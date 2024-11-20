@@ -1,7 +1,11 @@
 // ToDo: (20241011 - Jacky) Temporarily commnet the following code for the beta transition
 import { getTimestampNow, timestampInMilliSeconds, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
-import { Prisma, Voucher as PrismaVoucher } from '@prisma/client';
+import {
+  Prisma,
+  Voucher as PrismaVoucher,
+  AccociateLineItem as PrismaAssociateLineItem,
+} from '@prisma/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import type { ILineItem, ILineItemEntity } from '@/interfaces/line_item';
@@ -820,22 +824,25 @@ export async function putVoucherWithoutCreateNew(
       const reverseJobs: Promise<Prisma.BatchPayload | unknown>[] = [];
       Array.from(reverseRelationList).forEach((reverseRelation) => {
         const { eventId, original, new: newRelations } = reverseRelation;
-        original.forEach(async (originalRelation) => {
-          const deleteAssociateLineItemJob = tx.accociateLineItem.deleteMany({
-            where: {
+        const deleteAssociateLineItemJob = tx.accociateLineItem.deleteMany({
+          where: {
+            OR: original.map((originalRelation) => ({
               originalLineItemId: originalRelation.lineItemIdBeReversed,
               resultLineItemId: originalRelation.lineItemReverseOther.id,
-            },
-          });
+            })),
+          },
+        });
 
-          const deleteAssociateVoucherJob = tx.accociateVoucher.deleteMany({
-            where: {
+        const deleteAssociateVoucherJob = tx.accociateVoucher.deleteMany({
+          where: {
+            OR: original.map((originalRelation) => ({
               originalVoucherId: originalRelation.voucherId,
               resultVoucherId: voucherId,
-            },
-          });
-          reverseJobs.push(deleteAssociateLineItemJob, deleteAssociateVoucherJob);
+            })),
+          },
         });
+
+        reverseJobs.push(deleteAssociateLineItemJob, deleteAssociateVoucherJob);
 
         newRelations.forEach(async (newRelation) => {
           const createAssociateVoucherJob = tx.accociateVoucher.create({
@@ -1100,6 +1107,15 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
       voucherDate: voucherDeleteOtherEntity.date,
     });
 
+    await tx.voucher.update({
+      where: {
+        id: deleteVersionOriginVoucher.id,
+      },
+      data: {
+        deletedAt: nowInSecond,
+      },
+    });
+
     const newVoucher = await tx.voucher.create({
       data: {
         no: newVoucherNo,
@@ -1152,6 +1168,9 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
           })),
         },
       },
+      include: {
+        lineItems: true,
+      },
     });
 
     const newDeletedEvent = await tx.event.create({
@@ -1179,7 +1198,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
             createdAt: nowInSecond,
             updatedAt: nowInSecond,
             associateLineItems: {
-              create: deleteVersionReverseLineItemPairs.map((lineItemPair) => ({
+              create: deleteVersionReverseLineItemPairs.map((lineItemPair, key) => ({
                 originalLineItem: {
                   connect: {
                     id: lineItemPair.originLineItem.id,
@@ -1187,7 +1206,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
                 },
                 resultLineItem: {
                   connect: {
-                    id: lineItemPair.newDeleteReverseLineItem.id,
+                    id: newVoucher.lineItems[key].id, // Info: (20241120 - Murky) [Warning!] DB新創的id 可能根原本的id順序不同?
                   },
                 },
                 debit: lineItemPair.newDeleteReverseLineItem.debit,
@@ -1199,13 +1218,35 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
           },
         },
       },
+      include: {
+        associateVouchers: {
+          include: {
+            associateLineItems: true,
+          },
+        },
+      },
     });
 
     const transactionJobs: Promise<Prisma.BatchPayload | unknown>[] = [];
+    const newAssociatedLineItems = newDeletedEvent.associateVouchers.reduce((acc, cur) => {
+      cur.associateLineItems.forEach((lineItem) => {
+        acc.push(lineItem);
+      });
+      return acc;
+    }, [] as PrismaAssociateLineItem[]);
 
     deleteVersionReverseLineItemPairs.forEach((lineItemPair) => {
       const { newDeleteReverseLineItem } = lineItemPair;
       newDeleteReverseLineItem.resultLineItems.forEach((resultLineItem) => {
+        const newResultLineItem = newAssociatedLineItems.find(
+          (lineItem) => lineItem.originalLineItemId === resultLineItem.resultLineItemId
+        );
+        if (!newResultLineItem) {
+          throw new Error(
+            'newResultLineItemId is not found in deleteVoucherByCreateReverseVoucher in voucher.repo.ts'
+          );
+        }
+
         const createAssociateVoucherJob = tx.accociateVoucher.create({
           data: {
             originalVoucher: {
@@ -1234,7 +1275,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
                 },
                 resultLineItem: {
                   connect: {
-                    id: resultLineItem.id,
+                    id: newResultLineItem.resultLineItemId,
                   },
                 },
                 debit: resultLineItem.debit,

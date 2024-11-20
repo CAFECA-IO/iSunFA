@@ -745,8 +745,8 @@ export const voucherDeleteSchema = {
     querySchema: voucherDeleteQueryValidatorV2,
     bodySchema: voucherDeleteBodyValidatorV2,
   },
-  outputSchema: voucherEntityValidator,
-  frontend: voucherNullSchema,
+  outputSchema: z.union([z.number(), z.null()]),
+  frontend: z.number(),
 };
 
 export const voucherGetByAccountSchema = {

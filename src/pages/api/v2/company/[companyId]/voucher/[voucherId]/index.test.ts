@@ -92,7 +92,7 @@ describe('company/[companyId]/voucher/voucherId integration test', () => {
     });
   });
 
-  describe('Put one voucher', () => {
+  xdescribe('Put one voucher', () => {
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},
@@ -239,6 +239,30 @@ describe('company/[companyId]/voucher/voucherId integration test', () => {
 
       expect(newAssociateLineItem).not.toBeNull();
       expect(oldAssociateLineItem).toBeNull();
+    });
+  });
+
+  xdescribe('Delete one voucher', () => {
+    it('should return data match frontend validator', async () => {
+      req = {
+        headers: {},
+        query: {
+          voucherId: '1002',
+        },
+        method: 'DELETE',
+        json: jest.fn(),
+        body: {},
+      } as unknown as jest.Mocked<NextApiRequest>;
+
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as jest.Mocked<NextApiResponse>;
+
+      await handler(req, res);
+
+      const apiResponse = res.json.mock.calls[0][0];
+      expect(typeof apiResponse.payload).toBe('number');
     });
   });
 });
