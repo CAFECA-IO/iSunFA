@@ -29,10 +29,13 @@ function APIHandler<Data>(
   if (!apiConfig) throw new Error(`API ${apiName} is not defined`);
   checkInput(apiConfig, options);
 
-  let response = {} as IAPIResponse<Data>;
-  if (apiConfig.useWorker) {
-    response = useAPIWorker<Data>(apiConfig, options, triggerImmediately, cancel);
-  } else response = useAPI<Data>(apiConfig, options, triggerImmediately, cancel);
+  // Info: (20241120 - Liz) 呼叫兩個 Hook，確保它們的執行順序一致
+  const workerResponse = useAPIWorker<Data>(apiConfig, options, triggerImmediately, cancel);
+  const apiResponse = useAPI<Data>(apiConfig, options, triggerImmediately, cancel);
+
+  // Info: (20241120 - Liz) 根據條件決定使用哪一個結果
+  const response = apiConfig.useWorker ? workerResponse : apiResponse;
+
   const { code } = response;
   if (code === STATUS_CODE[STATUS_MESSAGE.UNAUTHORIZED_ACCESS]) {
     eventManager.emit(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
