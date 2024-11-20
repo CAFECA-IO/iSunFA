@@ -142,7 +142,9 @@
     "FAILED": "上传失败",
     "LOADING": "上传中...",
     "URL": "网址",
-    "FOR_MOBILE": "用于手机上传文件"
+    "FOR_MOBILE": "用于手机上传文件",
+    "BACK": "返回",
+    "COMPLETED": "完成"
   },
   "CREATE": {
     "FAILED": "创建失败"

@@ -257,6 +257,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.ZOD_EXAMPLE]: nullAPISchema, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: nullAPISchema,
   [APIName.PUSHER]: nullAPISchema,
+  [APIName.PUSHER_AUTH]: nullAPISchema,
   [APIName.ENCRYPT]: nullAPISchema,
   [APIName.DECRYPT]: nullAPISchema,
   [APIName.ASSET_LIST_V2]: nullAPISchema,

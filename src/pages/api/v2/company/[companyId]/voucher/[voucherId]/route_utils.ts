@@ -252,8 +252,49 @@ export const voucherAPIGetOneUtils = {
    */
   initLineItemEntities: (voucher: IGetOneVoucherResponse) => {
     const lineItemsDto = voucher.lineItems;
-    const lineItemEntities = lineItemsDto.map(voucherAPIGetOneUtils.initLineItemEntity);
-    return lineItemEntities;
+    const lineItems = lineItemsDto.map((dto) => {
+      const lineItemEntity = parsePrismaLineItemToLineItemEntity(dto);
+      const accountEntity = parsePrismaAccountToAccountEntity(dto.account);
+      const resultLineItems = dto.resultLineItem.map((result) => {
+        const resultAssociateLineItem = parsePrismaAssociateLineItemToEntity(result);
+        const originalLineItem = parsePrismaLineItemToLineItemEntity(result.originalLineItem);
+        const originalAccount = parsePrismaAccountToAccountEntity(result.originalLineItem.account);
+        const associateEvent = parsePrismaEventToEventEntity(result.accociateVoucher.event);
+        const associateVoucher = parsePrismaAssociateVoucherToEntity(result.accociateVoucher);
+        const originalVoucher = parsePrismaVoucherToVoucherEntity(
+          result.accociateVoucher.originalVoucher
+        );
+
+        const newResultAssociateLineItem: IAssociateLineItemEntity & {
+          associateVoucher: IAssociateVoucherEntity & {
+            event: IEventEntity;
+          };
+          originalLineItem: ILineItemEntity & {
+            account: IAccountEntity;
+          };
+        } = {
+          ...resultAssociateLineItem,
+          originalLineItem: {
+            ...originalLineItem,
+            account: originalAccount,
+          },
+          associateVoucher: {
+            ...associateVoucher,
+            event: associateEvent,
+            originalVoucher,
+          },
+        };
+
+        return newResultAssociateLineItem;
+      });
+      const newLineItem = {
+        ...lineItemEntity,
+        account: accountEntity,
+        resultLineItems,
+      };
+      return newLineItem;
+    });
+    return lineItems;
   },
 
   /**
@@ -986,11 +1027,26 @@ export const voucherAPIDeleteUtils = {
     return !!voucher.assetVouchers.length;
   },
 
-  // initDeleteVoucherEntity: (options: {
-  //   nowInSecond: number;
-  //   lineItems: ILineItemEntity[];
-
-  // }) => {
-  //   return voucher;
-  // }
+  /**
+   * Info: (20241025 - Murky)
+   * @description throw StatusMessage as Error, but it can log the errorMessage
+   * @param logger - pino Logger
+   * @param options - errorMessage and statusMessage
+   * @param options.errorMessage - string, message you want to log
+   * @param options.statusMessage - string, status message you want to throw
+   * @throws Error - statusMessage
+   */
+  throwErrorAndLog: (
+    logger: Logger,
+    {
+      errorMessage,
+      statusMessage,
+    }: {
+      errorMessage: string;
+      statusMessage: string;
+    }
+  ) => {
+    logger.error(errorMessage);
+    throw new Error(statusMessage);
+  },
 };
