@@ -30,7 +30,7 @@ const TO_DO_LIST: ITodoEvent[] = [
         startDate: 1727712000,
         createdAt: 1727712000,
         updatedAt: 1727712000,
-        imageId: '/images/fake_company_log_01.png',
+        imageId: '/images/fake_company_logo_01.png',
       },
     ],
   },
@@ -51,7 +51,7 @@ const TO_DO_LIST: ITodoEvent[] = [
         startDate: 1727712000,
         createdAt: 1727712000,
         updatedAt: 1727712000,
-        imageId: '/images/fake_company_log_01.png',
+        imageId: '/images/fake_company_logo_01.png',
       },
     ],
   },
@@ -83,7 +83,7 @@ const TO_DO_LIST: ITodoEvent[] = [
         startDate: 1727712000,
         createdAt: 1727712000,
         updatedAt: 1727712000,
-        imageId: '/images/fake_company_log_03.png',
+        imageId: '/images/fake_company_logo_03.png',
       },
     ],
   },
@@ -104,7 +104,7 @@ const TO_DO_LIST: ITodoEvent[] = [
         startDate: 1727712000,
         createdAt: 1727712000,
         updatedAt: 1727712000,
-        imageId: '/images/fake_company_log_02.png',
+        imageId: '/images/fake_company_logo_02.png',
       },
     ],
   },
@@ -125,7 +125,7 @@ const TO_DO_LIST: ITodoEvent[] = [
         startDate: 1727712000,
         createdAt: 1727712000,
         updatedAt: 1727712000,
-        imageId: '/images/fake_company_log_02.png',
+        imageId: '/images/fake_company_logo_02.png',
       },
     ],
   },
@@ -146,7 +146,7 @@ const TO_DO_LIST: ITodoEvent[] = [
         startDate: 1727712000,
         createdAt: 1727712000,
         updatedAt: 1727712000,
-        imageId: '/images/fake_company_log_02.png',
+        imageId: '/images/fake_company_logo_02.png',
       },
     ],
   },
@@ -167,7 +167,7 @@ const TO_DO_LIST: ITodoEvent[] = [
         startDate: 1727712000,
         createdAt: 1727712000,
         updatedAt: 1727712000,
-        imageId: '/images/fake_company_log_02.png',
+        imageId: '/images/fake_company_logo_02.png',
       },
     ],
   },
@@ -201,7 +201,7 @@ const ToDoEvent = ({ toDoEvent }: { toDoEvent: ITodoEvent }) => {
           <h5 className="text-center">No Company</h5>
         ) : (
           toDoEvent.userTodoCompanies.map((company) => (
-            <div className="flex items-center justify-center gap-8px">
+            <div key={company.id} className="flex items-center justify-center gap-8px">
               <Image src={company.imageId} width={24} height={24} alt="company_logo"></Image>
               <h5 className="truncate">{company.name}</h5>
             </div>

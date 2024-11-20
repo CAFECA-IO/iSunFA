@@ -93,14 +93,9 @@
     "EVENT_NAME": "事件名称",
     "ENTER_NAME": "输入名称",
     "DEADLINE": "截止日期",
-    "PARTNER_TYPE": "合作伙伴类型",
+    "AFFILIATED_COMPANY": "关联公司",
     "NOTE": "备注",
-    "ENTER_TEXT": "输入文字"
-  },
-
-  "PARTNER_TYPE": {
-    "CUSTOMER": "客户",
-    "VENDOR": "供应商",
-    "BOTH": "两者都是"
+    "ENTER_TEXT": "输入文字",
+    "SELECT_COMPANY": "选择公司"
   }
 }

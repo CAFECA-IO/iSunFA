@@ -14,7 +14,7 @@ import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 // Info: (20241016 - Jacky) Company list schema
 const companyListQuerySchema = z.object({
   userId: zodStringToNumber,
-  simple: zodStringToBoolean,
+  simple: zodStringToBoolean.optional(),
   searchQuery: z.string().optional(),
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
