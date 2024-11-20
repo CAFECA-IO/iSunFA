@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { ITodoCompany, PARTNER_TYPE } from '@/interfaces/todo';
+import { ICompany } from '@/interfaces/company';
+import { ITodoCompany } from '@/interfaces/todo';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
@@ -17,6 +18,36 @@ interface CreateTodoModalProps {
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
 }
 
+const FAKE_COMPANY_LIST: ICompany[] = [
+  {
+    id: 1,
+    name: 'Company A',
+    taxId: '12345678',
+    startDate: 1635484800,
+    createdAt: 1635484800,
+    updatedAt: 1635484800,
+    imageId: '/images/fake_company_logo_01.png',
+  },
+  {
+    id: 2,
+    name: 'Company B',
+    taxId: '87654321',
+    startDate: 1635484800,
+    createdAt: 1635484800,
+    updatedAt: 1635484800,
+    imageId: '/images/fake_company_logo_02.png',
+  },
+  {
+    id: 3,
+    name: 'Company C',
+    taxId: '87654321',
+    startDate: 1635484800,
+    createdAt: 1635484800,
+    updatedAt: 1635484800,
+    imageId: '/images/fake_company_logo_03.png',
+  },
+];
+
 const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodoModalProps) => {
   const { t } = useTranslation(['dashboard']);
   const { userAuth } = useUserCtx();
@@ -27,10 +58,12 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
   const [deadline, setDeadline] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [note, setNote] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [partnerType, setPartnerType] = useState<PARTNER_TYPE>(PARTNER_TYPE.BOTH);
+  const [company, setCompany] = useState<ICompany>(FAKE_COMPANY_LIST[0]);
 
   // Info: (20241119 - Liz) 建立待辦事項 API
   const { trigger: createTodoAPI } = APIHandler<ITodoCompany>(APIName.CREATE_TODO);
+
+  // Info: (20241120 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prevState) => !prevState);
@@ -41,6 +74,21 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
 
     setIsLoading(true);
 
+    // Deprecated: (20241119 - Liz)
+    // eslint-disable-next-line no-console
+    console.log(
+      'isLoading:',
+      isLoading,
+      'todoName:',
+      todoName,
+      'deadline:',
+      deadline.startTimeStamp,
+      'note:',
+      note,
+      'company:',
+      company
+    );
+
     try {
       const {
         data: createdTodo,
@@ -49,9 +97,9 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
       } = await createTodoAPI({
         params: { userId: userAuth.id },
         query: {
-          type: partnerType,
           name: todoName,
-          deadline,
+          deadline: deadline.startTimeStamp,
+          companyId: company.id,
           note,
         },
       });
@@ -61,7 +109,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
         setTodoName('');
         setDeadline(default30DayPeriodInSec);
         setNote('');
-        setPartnerType(PARTNER_TYPE.BOTH);
+        setCompany(FAKE_COMPANY_LIST[0]);
         toggleModal();
 
         if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241119 - Liz) This is a workaround to refresh the todo list after creating a new todo
@@ -139,9 +187,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
                 className="flex flex-auto items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
                 onClick={toggleDropdown}
               >
-                <p className="px-12px py-10px text-base font-medium">
-                  {t('dashboard:PARTNER_TYPE.' + partnerType.toUpperCase())}
-                </p>
+                <p className="px-12px py-10px text-base font-medium">{company.name}</p>
 
                 <div className="px-12px py-10px">
                   {isDropdownOpen ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
@@ -150,17 +196,17 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
 
               {isDropdownOpen && (
                 <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                  {Object.values(PARTNER_TYPE).map((item) => (
+                  {Object.values(FAKE_COMPANY_LIST).map((item) => (
                     <button
-                      key={item}
+                      key={item.id}
                       type="button"
                       onClick={() => {
-                        setPartnerType(item);
+                        setCompany(item);
                         toggleDropdown();
                       }}
                       className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                     >
-                      {t('dashboard:PARTNER_TYPE.' + item.toUpperCase())}
+                      {item.name}
                     </button>
                   ))}
                 </div>
