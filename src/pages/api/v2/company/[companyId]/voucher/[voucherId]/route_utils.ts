@@ -986,11 +986,26 @@ export const voucherAPIDeleteUtils = {
     return !!voucher.assetVouchers.length;
   },
 
-  // initDeleteVoucherEntity: (options: {
-  //   nowInSecond: number;
-  //   lineItems: ILineItemEntity[];
-
-  // }) => {
-  //   return voucher;
-  // }
+  /**
+   * Info: (20241025 - Murky)
+   * @description throw StatusMessage as Error, but it can log the errorMessage
+   * @param logger - pino Logger
+   * @param options - errorMessage and statusMessage
+   * @param options.errorMessage - string, message you want to log
+   * @param options.statusMessage - string, status message you want to throw
+   * @throws Error - statusMessage
+   */
+  throwErrorAndLog: (
+    logger: Logger,
+    {
+      errorMessage,
+      statusMessage,
+    }: {
+      errorMessage: string;
+      statusMessage: string;
+    }
+  ) => {
+    logger.error(errorMessage);
+    throw new Error(statusMessage);
+  },
 };

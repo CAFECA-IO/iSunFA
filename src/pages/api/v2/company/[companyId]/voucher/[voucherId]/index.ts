@@ -354,6 +354,14 @@ export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, numb
       await getUtils.getVoucherFromPrisma(voucherId);
 
     const originVoucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
+
+    if (originVoucher.deletedAt) {
+      deleteUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: 'Voucher already deleted',
+        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+      });
+    }
+
     const originLineItems = deleteUtils.initOriginalLineItemEntities(voucherFromPrisma);
 
     // const issuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
