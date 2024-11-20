@@ -387,6 +387,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, companyId]
   );
 
+  // Deprecated: (20241120 - tzuhan) incomplete code
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleNewCertificatesComing = useCallback(
     (message: { certificates: ICertificate[] }) => {
