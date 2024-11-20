@@ -24,7 +24,7 @@ import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-import { encryptFile, importPublicKey } from '@/lib/utils/crypto';
+import { encryptFile, generateKeyPair, importPublicKey } from '@/lib/utils/crypto';
 import { IV_LENGTH } from '@/constants/config';
 
 export interface IFileUIBetaWithFile extends IFileUIBeta {
@@ -42,7 +42,6 @@ const MobileUploadPage: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<IFileUIBeta[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [successUpload, setSuccessUpload] = useState<boolean>(false);
-  const { trigger: fetchPublicKey } = APIHandler<JsonWebKey>(APIName.PUBLIC_KEY_GET);
   const { trigger: uploadFileAPI } = APIHandler<number>(APIName.FILE_UPLOAD);
   // Deprecated: (20241120 - tzuhan) Test upload file to server then server push notification
   const { trigger: publicUploadAPI } = APIHandler<number>(APIName.PUBLIC_FILE_UPLOAD);
@@ -90,29 +89,17 @@ const MobileUploadPage: React.FC = () => {
     URL.revokeObjectURL(file.url);
   };
 
-  const encryptFileWithPublicKey = async (file: File) => {
+  const encryptFileWithPublicKey = async (file: File, publicKey: CryptoKey) => {
+    if (!token) throw new Error('token is undefined');
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const { success, data: publicKey } = await fetchPublicKey({
-        params: {
-          token,
-        },
+      const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+      const { encryptedContent } = await encryptFile(arrayBuffer, publicKey, iv);
+      const encryptedFile = new File([encryptedContent], file.name, {
+        type: file.type,
       });
-      if (success && publicKey) {
-        const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-        const { encryptedContent } = await encryptFile(
-          arrayBuffer,
-          await importPublicKey(publicKey),
-          iv
-        );
-        const encryptedFile = new File([encryptedContent], file.name, {
-          type: file.type,
-        });
 
-        return encryptedFile;
-      } else {
-        throw new Error('faile to get publicKey'); // ToDo: (20241120 - tuzhan) 轉成i18n
-      }
+      return encryptedFile;
     } catch (error) {
       throw new Error('faile to encrypt file'); // ToDo: (20241120 - tuzhan) 轉成i18n
     }
@@ -130,9 +117,10 @@ const MobileUploadPage: React.FC = () => {
         });
         return;
       }
+      const { publicKey } = await generateKeyPair();
       await Promise.all(
         selectedFiles.map(async (fileUI) => {
-          // const encryptedFile = await encryptFileWithPublicKey(fileUI.file);
+          // const encryptedFile = await encryptFileWithPublicKey(fileUI.file, publicKey);
           const formData = new FormData();
           // formData.append('file', encryptedFile);
           formData.append('file', fileUI.file);
