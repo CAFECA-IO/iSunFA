@@ -218,7 +218,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
         {
           voucherId: 1000,
           amount: 100,
-          description: '購買存貨-應付帳款',
+          description: '購買存貨-應付帳款hehe',
           debit: true,
           account: {
             id: 10000981,

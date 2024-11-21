@@ -3,13 +3,17 @@ import { IReverseItemUI } from '@/interfaces/line_item';
 import { FaMinus } from 'react-icons/fa6';
 import { FiEdit } from 'react-icons/fi';
 
-interface IReverseItemProps {
+interface IReverseLineItemProps {
   reverseItem: IReverseItemUI;
   addHandler: () => void;
   removeHandler: () => void;
 }
 
-const ReverseItem: React.FC<IReverseItemProps> = ({ reverseItem, addHandler, removeHandler }) => {
+const ReverseLineItem: React.FC<IReverseLineItemProps> = ({
+  reverseItem,
+  addHandler,
+  removeHandler,
+}) => {
   const { voucherNo, account, description, reverseAmount } = reverseItem;
   return (
     <div className="col-start-1 col-end-13 flex items-center justify-between gap-4px font-medium text-text-neutral-invert">
@@ -41,4 +45,4 @@ const ReverseItem: React.FC<IReverseItemProps> = ({ reverseItem, addHandler, rem
   );
 };
 
-export default ReverseItem;
+export default ReverseLineItem;

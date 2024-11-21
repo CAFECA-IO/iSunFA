@@ -11,6 +11,7 @@ import {
   IVoucherForSingleAccount,
 } from '@/interfaces/voucher';
 import {
+  nullSchema,
   zodFilterSectionSortingOptions,
   zodStringToNumber,
   zodStringToNumberWithDefault,
@@ -742,7 +743,7 @@ export const voucherPostSchema = {
 export const voucherListSchema = {
   input: {
     querySchema: voucherGetAllQueryValidatorV2,
-    bodySchema: voucherGetAllBodyValidatorV2,
+    bodySchema: nullSchema,
   },
   outputSchema: voucherGetAllOutputValidatorV2,
   frontend: voucherGetAllFrontendValidatorV2,
@@ -751,7 +752,7 @@ export const voucherListSchema = {
 export const voucherGetOneSchema = {
   input: {
     querySchema: voucherGetOneQueryValidatorV2,
-    bodySchema: voucherGetOneBodyValidatorV2,
+    bodySchema: nullSchema,
   },
   outputSchema: voucherGetOneOutputValidatorV2,
   frontend: voucherGetOneFrontendValidatorV2,
