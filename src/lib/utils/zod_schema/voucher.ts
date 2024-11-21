@@ -11,11 +11,12 @@ import {
   IVoucherForSingleAccount,
 } from '@/interfaces/voucher';
 import {
+  nullSchema,
   zodFilterSectionSortingOptions,
   zodStringToNumber,
   zodStringToNumberWithDefault,
 } from '@/lib/utils/zod_schema/common';
-import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
+import { DEFAULT_END_DATE, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { EventType, VoucherType } from '@/constants/account';
 import { SortBy } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
@@ -195,7 +196,7 @@ const voucherGetAllQueryValidatorV2 = z.object({
   type: z.nativeEnum(EventType).optional(),
   tab: z.nativeEnum(VoucherListTabV2),
   startDate: zodStringToNumberWithDefault(0),
-  endDate: zodStringToNumberWithDefault(Infinity),
+  endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
   sortOption: zodFilterSectionSortingOptions(),
   searchQuery: z.string().optional(),
 });
@@ -224,6 +225,17 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
           debit: z.boolean(),
           amount: z.number(),
         }),
+        payableInfo: z.object({
+          total: z.number(),
+          alreadyHappened: z.number(),
+          remain: z.number(),
+        }),
+        receivingInfo: z.object({
+          total: z.number(),
+          alreadyHappened: z.number(),
+          remain: z.number(),
+        }),
+        originalEvents: z.array(eventEntityValidator),
       })
     ),
     unRead: z.object({
@@ -262,6 +274,22 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
         amount: z.number().parse(voucher.sum.amount),
       },
     },
+    payableInfo: voucher.payableInfo,
+    receivingInfo: voucher.receivingInfo,
+    reverseVouchers: voucher.originalEvents.reduce(
+      (acc, event) => {
+        if (event.associateVouchers) {
+          event.associateVouchers.forEach((associateVoucher) => {
+            acc.push({
+              id: associateVoucher.resultVoucher.id,
+              voucherNo: associateVoucher.resultVoucher.no,
+            });
+          });
+        }
+        return acc;
+      },
+      [] as { id: number; voucherNo: string }[]
+    ),
   }));
 
   const parsedData: IPaginatedData<{
@@ -742,7 +770,7 @@ export const voucherPostSchema = {
 export const voucherListSchema = {
   input: {
     querySchema: voucherGetAllQueryValidatorV2,
-    bodySchema: voucherGetAllBodyValidatorV2,
+    bodySchema: nullSchema,
   },
   outputSchema: voucherGetAllOutputValidatorV2,
   frontend: voucherGetAllFrontendValidatorV2,
@@ -751,7 +779,7 @@ export const voucherListSchema = {
 export const voucherGetOneSchema = {
   input: {
     querySchema: voucherGetOneQueryValidatorV2,
-    bodySchema: voucherGetOneBodyValidatorV2,
+    bodySchema: nullSchema,
   },
   outputSchema: voucherGetOneOutputValidatorV2,
   frontend: voucherGetOneFrontendValidatorV2,

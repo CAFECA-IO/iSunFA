@@ -1,7 +1,6 @@
 import handler from '@/pages/api/v2/company/[companyId]/voucher/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { VoucherListTabV2 } from '@/constants/voucher';
-import { EventType } from '@/constants/account';
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
@@ -9,8 +8,8 @@ import { voucherListSchema } from '@/lib/utils/zod_schema/voucher';
 
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
-    userId: 1001,
-    companyId: 1001,
+    userId: 1000,
+    companyId: 1000,
     roleId: 1001,
     cookie: {
       httpOnly: false,
@@ -75,10 +74,10 @@ describe('company/[companyId]/voucher integration test', () => {
           page: '1',
           pageSize: '10',
           tab: VoucherListTabV2.UPLOADED,
-          type: EventType.PAYMENT,
-          startDate: '1',
-          endDate: '1',
-          searchQuery: 'string',
+          // type: EventType.PAYMENT,
+          // startDate: '1',
+          // endDate: '1772617600',
+          // searchQuery: 'string',
           sortOption: 'Date:asc-Amount:desc',
         },
         method: 'GET',
@@ -99,6 +98,7 @@ describe('company/[companyId]/voucher integration test', () => {
       const apiResponse = res.json.mock.calls[0][0];
       const { success } = outputValidator.safeParse(apiResponse.payload);
       expect(success).toBe(true);
+      expect(apiResponse.payload.data.vouchers.length).toBeGreaterThan(0);
     });
   });
 

@@ -1,38 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { useRouter } from 'next/router';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
-import { ISUNFA_ROUTE } from '@/constants/url';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
+import { IUser } from '@/interfaces/user';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import Link from 'next/link';
 
 interface AccountSettingsProps {}
 
 const AccountSettings: React.FC<AccountSettingsProps> = () => {
   const { t } = useTranslation(['setting', 'common']);
-  const router = useRouter();
   const { userAuth } = useUserCtx();
-  const { trigger: deleteAccountAPI } = APIHandler(APIName.USER_DELETE);
-  const { trigger: cancelDeleteAccountAPI } = APIHandler(APIName.USER_DELETE); // ToDo: (20241118 - tzuhan) 需要跟設計師確認 UX 需要等後端提供路徑
+  const [user, setUser] = useState<IUser | null>(userAuth);
+  const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
+  const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
 
   const procedureOfCancel = async () => {
-    if (!userAuth) return;
+    if (!user) return;
     try {
       messageModalVisibilityHandler();
-      const { success, code } = await cancelDeleteAccountAPI({
+      const {
+        success,
+        data: userData,
+        code,
+      } = await cancelDeleteAccountAPI({
         params: {
-          userId: userAuth.id,
+          userId: user.id,
         },
       });
-      if (success) router.push(ISUNFA_ROUTE.DASHBOARD);
-      else throw new Error(code);
+      if (success && userData) {
+        setUser(userData);
+      } else throw new Error(code);
     } catch (error) {
       toastHandler({
         id: ToastId.USER_DELETE_ERROR,
@@ -44,16 +50,50 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
   };
 
   const procedureOfDelete = async () => {
-    if (!userAuth) return;
+    if (!user) return;
     try {
       messageModalVisibilityHandler();
-      const { success, code } = await deleteAccountAPI({
+      const {
+        success,
+        data: userData,
+        code,
+      } = await deleteAccountAPI({
         params: {
-          userId: userAuth.id,
+          userId: user.id,
         },
       });
-      if (success) router.push(ISUNFA_ROUTE.DASHBOARD);
-      else throw new Error(code);
+      if (success && userData) {
+        setUser(userData);
+        const calculateRemainDays = (deletedAt: number) => {
+          const now = new Date().getTime();
+          const days = 3 - Math.floor(((now - deletedAt * 1000) / 24) * 60 * 60 * 1000);
+          return days;
+        };
+        const warningContent = (
+          <div className="flex justify-between">
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-text-state-error">
+                {t('setting:USER.DELETE_WARNING', {
+                  days: calculateRemainDays(userData.deletedAt),
+                })}
+              </p>
+              <p>{t('setting:USER.DELETE_HINT')}</p>
+            </div>
+            <Link
+              href={ISUNFA_ROUTE.GENERAL_SETTING}
+              className="text-sm font-bold text-link-text-warning"
+            >
+              {t('setting:USER.SETTING')}
+            </Link>
+          </div>
+        );
+        toastHandler({
+          id: ToastId.USER_DELETE_WARNING,
+          type: ToastType.WARNING,
+          content: warningContent,
+          closeable: true,
+        });
+      } else throw new Error(code);
     } catch (error) {
       toastHandler({
         id: ToastId.USER_DELETE_ERROR,
@@ -65,13 +105,13 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
   };
 
   const deleteAccountClickHandler = () => {
-    if (!userAuth) return;
+    if (!user) return;
     messageModalDataHandler({
       messageType: MessageType.WARNING,
-      title: t('company:DELETE.TITLE'),
-      content: t('company:DELETE.WARNING'),
+      title: t('setting:ACCOUNT.REMOVE'),
+      content: t('setting:ACCOUNT.CONFIRM_REMOVE'),
       backBtnStr: t('common:COMMON.CANCEL'),
-      submitBtnStr: t('setting:SETTING.REMOVE'),
+      submitBtnStr: t('setting:ACCOUNT.REMOVE_BTN'),
       submitBtnFunction: procedureOfDelete,
     });
     messageModalVisibilityHandler();
@@ -98,7 +138,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
           <span>{t('setting:NORMAL.SUBSCRIPTION_MANAGEMENT')}</span>
         </p>
       </button>
-      {userAuth?.deletedAt ? (
+      {user?.deletedAt ? (
         <button
           id="setting-cancel-remove-account"
           type="button"
@@ -117,7 +157,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
         >
           <p className="flex cursor-pointer gap-2" onClick={deleteAccountClickHandler}>
             <Image src="/icons/user-x-02.svg" width={16} height={16} alt="notice_icon" />
-            <span>{t('setting:NORMAL.REMOVE_THIS_ACCOUNT')}</span>
+            <span>{t('setting:ACCOUNT.REMOVE')}</span>
           </p>
         </button>
       )}

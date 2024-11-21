@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { FiEdit3, FiLink, FiMail } from 'react-icons/fi';
 import { TbUserCircle } from 'react-icons/tb';
 import { Button } from '@/components/button/button';
-import IPModal from '@/components/user_settings/ip_modal';
+import IPModal, { extractLoginDevice } from '@/components/user_settings/ip_modal';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { IUserActionLog } from '@/interfaces/user_action_log';
 
@@ -71,12 +71,13 @@ const UserInfo: React.FC<UserInfoProps> = ({
             id="setting-add-company"
             type="button"
             variant="linkBorderless"
+            size="noPadding"
             className="justify-start p-0 text-base font-normal"
             onClick={toggleIPModal}
           >
             <p className="flex gap-2">
               <span>
-                {loginDevice} / {loginIP}
+                {extractLoginDevice(loginDevice)} / {loginIP}
               </span>
             </p>
           </Button>

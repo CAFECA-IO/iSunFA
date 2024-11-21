@@ -17,7 +17,6 @@ import APIHandler from '@/lib/utils/api_handler';
 import Skeleton from '@/components/skeleton/skeleton';
 import { WEEK_FULL_LIST } from '@/constants/display';
 import { ToastType } from '@/interfaces/toastify';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { IVoucherDetailForFrontend, defaultVoucherDetail } from '@/interfaces/voucher';
 
@@ -28,20 +27,18 @@ interface IVoucherDetailPageBodyProps {
 const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherId }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
-
   const { selectedCompany } = useUserCtx();
 
-  const params = {
-    companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-    voucherId,
-  };
+  const companyId = selectedCompany?.id;
+
+  const params = { companyId, voucherId };
 
   // Info: (20241029 - Julian) Get voucher details from API
-  const { data: voucherData, isLoading } = APIHandler<IVoucherDetailForFrontend>(
-    APIName.VOUCHER_GET_BY_ID_V2,
-    { params },
-    true
-  );
+  const {
+    trigger: getVoucherDetail,
+    data: voucherData,
+    isLoading,
+  } = APIHandler<IVoucherDetailForFrontend>(APIName.VOUCHER_GET_BY_ID_V2, { params });
 
   // Info: (20241029 - Julian) Delete voucher API
   const {
@@ -113,6 +110,13 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
       actions,
     };
   });
+
+  useEffect(() => {
+    // Info: (20241121 - Julian) Get voucher detail when companyId is ready
+    if (companyId) {
+      getVoucherDetail();
+    }
+  }, [companyId]);
 
   useEffect(() => {
     if (!isDeleting) {

@@ -76,7 +76,7 @@ const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({
   };
 
   const popUpBody = isUploading ? (
-    <div className="dashboardCardShadow fixed bottom-4 right-4 w-480px overflow-hidden">
+    <div className="dashboardCardShadow fixed bottom-4 right-4 z-50 w-480px overflow-hidden">
       {/* Info: (20240919 - tzuhan) Header: 顯示標題與收縮/展開按鈕 */}
       <div className="flex items-center justify-between p-4">
         <div className="flex-auto flex-col items-center text-center">

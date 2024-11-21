@@ -8,10 +8,11 @@ import { IoCloseOutline } from 'react-icons/io5';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import Image from 'next/image';
+import { IRoom } from '@/interfaces/room';
 
 interface CertificateQRCodeModalProps {
   toggleQRCode: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
-  handleRoomCreate: (token: string) => void;
+  handleRoomCreate: (room: IRoom) => void;
 }
 
 const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
@@ -20,14 +21,12 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
   const { Canvas } = useQRCode();
-  const isDev = true; // Deprecated: (20241122 - tzuhan) debug purpose
-  const { success, data: token, code } = APIHandler<string>(APIName.ROOM_ADD, {}, true);
+  const { success, data: room, code } = APIHandler<IRoom>(APIName.ROOM_ADD, {}, true);
 
-  const displayedQRCode = success && token && (
+  const displayedQRCode = success && room && (
     <div className="mx-20 my-10 flex flex-col items-center">
-      {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
       <Canvas
-        text={`${isDev ? 'http://192.168.2.29:3000' : DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${token}`}
+        text={`${DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
         options={{
           errorCorrectionLevel: 'M',
           margin: 3,
@@ -41,10 +40,10 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
       />
       <a
         className="mt-2 text-center text-xs text-card-text-sub"
-        href={`${isDev ? 'http://localhost:3000' : DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${token}`}
+        href={`${DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
         target="_blank"
         rel="noreferrer"
-      >{`${isDev ? 'http://localhost:3000' : DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${token}`}</a>
+      >{`${DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}</a>
     </div>
   );
 
@@ -63,8 +62,8 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
   const displayedError = success === false && code && <div>{code}</div>;
 
   useEffect(() => {
-    if (token) handleRoomCreate(token);
-  }, [token]);
+    if (room) handleRoomCreate(room);
+  }, [room]);
 
   return (
     <main className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
