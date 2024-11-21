@@ -7,9 +7,6 @@ export async function listUser(): Promise<
   (User & { userAgreements: UserAgreement[]; imageFile: File | null })[]
 > {
   const userList = await prisma.user.findMany({
-    where: {
-      OR: [{ deletedAt: 0 }, { deletedAt: null }],
-    },
     orderBy: {
       id: SortOrder.ASC,
     },
@@ -64,7 +61,6 @@ export async function getUserById(
     user = await prisma.user.findUnique({
       where: {
         id: userId,
-        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
         userAgreements: true,
@@ -105,7 +101,7 @@ export async function updateUserById(
 
 export async function deleteUserById(
   userId: number
-): Promise<User & { userAgreements: UserAgreement[] }> {
+): Promise<User & { userAgreements: UserAgreement[]; imageFile: File | null }> {
   const nowInSecond = getTimestampNow();
 
   const where: Prisma.UserWhereUniqueInput = {
@@ -120,6 +116,7 @@ export async function deleteUserById(
 
   const include: Prisma.UserInclude = {
     userAgreements: true,
+    imageFile: true,
   };
 
   const user = await prisma.user.update({

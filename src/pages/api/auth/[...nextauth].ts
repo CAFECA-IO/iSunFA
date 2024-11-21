@@ -11,6 +11,7 @@ import { APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { loggerError } from '@/lib/utils/logger_back';
 // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
 // import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 // import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
@@ -160,13 +161,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     },
     callbacks: {
       async signIn({ user, account }) {
+        const session = await getSession(req, res);
         try {
           // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
           // let Dbuser;
           // const { invitation } = (account?.params || {}) as { invitation: string };
-          const session = await getSession(req, res);
           const getUser = await getUserByCredential(account?.providerAccountId || user.id);
-
           if (!getUser) {
             // Info: (20240813 - Tzuhan) check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
             if (account && user) {
@@ -208,11 +208,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
           } else {
             // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
             // Dbuser = getUser;
+            // ToDo: (20241121 - Jacky) Delete User from DB if deletedAt + 7 days is less than current date
             await setSession(session, { userId: getUser.user.id });
           }
           await createUserActionLog({
             sessionId: session.id,
-            userId: session.userId,
+            userId: session.userId || -1,
             actionType: UserActionLogActionType.LOGIN,
             actionDescription: UserActionLogActionType.LOGIN,
             ipAddress: req.headers['x-forwarded-for'] as string,
@@ -239,6 +240,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
           */
         } catch (_error) {
           // ToDo: (20240829 - Jacky) Add error handling with logger
+          const error = _error as Error;
+          loggerError(session.userId || -1, 'Error in signIn callback', error);
         }
         return true;
       },

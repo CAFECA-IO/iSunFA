@@ -36,7 +36,7 @@ const handlePostRequest: IHandleRequest<
 
   const { userId } = query;
   const { companyId, name, note, deadline } = body;
-  const createdTodo = await createTodo(userId, companyId, name, deadline, note);
+  const createdTodo = await createTodo(userId, name, deadline, note, companyId);
 
   payload = createdTodo;
   statusMessage = STATUS_MESSAGE.CREATED;

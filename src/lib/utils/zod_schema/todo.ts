@@ -15,7 +15,7 @@ const todoPostQuerySchema = z.object({
   userId: zodStringToNumber,
 });
 const todoPostBodySchema = z.object({
-  companyId: z.number().int(),
+  companyId: z.number().int().optional(),
   name: z.string(),
   deadline: z.number().int(),
   note: z.string().nullable(),
