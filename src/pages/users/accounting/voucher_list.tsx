@@ -27,7 +27,12 @@ const VoucherListPage: React.FC = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'journal', 'filter_section_type'])),
+    ...(await serverSideTranslations(locale, [
+      'layout',
+      'common',
+      'journal',
+      'filter_section_type',
+    ])),
     locale,
   },
 });

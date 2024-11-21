@@ -15,8 +15,9 @@ interface II18nProps {
 const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('dashboard');
 
-  const [openMenu, setOpenMenu] =
-    typeof setLangIsOpen !== 'function' ? useState(false) : [langIsOpen, setLangIsOpen];
+  const [openMenuState, setOpenMenuState] = useState(false);
+  const openMenu = typeof setLangIsOpen !== 'function' ? openMenuState : langIsOpen;
+  const setOpenMenu = typeof setLangIsOpen !== 'function' ? setOpenMenuState : setLangIsOpen;
 
   const { asPath } = useRouter();
   const {
