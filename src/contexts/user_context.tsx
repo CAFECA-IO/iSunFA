@@ -716,7 +716,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       // eslint-disable-next-line no-console
       console.log('觸發 useEffect 並且呼叫 signOut 函數');
 
-      // signOut();
+      signOut();
     };
 
     // Info: (20240822-Tzuhan) 確保只有一個監聽器

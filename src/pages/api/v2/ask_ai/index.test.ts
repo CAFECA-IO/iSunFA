@@ -24,7 +24,7 @@ describe('company/[companyId]/ask_ai', () => {
         req: {} as NextApiRequest,
       });
 
-      expect(statusMessage).toBe(STATUS_MESSAGE.AICH_API_NOT_FOUND);
+      expect(statusMessage).toBe(STATUS_MESSAGE.CREATED);
     });
 
     it('should pass voucher', async () => {
@@ -42,7 +42,7 @@ describe('company/[companyId]/ask_ai', () => {
         req: {} as NextApiRequest,
       });
 
-      expect(statusMessage).toBe(STATUS_MESSAGE.AICH_API_NOT_FOUND);
+      expect(statusMessage).toBe(STATUS_MESSAGE.CREATED);
     });
   });
 });

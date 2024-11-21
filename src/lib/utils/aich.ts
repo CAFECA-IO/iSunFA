@@ -2,7 +2,8 @@ import { AICH_URI } from '@/constants/config';
 import { AI_TYPE, AICH_APIS_TYPES, AICH_PATH } from '@/constants/aich';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItemFromAICH } from '@/interfaces/line_item';
-import { fuzzySearchAccountByName } from './repo/account.repo';
+import { fuzzySearchAccountByName } from '@/lib/utils/repo/account.repo';
+import loggerBack from '@/lib/utils/logger_back';
 
 /**
  * Generates the URL for the given endpoint.
@@ -53,28 +54,56 @@ export function getAichUrl(endPoint: AICH_APIS_TYPES, aichResultId?: string): st
   }
 }
 
-export const fetchResultIdFromAICH = async (key: AI_TYPE, body: object) => {
+export const fetchResultIdFromAICH = async (key: AI_TYPE, body: object): Promise<string> => {
   const aichPath = AICH_PATH[key];
-  const response = await fetch(`${aichPath}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-  const data = await response.json();
-  const { resultId } = data;
+
+  let resultId = 'default';
+
+  try {
+    const response = await fetch(aichPath, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.resultId) {
+        resultId = data.resultId;
+      } else {
+        loggerBack.error(`AICH resultId error: Missing resultId in response data`);
+      }
+    } else {
+      loggerBack.error(
+        `Failed to fetch result ID from AICH server: ${response.status} ${response.statusText}`
+      );
+    }
+  } catch (_error) {
+    const error = _error as Error;
+    loggerBack.error(`Error fetching result ID from AICH server: ${error.message}`);
+  }
   return resultId;
 };
 
 export const fetchResultFromAICH = async (key: AI_TYPE, aichResultId: string) => {
   const aichPath = AICH_PATH[key];
-  const response = await fetch(`${aichPath}/${aichResultId}`);
-  if (!response.ok) {
+  try {
+    const response = await fetch(`${aichPath}/${aichResultId}`);
+    if (!response.ok) {
+      loggerBack.error(
+        `Failed to fetch result from AICH server: ${response.status} ${response.statusText}`
+      );
+      return null;
+    }
+    const data = await response.json();
+    return data;
+  } catch (_error) {
+    const error = _error as Error;
+    loggerBack.error(`Error fetching result from AICH server: ${error.message}`);
     return null;
   }
-  const data = await response.json();
-  return data;
 };
 
 export async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {

@@ -93,14 +93,9 @@
     "EVENT_NAME": "Event Name",
     "ENTER_NAME": "Enter name",
     "DEADLINE": "Deadline",
-    "PARTNER_TYPE": "Partner Type",
+    "AFFILIATED_COMPANY": "Affiliated Company",
     "NOTE": "Note",
-    "ENTER_TEXT": "Enter text"
-  },
-
-  "PARTNER_TYPE": {
-    "CUSTOMER": "Customer",
-    "VENDOR": "Vendor",
-    "BOTH": "Both"
+    "ENTER_TEXT": "Enter text",
+    "SELECT_COMPANY": "Select a company"
   }
 }

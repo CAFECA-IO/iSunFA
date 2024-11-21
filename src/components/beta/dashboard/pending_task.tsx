@@ -259,15 +259,15 @@ const PendingTasksForAll = () => {
     companyLogoSrc: string;
     count: number;
   }[] = [
-    { companyName: 'Company A', companyLogoSrc: '/images/fake_company_log_01.png', count: 50 },
+    { companyName: 'Company A', companyLogoSrc: '/images/fake_company_logo_01.png', count: 50 },
     {
       companyName: 'Company B',
-      companyLogoSrc: '/images/fake_company_log_02.png',
+      companyLogoSrc: '/images/fake_company_logo_02.png',
       count: 10,
     },
     {
       companyName: 'Company C',
-      companyLogoSrc: '/images/fake_company_log_03.png',
+      companyLogoSrc: '/images/fake_company_logo_03.png',
       count: 2,
     },
   ];
@@ -277,15 +277,15 @@ const PendingTasksForAll = () => {
     companyLogoSrc: string;
     count: number;
   }[] = [
-    { companyName: 'Company A', companyLogoSrc: '/images/fake_company_log_01.png', count: 20 },
+    { companyName: 'Company A', companyLogoSrc: '/images/fake_company_logo_01.png', count: 20 },
     {
       companyName: 'Company B',
-      companyLogoSrc: '/images/fake_company_log_02.png',
+      companyLogoSrc: '/images/fake_company_logo_02.png',
       count: 10,
     },
     {
       companyName: 'Company C',
-      companyLogoSrc: '/images/fake_company_log_03.png',
+      companyLogoSrc: '/images/fake_company_logo_03.png',
       count: 8,
     },
   ];

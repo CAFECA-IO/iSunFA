@@ -141,7 +141,9 @@
     "FAILED": "上傳失敗",
     "LOADING": "上傳中...",
     "URL": "網站",
-    "FOR_MOBILE": "用於手機上傳檔案"
+    "FOR_MOBILE": "用於手機上傳檔案",
+    "BACK": "返回",
+    "COMPLETED": "完成"
   },
   "CREATE": {
     "FAILED": "創建失敗"

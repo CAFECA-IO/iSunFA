@@ -142,7 +142,9 @@
     "FAILED": "Upload failed",
     "LOADING": "Uploadng...",
     "URL": "Url",
-    "FOR_MOBILE": "For mobile upload"
+    "FOR_MOBILE": "For mobile upload",
+    "BACK": "Back",
+    "COMPLETED": "Complete"
   },
   "CREATE": {
     "FAILED": "Failed to create certificate"

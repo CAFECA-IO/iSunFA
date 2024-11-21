@@ -367,7 +367,7 @@ export async function listCompanyAndRole(
   targetPage: number = DEFAULT_PAGE_NUMBER,
   pageSize: number = DEFAULT_PAGE_LIMIT,
   searchQuery: string = '',
-  sortOrder: SortOrder = SortOrder.ASC
+  sortOrder: SortOrder = SortOrder.DESC
 ): Promise<{
   data: Array<{
     company: Company & { imageFile: File | null };
@@ -405,7 +405,8 @@ export async function listCompanyAndRole(
         },
       },
       orderBy: {
-        companyId: SortOrder.ASC,
+        // Info: (20241120 - Jacky) Order from bigger to smaller
+        order: sortOrder,
       },
       select: {
         company: {
@@ -443,7 +444,7 @@ export async function listCompanyAndRole(
   const hasNextPage = skip + pageSize < totalCount;
   const hasPreviousPage = targetPage > 1;
   // ToDo: (20241017 - Jacky) Should enum the sort by, companyOrder
-  const sort: { sortBy: string; sortOrder: string }[] = [{ sortBy: 'companyId', sortOrder }];
+  const sort: { sortBy: string; sortOrder: string }[] = [{ sortBy: 'order', sortOrder }];
 
   return {
     data: paginatedCompanyRoles,
@@ -455,6 +456,36 @@ export async function listCompanyAndRole(
     hasPreviousPage,
     sort,
   };
+}
+
+export async function listCompanyAndRoleSimple(userId: number): Promise<
+  Array<{
+    company: Company & { imageFile: File | null };
+    role: Role;
+    tag: string;
+    order: number;
+  }>
+> {
+  const companyRoleList = await prisma.admin.findMany({
+    where: {
+      userId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+    orderBy: {
+      order: SortOrder.DESC,
+    },
+    select: {
+      company: {
+        include: {
+          imageFile: true,
+        },
+      },
+      role: true,
+      tag: true,
+      order: true,
+    },
+  });
+  return companyRoleList;
 }
 
 export async function getCompanyAndRoleByUserIdAndCompanyId(
