@@ -5,7 +5,12 @@ import { useTranslation } from 'next-i18next';
 import { numberWithCommas } from '@/lib/utils/common';
 import VoucherLineItem from '@/components/voucher/voucher_line_item';
 import { Button } from '@/components/button/button';
-import { ILineItemUI, IReverseItemUI, initialVoucherLine } from '@/interfaces/line_item';
+import {
+  ILineItemBeta,
+  ILineItemUI,
+  IReverseItemUI,
+  initialVoucherLine,
+} from '@/interfaces/line_item';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import { inputStyle } from '@/constants/display';
@@ -33,7 +38,7 @@ interface IVoucherLineBlockProps {
 interface IVoucherLinePreviewProps {
   totalDebit: number;
   totalCredit: number;
-  lineItems: ILineItemUI[];
+  lineItems: ILineItemBeta[];
 }
 
 const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({

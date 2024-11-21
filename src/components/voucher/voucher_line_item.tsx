@@ -9,6 +9,8 @@ import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ILineItemUI } from '@/interfaces/line_item';
+import { useUserCtx } from '@/contexts/user_context';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IVoucherLineItemProps {
   id: number;
@@ -40,6 +42,9 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   creditChangeHandler,
 }) => {
   const { t } = useTranslation('common');
+  const { selectedCompany } = useUserCtx();
+
+  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
 
   const inputStyle = {
     NORMAL:
@@ -57,12 +62,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
   const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    {
-      params: {
-        companyId: 1,
-      },
-      query: queryCondition,
-    },
+    { params: { companyId }, query: queryCondition },
     false,
     true
   );

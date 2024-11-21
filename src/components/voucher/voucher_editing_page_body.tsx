@@ -49,7 +49,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
   id: 1000,
   voucherDate: 1704134230,
   type: 'payment',
-  note: '',
+  note: 'I am a test voucher',
   counterParty: {
     id: 1000,
     companyId: 1000,
