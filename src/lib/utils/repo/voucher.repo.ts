@@ -39,6 +39,8 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { JOURNAL_EVENT } from '@/constants/journal';
 
+import { AccountCodesOfAPRegex, AccountCodesOfARRegex } from '@/constants/asset';
+
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
 ) {
@@ -1075,16 +1077,17 @@ export async function getManyVoucherV2(options: {
   function getStatusFilter(voucherListTab: VoucherListTabV2) {
     switch (voucherListTab) {
       case VoucherListTabV2.UPLOADED:
+      case VoucherListTabV2.PAYMENT:
+      case VoucherListTabV2.RECEIVING:
         return JOURNAL_EVENT.UPLOADED;
       case VoucherListTabV2.UPCOMING:
         return JOURNAL_EVENT.UPCOMING;
-      case VoucherListTabV2.PAYMENT:
-      case VoucherListTabV2.RECEIVING:
+
       default:
         return undefined;
     }
   }
-  // const accountTypes = reportType ? ReportSheetAccountTypeMap[reportType] : [];
+  // Info: (20241121 - Murky) payable 和 receivable 如果要再搜尋中處理的話要用rowQuery, 所以這邊先用filter的
   const where: Prisma.VoucherWhereInput = {
     date: {
       gte: startDate,
@@ -1201,7 +1204,7 @@ export async function getManyVoucherV2(options: {
   };
 
   try {
-    vouchers = await prisma.voucher.findMany({
+    const vouchersFromPrisma = await prisma.voucher.findMany({
       ...findManyArgs,
       include: {
         lineItems: {
@@ -1232,6 +1235,26 @@ export async function getManyVoucherV2(options: {
         },
       },
     });
+
+    switch (tab) {
+      case VoucherListTabV2.PAYMENT:
+        vouchers = vouchersFromPrisma.filter((voucher) => {
+          return voucher.lineItems.some((lineItem) =>
+            AccountCodesOfAPRegex.test(lineItem.account.code)
+          );
+        });
+        break;
+      case VoucherListTabV2.RECEIVING:
+        vouchers = vouchersFromPrisma.filter((voucher) => {
+          return voucher.lineItems.some((lineItem) =>
+            AccountCodesOfARRegex.test(lineItem.account.code)
+          );
+        });
+        break;
+      default:
+        vouchers = vouchersFromPrisma;
+        break;
+    }
   } catch (error) {
     const logError = loggerError(
       0,
