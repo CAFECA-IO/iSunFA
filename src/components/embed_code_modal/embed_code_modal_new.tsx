@@ -245,7 +245,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('common:PLUGIN.BALANCE_SHEET')}</button>
+                <button type="button">{t('reports:REPORTS.BALANCE_SHEET')}</button>
               </div>
               <div
                 className="flex gap-2 py-2.5"
@@ -329,7 +329,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               {isBalanceSheetChecked && (
                 <li className="flex items-center gap-1">
                   <IoMdCheckmark />
-                  {t('common:PLUGIN.BALANCE_SHEET')}
+                  {t('reports:REPORTS.BALANCE_SHEET')}
                 </li>
               )}
               {isIncomeStatementChecked && (
@@ -350,7 +350,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   <>
                     <li className="flex items-center gap-1">
                       <IoMdCheckmark />
-                      {t('common:PLUGIN.BALANCE_SHEET')}
+                      {t('reports:REPORTS.BALANCE_SHEET')}
                     </li>
                     <li className="flex items-center gap-1">
                       <IoMdCheckmark />

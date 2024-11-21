@@ -20,8 +20,8 @@ import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import Toggle from '@/components/toggle/toggle';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useReactToPrint } from 'react-to-print';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
-import html2canvas from 'html2canvas';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
@@ -89,97 +89,34 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   //   window.print(); // 觸發列印
   //   setIsPrinting(false); // 退出列印模式
   // };
-  const handlePrint = async () => {
-    setIsPrinting(true); // 啟用列印模式
+  // const handlePrint = () => {
+  //   setIsPrinting(true); // 啟用列印模式
+  //   setTimeout(() => {
+  //     window.print(); // 直接使用瀏覽器列印功能
+  //     setIsPrinting(false); // 列印完成後退出列印模式
+  //   }, 500); // 等待 500ms 確保渲染完成
+  // };
 
-    const waitForRender = () => {
-      return new Promise<void>((resolve) => {
-        const observer = new MutationObserver(() => {
-          if (printRef.current) {
-            const allRendered = Array.from(printRef.current.querySelectorAll('*')).every(
-              (node) => node.getBoundingClientRect().height > 0
-            );
+const handlePrint = useReactToPrint({
+  content: () => printRef.current as HTMLElement,
+  documentTitle: 'Balance Sheet Report',
+  onBeforePrint: async () => {
+    // eslint-disable-next-line no-console
+    console.log('Before Print: isPrinting =', isPrinting);
+    return Promise.resolve();
+  },
+  onAfterPrint: async () => {
+    setIsPrinting(false);
+    // eslint-disable-next-line no-console
+    console.log('After Print: isPrinting =', isPrinting);
+    return Promise.resolve();
+  },
+} as unknown as Parameters<typeof useReactToPrint>[0]);
 
-            if (allRendered) {
-              observer.disconnect();
-              resolve();
-            }
-          }
-        });
-
-        if (printRef.current) {
-          observer.observe(printRef.current, { childList: true, subtree: true });
-        } else {
-          resolve();
-        }
-
-        setTimeout(() => {
-          observer.disconnect();
-          resolve();
-        }, 5000); // 超時保護機制
-      });
-    };
-
-    await waitForRender(); // 確保內容渲染完成
-
-    if (!printRef.current) {
-      // eslint-disable-next-line no-console
-      console.error('打印區域不存在，無法生成 PDF。');
-      setIsPrinting(false);
-      return;
-    }
-
-    try {
-      const canvas = await html2canvas(printRef.current, {
-        useCORS: true,
-        scale: 2,
-        backgroundColor: '#ffffff',
-      });
-
-      const dataUrl = canvas.toDataURL('image/png');
-      const windowContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Print Test</title>
-</head>
-<body>
-    <div>測試內容：列印範圍是否正確捕捉</div>
-    <img src="${dataUrl}" alt="Print Content"/>
-</body>
-</html>
-`;
-
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.open();
-        printWindow.document.write(windowContent);
-        printWindow.document.close();
-
-        // 確保圖片加載完成後再列印
-        const img = printWindow.document.querySelector('img');
-        if (img) {
-          if (img.complete) {
-            printWindow.print();
-            printWindow.close();
-          } else {
-            img.onload = () => {
-              printWindow.print();
-              printWindow.close();
-            };
-          }
-        } else {
-          // eslint-disable-next-line no-console
-          console.error('未找到 img 元素，無法進行列印');
-        }
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('列印失敗:', error);
-    } finally {
-      setIsPrinting(false);
-    }
-  };
+const handlePrintClick = () => {
+  setIsPrinting(true); // 啟用列印模式
+  handlePrint(); // 呼叫列印
+};
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
@@ -641,7 +578,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
       </div>
       <div className="ml-auto flex items-center gap-24px">
         <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
-        <PrintButton onClick={handlePrint} disabled={false} />
+        <PrintButton onClick={handlePrintClick} disabled={false} />
       </div>
     </div>
   );
@@ -707,7 +644,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ItemDetail = (
-    <div id="2" className={`relative overflow-y-hidden`}>
+    <div id="2" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
@@ -752,7 +689,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ProportionalTable = (
-    <div id="3" className={`relative overflow-y-hidden`}>
+    <div id="3" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>資產負債比例表</p>
@@ -804,7 +741,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const AssetItem = (
-    <div id="4" className={`relative overflow-y-hidden`}>
+    <div id="4" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>資產分布圖</p>
@@ -870,7 +807,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const TurnoverDay = (
-    <div id="5" className={`relative overflow-y-hidden`}>
+    <div id="5" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>應收帳款週轉天數</p>
@@ -943,9 +880,13 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
           preDate={preDate}
         >
           {ItemSummary}
+          <hr className="break-before-page" />
           {ItemDetail}
+          <hr className="break-before-page" />
           {ProportionalTable}
+          <hr className="break-before-page" />
           {AssetItem}
+          <hr className="break-before-page" />
           {TurnoverDay}
         </BalanceSheetA4Template>
       </div>

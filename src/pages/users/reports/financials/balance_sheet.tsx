@@ -19,9 +19,9 @@ const BalanceSheetPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:PLUGIN.BALANCE_SHEET')} - iSunFA</title>
+        <title>{t('reports:REPORTS.BALANCE_SHEET')} - iSunFA</title>
       </Head>
-      <Layout isDashboard={false} pageTitle={t('common:PLUGIN.BALANCE_SHEET')}>
+      <Layout isDashboard={false} pageTitle={t('reports:REPORTS.BALANCE_SHEET')}>
         {/* Info: (20241017 - Anna) 拿掉w-screen */}
         <main className="flex flex-col overflow-y-auto bg-surface-neutral-main-background font-barlow transition-all duration-300 ease-in-out">
           <BalanceSheetPageBody />

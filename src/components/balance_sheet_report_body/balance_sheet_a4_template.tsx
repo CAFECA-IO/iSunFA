@@ -214,7 +214,11 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
         <div
           key={`first-block-page-${index + 1}`}
           className={printContainerClass}
-          style={{ pageBreakBefore: index === 0 ? 'auto' : 'always', pageBreakAfter: 'always' }}
+          // style={{ pageBreakBefore: index === 0 ? 'auto' : 'always', pageBreakAfter: 'always' }}
+          style={{
+            pageBreakBefore: 'auto',
+            pageBreakAfter: 'auto',
+          }}
         >
           <div
             id={`first-block-page-${index + 1}`}
@@ -232,7 +236,11 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
         <div
           key={`second-block-page-${index + 1}`}
           className={printContainerClass}
-          style={{ pageBreakBefore: 'always', pageBreakAfter: 'always' }}
+          // style={{ pageBreakBefore: 'always', pageBreakAfter: 'always' }}
+          style={{
+            pageBreakBefore: 'auto',
+            pageBreakAfter: 'auto',
+          }}
         >
           <div
             id={`second-block-page-${index + 1}`}
@@ -250,7 +258,11 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
         <div
           key={`additional-block-page-${index + 1}`}
           className={printContainerClass}
-          style={{ pageBreakBefore: 'always', pageBreakAfter: 'always' }}
+          // style={{ pageBreakBefore: 'always', pageBreakAfter: 'always' }}
+          style={{
+            pageBreakBefore: 'auto',
+            pageBreakAfter: 'auto',
+          }}
         >
           <div
             id={`additional-block-page-${
