@@ -12,12 +12,13 @@ import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { ICertificate } from '@/interfaces/certificate';
 import { ProgressStatus } from '@/constants/account';
+import { IRoom } from '@/interfaces/room';
 
 interface CertificateFileUploadProps {}
 
 const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   const { userAuth, selectedCompany } = useUserCtx();
-  const [token, setToken] = useState<string | undefined>(undefined);
+  const [room, setRoom] = useState<IRoom | null>(null);
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
 
   const [pusher, setPusher] = useState<Pusher | undefined>(undefined);
@@ -27,7 +28,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   const [uploadedFileCount, setUploadFileCount] = useState<number>(0);
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState<boolean>(false);
   const { trigger: delectRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
-  const { trigger: getRoomFilesAPI } = APIHandler<IFileUIBeta[]>(APIName.ROOM_GET_BY_ID);
+  const { trigger: getRoomByIdAPI } = APIHandler<IRoom>(APIName.ROOM_GET_BY_ID);
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
 
   const pauseFileUpload = useCallback((file: IFileUIBeta, index: number) => {
@@ -105,14 +106,27 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   }, [files]);
 
   const handleNewFilesComing = useCallback(async (data: { message: string }) => {
+    if (isQRCodeModalOpen) setIsQRCodeModalOpen(false);
     // Deprecated: (20241120 - tzuhan) Debugging purpose
     // eslint-disable-next-line no-console
-    console.log(`handleNewFilesComing: data`, data);
-    const { success: successGetNewFiles, data: newFiles } = await getRoomFilesAPI({
-      query: { token },
+    console.log(`handleNewFilesComing: data.message`, JSON.parse(data.message));
+    const { success: successGetNewFiles, data: roomData } = await getRoomByIdAPI({
+      params: { roomId: room?.id },
+      body: { password: room?.password },
     });
-    if (successGetNewFiles && newFiles) {
-      setFiles((prev) => [...prev, ...newFiles]);
+    if (successGetNewFiles && roomData) {
+      const newFiles = roomData.fileList.map(
+        (file) =>
+          ({
+            ...file,
+            progress: 80,
+            status: ProgressStatus.IN_PROGRESS,
+          }) as IFileUIBeta
+      );
+      setFiles((prev) => {
+        const preFiles = prev.filter((p) => newFiles.some((f) => f.id === p.id));
+        return [...preFiles, ...newFiles];
+      });
     }
   }, []);
 
@@ -122,18 +136,17 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
 
   const handleRoomDelete = useCallback(async () => {
     await delectRoomAPI({
-      query: {
-        token,
-      },
+      params: { roomId: room?.id },
+      body: { password: room?.password },
     });
   }, []);
 
-  const handleRoomCreate = useCallback((roomToken: string) => {
-    setToken(roomToken);
+  const handleRoomCreate = useCallback((roomData: IRoom) => {
+    setRoom(roomData);
     const pusherInstance = getPusherInstance(userAuth?.id);
     setPusher(pusherInstance);
 
-    const privateChannel = pusherInstance.subscribe(`${PRIVATE_CHANNEL.ROOM}-${roomToken}`);
+    const privateChannel = pusherInstance.subscribe(`${PRIVATE_CHANNEL.ROOM}-${roomData.id}`);
     setChannel(privateChannel);
     privateChannel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
     privateChannel.bind(ROOM_EVENT.DELETE, handleRoomDelete);

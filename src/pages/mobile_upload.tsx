@@ -1,5 +1,3 @@
-// Deprecated: (20241120 - tzuhan) Debugging purpose
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
@@ -24,7 +22,7 @@ import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-import { encryptFile, generateKeyPair, importPublicKey } from '@/lib/utils/crypto';
+import { encryptFile, generateKeyPair } from '@/lib/utils/crypto';
 import { IV_LENGTH } from '@/constants/config';
 
 export interface IFileUIBetaWithFile extends IFileUIBeta {
@@ -43,8 +41,6 @@ const MobileUploadPage: React.FC = () => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [successUpload, setSuccessUpload] = useState<boolean>(false);
   const { trigger: uploadFileAPI } = APIHandler<number>(APIName.FILE_UPLOAD);
-  // Deprecated: (20241120 - tzuhan) Test upload file to server then server push notification
-  const { trigger: publicUploadAPI } = APIHandler<number>(APIName.PUBLIC_FILE_UPLOAD);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
@@ -120,20 +116,11 @@ const MobileUploadPage: React.FC = () => {
       const { publicKey } = await generateKeyPair();
       await Promise.all(
         selectedFiles.map(async (fileUI) => {
-          // const encryptedFile = await encryptFileWithPublicKey(fileUI.file, publicKey);
+          const encryptedFile = await encryptFileWithPublicKey(fileUI.file, publicKey);
           const formData = new FormData();
-          // formData.append('file', encryptedFile);
-          formData.append('file', fileUI.file);
+          formData.append('file', encryptedFile);
 
-          // const { success, data: filedId } = await uploadFileAPI({
-          //   query: {
-          //     type: UploadType.ROOM,
-          //     targetId: token as string,
-          //   },
-          //   body: formData,
-          // });
-
-          const { success, data: fileId } = await publicUploadAPI({
+          const { success, data: fileId } = await uploadFileAPI({
             query: {
               type: UploadType.ROOM,
               targetId: token as string,

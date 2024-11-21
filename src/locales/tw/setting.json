@@ -57,7 +57,6 @@
     "LINKED_EMAIL": "已連結的電子郵件",
     "LOGIN_DEVICE_N_IP": "登入裝置與 IP",
     "SUBSCRIPTION_MANAGEMENT": "訂閱管理",
-    "REMOVE_THIS_ACCOUNT": "刪除此帳戶",
     "FIRST_NAME": "名字",
     "EX_JANE": "例：Jane",
     "LAST_NAME": "姓氏",
@@ -164,5 +163,10 @@
     "UPDATE_ERROR": "儲存資料時發生錯誤，請重新提交您的請求。",
     "DELETE_ERROR": "刪除資料時發生錯誤，請再試一次。",
     "DELETE_CANCEL": "取消刪除流程"
+  },
+  "ACCOUNT": {
+    "REMOVE": "删除此账户",
+    "CONFIRM_REMOVE": "您确定要删除这个账户吗？",
+    "REMOVE_BTN": "是的，刪除此账户"
   }
 }

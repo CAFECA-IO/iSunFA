@@ -19,6 +19,8 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { roomManager } from '@/lib/utils/room';
 import { File } from '@prisma/client';
+import { getPusherInstance } from '@/lib/utils/pusher';
+import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
 
 export const config = {
   api: {
@@ -104,6 +106,11 @@ async function handleFileUpload(
     case UploadType.KYC:
     case UploadType.ROOM: {
       roomManager.addFileToRoom(targetId, returnFile);
+
+      const pusher = getPusherInstance();
+      pusher.trigger(`${PRIVATE_CHANNEL.ROOM}-${targetId}`, ROOM_EVENT.NEW_FILE, {
+        message: JSON.stringify(returnFile),
+      });
       break;
     }
     case UploadType.INVOICE: {
