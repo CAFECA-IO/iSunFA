@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { nullSchema, zodStringToNumber } from './common';
+import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
 export const UserAgreementPrismaSchema = z.object({
   id: z.number().int(),
