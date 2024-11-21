@@ -157,7 +157,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
         >
           <p className="flex cursor-pointer gap-2" onClick={deleteAccountClickHandler}>
             <Image src="/icons/user-x-02.svg" width={16} height={16} alt="notice_icon" />
-            <span>{t('setting:NORMAL.REMOVE_THIS_ACCOUNT')}</span>
+            <span>{t('setting:ACCOUNT.REMOVE')}</span>
           </p>
         </button>
       )}
