@@ -6,12 +6,14 @@ interface CollapseButtonProps {
   onClick: () => void;
   isCollapsed: boolean;
   buttonType?: 'default' | 'orange';
+  className?: string;
 }
 
 const CollapseButton: React.FC<CollapseButtonProps> = ({
   onClick,
   isCollapsed,
   buttonType = 'default',
+  className = '',
 }) => {
   // Info: (20241003 - Anna) 根據 buttonType 決定樣式
   const buttonStyles =
@@ -19,8 +21,13 @@ const CollapseButton: React.FC<CollapseButtonProps> = ({
       ? 'bg-orange-200 text-orange-900 px-2 py-1 rounded'
       : 'bg-transparent rounded px-2';
   return (
-    <div className="inline-flex">
-      <button className={buttonStyles} onClick={onClick} type="button" aria-expanded={!isCollapsed}>
+    <div className={`${className || ''}inline-flex print:hidden`}>
+      <button
+        className={`${buttonStyles}`}
+        onClick={onClick}
+        type="button"
+        aria-expanded={!isCollapsed}
+      >
         {/* Info: (20241001 - Anna) 根據狀態顯示對應箭頭 */}
         {buttonType !== 'orange' &&
           (isCollapsed ? (

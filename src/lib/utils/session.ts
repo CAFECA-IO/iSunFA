@@ -23,15 +23,16 @@ const dummyGetSession = async (req: NextApiRequest, res: NextApiResponse) => {
       path: '/',
       secure: true,
     },
-    userId: 10000121,
-    companyId: 10000001,
+    userId: 10000000, // Info: (20241112 - Anna)
+    companyId: 10000001, // Info: (20241112 - Anna)
     challenge: 'dummy',
-    roleId: 1006,
+    roleId: 1006, // Info: (20241112 - Anna)
   };
   return sessionData;
 };
 // Deprecate: (20241119 - Luphia) dummy session for development
-export const getSession = env === 'development' ? dummyGetSession : nextSession<ISessionData>(options);
+export const getSession =
+  env === 'development' ? dummyGetSession : nextSession<ISessionData>(options);
 
 export async function setSession(
   session: ISessionData,

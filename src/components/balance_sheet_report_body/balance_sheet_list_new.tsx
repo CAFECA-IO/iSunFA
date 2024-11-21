@@ -21,6 +21,7 @@ import DownloadButton from '@/components/button/download_button';
 import Toggle from '@/components/toggle/toggle';
 import { useGlobalCtx } from '@/contexts/global_context';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
+import html2canvas from 'html2canvas';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
@@ -41,21 +42,143 @@ const COLOR_CLASSES = [
 ];
 
 const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['report_401', 'common']);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+
+  // Info: (20241121 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
+  const printRef = useRef<HTMLDivElement>(null);
+
   // Info: (20241112 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
   const [isPrinting, setIsPrinting] = useState(false);
 
-  const handlePrint = () => {
-    // setIsPrinting(true); // Info: (20241118 - Anna) 開啟列印模式
-    // setTimeout(() => {
-    //   window.print(); // Info: (20241118 - Anna) 觸發瀏覽器列印
-    //   setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
-    // }, 500); // Info: (20241118 - Anna) 等待渲染完成後再列印
+  // const handlePrint = () => {
+  //   // setIsPrinting(true); // Info: (20241118 - Anna) 開啟列印模式
+  //   // setTimeout(() => {
+  //   //   window.print(); // Info: (20241118 - Anna) 觸發瀏覽器列印
+  //   //   setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
+  //   // }, 500); // Info: (20241118 - Anna) 等待渲染完成後再列印
 
-    //  window.print(); // Info: (20241118 - Anna) 預覽PDF
+  //   //  window.print(); // Info: (20241118 - Anna) 預覽PDF
 
-    setIsPrinting(true); // Info: (20241118 - Anna) 啟動列印模式 不會預覽PDF
+  //   setIsPrinting(true); // Info: (20241118 - Anna) 啟動列印模式 不會預覽PDF
+  // };
+  // const handlePrint = async () => {
+  //   setIsPrinting(true); // 啟用列印模式
+
+  //   const waitForRender = () => {
+  //     return new Promise<void>((resolve) => {
+  //       const observer = new MutationObserver(() => {
+  //         const allPagesRendered = document.querySelectorAll('.print-content').length > 0;
+  //         if (allPagesRendered) {
+  //           observer.disconnect();
+  //           resolve();
+  //         }
+  //       });
+
+  //       observer.observe(document.body, { childList: true, subtree: true });
+
+  //       // 超時保證流程不會卡死
+  //       setTimeout(() => {
+  //         observer.disconnect();
+  //         resolve();
+  //       }, 5000);
+  //     });
+  //   };
+
+  //   await waitForRender();
+  //   window.print(); // 觸發列印
+  //   setIsPrinting(false); // 退出列印模式
+  // };
+  const handlePrint = async () => {
+    setIsPrinting(true); // 啟用列印模式
+
+    const waitForRender = () => {
+      return new Promise<void>((resolve) => {
+        const observer = new MutationObserver(() => {
+          if (printRef.current) {
+            const allRendered = Array.from(printRef.current.querySelectorAll('*')).every(
+              (node) => node.getBoundingClientRect().height > 0
+            );
+
+            if (allRendered) {
+              observer.disconnect();
+              resolve();
+            }
+          }
+        });
+
+        if (printRef.current) {
+          observer.observe(printRef.current, { childList: true, subtree: true });
+        } else {
+          resolve();
+        }
+
+        setTimeout(() => {
+          observer.disconnect();
+          resolve();
+        }, 5000); // 超時保護機制
+      });
+    };
+
+    await waitForRender(); // 確保內容渲染完成
+
+    if (!printRef.current) {
+      // eslint-disable-next-line no-console
+      console.error('打印區域不存在，無法生成 PDF。');
+      setIsPrinting(false);
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(printRef.current, {
+        useCORS: true,
+        scale: 2,
+        backgroundColor: '#ffffff',
+      });
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const windowContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Print Test</title>
+</head>
+<body>
+    <div>測試內容：列印範圍是否正確捕捉</div>
+    <img src="${dataUrl}" alt="Print Content"/>
+</body>
+</html>
+`;
+
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.open();
+        printWindow.document.write(windowContent);
+        printWindow.document.close();
+
+        // 確保圖片加載完成後再列印
+        const img = printWindow.document.querySelector('img');
+        if (img) {
+          if (img.complete) {
+            printWindow.print();
+            printWindow.close();
+          } else {
+            img.onload = () => {
+              printWindow.print();
+              printWindow.close();
+            };
+          }
+        } else {
+          // eslint-disable-next-line no-console
+          console.error('未找到 img 元素，無法進行列印');
+        }
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('列印失敗:', error);
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
@@ -251,35 +374,35 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     };
   }, []);
 
-useEffect(() => {
-  if (isPrinting) {
-    const observer = new MutationObserver(() => {
-      // Info: (20241118 - Anna) 檢查所有需要的 ID 是否渲染完成
-      const requiredIds = ['#1', '#2', '#3', '#4', '#5'];
-      const allRendered = requiredIds.every((id) => document.querySelector(id));
+  useEffect(() => {
+    if (isPrinting) {
+      const observer = new MutationObserver(() => {
+        // Info: (20241118 - Anna) 檢查所有需要的 ID 是否渲染完成
+        const requiredIds = ['#1', '#2', '#3', '#4', '#5'];
+        const allRendered = requiredIds.every((id) => document.querySelector(id));
 
-      if (allRendered) {
-        observer.disconnect(); // Info: (20241118 - Anna) 停止監控
-        window.print(); // Info: (20241118 - Anna) 所有節點渲染完成後觸發列印
-        setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
-      }
-    });
+        if (allRendered) {
+          observer.disconnect(); // Info: (20241118 - Anna) 停止監控
+          window.print(); // Info: (20241118 - Anna) 所有節點渲染完成後觸發列印
+          setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
+        }
+      });
 
-    // Info: (20241118 - Anna) 監控目標節點的變化
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
+      // Info: (20241118 - Anna) 監控目標節點的變化
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
 
-    // Info: (20241118 - Anna) 返回清理函數以移除監控器
-    return () => {
-      observer.disconnect(); // Info: (20241118 - Anna) 確保監控器被清理
-    };
-  }
+      // Info: (20241118 - Anna) 返回清理函數以移除監控器
+      return () => {
+        observer.disconnect(); // Info: (20241118 - Anna) 確保監控器被清理
+      };
+    }
 
-  // Info: (20241118 - Anna) 如果 `isPrinting` 為假，則返回空清理函數，滿足 ESLint 的要求
-  return () => {};
-}, [isPrinting]);
+    // Info: (20241118 - Anna) 如果 `isPrinting` 為假，則返回空清理函數，滿足 ESLint 的要求
+    return () => {};
+  }, [isPrinting]);
 
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
@@ -441,6 +564,7 @@ useEffect(() => {
               {/* Info: (20241021 - Anna) 如果有 children 才顯示 CollapseButton */}
               {item.children && item.children.length > 0 && (
                 <CollapseButton
+                  className="print:hidden"
                   // Info: (20241017 - Anna) 指定 item 的 code 作為參數
                   onClick={() => toggleSubAccounts(item.code)}
                   // Info: (20241017 - Anna) 依據每個 item 的狀態決定是否展開
@@ -477,7 +601,11 @@ useEffect(() => {
                     </div>
                     {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給
                     BalanceDetailsButton，用於顯示彈出視窗的標題 */}
-                    <BalanceDetailsButton accountName={child.name} accountId={child.code} />
+                    <BalanceDetailsButton
+                      accountName={child.name}
+                      accountId={child.code}
+                      className="print:hidden"
+                    />
                   </div>
                 </td>
                 <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
@@ -637,7 +765,7 @@ useEffect(() => {
                 {curAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
                     <span className="w-200px">{label}</span>
                   </li>
@@ -653,7 +781,7 @@ useEffect(() => {
                 {preAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
                     <span className="w-200px">{label}</span>
                   </li>
@@ -695,7 +823,13 @@ useEffect(() => {
                   </li>
                 ))}
               </ul>
-              <PieChartAssets data={curAssetMixRatio} labels={curAssetMixLabels} colors={COLORS} />
+              <div className="relative" style={{ marginTop: '-20px' }}>
+                <PieChartAssets
+                  data={curAssetMixRatio}
+                  labels={curAssetMixLabels}
+                  colors={COLORS}
+                />
+              </div>
             </div>
           </div>
 
@@ -712,7 +846,14 @@ useEffect(() => {
                   </li>
                 ))}
               </ul>
-              <PieChartAssets data={preAssetMixRatio} labels={preAssetMixLabels} colors={COLORS} />
+              <div className="relative" style={{ marginTop: '-20px' }}>
+                {' '}
+                <PieChartAssets
+                  data={preAssetMixRatio}
+                  labels={preAssetMixLabels}
+                  colors={COLORS}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -795,8 +936,12 @@ useEffect(() => {
   // Info: (20241118 - Anna) 如果正在列印，僅渲染列印模式的內容
   if (isPrinting) {
     return (
-      <div className="mx-auto w-full origin-top overflow-x-auto print:block">
-        <BalanceSheetA4Template reportFinancial={reportFinancial} curDate={curDate}>
+      <div ref={printRef} className="mx-auto w-full origin-top overflow-x-auto print:block">
+        <BalanceSheetA4Template
+          reportFinancial={reportFinancial}
+          curDate={curDate}
+          preDate={preDate}
+        >
           {ItemSummary}
           {ItemDetail}
           {ProportionalTable}
