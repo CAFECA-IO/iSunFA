@@ -128,9 +128,6 @@ const MyCompanyListPageBody = () => {
     setCompanyList(resData.data);
     setTotalPage(resData.totalPages);
     setCurrentPage(resData.page);
-    // Deprecated: (20241115 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('handleApiResponse resData:', resData);
   };
 
   return (

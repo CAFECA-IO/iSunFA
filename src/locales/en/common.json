@@ -339,10 +339,5 @@
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error"
-  },
-  "USER": {
-    "DELETE_WARNING": "This account will be deleted in {{days}} business days.",
-    "DELETE_HINT": "Please ensure data backup. To cancel the deletion process, please go to the settings page.",
-    "SETTING": "Setting"
   }
 }

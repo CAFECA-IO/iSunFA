@@ -20,6 +20,7 @@ import {
   File as PrismaFile,
   UserCertificate as PrismaUserCertificate,
   AccociateLineItem as PrismaAssociateLineItem,
+  UserVoucher as PrismaUserVoucher,
 } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
@@ -200,220 +201,29 @@ export interface IVoucherBeta {
     };
     lineItems: ILineItemBeta[];
   };
+  payableInfo:
+    | {
+        total: number;
+        alreadyHappened: number;
+        remain: number;
+      }
+    | undefined;
+  receivingInfo:
+    | {
+        total: number;
+        alreadyHappened: number;
+        remain: number;
+      }
+    | undefined;
+  /**
+   * Info: (20241121 - Murky)
+   * @Julian 這邊可以用來顯示 voucher list 後面要reverse的地方
+   */
+  reverseVouchers: {
+    id: number;
+    voucherNo: string;
+  }[];
 }
-export const dummyVoucherList: IVoucherBeta[] = [
-  {
-    id: 1,
-    voucherDate: 1632511200,
-    voucherNo: '20240920-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Printer-0001',
-    counterParty: {
-      companyId: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-    unRead: false,
-    lineItemsInfo: {
-      sum: {
-        debit: true,
-        amount: 100200,
-      },
-      lineItems: [
-        {
-          id: 1001,
-          account: null,
-          description: 'Printer',
-          amount: 100000,
-          debit: true,
-        },
-        {
-          id: 1002,
-          account: null,
-          amount: 200,
-          description: 'Printer',
-          debit: true,
-        },
-        {
-          id: 1003,
-          account: null,
-          amount: 100200,
-          description: 'Printer',
-          debit: false,
-        },
-      ],
-    },
-  },
-  {
-    id: 2,
-    voucherDate: 1662511200,
-    voucherNo: '20240922-0001',
-    voucherType: VoucherType.EXPENSE,
-    note: 'Printer-0002',
-    counterParty: {
-      companyId: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-    unRead: true,
-    lineItemsInfo: {
-      sum: {
-        debit: true,
-        amount: 10200,
-      },
-      lineItems: [
-        {
-          id: 2001,
-          account: null,
-          description: 'Printer',
-          amount: 10200,
-          debit: true,
-        },
-        {
-          id: 2002,
-          account: null,
-          amount: 10200,
-          description: 'Printer',
-          debit: false,
-        },
-      ],
-    },
-  },
-  {
-    id: 3,
-    voucherDate: 1672592800,
-    voucherNo: '20240925-0002',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Scanner-0001',
-    counterParty: {
-      companyId: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-    unRead: true,
-    lineItemsInfo: {
-      sum: {
-        debit: true,
-        amount: 100200,
-      },
-      lineItems: [
-        {
-          id: 3001,
-          account: null,
-          description: 'Scanner',
-          amount: 100000,
-          debit: true,
-        },
-        {
-          id: 3002,
-          account: null,
-          amount: 200,
-          description: 'Scanner',
-          debit: true,
-        },
-        {
-          id: 3003,
-          account: null,
-          amount: 200,
-          description: 'Scanner',
-          debit: false,
-        },
-        {
-          id: 3004,
-          account: null,
-          amount: 100000,
-          description: 'Scanner',
-          debit: false,
-        },
-      ],
-    },
-  },
-  {
-    id: 4,
-    voucherDate: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    counterParty: {
-      companyId: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-    unRead: true,
-    lineItemsInfo: {
-      sum: {
-        debit: true,
-        amount: 300,
-      },
-      lineItems: [
-        {
-          id: 4001,
-          account: null,
-          description: 'Mouse',
-          amount: 300,
-          debit: true,
-        },
-        {
-          id: 4002,
-          account: null,
-          amount: 300,
-          description: 'Mouse',
-          debit: false,
-        },
-      ],
-    },
-  },
-  {
-    id: 5,
-    voucherDate: 1674762800,
-    voucherNo: '20240925-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Keyboard-0001',
-    counterParty: {
-      companyId: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-    unRead: true,
-    lineItemsInfo: {
-      sum: {
-        debit: true,
-        amount: 213,
-      },
-      lineItems: [
-        {
-          id: 5001,
-          account: null,
-          description: 'Keyboard',
-          amount: 213,
-          debit: true,
-        },
-        {
-          id: 5002,
-          account: null,
-          amount: 213,
-          description: 'Keyboard',
-          debit: false,
-        },
-      ],
-    },
-  },
-];
 
 export interface IVoucherUI extends IVoucherBeta {
   isSelected: boolean;
@@ -709,6 +519,25 @@ export type IGetOneVoucherResponse = PrismaVoucher & {
       };
     })[];
   })[];
+};
+
+export type IGetManyVoucherResponseButOne = PrismaVoucher & {
+  issuer: PrismaUser & {
+    imageFile: PrismaFile;
+  };
+  counterparty: PrismaCounterParty;
+  originalVouchers: (PrismaAssociateVoucher & {
+    event: PrismaEvent;
+    resultVoucher: PrismaVoucher & {
+      lineItems: (PrismaLineItem & {
+        account: PrismaAccount;
+      })[];
+    };
+  })[];
+  lineItems: (PrismaLineItem & {
+    account: PrismaAccount;
+  })[];
+  UserVoucher: PrismaUserVoucher[];
 };
 
 export interface IAIResultVoucher {

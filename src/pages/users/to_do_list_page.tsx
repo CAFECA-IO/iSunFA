@@ -44,7 +44,7 @@ const ToDoListPage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['dashboard', 'date_picker'])),
+      ...(await serverSideTranslations(locale as string, ['layout', 'dashboard', 'date_picker'])),
     },
   };
 };

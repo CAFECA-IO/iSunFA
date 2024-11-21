@@ -29,6 +29,7 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
       ...(await serverSideTranslations(locale as string, [
+        'layout',
         'common',
         'report_401',
         'journal',
