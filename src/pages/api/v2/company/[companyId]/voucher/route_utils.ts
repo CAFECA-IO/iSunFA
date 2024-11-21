@@ -1,8 +1,8 @@
 import { EventEntityFrequency, EventEntityType } from '@/constants/event';
-import { VoucherV2Action } from '@/constants/voucher';
+import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
 import { IEventEntity } from '@/interfaces/event';
 import { ILineItemEntity } from '@/interfaces/line_item';
-import { IVoucherEntity } from '@/interfaces/voucher';
+import { IGetManyVoucherResponseButOne, IVoucherEntity } from '@/interfaces/voucher';
 import { initEventEntity } from '@/lib/utils/event';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { initLineItemEntity } from '@/lib/utils/line_item';
@@ -30,11 +30,305 @@ import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { getUserById } from '@/lib/utils/repo/user.repo';
-import { getOneVoucherByIdWithoutInclude, postVoucherV2 } from '@/lib/utils/repo/voucher.repo';
+import {
+  getManyVoucherV2,
+  getOneVoucherByIdWithoutInclude,
+  getUnreadVoucherCount,
+  postVoucherV2,
+  upsertUserReadVoucher,
+} from '@/lib/utils/repo/voucher.repo';
 import { getCounterpartyById } from '@/lib/utils/repo/counterparty.repo';
 import { getOneLineItemWithoutInclude } from '@/lib/utils/repo/line_item.repo';
 import { getOneAssetByIdWithoutInclude } from '@/lib/utils/repo/asset.repo';
 import { getOneCertificateByIdWithoutInclude } from '@/lib/utils/repo/certificate.repo';
+
+import { SortBy, SortOrder } from '@/constants/sort';
+import { IPaginatedData } from '@/interfaces/pagination';
+
+import { LineItem as PrismaLineItem, Account as PrismaAccount, Prisma } from '@prisma/client';
+import { parsePrismaAccountToAccountEntity } from '@/lib/utils/formatter/account.formatter';
+import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
+import { initUserVoucherEntity } from '@/lib/utils/user_voucher';
+import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
+import { voucherAPIGetOneUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
+import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import { IFileEntity } from '@/interfaces/file';
+import { IUserVoucherEntity } from '@/interfaces/user_voucher';
+import { IAccountEntity } from '@/interfaces/accounting_account';
+
+/**
+ * Info: (20241121 - Murky)
+ * @note 僅限於 GET /voucher 輸出時使用
+ */
+export type IGetManyVoucherBetaEntity = IVoucherEntity & {
+  counterParty: ICounterPartyEntity;
+  issuer: IUserEntity & { imageFile: IFileEntity };
+  readByUsers: IUserVoucherEntity[];
+  lineItems: (ILineItemEntity & { account: IAccountEntity })[];
+  sum: {
+    debit: boolean;
+    amount: number;
+  };
+  payableInfo: {
+    total: number;
+    alreadyHappened: number;
+    remain: number;
+  };
+  receivingInfo: {
+    total: number;
+    alreadyHappened: number;
+    remain: number;
+  };
+  originalEvents: IEventEntity[];
+};
+
+/**
+ * Info: (20241120 - Murky)
+ * @description all function need for voucher Post
+ */
+export const voucherAPIGetUtils = {
+  /**
+   * Info: (20241025 - Murky)
+   * @description throw StatusMessage as Error, but it can log the errorMessage
+   * @param logger - pino Logger
+   * @param options - errorMessage and statusMessage
+   * @param options.errorMessage - string, message you want to log
+   * @param options.statusMessage - string, status message you want to throw
+   * @throws Error - statusMessage
+   */
+  throwErrorAndLog: (
+    logger: Logger,
+    {
+      errorMessage,
+      statusMessage,
+    }: {
+      errorMessage: string;
+      statusMessage: string;
+    }
+  ) => {
+    logger.error(errorMessage);
+    throw new Error(statusMessage);
+  },
+  getVoucherListFromPrisma: async (options: {
+    companyId: number;
+    startDate: number;
+    endDate: number;
+    page: number;
+    pageSize: number;
+    tab: VoucherListTabV2;
+    sortOption: {
+      sortBy: SortBy;
+      sortOrder: SortOrder;
+    }[];
+    type?: EventType | undefined;
+    searchQuery?: string | undefined;
+    isDeleted?: boolean | undefined;
+  }): Promise<
+    IPaginatedData<IGetManyVoucherResponseButOne[]> & {
+      where: Prisma.VoucherWhereInput;
+    }
+  > => {
+    return getManyVoucherV2(options);
+  },
+
+  getUnreadVoucherCount: (options: {
+    userId: number;
+    status: JOURNAL_EVENT;
+    where: Prisma.VoucherWhereInput;
+  }): Promise<number> => {
+    return getUnreadVoucherCount(options);
+  },
+
+  upsertUserReadVoucher: (options: {
+    voucherIdsBeenRead: number[];
+    userId: number;
+    nowInSecond: number;
+  }) => {
+    const { voucherIdsBeenRead, userId, nowInSecond } = options;
+    return upsertUserReadVoucher({
+      userId,
+      voucherIds: voucherIdsBeenRead,
+      nowInSecond,
+    });
+  },
+
+  initVoucherEntity: (voucher: IGetManyVoucherResponseButOne) => {
+    const voucherEntity = parsePrismaVoucherToVoucherEntity(voucher);
+    return voucherEntity;
+  },
+
+  initLineItemAndAccountEntity: (
+    lineItem: PrismaLineItem & {
+      account: PrismaAccount;
+    }
+  ) => {
+    const lineItemEntity = parsePrismaLineItemToLineItemEntity(lineItem);
+    const accountEntity = parsePrismaAccountToAccountEntity(lineItem.account);
+    return {
+      ...lineItemEntity,
+      account: accountEntity,
+    };
+  },
+
+  initLineItemAndAccountEntities: (voucher: IGetManyVoucherResponseButOne) => {
+    const lineItems = voucher.lineItems.map(voucherAPIGetUtils.initLineItemAndAccountEntity);
+    return lineItems;
+  },
+
+  initCounterPartyEntity: (voucher: IGetManyVoucherResponseButOne) => {
+    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(voucher.counterparty);
+    return counterParty;
+  },
+
+  initIssuerAndFileEntity: (voucher: IGetManyVoucherResponseButOne) => {
+    const issuer = parsePrismaUserToUserEntity(voucher.issuer);
+    const imageFile = parsePrismaFileToFileEntity(voucher.issuer.imageFile);
+    return {
+      ...issuer,
+      imageFile,
+    };
+  },
+
+  initUserVoucherEntities: (voucher: IGetManyVoucherResponseButOne) => {
+    const userVoucherEntities = voucher.UserVoucher.map(initUserVoucherEntity);
+    return userVoucherEntities;
+  },
+
+  getLineItemAmountSum(lineItems: ILineItemEntity[]) {
+    const sum = lineItems.reduce((acc, lineItem) => {
+      if (lineItem.debit) {
+        return acc + lineItem.amount;
+      }
+      return acc;
+    }, 0);
+    return sum;
+  },
+  /**
+   * Info: (20241112 - Murky)
+   * @description originalEvent 指的是 主要voucher 主於 AssociateVoucher中的original Id
+   * @todo
+   * - eventEntity需要包含：
+   * ```
+   * associateVouchers: [
+   *   {
+   *      originalVoucher: mockOriginalVoucher,
+   *      resultVoucher: mockRevertVoucher,
+   *   },
+   * ],
+   * ```
+   * - originalVoucher和resultVoucher的lineItems需要用initLineItemEntities初始化
+   * ```
+   * lineItems: mockOriginalLineItems,
+   * ```
+   */
+  initOriginalEventEntities: (voucher: IGetManyVoucherResponseButOne) => {
+    const originalVoucher = parsePrismaVoucherToVoucherEntity(voucher);
+    // Info: (20241112 - Murky) lineItems 都有 accountEntity
+    const originalLineItems = voucherAPIGetUtils.initLineItemAndAccountEntities(voucher);
+    originalVoucher.lineItems = originalLineItems;
+
+    const originalEventEntities: IEventEntity[] = voucher.originalVouchers.map(
+      (originalEventVoucher) => {
+        const event = parsePrismaEventToEventEntity(originalEventVoucher.event);
+        const resultVoucher = parsePrismaVoucherToVoucherEntity(originalEventVoucher.resultVoucher);
+        // Info: (20241112 - Murky) lineItems 都有 accountEntity
+        const resultLineItems = originalEventVoucher.resultVoucher.lineItems.map(
+          voucherAPIGetUtils.initLineItemAndAccountEntity
+        );
+        resultVoucher.lineItems = resultLineItems;
+
+        event.associateVouchers = [
+          {
+            originalVoucher,
+            resultVoucher,
+          },
+        ];
+        return event;
+      }
+    );
+    return originalEventEntities;
+  },
+
+  getPayableReceivableInfoFromVoucher: (events: IEventEntity[]) => {
+    const payableInfo = {
+      total: 0,
+      alreadyHappened: 0,
+      remain: 0,
+    };
+
+    const receivingInfo = {
+      total: 0,
+      alreadyHappened: 0,
+      remain: 0,
+    };
+
+    events.forEach((event) => {
+      const { payableInfo: newPayableInfo, receivingInfo: newReceivingInfo } =
+        voucherAPIGetOneUtils.getPayableReceivableInfo(event);
+      payableInfo.total += newPayableInfo.total;
+      payableInfo.alreadyHappened += newPayableInfo.alreadyHappened;
+      payableInfo.remain += newPayableInfo.remain;
+
+      receivingInfo.total += newReceivingInfo.total;
+      receivingInfo.alreadyHappened += newReceivingInfo.alreadyHappened;
+      receivingInfo.remain += newReceivingInfo.remain;
+    });
+
+    return {
+      payableInfo,
+      receivingInfo,
+    };
+  },
+  getSortFunction: (
+    sortBy: SortBy
+  ): ((
+    a: IGetManyVoucherBetaEntity,
+    b: IGetManyVoucherBetaEntity,
+    tab?: VoucherListTabV2
+  ) => number) => {
+    return (a, b, tab) => {
+      switch (sortBy) {
+        case SortBy.CREDIT:
+        case SortBy.DEBIT:
+          return a.sum.amount - b.sum.amount;
+
+        case SortBy.PAY_RECEIVE_TOTAL:
+          return tab === VoucherListTabV2.PAYMENT
+            ? a.payableInfo.total - b.payableInfo.total
+            : a.receivingInfo.total - b.receivingInfo.total;
+
+        case SortBy.PAY_RECEIVE_ALREADY_HAPPENED:
+          return tab === VoucherListTabV2.PAYMENT
+            ? a.payableInfo.alreadyHappened - b.payableInfo.alreadyHappened
+            : a.receivingInfo.alreadyHappened - b.receivingInfo.alreadyHappened;
+
+        case SortBy.PAY_RECEIVE_REMAIN:
+          return tab === VoucherListTabV2.PAYMENT
+            ? a.payableInfo.remain - b.payableInfo.remain
+            : a.receivingInfo.remain - b.receivingInfo.remain;
+
+        default:
+          return 0; // Info: (20241121 - Murky) 默認不排序
+      }
+    };
+  },
+  sortVoucherBetaList: (
+    voucherBetas: IGetManyVoucherBetaEntity[],
+    options: {
+      sortOption: { sortBy: SortBy; sortOrder: SortOrder }[];
+      tab: VoucherListTabV2;
+    }
+  ) => {
+    const { sortOption, tab } = options;
+    sortOption.forEach((option) => {
+      const sortFunction = voucherAPIGetUtils.getSortFunction(option.sortBy);
+      voucherBetas.sort(
+        (a, b) => sortFunction(a, b, tab) * (option.sortOrder === SortOrder.ASC ? 1 : -1)
+      );
+    });
+  },
+};
+
 /**
  * Info: (20241025 - Murky)
  * @description all function need for voucher Post

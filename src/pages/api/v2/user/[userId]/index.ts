@@ -52,6 +52,10 @@ const handleDeleteRequest: IHandleRequest<APIName.USER_DELETE, User | null> = as
   const getUser = await getUserById(userId);
   if (!getUser) {
     statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+  } else if (getUser.deletedAt && getUser.deletedAt > 0) {
+    // ToDo: (20241121 - Jacky) If user deletedAt already > 0, return original user data
+    statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+    payload = getUser;
   } else {
     const deletedUser = await deleteUserById(userId);
     payload = deletedUser;
