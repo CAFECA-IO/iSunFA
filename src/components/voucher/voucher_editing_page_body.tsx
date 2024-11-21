@@ -36,7 +36,6 @@ import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { VoucherV2Action } from '@/constants/voucher';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import { IVoucherDetailForFrontend /* , defaultVoucherDetail  */ } from '@/interfaces/voucher';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
@@ -353,7 +352,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedCompany?.id;
   const userId = userAuth?.id ?? -1;
   const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
 
@@ -384,10 +383,9 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   } = APIHandler<IPaginatedData<ICounterparty[]>>(APIName.COUNTERPARTY_LIST);
 
   // Info: (20241118 - Julian) 取得 Voucher 資料
-  const { data: voucherData } = APIHandler<IVoucherDetailForFrontend>(
+  const { trigger: getVoucherData, data: voucherData } = APIHandler<IVoucherDetailForFrontend>(
     APIName.VOUCHER_GET_BY_ID_V2,
-    { params: { companyId, voucherId } },
-    true
+    { params: { companyId, voucherId } }
   );
 
   // Info: (20241118 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
@@ -512,6 +510,13 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificatesUI, setSelectedCertificatesUI] =
     useState<ICertificateUI[]>(defaultCertificateUI);
+
+  useEffect(() => {
+    // Info: (20241121 - Julian) Get voucher data when companyId is ready
+    if (companyId) {
+      getVoucherData();
+    }
+  }, [companyId]);
 
   useEffect(() => {
     const storedCertificates = localStorage.getItem('selectedCertificates');
