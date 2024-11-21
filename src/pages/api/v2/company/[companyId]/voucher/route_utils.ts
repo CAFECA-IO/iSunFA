@@ -308,7 +308,7 @@ export const voucherAPIGetUtils = {
             : a.receivingInfo.remain - b.receivingInfo.remain;
 
         default:
-          return 0; // 默認不排序
+          return 0; // Info: (20241121 - Murky) 默認不排序
       }
     };
   },
