@@ -15,7 +15,7 @@ import {
   zodStringToNumber,
   zodStringToNumberWithDefault,
 } from '@/lib/utils/zod_schema/common';
-import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
+import { DEFAULT_END_DATE, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { EventType, VoucherType } from '@/constants/account';
 import { SortBy } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
@@ -195,7 +195,7 @@ const voucherGetAllQueryValidatorV2 = z.object({
   type: z.nativeEnum(EventType).optional(),
   tab: z.nativeEnum(VoucherListTabV2),
   startDate: zodStringToNumberWithDefault(0),
-  endDate: zodStringToNumberWithDefault(Infinity),
+  endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
   sortOption: zodFilterSectionSortingOptions(),
   searchQuery: z.string().optional(),
 });

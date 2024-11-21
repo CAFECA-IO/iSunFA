@@ -1086,76 +1086,70 @@ export async function getManyVoucherV2(options: {
   }
   // const accountTypes = reportType ? ReportSheetAccountTypeMap[reportType] : [];
   const where: Prisma.VoucherWhereInput = {
-    AND: [
-      {
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-    ],
+    date: {
+      gte: startDate,
+      lte: endDate,
+    },
     companyId,
     status: getStatusFilter(tab),
     type: type || undefined,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
-    OR: searchQuery
-      ? [
-          {
-            issuer: {
+    OR: [
+      {
+        issuer: {
+          name: {
+            contains: searchQuery,
+          },
+        },
+      },
+      {
+        counterparty: {
+          OR: [
+            {
               name: {
                 contains: searchQuery,
               },
             },
-          },
-          {
-            counterparty: {
-              OR: [
-                {
+            {
+              taxId: {
+                contains: searchQuery,
+              },
+            },
+          ],
+        },
+      },
+      {
+        note: {
+          contains: searchQuery,
+        },
+      },
+      {
+        no: {
+          contains: searchQuery,
+        },
+      },
+      {
+        lineItems: {
+          some: {
+            OR: [
+              // Info: (20241121 - Murky) 如果有需要搜尋再打開
+              // {
+              //   description: {
+              //     contains: searchQuery,
+              //   },
+              // },
+              {
+                account: {
                   name: {
                     contains: searchQuery,
                   },
                 },
-                {
-                  taxId: {
-                    contains: searchQuery,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            note: {
-              contains: searchQuery,
-            },
-          },
-          {
-            no: {
-              contains: searchQuery,
-            },
-          },
-          {
-            lineItems: {
-              some: {
-                OR: [
-                  // Info: (20241121 - Murky) 如果有需要搜尋再打開
-                  // {
-                  //   description: {
-                  //     contains: searchQuery,
-                  //   },
-                  // },
-                  {
-                    account: {
-                      name: {
-                        contains: searchQuery,
-                      },
-                    },
-                  },
-                ],
               },
-            },
+            ],
           },
-        ]
-      : [],
+        },
+      },
+    ],
   };
 
   let totalCount = 0;
@@ -1278,18 +1272,26 @@ export async function getUnreadVoucherCount(options: {
   let unreadVoucherCount = 0;
 
   try {
-    unreadVoucherCount = await prisma.voucher.count({
+    const readVoucherCount = await prisma.voucher.count({
       where: {
         ...where,
         status,
         UserVoucher: {
           some: {
             userId,
-            isRead: false,
+            isRead: true,
           },
         },
       },
     });
+
+    const totalVoucherCount = await prisma.voucher.count({
+      where: {
+        ...where,
+        status,
+      },
+    });
+    unreadVoucherCount = totalVoucherCount - readVoucherCount;
   } catch (error) {
     const logError = loggerError(
       0,
