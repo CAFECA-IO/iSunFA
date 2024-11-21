@@ -9,7 +9,7 @@ import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { ICertificateEntity } from '@/interfaces/certificate';
+import { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
@@ -20,6 +20,8 @@ import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/cons
 import { CounterpartyType } from '@/constants/counterparty';
 import { FileFolder } from '@/constants/file';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
+import { getPusherInstance } from '@/lib/utils/pusher';
+import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 type ICertificateListItem = ICertificateEntity & {
   invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
@@ -221,6 +223,40 @@ export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, obje
 
   payload = mockCertificate;
   statusMessage = STATUS_MESSAGE.CREATED;
+
+  const id = Math.floor(Math.random() * 10000000);
+  const certificateMock: ICertificate = {
+    id,
+    name: 'Invoice-' + String(id).padStart(8, '0'),
+    companyId,
+    unRead: true,
+    file: {
+      id: fileId,
+      name: 'fileName',
+      size: 10234,
+      url: 'https://isunfa.com/elements/avatar_default.svg?w=256&q=75',
+      existed: true,
+    },
+    invoice: {
+      id: 1,
+      createdAt: 1,
+      updatedAt: 1,
+    },
+    uploader: `Tzuhan`,
+    createdAt: 1,
+    updatedAt: 1,
+    voucherNo: null,
+  };
+
+  // Info: (20241121 - tzuhan) @Murkey 這是 createCertificate 成功h後，後端使用 pusher 的傳送 CERTIFICATE_EVENT.CREATE 的範例
+  /**
+   * CERTIFICATE_EVENT.CREATE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(certificate as ICertificate)
+   */
+  const pusher = getPusherInstance();
+  pusher.trigger(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`, CERTIFICATE_EVENT.CREATE, {
+    message: JSON.stringify(certificateMock),
+  });
+
   return {
     statusMessage,
     payload,

@@ -390,8 +390,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   // Deprecated: (20241120 - tzuhan) incomplete code
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleNewCertificatesComing = useCallback(
-    (message: { certificates: ICertificate[] }) => {
-      const { certificates: newCertificates } = message;
+    (data: { message: string }) => {
+      const newCertificates: ICertificate[] = [JSON.parse(data.message)];
 
       const newCertificatesUI: { [id: string]: ICertificateUI } = newCertificates.reduce(
         (acc, certificate) => {
@@ -424,7 +424,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   useEffect(() => {
     const pusher = getPusherInstance(userAuth?.id);
-    const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
     channel.bind(CERTIFICATE_EVENT.CREATE, handleNewCertificatesComing);
 
     return () => {

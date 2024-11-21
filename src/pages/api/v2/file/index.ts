@@ -107,6 +107,10 @@ async function handleFileUpload(
     case UploadType.ROOM: {
       roomManager.addFileToRoom(targetId, returnFile);
 
+      // Info: (20241121 - tzuhan) @Jacky 這是 FILE_UPLOAD 成功h後，後端使用 pusher 的傳送 ROOM_EVENT.NEW_FILE 的範例
+      /**
+       * ROOM_EVENT.NEW_FILE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(file as IFileBeta)
+       */
       const pusher = getPusherInstance();
       pusher.trigger(`${PRIVATE_CHANNEL.ROOM}-${targetId}`, ROOM_EVENT.NEW_FILE, {
         message: JSON.stringify(returnFile),

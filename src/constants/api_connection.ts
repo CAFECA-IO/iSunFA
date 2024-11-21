@@ -96,7 +96,7 @@ export enum APIName {
   STATUS_INFO_GET = 'STATUS_INFO_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
-  PUBLIC_FILE_UPLOAD = 'PUBLIC_FILE_UPLOAD',
+  PUBLIC_FILE_UPLOAD = 'PUBLIC_FILE_UPLOAD', // Deprecated: (20241122 - tzuhan) remove test api
   FILE_DELETE = 'FILE_DELETE',
   FILE_GET = 'FILE_GET',
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
@@ -132,10 +132,10 @@ export enum APIName {
   UPDATE_PROJECT_BY_ID = 'UPDATE_PROJECT_BY_ID',
   PUBLIC_KEY_GET = 'PUBLIC_KEY_GET',
   ZOD_EXAMPLE = 'ZOD_EXAMPLE', // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
-  CERTIFICATE_LIST = 'CERTIFICATE_LIST',
-  PUSHER = 'PUSHER',
-  ENCRYPT = 'ENCRYPT',
-  DECRYPT = 'DECRYPT',
+  CERTIFICATE_LIST = 'CERTIFICATE_LIST', // Deprecated: (20241122 - tzuhan) remove test api
+  PUSHER = 'PUSHER', // Deprecated: (20241122 - tzuhan) remove test api
+  ENCRYPT = 'ENCRYPT', // Deprecated: (20241122 - tzuhan) remove test api
+  DECRYPT = 'DECRYPT', // Deprecated: (20241122 - tzuhan) remove test api
   ASSET_LIST_V2 = 'ASSET_LIST_V2',
   ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
   ACCOUNTING_SETTING_GET = 'ACCOUNTING_SETTING_GET',
@@ -225,7 +225,7 @@ export enum APIPath {
   ROOM_DELETE = `${apiPrefixV2}/room/:roomId`,
   STATUS_INFO_GET = `${apiPrefixV2}/status_info`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
-  FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
+  FILE_UPLOAD = `${apiPrefixV2}/file`,
   PUBLIC_FILE_UPLOAD = `${apiPrefixV2}/upload`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
   FILE_GET = `${apiPrefix}/company/:companyId/file/:fileId`,
@@ -519,7 +519,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.ROOM_GET_BY_ID]: createConfig({
     name: APIName.ROOM_GET_BY_ID,
-    method: HttpMethod.GET,
+    method: HttpMethod.POST,
     path: APIPath.ROOM_GET_BY_ID,
   }),
   [APIName.ROOM_DELETE]: createConfig({

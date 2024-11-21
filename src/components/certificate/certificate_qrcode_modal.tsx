@@ -21,14 +21,12 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
   const { Canvas } = useQRCode();
-  const isDev = true; // Deprecated: (20241122 - tzuhan) debug purpose
   const { success, data: room, code } = APIHandler<IRoom>(APIName.ROOM_ADD, {}, true);
 
   const displayedQRCode = success && room && (
     <div className="mx-20 my-10 flex flex-col items-center">
-      {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
       <Canvas
-        text={`${isDev ? 'http://192.168.2.29:3000' : DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
+        text={`${DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
         options={{
           errorCorrectionLevel: 'M',
           margin: 3,
@@ -42,10 +40,10 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
       />
       <a
         className="mt-2 text-center text-xs text-card-text-sub"
-        href={`${isDev ? 'http://localhost:3000' : DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
+        href={`${DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
         target="_blank"
         rel="noreferrer"
-      >{`${isDev ? 'http://localhost:3000' : DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}</a>
+      >{`${DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}</a>
     </div>
   );
 
