@@ -50,10 +50,7 @@ const AccountingSettingPageBody: React.FC = () => {
   // Info: (20241113 - Julian) 取得會計設定資料
   const { trigger: getAccountSetting, data: accountingSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET,
-    {
-      params: { companyId },
-    },
-    true
+    { params: { companyId } }
   );
 
   const {

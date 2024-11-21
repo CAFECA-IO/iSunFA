@@ -306,8 +306,8 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
   });
 
   return (
-    <div className="rounded-sm bg-surface-brand-primary-5 p-24px shadow-Dropshadow_XS">
-      <div className="flex h-550px flex-col overflow-y-auto overflow-x-hidden">
+    <div className="h-550px rounded-sm bg-surface-brand-primary-5 p-24px shadow-Dropshadow_XS">
+      <div className="flex h-full flex-col overflow-y-auto overflow-x-hidden">
         {nestedAccountTitleMenu}
       </div>
     </div>
