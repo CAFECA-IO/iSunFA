@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { ITodoCompany, PARTNER_TYPE } from '@/interfaces/todo';
+import { ICompanyAndRole } from '@/interfaces/company';
+import { ITodoCompany } from '@/interfaces/todo';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
@@ -27,19 +28,47 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
   const [deadline, setDeadline] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [note, setNote] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [partnerType, setPartnerType] = useState<PARTNER_TYPE>(PARTNER_TYPE.BOTH);
+  const [company, setCompany] = useState<ICompanyAndRole>();
+  const [companyList, setCompanyList] = useState<ICompanyAndRole[]>([]);
+  const [noDataForTodoName, setNoDataForTodoName] = useState(false);
+  const [noDataForDeadline, setNoDataForDeadline] = useState(false);
 
   // Info: (20241119 - Liz) 建立待辦事項 API
   const { trigger: createTodoAPI } = APIHandler<ITodoCompany>(APIName.CREATE_TODO);
 
+  // Info: (20241120 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
+  const { trigger: listUserCompanyAPI } = APIHandler<ICompanyAndRole[]>(APIName.LIST_USER_COMPANY);
+
   const toggleDropdown = () => {
-    setIsDropdownOpen((prevState) => !prevState);
+    setIsDropdownOpen((prev) => !prev);
   };
 
   const handleSubmit = async () => {
     if (!userAuth) return;
 
+    const isDeadlineSelected = Object.values(deadline).every((value) => value !== 0);
+    if (!todoName || !isDeadlineSelected) {
+      setNoDataForTodoName(!todoName);
+      setNoDataForDeadline(!isDeadlineSelected);
+      return;
+    }
+
     setIsLoading(true);
+
+    // Deprecated: (20241119 - Liz)
+    // eslint-disable-next-line no-console
+    console.log(
+      'isLoading:',
+      isLoading,
+      'todoName:',
+      todoName,
+      'deadline:',
+      deadline.startTimeStamp,
+      'note:',
+      note,
+      'company:',
+      company
+    );
 
     try {
       const {
@@ -48,10 +77,10 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
         code,
       } = await createTodoAPI({
         params: { userId: userAuth.id },
-        query: {
-          type: partnerType,
+        body: {
           name: todoName,
-          deadline,
+          deadline: deadline.startTimeStamp,
+          companyId: company?.company.id ?? 0,
           note,
         },
       });
@@ -61,7 +90,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
         setTodoName('');
         setDeadline(default30DayPeriodInSec);
         setNote('');
-        setPartnerType(PARTNER_TYPE.BOTH);
+        setCompany(undefined);
         toggleModal();
 
         if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241119 - Liz) This is a workaround to refresh the todo list after creating a new todo
@@ -88,6 +117,39 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
     }
   };
 
+  useEffect(() => {
+    const listUserCompany = async () => {
+      if (!userAuth) return;
+
+      try {
+        const {
+          data: userCompanyList,
+          success,
+          code,
+        } = await listUserCompanyAPI({
+          params: { userId: userAuth.id },
+          query: { simple: true },
+        });
+
+        if (success && userCompanyList && userCompanyList.length > 0) {
+          // Info: (20241120 - Liz) 取得使用者擁有的公司列表成功時更新公司列表
+          setCompanyList(userCompanyList);
+        } else {
+          // Info: (20241120 - Liz) 取得使用者擁有的公司列表失敗時顯示錯誤訊息
+          // Deprecated: (20241120 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('listUserCompanyAPI(Simple) failed:', code);
+        }
+      } catch (error) {
+        // Deprecated: (20241120 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('listUserCompanyAPI(Simple) error:', error);
+      }
+    };
+
+    listUserCompany();
+  }, [userAuth]);
+
   return isModalOpen ? (
     <main className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
@@ -109,7 +171,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
             <input
               type="text"
               placeholder={t('dashboard:TO_DO_LIST_PAGE.ENTER_NAME')}
-              className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
+              className={`rounded-sm border bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none ${noDataForTodoName ? 'border-input-stroke-error' : 'border-input-stroke-input'}`}
               value={todoName}
               onChange={(e) => setTodoName(e.target.value)}
             />
@@ -125,12 +187,13 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
               type={DatePickerType.TEXT_DATE}
               period={deadline}
               setFilteredPeriod={setDeadline}
+              btnClassName={`${noDataForDeadline && 'border-input-stroke-error'}`}
             />
           </div>
 
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
-              {t('dashboard:TO_DO_LIST_PAGE.PARTNER_TYPE')}
+              {t('dashboard:TO_DO_LIST_PAGE.AFFILIATED_COMPANY')}
             </h4>
 
             <div className="relative flex">
@@ -140,7 +203,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
                 onClick={toggleDropdown}
               >
                 <p className="px-12px py-10px text-base font-medium">
-                  {t('dashboard:PARTNER_TYPE.' + partnerType.toUpperCase())}
+                  {company?.company.name || t('dashboard:TO_DO_LIST_PAGE.SELECT_COMPANY')}
                 </p>
 
                 <div className="px-12px py-10px">
@@ -150,17 +213,17 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
 
               {isDropdownOpen && (
                 <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                  {Object.values(PARTNER_TYPE).map((item) => (
+                  {companyList.map((item) => (
                     <button
-                      key={item}
+                      key={item.company.id}
                       type="button"
                       onClick={() => {
-                        setPartnerType(item);
+                        setCompany(item);
                         toggleDropdown();
                       }}
                       className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                     >
-                      {t('dashboard:PARTNER_TYPE.' + item.toUpperCase())}
+                      {item.company.name}
                     </button>
                   ))}
                 </div>

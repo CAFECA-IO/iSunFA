@@ -100,7 +100,7 @@ export enum APIName {
   FILE_DELETE = 'FILE_DELETE',
   FILE_GET = 'FILE_GET',
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
-  USER_ROLE_LIST = 'USER_ROLE_LIST',
+  USER_ROLE_LIST = 'USER_ROLE_LIST', // Info: (20241120 - Liz) Beta
   USER_CREATE_ROLE = 'USER_CREATE_ROLE',
   USER_SELECT_ROLE = 'USER_SELECT_ROLE',
   CREATE_USER_COMPANY = 'CREATE_USER_COMPANY',
@@ -151,6 +151,7 @@ export enum APIName {
   ASSET_LIST_EXPORT = 'ASSET_LIST_EXPORT',
   FILE_EXPORT = 'FILE_EXPORT',
   LEDGER_LIST = 'LEDGER_LIST',
+  PUSHER_AUTH = 'PUSHER_AUTH',
 }
 
 export enum APIPath {
@@ -280,6 +281,7 @@ export enum APIPath {
   ASSET_LIST_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
   FILE_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
   LEDGER_LIST = `${apiPrefixV2}/company/:companyId/ledger`,
+  PUSHER_AUTH = `${apiPrefixV2}/pusher/auth`,
 }
 const createConfig = ({
   name,
@@ -925,5 +927,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.VOUCHER_POST_V2,
     method: HttpMethod.POST,
     path: APIPath.VOUCHER_POST_V2,
+  }),
+  [APIName.PUSHER_AUTH]: createConfig({
+    name: APIName.PUSHER_AUTH,
+    method: HttpMethod.POST,
+    path: APIPath.PUSHER_AUTH,
   }),
 };

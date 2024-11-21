@@ -62,7 +62,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     reverseVoucherIds,
     assets,
     certificates,
-    lineItemsInfo: { lineItems },
+    lineItems,
   } = voucherData || defaultVoucherDetail;
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
