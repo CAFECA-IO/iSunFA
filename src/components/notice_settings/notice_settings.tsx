@@ -61,7 +61,7 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
 
   useEffect(() => {
     if (!isLoading) updateUseSetting();
-  }, [isLoading, enableSystemNotifications, enableUpdatesNotifications, enableEmailNotifications]);
+  }, [enableSystemNotifications, enableUpdatesNotifications, enableEmailNotifications]);
 
   return (
     <div>

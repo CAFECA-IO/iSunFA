@@ -41,6 +41,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
   onSubmit,
 }) => {
   const { t } = useTranslation(['setting', 'common']);
+  const disabled = !firstName || !lastName || !country || !phoneNumber;
   return (
     <form className="flex flex-col gap-lv-7" onSubmit={onSubmit}>
       <div className="grid grid-cols-2 gap-lv-7">
@@ -85,7 +86,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
         <SelectLauguageDropdown language={language} setLanguage={setLanguage} />
       </div>
       <div className="flex justify-end space-x-4">
-        <Button type="button" variant="secondaryBorderless">
+        <Button type="button" variant="secondaryBorderless" disabled={disabled}>
           {t('common:COMMON.CANCEL')}
         </Button>
         <Button type="submit" variant="default" disabled={!userSetting}>

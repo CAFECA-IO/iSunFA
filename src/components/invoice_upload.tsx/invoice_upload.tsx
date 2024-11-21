@@ -143,21 +143,23 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   );
 
   const certificateCreatedHandler = useCallback(
-    (data: ICertificate) => {
-      setFiles((prevFiles) => prevFiles.filter((f) => f.certificateId !== data.id));
+    (data: { message: string }) => {
+      const newCertificate: ICertificate = JSON.parse(data.message);
+      setFiles((prevFiles) => prevFiles.filter((f) => f.certificateId !== newCertificate.id));
     },
     [setFiles]
   );
 
   useEffect(() => {
     const pusher = getPusherInstance(userAuth?.id);
-    const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
 
     channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
     return () => {
-      channel.unbind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
-      pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
+      channel.unbind_all();
+      channel.unsubscribe();
+      pusher.disconnect();
     };
   }, [certificateCreatedHandler]);
 

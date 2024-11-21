@@ -20,6 +20,8 @@ import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/cons
 import { CounterpartyType } from '@/constants/counterparty';
 import { FileFolder } from '@/constants/file';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
+// import { getPusherInstance } from '@/lib/utils/pusher';
+// import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 type ICertificateListItem = ICertificateEntity & {
   invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
@@ -221,6 +223,18 @@ export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, obje
 
   payload = mockCertificate;
   statusMessage = STATUS_MESSAGE.CREATED;
+
+  // Info: (20241121 - tzuhan) @Murkey 這是 createCertificate 成功h後，後端使用 pusher 的傳送 CERTIFICATE_EVENT.CREATE 的範例
+  /**
+   * CERTIFICATE_EVENT.CREATE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(certificate as ICertificate)
+   */
+  /* ToDo: (20241121 - Luphia) Something went wrong, fix it
+  const pusher = getPusherInstance();
+  pusher.trigger(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`, CERTIFICATE_EVENT.CREATE, {
+    message: JSON.stringify(payload),
+  });
+   */
+
   return {
     statusMessage,
     payload,

@@ -952,15 +952,16 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   //   </div>
   // )
 
-  const certificateCreatedHandler = useCallback((message: { certificate: ICertificate }) => {
+  const certificateCreatedHandler = useCallback((data: { message: string }) => {
     const newCertificates = {
       ...certificates,
     };
-    newCertificates[message.certificate.id] = {
-      ...message.certificate,
+    const newCertificate: ICertificate = JSON.parse(data.message);
+    newCertificates[newCertificate.id] = {
+      ...newCertificate,
       isSelected: false,
       unRead: true,
-      actions: !message.certificate.voucherNo
+      actions: !newCertificate.voucherNo
         ? [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD, CERTIFICATE_USER_INTERACT_OPERATION.REMOVE]
         : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
     };
@@ -970,13 +971,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
   useEffect(() => {
     const pusher = getPusherInstance();
-    const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
 
     channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
     return () => {
-      channel.unbind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
-      pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
+      channel.unbind_all();
+      channel.unsubscribe();
+      pusher.disconnect();
     };
   }, []);
 
