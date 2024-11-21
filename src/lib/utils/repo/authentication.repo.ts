@@ -10,7 +10,6 @@ export async function getUserByCredential(
     user = await prisma.authentication.findUnique({
       where: {
         credentialId,
-        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
         user: {

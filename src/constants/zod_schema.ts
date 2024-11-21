@@ -92,6 +92,8 @@ import {
   userListSchema,
   userPutSchema,
 } from '@/lib/utils/zod_schema/user';
+import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
+import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -188,7 +190,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.ASSET_LIST_EXPORT]: assetExportSchema,
   [APIName.FILE_EXPORT]: assetExportSchema, // ToDo: (20241112 - Luphia) need to define the schema for file export
 
-  [APIName.AGREE_TO_TERMS]: nullAPISchema,
+  [APIName.AGREE_TO_TERMS]: UserAgreementPostSchema,
   [APIName.CREATE_CHALLENGE]: nullAPISchema,
   [APIName.EMAIL]: nullAPISchema,
   [APIName.USER_LIST]: userListSchema,
@@ -234,7 +236,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.REPORT_GET_BY_ID]: nullAPISchema,
   [APIName.REPORT_GET_V2]: nullAPISchema,
   [APIName.REPORT_GENERATE]: nullAPISchema,
-  [APIName.STATUS_INFO_GET]: nullAPISchema,
+  [APIName.STATUS_INFO_GET]: statusInfoGetSchema,
   [APIName.ACCOUNT_LIST]: nullAPISchema,
   [APIName.FILE_UPLOAD]: filePostSchema,
   [APIName.PUBLIC_FILE_UPLOAD]: nullAPISchema,
