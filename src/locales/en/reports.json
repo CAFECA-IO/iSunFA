@@ -1,5 +1,18 @@
 {
   "REPORTS": {
-    "BALANCE_SHEET": "Balance Sheet"
+    "BALANCE_SHEET": "Balance Sheet",
+    "DISPLAY_SUB_ACCOUNTS": "Display Sub-Accounts",
+    "NO_DATA": "No Data",
+    "COMPREHENSIVE_INCOME_STATEMENT": "Comprehensive Income Statement",
+    "CASH_FLOW_STATEMENT": "Cash Flow Statement",
+    "REPORT_401": "Business Tax Return(401)",
+    "Y": "Y",
+    "M": "M",
+    "DAY": "Day",
+    "CODE": "Code",
+    "BEGINNING": "Beginning",
+    "MIDTERM": "Midterm",
+    "ENDING": "Ending",
+    "TWD": "TWD"
   }
 }

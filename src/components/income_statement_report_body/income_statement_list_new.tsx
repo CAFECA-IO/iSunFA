@@ -22,7 +22,7 @@ interface IncomeStatementListProps {
 }
 
 const IncomeStatementList: React.FC<IncomeStatementListProps> = ({ selectedDateRange }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('report_401');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   // Info: (20241024 - Anna) 接收 selectedDateRange prop
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false); // Info: (20241024 - Anna) 新增追蹤 API 是否成功請求

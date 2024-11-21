@@ -1,5 +1,18 @@
 {
   "REPORTS": {
-    "BALANCE_SHEET": "資產負債表"
+    "BALANCE_SHEET": "資產負債表",
+    "DISPLAY_SUB_ACCOUNTS": "顯示所有子科目",
+    "NO_DATA": "沒有資料",
+    "COMPREHENSIVE_INCOME_STATEMENT": "綜合損益表",
+    "CASH_FLOW_STATEMENT": "現金流量表",
+    "REPORT_401": "營業人銷售額與稅額申報書(401)",
+    "Y": "年",
+    "M": "月",
+    "DAY": "日",
+    "CODE": "科目編號",
+    "BEGINNING": "起始日",
+    "MIDTERM": "期中",
+    "ENDING": "結束日",
+    "TWD": "新台幣"
   }
 }

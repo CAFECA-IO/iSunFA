@@ -7,7 +7,7 @@ import TrialBalancePageBody from '@/components/trial_balance/trial_balance_page_
 import Layout from '@/components/beta/layout/layout';
 
 const TrialBalancePage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('report_401');
 
   return (
     <>
@@ -31,7 +31,7 @@ const TrialBalancePage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, ['report_401'])),
     locale,
   },
 });

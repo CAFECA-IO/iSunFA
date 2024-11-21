@@ -1,5 +1,18 @@
 {
   "REPORTS": {
-    "BALANCE_SHEET": "资产负债表"
+    "BALANCE_SHEET": "资产负债表",
+    "DISPLAY_SUB_ACCOUNTS": "显示所有子科目",
+    "NO_DATA": "没有数据",
+    "COMPREHENSIVE_INCOME_STATEMENT": "综合损益表",
+    "CASH_FLOW_STATEMENT": "现金流量表",
+    "REPORT_401": "营业人销售额与税额申报书(401)",
+    "Y": "年",
+    "M": "月",
+    "DAY": "日",
+    "CODE": "科目编号",
+    "BEGINNING": "起始日",
+    "MIDTERM": "期中",
+    "ENDING": "结束日",
+    "TWD": "新台币"
   }
 }

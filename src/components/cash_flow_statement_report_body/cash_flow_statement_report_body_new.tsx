@@ -16,7 +16,7 @@ const CashFlowStatementPageBody = () => {
   });
 
   // Info: (20241101 - Anna) 定義語言選擇狀態
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['report_401']);
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );

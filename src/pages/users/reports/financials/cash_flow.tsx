@@ -11,7 +11,7 @@ import Layout from '@/components/beta/layout/layout';
 // const BalanceSheetPage = ({ reportId }: { reportId: string }) => {
 // Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
 const CashFlowPage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('reports');
 
   return (
     <>
@@ -19,9 +19,9 @@ const CashFlowPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:PLUGIN.CASH_FLOW_STATEMENT')} - iSunFA</title>
+        <title>{t('reports:REPORTS.CASH_FLOW_STATEMENT')} - iSunFA</title>
       </Head>
-      <Layout isDashboard={false} pageTitle={t('common:PLUGIN.CASH_FLOW_STATEMENT')}>
+      <Layout isDashboard={false} pageTitle={t('reports:REPORTS.CASH_FLOW_STATEMENT')}>
         {/* Info: (20241017 - Anna) 拿掉w-screen */}
         <main className="flex flex-col overflow-y-auto bg-surface-neutral-main-background font-barlow transition-all duration-300 ease-in-out">
           <CashFlowStatementPageBody />
@@ -33,7 +33,7 @@ const CashFlowPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, ['dashboard, reports'])),
     locale,
   },
 });

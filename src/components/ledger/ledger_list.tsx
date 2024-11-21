@@ -18,7 +18,7 @@ interface LedgerListProps {
 }
 
 const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, loading }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('journal');
   const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
 
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
@@ -137,7 +137,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
               {displayedDate}
             </div>
             <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              {t('common:COMMON.CODE')}
+              {t('reports:REPORTS.CODE')}
             </div>
             <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}

@@ -5,7 +5,7 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import { useTranslation } from 'next-i18next';
 
 const TrialBalancePageBody = () => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['report_401']);
   // Info: (20241015 - Anna) 定義日期篩選狀態
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
     startTimeStamp: 0,

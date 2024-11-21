@@ -42,7 +42,7 @@ const COLOR_CLASSES = [
 ];
 
 const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }) => {
-  const { t } = useTranslation(['report_401', 'common']);
+  const { t } = useTranslation(['report_401']);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241121 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
@@ -97,26 +97,26 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   //   }, 500); // 等待 500ms 確保渲染完成
   // };
 
-const handlePrint = useReactToPrint({
-  content: () => printRef.current as HTMLElement,
-  documentTitle: 'Balance Sheet Report',
-  onBeforePrint: async () => {
-    // eslint-disable-next-line no-console
-    console.log('Before Print: isPrinting =', isPrinting);
-    return Promise.resolve();
-  },
-  onAfterPrint: async () => {
-    setIsPrinting(false);
-    // eslint-disable-next-line no-console
-    console.log('After Print: isPrinting =', isPrinting);
-    return Promise.resolve();
-  },
-} as unknown as Parameters<typeof useReactToPrint>[0]);
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current as HTMLElement,
+    documentTitle: 'Balance Sheet Report',
+    onBeforePrint: async () => {
+      // eslint-disable-next-line no-console
+      console.log('Before Print: isPrinting =', isPrinting);
+      return Promise.resolve();
+    },
+    onAfterPrint: async () => {
+      setIsPrinting(false);
+      // eslint-disable-next-line no-console
+      console.log('After Print: isPrinting =', isPrinting);
+      return Promise.resolve();
+    },
+  } as unknown as Parameters<typeof useReactToPrint>[0]);
 
-const handlePrintClick = () => {
-  setIsPrinting(true); // 啟用列印模式
-  handlePrint(); // 呼叫列印
-};
+  const handlePrintClick = () => {
+    setIsPrinting(true); // 啟用列印模式
+    handlePrint(); // 呼叫列印
+  };
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
@@ -205,9 +205,11 @@ const handlePrintClick = () => {
 
   // Info: (20241023 - Anna) 在 useEffect 中依賴 getBalanceSheetReport，當日期範圍變更時觸發 API 請求
   useEffect(() => {
-    if (!selectedDateRange) return; // Info: (20241023 - Anna) 如果尚未選擇日期區間，不觸發請求
+    // if (!selectedDateRange) return; // Info: (20241023 - Anna) 如果尚未選擇日期區間，不觸發請求
+    if (!selectedDateRange || selectedDateRange.startTimeStamp === 0) return; // Info: (20241121 - Anna) 新增檢查
     getBalanceSheetReport();
-  }, [getBalanceSheetReport, selectedDateRange]);
+    // }, [getBalanceSheetReport, selectedDateRange]); // Info: (20241121 - Anna) 直接依賴 getBalanceSheetReport
+  }, [selectedDateRange, getBalanceSheetReport]); // Info: (20241121 - Anna) 簡化依賴
 
   const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
   const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
@@ -383,7 +385,7 @@ const handlePrintClick = () => {
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('common:COMMON.NO_DATA')}
+          {t('reports:REPORTS.NO_DATA')}
         </text>
       </svg>
     </div>
@@ -405,7 +407,7 @@ const handlePrintClick = () => {
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('common:COMMON.NO_DATA')}
+          {t('reports:REPORTS.NO_DATA')}
         </text>
       </svg>
     </div>
@@ -574,7 +576,7 @@ const handlePrintClick = () => {
           getToggledState={totalSubAccountsToggleHandler}
           toggleStateFromParent={totalSubAccountsToggle}
         />
-        <span className="text-neutral-600">{t('common:COMMON.DISPLAY_SUB_ACCOUNTS')}</span>
+        <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
       </div>
       <div className="ml-auto flex items-center gap-24px">
         <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
@@ -880,13 +882,9 @@ const handlePrintClick = () => {
           preDate={preDate}
         >
           {ItemSummary}
-          <hr className="break-before-page" />
           {ItemDetail}
-          <hr className="break-before-page" />
           {ProportionalTable}
-          <hr className="break-before-page" />
           {AssetItem}
-          <hr className="break-before-page" />
           {TurnoverDay}
         </BalanceSheetA4Template>
       </div>

@@ -53,7 +53,7 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
         'setting',
         'terms',
         'salary',
-        'asset',
+        'asset'
       ])),
     },
   };

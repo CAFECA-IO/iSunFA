@@ -11,7 +11,7 @@ import Layout from '@/components/beta/layout/layout';
 // const BalanceSheetPage = ({ reportId }: { reportId: string }) => {
 // Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
 const BalanceSheetPage = () => {
-  const { t } = useTranslation(['report_401', 'common']);
+  const { t } = useTranslation(['report_401']);
 
   return (
     <>
@@ -33,7 +33,7 @@ const BalanceSheetPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'report_401'])),
+    ...(await serverSideTranslations(locale, ['report_401', 'reports', 'date_picker', 'dashboard'])),
     locale,
   },
 });
