@@ -224,6 +224,17 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
           debit: z.boolean(),
           amount: z.number(),
         }),
+        payableInfo: z.object({
+          total: z.number(),
+          alreadyHappened: z.number(),
+          remain: z.number(),
+        }),
+        receivingInfo: z.object({
+          total: z.number(),
+          alreadyHappened: z.number(),
+          remain: z.number(),
+        }),
+        originalEvents: z.array(eventEntityValidator),
       })
     ),
     unRead: z.object({
@@ -262,6 +273,22 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
         amount: z.number().parse(voucher.sum.amount),
       },
     },
+    payableInfo: voucher.payableInfo,
+    receivingInfo: voucher.receivingInfo,
+    reverseVouchers: voucher.originalEvents.reduce(
+      (acc, event) => {
+        if (event.associateVouchers) {
+          event.associateVouchers.forEach((associateVoucher) => {
+            acc.push({
+              id: associateVoucher.resultVoucher.id,
+              voucherNo: associateVoucher.resultVoucher.no,
+            });
+          });
+        }
+        return acc;
+      },
+      [] as { id: number; voucherNo: string }[]
+    ),
   }));
 
   const parsedData: IPaginatedData<{
