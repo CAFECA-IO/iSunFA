@@ -21,7 +21,7 @@ import { CounterpartyType } from '@/constants/counterparty';
 import { FileFolder } from '@/constants/file';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 // import { getPusherInstance } from '@/lib/utils/pusher';
-import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+// import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 type ICertificateListItem = ICertificateEntity & {
   invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
