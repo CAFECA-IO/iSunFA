@@ -619,11 +619,12 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     return rows;
   };
   // Info: (20241029 - Anna) 子科目 Toggle 開關、列印及下載按鈕
-  const displayedSelectArea = (ref: React.RefObject<HTMLDivElement>) => {
+  // const displayedSelectArea = (ref: React.RefObject<HTMLDivElement>) => {
+  const displayedSelectArea = () => {
     // eslint-disable-next-line no-console
-    console.log('[displayedSelectArea]ref', ref);
+    console.log('[displayedSelectArea] Display Area Rendered');
     return (
-      <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap">
+      <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
         <div className="flex items-center gap-4">
           <Toggle
             id="totalSubAccounts-toggle"
@@ -983,7 +984,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         </BalanceSheetA4Template>
       ) : (
         <div className="mx-auto w-full origin-top overflow-x-auto">
-          {displayedSelectArea(printRef)}
+          {/* {displayedSelectArea(printRef)} */}
+          {displayedSelectArea()} {/* 不傳遞 printRef */}
           {ItemSummary}
           <hr className="break-before-page" />
           {ItemDetail}
