@@ -21,9 +21,9 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [unRead, setUnRead] = useState<{
-    receivable: number;
-    payable: number;
-  }>({ receivable: 0, payable: 0 });
+    receivingVoucher: number;
+    paymentVoucher: number;
+  }>({ receivingVoucher: 0, paymentVoucher: 0 });
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   // Info: (20241122 - Julian) 應收/應付總金額
   const [payReceiveSort, setPayReceiveSort] = useState<null | SortOrder>(null);
@@ -52,8 +52,8 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   const handleApiResponse = (
     data: IPaginatedData<{
       unRead: {
-        receivable: number;
-        payable: number;
+        receivingVoucher: number;
+        paymentVoucher: number;
       };
       vouchers: IVoucherBeta[];
     }>
@@ -96,13 +96,13 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           tabsString={voucherTabs}
           activeTab={VoucherListTabV2.RECEIVING}
           onTabClick={tabsClick}
-          counts={[unRead.receivable, unRead.payable]}
+          counts={[unRead.receivingVoucher, unRead.paymentVoucher]}
         />
         {/* Info: (20241122 - Julian) Filter Section */}
         <FilterSection<{
           unRead: {
-            receivable: number;
-            payable: number;
+            receivingVoucher: number;
+            paymentVoucher: number;
           };
           vouchers: IVoucherBeta[];
         }>

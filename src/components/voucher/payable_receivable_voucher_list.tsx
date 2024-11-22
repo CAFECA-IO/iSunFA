@@ -71,14 +71,9 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
     setSortOrder: setRemainSort,
   });
 
-  const displayedList = voucherList.map((voucher) => {
-    return (
-      <PayableReceivableVoucherItem
-        key={voucher.id}
-        /* voucherData={voucher} activeTab={activeTab} */
-      />
-    );
-  });
+  const displayedList = voucherList.map((voucher) => (
+    <PayableReceivableVoucherItem key={voucher.id} activeTab={activeTab} voucherData={voucher} />
+  ));
 
   return (
     <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">

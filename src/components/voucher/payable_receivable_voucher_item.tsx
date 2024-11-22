@@ -5,59 +5,41 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { FaDownload, FaUpload } from 'react-icons/fa';
 import { VoucherType } from '@/constants/account';
 import { FiRepeat } from 'react-icons/fi';
-// import { IVoucherBeta } from '@/interfaces/voucher';
+import { IVoucherBeta } from '@/interfaces/voucher';
 import { VoucherListTabV2 } from '@/constants/voucher';
 
 interface IPayableReceivableVoucherItemProps {
-  // activeTab: VoucherListTabV2;
-  //  voucherData: IVoucherBeta;
+  activeTab: VoucherListTabV2;
+  voucherData: IVoucherBeta;
 }
 
-const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps> = () => {
+const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps> = ({
+  // Info: (20241122 - Julian) 由於 Typescript 已經定義了 IVoucherBeta 的 interface，所以這邊不需要再用 PropTypes 定義 props 的型別
+  // eslint-disable-next-line react/prop-types
+  activeTab,
+  // eslint-disable-next-line react/prop-types
+  voucherData,
+}) => {
   const {
+    // eslint-disable-next-line react/prop-types
     id: voucherId,
+    // eslint-disable-next-line react/prop-types
     voucherDate,
+    // eslint-disable-next-line react/prop-types
     voucherType,
+    // eslint-disable-next-line react/prop-types
     voucherNo,
+    // eslint-disable-next-line react/prop-types
     counterParty,
+    // eslint-disable-next-line react/prop-types
     issuer,
+    // eslint-disable-next-line react/prop-types
     receivingInfo,
+    // eslint-disable-next-line react/prop-types
     payableInfo,
+    // eslint-disable-next-line react/prop-types
     reverseVouchers,
-  } =
-    // voucherData;
-    {
-      id: 1,
-      voucherDate: 1,
-      voucherType: VoucherType.EXPENSE,
-      voucherNo: 1,
-      counterParty: {
-        companyId: 1,
-        name: 'name',
-      },
-      issuer: {
-        avatar: 'avatar',
-        name: 'name',
-      },
-      receivingInfo: {
-        total: 1,
-        alreadyHappened: 1,
-        remain: 1,
-      },
-      payableInfo: {
-        total: 1,
-        alreadyHappened: 1,
-        remain: 1,
-      },
-      reverseVouchers: [
-        {
-          id: 1,
-          voucherNo: 1,
-        },
-      ],
-    };
-
-  const activeTab = VoucherListTabV2.RECEIVING;
+  } = voucherData;
 
   const {
     total: totalAmount,
@@ -91,14 +73,18 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
 
   const displayedCounterparty = (
     <div className="flex flex-col items-center gap-4px">
+      {/* eslint-disable-next-line react/prop-types */}
       <p className="text-text-neutral-tertiary">{counterParty.companyId}</p>
+      {/* eslint-disable-next-line react/prop-types */}
       <p className="text-text-neutral-primary">{counterParty.name}</p>
     </div>
   );
 
   const displayedIssuer = (
     <div className="flex items-center justify-center gap-4px text-text-neutral-primary">
+      {/* eslint-disable-next-line react/prop-types */}
       <Image src={issuer.avatar} alt="avatar" width={14} height={14} className="rounded-full" />
+      {/* eslint-disable-next-line react/prop-types */}
       <p>{issuer.name}</p>
     </div>
   );
@@ -124,12 +110,15 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
 
   const displayedReverse = (
     <div className="flex flex-col">
+      {/* eslint-disable-next-line react/prop-types */}
       {reverseVouchers && reverseVouchers.length > 0 ? (
+        // eslint-disable-next-line react/prop-types
         reverseVouchers.map((voucher) => (
           <Link
             href={`/users/accounting/${voucher.id}`}
             className="text-center text-link-text-primary"
           >
+            {/* eslint-disable-next-line react/prop-types */}
             {voucher.voucherNo}
           </Link>
         ))
