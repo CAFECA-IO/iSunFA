@@ -21,7 +21,7 @@ import DownloadButton from './download_button';
 // Info: (20241107 - Anna) 接收父層傳入的科目名稱作為 prop
 interface BalanceDetailsButtonProps {
   accountName: string;
-  accountId: string;
+  accountId: number;
 }
 
 /*

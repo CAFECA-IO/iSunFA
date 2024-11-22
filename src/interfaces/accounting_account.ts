@@ -50,6 +50,7 @@ export type IAccountNode = Omit<Account, 'children' | 'parent' | 'root' | 'leaf'
 };
 
 export interface IAccountForSheetDisplay {
+  accountId: number;
   code: string;
   name: string;
   amount: number | null;
@@ -60,6 +61,7 @@ export interface IAccountForSheetDisplay {
 }
 
 export interface IAccountReadyForFrontend {
+  accountId: number;
   code: string;
   name: string;
   curPeriodAmount: number;
