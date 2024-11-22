@@ -47,6 +47,7 @@ const UserRole = ({
   avatar,
   lastLoginAt,
 }: UserRoleProps) => {
+  const { t } = useTranslation(['dashboard']);
   const router = useRouter();
   const { selectRole } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
@@ -88,7 +89,7 @@ const UserRole = ({
       ></Image>
 
       <div className="space-y-16px text-center text-lg font-medium">
-        <p className="text-text-neutral-secondary">Last Login Time</p>
+        <p className="text-text-neutral-secondary">{t('dashboard:LOGIN.LAST_LOGIN_TIME')}</p>
 
         <p className="text-text-neutral-tertiary">{lastLoginAt}</p>
       </div>
@@ -99,7 +100,7 @@ const UserRole = ({
         onClick={handleSelectRole}
         disabled={isLoading}
       >
-        <p>Start</p>
+        <p>{t('dashboard:COMMON.START')}</p>
         <FiArrowRight size={24} />
       </button>
     </div>
@@ -116,7 +117,7 @@ const SelectRolePage = () => {
     const fetchUserRoleList = async () => {
       const data = await getUserRoleList();
 
-      if (data && data?.length > 0) {
+      if (data && data.length > 0) {
         setUserRoleList(data);
       } else {
         router.push(ISUNFA_ROUTE.CREATE_ROLE);
@@ -153,14 +154,14 @@ const SelectRolePage = () => {
         />
       </Head>
 
-      <div className="relative h-screen">
+      <div className="relative flex h-screen items-center justify-center">
         <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
 
         <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
           <I18n />
 
-          <Link href={ISUNFA_ROUTE.DASHBOARD}>
-            <FiHome size={20} />
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+            <FiHome size={22} />
           </Link>
         </div>
 
@@ -170,11 +171,11 @@ const SelectRolePage = () => {
           className="absolute left-0 top-0 z-0 ml-40px mt-40px flex items-center gap-25px text-button-text-secondary"
         >
           <TbLogout size={32} />
-          <p className="font-semibold">Log out</p>
+          <p className="font-semibold">{t('dashboard:HEADER.LOGOUT')}</p>
         </button>
 
         {/* // Info: (20241009 - Liz) User Roles */}
-        <section className="flex items-center justify-center gap-40px pt-120px">
+        <section className="flex items-center justify-center gap-40px">
           {userRoleList.map((userRole) => {
             const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.role.name);
 

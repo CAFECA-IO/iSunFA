@@ -1,7 +1,8 @@
 {
   "LOGIN": {
     "LOG_IN_WITH_GOOGLE": "Log In with Google",
-    "LOG_IN_WITH_APPLE": "Log In with Apple"
+    "LOG_IN_WITH_APPLE": "Log In with Apple",
+    "LAST_LOGIN_TIME": "Last Login Time"
   },
 
   "DASHBOARD": {

@@ -1,7 +1,8 @@
 {
   "LOGIN": {
     "LOG_IN_WITH_GOOGLE": "使用 Google 登录",
-    "LOG_IN_WITH_APPLE": "使用 Apple 登录"
+    "LOG_IN_WITH_APPLE": "使用 Apple 登录",
+    "LAST_LOGIN_TIME": "上次登录时间"
   },
 
   "DASHBOARD": {
