@@ -241,6 +241,8 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
     unRead: z.object({
       uploadedVoucher: z.number(),
       upcomingEvents: z.number(),
+      paymentVoucher: z.number(),
+      receivingVoucher: z.number(),
     }),
   })
 ).transform((data) => {
@@ -296,6 +298,8 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
     unRead: {
       uploadedVoucher: number;
       upcomingEvents: number;
+      paymentVoucher: number;
+      receivingVoucher: number;
     };
     vouchers: IVoucherBeta[];
   }> = {
