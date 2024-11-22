@@ -869,6 +869,15 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     setLineItems(aiLineItemsUI);
   };
 
+  const retryAIHandler = () => {
+    setAiState(AIState.WORKING);
+    askAI({
+      params: { companyId },
+      query: { reason: 'voucher' },
+      body: { certificateId: selectedIds[0] },
+    });
+  };
+
   // Info: (20241119 - Julian) 逐一比對 line item 是否有異動
   const isLineItemsEqual = (arr1: ILineItemBeta[], arr2: ILineItemBeta[]) => {
     if (arr1.length !== arr2.length) return false;
@@ -1155,6 +1164,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
         analyzeSuccess={analyzeSuccess ?? false}
         setAiState={setAiState}
         setIsShowAnalysisPreview={setIsShowAnalysisPreview}
+        retryClickHandler={retryAIHandler}
         fillUpClickHandler={fillUpWithAIResult}
       />
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}

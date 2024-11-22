@@ -618,6 +618,15 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setLineItems(aiLineItemsUI);
   };
 
+  const retryAIHandler = () => {
+    setAiState(AIState.WORKING);
+    askAI({
+      params: { companyId },
+      query: { reason: 'voucher' },
+      body: { certificateId: selectedIds[0] },
+    });
+  };
+
   const saveVoucher = async () => {
     // Info: (20241105 - Julian) 如果有資產，則加入 VoucherV2Action.ADD_ASSET；如果有反轉傳票，則加入 VoucherV2Action.REVERT
     const actions = [];
@@ -1034,6 +1043,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         analyzeSuccess={analyzeSuccess ?? false}
         setAiState={setAiState}
         setIsShowAnalysisPreview={setIsShowAnalysisPreview}
+        retryClickHandler={retryAIHandler}
         fillUpClickHandler={fillUpWithAIResult}
       />
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}

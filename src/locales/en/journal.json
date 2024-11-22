@@ -206,8 +206,10 @@
     "TRIAL_BALANCE": "Trial_Balance",
     "TRIAL_BALANCE_PERIOD": "Trial Balance Period",
     "NO_VOUCHER": "No voucher data",
-    "UPLOADED_VOUCHER_TAB": "Uploaded Voucher",
-    "UPCOMING_EVENTS_TAB": "Upcoming Events"
+    "UPLOADED_TAB": "Uploaded Voucher",
+    "UPCOMING_TAB": "Upcoming Events",
+    "RECEIVING_TAB": "Receiving",
+    "PAYMENT_TAB": "Payment"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "Add New Voucher",

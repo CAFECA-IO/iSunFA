@@ -201,20 +201,16 @@ export interface IVoucherBeta {
     };
     lineItems: ILineItemBeta[];
   };
-  payableInfo:
-    | {
-        total: number;
-        alreadyHappened: number;
-        remain: number;
-      }
-    | undefined;
-  receivingInfo:
-    | {
-        total: number;
-        alreadyHappened: number;
-        remain: number;
-      }
-    | undefined;
+  payableInfo: {
+    total: number;
+    alreadyHappened: number;
+    remain: number;
+  };
+  receivingInfo: {
+    total: number;
+    alreadyHappened: number;
+    remain: number;
+  };
   /**
    * Info: (20241121 - Murky)
    * @Julian 這邊可以用來顯示 voucher list 後面要reverse的地方
