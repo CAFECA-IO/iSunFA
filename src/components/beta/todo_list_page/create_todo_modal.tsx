@@ -15,10 +15,10 @@ import { default30DayPeriodInSec } from '@/constants/display';
 interface CreateTodoModalProps {
   isModalOpen: boolean;
   toggleModal: () => void;
-  setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
+  getTodoList: () => void;
 }
 
-const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodoModalProps) => {
+const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoModalProps) => {
   const { t } = useTranslation(['dashboard']);
   const { userAuth } = useUserCtx();
   const { toastHandler } = useModalContext();
@@ -45,6 +45,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
 
   const handleSubmit = async () => {
     if (!userAuth) return;
+    if (isLoading) return;
 
     const isDeadlineSelected = Object.values(deadline).every((value) => value !== 0);
     if (!todoName || !isDeadlineSelected) {
@@ -80,20 +81,19 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
         body: {
           name: todoName,
           deadline: deadline.startTimeStamp,
-          companyId: company?.company.id ?? 0,
+          companyId: company?.company.id,
           note,
         },
       });
 
       if (success) {
-        // Info: (20241119 - Liz) 新增待辦事項成功後清空表單並關閉 modal
+        // Info: (20241119 - Liz) 新增待辦事項成功後清空表單、關閉 Modal、重新取得待辦事項列表
         setTodoName('');
         setDeadline(default30DayPeriodInSec);
         setNote('');
         setCompany(undefined);
         toggleModal();
-
-        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241119 - Liz) This is a workaround to refresh the todo list after creating a new todo
+        getTodoList();
 
         // Deprecated: (20241119 - Liz)
         // eslint-disable-next-line no-console
@@ -155,7 +155,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('dashboard:TO_DO_LIST_PAGE.ADD_NEW_EVENT')}
+            {t('dashboard:TODO_LIST_PAGE.ADD_NEW_EVENT')}
           </h1>
           <button type="button" onClick={toggleModal}>
             <IoCloseOutline size={24} />
@@ -165,12 +165,12 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
         <section className="flex flex-col gap-24px px-40px py-16px">
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
-              {t('dashboard:TO_DO_LIST_PAGE.EVENT_NAME')}
+              {t('dashboard:TODO_LIST_PAGE.EVENT_NAME')}
               <span className="text-text-state-error"> *</span>
             </h4>
             <input
               type="text"
-              placeholder={t('dashboard:TO_DO_LIST_PAGE.ENTER_NAME')}
+              placeholder={t('dashboard:TODO_LIST_PAGE.ENTER_NAME')}
               className={`rounded-sm border bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none ${noDataForTodoName ? 'border-input-stroke-error' : 'border-input-stroke-input'}`}
               value={todoName}
               onChange={(e) => setTodoName(e.target.value)}
@@ -179,7 +179,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
 
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
-              {t('dashboard:TO_DO_LIST_PAGE.DEADLINE')}
+              {t('dashboard:TODO_LIST_PAGE.DEADLINE')}
               <span className="text-text-state-error"> *</span>
             </h4>
 
@@ -193,7 +193,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
 
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
-              {t('dashboard:TO_DO_LIST_PAGE.AFFILIATED_COMPANY')}
+              {t('dashboard:TODO_LIST_PAGE.AFFILIATED_COMPANY')}
             </h4>
 
             <div className="relative flex">
@@ -203,7 +203,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
                 onClick={toggleDropdown}
               >
                 <p className="px-12px py-10px text-base font-medium">
-                  {company?.company.name || t('dashboard:TO_DO_LIST_PAGE.SELECT_COMPANY')}
+                  {company?.company.name || t('dashboard:TODO_LIST_PAGE.SELECT_COMPANY')}
                 </p>
 
                 <div className="px-12px py-10px">
@@ -212,7 +212,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
+                <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_SM">
                   {companyList.map((item) => (
                     <button
                       key={item.company.id}
@@ -233,11 +233,11 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
 
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
-              {t('dashboard:TO_DO_LIST_PAGE.NOTE')}
+              {t('dashboard:TODO_LIST_PAGE.NOTE')}
             </h4>
             <input
               type="text"
-              placeholder={t('dashboard:TO_DO_LIST_PAGE.ENTER_TEXT')}
+              placeholder={t('dashboard:TODO_LIST_PAGE.ENTER_TEXT')}
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
               value={note}
               onChange={(e) => setNote(e.target.value)}
