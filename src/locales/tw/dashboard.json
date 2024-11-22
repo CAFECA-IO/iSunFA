@@ -83,8 +83,8 @@
     "MATCH_NEWS": "媒合資訊"
   },
 
-  "TO_DO_LIST_PAGE": {
-    "TO_DO_LIST_TITLE": "待辦事項",
+  "TODO_LIST_PAGE": {
+    "TODO_LIST_TITLE": "待辦事項",
     "ADD_EVENT": "新增事件",
     "EVENT_LIST": "事件列表",
     "ACTION": "操作",
@@ -96,6 +96,7 @@
     "AFFILIATED_COMPANY": "關聯公司",
     "NOTE": "備註",
     "ENTER_TEXT": "輸入文字",
-    "SELECT_COMPANY": "選擇公司"
+    "SELECT_COMPANY": "選擇公司",
+    "NO_COMPANY": "沒有公司"
   }
 }
