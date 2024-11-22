@@ -6,19 +6,17 @@ import { APIName } from '@/constants/api_connection';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IResponseData } from '@/interfaces/response_data';
-import { IVoucherEntity } from '@/interfaces/voucher';
+import { IVoucherEntity, IVoucherForSingleAccount } from '@/interfaces/voucher';
 import { formatApiResponse } from '@/lib/utils/common';
-import { loggerError } from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { IAccountEntity } from '@/interfaces/accounting_account';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { JOURNAL_EVENT } from '@/constants/journal';
-import { AccountType, EventType } from '@/constants/account';
 import { IUserEntity } from '@/interfaces/user';
 import type { IFileEntity } from '@/interfaces/file';
-import { FileFolder } from '@/constants/file';
+import { voucherGetByAccountAPIUtils as getUtils } from 'src/pages/api/v2/company/[companyId]/account/[accountId]/route_utils';
 
 type IVoucherEntityWithLineItems = IVoucherEntity &
   IVoucherEntity & {
@@ -28,109 +26,103 @@ type IVoucherEntityWithLineItems = IVoucherEntity &
 
 type GetVoucherByAccountResponse = IPaginatedData<IVoucherEntityWithLineItems[]>;
 
+/**
+ * Info: (20241121 - Murky)
+ * @description 需要由某個account來搜索出它所有的voucher
+ * @todo
+ * - 如果是 AP 或是AR 的account，需要額外計算沖帳結果
+ * - 只列出未沖帳完的voucher
+ */
 const handleGetRequest: IHandleRequest<
   APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2,
   GetVoucherByAccountResponse
-> = async ({ query }) => {
-  // const { pageSize, startDate, endDate, page, accountId, sortOption, searchQuery } = query;
-  const { pageSize, page, sortOption } = query;
+> = async ({ query, session }) => {
+  const { pageSize, startDate, endDate, page, accountId, sortOption, searchQuery } = query;
+  const { companyId } = session;
+  // const { pageSize, page, sortOption } = query;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: GetVoucherByAccountResponse | null = null;
 
-  const mockIssuer: IUserEntity & { imageFile: IFileEntity } = {
-    id: 1,
-    name: 'Murky',
-    email: 'murky@isunfa.com',
-    imageFileId: 1,
-    createdAt: 1,
-    updatedAt: 1,
-    deletedAt: null,
-    imageFile: {
-      id: 1,
-      name: 'murky.jpg',
-      size: 1000,
-      mimeType: 'image/jpeg',
-      type: FileFolder.TMP,
-      url: 'https://isunfa.com/elements/avatar_default.svg?w=256&q=75',
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    },
-  };
+  const accountFromPrisma = await getUtils.getAccountFromPrisma({
+    companyId,
+    accountId,
+  });
 
-  const mockLineItem: ILineItemEntity & { account: IAccountEntity } = {
-    id: 3,
-    description: '原價屋',
-    amount: 1000,
-    debit: false,
-    accountId: 1,
-    voucherId: 1,
-    createdAt: 1,
-    updatedAt: 1,
-    deletedAt: null,
-    account: {
-      id: 1,
-      companyId: 1002,
-      system: 'IFRS',
-      type: AccountType.ASSET,
-      debit: true,
-      liquidity: true,
-      code: '1172',
-      name: '應收帳款',
-      forUser: true,
-      parentCode: '1170',
-      rootCode: '1170',
-      level: 3,
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    },
-  };
+  if (!accountFromPrisma) {
+    getUtils.throwErrorAndLog(loggerBack, {
+      errorMessage: `Account not found: ${accountId}`,
+      statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+    });
+  }
 
-  const mockVoucher: IVoucherEntityWithLineItems = {
-    id: 1,
-    issuerId: 1,
-    counterPartyId: 1,
-    companyId: 1002,
-    status: JOURNAL_EVENT.UPLOADED,
-    editable: true,
-    no: '1001',
-    date: 1,
-    type: EventType.INCOME,
-    note: 'this is note',
-    createdAt: 1,
-    updatedAt: 1,
-    deletedAt: null,
-    lineItems: [mockLineItem],
-    readByUsers: [],
-    originalEvents: [],
-    resultEvents: [],
-    certificates: [],
-    asset: [],
-    issuer: mockIssuer,
-  };
+  const accountEntityForSearch = getUtils.initAccountEntity(accountFromPrisma!);
+  const isAccountARorAP = getUtils.isAccountARorAP(accountEntityForSearch);
 
-  const mockPaginatedData: GetVoucherByAccountResponse = {
+  const paginationVouchersFromPrisma = await getUtils.getVouchersFromPrisma({
+    companyId,
+    accountId,
+    startDate,
+    endDate,
+    sortOption,
     page,
-    totalPages: 10,
-    totalCount: 100,
     pageSize,
-    hasNextPage: true,
-    hasPreviousPage: false,
+    searchQuery,
+    isDeleted: undefined,
+  });
+
+  const { data: vouchersFromPrisma, ...pagination } = paginationVouchersFromPrisma;
+
+  const vouchers = vouchersFromPrisma.reduce(
+    (acc: IVoucherEntityWithLineItems[], voucherFromPrisma) => {
+      const issuerEntity = getUtils.initIssuerAndFileEntity(voucherFromPrisma);
+      const lineItemEntities = getUtils.initLineItemAndAccountEntities(voucherFromPrisma);
+      const voucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
+
+      if (!isAccountARorAP) {
+        acc.push({
+          ...voucherEntity,
+          issuer: issuerEntity,
+          lineItems: lineItemEntities,
+        });
+      } else {
+        const targetLineItem = lineItemEntities.find(
+          (lineItem) => lineItem.accountId === accountId
+        );
+        if (!(targetLineItem && getUtils.isLineItemWriteOff(targetLineItem))) {
+          acc.push({
+            ...voucherEntity,
+            issuer: issuerEntity,
+            lineItems: lineItemEntities,
+          });
+        }
+      }
+
+      return acc;
+    },
+    [] as IVoucherEntityWithLineItems[]
+  );
+
+  const paginatedData: GetVoucherByAccountResponse = {
+    page: pagination.page,
+    totalPages: pagination.totalPages,
+    totalCount: pagination.totalCount,
+    pageSize: pagination.pageSize,
+    hasNextPage: pagination.hasNextPage,
+    hasPreviousPage: pagination.hasPreviousPage,
     sort: sortOption,
-    data: [mockVoucher],
+    data: vouchers,
   };
 
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-  payload = mockPaginatedData;
+  payload = paginatedData;
   return {
     statusMessage,
     payload,
   };
 };
 
-type APIResponse = object | number | null;
+type APIResponse = IPaginatedData<IVoucherForSingleAccount[]> | null;
 
 const methodHandlers: {
   [key: string]: (

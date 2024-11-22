@@ -173,6 +173,7 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
         const curPeriodPercentageString = numberBeDashIfFalsy(curPeriodPercentage);
         const prePeriodPercentageString = numberBeDashIfFalsy(prePeriodPercentage);
         const accountReadyForFrontend: IAccountReadyForFrontend = {
+          accountId: curPeriodAccount.accountId,
           code: curPeriodAccount.code,
           name: curPeriodAccount.name,
           curPeriodAmount,
