@@ -19,7 +19,7 @@ import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { ASSET_CODE, SPECIAL_ACCOUNTS } from '@/constants/account';
 import { getTimestampOfFirstDateOfThisYear, timestampToString } from '@/lib/utils/common';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
-import { findUniqueAccountByCodeInPrisma } from '@/lib/utils/repo/account.repo';
+import { findUniqueAccountByIdInPrisma } from '@/lib/utils/repo/account.repo';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private startSecondOfYear: number;
@@ -92,24 +92,22 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     const closeAccount: ILineItemIncludeAccount[] = [];
 
-    const netIncomeAccount = await findUniqueAccountByCodeInPrisma(
-      SPECIAL_ACCOUNTS.NET_INCOME.code
+    const netIncomeAccount = await findUniqueAccountByIdInPrisma(SPECIAL_ACCOUNTS.NET_INCOME.id);
+
+    const otherComprehensiveIncomeAccount = await findUniqueAccountByIdInPrisma(
+      SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.id
     );
 
-    const otherComprehensiveIncomeAccount = await findUniqueAccountByCodeInPrisma(
-      SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
+    const netIncomeInEquity = await findUniqueAccountByIdInPrisma(
+      SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.id
     );
 
-    const netIncomeInEquity = await findUniqueAccountByCodeInPrisma(
-      SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.code
+    const accumulateProfitAndLossInEquity = await findUniqueAccountByIdInPrisma(
+      SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.id
     );
 
-    const accumulateProfitAndLossInEquity = await findUniqueAccountByCodeInPrisma(
-      SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.code
-    );
-
-    const otherEquityOther = await findUniqueAccountByCodeInPrisma(
-      SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.code
+    const otherEquityOther = await findUniqueAccountByIdInPrisma(
+      SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.id
     );
 
     closeAccount.push({
@@ -135,6 +133,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,
+            parentId: 0, // Info: (20241122 - Shirley) 添加預設值
+            rootId: 0, // Info: (20241122 - Shirley) 添加預設值
+            note: null, // Info: (20241122 - Shirley) 添加預設值
           },
     });
 
@@ -163,6 +164,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,
+            parentId: 0, // Info: (20241122 - Shirley) 添加預設值
+            rootId: 0, // Info: (20241122 - Shirley) 添加預設值
+            note: null, // Info: (20241122 - Shirley) 添加預設值
           },
     });
 
@@ -193,6 +197,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,
+            parentId: 0, // Info: (20241122 - Shirley) 添加預設值
+            rootId: 0, // Info: (20241122 - Shirley) 添加預設值
+            note: null, // Info: (20241122 - Shirley) 添加預設值
           },
     });
 

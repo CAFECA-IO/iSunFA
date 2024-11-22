@@ -612,7 +612,8 @@ export async function postVoucherV2({
           await tx.event.create({
             data: {
               eventType: revertEvent.eventType,
-              frequence: revertEvent.frequency,
+              // frequence: revertEvent.frequency,
+              frequency: revertEvent.frequency,
               startDate: revertEvent.startDate,
               endDate: revertEvent.endDate,
               daysOfWeek: revertEvent.daysOfWeek,
@@ -816,14 +817,14 @@ export async function putVoucherWithoutCreateNew(
       Array.from(reverseRelationList).forEach((reverseRelation) => {
         const { eventId, original, new: newRelations } = reverseRelation;
         original.forEach(async (originalRelation) => {
-          await tx.accociateLineItem.deleteMany({
+          await tx.associateLineItem.deleteMany({
             where: {
               originalLineItemId: originalRelation.lineItemIdBeReversed,
               resultLineItemId: originalRelation.lineItemReverseOther.id,
             },
           });
 
-          await tx.accociateVoucher.deleteMany({
+          await tx.associateVoucher.deleteMany({
             where: {
               originalVoucherId: originalRelation.voucherId,
               resultVoucherId: voucherId,
@@ -832,7 +833,7 @@ export async function putVoucherWithoutCreateNew(
         });
 
         newRelations.forEach(async (newRelation) => {
-          await tx.accociateVoucher.create({
+          await tx.associateVoucher.create({
             data: {
               originalVoucher: {
                 connect: {
@@ -972,7 +973,7 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
                     account: true,
                   },
                 },
-                accociateVoucher: {
+                associateVoucher: {
                   include: {
                     event: true,
                   },
@@ -987,7 +988,7 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
                     account: true,
                   },
                 },
-                accociateVoucher: {
+                associateVoucher: {
                   include: {
                     event: true,
                   },

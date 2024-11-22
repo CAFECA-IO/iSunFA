@@ -60,6 +60,7 @@ export interface IAccountForSheetDisplay {
 }
 
 export interface IAccountReadyForFrontend {
+  id: number;
   code: string;
   name: string;
   curPeriodAmount: number;

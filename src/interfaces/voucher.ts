@@ -8,7 +8,7 @@ import {
   Voucher as PrismaVoucher,
   User as PrismaUser,
   Counterparty as PrismaCounterParty,
-  AccociateVoucher as PrismaAssociateVoucher,
+  AssociateVoucher as PrismaAssociateVoucher,
   Event as PrismaEvent,
   LineItem as PrismaLineItem,
   AssetVoucher as PrismaAssetVoucher,
@@ -19,7 +19,7 @@ import {
   Invoice as PrismaInvoice,
   File as PrismaFile,
   UserCertificate as PrismaUserCertificate,
-  AccociateLineItem as PrismaAssociateLineItem,
+  AssociateLineItem as PrismaAssociateLineItem,
 } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
@@ -697,7 +697,7 @@ export type IGetOneVoucherResponse = PrismaVoucher & {
       resultLineItem: PrismaLineItem & {
         account: PrismaAccount;
       };
-      accociateVoucher: PrismaAssociateVoucher & {
+      associateVoucher: PrismaAssociateVoucher & {
         event: PrismaEvent;
       };
     })[];
@@ -705,7 +705,7 @@ export type IGetOneVoucherResponse = PrismaVoucher & {
       originalLineItem: PrismaLineItem & {
         account: PrismaAccount;
       };
-      accociateVoucher: PrismaAssociateVoucher & {
+      associateVoucher: PrismaAssociateVoucher & {
         event: PrismaEvent;
       };
     })[];

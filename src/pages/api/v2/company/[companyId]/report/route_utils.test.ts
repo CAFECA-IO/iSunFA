@@ -45,6 +45,7 @@ describe('company/[companyId]/v2/report/route_utils unit test', () => {
 
   describe('getMappingByReportType unit test', () => {
     const mockAccount: IAccountReadyForFrontend = {
+      id: 1001,
       code: '4000',
       name: '營業收入合計',
       curPeriodAmount: 1000,
@@ -63,6 +64,7 @@ describe('company/[companyId]/v2/report/route_utils unit test', () => {
 
       const map = transformAccountsToMap(mockAccounts);
       const account = map.get(mockAccount.code);
+
       expect(account).toBeDefined();
       expect(account);
     });
@@ -71,6 +73,7 @@ describe('company/[companyId]/v2/report/route_utils unit test', () => {
   describe('transformAccountMapToFilterSequence', () => {
     const mockAccounts: IAccountReadyForFrontend[] = [
       {
+        id: 1001,
         code: '4000',
         name: '營業收入合計',
         curPeriodAmount: 1000,
@@ -85,6 +88,7 @@ describe('company/[companyId]/v2/report/route_utils unit test', () => {
         children: [],
       },
       {
+        id: 1540,
         code: '2128',
         name: '按攤銷後成本衡量之金融負債－流動',
         curPeriodAmount: 1000,

@@ -684,7 +684,7 @@ export const voucherAPIPutUtils = {
       const lineItemReverseOther = voucherAPIPutUtils.initLineItemEntity(lineItem);
       lineItem.resultLineItem.forEach((result) => {
         // const lineItemIdBeReversed = result.resultLineItemId;
-        const { eventId } = result.accociateVoucher;
+        const { eventId } = result.associateVoucher;
         reversePairs.push({
           eventId,
           lineItemIdBeReversed: result.originalLineItemId,

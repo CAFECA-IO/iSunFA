@@ -258,11 +258,11 @@ export async function easyFindManyAccountsInPrisma(companyId: number, type: Acco
   return accounts;
 }
 
-export async function findUniqueAccountByCodeInPrisma(code: string, companyId?: number) {
+export async function findUniqueAccountByIdInPrisma(id: number, companyId?: number) {
   const account: Account | null = await prisma.account.findUnique({
     where: {
       OR: [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
-      code,
+      id,
     },
   });
   return account;

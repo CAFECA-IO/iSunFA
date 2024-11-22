@@ -168,19 +168,19 @@ describe('company/[companyId]/voucher/voucherId integration test', () => {
           voucherId: 1002,
         },
       });
-      const associateVoucher = await prisma.accociateVoucher.findFirst({
+      const associateVoucher = await prisma.associateVoucher.findFirst({
         where: {
           resultVoucherId: 1002,
         },
       });
 
-      const newAssociateLineItem = await prisma.accociateLineItem.findFirst({
+      const newAssociateLineItem = await prisma.associateLineItem.findFirst({
         where: {
           originalLineItemId: 1000,
         },
       });
 
-      const oldAssociateLineItem = await prisma.accociateLineItem.findFirst({
+      const oldAssociateLineItem = await prisma.associateLineItem.findFirst({
         where: {
           originalLineItemId: 1001,
         },

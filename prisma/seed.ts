@@ -1,5 +1,7 @@
+/* eslint-disable */
 import { PrismaClient } from '@prisma/client';
-import accounts from '@/seed_json/account.json';
+// import accounts from '@/seed_json/account.json';
+import accounts from '@/seed_json/account_new.json';
 import companies from '@/seed_json/company.json';
 import companyKYCs from '@/seed_json/company_kyc.json';
 import admins from '@/seed_json/admin.json';
@@ -268,13 +270,13 @@ async function createLineItems() {
 }
 
 async function createAssociateLineItem() {
-  await prisma.accociateLineItem.createMany({
+  await prisma.associateLineItem.createMany({
     data: associateLineItems,
   });
 }
 
 async function createAssociateVoucher() {
-  await prisma.accociateVoucher.createMany({
+  await prisma.associateVoucher.createMany({
     data: associateVouchers,
   });
 }
@@ -406,11 +408,16 @@ async function main() {
   await createInvoice();
 }
 
+// async function main() {
+//   return true;
+// }
+
 main()
   .then(async () => {
     await prisma.$disconnect();
   })
-  .catch(async () => {
+  .catch(async (error) => {
+    console.log('error', error);
     // Info (20240316 - Murky) - disconnect prisma
     await prisma.$disconnect();
     process.exit(1);

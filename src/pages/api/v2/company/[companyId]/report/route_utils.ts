@@ -64,6 +64,7 @@ export function transformAccountsToMap(accounts: IAccountReadyForFrontend[]) {
   accounts.forEach((account) => {
     if (account.code.length > 0) {
       accountsMap.set(account.code, account);
+      // accountsMap.set(account.id.toString(), account);
     }
   });
 
@@ -97,13 +98,21 @@ export function transformAccountsMapToFilterSequence({
   filter: FilterType[];
   accountsMap: Map<string, IAccountReadyForFrontend>;
 }) {
+  console.log(
+    'in transformAccountsMapToFilterSequence, filter',
+    filter,
+    'accountsMap',
+    accountsMap
+  );
   const accountsAfterFilter = filter.reduce((result: IAccountReadyForFrontend[], filterItem) => {
     const account = accountsMap.get(filterItem.code);
     if (account) {
       result.push(account);
     }
+
     return result;
   }, []);
+  // console.log('accountsAfterFilter[0]', accountsAfterFilter[0]);
 
   return accountsAfterFilter;
 }
