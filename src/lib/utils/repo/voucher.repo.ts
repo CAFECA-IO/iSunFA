@@ -39,7 +39,12 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { JOURNAL_EVENT } from '@/constants/journal';
 
-import { AccountCodesOfAPRegex, AccountCodesOfARRegex } from '@/constants/asset';
+import {
+  AccountCodesOfAP,
+  AccountCodesOfAPRegex,
+  AccountCodesOfAR,
+  AccountCodesOfARRegex,
+} from '@/constants/asset';
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
@@ -1593,13 +1598,63 @@ export async function getManyVoucherByAccountV2(options: {
 
 export async function getUnreadVoucherCount(options: {
   userId: number;
-  status: JOURNAL_EVENT;
+  tab: VoucherListTabV2;
   where: Prisma.VoucherWhereInput;
 }) {
-  const { userId, where, status } = options;
+  const { userId, where, tab } = options;
   let unreadVoucherCount = 0;
 
+  function getStatusFilter(voucherListTab: VoucherListTabV2) {
+    switch (voucherListTab) {
+      case VoucherListTabV2.UPLOADED:
+      case VoucherListTabV2.PAYMENT:
+      case VoucherListTabV2.RECEIVING:
+        return JOURNAL_EVENT.UPLOADED;
+      case VoucherListTabV2.UPCOMING:
+        return JOURNAL_EVENT.UPCOMING;
+
+      default:
+        return undefined;
+    }
+  }
+
+  function generateOrCode(voucherListTab: VoucherListTabV2) {
+    switch (voucherListTab) {
+      case VoucherListTabV2.PAYMENT:
+        return AccountCodesOfAP.map((code) => ({
+          lineItems: {
+            some: {
+              account: {
+                code: {
+                  startsWith: code,
+                },
+              },
+            },
+          },
+        }));
+      case VoucherListTabV2.RECEIVING:
+        return AccountCodesOfAR.map((code) => ({
+          lineItems: {
+            some: {
+              account: {
+                code: {
+                  startsWith: code,
+                },
+              },
+            },
+          },
+        }));
+      case VoucherListTabV2.UPLOADED:
+      case VoucherListTabV2.UPCOMING:
+      default:
+        return [];
+    }
+  }
+
   try {
+    const orCondition = generateOrCode(tab);
+    const isOrNeeded = orCondition.length > 0;
+    const status = getStatusFilter(tab);
     const readVoucherCount = await prisma.voucher.count({
       where: {
         ...where,
@@ -1610,6 +1665,7 @@ export async function getUnreadVoucherCount(options: {
             isRead: true,
           },
         },
+        ...(isOrNeeded && { OR: orCondition }),
       },
     });
 
@@ -1617,6 +1673,7 @@ export async function getUnreadVoucherCount(options: {
       where: {
         ...where,
         status,
+        ...(isOrNeeded && { OR: orCondition }),
       },
     });
     unreadVoucherCount = totalVoucherCount - readVoucherCount;

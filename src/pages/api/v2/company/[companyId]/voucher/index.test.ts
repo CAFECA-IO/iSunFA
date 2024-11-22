@@ -73,7 +73,7 @@ describe('company/[companyId]/voucher integration test', () => {
         query: {
           page: '1',
           pageSize: '10',
-          tab: VoucherListTabV2.UPLOADED,
+          tab: VoucherListTabV2.PAYMENT,
           // type: EventType.PAYMENT,
           // startDate: '1',
           // endDate: '1772617600',
