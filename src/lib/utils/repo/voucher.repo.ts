@@ -1210,6 +1210,52 @@ export async function getManyVoucherV2(options: {
         lineItems: {
           include: {
             account: true,
+            originalLineItem: {
+              // Info: (20241114 - Murky) 指的是這個lineItem是 original
+              include: {
+                resultLineItem: {
+                  include: {
+                    account: true,
+                  },
+                },
+                accociateVoucher: {
+                  include: {
+                    event: true,
+                  },
+                },
+              },
+            },
+            resultLineItem: {
+              // Info: (20241114 - Murky) 指的是這個lineItem是 result
+              include: {
+                originalLineItem: {
+                  include: {
+                    account: true,
+                    originalLineItem: {
+                      // Info: (20241114 - Murky) 指的是這個lineItem是 original
+                      include: {
+                        resultLineItem: {
+                          include: {
+                            account: true,
+                          },
+                        },
+                        accociateVoucher: {
+                          include: {
+                            event: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                accociateVoucher: {
+                  include: {
+                    event: true,
+                    originalVoucher: true,
+                  },
+                },
+              },
+            },
           },
         },
         counterparty: true,
@@ -1255,6 +1301,265 @@ export async function getManyVoucherV2(options: {
         vouchers = vouchersFromPrisma;
         break;
     }
+  } catch (error) {
+    const logError = loggerError(
+      0,
+      'Find many accounts in findManyAccountsInPrisma failed',
+      error as Error
+    );
+    logError.error('Prisma find many accounts in account.repo.ts failed');
+  }
+
+  const hasNextPage = vouchers.length > pageSize;
+  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER; // 1;
+
+  if (hasNextPage) {
+    vouchers.pop();
+  }
+
+  const returnValue = {
+    data: vouchers,
+    page,
+    pageSize,
+    totalPages,
+    totalCount,
+    hasNextPage,
+    hasPreviousPage,
+    sort: sortOption,
+    where,
+  };
+
+  return returnValue;
+}
+
+export async function getManyVoucherByAccountV2(options: {
+  companyId: number;
+  accountId: number;
+  startDate: number;
+  endDate: number;
+  page: number;
+  pageSize: number;
+  sortOption: {
+    sortBy: SortBy;
+    sortOrder: SortOrder;
+  }[];
+  searchQuery?: string | undefined;
+  isDeleted?: boolean | undefined;
+}): Promise<IPaginatedData<IGetManyVoucherResponseButOne[]>> {
+  const {
+    companyId,
+    accountId,
+    startDate,
+    endDate,
+    page,
+    pageSize,
+    sortOption,
+    searchQuery,
+    isDeleted,
+  } = options;
+  // const { page, pageSize, sortOption, isDeleted } = options;
+  let vouchers: IGetManyVoucherResponseButOne[] = [];
+
+  // Info: (20241121 - Murky) payable 和 receivable 如果要再搜尋中處理的話要用rowQuery, 所以這邊先用filter的
+  const where: Prisma.VoucherWhereInput = {
+    date: {
+      gte: startDate,
+      lte: endDate,
+    },
+    companyId,
+    status: JOURNAL_EVENT.UPLOADED,
+    deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
+    lineItems: {
+      some: {
+        account: {
+          id: accountId,
+        },
+      },
+    },
+    OR: [
+      {
+        issuer: {
+          name: {
+            contains: searchQuery,
+          },
+        },
+      },
+      {
+        counterparty: {
+          OR: [
+            {
+              name: {
+                contains: searchQuery,
+              },
+            },
+            {
+              taxId: {
+                contains: searchQuery,
+              },
+            },
+          ],
+        },
+      },
+      {
+        note: {
+          contains: searchQuery,
+        },
+      },
+      {
+        no: {
+          contains: searchQuery,
+        },
+      },
+      {
+        lineItems: {
+          some: {
+            OR: [
+              // Info: (20241121 - Murky) 如果有需要搜尋再打開
+              // {
+              //   description: {
+              //     contains: searchQuery,
+              //   },
+              // },
+              {
+                account: {
+                  name: {
+                    contains: searchQuery,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ],
+  };
+
+  let totalCount = 0;
+
+  try {
+    totalCount = await prisma.voucher.count({ where });
+  } catch (error) {
+    const logError = loggerError(
+      0,
+      'Count total count of voucher in getManyVoucherV2 failed',
+      error as Error
+    );
+    logError.error('Prisma count voucher in getManyVoucherV2 failed');
+  }
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  const offset = pageToOffset(page, pageSize);
+  // const orderBy = { [sortBy]: sortOrder };
+  function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
+    const orderBy: { [key: string]: SortOrder }[] = [];
+    sortOptions.forEach((sort) => {
+      const { sortBy, sortOrder } = sort;
+      switch (sortBy) {
+        case SortBy.DATE:
+          orderBy.push({
+            date: sortOrder,
+          });
+          break;
+        // Info: (20241120 - Murky) Credit和Debit等拿出去之後用程式碼排
+        case SortBy.PERIOD:
+        case SortBy.CREDIT:
+        case SortBy.DEBIT:
+        case SortBy.PAY_RECEIVE_TOTAL:
+        case SortBy.PAY_RECEIVE_ALREADY_HAPPENED:
+        case SortBy.PAY_RECEIVE_REMAIN:
+        default:
+          break;
+      }
+    });
+    return orderBy;
+  }
+
+  const findManyArgs = {
+    skip: offset,
+    take: pageSize + 1,
+    orderBy: createOrderByList(sortOption),
+    where,
+  };
+
+  try {
+    vouchers = await prisma.voucher.findMany({
+      ...findManyArgs,
+      include: {
+        lineItems: {
+          include: {
+            account: true,
+            originalLineItem: {
+              // Info: (20241114 - Murky) 指的是這個lineItem是 original
+              include: {
+                resultLineItem: {
+                  include: {
+                    account: true,
+                  },
+                },
+                accociateVoucher: {
+                  include: {
+                    event: true,
+                  },
+                },
+              },
+            },
+            resultLineItem: {
+              // Info: (20241114 - Murky) 指的是這個lineItem是 result
+              include: {
+                originalLineItem: {
+                  include: {
+                    account: true,
+                    originalLineItem: {
+                      // Info: (20241114 - Murky) 指的是這個lineItem是 original
+                      include: {
+                        resultLineItem: {
+                          include: {
+                            account: true,
+                          },
+                        },
+                        accociateVoucher: {
+                          include: {
+                            event: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                accociateVoucher: {
+                  include: {
+                    event: true,
+                    originalVoucher: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        counterparty: true,
+        issuer: {
+          include: {
+            imageFile: true,
+          },
+        },
+        UserVoucher: true,
+        originalVouchers: {
+          include: {
+            event: true,
+            resultVoucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   } catch (error) {
     const logError = loggerError(
       0,

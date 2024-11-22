@@ -691,7 +691,7 @@ const voucherGetByAccountQueryValidatorV2 = z.object({
   // type: z.nativeEnum(EventType).optional(),
   // tab: z.nativeEnum(),
   startDate: zodStringToNumberWithDefault(0),
-  endDate: zodStringToNumberWithDefault(Infinity),
+  endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
   sortOption: zodFilterSectionSortingOptions(),
   searchQuery: z.string().optional(),
 });

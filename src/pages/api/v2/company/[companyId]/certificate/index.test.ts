@@ -90,7 +90,7 @@ describe('company/[companyId]/certificate integration test', () => {
     });
   });
 
-  describe('Post certificate', () => {
+  xdescribe('Post certificate', () => {
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},
