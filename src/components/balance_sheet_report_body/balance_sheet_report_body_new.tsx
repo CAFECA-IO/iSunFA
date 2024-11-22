@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import BalanceSheetList from '@/components/balance_sheet_report_body/balance_sheet_list_new';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -6,6 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { ReportLanguagesMap, ReportLanguagesKey } from '@/interfaces/report_language';
 import { IoIosArrowDown } from 'react-icons/io';
 import Image from 'next/image';
+import { useReactToPrint } from 'react-to-print';
 
 // Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
 const BalanceSheetPageBody = () => {
@@ -16,6 +17,49 @@ const BalanceSheetPageBody = () => {
     startTimeStamp: 0,
     endTimeStamp: 0,
   });
+
+  // Info: (20241122 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  // Info: (20241122 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
+  const printRef = useRef<HTMLDivElement>(null);
+
+  // Info: (20241122 - Anna)
+  const handleOnBeforePrint = React.useCallback(() => {
+    setIsPrinting(true);
+    // eslint-disable-next-line no-console
+    console.log('onBeforePrint call ');
+    return Promise.resolve();
+  }, []);
+
+  // Info: (20241122 - Anna)
+  const handleOnAfterPrint = React.useCallback(() => {
+    setIsPrinting(false);
+    // eslint-disable-next-line no-console
+    console.log('onAfterPrint call ');
+  }, []);
+
+  // Info: (20241122 - Anna)
+  const printFn = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: 'alance Sheet Report',
+    onBeforePrint: handleOnBeforePrint,
+    onAfterPrint: handleOnAfterPrint,
+  });
+
+  // Info: (20241122 - Anna) 父層中管理 beforeprint 和 afterprint 的監聽
+  // useEffect(() => {
+  //   const handleBeforePrint = () => setIsPrinting(true);
+  //   const handleAfterPrint = () => setIsPrinting(false);
+
+  //   window.addEventListener('beforeprint', handleBeforePrint);
+  //   window.addEventListener('afterprint', handleAfterPrint);
+
+  //   return () => {
+  //     window.removeEventListener('beforeprint', handleBeforePrint);
+  //     window.removeEventListener('afterprint', handleAfterPrint);
+  //   };
+  // }, []);
 
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
@@ -100,7 +144,12 @@ const BalanceSheetPageBody = () => {
         </div>
 
         {/* Info: (20241017 - Anna) Balance Sheet List */}
-        <BalanceSheetList selectedDateRange={selectedDateRange} />
+        <BalanceSheetList
+          selectedDateRange={selectedDateRange}
+          isPrinting={isPrinting} // Info: (20241122 - Anna) 傳遞列印狀態
+          printRef={printRef} // Info: (20241122 - Anna) 傳遞列印區域 Ref
+          printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數
+        />
       </div>
     </div>
   );

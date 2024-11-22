@@ -20,11 +20,14 @@ import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import Toggle from '@/components/toggle/toggle';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { useReactToPrint } from 'react-to-print';
+// import { useReactToPrint } from 'react-to-print';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
+  isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
+  printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
+  printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
 }
 
 // Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
@@ -41,15 +44,20 @@ const COLOR_CLASSES = [
   'bg-[#9B8AFB]',
 ];
 
-const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }) => {
+const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
+  selectedDateRange,
+  isPrinting, // Info: (20241122 - Anna) 使用打印狀態
+  printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
+  printFn, // Info: (20241122 - Anna) 使用打印函數
+}) => {
   const { t } = useTranslation(['report_401']);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241121 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
-  const printRef = useRef<HTMLDivElement>(null);
+  // const printRef = useRef<HTMLDivElement>(null);
 
   // Info: (20241112 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
-  const [isPrinting, setIsPrinting] = useState(false);
+  // const [isPrinting, setIsPrinting] = useState(false);
 
   // const handlePrint = () => {
   //   // setIsPrinting(true); // Info: (20241118 - Anna) 開啟列印模式
@@ -122,23 +130,23 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   //   handlePrint(); // 呼叫列印
   // };
 
-  const handleOnAfterPrint = React.useCallback(() => {
-    // eslint-disable-next-line no-console
-    console.log('onAfterPrint call ');
-  }, []);
+  // const handleOnAfterPrint = React.useCallback(() => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('onAfterPrint call ');
+  // }, []);
 
-  const handleOnBeforePrint = React.useCallback(() => {
-    // eslint-disable-next-line no-console
-    console.log('onBeforePrint call ');
-    return Promise.resolve();
-  }, []);
+  // const handleOnBeforePrint = React.useCallback(() => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('onBeforePrint call ');
+  //   return Promise.resolve();
+  // }, []);
 
-  const printFn = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: 'alance Sheet Report',
-    onAfterPrint: handleOnAfterPrint,
-    onBeforePrint: handleOnBeforePrint,
-  });
+  // const printFn = useReactToPrint({
+  //   contentRef: printRef,
+  //   documentTitle: 'alance Sheet Report',
+  //   onAfterPrint: handleOnAfterPrint,
+  //   onBeforePrint: handleOnBeforePrint,
+  // });
 
   // const handleOnClick = React.useCallback(() => {
   //   printFn();
@@ -323,51 +331,69 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     }
   }, [reportFinancial, totalSubAccountsToggle]); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 作為依賴項
 
-  useEffect(() => {
-    // Info: (20241112 - Anna) 列印之前啟動列印模式
-    const handleBeforePrint = () => setIsPrinting(true);
-    // Info: (20241112 - Anna) 列印之後退出列印模式
-    const handleAfterPrint = () => setIsPrinting(false);
+  // useEffect(() => {
+  //   // Info: (20241112 - Anna) 列印之前啟動列印模式
+  //   const handleBeforePrint = () => setIsPrinting(true);
+  //   // Info: (20241112 - Anna) 列印之後退出列印模式
+  //   const handleAfterPrint = () => setIsPrinting(false);
 
-    window.addEventListener('beforeprint', handleBeforePrint);
-    window.addEventListener('afterprint', handleAfterPrint);
+  //   window.addEventListener('beforeprint', handleBeforePrint);
+  //   window.addEventListener('afterprint', handleAfterPrint);
 
-    // Info: (20241112 - Anna) 清除事件監聽器
-    return () => {
-      window.removeEventListener('beforeprint', handleBeforePrint);
-      window.removeEventListener('afterprint', handleAfterPrint);
-    };
-  }, []);
+  //   // Info: (20241112 - Anna) 清除事件監聽器
+  //   return () => {
+  //     window.removeEventListener('beforeprint', handleBeforePrint);
+  //     window.removeEventListener('afterprint', handleAfterPrint);
+  //   };
+  // }, []);
+
+  // useEffect(() => {
+  //   if (isPrinting) {
+  //     const observer = new MutationObserver(() => {
+  //       // Info: (20241118 - Anna) 檢查所有需要的 ID 是否渲染完成
+  //       const requiredIds = ['#1', '#2', '#3', '#4', '#5'];
+  //       const allRendered = requiredIds.every((id) => document.querySelector(id));
+
+  //       if (allRendered) {
+  //         observer.disconnect(); // Info: (20241118 - Anna) 停止監控
+  //         window.print(); // Info: (20241118 - Anna) 所有節點渲染完成後觸發列印
+  //        // setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
+  //       }
+  //     });
+
+  //     // Info: (20241118 - Anna) 監控目標節點的變化
+  //     observer.observe(document.body, {
+  //       childList: true,
+  //       subtree: true,
+  //     });
+
+  //     // Info: (20241118 - Anna) 返回清理函數以移除監控器
+  //     return () => {
+  //       observer.disconnect(); // Info: (20241118 - Anna) 確保監控器被清理
+  //     };
+  //   }
+
+  //   // Info: (20241118 - Anna) 如果 `isPrinting` 為假，則返回空清理函數，滿足 ESLint 的要求
+  //   return () => {};
+  // }, [isPrinting]);
 
   useEffect(() => {
     if (isPrinting) {
-      const observer = new MutationObserver(() => {
-        // Info: (20241118 - Anna) 檢查所有需要的 ID 是否渲染完成
-        const requiredIds = ['#1', '#2', '#3', '#4', '#5'];
-        const allRendered = requiredIds.every((id) => document.querySelector(id));
-
-        if (allRendered) {
-          observer.disconnect(); // Info: (20241118 - Anna) 停止監控
-          window.print(); // Info: (20241118 - Anna) 所有節點渲染完成後觸發列印
-          setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
-        }
-      });
-
-      // Info: (20241118 - Anna) 監控目標節點的變化
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-
-      // Info: (20241118 - Anna) 返回清理函數以移除監控器
-      return () => {
-        observer.disconnect(); // Info: (20241118 - Anna) 確保監控器被清理
-      };
+      // eslint-disable-next-line no-console
+      console.log('打印模式啟動');
     }
-
-    // Info: (20241118 - Anna) 如果 `isPrinting` 為假，則返回空清理函數，滿足 ESLint 的要求
-    return () => {};
   }, [isPrinting]);
+
+  // Info: (20241122 - Anna)打印 Ref 的內容
+  useEffect(() => {
+    if (printRef.current) {
+      // eslint-disable-next-line no-console
+      console.log('Current printRef content:', printRef.current);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('printRef is currently null');
+    }
+  }, [printRef]);
 
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
@@ -903,11 +929,47 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   );
 
   // Info: (20241118 - Anna) 如果正在列印，僅渲染列印模式的內容
-  if (isPrinting) {
-    // eslint-disable-next-line no-console
-    console.log('printRef', printRef);
-    return (
-      <div ref={printRef} className="mx-auto w-full origin-top overflow-x-auto print:block">
+  // if (isPrinting) {
+  //   // eslint-disable-next-line no-console
+  //   console.log('printRef', printRef);
+  //   return (
+  //     <div ref={printRef} className="mx-auto w-full origin-top overflow-x-auto print:block">
+  //       <BalanceSheetA4Template
+  //         reportFinancial={reportFinancial}
+  //         curDate={curDate}
+  //         preDate={preDate}
+  //       >
+  //         {ItemSummary}
+  //         {ItemDetail}
+  //         {ProportionalTable}
+  //         {AssetItem}
+  //         {TurnoverDay}
+  //       </BalanceSheetA4Template>
+  //     </div>
+  //   );
+  // }
+
+  // return (
+  //   <div className="mx-auto w-full origin-top overflow-x-auto">
+  //     {displayedSelectArea(printRef)}
+  //     {ItemSummary}
+  //     <hr className="break-before-page" />
+  //     {ItemDetail}
+  //     <hr className="break-before-page" />
+  //     {ProportionalTable}
+  //     <hr className="mb-16px mt-32px break-before-page" />
+  //     {AssetItem}
+  //     <hr className="break-before-page" />
+  //     {TurnoverDay}
+  //   </div>
+  // );
+
+  return (
+    <div
+      ref={printRef} // 確保 Ref 始終存在
+      className={`mx-auto w-full origin-top overflow-x-auto ${isPrinting ? 'print:block' : ''}`}
+    >
+      {isPrinting ? (
         <BalanceSheetA4Template
           reportFinancial={reportFinancial}
           curDate={curDate}
@@ -919,22 +981,20 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
           {AssetItem}
           {TurnoverDay}
         </BalanceSheetA4Template>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mx-auto w-full origin-top overflow-x-auto">
-      {displayedSelectArea(printRef)}
-      {ItemSummary}
-      <hr className="break-before-page" />
-      {ItemDetail}
-      <hr className="break-before-page" />
-      {ProportionalTable}
-      <hr className="mb-16px mt-32px break-before-page" />
-      {AssetItem}
-      <hr className="break-before-page" />
-      {TurnoverDay}
+      ) : (
+        <div className="mx-auto w-full origin-top overflow-x-auto">
+          {displayedSelectArea(printRef)}
+          {ItemSummary}
+          <hr className="break-before-page" />
+          {ItemDetail}
+          <hr className="break-before-page" />
+          {ProportionalTable}
+          <hr className="mb-16px mt-32px break-before-page" />
+          {AssetItem}
+          <hr className="break-before-page" />
+          {TurnoverDay}
+        </div>
+      )}
     </div>
   );
 };
