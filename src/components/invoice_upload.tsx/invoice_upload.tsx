@@ -36,7 +36,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
     useModalContext();
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
-  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
+  // const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
 
   const handleUploadCancelled = useCallback(() => {
     setFiles([]);
@@ -114,32 +114,32 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
           prevFiles.map((f) => (f.name === file.name ? { ...f, id: fileMeta.id, progress: 50 } : f))
         );
 
-        const { success: successCreated, data: certificate } = await createCertificateAPI({
-          params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-          body: { fileId: fileMeta.id },
-        });
-        if (!successCreated || !certificate) {
-          handleUploadFailed(file.name, new Error(t('certificate:CREATE.FAILED')));
-          return;
-        }
+        // const { success: successCreated, data: certificate } = await createCertificateAPI({
+        //   params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+        //   body: { fileId: fileMeta.id },
+        // });
+        // if (!successCreated || !certificate) {
+        //   handleUploadFailed(file.name, new Error(t('certificate:CREATE.FAILED')));
+        //   return;
+        // }
 
-        setFiles((prevFiles) =>
-          prevFiles.map((f) => {
-            return f.name === file.name
-              ? {
-                  ...f,
-                  progress: 100,
-                  status: ProgressStatus.SUCCESS,
-                  certificateId: certificate.id,
-                }
-              : f;
-          })
-        );
+        // setFiles((prevFiles) =>
+        //   prevFiles.map((f) => {
+        //     return f.name === file.name
+        //       ? {
+        //           ...f,
+        //           progress: 100,
+        //           status: ProgressStatus.SUCCESS,
+        //           certificateId: certificate.id,
+        //         }
+        //       : f;
+        //   })
+        // );
       } catch (error) {
         handleUploadFailed(file.name, error as Error);
       }
     },
-    [selectedCompany?.id, handleUploadFailed, setFiles, t, uploadFileAPI, createCertificateAPI]
+    [selectedCompany?.id, handleUploadFailed, setFiles, t, uploadFileAPI]
   );
 
   const certificateCreatedHandler = useCallback(
@@ -169,6 +169,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
       withScanner={withScanner}
       toggleQRCode={toggleQRCode}
       handleUpload={handleUpload}
+      multiple
     />
   );
 };
