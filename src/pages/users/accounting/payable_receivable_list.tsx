@@ -4,7 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Layout from '@/components/beta/layout/layout';
-import APandARPageBody from '@/components/voucher/ap_and_ar_page_body';
+import PayableReceivableVoucherPageBody from '@/components/voucher/payable_receivable_voucher_body';
 
 const APandARListPage: React.FC = () => {
   const { t } = useTranslation('common');
@@ -19,7 +19,7 @@ const APandARListPage: React.FC = () => {
       </Head>
 
       <Layout isDashboard={false} pageTitle={t('journal:VOUCHER.AP_AND_AR_PAGE_TITLE')}>
-        <APandARPageBody />
+        <PayableReceivableVoucherPageBody />
       </Layout>
     </>
   );

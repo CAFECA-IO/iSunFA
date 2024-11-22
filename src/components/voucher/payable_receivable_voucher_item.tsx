@@ -1,31 +1,73 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { numberWithCommas } from '@/lib/utils/common';
 import { FaDownload, FaUpload } from 'react-icons/fa';
 import { VoucherType } from '@/constants/account';
 import { FiRepeat } from 'react-icons/fi';
+// import { IVoucherBeta } from '@/interfaces/voucher';
+import { VoucherListTabV2 } from '@/constants/voucher';
 
-const APandARItem: React.FC = () => {
-  // ToDo: (20240924 - Julian) dummy data
-  const date: number = new Date().getTime() / 1000;
-  const voucherType: VoucherType = VoucherType.EXPENSE;
-  const voucherNo: string = '20240924-0001';
-  const counterparty = {
-    code: '59373022',
-    name: 'PX Mart',
-  };
-  const issuer = {
-    avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-    name: 'Julian',
-  };
-  const receivableAmount = 1000000;
-  const receivedAmount = 500000;
-  const remainAmount = 500000;
-  const reverse = '240417-001';
+interface IPayableReceivableVoucherItemProps {
+  // activeTab: VoucherListTabV2;
+  //  voucherData: IVoucherBeta;
+}
+
+const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps> = () => {
+  const {
+    id: voucherId,
+    voucherDate,
+    voucherType,
+    voucherNo,
+    counterParty,
+    issuer,
+    receivingInfo,
+    payableInfo,
+    reverseVouchers,
+  } =
+    // voucherData;
+    {
+      id: 1,
+      voucherDate: 1,
+      voucherType: VoucherType.EXPENSE,
+      voucherNo: 1,
+      counterParty: {
+        companyId: 1,
+        name: 'name',
+      },
+      issuer: {
+        avatar: 'avatar',
+        name: 'name',
+      },
+      receivingInfo: {
+        total: 1,
+        alreadyHappened: 1,
+        remain: 1,
+      },
+      payableInfo: {
+        total: 1,
+        alreadyHappened: 1,
+        remain: 1,
+      },
+      reverseVouchers: [
+        {
+          id: 1,
+          voucherNo: 1,
+        },
+      ],
+    };
+
+  const activeTab = VoucherListTabV2.RECEIVING;
+
+  const {
+    total: totalAmount,
+    alreadyHappened: alreadyHappenedAmount,
+    remain: remainAmount,
+  } = activeTab === VoucherListTabV2.RECEIVING ? receivingInfo : payableInfo;
 
   const displayedDate = (
     <div className="flex items-center justify-center">
-      <CalendarIcon timestamp={date} />
+      <CalendarIcon timestamp={voucherDate} />
     </div>
   );
 
@@ -49,8 +91,8 @@ const APandARItem: React.FC = () => {
 
   const displayedCounterparty = (
     <div className="flex flex-col items-center gap-4px">
-      <p className="text-text-neutral-tertiary">{counterparty.code}</p>
-      <p className="text-text-neutral-primary">{counterparty.name}</p>
+      <p className="text-text-neutral-tertiary">{counterParty.companyId}</p>
+      <p className="text-text-neutral-primary">{counterParty.name}</p>
     </div>
   );
 
@@ -61,15 +103,16 @@ const APandARItem: React.FC = () => {
     </div>
   );
 
-  const displayedReceivableAmount = (
+  const displayedTotalAmount = (
     <div className="whitespace-nowrap text-right">
-      {numberWithCommas(receivableAmount)} <span className="text-text-neutral-tertiary">TWD</span>
+      {numberWithCommas(totalAmount)} <span className="text-text-neutral-tertiary">TWD</span>
     </div>
   );
 
-  const displayedReceivedAmount = (
+  const displayedAlreadyHappenedAmount = (
     <div className="whitespace-nowrap text-right">
-      {numberWithCommas(receivedAmount)} <span className="text-text-neutral-tertiary">TWD</span>
+      {numberWithCommas(alreadyHappenedAmount)}{' '}
+      <span className="text-text-neutral-tertiary">TWD</span>
     </div>
   );
 
@@ -79,10 +122,28 @@ const APandARItem: React.FC = () => {
     </div>
   );
 
-  const displayedReverse = <p className="text-center text-link-text-primary">{reverse}</p>;
+  const displayedReverse = (
+    <div className="flex flex-col">
+      {reverseVouchers && reverseVouchers.length > 0 ? (
+        reverseVouchers.map((voucher) => (
+          <Link
+            href={`/users/accounting/${voucher.id}`}
+            className="text-center text-link-text-primary"
+          >
+            {voucher.voucherNo}
+          </Link>
+        ))
+      ) : (
+        <p className="text-center text-link-text-primary">-</p>
+      )}
+    </div>
+  );
 
   return (
-    <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
+    <Link
+      href={`/users/accounting/${voucherId}`}
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+    >
       {/* Info: (20240924 - Julian) Issued Date */}
       <div className="table-cell py-10px text-center align-middle">{displayedDate}</div>
       {/* Info: (20240924 - Julian) Voucher No */}
@@ -91,16 +152,16 @@ const APandARItem: React.FC = () => {
       <div className="table-cell align-middle">{displayedCounterparty}</div>
       {/* Info: (20240924 - Julian) Issuer */}
       <div className="table-cell align-middle">{displayedIssuer}</div>
-      {/* Info: (20240924 - Julian) Receivable Amount */}
-      <div className="table-cell align-middle">{displayedReceivableAmount}</div>
-      {/* Info: (20240924 - Julian) Received Amount */}
-      <div className="table-cell align-middle">{displayedReceivedAmount}</div>
+      {/* Info: (20240924 - Julian) Total Amount */}
+      <div className="table-cell align-middle">{displayedTotalAmount}</div>
+      {/* Info: (20240924 - Julian) Already Happened Amount */}
+      <div className="table-cell align-middle">{displayedAlreadyHappenedAmount}</div>
       {/* Info: (20240924 - Julian) Remain Amount */}
       <div className="table-cell align-middle">{displayedRemainAmount}</div>
       {/* Info: (20240924 - Julian) Reverse */}
       <div className="table-cell align-middle">{displayedReverse}</div>
-    </div>
+    </Link>
   );
 };
 
-export default APandARItem;
+export default PayableReceivableVoucherItem;
