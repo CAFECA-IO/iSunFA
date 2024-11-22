@@ -24,12 +24,14 @@ import { IEventEntity } from '@/interfaces/event';
 import { IVoucherBeta, IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { VoucherV2Action } from '@/constants/voucher';
+import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
 
 type IVoucherGetOutput = IPaginatedData<{
   unRead: {
     uploadedVoucher: number;
     upcomingEvents: number;
+    paymentVoucher: number;
+    receivingVoucher: number;
   };
   vouchers: IGetManyVoucherBetaEntity[];
 }>;
@@ -106,13 +108,25 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
   const unreadUploadedVoucherCounts = await getUtils.getUnreadVoucherCount({
     userId,
     where,
-    status: JOURNAL_EVENT.UPLOADED,
+    tab: VoucherListTabV2.UPLOADED,
   });
 
   const unreadUpcomingEventCounts = await getUtils.getUnreadVoucherCount({
     userId,
     where,
-    status: JOURNAL_EVENT.UPCOMING,
+    tab: VoucherListTabV2.UPCOMING,
+  });
+
+  const unreadReceivedVoucherCounts = await getUtils.getUnreadVoucherCount({
+    userId,
+    where,
+    tab: VoucherListTabV2.RECEIVING,
+  });
+
+  const unreadPayableVoucherCounts = await getUtils.getUnreadVoucherCount({
+    userId,
+    where,
+    tab: VoucherListTabV2.PAYMENT,
   });
   // ToDo: (20241121 - Murky) Post Read info
   getUtils.upsertUserReadVoucher({
@@ -133,6 +147,8 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
       unRead: {
         uploadedVoucher: unreadUploadedVoucherCounts,
         upcomingEvents: unreadUpcomingEventCounts,
+        paymentVoucher: unreadPayableVoucherCounts,
+        receivingVoucher: unreadReceivedVoucherCounts,
       },
       vouchers: voucherBetas,
     },

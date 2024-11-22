@@ -2,14 +2,66 @@ import { SortOrder, SortBy as BetaSortBy } from '@/constants/sort';
 import { IGetLineItemByAccount, ILineItemEntity } from '@/interfaces/line_item';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { Logger } from 'pino';
-import { LineItem as PrismaLineItem } from '@prisma/client';
-import { AccountCodesOfAPandAR } from '@/constants/asset';
+import {
+  LineItem as PrismaLineItem,
+  Account as PrismaAccount,
+  Voucher as PrismaVoucher,
+  AccociateLineItem as PrismaAssociateLineItem,
+  AccociateVoucher as PrismaAssociateVoucher,
+  Event as PrismaEvent,
+} from '@prisma/client';
+import {
+  AccountCodesOfAPandAR,
+  AccountCodesOfAPRegex,
+  AccountCodesOfARRegex,
+} from '@/constants/asset';
 import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_item.formatter';
 import { parsePrismaAccountToAccountEntity } from '@/lib/utils/formatter/account.formatter';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { IAccountEntity } from '@/interfaces/accounting_account';
-import { IVoucherEntity } from '@/interfaces/voucher';
+import { IGetManyVoucherResponseButOne, IVoucherEntity } from '@/interfaces/voucher';
 import { listLineItemsByAccount } from '@/lib/utils/repo/line_item.beta.repo';
+import { findFirstAccountInPrisma } from '@/lib/utils/repo/account.repo';
+import { getManyVoucherByAccountV2 } from '@/lib/utils/repo/voucher.repo';
+import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
+import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
+import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
+import { initUserVoucherEntity } from '@/lib/utils/user_voucher';
+import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
+import { parsePrismaAssociateLineItemToEntity } from '@/lib/utils/formatter/associate_line_item.formatter';
+import { parsePrismaAssociateVoucherToEntity } from '@/lib/utils/formatter/associate_voucher.formatter';
+import { IAssociateLineItemEntity } from '@/interfaces/associate_line_item';
+import { IAssociateVoucherEntity } from '@/interfaces/associate_voucher';
+import { IEventEntity } from '@/interfaces/event';
+
+type ILineItemEntityWithAssociate = ILineItemEntity & {
+  account: IAccountEntity;
+  lineItemsAssociateThatWriteOffMe: (IAssociateLineItemEntity & {
+    resultLineItem: ILineItemEntity & {
+      account: IAccountEntity;
+    };
+    associateVoucher: IAssociateVoucherEntity & {
+      event: IEventEntity;
+    };
+  })[];
+  lineItemsAssociateBeenWriteOffByMe: (IAssociateLineItemEntity & {
+    originalLineItem: ILineItemEntity & {
+      account: IAccountEntity;
+      lineItemsAssociateThatWriteOffMe: (IAssociateLineItemEntity & {
+        resultLineItem: ILineItemEntity & {
+          account: IAccountEntity;
+        };
+        associateVoucher: IAssociateVoucherEntity & {
+          event: IEventEntity;
+        };
+      })[];
+    };
+    associateVoucher: IAssociateVoucherEntity & {
+      event: IEventEntity;
+    };
+  })[];
+};
+
 /**
  * Info: (20241113 - Murky)
  * @description for src/pages/api/v2/company/[companyId]/account/[accountId]/lineitem.ts
@@ -133,5 +185,245 @@ export const lineItemGetByAccountAPIUtils = {
       account: accountEntity,
       voucher: voucherEntity,
     };
+  },
+};
+
+export const voucherGetByAccountAPIUtils = {
+  throwErrorAndLog: (
+    logger: Logger,
+    {
+      errorMessage,
+      statusMessage,
+    }: {
+      errorMessage: string;
+      statusMessage: string;
+    }
+  ) => {
+    logger.error(errorMessage);
+    throw new Error(statusMessage);
+  },
+  getAccountFromPrisma: async (options: { accountId: number; companyId: number }) => {
+    const { accountId, companyId } = options;
+    return findFirstAccountInPrisma(accountId, companyId);
+  },
+
+  getVouchersFromPrisma: async (options: {
+    companyId: number;
+    accountId: number;
+    startDate: number;
+    endDate: number;
+    page: number;
+    pageSize: number;
+    sortOption: {
+      sortBy: BetaSortBy;
+      sortOrder: SortOrder;
+    }[];
+    searchQuery?: string | undefined;
+    isDeleted?: boolean | undefined;
+  }) => {
+    return getManyVoucherByAccountV2(options);
+  },
+
+  initAccountEntity: (account: PrismaAccount): IAccountEntity => {
+    return parsePrismaAccountToAccountEntity(account);
+  },
+
+  isAccountAR: (account: IAccountEntity): boolean => {
+    return AccountCodesOfARRegex.test(account.code);
+  },
+
+  isAccountAP: (account: IAccountEntity): boolean => {
+    return AccountCodesOfAPRegex.test(account.code);
+  },
+
+  isAccountARorAP: (account: IAccountEntity): boolean => {
+    return (
+      voucherGetByAccountAPIUtils.isAccountAR(account) ||
+      voucherGetByAccountAPIUtils.isAccountAP(account)
+    );
+  },
+
+  isARorAPBeenWriteOff: (lineItemWithAssociate: ILineItemEntityWithAssociate): boolean => {
+    const targetAccountId = lineItemWithAssociate.account.id;
+    let writeOffAmount = lineItemWithAssociate.amount;
+    lineItemWithAssociate.lineItemsAssociateThatWriteOffMe.forEach((associate) => {
+      const isSameAccount = associate.resultLineItem.account.id === targetAccountId;
+
+      if (isSameAccount) {
+        const isSameDirection = associate.resultLineItem.debit === lineItemWithAssociate.debit;
+        writeOffAmount += associate.amount * (isSameDirection ? 1 : -1);
+      }
+    });
+    return writeOffAmount === 0;
+  },
+
+  isARorAPWriteOffOriginalVoucher: (
+    lineItemWithAssociate: ILineItemEntityWithAssociate
+  ): boolean => {
+    const targetAccountId = lineItemWithAssociate.account.id;
+    return lineItemWithAssociate.lineItemsAssociateBeenWriteOffByMe.every((associate) => {
+      return associate.originalLineItem.lineItemsAssociateThatWriteOffMe.every(
+        (originalAssociate) => {
+          const isSameAccount = originalAssociate.resultLineItem.account.id === targetAccountId;
+          let writeOffAmount = lineItemWithAssociate.amount;
+          if (isSameAccount) {
+            const isSameDirection =
+              originalAssociate.resultLineItem.debit === lineItemWithAssociate.debit;
+            writeOffAmount += originalAssociate.amount * (isSameDirection ? 1 : -1);
+          }
+          return writeOffAmount === 0;
+        }
+      );
+    });
+  },
+
+  isLineItemWriteOff: (lineItemWithAssociate: ILineItemEntityWithAssociate): boolean => {
+    const { lineItemsAssociateThatWriteOffMe, lineItemsAssociateBeenWriteOffByMe } =
+      lineItemWithAssociate;
+
+    if (lineItemsAssociateThatWriteOffMe.length && lineItemsAssociateBeenWriteOffByMe.length) {
+      return (
+        voucherGetByAccountAPIUtils.isARorAPBeenWriteOff(lineItemWithAssociate) &&
+        voucherGetByAccountAPIUtils.isARorAPWriteOffOriginalVoucher(lineItemWithAssociate)
+      );
+    } else if (lineItemsAssociateThatWriteOffMe.length) {
+      return voucherGetByAccountAPIUtils.isARorAPBeenWriteOff(lineItemWithAssociate);
+    } else if (lineItemsAssociateBeenWriteOffByMe.length) {
+      return voucherGetByAccountAPIUtils.isARorAPWriteOffOriginalVoucher(lineItemWithAssociate);
+    }
+    return false;
+  },
+  initVoucherEntity: (voucher: IGetManyVoucherResponseButOne) => {
+    const voucherEntity = parsePrismaVoucherToVoucherEntity(voucher);
+    return voucherEntity;
+  },
+
+  initLineItemsAssociateThatWriteOffMe(
+    entities: (PrismaAssociateLineItem & {
+      resultLineItem: PrismaLineItem & {
+        account: PrismaAccount;
+      };
+      accociateVoucher: PrismaAssociateVoucher & {
+        event: PrismaEvent;
+      };
+    })[]
+  ) {
+    return entities.map((data) => {
+      const associateLineItem = parsePrismaAssociateLineItemToEntity(data);
+      const resultLineItem = parsePrismaLineItemToLineItemEntity(data.resultLineItem);
+      const account = parsePrismaAccountToAccountEntity(data.resultLineItem.account);
+      const associateVoucher = parsePrismaAssociateVoucherToEntity(data.accociateVoucher);
+      const event = parsePrismaEventToEventEntity(data.accociateVoucher.event);
+      return {
+        ...associateLineItem,
+        resultLineItem: {
+          ...resultLineItem,
+          account,
+        },
+        associateVoucher: {
+          ...associateVoucher,
+          event,
+        },
+      };
+    });
+  },
+
+  initLineItemAndAccountEntity: (
+    lineItem: PrismaLineItem & {
+      account: PrismaAccount;
+      originalLineItem: (PrismaAssociateLineItem & {
+        resultLineItem: PrismaLineItem & {
+          account: PrismaAccount;
+        };
+        accociateVoucher: PrismaAssociateVoucher & {
+          event: PrismaEvent;
+        };
+      })[];
+      resultLineItem: (PrismaAssociateLineItem & {
+        originalLineItem: PrismaLineItem & {
+          account: PrismaAccount;
+          originalLineItem: (PrismaAssociateLineItem & {
+            resultLineItem: PrismaLineItem & {
+              account: PrismaAccount;
+            };
+            accociateVoucher: PrismaAssociateVoucher & {
+              event: PrismaEvent;
+            };
+          })[];
+        };
+        accociateVoucher: PrismaAssociateVoucher & {
+          event: PrismaEvent;
+          originalVoucher: PrismaVoucher;
+        };
+      })[];
+    }
+  ) => {
+    const lineItemEntity = parsePrismaLineItemToLineItemEntity(lineItem);
+    const accountEntity = parsePrismaAccountToAccountEntity(lineItem.account);
+
+    const lineItemsAssociateThatWriteOffMe =
+      voucherGetByAccountAPIUtils.initLineItemsAssociateThatWriteOffMe(lineItem.originalLineItem);
+
+    const lineItemsAssociateBeenWriteOffByMe = lineItem.resultLineItem.map((data) => {
+      const associateLineItem = parsePrismaAssociateLineItemToEntity(data);
+      const originalLineItem = parsePrismaLineItemToLineItemEntity(data.originalLineItem);
+      const account = parsePrismaAccountToAccountEntity(data.originalLineItem.account);
+      const associateVoucher = parsePrismaAssociateVoucherToEntity(data.accociateVoucher);
+      const event = parsePrismaEventToEventEntity(data.accociateVoucher.event);
+      const originalVoucher = parsePrismaVoucherToVoucherEntity(
+        data.accociateVoucher.originalVoucher
+      );
+      const writeOffLineItem = voucherGetByAccountAPIUtils.initLineItemsAssociateThatWriteOffMe(
+        data.originalLineItem.originalLineItem
+      );
+      return {
+        ...associateLineItem,
+        originalLineItem: {
+          ...originalLineItem,
+          account,
+          lineItemsAssociateThatWriteOffMe: writeOffLineItem,
+        },
+        associateVoucher: {
+          ...associateVoucher,
+          event,
+          originalVoucher,
+        },
+      };
+    });
+
+    const lineItemEntityWithAssociate: ILineItemEntityWithAssociate = {
+      ...lineItemEntity,
+      account: accountEntity,
+      lineItemsAssociateThatWriteOffMe,
+      lineItemsAssociateBeenWriteOffByMe,
+    };
+
+    return lineItemEntityWithAssociate;
+  },
+
+  initLineItemAndAccountEntities: (voucher: IGetManyVoucherResponseButOne) => {
+    const lineItems = voucher.lineItems.map(
+      voucherGetByAccountAPIUtils.initLineItemAndAccountEntity
+    );
+    return lineItems;
+  },
+
+  initCounterPartyEntity: (voucher: IGetManyVoucherResponseButOne) => {
+    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(voucher.counterparty);
+    return counterParty;
+  },
+
+  initIssuerAndFileEntity: (voucher: IGetManyVoucherResponseButOne) => {
+    const issuer = parsePrismaUserToUserEntity(voucher.issuer);
+    const imageFile = parsePrismaFileToFileEntity(voucher.issuer.imageFile);
+    return {
+      ...issuer,
+      imageFile,
+    };
+  },
+
+  initUserVoucherEntities: (voucher: IGetManyVoucherResponseButOne) => {
+    const userVoucherEntities = voucher.UserVoucher.map(initUserVoucherEntity);
+    return userVoucherEntities;
   },
 };

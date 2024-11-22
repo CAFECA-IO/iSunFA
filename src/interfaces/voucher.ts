@@ -532,6 +532,31 @@ export type IGetManyVoucherResponseButOne = PrismaVoucher & {
   })[];
   lineItems: (PrismaLineItem & {
     account: PrismaAccount;
+    originalLineItem: (PrismaAssociateLineItem & {
+      resultLineItem: PrismaLineItem & {
+        account: PrismaAccount;
+      };
+      accociateVoucher: PrismaAssociateVoucher & {
+        event: PrismaEvent;
+      };
+    })[];
+    resultLineItem: (PrismaAssociateLineItem & {
+      originalLineItem: PrismaLineItem & {
+        account: PrismaAccount;
+        originalLineItem: (PrismaAssociateLineItem & {
+          resultLineItem: PrismaLineItem & {
+            account: PrismaAccount;
+          };
+          accociateVoucher: PrismaAssociateVoucher & {
+            event: PrismaEvent;
+          };
+        })[];
+      };
+      accociateVoucher: PrismaAssociateVoucher & {
+        event: PrismaEvent;
+        originalVoucher: PrismaVoucher;
+      };
+    })[];
   })[];
   UserVoucher: PrismaUserVoucher[];
 };
