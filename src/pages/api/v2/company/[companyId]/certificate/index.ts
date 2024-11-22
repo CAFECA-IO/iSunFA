@@ -210,7 +210,7 @@ export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, obje
   };
 
   const mockCertificate: ICertificatePostResponse = {
-    id: 1,
+    id: Math.floor(Math.random() * 10000000),
     companyId,
     // voucherNo: null,
     createdAt: 1,

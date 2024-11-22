@@ -28,7 +28,7 @@ const DefaultIntroduction: React.FC = () => {
 
   return (
     <section className="relative h-full">
-      <div className="flex flex-col gap-40px pl-60px pt-60px">
+      <div className="flex flex-col gap-40px pl-60px pt-70px">
         <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
           {t('dashboard:CREATE_ROLE_PAGE.SELECT_YOUR_ROLE')}
         </h1>
@@ -119,7 +119,7 @@ const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({ childre
 
   return (
     <section className="relative h-full">
-      <div className="flex flex-col gap-40px pl-60px pt-60px">
+      <div className="flex flex-col gap-40px pl-60px pt-70px">
         <div className="flex items-center gap-24px">
           <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
             {t('dashboard:ROLE.BOOKKEEPER')}
@@ -163,7 +163,7 @@ const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntro
 
   return (
     <section className="relative h-full">
-      <div className="flex flex-col gap-40px pl-60px pt-60px">
+      <div className="flex flex-col gap-40px pl-60px pt-70px">
         <div className="flex items-center gap-24px">
           <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
             {t('dashboard:ROLE.EDUCATIONAL')}

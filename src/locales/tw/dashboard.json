@@ -1,7 +1,8 @@
 {
   "LOGIN": {
     "LOG_IN_WITH_GOOGLE": "使用 Google 登入",
-    "LOG_IN_WITH_APPLE": "使用 Apple 登入"
+    "LOG_IN_WITH_APPLE": "使用 Apple 登入",
+    "LAST_LOGIN_TIME": "上次登入時間"
   },
 
   "DASHBOARD": {
@@ -59,6 +60,7 @@
     "CREATE_ROLE_TITLE": "建立角色",
     "SELECT_YOUR_ROLE": "選擇您的角色",
     "ROLE_FUNCTION_PREVIEW": "角色功能預覽",
+    "BACK_TO_SELECT_ROLE_PAGE": "回到選擇角色頁面",
 
     "COMMON_FUNCTIONS": "常用功能",
     "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "管理總帳、開立憑證、製作財務及稅務報表",

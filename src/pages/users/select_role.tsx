@@ -15,6 +15,7 @@ import { RoleName } from '@/constants/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { IRole } from '@/interfaces/role';
 
 interface UserRoleProps {
   name: string;
@@ -47,6 +48,7 @@ const UserRole = ({
   avatar,
   lastLoginAt,
 }: UserRoleProps) => {
+  const { t } = useTranslation(['dashboard']);
   const router = useRouter();
   const { selectRole } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
@@ -88,7 +90,7 @@ const UserRole = ({
       ></Image>
 
       <div className="space-y-16px text-center text-lg font-medium">
-        <p className="text-text-neutral-secondary">Last Login Time</p>
+        <p className="text-text-neutral-secondary">{t('dashboard:LOGIN.LAST_LOGIN_TIME')}</p>
 
         <p className="text-text-neutral-tertiary">{lastLoginAt}</p>
       </div>
@@ -99,32 +101,58 @@ const UserRole = ({
         onClick={handleSelectRole}
         disabled={isLoading}
       >
-        <p>Start</p>
+        <p>{t('dashboard:COMMON.START')}</p>
         <FiArrowRight size={24} />
       </button>
     </div>
   );
 };
 
+const findUnusedRoles = (systemRoles: IRole[], userRoles: IUserRole[]): IRole[] => {
+  // Info: (20241122 - Liz) 將 userRoles 中的角色 ID 建立為一個 Set
+  const userRoleIds = new Set(userRoles.map((userRole) => userRole.role.id));
+
+  // Info: (20241122 - Liz) 從 systemRoles 中篩選出尚未被 userRoles 使用的角色
+  return systemRoles.filter((role) => !userRoleIds.has(role.id));
+};
+
 const SelectRolePage = () => {
   const { t } = useTranslation(['dashboard']);
-  const { signOut, userAuth, getUserRoleList } = useUserCtx();
+  const { signOut, userAuth, getUserRoleList, getSystemRoleList } = useUserCtx();
   const router = useRouter();
   const [userRoleList, setUserRoleList] = useState<IUserRole[]>([]);
+  const [isAbleToCreateRole, setIsAbleToCreateRole] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchUserRoleList = async () => {
-      const data = await getUserRoleList();
+    const initializeRolesData = async () => {
+      // Deprecated: (20241122 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('觸發 useEffect, 取得系統角色與使用者角色 (in SelectRolePage)');
 
-      if (data && data?.length > 0) {
-        setUserRoleList(data);
-      } else {
-        router.push(ISUNFA_ROUTE.CREATE_ROLE);
+      try {
+        const userRoles = await getUserRoleList();
+        const systemRoles = await getSystemRoleList();
+
+        if (!userRoles || userRoles.length === 0) {
+          router.push(ISUNFA_ROUTE.CREATE_ROLE);
+          return;
+        }
+
+        setUserRoleList(userRoles);
+
+        if (systemRoles && userRoles) {
+          const unusedRoles = findUnusedRoles(systemRoles, userRoles);
+          setIsAbleToCreateRole(unusedRoles.length > 0);
+        }
+      } catch (error) {
+        // Deprecated: (20241122 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('Failed to fetch or compute roles:', error);
       }
     };
 
-    fetchUserRoleList();
-  }, [router]);
+    initializeRolesData();
+  }, [getSystemRoleList, getUserRoleList, router]);
 
   // Info: (20241107 - Liz) 跳轉到建立角色頁面前的 Loading 畫面
   if (userRoleList === null) {
@@ -153,14 +181,14 @@ const SelectRolePage = () => {
         />
       </Head>
 
-      <div className="relative h-screen">
+      <div className="relative flex h-screen items-center justify-center">
         <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
 
         <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
           <I18n />
 
-          <Link href={ISUNFA_ROUTE.DASHBOARD}>
-            <FiHome size={20} />
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+            <FiHome size={22} />
           </Link>
         </div>
 
@@ -170,11 +198,11 @@ const SelectRolePage = () => {
           className="absolute left-0 top-0 z-0 ml-40px mt-40px flex items-center gap-25px text-button-text-secondary"
         >
           <TbLogout size={32} />
-          <p className="font-semibold">Log out</p>
+          <p className="font-semibold">{t('dashboard:HEADER.LOGOUT')}</p>
         </button>
 
         {/* // Info: (20241009 - Liz) User Roles */}
-        <section className="flex items-center justify-center gap-40px pt-120px">
+        <section className="flex items-center justify-center gap-40px">
           {userRoleList.map((userRole) => {
             const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.role.name);
 
@@ -191,12 +219,14 @@ const SelectRolePage = () => {
             );
           })}
 
-          <Link
-            href={ISUNFA_ROUTE.CREATE_ROLE}
-            className="z-1 rounded-lg bg-surface-neutral-surface-lv1 p-18px text-text-neutral-secondary shadow-Dropshadow_S"
-          >
-            <HiPlus size={64} />
-          </Link>
+          {isAbleToCreateRole && (
+            <Link
+              href={ISUNFA_ROUTE.CREATE_ROLE}
+              className="z-1 rounded-lg bg-surface-neutral-surface-lv1 p-18px text-text-neutral-secondary shadow-Dropshadow_S"
+            >
+              <HiPlus size={64} />
+            </Link>
+          )}
         </section>
       </div>
     </>
