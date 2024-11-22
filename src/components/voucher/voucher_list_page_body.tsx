@@ -15,17 +15,13 @@ import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { ISUNFA_ROUTE } from '@/constants/url';
-
-enum VoucherTabs {
-  UPLOADED = 'UPLOADED_VOUCHER',
-  UPCOMING = 'UPCOMING_EVENTS',
-}
+import { VoucherListTabV2 } from '@/constants/voucher';
 
 const VoucherListPageBody: React.FC = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
 
-  const [activeTab, setActiveTab] = useState<VoucherTabs>(VoucherTabs.UPLOADED);
+  const [activeTab, setActiveTab] = useState<VoucherListTabV2>(VoucherListTabV2.UPLOADED);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -40,6 +36,7 @@ const VoucherListPageBody: React.FC = () => {
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
   const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
   const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
+  const [voucherList, setVoucherList] = useState<IVoucherBeta[]>([]);
 
   useEffect(() => {
     setOtherSorts([
@@ -48,13 +45,14 @@ const VoucherListPageBody: React.FC = () => {
     ]);
   }, [creditSort, debitSort]);
 
-  const voucherTabs = Object.values(VoucherTabs).map((value) => t(`journal:VOUCHER.${value}_TAB`));
+  const voucherTabs = [VoucherListTabV2.UPLOADED, VoucherListTabV2.UPCOMING].map((value) =>
+    t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
+  );
   const voucherTypeList = Object.keys(EventType).map((key) => key.toLowerCase());
 
   const params = { companyId: selectedCompany?.id ?? FREE_COMPANY_ID };
-  const tabQuery = activeTab === VoucherTabs.UPLOADED ? 'uploaded' : 'upcoming';
+  const tabQuery = activeTab === VoucherListTabV2.UPLOADED ? 'uploaded' : 'upcoming';
 
-  const [voucherList, setVoucherList] = useState<IVoucherBeta[]>([]);
   const handleApiResponse = (
     data: IPaginatedData<{
       unRead: {
@@ -71,7 +69,7 @@ const VoucherListPageBody: React.FC = () => {
     setVoucherList(data.data.vouchers);
   };
 
-  const tabClick = (tab: string) => setActiveTab(tab as VoucherTabs);
+  const tabClick = (tab: string) => setActiveTab(tab as VoucherListTabV2);
 
   const displayVoucherList =
     voucherList && voucherList.length > 0 ? (
@@ -111,7 +109,7 @@ const VoucherListPageBody: React.FC = () => {
           onTabClick={tabClick}
           counts={[unRead.uploadedVoucher, unRead.upcomingEvents]}
         />
-        {/* ToDo: (20241022 - Julian) Filter Section */}
+        {/* Info: (20241022 - Julian) Filter Section */}
         <FilterSection<{
           unRead: {
             uploadedVoucher: number;

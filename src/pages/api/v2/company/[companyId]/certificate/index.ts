@@ -20,8 +20,8 @@ import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/cons
 import { CounterpartyType } from '@/constants/counterparty';
 import { FileFolder } from '@/constants/file';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
-// import { getPusherInstance } from '@/lib/utils/pusher';
-// import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { getPusherInstance } from '@/lib/utils/pusher';
+import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 type ICertificateListItem = ICertificateEntity & {
   invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
@@ -210,7 +210,7 @@ export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, obje
   };
 
   const mockCertificate: ICertificatePostResponse = {
-    id: 1,
+    id: Math.floor(Math.random() * 10000000),
     companyId,
     // voucherNo: null,
     createdAt: 1,
@@ -228,12 +228,10 @@ export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, obje
   /**
    * CERTIFICATE_EVENT.CREATE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(certificate as ICertificate)
    */
-  /* ToDo: (20241121 - Luphia) Something went wrong, fix it
   const pusher = getPusherInstance();
   pusher.trigger(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`, CERTIFICATE_EVENT.CREATE, {
     message: JSON.stringify(payload),
   });
-   */
 
   return {
     statusMessage,

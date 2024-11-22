@@ -10,6 +10,7 @@ export enum LifeCycleType {
 }
 
 export const EMPTY_I_ACCOUNT_READY_FRONTEND: IAccountReadyForFrontend = {
+  accountId: 0,
   code: 'Empty Account',
   name: 'Empty Account',
   curPeriodAmount: 0,

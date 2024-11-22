@@ -26,7 +26,6 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
   const procedureOfCancel = async () => {
     if (!user) return;
     try {
-      messageModalVisibilityHandler();
       const {
         success,
         data: userData,

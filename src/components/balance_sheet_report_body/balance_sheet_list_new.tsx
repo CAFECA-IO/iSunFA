@@ -444,7 +444,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
                     </div>
                     {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給
                     BalanceDetailsButton，用於顯示彈出視窗的標題 */}
-                    <BalanceDetailsButton accountName={child.name} accountId={child.code} />
+                    <BalanceDetailsButton accountName={child.name} accountId={child.accountId} />
                   </div>
                 </td>
                 <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">

@@ -618,6 +618,15 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setLineItems(aiLineItemsUI);
   };
 
+  const retryAIHandler = () => {
+    setAiState(AIState.WORKING);
+    askAI({
+      params: { companyId },
+      query: { reason: 'voucher' },
+      body: { certificateId: selectedIds[0] },
+    });
+  };
+
   const saveVoucher = async () => {
     // Info: (20241105 - Julian) 如果有資產，則加入 VoucherV2Action.ADD_ASSET；如果有反轉傳票，則加入 VoucherV2Action.REVERT
     const actions = [];
@@ -952,21 +961,45 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   //   </div>
   // )
 
-  const certificateCreatedHandler = useCallback((data: { message: string }) => {
-    const newCertificates = {
-      ...certificates,
-    };
-    const newCertificate: ICertificate = JSON.parse(data.message);
-    newCertificates[newCertificate.id] = {
-      ...newCertificate,
-      isSelected: false,
-      unRead: true,
-      actions: !newCertificate.voucherNo
-        ? [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD, CERTIFICATE_USER_INTERACT_OPERATION.REMOVE]
-        : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-    };
-    setCertificates(newCertificates);
-  }, []);
+  const certificateCreatedHandler = useCallback(
+    (data: { message: string }) => {
+      const newCertificate: ICertificate = JSON.parse(data.message);
+      // Deprecated: (20241122 - tzuhan) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(`NewVoucherForm handleNewCertificateComing: newCertificate`, newCertificate);
+      setCertificates((prev) => {
+        // Deprecated: (20241122 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log(`NewVoucherForm handleNewCertificateComing: prev`, prev);
+        const newCertificatesUI: { [id: string]: ICertificateUI } = {
+          [newCertificate.id]: {
+            ...newCertificate,
+            isSelected: false,
+            unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
+            actions: !newCertificate.voucherNo
+              ? [
+                  CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                  CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+                ]
+              : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+          },
+        };
+        Object.values(prev).forEach((certificate) => {
+          newCertificatesUI[certificate.id] = {
+            ...certificate,
+          };
+        });
+        // Deprecated: (20241122 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log(
+          `NewVoucherForm handleNewCertificateComing: newCertificates`,
+          newCertificatesUI
+        );
+        return newCertificatesUI;
+      });
+    },
+    [certificates]
+  );
 
   // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
   useEffect(() => {
@@ -1010,6 +1043,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         analyzeSuccess={analyzeSuccess ?? false}
         setAiState={setAiState}
         setIsShowAnalysisPreview={setIsShowAnalysisPreview}
+        retryClickHandler={retryAIHandler}
         fillUpClickHandler={fillUpWithAIResult}
       />
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}

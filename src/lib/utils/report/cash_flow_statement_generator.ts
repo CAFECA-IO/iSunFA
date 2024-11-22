@@ -188,6 +188,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     amount = operatingFunction(amount, childAmount);
 
     const accountForSheetDisplay: IAccountForSheetDisplay = {
+      accountId: -1,
       code: currentCode,
       name,
       amount,
@@ -243,6 +244,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const sum = CashFlowStatementGenerator.sumIndirectOperatingCashFlow(indirectOperatingCashFlow);
 
     indirectOperatingCashFlow.set(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING.code, {
+      accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING.code,
       name: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING.name,
       amount: sum,
@@ -308,6 +310,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   } {
     const result = new Map<string, IAccountForSheetDisplay>();
     result.set('header', {
+      accountId: -1,
       code: 'header',
       name: firstLineName,
       amount: null,
@@ -335,6 +338,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       });
 
       const accountForSheetDisplay: IAccountForSheetDisplay = {
+        accountId: -1,
         code: investCode,
         name: mapping.name,
         amount: total,
@@ -359,6 +363,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     );
 
     reportSheetMapping.set(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT.code, {
+      accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT.code,
       name: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT.name,
       amount: directCashFlow,
@@ -375,6 +380,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       INVESTING_CASH_FLOW_DIRECT_MAPPING
     );
     reportSheetMapping.set(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_INVESTING.code, {
+      accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_INVESTING.code,
       name: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_INVESTING.name,
       amount: directCashFlow,
@@ -391,6 +397,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       FINANCING_CASH_FLOW_DIRECT_MAPPING
     );
     reportSheetMapping.set(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FINANCING.code, {
+      accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FINANCING.code,
       name: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FINANCING.name,
       amount: directCashFlow,
@@ -439,6 +446,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     ]);
 
     result.set(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FOREIGN_EXCHANGE.code, {
+      accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FOREIGN_EXCHANGE.code,
       name: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FOREIGN_EXCHANGE.name,
       amount: 0,
@@ -448,6 +456,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_INCREASE_THIS_PERIOD.code, {
+      accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_INCREASE_THIS_PERIOD.code,
       name: SPECIAL_ACCOUNTS.CASH_INCREASE_THIS_PERIOD.name,
       amount: cashFlowFromOperating,
@@ -457,6 +466,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_BEGINNING.code, {
+      accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_BEGINNING.code,
       name: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_BEGINNING.name,
       amount: startCashBalance,
@@ -466,6 +476,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_END.code, {
+      accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_END.code,
       name: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_END.name,
       amount: endCashBalance,
@@ -486,6 +497,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         return accountInfo;
       }
       return {
+        accountId: -1,
         code: accountCode,
         name: account.name,
         amount: 0,
