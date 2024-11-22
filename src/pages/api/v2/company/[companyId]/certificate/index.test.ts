@@ -6,7 +6,7 @@ import { InvoiceTabs } from '@/constants/certificate';
 import { InvoiceType } from '@/constants/invoice';
 import {
   certificateListSchema,
-  //  certificatePostSchema
+  // Info: (20241122 - tzuhan) certificatePostSchema
 } from '@/lib/utils/zod_schema/certificate';
 
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
@@ -93,9 +93,8 @@ describe('company/[companyId]/certificate integration test', () => {
     });
   });
 
-  /**
-  * Info: （20241122 - tzuhan）@Murky comment this test for testing
-  describe('Post certificate', () => {
+  // Info: (20241122 - tzuhan) @Murky comment this test for testing
+  xdescribe('Post certificate', () => {
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},
@@ -124,5 +123,4 @@ describe('company/[companyId]/certificate integration test', () => {
       expect(success).toBe(true);
     });
   });
-  */
 });
