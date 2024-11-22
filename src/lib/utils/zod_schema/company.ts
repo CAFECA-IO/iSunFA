@@ -1,17 +1,20 @@
 import { z } from 'zod';
 import { COMPANY_TAG, CompanyUpdateAction } from '@/constants/company';
-import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
+import {
+  nullSchema,
+  zodStringToBoolean,
+  zodStringToNumber,
+  zodStringToNumberWithDefault,
+} from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
 import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
 import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 
-// Info: (20241028 - Jacky) Company null schema
-const companyNullSchema = z.union([z.object({}), z.string()]);
-
 // Info: (20241016 - Jacky) Company list schema
 const companyListQuerySchema = z.object({
   userId: zodStringToNumber,
+  simple: zodStringToBoolean.optional(),
   searchQuery: z.string().optional(),
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
@@ -74,32 +77,24 @@ export const companyOutputSchema = companyPrismaSchema.transform((data) => {
   return output;
 });
 
-const companyRolePrismaSchema = z.object({
-  company: companyPrismaSchema,
+const companyRoleOutputSchema = z.object({
+  company: companyOutputSchema,
   tag: z.nativeEnum(COMPANY_TAG),
   order: z.number().int(),
   role: rolePrimsaSchema,
 });
-
-const companyRoleOutputSchema = companyRolePrismaSchema.transform((data) => {
-  return {
-    ...data,
-    company: {
-      ...data.company,
-      imageId: data.company.imageFile.url,
-    },
-  };
-});
 // Info: (20241028 - Jacky) Paginated data schema
-const paginatedCompanyAndrolePrimsaSchema = paginatedDataSchema(companyRoleOutputSchema);
+const paginatedCompanyAndroleOutputSchema = paginatedDataSchema(companyRoleOutputSchema);
+
+const listedCompanyAndRoleOutputSchema = z.array(companyRoleOutputSchema);
 
 export const companyListSchema = {
   input: {
     querySchema: companyListQuerySchema,
-    bodySchema: companyNullSchema,
+    bodySchema: nullSchema,
   },
-  outputSchema: paginatedCompanyAndrolePrimsaSchema,
-  frontend: companyNullSchema,
+  outputSchema: z.union([paginatedCompanyAndroleOutputSchema, listedCompanyAndRoleOutputSchema]),
+  frontend: nullSchema,
 };
 
 export const companyPostSchema = {
@@ -108,16 +103,16 @@ export const companyPostSchema = {
     bodySchema: companyPostBodySchema,
   },
   outputSchema: companyRoleOutputSchema.nullable(),
-  frontend: companyNullSchema,
+  frontend: nullSchema,
 };
 
 export const companyGetByIdSchema = {
   input: {
     querySchema: companyGetByIdQuerySchema,
-    bodySchema: companyNullSchema,
+    bodySchema: nullSchema,
   },
   outputSchema: companyRoleOutputSchema.nullable(),
-  frontend: companyNullSchema,
+  frontend: nullSchema,
 };
 
 export const companyPutSchema = {
@@ -126,16 +121,16 @@ export const companyPutSchema = {
     bodySchema: companyPutBodySchema,
   },
   outputSchema: companyRoleOutputSchema,
-  frontend: companyNullSchema,
+  frontend: nullSchema,
 };
 
 export const companyDeleteSchema = {
   input: {
     querySchema: companyDeleteQuerySchema,
-    bodySchema: companyNullSchema,
+    bodySchema: nullSchema,
   },
   outputSchema: companyOutputSchema.nullable(),
-  frontend: companyNullSchema,
+  frontend: nullSchema,
 };
 
 export const companySelectSchema = {
@@ -144,7 +139,7 @@ export const companySelectSchema = {
     bodySchema: companySelectBodySchema,
   },
   outputSchema: companyOutputSchema.nullable(),
-  frontend: companyNullSchema,
+  frontend: nullSchema,
 };
 
 /**

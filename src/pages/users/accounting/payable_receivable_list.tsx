@@ -28,6 +28,7 @@ const APandARListPage: React.FC = () => {
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
     ...(await serverSideTranslations(locale, [
+      'layout',
       'common',
       'journal',
       'salary',

@@ -87,10 +87,13 @@ import { fileDeleteSchema, fileGetSchema, filePostSchema } from '@/lib/utils/zod
 import { imageGetSchema } from '@/lib/utils/zod_schema/image';
 import {
   userDeleteSchema,
+  userDeletionPutSchema,
   userGetSchema,
   userListSchema,
   userPutSchema,
 } from '@/lib/utils/zod_schema/user';
+import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
+import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -187,12 +190,13 @@ export const ZOD_SCHEMA_API = {
   [APIName.ASSET_LIST_EXPORT]: assetExportSchema,
   [APIName.FILE_EXPORT]: assetExportSchema, // ToDo: (20241112 - Luphia) need to define the schema for file export
 
-  [APIName.AGREE_TO_TERMS]: nullAPISchema,
+  [APIName.AGREE_TO_TERMS]: UserAgreementPostSchema,
   [APIName.CREATE_CHALLENGE]: nullAPISchema,
   [APIName.EMAIL]: nullAPISchema,
   [APIName.USER_LIST]: userListSchema,
   [APIName.USER_GET_BY_ID]: userGetSchema,
   [APIName.USER_UPDATE]: userPutSchema,
+  [APIName.USER_DELETION_UPDATE]: userDeletionPutSchema,
   [APIName.USER_DELETE]: userDeleteSchema,
   [APIName.COMPANY_ADD]: nullAPISchema,
   [APIName.COMPANY_GET]: nullAPISchema,
@@ -232,7 +236,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.REPORT_GET_BY_ID]: nullAPISchema,
   [APIName.REPORT_GET_V2]: nullAPISchema,
   [APIName.REPORT_GENERATE]: nullAPISchema,
-  [APIName.STATUS_INFO_GET]: nullAPISchema,
+  [APIName.STATUS_INFO_GET]: statusInfoGetSchema,
   [APIName.ACCOUNT_LIST]: nullAPISchema,
   [APIName.FILE_UPLOAD]: filePostSchema,
   [APIName.PUBLIC_FILE_UPLOAD]: nullAPISchema,
@@ -255,6 +259,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.ZOD_EXAMPLE]: nullAPISchema, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: nullAPISchema,
   [APIName.PUSHER]: nullAPISchema,
+  [APIName.PUSHER_AUTH]: nullAPISchema,
   [APIName.ENCRYPT]: nullAPISchema,
   [APIName.DECRYPT]: nullAPISchema,
   [APIName.ASSET_LIST_V2]: nullAPISchema,

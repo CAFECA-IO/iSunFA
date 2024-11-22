@@ -11,13 +11,25 @@ import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
 import { IUserActionLog } from '@/interfaces/user_action_log';
 import { timestampToString } from '@/lib/utils/common';
-import { ActionType } from '@/constants/display';
+import { UserActionLogActionType } from '@/constants/user_action_log';
 
 interface IPModalProps {
   userId: number;
   toggleModal: () => void;
   pageData: IPaginatedData<IUserActionLog[]> | null;
 }
+
+export const extractLoginDevice = (userAgent: string): string => {
+  // Info: (20241121 - tzuhan) Match for browser name and version
+  const browserMatch = userAgent.match(/(Chrome|Firefox|Safari|Edge|Opera)\/[\d.]+/);
+  const browser = browserMatch ? browserMatch[0].split('/')[0] : 'Unknown Browser';
+
+  // Info: (20241121 - tzuhan) Match for operating system
+  const osMatch = userAgent.match(/\(([^)]+)\)/);
+  const os = osMatch ? osMatch[1].split(';')[0] : 'Unknown OS';
+
+  return `${os} ${browser}`;
+};
 
 const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
   const { t } = useTranslation(['setting', 'common']);
@@ -52,7 +64,7 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
       setIsLoading(true);
       const { success, data, code } = await getUserActionLogAPI({
         params: { userId },
-        query: { page, actionType: ActionType.login, pageSize: 6 },
+        query: { page, actionType: UserActionLogActionType.LOGIN, pageSize: 6 },
       });
       if (success && data) {
         setPage(data.page);
@@ -130,7 +142,9 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
                       </div>
                     </div>
                     <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary align-middle">
-                      <div className="px-lv-4 py-lv-3">{userActionLog.userAgent}</div>
+                      <div className="px-lv-4 py-lv-3">
+                        {extractLoginDevice(userActionLog.userAgent)}
+                      </div>
                     </div>
                     <div className="relative table-cell border-b border-stroke-neutral-quaternary">
                       <div

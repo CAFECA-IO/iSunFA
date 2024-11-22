@@ -11,11 +11,12 @@ import {
   IVoucherForSingleAccount,
 } from '@/interfaces/voucher';
 import {
+  nullSchema,
   zodFilterSectionSortingOptions,
   zodStringToNumber,
   zodStringToNumberWithDefault,
 } from '@/lib/utils/zod_schema/common';
-import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
+import { DEFAULT_END_DATE, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { EventType, VoucherType } from '@/constants/account';
 import { SortBy } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
@@ -40,9 +41,11 @@ import {
 } from '@/lib/utils/zod_schema/certificate';
 import { invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
 import { accountingSettingEntityValidator } from '@/lib/utils/zod_schema/accounting_setting';
-import { lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
+import { IReverseItemValidator, lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
 import { isUserReadCertificate } from '@/lib/utils/user_certificate';
 import { userCertificateEntityValidator } from '@/lib/utils/zod_schema/user_certificate';
+import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
+import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -193,7 +196,7 @@ const voucherGetAllQueryValidatorV2 = z.object({
   type: z.nativeEnum(EventType).optional(),
   tab: z.nativeEnum(VoucherListTabV2),
   startDate: zodStringToNumberWithDefault(0),
-  endDate: zodStringToNumberWithDefault(Infinity),
+  endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
   sortOption: zodFilterSectionSortingOptions(),
   searchQuery: z.string().optional(),
 });
@@ -222,6 +225,17 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
           debit: z.boolean(),
           amount: z.number(),
         }),
+        payableInfo: z.object({
+          total: z.number(),
+          alreadyHappened: z.number(),
+          remain: z.number(),
+        }),
+        receivingInfo: z.object({
+          total: z.number(),
+          alreadyHappened: z.number(),
+          remain: z.number(),
+        }),
+        originalEvents: z.array(eventEntityValidator),
       })
     ),
     unRead: z.object({
@@ -260,6 +274,22 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
         amount: z.number().parse(voucher.sum.amount),
       },
     },
+    payableInfo: voucher.payableInfo,
+    receivingInfo: voucher.receivingInfo,
+    reverseVouchers: voucher.originalEvents.reduce(
+      (acc, event) => {
+        if (event.associateVouchers) {
+          event.associateVouchers.forEach((associateVoucher) => {
+            acc.push({
+              id: associateVoucher.resultVoucher.id,
+              voucherNo: associateVoucher.resultVoucher.no,
+            });
+          });
+        }
+        return acc;
+      },
+      [] as { id: number; voucherNo: string }[]
+    ),
   }));
 
   const parsedData: IPaginatedData<{
@@ -398,6 +428,20 @@ const voucherGetOneOutputValidatorV2 = z
         ...iLineItemBodyValidatorV2.shape,
         id: z.number(),
         account: accountEntityValidator,
+        resultLineItems: z.array(
+          z.object({
+            ...IAssociateLineItemEntitySchema.shape,
+            associateVoucher: z.object({
+              ...IAssociateVoucherEntitySchema.shape,
+              originalVoucher: voucherEntityValidator,
+            }),
+            originalLineItem: z.object({
+              ...iLineItemBodyValidatorV2.shape,
+              id: z.number(),
+              account: accountEntityValidator,
+            }),
+          })
+        ),
       })
     ),
     payableInfo: z
@@ -511,27 +555,34 @@ const voucherGetOneOutputValidatorV2 = z
         };
         return certificateInstance;
       }),
-      lineItemsInfo: {
-        lineItems: data.lineItems.map((lineItem) => ({
-          id: lineItem.id,
-          description: lineItem.description,
-          debit: lineItem.debit,
-          amount: lineItem.amount,
-          account: {
-            id: lineItem.account.id,
-            companyId: lineItem.account.companyId,
-            system: lineItem.account.system,
-            debit: lineItem.account.debit,
-            liquidity: lineItem.account.liquidity,
-            name: lineItem.account.name,
-            code: lineItem.account.code,
-            type: lineItem.account.type,
-            createdAt: lineItem.account.createdAt,
-            updatedAt: lineItem.account.updatedAt,
-            deletedAt: lineItem.account.deletedAt,
-          },
+      lineItems: data.lineItems.map((lineItem) => ({
+        id: lineItem.id,
+        description: lineItem.description,
+        debit: lineItem.debit,
+        amount: lineItem.amount,
+        account: {
+          id: lineItem.account.id,
+          companyId: lineItem.account.companyId,
+          system: lineItem.account.system,
+          debit: lineItem.account.debit,
+          liquidity: lineItem.account.liquidity,
+          name: lineItem.account.name,
+          code: lineItem.account.code,
+          type: lineItem.account.type,
+          createdAt: lineItem.account.createdAt,
+          updatedAt: lineItem.account.updatedAt,
+          deletedAt: lineItem.account.deletedAt,
+        },
+        reverseList: lineItem.resultLineItems.map((resultLineItem) => ({
+          voucherId: resultLineItem.associateVoucher.originalVoucherId,
+          amount: resultLineItem.amount,
+          description: resultLineItem.originalLineItem.description,
+          debit: resultLineItem.debit,
+          account: resultLineItem.originalLineItem.account,
+          voucherNo: resultLineItem.associateVoucher.originalVoucher.no,
+          lineItemBeReversedId: resultLineItem.originalLineItemId,
         })),
-      },
+      })),
     };
 
     return voucherDetail;
@@ -577,9 +628,12 @@ const IVoucherDetailForFrontendValidator = z.object({
   ),
   assets: z.array(IAssetDetailsValidator),
   certificates: z.array(ICertificateValidator),
-  lineItemsInfo: z.object({
-    lineItems: z.array(ILineItemBetaValidator),
-  }),
+  lineItems: z.array(
+    z.object({
+      ...ILineItemBetaValidator.shape,
+      reverseList: z.array(IReverseItemValidator),
+    })
+  ),
 });
 
 export const voucherGetOneFrontendValidatorV2 = IVoucherDetailForFrontendValidator;
@@ -716,7 +770,7 @@ export const voucherPostSchema = {
 export const voucherListSchema = {
   input: {
     querySchema: voucherGetAllQueryValidatorV2,
-    bodySchema: voucherGetAllBodyValidatorV2,
+    bodySchema: nullSchema,
   },
   outputSchema: voucherGetAllOutputValidatorV2,
   frontend: voucherGetAllFrontendValidatorV2,
@@ -725,7 +779,7 @@ export const voucherListSchema = {
 export const voucherGetOneSchema = {
   input: {
     querySchema: voucherGetOneQueryValidatorV2,
-    bodySchema: voucherGetOneBodyValidatorV2,
+    bodySchema: nullSchema,
   },
   outputSchema: voucherGetOneOutputValidatorV2,
   frontend: voucherGetOneFrontendValidatorV2,
@@ -745,8 +799,8 @@ export const voucherDeleteSchema = {
     querySchema: voucherDeleteQueryValidatorV2,
     bodySchema: voucherDeleteBodyValidatorV2,
   },
-  outputSchema: voucherEntityValidator,
-  frontend: voucherNullSchema,
+  outputSchema: z.union([z.number(), z.null()]),
+  frontend: z.number(),
 };
 
 export const voucherGetByAccountSchema = {

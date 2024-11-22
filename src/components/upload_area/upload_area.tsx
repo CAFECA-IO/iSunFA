@@ -61,7 +61,6 @@ const UploadArea: React.FC<UploadAreaProps> = ({
 
   return (
     <div
-      onClick={openFileDialog}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -76,6 +75,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({
         className="group flex h-full flex-1 flex-col items-center justify-center rounded-l-lg"
         disabled={isDisabled}
         aria-disabled={isDisabled}
+        onClick={openFileDialog}
       >
         <Image
           src="/icons/upload_file.svg"

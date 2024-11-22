@@ -293,7 +293,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     );
 
   return (
-    <div className="flex flex-col gap-24px rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS">
+    <div className="flex h-550px flex-col gap-24px rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS">
       {/* Info: (20241112 - Julian) Title */}
       <div className="flex items-center gap-8px">
         <Image src="/icons/add_accounting_title.svg" width={16} height={16} alt="add_icon" />

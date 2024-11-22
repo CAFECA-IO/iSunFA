@@ -29,7 +29,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
   defaultAssetList = [],
 }) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { selectedCompany, userAuth } = useUserCtx();
   const { addAssetModalVisibilityHandler, addAssetModalDataHandler } = useGlobalCtx();
   const { deleteTemporaryAssetHandler, temporaryAssetList } = useAccountingCtx();
   const { toastHandler } = useModalContext();
@@ -38,9 +38,12 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     APIName.DELETE_ASSET_V2
   );
 
+  const userId = userAuth?.id ?? -1;
+  const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
+
   const [assetList, setAssetList] = useState<IAssetDetails[]>([
     ...defaultAssetList,
-    ...temporaryAssetList,
+    ...temporaryAssetListByUser,
   ]);
 
   // Info: (20241025 - Julian) 根據 lineItems 取得資產類別的會計科目
@@ -68,7 +71,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     if (!isLoading) {
       if (success && data) {
         // Info: (20241025 - Julian) 確定 API 刪除成功後，更新畫面
-        deleteTemporaryAssetHandler(data.id);
+        deleteTemporaryAssetHandler(userId, data.assetNumber);
       } else if (error) {
         // Info: (20241025 - Julian) 刪除失敗後，提示使用者
         toastHandler({
@@ -82,16 +85,23 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
   }, [success, data, isLoading]);
 
   useEffect(() => {
-    if (defaultAssetList && defaultAssetList.length > 0) {
-      // Info:(20241118 - Julian) Combine defaultAssetList and temporaryAssetList
-      const newAssetList = [...defaultAssetList, ...temporaryAssetList];
-      setAssetList(newAssetList);
-    }
-  }, [defaultAssetList, temporaryAssetList]);
+    // Info: (20241119 - Julian) 更新 assetList
+    const newTemporaryAssetList = temporaryAssetList[userId] ?? [];
+    setAssetList([...defaultAssetList, ...newTemporaryAssetList]);
+  }, [temporaryAssetList]);
 
   const displayedAssetList =
     assetList.length > 0 ? (
       assetList.map((asset) => {
+        const editClickHandler = () => {
+          addAssetModalDataHandler({
+            modalType: AssetModalType.EDIT,
+            assetAccountList,
+            assetData: asset,
+          });
+          addAssetModalVisibilityHandler();
+        };
+
         const deleteHandler = () => {
           // Info: (20241025 - Julian) trigger API to delete asset
           trigger({
@@ -113,7 +123,12 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
               <p className="text-xs text-file-uploading-text-disable">{asset.assetNumber}</p>
             </div>
             <div className="flex items-center gap-16px">
-              <Button type="button" variant="secondaryBorderless" size={'defaultSquare'}>
+              <Button
+                type="button"
+                variant="secondaryBorderless"
+                size={'defaultSquare'}
+                onClick={editClickHandler}
+              >
                 <FiEdit size={20} />
               </Button>
               <Button

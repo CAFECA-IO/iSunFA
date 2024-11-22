@@ -30,14 +30,20 @@ const userActionLogOutputSchema = z
     userAgent: z.string(),
     apiEndpoint: z.string(),
     httpMethod: z.string(),
-    requestPayload: z.record(z.string(), z.string()),
+    requestPayload: z.union([z.record(z.string(), z.string()), z.string()]),
     httpStatusCode: z.number().int(),
     statusMessage: z.string(),
   })
   .transform((data) => {
+    const requestPayload =
+      typeof data.requestPayload === 'string'
+        ? { message: data.requestPayload }
+        : data.requestPayload;
+
     return {
       ...data,
       normal: true,
+      requestPayload,
     };
   });
 

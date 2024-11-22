@@ -17,38 +17,43 @@ interface ILoginConfirmProps {
     content: string;
     buttonText: string;
   };
-  infoModalVisibilityHandler: (visibility: boolean) => void;
-  tosModalVisibilityHandler: (visibility: boolean) => void;
+  toggleTermsOfServiceConfirmModal: (visibility: boolean) => void;
+  togglePrivacyPolicyConfirmModal: (visibility: boolean) => void;
 }
 
 const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
   id,
   isModalVisible,
   modalData,
-  infoModalVisibilityHandler,
-  tosModalVisibilityHandler,
+  toggleTermsOfServiceConfirmModal,
+  togglePrivacyPolicyConfirmModal,
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('terms');
   const { handleUserAgree, signOut } = useUserCtx();
   const router = useRouter();
 
   const onAgree = async () => {
-    if (id === 'agree-to-our-terms-of-service') {
-      infoModalVisibilityHandler(false);
-      await handleUserAgree(Hash.HASH_FOR_TERMS_OF_SERVICE);
-      tosModalVisibilityHandler(true);
+    if (id === 'terms-of-service') {
+      const success = await handleUserAgree(Hash.HASH_FOR_TERMS_OF_SERVICE);
+      if (!success) return;
+
+      toggleTermsOfServiceConfirmModal(false);
+      togglePrivacyPolicyConfirmModal(true);
     }
-    if (id === 'agree-to-our-privacy-policy') {
-      tosModalVisibilityHandler(false);
-      await handleUserAgree(Hash.HASH_FOR_PRIVACY_POLICY);
+    if (id === 'privacy-policy') {
+      const success = await handleUserAgree(Hash.HASH_FOR_PRIVACY_POLICY);
+      if (!success) return;
+
+      togglePrivacyPolicyConfirmModal(false);
       router.push(ISUNFA_ROUTE.SELECT_ROLE);
     }
   };
   const onCancel = () => {
-    infoModalVisibilityHandler(false);
-    tosModalVisibilityHandler(false);
+    toggleTermsOfServiceConfirmModal(false);
+    togglePrivacyPolicyConfirmModal(false);
     signOut();
   };
+
   const displayModal = isModalVisible ? (
     <div id={id} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="absolute max-h-80vh w-full max-w-xl rounded-xs bg-surface-neutral-surface-lv1 p-4 pt-0 shadow-lg">
@@ -74,7 +79,7 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
             variant="tertiaryOutline"
             className="mr-2 px-4 py-2 text-sm lg:text-lg"
           >
-            {t('common:COMMON.CANCEL')}
+            {t('terms:MODAL.CANCEL')}
           </Button>
           <Button
             type="button"

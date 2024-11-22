@@ -39,6 +39,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
     props: {
       assetId: params.assetId,
       ...(await serverSideTranslations(locale as string, [
+        'layout',
         'common',
         'journal',
         'project',

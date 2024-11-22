@@ -22,9 +22,8 @@ import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
-import { getPusherInstance } from '@/lib/utils/pusher_client';
-// import { encryptFile, importPublicKey } from '@/lib/utils/crypto'; // TODO:(20241113 - tzuhan) encrypt file
+import { encryptFile, generateKeyPair } from '@/lib/utils/crypto';
+import { IV_LENGTH } from '@/constants/config';
 
 export interface IFileUIBetaWithFile extends IFileUIBeta {
   file: File;
@@ -34,17 +33,16 @@ const MobileUploadPage: React.FC = () => {
   const { t } = useTranslation(['certificate', 'common']);
   const router = useRouter();
   const { query } = router;
-  const [token, setToken] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [token, setToken] = useState<string | undefined>(undefined);
+  const [selectedFile, setSelectedFile] = useState<IFileUIBetaWithFile | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<IFileUIBetaWithFile[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<IFileUIBeta[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [successUpload, setSuccessUpload] = useState<boolean>(false);
-  // Info: (20241023 - tzuhan) @Murky, <...> 裡面是 public file upload API 期望的回傳格式，希望回傳 fileId
+  const [successUpload, setSuccessUpload] = useState<boolean | undefined>(undefined);
   const { trigger: uploadFileAPI } = APIHandler<number>(APIName.FILE_UPLOAD);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const [selectedFile, setSelectedFile] = useState<IFileUIBetaWithFile | null>(null);
 
   const handleFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -87,11 +85,25 @@ const MobileUploadPage: React.FC = () => {
     URL.revokeObjectURL(file.url);
   };
 
+  const encryptFileWithPublicKey = async (file: File, publicKey: CryptoKey) => {
+    if (!token) throw new Error('token is undefined');
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+      const { encryptedContent } = await encryptFile(arrayBuffer, publicKey, iv);
+      const encryptedFile = new File([encryptedContent], file.name, {
+        type: file.type,
+      });
+
+      return encryptedFile;
+    } catch (error) {
+      throw new Error('faile to encrypt file'); // ToDo: (20241120 - tuzhan) 轉成i18n
+    }
+  };
+
   const uploadFiles = async () => {
     setIsUploading(true);
     try {
-      // const certificatesPayload = [...selectedFilesRef.current];
-
       if (!token) {
         toastHandler({
           id: ToastId.TOKEN_NOT_PROVIDED,
@@ -101,63 +113,34 @@ const MobileUploadPage: React.FC = () => {
         });
         return;
       }
+      const keyPair = await generateKeyPair();
+      await Promise.all(
+        selectedFiles.map(async (fileUI) => {
+          const encryptedFile = await encryptFileWithPublicKey(fileUI.file, keyPair.publicKey);
+          const formData = new FormData();
+          formData.append('file', encryptedFile);
 
-      selectedFiles.map(async (certificate) => {
-        const formData = new FormData();
-        formData.append('file', certificate.file);
+          const { success, data: fileId } = await uploadFileAPI({
+            query: {
+              type: UploadType.ROOM,
+              targetId: token as string,
+            },
+            body: formData,
+          });
 
-        const { success, data: filedId } = await uploadFileAPI({
-          query: {
-            type: UploadType.ROOM,
-            token: token as string,
-          },
-          body: formData,
-        });
+          setUploadedFiles((prev) => [
+            ...prev,
+            {
+              ...fileUI,
+              id: success ? fileId : null,
+              progress: success ? 100 : 0,
+              status: success ? ProgressStatus.SUCCESS : ProgressStatus.FAILED,
+            },
+          ]);
+        })
+      );
 
-        const uploadingCertificate = {
-          ...certificate,
-        };
-
-        if (success && filedId) {
-          uploadingCertificate.id = filedId;
-          uploadingCertificate.status = ProgressStatus.SUCCESS;
-          uploadingCertificate.progress = 100;
-        } else {
-          uploadingCertificate.status = ProgressStatus.FAILED;
-          uploadingCertificate.progress = 0;
-        }
-
-        const pusher = getPusherInstance();
-
-        const successPushAgain = pusher.send_event(
-          ROOM_EVENT.NEW_FILE,
-          {
-            files: [uploadingCertificate],
-          },
-          PRIVATE_CHANNEL.ROOM
-        );
-
-        if (successPushAgain === false) {
-          if (success) {
-            toastHandler({
-              id: ToastId.NOTIFY_WEB_ERROR,
-              type: ToastType.WARNING,
-              content: t('certificate:WARNING.SUCCESS_UPLOAD_BUT_NOTIFY_ERROR', {
-                name: certificate.name,
-              }),
-              closeable: true,
-            });
-          } else {
-            toastHandler({
-              id: ToastId.UPLOAD_CERTIFICATE_ERROR,
-              type: ToastType.ERROR,
-              content: t('certificate:ERROR.UPLOAD_AND_NOTIFY', { name: certificate.name }),
-              closeable: true,
-            });
-          }
-        }
-        setUploadedFiles((prev) => [...prev, uploadingCertificate]);
-      });
+      setSuccessUpload(true);
     } catch (error) {
       setSuccessUpload(false);
       setIsUploading(false);
@@ -198,9 +181,6 @@ const MobileUploadPage: React.FC = () => {
     clearAllItems();
     if (router.isReady && query.token) {
       setToken(query.token as string);
-      // Info: (20241111- tzuhan) 1. pusher emit ROOM_EVENT.JOIN
-      const pusher = getPusherInstance();
-      pusher.send_event(ROOM_EVENT.JOIN, { token: query.token }, PRIVATE_CHANNEL.ROOM);
     }
   }, [router]);
 
@@ -229,7 +209,7 @@ const MobileUploadPage: React.FC = () => {
           <div className="ml-1 w-44px"></div>
           <div className="flex items-center justify-center gap-2">
             <div className="p-2 text-stroke-neutral-invert">{t('certificate:TITLE.SELECT')}:</div>
-            <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
+            <div className="h-22px w-22px rounded-full bg-badge-surface-soft-primary text-center text-sm font-normal tracking-tight text-badge-text-primary-solid">
               {selectedFiles.length}
             </div>
           </div>
@@ -310,14 +290,13 @@ const MobileUploadPage: React.FC = () => {
                   className={`absolute left-0 top-0 h-50px w-50px ${selectedFile && selectedFile.url === file.url ? 'bg-black/50' : 'bg-transparent'}`}
                   onClick={() => handleSelectFile(file)}
                 ></div>
-                <Button
+                <button
                   type="button"
-                  variant={null}
                   className="absolute -right-8px top-0 h-16px w-16px -translate-y-1/2 rounded-full border border-stroke-neutral-solid-dark bg-surface-neutral-surface-lv2 p-0 text-stroke-neutral-solid-dark"
                   onClick={() => handleRemoveFile(file)}
                 >
-                  <RxCross2 size={10} />
-                </Button>
+                  <RxCross2 size={10} className="mx-auto" />
+                </button>
               </div>
             ))}
           </div>
@@ -340,7 +319,7 @@ const MobileUploadPage: React.FC = () => {
         </div>
         {isUploading && (
           <div className="full-height safe-area-adjustment absolute left-0 top-0 z-20 flex h-100vh w-100vw items-center justify-center bg-white">
-            {!successUpload ? (
+            {successUpload === undefined ? (
               <div className="flex flex-col items-center gap-2">
                 <Image
                   src="/elements/uploading.gif"
@@ -364,7 +343,12 @@ const MobileUploadPage: React.FC = () => {
                     height={150}
                     alt="Success"
                   />
-                  <div>Compeleted</div>
+                  {successUpload === false && (
+                    <div className="text-sm text-text-neutral-tertiary">
+                      ({`${uploadedFiles.length}/${selectedFiles.length}`})
+                    </div>
+                  )}
+                  <div>{t('certificate:UPLOAD.COMPLETED')}</div>
                 </div>
                 <Button
                   type="button"
@@ -373,7 +357,7 @@ const MobileUploadPage: React.FC = () => {
                   className="mx-4 mb-4 flex items-center gap-2"
                 >
                   <PiHouse size={20} />
-                  <div>Back</div>
+                  <div>{t('certificate:UPLOAD.BACK')}</div>
                 </Button>
               </div>
             )}
@@ -386,18 +370,7 @@ const MobileUploadPage: React.FC = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, [
-      'common',
-      'certificate',
-      'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-      'asset',
-    ])),
+    ...(await serverSideTranslations(locale, ['common', 'certificate'])),
     locale,
   },
 });

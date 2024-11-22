@@ -21,6 +21,8 @@ export enum EventEntityType {
    * @description voucher is created because of account need to be revert, like account receivable or payable
    */
   REVERT = 'revert',
+
+  DELETE = 'delete',
 }
 
 /**

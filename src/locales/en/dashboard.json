@@ -1,4 +1,9 @@
 {
+  "LOGIN": {
+    "LOG_IN_WITH_GOOGLE": "Log In with Google",
+    "LOG_IN_WITH_APPLE": "Log In with Apple"
+  },
+
   "DASHBOARD": {
     "DASHBOARD": "Dashboard",
     "TO_DO_LIST": "To-do List",
@@ -28,7 +33,9 @@
   "COMMON": {
     "ERROR": "Error",
     "START": "Start",
-    "PREVIEW": "Preview"
+    "PREVIEW": "Preview",
+    "CANCEL": "Cancel",
+    "CREATE": "Create"
   },
 
   "HEADER": {
@@ -76,7 +83,20 @@
     "MATCH_NEWS": "Match News"
   },
 
-  "TO_DO_LIST_PAGE": {
-    "TO_DO_LIST_TITLE": "To-do List"
+  "TODO_LIST_PAGE": {
+    "TODO_LIST_TITLE": "To-do List",
+    "ADD_EVENT": "Add Event",
+    "EVENT_LIST": "Event List",
+    "ACTION": "Action",
+    "NO_PENDING_TASKS": "No Pending Tasks",
+    "ADD_NEW_EVENT": "Add New Event",
+    "EVENT_NAME": "Event Name",
+    "ENTER_NAME": "Enter name",
+    "DEADLINE": "Deadline",
+    "AFFILIATED_COMPANY": "Affiliated Company",
+    "NOTE": "Note",
+    "ENTER_TEXT": "Enter text",
+    "SELECT_COMPANY": "Select a company",
+    "NO_COMPANY": "No company"
   }
 }

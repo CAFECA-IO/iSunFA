@@ -47,24 +47,6 @@ const FinancialNewsPage = ({ newsId }: FinancialNewsPageProps) => {
   );
 };
 
-// export const getServerSideProps = async ({ locale }: ILocale) => {
-//   return {
-//     props: {
-//       ...(await serverSideTranslations(locale as string, [
-//         'common',
-//         'report_401',
-//         'journal',
-//         'kyc',
-//         'project',
-//         'setting',
-//         'terms',
-//         'salary',
-//         'asset',
-//       ])),
-//     },
-//   };
-// };
-
 export const getServerSideProps: GetServerSideProps = async ({ params, locale }) => {
   if (!params || !params.newsId || typeof params.newsId !== 'string') {
     return {
@@ -75,17 +57,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       newsId: params.newsId,
-      ...(await serverSideTranslations(locale as string, [
-        'common',
-        'report_401',
-        'journal',
-        'kyc',
-        'project',
-        'setting',
-        'terms',
-        'salary',
-        'asset',
-      ])),
+      ...(await serverSideTranslations(locale as string, ['layout', 'common'])),
     },
   };
 };

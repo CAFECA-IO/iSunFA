@@ -31,14 +31,12 @@ import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
-// import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
 import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
 import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 import { UploadType } from '@/constants/file';
-import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
 import { useModalContext } from '@/contexts/modal_context';
 import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher_modal';
 import AssetStatusSettingModal from '@/components/asset_status_setting_modal/asset_status_setting_modal';
@@ -134,8 +132,6 @@ interface IGlobalContext {
 
   isManualAccountOpeningModalVisible: boolean;
   manualAccountOpeningModalVisibilityHandler: () => void;
-
-  termsOfServiceConfirmModalVisibilityHandler: (visibility: boolean) => void;
 }
 
 export interface IGlobalProvider {
@@ -148,7 +144,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const { t } = useTranslation(['common', 'report_401']);
   const router = useRouter();
   const { pathname } = router;
-  const { isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy } = useUserCtx();
+  const { isSignIn } = useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
@@ -219,12 +215,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
 
   const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
-
-  const [isTermsOfServiceConfirmModalVisible, setIsTermsOfServiceConfirmModalVisible] =
-    useState(false);
-
-  const [isPrivacyPolicyConfirmModalVisible, setIsPrivacyPolicyConfirmModalVisible] =
-    useState(false);
 
   const [isExportVoucherModalVisible, setIsExportVoucherModalVisible] = useState(false);
 
@@ -368,14 +358,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setFilterOptionsForContract(options);
   };
 
-  const termsOfServiceConfirmModalVisibilityHandler = (visibility: boolean) => {
-    setIsTermsOfServiceConfirmModalVisible(visibility);
-  };
-
-  const privacyPolicyConfirmModalVisibilityHandler = (visibility: boolean) => {
-    setIsPrivacyPolicyConfirmModalVisible(visibility);
-  };
-
   const exportVoucherModalVisibilityHandler = () => {
     setIsExportVoucherModalVisible(!isExportVoucherModalVisible);
   };
@@ -449,22 +431,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     //   });
     // }
   }, [reportPendingStatus, reportGeneratedStatus, isSignIn, pathname]);
-
-  // ToDo: (20241107 - Liz) 預計將這一段在登入流程中處理(可能在 create role page 處理)
-  useEffect(() => {
-    if (isSignIn) {
-      if (!isAgreeTermsOfService || !isAgreePrivacyPolicy) {
-        if (router.pathname !== ISUNFA_ROUTE.LOGIN) router.push(ISUNFA_ROUTE.LOGIN);
-        if (!isAgreeTermsOfService) termsOfServiceConfirmModalVisibilityHandler(true);
-        if (isAgreeTermsOfService && !isAgreePrivacyPolicy) {
-          privacyPolicyConfirmModalVisibilityHandler(true);
-        }
-      } else {
-        termsOfServiceConfirmModalVisibilityHandler(false);
-        privacyPolicyConfirmModalVisibilityHandler(false);
-      }
-    }
-  }, [pathname, isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy]);
 
   // Info: (20240830 - Anna) 為了拿掉react/jsx-no-constructed-context-values註解，所以使用useMemo hook
 
@@ -541,8 +507,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
       isManualAccountOpeningModalVisible,
       manualAccountOpeningModalVisibilityHandler,
-
-      termsOfServiceConfirmModalVisibilityHandler,
     }),
     [
       width,
@@ -616,8 +580,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
       isManualAccountOpeningModalVisible,
       manualAccountOpeningModalVisibilityHandler,
-
-      termsOfServiceConfirmModalVisibilityHandler,
     ]
   );
 
@@ -741,29 +703,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <TransferCompanyModal
         isModalVisible={isTransferCompanyModalVisible}
         modalVisibilityHandler={transferCompanyModalVisibilityHandler}
-      />
-
-      <LoginConfirmModal
-        id="agree-to-our-terms-of-service"
-        isModalVisible={isTermsOfServiceConfirmModalVisible}
-        modalData={{
-          title: t('common:COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
-          content: 'terms_of_service',
-          buttonText: t('common:COMMON.AGREE_TO_OUR_TERMS_OF_SERVICE'),
-        }}
-        infoModalVisibilityHandler={termsOfServiceConfirmModalVisibilityHandler}
-        tosModalVisibilityHandler={privacyPolicyConfirmModalVisibilityHandler}
-      />
-      <LoginConfirmModal
-        id="agree-to-our-privacy-policy"
-        isModalVisible={isPrivacyPolicyConfirmModalVisible}
-        modalData={{
-          title: t('common:COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
-          content: 'privacy_policy',
-          buttonText: t('common:COMMON.AGREE_TO_OUR_PRIVACY_POLICY'),
-        }}
-        infoModalVisibilityHandler={termsOfServiceConfirmModalVisibilityHandler}
-        tosModalVisibilityHandler={privacyPolicyConfirmModalVisibilityHandler}
       />
 
       <ExportVoucherModal

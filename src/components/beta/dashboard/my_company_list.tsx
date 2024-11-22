@@ -12,7 +12,7 @@ const COMPANY_LIST: ICompanyAndRole[] = [
   {
     company: {
       id: 1,
-      imageId: 'img123',
+      imageId: '/images/fake_company_logo_01.png',
       name: 'Tech Corp',
       taxId: '123456789',
       startDate: 1622505600,
@@ -32,7 +32,7 @@ const COMPANY_LIST: ICompanyAndRole[] = [
   {
     company: {
       id: 2,
-      imageId: 'img456',
+      imageId: '/images/fake_company_logo_02.png',
       name: 'Tech Corp 2',
       taxId: '987654321',
       startDate: 1622505600,

@@ -240,7 +240,9 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
         );
       })
     ) : (
-      <div className="col-start-1 col-end-15 text-center text-lg">No Reverse Item Found</div>
+      <div className="col-start-1 col-end-15 text-center text-lg">
+        {t('journal:REVERSE_MODAL.NOT_FOUND')}
+      </div>
     );
 
   const isDisplayModal = isModalVisible ? (

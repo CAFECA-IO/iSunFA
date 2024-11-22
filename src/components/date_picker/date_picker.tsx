@@ -66,7 +66,7 @@ const PopulateDates = ({
   setComponentVisible,
   type,
 }: IPopulateDatesParams) => {
-  const { t }: { t: TranslateFunction } = useTranslation('common');
+  const { t }: { t: TranslateFunction } = useTranslation('date_picker');
 
   // Info: (2020417 - Shirley) 用於日期選取的樣式
   const beforeStyle =
@@ -87,7 +87,7 @@ const PopulateDates = ({
   };
 
   // Info: (20240417 - Shirley) 顯示月份中的每一天
-  const formatDaysInMonth = daysInMonth.map((el: Dates) => {
+  const formatDaysInMonth = daysInMonth.map((el: Dates, index) => {
     const date = el ? new Date(`${selectedYear}/${selectedMonth}/${el.date} 00:00:00`) : null;
 
     // Info: (20240417 - Shirley) 因為 selectTimeTwo 是 23:59:59，所以還原時間設置為 00:00:00
@@ -165,7 +165,7 @@ const PopulateDates = ({
 
     return (
       <button
-        key={el?.date}
+        key={el?.date || `${Date.now()}-${index}`}
         type="button"
         disabled={el?.disable ?? true} // Info: (20241108 - Julian) 禁用範圍外和空白日期
         className={`relative z-10 flex h-35px items-center justify-center whitespace-nowrap px-1 text-base transition-all duration-150 ease-in-out disabled:text-date-picker-text-disable md:h-35px ${isSelectedDateStyle} ${isSelectedPeriodStyle}`}
@@ -204,7 +204,7 @@ const DatePicker = ({
   disabled,
   datePickerHandler,
 }: IDatePickerProps) => {
-  const { t }: { t: TranslateFunction } = useTranslation('common');
+  const { t }: { t: TranslateFunction } = useTranslation('date_picker');
 
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
 
@@ -367,8 +367,8 @@ const DatePicker = ({
 
   const defaultPeriodText =
     type === DatePickerType.TEXT_DATE
-      ? t('common:DATE_PICKER.SELECT_DATE')
-      : t('common:DATE_PICKER.SELECT_PERIOD');
+      ? t('date_picker:DATE_PICKER.SELECT_DATE')
+      : t('date_picker:DATE_PICKER.SELECT_PERIOD');
 
   // Info: (20240417 - Shirley) 顯示時間區間
   const displayedPeriod =
@@ -376,7 +376,7 @@ const DatePicker = ({
       ? type === DatePickerType.TEXT_DATE || type === DatePickerType.ICON_DATE
         ? `${timestampToString(period.startTimeStamp).date}`
         : `${timestampToString(period.startTimeStamp).date} ${t(
-            'common:DATE_PICKER.TO'
+            'date_picker:DATE_PICKER.TO'
           )} ${timestampToString(period.endTimeStamp).date}`
       : defaultPeriodText;
 
@@ -414,6 +414,7 @@ const DatePicker = ({
         disabled={disabled}
         type="button"
         variant={'tertiaryOutline'}
+        size={'placeholderInput'}
         onClick={openCalenderHandler}
         className={cn(
           'group flex w-full items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background p-3 text-input-text-input-placeholder hover:cursor-pointer group-hover:text-button-text-primary-hover',
@@ -466,7 +467,7 @@ const DatePicker = ({
             onClick={todayClickHandler}
             className="w-full p-1 text-sm"
           >
-            {t('common:DATE_PICKER.TODAY')}
+            {t('date_picker:DATE_PICKER.TODAY')}
           </Button>
 
           <div className="flex w-full items-center justify-between">
