@@ -97,6 +97,7 @@ function transformDetailsIntoGeneral(
       return accountInfo;
     }
     return {
+      accountId: -1,
       code: accountCode,
       name: account.name,
       curPeriodAmount: 0,

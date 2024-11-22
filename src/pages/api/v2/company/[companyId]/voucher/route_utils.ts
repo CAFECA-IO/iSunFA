@@ -133,7 +133,7 @@ export const voucherAPIGetUtils = {
 
   getUnreadVoucherCount: (options: {
     userId: number;
-    status: JOURNAL_EVENT;
+    tab: VoucherListTabV2;
     where: Prisma.VoucherWhereInput;
   }): Promise<number> => {
     return getUnreadVoucherCount(options);
