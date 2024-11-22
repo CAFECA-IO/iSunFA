@@ -14,13 +14,11 @@ const PageTitle = ({ pageTitle = '', goBackUrl = '' }: PageTitleProps) => {
       {
         // Info: (20241017 - Liz) 返回按鈕的路徑是空字串時，不顯示返回按鈕。
         goBackUrl && (
-          <Link href={goBackUrl}>
-            <button
-              type="button"
-              className="p-10px text-button-text-secondary hover:text-button-text-primary-hover"
-            >
-              <PiArrowUUpLeftBold size={24} />
-            </button>
+          <Link
+            href={goBackUrl}
+            className="p-10px text-button-text-secondary hover:text-button-text-primary-hover"
+          >
+            <PiArrowUUpLeftBold size={24} />
           </Link>
         )
       }

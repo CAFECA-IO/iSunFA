@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import AvatarSVG from '@/components/avatar_svg/avatar_svg';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Provider } from '@/constants/provider';
@@ -9,6 +10,7 @@ import { FiHome } from 'react-icons/fi';
 import I18n from '@/components/i18n/i18n';
 import { signIn } from 'next-auth/react';
 import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 // ToDo: (20241119 - Liz) Beta version 不支援 Apple 登入
 const IS_APPLE_LOGIN_ENABLED = false;
@@ -60,8 +62,9 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
 
       <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
         <I18n />
-
-        <FiHome size={20} />
+        <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+          <FiHome size={22} />
+        </Link>
       </div>
 
       {isAuthLoading ? (

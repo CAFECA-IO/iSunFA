@@ -9,44 +9,51 @@ import PreviewModal from '@/components/beta/create_role/preview_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
+import { PiArrowUUpLeftBold } from 'react-icons/pi';
+import Link from 'next/link';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
-const findUniqueRolesOptimized = (systemRoles: IRole[], userRoles: IUserRole[]): IRole[] => {
-  const userRoleList = userRoles.map((userRole) => userRole.role);
+const findUnusedRoles = (systemRoles: IRole[], userRoles: IUserRole[]): IRole[] => {
+  // Info: (20241122 - Liz) 將 userRoles 中的角色 ID 建立為一個 Set
+  const userRoleIds = new Set(userRoles.map((userRole) => userRole.role.id));
 
-  const systemRoleIds = new Set(systemRoles.map((role) => role.id));
-  const userRoleIds = new Set(userRoleList.map((role) => role.id));
-
-  const uniqueInSystemRoles = systemRoles.filter((role) => !userRoleIds.has(role.id));
-  const uniqueInUserRoles = userRoleList.filter((role) => !systemRoleIds.has(role.id));
-
-  return [...uniqueInSystemRoles, ...uniqueInUserRoles];
+  // Info: (20241122 - Liz) 從 systemRoles 中篩選出尚未被 userRoles 使用的角色
+  return systemRoles.filter((role) => !userRoleIds.has(role.id));
 };
 
 const CreateRolePage = () => {
   const { t } = useTranslation(['dashboard']);
   const { getSystemRoleList, getUserRoleList } = useUserCtx();
+
   // Info: (20241108 - Liz) 畫面顯示的角色
   const [showingRole, setShowingRole] = useState<string>('');
   // Info: (20241108 - Liz) 使用者選擇的角色 ID
   const [selectedRoleId, setSelectedRoleId] = useState<number>(0);
-
+  const [unusedSystemRoles, setUnusedSystemRoles] = useState<IRole[]>([]);
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
+  const [isAbleToGoBack, setIsAbleToGoBack] = useState<boolean>(false);
 
   const togglePreviewModal = () => {
     setIsPreviewModalVisible((prev) => !prev);
   };
 
-  const [uniqueRoles, setUniqueRoles] = useState<IRole[]>([]);
-
   useEffect(() => {
     const fetchAndComputeRoles = async () => {
+      // Deprecated: (20241122 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('觸發 useEffect, 取得系統角色與使用者角色 (in CreateRolePage)');
+
       try {
         const systemRoles = await getSystemRoleList();
         const userRoles = await getUserRoleList();
 
         if (systemRoles && userRoles) {
-          const unique = findUniqueRolesOptimized(systemRoles, userRoles);
-          setUniqueRoles(unique);
+          const unusedRoles = findUnusedRoles(systemRoles, userRoles);
+          setUnusedSystemRoles(unusedRoles);
+        }
+
+        if (userRoles && userRoles.length > 0) {
+          setIsAbleToGoBack(true);
         }
       } catch (error) {
         // Deprecated: (20241108 - Liz)
@@ -80,6 +87,21 @@ const CreateRolePage = () => {
       </Head>
 
       <main className="relative h-screen overflow-hidden">
+        {isAbleToGoBack && (
+          <Link
+            href={ISUNFA_ROUTE.SELECT_ROLE}
+            className="group absolute z-1 ml-40px mt-30px flex items-center gap-8px hover:text-button-text-primary-hover"
+          >
+            <PiArrowUUpLeftBold
+              size={24}
+              className="text-button-text-secondary group-hover:text-button-text-primary-hover"
+            />
+            <p className="text-lg font-semibold text-text-neutral-secondary group-hover:text-button-text-primary-hover">
+              {t('dashboard:CREATE_ROLE_PAGE.BACK_TO_SELECT_ROLE_PAGE')}
+            </p>
+          </Link>
+        )}
+
         <div className="h-75%">
           <Introduction
             showingRole={showingRole}
@@ -90,7 +112,7 @@ const CreateRolePage = () => {
 
         <div className="mx-100px mb-40px">
           <RoleCard
-            roleList={uniqueRoles}
+            roleList={unusedSystemRoles}
             showingRole={showingRole}
             setShowingRole={setShowingRole}
             setSelectedRoleId={setSelectedRoleId}
