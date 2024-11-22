@@ -60,6 +60,7 @@
     "CREATE_ROLE_TITLE": "Create Role",
     "SELECT_YOUR_ROLE": "Select Your Role",
     "ROLE_FUNCTION_PREVIEW": "Role Function Preview",
+    "BACK_TO_SELECT_ROLE_PAGE": "Back to Select Role Page",
 
     "COMMON_FUNCTIONS": "Common Functions",
     "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "General Ledger, Voucher Issuance, Preparation of Financial and Tax Reports",
