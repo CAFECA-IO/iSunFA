@@ -97,26 +97,52 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   //   }, 500); // 等待 500ms 確保渲染完成
   // };
 
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current as HTMLElement,
-    documentTitle: 'Balance Sheet Report',
-    onBeforePrint: async () => {
-      // eslint-disable-next-line no-console
-      console.log('Before Print: isPrinting =', isPrinting);
-      return Promise.resolve();
-    },
-    onAfterPrint: async () => {
-      setIsPrinting(false);
-      // eslint-disable-next-line no-console
-      console.log('After Print: isPrinting =', isPrinting);
-      return Promise.resolve();
-    },
-  } as unknown as Parameters<typeof useReactToPrint>[0]);
+  // const handlePrint = useReactToPrint({
+  //   content: () => printRef.current as HTMLElement,
+  //   documentTitle: 'Balance Sheet Report',
+  //   onBeforePrint: async () => {
+  //     // eslint-disable-next-line no-console
+  //     console.log('Before Print: isPrinting =', isPrinting);
+  //     return Promise.resolve();
+  //   },
+  //   onAfterPrint: async () => {
+  //     setIsPrinting(false);
+  //     // eslint-disable-next-line no-console
+  //     console.log('After Print: isPrinting =', isPrinting);
+  //     return Promise.resolve();
+  //   },
+  // } as unknown as Parameters<typeof useReactToPrint>[0]);
 
-  const handlePrintClick = () => {
-    setIsPrinting(true); // 啟用列印模式
-    handlePrint(); // 呼叫列印
-  };
+  // const handlePrint = useReactToPrint({
+  //   printRef,
+  // } as unknown as Parameters<typeof useReactToPrint>[0]);
+
+  // const handlePrintClick = () => {
+  //   setIsPrinting(true); // 啟用列印模式
+  //   handlePrint(); // 呼叫列印
+  // };
+
+  const handleOnAfterPrint = React.useCallback(() => {
+    // eslint-disable-next-line no-console
+    console.log('onAfterPrint call ');
+  }, []);
+
+  const handleOnBeforePrint = React.useCallback(() => {
+    // eslint-disable-next-line no-console
+    console.log('onBeforePrint call ');
+    return Promise.resolve();
+  }, []);
+
+  const printFn = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: 'alance Sheet Report',
+    onAfterPrint: handleOnAfterPrint,
+    onBeforePrint: handleOnBeforePrint,
+  });
+
+  // const handleOnClick = React.useCallback(() => {
+  //   printFn();
+  // }, [printFn]);
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
@@ -567,23 +593,27 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     return rows;
   };
   // Info: (20241029 - Anna) 子科目 Toggle 開關、列印及下載按鈕
-  const displayedSelectArea = (
-    <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap">
-      <div className="flex items-center gap-4">
-        <Toggle
-          id="totalSubAccounts-toggle"
-          initialToggleState={totalSubAccountsToggle}
-          getToggledState={totalSubAccountsToggleHandler}
-          toggleStateFromParent={totalSubAccountsToggle}
-        />
-        <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
+  const displayedSelectArea = (ref: React.RefObject<HTMLDivElement>) => {
+    // eslint-disable-next-line no-console
+    console.log('[displayedSelectArea]ref', ref);
+    return (
+      <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap">
+        <div className="flex items-center gap-4">
+          <Toggle
+            id="totalSubAccounts-toggle"
+            initialToggleState={totalSubAccountsToggle}
+            getToggledState={totalSubAccountsToggleHandler}
+            toggleStateFromParent={totalSubAccountsToggle}
+          />
+          <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
+        </div>
+        <div className="ml-auto flex items-center gap-24px">
+          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
+          <PrintButton onClick={printFn} disabled={false} />
+        </div>
       </div>
-      <div className="ml-auto flex items-center gap-24px">
-        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
-        <PrintButton onClick={handlePrintClick} disabled={false} />
-      </div>
-    </div>
-  );
+    );
+  };
 
   const ItemSummary = (
     <div id="1" className="relative overflow-y-hidden">
@@ -874,6 +904,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
 
   // Info: (20241118 - Anna) 如果正在列印，僅渲染列印模式的內容
   if (isPrinting) {
+    // eslint-disable-next-line no-console
+    console.log('printRef', printRef);
     return (
       <div ref={printRef} className="mx-auto w-full origin-top overflow-x-auto print:block">
         <BalanceSheetA4Template
@@ -893,7 +925,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
 
   return (
     <div className="mx-auto w-full origin-top overflow-x-auto">
-      {displayedSelectArea}
+      {displayedSelectArea(printRef)}
       {ItemSummary}
       <hr className="break-before-page" />
       {ItemDetail}

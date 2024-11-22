@@ -43,7 +43,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
     return result;
   };
   // Info: (20241120 - Anna) 新增分頁邏輯
-  const splitTableRows = async (
+  const splitTableRows = (
     rows: React.ReactNode[],
     rowsPerPage: number
   ): Promise<ReactNode[][]> => {
@@ -85,22 +85,26 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
 
   // 在 useEffect 中使用 async/await 確保渲染完成後更新狀態
   useEffect(() => {
-    const performSplitFirstBlock = async () => {
-      const splitPages = await splitTableRows(firstTableRows, 10); // 等待分頁完成
-      setFirstBlockSplitPages(splitPages); // 更新狀態
-    };
+    (async () => {
+      const performSplitFirstBlock = async () => {
+        const splitPages = await splitTableRows(firstTableRows, 10); // 等待分頁完成
+        setFirstBlockSplitPages(splitPages); // 更新狀態
+      };
 
-    if (firstTableRows) performSplitFirstBlock(); // 確保 rows 存在才執行
-  }, [firstTableRows]);
+      if (firstTableRows) await performSplitFirstBlock(); // 確保 rows 存在才執行
+    })(); // 確保 rows 存在才執行
+  }, []);
 
   useEffect(() => {
-    const performSplitSecondBlock = async () => {
-      const splitPages = await splitTableRows(secondTableRows, 10); // 等待分頁完成
-      setSecondBlockSplitPages(splitPages); // 更新狀態
-    };
+    (async () => {
+      const performSplitSecondBlock = async () => {
+        const splitPages = await splitTableRows(secondTableRows, 10); // 等待分頁完成
+        setSecondBlockSplitPages(splitPages); // 更新狀態
+      };
 
-    if (secondTableRows) performSplitSecondBlock(); // 確保 rows 存在才執行
-  }, [secondTableRows]);
+      if (secondTableRows) await performSplitSecondBlock(); // 確保 rows 存在才執行
+    })(); // 確保 rows 存在才執行
+  }, []);
 
   // Info: (20241120 - Anna)  確保表格分頁後保留表頭
   const firstTableHeaders = (
