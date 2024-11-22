@@ -118,7 +118,6 @@ export const AUTH_CHECK = {
   [APIName.STATUS_INFO_GET]: [AuthFunctionsKeysNew.user],
   [APIName.ACCOUNT_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.FILE_UPLOAD]: [AuthFunctionsKeysNew.user],
-  [APIName.PUBLIC_FILE_UPLOAD]: [AuthFunctionsKeysNew.user],
   [APIName.FILE_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.FILE_GET]: [AuthFunctionsKeysNew.user],
   [APIName.ROLE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
@@ -137,10 +136,7 @@ export const AUTH_CHECK = {
   [APIName.PUBLIC_KEY_GET]: [AuthFunctionsKeysNew.user],
   [APIName.ZOD_EXAMPLE]: [AuthFunctionsKeysNew.user], // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: [AuthFunctionsKeysNew.user],
-  [APIName.PUSHER]: [AuthFunctionsKeysNew.user],
   [APIName.PUSHER_AUTH]: [AuthFunctionsKeysNew.user],
-  [APIName.ENCRYPT]: [AuthFunctionsKeysNew.user],
-  [APIName.DECRYPT]: [AuthFunctionsKeysNew.user],
   [APIName.ASSET_LIST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ASSET_GET_BY_ID_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_ASSET_V2]: [AuthFunctionsKeysNew.user],
