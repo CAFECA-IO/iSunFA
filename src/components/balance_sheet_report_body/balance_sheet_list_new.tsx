@@ -965,11 +965,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   //   </div>
   // );
 
-  return (
-    <div
-      ref={printRef} // 確保 Ref 始終存在
-      className={`mx-auto w-full origin-top overflow-x-auto ${isPrinting ? 'print:block' : ''}`}
-    >
+return (
+  <div className={`mx-auto w-full origin-top overflow-x-auto`}>
+    <div ref={printRef}>
       {isPrinting ? (
         <BalanceSheetA4Template
           reportFinancial={reportFinancial}
@@ -983,9 +981,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           {TurnoverDay}
         </BalanceSheetA4Template>
       ) : (
-        <div className="mx-auto w-full origin-top overflow-x-auto">
-          {/* {displayedSelectArea(printRef)} */}
-          {displayedSelectArea()} {/* 不傳遞 printRef */}
+        <>
+          {displayedSelectArea()}
           {ItemSummary}
           <hr className="break-before-page" />
           {ItemDetail}
@@ -995,10 +992,11 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           {AssetItem}
           <hr className="break-before-page" />
           {TurnoverDay}
-        </div>
+        </>
       )}
     </div>
-  );
+  </div>
+);
 };
 
 export default BalanceSheetList;

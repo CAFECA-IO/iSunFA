@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import BalanceSheetList from '@/components/balance_sheet_report_body/balance_sheet_list_new';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -23,6 +23,13 @@ const BalanceSheetPageBody = () => {
 
   // Info: (20241122 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
   const printRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isPrinting && printRef.current) {
+      // eslint-disable-next-line no-console
+      console.log('Printing content:', printRef.current.innerHTML);
+    }
+  }, [isPrinting]);
 
   // Info: (20241122 - Anna)
   const handleOnBeforePrint = React.useCallback(() => {
