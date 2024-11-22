@@ -45,7 +45,9 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
     ]);
   }, [payReceiveSort, payReceiveAlreadyHappenedSort, remainSort]);
 
-  const voucherTabs = [VoucherListTabV2.RECEIVING, VoucherListTabV2.PAYMENT];
+  const voucherTabs = [VoucherListTabV2.RECEIVING, VoucherListTabV2.PAYMENT].map((value) =>
+    t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
+  );
 
   const params = { companyId: selectedCompany?.id };
 
@@ -94,7 +96,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
         <Tabs
           tabs={voucherTabs}
           tabsString={voucherTabs}
-          activeTab={VoucherListTabV2.RECEIVING}
+          activeTab={activeTab}
           onTabClick={tabsClick}
           counts={[unRead.receivingVoucher, unRead.paymentVoucher]}
         />

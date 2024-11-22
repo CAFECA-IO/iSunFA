@@ -46,7 +46,7 @@ const VoucherListPageBody: React.FC = () => {
   }, [creditSort, debitSort]);
 
   const voucherTabs = [VoucherListTabV2.UPLOADED, VoucherListTabV2.UPCOMING].map((value) =>
-    t(`journal:VOUCHER.${value}_TAB`)
+    t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
   );
   const voucherTypeList = Object.keys(EventType).map((key) => key.toLowerCase());
 

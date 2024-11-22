@@ -206,8 +206,10 @@
     "TRIAL_BALANCE": "试算表",
     "TRIAL_BALANCE_PERIOD": "试算表期间",
     "NO_VOUCHER": "无传票资料",
-    "UPLOADED_VOUCHER_TAB": "已过账传票",
-    "UPCOMING_EVENTS_TAB": "未过账传票"
+    "UPLOADED_TAB": "已过账传票",
+    "UPCOMING_TAB": "未过账传票",
+    "RECEIVING_TAB": "应收传票",
+    "PAYMENT_TAB": "应付传票"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增传票",
