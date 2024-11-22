@@ -7,6 +7,7 @@ interface UploadAreaProps {
   withScanner: boolean;
   toggleQRCode?: () => void;
   handleUpload: (file: File) => Promise<void>;
+  multiple?: boolean;
 }
 
 const UploadArea: React.FC<UploadAreaProps> = ({
@@ -14,6 +15,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({
   withScanner,
   toggleQRCode,
   handleUpload,
+  multiple = false,
 }) => {
   const { t } = useTranslation(['common', 'journal']);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
@@ -104,6 +106,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({
           className="hidden"
           onChange={handleFileChange}
           disabled={isDisabled}
+          multiple={multiple}
         />
       </button>
 

@@ -387,30 +387,49 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, companyId]
   );
 
-  // Deprecated: (20241120 - tzuhan) incomplete code
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleNewCertificatesComing = useCallback(
-    (data: { message: string }) => {
-      const newCertificates: ICertificate[] = [JSON.parse(data.message)];
-
-      const newCertificatesUI: { [id: string]: ICertificateUI } = newCertificates.reduce(
-        (acc, certificate) => {
-          acc[certificate.id] = {
-            ...certificate,
+  const handleNewCertificateComing = useCallback(
+    (newCertificate: ICertificate) => {
+      setCertificates((prev) => {
+        // Deprecated: (20241122 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log(`CertificateListBody handleNewCertificateComing: prev`, prev);
+        const newCertificatesUI: { [id: string]: ICertificateUI } = {
+          [newCertificate.id]: {
+            ...newCertificate,
             isSelected: false,
             unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
-            actions: !certificate.voucherNo
+            actions: !newCertificate.voucherNo
               ? [
                   CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
                   CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
                 ]
               : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+          },
+        };
+        Object.values(prev).forEach((certificate) => {
+          newCertificatesUI[certificate.id] = {
+            ...certificate,
           };
-          return acc;
-        },
-        {} as { [id: string]: ICertificateUI }
-      );
-      setCertificates((prev) => ({ ...newCertificatesUI, ...prev }));
+        });
+        // Deprecated: (20241122 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log(
+          `CertificateListBody handleNewCertificateComing: newCertificatesUI`,
+          newCertificatesUI
+        );
+        return newCertificatesUI;
+      });
+    },
+    [certificates]
+  );
+
+  const parseCertificateCreateEventMessage = useCallback(
+    (data: { message: string }) => {
+      const newCertificate: ICertificate = JSON.parse(data.message);
+      // Deprecated: (20241122 - tzuhan) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(`CertificateListBody handleNewCertificateComing: newCertificate`, newCertificate);
+      handleNewCertificateComing(newCertificate);
     },
     [companyId, certificates, activeTab]
   );
@@ -425,7 +444,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   useEffect(() => {
     const pusher = getPusherInstance(userAuth?.id);
     const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
-    channel.bind(CERTIFICATE_EVENT.CREATE, handleNewCertificatesComing);
+    channel.bind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
 
     return () => {
       channel.unbind_all();
@@ -455,24 +474,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           onDelete={handleDeleteItem}
         />
       )}
-      {/* {showQRCode && (
-        <CertificateQRCodeModal
-          handleRoomCreate={handleRoomCreate}
-          toggleModal={() => setShowQRCode((prev) => !prev)}
-        />
-      )} */}
       {/* Info: (20240919 - tzuhan) Main Content */}
       <div
         className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'overflow-y-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
-        {/* <InvoiceUpload
-          isDisabled={false}
-          withScanner
-          toggleQRCode={toggleQRCode}
-          setFiles={setDesktopUploadFiles}
-          showErrorMessage={false}
-        /> */}
         <CertificateFileUpload />
         {/* Info: (20240919 - tzuhan) Tabs */}
         <Tabs
@@ -555,12 +561,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           </div>
         )}
       </div>
-      {/* Deprecated: (20241111 - tzuhan) Floating Upload Popup */}
-      {/* <FloatingUploadPopup
-        companyId={companyId}
-        mobileUploadFiles={Object.values(mobileUploadFiles)}
-        desktopUploadFiles={desktopUploadFiles}
-      /> */}
     </>
   );
 };

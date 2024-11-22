@@ -239,7 +239,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.STATUS_INFO_GET]: statusInfoGetSchema,
   [APIName.ACCOUNT_LIST]: nullAPISchema,
   [APIName.FILE_UPLOAD]: filePostSchema,
-  [APIName.PUBLIC_FILE_UPLOAD]: nullAPISchema,
   [APIName.FILE_DELETE]: fileDeleteSchema,
   [APIName.FILE_GET]: fileGetSchema,
   [APIName.ROLE_GET_BY_ID]: nullAPISchema,
@@ -258,10 +257,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.PUBLIC_KEY_GET]: nullAPISchema,
   [APIName.ZOD_EXAMPLE]: nullAPISchema, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: nullAPISchema,
-  [APIName.PUSHER]: nullAPISchema,
   [APIName.PUSHER_AUTH]: nullAPISchema,
-  [APIName.ENCRYPT]: nullAPISchema,
-  [APIName.DECRYPT]: nullAPISchema,
   [APIName.ASSET_LIST_V2]: nullAPISchema,
   [APIName.ASSET_GET_BY_ID_V2]: nullAPISchema,
   [APIName.CREATE_ASSET_V2]: nullAPISchema,
