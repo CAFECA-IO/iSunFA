@@ -20,7 +20,7 @@ export const ISUNFA_ROUTE = {
   SELECT_ROLE: '/users/select_role',
   DASHBOARD: '/users/dashboard',
   MY_COMPANY_LIST_PAGE: '/users/my_company_list_page',
-  TO_DO_LIST_PAGE: '/users/to_do_list_page',
+  TODO_LIST_PAGE: '/users/todo_list_page',
   LATEST_NEWS_PAGE: '/beta/latest_news_page',
   FINANCIAL_NEWS_PAGE: '/beta/latest_news_page/financial_news_page',
   SYSTEM_NEWS_PAGE: '/beta/latest_news_page/system_news_page',
