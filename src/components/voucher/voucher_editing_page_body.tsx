@@ -1090,6 +1090,9 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       ...certificates,
     };
     const newCertificate: ICertificate = JSON.parse(data.message);
+    // Deprecated: (20241122 - tzuhan) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(`VoucherEditingPage handleNewCertificateComing: newCertificate`, newCertificate);
     newCertificates[newCertificate.id] = {
       ...newCertificate,
       isSelected: false,

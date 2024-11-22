@@ -24,8 +24,6 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   const [pusher, setPusher] = useState<Pusher | undefined>(undefined);
   const [channel, setChannel] = useState<Channel | undefined>(undefined);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [uploadedFileCount, setUploadFileCount] = useState<number>(0);
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState<boolean>(false);
   const { trigger: delectRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
   // const { trigger: getRoomByIdAPI } = APIHandler<IRoom>(APIName.ROOM_GET_BY_ID); // Info: (20241121 - tzuhan) 目前沒有用的，目前用 pusher 傳來的是足夠的
@@ -61,7 +59,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
     setIsQRCodeModalOpen((prev) => !prev);
   };
 
-  const createCertificate = useCallback(async (fileId: number, index: number) => {
+  const createCertificate = useCallback(async (fileId: number) => {
     try {
       const { success: successCreated, data } = await createCertificateAPI({
         params: {
@@ -71,9 +69,10 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
           fileId,
         },
       });
-      if (successCreated) {
+      if (successCreated && data) {
         setFiles((prev) => {
           const updateFiles = [...prev];
+          const index = updateFiles.findIndex((f) => f.id === data.file.id);
           updateFiles[index].certificateId = data?.id;
           updateFiles[index].progress = 100;
           updateFiles[index].status = ProgressStatus.SUCCESS;
@@ -83,27 +82,12 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
     } catch (error) {
       setFiles((prev) => {
         const updateFiles = [...prev];
+        const index = updateFiles.findIndex((f) => f.id === fileId);
         updateFiles[index].status = ProgressStatus.FAILED;
         return prev;
       });
     }
   }, []);
-
-  useEffect(() => {
-    let uploading = false;
-    let uploadCounts = 0;
-    files.map(async (file, index) => {
-      if (file.id && !file.certificateId && file.status !== ProgressStatus.PAUSED) {
-        await createCertificate(file.id, index);
-        if (isUploading === false) {
-          uploading = true;
-          setIsUploading(uploading);
-        }
-        uploadCounts += 1;
-      }
-    });
-    setUploadFileCount(uploadCounts);
-  }, [files]);
 
   const handleNewFilesComing = useCallback(
     async (data: { message: string }, roomId: string, roomPassword: string) => {
@@ -120,6 +104,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
       };
       setIsQRCodeModalOpen(false);
       setFiles((prev) => [...prev, newFile]);
+      await createCertificate(newFile.id!);
     },
     []
   );
@@ -178,8 +163,6 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
       />
       <FloatingUploadPopup
         files={files}
-        uploadedFileCount={uploadedFileCount}
-        isUploading={isUploading}
         pauseFileUpload={pauseFileUpload}
         deleteFile={deleteFile}
       />

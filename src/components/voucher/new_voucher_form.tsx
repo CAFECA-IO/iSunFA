@@ -956,7 +956,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     const newCertificates = {
       ...certificates,
     };
+    // Deprecated: (20241122 - tzuhan) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(`NewVoucherForm handleNewCertificateComing: certificates`, certificates);
     const newCertificate: ICertificate = JSON.parse(data.message);
+    // Deprecated: (20241122 - tzuhan) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(`NewVoucherForm handleNewCertificateComing: newCertificate`, newCertificate);
     newCertificates[newCertificate.id] = {
       ...newCertificate,
       isSelected: false,
@@ -965,6 +971,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         ? [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD, CERTIFICATE_USER_INTERACT_OPERATION.REMOVE]
         : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
     };
+    // Deprecated: (20241122 - tzuhan) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(`NewVoucherForm handleNewCertificateComing: newCertificates`, newCertificates);
     setCertificates(newCertificates);
   }, []);
 

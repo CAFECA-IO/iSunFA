@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
 import { useModalContext } from '@/contexts/modal_context';
 import APIHandler from '@/lib/utils/api_handler';
@@ -8,8 +8,8 @@ import { APIName } from '@/constants/api_connection';
 import UploadArea from '@/components/upload_area/upload_area';
 import { ProgressStatus } from '@/constants/account';
 import { ICertificate } from '@/interfaces/certificate';
-import { getPusherInstance } from '@/lib/utils/pusher_client';
-import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+// import { getPusherInstance } from '@/lib/utils/pusher_client';
+// import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
@@ -32,11 +32,11 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   showErrorMessage,
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
-  const { userAuth, selectedCompany } = useUserCtx();
+  const { selectedCompany } = useUserCtx();
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
     useModalContext();
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
-  // const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
+  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
 
   const handleUploadCancelled = useCallback(() => {
     setFiles([]);
@@ -114,27 +114,27 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
           prevFiles.map((f) => (f.name === file.name ? { ...f, id: fileMeta.id, progress: 50 } : f))
         );
 
-        // const { success: successCreated, data: certificate } = await createCertificateAPI({
-        //   params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-        //   body: { fileId: fileMeta.id },
-        // });
-        // if (!successCreated || !certificate) {
-        //   handleUploadFailed(file.name, new Error(t('certificate:CREATE.FAILED')));
-        //   return;
-        // }
+        const { success: successCreated, data: certificate } = await createCertificateAPI({
+          params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+          body: { fileId: fileMeta.id },
+        });
+        if (!successCreated || !certificate) {
+          handleUploadFailed(file.name, new Error(t('certificate:CREATE.FAILED')));
+          return;
+        }
 
-        // setFiles((prevFiles) =>
-        //   prevFiles.map((f) => {
-        //     return f.name === file.name
-        //       ? {
-        //           ...f,
-        //           progress: 100,
-        //           status: ProgressStatus.SUCCESS,
-        //           certificateId: certificate.id,
-        //         }
-        //       : f;
-        //   })
-        // );
+        setFiles((prevFiles) =>
+          prevFiles.map((f) => {
+            return f.name === file.name
+              ? {
+                  ...f,
+                  progress: 100,
+                  status: ProgressStatus.SUCCESS,
+                  certificateId: certificate.id,
+                }
+              : f;
+          })
+        );
       } catch (error) {
         handleUploadFailed(file.name, error as Error);
       }
@@ -142,26 +142,26 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
     [selectedCompany?.id, handleUploadFailed, setFiles, t, uploadFileAPI]
   );
 
-  const certificateCreatedHandler = useCallback(
-    (data: { message: string }) => {
-      const newCertificate: ICertificate = JSON.parse(data.message);
-      setFiles((prevFiles) => prevFiles.filter((f) => f.certificateId !== newCertificate.id));
-    },
-    [setFiles]
-  );
+  // const certificateCreatedHandler = useCallback(
+  //   (data: { message: string }) => {
+  //     const newCertificate: ICertificate = JSON.parse(data.message);
+  //     setFiles((prevFiles) => prevFiles.filter((f) => f.certificateId !== newCertificate.id));
+  //   },
+  //   [setFiles]
+  // );
 
-  useEffect(() => {
-    const pusher = getPusherInstance(userAuth?.id);
-    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
+  // useEffect(() => {
+  //   const pusher = getPusherInstance(userAuth?.id);
+  //   const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
 
-    channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
+  //   channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
-    return () => {
-      channel.unbind_all();
-      channel.unsubscribe();
-      pusher.disconnect();
-    };
-  }, [certificateCreatedHandler]);
+  //   return () => {
+  //     channel.unbind_all();
+  //     channel.unsubscribe();
+  //     pusher.disconnect();
+  //   };
+  // }, [certificateCreatedHandler]);
 
   return (
     <UploadArea
