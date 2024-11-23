@@ -43,10 +43,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
     return result;
   };
   // Info: (20241120 - Anna) 新增分頁邏輯
-  const splitTableRows = (
-    rows: React.ReactNode[],
-    rowsPerPage: number
-  ): Promise<ReactNode[][]> => {
+  const splitTableRows = (rows: React.ReactNode[], rowsPerPage: number): Promise<ReactNode[][]> => {
     return new Promise((resolve) => {
       setTimeout(() => {
         const validRows = rows.filter(

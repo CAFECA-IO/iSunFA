@@ -965,38 +965,38 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   //   </div>
   // );
 
-return (
-  <div className={`mx-auto w-full origin-top overflow-x-auto`}>
-    <div ref={printRef}>
-      {isPrinting ? (
-        <BalanceSheetA4Template
-          reportFinancial={reportFinancial}
-          curDate={curDate}
-          preDate={preDate}
-        >
-          {ItemSummary}
-          {ItemDetail}
-          {ProportionalTable}
-          {AssetItem}
-          {TurnoverDay}
-        </BalanceSheetA4Template>
-      ) : (
-        <>
-          {displayedSelectArea()}
-          {ItemSummary}
-          <hr className="break-before-page" />
-          {ItemDetail}
-          <hr className="break-before-page" />
-          {ProportionalTable}
-          <hr className="mb-16px mt-32px break-before-page" />
-          {AssetItem}
-          <hr className="break-before-page" />
-          {TurnoverDay}
-        </>
-      )}
+  return (
+    <div className={`mx-auto w-full origin-top overflow-x-auto`}>
+      <div ref={printRef}>
+        {isPrinting ? (
+          <BalanceSheetA4Template
+            reportFinancial={reportFinancial}
+            curDate={curDate}
+            preDate={preDate}
+          >
+            {ItemSummary}
+            {ItemDetail}
+            {ProportionalTable}
+            {AssetItem}
+            {TurnoverDay}
+          </BalanceSheetA4Template>
+        ) : (
+          <>
+            {displayedSelectArea()}
+            {ItemSummary}
+            <hr className="break-before-page" />
+            {ItemDetail}
+            <hr className="break-before-page" />
+            {ProportionalTable}
+            <hr className="mb-16px mt-32px break-before-page" />
+            {AssetItem}
+            <hr className="break-before-page" />
+            {TurnoverDay}
+          </>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default BalanceSheetList;
