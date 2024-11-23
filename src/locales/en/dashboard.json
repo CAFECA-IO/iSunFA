@@ -1,7 +1,8 @@
 {
   "LOGIN": {
     "LOG_IN_WITH_GOOGLE": "Log In with Google",
-    "LOG_IN_WITH_APPLE": "Log In with Apple"
+    "LOG_IN_WITH_APPLE": "Log In with Apple",
+    "LAST_LOGIN_TIME": "Last Login Time"
   },
 
   "DASHBOARD": {
@@ -59,6 +60,7 @@
     "CREATE_ROLE_TITLE": "Create Role",
     "SELECT_YOUR_ROLE": "Select Your Role",
     "ROLE_FUNCTION_PREVIEW": "Role Function Preview",
+    "BACK_TO_SELECT_ROLE_PAGE": "Back to Select Role Page",
 
     "COMMON_FUNCTIONS": "Common Functions",
     "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "General Ledger, Voucher Issuance, Preparation of Financial and Tax Reports",
@@ -83,8 +85,8 @@
     "MATCH_NEWS": "Match News"
   },
 
-  "TO_DO_LIST_PAGE": {
-    "TO_DO_LIST_TITLE": "To-do List",
+  "TODO_LIST_PAGE": {
+    "TODO_LIST_TITLE": "To-do List",
     "ADD_EVENT": "Add Event",
     "EVENT_LIST": "Event List",
     "ACTION": "Action",
@@ -96,6 +98,7 @@
     "AFFILIATED_COMPANY": "Affiliated Company",
     "NOTE": "Note",
     "ENTER_TEXT": "Enter text",
-    "SELECT_COMPANY": "Select a company"
+    "SELECT_COMPANY": "Select a company",
+    "NO_COMPANY": "No company"
   }
 }

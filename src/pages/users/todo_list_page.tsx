@@ -3,10 +3,10 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Layout from '@/components/beta/layout/layout';
-import ToDoListPageBody from '@/components/beta/to_do_list_page/to_do_list_page_body';
+import TodoListPageBody from '@/components/beta/todo_list_page/todo_list_page_body';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
-const ToDoListPage = () => {
+const TodoListPage = () => {
   const { t } = useTranslation(['dashboard']);
 
   return (
@@ -15,7 +15,7 @@ const ToDoListPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('dashboard:TO_DO_LIST_PAGE.TO_DO_LIST_TITLE')}</title>
+        <title>{t('dashboard:TODO_LIST_PAGE.TODO_LIST_TITLE')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -32,10 +32,10 @@ const ToDoListPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('dashboard:TO_DO_LIST_PAGE.TO_DO_LIST_TITLE')}
+        pageTitle={t('dashboard:TODO_LIST_PAGE.TODO_LIST_TITLE')}
         goBackUrl={ISUNFA_ROUTE.DASHBOARD}
       >
-        <ToDoListPageBody />
+        <TodoListPageBody />
       </Layout>
     </>
   );
@@ -44,9 +44,9 @@ const ToDoListPage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['dashboard', 'date_picker'])),
+      ...(await serverSideTranslations(locale as string, ['layout', 'dashboard', 'date_picker'])),
     },
   };
 };
 
-export default ToDoListPage;
+export default TodoListPage;

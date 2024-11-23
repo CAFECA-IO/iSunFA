@@ -211,3 +211,7 @@ export const AccountCodesOfAP = [
   '2680', // Info: (20241007 - Julian) 財務保證負債－非流動
 ];
 export const AccountCodesOfAPandAR = [...AccountCodesOfAR, ...AccountCodesOfAP];
+
+export const AccountCodesOfARRegex = new RegExp(`^(${AccountCodesOfAR.join('|')}).*`);
+export const AccountCodesOfAPRegex = new RegExp(`^(${AccountCodesOfAP.join('|')}).*`);
+export const AccountCodesOfAPandARRegex = new RegExp(`^(${AccountCodesOfAPandAR.join('|')}).*`);

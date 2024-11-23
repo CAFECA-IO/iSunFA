@@ -328,6 +328,7 @@ export function iAccountNode2IAccountForSheetDisplay(
   children?: IAccountForSheetDisplay[]
 ): IAccountForSheetDisplay {
   const iAccountForSheetDisplay: IAccountForSheetDisplay = {
+    accountId: accountNode.id,
     code: accountNode.code,
     name: accountNode.name,
     amount: accountNode.amount,
@@ -360,6 +361,7 @@ export function mappingAccountToSheetDisplay(
     const account = accountMap.get(row.code);
     if (!account) {
       sheetDisplay.push({
+        accountId: -1,
         code: row.code,
         name: row.name,
         amount: 0,
@@ -381,6 +383,7 @@ export function mappingAccountToSheetDisplay(
           })
         : [];
       sheetDisplay.push({
+        accountId: -1,
         code: row.code,
         name: row.name,
         amount: account.accountNode.amount,

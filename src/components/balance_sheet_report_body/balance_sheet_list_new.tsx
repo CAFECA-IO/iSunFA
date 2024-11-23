@@ -594,7 +594,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     BalanceDetailsButton，用於顯示彈出視窗的標題 */}
                     <BalanceDetailsButton
                       accountName={child.name}
-                      accountId={child.code}
+                      accountId={child.accountId}
                       className="print:hidden"
                     />
                   </div>

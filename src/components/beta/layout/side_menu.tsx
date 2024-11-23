@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FiLayout } from 'react-icons/fi';
 import { IoIosArrowForward } from 'react-icons/io';
 import Image from 'next/image';
@@ -7,126 +7,291 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
-// import { useUserCtx } from '@/contexts/user_context'; // ToDo: (20241018 - Liz) 準備串接真實資料
+import { useTranslation } from 'next-i18next';
+import { useUserCtx } from '@/contexts/user_context';
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
 
-interface SideMenuProps {
-  toggleOverlay?: () => void;
-  className?: string; // Info: (20241118 - Anna) 因為列印功能會需要用到
-}
-
-interface CaptionProps {
-  caption: string;
-}
-
-interface SubMenuItemProps {
-  linkText: string;
-  href?: string;
-  disabled?: boolean;
-  isCompanyNeeded?: boolean;
-  toggleOverlay?: () => void;
-  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; // Info: (20241117 - Anna) 可選
-}
-
-interface PanelLayoutProps {
-  panelTitle: string;
+interface IDefaultMenuOption {
+  title: string;
   iconSrc: string;
   iconSrcAlt: string;
   iconWidth: number;
   iconHeight: number;
-  children: React.ReactNode;
   disabled?: boolean;
 }
 
-const TEMPORARY_LINK = ISUNFA_ROUTE.DASHBOARD;
+interface IMenuOptionWithLink extends IDefaultMenuOption {
+  link: string;
+  subMenu?: undefined;
+}
 
-const PanelLayout = ({
-  panelTitle,
-  iconSrc,
-  iconSrcAlt,
-  iconWidth,
-  iconHeight,
-  children,
-  disabled = false,
-}: PanelLayoutProps) => {
-  const {
-    targetRef: panelLayoutRef,
-    componentVisible: isPanelOpen,
-    setComponentVisible: setIsPanelOpen,
-  } = useOuterClick<HTMLDivElement>(false);
+interface IMenuOptionWithSubMenu extends IDefaultMenuOption {
+  link?: undefined;
+  subMenu: ISubMenuSubMenuSection[];
+}
 
-  const togglePanel = () => {
-    setIsPanelOpen((prev) => !prev);
+type TMenuOption = IMenuOptionWithLink | IMenuOptionWithSubMenu;
+
+interface ISubMenuSubMenuSection {
+  caption: string;
+  subMenu: (ISubMenuOptionWithLink | ISubMenuOptionWithModal)[];
+}
+
+interface IDefaultSubMenuOption {
+  title: string;
+  disabled?: boolean;
+  needToVerifyCompany: boolean;
+}
+
+enum SubMenuOptionType {
+  LINK = 'Link',
+  MODAL = 'Modal',
+}
+
+interface ISubMenuOptionWithLink extends IDefaultSubMenuOption {
+  type: SubMenuOptionType.LINK;
+  link: string;
+}
+interface ISubMenuOptionWithModal extends IDefaultSubMenuOption {
+  type: SubMenuOptionType.MODAL;
+  link?: undefined;
+}
+
+const MENU_CONFIG: TMenuOption[] = [
+  {
+    title: 'ACCOUNTING',
+    iconSrc: '/icons/accounting_icon_calculator.svg',
+    iconSrcAlt: 'accounting_icon_calculator',
+    iconWidth: 20.34,
+    iconHeight: 23.85,
+    subMenu: [
+      {
+        caption: 'ACCOUNTING',
+        subMenu: [
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'ADDING_VOUCHER',
+            link: ISUNFA_ROUTE.ADD_NEW_VOUCHER,
+            needToVerifyCompany: true,
+          },
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'VOUCHER_LIST',
+            link: ISUNFA_ROUTE.VOUCHER_LIST,
+            needToVerifyCompany: true,
+          },
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'PAYABLE_RECEIVABLE_LIST',
+            link: ISUNFA_ROUTE.PAYABLE_RECEIVABLE_LIST,
+            needToVerifyCompany: true,
+          },
+        ],
+      },
+      {
+        caption: 'CERTIFICATES',
+        subMenu: [
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'UPLOAD_CERTIFICATE',
+            link: ISUNFA_ROUTE.CERTIFICATE_LIST,
+            needToVerifyCompany: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'ASSET_MANAGEMENT',
+    iconSrc: '/icons/asset_management_icon.svg',
+    iconSrcAlt: 'asset_management_icon',
+    iconWidth: 24,
+    iconHeight: 24,
+    subMenu: [
+      {
+        caption: 'ASSET',
+        subMenu: [
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'ASSET_LIST',
+            link: ISUNFA_ROUTE.ASSET_LIST,
+            needToVerifyCompany: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'PERSONNEL_MANAGEMENT',
+    iconSrc: '/icons/personnel_management_icon.svg',
+    iconSrcAlt: 'personnel_management_icon',
+    iconWidth: 23.95,
+    iconHeight: 24,
+    disabled: true,
+    subMenu: [],
+  },
+  {
+    title: 'REPORTS',
+    iconSrc: '/icons/reports_icon.svg',
+    iconSrcAlt: 'reports_icon',
+    iconWidth: 20.58,
+    iconHeight: 23.85,
+    subMenu: [
+      {
+        caption: 'FINANCIAL_REPORT',
+        subMenu: [
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'BALANCE_SHEET',
+            link: ISUNFA_ROUTE.BALANCE_SHEET,
+            needToVerifyCompany: true,
+          },
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'INCOME_STATEMENT',
+            link: ISUNFA_ROUTE.INCOME_STATEMENT,
+            needToVerifyCompany: true,
+          },
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'STATEMENT_OF_CASH_FLOWS',
+            link: ISUNFA_ROUTE.CASH_FLOW,
+            needToVerifyCompany: true,
+          },
+        ],
+      },
+      {
+        caption: 'TAX_REPORT',
+        subMenu: [
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'BUSINESS_TAX_RETURN_401',
+            link: ISUNFA_ROUTE.BUSINESS_TAX,
+            needToVerifyCompany: true,
+          },
+        ],
+      },
+      {
+        caption: 'DAILY_REPORT',
+        subMenu: [
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'LEDGER',
+            link: ISUNFA_ROUTE.LEDGER,
+            needToVerifyCompany: true,
+          },
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'TRIAL_BALANCE',
+            link: ISUNFA_ROUTE.TRIAL_BALANCE,
+            needToVerifyCompany: true,
+          },
+        ],
+      },
+      {
+        caption: 'EMBED_CODE',
+        subMenu: [
+          {
+            type: SubMenuOptionType.MODAL,
+            title: 'GENERATE_EMBED_CODE',
+            needToVerifyCompany: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'PARAMETER_SETTING',
+    iconSrc: '/icons/parameter_setting.svg',
+    iconSrcAlt: 'parameter_setting',
+    iconWidth: 23.77,
+    iconHeight: 23.73,
+    subMenu: [
+      {
+        caption: 'SETTING',
+        subMenu: [
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'GENERAL_SETTING',
+            link: ISUNFA_ROUTE.GENERAL_SETTING,
+            needToVerifyCompany: false,
+          },
+        ],
+      },
+      {
+        caption: 'COMPANY_SETTING',
+        subMenu: [
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'ACCOUNTING_SETTING',
+            link: ISUNFA_ROUTE.ACCOUNTING_SETTING,
+            needToVerifyCompany: true,
+          },
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'CLIENTS_SUPPLIERS_MANAGEMENT',
+            link: ISUNFA_ROUTE.COUNTERPARTY,
+            needToVerifyCompany: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'BACK_TO_DASHBOARD',
+    iconSrc: '/icons/dashboard.svg',
+    iconSrcAlt: 'dashboard_icon',
+    iconWidth: 24,
+    iconHeight: 24,
+    link: ISUNFA_ROUTE.DASHBOARD,
+  },
+];
+
+type TSubMenuOption = ISubMenuOptionWithLink | ISubMenuOptionWithModal;
+type SubMenuOptionProps = TSubMenuOption & {
+  toggleOverlay?: () => void;
+};
+
+const SubMenuOption = ({
+  type,
+  title,
+  link,
+  disabled,
+  needToVerifyCompany,
+  toggleOverlay = () => {},
+}: SubMenuOptionProps) => {
+  const { t } = useTranslation(['layout']);
+  const { toastHandler } = useModalContext();
+  const { selectedCompany } = useUserCtx();
+  const noSelectedCompany = !selectedCompany;
+  const [isEmbedCodeModalOpen, setIsEmbedCodeModalOpen] = useState<boolean>(false);
+
+  const toggleModal = () => {
+    if (title === 'GENERATE_EMBED_CODE') {
+      setIsEmbedCodeModalOpen((prev) => !prev);
+    }
+
+    // Info: (20241121 - Liz) If there are more modals, add more conditions here
   };
 
-  return (
-    <div ref={panelLayoutRef}>
-      <button
-        type="button"
-        onClick={togglePanel}
-        disabled={disabled}
-        className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
-      >
-        <div className="flex h-24px w-24px items-center justify-center">
-          <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
-        </div>
-        <p className="grow text-left">{panelTitle}</p>
-        <IoIosArrowForward size={20} />
-      </button>
-
-      {/* // Info: (20241014 - Liz) Panel : 面板上有各種 links 可以連結到其他頁面 */}
-      {isPanelOpen && (
-        <div
-          onClick={togglePanel} // Info: (20241022 - Liz) 點擊此 Panel 會關閉 Panel
-          className="absolute left-full top-0 z-20 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent"
-        >
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const Caption = ({ caption }: CaptionProps) => {
-  return (
-    <h4 className="text-xs font-semibold uppercase tracking-widest text-text-brand-primary-lv1">
-      {caption}
-    </h4>
-  );
-};
-
-const SubMenuItem = ({
-  linkText,
-  href,
-  disabled = false,
-  isCompanyNeeded = false,
-  toggleOverlay = () => {},
-  onClick, // Info: (20241117 - Anna) 接收 onClick
-}: SubMenuItemProps) => {
-  const { toastHandler } = useModalContext();
-
-  // const { selectedCompany } = useUserCtx(); // ToDo: (20241018 - Liz) 準備串接真實資料
-
-  /* === Fake Data === */
-  const selectedCompany = '';
-  const isSelectedCompany = !!selectedCompany;
-
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (isCompanyNeeded && !isSelectedCompany) {
+    if (needToVerifyCompany && noSelectedCompany) {
       // Info: (20241018 - Liz) 阻止導航
       e.preventDefault();
 
-      // ToDo: (20241018 - Liz) 要換成真實的「選擇公司」的 Link href
       toastHandler({
         id: 'company-needed',
         type: ToastType.INFO,
         content: (
           <div className="flex items-center gap-32px">
             <p className="text-sm text-text-neutral-primary">
-              Please select a company before proceeding with the operation.
+              {t('layout:TOAST.PLEASE_SELECT_A_COMPANY_BEFORE_PROCEEDING_WITH_THE_OPERATION')}
             </p>
-            <Link href={'/'} className="text-base font-semibold text-link-text-primary">
-              Company Link
+            <Link
+              href={ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE}
+              className="text-base font-semibold text-link-text-primary"
+            >
+              {t('layout:TOAST.GO_TO_SELECT_COMPANY')}
             </Link>
           </div>
         ),
@@ -142,178 +307,196 @@ const SubMenuItem = ({
         },
       });
     }
-     if (onClick) {
-       onClick(e); // Info: (20241117 - Anna) 明確使用 onClick
-     }
   };
 
+  if (type === SubMenuOptionType.LINK) {
+    return (
+      <Link
+        href={link}
+        onClick={handleClick}
+        className={`rounded-xs px-12px py-10px font-medium hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:bg-transparent disabled:text-button-text-disable ${disabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
+      >
+        {t(`layout:SIDE_MENU.${title}`)}
+      </Link>
+    );
+  }
+
+  if (type === SubMenuOptionType.MODAL) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={toggleModal}
+          className={`rounded-xs px-12px py-10px text-left font-medium hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:bg-transparent disabled:text-button-text-disable ${disabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
+        >
+          {t(`layout:SIDE_MENU.${title}`)}
+        </button>
+
+        {isEmbedCodeModalOpen && (
+          <EmbedCodeModal
+            isModalVisible={isEmbedCodeModalOpen}
+            modalVisibilityHandler={toggleModal}
+          />
+        )}
+      </>
+    );
+  }
+
+  return null;
+};
+
+interface SubMenuSectionProps {
+  subMenu: ISubMenuSubMenuSection;
+  toggleOverlay: () => void;
+}
+
+const SubMenuSection = ({ subMenu, toggleOverlay }: SubMenuSectionProps) => {
+  const { t } = useTranslation(['layout']);
   return (
-    <Link
-      href={href ?? TEMPORARY_LINK}
-      onClick={handleClick}
-      className={`rounded-xs px-12px py-10px font-medium hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:bg-transparent disabled:text-button-text-disable ${disabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
-    >
-      {linkText}
-    </Link>
+    <>
+      <h4 className="text-xs font-semibold uppercase tracking-widest text-text-brand-primary-lv1">
+        {t(`layout:SIDE_MENU.${subMenu.caption}`)}
+      </h4>
+
+      {subMenu.subMenu.map((item) => (
+        <SubMenuOption key={item.title} {...item} toggleOverlay={toggleOverlay} />
+      ))}
+    </>
   );
 };
 
-const SideMenu = ({ toggleOverlay, className }: SideMenuProps) => {
+interface SubMenuProps {
+  selectedMenuOption: string;
+  toggleOverlay: () => void;
+}
+
+const SubMenu = ({ selectedMenuOption, toggleOverlay }: SubMenuProps) => {
+  const subMenu = MENU_CONFIG.find((menu) => menu.title === selectedMenuOption)?.subMenu;
+
+  if (!subMenu) return null;
+
+  return (
+    <div className="absolute left-full top-0 z-20 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent">
+      <div className="flex flex-col gap-24px">
+        {subMenu.map((item) => (
+          <SubMenuSection key={item.caption} subMenu={item} toggleOverlay={toggleOverlay} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+type MenuOptionProps = TMenuOption & {
+  onClickMenuOption: (menuOptionTitle: string) => void;
+};
+
+const MenuOption = ({
+  title,
+  iconSrc,
+  iconSrcAlt,
+  iconWidth,
+  iconHeight,
+  disabled = false,
+  link,
+  subMenu,
+  onClickMenuOption,
+}: MenuOptionProps) => {
+  const { t } = useTranslation(['layout']);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => onClickMenuOption(title)}
+        disabled={disabled}
+        className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
+      >
+        <div className="flex h-24px w-24px items-center justify-center">
+          <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
+        </div>
+
+        {link ? (
+          <Link href={link}>{t(`layout:SIDE_MENU.${title}`)}</Link>
+        ) : (
+          <p className="grow text-left">{t(`layout:SIDE_MENU.${title}`)}</p>
+        )}
+
+        {subMenu && <IoIosArrowForward size={20} />}
+      </button>
+    </div>
+  );
+};
+
+interface SideMenuProps {
+  toggleOverlay: () => void;
+  className?: string; // Info: (20241118 - Anna) 因為列印功能會需要用到
+}
+
+const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
+  const { t } = useTranslation(['layout']);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(true);
-  const [isModalVisible, setIsModalVisible] = useState(false); // Info: (20241117 - Anna) 新增狀態用於控制 Modal 顯示
+  const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
 
   const toggleSideMenu = () => {
     setIsSideMenuOpen((prev) => !prev);
   };
 
-  const toggleModalVisibility = () => {
-    // Info: (20241117 - Anna) 新增控制 Modal 的顯示函數
-    setIsModalVisible((prev) => !prev);
+  const {
+    targetRef: subMenuTargetRef,
+    componentVisible: isSubMenuOpen,
+    setComponentVisible: setIsSubMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const onClickMenuOption = (menuOption: string) => {
+    setSelectedMenuOption((prev) => {
+      const currentMenuOption = prev === menuOption ? '' : menuOption;
+      setIsSubMenuOpen(!!currentMenuOption);
+      return currentMenuOption;
+    });
   };
+
+  useEffect(() => {
+    // Info: (20241121 - Liz) 觸發 useOuterClick 的 handleClickOutside 時，將 selectedMenuOption 設為空字串
+    if (!isSubMenuOpen && selectedMenuOption) {
+      setSelectedMenuOption('');
+    }
+  }, [isSubMenuOpen, selectedMenuOption]);
 
   // Info: (20241118 - Anna) 因為列印功能會需要用到className
   return (
-    <div className={`z-100 h-full bg-surface-neutral-main-background ${className || ''}`}>
+    <div className={`z-100 h-full bg-surface-neutral-main-background`}>
       {isSideMenuOpen ? (
-        <section className="relative flex h-full w-max flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu">
-          {/* Info: (20241117 - Anna) Embed Code Modal */}
-          <EmbedCodeModal
-            isModalVisible={isModalVisible}
-            modalVisibilityHandler={toggleModalVisibility}
-          />
-
-          {/* Side Menu Icon */}
+        <section
+          className="relative flex h-full w-max flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu"
+          ref={subMenuTargetRef}
+        >
+          {/* // Info: (20241121 - Liz) Side Menu Icon */}
           <div>
             <button type="button" onClick={toggleSideMenu} className="p-10px">
               <FiLayout size={24} />
             </button>
           </div>
 
-          {/* Side Menu Body */}
+          {/* // Info: (20241121 - Liz) Side Menu Content */}
           <div className="flex flex-auto flex-col gap-24px">
-            {/* // Info: (20241014 - Liz) Accounting */}
-            <PanelLayout
-              panelTitle="Accounting"
-              iconSrc="/icons/accounting_icon_calculator.svg"
-              iconSrcAlt="accounting_icon_calculator"
-              iconWidth={20.34}
-              iconHeight={23.85}
-            >
-              <div className="flex flex-col gap-24px">
-                <Caption caption="Accounting" />
-                <SubMenuItem linkText="Adding Voucher" href={ISUNFA_ROUTE.ADD_NEW_VOUCHER} />
-                <SubMenuItem linkText="Voucher List" href={ISUNFA_ROUTE.VOUCHER_LIST} />
-                <SubMenuItem
-                  linkText="Payable/Receivable List"
-                  href={ISUNFA_ROUTE.PAYABLE_RECEIVABLE_LIST}
-                />
-
-                <Caption caption="Certificates" />
-                <SubMenuItem linkText="Upload Certificate" href={ISUNFA_ROUTE.CERTIFICATE_LIST} />
-              </div>
-            </PanelLayout>
-
-            {/* // Info: (20241014 - Liz) Asset Management */}
-            <PanelLayout
-              panelTitle="Asset Management"
-              iconSrc="/icons/asset_management_icon.svg"
-              iconSrcAlt="asset_management_icon"
-              iconWidth={24}
-              iconHeight={24}
-            >
-              <div className="flex flex-col gap-24px">
-                <Caption caption="Asset" />
-                <SubMenuItem linkText="Asset List" href={ISUNFA_ROUTE.ASSET_LIST} />
-              </div>
-            </PanelLayout>
-
-            {/* // Info: (20241014 - Liz) Personnel Management */}
-            <PanelLayout
-              disabled
-              panelTitle="Personnel Management"
-              iconSrc="/icons/personnel_management_icon.svg"
-              iconSrcAlt="personnel_management_icon"
-              iconWidth={23.95}
-              iconHeight={24}
-            >
-              <div></div>
-            </PanelLayout>
-
-            {/* // Info: (20241014 - Liz) Reports */}
-            <PanelLayout
-              panelTitle="Reports"
-              iconSrc="/icons/reports_icon.svg"
-              iconSrcAlt="reports_icon"
-              iconWidth={20.58}
-              iconHeight={23.85}
-            >
-              <div className="flex flex-col gap-24px">
-                <Caption caption="Financial Report" />
-                <SubMenuItem linkText="Balance Sheet" />
-                <SubMenuItem linkText="Income Statement" />
-                <SubMenuItem linkText="Statement of Cash Flows" />
-
-                <Caption caption="Tax Report" />
-                <SubMenuItem linkText="Business Tax Return (401)" />
-
-                <Caption caption="Daily Report" />
-                <SubMenuItem linkText="Ledger" />
-                <SubMenuItem linkText="Trial Balance" />
-
-                <Caption caption="Embed code" />
-                <SubMenuItem
-                  linkText="Generate Embed Code"
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault(); // Info: (20241117 - Anna) 阻止頁面跳轉
-                    toggleModalVisibility(); // Info: (20241117 - Anna) 顯示彈跳視窗
-                  }}
-                />
-              </div>
-            </PanelLayout>
-
-            {/* // Info: (20241014 - Liz) Parameter Setting */}
-            <PanelLayout
-              panelTitle="Parameter Setting"
-              iconSrc="/icons/parameter_setting.svg"
-              iconSrcAlt="parameter_setting"
-              iconWidth={23.77}
-              iconHeight={23.73}
-            >
-              <div className="flex flex-col gap-24px">
-                <Caption caption="Setting" />
-                <SubMenuItem
-                  linkText="General Setting"
-                  href={ISUNFA_ROUTE.GENERAL_SETTING}
-                  isCompanyNeeded={false} // ToDo: (20241118 - tzuhan) change back to true after @liz using real data
-                  toggleOverlay={toggleOverlay}
-                />
-
-                <Caption caption="Company setting" />
-                <SubMenuItem linkText="Accounting Setting" href={ISUNFA_ROUTE.ACCOUNTING_SETTING} />
-                <SubMenuItem linkText="Clients/Suppliers Management" />
-              </div>
-            </PanelLayout>
-
-            {/* // Info: (20241015 - Liz) 回到儀表板 */}
-            <Link
-              href={ISUNFA_ROUTE.DASHBOARD}
-              className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
-            >
-              <Image src="/icons/dashboard.svg" alt="dashboard_icon" width={24} height={24}></Image>
-              <p>Back to dashboard</p>
-            </Link>
+            {MENU_CONFIG.map((menu) => (
+              <MenuOption key={menu.title} {...menu} onClickMenuOption={onClickMenuOption} />
+            ))}
           </div>
 
-          {/* // Info: (20241118 - Anna) Side Menu Footer */}
+          {isSubMenuOpen && (
+            <SubMenu selectedMenuOption={selectedMenuOption} toggleOverlay={toggleOverlay} />
+          )}
+
+          {/* // Info: (20241121 - Liz) Side Menu Footer */}
           <div className="flex flex-col items-center gap-8px">
             <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta V1.0.0</p>
 
-            {/* // ToDo: (20241014 - Liz) Link 到隱私權政策和服務條款頁面 */}
+            {/* // ToDo: (20241121 - Liz) Link 到隱私權政策和服務條款頁面 */}
             <div className="flex gap-8px text-sm font-semibold">
-              <p className="text-link-text-primary">Private Policy</p>
+              <p className="text-link-text-primary">{t('layout:SIDE_MENU.PRIVACY_POLICY')}</p>
               <div className="w-1px bg-stroke-neutral-quaternary"></div>
-              <p className="text-link-text-primary">Service Term</p>
+              <p className="text-link-text-primary">{t('layout:SIDE_MENU.TERMS_OF_SERVICE')}</p>
             </div>
           </div>
         </section>

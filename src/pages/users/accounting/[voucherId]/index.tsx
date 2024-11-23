@@ -39,12 +39,14 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
     props: {
       voucherId: params.voucherId,
       ...(await serverSideTranslations(locale as string, [
+        'layout',
         'common',
         'journal',
         'setting',
         'terms',
         'asset',
         'dashboard',
+        'date_picker',
       ])),
     },
   };

@@ -335,10 +335,5 @@
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误"
-  },
-  "USER": {
-    "DELETE_WARNING": "此账户将在 {{days}} 个工作日内被删除。",
-    "DELETE_HINT": "请确保数据备份。如需取消删除过程，请前往设置页面。",
-    "SETTING": "设定"
   }
 }

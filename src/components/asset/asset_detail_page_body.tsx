@@ -15,7 +15,6 @@ import { APIName } from '@/constants/api_connection';
 import { AssetStatus } from '@/constants/asset';
 import { ToastType } from '@/interfaces/toastify';
 import { ASSET_DELETE_TERM } from '@/constants/common';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import { AssetModalType } from '@/interfaces/asset_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastId } from '@/constants/toast_id';
@@ -34,17 +33,16 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
 
-  const params = {
-    companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-    assetId,
-  };
+  const companyId = selectedCompany?.id;
+
+  const params = { companyId, assetId };
 
   // Info: (20241028 - Julian) Get asset details from API
-  const { data: assetDetail, isLoading } = APIHandler<IAssetDetails>(
-    APIName.ASSET_GET_BY_ID_V2,
-    { params },
-    true
-  );
+  const {
+    trigger: getAssetDetail,
+    data: assetDetail,
+    isLoading,
+  } = APIHandler<IAssetDetails>(APIName.ASSET_GET_BY_ID_V2, { params });
 
   // Info: (20241028 - Julian) Delete asset API
   const {
@@ -57,8 +55,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   // Info: (20241028 - Julian) Update asset API
   const { trigger: updateAsset, data: defaultAssetData } = APIHandler<IAssetDetails>(
     APIName.UPDATE_ASSET_V2,
-    { params },
-    true
+    { params }
   );
 
   // Info: (20241016 - Julian) Get asset details from API
@@ -132,6 +129,13 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     assetStatusSettingModalDataHandler(assetId, assetStatus as AssetStatus);
     assetStatusSettingModalVisibilityHandler();
   };
+
+  useEffect(() => {
+    // Info: (20241121 - Julian) Get voucher detail when companyId is ready
+    if (companyId) {
+      getAssetDetail();
+    }
+  }, [companyId]);
 
   useEffect(() => {
     if (!isDeleting) {

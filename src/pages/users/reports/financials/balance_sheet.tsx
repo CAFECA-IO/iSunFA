@@ -33,7 +33,14 @@ const BalanceSheetPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['report_401', 'reports', 'date_picker', 'dashboard'])),
+    ...(await serverSideTranslations(locale, [
+      'layout',
+      'common',
+      'report_401',
+      'reports',
+      'date_picker',
+      'dashboard',
+    ])),
     locale,
   },
 });

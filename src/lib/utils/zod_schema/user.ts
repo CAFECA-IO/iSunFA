@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
 import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { IUser } from '@/interfaces/user';
+import { UserAgreementPrismaSchema } from '@/lib/utils/zod_schema/user_agreement';
 
 const userGetQuerySchema = z.object({
   userId: zodStringToNumber,
@@ -25,7 +26,7 @@ export const userPrismaSchema = z.object({
   name: z.string(),
   email: z.string(),
   imageFile: filePrismaSchema,
-  userAgreements: z.array(z.string()),
+  userAgreements: z.array(UserAgreementPrismaSchema),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
   deletedAt: z.number().int().nullable(),
@@ -37,7 +38,7 @@ export const userOutputSchema = userPrismaSchema.transform((data) => {
     name: data.name,
     email: data.email,
     imageId: data.imageFile.url,
-    agreementList: data.userAgreements,
+    agreementList: data.userAgreements.map((agreement) => agreement.agreementHash),
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
     deletedAt: data.deletedAt ?? 0,

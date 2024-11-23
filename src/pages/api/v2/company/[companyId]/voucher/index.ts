@@ -6,248 +6,151 @@ import { IResponseData } from '@/interfaces/response_data';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
-import { voucherAPIPostUtils as postUtils } from '@/pages/api/v2/company/[companyId]/voucher/route_utils';
+import {
+  voucherAPIPostUtils as postUtils,
+  voucherAPIGetUtils as getUtils,
+  IGetManyVoucherBetaEntity,
+} from '@/pages/api/v2/company/[companyId]/voucher/route_utils';
 import { withRequestValidation } from '@/lib/utils/middleware';
 
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { initVoucherEntity } from '@/lib/utils/voucher';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { postVoucherV2 } from '@/lib/utils/repo/voucher.repo';
-import { VoucherV2Action } from '@/constants/voucher';
-import { CounterpartyType, PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
+import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { initCounterPartyEntity } from '@/lib/utils/counterparty';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IEventEntity } from '@/interfaces/event';
-import { IVoucherEntity } from '@/interfaces/voucher';
+import { IVoucherBeta, IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
-import { IUserEntity } from '@/interfaces/user';
-import { IUserVoucherEntity } from '@/interfaces/user_voucher';
-import { ILineItemEntity } from '@/interfaces/line_item';
-import { IAccountEntity } from '@/interfaces/accounting_account';
-import { AccountType, EventType } from '@/constants/account';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { IFileEntity } from '@/interfaces/file';
-import { FileFolder } from '@/constants/file';
+import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
 
-type IVoucherBetaEntity = IVoucherEntity & {
-  counterParty: ICounterPartyEntity;
-  issuer: IUserEntity & { imageFile: IFileEntity };
-  readByUsers: IUserVoucherEntity[];
-  lineItems: (ILineItemEntity & { account: IAccountEntity })[];
-  sum: {
-    debit: boolean;
-    amount: number;
-  };
-};
-
-type IVoucherPostOutput = IPaginatedData<{
+type IVoucherGetOutput = IPaginatedData<{
   unRead: {
     uploadedVoucher: number;
     upcomingEvents: number;
+    paymentVoucher: number;
+    receivingVoucher: number;
   };
-  vouchers: IVoucherBetaEntity[];
+  vouchers: IGetManyVoucherBetaEntity[];
 }>;
 
-export const handleGetRequest: IHandleRequest<
-  APIName.VOUCHER_LIST_V2,
-  IVoucherPostOutput
-> = async ({ query, body }) => {
-  // Deprecated: (20241104 - Murky) Print out query and body for debugging
-  loggerBack.info(`query: ${JSON.stringify(query, null, 2)}`);
-  loggerBack.info(`body: ${JSON.stringify(body, null, 2)}`);
+/**
+ * Info: (20241120 - Murky)
+ * @todo
+ * - 需要同時滿足一般傳票回傳一般voucher和payable, receivable回傳
+ * - sortBy 需要提供 issue day, total credit/total debit, payable amount, paid amount, remain amount
+ * - 需要同時Post voucherRead
+ * - 回傳的時候需要回傳未讀voucher數量
+ */
+export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherGetOutput> = async ({
+  query,
+  session,
+}) => {
   // ToDo: (20240927 - Murky) Remember to add auth check
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IVoucherPostOutput | null = null;
+  let payload: IVoucherGetOutput | null = null;
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
 
-  const mockLineItems: (ILineItemEntity & { account: IAccountEntity })[] = [
-    {
-      id: 1,
-      description: '存入銀行',
-      amount: 600,
-      debit: true,
-      accountId: 1,
-      voucherId: 1,
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      account: {
-        id: 1,
-        companyId: 1002,
-        system: 'IFRS',
-        type: AccountType.ASSET,
-        debit: true,
-        liquidity: true,
-        code: '1103',
-        name: '銀行存款',
-        forUser: true,
-        parentCode: '1100',
-        rootCode: '1100',
-        level: 3,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
+  const { userId, companyId } = session;
+
+  const { page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } = query;
+  const paginationVouchersFromPrisma = await getUtils.getVoucherListFromPrisma({
+    companyId,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    tab,
+    sortOption,
+    searchQuery,
+    type,
+  });
+  const { data: vouchersFromPrisma, where, ...pagination } = paginationVouchersFromPrisma;
+  const nowInSecond = getTimestampNow();
+  const voucherBetas: IGetManyVoucherBetaEntity[] = vouchersFromPrisma.map((voucherFromPrisma) => {
+    const voucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
+    const lineItemEntities = getUtils.initLineItemAndAccountEntities(voucherFromPrisma);
+    const counterPartyEntity = getUtils.initCounterPartyEntity(voucherFromPrisma);
+    const issuerEntity = getUtils.initIssuerAndFileEntity(voucherFromPrisma);
+    const readByUsers = getUtils.initUserVoucherEntities(voucherFromPrisma);
+    const sum = getUtils.getLineItemAmountSum(lineItemEntities);
+    const originalEventEntities = getUtils.initOriginalEventEntities(voucherFromPrisma);
+    const { payableInfo, receivingInfo } =
+      getUtils.getPayableReceivableInfoFromVoucher(originalEventEntities);
+
+    const voucherBeta: IGetManyVoucherBetaEntity = {
+      ...voucherEntity,
+      counterParty: counterPartyEntity,
+      issuer: issuerEntity,
+      readByUsers,
+      lineItems: lineItemEntities,
+      sum: {
+        debit: false, // Info: (20241104 - Murky) 這個其實永遠是false, 因為debit和credit相同, 然後總和放在credit
+        amount: sum,
       },
-    },
-    {
-      id: 2,
-      description: '存入銀行',
-      amount: 600,
-      debit: true,
-      accountId: 1,
-      voucherId: 1,
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      account: {
-        id: 2,
-        companyId: 1002,
-        system: 'IFRS',
-        type: AccountType.ASSET,
-        debit: true,
-        liquidity: true,
-        code: '1101',
-        name: '庫存現金',
-        forUser: true,
-        parentCode: '1100',
-        rootCode: '1100',
-        level: 3,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
-      },
-    },
-    {
-      id: 3,
-      description: '原價屋',
-      amount: 1000,
-      debit: false,
-      accountId: 1,
-      voucherId: 1,
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      account: {
-        id: 1,
-        companyId: 1002,
-        system: 'IFRS',
-        type: AccountType.ASSET,
-        debit: true,
-        liquidity: true,
-        code: '1172',
-        name: '應收帳款',
-        forUser: true,
-        parentCode: '1170',
-        rootCode: '1170',
-        level: 3,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
-      },
-    },
-  ];
+      payableInfo,
+      receivingInfo,
+      originalEvents: originalEventEntities,
+    };
 
-  const mockCounterParty: ICounterPartyEntity = {
-    id: 1,
-    companyId: 1003,
-    name: '原價屋',
-    taxId: '27749036',
-    type: CounterpartyType.CLIENT,
-    note: '買電腦',
-    createdAt: 1,
-    updatedAt: 1,
-    deletedAt: null,
-  };
+    return voucherBeta;
+  });
 
-  const mockIssuer: IUserEntity & { imageFile: IFileEntity } = {
-    id: 1,
-    name: 'Murky',
-    email: 'murky@isunfa.com',
-    imageFileId: 1,
-    createdAt: 1,
-    updatedAt: 1,
-    deletedAt: null,
-    imageFile: {
-      id: 1,
-      name: 'murky.jpg',
-      size: 1000,
-      mimeType: 'image/jpeg',
-      type: FileFolder.TMP,
-      url: 'https://isunfa.com/elements/avatar_default.svg?w=256&q=75',
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    },
-  };
+  // ToDo: (20241121 - Murky) Sort by total credit/total debit, payable amount, paid amount, remain amount
+  getUtils.sortVoucherBetaList(voucherBetas, {
+    sortOption,
+    tab,
+  });
 
-  const mockReadByUsers: IUserVoucherEntity[] = [
-    {
-      id: 1,
-      userId: 1,
-      voucherId: 1,
-      isRead: true,
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    },
-  ];
+  // ToDo: (20241121 - Murky) Get upload and upcoming unread voucher count
+  const unreadUploadedVoucherCounts = await getUtils.getUnreadVoucherCount({
+    userId,
+    where,
+    tab: VoucherListTabV2.UPLOADED,
+  });
 
-  const mockSum: number = mockLineItems.reduce((acc, lineItem) => {
-    if (lineItem.debit) {
-      return acc + lineItem.amount;
-    }
-    return acc;
-  }, 0);
+  const unreadUpcomingEventCounts = await getUtils.getUnreadVoucherCount({
+    userId,
+    where,
+    tab: VoucherListTabV2.UPCOMING,
+  });
 
-  const mockOutputVoucher: IVoucherBetaEntity = {
-    id: 1,
-    issuerId: 1,
-    counterPartyId: 1,
-    companyId: 1002,
-    status: JOURNAL_EVENT.UPLOADED,
-    editable: true,
-    no: '1001',
-    date: 1,
-    type: EventType.INCOME,
-    note: 'this is note',
-    createdAt: 1,
-    updatedAt: 1,
-    deletedAt: null,
-    counterParty: mockCounterParty,
-    issuer: mockIssuer,
-    readByUsers: mockReadByUsers,
-    lineItems: mockLineItems,
-    originalEvents: [],
-    resultEvents: [],
-    certificates: [],
-    asset: [],
-    sum: {
-      debit: false, // Info: (20241104 - Murky) 這個其實永遠是false, 因為debit和credit相同, 然後總和放在credit
-      amount: mockSum,
-    },
-  };
+  const unreadReceivedVoucherCounts = await getUtils.getUnreadVoucherCount({
+    userId,
+    where,
+    tab: VoucherListTabV2.RECEIVING,
+  });
 
-  const mockUnRead = {
-    uploadedVoucher: 1,
-    upcomingEvents: 1,
-  };
+  const unreadPayableVoucherCounts = await getUtils.getUnreadVoucherCount({
+    userId,
+    where,
+    tab: VoucherListTabV2.PAYMENT,
+  });
+  // ToDo: (20241121 - Murky) Post Read info
+  getUtils.upsertUserReadVoucher({
+    userId,
+    voucherIdsBeenRead: voucherBetas.map((voucher) => voucher.id),
+    nowInSecond,
+  });
 
   payload = {
-    page: 1, // Info: (20240927 - Murky) current page
-    totalPages: 3,
-    totalCount: 30,
-    pageSize: 10,
-    hasNextPage: true,
-    hasPreviousPage: true,
-    sort: [
-      {
-        sortBy: 'createAt',
-        sortOrder: 'desc',
-      },
-    ],
+    page: pagination.page,
+    totalPages: pagination.totalPages,
+    totalCount: pagination.totalCount,
+    pageSize: pagination.pageSize,
+    hasNextPage: pagination.hasNextPage,
+    hasPreviousPage: pagination.hasPreviousPage,
+    sort: sortOption,
     data: {
-      unRead: mockUnRead,
-      vouchers: [mockOutputVoucher],
+      unRead: {
+        uploadedVoucher: unreadUploadedVoucherCounts,
+        upcomingEvents: unreadUpcomingEventCounts,
+        paymentVoucher: unreadPayableVoucherCounts,
+        receivingVoucher: unreadReceivedVoucherCounts,
+      },
+      vouchers: voucherBetas,
     },
   };
   return {
@@ -561,7 +464,16 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
   };
 };
 
-type APIResponse = object | number | null;
+type APIResponse =
+  | IPaginatedData<{
+      unRead: {
+        uploadedVoucher: number;
+        upcomingEvents: number;
+      };
+      vouchers: IVoucherBeta[];
+    }>
+  | number
+  | null;
 
 const methodHandlers: {
   [key: string]: (

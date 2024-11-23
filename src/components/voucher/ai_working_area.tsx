@@ -17,6 +17,7 @@ interface AIWorkingAreaProps {
   setAiState: (state: AIState) => void;
   analyzeSuccess: boolean;
   setIsShowAnalysisPreview: (isShow: boolean) => void;
+  retryClickHandler: () => void;
   fillUpClickHandler: () => void;
 }
 
@@ -25,6 +26,7 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
   setAiState,
   analyzeSuccess,
   setIsShowAnalysisPreview,
+  retryClickHandler,
   fillUpClickHandler,
 }) => {
   const { t } = useTranslation('common');
@@ -56,6 +58,7 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
         <p>{t('journal:AI_WORKING_AREA.FAILED_CONTENT')}</p>
         <button
           type="button"
+          onClick={retryClickHandler}
           className="flex items-center gap-4px px-16px py-8px text-sm text-button-text-primary hover:text-button-text-primary-hover"
         >
           <GrRefresh size={20} className="scale-x-flip" />

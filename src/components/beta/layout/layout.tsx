@@ -17,7 +17,7 @@ interface LayoutProps {
 }
 
 const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) => {
-  const { t } = useTranslation(['setting', 'common']);
+  const { t } = useTranslation(['layout']);
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
 
   const toggleOverlay = () => {
@@ -34,31 +34,36 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
   };
 
   useEffect(() => {
-    if (userAuth && userAuth?.deletedAt) {
-      const warningContent = (
+    if (!userAuth?.deletedAt) return;
+
+    // Deprecated: (20241121 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('useEffect for warning deleted user in Layout is called!');
+
+    toastHandler({
+      id: ToastId.USER_DELETE_WARNING,
+      type: ToastType.WARNING,
+      content: (
         <div className="flex justify-between">
           <div className="flex flex-col items-start gap-2">
             <p className="text-text-state-error">
-              {t('setting:USER.DELETE_WARNING', { days: calculateRemainDays(userAuth?.deletedAt) })}
+              {t('layout:USER.DELETE_WARNING', {
+                days: calculateRemainDays(userAuth?.deletedAt),
+              })}
             </p>
-            <p>{t('setting:USER.DELETE_HINT')}</p>
+            <p>{t('layout:USER.DELETE_HINT')}</p>
           </div>
           <Link
             href={ISUNFA_ROUTE.GENERAL_SETTING}
             className="text-sm font-bold text-link-text-warning"
           >
-            {t('setting:USER.SETTING')}
+            {t('layout:USER.SETTING')}
           </Link>
         </div>
-      );
-      toastHandler({
-        id: ToastId.USER_DELETE_WARNING,
-        type: ToastType.WARNING,
-        content: warningContent,
-        closeable: true,
-      });
-    }
-  }, [userAuth?.deletedAt]);
+      ),
+      closeable: true,
+    });
+  }, [t, toastHandler, userAuth]);
 
   return (
     <div className="flex h-screen overflow-hidden">

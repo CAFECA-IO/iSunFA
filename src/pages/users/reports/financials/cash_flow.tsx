@@ -33,7 +33,7 @@ const CashFlowPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['dashboard, reports'])),
+    ...(await serverSideTranslations(locale, ['layout', 'common', 'dashboard, reports'])),
     locale,
   },
 });

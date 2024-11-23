@@ -36,7 +36,7 @@ const ToDoListEmpty = () => {
         <h3 className="text-xl font-bold text-text-neutral-secondary">
           {t('dashboard:DASHBOARD.TO_DO_LIST')}
         </h3>
-        <MoreLink href={ISUNFA_ROUTE.TO_DO_LIST_PAGE} />
+        <MoreLink href={ISUNFA_ROUTE.TODO_LIST_PAGE} />
       </div>
 
       <div className="flex items-center justify-between">
@@ -76,7 +76,7 @@ const ToDoListHasPlan = () => {
         <h3 className="text-xl font-bold text-text-neutral-secondary">
           {t('dashboard:DASHBOARD.TO_DO_LIST')}
         </h3>
-        <MoreLink href={ISUNFA_ROUTE.TO_DO_LIST_PAGE} />
+        <MoreLink href={ISUNFA_ROUTE.TODO_LIST_PAGE} />
       </div>
 
       <div className="flex items-center justify-between">

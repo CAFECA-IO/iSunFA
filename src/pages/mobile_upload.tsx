@@ -1,5 +1,3 @@
-// Deprecated: (20241120 - tzuhan) Debugging purpose
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
@@ -24,7 +22,7 @@ import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-import { encryptFile, generateKeyPair, importPublicKey } from '@/lib/utils/crypto';
+import { encryptFile, generateKeyPair } from '@/lib/utils/crypto';
 import { IV_LENGTH } from '@/constants/config';
 
 export interface IFileUIBetaWithFile extends IFileUIBeta {
@@ -41,10 +39,8 @@ const MobileUploadPage: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<IFileUIBetaWithFile[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<IFileUIBeta[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [successUpload, setSuccessUpload] = useState<boolean>(false);
+  const [successUpload, setSuccessUpload] = useState<boolean | undefined>(undefined);
   const { trigger: uploadFileAPI } = APIHandler<number>(APIName.FILE_UPLOAD);
-  // Deprecated: (20241120 - tzuhan) Test upload file to server then server push notification
-  const { trigger: publicUploadAPI } = APIHandler<number>(APIName.PUBLIC_FILE_UPLOAD);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
@@ -117,23 +113,14 @@ const MobileUploadPage: React.FC = () => {
         });
         return;
       }
-      const { publicKey } = await generateKeyPair();
+      const keyPair = await generateKeyPair();
       await Promise.all(
         selectedFiles.map(async (fileUI) => {
-          // const encryptedFile = await encryptFileWithPublicKey(fileUI.file, publicKey);
+          const encryptedFile = await encryptFileWithPublicKey(fileUI.file, keyPair.publicKey);
           const formData = new FormData();
-          // formData.append('file', encryptedFile);
-          formData.append('file', fileUI.file);
+          formData.append('file', encryptedFile);
 
-          // const { success, data: filedId } = await uploadFileAPI({
-          //   query: {
-          //     type: UploadType.ROOM,
-          //     targetId: token as string,
-          //   },
-          //   body: formData,
-          // });
-
-          const { success, data: fileId } = await publicUploadAPI({
+          const { success, data: fileId } = await uploadFileAPI({
             query: {
               type: UploadType.ROOM,
               targetId: token as string,
@@ -153,7 +140,6 @@ const MobileUploadPage: React.FC = () => {
         })
       );
 
-      setIsUploading(false);
       setSuccessUpload(true);
     } catch (error) {
       setSuccessUpload(false);
@@ -223,7 +209,7 @@ const MobileUploadPage: React.FC = () => {
           <div className="ml-1 w-44px"></div>
           <div className="flex items-center justify-center gap-2">
             <div className="p-2 text-stroke-neutral-invert">{t('certificate:TITLE.SELECT')}:</div>
-            <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
+            <div className="h-22px w-22px rounded-full bg-badge-surface-soft-primary text-center text-sm font-normal tracking-tight text-badge-text-primary-solid">
               {selectedFiles.length}
             </div>
           </div>
@@ -333,7 +319,7 @@ const MobileUploadPage: React.FC = () => {
         </div>
         {isUploading && (
           <div className="full-height safe-area-adjustment absolute left-0 top-0 z-20 flex h-100vh w-100vw items-center justify-center bg-white">
-            {!successUpload ? (
+            {successUpload === undefined ? (
               <div className="flex flex-col items-center gap-2">
                 <Image
                   src="/elements/uploading.gif"
@@ -357,6 +343,11 @@ const MobileUploadPage: React.FC = () => {
                     height={150}
                     alt="Success"
                   />
+                  {successUpload === false && (
+                    <div className="text-sm text-text-neutral-tertiary">
+                      ({`${uploadedFiles.length}/${selectedFiles.length}`})
+                    </div>
+                  )}
                   <div>{t('certificate:UPLOAD.COMPLETED')}</div>
                 </div>
                 <Button

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
 import { useModalContext } from '@/contexts/modal_context';
 import APIHandler from '@/lib/utils/api_handler';
@@ -8,8 +8,8 @@ import { APIName } from '@/constants/api_connection';
 import UploadArea from '@/components/upload_area/upload_area';
 import { ProgressStatus } from '@/constants/account';
 import { ICertificate } from '@/interfaces/certificate';
-import { getPusherInstance } from '@/lib/utils/pusher_client';
-import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+// import { getPusherInstance } from '@/lib/utils/pusher_client';
+// import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
@@ -32,7 +32,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   showErrorMessage,
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
-  const { userAuth, selectedCompany } = useUserCtx();
+  const { selectedCompany } = useUserCtx();
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
     useModalContext();
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
@@ -139,27 +139,29 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
         handleUploadFailed(file.name, error as Error);
       }
     },
-    [selectedCompany?.id, handleUploadFailed, setFiles, t, uploadFileAPI, createCertificateAPI]
+    [selectedCompany?.id, handleUploadFailed, setFiles, t, uploadFileAPI]
   );
 
-  const certificateCreatedHandler = useCallback(
-    (data: ICertificate) => {
-      setFiles((prevFiles) => prevFiles.filter((f) => f.certificateId !== data.id));
-    },
-    [setFiles]
-  );
+  // const certificateCreatedHandler = useCallback(
+  //   (data: { message: string }) => {
+  //     const newCertificate: ICertificate = JSON.parse(data.message);
+  //     setFiles((prevFiles) => prevFiles.filter((f) => f.certificateId !== newCertificate.id));
+  //   },
+  //   [setFiles]
+  // );
 
-  useEffect(() => {
-    const pusher = getPusherInstance(userAuth?.id);
-    const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
+  // useEffect(() => {
+  //   const pusher = getPusherInstance(userAuth?.id);
+  //   const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
 
-    channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
+  //   channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
-    return () => {
-      channel.unbind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
-      pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
-    };
-  }, [certificateCreatedHandler]);
+  //   return () => {
+  //     channel.unbind_all();
+  //     channel.unsubscribe();
+  //     pusher.disconnect();
+  //   };
+  // }, [certificateCreatedHandler]);
 
   return (
     <UploadArea
@@ -167,6 +169,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
       withScanner={withScanner}
       toggleQRCode={toggleQRCode}
       handleUpload={handleUpload}
+      multiple
     />
   );
 };

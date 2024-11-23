@@ -33,7 +33,7 @@ const IncomeStatementPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['reports', 'dashboard'])),
+    ...(await serverSideTranslations(locale, ['layout', 'common', 'reports', 'dashboard'])),
     locale,
   },
 });

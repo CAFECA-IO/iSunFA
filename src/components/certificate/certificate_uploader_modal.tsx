@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
@@ -23,6 +23,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
+  const [progress, setProgress] = useState<number>(0);
 
   const updateFileStatus = (prevFiles: IFileUIBeta[], index: number) =>
     prevFiles.map((file, i) => {
@@ -45,6 +46,17 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
   const deleteFile = (index: number) => {
     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
+
+  useEffect(() => {
+    if (files.length > 0) {
+      const newProgress =
+        files.reduce((acc, curr) => {
+          const newAcc = acc + curr.progress;
+          return newAcc;
+        }, 0) / files.length;
+      setProgress(newProgress);
+    }
+  }, files);
 
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen) return null;
@@ -96,7 +108,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
         <div className="mb-4 h-60px rounded-b-lg border-b border-l border-r border-file-uploading-stroke-outline px-4 py-2">
           <CircularProgressBar
             size={40} // Info: (20240926 - tzuhan) 圓的直徑
-            progress={55} // Info: (20240926 - tzuhan) 進度百分比
+            progress={progress} // Info: (20240926 - tzuhan) 進度百分比
             strokeWidth={2} // Info: (20240926 - tzuhan) 線條寬度
             remainingText={t('certificate:UPLOAD.REMAIN', { count: files.length })} // Info: (20240926 - tzuhan) 顯示的剩餘文字
           />

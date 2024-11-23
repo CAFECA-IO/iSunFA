@@ -33,7 +33,7 @@ const BusinessTaxPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['reports'])),
+    ...(await serverSideTranslations(locale, ['layout', 'common', 'reports'])),
     locale,
   },
 });

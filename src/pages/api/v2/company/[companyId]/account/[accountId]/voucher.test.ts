@@ -7,7 +7,7 @@ import { voucherGetByAccountSchema } from '@/lib/utils/zod_schema/voucher';
 jest.mock('../../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
     userId: 1001,
-    companyId: 1001,
+    companyId: 1000,
     roleId: 1001,
     cookie: {
       httpOnly: false,
@@ -65,15 +65,15 @@ describe('company/[companyId]/voucher/account/[accountId] integration test', () 
       req = {
         headers: {},
         query: {
-          accountId: '1',
+          accountId: '10000981',
           page: '1',
           pageSize: '10',
           // tab: VoucherListTabV2.UPLOADED,
           // type: EventType.PAYMENT,
           startDate: '1',
-          endDate: '1',
-          searchQuery: 'string',
-          sortOption: '',
+          endDate: '1772617600',
+          // searchQuery: 'string',
+          // sortOption: '',
         },
         method: 'GET',
         json: jest.fn(),
