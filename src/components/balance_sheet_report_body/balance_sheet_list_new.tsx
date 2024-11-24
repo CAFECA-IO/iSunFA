@@ -974,6 +974,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             curDate={curDate}
             preDate={preDate}
           >
+            456
             {ItemSummary}
             {ItemDetail}
             {ProportionalTable}
@@ -983,6 +984,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         ) : (
           <>
             {displayedSelectArea()}
+            123
             {ItemSummary}
             <hr className="break-before-page" />
             {ItemDetail}

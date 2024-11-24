@@ -28,6 +28,8 @@ const BalanceSheetPageBody = () => {
     if (isPrinting && printRef.current) {
       // eslint-disable-next-line no-console
       console.log('Printing content:', printRef.current.innerHTML);
+      // eslint-disable-next-line no-console
+      console.log('isPrinting?', isPrinting);
     }
   }, [isPrinting]);
 
@@ -49,7 +51,7 @@ const BalanceSheetPageBody = () => {
   // Info: (20241122 - Anna)
   const printFn = useReactToPrint({
     contentRef: printRef,
-    documentTitle: 'alance Sheet Report',
+    documentTitle: 'balance Sheet Report',
     onBeforePrint: handleOnBeforePrint,
     onAfterPrint: handleOnAfterPrint,
   });
