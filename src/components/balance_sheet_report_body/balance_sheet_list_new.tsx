@@ -377,21 +377,29 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   //   return () => {};
   // }, [isPrinting]);
 
-  useEffect(() => {
-    if (isPrinting) {
-      // eslint-disable-next-line no-console
-      console.log('打印模式啟動');
-    }
-  }, [isPrinting]);
+    useEffect(() => {
+      if (isPrinting && printRef.current) {
+        // eslint-disable-next-line no-console
+        console.log(
+          'balance_sheet_list 觀察 Printing content:',
+          printRef.current.innerHTML
+        );
+        // eslint-disable-next-line no-console
+        console.log('BalanceSheetList received isPrinting?', isPrinting);
+      } else {
+        // eslint-disable-next-line no-console
+        console.log('BalanceSheetList printRef is null');
+      }
+    }, [isPrinting]);
 
   // Info: (20241122 - Anna)打印 Ref 的內容
   useEffect(() => {
     if (printRef.current) {
       // eslint-disable-next-line no-console
-      console.log('Current printRef content:', printRef.current);
+      console.log('balance_sheet_list 觀察 Current printRef content:', printRef.current);
     } else {
       // eslint-disable-next-line no-console
-      console.log('printRef is currently null');
+      console.log('BalanceSheetList printRef is currently null');
     }
   }, [printRef]);
 
