@@ -118,7 +118,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
   };
 
   useEffect(() => {
-    const listUserCompany = async () => {
+    const getCompanyList = async () => {
       if (!userAuth) return;
 
       try {
@@ -147,7 +147,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
       }
     };
 
-    listUserCompany();
+    getCompanyList();
   }, [userAuth]);
 
   return isModalOpen ? (
