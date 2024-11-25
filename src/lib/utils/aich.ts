@@ -54,24 +54,22 @@ export function getAichUrl(endPoint: AICH_APIS_TYPES, aichResultId?: string): st
   }
 }
 
-export const fetchResultIdFromAICH = async (key: AI_TYPE, body: object): Promise<string> => {
+export const fetchResultIdFromAICH = async (key: AI_TYPE, formData: FormData): Promise<string> => {
   const aichPath = AICH_PATH[key];
 
-  let resultId = 'default';
+  let resultId = 'fetchAIResultIdError';
 
   try {
+    // Info: (20241125 - Jacky) Don't set headers, let fetch handle it
     const response = await fetch(aichPath, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+      body: formData,
     });
 
     if (response.ok) {
       const data = await response.json();
-      if (data.resultId) {
-        resultId = data.resultId;
+      if (data.payload.resultId) {
+        resultId = data.payload.resultId;
       } else {
         loggerBack.error(`AICH resultId error: Missing resultId in response data`);
       }

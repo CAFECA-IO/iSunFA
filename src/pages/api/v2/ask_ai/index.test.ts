@@ -11,7 +11,7 @@ describe('company/[companyId]/ask_ai', () => {
         reason: AI_TYPE.CERTIFICATE,
       };
       const body = {
-        targetId: 1,
+        targetIdList: [1],
       };
 
       jest.mock('../../../../lib/utils/aich', () => ({
@@ -32,7 +32,7 @@ describe('company/[companyId]/ask_ai', () => {
         reason: AI_TYPE.VOUCHER,
       };
       const body = {
-        targetId: 1,
+        targetIdList: [1],
       };
 
       const { statusMessage } = await handlePostRequest({
