@@ -379,11 +379,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
 
   useEffect(() => {
     if (isPrinting && printRef.current) {
+      // ToDo: (20241125 - tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('balance_sheet_list 觀察 Printing content:', printRef.current.innerHTML);
+      // ToDo: (20241125 - tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('BalanceSheetList received isPrinting?', isPrinting);
     } else {
+      // ToDo: (20241125 - tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('BalanceSheetList printRef is null');
     }
@@ -392,9 +395,11 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // Info: (20241122 - Anna)打印 Ref 的內容
   useEffect(() => {
     if (printRef.current) {
+      // ToDo: (20241125 - tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('balance_sheet_list 觀察 Current printRef content:', printRef.current);
     } else {
+      // ToDo: (20241125 - tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('BalanceSheetList printRef is currently null');
     }
@@ -626,6 +631,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // Info: (20241029 - Anna) 子科目 Toggle 開關、列印及下載按鈕
   // const displayedSelectArea = (ref: React.RefObject<HTMLDivElement>) => {
   const displayedSelectArea = () => {
+    // ToDo: (20241125 - tzuhan) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('[displayedSelectArea] Display Area Rendered');
     return (
