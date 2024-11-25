@@ -15,6 +15,7 @@ import {
 import { inputStyle } from '@/constants/display';
 import { LuTrash2 } from 'react-icons/lu';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 interface IVoucherLineBlockProps {
   lineItems: ILineItemUI[];
@@ -69,6 +70,14 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     const newVoucherId = lineItems.length > 0 ? lineItems[lineItems.length - 1].id + 1 : 0;
     setLineItems([...lineItems, { ...initialVoucherLine, id: newVoucherId }]);
   };
+
+  // Info: (20241125 - Julian) Ctrl + Enter 新增傳票列
+  const handleCtrlEnter = (event: KeyboardEvent) => {
+    event.preventDefault();
+    addNewVoucherLine();
+  };
+
+  useHotkeys('ctrl+enter', handleCtrlEnter);
 
   // Info: (20241004 - Julian) 傳票列條件
   useEffect(() => {
@@ -129,7 +138,6 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     );
 
   return (
-    /* Info: (20240927 - Julian) Table */
     <div className="flex flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
       {/* Info: (20240927 - Julian) Table Header */}
       <div className="grid w-full grid-cols-13 gap-x-24px">
