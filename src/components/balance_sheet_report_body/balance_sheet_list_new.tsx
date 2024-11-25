@@ -377,27 +377,29 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   //   return () => {};
   // }, [isPrinting]);
 
-    useEffect(() => {
-      if (isPrinting && printRef.current) {
-        // eslint-disable-next-line no-console
-        console.log(
-          'balance_sheet_list 觀察 Printing content:',
-          printRef.current.innerHTML
-        );
-        // eslint-disable-next-line no-console
-        console.log('BalanceSheetList received isPrinting?', isPrinting);
-      } else {
-        // eslint-disable-next-line no-console
-        console.log('BalanceSheetList printRef is null');
-      }
-    }, [isPrinting]);
+  useEffect(() => {
+    if (isPrinting && printRef.current) {
+      // ToDo: (20241125 - tzuhan) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('balance_sheet_list 觀察 Printing content:', printRef.current.innerHTML);
+      // ToDo: (20241125 - tzuhan) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('BalanceSheetList received isPrinting?', isPrinting);
+    } else {
+      // ToDo: (20241125 - tzuhan) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('BalanceSheetList printRef is null');
+    }
+  }, [isPrinting]);
 
   // Info: (20241122 - Anna)打印 Ref 的內容
   useEffect(() => {
     if (printRef.current) {
+      // ToDo: (20241125 - tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('balance_sheet_list 觀察 Current printRef content:', printRef.current);
     } else {
+      // ToDo: (20241125 - tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('BalanceSheetList printRef is currently null');
     }
@@ -629,6 +631,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // Info: (20241029 - Anna) 子科目 Toggle 開關、列印及下載按鈕
   // const displayedSelectArea = (ref: React.RefObject<HTMLDivElement>) => {
   const displayedSelectArea = () => {
+    // ToDo: (20241125 - tzuhan) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('[displayedSelectArea] Display Area Rendered');
     return (
@@ -974,36 +977,35 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // );
 
   return (
-    <div className={`mx-auto w-full origin-top overflow-x-auto`}>
-      <div ref={printRef}>
-        {isPrinting ? (
-          <BalanceSheetA4Template
-            reportFinancial={reportFinancial}
-            curDate={curDate}
-            preDate={preDate}
-          >
-            456
-            {ItemSummary}
-            {ItemDetail}
-            {ProportionalTable}
-            {AssetItem}
-            {TurnoverDay}
-          </BalanceSheetA4Template>
-        ) : (
-          <>
-            {displayedSelectArea()}
-            123
-            {ItemSummary}
-            <hr className="break-before-page" />
-            {ItemDetail}
-            <hr className="break-before-page" />
-            {ProportionalTable}
-            <hr className="mb-16px mt-32px break-before-page" />
-            {AssetItem}
-            <hr className="break-before-page" />
-            {TurnoverDay}
-          </>
-        )}
+    <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
+      {displayedSelectArea()}
+      {/* Info: (20241125 - Tzuhan) 渲染打印模板，通過 CSS 隱藏 */}
+      <div ref={printRef} className="hidden print:block">
+        <BalanceSheetA4Template
+          reportFinancial={reportFinancial}
+          curDate={curDate}
+          preDate={preDate}
+        >
+          456
+          {ItemSummary}
+          {ItemDetail}
+          {ProportionalTable}
+          {AssetItem}
+          {TurnoverDay}
+        </BalanceSheetA4Template>
+      </div>
+      {/*  Info: (20241125 - Tzuhan) 預覽區域 */}
+      <div className="block print:hidden">
+        123
+        {ItemSummary}
+        <hr className="break-before-page" />
+        {ItemDetail}
+        <hr className="break-before-page" />
+        {ProportionalTable}
+        <hr className="mb-16px mt-32px break-before-page" />
+        {AssetItem}
+        <hr className="break-before-page" />
+        {TurnoverDay}
       </div>
     </div>
   );
