@@ -102,6 +102,7 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
         'common',
         'setting',
         'company',
+        'filter_section_type',
       ])),
     },
   };
