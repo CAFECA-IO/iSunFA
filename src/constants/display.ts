@@ -123,6 +123,7 @@ export const default30DayPeriodInSec = {
 };
 
 export const MILLISECONDS_IN_A_SECOND = 1000;
+export const MILLISECONDS_IN_A_MINUTE = 60000;
 
 // Info: (20241009 - Julian) input CSS style
 export const inputStyle = {

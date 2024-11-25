@@ -123,8 +123,8 @@ export enum APIName {
   TODO_LIST = 'TODO_LIST',
   CREATE_TODO = 'CREATE_TODO',
   TODO_GET_BY_ID = 'TODO_GET_BY_ID',
-  TODO_UPDATE = 'TODO_UPDATE',
-  TODO_DELETE = 'TODO_DELETE',
+  UPDATE_TODO = 'UPDATE_TODO',
+  DELETE_TODO = 'DELETE_TODO',
   PROJECT_LIST = 'PROJECT_LIST',
   CREATE_PROJECT = 'CREATE_PROJECT',
   GET_PROJECT_BY_ID = 'GET_PROJECT_BY_ID',
@@ -249,8 +249,8 @@ export enum APIPath {
   TODO_LIST = `${apiPrefixV2}/user/:userId/todo`,
   CREATE_TODO = `${apiPrefixV2}/user/:userId/todo`,
   TODO_GET_BY_ID = `${apiPrefixV2}/todo/:todoId`,
-  TODO_UPDATE = `${apiPrefixV2}/todo/:todoId`,
-  TODO_DELETE = `${apiPrefixV2}/todo/:todoId`,
+  UPDATE_TODO = `${apiPrefixV2}/todo/:todoId`,
+  DELETE_TODO = `${apiPrefixV2}/todo/:todoId`,
   PROJECT_LIST = `${apiPrefix}/company/:companyId/project`,
   CREATE_PROJECT = `${apiPrefix}/company/:companyId/project`,
   GET_PROJECT_BY_ID = `${apiPrefix}/company/:companyId/project/:projectId`,
@@ -680,15 +680,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.TODO_GET_BY_ID,
   }),
-  [APIName.TODO_UPDATE]: createConfig({
-    name: APIName.TODO_UPDATE,
+  [APIName.UPDATE_TODO]: createConfig({
+    name: APIName.UPDATE_TODO,
     method: HttpMethod.PUT,
-    path: APIPath.TODO_UPDATE,
+    path: APIPath.UPDATE_TODO,
   }),
-  [APIName.TODO_DELETE]: createConfig({
-    name: APIName.TODO_DELETE,
+  [APIName.DELETE_TODO]: createConfig({
+    name: APIName.DELETE_TODO,
     method: HttpMethod.DELETE,
-    path: APIPath.TODO_DELETE,
+    path: APIPath.DELETE_TODO,
   }),
   [APIName.PROJECT_LIST]: createConfig({
     name: APIName.PROJECT_LIST,

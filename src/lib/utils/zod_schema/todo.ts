@@ -27,19 +27,17 @@ const todoGetQuerySchema = z.object({
 });
 
 const todoPutQuerySchema = z.object({
-  userId: zodStringToNumber,
   todoId: zodStringToNumber,
 });
 
 const todoPutBodySchema = z.object({
-  companyId: z.number().int(),
+  companyId: z.number().int().optional(),
   name: z.string(),
   deadline: z.number().int(),
   note: z.string().nullable(),
 });
 
 const todoDeleteQuerySchema = z.object({
-  userId: zodStringToNumber,
   todoId: zodStringToNumber,
 });
 

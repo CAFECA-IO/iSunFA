@@ -10,31 +10,43 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { default30DayPeriodInSec } from '@/constants/display';
 
-interface CreateTodoModalProps {
+interface UpdateTodoModalProps {
+  todoToUpdate: ITodoCompany;
   isModalOpen: boolean;
-  toggleModal: () => void;
+  setTodoToUpdate: React.Dispatch<React.SetStateAction<ITodoCompany | undefined>>;
   getTodoList: () => void;
 }
 
-const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoModalProps) => {
+const UpdateTodoModal = ({
+  todoToUpdate,
+  isModalOpen,
+  setTodoToUpdate,
+  getTodoList,
+}: UpdateTodoModalProps) => {
   const { t } = useTranslation(['dashboard']);
   const { userAuth } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [todoName, setTodoName] = useState('');
-  const [deadline, setDeadline] = useState<IDatePeriod>(default30DayPeriodInSec);
-  const [note, setNote] = useState('');
+  const [todoName, setTodoName] = useState(todoToUpdate.name);
+  const [deadline, setDeadline] = useState<IDatePeriod>({
+    startTimeStamp: todoToUpdate.deadline,
+    endTimeStamp: todoToUpdate.deadline,
+  });
+  const [note, setNote] = useState(todoToUpdate.note);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [company, setCompany] = useState<ICompany>();
+  const [company, setCompany] = useState<ICompany>(todoToUpdate.company);
   const [companyAndRoleList, setCompanyAndRoleList] = useState<ICompanyAndRole[]>([]);
   const [noDataForTodoName, setNoDataForTodoName] = useState(false);
   const [noDataForDeadline, setNoDataForDeadline] = useState(false);
 
-  // Info: (20241119 - Liz) 建立待辦事項 API
-  const { trigger: createTodoAPI } = APIHandler<ITodoCompany>(APIName.CREATE_TODO);
+  const closeUpdateTodoModal = () => {
+    setTodoToUpdate(undefined);
+  };
+
+  // Info: (20241125 - Liz) 更新待辦事項 API
+  const { trigger: updateTodoAPI } = APIHandler<ITodoCompany>(APIName.UPDATE_TODO);
 
   // Info: (20241120 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
   const { trigger: listUserCompanyAPI } = APIHandler<ICompanyAndRole[]>(APIName.LIST_USER_COMPANY);
@@ -56,28 +68,13 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
 
     setIsLoading(true);
 
-    // Deprecated: (20241119 - Liz)
-    // eslint-disable-next-line no-console
-    console.log(
-      'isLoading:',
-      isLoading,
-      'todoName:',
-      todoName,
-      'deadline:',
-      deadline.startTimeStamp,
-      'note:',
-      note,
-      'company:',
-      company
-    );
-
     try {
       const {
-        data: createdTodo,
+        data: updatedTodo,
         success,
         code,
-      } = await createTodoAPI({
-        params: { userId: userAuth.id },
+      } = await updateTodoAPI({
+        params: { todoId: todoToUpdate.id },
         body: {
           name: todoName,
           deadline: deadline.startTimeStamp,
@@ -86,32 +83,31 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
         },
       });
 
-      if (success) {
-        // Info: (20241119 - Liz) 新增待辦事項成功後清空表單、關閉 Modal、重新取得待辦事項列表
-        setTodoName('');
-        setDeadline(default30DayPeriodInSec);
-        setNote('');
-        setCompany(undefined);
-        toggleModal();
-        getTodoList();
+      if (success && updatedTodo) {
+        setTodoName(updatedTodo.name);
+        setDeadline({ startTimeStamp: updatedTodo.deadline, endTimeStamp: updatedTodo.deadline });
+        setNote(updatedTodo.note);
+        setCompany(updatedTodo.company);
+        setTodoToUpdate(undefined); // Info: (20241125 - Liz) 關閉 modal
+        getTodoList(); // Info: (20241125 - Liz) 重新取得待辦事項列表
 
-        // Deprecated: (20241119 - Liz)
+        // Deprecated: (20241125 - Liz)
         // eslint-disable-next-line no-console
-        console.log('createTodoAPI success:', createdTodo);
+        console.log('updateTodoAPI success:', updatedTodo);
       } else {
-        // Info: (20241119 - Liz) 新增待辦事項失敗時顯示錯誤訊息
+        // Info: (20241125 - Liz) 更新待辦事項失敗時顯示錯誤訊息
         toastHandler({
-          id: 'create-todo-failed',
+          id: 'update-todo-failed',
           type: ToastType.ERROR,
-          content: <p>Create todo failed. Error code: {code}</p>,
+          content: <p>Update todo failed. Error code: {code}</p>,
           closeable: true,
           position: ToastPosition.TOP_CENTER,
         });
       }
     } catch (error) {
-      // Deprecated: (20241119 - Liz)
+      // Deprecated: (20241125 - Liz)
       // eslint-disable-next-line no-console
-      console.error('createTodoAPI error:', error);
+      console.error('updateTodoAPI error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -155,9 +151,9 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('dashboard:TODO_LIST_PAGE.ADD_NEW_EVENT')}
+            {t('dashboard:TODO_LIST_PAGE.EDIT_MY_EVENT')}
           </h1>
-          <button type="button" onClick={toggleModal}>
+          <button type="button" onClick={closeUpdateTodoModal}>
             <IoCloseOutline size={24} />
           </button>
         </section>
@@ -248,7 +244,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
         <section className="flex justify-end gap-12px px-20px py-16px">
           <button
             type="button"
-            onClick={toggleModal}
+            onClick={closeUpdateTodoModal}
             className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
           >
             {t('dashboard:COMMON.CANCEL')}
@@ -260,7 +256,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
             disabled={isLoading}
             className="rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
-            {t('dashboard:COMMON.CREATE')}
+            {t('dashboard:COMMON.SAVE')}
           </button>
         </section>
       </div>
@@ -268,4 +264,4 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
   ) : null;
 };
 
-export default CreateTodoModal;
+export default UpdateTodoModal;

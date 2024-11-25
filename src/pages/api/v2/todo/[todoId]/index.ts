@@ -27,7 +27,7 @@ const handleGetRequest: IHandleRequest<
 };
 
 const handlePutRequest: IHandleRequest<
-  APIName.TODO_UPDATE,
+  APIName.UPDATE_TODO,
   Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] }
 > = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -36,7 +36,7 @@ const handlePutRequest: IHandleRequest<
 
   const { todoId } = query;
   const { name, deadline, note, companyId } = body;
-  const updatedTodo = await updateTodo(todoId, companyId, name, deadline, note);
+  const updatedTodo = await updateTodo(todoId, name, deadline, note, companyId);
   if (updatedTodo) {
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
     payload = updatedTodo;
@@ -45,7 +45,7 @@ const handlePutRequest: IHandleRequest<
 };
 
 const handleDeleteRequest: IHandleRequest<
-  APIName.TODO_DELETE,
+  APIName.DELETE_TODO,
   Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] }
 > = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -68,8 +68,8 @@ const methodHandlers: {
   ) => Promise<{ statusMessage: string; payload: ITodoCompany | null }>;
 } = {
   GET: (req, res) => withRequestValidation(APIName.TODO_GET_BY_ID, req, res, handleGetRequest),
-  PUT: (req, res) => withRequestValidation(APIName.TODO_UPDATE, req, res, handlePutRequest),
-  DELETE: (req, res) => withRequestValidation(APIName.TODO_DELETE, req, res, handleDeleteRequest),
+  PUT: (req, res) => withRequestValidation(APIName.UPDATE_TODO, req, res, handlePutRequest),
+  DELETE: (req, res) => withRequestValidation(APIName.DELETE_TODO, req, res, handleDeleteRequest),
 };
 
 export default async function handler(
