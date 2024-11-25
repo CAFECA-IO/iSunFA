@@ -168,7 +168,7 @@ const PieChart = ({ data }: PieChartProps) => {
         allowMultipleDataPointsSelection: false,
         filter: {
           type: 'darken',
-          value: 0.85,
+          // value: 0.85,
         },
       },
     },
