@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import FocusLock from 'react-focus-lock';
 import { useRouter } from 'next/router';
 import { FaChevronDown } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
 import { FiSearch } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-// import { useHotkeys } from 'react-hotkeys-hook';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 // import Toggle from '@/components/toggle/toggle';
@@ -737,6 +738,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     }
   };
 
+  // Info: (20241125 - Julian) 清空表單熱鍵
+  useHotkeys('ctrl+c', clearClickHandler);
+
   useEffect(() => {
     if (isCreating === false) {
       if (createSuccess) {
@@ -1055,149 +1059,152 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         className="my-8"
       />
 
-      {/* Info: (20240926 - Julian) form */}
-      <form ref={formRef} onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
-        {/* Info: (20240926 - Julian) Date */}
-        <div ref={dateRef} className="flex flex-col gap-8px whitespace-nowrap">
-          <p className="font-bold text-input-text-primary">
-            {t('journal:ADD_NEW_VOUCHER.VOUCHER_DATE')}
-            <span className="text-text-state-error">*</span>
-          </p>
-          <DatePicker
-            id="voucher-date"
-            type={DatePickerType.TEXT_DATE}
-            period={isShowAnalysisPreview ? aiDate : date}
-            setFilteredPeriod={setDate}
-            btnClassName={
-              isShowDateHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : ''
-            }
-          />
-        </div>
-        {/* Info: (20240926 - Julian) Type */}
-        <div className="flex flex-col gap-8px">
-          <p className="font-bold text-input-text-primary">
-            {t('journal:ADD_NEW_VOUCHER.VOUCHER_TYPE')}
-            <span className="text-text-state-error">*</span>
-          </p>
-          <div className="relative">
-            <button
-              id="voucher-type"
-              type="button"
-              onClick={typeToggleHandler}
-              className="flex w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
-            >
-              <p
-                className={`text-base ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'text-input-text-input-filled'}`}
-              >
-                {isShowAnalysisPreview ? translateType(aiType) : translateType(type)}
-              </p>
-              <FaChevronDown size={20} />
-            </button>
-            {/* Info: (20240926 - Julian) Type dropdown */}
-            {typeDropdownMenu}
-          </div>
-        </div>
-
-        {/* Info: (20240926 - Julian) Note */}
-        <div className="col-span-2 flex flex-col gap-8px">
-          <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
-          <input
-            id="voucher-note"
-            type="text"
-            value={note}
-            onChange={noteChangeHandler}
-            placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
-            className={`rounded-sm border border-input-stroke-input px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
-          />
-        </div>
-        {/* Info: (20240926 - Julian) Counterparty */}
-        {isShowCounter && (
-          <div className="relative col-span-2 flex flex-col gap-8px">
+      {/* Info: (20241125 - Julian) 限制焦點只能在 Form 內 */}
+      <FocusLock className="w-full">
+        {/* Info: (20240926 - Julian) form */}
+        <form ref={formRef} onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
+          {/* Info: (20240926 - Julian) Date */}
+          <div ref={dateRef} className="flex flex-col gap-8px whitespace-nowrap">
             <p className="font-bold text-input-text-primary">
-              {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
+              {t('journal:ADD_NEW_VOUCHER.VOUCHER_DATE')}
               <span className="text-text-state-error">*</span>
             </p>
-            <button
-              id="voucher-counterparty"
-              type="button"
-              // Info: (20241108 - Julian) 透過 tabIndex 讓 div 可以被 focus
-              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-              // tabIndex={0}
-              ref={counterpartyRef}
-              onClick={counterSearchToggleHandler}
-              className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
-            >
-              {displayedCounterparty}
-              <div className="h-20px w-20px">
-                <FiSearch size={20} />
-              </div>
-            </button>
-            {/* Info: (20241004 - Julian) Counterparty drop menu */}
-            {counterpartyDropMenu}
+            <DatePicker
+              id="voucher-date"
+              type={DatePickerType.TEXT_DATE}
+              period={isShowAnalysisPreview ? aiDate : date}
+              setFilteredPeriod={setDate}
+              btnClassName={
+                isShowDateHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : ''
+              }
+            />
           </div>
-        )}
-        {/* Info: (20241007 - Julian) Recurring */}
-
-        {/* Info: (20241009 - Julian) Asset */}
-        {isAssetRequired && (
-          <div ref={assetRef} className="col-span-2 flex flex-col">
-            <AssetSection isShowAssetHint={isShowAssetHint} lineItems={voucherLineItems} />
-          </div>
-        )}
-        {/* Info: (20240926 - Julian) Voucher line block */}
-        {isShowAnalysisPreview ? (
-          <VoucherLinePreview
-            totalCredit={aiTotalCredit}
-            totalDebit={aiTotalDebit}
-            lineItems={aiLineItems}
-          />
-        ) : (
-          <>
-            {isShowReverseHint ? (
-              <p className="text-text-state-error">
-                {t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}
-              </p>
-            ) : null}
-            <div ref={voucherLineRef} className="col-span-2">
-              <VoucherLineBlock
-                lineItems={voucherLineItems}
-                setLineItems={setLineItems}
-                flagOfClear={flagOfClear}
-                flagOfSubmit={flagOfSubmit}
-                setIsTotalZero={setIsTotalZero}
-                setIsTotalNotEqual={setIsTotalNotEqual}
-                setHaveZeroLine={setHaveZeroLine}
-                setIsAccountingNull={setIsAccountingNull}
-                setIsVoucherLineEmpty={setIsVoucherLineEmpty}
-                setIsCounterpartyRequired={setIsCounterpartyRequired}
-                setIsAssetRequired={setIsAssetRequired}
-              />
+          {/* Info: (20240926 - Julian) Type */}
+          <div className="flex flex-col gap-8px">
+            <p className="font-bold text-input-text-primary">
+              {t('journal:ADD_NEW_VOUCHER.VOUCHER_TYPE')}
+              <span className="text-text-state-error">*</span>
+            </p>
+            <div className="relative">
+              <button
+                id="voucher-type"
+                type="button"
+                onClick={typeToggleHandler}
+                className="flex w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
+              >
+                <p
+                  className={`text-base ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'text-input-text-input-filled'}`}
+                >
+                  {isShowAnalysisPreview ? translateType(aiType) : translateType(type)}
+                </p>
+                <FaChevronDown size={20} />
+              </button>
+              {/* Info: (20240926 - Julian) Type dropdown */}
+              {typeDropdownMenu}
             </div>
-          </>
-        )}
-        {/* Info: (20240926 - Julian) buttons */}
-        <div className="col-span-2 ml-auto flex items-center gap-12px">
-          <Button
-            id="voucher-clear-button"
-            type="button"
-            variant="secondaryOutline"
-            onClick={clearClickHandler}
-          >
-            {t('journal:JOURNAL.CLEAR_ALL')}
-          </Button>
-          <Button
-            id="voucher-save-button"
-            type="submit"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') e.preventDefault();
-            }}
-            disabled={isCreating} // Info: (20241120 - Julian) 防止重複送出
-          >
-            <p>{t('common:COMMON.SAVE')}</p>
-            <BiSave size={20} />
-          </Button>
-        </div>
-      </form>
+          </div>
+
+          {/* Info: (20240926 - Julian) Note */}
+          <div className="col-span-2 flex flex-col gap-8px">
+            <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
+            <input
+              id="voucher-note"
+              type="text"
+              value={note}
+              onChange={noteChangeHandler}
+              placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
+              className={`rounded-sm border border-input-stroke-input px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
+            />
+          </div>
+          {/* Info: (20240926 - Julian) Counterparty */}
+          {isShowCounter && (
+            <div className="relative col-span-2 flex flex-col gap-8px">
+              <p className="font-bold text-input-text-primary">
+                {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
+                <span className="text-text-state-error">*</span>
+              </p>
+              <button
+                id="voucher-counterparty"
+                type="button"
+                // Info: (20241108 - Julian) 透過 tabIndex 讓 div 可以被 focus
+                // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+                // tabIndex={0}
+                ref={counterpartyRef}
+                onClick={counterSearchToggleHandler}
+                className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
+              >
+                {displayedCounterparty}
+                <div className="h-20px w-20px">
+                  <FiSearch size={20} />
+                </div>
+              </button>
+              {/* Info: (20241004 - Julian) Counterparty drop menu */}
+              {counterpartyDropMenu}
+            </div>
+          )}
+          {/* Info: (20241007 - Julian) Recurring */}
+
+          {/* Info: (20241009 - Julian) Asset */}
+          {isAssetRequired && (
+            <div ref={assetRef} className="col-span-2 flex flex-col">
+              <AssetSection isShowAssetHint={isShowAssetHint} lineItems={voucherLineItems} />
+            </div>
+          )}
+          {/* Info: (20240926 - Julian) Voucher line block */}
+          {isShowAnalysisPreview ? (
+            <VoucherLinePreview
+              totalCredit={aiTotalCredit}
+              totalDebit={aiTotalDebit}
+              lineItems={aiLineItems}
+            />
+          ) : (
+            <>
+              {isShowReverseHint ? (
+                <p className="text-text-state-error">
+                  {t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}
+                </p>
+              ) : null}
+              <div ref={voucherLineRef} className="col-span-2">
+                <VoucherLineBlock
+                  lineItems={voucherLineItems}
+                  setLineItems={setLineItems}
+                  flagOfClear={flagOfClear}
+                  flagOfSubmit={flagOfSubmit}
+                  setIsTotalZero={setIsTotalZero}
+                  setIsTotalNotEqual={setIsTotalNotEqual}
+                  setHaveZeroLine={setHaveZeroLine}
+                  setIsAccountingNull={setIsAccountingNull}
+                  setIsVoucherLineEmpty={setIsVoucherLineEmpty}
+                  setIsCounterpartyRequired={setIsCounterpartyRequired}
+                  setIsAssetRequired={setIsAssetRequired}
+                />
+              </div>
+            </>
+          )}
+          {/* Info: (20240926 - Julian) buttons */}
+          <div className="col-span-2 ml-auto flex items-center gap-12px">
+            <Button
+              id="voucher-clear-button"
+              type="button"
+              variant="secondaryOutline"
+              onClick={clearClickHandler}
+            >
+              {t('journal:JOURNAL.CLEAR_ALL')}
+            </Button>
+            <Button
+              id="voucher-save-button"
+              type="submit"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.preventDefault();
+              }}
+              disabled={isCreating} // Info: (20241120 - Julian) 防止重複送出
+            >
+              <p>{t('common:COMMON.SAVE')}</p>
+              <BiSave size={20} />
+            </Button>
+          </div>
+        </form>
+      </FocusLock>
     </div>
   );
 };

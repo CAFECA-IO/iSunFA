@@ -138,6 +138,11 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
     // Info: (20241004 - Julian) 子項目
     const childAccountList = accountList.filter((account) => account.type === value);
     const childAccountMenu = childAccountList.map((account) => {
+      // Info: (20241125 - Julian) 選項 ref
+      const optionRef = (el: HTMLButtonElement) => {
+        optionRefs.current[account.id] = el;
+      };
+
       const accountClickHandler = () => {
         // Info: (20241001 - Julian) 關閉 Accounting Menu 和編輯狀態
         setAccountingMenuOpen(false);
@@ -152,9 +157,7 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
         <button
           key={account.id}
           type="button"
-          ref={(el) => {
-            optionRefs.current[account.id] = el;
-          }}
+          ref={optionRef}
           onClick={accountClickHandler}
           className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
         >
@@ -188,16 +191,18 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
       </p>
     );
 
-  // Info: (20241125 - Julian) Enter 鍵事件
-  const handleEnter = (event: KeyboardEvent) => {
+  // Info: (20241125 - Julian) Number 鍵事件
+  const handleNumber = (event: KeyboardEvent) => {
     event.preventDefault();
-    if (!isAccountEditing) {
-      setIsAccountEditing(true);
-    } else {
-      // 選擇當前選項
-      accountSelectedHandler(accountList[activeOptionIndex]);
-
-      setIsAccountEditing(false);
+    if (
+      // Info: (20241125 - Julian) 限制只有在 focus 會計科目時才能觸發
+      document.activeElement === accountRef.current ||
+      document.activeElement === accountInputRef.current
+    ) {
+      if (!isAccountEditing) {
+        setIsAccountEditing(true);
+        setAccountingMenuOpen(true);
+      }
     }
   };
 
@@ -207,18 +212,33 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
       event.preventDefault();
 
       if (event.key === 'ArrowDown' || event.key === 'Tab') {
-        // 選擇下一個選項
-        setActiveOptionIndex((prev) => prev + 1);
-        // optionRefs.current[activeOptionIndex]?.scrollIntoView({ block: 'nearest' });
+        // Info: (20241125 - Julian) 選擇下一個選項
+        setActiveOptionIndex((prev) => {
+          const nextIndex = Math.min(prev + 1, accountList.length - 1);
+          const targetId = accountList[nextIndex]?.id;
+
+          // Info: (20241125 - Julian) 聚焦目標選項
+          if (targetId && optionRefs.current[targetId]) {
+            optionRefs.current[targetId]?.focus();
+
+            // Info: (20241125 - Julian) 確保選項在可視範圍內
+            optionRefs.current[targetId]?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'nearest',
+            });
+          }
+          return nextIndex;
+        });
       } else if (event.key === 'ArrowUp') {
-        // 選擇上一個選項
+        // Info: (20241125 - Julian) 選擇上一個選項
         setActiveOptionIndex((prev) => prev - 1);
-        // optionRefs.current[activeOptionIndex]?.scrollIntoView({ block: 'nearest' });
+        const targetId = accountList[activeOptionIndex - 1]?.id;
+        optionRefs.current[targetId]?.focus();
       }
     }
   };
 
-  useHotkeys('enter', handleEnter);
+  useHotkeys(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], handleNumber);
   useHotkeys(['tab', 'ArrowUp', 'ArrowDown'], handleNavigation);
 
   const displayedAccountingMenu = isAccountingMenuOpen ? (
