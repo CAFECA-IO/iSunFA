@@ -18,7 +18,6 @@ import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 
 interface CompanyListProps {
   companyList: ICompanyAndRole[];
-  toggleDeleteModal: () => void;
   setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setCompanyToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
@@ -38,19 +37,13 @@ const NoData = () => {
   );
 };
 
-const CompanyList = ({
-  companyList,
-  toggleDeleteModal,
-  setCompanyToEdit,
-  setCompanyToDelete,
-}: CompanyListProps) => {
+const CompanyList = ({ companyList, setCompanyToEdit, setCompanyToDelete }: CompanyListProps) => {
   return (
     <section className="flex flex-auto flex-col gap-8px">
       {companyList.map((myCompany) => (
         <CompanyItem
           key={myCompany.company.id}
           myCompany={myCompany}
-          toggleDeleteModal={toggleDeleteModal}
           setCompanyToEdit={setCompanyToEdit}
           setCompanyToDelete={setCompanyToDelete}
         />
@@ -67,7 +60,6 @@ const MyCompanyListPageBody = () => {
   const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20241114 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
 
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [companyToEdit, setCompanyToEdit] = useState<ICompanyAndRole | undefined>();
   const [companyToDelete, setCompanyToDelete] = useState<ICompanyAndRole | undefined>();
   const [totalPage, setTotalPage] = useState(1);
@@ -79,8 +71,9 @@ const MyCompanyListPageBody = () => {
   const toggleCreateCompanyModal = () => {
     setIsCreateCompanyModalOpen((prev) => !prev);
   };
-  const toggleDeleteModal = () => {
-    setIsDeleteModalOpen((prev) => !prev);
+
+  const closeDeleteModal = () => {
+    setCompanyToDelete(undefined);
   };
 
   // Info: (20241115 - Liz) 打 API 刪除公司
@@ -92,16 +85,6 @@ const MyCompanyListPageBody = () => {
 
       if (data) {
         setRefreshKey((prev) => prev + 1);
-        // Deprecated: (20241115 - Liz)
-        // eslint-disable-next-line no-console
-        console.log(
-          '刪除公司成功, api return data:',
-          data,
-          'refreshKey:',
-          refreshKey,
-          'companyToDelete:',
-          companyToDelete
-        );
       } else {
         // Deprecated: (20241115 - Liz)
         // eslint-disable-next-line no-console
@@ -120,7 +103,7 @@ const MyCompanyListPageBody = () => {
     submitBtnStr: t('company:PAGE_BODY.DELETE'),
     submitBtnFunction: handleDeleteCompany,
     messageType: MessageType.WARNING,
-    backBtnFunction: toggleDeleteModal,
+    backBtnFunction: closeDeleteModal,
     backBtnStr: t('company:PAGE_BODY.CANCEL'),
   };
 
@@ -171,7 +154,6 @@ const MyCompanyListPageBody = () => {
         <>
           <CompanyList
             companyList={companyList}
-            toggleDeleteModal={toggleDeleteModal}
             setCompanyToEdit={setCompanyToEdit}
             setCompanyToDelete={setCompanyToDelete}
           />
@@ -202,8 +184,8 @@ const MyCompanyListPageBody = () => {
       {companyToDelete && (
         <MessageModal
           messageModalData={messageModalData}
-          isModalVisible={isDeleteModalOpen}
-          modalVisibilityHandler={toggleDeleteModal}
+          isModalVisible={!!companyToDelete}
+          modalVisibilityHandler={closeDeleteModal}
         />
       )}
     </main>

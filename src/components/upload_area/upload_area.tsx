@@ -17,7 +17,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({
   handleUpload,
   multiple = false,
 }) => {
-  const { t } = useTranslation(['common', 'journal']);
+  const { t } = useTranslation(['common', 'certificate']);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -141,14 +141,14 @@ const UploadArea: React.FC<UploadAreaProps> = ({
                 className="group-disabled:grayscale"
               />
               <p className="font-semibold text-drag-n-drop-text-primary group-disabled:text-drag-n-drop-text-disable">
-                {t('journal:JOURNAL.USE_YOUR_PHONE_AS')}
+                {t('certificate:UPLOAD.USE_YOUR_PHONE_AS')}
                 <span className="cursor-pointer text-text-brand-primary-lv2 group-disabled:cursor-not-allowed group-disabled:text-drag-n-drop-text-disable">
-                  {t('journal:JOURNAL.SCANNER')}
+                  {t('certificate:UPLOAD.SCANNER')}
                 </span>
               </p>
             </div>
             <p className="text-center text-drag-n-drop-text-note group-disabled:text-drag-n-drop-text-disable">
-              {t('journal:JOURNAL.SCAN_THE_QRCODE')}
+              {t('certificate:UPLOAD.SCAN_THE_QRCODE')}
             </p>
           </button>
         </>

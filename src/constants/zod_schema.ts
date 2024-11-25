@@ -13,6 +13,7 @@ import {
   certificatePostSchema,
   certificatePostValidator,
   certificatePutValidator,
+  invoicePutV2Schema,
 } from '@/lib/utils/zod_schema/certificate';
 import {
   companyDeleteSchema,
@@ -168,8 +169,8 @@ export const ZOD_SCHEMA_API = {
   [APIName.TODO_LIST]: todoListSchema,
   [APIName.CREATE_TODO]: todoPostSchema,
   [APIName.TODO_GET_BY_ID]: todoGetSchema,
-  [APIName.TODO_UPDATE]: todoPutSchema,
-  [APIName.TODO_DELETE]: todoDeleteSchema,
+  [APIName.UPDATE_TODO]: todoPutSchema,
+  [APIName.DELETE_TODO]: todoDeleteSchema,
   [APIName.ACCOUNTING_SETTING_GET]: accountingSettingGetSchema,
   [APIName.ACCOUNTING_SETTING_UPDATE]: accountingSettingPutSchema,
   [APIName.USER_SETTING_GET]: userSettingGetSchema,
@@ -202,6 +203,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.COMPANY_GET]: nullAPISchema,
   [APIName.COMPANY_ADD_BY_INVITATION_CODE]: nullAPISchema,
   [APIName.CERTIFICATE_PUT_V2]: nullAPISchema,
+  [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
   [APIName.CERTIFICATE_DELETE_V2]: nullAPISchema,
   [APIName.CERTIFICATE_DELETE__MULTIPLE_V2]: nullAPISchema,
   [APIName.PROFIT_GET_INSIGHT]: nullAPISchema,

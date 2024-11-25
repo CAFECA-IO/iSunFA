@@ -42,8 +42,8 @@ export const AUTH_CHECK = {
   [APIName.TODO_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_TODO]: [AuthFunctionsKeysNew.user],
   [APIName.TODO_GET_BY_ID]: [AuthFunctionsKeysNew.user],
-  [APIName.TODO_UPDATE]: [AuthFunctionsKeysNew.user],
-  [APIName.TODO_DELETE]: [AuthFunctionsKeysNew.user],
+  [APIName.UPDATE_TODO]: [AuthFunctionsKeysNew.user],
+  [APIName.DELETE_TODO]: [AuthFunctionsKeysNew.user],
   [APIName.ACCOUNTING_SETTING_GET]: [AuthFunctionsKeysNew.user],
   [APIName.ACCOUNTING_SETTING_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.USER_SETTING_GET]: [AuthFunctionsKeysNew.user],
@@ -61,6 +61,7 @@ export const AUTH_CHECK = {
   [APIName.CERTIFICATE_LIST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_POST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_GET_V2]: [AuthFunctionsKeysNew.user],
+  [APIName.INVOICE_PUT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ASSET_LIST_EXPORT]: [AuthFunctionsKeysNew.user],
   [APIName.FILE_EXPORT]: [AuthFunctionsKeysNew.user], // ToDo: (20241112 - Luphia) need to define the schema for file export
   [APIName.ROOM_ADD]: [AuthFunctionsKeysNew.user],

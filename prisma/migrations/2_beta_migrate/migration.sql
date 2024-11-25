@@ -317,7 +317,7 @@ WHERE NOT EXISTS (SELECT 1 FROM certificate WHERE id = 555);
 
 -- Insert a default counter_party for cases where counter_party_id is NULL
 INSERT INTO counterparty (id, company_id, name, tax_id, type, note, created_at, updated_at)
-SELECT 555 AS id, 555 AS company_id, 'N/A' AS name, 'N/A' AS tax_id, 'N/A' AS type, 'N/A' AS note, 0 AS created_at, 0 AS updated_at
+SELECT 555 AS id, 555 AS company_id, 'N/A' AS name, 'N/A' AS tax_id, 'BOTH' AS type, 'N/A' AS note, 0 AS created_at, 0 AS updated_at
 WHERE NOT EXISTS (SELECT 1 FROM counterparty WHERE id = 555);
 
 ALTER TABLE "invoice" 

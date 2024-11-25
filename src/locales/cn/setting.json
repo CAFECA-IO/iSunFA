@@ -162,7 +162,10 @@
     "UPDATE_SUCCESS": "您的信息已成功更新。",
     "UPDATE_ERROR": "保存数据时发生错误，请重新提交您的请求。",
     "DELETE_ERROR": "删除数据时发生错误，请重试。",
-    "DELETE_CANCEL": "取消刪除流程"
+    "DELETE_CANCEL": "取消刪除流程",
+    "DELETE_CANCEL_CONFIRM": "您确定要取消删除流程吗？",
+    "DELETE_CANCEL_BTN": "是的，取消流程",
+    "DELETE_CANCEL_SUCCESS": "删除流程已成功取消。"
   },
   "ACCOUNT": {
     "REMOVE": "删除此账户",

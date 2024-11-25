@@ -10,7 +10,7 @@ import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { InvoiceTabs } from '@/constants/certificate'; // Info: (20241023 - tzuhan) @Murky, 這裡要改成 SORT_BY （已經定義好）
 import { fileEntityValidator, IFileBetaValidator } from '@/lib/utils/zod_schema/file';
 import { IInvoiceBetaValidator, invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
-import { InvoiceType } from '@/constants/invoice';
+import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 import { counterPartyEntityValidator } from '@/constants/counterparty';
 import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
@@ -272,15 +272,9 @@ const certificatePostBodyValidator = z.object({
   fileId: z.number(),
 });
 
-const certificatePostOutputSchema = z.object({
-  ...certificateEntityValidator.shape,
-  file: fileEntityValidator,
-});
+const certificatePostOutputSchema = ICertificateValidator.strict();
 
-const certificatePostFrontendSchema = z.object({
-  ...certificateEntityValidator.shape,
-  file: fileEntityValidator,
-});
+const certificatePostFrontendSchema = ICertificateValidator.strict();
 
 export const certificatePostValidator: IZodValidator<
   (typeof certificatePostQueryValidator)['shape'],
@@ -353,4 +347,38 @@ export const certificateGetOneSchema = {
   },
   outputSchema: certificateGetOneOutputSchema,
   frontend: certificateGetOneFrontendSchema,
+};
+
+/**
+ * Info: (20241125 - Murky)
+ * @note 因為放在invoice 會有dependency cycle, 所以放在這裡
+ */
+const invoicePutV2QuerySchema = z.object({
+  invoiceId: zodStringToNumber,
+});
+
+const invoicePutV2BodySchema = z.object({
+  // id: z.number(),
+  certificateId: z.number().optional(),
+  counterPartyId: z.number().optional(),
+  inputOrOutput: z.nativeEnum(InvoiceTransactionDirection).optional(),
+  date: z.number().optional(),
+  no: z.string().optional(),
+  currencyAlias: z.nativeEnum(CurrencyType).optional(),
+  priceBeforeTax: z.number().optional(),
+  taxType: z.nativeEnum(InvoiceTaxType).optional(),
+  taxRatio: z.number().optional(),
+  taxPrice: z.number().optional(),
+  totalPrice: z.number().optional(),
+  type: z.nativeEnum(InvoiceType).optional(),
+  deductible: z.boolean().optional(),
+});
+
+export const invoicePutV2Schema = {
+  input: {
+    querySchema: invoicePutV2QuerySchema,
+    bodySchema: invoicePutV2BodySchema,
+  },
+  outputSchema: ICertificateValidator.strict(),
+  frontend: ICertificateValidator,
 };

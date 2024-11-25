@@ -44,6 +44,7 @@ export enum APIName {
   CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
   CERTIFICATE_PUT_V2 = 'CERTIFICATE_PUT_V2',
+  INVOICE_PUT_V2 = 'INVOICE_PUT_V2',
   CERTIFICATE_DELETE_V2 = 'CERTIFICATE_DELETE_V2',
   CERTIFICATE_DELETE__MULTIPLE_V2 = 'CERTIFICATE_DELETE__MULTIPLE_V2',
   COUNTERPARTY_LIST = 'COUNTERPARTY_LIST',
@@ -123,8 +124,8 @@ export enum APIName {
   TODO_LIST = 'TODO_LIST',
   CREATE_TODO = 'CREATE_TODO',
   TODO_GET_BY_ID = 'TODO_GET_BY_ID',
-  TODO_UPDATE = 'TODO_UPDATE',
-  TODO_DELETE = 'TODO_DELETE',
+  UPDATE_TODO = 'UPDATE_TODO',
+  DELETE_TODO = 'DELETE_TODO',
   PROJECT_LIST = 'PROJECT_LIST',
   CREATE_PROJECT = 'CREATE_PROJECT',
   GET_PROJECT_BY_ID = 'GET_PROJECT_BY_ID',
@@ -171,6 +172,7 @@ export enum APIPath {
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
+  INVOICE_PUT_V2 = `${apiPrefixV2}/company/:companyId/invoice/:invoiceId`,
   CERTIFICATE_DELETE_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_DELETE__MULTIPLE_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   COUNTERPARTY_LIST = `${apiPrefixV2}/company/:companyId/counterparty`,
@@ -249,8 +251,8 @@ export enum APIPath {
   TODO_LIST = `${apiPrefixV2}/user/:userId/todo`,
   CREATE_TODO = `${apiPrefixV2}/user/:userId/todo`,
   TODO_GET_BY_ID = `${apiPrefixV2}/todo/:todoId`,
-  TODO_UPDATE = `${apiPrefixV2}/todo/:todoId`,
-  TODO_DELETE = `${apiPrefixV2}/todo/:todoId`,
+  UPDATE_TODO = `${apiPrefixV2}/todo/:todoId`,
+  DELETE_TODO = `${apiPrefixV2}/todo/:todoId`,
   PROJECT_LIST = `${apiPrefix}/company/:companyId/project`,
   CREATE_PROJECT = `${apiPrefix}/company/:companyId/project`,
   GET_PROJECT_BY_ID = `${apiPrefix}/company/:companyId/project/:projectId`,
@@ -680,15 +682,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.TODO_GET_BY_ID,
   }),
-  [APIName.TODO_UPDATE]: createConfig({
-    name: APIName.TODO_UPDATE,
+  [APIName.UPDATE_TODO]: createConfig({
+    name: APIName.UPDATE_TODO,
     method: HttpMethod.PUT,
-    path: APIPath.TODO_UPDATE,
+    path: APIPath.UPDATE_TODO,
   }),
-  [APIName.TODO_DELETE]: createConfig({
-    name: APIName.TODO_DELETE,
+  [APIName.DELETE_TODO]: createConfig({
+    name: APIName.DELETE_TODO,
     method: HttpMethod.DELETE,
-    path: APIPath.TODO_DELETE,
+    path: APIPath.DELETE_TODO,
   }),
   [APIName.PROJECT_LIST]: createConfig({
     name: APIName.PROJECT_LIST,
@@ -799,6 +801,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CERTIFICATE_DELETE_V2,
     method: HttpMethod.DELETE,
     path: APIPath.CERTIFICATE_PUT_V2,
+  }),
+  [APIName.INVOICE_PUT_V2]: createConfig({
+    name: APIName.INVOICE_PUT_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.INVOICE_PUT_V2,
   }),
   // Info: (20241028 - Tzuhan) @Murky, 需要新增這個 API 用來在 certificate list 一次性刪除多張certificate
   [APIName.CERTIFICATE_DELETE__MULTIPLE_V2]: createConfig({
