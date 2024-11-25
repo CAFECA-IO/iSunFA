@@ -4,10 +4,7 @@ import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { InvoiceTabs } from '@/constants/certificate';
 import { InvoiceType } from '@/constants/invoice';
-import {
-  certificateListSchema,
-  // Info: (20241122 - tzuhan) certificatePostSchema
-} from '@/lib/utils/zod_schema/certificate';
+import { certificateListSchema, certificatePostSchema } from '@/lib/utils/zod_schema/certificate';
 
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
@@ -99,10 +96,10 @@ describe('company/[companyId]/certificate integration test', () => {
       req = {
         headers: {},
         query: {
-          companyId: '1',
+          companyId: '1000',
         },
         body: {
-          fileId: 1,
+          fileId: 1009,
         },
         method: 'POST',
         json: jest.fn(),

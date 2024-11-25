@@ -9,6 +9,17 @@ import type { IUserEntity } from '@/interfaces/user';
 import { CurrencyType } from '@/constants/currency';
 import type { IUserCertificateEntity } from '@/interfaces/user_certificate';
 
+import {
+  Certificate as PrismaCertificate,
+  VoucherCertificate as PrismaVoucherCertificate,
+  Voucher as PrismaVoucher,
+  UserCertificate as PrismaUserCertificate,
+  File as PrismaFile,
+  Invoice as PrismaInvoice,
+  User as PrismaUser,
+  Counterparty as PrismaCounterparty,
+} from '@prisma/client';
+
 // Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來定義 Certificate 的介面，需要確認是否有遺漏或錯誤
 export interface ICertificate {
   id: number;
@@ -198,3 +209,15 @@ export interface ICertificateEntity {
 
   userCertificates: IUserCertificateEntity[];
 }
+
+export type PostCertificateResponse = PrismaCertificate & {
+  file: PrismaFile;
+  UserCertificate: PrismaUserCertificate[];
+  voucherCertificates: (PrismaVoucherCertificate & {
+    voucher: PrismaVoucher;
+  })[];
+  invoices: (PrismaInvoice & {
+    counterParty: PrismaCounterparty;
+  })[];
+  uploader: PrismaUser;
+};

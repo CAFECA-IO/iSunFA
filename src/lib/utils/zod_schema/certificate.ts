@@ -272,15 +272,9 @@ const certificatePostBodyValidator = z.object({
   fileId: z.number(),
 });
 
-const certificatePostOutputSchema = z.object({
-  ...certificateEntityValidator.shape,
-  file: fileEntityValidator,
-});
+const certificatePostOutputSchema = ICertificateValidator.strict();
 
-const certificatePostFrontendSchema = z.object({
-  ...certificateEntityValidator.shape,
-  file: fileEntityValidator,
-});
+const certificatePostFrontendSchema = ICertificateValidator.strict();
 
 export const certificatePostValidator: IZodValidator<
   (typeof certificatePostQueryValidator)['shape'],

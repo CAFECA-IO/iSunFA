@@ -2,14 +2,14 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 // import { AuthFunctionsKeys } from '@/interfaces/auth';
 // import { checkAuthorization } from '@/lib/utils/auth_check';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { APIName } from '@/constants/api_connection';
 
 import { loggerError } from '@/lib/utils/logger_back';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { ICertificateEntity } from '@/interfaces/certificate';
+import { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
@@ -20,8 +20,9 @@ import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/cons
 import { CounterpartyType } from '@/constants/counterparty';
 import { FileFolder } from '@/constants/file';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
-import { getPusherInstance } from '@/lib/utils/pusher';
-import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+
+import { certificateAPIPostUtils as postUtils } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
+import { IVoucherEntity } from '@/interfaces/voucher';
 
 type ICertificateListItem = ICertificateEntity & {
   invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
@@ -42,13 +43,17 @@ type ICertificateListSummary = {
 
 type PaginatedCertificateListResponse = IPaginatedData<ICertificateListSummary>;
 
-type ICertificatePostResponse = ICertificateEntity & { file: IFileEntity };
-
 type APIResponse =
-  | object
-  | {
-      data: unknown;
-    }
+  | ICertificate
+  | IPaginatedData<{
+      totalInvoicePrice: number;
+      unRead: {
+        withVoucher: number;
+        withoutVoucher: number;
+      };
+      currency: CurrencyType;
+      certificates: ICertificate[];
+    }>
   | null;
 
 export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_LIST_V2, object> = async ({
@@ -185,54 +190,79 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_LIST_V2, objec
   };
 };
 
+/**
+ * Info: (20241122 - Murky)
+ * @todo
+ * - 輸入companyId, fileId
+ * - 回傳 ICertificate
+ * - 記得放在Pusher CERTIFICATE_EVENT.CREATE
+ */
 export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, object> = async ({
-  query,
   body,
-  // session,
+  session,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICertificatePostResponse | null = null;
+  let payload: ICertificate | null = null;
 
   const { fileId } = body;
-  // const { companyId } = session;
-  const { companyId } = query;
+  const { userId, companyId } = session;
 
-  const mockFile: IFileEntity = {
-    id: fileId,
-    name: 'murky.jpg',
-    size: 1000,
-    mimeType: 'image/jpeg',
-    type: FileFolder.TMP,
-    url: 'https://isunfa.com/elements/avatar_default.svg?w=256&q=75',
-    createdAt: 1,
-    updatedAt: 1,
-    deletedAt: null,
-  };
+  try {
+    const nowInSecond = getTimestampNow();
 
-  const mockCertificate: ICertificatePostResponse = {
-    id: Math.floor(Math.random() * 10000000),
-    companyId,
-    // voucherNo: null,
-    createdAt: 1,
-    updatedAt: 1,
-    deletedAt: null,
-    vouchers: [],
-    userCertificates: [],
-    file: mockFile,
-  };
+    const certificateFromPrisma = await postUtils.createCertificateInPrisma({
+      nowInSecond,
+      companyId,
+      uploaderId: userId,
+      fileId,
+    });
 
-  payload = mockCertificate;
-  statusMessage = STATUS_MESSAGE.CREATED;
+    const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
+    const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
+    const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
+    const voucherCertificateEntity =
+      postUtils.initVoucherCertificateEntities(certificateFromPrisma);
+    const invoiceEntity = postUtils.initInvoiceEntity(certificateFromPrisma, {
+      nowInSecond,
+    });
+    const certificateEntity = postUtils.initCertificateEntity(certificateFromPrisma);
 
-  // Info: (20241121 - tzuhan) @Murkey 這是 createCertificate 成功h後，後端使用 pusher 的傳送 CERTIFICATE_EVENT.CREATE 的範例
-  /**
-   * CERTIFICATE_EVENT.CREATE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(certificate as ICertificate)
-   */
-  const pusher = getPusherInstance();
-  pusher.trigger(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`, CERTIFICATE_EVENT.CREATE, {
-    message: JSON.stringify(payload),
-  });
+    const certificateReadyForTransfer: ICertificateEntity & {
+      invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
+      file: IFileEntity;
+      uploader: IUserEntity;
+      userCertificates: IUserCertificateEntity[];
+      vouchers: IVoucherEntity[];
+    } = {
+      ...certificateEntity,
+      invoice: invoiceEntity,
+      file: fileEntity,
+      uploader: uploaderEntity,
+      vouchers: voucherCertificateEntity.map((voucherCertificate) => voucherCertificate.voucher),
+      userCertificates: userCertificateEntities,
+    };
 
+    const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
+      certificateReadyForTransfer
+    );
+
+    // Info: (20241121 - tzuhan) @Murkey 這是 createCertificate 成功h後，後端使用 pusher 的傳送 CERTIFICATE_EVENT.CREATE 的範例
+    /**
+     * CERTIFICATE_EVENT.CREATE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(certificate as ICertificate)
+     */
+
+    postUtils.triggerPusherNotification(certificate, {
+      companyId,
+    });
+
+    statusMessage = STATUS_MESSAGE.CREATED;
+    payload = certificate;
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+    const logger = loggerError(userId, error.name, error.message);
+    logger.error(error);
+  }
   return {
     statusMessage,
     payload,
