@@ -144,7 +144,10 @@
     "URL": "网址",
     "FOR_MOBILE": "用于手机上传文件",
     "BACK": "返回",
-    "COMPLETED": "完成"
+    "COMPLETED": "完成",
+    "USE_YOUR_PHONE_AS": "使用您的手机作为",
+    "SCANNER": "扫描器",
+    "SCAN_THE_QRCODE": "请扫描二维码开始用手机扫描"
   },
   "CREATE": {
     "FAILED": "创建失败"
