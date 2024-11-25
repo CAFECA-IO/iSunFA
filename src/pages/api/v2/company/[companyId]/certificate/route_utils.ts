@@ -7,7 +7,7 @@ import {
 import loggerBack from '@/lib/utils/logger_back';
 import { Logger } from 'pino';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { initFileEntity } from '@/lib/utils/file';
+import { getImageUrlFromFileIdV1, initFileEntity } from '@/lib/utils/file';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
 import { parsePrismaUserCertificateToUserCertificateEntity } from '@/lib/utils/formatter/user_certificate.formatter';
 import {
@@ -173,6 +173,11 @@ export const certificateAPIPostUtils = {
     return parsePrismaCertificateToCertificateEntity(certificateFromPrisma);
   },
 
+  transformFileURL: (file: IFileEntity) => {
+    const fileURL = getImageUrlFromFileIdV1(file.id);
+    return fileURL;
+  },
+
   transformCertificateEntityToResponse: (
     certificateEntity: ICertificateEntity & {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
@@ -182,11 +187,12 @@ export const certificateAPIPostUtils = {
       vouchers: IVoucherEntity[];
     }
   ): ICertificate => {
+    const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
     const file: IFileBeta = {
       id: certificateEntity.file.id,
       name: certificateEntity.file.name,
       size: certificateEntity.file.size,
-      url: certificateEntity.file.url,
+      url: fileURL,
       existed: true,
     };
 
