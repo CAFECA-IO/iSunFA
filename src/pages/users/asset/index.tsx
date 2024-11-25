@@ -27,7 +27,14 @@ const AssetListPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['layout', 'common', 'asset', 'filter_section_type'])),
+    ...(await serverSideTranslations(locale, [
+      'layout',
+      'common',
+      'asset',
+      'dashboard',
+      'date_picker',
+      'filter_section_type',
+    ])),
     locale,
   },
 });
