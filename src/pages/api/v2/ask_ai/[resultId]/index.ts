@@ -65,26 +65,25 @@ async function certificateHandler() {
 }
 
 // Info: (20241004 - Murky) Handler for the 'voucher' endpoint
-// ASK_AI_RESULT_V2 希望可以回 IAIResultVoucher
 async function voucherHandler(key: AI_TYPE, resultId: string, session: ISessionData) {
   let statusMessage: string = DEFAULT_STATUS_MESSAGE;
   let payload: APIResponse = DEFAULT_PAYLOAD;
 
   const { companyId } = session;
+
   const resultFromAI = await fetchResultFromAICH(key, resultId);
   if (resultFromAI) {
+    const { payload: aiPayload } = resultFromAI;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    const counterparty = await fuzzySearchCounterpartyByName(
-      resultFromAI.counterpartyName,
-      companyId
-    );
-    const lineItems = await formatLineItemsFromAICH(resultFromAI.lineItems);
+    const counterparty = await fuzzySearchCounterpartyByName(aiPayload.counterpartyName, companyId);
+    const lineItems = await formatLineItemsFromAICH(aiPayload.lineItems);
 
     const nowTimestamp = getTimestampNow();
     const voucher: IAIResultVoucher = {
-      voucherDate: resultFromAI.date || nowTimestamp, // Info: (20241107 - Murky) AI必須轉換出來
-      type: resultFromAI.type || EventType.INCOME, // Info: (20241107 - Murky) 可以讓AI轉換
-      note: resultFromAI.note || 'this is note',
+      aiType: AI_TYPE.VOUCHER,
+      voucherDate: aiPayload.date || nowTimestamp, // Info: (20241107 - Murky) AI必須轉換出來
+      type: aiPayload.type || EventType.INCOME, // Info: (20241107 - Murky) 可以讓AI轉換
+      note: aiPayload.note || 'this is note',
       counterParty: counterparty || PUBLIC_COUNTER_PARTY,
       lineItems,
     };
