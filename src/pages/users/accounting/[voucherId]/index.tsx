@@ -47,6 +47,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
         'asset',
         'dashboard',
         'date_picker',
+        'filter_section_type',
       ])),
     },
   };
