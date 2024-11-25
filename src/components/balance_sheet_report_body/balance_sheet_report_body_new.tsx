@@ -75,7 +75,7 @@ const BalanceSheetPageBody = () => {
         resolve(); // 明確調用 resolve，表示完成
       }, 100); // 延遲 100 毫秒
     });
-  }, []);
+  }, [isPrinting]);
 
   const handleOnAfterPrint = React.useCallback(() => {
     // eslint-disable-next-line no-console

@@ -14,6 +14,7 @@ import { ReportTypeToBaifaReportType } from '@/interfaces/report_type';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;
@@ -37,8 +38,28 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   const [step, setStep] = useState<number>(0);
   const [generatedCode, setGeneratedCode] = useState<string>('');
 
-  // Info: (20241111 - Anna) Set the current date as default for report generation
-  const todayDate = new Date().toISOString().split('T')[0];
+  // // Info: (20241111 - Anna) Set the current date as default for report generation
+  // const todayDate = new Date().toISOString().split('T')[0];
+
+  // Info: (20241125 - Anna) 新增函數以決定日期範圍
+  const getDefaultDateRange = (reportType: FinancialReportTypesKey) => {
+    const today = new Date();
+    const todayDate = today.toISOString().split('T')[0];
+
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(today.getMonth() - 3);
+    const threeMonthsAgoDate = threeMonthsAgo.toISOString().split('T')[0];
+
+    if (reportType === FinancialReportTypesKey.balance_sheet) {
+      return { from: todayDate, to: todayDate };
+    } else if (
+      reportType === FinancialReportTypesKey.comprehensive_income_statement ||
+      reportType === FinancialReportTypesKey.cash_flow_statement
+    ) {
+      return { from: threeMonthsAgoDate, to: todayDate };
+    }
+    return { from: todayDate, to: todayDate };
+  };
 
   // Info: (20241111 - Anna) 使用 APIHandler 設置 REPORT_GENERATE API 的觸發功能
   const {
@@ -95,35 +116,76 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   };
 
   // Info: (20241111 - Anna) 在 generateClickHandler 中設置生成報告所需的參數並使用 todayDate
+  // const generateClickHandler = async () => {
+  //   setStep(1);
+
+  //   const reportTypes = [
+  //     isBalanceSheetChecked ? 'balance' : null,
+  //     isIncomeStatementChecked ? 'comprehensive-income' : null,
+  //     isCashFlowStatementChecked ? 'cash-flow' : null,
+  //   ].filter(Boolean);
+
+  //   // Info: (20241111 - Anna) 確保包含 selectedCompany 作為參數
+  //   if (selectedCompany) {
+  //     try {
+  //       await generateFinancialReport({
+  //         params: {
+  //           companyId: selectedCompany.id,
+  //         },
+  //         body: {
+  //           date: todayDate, // Info: (20241111 - Anna) 使用當前預設日期
+  //           language: selectedReportLanguage,
+  //           reportTypes,
+  //         },
+  //       });
+  //     } catch (error) {
+  //       // Deprecate: (20241118 - Anna) debug
+  //       // eslint-disable-next-line no-console
+  //       console.error('Error generating report:', generateError);
+  //     }
+  //   } else {
+  //     // Deprecate: (20241118 - Anna) debug
+  //     // eslint-disable-next-line no-console
+  //     console.warn('No company selected for report generation');
+  //   }
+  // };
+
+  // Info: (20241125 - Anna)
   const generateClickHandler = async () => {
     setStep(1);
 
     const reportTypes = [
-      isBalanceSheetChecked ? 'balance' : null,
-      isIncomeStatementChecked ? 'comprehensive-income' : null,
-      isCashFlowStatementChecked ? 'cash-flow' : null,
+      isBalanceSheetChecked ? FinancialReportTypesKey.balance_sheet : null,
+      isIncomeStatementChecked ? FinancialReportTypesKey.comprehensive_income_statement : null,
+      isCashFlowStatementChecked ? FinancialReportTypesKey.cash_flow_statement : null,
     ].filter(Boolean);
 
-    // Info: (20241111 - Anna) 確保包含 selectedCompany 作為參數
     if (selectedCompany) {
+      const { from, to } = getDefaultDateRange(
+        isBalanceSheetChecked
+          ? FinancialReportTypesKey.balance_sheet
+          : isIncomeStatementChecked
+            ? FinancialReportTypesKey.comprehensive_income_statement
+            : FinancialReportTypesKey.cash_flow_statement
+      );
+
       try {
         await generateFinancialReport({
           params: {
             companyId: selectedCompany.id,
           },
           body: {
-            date: todayDate, // Info: (20241111 - Anna) 使用當前預設日期
+            from,
+            to,
             language: selectedReportLanguage,
             reportTypes,
           },
         });
       } catch (error) {
-        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.error('Error generating report:', generateError);
       }
     } else {
-      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.warn('No company selected for report generation');
     }
