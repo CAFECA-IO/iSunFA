@@ -1,5 +1,7 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import AppleProvider from 'next-auth/providers/apple';
+import { generateAppleClientSecret } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { destroySession, getSession, setSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -73,31 +75,6 @@ import { loggerError } from '@/lib/utils/logger_back';
  * - 選擇公司的操作更新資料庫和 session，確保用戶狀態的一致性。
  */
 
-// const generateAppleClientSecret = () => {
-//   const privateKey = process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-//   if (!privateKey) {
-//     throw new Error('APPLE_PRIVATE_KEY is not defined or incorrectly formatted');
-//   }
-
-//   return jwt.sign(
-//     {
-//       iss: process.env.APPLE_TEAM_ID as string,
-//       iat: Math.floor(Date.now() / 1000),
-//       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 180,
-//       aud: 'https://appleid.apple.com',
-//       sub: process.env.APPLE_CLIENT_ID as string,
-//     },
-//     privateKey,
-//     {
-//       algorithm: 'ES256',
-//       header: {
-//         alg: 'ES256',
-//         kid: process.env.APPLE_KEY_ID as string,
-//       },
-//     }
-//   );
-// };
-
 async function fetchImageInfo(imageUrl: string): Promise<{
   iconUrl: string;
   mimeType: string;
@@ -131,11 +108,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         clientId: process.env.GOOGLE_CLIENT_ID as string,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       }),
-      // ToDo: (20240813-Tzuhan) Apple login is not provided in the beta version
-      // AppleProvider({
-      //   clientId: process.env.APPLE_CLIENT_ID as string,
-      //   clientSecret: generateAppleClientSecret(),
-      // }),
+      AppleProvider({
+        clientId: process.env.APPLE_CLIENT_ID as string,
+        clientSecret: generateAppleClientSecret(),
+      }),
     ],
     pages: {
       signIn: ISUNFA_ROUTE.LOGIN,
