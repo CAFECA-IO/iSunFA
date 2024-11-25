@@ -195,7 +195,7 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_LIST_V2, objec
  * @todo
  * - 輸入companyId, fileId
  * - 回傳 ICertificate
- * - 記得放在Pusher
+ * - 記得放在Pusher CERTIFICATE_EVENT.CREATE
  */
 export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, object> = async ({
   body,
