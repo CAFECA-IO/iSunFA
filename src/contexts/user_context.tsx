@@ -126,11 +126,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
   const [, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(null);
-
-  // Deprecated: (20241113 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('(in userContext) selectedCompanyRef.current:', selectedCompanyRef.current);
-
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
@@ -552,7 +547,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241108 - Liz) 取得系統角色列表
-
   const getSystemRoleList = async () => {
     try {
       const { data: systemRoleList, success } = await systemRoleListAPI({

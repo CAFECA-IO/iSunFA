@@ -36,7 +36,9 @@
     "START": "开始",
     "PREVIEW": "预览",
     "CANCEL": "取消",
-    "CREATE": "新增"
+    "CREATE": "新增",
+    "SAVE": "储存",
+    "DELETE": "删除"
   },
 
   "HEADER": {
@@ -99,6 +101,9 @@
     "NOTE": "备注",
     "ENTER_TEXT": "输入文字",
     "SELECT_COMPANY": "选择公司",
-    "NO_COMPANY": "没有公司"
+    "NO_COMPANY": "没有公司",
+    "EDIT_MY_EVENT": "编辑我的事件",
+    "DELETE_MESSAGE_TITLE": "删除此事件",
+    "DELETE_MESSAGE_CONTENT": "您确定要删除此事件吗？"
   }
 }

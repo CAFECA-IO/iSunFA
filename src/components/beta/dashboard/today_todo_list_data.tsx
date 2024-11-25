@@ -4,7 +4,7 @@ import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ITodoCompany } from '@/interfaces/todo';
 import { useEffect, useState } from 'react';
-import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { MILLISECONDS_IN_A_MINUTE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -56,6 +56,10 @@ const TodayTodoListData = () => {
         });
 
         if (success && userTodoList && userTodoList.length > 0) {
+          // Deprecated: (20241125 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('取得所有待辦事項列表成功:', userTodoList);
+
           const todayStart = new Date();
           todayStart.setHours(0, 0, 0, 0); // ToDo: (20241122 - Liz) 設定今天的開始時間 (00:00:00)
 
@@ -116,7 +120,7 @@ const TodayTodoListData = () => {
       setFilterTodoList(notExpiredTodoList);
     };
 
-    const timer = setInterval(refreshTodoList, MILLISECONDS_IN_A_SECOND);
+    const timer = setInterval(refreshTodoList, MILLISECONDS_IN_A_MINUTE);
 
     return () => {
       if (timer) clearTimeout(timer);
