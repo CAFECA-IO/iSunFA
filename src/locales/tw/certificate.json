@@ -143,7 +143,10 @@
     "URL": "網站",
     "FOR_MOBILE": "用於手機上傳檔案",
     "BACK": "返回",
-    "COMPLETED": "完成"
+    "COMPLETED": "完成",
+    "USE_YOUR_PHONE_AS": "使用您的手機作為",
+    "SCANNER": "掃描器",
+    "SCAN_THE_QRCODE": "請掃描二維碼開始用手機掃描"
   },
   "CREATE": {
     "FAILED": "創建失敗"

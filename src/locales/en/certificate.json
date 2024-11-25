@@ -144,7 +144,10 @@
     "URL": "Url",
     "FOR_MOBILE": "For mobile upload",
     "BACK": "Back",
-    "COMPLETED": "Complete"
+    "COMPLETED": "Complete",
+    "USE_YOUR_PHONE_AS": "Use Your Phone as ",
+    "SCANNER": "Scanner",
+    "SCAN_THE_QRCODE": "Please scan the QRcode to start scanning with your phone"
   },
   "CREATE": {
     "FAILED": "Failed to create certificate"
