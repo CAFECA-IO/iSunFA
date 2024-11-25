@@ -161,7 +161,7 @@ const PieChart = ({ data }: PieChartProps) => {
       hover: {
         filter: {
           type: 'darken',
-          value: 0.85,
+          // value: 0.85,
         },
       },
       active: {
