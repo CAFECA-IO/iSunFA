@@ -1129,6 +1129,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
                 id="voucher-counterparty"
                 type="button"
                 // Info: (20241108 - Julian) 透過 tabIndex 讓 div 可以被 focus
+                // ToDo: (20241125 - Julian) remove eslint-disable
                 // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                 // tabIndex={0}
                 ref={counterpartyRef}
