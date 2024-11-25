@@ -1,20 +1,24 @@
-import React, { useRef, useState, useEffect } from 'react';
+// Deprecated: (20241114 - Liz) 這是 Alpha 版本的元件，目前沒有使用到，翻譯也已拔除。
+
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
+import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
 import { useTranslation } from 'next-i18next';
+import { FiSearch } from 'react-icons/fi';
+import { useUserCtx } from '@/contexts/user_context';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { IFinancialReportRequest } from '@/interfaces/report';
+import { FinancialReportTypesKeyReportSheetTypeMapping, ReportType } from '@/constants/report';
+import dayjs from 'dayjs';
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { RxCross2 } from 'react-icons/rx';
 import { IoIosArrowDown, IoMdCheckmark } from 'react-icons/io';
 import { PiCopySimpleBold } from 'react-icons/pi';
-import APIHandler from '@/lib/utils/api_handler';
-import { APIName } from '@/constants/api_connection';
-import { useUserCtx } from '@/contexts/user_context';
-import { ReportTypeToBaifaReportType } from '@/interfaces/report_type';
-import { ISUNFA_ROUTE } from '@/constants/url';
-import { useModalContext } from '@/contexts/modal_context';
-import { ToastType } from '@/interfaces/toastify';
-import { FinancialReportTypesKey } from '@/interfaces/report_type';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;
@@ -24,51 +28,30 @@ interface IEmbedCodeModal {
 const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
   const { t } = useTranslation(['common', 'report_401']);
   const { selectedCompany } = useUserCtx();
-  const { toastHandler } = useModalContext();
-  const balanceSheetRef = useRef<HTMLInputElement>(null);
-  const incomeStatementRef = useRef<HTMLInputElement>(null);
-  const cashFlowStatementRef = useRef<HTMLInputElement>(null);
+  // const balanceSheetRef = useRef<HTMLInputElement>(null);
+  // const incomeStatementRef = useRef<HTMLInputElement>(null);
+  // const cashFlowStatementRef = useRef<HTMLInputElement>(null);
 
   const [isBalanceSheetChecked, setIsBalanceSheetChecked] = useState(true);
   const [isIncomeStatementChecked, setIsIncomeStatementChecked] = useState(true);
   const [isCashFlowStatementChecked, setIsCashFlowStatementChecked] = useState(true);
+
+  const [selectedProjectName, setSelectedProjectName] =
+    useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
+  const [searchQuery, setSearchQuery] = useState('');
+
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
   const [step, setStep] = useState<number>(0);
-  const [generatedCode, setGeneratedCode] = useState<string>('');
+  // const [generatedIframeCode, setGeneratedIframeCode] = useState<string>('');
+    const [generatedIframeCode] = useState<string>('');
 
-  // // Info: (20241111 - Anna) Set the current date as default for report generation
-  // const todayDate = new Date().toISOString().split('T')[0];
-
-  // Info: (20241125 - Anna) 新增函數以決定日期範圍
-  const getDefaultDateRange = (reportType: FinancialReportTypesKey) => {
-    const today = new Date();
-    const todayDate = today.toISOString().split('T')[0];
-
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(today.getMonth() - 3);
-    const threeMonthsAgoDate = threeMonthsAgo.toISOString().split('T')[0];
-
-    if (reportType === FinancialReportTypesKey.balance_sheet) {
-      return { from: todayDate, to: todayDate };
-    } else if (
-      reportType === FinancialReportTypesKey.comprehensive_income_statement ||
-      reportType === FinancialReportTypesKey.cash_flow_statement
-    ) {
-      return { from: threeMonthsAgoDate, to: todayDate };
-    }
-    return { from: todayDate, to: todayDate };
-  };
-
-  // Info: (20241111 - Anna) 使用 APIHandler 設置 REPORT_GENERATE API 的觸發功能
   const {
-    trigger: generateFinancialReport, // Info: (20241111 - Anna) API 觸發方法
-    code: reportId, // Info: (20241111 - Anna) 生成的報告 ID
-    isLoading: isGenerating, // Info: (20241111 - Anna) 是否正在生成
-    success: generateSuccess, // Info: (20241111 - Anna) 生成是否成功
-    error: generateError, // Info: (20241111 - Anna) 錯誤信息
-  } = APIHandler(APIName.REPORT_GENERATE); // Info: (20241111 - Anna) 使用 APIHandler 設置 API
+    targetRef: projectMenuRef,
+    componentVisible: isProjectMenuOpen,
+    setComponentVisible: setIsProjectMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const {
     targetRef: languageMenuRef,
@@ -77,6 +60,25 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   } = useOuterClick<HTMLDivElement>(false);
 
   const selectedLanguage = ReportLanguagesMap[selectedReportLanguage];
+
+  // Info: (20241125 - Anna)
+  const {
+    trigger: generateFinancialReport,
+    // Info: (20240516 - Shirley) data: generatedResult,
+    // Info: (20240516 - Shirley) error: generatedError,
+    code: generatedCode,
+    isLoading: generatedLoading,
+    success: generatedSuccess,
+  } = APIHandler<IAccountResultStatus>(APIName.REPORT_GENERATE);
+
+  const projectMenuClickHandler = () => {
+    setIsProjectMenuOpen(!isProjectMenuOpen);
+  };
+
+  const projectOptionClickHandler = (projectName: keyof typeof DUMMY_PROJECTS_MAP) => {
+    setSelectedProjectName(projectName);
+    setIsProjectMenuOpen(false);
+  };
 
   const languageMenuClickHandler = () => {
     setIsLanguageMenuOpen(!isLanguageMenuOpen);
@@ -93,150 +95,269 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   };
 
   const copyClickHandler = () => {
-    navigator.clipboard
-      .writeText(generatedCode)
-      .then(() => {
-        // Info: (20241111 - Anna) 使用 toastHandler 顯示複製成功提示
-        toastHandler({
-          id: 'copy-success', // Info: (20241111 - Anna) 固定的唯一標識
-          type: ToastType.SUCCESS,
-          content: '複製成功！',
-          closeable: true,
-        });
-      })
-      .catch(() => {
-        // Info: (20241111 - Anna) 使用 toastHandler 顯示複製失敗提示
-        toastHandler({
-          id: 'copy-error', // Info: (20241111 - Anna) 固定的唯一標識
-          type: ToastType.ERROR,
-          content: '複製失敗！',
-          closeable: true,
-        });
-      });
+    navigator.clipboard.writeText(generatedIframeCode);
   };
 
-  // Info: (20241111 - Anna) 在 generateClickHandler 中設置生成報告所需的參數並使用 todayDate
-  // const generateClickHandler = async () => {
+  // Info: (20241125 - Anna)
+const [selectedReportType, setSelectedReportType] = useState<FinancialReportTypesKey>(
+  FinancialReportTypesKey.balance_sheet // 默認值設置為 'balance_sheet'
+);
+
+  // const generateClickHandler = () => {
   //   setStep(1);
 
-  //   const reportTypes = [
-  //     isBalanceSheetChecked ? 'balance' : null,
-  //     isIncomeStatementChecked ? 'comprehensive-income' : null,
-  //     isCashFlowStatementChecked ? 'cash-flow' : null,
-  //   ].filter(Boolean);
+  //   // TODO: (20240507 - Shirley) [Beta] dummy data
+  //   const balanceLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`;
+  //   const comprehensiveIncomeLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`;
+  //   const cashFlowLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`;
+  //   const allReportsLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports`;
 
-  //   // Info: (20241111 - Anna) 確保包含 selectedCompany 作為參數
-  //   if (selectedCompany) {
-  //     try {
-  //       await generateFinancialReport({
-  //         params: {
-  //           companyId: selectedCompany.id,
-  //         },
-  //         body: {
-  //           date: todayDate, // Info: (20241111 - Anna) 使用當前預設日期
-  //           language: selectedReportLanguage,
-  //           reportTypes,
-  //         },
-  //       });
-  //     } catch (error) {
-  //       // Deprecate: (20241118 - Anna) debug
-  //       // eslint-disable-next-line no-console
-  //       console.error('Error generating report:', generateError);
-  //     }
+  //   if (
+  //     balanceSheetRef.current?.checked &&
+  //     !incomeStatementRef.current?.checked &&
+  //     !cashFlowStatementRef.current?.checked
+  //   ) {
+  //     const code = `  <iframe
+  //   src="${balanceLink}"
+  //   title="balance-sheet"
+  //   width={600}
+  //   height={600}
+  //   />`;
+  //     setGeneratedIframeCode(code);
+  //   } else if (
+  //     !balanceSheetRef.current?.checked &&
+  //     incomeStatementRef.current?.checked &&
+  //     !cashFlowStatementRef.current?.checked
+  //   ) {
+  //     const code = `  <iframe
+  //   src="${comprehensiveIncomeLink}"
+  //   title="comprehensive-income-statement"
+  //   width={600}
+  //   height={600}
+  //   />`;
+  //     setGeneratedIframeCode(code);
+  //   } else if (
+  //     !balanceSheetRef.current?.checked &&
+  //     !incomeStatementRef.current?.checked &&
+  //     cashFlowStatementRef.current?.checked
+  //   ) {
+  //     const code = `  <iframe
+  //   src="${cashFlowLink}"
+  //   title="cash-flow-statement"
+  //   width={600}
+  //   height={600}
+  //   />`;
+  //     setGeneratedIframeCode(code);
   //   } else {
-  //     // Deprecate: (20241118 - Anna) debug
-  //     // eslint-disable-next-line no-console
-  //     console.warn('No company selected for report generation');
+  //     const code = `  <iframe
+  //   src="${allReportsLink}"
+  //   title="financial-reports"
+  //   width={600}
+  //   height={600}
+  //   />`;
+  //     setGeneratedIframeCode(code);
   //   }
   // };
 
-  // Info: (20241125 - Anna)
-  const generateClickHandler = async () => {
-    setStep(1);
+  useEffect(() => {
+    // Info: (20240509 - Shirley) 每次展開 menu 之前都要清空 searchQuery
+    if (isProjectMenuOpen) {
+      setSearchQuery('');
+    }
+  }, [isProjectMenuOpen]);
 
-    const reportTypes = [
-      isBalanceSheetChecked ? FinancialReportTypesKey.balance_sheet : null,
-      isIncomeStatementChecked ? FinancialReportTypesKey.comprehensive_income_statement : null,
-      isCashFlowStatementChecked ? FinancialReportTypesKey.cash_flow_statement : null,
-    ].filter(Boolean);
+  // Info: (20241125 - Anna)
+  useEffect(() => {
+    if (generatedCode && !generatedLoading) {
+      if (generatedSuccess) {
+        // messageModalDataHandler({
+        //   title: '',
+        //   subtitle: t('report_401:MY_REPORTS_SECTION.WE_RECEIVED_YOUR_APPLICATION'),
+        //   content: t('report_401:MY_REPORTS_SECTION.TAKE_MINUTES'),
+        //   submitBtnStr: t('common:COMMON.CLOSE'),
+        //   submitBtnFunction: () => {
+        //     messageModalVisibilityHandler();
+        //     // Info: (20240807 - Anna) 在成功生成報告後，將導航函數作為submitBtnFunction傳入⭢執行導航
+        //     navigateToMyReports();
+        //   },
+        //   messageType: MessageType.SUCCESS,
+        //   submitBtnVariant: 'secondaryBorderless',
+        //   submitBtnClassName: 'text-link-text-success hover:text-link-text-success-hover',
+        // });
+        // messageModalVisibilityHandler();
+
+        // Info: (20241125 - Anna) 成功生成報告
+        // eslint-disable-next-line no-console
+        console.log('Report generation succeeded:', {
+          code: generatedCode,
+          message: 'We received your application. The report will be ready in a few minutes.',
+        });
+      } else {
+        // messageModalDataHandler({
+        //   title: '',
+        //   subtitle: t('common:DASHBOARD.FAILED'),
+        //   content: t('common:DASHBOARD.WE_CAN_T_GENERATE_THE_REPORT'),
+        //   submitBtnStr: t('common:DASHBOARD.TRY_AGAIN'),
+        //   submitBtnFunction: () => {
+        //     messageModalVisibilityHandler();
+        //   },
+        //   messageType: MessageType.ERROR,
+        //   submitBtnVariant: 'tertiaryBorderless',
+        //   submitBtnIcon: <GrPowerReset size={16} />,
+        // });
+        // messageModalVisibilityHandler();
+
+        // 報告生成失敗
+        // eslint-disable-next-line no-console
+        console.error('Report generation failed:', {
+          code: generatedCode,
+          error: "We can't generate the report. Please try again.",
+        });
+      }
+    }
+  }, [generatedSuccess, generatedLoading]);
+
+  // Info: (20241125 - Anna)
+  const generateReportHandler = async () => {
+    // Info: (20241125 - Anna) 定義日期範圍邏輯
+    const getPeriod = () => {
+      const today = dayjs().startOf('day'); // Info: (20241125 - Anna)獲取今天日期
+      if (isBalanceSheetChecked) {
+        return {
+          startTimeStamp: today.unix(), // Info: (20241125 - Anna) 今天
+          endTimeStamp: today.unix(), // Info: (20241125 - Anna) 今天
+        };
+      } else if (isIncomeStatementChecked || isCashFlowStatementChecked) {
+        return {
+          startTimeStamp: today.subtract(3, 'month').unix(), // Info: (20241125 - Anna) 三個月前
+          endTimeStamp: today.unix(), // Info: (20241125 - Anna) 今天
+        };
+      }
+      return null; // Info: (20241125 - Anna) 如果沒有勾選任何選項
+    };
+
+    const period = getPeriod(); // 獲取日期範圍
+
+    if (!period) {
+      // eslint-disable-next-line no-console
+      console.error('No report type selected.');
+      return;
+    }
+
+    const body: IFinancialReportRequest = {
+      projectId: DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id,
+      type: FinancialReportTypesKeyReportSheetTypeMapping[selectedReportType],
+      reportLanguage: selectedReportLanguage,
+      from: period.startTimeStamp,
+      to: period.endTimeStamp,
+      reportType: ReportType.FINANCIAL,
+    };
 
     if (selectedCompany) {
-      const { from, to } = getDefaultDateRange(
-        isBalanceSheetChecked
-          ? FinancialReportTypesKey.balance_sheet
-          : isIncomeStatementChecked
-            ? FinancialReportTypesKey.comprehensive_income_statement
-            : FinancialReportTypesKey.cash_flow_statement
-      );
-
-      try {
-        await generateFinancialReport({
-          params: {
-            companyId: selectedCompany.id,
-          },
-          body: {
-            from,
-            to,
-            language: selectedReportLanguage,
-            reportTypes,
-          },
-        });
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Error generating report:', generateError);
-      }
-    } else {
-      // eslint-disable-next-line no-console
-      console.warn('No company selected for report generation');
+      generateFinancialReport({
+        params: {
+          companyId: selectedCompany.id,
+        },
+        body,
+      });
     }
   };
 
-  // Info: (20241111 - Anna) 使用 useEffect 監聽生成成功，並更新 iframe 嵌入代碼
-  useEffect(() => {
-    if (generateSuccess && reportId) {
-      //   const balanceLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=balance`;
-      //   const comprehensiveIncomeLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=comprehensive-income`;
-      //   const cashFlowLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=cash-flow`;
+  const displayedProjectMenu = (
+    <div ref={projectMenuRef} className="relative flex w-full">
+      <div
+        className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-2 ${
+          isProjectMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
+        }`}
+      >
+        <div className="flex items-center justify-center space-x-4 self-center pl-2.5 text-center">
+          <div
+            className="text-center text-input-text-input-filled"
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            {t('common:COMMON.PROJECT')}
+          </div>
+          <div
+            className={`h-11 w-px ${
+              isProjectMenuOpen ? 'bg-input-stroke-selected' : 'bg-dropdown-stroke-menu'
+            }`}
+          />
+        </div>
 
-      // Info: (20241111 - Anna) 使用 ISUNFA_ROUTE 和 ReportTypeToBaifaReportType 的新鏈接格式
-      const balanceLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType.balance_sheet}`;
-      const comprehensiveIncomeLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType.comprehensive_income_statement}`;
-      const cashFlowLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType.cash_flow_statement}`;
+        <button
+          type="button"
+          className={`flex w-full items-center justify-between bg-input-surface-input-background px-3 py-2.5`}
+          onClick={projectMenuClickHandler}
+        >
+          <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
+            {selectedProjectName === 'Overall' ? t('common:COMMON.OVERALL') : selectedProjectName}
+          </div>
 
-      let code = '';
-
-      if (
-        balanceSheetRef.current?.checked &&
-        !incomeStatementRef.current?.checked &&
-        !cashFlowStatementRef.current?.checked
-      ) {
-        code = `<iframe src="${balanceLink}" title="balance-sheet" width={600} height={600} />`;
-      } else if (
-        !balanceSheetRef.current?.checked &&
-        incomeStatementRef.current?.checked &&
-        !cashFlowStatementRef.current?.checked
-      ) {
-        code = `<iframe src="${comprehensiveIncomeLink}" title="comprehensive-income-statement" width={600} height={600} />`;
-      } else if (
-        !balanceSheetRef.current?.checked &&
-        !incomeStatementRef.current?.checked &&
-        cashFlowStatementRef.current?.checked
-      ) {
-        code = `<iframe src="${cashFlowLink}" title="cash-flow-statement" width={600} height={600} />`;
-      } else {
-        // Info: (20241111 - Anna)  如果選擇多個或全部報告，生成多個 <iframe> 標籤
-        code = `
-      <div>
-        ${balanceSheetRef.current?.checked ? `<iframe src="${balanceLink}" title="balance-sheet" width={600} height={600}></iframe>` : ''}
-        ${incomeStatementRef.current?.checked ? `<iframe src="${comprehensiveIncomeLink}" title="comprehensive-income-statement" width={600} height={600}></iframe>` : ''}
-        ${cashFlowStatementRef.current?.checked ? `<iframe src="${cashFlowLink}" title="cash-flow-statement" width={600} height={600}></iframe>` : ''}
+          <div className="my-auto flex flex-col justify-center">
+            <IoIosArrowDown size={20} className="text-icon-surface-single-color-primary" />
+          </div>
+        </button>
       </div>
-    `;
-      }
 
-      setGeneratedCode(code);
-    }
-  }, [generateSuccess, reportId]);
+      {/* Info: (20240425 - Shirley) Project Menu */}
+      <div
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+          isProjectMenuOpen
+            ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
+            : 'grid-rows-0 border-transparent'
+        }`}
+      >
+        <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
+          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal shadow-sm">
+            <input
+              type="text"
+              placeholder={t('common:COMMON.SEARCH')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border-none text-input-text-input-filled focus:outline-none"
+            />
+            <FiSearch size={20} className="text-icon-surface-single-color-primary" />
+          </div>
+          {/* Info: (20240830 - Anna) 為了解決Unexpected newline before '}'錯誤，請prettier不要格式化 */}
+          {/* prettier-ignore */}
+          <div className="mt-2 max-h-60 w-full overflow-y-auto">
+            {Object.keys(DUMMY_PROJECTS_MAP)
+              .filter((project) =>
+                DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase()))
+              .map((project) => (
+                <li
+                  key={project}
+                  onClick={() =>
+                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)}
+                  className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
+                >
+                  <div className="flex cursor-pointer items-center gap-2">
+                    {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].icon ? (
+                      <div className="h-6 w-6">
+                        <Image
+                          src={DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].icon}
+                          alt={project}
+                          width={20}
+                          height={20}
+                        />
+                      </div>
+                    ) : null}
+                    <div className="text-base font-medium leading-6 tracking-normal">
+                      {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
+                      'Overall'
+                        ? t('common:COMMON.OVERALL')
+                        : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
+                    </div>
+                  </div>
+                </li>
+              ))}
+          </div>
+        </ul>
+      </div>
+    </div>
+  );
 
   const displayedLanguageMenu = (
     <div ref={languageMenuRef} className="relative flex w-full">
@@ -290,16 +411,25 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         <div className="flex flex-col max-md:max-w-full">
           <div className="flex flex-col justify-end text-sm leading-5 tracking-normal max-md:max-w-full">
             <div className="flex flex-col justify-center max-md:max-w-full">
-              <div className="flex flex-col gap-3 max-md:max-w-full"></div>
+              <div className="flex flex-col gap-3 max-md:max-w-full">
+                <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
+                  {t('common:COMMON.PROJECT')}
+                </div>
+
+                {displayedProjectMenu}
+              </div>
             </div>
 
-            <div className="mt-26px font-semibold text-input-text-input-filled max-md:max-w-full">
+            <div className="mt-10 font-semibold text-input-text-input-filled max-md:max-w-full">
               {t('report_401:EMBED_CODE_MODAL.WHAT_TYPE_OF_REPORT')}
             </div>
             <div className="mt-4 flex flex-wrap justify-between gap-1 text-input-text-input-filled sm:gap-2">
               <div
                 className="flex gap-2 py-2.5"
-                onClick={() => setIsBalanceSheetChecked(!isBalanceSheetChecked)}
+                onClick={() => {
+                  setIsBalanceSheetChecked(!isBalanceSheetChecked);
+                  setSelectedReportType(FinancialReportTypesKey.balance_sheet); // Info: (20241125 - Anna) 更新選中的報表類型
+                }}
               >
                 <input
                   type="checkbox"
@@ -311,7 +441,10 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               </div>
               <div
                 className="flex gap-2 py-2.5"
-                onClick={() => setIsIncomeStatementChecked(!isIncomeStatementChecked)}
+                onClick={() => {
+                  setIsIncomeStatementChecked(!isIncomeStatementChecked);
+                  setSelectedReportType(FinancialReportTypesKey.comprehensive_income_statement); // Info: (20241125 - Anna) 更新選中的報表類型
+                }}
               >
                 <input
                   type="checkbox"
@@ -323,7 +456,10 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               </div>
               <div
                 className="flex gap-2 py-2.5"
-                onClick={() => setIsCashFlowStatementChecked(!isCashFlowStatementChecked)}
+                onClick={() => {
+                  setIsCashFlowStatementChecked(!isCashFlowStatementChecked);
+                  setSelectedReportType(FinancialReportTypesKey.cash_flow_statement); // Info: (20241125 - Anna) 更新選中的報表類型
+                }}
               >
                 <input
                   type="checkbox"
@@ -352,13 +488,12 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           </Button>
           <Button
             disabled={
-              (!isBalanceSheetChecked &&
-                !isIncomeStatementChecked &&
-                !isCashFlowStatementChecked) ||
-              isGenerating // Info: (20241111 - Anna) 當 `isGenerating` 為 `true` 時禁用按鈕
+              !isBalanceSheetChecked && !isIncomeStatementChecked && !isCashFlowStatementChecked
             }
             variant={'tertiary'}
-            onClick={generateClickHandler}
+            // Info: (20241125 - Anna)
+            // onClick={generateClickHandler}
+            onClick={generateReportHandler}
           >
             {t('report_401:EMBED_CODE_MODAL.GENERATE')}
           </Button>
@@ -368,11 +503,55 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   );
 
   const displayedEmbedCode = (
+    // <>
+    //   <div className="flex w-full flex-col justify-center px-4 py-2.5">
+    //     <div className="flex flex-col">
+    //       <div className="w-300px justify-center self-center overflow-x-auto overflow-y-auto text-wrap border border-solid border-stroke-neutral-quaternary bg-surface-neutral-main-background px-3 py-4 text-sm leading-5 tracking-normal text-neutral-800 md:w-full">
+    //         {generatedIframeCode}
+    //       </div>
+
+    //       <div className="mt-3 flex flex-col justify-center space-y-3 text-base leading-6 tracking-normal text-input-text-input-filled max-md:max-w-full md:mt-8">
+    //         <div className="flex space-x-3 text-input-text-primary">
+    //           <Image src={'/icons/rocket.svg'} width={20} height={20} alt="rocket_icon" />
+    //           <p className="text-input-text-primary">
+    //             {t(
+    //               `project:PROJECT.${DUMMY_PROJECTS_MAP[selectedProjectName].name.toUpperCase().replace(/ /g, '_')}`
+    //             )}
+    //           </p>
+    //         </div>
+    //         <ol className="max-w-md list-disc space-y-2 pl-5 text-base tracking-normal md:max-w-xl lg:max-w-2xl lg:text-base">
+    //           {isBalanceSheetChecked && <li>{t('reports:REPORTS.BALANCE_SHEET')}</li>}
+    //           {isIncomeStatementChecked && (
+    //             <li>{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
+    //           )}
+    //           <li>{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
+    //           {isCashFlowStatementChecked && <li>{t('common:PLUGIN.CASH_FLOW_STATEMENT')}</li>}
+    //           {!isBalanceSheetChecked &&
+    //             !isIncomeStatementChecked &&
+    //             !isCashFlowStatementChecked && (
+    //               <>
+    //                 <li>{t('reports:REPORTS.BALANCE_SHEET')}</li>
+    //                 <li>{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
+    //                 <li>{t('common:PLUGIN.CASH_FLOW_STATEMENT')}</li>
+    //               </>
+    //             )}
+    //         </ol>
+    //       </div>
+    //     </div>
+    //   </div>
+
+    //   <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
+    //     <Button variant={'tertiary'} onClick={copyClickHandler}>
+    //       <PiCopySimple size={16} />
+    //       <p>{t('report_401:EMBED_CODE_MODAL.COPY')}</p>
+    //     </Button>
+    //   </div>
+    // </>
     <>
       <div className="flex w-full flex-col justify-center px-4 py-2.5">
         <div className="flex flex-col">
           <div className="w-300px justify-center self-center overflow-x-auto overflow-y-auto text-wrap border border-solid border-stroke-neutral-quaternary bg-surface-neutral-main-background px-3 py-4 text-sm leading-5 tracking-normal text-neutral-800 md:w-full">
-            {generatedCode}
+            {generatedIframeCode}
           </div>
 
           <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
@@ -441,7 +620,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
       <div className="relative mx-auto flex flex-col items-center rounded-md bg-card-surface-primary p-6 shadow-lg shadow-black/80 sm:max-w-lg sm:px-3">
         <div className="flex w-full gap-2.5 pl-10 pr-5 max-md:max-w-full max-md:flex-wrap max-md:pl-5">
-          <div className="flex flex-1 flex-col items-center justify-center px-20 text-center max-md:px-5">
+          <div className="flex flex-1 flex-col items-center justify-center px-20 pb-10 text-center max-md:px-5">
             <div className="justify-center text-xl font-bold leading-8 text-input-text-input-filled">
               {t('report_401:EMBED_CODE_MODAL.EMBED_CODE')}
             </div>
