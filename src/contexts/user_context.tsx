@@ -55,6 +55,18 @@ interface UserContextType {
     tag: COMPANY_TAG;
   }) => Promise<ICompanyAndRole | null>;
   deleteCompany: (companyId: number) => Promise<ICompany | null>;
+  deleteAccount: () => Promise<{
+    success: boolean;
+    data: IUser | null;
+    code: string;
+    error: Error | null;
+  }>;
+  cancelDeleteAccount: () => Promise<{
+    success: boolean;
+    data: IUser | null;
+    code: string;
+    error: Error | null;
+  }>;
 
   errorCode: string | null;
   toggleIsSignInError: () => void;
@@ -88,6 +100,9 @@ export const UserContext = createContext<UserContextType>({
   selectCompany: async () => null,
   updateCompany: async () => null,
   deleteCompany: async () => null,
+  deleteAccount: async () => Promise.resolve({ success: false, data: null, code: '', error: null }),
+  cancelDeleteAccount: async () =>
+    Promise.resolve({ success: false, data: null, code: '', error: null }),
 
   errorCode: null,
   toggleIsSignInError: () => {},
@@ -147,6 +162,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: updateCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.COMPANY_UPDATE);
   // Info: (20241115 - Liz) 刪除公司 API
   const { trigger: deleteCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_DELETE);
+  const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
+  const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -660,6 +677,28 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const deleteAccount = async () => {
+    const res = await deleteAccountAPI({
+      params: { userId: userAuthRef.current?.id },
+    });
+
+    if (res.success && res.data) {
+      setUserAuth(res.data);
+    }
+    return res;
+  };
+
+  const cancelDeleteAccount = async () => {
+    const res = await cancelDeleteAccountAPI({
+      params: { userId: userAuthRef.current?.id },
+    });
+
+    if (res.success && res.data) {
+      setUserAuth(res.data);
+    }
+    return res;
+  };
+
   const throttledGetStatusInfo = useCallback(
     throttle(() => {
       getStatusInfo();
@@ -748,6 +787,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       selectCompany,
       updateCompany,
       deleteCompany,
+      deleteAccount,
+      cancelDeleteAccount,
       selectedCompany: selectedCompanyRef.current,
       errorCode: errorCodeRef.current,
       toggleIsSignInError,

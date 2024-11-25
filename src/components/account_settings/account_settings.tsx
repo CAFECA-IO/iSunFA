@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import APIHandler from '@/lib/utils/api_handler';
-import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { MessageType } from '@/interfaces/message_modal';
@@ -16,27 +14,23 @@ interface AccountSettingsProps {}
 
 const AccountSettings: React.FC<AccountSettingsProps> = () => {
   const { t } = useTranslation(['setting', 'common']);
-  const { userAuth } = useUserCtx();
+  const { userAuth, deleteAccount, cancelDeleteAccount } = useUserCtx();
   const [user, setUser] = useState<IUser | null>(userAuth);
-  const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
-  const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
 
   const procedureOfCancel = async () => {
     if (!user) return;
     try {
-      const {
-        success,
-        data: userData,
-        code,
-      } = await cancelDeleteAccountAPI({
-        params: {
-          userId: user.id,
-        },
-      });
+      const { success, data: userData, code } = await cancelDeleteAccount();
       if (success && userData) {
         setUser(userData);
+        toastHandler({
+          id: ToastId.USER_DELETE_CANCEL,
+          type: ToastType.SUCCESS,
+          content: t('setting:USER.DELETE_CANCEL_SUCCESS'),
+          closeable: true,
+        });
       } else throw new Error(code);
     } catch (error) {
       toastHandler({
@@ -52,37 +46,29 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
     if (!user) return;
     try {
       messageModalVisibilityHandler();
-      const {
-        success,
-        data: userData,
-        code,
-      } = await deleteAccountAPI({
-        params: {
-          userId: user.id,
-        },
-      });
+      const { success, data: userData, code } = await deleteAccount();
       if (success && userData) {
         setUser(userData);
         const calculateRemainDays = (deletedAt: number) => {
           const now = new Date().getTime();
-          const days = 3 - Math.floor(((now - deletedAt * 1000) / 24) * 60 * 60 * 1000);
+          const days = 3 - Math.floor((now - deletedAt * 1000) / 24 / 60 / 60 / 1000);
           return days;
         };
         const warningContent = (
           <div className="flex justify-between">
             <div className="flex flex-col items-start gap-2">
               <p className="text-text-state-error">
-                {t('setting:USER.DELETE_WARNING', {
+                {t('layout:USER.DELETE_WARNING', {
                   days: calculateRemainDays(userData.deletedAt),
                 })}
               </p>
-              <p>{t('setting:USER.DELETE_HINT')}</p>
+              <p>{t('layout:USER.DELETE_HINT')}</p>
             </div>
             <Link
               href={ISUNFA_ROUTE.GENERAL_SETTING}
               className="text-sm font-bold text-link-text-warning"
             >
-              {t('setting:USER.SETTING')}
+              {t('layout:USER.SETTING')}
             </Link>
           </div>
         );
@@ -101,6 +87,19 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
         closeable: true,
       });
     }
+  };
+
+  const cancelDeleteClickHandler = () => {
+    if (!user) return;
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: t('setting:USER.DELETE_CANCEL'),
+      content: t('setting:USER.DELETE_CANCEL_CONFIRM'),
+      backBtnStr: t('common:COMMON.CANCEL'),
+      submitBtnStr: t('setting:USER.DELETE_CANCEL_BTN'),
+      submitBtnFunction: procedureOfCancel,
+    });
+    messageModalVisibilityHandler();
   };
 
   const deleteAccountClickHandler = () => {
@@ -143,7 +142,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
           type="button"
           className="group inline-flex items-center justify-start whitespace-nowrap rounded-xs border-none font-medium text-button-text-primary hover:text-button-text-primary-hover focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:text-button-text-disable disabled:opacity-100"
         >
-          <p className="flex cursor-pointer gap-2" onClick={procedureOfCancel}>
+          <p className="flex cursor-pointer gap-2" onClick={cancelDeleteClickHandler}>
             <Image src="/icons/user-x-02.svg" width={16} height={16} alt="notice_icon" />
             <span>{t('setting:USER.DELETE_CANCEL')}</span>
           </p>
