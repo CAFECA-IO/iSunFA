@@ -39,7 +39,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const params = { companyId: selectedCompany?.id };
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { trigger: updateCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_PUT_V2);
+  const { trigger: updateCertificateAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
   const { trigger: deleteCertificatesAPI } = APIHandler<void>(APIName.CERTIFICATE_DELETE_V2);
 
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
@@ -345,8 +345,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       try {
         // Info: (20241025 - tzuhan) @Murky, 這邊跟目前後端的接口不一致，需要調整的話再跟我說
         const { success, data: updatedCertificate } = await updateCertificateAPI({
-          params: { companyId, certificateId: certificate.id },
-          body: certificate,
+          params: { companyId, invoiceId: certificate.invoice.id },
+          body: certificate.invoice,
         });
         if (success && updatedCertificate) {
           const updatedData = {

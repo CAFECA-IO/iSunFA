@@ -8,12 +8,11 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import { FiHome } from 'react-icons/fi';
 import I18n from '@/components/i18n/i18n';
-import { signIn } from 'next-auth/react';
 import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 // ToDo: (20241119 - Liz) Beta version 不支援 Apple 登入
-const IS_APPLE_LOGIN_ENABLED = false;
+const IS_APPLE_LOGIN_ENABLED = true;
 
 const Loader = () => {
   return (
@@ -30,6 +29,13 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
 
   const googleAuthSignIn = () => {
     authenticateUser(Provider.GOOGLE, {
+      invitation,
+      action,
+    });
+  };
+
+  const appleAuthSignIn = () => {
+    authenticateUser(Provider.APPLE, {
       invitation,
       action,
     });
@@ -96,9 +102,9 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
             {IS_APPLE_LOGIN_ENABLED && (
               <button
                 type="button"
-                onClick={() => signIn('apple')}
+                onClick={appleAuthSignIn}
                 className="flex items-center justify-center gap-15px rounded-sm bg-black p-15px"
-                disabled
+                disabled={!IS_APPLE_LOGIN_ENABLED}
               >
                 <Image src="/icons/apple_logo.svg" alt="apple_logo" width="24" height="24"></Image>
                 <p className="text-xl font-medium text-white">

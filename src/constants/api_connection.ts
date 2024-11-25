@@ -44,6 +44,7 @@ export enum APIName {
   CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
   CERTIFICATE_PUT_V2 = 'CERTIFICATE_PUT_V2',
+  INVOICE_PUT_V2 = 'INVOICE_PUT_V2',
   CERTIFICATE_DELETE_V2 = 'CERTIFICATE_DELETE_V2',
   CERTIFICATE_DELETE__MULTIPLE_V2 = 'CERTIFICATE_DELETE__MULTIPLE_V2',
   COUNTERPARTY_LIST = 'COUNTERPARTY_LIST',
@@ -171,6 +172,7 @@ export enum APIPath {
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
+  INVOICE_PUT_V2 = `${apiPrefixV2}/company/:companyId/invoice/:invoiceId`,
   CERTIFICATE_DELETE_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_DELETE__MULTIPLE_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   COUNTERPARTY_LIST = `${apiPrefixV2}/company/:companyId/counterparty`,
@@ -799,6 +801,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CERTIFICATE_DELETE_V2,
     method: HttpMethod.DELETE,
     path: APIPath.CERTIFICATE_PUT_V2,
+  }),
+  [APIName.INVOICE_PUT_V2]: createConfig({
+    name: APIName.INVOICE_PUT_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.INVOICE_PUT_V2,
   }),
   // Info: (20241028 - Tzuhan) @Murky, 需要新增這個 API 用來在 certificate list 一次性刪除多張certificate
   [APIName.CERTIFICATE_DELETE__MULTIPLE_V2]: createConfig({

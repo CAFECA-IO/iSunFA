@@ -47,6 +47,7 @@ import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
 import { IAIResultVoucher } from '@/interfaces/voucher';
+import { AI_TYPE } from '@/constants/aich';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -56,6 +57,7 @@ import { IAIResultVoucher } from '@/interfaces/voucher';
 type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
 
 const dummyAIResult: IAIResultVoucher = {
+  aiType: AI_TYPE.VOUCHER,
   voucherDate: 0,
   type: '',
   note: '',

@@ -31,10 +31,10 @@ export enum CounterpartyType {
 export const PUBLIC_COUNTER_PARTY: ICounterPartyEntity = {
   id: 555,
   companyId: 555,
-  name: 'N/A',
-  taxId: 'N/A',
+  name: 'DEFAULT_COUNTER_PARTY',
+  taxId: '00000001',
   type: CounterpartyType.BOTH,
-  note: 'N/A',
+  note: 'DEFAULT_COUNTER_PARTY',
   createdAt: 0,
   updatedAt: 0,
   deletedAt: null,

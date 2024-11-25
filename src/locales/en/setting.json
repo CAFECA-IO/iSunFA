@@ -162,7 +162,10 @@
     "UPDATE_SUCCESS": "Your information has been successfully updated.",
     "UPDATE_ERROR": "There was an error saving the data, please resubmit your request.",
     "DELETE_ERROR": "There was an error deleting the data, please try again.",
-    "DELETE_CANCEL": "Cancel the deletion process"
+    "DELETE_CANCEL": "Cancel the deletion process",
+    "DELETE_CANCEL_CONFIRM": "Are you sure you want to cancel the deletion process?",
+    "DELETE_CANCEL_BTN": "Yes, Cancel the process",
+    "DELETE_CANCEL_SUCCESS": "The deletion process has been canceled."
   },
   "ACCOUNT": {
     "REMOVE": "Remove this account",
