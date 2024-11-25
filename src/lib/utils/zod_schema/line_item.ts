@@ -30,3 +30,11 @@ export const IReverseItemValidator = z.object({
   debit: z.boolean(),
   lineItemBeReversedId: z.number(),
 });
+
+export const lineItemAiSchema = z.object({
+  lineItemIndex: z.string(),
+  account: z.string(),
+  description: z.string(),
+  debit: z.boolean(),
+  amount: z.number(),
+});

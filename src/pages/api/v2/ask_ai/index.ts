@@ -10,15 +10,25 @@ import { IAskResult } from '@/interfaces/ask_ai';
 import { AI_TYPE } from '@/constants/aich';
 import { fetchResultIdFromAICH } from '@/lib/utils/aich';
 import loggerBack from '@/lib/utils/logger_back';
+import { listFileByIdList } from '@/lib/utils/repo/file.repo';
+import { readFile } from 'fs/promises';
+import { decryptImageFile, parseFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
+import { bufferToBlob } from '@/lib/utils/parse_image_form';
 
-const handleCertificateRequest = async (key: AI_TYPE, targetId: number) => {
+const handleCertificateRequest = async (
+  companyId: number,
+  key: AI_TYPE,
+  targetIdList: number[]
+) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAskResult | null = null;
 
-  const certificate = { fileId: targetId };
+  const certificate = { fileId: targetIdList[0], companyId };
+  const formdata = new FormData();
+  formdata.append('certificate', JSON.stringify(certificate));
 
   try {
-    const resultId = await fetchResultIdFromAICH(key, certificate);
+    const resultId = await fetchResultIdFromAICH(key, formdata);
 
     statusMessage = STATUS_MESSAGE.CREATED;
     payload = {
@@ -34,14 +44,34 @@ const handleCertificateRequest = async (key: AI_TYPE, targetId: number) => {
   return { statusMessage, payload };
 };
 
-const handleVoucherRequest = async (key: AI_TYPE, targetId: number) => {
+const handleVoucherRequest = async (companyId: number, key: AI_TYPE, targetIdList: number[]) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAskResult | null = null;
 
-  const voucher = { certificateId: targetId };
+  const fileList = await listFileByIdList(targetIdList);
+
+  const fileBlobList = await Promise.all(
+    fileList.map(async (file) => {
+      const filePath = parseFilePathWithBaseUrlPlaceholder(file.url);
+      const fileBuffer = await readFile(filePath);
+      const decryptFileBuffer = await decryptImageFile({
+        imageBuffer: fileBuffer,
+        file,
+        companyId,
+      });
+      const decryptFileBlob = bufferToBlob(decryptFileBuffer, file.mimeType);
+      return decryptFileBlob;
+    })
+  );
+
+  const formData = new FormData();
+  formData.append('image', fileBlobList[0]);
+  // fileBlobList.forEach((fileBlob) => {
+  //   formData.append('image', fileBlob);
+  // });
 
   try {
-    const resultId = await fetchResultIdFromAICH(key, voucher);
+    const resultId = await fetchResultIdFromAICH(key, formData);
 
     statusMessage = STATUS_MESSAGE.CREATED;
     payload = {
@@ -59,8 +89,9 @@ const handleVoucherRequest = async (key: AI_TYPE, targetId: number) => {
 
 const postHandlers: {
   [key: string]: (
+    companyId: number,
     key: AI_TYPE,
-    targetId: number
+    targetIdList: number[]
   ) => Promise<{ statusMessage: string; payload: IAskResult | null }>;
 } = {
   certificate: handleCertificateRequest,
@@ -70,15 +101,17 @@ const postHandlers: {
 export const handlePostRequest: IHandleRequest<APIName.ASK_AI_V2, IAskResult | null> = async ({
   query,
   body,
+  session,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAskResult | null = null;
 
   const { reason } = query;
-  const { targetId } = body;
+  const { targetIdList } = body;
+  const { companyId } = session;
 
   const postHandler = postHandlers[reason];
-  ({ statusMessage, payload } = await postHandler(reason, targetId));
+  ({ statusMessage, payload } = await postHandler(companyId, reason, targetIdList));
 
   return { statusMessage, payload };
 };

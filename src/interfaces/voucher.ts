@@ -29,6 +29,7 @@ import type { IAssetDetails, IAssetEntity } from '@/interfaces/asset';
 import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
 import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import type { IUserEntity } from '@/interfaces/user';
+import { AI_TYPE } from '@/constants/aich';
 
 export interface IVoucherMetaData {
   date: number;
@@ -562,6 +563,7 @@ export type IGetManyVoucherResponseButOne = PrismaVoucher & {
 };
 
 export interface IAIResultVoucher {
+  aiType: AI_TYPE;
   voucherDate: number;
   type: string;
   note: string;

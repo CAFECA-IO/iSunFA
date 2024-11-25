@@ -117,6 +117,23 @@ export async function findFileById(fileId: number): Promise<File | null> {
   return file;
 }
 
+export async function listFileByIdList(fileIdList: number[]): Promise<File[]> {
+  let files: File[] = [];
+
+  try {
+    files = await prisma.file.findMany({
+      where: {
+        id: {
+          in: fileIdList,
+        },
+      },
+    });
+  } catch (error) {
+    loggerBack.error(error, 'Error happened in listFileByIdList in file.repo.ts');
+  }
+  return files;
+}
+
 export async function findFileInDBByName(name: string): Promise<File | null> {
   let file: File | null = null;
 
