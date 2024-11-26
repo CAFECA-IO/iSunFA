@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { NewsType } from '@/constants/news';
-import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
+import {
+  zodStringToBoolean,
+  zodStringToNumber,
+  zodStringToNumberWithDefault,
+} from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 
@@ -9,7 +13,7 @@ const newsNullSchema = z.union([z.object({}), z.string()]);
 
 // Info: (20241015 - Jacky) News list schema
 const newsListQuerySchema = z.object({
-  simple: z.boolean().optional(),
+  simple: zodStringToBoolean.optional(),
   type: z.nativeEnum(NewsType).optional(),
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
@@ -33,6 +37,7 @@ const newsGetByIdQuerySchema = z.object({
 
 const newsOutputSchema = z.object({
   id: z.number().int(),
+  imageId: z.number().int(),
   type: z.nativeEnum(NewsType),
   title: z.string(),
   content: z.string(),
@@ -41,13 +46,14 @@ const newsOutputSchema = z.object({
 });
 
 const paginatedNewsOutputSchema = paginatedDataSchema(newsOutputSchema);
+const arrayNewsOutputSchema = z.array(newsOutputSchema);
 
 export const newsListSchema = {
   input: {
     querySchema: newsListQuerySchema,
     bodySchema: newsNullSchema,
   },
-  outputSchema: paginatedNewsOutputSchema,
+  outputSchema: z.union([paginatedNewsOutputSchema, arrayNewsOutputSchema]),
   frontend: newsNullSchema,
 };
 

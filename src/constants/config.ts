@@ -53,6 +53,8 @@ export const AICH_URI = process.env.AICH_URI as string;
 
 export const DEFAULT_PAGE_START_AT = 1;
 export const DEFAULT_PAGE_LIMIT = 10;
+export const DEFAULT_MAX_PAGE_LIMIT = 2147483647;
+
 export const DEFAULT_PAGE_OFFSET = 0;
 export const DEFAULT_END_DATE = 2147483647;
 
@@ -92,7 +94,7 @@ export const USER_ICON_BACKGROUND_COLORS = [
 
 export const FREE_COMPANY_ID = 1001;
 export const NON_EXISTING_COMPANY_ID = -1;
-export const DOMAIN = 'https://isunfa.com';
+// export const DOMAIN = 'https://isunfa.com'; // Info: (20241126 - tzuhan) 我們會部署到多個網站 domain 不一定是這個也可能是 localhost 或是 https://isunfa.tw
 export const NON_EXISTING_REPORT_ID = -1;
 export const BUFFER_AMOUNT = 0.01; // Info: (20240806 - Shirley) 小於0.01來避免浮點數精度問題
 export const IV_LENGTH = 12;
