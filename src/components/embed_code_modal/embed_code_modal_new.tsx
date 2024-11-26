@@ -188,10 +188,23 @@ const [selectedReportType, setSelectedReportType] = useState<FinancialReportType
 
         // Info: (20241125 - Anna) 成功生成報告
         // eslint-disable-next-line no-console
-        console.log('Report generation succeeded:', {
-          code: generatedCode,
-          message: 'We received your application. The report will be ready in a few minutes.',
-        });
+      console.log('Report generation succeeded:', {
+        code: generatedCode,
+        message: 'We received your application. The report will be ready in a few minutes.',
+        request: {
+          params: {
+            companyId: selectedCompany?.id,
+          },
+          body: {
+            projectId: DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id,
+            type: FinancialReportTypesKeyReportSheetTypeMapping[selectedReportType],
+            reportLanguage: selectedReportLanguage,
+            from: dayjs().unix(), // 示例：可以調整為您實際的日期範圍
+            to: dayjs().unix(), // 示例：可以調整為您實際的日期範圍
+            reportType: ReportType.FINANCIAL,
+          },
+        },
+      });
       } else {
         // messageModalDataHandler({
         //   title: '',

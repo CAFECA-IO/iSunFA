@@ -980,7 +980,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           curDate={curDate}
           preDate={preDate}
         >
-          456
           {ItemSummary}
           {ItemDetail}
           {ProportionalTable}
@@ -990,7 +989,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       </div>
       {/*  Info: (20241125 - Tzuhan) 預覽區域 */}
       <div className="block print:hidden">
-        123
         {ItemSummary}
         <hr className="break-before-page" />
         {ItemDetail}
