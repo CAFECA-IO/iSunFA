@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { DOMAIN } from '@/constants/config';
 import { Button } from '@/components/button/button';
 import { useQRCode } from 'next-qrcode';
 import { IoCloseOutline } from 'react-icons/io5';
@@ -22,11 +21,12 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
   const { t } = useTranslation(['certificate', 'common']);
   const { Canvas } = useQRCode();
   const { success, data: room, code } = APIHandler<IRoom>(APIName.ROOM_ADD, {}, true);
+  const domain = process.env.DOMAIN;
 
   const displayedQRCode = success && room && (
     <div className="mx-20 my-10 flex flex-col items-center">
       <Canvas
-        text={`${DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
+        text={`${domain}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
         options={{
           errorCorrectionLevel: 'M',
           margin: 3,
@@ -40,10 +40,10 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
       />
       <a
         className="mt-2 text-center text-xs text-card-text-sub"
-        href={`${DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
+        href={`${domain}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
         target="_blank"
         rel="noreferrer"
-      >{`${DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}</a>
+      >{`${domain}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}</a>
     </div>
   );
 

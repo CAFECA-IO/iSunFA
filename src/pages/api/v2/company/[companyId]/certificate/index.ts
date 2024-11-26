@@ -16,20 +16,15 @@ import { IFileEntity } from '@/interfaces/file';
 import { IUserEntity } from '@/interfaces/user';
 import { CurrencyType } from '@/constants/currency';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
-import { CounterpartyType } from '@/constants/counterparty';
-import { FileFolder } from '@/constants/file';
+
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 
-import { certificateAPIPostUtils as postUtils } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
+import {
+  certificateAPIPostUtils as postUtils,
+  certificateAPIGetListUtils as getListUtils,
+} from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
 import { IVoucherEntity } from '@/interfaces/voucher';
-
-type ICertificateListItem = ICertificateEntity & {
-  invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
-  file: IFileEntity;
-  uploader: IUserEntity & { imageFile: IFileEntity };
-  userCertificates: IUserCertificateEntity[];
-};
+import { InvoiceTabs } from '@/constants/certificate';
 
 type ICertificateListSummary = {
   totalInvoicePrice: number;
@@ -38,150 +33,130 @@ type ICertificateListSummary = {
     withoutVoucher: number;
   };
   currency: CurrencyType;
-  certificates: ICertificateListItem[];
+  certificates: ICertificate[];
 };
 
 type PaginatedCertificateListResponse = IPaginatedData<ICertificateListSummary>;
 
-type APIResponse =
-  | ICertificate
-  | IPaginatedData<{
-      totalInvoicePrice: number;
-      unRead: {
-        withVoucher: number;
-        withoutVoucher: number;
-      };
-      currency: CurrencyType;
-      certificates: ICertificate[];
-    }>
-  | null;
+type APIResponse = ICertificate[] | PaginatedCertificateListResponse | null;
 
+/**
+ * Info: (20241126 - Murky)
+ * @todo
+ * - 符合FilterSection公版
+ * - 需要讀取withVoucher, withoutVoucher unRead的數量
+ * - 要從account setting讀取currency
+ * - 要Post UserCertificate Read
+ */
 export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_LIST_V2, object> = async ({
   query,
+  session,
 }) => {
   // ToDo: (20241024 - Murky) API接口請符合 FilterSection 公版
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: PaginatedCertificateListResponse | null = null;
 
-  if (query) {
-    // ToDo: (20240924 - Murky) Remember to use sortBy, sortOrder, startDate, endDate, searchQuery, hasBeenUsed
-    const { page, pageSize, sortOption } = query;
-    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  const { userId, companyId } = session;
+  const { page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } = query;
+  const nowInSecond = getTimestampNow();
 
-    const mockUserFile: IFileEntity = {
-      id: 1,
-      name: 'murky.jpg',
-      size: 1000,
-      mimeType: 'image/jpeg',
-      type: FileFolder.TMP,
-      url: 'https://isunfa.com/elements/avatar_default.svg?w=256&q=75',
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    };
-
-    const mockInvoiceFile: IFileEntity = {
-      id: 1,
-      name: 'murky.jpg',
-      size: 1000,
-      mimeType: 'image/jpeg',
-      type: FileFolder.TMP,
-      url: 'https://isunfa.com/elements/avatar_default.svg?w=256&q=75',
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    };
-
-    const mockUploader: IUserEntity & { imageFile: IFileEntity } = {
-      id: 1,
-      name: 'Murky',
-      email: 'murky@isunfa.com',
-      imageFileId: 1,
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      imageFile: mockUserFile,
-    };
-
-    const mockCounterParty: ICounterPartyEntity = {
-      id: 1,
-      companyId: 1003,
-      name: '原價屋',
-      taxId: '27749036',
-      type: CounterpartyType.CLIENT,
-      note: '買電腦',
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    };
-
-    const mockInvoice: IInvoiceEntity & { counterParty: ICounterPartyEntity } = {
-      id: 1,
-      certificateId: 1,
-      counterPartyId: 1,
-      inputOrOutput: InvoiceTransactionDirection.INPUT,
-      date: 1,
-      no: '1001',
-      currencyAlias: CurrencyType.TWD,
-      priceBeforeTax: 2000,
-      taxType: InvoiceTaxType.TAXABLE,
-      taxRatio: 5,
-      taxPrice: 100,
-      totalPrice: 2100,
-      type: InvoiceType.SALES_TRIPLICATE_INVOICE,
-      deductible: true,
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      counterParty: mockCounterParty,
-    };
-
-    const mockCertificate: ICertificateListItem = {
-      id: 1,
-      companyId: 1003,
-      // voucherNo: '',
-      invoice: mockInvoice,
-      file: mockInvoiceFile,
-      uploader: mockUploader,
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      vouchers: [],
-      userCertificates: [
-        {
-          id: 1,
-          userId: 1,
-          certificateId: 1,
-          isRead: false,
-          createdAt: 1,
-          updatedAt: 1,
-          deletedAt: null,
-        },
-      ],
-    };
-
-    const mockCertificateList: ICertificateListSummary = {
-      totalInvoicePrice: 2000,
-      unRead: {
-        withVoucher: 0,
-        withoutVoucher: 0,
-      },
-      currency: CurrencyType.TWD,
-      certificates: [mockCertificate],
-    };
-
-    const pagination: PaginatedCertificateListResponse = {
-      data: mockCertificateList,
+  try {
+    const paginationCertificates = await getListUtils.getPaginatedCertificateList({
+      tab,
+      companyId,
+      startDate,
+      endDate,
       page,
-      totalPages: 3,
-      totalCount: 30,
       pageSize,
-      hasNextPage: true,
-      hasPreviousPage: false,
-      sort: sortOption,
+      sortOption,
+      searchQuery,
+      type,
+      isDeleted: false,
+    });
+
+    const { data: certificatesFromPrisma, where, ...pagination } = paginationCertificates;
+
+    const currency = await getListUtils.getCurrencyFromSetting(companyId);
+
+    const certificates = certificatesFromPrisma.map((certificateFromPrisma) => {
+      const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
+      const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
+      const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
+      const voucherCertificateEntity =
+        postUtils.initVoucherCertificateEntities(certificateFromPrisma);
+      const invoiceEntity = postUtils.initInvoiceEntity(certificateFromPrisma, {
+        nowInSecond,
+      });
+      const certificateEntity = postUtils.initCertificateEntity(certificateFromPrisma);
+
+      const certificateReadyForTransfer: ICertificateEntity & {
+        invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
+        file: IFileEntity;
+        uploader: IUserEntity;
+        userCertificates: IUserCertificateEntity[];
+        vouchers: IVoucherEntity[];
+      } = {
+        ...certificateEntity,
+        invoice: invoiceEntity,
+        file: fileEntity,
+        uploader: uploaderEntity,
+        vouchers: voucherCertificateEntity.map((voucherCertificate) => voucherCertificate.voucher),
+        userCertificates: userCertificateEntities,
+      };
+
+      const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
+        certificateReadyForTransfer
+      );
+      return certificate;
+    });
+
+    const totalInvoicePrice = getListUtils.getSumOfTotalInvoicePrice(certificates);
+
+    const withVoucher = await getListUtils.getUnreadCertificateCount({
+      userId,
+      tab: InvoiceTabs.WITH_VOUCHER,
+      where,
+    });
+
+    const withoutVoucher = await getListUtils.getUnreadCertificateCount({
+      userId,
+      tab: InvoiceTabs.WITHOUT_VOUCHER,
+      where,
+    });
+
+    // Info: (20241126 - Murky) Record already read certificate
+    getListUtils.upsertUserReadCertificates({
+      userId,
+      certificateIdsBeenRead: certificates.map((certificate) => certificate.id),
+      nowInSecond,
+    });
+
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    const payloadData = {
+      totalInvoicePrice,
+      unRead: {
+        withVoucher,
+        withoutVoucher,
+      },
+      currency,
+      certificates,
     };
 
-    payload = pagination;
+    payload = {
+      page: pagination.page,
+      totalPages: pagination.totalPages,
+      totalCount: pagination.totalCount,
+      pageSize: pagination.pageSize,
+      hasNextPage: pagination.hasNextPage,
+      hasPreviousPage: pagination.hasPreviousPage,
+      sort: sortOption,
+      data: payloadData,
+    };
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+    const logger = loggerError(userId, error.name, error.message);
+    logger.error(error);
   }
 
   return {
@@ -202,61 +177,67 @@ export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, obje
   session,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICertificate | null = null;
+  let payload: ICertificate[] | null = null;
 
-  const { fileId } = body;
+  const { fileIds } = body;
   const { userId, companyId } = session;
 
   try {
     const nowInSecond = getTimestampNow();
 
-    const certificateFromPrisma = await postUtils.createCertificateInPrisma({
-      nowInSecond,
-      companyId,
-      uploaderId: userId,
-      fileId,
-    });
+    const certificates: ICertificate[] = await Promise.all(
+      fileIds.map(async (fileId) => {
+        const certificateFromPrisma = await postUtils.createCertificateInPrisma({
+          nowInSecond,
+          companyId,
+          uploaderId: userId,
+          fileId,
+        });
 
-    const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
-    const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
-    const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
-    const voucherCertificateEntity =
-      postUtils.initVoucherCertificateEntities(certificateFromPrisma);
-    const invoiceEntity = postUtils.initInvoiceEntity(certificateFromPrisma, {
-      nowInSecond,
-    });
-    const certificateEntity = postUtils.initCertificateEntity(certificateFromPrisma);
+        const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
+        const userCertificateEntities =
+          postUtils.initUserCertificateEntities(certificateFromPrisma);
+        const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
+        const voucherCertificateEntity =
+          postUtils.initVoucherCertificateEntities(certificateFromPrisma);
+        const invoiceEntity = postUtils.initInvoiceEntity(certificateFromPrisma, {
+          nowInSecond,
+        });
+        const certificateEntity = postUtils.initCertificateEntity(certificateFromPrisma);
 
-    const certificateReadyForTransfer: ICertificateEntity & {
-      invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
-      file: IFileEntity;
-      uploader: IUserEntity;
-      userCertificates: IUserCertificateEntity[];
-      vouchers: IVoucherEntity[];
-    } = {
-      ...certificateEntity,
-      invoice: invoiceEntity,
-      file: fileEntity,
-      uploader: uploaderEntity,
-      vouchers: voucherCertificateEntity.map((voucherCertificate) => voucherCertificate.voucher),
-      userCertificates: userCertificateEntities,
-    };
+        const certificateReadyForTransfer: ICertificateEntity & {
+          invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
+          file: IFileEntity;
+          uploader: IUserEntity;
+          userCertificates: IUserCertificateEntity[];
+          vouchers: IVoucherEntity[];
+        } = {
+          ...certificateEntity,
+          invoice: invoiceEntity,
+          file: fileEntity,
+          uploader: uploaderEntity,
+          vouchers: voucherCertificateEntity.map(
+            (voucherCertificate) => voucherCertificate.voucher
+          ),
+          userCertificates: userCertificateEntities,
+        };
 
-    const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
-      certificateReadyForTransfer
+        const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
+          certificateReadyForTransfer
+        );
+        postUtils.triggerPusherNotification(certificate, {
+          companyId,
+        });
+        return certificate;
+      })
     );
-
     // Info: (20241121 - tzuhan) @Murkey 這是 createCertificate 成功h後，後端使用 pusher 的傳送 CERTIFICATE_EVENT.CREATE 的範例
     /**
      * CERTIFICATE_EVENT.CREATE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(certificate as ICertificate)
      */
 
-    postUtils.triggerPusherNotification(certificate, {
-      companyId,
-    });
-
     statusMessage = STATUS_MESSAGE.CREATED;
-    payload = certificate;
+    payload = certificates;
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;

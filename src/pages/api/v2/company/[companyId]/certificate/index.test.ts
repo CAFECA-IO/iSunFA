@@ -3,13 +3,13 @@ import handler from '@/pages/api/v2/company/[companyId]/certificate/index';
 import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { InvoiceTabs } from '@/constants/certificate';
-import { InvoiceType } from '@/constants/invoice';
 import { certificateListSchema, certificatePostSchema } from '@/lib/utils/zod_schema/certificate';
+import { InvoiceType } from '@/constants/invoice';
 
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
-    userId: 1001,
-    companyId: 1001,
+    userId: 1000,
+    companyId: 10000000,
   }),
 }));
 
@@ -62,12 +62,12 @@ describe('company/[companyId]/certificate integration test', () => {
         query: {
           page: '1',
           pageSize: '10',
-          tab: InvoiceTabs.WITH_VOUCHER,
-          type: InvoiceType.FOREIGN_SERVICE_PAYMENT,
+          tab: InvoiceTabs.WITHOUT_VOUCHER,
+          type: InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
           startDate: '1',
-          endDate: '1',
-          searchQuery: 'string',
-          sortOption: 'Date:asc-Amount:desc',
+          // endDate: `${DEFAULT_END_DATE}`,
+          // searchQuery: 'string',
+          // sortOption: 'Date:asc-Amount:desc',
         },
         method: 'GET',
         json: jest.fn(),

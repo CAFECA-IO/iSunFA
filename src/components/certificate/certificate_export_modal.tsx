@@ -8,6 +8,7 @@ import { Button } from '@/components/button/button';
 import { RxCross1 } from 'react-icons/rx';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { FiDownload } from 'react-icons/fi';
+import { DEFAULT_MAX_PAGE_LIMIT } from '@/constants/config';
 
 interface CertificateExportModalProps {
   isOpen: boolean;
@@ -59,9 +60,10 @@ const CertificateExportModal: React.FC<CertificateExportModalProps> = ({
         <div className="mt-4 flex-1">
           <p className="mb-1 p-1 text-input-text-primary">{t('common:COMMON.PERIOD')}</p>
           <FilterSection
+            // Info: (20241126 - Murky) @tzuhan, 後端把tab設定成填寫undefined或不填寫的時候會回傳所有certificate
             apiName={APIName.CERTIFICATE_LIST_V2}
             page={1}
-            pageSize={1000} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
+            pageSize={DEFAULT_MAX_PAGE_LIMIT} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
             onApiResponse={handleApiResponse}
             enableSearch={false}
           />
