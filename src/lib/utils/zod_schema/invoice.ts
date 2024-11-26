@@ -31,6 +31,26 @@ export const IInvoiceBetaValidator = z.object({
   // name: z.string().describe('name of invoice, not in IInvoiceBeta right now'),
 });
 
+export const IInvoiceBetaValidatorOptional = z.object({
+  id: z.number().optional(),
+  isComplete: z.boolean().optional(),
+  counterParty: ICounterpartyValidator.optional(),
+  inputOrOutput: z.nativeEnum(InvoiceTransactionDirection).optional(),
+  date: z.number().optional(),
+  no: z.string().optional(),
+  currencyAlias: z.nativeEnum(CurrencyType).optional(),
+  priceBeforeTax: z.number().optional(),
+  taxType: z.nativeEnum(InvoiceTaxType).optional(),
+  taxRatio: z.number().optional(),
+  taxPrice: z.number().optional(),
+  totalPrice: z.number().optional(),
+  type: z.nativeEnum(InvoiceType).optional(),
+  deductible: z.boolean().optional(),
+  createdAt: z.number().optional(),
+  updatedAt: z.number().optional(),
+  // name: z.string().describe('name of invoice, not in IInvoiceBeta right now'),
+});
+
 const iInvoiceValidator = z.object({
   journalId: z.number().nullable(),
   date: z.number(), // Info: (20240522 - Murky) timestamp

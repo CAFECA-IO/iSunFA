@@ -53,6 +53,8 @@ export const AICH_URI = process.env.AICH_URI as string;
 
 export const DEFAULT_PAGE_START_AT = 1;
 export const DEFAULT_PAGE_LIMIT = 10;
+export const DEFAULT_MAX_PAGE_LIMIT = 2147483647;
+
 export const DEFAULT_PAGE_OFFSET = 0;
 export const DEFAULT_END_DATE = 2147483647;
 
