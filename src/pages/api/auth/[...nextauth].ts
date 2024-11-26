@@ -111,6 +111,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       AppleProvider({
         clientId: process.env.APPLE_CLIENT_ID as string,
         clientSecret: generateAppleClientSecret(),
+        authorization: {
+          params: {
+            scope: 'openid email name',
+            response_type: 'code',
+            response_mode: 'form_post',
+            code_challenge_method: 'S256',
+          },
+        },
       }),
     ],
     pages: {
@@ -137,6 +145,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     },
     callbacks: {
       async signIn({ user, account }) {
+        // Deprecated: (20241128 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log('callbacK ser:', user);
+        // Deprecated: (20241128 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log('callbacK Account:', account);
         const session = await getSession(req, res);
         try {
           // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
@@ -222,6 +236,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return true;
       },
       async redirect({ url, baseUrl }) {
+        // Deprecated: (20241128 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log('callbacK URL:', url);
         return url.startsWith(baseUrl) ? url : baseUrl;
       },
     },
