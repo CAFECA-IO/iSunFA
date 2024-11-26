@@ -8,25 +8,28 @@ datasource db {
 }
 
 model Account {
-  id         Int     @id @default(autoincrement())
+  id         Int     @id @unique @default(autoincrement())
   companyId  Int     @default(0) @map("company_id")
   system     String // Info: (20240625 - Murky) ex "IFRS" 
   type       String // Info: (20240625 - Murky) ex "Asset"
   debit      Boolean // Info: (20240625 - Murky) true: debit, false: credit
   liquidity  Boolean
-  code       String  @unique
+  code       String
   name       String // Info: (20240625 - Murky) empty if is not sub account
   forUser    Boolean @map("for_user") // Info: (20240625 - Murky) is account the last layer of account tree
   parentCode String  @map("parent_code")
   rootCode   String  @map("root_code")
+  parentId   Int     @map("parent_id")
+  rootId     Int     @map("root_id")
   createdAt  Int     @map("created_at")
   updatedAt  Int     @map("updated_at")
   level      Int     @default(0)
   deletedAt  Int?    @map("deleted_at")
+  note       String? @map("note")
 
   company  Company    @relation(fields: [companyId], references: [id])
-  parent   Account    @relation("Parent", fields: [parentCode], references: [code])
-  root     Account    @relation("Root", fields: [rootCode], references: [code])
+  parent   Account    @relation("Parent", fields: [parentId], references: [id])
+  root     Account    @relation("Root", fields: [rootId], references: [id])
   child    Account[]  @relation("Parent")
   leaf     Account[]  @relation("Root")
   lineItem LineItem[]
@@ -147,9 +150,9 @@ model AccountingSetting {
   @@map("accounting_setting")
 }
 
-model AccociateLineItem {
+model AssociateLineItem {
   id                 Int     @id @default(autoincrement())
-  accociateVoucherId Int     @map("accociate_voucher_id")
+  associateVoucherId Int     @map("associate_voucher_id")
   originalLineItemId Int     @map("original_line_item_id")
   resultLineItemId   Int     @map("result_line_item_id")
   debit              Boolean
@@ -158,14 +161,14 @@ model AccociateLineItem {
   updatedAt          Int     @map("updated_at")
   deletedAt          Int?    @map("deleted_at")
 
-  accociateVoucher AccociateVoucher @relation(fields: [accociateVoucherId], references: [id])
+  associateVoucher AssociateVoucher @relation(fields: [associateVoucherId], references: [id])
   originalLineItem LineItem         @relation("original_line_item", fields: [originalLineItemId], references: [id])
   resultLineItem   LineItem         @relation("result_line_item", fields: [resultLineItemId], references: [id])
 
   @@map("associate_line_item")
 }
 
-model AccociateVoucher {
+model AssociateVoucher {
   id                Int  @id @default(autoincrement())
   eventId           Int  @map("event_id")
   originalVoucherId Int  @map("original_voucher_id")
@@ -174,7 +177,7 @@ model AccociateVoucher {
   updatedAt         Int  @map("updated_at")
   deletedAt         Int? @map("deleted_at")
 
-  associateLineItems AccociateLineItem[]
+  associateLineItems AssociateLineItem[]
 
   event           Event   @relation(fields: [eventId], references: [id])
   originalVoucher Voucher @relation("original_voucher", fields: [originalVoucherId], references: [id])
@@ -286,6 +289,7 @@ model CompanySetting {
   country            String
   phone              String
   address            String
+  countryCode        String @default("tw") @map("country_code")
   createdAt          Int    @map("created_at")
   updatedAt          Int    @map("updated_at")
   deletedAt          Int?   @map("deleted_at")
@@ -404,7 +408,7 @@ model EmployeeProject {
 model Event {
   id           Int    @id @default(autoincrement())
   eventType    String @map("event_type")
-  frequence    String
+  frequency    String @map("frequency")
   startDate    Int    @map("start_date")
   endDate      Int    @map("end_date")
   daysOfWeek   Int[]
@@ -413,7 +417,7 @@ model Event {
   updatedAt    Int    @map("updated_at")
   deletedAt    Int?   @map("deleted_at")
 
-  associateVouchers AccociateVoucher[]
+  associateVouchers AssociateVoucher[]
 
   @@map("event")
 }
@@ -586,8 +590,8 @@ model LineItem {
   updatedAt   Int     @map("updated_at")
   deletedAt   Int?    @map("deleted_at")
 
-  originalLineItem AccociateLineItem[] @relation("original_line_item")
-  resultLineItem   AccociateLineItem[] @relation("result_line_item")
+  originalLineItem AssociateLineItem[] @relation("original_line_item")
+  resultLineItem   AssociateLineItem[] @relation("result_line_item")
 
   account Account @relation(fields: [accountId], references: [id])
   voucher Voucher @relation(fields: [voucherId], references: [id])
@@ -1063,8 +1067,8 @@ model Voucher {
   voucherCertificates    VoucherCertificate[]
   invoiceVoucherJournals InvoiceVoucherJournal[]
 
-  originalVouchers AccociateVoucher[] @relation("original_voucher")
-  resultVouchers   AccociateVoucher[] @relation("result_voucher")
+  originalVouchers AssociateVoucher[] @relation("original_voucher")
+  resultVouchers   AssociateVoucher[] @relation("result_voucher")
 
   company      Company      @relation(fields: [companyId], references: [id])
   issuer       User         @relation(fields: [issuerId], references: [id])

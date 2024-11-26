@@ -6,8 +6,8 @@ import {
   LineItem as PrismaLineItem,
   Account as PrismaAccount,
   Voucher as PrismaVoucher,
-  AccociateLineItem as PrismaAssociateLineItem,
-  AccociateVoucher as PrismaAssociateVoucher,
+  AssociateLineItem as PrismaAssociateLineItem,
+  AssociateVoucher as PrismaAssociateVoucher,
   Event as PrismaEvent,
 } from '@prisma/client';
 import {
@@ -303,7 +303,7 @@ export const voucherGetByAccountAPIUtils = {
       resultLineItem: PrismaLineItem & {
         account: PrismaAccount;
       };
-      accociateVoucher: PrismaAssociateVoucher & {
+      associateVoucher: PrismaAssociateVoucher & {
         event: PrismaEvent;
       };
     })[]
@@ -312,8 +312,8 @@ export const voucherGetByAccountAPIUtils = {
       const associateLineItem = parsePrismaAssociateLineItemToEntity(data);
       const resultLineItem = parsePrismaLineItemToLineItemEntity(data.resultLineItem);
       const account = parsePrismaAccountToAccountEntity(data.resultLineItem.account);
-      const associateVoucher = parsePrismaAssociateVoucherToEntity(data.accociateVoucher);
-      const event = parsePrismaEventToEventEntity(data.accociateVoucher.event);
+      const associateVoucher = parsePrismaAssociateVoucherToEntity(data.associateVoucher);
+      const event = parsePrismaEventToEventEntity(data.associateVoucher.event);
       return {
         ...associateLineItem,
         resultLineItem: {
@@ -335,7 +335,7 @@ export const voucherGetByAccountAPIUtils = {
         resultLineItem: PrismaLineItem & {
           account: PrismaAccount;
         };
-        accociateVoucher: PrismaAssociateVoucher & {
+        associateVoucher: PrismaAssociateVoucher & {
           event: PrismaEvent;
         };
       })[];
@@ -346,12 +346,12 @@ export const voucherGetByAccountAPIUtils = {
             resultLineItem: PrismaLineItem & {
               account: PrismaAccount;
             };
-            accociateVoucher: PrismaAssociateVoucher & {
+            associateVoucher: PrismaAssociateVoucher & {
               event: PrismaEvent;
             };
           })[];
         };
-        accociateVoucher: PrismaAssociateVoucher & {
+        associateVoucher: PrismaAssociateVoucher & {
           event: PrismaEvent;
           originalVoucher: PrismaVoucher;
         };
@@ -368,10 +368,10 @@ export const voucherGetByAccountAPIUtils = {
       const associateLineItem = parsePrismaAssociateLineItemToEntity(data);
       const originalLineItem = parsePrismaLineItemToLineItemEntity(data.originalLineItem);
       const account = parsePrismaAccountToAccountEntity(data.originalLineItem.account);
-      const associateVoucher = parsePrismaAssociateVoucherToEntity(data.accociateVoucher);
-      const event = parsePrismaEventToEventEntity(data.accociateVoucher.event);
+      const associateVoucher = parsePrismaAssociateVoucherToEntity(data.associateVoucher);
+      const event = parsePrismaEventToEventEntity(data.associateVoucher.event);
       const originalVoucher = parsePrismaVoucherToVoucherEntity(
-        data.accociateVoucher.originalVoucher
+        data.associateVoucher.originalVoucher
       );
       const writeOffLineItem = voucherGetByAccountAPIUtils.initLineItemsAssociateThatWriteOffMe(
         data.originalLineItem.originalLineItem

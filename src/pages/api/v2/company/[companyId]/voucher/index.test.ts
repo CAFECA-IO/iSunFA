@@ -164,13 +164,13 @@ describe('company/[companyId]/voucher integration test', () => {
         });
       }
 
-      const associateVoucher = await prisma.accociateVoucher.findFirst({
+      const associateVoucher = await prisma.associateVoucher.findFirst({
         where: {
           originalVoucherId: req.body.reverseVouchers[0].voucherId || 1001,
         },
       });
 
-      const associateLineItem = await prisma.accociateLineItem.findFirst({
+      const associateLineItem = await prisma.associateLineItem.findFirst({
         where: {
           originalLineItemId: req.body.reverseVouchers[0].lineItemIdBeReversed,
         },
@@ -183,14 +183,14 @@ describe('company/[companyId]/voucher integration test', () => {
       });
 
       if (associateLineItem) {
-        await prisma.accociateLineItem.delete({
+        await prisma.associateLineItem.delete({
           where: {
             id: associateLineItem.id,
           },
         });
       }
       if (associateVoucher) {
-        await prisma.accociateVoucher.delete({
+        await prisma.associateVoucher.delete({
           where: {
             id: associateVoucher.id,
           },

@@ -249,6 +249,9 @@ export async function handlePostRequest(
     createdAt: timeInSeconds,
     updatedAt: timeInSeconds,
     level: parentAccount.level + 1,
+    parentId: parentAccount.id,
+    rootId: parentAccount.rootId,
+    note: null,
   };
   let savedNewOwnAccount: IAccount | null = null;
   try {
