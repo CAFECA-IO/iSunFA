@@ -38,7 +38,7 @@ type ICertificateListSummary = {
 
 type PaginatedCertificateListResponse = IPaginatedData<ICertificateListSummary>;
 
-type APIResponse = ICertificate | PaginatedCertificateListResponse | null;
+type APIResponse = ICertificate[] | PaginatedCertificateListResponse | null;
 
 /**
  * Info: (20241126 - Murky)
@@ -177,61 +177,67 @@ export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, obje
   session,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICertificate | null = null;
+  let payload: ICertificate[] | null = null;
 
-  const { fileId } = body;
+  const { fileIds } = body;
   const { userId, companyId } = session;
 
   try {
     const nowInSecond = getTimestampNow();
 
-    const certificateFromPrisma = await postUtils.createCertificateInPrisma({
-      nowInSecond,
-      companyId,
-      uploaderId: userId,
-      fileId,
-    });
+    const certificates: ICertificate[] = await Promise.all(
+      fileIds.map(async (fileId) => {
+        const certificateFromPrisma = await postUtils.createCertificateInPrisma({
+          nowInSecond,
+          companyId,
+          uploaderId: userId,
+          fileId,
+        });
 
-    const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
-    const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
-    const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
-    const voucherCertificateEntity =
-      postUtils.initVoucherCertificateEntities(certificateFromPrisma);
-    const invoiceEntity = postUtils.initInvoiceEntity(certificateFromPrisma, {
-      nowInSecond,
-    });
-    const certificateEntity = postUtils.initCertificateEntity(certificateFromPrisma);
+        const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
+        const userCertificateEntities =
+          postUtils.initUserCertificateEntities(certificateFromPrisma);
+        const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
+        const voucherCertificateEntity =
+          postUtils.initVoucherCertificateEntities(certificateFromPrisma);
+        const invoiceEntity = postUtils.initInvoiceEntity(certificateFromPrisma, {
+          nowInSecond,
+        });
+        const certificateEntity = postUtils.initCertificateEntity(certificateFromPrisma);
 
-    const certificateReadyForTransfer: ICertificateEntity & {
-      invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
-      file: IFileEntity;
-      uploader: IUserEntity;
-      userCertificates: IUserCertificateEntity[];
-      vouchers: IVoucherEntity[];
-    } = {
-      ...certificateEntity,
-      invoice: invoiceEntity,
-      file: fileEntity,
-      uploader: uploaderEntity,
-      vouchers: voucherCertificateEntity.map((voucherCertificate) => voucherCertificate.voucher),
-      userCertificates: userCertificateEntities,
-    };
+        const certificateReadyForTransfer: ICertificateEntity & {
+          invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
+          file: IFileEntity;
+          uploader: IUserEntity;
+          userCertificates: IUserCertificateEntity[];
+          vouchers: IVoucherEntity[];
+        } = {
+          ...certificateEntity,
+          invoice: invoiceEntity,
+          file: fileEntity,
+          uploader: uploaderEntity,
+          vouchers: voucherCertificateEntity.map(
+            (voucherCertificate) => voucherCertificate.voucher
+          ),
+          userCertificates: userCertificateEntities,
+        };
 
-    const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
-      certificateReadyForTransfer
+        const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
+          certificateReadyForTransfer
+        );
+        postUtils.triggerPusherNotification(certificate, {
+          companyId,
+        });
+        return certificate;
+      })
     );
-
     // Info: (20241121 - tzuhan) @Murkey 這是 createCertificate 成功h後，後端使用 pusher 的傳送 CERTIFICATE_EVENT.CREATE 的範例
     /**
      * CERTIFICATE_EVENT.CREATE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(certificate as ICertificate)
      */
 
-    postUtils.triggerPusherNotification(certificate, {
-      companyId,
-    });
-
     statusMessage = STATUS_MESSAGE.CREATED;
-    payload = certificate;
+    payload = certificates;
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;

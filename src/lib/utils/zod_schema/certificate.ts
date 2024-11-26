@@ -9,7 +9,11 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_END_DATE, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { InvoiceTabs } from '@/constants/certificate'; // Info: (20241023 - tzuhan) @Murky, 這裡要改成 SORT_BY （已經定義好）
 import { fileEntityValidator, IFileBetaValidator } from '@/lib/utils/zod_schema/file';
-import { IInvoiceBetaValidator, invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
+import {
+  IInvoiceBetaValidator,
+  IInvoiceBetaValidatorOptional,
+  invoiceEntityValidator,
+} from '@/lib/utils/zod_schema/invoice';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 import { counterPartyEntityValidator } from '@/constants/counterparty';
@@ -31,6 +35,21 @@ export const ICertificateValidator = z.object({
   unRead: z.boolean(),
   file: IFileBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
   invoice: IInvoiceBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
+  voucherNo: z.string().nullable(),
+  aiResultId: z.string().optional(),
+  aiStatus: z.string().optional(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  uploader: z.string(),
+});
+
+export const ICertificatePartialInvoiceValidator = z.object({
+  id: z.number(),
+  name: z.string().describe('Name of certificate, but get it from Invoice'),
+  companyId: z.number(),
+  unRead: z.boolean(),
+  file: IFileBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
+  invoice: IInvoiceBetaValidatorOptional, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
   voucherNo: z.string().nullable(),
   aiResultId: z.string().optional(),
   aiStatus: z.string().optional(),
@@ -83,7 +102,7 @@ const paginatedCertificates = paginatedDataSchemaDataNotArray(
         withoutVoucher: z.number(),
       }),
       currency: z.nativeEnum(CurrencyType),
-      certificates: z.array(ICertificateValidator),
+      certificates: z.array(ICertificatePartialInvoiceValidator),
     })
     .strict()
 );
@@ -188,12 +207,12 @@ const certificatePostQueryValidator = z.object({
  * @note company 從session取得
  */
 const certificatePostBodyValidator = z.object({
-  fileId: z.number(),
+  fileIds: z.array(z.number()),
 });
 
-const certificatePostOutputSchema = ICertificateValidator.strict();
+const certificatePostOutputSchema = z.array(ICertificatePartialInvoiceValidator.strict());
 
-const certificatePostFrontendSchema = ICertificateValidator.strict();
+const certificatePostFrontendSchema = z.array(ICertificatePartialInvoiceValidator.strict());
 
 export const certificatePostValidator: IZodValidator<
   (typeof certificatePostQueryValidator)['shape'],
