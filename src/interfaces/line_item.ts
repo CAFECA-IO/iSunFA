@@ -1,7 +1,7 @@
 import {
   Prisma,
   Voucher as PrismaVoucher,
-  AccociateVoucher as PrismaAssociateVoucher,
+  AssociateVoucher as PrismaAssociateVoucher,
   LineItem as PrismaLineItem,
   Account as PrismaAccount,
 } from '@prisma/client';

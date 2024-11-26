@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import accounts from '@/seed_json/account.json';
+import accounts from '@/seed_json/account_new.json';
 import companies from '@/seed_json/company.json';
 import companyKYCs from '@/seed_json/company_kyc.json';
 import admins from '@/seed_json/admin.json';
@@ -268,13 +268,13 @@ async function createLineItems() {
 }
 
 async function createAssociateLineItem() {
-  await prisma.accociateLineItem.createMany({
+  await prisma.associateLineItem.createMany({
     data: associateLineItems,
   });
 }
 
 async function createAssociateVoucher() {
-  await prisma.accociateVoucher.createMany({
+  await prisma.associateVoucher.createMany({
     data: associateVouchers,
   });
 }

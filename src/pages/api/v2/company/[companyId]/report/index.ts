@@ -24,6 +24,7 @@ import CashFlowStatementGenerator from '@/lib/utils/report/cash_flow_statement_g
 
 type APIResponse = object | null;
 
+// TODO: (20241126 - Shirley) FIXME: account table schema 有修改，account code 可能重複，需要改用 account id
 export async function balanceSheetHandler({
   // ToDo: (20241007 - Murky) Use these param in function
   /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -116,6 +117,7 @@ export async function balanceSheetHandler({
   };
 }
 
+// TODO: (20241126 - Shirley) FIXME: account table schema 有修改，account code 可能重複，需要改用 account id
 export async function incomeStatementHandler({
   // ToDo: (20241007 - Murky) Use these param in function
   /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -208,6 +210,7 @@ export async function incomeStatementHandler({
   };
 }
 
+// TODO: (20241126 - Shirley) FIXME: account table schema 有修改，account code 可能重複，需要改用 account id
 export async function cashFlowHandler({
   // ToDo: (20241007 - Murky) Use these param in function
   /* eslint-disable @typescript-eslint/no-unused-vars */

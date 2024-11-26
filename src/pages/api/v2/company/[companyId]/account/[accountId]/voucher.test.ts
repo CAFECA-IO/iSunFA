@@ -65,7 +65,7 @@ describe('company/[companyId]/voucher/account/[accountId] integration test', () 
       req = {
         headers: {},
         query: {
-          accountId: '10000981',
+          accountId: '1981',
           page: '1',
           pageSize: '10',
           // tab: VoucherListTabV2.UPLOADED,

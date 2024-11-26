@@ -625,17 +625,17 @@ describe('voucherAPIPostUtils', () => {
       expect(voucher.id).toBeGreaterThan(0);
       expect(voucher.lineItems.length).toBe(3);
 
-      const associateVoucher = await prisma.accociateVoucher.findFirst({
+      const associateVoucher = await prisma.associateVoucher.findFirst({
         where: {
           originalVoucherId: fakeReversedVoucher.id,
           resultVoucherId: voucher.id,
         },
       });
 
-      const associateLineItem = await prisma.accociateLineItem.findFirst({
+      const associateLineItem = await prisma.associateLineItem.findFirst({
         where: {
           originalLineItemId: fakeReversedLineItem.id,
-          accociateVoucherId: associateVoucher?.id,
+          associateVoucherId: associateVoucher?.id,
         },
       });
       expect(associateLineItem).toBeDefined();
@@ -651,14 +651,14 @@ describe('voucherAPIPostUtils', () => {
       expect(event).toBeDefined();
 
       if (associateLineItem) {
-        await prisma.accociateLineItem.delete({
+        await prisma.associateLineItem.delete({
           where: {
             id: associateLineItem.id,
           },
         });
       }
       if (associateVoucher) {
-        await prisma.accociateVoucher.delete({
+        await prisma.associateVoucher.delete({
           where: {
             id: associateVoucher.id,
           },

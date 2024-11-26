@@ -166,6 +166,9 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
     level: account.level,
     deletedAt: account.deletedAt,
     children: updatedChildren,
+    parentId: account.parentId,
+    rootId: account.rootId,
+    note: account.note,
   };
 
   // updatedAccount.amount = newAmount; // Info: (20240801 - Murky)
@@ -214,6 +217,9 @@ function updateAccountAmountByDFSForTrialBalance(
     level: account.level,
     deletedAt: account.deletedAt,
     children: updatedChildren,
+    parentId: account.parentId,
+    rootId: account.rootId,
+    note: account.note,
   };
 
   // updatedAccount.amount = newAmount; // Info: (20240801 - Murky)
