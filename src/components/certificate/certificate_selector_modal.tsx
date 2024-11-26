@@ -9,7 +9,8 @@ import { Button } from '@/components/button/button';
 import { RxCross1 } from 'react-icons/rx';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { InvoiceTabs } from '@/constants/certificate';
-import { InvoiceType } from '@/constants/invoice';
+// import { InvoiceType } from '@/constants/invoice';
+import { DEFAULT_MAX_PAGE_LIMIT } from '@/constants/config';
 
 interface CertificateSelectorModalProps {
   isOpen: boolean;
@@ -86,10 +87,11 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
         <FilterSection
           apiName={APIName.CERTIFICATE_LIST_V2}
           page={1}
-          pageSize={1000} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
+          pageSize={DEFAULT_MAX_PAGE_LIMIT} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
           tab={InvoiceTabs.WITHOUT_VOUCHER}
           onApiResponse={handleApiResponse}
-          types={Object.keys(InvoiceType)}
+          // types={Object.keys(InvoiceType)}
+          types={[]} // Info: (20241126 - Murky) @tuzhan, undefined可以拿到全部
         />
         <div className="mt-12px px-4">
           <div className="flex items-center justify-between">

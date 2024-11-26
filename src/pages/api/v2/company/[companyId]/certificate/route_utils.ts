@@ -12,13 +12,19 @@ import {
 import loggerBack from '@/lib/utils/logger_back';
 import { Logger } from 'pino';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { getImageUrlFromFileIdV1, initFileEntity } from '@/lib/utils/file';
+import {
+  decryptImageFile,
+  getImageUrlFromFileIdV1,
+  initFileEntity,
+  parseFilePathWithBaseUrlPlaceholder,
+} from '@/lib/utils/file';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
 import { parsePrismaUserCertificateToUserCertificateEntity } from '@/lib/utils/formatter/user_certificate.formatter';
 import {
   Prisma,
   Voucher as PrismaVoucher,
   VoucherCertificate as PrismaVoucherCertificate,
+  File as PrismaFile,
 } from '@prisma/client';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { parsePrismaVoucherCertificateToEntity } from '@/lib/utils/formatter/voucher_certificate.formatter';
@@ -42,6 +48,8 @@ import { InvoiceTabs } from '@/constants/certificate';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
+import { readFile } from 'fs/promises';
+import { bufferToBlob } from '@/lib/utils/parse_image_form';
 
 export const certificateAPIPostUtils = {
   /**
@@ -154,7 +162,7 @@ export const certificateAPIPostUtils = {
         taxRatio: 0,
         taxPrice: 0,
         totalPrice: 0,
-        type: InvoiceType.SALES_TRIPLICATE_INVOICE,
+        type: InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
         deductible: false,
         createdAt: nowInSecond,
         updatedAt: nowInSecond,
@@ -273,11 +281,40 @@ export const certificateAPIPostUtils = {
       message: JSON.stringify(certificate),
     });
   },
+
+  getAndDecryptFile: async (
+    file: PrismaFile,
+    options: {
+      companyId: number;
+    }
+  ): Promise<Blob> => {
+    const { companyId } = options;
+    const filePath = parseFilePathWithBaseUrlPlaceholder(file.url);
+    const fileBuffer = await readFile(filePath);
+    const decryptFileBuffer = await decryptImageFile({
+      imageBuffer: fileBuffer,
+      file,
+      companyId,
+    });
+    const decryptFileBlob = bufferToBlob(decryptFileBuffer, file.mimeType);
+    return decryptFileBlob;
+  },
+
+  sendFileToAI: async (
+    file: PrismaFile,
+    options: {
+      companyId: number;
+    }
+  ) => {
+    const { companyId } = options;
+    const fileBlob = await certificateAPIPostUtils.getAndDecryptFile(file, { companyId });
+    const formData = new FormData();
+    formData.append('image', fileBlob);
+  },
 };
 
 export const certificateAPIGetListUtils = {
   getPaginatedCertificateList: (options: {
-    tab: InvoiceTabs;
     companyId: number;
     startDate: number;
     endDate: number;
@@ -291,6 +328,7 @@ export const certificateAPIGetListUtils = {
     searchQuery?: string | undefined;
     isDeleted?: boolean | undefined;
     type?: InvoiceType | undefined;
+    tab?: InvoiceTabs | undefined;
   }): Promise<
     IPaginatedData<PostCertificateResponse[]> & {
       where: Prisma.CertificateWhereInput;

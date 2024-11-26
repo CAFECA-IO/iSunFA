@@ -119,10 +119,7 @@ export async function createCertificateWithEmptyInvoice(options: {
 }
 
 export async function getCertificatesV2(options: {
-  tab: InvoiceTabs;
   companyId: number;
-  startDate: number;
-  endDate: number;
   page: number;
   pageSize: number;
   sortOption: {
@@ -130,9 +127,12 @@ export async function getCertificatesV2(options: {
     sortBy: SortBy;
     sortOrder: SortOrder;
   }[];
+  startDate?: number;
+  endDate?: number;
   searchQuery?: string | undefined;
   isDeleted?: boolean | undefined;
   type?: InvoiceType | undefined;
+  tab?: InvoiceTabs;
 }): Promise<
   IPaginatedData<PostCertificateResponse[]> & {
     where: Prisma.CertificateWhereInput;
@@ -153,7 +153,11 @@ export async function getCertificatesV2(options: {
   // const { page, pageSize, sortOption, isDeleted } = options;
   let certificates: PostCertificateResponse[] = [];
 
-  function getVoucherCertificateRelation(invoiceTab: InvoiceTabs) {
+  function getVoucherCertificateRelation(invoiceTab: InvoiceTabs | undefined) {
+    if (!invoiceTab) {
+      return undefined;
+    }
+
     switch (invoiceTab) {
       case InvoiceTabs.WITH_VOUCHER:
         return {

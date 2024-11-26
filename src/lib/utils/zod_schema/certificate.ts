@@ -6,7 +6,7 @@ import {
   zodStringToNumberWithDefault,
 } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
-import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { DEFAULT_END_DATE, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { InvoiceTabs } from '@/constants/certificate'; // Info: (20241023 - tzuhan) @Murky, 這裡要改成 SORT_BY （已經定義好）
 import { fileEntityValidator, IFileBetaValidator } from '@/lib/utils/zod_schema/file';
 import { IInvoiceBetaValidator, invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
@@ -64,10 +64,10 @@ export const certificateEntityValidator = z.object({
 const certificateListQueryValidator = z.object({
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
-  tab: z.nativeEnum(InvoiceTabs),
+  tab: z.nativeEnum(InvoiceTabs).optional(),
   type: z.nativeEnum(InvoiceType).optional(), // Info: (20241107 - Murky) @tzuhan, type 使用 InvoiceType, 如果要選擇全部可以填 undefined
   startDate: zodStringToNumberWithDefault(0),
-  endDate: zodStringToNumberWithDefault(Infinity),
+  endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
   sortOption: zodFilterSectionSortingOptions(),
   searchQuery: z.string().optional(),
 });

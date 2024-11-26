@@ -71,6 +71,7 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_LIST_V2, objec
       sortOption,
       searchQuery,
       type,
+      isDeleted: false,
     });
 
     const { data: certificatesFromPrisma, where, ...pagination } = paginationCertificates;
