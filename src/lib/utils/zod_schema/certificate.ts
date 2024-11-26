@@ -74,104 +74,23 @@ const certificateListQueryValidator = z.object({
 
 const certificateListBodyValidator = z.object({});
 
-const certificateListFrontendSchema = paginatedDataSchemaDataNotArray(
-  z.object({
-    totalInvoicePrice: z.number(),
-    unRead: z.object({
-      withVoucher: z.number(),
-      withoutVoucher: z.number(),
-    }),
-    currency: z.nativeEnum(CurrencyType),
-    certificates: z.array(ICertificateValidator),
-  })
-).strict();
-
-const certificateListOutputSchema = paginatedDataSchemaDataNotArray(
-  z.object({
-    totalInvoicePrice: z.number(),
-    unRead: z.object({
-      withVoucher: z.number(),
-      withoutVoucher: z.number(),
-    }),
-    currency: z.nativeEnum(CurrencyType),
-    certificates: z.array(
-      z.object({
-        ...certificateEntityValidator.shape,
-        invoice: z.object({
-          ...invoiceEntityValidator.shape,
-          counterParty: counterPartyEntityValidator,
-        }),
-        file: fileEntityValidator,
-        uploader: userEntityValidator,
-        userCertificates: z.array(userCertificateEntityValidator),
-      })
-    ),
-  })
-).transform((item) => {
-  const certificateListData: z.infer<typeof certificateListFrontendSchema> = {
-    ...item,
-    data: {
-      ...item.data,
-      certificates: item.data.certificates.map((certificate) => {
-        const isRead = certificate.userCertificates.some(
-          (userCertificate) => userCertificate.isRead
-        );
-        return {
-          id: certificate.id,
-          unRead: !isRead,
-          companyId: certificate.companyId,
-          voucherNo: null,
-          name: 'certificate', // Info: (20241105 - Murky) certificate.invoice.name,
-          uploader: certificate.uploader.name,
-          aiStatus: certificate.aiStatus,
-          invoice: {
-            id: certificate.invoice.id,
-            isComplete: true,
-            inputOrOutput: certificate.invoice.inputOrOutput,
-            date: certificate.invoice.date,
-            no: certificate.invoice.no,
-            currencyAlias: certificate.invoice.currencyAlias,
-            priceBeforeTax: certificate.invoice.priceBeforeTax,
-            taxType: certificate.invoice.taxType,
-            taxRatio: certificate.invoice.taxRatio,
-            taxPrice: certificate.invoice.taxPrice,
-            totalPrice: certificate.invoice.totalPrice,
-            type: certificate.invoice.type,
-            deductible: certificate.invoice.deductible,
-            counterPartyId: certificate.invoice.counterPartyId,
-            createdAt: certificate.invoice.createdAt,
-            updatedAt: certificate.invoice.updatedAt,
-            name: 'InvoiceName', // ToDo: (20241105 - Murky) DB 沒有這個欄位, 等待db更新
-            uploader: certificate.uploader.name,
-            counterParty: {
-              id: certificate.invoice.counterParty.id,
-              companyId: certificate.invoice.counterParty.companyId,
-              name: certificate.invoice.counterParty.name,
-              taxId: certificate.invoice.counterParty.taxId,
-              type: certificate.invoice.counterParty.type,
-              note: certificate.invoice.counterParty.note,
-              createdAt: certificate.invoice.counterParty.createdAt,
-              updatedAt: certificate.invoice.counterParty.updatedAt,
-            },
-          },
-          file: {
-            id: certificate.file.id,
-            name: certificate.file.name,
-            url: certificate.file.url,
-            size: certificate.file.size,
-            existed: !!certificate.file,
-          },
-          createdAt: certificate.createdAt,
-          updatedAt: certificate.updatedAt,
-          deletedAt: certificate.deletedAt,
-        };
+const paginatedCertificates = paginatedDataSchemaDataNotArray(
+  z
+    .object({
+      totalInvoicePrice: z.number(),
+      unRead: z.object({
+        withVoucher: z.number(),
+        withoutVoucher: z.number(),
       }),
-    },
-  };
+      currency: z.nativeEnum(CurrencyType),
+      certificates: z.array(ICertificateValidator),
+    })
+    .strict()
+);
 
-  const certificateList = certificateListFrontendSchema.parse(certificateListData);
-  return certificateList;
-});
+const certificateListFrontendSchema = paginatedCertificates;
+
+const certificateListOutputSchema = paginatedCertificates;
 
 export const certificateListValidator: IZodValidator<
   (typeof certificateListQueryValidator)['shape'],
