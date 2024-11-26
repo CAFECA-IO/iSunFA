@@ -259,10 +259,10 @@ export const voucherAPIGetOneUtils = {
         const resultAssociateLineItem = parsePrismaAssociateLineItemToEntity(result);
         const originalLineItem = parsePrismaLineItemToLineItemEntity(result.originalLineItem);
         const originalAccount = parsePrismaAccountToAccountEntity(result.originalLineItem.account);
-        const associateEvent = parsePrismaEventToEventEntity(result.accociateVoucher.event);
-        const associateVoucher = parsePrismaAssociateVoucherToEntity(result.accociateVoucher);
+        const associateEvent = parsePrismaEventToEventEntity(result.associateVoucher.event);
+        const associateVoucher = parsePrismaAssociateVoucherToEntity(result.associateVoucher);
         const originalVoucher = parsePrismaVoucherToVoucherEntity(
-          result.accociateVoucher.originalVoucher
+          result.associateVoucher.originalVoucher
         );
 
         const newResultAssociateLineItem: IAssociateLineItemEntity & {
@@ -734,7 +734,7 @@ export const voucherAPIPutUtils = {
       const lineItemReverseOther = voucherAPIPutUtils.initLineItemEntity(lineItem);
       lineItem.resultLineItem.forEach((result) => {
         // const lineItemIdBeReversed = result.resultLineItemId;
-        const { eventId } = result.accociateVoucher;
+        const { eventId } = result.associateVoucher;
         reversePairs.push({
           eventId,
           lineItemIdBeReversed: result.originalLineItemId,
@@ -932,8 +932,8 @@ export const voucherAPIDeleteUtils = {
         const resultAssociateLineItem = parsePrismaAssociateLineItemToEntity(result);
         const originalLineItem = parsePrismaLineItemToLineItemEntity(result.originalLineItem);
         const originalAccount = parsePrismaAccountToAccountEntity(result.originalLineItem.account);
-        const associateEvent = parsePrismaEventToEventEntity(result.accociateVoucher.event);
-        const associateVoucher = parsePrismaAssociateVoucherToEntity(result.accociateVoucher);
+        const associateEvent = parsePrismaEventToEventEntity(result.associateVoucher.event);
+        const associateVoucher = parsePrismaAssociateVoucherToEntity(result.associateVoucher);
 
         const newResultAssociateLineItem: IAssociateLineItemEntity & {
           associateVoucher: IAssociateVoucherEntity & {

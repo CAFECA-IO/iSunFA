@@ -258,8 +258,9 @@ export async function easyFindManyAccountsInPrisma(companyId: number, type: Acco
   return accounts;
 }
 
-export async function findUniqueAccountByCodeInPrisma(code: string, companyId?: number) {
-  const account: Account | null = await prisma.account.findUnique({
+// TODO: (20241126 - Shirley) FIXME: account code 可能重複，要改用 account id 找
+export async function findFirstAccountByCodeInPrisma(code: string, companyId?: number) {
+  const account: Account | null = await prisma.account.findFirst({
     where: {
       OR: [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
       code,
