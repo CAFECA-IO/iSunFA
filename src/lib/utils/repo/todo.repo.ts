@@ -99,10 +99,10 @@ export async function getTodoById(id: number) {
 // Info: (20241107 - Jacky) Update a Todo
 export async function updateTodo(
   id: number,
-  companyId: number,
   name: string,
   deadline: number,
-  note: string | null
+  note: string | null,
+  companyId?: number
 ) {
   const nowInSecond = getTimestampNow();
   const updatedTodo = await prisma.todo.update({

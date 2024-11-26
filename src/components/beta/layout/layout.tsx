@@ -29,7 +29,7 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
 
   const calculateRemainDays = (deletedAt: number) => {
     const now = new Date().getTime();
-    const days = 3 - Math.floor(((now - deletedAt * 1000) / 24) * 60 * 60 * 1000);
+    const days = 3 - Math.floor((now - deletedAt * 1000) / 24 / 60 / 60 / 1000);
     return days;
   };
 

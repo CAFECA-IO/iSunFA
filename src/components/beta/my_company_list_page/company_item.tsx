@@ -12,17 +12,11 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface ICompanyItemProps {
   myCompany: ICompanyAndRole;
-  toggleDeleteModal: () => void;
   setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setCompanyToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
-const CompanyItem = ({
-  myCompany,
-  toggleDeleteModal,
-  setCompanyToEdit,
-  setCompanyToDelete,
-}: ICompanyItemProps) => {
+const CompanyItem = ({ myCompany, setCompanyToEdit, setCompanyToDelete }: ICompanyItemProps) => {
   const { t } = useTranslation(['company']);
   const { selectCompany, selectedCompany } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
@@ -38,15 +32,18 @@ const CompanyItem = ({
     setIsOptionsDropdownOpen((prev) => !prev);
   };
 
+  const closeOptionsDropdown = () => {
+    setIsOptionsDropdownOpen(false);
+  };
+
   const openChangeTagModal = () => {
     setCompanyToEdit(myCompany);
-    toggleOptionsDropdown();
+    closeOptionsDropdown();
   };
 
   const openDeleteCompanyModal = () => {
     setCompanyToDelete(myCompany);
-    toggleDeleteModal();
-    toggleOptionsDropdown();
+    closeOptionsDropdown();
   };
 
   // Info: (20241113 - Liz) call Select Company API

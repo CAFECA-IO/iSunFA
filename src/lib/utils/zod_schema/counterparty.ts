@@ -63,7 +63,7 @@ const counterpartyDeleteQuerySchema = z.object({
   counterpartyId: zodStringToNumber,
 });
 
-const counterpartySchema = z.object({
+export const counterpartySchema = z.object({
   id: z.number().int(),
   companyId: z.number().int(),
   name: z.string(),

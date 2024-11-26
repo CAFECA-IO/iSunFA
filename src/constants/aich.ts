@@ -25,7 +25,7 @@ export enum AI_TYPE {
 }
 
 export const AICH_PATH = {
-  [AI_TYPE.CERTIFICATE]: `${aichPrefix}/certificate`,
-  [AI_TYPE.VOUCHER]: `${aichPrefix}/voucher`,
-  [AI_TYPE.HELP]: `${aichPrefix}/help`,
+  [AI_TYPE.CERTIFICATE]: `${aichPrefix}/ai/certificate`,
+  [AI_TYPE.VOUCHER]: `${aichPrefix}/ai/voucher`,
+  [AI_TYPE.HELP]: `${aichPrefix}/ai/help`,
 };

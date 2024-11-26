@@ -44,7 +44,12 @@ const MyCompanyListPage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['layout', 'dashboard', 'company'])),
+      ...(await serverSideTranslations(locale as string, [
+        'layout',
+        'dashboard',
+        'company',
+        'filter_section_type',
+      ])),
     },
   };
 };

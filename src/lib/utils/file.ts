@@ -69,6 +69,11 @@ export function parseFilePathWithBaseUrlPlaceholder(filePath: string): string {
   }
 }
 
+export function getImageUrlFromFileIdV1(fileId: number, companyId?: number): string {
+  const companyIdStr = companyId ? `/${companyId}` : '1';
+  return `/api/v1/company/${companyIdStr}/image/${fileId}`;
+}
+
 export async function decryptImageFile({
   imageBuffer,
   file,
