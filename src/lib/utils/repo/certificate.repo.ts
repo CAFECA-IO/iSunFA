@@ -87,7 +87,7 @@ export async function createCertificateWithEmptyInvoice(options: {
             taxRatio: 0,
             taxPrice: 0,
             totalPrice: 0,
-            type: InvoiceType.SALES_TRIPLICATE_INVOICE,
+            type: InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
             deductible: false,
             createdAt: nowInSecond,
             updatedAt: nowInSecond,
