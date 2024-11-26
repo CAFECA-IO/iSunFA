@@ -1,132 +1,51 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import TabsForLatestNews from '@/components/beta/latest_news_page/tabs_for_latest_news';
 import NewsList from '@/components/beta/latest_news_page/news_list';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { INews } from '@/interfaces/news';
 import { NewsType } from '@/constants/news';
 
 const LatestNews = () => {
-  const [activeTab, setActiveTab] = useState<number>(0);
   const { t } = useTranslation('dashboard');
+  const [type, setType] = useState<NewsType>(NewsType.FINANCIAL);
+  const [newsList, setNewsList] = useState<INews[]>([]);
 
-  /* === Fake Data === */
-  // Deprecated: (20241018 - Liz) FINANCIAL_NEWS, SYSTEM_NEWS, MATCHING_NEWS 是假資料，之後會改成從 user context 打 API 拿資料
-  const FINANCIAL_NEWS = [
-    {
-      id: 'financial-1',
-      title: '遇到金融詐騙免驚 移民署培力新住民金融消費新知',
-      type: NewsType.FINANCIAL,
-      date: '2024/09/13',
-    },
-    {
-      id: 'financial-2',
-      title: '凱基證券重視公平待客、友善金融',
-      type: NewsType.FINANCIAL,
-      date: '2024/09/12',
-    },
-    {
-      id: 'financial-3',
-      title: '華航志工到偏鄉2萬童樂學航空新知',
-      type: NewsType.FINANCIAL,
-      date: '2024/09/11',
-    },
-    {
-      id: 'financial-4',
-      title: '你在滑手機、追劇 他們正在汲取新知、思考未來！',
-      type: NewsType.FINANCIAL,
-      date: '2024/09/10',
-    },
-    {
-      id: 'financial-5',
-      title: 'ESG時代－金融業該如何落實責任投資？',
-      type: NewsType.FINANCIAL,
-      date: '2024/09/09',
-    },
-  ];
+  // Info: (20241126 - Liz) 打 API 取得最新消息列表
+  const { trigger: getNewsListAPI } = APIHandler<INews[]>(APIName.NEWS_LIST);
 
-  const SYSTEM_NEWS = [
-    {
-      id: 'system-1',
-      title: 'iSunFA V.14.10 更新版本',
-      type: NewsType.SYSTEM,
-      date: '2024/09/13',
-    },
-    {
-      id: 'system-2',
-      title: 'iSunFA V.14.10 更新通知',
-      type: NewsType.SYSTEM,
-      date: '2024/09/12',
-    },
-    {
-      id: 'system-3',
-      title: 'iSunFA V.14.09 實裝小提醒',
-      type: NewsType.SYSTEM,
-      date: '2024/09/11',
-    },
-    {
-      id: 'system-4',
-      title: 'iSunFA V.14.09 新功能重點整理',
-      type: NewsType.SYSTEM,
-      date: '2024/09/10',
-    },
-    {
-      id: 'system-5',
-      title: 'iSunFA V.14.09 懶人包一次看',
-      type: NewsType.SYSTEM,
-      date: '2024/09/09',
-    },
-  ];
+  // Info: (20241126 - Liz) 取得最新消息列表 (根據不同的 type)
+  useEffect(() => {
+    const getNewsList = async () => {
+      try {
+        const { data, success, code } = await getNewsListAPI({
+          query: { simple: true, type },
+        });
 
-  const MATCHING_NEWS = [
-    {
-      id: 'system-1',
-      title: 'Amazon 上傳相關憑證，徵求記帳士開立傳票',
-      type: NewsType.MATCH,
-      date: '2024/09/13',
-    },
-    {
-      id: 'system-2',
-      title: 'Apple 上傳相關憑證，徵求記帳士開立傳票',
-      type: NewsType.MATCH,
-      date: '2024/09/12',
-    },
-    {
-      id: 'system-3',
-      title: 'iSunFA V.14.09 實裝小提醒',
-      type: NewsType.MATCH,
-      date: '2024/09/11',
-    },
-    {
-      id: 'system-4',
-      title: 'Google 上傳相關憑證，徵求記帳士開立傳票',
-      type: NewsType.MATCH,
-      date: '2024/09/10',
-    },
-    {
-      id: 'system-5',
-      title: 'Netflix 上傳相關憑證，徵求記帳士開立傳票 5',
-      type: NewsType.MATCH,
-      date: '2024/09/09',
-    },
-  ];
+        if (success && data) {
+          setNewsList(data);
 
-  let newsList: { id: string; title: string; type: string; date: string }[] = [];
+          // Deprecated: (20241126 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('getNewsListAPI success:', 'data:', data);
+        } else {
+          // Deprecated: (20241126 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('getNewsListAPI failed:', code);
+        }
+      } catch (error) {
+        // Deprecated: (20241126 - Liz)
+        // eslint-disable-next-line no-console
+        console.log(error);
+      }
+    };
 
-  switch (activeTab) {
-    case 0:
-      newsList = FINANCIAL_NEWS;
-      break;
-    case 1:
-      newsList = SYSTEM_NEWS;
-      break;
-    case 2:
-      newsList = MATCHING_NEWS;
-      break;
-    default:
-      newsList = [];
-  }
+    getNewsList();
+  }, [type]);
 
   return (
     <DashboardCardLayout>
@@ -138,11 +57,10 @@ const LatestNews = () => {
           <MoreLink href={ISUNFA_ROUTE.LATEST_NEWS_PAGE} />
         </section>
 
-        {/* Tab */}
-        <TabsForLatestNews activeTab={activeTab} setActiveTab={setActiveTab} />
+        {/* // Info: (20241126 - Liz) Tab */}
+        <TabsForLatestNews activeTab={type} setActiveTab={setType} />
 
-        {/* News List */}
-        <NewsList list={newsList} />
+        <NewsList newsList={newsList} />
       </section>
     </DashboardCardLayout>
   );
