@@ -136,7 +136,6 @@ export async function withRequestValidation<T extends APIName, U>(
             payload = outputData;
           }
         } catch (handlerError) {
-          // console.log('handlerError: ', handlerError);
           statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
           loggerError({
             userId: session.userId ?? 0,
