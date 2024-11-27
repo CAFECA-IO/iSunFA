@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.8.5+124",
+  "version": "0.8.5+125",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -22,6 +22,7 @@
     "@prisma/client": "^5.14.0",
     "@types/formidable": "^3.4.5",
     "apexcharts": "^4.0.0",
+    "axios": "^1.7.8",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
     "chart.js": "^4.4.3",
