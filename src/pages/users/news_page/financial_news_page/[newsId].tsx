@@ -1,16 +1,18 @@
 import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
+
+// import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Layout from '@/components/beta/layout/layout';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import MatchNewsPageBody from '@/components/beta/latest_news_page/match_news_page_body';
+import FinancialNewsPageBody from '@/components/beta/news_page/financial_news_page_body';
 
-interface MatchNewsPageProps {
+interface FinancialNewsPageProps {
   newsId: string;
 }
 
-const MatchNewsPage = ({ newsId }: MatchNewsPageProps) => {
+const FinancialNewsPage = ({ newsId }: FinancialNewsPageProps) => {
   const { t } = useTranslation(['common']);
 
   return (
@@ -19,7 +21,7 @@ const MatchNewsPage = ({ newsId }: MatchNewsPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:LATEST_NEWS_PAGE.MATCH_NEWS')}</title>
+        <title>{t('common:LATEST_NEWS_PAGE.FINANCIAL_NEWS')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -36,10 +38,10 @@ const MatchNewsPage = ({ newsId }: MatchNewsPageProps) => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('common:LATEST_NEWS_PAGE.MATCH_NEWS')}
+        pageTitle={t('common:LATEST_NEWS_PAGE.FINANCIAL_NEWS')}
         goBackUrl={ISUNFA_ROUTE.LATEST_NEWS_PAGE}
       >
-        <MatchNewsPageBody newsId={newsId} />
+        <FinancialNewsPageBody newsId={newsId} />
       </Layout>
     </>
   );
@@ -60,4 +62,4 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   };
 };
 
-export default MatchNewsPage;
+export default FinancialNewsPage;

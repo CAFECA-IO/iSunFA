@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import Pagination from '@/components/pagination/pagination';
-import TabsForLatestNews from '@/components/beta/latest_news_page/tabs_for_latest_news';
-import NewsList from '@/components/beta/latest_news_page/news_list';
+import TabsForLatestNews from '@/components/beta/news_page/tabs_for_latest_news';
+import NewsList from '@/components/beta/news_page/news_list';
 import { useRouter } from 'next/router';
 import { NewsType } from '@/constants/news';
 import { APIName } from '@/constants/api_connection';

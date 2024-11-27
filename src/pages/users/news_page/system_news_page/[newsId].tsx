@@ -1,18 +1,16 @@
 import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
-
-// import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Layout from '@/components/beta/layout/layout';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import FinancialNewsPageBody from '@/components/beta/latest_news_page/financial_news_page_body';
+import SystemNewsPageBody from '@/components/beta/news_page/system_news_page_body';
 
-interface FinancialNewsPageProps {
+interface SystemNewsPageProps {
   newsId: string;
 }
 
-const FinancialNewsPage = ({ newsId }: FinancialNewsPageProps) => {
+const SystemNewsPage = ({ newsId }: SystemNewsPageProps) => {
   const { t } = useTranslation(['common']);
 
   return (
@@ -21,7 +19,7 @@ const FinancialNewsPage = ({ newsId }: FinancialNewsPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:LATEST_NEWS_PAGE.FINANCIAL_NEWS')}</title>
+        <title>{t('common:LATEST_NEWS_PAGE.SYSTEM_NEWS')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -38,10 +36,10 @@ const FinancialNewsPage = ({ newsId }: FinancialNewsPageProps) => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('common:LATEST_NEWS_PAGE.FINANCIAL_NEWS')}
+        pageTitle={t('common:LATEST_NEWS_PAGE.SYSTEM_NEWS')}
         goBackUrl={ISUNFA_ROUTE.LATEST_NEWS_PAGE}
       >
-        <FinancialNewsPageBody newsId={newsId} />
+        <SystemNewsPageBody newsId={newsId} />
       </Layout>
     </>
   );
@@ -62,4 +60,4 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   };
 };
 
-export default FinancialNewsPage;
+export default SystemNewsPage;
