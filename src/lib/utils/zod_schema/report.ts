@@ -70,3 +70,16 @@ export const generatePublicReportSchemaV2 = {
   outputSchema: z.number().nullable(),
   frontend: z.number().nullable(),
 };
+
+const getPublicReportQuerySchemaV2 = z.object({
+  reportId: zodStringToNumber,
+});
+
+export const getPublicReportSchemaV2 = {
+  input: {
+    querySchema: getPublicReportQuerySchemaV2,
+    bodySchema: nullSchema,
+  },
+  outputSchema: z.any(),
+  frontend: z.any(),
+};
