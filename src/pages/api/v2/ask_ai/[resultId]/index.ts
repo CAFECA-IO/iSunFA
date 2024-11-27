@@ -40,9 +40,10 @@ async function certificateHandler(key: AI_TYPE, resultId: string, session: ISess
 
   if (resultFromAI.payload && resultFromAI.payload.length > 0) {
     const { payload: aiPayload } = resultFromAI;
+    const { status, value } = aiPayload;
     const { companyId } = session;
     const invoiceList: IInvoiceEntity[] = await Promise.all(
-      aiPayload.map(async (invoice: IAIInvoice) => {
+      value.map(async (invoice: IAIInvoice) => {
         const counterparty = await fuzzySearchCounterpartyByName(
           invoice.counterpartyName,
           companyId
@@ -70,6 +71,7 @@ async function certificateHandler(key: AI_TYPE, resultId: string, session: ISess
 
     const { count } = await createManyInvoice(invoiceList);
     payload = {
+      aiStatus: status,
       aiType: AI_TYPE.CERTIFICATE,
       count,
     };
@@ -91,16 +93,18 @@ async function voucherHandler(key: AI_TYPE, resultId: string, session: ISessionD
   const resultFromAI = await fetchResultFromAICH(key, resultId);
   if (resultFromAI) {
     const { payload: aiPayload } = resultFromAI;
+    const { status, value } = aiPayload;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    const counterparty = await fuzzySearchCounterpartyByName(aiPayload.counterpartyName, companyId);
-    const lineItems = await formatLineItemsFromAICH(aiPayload.lineItems);
+    const counterparty = await fuzzySearchCounterpartyByName(value.counterpartyName, companyId);
+    const lineItems = await formatLineItemsFromAICH(value.lineItems);
 
     const nowTimestamp = getTimestampNow();
     const voucher: IAIResultVoucher = {
+      aiStatus: status,
       aiType: AI_TYPE.VOUCHER,
-      voucherDate: aiPayload.date || nowTimestamp, // Info: (20241107 - Murky) AI必須轉換出來
-      type: aiPayload.type || EventType.INCOME, // Info: (20241107 - Murky) 可以讓AI轉換
-      note: aiPayload.note || 'this is note',
+      voucherDate: value.date || nowTimestamp, // Info: (20241107 - Murky) AI必須轉換出來
+      type: value.type || EventType.INCOME, // Info: (20241107 - Murky) 可以讓AI轉換
+      note: value.note || 'this is note',
       counterParty: counterparty || PUBLIC_COUNTER_PARTY,
       lineItems,
     };
