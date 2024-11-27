@@ -25,8 +25,11 @@ export async function createNews(imageId: number, title: string, content: string
       },
     });
   } catch (error) {
-    const logError = loggerError(0, 'create news in createNews failed', error as Error);
-    logError.error('Prisma related create news in createNews in news.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'create news in createNews failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return news;
@@ -67,8 +70,11 @@ export async function listNews(
   try {
     newsList = await prisma.news.findMany(findManyArgs);
   } catch (error) {
-    const logError = loggerError(0, 'find many news in listNews failed', error as Error);
-    logError.error('Prisma related find many news in listNews in news.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'find many news in listNews failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   const totalCount = newsList.length;
@@ -118,8 +124,11 @@ export async function listNewsSimple(
   try {
     newsList = await prisma.news.findMany(findManyArgs);
   } catch (error) {
-    const logError = loggerError(0, 'find many news in listNewsSimple failed', error as Error);
-    logError.error('Prisma related find many news in listNewsSimple in news.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'find many news in listNewsSimple failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return newsList;
@@ -135,8 +144,11 @@ export async function getNewsById(newsId: number): Promise<News | null> {
       },
     });
   } catch (error) {
-    const logError = loggerError(0, 'find unique news in getNewsById failed', error as Error);
-    logError.error('Prisma related find unique news in getNewsById in news.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'find unique news in getNewsById failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return news;
@@ -150,7 +162,10 @@ export async function deleteNewsForTesting(newsId: number) {
       },
     });
   } catch (error) {
-    const logError = loggerError(0, 'delete news in deleteNewsForTesting failed', error as Error);
-    logError.error('Prisma related delete news in deleteNewsForTesting in news.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'delete news in deleteNewsForTesting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 }

@@ -420,14 +420,11 @@ export async function listCompanyAndRole(
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'find many company roles in listCompanyAndRole failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related find many company roles in listCompanyAndRole in admin.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'list company and role in listCompanyAndRole failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   const totalCount = companyRoleList.length;

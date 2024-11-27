@@ -64,10 +64,11 @@ async function handleVoucherCreatePrismaLogic(
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (_error) {
     const error = _error as Error;
-    const logError = loggerError(0, 'handleVoucherCreatePrismaLogic failed', error);
-    logError.error(
-      'Prisma related func. in handleVoucherCreatePrismaLogic in voucher/index.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'handleVoucherCreatePrismaLogic failed',
+      errorMessage: error.message,
+    });
 
     switch (error.message) {
       case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
@@ -164,8 +165,11 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
       }
     } catch (_error) {
-      const logError = loggerError(userId, 'handler request failed', _error as Error);
-      logError.error('handle voucher request failed in handler in voucher/index.ts');
+      loggerError({
+        userId,
+        errorType: 'handler request failed',
+        errorMessage: (_error as Error).message,
+      });
     }
   }
   const { httpCode, result } = formatApiResponse<ApiResponseType>(statusMessage, payload);

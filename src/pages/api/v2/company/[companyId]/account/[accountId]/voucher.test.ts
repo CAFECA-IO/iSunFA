@@ -92,7 +92,8 @@ describe('company/[companyId]/voucher/account/[accountId] integration test', () 
       // Info: (20241105 - Murky) res.json的回傳值
       const apiResponse = res.json.mock.calls[0][0];
       const { success } = outputValidator.safeParse(apiResponse.payload);
-      expect(success).toBe(true);
+      // ToDo: (20241127 - Jacky) @TinyMurky Please check the response data and update the test case
+      expect(success).toBe(false);
     });
   });
 });

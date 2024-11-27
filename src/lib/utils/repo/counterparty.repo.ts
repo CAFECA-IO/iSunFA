@@ -69,14 +69,11 @@ export async function listCounterparty(
   try {
     counterparties = await prisma.counterparty.findMany(findManyArgs);
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'find many counterparties in listCounterparties failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related find many counterparties in listCounterparties in counterparty.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'find many counterparties in listCounterparties failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   const totalCount = counterparties.length;
@@ -200,12 +197,11 @@ export async function fuzzySearchCounterpartyByName(name: string, companyId: num
     `;
     [counterparty] = counterparties;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Fuzzy search counterparty by name in fuzzySearchCounterpartyByName failed',
-      error as Error
-    );
-    logError.error('Prisma fuzzy search counterparty by name in counterparty.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Fuzzy search counterparty by name in fuzzySearchCounterpartyByName failed',
+      errorMessage: (error as Error).message,
+    });
   }
   return counterparty;
 }

@@ -26,8 +26,11 @@ export async function createFileFoldersIfNotExists(): Promise<void> {
     try {
       await fs.mkdir(folder, { recursive: true });
     } catch (error) {
-      const logError = loggerError(0, 'createFileFoldersIfNotExists failed', error as Error);
-      logError.error('Func. createFileFoldersIfNotExists in file.ts failed');
+      loggerError({
+        userId: 0,
+        errorType: 'createFileFoldersIfNotExists failed',
+        errorMessage: error as Error,
+      });
     }
   });
   CRYPTO_FOLDER_PATH.map(async (folder) => {

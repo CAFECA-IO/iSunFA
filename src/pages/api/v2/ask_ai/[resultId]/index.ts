@@ -14,47 +14,64 @@ import { AI_TYPE } from '@/constants/aich';
 import { fetchResultFromAICH, formatLineItemsFromAICH } from '@/lib/utils/aich';
 import { ISessionData } from '@/interfaces/session_data';
 import { fuzzySearchCounterpartyByName } from '@/lib/utils/repo/counterparty.repo';
+import { CurrencyType } from '@/constants/currency';
+import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
+import { IAIInvoice, IInvoiceEntity } from '@/interfaces/invoice';
+import { createManyInvoice } from '@/lib/utils/repo/invoice.repo';
 
 type CertificateAiResponse = {
   aiType: AI_TYPE; // Info: (20241107 - Murky) For zod discriminator
   [key: string]: unknown;
 };
 
+// ToDo: (20241126 - Jacky) Should be moved to interfaces with valid type
 type APIResponse = IAIResultVoucher | CertificateAiResponse | null;
 
 const DEFAULT_STATUS_MESSAGE = STATUS_MESSAGE.BAD_REQUEST;
 const DEFAULT_PAYLOAD = null;
 
-// Info: (20241004 - Murky) Mock promise to simulate fetching AI result
-const mockFetchAIResult = new Promise((resolve) => {
-  resolve(true);
-});
-
-// Info: (20241118 - Jacky) This handler is not needed in beta version
 // Info: (20241004 - Murky) Handler for the 'certificate' endpoint
-async function certificateHandler() {
+async function certificateHandler(key: AI_TYPE, resultId: string, session: ISessionData) {
   let statusMessage: string = DEFAULT_STATUS_MESSAGE;
   let payload: APIResponse = DEFAULT_PAYLOAD;
 
-  // Info: (20241004 - Murky) Simulate fetching data from an AI service
-  const resultFromAI = await mockFetchAIResult;
-  if (resultFromAI) {
-    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+  const resultFromAI = await fetchResultFromAICH(key, resultId);
+  statusMessage = STATUS_MESSAGE.SUCCESS_GET;
 
-    // Info: (20241004 - Murky) Populate the payload with certificate details
+  if (resultFromAI.payload && resultFromAI.payload.length > 0) {
+    const { payload: aiPayload } = resultFromAI;
+    const { companyId } = session;
+    const invoiceList: IInvoiceEntity[] = await Promise.all(
+      aiPayload.map(async (invoice: IAIInvoice) => {
+        const counterparty = await fuzzySearchCounterpartyByName(
+          invoice.counterpartyName,
+          companyId
+        );
+        const nowTimestamp = getTimestampNow();
+        return {
+          certificateId: invoice.certificateId || 555,
+          counterPartyId: counterparty?.id || PUBLIC_COUNTER_PARTY.id,
+          inputOrOutput: invoice.inputOrOutput || InvoiceTransactionDirection.INPUT,
+          date: invoice.date || nowTimestamp,
+          no: invoice.no || 'AI00000000',
+          currencyAlias: invoice.currencyAlias || CurrencyType.TWD,
+          priceBeforeTax: invoice.priceBeforeTax || 0,
+          taxType: invoice.taxType || InvoiceTaxType.TAXABLE,
+          taxRatio: invoice.taxRatio || 5,
+          taxPrice: invoice.taxPrice || 0,
+          totalPrice: invoice.totalPrice || 0,
+          type: invoice.type || InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+          deductible: invoice.deductible || false,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
+        };
+      })
+    );
+
+    const { count } = await createManyInvoice(invoiceList);
     payload = {
       aiType: AI_TYPE.CERTIFICATE,
-      inputOrOutput: 'input',
-      certificateDate: 10000001, // Info: (20241004 - Murky) Example certificate date
-      certificateNo: 'AB-12345678', // Info: (20241004 - Murky) Certificate number
-      currencyAlias: 'TWD', // Info: (20241004 - Murky) Currency code
-      priceBeforeTax: 4000, // Info: (20241004 - Murky) Price before tax
-      taxRatio: 5, // Info: (20241004 - Murky) Tax percentage
-      taxPrice: 200, // Info: (20241004 - Murky) Tax amount
-      totalPrice: 4200, // Info: (20241004 - Murky) Total price including tax
-      counterPartyId: 1, // Info: (20241004 - Murky) ID of the counterparty
-      invoiceType: 'triplicate_uniform_invoice', // Info: (20241004 - Murky) Type of invoice
-      deductible: true, // Info: (20241004 - Murky) Whether the amount is deductible
+      count,
     };
   }
 
@@ -170,13 +187,10 @@ export default async function handler(
   } catch (_error) {
     // Info: (20241004 - Murky) Handle any errors that occur during request processing
     const error = _error as Error;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error({
-      error,
-      requestMethod: req.method, // Info: (20241004 - Murky) Log the HTTP method
-      requestUrl: req.url, // Info: (20241004 - Murky) Log the request URL
-      requestBody: '[REDACTED]', // Info: (20241004 - Murky) Mask sensitive information in the request body
-      queryParams: req.query, // Info: (20241004 - Murky) Log the query parameters
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
     });
     statusMessage = error.message;
   }

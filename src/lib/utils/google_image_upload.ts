@@ -64,8 +64,11 @@ export async function uploadFileToGoogleCloud(
     await file.makePublic();
     url = `${GOOGLE_STORAGE_BUCKET_URL}${destFileName}`;
   } catch (error) {
-    const logError = loggerError(0, 'uploadFileToGoogleCloud failed', error as Error);
-    logError.error('Func. uploadFileToGoogleCloud in google_image_upload.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'uploadFileToGoogleCloud failed',
+      errorMessage: error as Error,
+    });
   }
   return url;
 }

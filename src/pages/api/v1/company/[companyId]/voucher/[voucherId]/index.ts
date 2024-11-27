@@ -42,10 +42,11 @@ async function handleVoucherUpdatePrismaLogic(
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (_error) {
     const error = _error as Error;
-    const logError = loggerError(0, 'handleVoucherUpdatePrismaLogic failed', error);
-    logError.error(
-      'Prisma related func. in handleVoucherUpdatePrismaLogic in voucher/voucherId/index.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'handleVoucherUpdatePrismaLogic failed',
+      errorMessage: error.message,
+    });
     switch (error.message) {
       case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
         statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
@@ -77,12 +78,11 @@ async function handlePutRequest(
     voucherUpdated = voucherUpdatedData.voucherUpdated;
     statusMessage = voucherUpdatedData.statusMessage;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'handleVoucherUpdatePrismaLogic in handlePutRequest failed',
-      error as Error
-    );
-    logError.error('Prisma related func. in handlePutRequest in voucher/voucherId/index.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'handleVoucherUpdatePrismaLogic in handlePutRequest failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return {
@@ -124,10 +124,11 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      const logError = loggerError(userId, 'handle voucherId request failed', error);
-      logError.error(
-        'handle voucher request failed in handler function in voucher/voucherId/index.ts'
-      );
+      loggerError({
+        userId,
+        errorType: 'handle voucherId request failed',
+        errorMessage: error.message,
+      });
       statusMessage = error.message;
     }
   }

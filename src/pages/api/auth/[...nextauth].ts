@@ -217,7 +217,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         } catch (_error) {
           // ToDo: (20240829 - Jacky) Add error handling with logger
           const error = _error as Error;
-          loggerError(session.userId || -1, 'Error in signIn callback', error);
+          loggerError({
+            userId: session.userId || -1,
+            errorType: 'Error in signIn callback',
+            errorMessage: error.message,
+          });
         }
         return true;
       },

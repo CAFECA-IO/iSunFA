@@ -117,9 +117,13 @@ export async function listLineItems({
 
   try {
     lineItems = await prisma.lineItem.findMany(findManyArgs);
-  } catch (error) {
-    const logError = loggerError(0, 'Find many line items in listLineItems failed', error as Error);
-    logError.error('Prisma find many line items in listLineItems in line_item.beta.repo.ts failed');
+  } catch (_error) {
+    const error = _error as Error;
+    loggerError({
+      userId: 0,
+      errorType: 'Find many line items in listLineItems failed',
+      errorMessage: error.message,
+    });
   }
 
   const hasNextPage = lineItems.length > pageSize;
@@ -197,8 +201,11 @@ export async function createLineItem({
   try {
     result = await prisma.lineItem.create(lineItemCreateArgs);
   } catch (error) {
-    const logError = loggerError(0, 'Create line item in createLineItem failed', error as Error);
-    logError.error('Prisma create line item in createLineItem in line_item.beta.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Create line item in createLineItem failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return result;
@@ -261,8 +268,11 @@ export async function updateLineItem({
   try {
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
-    const logError = loggerError(0, 'Update line item in updateLineItem failed', error as Error);
-    logError.error('Prisma update line item in updateLineItem in line_item.beta.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Update line item in updateLineItem failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return result;
@@ -294,14 +304,11 @@ export async function deleteLineItem(lineItemId: number): Promise<ILineItemInclu
   try {
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Soft delete line item in deleteLineItem failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma soft delete line item in deleteLineItem in line_item.beta.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'Soft delete line item in deleteLineItem failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return result;
@@ -443,8 +450,11 @@ export async function listLineItemsByAccount({
       skip,
     });
   } catch (error) {
-    const logError = loggerError(0, 'Find many line items in listLineItems failed', error as Error);
-    logError.error('Prisma find many line items in listLineItems in line_item.beta.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Find many line items in listLineItems failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   const hasNextPage = lineItems.length > pageSize;

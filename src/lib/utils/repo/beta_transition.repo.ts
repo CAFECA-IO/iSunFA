@@ -113,12 +113,11 @@ export async function listInvoiceVoucherJournal(
 
     return paginatedJournalList;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'List invoice voucher journal in listInvoiceVoucherJournal failed',
-      error as Error
-    );
-    logError.error('Func. listInvoiceVoucherJournal in journal.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'listInvoiceVoucherJournal failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -236,8 +235,11 @@ export async function createInvoice(
       data,
     });
   } catch (error) {
-    const logError = loggerError(0, 'Create invoice in createInvoice failed', error as Error);
-    logError.error('Prisma create invoice in createInvoice in invoice.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Create invoice in createInvoice failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -283,8 +285,11 @@ export async function createVoucher(
       data,
     });
   } catch (error) {
-    const logError = loggerError(0, 'Create voucher in createVoucher failed', error as Error);
-    logError.error('Prisma create voucher in createVoucher in invoice.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Create voucher in createVoucher failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -333,14 +338,11 @@ export async function createInvoiceVoucherJournal(
       data,
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Create invoice voucher journal in createInvoiceVoucherJournal failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma create invoice voucher journal in createInvoiceVoucherJournal in invoice.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'Create invoice voucher journal in createInvoiceVoucherJournal failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -505,8 +507,11 @@ export async function handlePrismaUpdateLogic(formattedInvoice: IInvoice, aichRe
       contractId || 0
     );
   } catch (error) {
-    const logError = loggerError(0, 'handlePrismaUpdateLogic failed', error as Error);
-    logError.error('Prisma related func. in handlePrismaUpdateLogic in invoice.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'handlePrismaUpdateLogic failed',
+      errorMessage: error as Error,
+    });
   }
 
   return journalIdBeUpdated;
@@ -536,14 +541,11 @@ export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'find unique ocr in findUniqueOcrInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related find unique ocr in findUniqueOcrInPrisma in invoice.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'find unique ocr in findUniqueOcrInPrisma failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return ocrIdInDB;
@@ -566,14 +568,11 @@ export async function updateOcrStatusInPrisma(ocrId: number, status: ProgressSta
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'update ocr status in updateOcrStatusInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related update ocr status in updateOcrStatusInPrisma in invoice.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'update ocr status in updateOcrStatusInPrisma failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -629,14 +628,11 @@ export async function createJournalInPrisma(
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'create journal in createJournalInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related create journal in createJournalInPrisma in invoice.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'create journal in createJournalInPrisma failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -713,18 +709,20 @@ export async function handlePrismaSavingLogic(
         await updateOcrStatusInPrisma(ocrIdInDB.id, ProgressStatus.HAS_BEEN_USED);
       }
     } catch (error) {
-      const logError = loggerError(0, 'handlePrismaSavingLogic failed', error as Error);
-      logError.error(
-        'Prisma related func. in handlePrismaSavingLogic in beta_transition.repo.ts failed'
-      );
+      loggerError({
+        userId: 0,
+        errorType: 'handlePrismaSavingLogic failed',
+        errorMessage: error as Error,
+      });
     }
 
     return journalIdBeCreated;
   } catch (error) {
-    const logError = loggerError(0, 'handlePrismaSavingLogic failed', error as Error);
-    logError.error(
-      'Prisma related func. in handlePrismaSavingLogic in beta_transition.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'handlePrismaSavingLogic failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }

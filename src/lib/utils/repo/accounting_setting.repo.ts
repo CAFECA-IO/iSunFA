@@ -21,14 +21,11 @@ export async function createAccountingSetting(companyId: number) {
       include: { shortcuts: true },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'create accounting setting in createAccountingSetting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related create accounting setting in createAccountingSetting in accounting_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'create accounting setting in createAccountingSetting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return accountingSetting;
@@ -43,14 +40,11 @@ export async function getAccountingSettingByCompanyId(companyId: number) {
       include: { shortcuts: true },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'get accounting setting in getAccountingSetting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related get accounting setting in getAccountingSetting in accounting_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'get accounting setting in getAccountingSetting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return accountingSetting;
@@ -92,14 +86,11 @@ export async function updateAccountingSettingById(id: number, data: IAccountingS
       accountingSetting = await getAccountingSettingByCompanyId(data.companyId);
     }
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'update accounting setting in updateAccountingSetting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related update accounting setting in updateAccountingSetting in accounting_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'update accounting setting in updateAccountingSetting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return accountingSetting;
@@ -113,14 +104,11 @@ export async function deleteAccountingSettingByIdForTesting(id: number) {
       where: { id },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'delete accounting setting in deleteAccountingSettingByIdForTesting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related delete accounting setting in deleteAccountingSettingByIdForTesting in accounting_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'delete accounting setting in deleteAccountingSettingByIdForTesting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return accountingSetting;

@@ -67,10 +67,11 @@ async function deleteEmployee(employeeIdNumber: number): Promise<void> {
   try {
     await updateEndDateByEmployeeId(employeeIdNumber, targetTime);
   } catch (error) {
-    const logError = loggerError(0, 'delete employee in deleteEmployee failed', error as Error);
-    logError.error(
-      'Prisma related updateEndDateByEmployeeId in deleteEmployee in employee/employeeId/index.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'delete employee in deleteEmployee failed',
+      errorMessage: (error as Error).message,
+    });
   }
 }
 
@@ -96,10 +97,11 @@ async function updateEmployee(
     );
     await updateEmployeeProject(employeeIdNumber, projectIdsNames, targetTime);
   } catch (error) {
-    const logError = loggerError(0, 'update employee in updateEmployee failed', error as Error);
-    logError.error(
-      'Prisma related updateEmployeeById or updateEmployeeProject in updateEmployee in employee/employeeId/index.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'update employee in updateEmployee failed',
+      errorMessage: (error as Error).message,
+    });
   }
   const employee = await getEmployeeById(employeeIdNumber);
   const projects = await getProjectsByEmployeeId(employeeIdNumber);

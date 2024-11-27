@@ -245,8 +245,11 @@ async function generateReport(
 
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
-    const logError = loggerError(0, 'generateReport failed', error as Error);
-    logError.error('Func. generateReport in company/companyId/report/index.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'generateReport failed',
+      errorMessage: (error as Error).message,
+    });
   }
   return reportContent;
 }

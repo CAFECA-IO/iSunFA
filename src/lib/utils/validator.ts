@@ -1,12 +1,9 @@
 import { API_ZOD_SCHEMA, ZOD_SCHEMA_API } from '@/constants/zod_schema';
-// import { NextApiRequest } from 'next';
 import { z } from 'zod';
-// import { loggerRequest } from '@/lib/utils/logger_back';
-// import { APIPath } from '@/constants/api_connection';
 import { ApiValidationError } from '@/lib/utils/error/api_validation_error';
 import { NextApiRequest } from 'next';
-import { APIName, APIPath } from '@/constants/api_connection';
-import { loggerRequest, loggerError } from '@/lib/utils/logger_back';
+import { APIName } from '@/constants/api_connection';
+import { loggerError } from '@/lib/utils/logger_back';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -66,12 +63,11 @@ export function validateAndFormatData<T extends z.ZodTypeAny>(
       zodErrorMessage,
       issues: error.issues,
     };
-    const logger = loggerError(
-      0,
-      `Validate and format data by zod failed`,
-      JSON.stringify(errorOption)
-    );
-    logger.error('Data validation failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Validate and format data by zod failed',
+      errorMessage: JSON.stringify(errorOption),
+    });
     throw new ApiValidationError(`Data validation failed`, errorOption);
   }
 }
@@ -138,17 +134,12 @@ export function validateRequest<T extends keyof typeof API_ZOD_SCHEMA>(
     payload.body = validateAndFormatData(bodyValidator, body);
   } catch (_error) {
     const error = _error as ApiValidationError;
-    const logger = loggerRequest(
+    loggerError({
       userId,
-      APIPath[apiName],
-      req.method || 'unknown',
-      400,
-      error,
-      req.headers['user-agent'] || 'unknown user-agent',
-      req.socket.remoteAddress || 'unknown ip'
-    );
+      errorType: 'Request validation failed',
+      errorMessage: error,
+    });
 
-    logger.error('Request validation failed');
     // Info: (20240909 - Murky) if validator is z.ZodOptional (which used when query or body is not needed), it will return null
     payload = {
       query: null,

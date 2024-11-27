@@ -10,8 +10,8 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { InvoiceType } from '@/constants/invoice';
-import { loggerError, loggerRequest } from '@/lib/utils/logger_back';
-import { APIName, APIPath } from '@/constants/api_connection';
+import { loggerError } from '@/lib/utils/logger_back';
+import { APIName } from '@/constants/api_connection';
 import { validateRequest } from '@/lib/utils/validator';
 import { EventType } from '@/constants/account';
 import { handlePrismaSavingLogic } from '@/lib/utils/repo/beta_transition.repo';
@@ -58,10 +58,11 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
       body: JSON.stringify([invoiceData]),
     });
   } catch (error) {
-    const logError = loggerError(0, 'upload invoice to AICH failed', error as Error);
-    logError.error(
-      'upload invoice to AICH failed when fetch in uploadInvoiceToAICH in invoice/index.ts'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'upload invoice to AICH failed',
+      errorMessage: (error as Error).message,
+    });
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -86,10 +87,11 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    const logError = loggerError(0, 'get payload from response JSON failed', error as Error);
-    logError.error(
-      'get payload from response JSON failed when await responseJSON in getPayloadFromResponseJSON in invoice/index.ts'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'get payload from response JSON failed',
+      errorMessage: (error as Error).message,
+    });
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -182,18 +184,6 @@ export default async function handler(
     }
   } else {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
-
-    const logger = loggerRequest(
-      userId,
-      APIPath[APIName.INVOICE_CREATE],
-      req.method || 'unknown',
-      401,
-      { message: 'Forbidden' },
-      req.headers['user-agent'] || 'unknown user-agent',
-      req.socket.remoteAddress || 'unknown ip'
-    );
-
-    logger.error('Request validation failed');
   }
 
   const { httpCode, result } = formatApiResponse<APIReturnType>(statusMessage, payload);

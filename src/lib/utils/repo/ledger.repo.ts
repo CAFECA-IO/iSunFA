@@ -250,8 +250,11 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       },
     };
   } catch (error) {
-    const logError = loggerError(0, 'listLedger in ledger.repo.ts failed', error as Error);
-    logError.error('Prisma related listLedger in ledger.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'listLedger in ledger.repo.ts failed',
+      errorMessage: error as Error,
+    });
   }
 
   return ledgerPayload;

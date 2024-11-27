@@ -65,14 +65,12 @@ export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
 
     return result;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'find unique journal involve invoice payment in findUniqueJournalInvolveInvoicePaymentInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related find unique journal involve invoice payment in findUniqueJournalInvolveInvoicePaymentInPrisma in voucher.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType:
+        'find unique journal involve invoice payment in findUniqueJournalInvolveInvoicePaymentInPrisma failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -90,14 +88,11 @@ export async function findFirstAccountByNameInPrisma(accountName: string) {
 
     return result?.id || null;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'find first account by name in findFirstAccountByNameInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related find first account by name in findFirstAccountByNameInPrisma in voucher.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'find first account by name in findFirstAccountByNameInPrisma failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -124,14 +119,12 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
 
     return result;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'find first account belongs to company in findFirstAccountBelongsToCompanyInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related find first account belongs to company in findFirstAccountBelongsToCompanyInPrisma in voucher.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType:
+        'find first account belongs to company in findFirstAccountBelongsToCompanyInPrisma failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -157,14 +150,11 @@ export async function findUniqueVoucherInPrisma(voucherId: number) {
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'find unique voucher in findUniqueVoucherInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related find unique voucher in findUniqueVoucherInPrisma in voucher.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'find unique voucher in findUniqueVoucherInPrisma failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return voucherData;
@@ -222,14 +212,11 @@ export async function createLineItemInPrisma(
 
     return result.id;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'create line item in createLineItemInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related create line item in createLineItemInPrisma in voucher.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'create line item in createLineItemInPrisma failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -278,14 +265,11 @@ export async function getLatestVoucherNoInPrisma(
 
     return `${formattedDate}${newVoucherNo}`;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'get latest voucher no in getLatestVoucherNoInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related get latest voucher no in getLatestVoucherNoInPrisma in voucher.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'get latest voucher no in getLatestVoucherNoInPrisma failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -362,14 +346,11 @@ export async function findManyVoucherWithCashInPrisma(
 
     return vouchers;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'find many voucher with cash in findManyVoucherWithCashInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related find many voucher with cash in findManyVoucherWithCashInPrisma in voucher.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'find many voucher with cash in findManyVoucherWithCashInPrisma failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -928,14 +909,11 @@ export async function getOneVoucherByIdWithoutInclude(voucherId: number) {
 
     return voucher;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'get one voucher by id without include in getOneVoucherByIdWithoutInclude failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related get one voucher by id without include in getOneVoucherByIdWithoutInclude in voucher.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'get one voucher by id without include in getOneVoucherByIdWithoutInclude failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -1033,14 +1011,11 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'get accounting setting in getAccountingSetting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related get accounting setting in getAccountingSetting in accounting_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType: 'get accounting setting in getAccountingSetting failed',
+      errorMessage: (error as Error).message,
+    });
   }
   return voucher;
 }
@@ -1165,12 +1140,11 @@ export async function getManyVoucherV2(options: {
   try {
     totalCount = await prisma.voucher.count({ where });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Count total count of voucher in getManyVoucherV2 failed',
-      error as Error
-    );
-    logError.error('Prisma count voucher in getManyVoucherV2 failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Count total count of voucher in getManyVoucherV2 failed',
+      errorMessage: error as Error,
+    });
   }
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -1307,12 +1281,11 @@ export async function getManyVoucherV2(options: {
         break;
     }
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Find many accounts in findManyAccountsInPrisma failed',
-      error as Error
-    );
-    logError.error('Prisma find many accounts in account.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Find many accounts in findManyAccountsInPrisma failed',
+      errorMessage: error as Error,
+    });
   }
 
   const hasNextPage = vouchers.length > pageSize;
@@ -1444,12 +1417,11 @@ export async function getManyVoucherByAccountV2(options: {
   try {
     totalCount = await prisma.voucher.count({ where });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Count total count of voucher in getManyVoucherV2 failed',
-      error as Error
-    );
-    logError.error('Prisma count voucher in getManyVoucherV2 failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Count total count of voucher in getManyVoucherV2 failed',
+      errorMessage: error as Error,
+    });
   }
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -1566,12 +1538,11 @@ export async function getManyVoucherByAccountV2(options: {
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Find many accounts in findManyAccountsInPrisma failed',
-      error as Error
-    );
-    logError.error('Prisma find many accounts in account.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Find many accounts in findManyAccountsInPrisma failed',
+      errorMessage: error as Error,
+    });
   }
 
   const hasNextPage = vouchers.length > pageSize;
@@ -1678,12 +1649,11 @@ export async function getUnreadVoucherCount(options: {
     });
     unreadVoucherCount = totalVoucherCount - readVoucherCount;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Count unread voucher in getUnreadVoucherCount failed',
-      error as Error
-    );
-    logError.error('Prisma count unread voucher in getUnreadVoucherCount failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Count unread voucher in getUnreadVoucherCount failed',
+      errorMessage: error as Error,
+    });
   }
 
   return unreadVoucherCount;
@@ -1757,14 +1727,12 @@ export async function getOneVoucherWithLineItemAndAccountV2(voucherId: number) {
 
     return voucher;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'get one voucher with line item and account in getOneVoucherWithLineItemAndAccountV2 failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related get one voucher with line item and account in getOneVoucherWithLineItemAndAccountV2 in voucher.repo.ts failed'
-    );
+    loggerError({
+      userId: 0,
+      errorType:
+        'get one voucher with line item and account in getOneVoucherWithLineItemAndAccountV2 failed',
+      errorMessage: error as Error,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }

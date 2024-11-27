@@ -211,12 +211,11 @@ export async function listTrialBalance(
       total: totalFromTree,
     };
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'listTrialBalance in trial_balance.repo.ts failed',
-      error as Error
-    );
-    logError.error('Prisma related listTrialBalance in trial_balance.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'listTrialBalance in trial_balance.repo.ts failed',
+      errorMessage: error as Error,
+    });
   }
 
   return trialBalancePayload;

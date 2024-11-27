@@ -23,12 +23,29 @@ const handleCertificateRequest = async (
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAskResult | null = null;
 
-  const certificate = { fileId: targetIdList[0], companyId };
-  const formdata = new FormData();
-  formdata.append('certificate', JSON.stringify(certificate));
+  const fileList = await listFileByIdList(targetIdList);
+
+  const fileBlobList = await Promise.all(
+    fileList.map(async (file) => {
+      const filePath = parseFilePathWithBaseUrlPlaceholder(file.url);
+      const fileBuffer = await readFile(filePath);
+      const decryptFileBuffer = await decryptImageFile({
+        imageBuffer: fileBuffer,
+        file,
+        companyId,
+      });
+      const decryptFileBlob = bufferToBlob(decryptFileBuffer, file.mimeType);
+      return decryptFileBlob;
+    })
+  );
+
+  const formData = new FormData();
+  fileBlobList.forEach((fileBlob) => {
+    formData.append('image', fileBlob);
+  });
 
   try {
-    const resultId = await fetchResultIdFromAICH(key, formdata);
+    const resultId = await fetchResultIdFromAICH(key, formData);
 
     statusMessage = STATUS_MESSAGE.CREATED;
     payload = {
@@ -65,10 +82,9 @@ const handleVoucherRequest = async (companyId: number, key: AI_TYPE, targetIdLis
   );
 
   const formData = new FormData();
-  formData.append('image', fileBlobList[0]);
-  // fileBlobList.forEach((fileBlob) => {
-  //   formData.append('image', fileBlob);
-  // });
+  fileBlobList.forEach((fileBlob) => {
+    formData.append('image', fileBlob);
+  });
 
   try {
     const resultId = await fetchResultIdFromAICH(key, formData);
