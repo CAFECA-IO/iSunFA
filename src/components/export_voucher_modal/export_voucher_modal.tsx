@@ -42,11 +42,9 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
     }
   }, [isModalVisible]);
 
-  // Info: (20241126 - Julian) 顯示 Toast
   useEffect(() => {
     if (isLoading === false) {
       // Info: (20241126 - Julian) 顯示失敗 Toast
-
       if (!success) {
         toastHandler({
           id: 'export-voucher-error',
