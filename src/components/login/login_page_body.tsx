@@ -24,18 +24,17 @@ const Loader = () => {
 
 const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
   const { t } = useTranslation('dashboard');
-  const { isAuthLoading, authenticateUser, isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy } =
-    useUserCtx();
+  const {
+    isAuthLoading,
+    authenticateUser,
+    isSignIn,
+    isAgreeTermsOfService,
+    isAgreePrivacyPolicy,
+    handleAppleSignIn,
+  } = useUserCtx();
 
   const googleAuthSignIn = () => {
     authenticateUser(Provider.GOOGLE, {
-      invitation,
-      action,
-    });
-  };
-
-  const appleAuthSignIn = () => {
-    authenticateUser(Provider.APPLE, {
       invitation,
       action,
     });
@@ -102,7 +101,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
             {IS_APPLE_LOGIN_ENABLED && (
               <button
                 type="button"
-                onClick={appleAuthSignIn}
+                onClick={handleAppleSignIn}
                 className="flex items-center justify-center gap-15px rounded-sm bg-black p-15px"
                 disabled={!IS_APPLE_LOGIN_ENABLED}
               >
