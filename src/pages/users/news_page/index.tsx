@@ -44,7 +44,12 @@ const LatestNewsPage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['layout', 'dashboard', 'date_picker'])),
+      ...(await serverSideTranslations(locale as string, [
+        'layout',
+        'dashboard',
+        'date_picker',
+        'search',
+      ])),
     },
   };
 };
