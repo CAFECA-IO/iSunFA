@@ -121,6 +121,17 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         checks: ['pkce'],
       }),
     ],
+    cookies: {
+      pkceCodeVerifier: {
+        name: 'next-auth.pkce.code_verifier',
+        options: {
+          httpOnly: true,
+          sameSite: 'none',
+          secure: true,
+          maxAge: 900,
+        },
+      },
+    },
     pages: {
       signIn: ISUNFA_ROUTE.LOGIN,
     },
