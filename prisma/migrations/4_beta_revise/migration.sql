@@ -1,3 +1,4 @@
+-- Step 1: 重構會計科目表 (account table) --
 -- 1. 暫時禁用相關外鍵約束
 ALTER TABLE "line_item" DROP CONSTRAINT "line_item_account_id_fkey";
 ALTER TABLE "account" DROP CONSTRAINT "account_parent_code_fkey";
@@ -1527,9 +1528,6 @@ ALTER TABLE "account" ADD CONSTRAINT "account_root_code_fkey"
 DROP TABLE account_temp;
 DROP TABLE account_id_mapping;
 
--- 11. 重置序列（如果需要）
-ALTER SEQUENCE account_id_seq RESTART WITH 10000000;
-
 -- 12. 新增 parent_id 和 root_id 欄位（先不加 NOT NULL）
 ALTER TABLE account ADD COLUMN parent_id INTEGER;
 ALTER TABLE account ADD COLUMN root_id INTEGER;
@@ -1594,23 +1592,32 @@ ALTER TABLE account
     ON DELETE RESTRICT 
     ON UPDATE CASCADE;
 
+-- Step 2: 修正關聯明細表 (associate_line_item table) --
+-- 2.1 修正欄位名稱拼寫錯誤
 -- DropForeignKey
 ALTER TABLE "associate_line_item" DROP CONSTRAINT "associate_line_item_accociate_voucher_id_fkey";
-
 -- AlterTable
 ALTER TABLE "associate_line_item" 
 RENAME COLUMN "accociate_voucher_id" TO "associate_voucher_id";
 
+-- Step 3: 更新公司設定表 (company_setting table) --
+-- 3.1 新增國家代碼欄位，預設值為 'tw'
 -- AlterTable
 ALTER TABLE "company_setting" 
 ADD COLUMN "country_code" TEXT NOT NULL DEFAULT 'tw';
 
+-- Step 4: 修正事件表 (event table) --
+-- 4.1 修正欄位名稱拼寫錯誤
 -- AlterTable
 ALTER TABLE "event" 
 RENAME COLUMN "frequence" TO "frequency";
 
+-- Step 5: 優化會計科目表索引 (account table) --
+-- 5.1 新增 ID 唯一索引以提升查詢效能
 -- CreateIndex
 CREATE UNIQUE INDEX "account_id_key" ON "account"("id");
 
+-- Step 6: 重建關聯明細表的外鍵關係 --
+-- 6.1 建立正確的外鍵約束
 -- AddForeignKey
 ALTER TABLE "associate_line_item" ADD CONSTRAINT "associate_line_item_associate_voucher_id_fkey" FOREIGN KEY ("associate_voucher_id") REFERENCES "associate_voucher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
