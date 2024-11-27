@@ -27,6 +27,7 @@
     "**/*.tsx",
     "tailwind.config.ts",
     "scripts/update_version.js"
-  ],
+// , "src/pages/api/auth/callback/apple.ts."  
+],
   "exclude": ["node_modules"]
 }

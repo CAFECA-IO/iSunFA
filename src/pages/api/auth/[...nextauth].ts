@@ -111,6 +111,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       AppleProvider({
         clientId: process.env.APPLE_CLIENT_ID as string,
         clientSecret: generateAppleClientSecret(),
+        authorization: {
+          params: {
+            response_type: 'code', // Info: (20241127-tzuhan) 指定授權類型
+            scope: 'openid email', // Info: (20241127-tzuhan) 必須包含 openid 和 email
+            response_mode: 'form_post', // Info: (20241127-tzuhan) 使用 form_post 方式回傳
+          },
+        },
       }),
     ],
     pages: {
