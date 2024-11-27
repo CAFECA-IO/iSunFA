@@ -1,4 +1,9 @@
-import { createCertificateWithEmptyInvoice } from '@/lib/utils/repo/certificate.repo';
+import {
+  createCertificateWithEmptyInvoice,
+  getCertificatesV2,
+  getUnreadCertificateCount,
+  upsertUserReadCertificates,
+} from '@/lib/utils/repo/certificate.repo';
 import {
   ICertificate,
   ICertificateEntity,
@@ -7,19 +12,26 @@ import {
 import loggerBack from '@/lib/utils/logger_back';
 import { Logger } from 'pino';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { getImageUrlFromFileIdV1, initFileEntity } from '@/lib/utils/file';
+import {
+  decryptImageFile,
+  getImageUrlFromFileIdV1,
+  initFileEntity,
+  parseFilePathWithBaseUrlPlaceholder,
+} from '@/lib/utils/file';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
 import { parsePrismaUserCertificateToUserCertificateEntity } from '@/lib/utils/formatter/user_certificate.formatter';
 import {
+  Prisma,
   Voucher as PrismaVoucher,
   VoucherCertificate as PrismaVoucherCertificate,
+  File as PrismaFile,
 } from '@prisma/client';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { parsePrismaVoucherCertificateToEntity } from '@/lib/utils/formatter/voucher_certificate.formatter';
 import { initInvoiceEntity } from '@/lib/utils/invoice';
 import { parsePrismaInvoiceToInvoiceEntity } from '@/lib/utils/formatter/invoice.formatter';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
-import { CurrencyType } from '@/constants/currency';
+import { CurrencyType, OEN_CURRENCY } from '@/constants/currency';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 import { parsePrismaCertificateToCertificateEntity } from '@/lib/utils/formatter/certificate.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
@@ -32,6 +44,12 @@ import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatt
 import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { InvoiceTabs } from '@/constants/certificate';
+import { SortBy, SortOrder } from '@/constants/sort';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
+import { readFile } from 'fs/promises';
+import { bufferToBlob } from '@/lib/utils/parse_image_form';
 
 export const certificateAPIPostUtils = {
   /**
@@ -144,7 +162,7 @@ export const certificateAPIPostUtils = {
         taxRatio: 0,
         taxPrice: 0,
         totalPrice: 0,
-        type: InvoiceType.SALES_TRIPLICATE_INVOICE,
+        type: InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
         deductible: false,
         createdAt: nowInSecond,
         updatedAt: nowInSecond,
@@ -263,7 +281,100 @@ export const certificateAPIPostUtils = {
       message: JSON.stringify(certificate),
     });
   },
+
+  getAndDecryptFile: async (
+    file: PrismaFile,
+    options: {
+      companyId: number;
+    }
+  ): Promise<Blob> => {
+    const { companyId } = options;
+    const filePath = parseFilePathWithBaseUrlPlaceholder(file.url);
+    const fileBuffer = await readFile(filePath);
+    const decryptFileBuffer = await decryptImageFile({
+      imageBuffer: fileBuffer,
+      file,
+      companyId,
+    });
+    const decryptFileBlob = bufferToBlob(decryptFileBuffer, file.mimeType);
+    return decryptFileBlob;
+  },
+
+  sendFileToAI: async (
+    file: PrismaFile,
+    options: {
+      companyId: number;
+    }
+  ) => {
+    const { companyId } = options;
+    const fileBlob = await certificateAPIPostUtils.getAndDecryptFile(file, { companyId });
+    const formData = new FormData();
+    formData.append('image', fileBlob);
+  },
 };
+
+export const certificateAPIGetListUtils = {
+  getPaginatedCertificateList: (options: {
+    companyId: number;
+    startDate: number;
+    endDate: number;
+    page: number;
+    pageSize: number;
+    sortOption: {
+      // Info: (20241126 - Murky) 畫面沒有特定要sort哪些值
+      sortBy: SortBy;
+      sortOrder: SortOrder;
+    }[];
+    searchQuery?: string | undefined;
+    isDeleted?: boolean | undefined;
+    type?: InvoiceType | undefined;
+    tab?: InvoiceTabs | undefined;
+  }): Promise<
+    IPaginatedData<PostCertificateResponse[]> & {
+      where: Prisma.CertificateWhereInput;
+    }
+  > => {
+    return getCertificatesV2(options);
+  },
+
+  getUnreadCertificateCount: (options: {
+    userId: number;
+    tab: InvoiceTabs;
+    where: Prisma.CertificateWhereInput;
+  }): Promise<number> => {
+    return getUnreadCertificateCount(options);
+  },
+
+  getCurrencyFromSetting: async (companyId: number) => {
+    const accountingSetting = await getAccountingSettingByCompanyId(companyId);
+    const currencyKey =
+      (accountingSetting?.currency as keyof typeof OEN_CURRENCY) || CurrencyType.TWD;
+    const currency = OEN_CURRENCY[currencyKey];
+    return currency;
+  },
+
+  getSumOfTotalInvoicePrice: (certificates: ICertificate[]): number => {
+    return certificates.reduce((acc, certificate) => {
+      if (!certificate?.invoice?.totalPrice) {
+        return acc;
+      }
+      return acc + certificate.invoice.totalPrice;
+    }, 0);
+  },
+  upsertUserReadCertificates: (options: {
+    certificateIdsBeenRead: number[];
+    userId: number;
+    nowInSecond: number;
+  }) => {
+    const { certificateIdsBeenRead, userId, nowInSecond } = options;
+    return upsertUserReadCertificates({
+      userId,
+      certificateIds: certificateIdsBeenRead,
+      nowInSecond,
+    });
+  },
+};
+
 export const mockCertificateList = [
   {
     id: 1,

@@ -1,8 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import handler from '@/pages/api/v2/company/[companyId]/account/[accountId]/voucher';
+import handler from '@/pages/api/v2/company/[companyId]/report/public/index';
 import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
-import { voucherGetByAccountSchema } from '@/lib/utils/zod_schema/voucher';
+import { FinancialReportTypesKeyReportSheetTypeMapping, ReportType } from '@/constants/report';
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
+import { ReportLanguagesKey } from '@/interfaces/report_language';
 
 jest.mock('../../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
@@ -60,24 +62,23 @@ describe('company/[companyId]/voucher/account/[accountId] integration test', () 
   afterEach(() => {
     jest.clearAllMocks();
   });
-  describe('Get one voucher', () => {
-    it('should return data match frontend validator', async () => {
+  xdescribe('Post Public Report', () => {
+    it('should return data match datatype', async () => {
       req = {
         headers: {},
-        query: {
-          accountId: '1981',
-          page: '1',
-          pageSize: '10',
-          // tab: VoucherListTabV2.UPLOADED,
-          // type: EventType.PAYMENT,
-          startDate: '1',
-          endDate: '1772617600',
-          // searchQuery: 'string',
-          // sortOption: '',
-        },
-        method: 'GET',
+        query: {},
+        method: 'POST',
         json: jest.fn(),
-        body: {},
+        body: {
+          // projectId: -1,
+          type: FinancialReportTypesKeyReportSheetTypeMapping[
+            FinancialReportTypesKey.balance_sheet
+          ], // 更新為每次迭代的類型
+          reportLanguage: ReportLanguagesKey.tw,
+          from: 0,
+          // to: period.endTimeStamp,
+          reportType: ReportType.FINANCIAL,
+        },
       } as unknown as jest.Mocked<NextApiRequest>;
 
       res = {
@@ -85,14 +86,11 @@ describe('company/[companyId]/voucher/account/[accountId] integration test', () 
         json: jest.fn(),
       } as unknown as jest.Mocked<NextApiResponse>;
 
-      const outputValidator = voucherGetByAccountSchema.frontend;
-
       await handler(req, res);
 
       // Info: (20241105 - Murky) res.json的回傳值
       const apiResponse = res.json.mock.calls[0][0];
-      const { success } = outputValidator.safeParse(apiResponse.payload);
-      expect(success).toBe(true);
+      expect(apiResponse.payload).toBeGreaterThan(0);
     });
   });
 });

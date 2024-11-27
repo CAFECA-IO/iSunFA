@@ -45,7 +45,7 @@ interface IDefaultSubMenuOption {
 
 enum SubMenuOptionType {
   LINK = 'Link',
-  MODAL = 'Modal',
+  BUTTON = 'Button',
 }
 
 interface ISubMenuOptionWithLink extends IDefaultSubMenuOption {
@@ -53,7 +53,7 @@ interface ISubMenuOptionWithLink extends IDefaultSubMenuOption {
   link: string;
 }
 interface ISubMenuOptionWithModal extends IDefaultSubMenuOption {
-  type: SubMenuOptionType.MODAL;
+  type: SubMenuOptionType.BUTTON;
   link?: undefined;
 }
 
@@ -192,7 +192,7 @@ const MENU_CONFIG: TMenuOption[] = [
         caption: 'EMBED_CODE',
         subMenu: [
           {
-            type: SubMenuOptionType.MODAL,
+            type: SubMenuOptionType.BUTTON,
             title: 'GENERATE_EMBED_CODE',
             needToVerifyCompany: true,
           },
@@ -266,12 +266,16 @@ const SubMenuOption = ({
   const noSelectedCompany = !selectedCompany;
   const [isEmbedCodeModalOpen, setIsEmbedCodeModalOpen] = useState<boolean>(false);
 
-  const toggleModal = () => {
+  const toggleEmbedCodeModal = () => {
+    setIsEmbedCodeModalOpen((prev) => !prev);
+  };
+
+  const onClickButton = () => {
     if (title === 'GENERATE_EMBED_CODE') {
-      setIsEmbedCodeModalOpen((prev) => !prev);
+      toggleEmbedCodeModal();
     }
 
-    // Info: (20241121 - Liz) If there are more modals, add more conditions here
+    // Info: (20241126 - Liz) 其他按鈕的 onClick 事件新增在這裡
   };
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -321,12 +325,12 @@ const SubMenuOption = ({
     );
   }
 
-  if (type === SubMenuOptionType.MODAL) {
+  if (type === SubMenuOptionType.BUTTON) {
     return (
       <>
         <button
           type="button"
-          onClick={toggleModal}
+          onClick={onClickButton}
           className={`rounded-xs px-12px py-10px text-left font-medium hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:bg-transparent disabled:text-button-text-disable ${disabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
         >
           {t(`layout:SIDE_MENU.${title}`)}
@@ -335,7 +339,7 @@ const SubMenuOption = ({
         {isEmbedCodeModalOpen && (
           <EmbedCodeModal
             isModalVisible={isEmbedCodeModalOpen}
-            modalVisibilityHandler={toggleModal}
+            modalVisibilityHandler={toggleEmbedCodeModal}
           />
         )}
       </>

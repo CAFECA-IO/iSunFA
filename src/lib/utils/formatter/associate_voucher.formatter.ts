@@ -1,4 +1,4 @@
-import { AccociateVoucher as PrismaAssociateVoucher } from '@prisma/client';
+import { AssociateVoucher as PrismaAssociateVoucher } from '@prisma/client';
 import { IAssociateVoucherEntity } from '@/interfaces/associate_voucher';
 
 export function parsePrismaAssociateVoucherToEntity(

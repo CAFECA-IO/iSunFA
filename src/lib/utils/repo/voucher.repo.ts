@@ -9,7 +9,7 @@ import prisma from '@/client';
 import {
   Prisma,
   Voucher as PrismaVoucher,
-  AccociateLineItem as PrismaAssociateLineItem,
+  AssociateLineItem as PrismaAssociateLineItem,
 } from '@prisma/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -636,7 +636,7 @@ export async function postVoucherV2({
           await tx.event.create({
             data: {
               eventType: revertEvent.eventType,
-              frequence: revertEvent.frequency,
+              frequency: revertEvent.frequency,
               startDate: revertEvent.startDate,
               endDate: revertEvent.endDate,
               daysOfWeek: revertEvent.daysOfWeek,
@@ -841,7 +841,7 @@ export async function putVoucherWithoutCreateNew(
       const reverseJobs: Promise<Prisma.BatchPayload | unknown>[] = [];
       Array.from(reverseRelationList).forEach((reverseRelation) => {
         const { eventId, original, new: newRelations } = reverseRelation;
-        const deleteAssociateLineItemJob = tx.accociateLineItem.deleteMany({
+        const deleteAssociateLineItemJob = tx.associateLineItem.deleteMany({
           where: {
             OR: original.map((originalRelation) => ({
               originalLineItemId: originalRelation.lineItemIdBeReversed,
@@ -850,7 +850,7 @@ export async function putVoucherWithoutCreateNew(
           },
         });
 
-        const deleteAssociateVoucherJob = tx.accociateVoucher.deleteMany({
+        const deleteAssociateVoucherJob = tx.associateVoucher.deleteMany({
           where: {
             OR: original.map((originalRelation) => ({
               originalVoucherId: originalRelation.voucherId,
@@ -862,7 +862,7 @@ export async function putVoucherWithoutCreateNew(
         reverseJobs.push(deleteAssociateLineItemJob, deleteAssociateVoucherJob);
 
         newRelations.forEach(async (newRelation) => {
-          const createAssociateVoucherJob = tx.accociateVoucher.create({
+          const createAssociateVoucherJob = tx.associateVoucher.create({
             data: {
               originalVoucher: {
                 connect: {
@@ -1005,7 +1005,7 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
                     account: true,
                   },
                 },
-                accociateVoucher: {
+                associateVoucher: {
                   include: {
                     event: true,
                   },
@@ -1020,7 +1020,7 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
                     account: true,
                   },
                 },
-                accociateVoucher: {
+                associateVoucher: {
                   include: {
                     event: true,
                     originalVoucher: true,
@@ -1223,7 +1223,7 @@ export async function getManyVoucherV2(options: {
                     account: true,
                   },
                 },
-                accociateVoucher: {
+                associateVoucher: {
                   include: {
                     event: true,
                   },
@@ -1244,7 +1244,7 @@ export async function getManyVoucherV2(options: {
                             account: true,
                           },
                         },
-                        accociateVoucher: {
+                        associateVoucher: {
                           include: {
                             event: true,
                           },
@@ -1253,7 +1253,7 @@ export async function getManyVoucherV2(options: {
                     },
                   },
                 },
-                accociateVoucher: {
+                associateVoucher: {
                   include: {
                     event: true,
                     originalVoucher: true,
@@ -1502,7 +1502,7 @@ export async function getManyVoucherByAccountV2(options: {
                     account: true,
                   },
                 },
-                accociateVoucher: {
+                associateVoucher: {
                   include: {
                     event: true,
                   },
@@ -1523,7 +1523,7 @@ export async function getManyVoucherByAccountV2(options: {
                             account: true,
                           },
                         },
-                        accociateVoucher: {
+                        associateVoucher: {
                           include: {
                             event: true,
                           },
@@ -1532,7 +1532,7 @@ export async function getManyVoucherByAccountV2(options: {
                     },
                   },
                 },
-                accociateVoucher: {
+                associateVoucher: {
                   include: {
                     event: true,
                     originalVoucher: true,
@@ -1889,7 +1889,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
     const newDeletedEvent = await tx.event.create({
       data: {
         eventType: deleteEvent.eventType,
-        frequence: deleteEvent.frequency,
+        frequency: deleteEvent.frequency,
         startDate: deleteEvent.startDate,
         endDate: deleteEvent.endDate,
         daysOfWeek: deleteEvent.daysOfWeek,
@@ -1960,7 +1960,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
           );
         }
 
-        const createAssociateVoucherJob = tx.accociateVoucher.create({
+        const createAssociateVoucherJob = tx.associateVoucher.create({
           data: {
             originalVoucher: {
               connect: {

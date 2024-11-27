@@ -1,7 +1,7 @@
 [
   {
     "id": 1000,
-    "accociateVoucherId": 1000,
+    "associateVoucherId": 1000,
     "originalLineItemId": 1001,
     "resultLineItemId": 1007,
     "debit": true,

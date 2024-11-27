@@ -1,6 +1,6 @@
-// model AccociateLineItem {
+// model AssociateLineItem {
 //   id                 Int     @id @default(autoincrement())
-//   accociateVoucherId Int     @map("accociate_voucher_id")
+//   associateVoucherId Int     @map("accociate_voucher_id")
 //   originalLineItemId Int     @map("original_line_item_id")
 //   resultLineItemId   Int     @map("result_line_item_id")
 //   debit              Boolean

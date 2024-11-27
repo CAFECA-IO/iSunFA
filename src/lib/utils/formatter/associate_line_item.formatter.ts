@@ -1,4 +1,4 @@
-import { AccociateLineItem as PrismaAssociateLineItem } from '@prisma/client';
+import { AssociateLineItem as PrismaAssociateLineItem } from '@prisma/client';
 import { IAssociateLineItemEntity } from '@/interfaces/associate_line_item';
 
 export function parsePrismaAssociateLineItemToEntity(
@@ -6,7 +6,7 @@ export function parsePrismaAssociateLineItemToEntity(
 ): IAssociateLineItemEntity {
   return {
     id: prismaAssociateLineItem.id,
-    associateVoucherId: prismaAssociateLineItem.accociateVoucherId,
+    associateVoucherId: prismaAssociateLineItem.associateVoucherId,
     originalLineItemId: prismaAssociateLineItem.originalLineItemId,
     resultLineItemId: prismaAssociateLineItem.resultLineItemId,
     debit: prismaAssociateLineItem.debit,

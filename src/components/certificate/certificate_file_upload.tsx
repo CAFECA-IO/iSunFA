@@ -66,7 +66,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
           companyId,
         },
         body: {
-          fileId,
+          fileIds: [fileId], // Info: (20241126 - Murky) @tsuhan 這邊已經可以使用批次上傳, 但是我不知道怎麼改，所以先放在array
         },
       });
       if (successCreated && data) {

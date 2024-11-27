@@ -1,24 +1,11 @@
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
-
-interface NewsListProps {
-  list: {
-    id: string;
-    title: string;
-    type: string;
-    date: string;
-  }[];
-  isPageStyle?: boolean;
-}
+import { INews } from '@/interfaces/news';
+import { NewsType } from '@/constants/news';
 
 interface NewsProps {
-  news: {
-    id: string;
-    title: string;
-    type: string;
-    date: string;
-  };
+  news: INews;
 }
 
 const News = ({ news }: NewsProps) => {
@@ -27,15 +14,15 @@ const News = ({ news }: NewsProps) => {
   let link = '';
 
   switch (news.type) {
-    case 'financial':
+    case NewsType.FINANCIAL:
       link = ISUNFA_ROUTE.FINANCIAL_NEWS_PAGE + `/${news.id}`;
       break;
 
-    case 'system':
+    case NewsType.SYSTEM:
       link = ISUNFA_ROUTE.SYSTEM_NEWS_PAGE + `/${news.id}`;
       break;
 
-    case 'match':
+    case NewsType.MATCH:
       link = ISUNFA_ROUTE.MATCH_NEWS_PAGE + `/${news.id}`;
       break;
 
@@ -44,12 +31,20 @@ const News = ({ news }: NewsProps) => {
       break;
   }
 
+  // Info: (20241126 - Liz) 把 news.createdAt 日期格式化
+  const date = new Date(news.createdAt * 1000);
+  const years = date.getFullYear();
+  const months = date.getMonth() + 1;
+  const days = date.getDate();
+
   return (
     <div
       key={news.id}
       className="flex items-center justify-between gap-16px rounded-xs bg-surface-brand-primary-10 p-8px"
     >
-      <p className="flex-none text-sm font-normal text-text-neutral-mute">{news.date}</p>
+      <p className="flex-none text-sm font-normal text-text-neutral-mute">
+        {`${years}/${months}/${days}`}
+      </p>
 
       <p className="flex-auto truncate text-base font-semibold text-surface-brand-secondary">
         {news.title}
@@ -62,10 +57,15 @@ const News = ({ news }: NewsProps) => {
   );
 };
 
-const NewsList = ({ list, isPageStyle }: NewsListProps) => {
+interface NewsListProps {
+  newsList: INews[];
+  isPageStyle?: boolean;
+}
+
+const NewsList = ({ newsList, isPageStyle }: NewsListProps) => {
   return (
     <section className={`flex flex-col ${isPageStyle ? 'gap-8px' : 'gap-24px'}`}>
-      {list.map((news) => (
+      {newsList.map((news) => (
         <News key={news.id} news={news} />
       ))}
     </section>

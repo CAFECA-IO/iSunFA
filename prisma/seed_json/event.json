@@ -1,7 +1,7 @@
 {
   "id": 1000,
   "eventType": "revert",
-  "frequence": "once",
+  "frequency": "once",
   "startDate": 1731343518,
   "endDate": 1731343518,
   "daysOfWeek": [],

@@ -19,7 +19,7 @@ import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { ASSET_CODE, SPECIAL_ACCOUNTS } from '@/constants/account';
 import { getTimestampOfFirstDateOfThisYear, timestampToString } from '@/lib/utils/common';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
-import { findUniqueAccountByCodeInPrisma } from '@/lib/utils/repo/account.repo';
+import { findFirstAccountByCodeInPrisma } from '@/lib/utils/repo/account.repo';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private startSecondOfYear: number;
@@ -92,23 +92,21 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     const closeAccount: ILineItemIncludeAccount[] = [];
 
-    const netIncomeAccount = await findUniqueAccountByCodeInPrisma(
-      SPECIAL_ACCOUNTS.NET_INCOME.code
-    );
+    const netIncomeAccount = await findFirstAccountByCodeInPrisma(SPECIAL_ACCOUNTS.NET_INCOME.code);
 
-    const otherComprehensiveIncomeAccount = await findUniqueAccountByCodeInPrisma(
+    const otherComprehensiveIncomeAccount = await findFirstAccountByCodeInPrisma(
       SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
     );
 
-    const netIncomeInEquity = await findUniqueAccountByCodeInPrisma(
+    const netIncomeInEquity = await findFirstAccountByCodeInPrisma(
       SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.code
     );
 
-    const accumulateProfitAndLossInEquity = await findUniqueAccountByCodeInPrisma(
+    const accumulateProfitAndLossInEquity = await findFirstAccountByCodeInPrisma(
       SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.code
     );
 
-    const otherEquityOther = await findUniqueAccountByCodeInPrisma(
+    const otherEquityOther = await findFirstAccountByCodeInPrisma(
       SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.code
     );
 
@@ -135,6 +133,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,
+            parentId: 0, // TODO: (20241122 - Shirley) 添加預設值
+            rootId: 0, // TODO: (20241122 - Shirley) 添加預設值
+            note: null, // TODO: (20241122 - Shirley) 添加預設值
           },
     });
 
@@ -163,6 +164,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,
+            parentId: 0, // TODO: (20241122 - Shirley) 添加預設值
+            rootId: 0, // TODO: (20241122 - Shirley) 添加預設值
+            note: null, // TODO: (20241122 - Shirley) 添加預設值
           },
     });
 
@@ -193,6 +197,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,
+            parentId: 0, // TODO: (20241122 - Shirley) 添加預設值
+            rootId: 0, // TODO: (20241122 - Shirley) 添加預設值
+            note: null, // TODO: (20241122 - Shirley) 添加預設值
           },
     });
 

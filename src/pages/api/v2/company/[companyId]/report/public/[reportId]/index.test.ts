@@ -1,23 +1,23 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import handler from '@/pages/api/v2/company/[companyId]/account/[accountId]/voucher';
+import handler from '@/pages/api/v2/company/[companyId]/report/public/[reportId]/index';
 import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
-import { voucherGetByAccountSchema } from '@/lib/utils/zod_schema/voucher';
 
-jest.mock('../../../../../../../lib/utils/session.ts', () => ({
-  getSession: jest.fn().mockResolvedValue({
-    userId: 1001,
-    companyId: 1000,
-    roleId: 1001,
-    cookie: {
-      httpOnly: false,
-      path: 'string',
-      secure: false,
-    },
-  }),
-}));
+// Info: (20241127 - Murky) No Session to mimic public access
+// jest.mock('../../../../../../../lib/utils/session.ts', () => ({
+// getSession: jest.fn().mockResolvedValue({
+// userId: 1001,
+// companyId: 1000,
+// roleId: 1001,
+// cookie: {
+//   httpOnly: false,
+//   path: 'string',
+//   secure: false,
+// },
+// }),
+// }));
 
-jest.mock('../../../../../../../lib/utils/auth_check', () => ({
+jest.mock('../../../../../../../../lib/utils/auth_check', () => ({
   checkAuthorization: jest.fn().mockResolvedValue(true),
 }));
 
@@ -60,20 +60,12 @@ describe('company/[companyId]/voucher/account/[accountId] integration test', () 
   afterEach(() => {
     jest.clearAllMocks();
   });
-  describe('Get one voucher', () => {
-    it('should return data match frontend validator', async () => {
+  xdescribe('Get Public Report', () => {
+    it('should return data match datatype', async () => {
       req = {
         headers: {},
         query: {
-          accountId: '1981',
-          page: '1',
-          pageSize: '10',
-          // tab: VoucherListTabV2.UPLOADED,
-          // type: EventType.PAYMENT,
-          startDate: '1',
-          endDate: '1772617600',
-          // searchQuery: 'string',
-          // sortOption: '',
+          reportId: '10000000',
         },
         method: 'GET',
         json: jest.fn(),
@@ -85,14 +77,11 @@ describe('company/[companyId]/voucher/account/[accountId] integration test', () 
         json: jest.fn(),
       } as unknown as jest.Mocked<NextApiResponse>;
 
-      const outputValidator = voucherGetByAccountSchema.frontend;
-
       await handler(req, res);
 
       // Info: (20241105 - Murky) res.json的回傳值
       const apiResponse = res.json.mock.calls[0][0];
-      const { success } = outputValidator.safeParse(apiResponse.payload);
-      expect(success).toBe(true);
+      expect(apiResponse.payload).toBeDefined();
     });
   });
 });
