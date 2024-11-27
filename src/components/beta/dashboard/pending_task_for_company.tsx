@@ -77,7 +77,7 @@ const PendingTaskForCompany = () => {
         {t('dashboard:DASHBOARD.PENDING_TASKS')}
       </h3>
 
-      {/* --- Chart Section --- */}
+      {/* Info: (20241127 - Liz) --- Chart Section --- */}
       <section className="flex items-center gap-16px">
         <div className="w-160px">
           <DonutChart
@@ -122,7 +122,7 @@ const PendingTaskForCompany = () => {
       </section>
 
       <section className="flex flex-col gap-24px">
-        {/* --- List Section ---  */}
+        {/* Info: (20241127 - Liz) --- List Section ---  */}
         {TASKS_ICON.map((task) => (
           <section key={task.title} className="flex items-center justify-between">
             <TaskType iconName={task.iconName} title={task.title} />
