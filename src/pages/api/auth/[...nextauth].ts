@@ -111,14 +111,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       AppleProvider({
         clientId: process.env.APPLE_CLIENT_ID as string,
         clientSecret: generateAppleClientSecret(),
-        authorization: {
-          params: {
-            scope: 'openid email name',
-            response_type: 'code',
-            response_mode: 'form_post',
-            code_challenge_method: 'S256',
-          },
-        },
       }),
     ],
     pages: {
@@ -147,7 +139,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       async signIn({ user, account }) {
         // Deprecated: (20241128 - tzuhan) Debugging purpose
         // eslint-disable-next-line no-console
-        console.log('callbacK ser:', user);
+        console.log('callbacK User:', user);
         // Deprecated: (20241128 - tzuhan) Debugging purpose
         // eslint-disable-next-line no-console
         console.log('callbacK Account:', account);
