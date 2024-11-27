@@ -16,7 +16,13 @@ import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
+import { InvoiceTaxType } from '@/constants/invoice';
 
+/**
+ * Info: (20241127 - Murky)
+ * @note
+ * - taxable
+ */
 const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | null> = async ({
   body,
   session,
@@ -31,9 +37,9 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
     inputOrOutput,
     date,
     no,
-    currencyAlias,
+    // currencyAlias,
     priceBeforeTax,
-    taxType,
+    // taxType,
     taxRatio,
     taxPrice,
     totalPrice,
@@ -59,6 +65,8 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
       });
     }
 
+    const currencyAlias = await postUtils.getCurrencyFromSetting(userId);
+
     const certificateFromPrisma = await postUtils.postInvoiceInPrisma({
       nowInSecond,
       certificateId,
@@ -68,7 +76,7 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
       no,
       currencyAlias,
       priceBeforeTax,
-      taxType,
+      taxType: InvoiceTaxType.TAXABLE,
       taxRatio,
       taxPrice,
       totalPrice,

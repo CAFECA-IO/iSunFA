@@ -806,7 +806,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.INVOICE_POST_V2]: createConfig({
     name: APIName.INVOICE_POST_V2,
-    method: HttpMethod.PUT,
+    method: HttpMethod.POST,
     path: APIPath.INVOICE_POST_V2,
   }),
   [APIName.INVOICE_PUT_V2]: createConfig({

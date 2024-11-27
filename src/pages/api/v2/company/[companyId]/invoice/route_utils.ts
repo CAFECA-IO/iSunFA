@@ -1,8 +1,9 @@
-import { CurrencyType } from '@/constants/currency';
+import { CurrencyType, OEN_CURRENCY } from '@/constants/currency';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { PostCertificateResponse } from '@/interfaces/certificate';
 import loggerBack from '@/lib/utils/logger_back';
+import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { getOneCertificateByIdWithoutInclude } from '@/lib/utils/repo/certificate.repo';
 import { getCounterpartyById } from '@/lib/utils/repo/counterparty.repo';
 import { postInvoiceV2 } from '@/lib/utils/repo/invoice.repo';
@@ -41,7 +42,13 @@ export const invoicePostApiUtils = {
     const counterParty = await getCounterpartyById(counterPartyId);
     return !!counterParty;
   },
-
+  getCurrencyFromSetting: async (companyId: number) => {
+    const accountingSetting = await getAccountingSettingByCompanyId(companyId);
+    const currencyKey =
+      (accountingSetting?.currency as keyof typeof OEN_CURRENCY) || CurrencyType.TWD;
+    const currency = OEN_CURRENCY[currencyKey];
+    return currency;
+  },
   postInvoiceInPrisma: async (options: {
     nowInSecond: number;
     certificateId: number;

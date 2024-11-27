@@ -41,7 +41,7 @@ import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
-import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { InvoiceTabs } from '@/constants/certificate';
@@ -373,6 +373,78 @@ export const certificateAPIGetListUtils = {
       certificateIds: certificateIdsBeenRead,
       nowInSecond,
     });
+  },
+  transformCertificateEntityToResponse: (
+    certificateEntity: ICertificateEntity & {
+      invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
+      file: IFileEntity;
+      uploader: IUserEntity;
+      userCertificates: IUserCertificateEntity[];
+      vouchers: IVoucherEntity[];
+    }
+  ): ICertificate => {
+    const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
+    const file: IFileBeta = {
+      id: certificateEntity.file.id,
+      name: certificateEntity.file.name,
+      size: certificateEntity.file.size,
+      url: fileURL,
+      existed: true,
+    };
+
+    let invoice: IInvoiceBetaOptional = {};
+
+    if (certificateEntity.invoice?.id) {
+      const counterParty: ICounterparty = {
+        id: certificateEntity.invoice.counterParty.id,
+        companyId: certificateEntity.invoice.counterParty.companyId,
+        name: certificateEntity.invoice.counterParty.name,
+        taxId: certificateEntity.invoice.counterParty.taxId,
+        type: certificateEntity.invoice.counterParty.type,
+        note: certificateEntity.invoice.counterParty.note,
+        createdAt: certificateEntity.invoice.counterParty.createdAt,
+        updatedAt: certificateEntity.invoice.counterParty.updatedAt,
+      };
+      invoice = {
+        id: certificateEntity.invoice.id,
+        isComplete: false,
+        counterParty,
+        inputOrOutput: certificateEntity.invoice.inputOrOutput,
+        date: certificateEntity.invoice.date,
+        no: certificateEntity.invoice.no,
+        currencyAlias: certificateEntity.invoice.currencyAlias,
+        priceBeforeTax: certificateEntity.invoice.priceBeforeTax,
+        taxType: certificateEntity.invoice.taxType,
+        taxRatio: certificateEntity.invoice.taxRatio,
+        taxPrice: certificateEntity.invoice.taxPrice,
+        totalPrice: certificateEntity.invoice.totalPrice,
+        type: certificateEntity.invoice.type,
+        deductible: certificateEntity.invoice.deductible,
+        createdAt: certificateEntity.invoice.createdAt,
+        updatedAt: certificateEntity.invoice.updatedAt,
+      };
+    }
+    const isRead =
+      certificateEntity.userCertificates.length > 0
+        ? certificateEntity.userCertificates.some((data) => data.isRead)
+        : false;
+    const voucherNo = certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0].no : '';
+
+    const certificate: ICertificate = {
+      id: certificateEntity.id,
+      name: certificateEntity.file.name,
+      companyId: certificateEntity.companyId,
+      unRead: !isRead,
+      file,
+      invoice,
+      voucherNo,
+      aiResultId: certificateEntity.aiResultId,
+      createdAt: certificateEntity.createdAt,
+      updatedAt: certificateEntity.updatedAt,
+      uploader: certificateEntity.uploader.name,
+    };
+
+    return certificate;
   },
 };
 

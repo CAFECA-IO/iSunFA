@@ -179,30 +179,45 @@ export async function getCertificatesV2(options: {
     companyId,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
     voucherCertificates: getVoucherCertificateRelation(tab),
-    invoices: {
-      some: {
-        type,
-      },
-    },
-    OR: [
+    AND: [
       {
-        file: {
-          name: {
-            contains: searchQuery,
-          },
-        },
-      },
-      {
-        invoices: {
-          some: {
-            name: {
-              contains: searchQuery,
-            },
-            no: {
-              contains: searchQuery,
+        OR: [
+          {
+            invoices: {
+              some: {
+                type, // 如果有符合的 `type`
+              },
             },
           },
-        },
+          {
+            invoices: {
+              none: {}, // 沒有任何關聯的 `invoices`
+            },
+          },
+        ],
+      },
+      {
+        OR: [
+          {
+            file: {
+              name: {
+                contains: searchQuery,
+              },
+            },
+          },
+          {
+            invoices: {
+              some: {
+                name: {
+                  contains: searchQuery,
+                },
+                no: {
+                  contains: searchQuery,
+                },
+              },
+            },
+          },
+        ],
       },
     ],
   };
