@@ -122,7 +122,7 @@ const MyReportsSection = () => {
       toastHandler({
         id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
         type: ToastType.ERROR,
-        content: `${t('common:DASHBOARD.FAILED_TO_FETCH_PENDING_REPORTS')} ${listPendingCode}.${t('common:DASHBOARD.USING_DUMMY_DATA')}`,
+        content: `${t('alpha:DASHBOARD.FAILED_TO_FETCH_PENDING_REPORTS')} ${listPendingCode}.${t('alpha:DASHBOARD.USING_DUMMY_DATA')}`,
         closeable: true,
       });
     }

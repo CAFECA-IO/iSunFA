@@ -1,0 +1,45 @@
+{
+  "DASHBOARD": {
+    "PROFIT_CHANGE": "利润变化",
+    "PRE_LAUNCH_PROJECTS": "预启动专案",
+    "HELLO_WELCOME_TO": "你好！欢迎来到",
+    "TOP_PROJECT_ROI": "最优项目投资报酬率",
+    "FAILED_TO_GET_PROFIT_INSIGHT": "无法获得利润观察。错误代码: ",
+    "FAILED_TO_GET_LABOR_COST": "获取人工成本数据失败。错误代码：",
+    "FAILED_TO_GET_INCOME_EXPENSE_TREND": "无法获取收入/支出趋势。错误代码：",
+    "FAILED_TO_GET_PROJECT_PROGRESS_DATA": "无法获取项目进度数据。错误代码：",
+    "FAILED_TO_GET_PROFIT_COMPARISON": "无法获得利润比较。错误代码：",
+    "FAILED_TO_GET": "无法获得",
+    "REPORT": "报告: ",
+    "FAILED_TO_FETCH_PENDING_REPORTS": "无法获取待处理的报告。错误代码：",
+    "USING_DUMMY_DATA": "使用虚拟数据",
+    "SELECTED": "已选择",
+    "PASS_YEAR": "去年度",
+    "CURRENT_YEAR": "今年度",
+    "WE_CAN_T_GENERATE_THE_REPORT": "我们无法生成您申请的报告，请更改选择并重试。",
+    "FAILED": "失败了",
+    "TRY_AGAIN": "再试一次"
+  },
+  "BOOKMARK_LIST": {
+    "ADD_NEW_CONTRACT": "新增合同",
+    "ADD_NEW_KYC": "新增KYC",
+    "ADD_NEW_EMPLOYEES": "新增员工",
+    "ADD_NEW_PAYROLL": "新增工资",
+    "ADD_NEW_JOURNAL": "新增日记账",
+    "CAMERA_SCANNER": "相机扫描仪",
+    "BALANCE_SHEET": "资产负债表",
+    "INCOME_STATEMENT": "损益表",
+    "CASH_FLOW_STATEMENT": "现金流量表",
+    "FINANCIAL_PERFORMANCE": "财务表现",
+    "COST_ANALYSIS": "成本分析",
+    "HR_UTILIZATION": "人力资源利用",
+    "FORECAST_REPORT": "预测报告"
+  },
+  "EDIT_BOOKMARK_MODAL": {
+    "LISTED": "列出",
+    "EDIT_MY_FAVORITES": "编辑我的收藏夹",
+    "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "选择要新增或删除的书签",
+    "SAVE": "保存",
+    "PLEASE_SELECT_BOOKMARKS": "请选择书签"
+  }
+}

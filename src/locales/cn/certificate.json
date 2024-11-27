@@ -1,6 +1,6 @@
 {
   "LIST": {
-    "INVOICE_TOTAL_PRRICE": "发票总价",
+    "INVOICE_TOTAL_PRICE": "发票总价",
     "EXPORT_CERTIFICATES": "导出发票"
   },
   "TAB": {
@@ -151,5 +151,18 @@
   },
   "CREATE": {
     "FAILED": "创建失败"
+  },
+  "SELECTION": {
+    "EXPORT": "导出",
+    "CERTIFICATES": "证书",
+    "ADD_NEW_VOUCHER": "新增传票",
+    "ADD_NEW_ASSET": "新增资产"
+  },
+  "COMMON": {
+    "PERIOD": "期間",
+    "CANCEL": "取消"
+  },
+  "TOAST": {
+    "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误"
   }
 }

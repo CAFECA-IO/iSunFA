@@ -63,7 +63,7 @@ const DashboardOverview = () => {
     } else if (getSuccess === false) {
       toastHandler({
         id: `profit_insight-${getCode}`,
-        content: `${t('common:DASHBOARD.FAILED_TO_GET_PROFIT_INSIGHT')} ${getCode}`,
+        content: `${t('alpha:DASHBOARD.FAILED_TO_GET_PROFIT_INSIGHT')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -84,7 +84,7 @@ const DashboardOverview = () => {
             ></Image>
 
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              {t('common:DASHBOARD.PROFIT_CHANGE')}
+              {t('alpha:DASHBOARD.PROFIT_CHANGE')}
             </div>
           </div>
           <div
@@ -126,7 +126,7 @@ const DashboardOverview = () => {
             ></Image>
 
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              {t('common:DASHBOARD.TOP_PROJECT_ROI')}
+              {t('alpha:DASHBOARD.TOP_PROJECT_ROI')}
             </div>
           </div>
           <div
@@ -168,7 +168,7 @@ const DashboardOverview = () => {
             ></Image>
 
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              {t('common:DASHBOARD.PRE_LAUNCH_PROJECTS')}
+              {t('alpha:DASHBOARD.PRE_LAUNCH_PROJECTS')}
             </div>
           </div>
           <div

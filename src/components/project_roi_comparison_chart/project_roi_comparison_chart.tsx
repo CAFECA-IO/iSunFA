@@ -241,7 +241,7 @@ const ProjectRoiComparisonChart = () => {
     if (listSuccess === false) {
       toastHandler({
         id: `profit_comparison-${listCode}`,
-        content: `${t('common:DASHBOARD.FAILED_TO_GET_PROFIT_COMPARISON')} ${listCode}`,
+        content: `${t('alpha:DASHBOARD.FAILED_TO_GET_PROFIT_COMPARISON')} ${listCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });

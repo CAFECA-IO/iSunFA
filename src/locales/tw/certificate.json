@@ -1,6 +1,7 @@
 {
   "LIST": {
-    "INVOICE_TOTAL_PRRICE": "發票總價"
+    "INVOICE_TOTAL_PRICE": "發票總價",
+    "EXPORT_CERTIFICATES": "匯出發票"
   },
   "TAB": {
     "WITHOUT_VOUCHER": "無憑證的發票",
@@ -150,5 +151,18 @@
   },
   "CREATE": {
     "FAILED": "創建失敗"
+  },
+  "SELECTION": {
+    "EXPORT": "匯出",
+    "CERTIFICATES": "證書",
+    "ADD_NEW_VOUCHER": "新增傳票",
+    "ADD_NEW_ASSET": "新增資產"
+  },
+  "COMMON": {
+    "PERIOD": "期間",
+    "CANCEL": "取消"
+  },
+  "TOAST": {
+    "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤"
   }
 }

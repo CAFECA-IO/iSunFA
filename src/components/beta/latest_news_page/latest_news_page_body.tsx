@@ -1,56 +1,23 @@
-import { useState, useRef, useEffect } from 'react';
-// import FilterSection from '@/components/filter_section/filter_section'; // ToDo: (20241023 - Liz) 使用共用元件代替 Search
+import { useState, useRef } from 'react';
 import Pagination from '@/components/pagination/pagination';
 import TabsForLatestNews from '@/components/beta/latest_news_page/tabs_for_latest_news';
 import NewsList from '@/components/beta/latest_news_page/news_list';
 import { useRouter } from 'next/router';
 import { NewsType } from '@/constants/news';
-import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { INews } from '@/interfaces/news';
+import FilterSection from '@/components/filter_section/filter_section';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 
 const LatestNewsPageBody = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  // const [financialNews, setFinancialNews] = useState(FINANCIAL_NEWS);
-  // const [systemNews, setSystemNews] = useState(SYSTEM_NEWS);
-  // const [matchingNews, setMatchingNews] = useState(MATCHING_NEWS);
+  const [totalPages, setTotalPages] = useState(1);
   const [type, setType] = useState<NewsType>(NewsType.FINANCIAL);
   const [newsList, setNewsList] = useState<INews[]>([]);
-
-  // Info: (20241126 - Liz) 打 API 取得最新消息列表
-  const { trigger: getNewsListAPI } = APIHandler<INews[]>(APIName.NEWS_LIST);
-
-  // Info: (20241126 - Liz) 取得最新消息列表 (根據不同的 type)
-  useEffect(() => {
-    const getNewsList = async () => {
-      try {
-        const { data, success, code } = await getNewsListAPI({
-          query: { simple: true, type },
-        });
-
-        if (success && data) {
-          setNewsList(data);
-
-          // Deprecated: (20241126 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getNewsListAPI success:', 'data:', data);
-        } else {
-          // Deprecated: (20241126 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getNewsListAPI failed:', code);
-        }
-      } catch (error) {
-        // Deprecated: (20241126 - Liz)
-        // eslint-disable-next-line no-console
-        console.log(error);
-      }
-    };
-
-    getNewsList();
-  }, [type]);
+  const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20241127 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
 
   const router = useRouter();
-
   const resetUrlPage = () => {
     const query = { ...router.query, page: '1' }; // Info: (20241023 - Liz) 將 page 設為 1
     router.push(
@@ -76,47 +43,33 @@ const LatestNewsPageBody = () => {
 
   const resetPage = () => {
     setCurrentPage(1);
-    resetPagination();
-    resetUrlPage();
+    resetPagination(); // Info: (20241127 - Liz) 重置 Pagination 元件的頁碼
+    resetUrlPage(); // Info: (20241127 - Liz) 重置 URL 頁碼
+    setRefreshKey((prev) => prev + 1); // Info: (20241127 - Liz) refresh FilterSection component to retrigger the API call
   };
 
-  const itemsPerPage = 10;
-  const totalItems = newsList.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const slicedNewsList = newsList.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // let totalPages = 0;
-
-  // switch (activeTab) {
-  //   case 0:
-  //     newsList = slicedFinancialNews;
-  //     totalPages = totalPagesForFinancialNews;
-  //     break;
-  //   case 1:
-  //     newsList = slicedSystemNews;
-  //     totalPages = totalPagesForSystemNews;
-  //     break;
-  //   case 2:
-  //     newsList = slicedMatchingNews;
-  //     totalPages = totalPagesForMatchingNews;
-  //     break;
-  //   default:
-  //     break;
-  // }
+  const handleApiResponse = (resData: IPaginatedData<INews[]>) => {
+    setNewsList(resData.data);
+    setTotalPages(resData.totalPages);
+    setCurrentPage(resData.page);
+  };
 
   return (
     <main className="flex min-h-full flex-col gap-40px">
-      <section className="h-44px bg-gray-500">
-        Date Picker & Search (Todo : use common components)
-      </section>
+      <FilterSection<INews[]>
+        key={refreshKey}
+        apiName={APIName.NEWS_LIST}
+        onApiResponse={handleApiResponse}
+        types={[type]}
+        page={currentPage}
+        pageSize={DEFAULT_PAGE_LIMIT}
+        displayTypeFilter
+      />
 
       <TabsForLatestNews activeTab={type} setActiveTab={setType} isPageStyle callBack={resetPage} />
 
       <div className="flex-auto">
-        <NewsList newsList={slicedNewsList} isPageStyle />
+        <NewsList newsList={newsList} isPageStyle />
       </div>
 
       <Pagination

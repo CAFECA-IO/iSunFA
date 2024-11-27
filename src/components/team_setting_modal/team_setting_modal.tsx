@@ -145,7 +145,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
               onClick={saveClickHandler}
               className="flex-1 rounded-xs"
             >
-              {t('common:EDIT_BOOKMARK_MODAL.SAVE')}
+              {t('alpha:EDIT_BOOKMARK_MODAL.SAVE')}
             </Button>
           </div>
         </div>

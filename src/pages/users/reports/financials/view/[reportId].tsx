@@ -57,7 +57,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     if (getFRSuccess === false) {
       toastHandler({
         id: `getFR-${getFRCode}_${reportId}`,
-        content: `${t('common:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('common:DASHBOARD.REPORT')}${getFRCode}`,
+        content: `${t('alpha:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('alpha:DASHBOARD.REPORT')}${getFRCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
