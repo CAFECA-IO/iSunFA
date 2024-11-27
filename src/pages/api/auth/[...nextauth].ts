@@ -118,6 +118,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
             response_mode: 'form_post', // Info: (20241127-tzuhan) 使用 form_post 方式回傳
           },
         },
+        checks: ['pkce'],
       }),
     ],
     pages: {
@@ -241,6 +242,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return url.startsWith(baseUrl) ? url : baseUrl;
       },
     },
-    debug: false,
+    debug: true,
   });
 }
