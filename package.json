@@ -6,16 +6,16 @@
     "dev": "next dev",
     "build": "npm run generate && next build",
     "generate": "prisma generate",
-    "start": "next start && node cron-job.js",
+    "start": "next start",
     "lint": "next lint && eslint --fix --ext .js,.jsx,.ts,.tsx .",
     "test": "jest",
     "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|jsx|ts|tsx|json|css)\"",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json|css)\"",
     "validate": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json|css)\" && next lint && eslint --fix --ext .js,.jsx,.ts,.tsx . && npm run test",
-    "production": "next start -p 80 && node cron-job.js",
+    "production": "next start -p 80",
     "update-version": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/update_version.ts && git add package.json",
     "prepare": "husky",
-    "cron": "node cron-job.js"
+    "cron": "bash cron_job.sh"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
