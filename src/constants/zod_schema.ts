@@ -32,7 +32,11 @@ import {
   companyPendingTaskSchema,
   userPendingTaskSchema,
 } from '@/lib/utils/zod_schema/pending_task';
-import { reportGetValidatorV2 } from '@/lib/utils/zod_schema/report';
+import {
+  generatePublicReportSchemaV2,
+  getPublicReportSchemaV2,
+  reportGetValidatorV2,
+} from '@/lib/utils/zod_schema/report';
 import {
   userRoleListSchema,
   userRolePostSchema,
@@ -235,9 +239,9 @@ export const ZOD_SCHEMA_API = {
   // [APIName.JOURNAL_UPDATE]: nullAPISchema, // Info: (20240723 - Tzuhan)
   [APIName.JOURNAL_DELETE]: nullAPISchema,
   [APIName.REPORT_LIST]: nullAPISchema,
-  [APIName.REPORT_GET_BY_ID]: nullAPISchema,
+  [APIName.REPORT_GET_BY_ID]: getPublicReportSchemaV2,
   [APIName.REPORT_GET_V2]: nullAPISchema,
-  [APIName.REPORT_GENERATE]: nullAPISchema,
+  [APIName.REPORT_GENERATE]: generatePublicReportSchemaV2,
   [APIName.STATUS_INFO_GET]: statusInfoGetSchema,
   [APIName.ACCOUNT_LIST]: nullAPISchema,
   [APIName.FILE_UPLOAD]: filePostSchema,

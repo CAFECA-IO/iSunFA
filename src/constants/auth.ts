@@ -13,6 +13,7 @@ export enum AuthFunctionsKeysNew {
 export const AUTH_WHITELIST = {
   [APIName.FILE_UPLOAD]: { query: { type: UploadType.ROOM } },
   [APIName.STATUS_INFO_GET]: { query: {} },
+  [APIName.REPORT_GET_BY_ID]: { query: {} },
 };
 
 // ToDo: (20241111 - Jacky) Add more auth functions
