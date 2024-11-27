@@ -44,7 +44,6 @@ import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { VoucherV2Action } from '@/constants/voucher';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
 import { IAIResultVoucher } from '@/interfaces/voucher';
@@ -84,7 +83,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedCompany?.id;
   const userId = userAuth?.id ?? -1;
 
   const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
@@ -120,6 +119,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     success: createSuccess,
     isLoading: isCreating,
   } = APIHandler(APIName.VOUCHER_POST_V2);
+
+  // Info: (20241127 - Julian) 取得 AI 分析的 resultId
+  const resultId = askData?.resultId;
 
   // Info: (20241108 - Julian) 取得 AI 分析結果
   const {
@@ -235,25 +237,33 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       askAI({
         params: { companyId },
         query: { reason: 'voucher' },
-        body: { certificateId: selectedIds[0] },
+        body: { targetIdList: [100] },
       });
     }
   }, [selectedCertificates, selectedIds]);
 
+  const handleGetAIResult = useCallback(() => {
+    // Info: (20241127 - Julian) 用 ResultId 來問 AI 分析結果，持續問到有結果為止
+    const waitForResult = setInterval(() => {
+      getAIResult({ params: { companyId, resultId }, query: { reason: 'voucher' } });
+    }, 500);
+    return () => clearInterval(waitForResult);
+  }, [resultId]);
+
+  // Info: (20241127 - Julian) 取得 AI 分析結果
   useEffect(() => {
     if (isAskingAI === false) {
-      if (askSuccess && askData) {
-        // Info: (20241018 - Tzuhan) 呼叫 AI 分析 API
-        getAIResult({
-          params: { companyId, resultId: askData.resultId },
-          query: { reason: 'voucher' },
-        });
-      } else if (!askSuccess) {
+      if (askSuccess === false || resultId === 'fetchAIResultIdError') {
         //  Info: (20241021 - Julian) AI 分析失敗
         setAiState(AIState.FAILED);
+      } else if (askSuccess && askData && aiState === AIState.WORKING) {
+        //  Info: (20241021 - Julian) AI 分析中
+        if (aiState === AIState.WORKING) {
+          handleGetAIResult();
+        }
       }
     }
-  }, [askSuccess, askData, isAskingAI]);
+  }, [askSuccess, askData, isAskingAI, aiState]);
 
   // Info: (20241021 - Julian) AI 分析結果
   useEffect(() => {
@@ -626,7 +636,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     askAI({
       params: { companyId },
       query: { reason: 'voucher' },
-      body: { certificateId: selectedIds[0] },
+      body: { targetIdList: selectedIds },
     });
   };
 
@@ -1010,7 +1020,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
   useEffect(() => {
     const pusher = getPusherInstance();
-    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
 
     channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
@@ -1020,6 +1030,33 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       pusher.disconnect();
     };
   }, []);
+
+  // ToDo: (20241127 - Julian) 訂閱 Voucher AI 分析結果 PUSHER
+  // const aiResultHandler = useCallback(
+  //   (data: { message: string }) => {
+  //     const aiResult: IAIResultVoucher = JSON.parse(data.message);
+  //     // Deprecated: (20241127 - Julian) Debugging purpose
+  //     // eslint-disable-next-line no-console
+  //     console.log(`NewVoucherForm aiResultHandler: aiResult`, aiResult);
+  //     setAiVoucherResult(aiResult);
+  //     setAiState(AIState.FINISH);
+  //   },
+  //   [selectedIds]
+  // );
+
+  // ToDo: (20241127 - Julian) 訂閱 Voucher AI 分析結果 PUSHER
+  // useEffect(() => {
+  //   const pusher = getPusherInstance();
+  //   const channel = pusher.subscribe(`${PRIVATE_CHANNEL.VOUCHER}-${resultId}`);
+
+  //   channel.bind(CERTIFICATE_EVENT.ANALYSIS, aiResultHandler);
+
+  //   return () => {
+  //     channel.unbind_all();
+  //     channel.unsubscribe();
+  //     pusher.disconnect();
+  //   };
+  // }, []);
 
   useEffect(() => {
     setSelectedCertificates(Object.values(selectedData));
