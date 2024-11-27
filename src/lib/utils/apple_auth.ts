@@ -1,8 +1,4 @@
-/* eslint-disable no-console */
 import jwt from 'jsonwebtoken';
-// const axios = require('axios');
-// const jwt = require('jsonwebtoken');
-// require('dotenv').config();
 
 export const generateAppleClientSecret = (): string => {
   const { APPLE_PRIVATE_KEY, APPLE_TEAM_ID, APPLE_CLIENT_ID, APPLE_KEY_ID, APPLE_TOKEN_EXPIRY } =
@@ -44,35 +40,3 @@ export const generateAppleClientSecret = (): string => {
     throw new Error(`Failed to generate Apple client secret: ${(error as Error).message}`);
   }
 };
-
-/** Info: test code
-const requestAppleToken = async () => {
-  const clientSecret = generateAppleClientSecret();
-  console.log('Generated clientSecret:', clientSecret);
-
-  const body = new URLSearchParams({
-    client_id: process.env.APPLE_CLIENT_ID!,
-    client_secret: clientSecret,
-    code: 'AUTHORIZATION_CODE',
-    grant_type: 'authorization_code',
-    redirect_uri: 'https://isunfa.tw/api/auth/callback/apple',
-  });
-
-  try {
-    const response = await axios.post('https://appleid.apple.com/auth/token', body.toString(), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
-    console.log('Token response:', response.data);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    if (error.response) {
-      console.error('Error fetching token:', error.response.data);
-    } else {
-      console.error('Error fetching token:', error.message);
-    }
-  }
-};
-
-// 執行測試
-requestAppleToken();
-*/
