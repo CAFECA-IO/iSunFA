@@ -27,6 +27,6 @@
     "**/*.tsx",
     "tailwind.config.ts",
     "scripts/update_version.js"
-],
+  ],
   "exclude": ["node_modules"]
 }
