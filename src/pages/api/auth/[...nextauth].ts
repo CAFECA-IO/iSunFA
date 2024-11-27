@@ -159,12 +159,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     },
     callbacks: {
       async signIn({ user, account }) {
-        // Deprecated: (20241128 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log('callbacK User:', user);
-        // Deprecated: (20241128 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log('callbacK Account:', account);
         const session = await getSession(req, res);
         try {
           // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
@@ -250,9 +244,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return true;
       },
       async redirect({ url, baseUrl }) {
-        // Deprecated: (20241128 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log('callbacK URL:', url);
         return url.startsWith(baseUrl) ? url : baseUrl;
       },
     },

@@ -160,7 +160,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Info: (20241127 - tzuhan) 登錄成功，重定向到 LOGIN，帶 signin=true
-    res.redirect(`${ISUNFA_ROUTE.LOGIN}?signin=true&error=`);
+    res.redirect(`${ISUNFA_ROUTE.LOGIN}`);
   } catch (err) {
     // Info: (20241127 - tzuhan) 錯誤處理
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
