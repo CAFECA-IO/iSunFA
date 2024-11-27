@@ -194,7 +194,7 @@ const AnalysisReportSection = () => {
         onClick={typeMenuClickHandler}
       >
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-          {t(`common:BOOKMARK_LIST.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
+          {t(`alpha:BOOKMARK_LIST.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
@@ -218,7 +218,7 @@ const AnalysisReportSection = () => {
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               {/* Info: (20240710 - Anna) {name} */}
-              {t(`common:BOOKMARK_LIST.${name.toUpperCase().replace(/ /g, '_')}`)}
+              {t(`alpha:BOOKMARK_LIST.${name.toUpperCase().replace(/ /g, '_')}`)}
             </li>
           ))}
         </ul>

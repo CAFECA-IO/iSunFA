@@ -37,6 +37,7 @@ interface FilterSectionProps<T> {
     sortOrder: SortOrder;
   }[];
   disableDateSearch?: boolean;
+  displayTypeFilter?: boolean;
 }
 
 const FilterSection = <T,>({
@@ -57,6 +58,7 @@ const FilterSection = <T,>({
   setDateSort,
   otherSorts,
   disableDateSearch,
+  displayTypeFilter,
 }: FilterSectionProps<T>) => {
   const { t } = useTranslation(['certificate', 'common']);
   const { toastHandler } = useModalContext();
@@ -95,6 +97,11 @@ const FilterSection = <T,>({
       if (isLoading) return;
       setIsLoading(true);
       // Info: (20241022 - tzuhan) @Murky, 這裡是前端呼叫 CERTIFICATE_LIST_V2 API 的地方，以及query參數的組合
+
+      // Deprecated: (20241127 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('selectedType:', selectedType);
+
       const { success, code, data } = await trigger({
         params,
         query: {
@@ -212,7 +219,7 @@ const FilterSection = <T,>({
       style={{ maxWidth: '100%' }}
     >
       {/* Info: (20240919 - tzuhan) 類型篩選 */}
-      {types.length > 0 && (
+      {!displayTypeFilter && types.length > 0 && (
         <SelectFilter
           label="Type"
           options={types}
