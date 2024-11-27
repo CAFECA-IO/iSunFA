@@ -214,12 +214,11 @@ export async function getCertificatesV2(options: {
   try {
     totalCount = await prisma.certificate.count({ where });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Count total count of voucher in getManyVoucherV2 failed',
-      error as Error
-    );
-    logError.error('Prisma count voucher in getManyVoucherV2 failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Count total count of voucher in getManyVoucherV2 failed',
+      errorMessage: error as Error,
+    });
   }
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -275,12 +274,11 @@ export async function getCertificatesV2(options: {
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Find many accounts in findManyAccountsInPrisma failed',
-      error as Error
-    );
-    logError.error('Prisma find many accounts in account.repo.ts failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Find many accounts in findManyAccountsInPrisma failed',
+      errorMessage: error as Error,
+    });
   }
 
   const hasNextPage = certificates.length > pageSize;
@@ -350,12 +348,11 @@ export async function getUnreadCertificateCount(options: {
     });
     unreadCertificateCount = totalCertificateCount - readCertificateCount;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Count unread voucher in getUnreadVoucherCount failed',
-      error as Error
-    );
-    logError.error('Prisma count unread voucher in getUnreadVoucherCount failed');
+    loggerError({
+      userId: 0,
+      errorType: 'Count unread voucher in getUnreadVoucherCount failed',
+      errorMessage: error as Error,
+    });
   }
 
   return unreadCertificateCount;
@@ -410,4 +407,19 @@ export async function upsertUserReadCertificates(options: {
   });
 
   await Promise.all([updateJob, createJob]);
+}
+
+export async function listCertificateWithoutInvoice() {
+  const certificates = await prisma.certificate.findMany({
+    where: {
+      invoices: {
+        none: {},
+      },
+    },
+    select: {
+      fileId: true,
+    },
+  });
+
+  return certificates;
 }

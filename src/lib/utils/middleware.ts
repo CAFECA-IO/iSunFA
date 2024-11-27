@@ -111,13 +111,13 @@ export async function withRequestValidation<T extends APIName, U>(
 
   const session = await getSession(req, res);
   const isLogin = await checkSessionUser(session, apiName, req);
-  if (isLogin) {
+  if (!isLogin) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
     const { query, body } = checkRequestData(apiName, req, session);
     if (query !== null && body !== null) {
       const isAuth = await checkUserAuthorization(apiName, req, session);
-      if (isAuth) {
+      if (!isAuth) {
         statusMessage = STATUS_MESSAGE.FORBIDDEN;
       } else {
         try {

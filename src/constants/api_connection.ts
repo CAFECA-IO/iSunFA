@@ -44,6 +44,7 @@ export enum APIName {
   CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
   CERTIFICATE_PUT_V2 = 'CERTIFICATE_PUT_V2',
+  CRON_JOB = 'CRON_JOB',
   INVOICE_PUT_V2 = 'INVOICE_PUT_V2',
   CERTIFICATE_DELETE_V2 = 'CERTIFICATE_DELETE_V2',
   CERTIFICATE_DELETE__MULTIPLE_V2 = 'CERTIFICATE_DELETE__MULTIPLE_V2',
@@ -172,6 +173,7 @@ export enum APIPath {
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
+  CRON_JOB = `${apiPrefix}/cron_job`,
   INVOICE_PUT_V2 = `${apiPrefixV2}/company/:companyId/invoice/:invoiceId`,
   CERTIFICATE_DELETE_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_DELETE__MULTIPLE_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
@@ -801,6 +803,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CERTIFICATE_DELETE_V2,
     method: HttpMethod.DELETE,
     path: APIPath.CERTIFICATE_PUT_V2,
+  }),
+  [APIName.CRON_JOB]: createConfig({
+    name: APIName.CRON_JOB,
+    method: HttpMethod.GET,
+    path: APIPath.CRON_JOB,
   }),
   [APIName.INVOICE_PUT_V2]: createConfig({
     name: APIName.INVOICE_PUT_V2,
