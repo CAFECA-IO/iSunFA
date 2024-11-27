@@ -1,6 +1,6 @@
 import { APIName } from '@/constants/api_connection';
-import { UploadType } from './file';
-import { AI_TYPE } from './aich';
+import { UploadType } from '@/constants/file';
+import { AI_TYPE } from '@/constants/aich';
 
 export enum AuthFunctionsKeysNew {
   user = 'user',
