@@ -45,7 +45,7 @@ interface IAccountBook {
  * 實作 IAccountBook
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-class AccountBook implements IAccountBook {
+export class AccountBook implements IAccountBook {
   nodes: Map<number, IAccountBookNode>;
 
   constructor() {
@@ -85,9 +85,9 @@ class AccountBook implements IAccountBook {
   // Info: (20241118 - Luphia) 需注意應優先插入父節點，再插入子節點，插入節點時應同時更新父節點的 children 屬性
   insertNode(node: IAccountBookNode): void {
     this.nodes.set(node.id, node);
-    if (node.parentCode) {
+    if (node.parentId) {
       // ToDo: (20241118 - Luphia) IAccountNode id 為 number, parentCode 為 string 是不合理的，應統一為 number
-      const parentId = parseInt(node.parentCode, 10);
+      const { parentId } = node;
       const parent = this.findNode(parentId);
       if (parent) {
         parent.addChild(node);
@@ -119,6 +119,39 @@ class AccountBook implements IAccountBook {
     this.nodes.forEach(callback);
   }
 }
+
+// const accountBook = new AccountBook();
+
+// function isProfitAndLossAccount(node: any): boolean {
+//   // 根據科目的屬性判斷是否為損益表科目
+//   // 例如，type 為 'expense' 或 'income' 等
+//   return node.type === 'expense' || node.type === 'income';
+// }
+
+// function getInitialBalanceForAccount(accountId: number): { credit: number; debit: number } {
+//   // 實作獲取期初餘額的邏輯
+//   // 例如，從資料庫中查詢或根據其他條件計算
+//   // 此處僅提供示例
+//   return { credit: 1000, debit: 500 };
+// }
+
+// async function initializeInitialBalances(accountBook: AccountBook): Promise<void> {
+//   accountBook.traverse((node) => {
+//     if (isProfitAndLossAccount(node)) {
+//       node.setInitialCredit(0);
+//       node.setInitialDebit(0);
+//     } else {
+//       // 假設有一個函數來獲取期初餘額
+//       const initialBalance = getInitialBalanceForAccount(node.id);
+//       node.setInitialCredit(initialBalance.credit);
+//       node.setInitialDebit(initialBalance.debit);
+//     }
+//   });
+// }
+
+// export { initializeInitialBalances };
+
+// export default accountBook;
 
 /* Info: (20241118 - Luphia) 使用案例 Company 10000007 AnnaCryCryCry
  * 會計科目取 system = 'IFRS' and company_id = 1002 (公用) 10000007 (AnnaCryCryCry)
