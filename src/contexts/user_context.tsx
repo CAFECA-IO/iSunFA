@@ -265,6 +265,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     // eslint-disable-next-line no-console
     console.log('call signOut 登出並且清除 user context 所有狀態');
 
+    // Info: (20241127 - Liz)  清除 localStorage 中的資料
+    localStorage.removeItem('userId');
+    localStorage.removeItem('expired_at');
+
     await authSignOut({ redirect: false }); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
     clearStates(); // Info: (20241004 - Liz) 清除 context 中的狀態
     redirectToLoginPage(); // Info: (20241004 - Liz) 重新導向到登入頁面
