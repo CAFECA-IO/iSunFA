@@ -23,8 +23,8 @@ const dummyGetSession = async (req: NextApiRequest, res: NextApiResponse) => {
       path: '/',
       secure: true,
     },
-    userId: 10000000, // Info: (20241112 - Anna)
-    companyId: 10000001, // Info: (20241112 - Anna)
+    userId: 10000006, // Info: (20241112 - Anna)
+    companyId: 10000007, // Info: (20241112 - Anna)
     challenge: 'dummy',
     roleId: 1006, // Info: (20241112 - Anna)
   };
