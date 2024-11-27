@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import AppleProvider from 'next-auth/providers/apple';
-import { generateAppleClientSecret } from '@/lib/utils/apple_auth';
+// import AppleProvider from 'next-auth/providers/apple';
+// import { generateAppleClientSecret } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { destroySession, getSession, setSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -108,6 +108,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         clientId: process.env.GOOGLE_CLIENT_ID as string,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       }),
+    ],
+    /** Info: (20241127 - tzuhan) Apple login 單獨實作
       AppleProvider({
         clientId: process.env.APPLE_CLIENT_ID as string,
         clientSecret: generateAppleClientSecret(),
@@ -132,6 +134,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         },
       },
     },
+    */
     pages: {
       signIn: ISUNFA_ROUTE.LOGIN,
     },
@@ -253,6 +256,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return url.startsWith(baseUrl) ? url : baseUrl;
       },
     },
-    debug: true,
+    debug: false,
   });
 }
