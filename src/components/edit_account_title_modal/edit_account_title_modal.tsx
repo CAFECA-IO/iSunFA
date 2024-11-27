@@ -266,7 +266,7 @@ const EditAccountTitleModal = ({
             disabled={disableSubmit}
             onClick={handleSave}
           >
-            {t('common:EDIT_BOOKMARK_MODAL.SAVE')}
+            {t('alpha:EDIT_BOOKMARK_MODAL.SAVE')}
           </Button>
         </div>
       </div>

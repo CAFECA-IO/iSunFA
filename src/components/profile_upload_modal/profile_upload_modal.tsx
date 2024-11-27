@@ -210,7 +210,7 @@ const ProfileUploadModal = ({
           {t('common:COMMON.CANCEL')}
         </Button>
         <Button type="button" className="w-full" variant="tertiary" onClick={saveImage}>
-          <p>{t('common:EDIT_BOOKMARK_MODAL.SAVE')}</p>
+          <p>{t('alpha:EDIT_BOOKMARK_MODAL.SAVE')}</p>
           <svg
             width="20"
             height="20"
