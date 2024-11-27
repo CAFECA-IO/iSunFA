@@ -3,7 +3,6 @@ import { IZodValidator } from '@/interfaces/zod_validator';
 import {
   nullSchema,
   zodStringToNumber,
-  zodStringToNumberWithDefault,
   zodTimestampInSecondsNoDefault,
 } from '@/lib/utils/zod_schema/common';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
@@ -35,12 +34,15 @@ export const reportRequestValidatorsV2: {
 };
 
 const generatePublicReportBodySchemaV2 = z.object({
-  projectId: zodStringToNumber.optional().transform((val) => {
-    if (!val) {
-      return null;
-    }
-    return val;
-  }),
+  projectId: z
+    .number()
+    .optional()
+    .transform((val) => {
+      if (!val) {
+        return null;
+      }
+      return val;
+    }),
   type: z
     .nativeEnum(ReportSheetType)
     .optional()
@@ -57,8 +59,24 @@ const generatePublicReportBodySchemaV2 = z.object({
       }
       return val;
     }),
-  from: zodStringToNumberWithDefault(0),
-  to: zodStringToNumberWithDefault(getTimestampOfLastSecondOfDate(getTimestampNow())),
+  from: z
+    .number()
+    .optional()
+    .transform((val) => {
+      if (!val) {
+        return 0;
+      }
+      return val;
+    }),
+  to: z
+    .number()
+    .optional()
+    .transform((val) => {
+      if (!val) {
+        return getTimestampOfLastSecondOfDate(getTimestampNow());
+      }
+      return val;
+    }),
   reportType: z.nativeEnum(ReportType),
 });
 
