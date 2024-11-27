@@ -9,7 +9,7 @@ import { InvoiceType } from '@/constants/invoice';
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
     userId: 1000,
-    companyId: 10000000,
+    companyId: 1000,
   }),
 }));
 
@@ -99,7 +99,7 @@ describe('company/[companyId]/certificate integration test', () => {
           companyId: '1000',
         },
         body: {
-          fileId: 1009,
+          fileIds: [1009],
         },
         method: 'POST',
         json: jest.fn(),

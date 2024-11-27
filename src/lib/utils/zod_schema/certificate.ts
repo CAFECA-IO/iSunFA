@@ -320,3 +320,28 @@ export const invoicePutV2Schema = {
   outputSchema: ICertificateValidator.strict(),
   frontend: ICertificateValidator,
 };
+
+export const invoicePostV2BodySchema = z.object({
+  certificateId: z.number(),
+  counterPartyId: z.number(),
+  inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
+  date: z.number(),
+  no: z.string(),
+  currencyAlias: z.nativeEnum(CurrencyType),
+  priceBeforeTax: z.number(),
+  taxType: z.nativeEnum(InvoiceTaxType),
+  taxRatio: z.number(),
+  taxPrice: z.number(),
+  totalPrice: z.number(),
+  type: z.nativeEnum(InvoiceType),
+  deductible: z.boolean(),
+});
+
+export const invoicePostV2Schema = {
+  input: {
+    querySchema: nullSchema,
+    bodySchema: invoicePostV2BodySchema,
+  },
+  outputSchema: ICertificateValidator.strict(),
+  frontend: ICertificateValidator,
+};

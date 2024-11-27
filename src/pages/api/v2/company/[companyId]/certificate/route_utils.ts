@@ -36,12 +36,12 @@ import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/cons
 import { parsePrismaCertificateToCertificateEntity } from '@/lib/utils/formatter/certificate.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
 import { IFileBeta, IFileEntity } from '@/interfaces/file';
-import { IInvoiceEntity, IInvoiceBeta } from '@/interfaces/invoice';
+import { IInvoiceEntity, IInvoiceBetaOptional } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
-import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
+import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { InvoiceTabs } from '@/constants/certificate';
@@ -214,33 +214,34 @@ export const certificateAPIPostUtils = {
       existed: true,
     };
 
-    const counterParty: ICounterparty = {
-      id: certificateEntity.invoice.counterParty.id,
-      companyId: certificateEntity.invoice.counterParty.companyId,
-      name: certificateEntity.invoice.counterParty.name,
-      taxId: certificateEntity.invoice.counterParty.taxId,
-      type: certificateEntity.invoice.counterParty.type,
-      note: certificateEntity.invoice.counterParty.note,
-      createdAt: certificateEntity.invoice.counterParty.createdAt,
-      updatedAt: certificateEntity.invoice.counterParty.updatedAt,
-    };
-    const invoice: IInvoiceBeta = {
-      id: certificateEntity.invoice.id,
-      isComplete: false,
-      counterParty,
-      inputOrOutput: certificateEntity.invoice.inputOrOutput,
-      date: certificateEntity.invoice.date,
-      no: certificateEntity.invoice.no,
-      currencyAlias: certificateEntity.invoice.currencyAlias,
-      priceBeforeTax: certificateEntity.invoice.priceBeforeTax,
-      taxType: certificateEntity.invoice.taxType,
-      taxRatio: certificateEntity.invoice.taxRatio,
-      taxPrice: certificateEntity.invoice.taxPrice,
-      totalPrice: certificateEntity.invoice.totalPrice,
-      type: certificateEntity.invoice.type,
-      deductible: certificateEntity.invoice.deductible,
-      createdAt: certificateEntity.invoice.createdAt,
-      updatedAt: certificateEntity.invoice.updatedAt,
+    // Deprecated: (20241127 - Murky) 目前CreateCertificate不會創造invoice, 如果需要假的invoice再把這邊打開
+    // const counterParty: ICounterparty = {
+    //   id: certificateEntity.invoice.counterParty.id,
+    //   companyId: certificateEntity.invoice.counterParty.companyId,
+    //   name: certificateEntity.invoice.counterParty.name,
+    //   taxId: certificateEntity.invoice.counterParty.taxId,
+    //   type: certificateEntity.invoice.counterParty.type,
+    //   note: certificateEntity.invoice.counterParty.note,
+    //   createdAt: certificateEntity.invoice.counterParty.createdAt,
+    //   updatedAt: certificateEntity.invoice.counterParty.updatedAt,
+    // };
+    const invoice: IInvoiceBetaOptional = {
+      // id: certificateEntity.invoice.id,
+      // isComplete: false,
+      // counterParty,
+      // inputOrOutput: certificateEntity.invoice.inputOrOutput,
+      // date: certificateEntity.invoice.date,
+      // no: certificateEntity.invoice.no,
+      // currencyAlias: certificateEntity.invoice.currencyAlias,
+      // priceBeforeTax: certificateEntity.invoice.priceBeforeTax,
+      // taxType: certificateEntity.invoice.taxType,
+      // taxRatio: certificateEntity.invoice.taxRatio,
+      // taxPrice: certificateEntity.invoice.taxPrice,
+      // totalPrice: certificateEntity.invoice.totalPrice,
+      // type: certificateEntity.invoice.type,
+      // deductible: certificateEntity.invoice.deductible,
+      // createdAt: certificateEntity.invoice.createdAt,
+      // updatedAt: certificateEntity.invoice.updatedAt,
     };
     const isRead =
       certificateEntity.userCertificates.length > 0

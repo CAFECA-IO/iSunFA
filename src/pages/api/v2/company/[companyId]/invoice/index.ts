@@ -8,7 +8,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { invoicePutApiUtils as putUtils } from '@/pages/api/v2/company/[companyId]/invoice/[invoiceId]/route_utils';
+import { invoicePostApiUtils as postUtils } from '@/pages/api/v2/company/[companyId]/invoice/route_utils';
 import { certificateAPIPostUtils } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
@@ -17,15 +17,13 @@ import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
 
-const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | null> = async ({
-  query,
+const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | null> = async ({
   body,
   session,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICertificate | null = null;
 
-  const { invoiceId } = query;
   const { userId } = session;
   const {
     certificateId,
@@ -45,23 +43,24 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
   const nowInSecond = getTimestampNow();
 
   try {
-    if (certificateId && !putUtils.isCertificateExistInDB(certificateId)) {
-      putUtils.throwErrorAndLog(loggerBack, {
+    const isCertificateExistInDB = await postUtils.isCertificateExistInDB(certificateId);
+    if (!isCertificateExistInDB) {
+      postUtils.throwErrorAndLog(loggerBack, {
         errorMessage: 'Certificate not found',
         statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
       });
     }
 
-    if (counterPartyId && !putUtils.isCounterPartyExistInDB(counterPartyId)) {
-      putUtils.throwErrorAndLog(loggerBack, {
+    const isCounterPartyExistInDB = await postUtils.isCounterPartyExistInDB(counterPartyId);
+    if (!isCounterPartyExistInDB) {
+      postUtils.throwErrorAndLog(loggerBack, {
         errorMessage: 'CounterParty not found',
         statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
       });
     }
 
-    const certificateFromPrisma = await putUtils.putInvoiceInPrisma({
+    const certificateFromPrisma = await postUtils.postInvoiceInPrisma({
       nowInSecond,
-      invoiceId,
       certificateId,
       counterPartyId,
       inputOrOutput,
@@ -133,7 +132,7 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  PUT: (req, res) => withRequestValidation(APIName.INVOICE_PUT_V2, req, res, handlePutRequest),
+  POST: (req, res) => withRequestValidation(APIName.INVOICE_POST_V2, req, res, handlePostRequest),
 };
 
 export default async function handler(

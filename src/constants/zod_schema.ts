@@ -14,6 +14,7 @@ import {
   certificatePostValidator,
   certificatePutValidator,
   invoicePutV2Schema,
+  invoicePostV2Schema,
 } from '@/lib/utils/zod_schema/certificate';
 import {
   companyDeleteSchema,
@@ -207,6 +208,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.COMPANY_GET]: nullAPISchema,
   [APIName.COMPANY_ADD_BY_INVITATION_CODE]: nullAPISchema,
   [APIName.CERTIFICATE_PUT_V2]: nullAPISchema,
+  [APIName.INVOICE_POST_V2]: invoicePostV2Schema,
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
   [APIName.CERTIFICATE_DELETE_V2]: nullAPISchema,
   [APIName.CERTIFICATE_DELETE__MULTIPLE_V2]: nullAPISchema,

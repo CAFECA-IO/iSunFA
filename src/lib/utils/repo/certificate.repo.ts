@@ -1,8 +1,6 @@
 import prisma from '@/client';
 
-import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
-import { CurrencyType } from '@/constants/currency';
-import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
+import { InvoiceType } from '@/constants/invoice';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { PostCertificateResponse } from '@/interfaces/certificate';
 import { SortBy, SortOrder } from '@/constants/sort';
@@ -70,30 +68,30 @@ export async function createCertificateWithEmptyInvoice(options: {
         createdAt: nowInSecond,
         updatedAt: nowInSecond,
         deletedAt: null,
-        invoices: {
-          create: {
-            counterParty: {
-              connect: {
-                id: PUBLIC_COUNTER_PARTY.id,
-              },
-            },
-            name: '',
-            inputOrOutput: InvoiceTransactionDirection.INPUT,
-            date: nowInSecond,
-            no: '',
-            currencyAlias: CurrencyType.TWD,
-            priceBeforeTax: 0,
-            taxType: InvoiceTaxType.TAXABLE,
-            taxRatio: 0,
-            taxPrice: 0,
-            totalPrice: 0,
-            type: InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
-            deductible: false,
-            createdAt: nowInSecond,
-            updatedAt: nowInSecond,
-            deletedAt: null,
-          },
-        },
+        // invoices: {
+        //   create: {
+        //     counterParty: {
+        //       connect: {
+        //         id: PUBLIC_COUNTER_PARTY.id,
+        //       },
+        //     },
+        //     name: '',
+        //     inputOrOutput: InvoiceTransactionDirection.INPUT,
+        //     date: nowInSecond,
+        //     no: '',
+        //     currencyAlias: CurrencyType.TWD,
+        //     priceBeforeTax: 0,
+        //     taxType: InvoiceTaxType.TAXABLE,
+        //     taxRatio: 0,
+        //     taxPrice: 0,
+        //     totalPrice: 0,
+        //     type: InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+        //     deductible: false,
+        //     createdAt: nowInSecond,
+        //     updatedAt: nowInSecond,
+        //     deletedAt: null,
+        //   },
+        // },
       },
       include: {
         voucherCertificates: {
@@ -112,7 +110,7 @@ export async function createCertificateWithEmptyInvoice(options: {
       },
     });
   } catch (error) {
-    loggerBack.error('createCertificateWithEmptyInvoice error', error);
+    loggerBack.error(`createCertificateWithEmptyInvoice: ${JSON.stringify(error, null, 2)}`);
   }
 
   return certificate;
