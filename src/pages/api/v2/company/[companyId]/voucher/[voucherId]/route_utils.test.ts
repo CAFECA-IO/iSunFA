@@ -146,7 +146,7 @@ describe('voucher/:voucherId', () => {
           event: {
             id: 1000,
             eventType: 'revert',
-            frequence: 'once',
+            frequency: 'once',
             startDate: 1731343518,
             endDate: 1731343518,
             daysOfWeek: [],
@@ -271,7 +271,7 @@ describe('voucher/:voucherId', () => {
           event: {
             id: 1000,
             eventType: 'revert',
-            frequence: 'once',
+            frequency: 'once',
             startDate: 1731343518,
             endDate: 1731343518,
             daysOfWeek: [],
@@ -458,7 +458,7 @@ describe('voucher/:voucherId', () => {
           originalLineItem: [
             {
               id: 1000,
-              accociateVoucherId: 1000,
+              associateVoucherId: 1000,
               originalLineItemId: 1001,
               resultLineItemId: 1007,
               debit: true,
@@ -494,7 +494,7 @@ describe('voucher/:voucherId', () => {
                   deletedAt: null,
                 },
               },
-              accociateVoucher: {
+              associateVoucher: {
                 id: 1000,
                 eventId: 1000,
                 originalVoucherId: 1002,
@@ -505,7 +505,7 @@ describe('voucher/:voucherId', () => {
                 event: {
                   id: 1000,
                   eventType: 'revert',
-                  frequence: 'once',
+                  frequency: 'once',
                   startDate: 1731343518,
                   endDate: 1731343518,
                   daysOfWeek: [],
@@ -520,7 +520,7 @@ describe('voucher/:voucherId', () => {
           resultLineItem: [
             {
               id: 1000,
-              accociateVoucherId: 1000,
+              associateVoucherId: 1000,
               originalLineItemId: 1001,
               resultLineItemId: 1007,
               debit: true,
@@ -556,7 +556,7 @@ describe('voucher/:voucherId', () => {
                   deletedAt: null,
                 },
               },
-              accociateVoucher: {
+              associateVoucher: {
                 id: 1000,
                 eventId: 1000,
                 originalVoucherId: 1002,
@@ -567,7 +567,7 @@ describe('voucher/:voucherId', () => {
                 event: {
                   id: 1000,
                   eventType: 'revert',
-                  frequence: 'once',
+                  frequency: 'once',
                   startDate: 1731343518,
                   endDate: 1731343518,
                   daysOfWeek: [],

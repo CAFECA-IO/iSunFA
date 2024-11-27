@@ -1,20 +1,20 @@
 import Image from 'next/image';
-
-// ToDo: (20241014 - Liz) 從 user context 取得使用者已經選擇的公司
-const selectedCompany = 'iSunCloud';
+import { useUserCtx } from '@/contexts/user_context';
 
 const CompanyBadge = () => {
+  const { selectedCompany } = useUserCtx();
+
   return (
     <div>
       {selectedCompany ? (
         <div className="flex items-center justify-center gap-1px rounded-md bg-badge-surface-soft-primary px-3px py-4px text-badge-text-primary-solid">
           <Image
-            src="/images/fake_company_avatar.svg"
-            alt="fake_company_avatar"
+            src={selectedCompany.imageId}
+            alt="company_avatar_in_header"
             width={14}
             height={14}
           ></Image>
-          <p className="px-2.5px text-xs font-medium">{selectedCompany}</p>
+          <p className="px-2.5px text-xs font-medium">{selectedCompany.name}</p>
         </div>
       ) : null}
     </div>

@@ -116,7 +116,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
 
         const { success: successCreated, data: certificate } = await createCertificateAPI({
           params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-          body: { fileId: fileMeta.id },
+          body: { fileIds: [fileMeta.id] }, // Info: (20241126 - Murky) @tsuhan 這邊已經可以使用批次上傳, 但是我不知道怎麼改，所以先放在array
         });
         if (!successCreated || !certificate) {
           handleUploadFailed(file.name, new Error(t('certificate:CREATE.FAILED')));
