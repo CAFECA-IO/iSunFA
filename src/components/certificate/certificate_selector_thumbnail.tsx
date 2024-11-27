@@ -25,6 +25,10 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
 }) => {
   const [selectedCertificate, setSelectedCertificate] = useState<ICertificateUI | null>(null);
 
+  // Info: (20241127 - Julian) 將檔名拆開，以便縮短檔名長度，避免 UI 過長
+  const certificateFilename = certificate.name.split('.')[0];
+  const certificateFilenameExtension = certificate.name.split('.').pop();
+
   const handleClicked = (
     e: React.MouseEvent<HTMLDivElement>,
     clickedCertificate: ICertificateUI
@@ -76,7 +80,10 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
             </div>
           </div>
         </div>
-        <p className="text-xs font-medium text-text-neutral-primary">{certificate.name}</p>
+        <div className="flex text-xs font-medium text-text-neutral-primary">
+          <p className="w-80px truncate">{certificateFilename}</p>
+          <p>{certificateFilenameExtension}</p>
+        </div>
       </div>
     </>
   );
