@@ -7,7 +7,7 @@ import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { PostCertificateResponse } from '@/interfaces/certificate';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { Prisma } from '@prisma/client';
-import { pageToOffset } from '@/lib/utils/common';
+import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { InvoiceTabs } from '@/constants/certificate';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -417,9 +417,43 @@ export async function listCertificateWithoutInvoice() {
       },
     },
     select: {
+      id: true,
+      companyId: true,
       fileId: true,
     },
   });
 
   return certificates;
+}
+
+export async function listCertificateWithResultId() {
+  const certificates = await prisma.certificate.findMany({
+    where: {
+      aiResultId: {
+        notIn: ['', '0', 'done'],
+      },
+    },
+    select: {
+      id: true,
+      companyId: true,
+      aiResultId: true,
+    },
+  });
+
+  return certificates;
+}
+
+export async function updateCertificateAiResultId(certificateId: number, aiResultId: string) {
+  const nowInSecond = getTimestampNow();
+  const certificate = await prisma.certificate.update({
+    where: {
+      id: certificateId,
+    },
+    data: {
+      aiResultId,
+      updatedAt: nowInSecond,
+    },
+  });
+
+  return certificate;
 }

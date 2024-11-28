@@ -1,6 +1,5 @@
 import { APIName } from '@/constants/api_connection';
 import { UploadType } from '@/constants/file';
-import { AI_TYPE } from '@/constants/aich';
 
 export enum AuthFunctionsKeysNew {
   user = 'user',
@@ -14,8 +13,6 @@ export enum AuthFunctionsKeysNew {
 export const AUTH_WHITELIST = {
   [APIName.FILE_UPLOAD]: { query: { type: UploadType.ROOM } },
   [APIName.STATUS_INFO_GET]: { query: {} },
-  [APIName.CRON_JOB]: { query: {} },
-  [APIName.ASK_AI_V2]: { query: { reason: AI_TYPE.CERTIFICATE } },
 };
 
 // ToDo: (20241111 - Jacky) Add more auth functions
@@ -33,7 +30,6 @@ export const AUTH_CHECK = {
   [APIName.COUNTERPARTY_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_DELETE]: [AuthFunctionsKeysNew.user],
-  [APIName.CRON_JOB]: [AuthFunctionsKeysNew.user],
   [APIName.USER_PENDING_TASK_GET]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_PENDING_TASK_GET]: [AuthFunctionsKeysNew.user],
   [APIName.USER_ROLE_LIST]: [AuthFunctionsKeysNew.user],

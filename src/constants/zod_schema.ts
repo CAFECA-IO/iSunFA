@@ -95,7 +95,6 @@ import {
 } from '@/lib/utils/zod_schema/user';
 import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
 import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
-import { cronJobGetSchema } from '@/lib/utils/zod_schema/cron_job';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -204,7 +203,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.COMPANY_GET]: nullAPISchema,
   [APIName.COMPANY_ADD_BY_INVITATION_CODE]: nullAPISchema,
   [APIName.CERTIFICATE_PUT_V2]: nullAPISchema,
-  [APIName.CRON_JOB]: cronJobGetSchema,
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
   [APIName.CERTIFICATE_DELETE_V2]: nullAPISchema,
   [APIName.CERTIFICATE_DELETE__MULTIPLE_V2]: nullAPISchema,
