@@ -22,10 +22,11 @@ export async function checkSessionUser(
     return true;
   }
 
+  // Info: (20241128 - Luphia) If there is no user_id, it will be considered as a guest
   if (!session.userId) {
     isLogin = false;
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.GUEST,
       errorType: 'Unauthorized Access',
       errorMessage: 'User ID is missing in session',
     });
