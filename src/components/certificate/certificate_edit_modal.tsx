@@ -69,7 +69,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const [invoiceType, setInvoiceType] = useState<InvoiceType>(
     certificate.invoice.type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE
   );
-  const [deductible, setDeductible] = useState(certificate.invoice.deductible);
+  const [deductible, setDeductible] = useState<boolean>(!!certificate.invoice.deductible);
   const {
     isMessageModalVisible,
     messageModalDataHandler,
@@ -485,7 +485,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                       ref={taxRatioMenuRef}
                       className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary p-8px"
                     >
-                      {[5, 10, 15].map((value) => (
+                      {[0, 5, 10, 15].map((value) => (
                         <li
                           key={`taxable-${value}`}
                           value={value}
