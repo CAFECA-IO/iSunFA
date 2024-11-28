@@ -226,7 +226,8 @@
     "SELECT_ACCOUNTING": "選擇會計科目",
     "NO_ACCOUNTING_FOUND": "查無會計科目",
     "NO_COUNTERPARTY_FOUND": "查無交易對象",
-    "EVERY": "每"
+    "EVERY": "每",
+    "TOAST_FAILED_TO_CREATE": "建立傳票失敗，請稍後再試。"
   },
   "ACCOUNT_TYPE": {
     "ASSET": "資產",

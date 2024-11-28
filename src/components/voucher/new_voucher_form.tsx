@@ -44,7 +44,6 @@ import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { VoucherV2Action } from '@/constants/voucher';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
 import { IAIResultVoucher } from '@/interfaces/voucher';
@@ -84,7 +83,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedCompany?.id;
   const userId = userAuth?.id ?? -1;
 
   const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
@@ -129,6 +128,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     counterParty: aiCounterParty,
     lineItems: aiLineItems,
   } = resultData ?? dummyAIResult;
+
+  // Info: (20241127 - Julian) 取得 AI 分析的 resultId
+  const resultId = askData?.resultId;
 
   const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
 
@@ -191,6 +193,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241018 - Tzuhan) AI 分析相關 state
   const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
   const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
+  const [apiInterval, setApiInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
@@ -219,53 +222,80 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           isSelected,
         };
       });
+
+      const selectedCerts = Object.values(updatedData).filter(
+        (item) => item.isSelected
+      ) as ICertificateUI[];
+
       setCertificates(updatedData);
-      setSelectedCertificates(
-        Object.values(updatedData).filter((item) => item.isSelected) as ICertificateUI[]
-      );
+      setSelectedCertificates(selectedCerts);
+
+      const targetIdList = selectedCerts.map((item) => item.id);
+
+      // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
+      setAiState(AIState.WORKING);
+      // Info: (20241021 - Julian) 呼叫 ask AI
+      askAI({ params: { companyId }, query: { reason: 'voucher' }, body: { targetIdList } });
     },
     [certificates]
   );
 
-  useEffect(() => {
-    if (selectedCertificates.length > 0 && selectedIds.length > 0) {
-      // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
-      setAiState(AIState.WORKING);
-      // Info: (20241021 - Julian) 呼叫 ask AI
-      askAI({
-        params: { companyId },
-        query: { reason: 'voucher' },
-        body: { certificateId: selectedIds[0] },
-      });
-    }
-  }, [selectedCertificates, selectedIds]);
+  // useEffect(() => {
+  //   if (selectedCertificates.length > 0 && selectedIds.length > 0) {
+  //     // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
+  //     setAiState(AIState.WORKING);
+  //     // Info: (20241021 - Julian) 呼叫 ask AI
+  //     askAI({
+  //       params: { companyId },
+  //       query: { reason: 'voucher' },
+  //       body: { targetIdList: [100] },
+  //     });
+  //   }
+  // }, [selectedCertificates, selectedIds]);
+
+  const handleGetAIResult = useCallback(() => {
+    // Info: (20241128 - Julian) 用 ResultId 來問 AI 分析結果，持續問到有結果為止；若 aiState !== AIState.WORKING 則停止問
+    const interval = setInterval(async () => {
+      getAIResult({ params: { companyId, resultId }, query: { reason: 'voucher' } });
+    }, 5000);
+
+    setApiInterval(interval);
+  }, [resultId]);
 
   useEffect(() => {
+    if (aiState === AIState.WORKING) {
+      // Info: (20241128 - Julian) 問 AI 分析結果
+      handleGetAIResult();
+    } else if (apiInterval) {
+      // Info: (20241128 - Julian) 如果 AI 分析結束，則停止問 API
+      clearInterval(apiInterval);
+    }
+  }, [aiState]);
+
+  // Info: (20241128 - Julian) 取得 AI 分析結果
+  useEffect(() => {
     if (isAskingAI === false) {
-      if (askSuccess && askData) {
-        // Info: (20241018 - Tzuhan) 呼叫 AI 分析 API
-        getAIResult({
-          params: { companyId, resultId: askData.resultId },
-          query: { reason: 'voucher' },
-        });
-      } else if (!askSuccess) {
+      if (askSuccess === false || resultId === 'fetchAIResultIdError') {
         //  Info: (20241021 - Julian) AI 分析失敗
         setAiState(AIState.FAILED);
+      } else if (askSuccess && askData) {
+        //  Info: (20241021 - Julian) AI 分析中
+        setAiState(AIState.WORKING);
       }
     }
   }, [askSuccess, askData, isAskingAI]);
 
   // Info: (20241021 - Julian) AI 分析結果
   useEffect(() => {
-    if (isAskingAI === false && isAIWorking === false) {
+    if (isAIWorking === false) {
       if (resultData) {
         setAiState(AIState.FINISH);
-      } else if (!resultData || !analyzeSuccess) {
+      } else if (analyzeSuccess === false) {
         // Info: (20241021 - Julian) AI 分析失敗
         setAiState(AIState.FAILED);
       }
     }
-  }, [isAIWorking, resultData, analyzeSuccess, isAskingAI]);
+  }, [isAIWorking, resultData, analyzeSuccess]);
 
   useEffect(() => {
     const isReverse = reverses.length > 0;
@@ -352,12 +382,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   //     // Info: (20241107 - Julian) 獲取 form 元素中的所有 input, button 元素
   //     const elementsInForm =
   //       formRef.current?.querySelectorAll<FocusableElement>('input, button, div') ?? [];
-
-  //     // Info: (20241107 - Julian) 過濾出可聚焦的元素
-  //     const focusableElements: FocusableElement[] = Array.from(elementsInForm).filter(
-  //       // Info: (20241107 - Julian) 過濾掉 disabled 或 tabIndex < 0 的元素
-  //       (el) => el.tabIndex >= 0 && (el as HTMLInputElement | HTMLButtonElement).disabled !== true
-  //     );
 
   //     // Info: (20241107 - Julian) 獲取各個欄位的 index
   //     const dateIndex = focusableElements.findIndex((el) => el.id === 'voucher-date');
@@ -626,7 +650,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     askAI({
       params: { companyId },
       query: { reason: 'voucher' },
-      body: { certificateId: selectedIds[0] },
+      body: { targetIdList: selectedIds },
     });
   };
 
@@ -662,8 +686,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         ? reverses.map((reverse) => {
             return {
               voucherId: reverse.voucherId,
-              lineItemIdBeReversed: reverse.voucherId, // ToDo: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
-              lineItemIdReverseOther: -1, // ToDo: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
+              lineItemIdBeReversed: reverse.lineItemBeReversedId, // ToDo: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
+              lineItemIdReverseOther: reverse.lineItemIndex, // ToDo: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
               amount: reverse.amount,
             };
           })
@@ -671,7 +695,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
     const body = {
       actions,
-      certificateIds: Object.values(certificates),
+      certificateIds: selectedIds,
       voucherDate: date.startTimeStamp,
       type: VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType],
       note,
@@ -752,7 +776,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           // ToDo: (20241108 - Julian) i18n
           id: 'create-voucher-fail',
           type: ToastType.ERROR,
-          content: 'Failed to create voucher, please try again later.',
+          content: t('journal:ADD_NEW_VOUCHER.TOAST_FAILED_TO_CREATE'),
           closeable: true,
         });
       }
@@ -804,7 +828,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   );
 
   const counterMenu = isCounterpartyLoading ? (
-    <div className="px-12px py-8px text-sm text-input-text-input-placeholder">Loading...</div>
+    <div className="px-12px py-8px text-sm text-input-text-input-placeholder">
+      {t('common:COMMON.LOADING')}
+    </div>
   ) : filteredCounterparty && filteredCounterparty.length > 0 ? (
     filteredCounterparty.map((counter) => {
       const counterClickHandler = () => {
@@ -1010,7 +1036,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
   useEffect(() => {
     const pusher = getPusherInstance();
-    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
 
     channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
@@ -1020,6 +1046,33 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       pusher.disconnect();
     };
   }, []);
+
+  // ToDo: (20241127 - Julian) 訂閱 Voucher AI 分析結果 PUSHER
+  // const aiResultHandler = useCallback(
+  //   (data: { message: string }) => {
+  //     const aiResult: IAIResultVoucher = JSON.parse(data.message);
+  //     // Deprecated: (20241127 - Julian) Debugging purpose
+  //     // eslint-disable-next-line no-console
+  //     console.log(`NewVoucherForm aiResultHandler: aiResult`, aiResult);
+  //     setAiVoucherResult(aiResult);
+  //     setAiState(AIState.FINISH);
+  //   },
+  //   [selectedIds]
+  // );
+
+  // ToDo: (20241127 - Julian) 訂閱 Voucher AI 分析結果 PUSHER
+  // useEffect(() => {
+  //   const pusher = getPusherInstance();
+  //   const channel = pusher.subscribe(`${PRIVATE_CHANNEL.VOUCHER}-${resultId}`);
+
+  //   channel.bind(CERTIFICATE_EVENT.ANALYSIS, aiResultHandler);
+
+  //   return () => {
+  //     channel.unbind_all();
+  //     channel.unsubscribe();
+  //     pusher.disconnect();
+  //   };
+  // }, []);
 
   useEffect(() => {
     setSelectedCertificates(Object.values(selectedData));
@@ -1128,10 +1181,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
               <button
                 id="voucher-counterparty"
                 type="button"
-                // Info: (20241108 - Julian) 透過 tabIndex 讓 div 可以被 focus
-                // ToDo: (20241125 - Julian) remove eslint-disable
-                // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-                // tabIndex={0}
                 ref={counterpartyRef}
                 onClick={counterSearchToggleHandler}
                 className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
