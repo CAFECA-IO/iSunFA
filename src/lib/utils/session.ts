@@ -1,8 +1,4 @@
 import { ISessionData } from '@/interfaces/session_data';
-<<<<<<< HEAD
-import { NextApiRequest, NextApiResponse } from 'next';
-=======
->>>>>>> develop
 import nextSession from 'next-session';
 
 const options = {
