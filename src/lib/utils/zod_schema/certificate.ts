@@ -16,7 +16,7 @@ import {
 } from '@/lib/utils/zod_schema/invoice';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
-import { counterPartyEntityValidator } from '@/constants/counterparty';
+import { counterPartyEntityValidator, PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
 import { userEntityValidator } from '@/lib/utils/zod_schema/user';
 import { ICertificate } from '@/interfaces/certificate';
@@ -334,7 +334,15 @@ export const invoicePutV2Schema = {
 
 export const invoicePostV2BodySchema = z.object({
   certificateId: z.number(),
-  counterPartyId: z.number(),
+  counterPartyId: z
+    .number()
+    .optional()
+    .transform((value) => {
+      if (value === undefined) {
+        return PUBLIC_COUNTER_PARTY.id;
+      }
+      return value;
+    }),
   inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
   date: z.number(),
   no: z.string(),
