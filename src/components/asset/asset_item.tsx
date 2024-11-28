@@ -140,12 +140,13 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
     >
       {/* Info: (20240920 - Julian) Select */}
       <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
-        <div className="relative top-20px px-8px">
+        <div className="relative top-20px z-10 px-8px">
           <input
             type="checkbox"
             className={checkboxStyle}
             checked={isSelected}
             onChange={checkboxHandler}
+            onClick={(e) => e.stopPropagation()} // Info: (20241127 - Julian) Prevent the event from bubbling up
           />
         </div>
       </div>
