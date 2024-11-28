@@ -18,7 +18,7 @@ import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
-import { handleAppleOAuth } from './callback/apple';
+import { handleAppleOAuth } from '@/lib/utils/apple_auth';
 // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
 // import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 // import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
@@ -124,10 +124,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
           try {
             const { account, user } = await handleAppleOAuth(credentials!.code);
             if (!account || !user) throw new Error('Apple sign-in failed');
-            return {
-              id: user.id,
-              email: user.email,
-            };
+            return user;
           } catch (error) {
             loggerError(-1, 'Apple OAuth failed', error as Error);
             return null;
@@ -187,16 +184,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       async signIn({ user, account }) {
         const session = await getSession(req, res);
         try {
-          await handleSignInSession(
-            req,
-            res,
-            user,
-            account || {
-              provider: 'google',
-              providerAccountId: user.id,
-              type: 'oauth',
-            }
-          );
+          if (!account) throw Error('Account not found');
+          await handleSignInSession(req, res, user, account);
           /* /* Info: (20241128 - tzuhan) @Anna, @Jacky, @Murky move to @/lib/utils/signIn
           // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
           // let Dbuser;
