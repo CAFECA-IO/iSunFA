@@ -59,6 +59,7 @@ import { AI_TYPE } from '@/constants/aich';
 
 const dummyAIResult: IAIResultVoucher = {
   aiType: AI_TYPE.VOUCHER,
+  // ToDo: (20241128 - Luphia) Use Constant
   aiStatus: 'success',
   voucherDate: 0,
   type: '',
