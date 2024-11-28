@@ -29,10 +29,13 @@ interface IServerSideProps {
 }
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
+  // Deprecated: (20241128 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('進入 ViewFinancialReportPage', 'reportId:', reportId, 'reportType:', reportType);
+
   const { t } = useTranslation('common');
   const { toastHandler } = useModalContext();
   const { selectedCompany, isAuthLoading } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const [reportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
@@ -41,31 +44,51 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     tokenId: '',
     reportLink: '',
   });
-  const {
-    data: reportFinancial,
-    code: getFRCode,
-    success: getFRSuccess,
-  } = APIHandler<FinancialReport>(
-    APIName.REPORT_GET_BY_ID,
-    {
-      params: { companyId: selectedCompany?.id, reportId },
-    },
-    hasCompanyId
-  );
+
+  const [financialReport, setFinancialReport] = React.useState<FinancialReport | null>(null);
+  const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] =
+    React.useState<boolean>(false);
+
+  const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
 
   useEffect(() => {
-    if (getFRSuccess === false) {
-      toastHandler({
-        id: `getFR-${getFRCode}_${reportId}`,
-        content: `${t('alpha:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('alpha:DASHBOARD.REPORT')}${getFRCode}`,
-        type: ToastType.ERROR,
-        closeable: true,
-      });
-    }
-  }, [getFRSuccess, getFRCode, reportFinancial]);
+    if (isAuthLoading || !selectedCompany) return;
+
+    const getFinancialReport = async () => {
+      try {
+        const {
+          data: reportFinancial,
+          code: getFRCode,
+          success: getFRSuccess,
+        } = await getFinancialReportAPI({
+          params: { companyId: selectedCompany.id, reportId },
+        });
+
+        if (!getFRSuccess) {
+          toastHandler({
+            id: `getFR-${getFRCode}_${reportId}`,
+            content: `${t('alpha:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('alpha:DASHBOARD.REPORT')}${getFRCode}`,
+            type: ToastType.ERROR,
+            closeable: true,
+          });
+          return;
+        }
+
+        setFinancialReport(reportFinancial);
+        setIsGetFinancialReportSuccess(getFRSuccess);
+      } catch (error) {
+        // console.log('error:', error);
+      }
+    };
+
+    getFinancialReport();
+    // Deprecated: (20241128 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('in useEffect and calling getFinancialReport');
+  }, [isAuthLoading, reportId, reportType, selectedCompany, t, toastHandler]);
 
   const displayedBody =
-    isAuthLoading || !getFRSuccess ? (
+    isAuthLoading || !isGetFinancialReportSuccess ? (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
@@ -85,7 +108,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
             }
             tokenContract={reportData.tokenContract}
             tokenId={reportData.tokenId}
-            reportLink={`/users/reports/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
+            reportLink={`/users/reports/${reportId}/${ReportUrlMap[financialReport?.reportType as keyof typeof ReportUrlMap]}`}
             reportId={reportId}
           />
         </div>

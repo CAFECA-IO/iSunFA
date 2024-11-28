@@ -14,13 +14,13 @@ const Toggle = ({
   initialToggleState = false,
   getToggledState,
   lockedToOpen = false,
-  toggleStateFromParent,
-  setToggleStateFromParent,
+  toggleStateFromParent = false,
+  setToggleStateFromParent = () => {},
 }: IToggleProps) => {
-  const [toggle, setToggle] =
-    toggleStateFromParent && setToggleStateFromParent
-      ? [toggleStateFromParent, setToggleStateFromParent]
-      : useState(initialToggleState);
+  const [internalToggle, setInternalToggle] = useState(initialToggleState);
+  const toggle = toggleStateFromParent !== undefined ? toggleStateFromParent : internalToggle;
+  const setToggle =
+    setToggleStateFromParent !== undefined ? setToggleStateFromParent : setInternalToggle;
 
   const passToggledStateHandler = (data: boolean) => {
     getToggledState(data);
@@ -55,13 +55,6 @@ const Toggle = ({
       ></div>
     </div>
   );
-};
-
-Toggle.defaultProps = {
-  lockedToOpen: false,
-  initialToggleState: false,
-  toggleStateFromParent: false,
-  setToggleStateFromParent: () => {},
 };
 
 export default Toggle;

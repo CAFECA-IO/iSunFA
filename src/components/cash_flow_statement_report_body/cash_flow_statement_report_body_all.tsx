@@ -21,6 +21,11 @@ interface ICashFlowStatementReportBodyAllProps {
 const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+
+  // Deprecated: (20241128 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('進入 CashFlowStatementReportBodyAll');
+
   const {
     data: reportFinancial,
     code: getReportFinancialCode,

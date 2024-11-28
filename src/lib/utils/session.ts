@@ -26,13 +26,12 @@ const dummyGetSession = async (req: NextApiRequest, res: NextApiResponse) => {
     userId: 10000006, // Info: (20241112 - Anna)
     companyId: 10000007, // Info: (20241112 - Anna)
     challenge: 'dummy',
-    roleId: 1006, // Info: (20241112 - Anna)
+    roleId: 1006,
   };
   return sessionData;
 };
 // Deprecate: (20241119 - Luphia) dummy session for development
-export const getSession =
-  env === 'development' ? dummyGetSession : nextSession<ISessionData>(options);
+export const getSession = env === 'development' ? dummyGetSession : nextSession<ISessionData>(options);
 
 export async function setSession(
   session: ISessionData,

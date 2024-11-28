@@ -57,6 +57,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const [preDate, setPreDate] = useStateRef<string>('');
   const [preYear, setPreYear] = useStateRef<string>('');
 
+  // Deprecated: (20241128 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('進入 BalanceSheetReportBodyAll');
+
   const {
     data: reportFinancial,
     code: getReportFinancialCode,
