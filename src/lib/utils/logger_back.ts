@@ -77,13 +77,14 @@ export const loggerError = ({
 }) => {
   const logData = { userId, errorType, errorMessage };
 
-  // Info: (20241128 - Jacky) 將錯誤訊息整理到日誌檔
   if (typeof errorMessage === 'string') {
+    // Info: (20240905 - Gibbs) 如果錯誤訊息是字符串，表示已經過其他程序判定，直接使用
     logData.errorMessage = errorMessage;
   } else if (
     errorMessage instanceof Prisma.PrismaClientKnownRequestError ||
     errorMessage instanceof Prisma.PrismaClientInitializationError
   ) {
+    // Info: (20240905 - Gibbs) 如果錯誤訊息是 Prisma 已知錯誤，則根據 errorCode 歸納錯誤原因，若皆不符合則視為 Prisma 未知錯誤
     const errorCode = getErrorCode(errorMessage);
     switch (errorCode) {
       case 'P1008':
@@ -125,6 +126,7 @@ export const loggerError = ({
     errorMessage instanceof Prisma.PrismaClientRustPanicError ||
     errorMessage instanceof Prisma.PrismaClientValidationError
   ) {
+    // Info: (20240905 - Gibbs) 如果錯誤訊息是 Prisma 未知錯誤或驗證錯誤，則直接使用錯誤訊息
     logData.errorMessage = `A Prisma error:\n${errorMessage.message}`;
   } else if (errorMessage instanceof Error) {
     logData.errorMessage = `Non Prisma error:\n${errorMessage.message}`;

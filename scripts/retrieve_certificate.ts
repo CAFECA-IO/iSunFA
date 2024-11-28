@@ -12,6 +12,7 @@ import {
 import { fuzzySearchCounterpartyByName } from '@/lib/utils/repo/counterparty.repo';
 import { createManyInvoice } from '@/lib/utils/repo/invoice.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 async function processCertificateContent(certificate: {
   id: number;
@@ -20,9 +21,13 @@ async function processCertificateContent(certificate: {
 }) {
   loggerBack.info(`Processing certificate ${certificate.id}`);
   try {
+    // Info: (20241128 - Jacky) Step 1: Load the analysis waiting list
+    // Info: (20241128 - Jacky) Step 2: Fetch the analysis result from AICH
     const resultFromAI = await fetchResultFromAICH(AI_TYPE.CERTIFICATE, certificate.aiResultId);
 
     if (resultFromAI.payload && resultFromAI.payload.length > 0) {
+      // Info: (20241128 - Jacky) Step 3: If analysis result is ready, process the invoices
+      // ToDo: (20241128 - Luphia) Declare expact data format for resultFromAI (why are there multiple invoices with one certificate?)
       const { payload: aiPayload } = resultFromAI;
       const { status, value } = aiPayload;
       if (status !== 'success') {
@@ -37,12 +42,15 @@ async function processCertificateContent(certificate: {
       }
       const invoiceList: IInvoiceEntity[] = await Promise.all(
         value.map(async (invoice: IAIInvoice) => {
+          // Info: (20241128 - Jacky) Step 4: Fuzzy search CounterParty by name for each invoice
+          // ToDo: (20241128 - Luphia) Do not process sql query in loop especially for fuzzy search
           const counterparty = await fuzzySearchCounterpartyByName(
             invoice.counterpartyName,
             certificate.companyId
           );
           const nowTimestamp = getTimestampNow();
-          return {
+          // ToDo: (20241128 - Luphia) Declare expact data format for analysisResult
+          const analysisResult = {
             certificateId: certificate.id,
             counterPartyId: counterparty?.id || PUBLIC_COUNTER_PARTY.id,
             inputOrOutput: invoice.inputOrOutput || InvoiceTransactionDirection.INPUT,
@@ -59,10 +67,13 @@ async function processCertificateContent(certificate: {
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
           };
+          return analysisResult;
         })
       );
 
+      // Info: (20241128 - Jacky) Step 5: Create invoices for this certificate
       const { count } = await createManyInvoice(invoiceList);
+      // Info: (20241128 - Jacky) Step 6: Update certificate status to done to remove it from the waiting list
       await updateCertificateAiResultId(certificate.id, 'done');
       loggerBack.info(`Processed ${count} invoices for certificate ${certificate.id}`);
     } else {
@@ -81,12 +92,13 @@ async function processCertificateContent(certificate: {
 async function processCertificates() {
   try {
     const certificatesWithResultId = await listCertificateWithResultId();
+    // ToDo: (20241128 - Luphia) use waterfall promise to process certificates
     await Promise.all(certificatesWithResultId.map(processCertificateContent));
     loggerBack.info('All certificates processed successfully');
   } catch (_error) {
     const error = _error as Error;
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'CertificateListError',
       errorMessage: error,
     });

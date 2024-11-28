@@ -18,6 +18,7 @@ import { CurrencyType } from '@/constants/currency';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 import { IAIInvoice, IInvoiceEntity } from '@/interfaces/invoice';
 import { createManyInvoice } from '@/lib/utils/repo/invoice.repo';
+import { DefaultValue } from '@/constants/default_value';
 
 type CertificateAiResponse = {
   aiType: AI_TYPE; // Info: (20241107 - Murky) For zod discriminator
@@ -49,9 +50,9 @@ async function certificateHandler(key: AI_TYPE, resultId: string, session: ISess
           companyId
         );
         const nowTimestamp = getTimestampNow();
-        return {
-          certificateId: invoice.certificateId || 555,
-          counterPartyId: counterparty?.id || PUBLIC_COUNTER_PARTY.id,
+        const certificateParsedResult = {
+          certificateId: invoice.certificateId || DefaultValue.CERTIFICATE_ID.UNKNOWN,
+          counterPartyId: counterparty?.id || DefaultValue.COUNTER_PARTY_ID.PROCESSING,
           inputOrOutput: invoice.inputOrOutput || InvoiceTransactionDirection.INPUT,
           date: invoice.date || nowTimestamp,
           no: invoice.no || 'AI00000000',
@@ -66,6 +67,7 @@ async function certificateHandler(key: AI_TYPE, resultId: string, session: ISess
           createdAt: nowTimestamp,
           updatedAt: nowTimestamp,
         };
+        return certificateParsedResult;
       })
     );
 

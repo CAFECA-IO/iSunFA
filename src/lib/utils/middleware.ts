@@ -9,6 +9,7 @@ import { APIName, APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { ISessionData } from '@/interfaces/session_data';
 import { checkAuthorizationNew, isWhitelisted } from '@/lib/utils/auth_check_v2';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function checkSessionUser(
   session: ISessionData,
@@ -61,7 +62,7 @@ export function checkRequestData<T extends APIName>(
 
   if (query === null && body === null) {
     loggerError({
-      userId: session.userId || 555,
+      userId: session.userId || DefaultValue.USER_ID.UNKNOWN,
       errorType: `Invalid Input Parameter for ${apiName} in middleware.ts`,
       errorMessage: req.body,
     });
@@ -79,7 +80,7 @@ export async function logUserAction<T extends APIName>(
   try {
     const userActionLog = {
       sessionId: session.id || '',
-      userId: session.userId || 555,
+      userId: session.userId || DefaultValue.USER_ID.UNKNOWN,
       actionType: UserActionLogActionType.API,
       actionDescription: apiName,
       ipAddress: (req.headers['x-forwarded-for'] as string) || '',
@@ -92,7 +93,7 @@ export async function logUserAction<T extends APIName>(
     await createUserActionLog(userActionLog);
   } catch (error) {
     loggerError({
-      userId: session.userId || 555,
+      userId: session.userId || DefaultValue.USER_ID.UNKNOWN,
       errorType: `Failed to log user action for ${apiName} in middleware.ts`,
       errorMessage: error as Error,
     });
