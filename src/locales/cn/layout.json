@@ -42,5 +42,17 @@
     "DELETE_WARNING": "此账户将在 {{days}} 个工作日内被删除。",
     "DELETE_HINT": "请确保数据备份。如需取消删除过程，请前往设置页面。",
     "SETTING": "设定"
+  },
+  "EMBED_CODE_MODAL": {
+    "EMBED_CODE": "嵌入程式码",
+    "WHAT_TYPE_OF_REPORT": "您想在网站上显示什么类型的报告？",
+    "REPORT_LANGUAGE": "报告语言",
+    "COPY": "克隆",
+    "THE_LATEST_REPORT": "在您的网站上显示最新报告",
+    "GENERATE": "产生",
+    "CODE_COPIED_TO_CLIPBOARD": "代码已复制到剪贴簿",
+    "BALANCE_SHEET": "资产负债表",
+    "COMPREHENSIVE_INCOME_STATEMENT": "综合损益表",
+    "CASH_FLOW": "现金流量表"
   }
 }

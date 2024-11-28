@@ -170,15 +170,6 @@
     "SECONDS": "秒",
     "YES_DELETE_IT": "是的，请删除"
   },
-  "EMBED_CODE_MODAL": {
-    "EMBED_CODE": "嵌入程式码",
-    "WHAT_TYPE_OF_REPORT": "您想在网站上显示什么类型的报告？",
-    "REPORT_LANGUAGE": "报告语言",
-    "COPY": "克隆",
-    "THE_LATEST_REPORT": "在您的网站上显示最新报告",
-    "GENERATE": "产生",
-    "CODE_COPIED_TO_CLIPBOARD": "代码已复制到剪贴簿"
-  },
   "ANALYSIS_REPORTS_SECTION": {
     "REPORT_TYPE": "报告类型",
     "ATTENTION": "注意：产生报告大约需要 30 到 40 分钟。完成后，它将存储在“我的报告”中。感谢您的耐心等待。"

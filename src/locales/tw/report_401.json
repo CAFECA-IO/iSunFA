@@ -170,15 +170,6 @@
     "SECONDS": "秒",
     "YES_DELETE_IT": "是，請刪除"
   },
-  "EMBED_CODE_MODAL": {
-    "EMBED_CODE": "嵌入程式碼",
-    "WHAT_TYPE_OF_REPORT": "您想在網站上顯示什麼類型的報告？",
-    "REPORT_LANGUAGE": "報告語言",
-    "COPY": "複製",
-    "THE_LATEST_REPORT": "在您的網站上顯示最新報告",
-    "GENERATE": "產生",
-    "CODE_COPIED_TO_CLIPBOARD": "代碼已複製到剪貼簿"
-  },
   "ANALYSIS_REPORTS_SECTION": {
     "REPORT_TYPE": "報告類型",
     "ATTENTION": "注意：產生報告大約需要 30 到 40 分鐘。完成後，它將儲存在“我的報告”中。感謝您的耐心等待。"

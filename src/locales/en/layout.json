@@ -42,5 +42,17 @@
     "DELETE_WARNING": "This account will be deleted in {{days}} business days.",
     "DELETE_HINT": "Please ensure data backup. To cancel the deletion process, please go to the settings page.",
     "SETTING": "Setting"
+  },
+  "EMBED_CODE_MODAL": {
+    "EMBED_CODE": "Embed Code",
+    "WHAT_TYPE_OF_REPORT": "What type of Report do you want to display on your web?",
+    "REPORT_LANGUAGE": "Report Language",
+    "COPY": "Copy",
+    "THE_LATEST_REPORT": "To show the Latest Report on your website",
+    "GENERATE": "Generate",
+    "CODE_COPIED_TO_CLIPBOARD": "Code copied to clipboard",
+    "BALANCE_SHEET": "Balance Sheet",
+    "COMPREHENSIVE_INCOME_STATEMENT": "Comprehensive Income Statement",
+    "CASH_FLOW": "Cash Flow Statement"
   }
 }
