@@ -8,7 +8,7 @@ import AssetDetailPageBody from '@/components/asset/asset_detail_page_body';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const AssetDetailPage: React.FC<{ assetId: string }> = ({ assetId }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('asset');
 
   const pageTitle = `${t('asset:ASSET_DETAIL_PAGE.TITLE')} ${assetId}`;
 

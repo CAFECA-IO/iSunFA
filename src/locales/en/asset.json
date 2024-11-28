@@ -80,5 +80,13 @@
     "CONFIRM_MESSAGE_TITLE": "Are you sure you want to update this asset?",
     "CONFIRM_MESSAGE_BTN": "Yes, update the asset",
     "TOAST_SUCCESS": "Asset has been updated"
+  },
+  "COMMON": {
+    "CANCEL": "Cancel",
+    "M": "M",
+    "Y": "Y",
+    "D": "D",
+    "SELECT": "Select",
+    "SELECT_ALL": "Select All"
   }
 }

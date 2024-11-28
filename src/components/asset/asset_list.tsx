@@ -37,7 +37,7 @@ const AssetList: React.FC<IAssetListProps> = ({
   remainingLifeSort,
   setRemainingLifeSort,
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('asset');
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   const defaultAssetList: IAssetItemUI[] = assetList.map((asset) => {
@@ -183,7 +183,7 @@ const AssetList: React.FC<IAssetListProps> = ({
           className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
           onClick={selectAllHandler}
         >
-          {t('common:COMMON.SELECT_ALL')}
+          {t('asset:COMMON.SELECT_ALL')}
         </button>
         {/* Info: (20241024 - Julian) Cancel selecting button */}
         <button
@@ -191,7 +191,7 @@ const AssetList: React.FC<IAssetListProps> = ({
           onClick={selectToggleHandler}
           className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
         >
-          {t('common:COMMON.CANCEL')}
+          {t('asset:COMMON.CANCEL')}
         </button>
         {/* Info: (20241024 - Julian) Select toggle button */}
         <button
@@ -199,7 +199,7 @@ const AssetList: React.FC<IAssetListProps> = ({
           onClick={selectToggleHandler}
           className={`${isCheckBoxOpen ? 'hidden' : 'block'} font-semibold text-link-text-primary hover:opacity-70`}
         >
-          {t('common:COMMON.SELECT')}
+          {t('asset:COMMON.SELECT')}
         </button>
       </div>
 

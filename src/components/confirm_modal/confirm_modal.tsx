@@ -670,7 +670,7 @@ const ConfirmModal = ({
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between">
-              <p>{t('common:DATE_PICKER.DATE')}</p>
+              <p>{t('common:COMMON.DATE')}</p>
               {displayDate}
             </div>
             {/* Info: (20240429 - Julian) Reason */}
