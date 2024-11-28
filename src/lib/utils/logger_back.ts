@@ -77,7 +77,7 @@ export const loggerError = ({
 }) => {
   const logData = { userId, errorType, errorMessage };
 
-  // 处理错误消息并补充日志信息
+  // Info: (20241128 - Jacky) 將錯誤訊息整理到日誌檔
   if (typeof errorMessage === 'string') {
     logData.errorMessage = errorMessage;
   } else if (
@@ -130,18 +130,18 @@ export const loggerError = ({
     logData.errorMessage = `Non Prisma error:\n${errorMessage.message}`;
   }
 
-  // 直接返回日志并记录
+  // Info: (20241128 - Jacky) 保存錯誤日誌並回傳記錄結果
   return loggerBack.child({ level: 'error', ...logData }).error('Error occurred');
 };
 
 /** Info: (20240828 - Gibbs) 記錄請求和響應的詳細信息
- * @param {number} [userId] - 用戶ID
- * @param {string} url - 請求的URL
- * @param {string} method - HTTP方法 (如GET, POST)
- * @param {number} statusCode - 韙應的HTTP狀態碼
+ * @param {number} [userId] - 用戶 ID
+ * @param {string} url - 請求的 URL
+ * @param {string} method - HTTP 方法 (如GET, POST)
+ * @param {number} statusCode - HTTP 狀態碼
  * @param {object} params - 請求參數
  * @param {string} userAgent - 用戶代理信息
- * @param {string} ipAddress - 用戶的IP地址
+ * @param {string} ipAddress - 用戶的 IP 地址
  */
 export const loggerRequest = ({
   userId,
@@ -165,7 +165,7 @@ export const loggerRequest = ({
 };
 
 /** Info: (20240828 - Gibbs) 記錄用戶行為
- * @param {number} userId - 用戶ID
+ * @param {number} userId - 用戶 ID
  * @param {string} actionType - 操作類型
  * @param {object} actionDetails - 操作詳細信息
  */
@@ -198,7 +198,7 @@ export const loggerSystemEvent = ({
 };
 
 /** Info: (20240828 - Gibbs) 記錄性能數據
- * @param {number} [userId] - 用戶ID
+ * @param {number} [userId] - 用戶 ID
  * @param {number} responseTime - 響應時間
  * @param {object} queryPerformance - 查詢性能
  * @param {number} resourceLoadTime - 資源加載時間
@@ -219,7 +219,7 @@ export const loggerPerformance = ({
 };
 
 /** Info: (20240828 - Gibbs) 記錄安全相關事件
- * @param {number} [userId] - 用戶ID
+ * @param {number} [userId] - 用戶 ID
  * @param {object} authProcess - 認證過程
  * @param {object} securityEvent - 安全事件
  */
