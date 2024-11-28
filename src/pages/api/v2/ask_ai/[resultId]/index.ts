@@ -20,6 +20,8 @@ import { IAIInvoice, IInvoiceEntity } from '@/interfaces/invoice';
 import { createManyInvoice } from '@/lib/utils/repo/invoice.repo';
 import { DefaultValue } from '@/constants/default_value';
 
+// ToDo: (20241128 - Luphia) Check this API carefully
+
 type CertificateAiResponse = {
   aiType: AI_TYPE; // Info: (20241107 - Murky) For zod discriminator
   [key: string]: unknown;
