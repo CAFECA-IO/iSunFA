@@ -1,0 +1,132 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { getSession, setSession } from '@/lib/utils/session';
+import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
+import { AdapterUser } from 'next-auth/adapters';
+import { Account, User } from 'next-auth';
+import { generateIcon } from '@/lib/utils/generate_user_icon';
+import { createFile } from '@/lib/utils/repo/file.repo';
+import { FileFolder, PUBLIC_IMAGE_ID } from '@/constants/file';
+import { APIPath } from '@/constants/api_connection';
+import { UserActionLogActionType } from '@/constants/user_action_log';
+import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+
+export const fetchImageInfo = async (
+  imageUrl: string
+): Promise<{
+  iconUrl: string;
+  mimeType: string;
+  size: number;
+}> => {
+  let mimeType = 'image/jpeg'; // Info: (20240902 - Murky) Default image type is jpeg
+  let size = 0;
+
+  try {
+    const response = await fetch(imageUrl);
+    if (response.ok) {
+      const blob = await response.blob();
+      mimeType = blob.type;
+      size = blob.size;
+    }
+  } catch {
+    // Info: (20240902 - Murky) Do nothing
+  }
+
+  return {
+    iconUrl: imageUrl,
+    mimeType,
+    size,
+  };
+};
+
+export const handleSignInSession = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  user: User | AdapterUser,
+  account:
+    | Account
+    | {
+        provider: string;
+        providerAccountId: string;
+        type: string;
+      }
+) => {
+  const session = await getSession(req, res);
+  // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
+  // let Dbuser;
+  // const { invitation } = (account?.params || {}) as { invitation: string };
+  const existingUser = await getUserByCredential(account.providerAccountId || user.id);
+  if (!existingUser) {
+    // Info: (20241127 - tzuhan) 如果用戶不存在，創建用戶
+    let userImage = {
+      iconUrl: user.image ?? '',
+      mimeType: 'image/jpeg',
+      size: 0,
+    };
+
+    if (user.image) {
+      userImage = await fetchImageInfo(user.image);
+    } else {
+      userImage = await generateIcon(user.name ?? '');
+    }
+
+    const imageName = `${user.name || 'user'}_icon`;
+    const file = await createFile({
+      name: imageName,
+      size: userImage.size,
+      mimeType: userImage.mimeType,
+      type: FileFolder.TMP,
+      url: userImage.iconUrl,
+      isEncrypted: false,
+      encryptedSymmetricKey: '',
+    });
+
+    const createdUser = await createUserByAuth({
+      name: user.name || '',
+      email: user.email || '',
+      provider: account.provider,
+      credentialId: account.providerAccountId,
+      method: account.type,
+      authData: account,
+      imageId: file?.id ?? PUBLIC_IMAGE_ID,
+    });
+
+    await setSession(session, { userId: createdUser.user.id });
+
+    // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
+    // Dbuser = createdUser;
+  } else {
+    // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
+    // Dbuser = getUser;
+    // ToDo: (20241121 - Jacky) Delete User from DB if deletedAt + 7 days is less than current date
+    await setSession(session, { userId: existingUser.user.id });
+  }
+  await createUserActionLog({
+    sessionId: session.id,
+    userId: session.userId || -1,
+    actionType: UserActionLogActionType.LOGIN,
+    actionDescription: UserActionLogActionType.LOGIN,
+    ipAddress: req.headers['x-forwarded-for'] as string,
+    userAgent: req.headers['user-agent'] as string,
+    apiEndpoint: req.url || APIPath.SIGN_IN,
+    httpMethod: req.method || '',
+    requestPayload: req.body,
+    statusMessage: STATUS_MESSAGE.SUCCESS,
+  });
+  /* Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
+  if (invitationCode) {
+    const getInvitation = await getInvitationByCode(invitationCode);
+    if (getInvitation) {
+      const isValid = await isInvitationValid(getInvitation);
+      if (isValid) {
+        await useInvitation(getInvitation, Dbuser?.id ?? 0);
+        // ToDo: (20240829 - Jacky) Add error handling with logger
+        // statusMessage = admin
+        //   ? STATUS_MESSAGE.CREATED_INVITATION
+        //   : STATUS_MESSAGE.INVITATION_CONFLICT;
+      }
+    }
+  }
+  */
+  return session;
+};

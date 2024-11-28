@@ -3,17 +3,20 @@ import GoogleProvider from 'next-auth/providers/google';
 // import AppleProvider from 'next-auth/providers/apple';
 // import { generateAppleClientSecret } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { destroySession, getSession, setSession } from '@/lib/utils/session';
+import { destroySession, getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
+/* Info: (20241128 - tzuhan) move to @/lib/utils/signIn
 import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import { FileFolder, PUBLIC_IMAGE_ID } from '@/constants/file';
+*/
 import { APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
+import { handleSignInSession } from '@/lib/utils/signIn';
 // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
 // import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 // import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
@@ -75,6 +78,7 @@ import { loggerError } from '@/lib/utils/logger_back';
  * - 選擇公司的操作更新資料庫和 session，確保用戶狀態的一致性。
  */
 
+/* Info: (20241128 - tzuhan) @Murky move to @/lib/utils/signIn
 async function fetchImageInfo(imageUrl: string): Promise<{
   iconUrl: string;
   mimeType: string;
@@ -100,6 +104,7 @@ async function fetchImageInfo(imageUrl: string): Promise<{
     size,
   };
 }
+*/
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   return NextAuth(req, res, {
@@ -161,6 +166,17 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       async signIn({ user, account }) {
         const session = await getSession(req, res);
         try {
+          await handleSignInSession(
+            req,
+            res,
+            user,
+            account || {
+              provider: 'google',
+              providerAccountId: user.id,
+              type: 'oauth',
+            }
+          );
+          /* /* Info: (20241128 - tzuhan) @Anna, @Jacky, @Murky move to @/lib/utils/signIn
           // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
           // let Dbuser;
           // const { invitation } = (account?.params || {}) as { invitation: string };
