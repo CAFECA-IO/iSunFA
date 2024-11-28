@@ -224,7 +224,8 @@
     "SELECT_ACCOUNTING": "Select Accounting",
     "NO_ACCOUNTING_FOUND": "No accounting found",
     "NO_COUNTERPARTY_FOUND": "No counterparty found",
-    "EVERY": "Every"
+    "EVERY": "Every",
+    "TOAST_FAILED_TO_CREATE": "Failed to create voucher, please try again later."
   },
   "ACCOUNT_TYPE": {
     "ASSET": "Assets",
