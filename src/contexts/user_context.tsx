@@ -9,7 +9,7 @@ import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
-import { signIn as authSignIn } from 'next-auth/react';
+import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -136,7 +136,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const isRouteChanging = useRef(false);
 
-  const { trigger: signoutAPI } = APIHandler<string>(APIName.SIGN_OUT);
   const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
   const { trigger: getStatusInfoAPI } = APIHandler<{
@@ -272,7 +271,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem('userId');
     localStorage.removeItem('expired_at');
 
-    await signoutAPI(); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
+    await authSignOut({ redirect: false }); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
     clearStates(); // Info: (20241004 - Liz) 清除 context 中的狀態
     redirectToLoginPage(); // Info: (20241004 - Liz) 重新導向到登入頁面
   };

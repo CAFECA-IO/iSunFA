@@ -155,7 +155,7 @@ export enum APIPath {
   AGREE_TO_TERMS = `${apiPrefix}/user/:userId/agreement`,
   CREATE_CHALLENGE = `${apiPrefix}/challenge`,
   SIGN_IN = `${apiPrefix}/sign_in`,
-  SIGN_OUT = `/api/auth/signout`,
+  SIGN_OUT = `${apiPrefix}/sign_out`,
   EMAIL = `${apiPrefix}/email`,
   USER_LIST = `${apiPrefixV2}/user`,
   USER_GET_BY_ID = `${apiPrefixV2}/user/:userId`,

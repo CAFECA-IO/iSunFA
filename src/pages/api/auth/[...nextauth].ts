@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
 // import AppleProvider from 'next-auth/providers/apple';
 // import { generateAppleClientSecret } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -17,6 +18,7 @@ import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
+import { handleAppleOAuth } from './callback/apple';
 // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
 // import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 // import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
@@ -112,6 +114,25 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       GoogleProvider({
         clientId: process.env.GOOGLE_CLIENT_ID as string,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      }),
+      CredentialsProvider({
+        name: 'Apple',
+        credentials: {
+          code: { label: 'Authorization Code', type: 'text' },
+        },
+        async authorize(credentials) {
+          try {
+            const { account, user } = await handleAppleOAuth(credentials!.code);
+            if (!account || !user) throw new Error('Apple sign-in failed');
+            return {
+              id: user.id,
+              email: user.email,
+            };
+          } catch (error) {
+            loggerError(-1, 'Apple OAuth failed', error as Error);
+            return null;
+          }
+        },
       }),
     ],
     /** Info: (20241127 - tzuhan) Apple login 單獨實作
