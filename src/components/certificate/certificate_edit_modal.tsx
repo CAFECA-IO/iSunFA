@@ -189,7 +189,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         );
       })
     ) : (
-      <div className="flex text-left text-sm">
+      <div className="flex text-left text-sm" onClick={() => setCounterPartyMenuOpen(false)}>
         <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">N/A</p>
         <p className="px-12px py-8px text-dropdown-text-secondary">N/A</p>
       </div>
@@ -534,7 +534,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     hasComma
                     className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                   />
-                  <div className="flex items-center rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-12px text-sm text-input-text-input-placeholder">
+                  <div className="flex items-center rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                     <Image
                       src="/currencies/twd.svg"
                       width={16}
@@ -570,7 +570,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   hasComma
                   className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                 />
-                <div className="flex items-center rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-12px text-sm text-input-text-input-placeholder">
+                <div className="flex items-center rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                   <Image
                     src="/currencies/twd.svg"
                     width={16}
