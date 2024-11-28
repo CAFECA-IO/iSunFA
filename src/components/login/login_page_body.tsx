@@ -9,18 +9,11 @@ import { useTranslation } from 'next-i18next';
 import { FiHome } from 'react-icons/fi';
 import I18n from '@/components/i18n/i18n';
 import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
+import Loader from '@/components/loader/loader';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 // ToDo: (20241119 - Liz) Beta version 不支援 Apple 登入
 const IS_APPLE_LOGIN_ENABLED = true;
-
-const Loader = () => {
-  return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="h-16 w-16 animate-spin rounded-full border-4 border-orange-400 border-t-transparent"></div>
-    </div>
-  );
-};
 
 const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
   const { t } = useTranslation('dashboard');
