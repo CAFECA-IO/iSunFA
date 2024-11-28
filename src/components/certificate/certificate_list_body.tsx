@@ -221,36 +221,50 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, activeTab, isSelectedAll]
   );
 
+  const deleteSelectedCertificates = useCallback(
+    async (selectedIds: string[]) => {
+      try {
+        const { success, data: deletedIds } = await deleteCertificatesAPI({
+          params: { companyId },
+          body: { certificateIds: selectedIds }, // Info: (20241128 - Murky) @tzuhan 這邊用multiple delete，然後把要delete的東西放在array裡
+        });
+        if (success && deletedIds) {
+          setCertificates((prev) => {
+            const updatedData = { ...prev };
+            deletedIds.forEach((id) => {
+              delete updatedData[id];
+            });
+            return updatedData;
+          });
+          toastHandler({
+            id: ToastId.DELETE_CERTIFICATE_SUCCESS,
+            type: ToastType.SUCCESS,
+            content: t('certificate:DELETE.SUCCESS'),
+            closeable: true,
+          });
+        } else throw new Error(t('certificate:DELETE.ERROR'));
+      } catch (error) {
+        toastHandler({
+          id: ToastId.DELETE_CERTIFICATE_ERROR,
+          type: ToastType.ERROR,
+          content: t('certificate:ERROR.WENT_WRONG'),
+          closeable: true,
+        });
+      }
+    },
+    [certificates]
+  );
+
   const handleDeleteItem = useCallback(
-    (id: number) => {
+    (selectedId: number) => {
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
         content: t('certificate:DELETE.CONTENT'),
-        notes: `${certificates[id].name}?`,
+        notes: `${certificates[selectedId].name}?`,
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
-          try {
-            const { success } = await deleteCertificatesAPI({
-              params: { companyId },
-              body: { certificateIds: [id] }, // Info: (20241128 - Murky) @tzuhan 這邊用multiple delete，然後把要delete的東西放在array裡
-            });
-            if (success) {
-              toastHandler({
-                id: ToastId.DELETE_CERTIFICATE_SUCCESS,
-                type: ToastType.SUCCESS,
-                content: t('certificate:DELETE.SUCCESS'),
-                closeable: true,
-              });
-            } else throw new Error(t('certificate:DELETE.ERROR'));
-          } catch (error) {
-            toastHandler({
-              id: ToastId.DELETE_CERTIFICATE_ERROR,
-              type: ToastType.ERROR,
-              content: t('certificate:ERROR.WENT_WRONG'),
-              closeable: true,
-            });
-          }
+          await deleteSelectedCertificates([selectedId.toString()]);
         },
         backBtnStr: t('certificate:DELETE.NO'),
       });
@@ -271,36 +285,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
-          try {
-            // Info: (20241025 - tzuhan) 批量刪除選中的項目
-            // Deprecated: (20240923 - tzuhan) debugging purpose
-            // eslint-disable-next-line no-console
-            console.log('Remove multiple ids:', selectedIds);
-
-            const { success: deleteMultipleSuccess, code } = await deleteCertificatesAPI({
-              params: { companyId },
-              query: { certificateIds: selectedIds },
-            });
-            if (deleteMultipleSuccess) {
-              // Info: (20241025 - tzuhan) 顯示刪除成功的提示
-              toastHandler({
-                id: ToastId.DELETE_CERTIFICATE_SUCCESS,
-                type: ToastType.SUCCESS,
-                content: t('certificate:DELETE.SUCCESS'),
-                closeable: true,
-              });
-            } else {
-              throw new Error(code);
-            }
-          } catch (error) {
-            // Info: (20241025 - tzuhan) 顯示錯誤提示
-            toastHandler({
-              id: ToastId.DELETE_CERTIFICATE_ERROR,
-              type: ToastType.ERROR,
-              content: t('certificate:ERROR.WENT_WRONG'),
-              closeable: true,
-            });
-          }
+          // Info: (20241025 - tzuhan) 批量刪除選中的項目
+          // Deprecated: (20240923 - tzuhan) debugging purpose
+          // eslint-disable-next-line no-console
+          console.log('Remove multiple ids:', selectedIds);
+          await deleteSelectedCertificates(selectedIds);
         },
         backBtnStr: t('certificate:DELETE.NO'),
       });
