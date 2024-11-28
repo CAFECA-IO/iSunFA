@@ -9,7 +9,10 @@ import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { invoicePostApiUtils as postUtils } from '@/pages/api/v2/company/[companyId]/invoice/route_utils';
-import { certificateAPIPostUtils } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
+import {
+  certificateAPIGetListUtils,
+  certificateAPIPostUtils,
+} from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
@@ -110,9 +113,8 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
       userCertificates: userCertificateEntities,
     };
 
-    const certificate: ICertificate = certificateAPIPostUtils.transformCertificateEntityToResponse(
-      certificateReadyForTransfer
-    );
+    const certificate: ICertificate =
+      certificateAPIGetListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
 
     payload = certificate;
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
