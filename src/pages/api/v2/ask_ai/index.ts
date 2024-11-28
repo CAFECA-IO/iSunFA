@@ -15,6 +15,7 @@ import { readFile } from 'fs/promises';
 import { decryptImageFile, parseFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
 import { bufferToBlob } from '@/lib/utils/parse_image_form';
 
+// ToDo: (20241128 - Luphia) Check this API carefully
 const handleCertificateRequest = async (
   companyId: number,
   key: AI_TYPE,
