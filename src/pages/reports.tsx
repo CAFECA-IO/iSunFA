@@ -257,7 +257,7 @@ const AuditReport = () => {
           <div className="grow">
             <input
               type="text"
-              placeholder={t('common:COMMON.SEARCH')}
+              placeholder={t('search:COMMON.SEARCH')}
               className="w-full rounded-sm bg-input-surface-input-background px-3 py-2.5 text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
             />
           </div>
@@ -429,7 +429,7 @@ const AuditReport = () => {
             <div className="grow rounded-sm px-3">
               <input
                 type="text"
-                placeholder={t('common:COMMON.SEARCH')}
+                placeholder={t('search:COMMON.SEARCH')}
                 className="w-full rounded-sm bg-transparent py-2.5 text-xs font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder focus:outline-none"
               />
             </div>

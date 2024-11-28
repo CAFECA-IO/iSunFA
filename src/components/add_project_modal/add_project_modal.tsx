@@ -239,7 +239,7 @@ const AddProjectModal = ({
           <input
             id="companySearchBar"
             type="text"
-            placeholder={t('common:COMMON.SEARCH')}
+            placeholder={t('search:COMMON.SEARCH')}
             value={searchMemberValue}
             onChange={searchMemberChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"
