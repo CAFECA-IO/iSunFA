@@ -84,8 +84,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     toastHandler,
   } = useModalContext();
   const [isAddCounterPartyModalOpen, setIsAddCounterPartyModalOpen] = useState(false);
-  const isFormValid =
-    priceBeforeTax > 0 && totalPrice > 0 && counterParty !== null && certificateNo !== '';
+  const isFormValid = priceBeforeTax > 0 && totalPrice > 0 && certificateNo !== '';
 
   const {
     targetRef: taxRatioMenuRef,
