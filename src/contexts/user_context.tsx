@@ -78,6 +78,7 @@ interface UserContextType {
 
   handleUserAgree: (hash: Hash) => Promise<boolean>;
   authenticateUser: (selectProvider: Provider, props: ILoginPageProps) => Promise<void>;
+  handleAppleSignIn: () => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -113,6 +114,7 @@ export const UserContext = createContext<UserContextType>({
 
   handleUserAgree: async () => false,
   authenticateUser: async () => {},
+  handleAppleSignIn: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -264,6 +266,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     // Deprecated: (20241111 - Liz)
     // eslint-disable-next-line no-console
     console.log('call signOut 登出並且清除 user context 所有狀態');
+
+    // Info: (20241127 - Liz)  清除 localStorage 中的資料
+    localStorage.removeItem('userId');
+    localStorage.removeItem('expired_at');
 
     await authSignOut({ redirect: false }); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
     clearStates(); // Info: (20241004 - Liz) 清除 context 中的狀態
@@ -477,6 +483,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setIsAuthLoading(false);
     }
+  };
+
+  const handleAppleSignIn = () => {
+    const clientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
+    const redirectUri = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI!;
+
+    const url = `https://appleid.apple.com/auth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(
+      redirectUri
+    )}&scope=openid%20email%20name&response_mode=form_post`;
+
+    window.location.href = url;
   };
 
   const authenticateUser = async (selectProvider: Provider, props: ILoginPageProps) => {
@@ -790,6 +807,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       checkIsRegistered,
       handleUserAgree,
       authenticateUser,
+      handleAppleSignIn,
     }),
     [
       credentialRef.current,

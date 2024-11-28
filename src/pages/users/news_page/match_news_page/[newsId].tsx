@@ -1,12 +1,16 @@
 import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { ILocale } from '@/interfaces/locale';
+import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
 import Layout from '@/components/beta/layout/layout';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import LatestNewsPageBody from '@/components/beta/latest_news_page/latest_news_page_body';
+import MatchNewsPageBody from '@/components/beta/news_page/match_news_page_body';
 
-const LatestNewsPage = () => {
+interface MatchNewsPageProps {
+  newsId: string;
+}
+
+const MatchNewsPage = ({ newsId }: MatchNewsPageProps) => {
   const { t } = useTranslation(['common']);
 
   return (
@@ -15,7 +19,7 @@ const LatestNewsPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:LATEST_NEWS_PAGE.LATEST_NEWS')}</title>
+        <title>{t('common:LATEST_NEWS_PAGE.MATCH_NEWS')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -32,21 +36,28 @@ const LatestNewsPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('common:LATEST_NEWS_PAGE.LATEST_NEWS')}
-        goBackUrl={ISUNFA_ROUTE.DASHBOARD}
+        pageTitle={t('common:LATEST_NEWS_PAGE.MATCH_NEWS')}
+        goBackUrl={ISUNFA_ROUTE.LATEST_NEWS_PAGE}
       >
-        <LatestNewsPageBody />
+        <MatchNewsPageBody newsId={newsId} />
       </Layout>
     </>
   );
 };
 
-export const getServerSideProps = async ({ locale }: ILocale) => {
+export const getServerSideProps: GetServerSideProps = async ({ params, locale }) => {
+  if (!params || !params.newsId || typeof params.newsId !== 'string') {
+    return {
+      notFound: true,
+    };
+  }
+
   return {
     props: {
+      newsId: params.newsId,
       ...(await serverSideTranslations(locale as string, ['layout', 'common'])),
     },
   };
 };
 
-export default LatestNewsPage;
+export default MatchNewsPage;

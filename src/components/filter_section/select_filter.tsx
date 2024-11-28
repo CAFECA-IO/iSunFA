@@ -21,7 +21,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
   containerClassName = '',
   className = '',
 }) => {
-  const { t } = useTranslation(['common', 'filter_section_type']);
+  const { t } = useTranslation(['filter_section_type']);
   const {
     targetRef: menuRef,
     componentVisible: menuVisibility,

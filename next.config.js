@@ -60,7 +60,6 @@ const nextConfig = {
     I_SUN_FA_PHONE_NUMBER: process.env.I_SUN_FA_PHONE_NUMBER,
     GITHUB_LINK: process.env.REACT_APP_GITHUB_LINK,
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
-    DOMAIN: process.env.DOMAIN,
   },
   images: {
     loader: 'custom',

@@ -172,9 +172,9 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       } else {
         messageModalDataHandler({
           title: '',
-          subtitle: t('common:DASHBOARD.FAILED'),
-          content: t('common:DASHBOARD.WE_CAN_T_GENERATE_THE_REPORT'),
-          submitBtnStr: t('common:DASHBOARD.TRY_AGAIN'),
+          subtitle: t('alpha:DASHBOARD.FAILED'),
+          content: t('alpha:DASHBOARD.WE_CAN_T_GENERATE_THE_REPORT'),
+          submitBtnStr: t('alpha:DASHBOARD.TRY_AGAIN'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
           },

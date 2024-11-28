@@ -8,7 +8,7 @@ interface SearchInputProps {
 }
 
 const SearchInput: React.FC<SearchInputProps> = ({ searchQuery, onSearchChange }) => {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['search']);
   return (
     <div className="flex min-w-200px flex-1 flex-col">
       <div className="relative flex-1 text-sm font-medium">
@@ -16,7 +16,7 @@ const SearchInput: React.FC<SearchInputProps> = ({ searchQuery, onSearchChange }
           type="text"
           id="search"
           className={`relative flex h-44px w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
-          placeholder={t('common:COMMON.SEARCH')}
+          placeholder={t('search:COMMON.SEARCH')}
           defaultValue={searchQuery}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.nativeEvent.isComposing) {

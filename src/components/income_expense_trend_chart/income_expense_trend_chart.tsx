@@ -260,7 +260,7 @@ const IncomeExpenseTrendChart = () => {
     if (getSuccess === false) {
       toastHandler({
         id: `income_expense_trend-${getCode}`,
-        content: `${t('common:DASHBOARD.FAILED_TO_GET_INCOME_EXPENSE_TREND')} ${getCode}`,
+        content: `${t('alpha:DASHBOARD.FAILED_TO_GET_INCOME_EXPENSE_TREND')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
