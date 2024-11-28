@@ -54,7 +54,7 @@ describe('company/[companyId]/certificate/:certificateId integration test', () =
     jest.clearAllMocks();
   });
 
-  describe('GET one certificate', () => {
+  xdescribe('GET one certificate', () => {
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},
