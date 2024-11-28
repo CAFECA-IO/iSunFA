@@ -22,6 +22,7 @@ import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import {
   certificateAPIPostUtils as postUtils,
   certificateAPIGetListUtils as getListUtils,
+  certificateAPIDeleteMultipleUtils as deleteUtils,
 } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { InvoiceTabs } from '@/constants/certificate';
@@ -38,7 +39,7 @@ type ICertificateListSummary = {
 
 type PaginatedCertificateListResponse = IPaginatedData<ICertificateListSummary>;
 
-type APIResponse = ICertificate[] | PaginatedCertificateListResponse | null;
+type APIResponse = ICertificate[] | PaginatedCertificateListResponse | number[] | null;
 
 /**
  * Info: (20241126 - Murky)
@@ -48,10 +49,10 @@ type APIResponse = ICertificate[] | PaginatedCertificateListResponse | null;
  * - 要從account setting讀取currency
  * - 要Post UserCertificate Read
  */
-export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_LIST_V2, object> = async ({
-  query,
-  session,
-}) => {
+export const handleGetRequest: IHandleRequest<
+  APIName.CERTIFICATE_LIST_V2,
+  PaginatedCertificateListResponse
+> = async ({ query, session }) => {
   // ToDo: (20241024 - Murky) API接口請符合 FilterSection 公版
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: PaginatedCertificateListResponse | null = null;
@@ -172,10 +173,10 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_LIST_V2, objec
  * - 回傳 ICertificate
  * - 記得放在Pusher CERTIFICATE_EVENT.CREATE
  */
-export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, object> = async ({
-  body,
-  session,
-}) => {
+export const handlePostRequest: IHandleRequest<
+  APIName.CERTIFICATE_POST_V2,
+  ICertificate[]
+> = async ({ body, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICertificate[] | null = null;
 
@@ -250,6 +251,37 @@ export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, obje
   };
 };
 
+export const handleDeleteRequest: IHandleRequest<
+  APIName.CERTIFICATE_DELETE_MULTIPLE_V2,
+  number[]
+> = async ({ body, session }) => {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: number[] | null = null;
+
+  const { certificateIds } = body;
+  const { userId } = session;
+
+  try {
+    const nowInSecond = getTimestampNow();
+
+    const deletedCertificateIds = await deleteUtils.deleteCertificates({
+      certificateIds,
+      nowInSecond,
+    });
+
+    statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+    payload = deletedCertificateIds;
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+    const logger = loggerError(userId, error.name, error.message);
+    logger.error(error);
+  }
+  return {
+    statusMessage,
+    payload,
+  };
+};
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
@@ -262,6 +294,8 @@ const methodHandlers: {
   GET: (req, res) => withRequestValidation(APIName.CERTIFICATE_LIST_V2, req, res, handleGetRequest),
   POST: (req, res) =>
     withRequestValidation(APIName.CERTIFICATE_POST_V2, req, res, handlePostRequest),
+  DELETE: (req, res) =>
+    withRequestValidation(APIName.CERTIFICATE_DELETE_MULTIPLE_V2, req, res, handleDeleteRequest),
 };
 
 export default async function handler(

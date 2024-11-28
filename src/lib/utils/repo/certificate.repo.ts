@@ -424,3 +424,58 @@ export async function upsertUserReadCertificates(options: {
 
   await Promise.all([updateJob, createJob]);
 }
+
+export async function deleteMultipleCertificates(options: {
+  certificateIds: number[];
+  nowInSecond: number;
+}): Promise<number[]> {
+  const { certificateIds, nowInSecond } = options;
+  const certificateUpdateWhere: Prisma.CertificateWhereInput = {
+    id: {
+      in: certificateIds,
+    },
+  };
+
+  const [updateIdResults] = await prisma.$transaction([
+    prisma.certificate.findMany({
+      where: certificateUpdateWhere,
+      select: {
+        id: true,
+      },
+    }),
+    prisma.userCertificate.deleteMany({
+      where: {
+        certificateId: {
+          in: certificateIds,
+        },
+      },
+    }),
+    prisma.voucherCertificate.deleteMany({
+      where: {
+        certificateId: {
+          in: certificateIds,
+        },
+      },
+    }),
+    prisma.invoice.updateMany({
+      where: {
+        certificateId: {
+          in: certificateIds,
+        },
+      },
+      data: {
+        updatedAt: nowInSecond,
+        deletedAt: nowInSecond,
+      },
+    }),
+    prisma.certificate.updateMany({
+      where: certificateUpdateWhere,
+      data: {
+        deletedAt: nowInSecond,
+        updatedAt: nowInSecond,
+      },
+    }),
+  ]);
+  const deletedIds = updateIdResults.map((result) => result.id);
+  return deletedIds;
+}

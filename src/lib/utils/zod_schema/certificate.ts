@@ -287,6 +287,17 @@ export const certificateGetOneSchema = {
   frontend: certificateGetOneFrontendSchema,
 };
 
+export const certificateMultiDeleteSchema = {
+  input: {
+    querySchema: nullSchema,
+    bodySchema: z.object({
+      certificateIds: z.array(z.number()),
+    }),
+  },
+  outputSchema: z.array(z.number()),
+  frontend: z.array(z.number()),
+};
+
 /**
  * Info: (20241125 - Murky)
  * @note 因為放在invoice 會有dependency cycle, 所以放在這裡
