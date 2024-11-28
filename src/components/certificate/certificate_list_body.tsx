@@ -222,7 +222,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   );
 
   const deleteSelectedCertificates = useCallback(
-    async (selectedIds: string[]) => {
+    async (selectedIds: number[]) => {
       try {
         const { success, data: deletedIds } = await deleteCertificatesAPI({
           params: { companyId },
@@ -264,7 +264,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
-          await deleteSelectedCertificates([selectedId.toString()]);
+          await deleteSelectedCertificates([selectedId]);
         },
         backBtnStr: t('certificate:DELETE.NO'),
       });
@@ -275,7 +275,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleDeleteSelectedItems = useCallback(() => {
     // Info: (20241025 - tzuhan) 找出所有選中的項目 ID
-    const selectedIds = Object.keys(certificates).filter((id) => certificates[id].isSelected);
+    const selectedIds = Object.values(certificates)
+      .filter((certificate) => certificate.isSelected)
+      .map((certificate) => certificate.id);
 
     // Info: (20241025 - tzuhan) 如果有選中的項目，顯示刪除確認模態框
     if (selectedIds.length > 0) {
