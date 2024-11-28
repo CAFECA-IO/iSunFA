@@ -41,5 +41,25 @@
     "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "Select a bookmark to add or remove.",
     "SAVE": "Save",
     "PLEASE_SELECT_BOOKMARKS": "Please select bookmarks"
+  },
+  "PASSKEY_SUPPORT_MODAL": {
+    "ANDROID": "Android OS9 or later",
+    "MACOS": "MacOS 13.5 or later",
+    "IOS": "iOS 16 & iPadOS 16 or later",
+    "GOT_IT": "Got it!",
+    "PASSKEY_SUPPORT_SUMMARY": "Passkey support summary"
+  },
+  "PROFILE_UPLOAD_MODAL": {
+    "DROP_YOUR_FILES_HERE_OR": "Drop your files here or",
+    "PROFILE_PIC": "Profile Pic",
+    "COMPANY_IMAGE": "Company Image",
+    "PROJECT_IMAGE": "Project Image",
+    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "Please upload your profile picture",
+    "PLEASE_UPLOAD_YOUR_COMPANY_PICTURE": "Please upload your company image",
+    "PLEASE_UPLOAD_YOUR_PROJECT_PICTURE": "Please upload your project image",
+    "UPLOAD_FAILED": "Upload failed",
+    "PLEASE_TRY_LATER": "Please try again later. Error code:",
+    "OK": "OK",
+    "CANCEL": "Cancel"
   }
 }

@@ -41,5 +41,25 @@
     "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "选择要新增或删除的书签",
     "SAVE": "保存",
     "PLEASE_SELECT_BOOKMARKS": "请选择书签"
+  },
+  "PASSKEY_SUPPORT_MODAL": {
+    "ANDROID": "Android OS9 或更高版本",
+    "MACOS": "MacOS 13.5 或更高版本",
+    "IOS": "iOS 16 和 iPadOS 16 或更高版本",
+    "GOT_IT": "知道了！",
+    "PASSKEY_SUPPORT_SUMMARY": "密钥支持"
+  },
+  "PROFILE_UPLOAD_MODAL": {
+    "DROP_YOUR_FILES_HERE_OR": "将您的文件拖放到此处或",
+    "PROFILE_PIC": "使用者照片",
+    "COMPANY_IMAGE": "公司图片",
+    "PROJECT_IMAGE": "专案图片",
+    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "请上传您的个人资料照片",
+    "PLEASE_UPLOAD_YOUR_COMPANY_PICTURE": "请上传您的公司图片",
+    "PLEASE_UPLOAD_YOUR_PROJECT_PICTURE": "请上传您的专案图片",
+    "UPLOAD_FAILED": "上传失败",
+    "PLEASE_TRY_LATER": "请稍后再试。错误代码：",
+    "OK": "好",
+    "CANCEL": "取消"
   }
 }

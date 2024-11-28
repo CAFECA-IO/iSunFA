@@ -74,7 +74,6 @@
     "OR": "或",
     "ERROR_CODE": "錯誤代碼: {{code}}",
     "CANCEL": "取消",
-    "ALPHA_TEST_REMINDER": "Alpha 版本的資料只用於測試",
     "TYPE": "類型",
     "EMPLOYEE": "員工",
     "DESCRIPTION": "描述",
@@ -103,7 +102,7 @@
     "SELECT": "選擇",
     "SELECT_ALL": "全選",
     "NO_DATA": "沒有數據",
-    "TOOLTIP_MESSAGE": "當遊標位於圖形使用者介面中的圖示、圖像、超連結或其他元素上時出現的訊息。",
+    "TOOLTIP_MESSAGE": "當游標位於圖形使用者介面中的圖示、圖像、超連結或其他元素上時出現的訊息。",
     "PERIOD": "期間",
     "OK": "好",
     "FROM": "從",
@@ -125,25 +124,7 @@
     "SUBMIT": "送出"
   },
   "LOADING_MODAL": {
-    "LOADING": "正在加載中，請稍等..."
-  },
-  "PASSKEY_SUPPORT_MODAL": {
-    "ANDROID": "Android OS9 或更高版本",
-    "MACOS": "MacOS 13.5 或更高版本",
-    "IOS": "iOS 16 和 iPadOS 16 或更高版本",
-    "GOT_IT": "知道了！",
-    "PASSKEY_SUPPORT_SUMMARY": "密鑰支援"
-  },
-  "PROFILE_UPLOAD_MODAL": {
-    "DROP_YOUR_FILES_HERE_OR": "將您的文件拖放到此處或",
-    "PROFILE_PIC": "使用者照片",
-    "COMPANY_IMAGE": "公司圖片",
-    "PROJECT_IMAGE": "專案圖片",
-    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "請上傳您的個人資料照片",
-    "PLEASE_UPLOAD_YOUR_COMPANY_PICTURE": "請上傳您的公司圖片",
-    "PLEASE_UPLOAD_YOUR_PROJECT_PICTURE": "請上傳您的專案圖片",
-    "UPLOAD_FAILED": "上傳失敗",
-    "PLEASE_TRY_LATER": "請稍後再試。錯誤代碼："
+    "LOADING": "正在載入中，請稍等..."
   },
   "UPLOAD_AREA": {
     "DROP_YOUR_FILES_HERE_OR": "將您的文件拖放到此處或",

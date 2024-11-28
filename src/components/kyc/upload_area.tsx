@@ -21,11 +21,11 @@ import { IFile } from '@/interfaces/file';
 import { UploadType } from '@/constants/file';
 
 const UploadArea = ({
-  loacalStorageFilesKey = KYCFiles,
+  localStorageFilesKey = KYCFiles,
   type,
   onChange,
 }: {
-  loacalStorageFilesKey: string;
+  localStorageFilesKey: string;
   type: UploadDocumentKeys;
   onChange: (key: UploadDocumentKeys, id: number | undefined) => void;
 }) => {
@@ -66,12 +66,12 @@ const UploadArea = ({
   );
 
   const updateFileIdInLocalStorage = (fileType: UploadDocumentKeys, fileId: number) => {
-    const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
+    const currentData = JSON.parse(localStorage.getItem(localStorageFilesKey) || '{}');
     const data = currentData;
 
     if (data[fileType]) {
       data[fileType].id = fileId;
-      localStorage.setItem(loacalStorageFilesKey, JSON.stringify(data));
+      localStorage.setItem(localStorageFilesKey, JSON.stringify(data));
     }
   };
 
@@ -114,7 +114,7 @@ const UploadArea = ({
         return;
       }
 
-      const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
+      const currentData = JSON.parse(localStorage.getItem(localStorageFilesKey) || '{}');
       const localStorageData = currentData;
       const reader = new FileReader();
       readerRef.current = reader;
@@ -139,7 +139,7 @@ const UploadArea = ({
               file: base64File,
             },
           };
-          localStorage.setItem(loacalStorageFilesKey, JSON.stringify(newData));
+          localStorage.setItem(localStorageFilesKey, JSON.stringify(newData));
           setUploadedFile(file);
 
           await handleFileUpload(file);
@@ -230,7 +230,7 @@ const UploadArea = ({
       setUploadProgress(0);
       setStatus(ProgressStatus.NOT_FOUND);
       onChange(type, undefined);
-      deleteFileFromLocalStorage(type, loacalStorageFilesKey, uploadedFileId);
+      deleteFileFromLocalStorage(type, localStorageFilesKey, uploadedFileId);
       setUploadedFile(undefined);
       setUploadedFileId(undefined);
     }
@@ -239,7 +239,7 @@ const UploadArea = ({
   useEffect(() => {
     if (!hasCompanyId) return;
     try {
-      const { id, file } = loadFileFromLocalStorage(type, loacalStorageFilesKey);
+      const { id, file } = loadFileFromLocalStorage(type, localStorageFilesKey);
       setUploadedFile(file);
       setUploadedFileId(Number(id));
       setUploadProgress(100);

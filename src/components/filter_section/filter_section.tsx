@@ -60,7 +60,7 @@ const FilterSection = <T,>({
   disableDateSearch,
   displayTypeFilter,
 }: FilterSectionProps<T>) => {
-  const { t } = useTranslation(['certificate', 'common']);
+  const { t } = useTranslation(['common']);
   const { toastHandler } = useModalContext();
   const [selectedType, setSelectedType] = useState<string | undefined>(
     types.length > 0 ? types[0] : undefined

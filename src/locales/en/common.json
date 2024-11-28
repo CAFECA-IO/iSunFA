@@ -74,7 +74,6 @@
     "OR": "OR",
     "ERROR_CODE": "Error Code: {{code}}",
     "CANCEL": "Cancel",
-    "ALPHA_TEST_REMINDER": "The data used in the Alpha version is for testing purposes only.",
     "TYPE": "Type",
     "EMPLOYEE": "Employee",
     "DESCRIPTION": "Description",
@@ -126,24 +125,6 @@
   },
   "LOADING_MODAL": {
     "LOADING": "It is loading, please wait..."
-  },
-  "PASSKEY_SUPPORT_MODAL": {
-    "ANDROID": "Android OS9 or later",
-    "MACOS": "MacOS 13.5 or later",
-    "IOS": "iOS 16 & iPadOS 16 or later",
-    "GOT_IT": "Got it!",
-    "PASSKEY_SUPPORT_SUMMARY": "Passkey support summary"
-  },
-  "PROFILE_UPLOAD_MODAL": {
-    "DROP_YOUR_FILES_HERE_OR": "Drop your files here or",
-    "PROFILE_PIC": "Profile Pic",
-    "COMPANY_IMAGE": "Company Image",
-    "PROJECT_IMAGE": "Project Image",
-    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "Please upload your profile picture",
-    "PLEASE_UPLOAD_YOUR_COMPANY_PICTURE": "Please upload your company image",
-    "PLEASE_UPLOAD_YOUR_PROJECT_PICTURE": "Please upload your project image",
-    "UPLOAD_FAILED": "Upload failed",
-    "PLEASE_TRY_LATER": "Please try again later. Error code:"
   },
   "UPLOAD_AREA": {
     "DROP_YOUR_FILES_HERE_OR": "Drop your files here or ",
