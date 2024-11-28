@@ -197,6 +197,8 @@
     "REVERSE": "Reverse",
     "EXPORT_VOUCHER_MODAL_TITLE": "Export Voucher",
     "EXPORT_VOUCHER_MODAL_SUBTITLE": "Please select the vouchers you want to export",
+    "TOAST_EXPORT_SUCCESS": "Voucher exported successfully.",
+    "TOAST_EXPORT_FAILED": "Failed to export voucher, please try again later.",
     "VOUCHER_NUMBER": "Voucher Number",
     "EXPORT_BTN": "Export",
     "FROM_PLACEHOLDER": "From",

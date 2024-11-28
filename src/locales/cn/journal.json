@@ -197,6 +197,8 @@
     "REVERSE": "冲销",
     "EXPORT_VOUCHER_MODAL_TITLE": "汇出传票",
     "EXPORT_VOUCHER_MODAL_SUBTITLE": "请选择您要汇出的传票",
+    "TOAST_EXPORT_SUCCESS": "传票已成功汇出。",
+    "TOAST_EXPORT_FAILED": "传票汇出失败，请稍后再试。",
     "VOUCHER_NUMBER": "传票号码",
     "EXPORT_BTN": "汇出",
     "FROM_PLACEHOLDER": "从",
