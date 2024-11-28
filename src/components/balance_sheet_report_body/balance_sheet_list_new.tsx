@@ -19,9 +19,10 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import Toggle from '@/components/toggle/toggle';
-import { useGlobalCtx } from '@/contexts/global_context';
+// import { useGlobalCtx } from '@/contexts/global_context';
 // import { useReactToPrint } from 'react-to-print';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
+import { Html2PdfOptions } from 'html2pdf.js';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
@@ -51,7 +52,44 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   printFn, // Info: (20241122 - Anna) 使用打印函數
 }) => {
   const { t } = useTranslation(['report_401']);
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+  // const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+
+  // 🌟 新增狀態來追蹤是否正在下載 PDF
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    const element = document.getElementById('download-content');
+    if (element) {
+      try {
+        setIsDownloadingPDF(true); // 🌟 開始下載時，顯示內容
+
+        // 動態載入 html2pdf.js
+        const html2pdf = (await import('html2pdf.js')).default;
+
+        const options: Html2PdfOptions = {
+          margin: 0,
+          filename: 'example.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        };
+
+        // 🌟 確保 printRef.current 不是 null
+        html2pdf()
+          .set(options)
+          .from(printRef.current as HTMLElement) // 🌟 確保使用的是正確的節點
+          .save();
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error loading html2pdf.js:', error);
+      } finally {
+        setIsDownloadingPDF(false); // 🌟 完成下載後，隱藏內容
+      }
+    } else {
+      // eslint-disable-next-line no-console
+      console.error('Element not found for PDF generation');
+    }
+  };
 
   // Info: (20241121 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
   // const printRef = useRef<HTMLDivElement>(null);
@@ -393,7 +431,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   useEffect(() => {
     if (printRef.current) {
       // eslint-disable-next-line no-console
-      console.log('balance_sheet_list 觀察 Current printRef content:', printRef.current);
+      // console.log('balance_sheet_list 觀察 Current printRef content:', printRef.current);
+      // eslint-disable-next-line no-console
+      console.log('balance_sheet_list 觀察 Download content:', printRef.current.innerHTML);
     } else {
       // eslint-disable-next-line no-console
       console.log('BalanceSheetList printRef is currently null');
@@ -640,7 +680,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
         </div>
         <div className="ml-auto flex items-center gap-24px">
-          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
+          {/* <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} /> */}
+          <DownloadButton onClick={handleDownloadPDF} disabled={false} />
           <PrintButton onClick={printFn} disabled={false} />
         </div>
       </div>
@@ -974,7 +1015,12 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
       {displayedSelectArea()}
       {/* Info: (20241125 - Tzuhan) 渲染打印模板，通過 CSS 隱藏 */}
-      <div ref={printRef} className="hidden print:block">
+      {/* <div ref={printRef} id="download-content" className="hidden print:block"> */}
+      <div
+        ref={printRef}
+        id="download-content"
+        className={`${isDownloadingPDF ? 'block' : 'hidden print:block'}`} // 🌟 同時支持下載和列印功能
+      >
         <BalanceSheetA4Template
           reportFinancial={reportFinancial}
           curDate={curDate}

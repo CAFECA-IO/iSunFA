@@ -72,9 +72,9 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     navigator.clipboard.writeText(generatedIframeCode);
   };
 
-const generateClickHandler = () => {
-  setStep(1);
-};
+  const generateClickHandler = () => {
+    setStep(1);
+  };
 
   useEffect(() => {
     if (generatedCode && !generatedLoading && generatedSuccess) {
@@ -113,83 +113,83 @@ const generateClickHandler = () => {
     // 確保返回 void
   }, [generatedCode, generatedLoading, generatedSuccess]);
 
-const generateReportHandler = async () => {
-  const getPeriod = () => {
-    const today = dayjs().startOf('day'); // 拿今天日期
-    return {
-      startTimeStamp: today.subtract(3, 'month').unix(), // 三個月前
-      endTimeStamp: today.unix(), // 今天
+  const generateReportHandler = async () => {
+    const getPeriod = () => {
+      const today = dayjs().startOf('day'); // 拿今天日期
+      return {
+        startTimeStamp: today.subtract(3, 'month').unix(), // 三個月前
+        endTimeStamp: today.unix(), // 今天
+      };
     };
-  };
 
-  const period = getPeriod();
+    const period = getPeriod();
 
-  if (!period) {
-    // eslint-disable-next-line no-console
-    console.error('No report type selected.');
-    return;
-  }
-
-  const selectedReportTypes = [];
-  if (isBalanceSheetChecked) selectedReportTypes.push(FinancialReportTypesKey.balance_sheet);
-  if (isIncomeStatementChecked) {
-    selectedReportTypes.push(FinancialReportTypesKey.comprehensive_income_statement);
-  }
-  if (isCashFlowStatementChecked) {
-    selectedReportTypes.push(FinancialReportTypesKey.cash_flow_statement);
-  }
-
-  if (selectedReportTypes.length === 0) {
-    // eslint-disable-next-line no-console
-    console.error('No report type selected.');
-    return;
-  }
-
-  if (selectedCompany) {
-    const iframeCodes: string[] = [];
-
-    await Promise.all(
-      selectedReportTypes.map(async (reportType) => {
-        const body: IFinancialReportRequest = {
-          type: FinancialReportTypesKeyReportSheetTypeMapping[reportType], // 每次迭代報告類型
-          reportLanguage: selectedReportLanguage,
-          from: period.startTimeStamp,
-          to: period.endTimeStamp,
-          reportType: ReportType.FINANCIAL,
-        };
-
-        try {
-          const report = await generateFinancialReport({
-            params: { companyId: selectedCompany.id },
-            body,
-          });
-
-          const reportId = report.data; // 從 API 響應中拿 reportId
-
-          // 動態生成link
-          const reportLink = `https://isunfa.tw${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}`;
-
-          // 生成 iframe
-          iframeCodes.push(
-            `<iframe src="${reportLink}" title="${reportType}" width={600} height={600} />`
-          );
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error(`Failed to generate report for type: ${reportType}`, error);
-        }
-      })
-    );
-
-    if (iframeCodes.length > 0) {
-      setGeneratedIframeCode(iframeCodes.join('\n')); // 設置 iframe 到狀態
-    } else {
+    if (!period) {
       // eslint-disable-next-line no-console
-      console.error('No matching reports found or no report type selected.');
+      console.error('No report type selected.');
+      return;
     }
-  }
 
-  setIsGenerateClicked(false); // 重置按鈕
-};
+    const selectedReportTypes = [];
+    if (isBalanceSheetChecked) selectedReportTypes.push(FinancialReportTypesKey.balance_sheet);
+    if (isIncomeStatementChecked) {
+      selectedReportTypes.push(FinancialReportTypesKey.comprehensive_income_statement);
+    }
+    if (isCashFlowStatementChecked) {
+      selectedReportTypes.push(FinancialReportTypesKey.cash_flow_statement);
+    }
+
+    if (selectedReportTypes.length === 0) {
+      // eslint-disable-next-line no-console
+      console.error('No report type selected.');
+      return;
+    }
+
+    if (selectedCompany) {
+      const iframeCodes: string[] = [];
+
+      await Promise.all(
+        selectedReportTypes.map(async (reportType) => {
+          const body: IFinancialReportRequest = {
+            type: FinancialReportTypesKeyReportSheetTypeMapping[reportType], // 每次迭代報告類型
+            reportLanguage: selectedReportLanguage,
+            from: period.startTimeStamp,
+            to: period.endTimeStamp,
+            reportType: ReportType.FINANCIAL,
+          };
+
+          try {
+            const report = await generateFinancialReport({
+              params: { companyId: selectedCompany.id },
+              body,
+            });
+
+            const reportId = report.data; // 從 API 響應中拿 reportId
+
+            // 動態生成link
+            const reportLink = `https://isunfa.tw${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}`;
+
+            // 生成 iframe
+            iframeCodes.push(
+              `<iframe src="${reportLink}" title="${reportType}" width={600} height={600} />`
+            );
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error(`Failed to generate report for type: ${reportType}`, error);
+          }
+        })
+      );
+
+      if (iframeCodes.length > 0) {
+        setGeneratedIframeCode(iframeCodes.join('\n')); // 設置 iframe 到狀態
+      } else {
+        // eslint-disable-next-line no-console
+        console.error('No matching reports found or no report type selected.');
+      }
+    }
+
+    setIsGenerateClicked(false); // 重置按鈕
+  };
 
   // Info: (20241126 - Anna)
   const handleGenerateClick = () => {
@@ -297,7 +297,7 @@ const generateReportHandler = async () => {
                   readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('common:BOOKMARK_LIST.CASH_FLOW_STATEMENT')}</button>
+                <button type="button">{t('layout:EMBED_CODE_MODAL.CASH_FLOW_STATEMENT')}</button>
               </div>
             </div>
           </div>
@@ -373,7 +373,7 @@ const generateReportHandler = async () => {
               {isCashFlowStatementChecked && (
                 <li className="flex items-center gap-1">
                   <IoMdCheckmark />
-                  {t('common:BOOKMARK_LIST.CASH_FLOW_STATEMENT')}
+                  {t('layout:EMBED_CODE_MODAL.CASH_FLOW_STATEMENT')}
                 </li>
               )}
               {!isBalanceSheetChecked &&
@@ -390,7 +390,7 @@ const generateReportHandler = async () => {
                     </li>
                     <li className="flex items-center gap-1">
                       <IoMdCheckmark />
-                      {t('common:BOOKMARK_LIST.CASH_FLOW_STATEMENT')}
+                      {t('layout:EMBED_CODE_MODAL.CASH_FLOW_STATEMENT')}
                     </li>
                   </>
                 )}
