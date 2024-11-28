@@ -116,6 +116,43 @@ export async function createCertificateWithEmptyInvoice(options: {
   return certificate;
 }
 
+export async function getOneCertificateById(
+  certificateId: number,
+  optional?: {
+    isDeleted?: boolean;
+  }
+): Promise<PostCertificateResponse | null> {
+  let certificate: PostCertificateResponse | null = null;
+  const { isDeleted } = optional || {};
+  try {
+    certificate = await prisma.certificate.findUnique({
+      where: {
+        id: certificateId,
+        deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
+      },
+      include: {
+        voucherCertificates: {
+          include: {
+            voucher: true,
+          },
+        },
+        file: true,
+        UserCertificate: true,
+        invoices: {
+          include: {
+            counterParty: true,
+          },
+        },
+        uploader: true,
+      },
+    });
+  } catch (error) {
+    loggerBack.error(`getOneCertificateById: ${JSON.stringify(error, null, 2)}`);
+  }
+
+  return certificate;
+}
+
 export async function getCertificatesV2(options: {
   companyId: number;
   page: number;

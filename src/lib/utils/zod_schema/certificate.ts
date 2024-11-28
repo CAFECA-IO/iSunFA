@@ -8,19 +8,15 @@ import {
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_END_DATE, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { InvoiceTabs } from '@/constants/certificate'; // Info: (20241023 - tzuhan) @Murky, 這裡要改成 SORT_BY （已經定義好）
-import { fileEntityValidator, IFileBetaValidator } from '@/lib/utils/zod_schema/file';
+import { IFileBetaValidator } from '@/lib/utils/zod_schema/file';
 import {
   IInvoiceBetaValidator,
   IInvoiceBetaValidatorOptional,
-  invoiceEntityValidator,
 } from '@/lib/utils/zod_schema/invoice';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
-import { counterPartyEntityValidator, PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
+import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
-import { userEntityValidator } from '@/lib/utils/zod_schema/user';
-import { ICertificate } from '@/interfaces/certificate';
-import { userCertificateEntityValidator } from './user_certificate';
 
 const nullSchema = z.union([z.object({}), z.string()]);
 
@@ -125,70 +121,12 @@ const certificateGetOneQueryValidator = z.object({
 
 const certificateGetOneBodyValidator = z.object({});
 
-const certificateGetOneOutputSchema = z
-  .object({
-    ...certificateEntityValidator.shape,
-    invoice: z.object({
-      ...invoiceEntityValidator.shape,
-      counterParty: counterPartyEntityValidator,
-    }),
-    file: fileEntityValidator,
-    uploader: userEntityValidator,
-    userCertificates: z.array(userCertificateEntityValidator),
-  })
-  .transform((certificate) => {
-    const isRead = certificate.userCertificates.some((userCertificate) => userCertificate.isRead);
-    const certificateInstance: ICertificate = {
-      id: certificate.id,
-      unRead: !isRead,
-      companyId: certificate.companyId,
-      voucherNo: null, // certificate.voucherNo,
-      name: 'certificate', // Info: (20241108 - Murky) certificate.invoice.name,
-      uploader: certificate.uploader.name,
-      aiStatus: certificate.aiStatus,
-      invoice: {
-        id: certificate.invoice.id,
-        isComplete: true,
-        inputOrOutput: certificate.invoice.inputOrOutput,
-        date: certificate.invoice.date,
-        no: certificate.invoice.no,
-        currencyAlias: certificate.invoice.currencyAlias,
-        priceBeforeTax: certificate.invoice.priceBeforeTax,
-        taxType: certificate.invoice.taxType,
-        taxRatio: certificate.invoice.taxRatio,
-        taxPrice: certificate.invoice.taxPrice,
-        totalPrice: certificate.invoice.totalPrice,
-        type: certificate.invoice.type,
-        deductible: certificate.invoice.deductible,
-        createdAt: certificate.invoice.createdAt,
-        updatedAt: certificate.invoice.updatedAt,
-        // name: 'InvoiceName', // ToDo: (20241105 - Murky) DB 沒有這個欄位, 等待db更新
-        // uploader: certificate.uploader.name,
-        counterParty: {
-          id: certificate.invoice.counterParty.id,
-          companyId: certificate.invoice.counterParty.companyId,
-          name: certificate.invoice.counterParty.name,
-          taxId: certificate.invoice.counterParty.taxId,
-          type: certificate.invoice.counterParty.type,
-          note: certificate.invoice.counterParty.note,
-          createdAt: certificate.invoice.counterParty.createdAt,
-          updatedAt: certificate.invoice.counterParty.updatedAt,
-        },
-      },
-      file: {
-        id: certificate.file.id,
-        name: certificate.file.name,
-        url: certificate.file.url,
-        size: certificate.file.size,
-        existed: !!certificate.file,
-      },
-      createdAt: certificate.createdAt,
-      updatedAt: certificate.updatedAt,
-    };
-    return certificateInstance;
-  });
+const certificateGetOneOutputSchema = z.union([
+  ICertificatePartialInvoiceValidator.strict(),
+  z.null(),
+]);
 
-const certificateGetOneFrontendSchema = ICertificateValidator.strict();
+const certificateGetOneFrontendSchema = ICertificatePartialInvoiceValidator.strict();
 
 export const certificateGetOneValidator: IZodValidator<
   (typeof certificateGetOneQueryValidator)['shape'],

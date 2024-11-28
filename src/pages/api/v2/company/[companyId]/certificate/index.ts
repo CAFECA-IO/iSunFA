@@ -105,7 +105,7 @@ export const handleGetRequest: IHandleRequest<
         userCertificates: userCertificateEntities,
       };
 
-      const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
+      const certificate: ICertificate = getListUtils.transformCertificateEntityToResponse(
         certificateReadyForTransfer
       );
       return certificate;
