@@ -1,6 +1,7 @@
 {
   "LIST": {
-    "INVOICE_TOTAL_PRRICE": "發票總價"
+    "INVOICE_TOTAL_PRICE": "發票總價",
+    "EXPORT_CERTIFICATES": "匯出發票"
   },
   "TAB": {
     "WITHOUT_VOUCHER": "無憑證的發票",
@@ -43,13 +44,13 @@
     "UPDATE_CERTIFICATE": "更新發票失敗，{{reason}}"
   },
   "WARNING": {
-    "SUCCESS_UPLOAD_BUT_NOTIFY_ERROR": "發票已上傳，但通知網頁失敗"
-  },
-  "TITLE": {
     "UPLOAD_FAILED": "上傳失敗",
     "UPLOAD_FAILED_NOTIFY": "有一些文件未成功上傳，您要取消上傳嗎？",
     "UPLOAD_CANCEL": "是，取消上傳",
     "UPLOAD_CONTINUE": "否，繼續上傳",
+    "SUCCESS_UPLOAD_BUT_NOTIFY_ERROR": "發票已上傳，但通知網頁失敗"
+  },
+  "TITLE": {
     "UPLOAD": "上傳發票",
     "SELECT": "選擇一個或多個發票",
     "LIST": "發票列表"
@@ -150,5 +151,18 @@
   },
   "CREATE": {
     "FAILED": "創建失敗"
+  },
+  "SELECTION": {
+    "EXPORT": "匯出",
+    "CERTIFICATES": "證書",
+    "ADD_NEW_VOUCHER": "新增傳票",
+    "ADD_NEW_ASSET": "新增資產"
+  },
+  "COMMON": {
+    "PERIOD": "期間",
+    "CANCEL": "取消"
+  },
+  "TOAST": {
+    "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤"
   }
 }

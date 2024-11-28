@@ -32,7 +32,7 @@ import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 interface CertificateListBodyProps {}
 
 const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
-  const { t } = useTranslation(['certificate', 'common']);
+  const { t } = useTranslation(['certificate']);
   const router = useRouter();
   const { userAuth, selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
@@ -79,7 +79,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [addOperations, setAddOperations] = useState<ISelectionToolBarOperation[]>([
     {
       operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
-      buttonStr: 'common:SELECTION.ADD_NEW_VOUCHER',
+      buttonStr: 'certificate:SELECTION.ADD_NEW_VOUCHER',
       onClick: handleAddVoucher,
     },
   ]);
@@ -321,7 +321,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         setAddOperations([
           {
             operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
-            buttonStr: 'common:SELECTION.ADD_NEW_VOUCHER',
+            buttonStr: 'certificate:SELECTION.ADD_NEW_VOUCHER',
             onClick: handleAddVoucher,
           },
         ]);
@@ -544,7 +544,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               isSelectable={activeTab === InvoiceTabs.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
               items={Object.values(certificates)}
-              subtitle={`${t('certificate:LIST.INVOICE_TOTAL_PRRICE')}:`}
+              subtitle={`${t('certificate:LIST.INVOICE_TOTAL_PRICE')}:`}
               totalPrice={totalInvoicePrice}
               currency={currency}
               selectedCount={Object.values(selectedCertificates).length}

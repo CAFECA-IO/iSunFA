@@ -21,7 +21,7 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
   const { t } = useTranslation(['certificate', 'common']);
   const { Canvas } = useQRCode();
   const { success, data: room, code } = APIHandler<IRoom>(APIName.ROOM_ADD, {}, true);
-  const domain = process.env.DOMAIN;
+  const domain = process.env.NEXT_PUBLIC_DOMAIN;
 
   const displayedQRCode = success && room && (
     <div className="mx-20 my-10 flex flex-col items-center">
