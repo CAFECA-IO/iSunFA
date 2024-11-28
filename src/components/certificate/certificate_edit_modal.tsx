@@ -7,7 +7,7 @@ import NumericInput from '@/components/numeric_input/numeric_input';
 import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
 import { InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
-import { generateRandomCounterParties, ICounterparty } from '@/interfaces/counterparty';
+import { ICounterparty } from '@/interfaces/counterparty';
 import { CounterpartyType } from '@/constants/counterparty';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
@@ -22,6 +22,10 @@ import { ToastType } from '@/interfaces/toastify';
 import { IoCloseOutline } from 'react-icons/io5';
 import { BiSave } from 'react-icons/bi';
 import { LuTrash2 } from 'react-icons/lu';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IPaginatedData } from '@/interfaces/pagination';
+import Loader, { LoaderSize } from '@/components/loader/loader';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
@@ -44,9 +48,12 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   if (!isOpen || !certificate) return null;
 
   const { t } = useTranslation(['certificate', 'common']);
-  const counterPartyList = generateRandomCounterParties(10);
-  const [filteredCounterPartyList, setFilteredCounterPartyList] =
-    useState<ICounterparty[]>(counterPartyList);
+  const { trigger: getCounterpartyList } = APIHandler<IPaginatedData<ICounterparty[]>>(
+    APIName.COUNTERPARTY_LIST
+  );
+  const [isLoadingCounterParty, setIsLoadingCounterParty] = useState(false);
+  const [counterPartyList, setCounterPartyList] = useState<ICounterparty[]>([]);
+  const [filteredCounterPartyList, setFilteredCounterPartyList] = useState<ICounterparty[]>([]);
   const [counterParty, setCounterParty] = useState<ICounterparty | undefined>(
     certificate.invoice.counterParty
   );
@@ -132,9 +139,18 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const counterPartyNameInputRef = useRef<HTMLInputElement>(null);
   const counterPartyTaxIdInputRef = useRef<HTMLInputElement>(null);
 
-  const counterPartyEditingHandler = () => {
+  const counterPartyEditingHandler = async () => {
     setIsCounterPartyEditing(true);
+    setIsLoadingCounterParty(true);
     setCounterPartyMenuOpen(true);
+    const { success, data } = await getCounterpartyList({
+      params: { companyId },
+    });
+    if (success) {
+      setCounterPartyList(data?.data ?? []);
+      setFilteredCounterPartyList(data?.data ?? []);
+    }
+    setIsLoadingCounterParty(false);
   };
 
   const onCancelAddCounterParty = () => {
@@ -145,44 +161,54 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     setSearchTaxId('');
   };
 
-  const CounterPartyItems = filteredCounterPartyList.map((partner) => {
-    const counterPartyClickHandler = () => {
-      setCounterParty(partner);
-      // Info: (20241017 - Tzuhan) 關閉 CounterPartyI Menu 和編輯狀態
-      setCounterPartyMenuOpen(false);
-      setIsCounterPartyEditing(false);
-      // Info: (20241017 - Tzuhan) 重置搜尋關鍵字
-      setSearchName('');
-      setSearchTaxId('');
-    };
+  const CounterPartyItems =
+    filteredCounterPartyList.length > 0 ? (
+      filteredCounterPartyList.map((partner) => {
+        const counterPartyClickHandler = () => {
+          setCounterParty(partner);
+          // Info: (20241017 - Tzuhan) 關閉 CounterPartyI Menu 和編輯狀態
+          setCounterPartyMenuOpen(false);
+          setIsCounterPartyEditing(false);
+          // Info: (20241017 - Tzuhan) 重置搜尋關鍵字
+          setSearchName('');
+          setSearchTaxId('');
+        };
 
-    return (
-      <button
-        key={partner.id}
-        type="button"
-        onClick={counterPartyClickHandler}
-        className="flex w-full text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-      >
-        <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">
-          {partner.taxId}
-        </p>
-        <p className="px-12px py-8px text-dropdown-text-secondary">{partner.name}</p>
-      </button>
+        return (
+          <button
+            key={partner.id}
+            type="button"
+            onClick={counterPartyClickHandler}
+            className="flex w-full text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
+          >
+            <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">
+              {partner.taxId}
+            </p>
+            <p className="px-12px py-8px text-dropdown-text-secondary">{partner.name}</p>
+          </button>
+        );
+      })
+    ) : (
+      <div className="flex text-left text-sm">
+        <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">N/A</p>
+        <p className="px-12px py-8px text-dropdown-text-secondary">N/A</p>
+      </div>
     );
-  });
 
   const DisplayedCounterPartyMenu = (
     <div
       ref={counterPartyMenuRef}
       className={`absolute left-0 top-50px z-30 grid w-full overflow-hidden ${
-        isCounterPartyMenuOpen && filteredCounterPartyList.length > 0
-          ? 'grid-rows-1'
-          : 'grid-rows-0'
+        isCounterPartyMenuOpen ? 'grid-rows-1' : 'grid-rows-0'
       } rounded-sm shadow-dropmenu transition-all duration-150 ease-in-out`}
     >
-      <div className="flex max-h-150px flex-col overflow-y-auto rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary py-8px">
-        {CounterPartyItems}
-      </div>
+      {isLoadingCounterParty ? (
+        <Loader size={LoaderSize.SMALL} />
+      ) : (
+        <div className="flex max-h-150px flex-col overflow-y-auto rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary py-8px">
+          {CounterPartyItems}
+        </div>
+      )}
     </div>
   );
 
@@ -232,7 +258,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     });
     setFilteredCounterPartyList(filteredList);
     if (filteredList.length === 0) {
-      setCounterPartyMenuOpen(false);
       counterPartySearchHandler();
     }
   };
@@ -261,9 +286,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   ) : (
     <p className={`flex truncate text-input-text-input-filled`}>
       <p className="w-100px border-r px-12px py-10px text-dropdown-text-primary">
-        {counterParty?.taxId}
+        {counterParty?.taxId ?? 'N/A'}
       </p>
-      <p className="px-12px py-10px text-dropdown-text-secondary">{counterParty?.name}</p>
+      <p className="px-12px py-10px text-dropdown-text-secondary">{counterParty?.name ?? 'N/A'}</p>
     </p>
   );
 
@@ -445,7 +470,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                   triggerWhenChanged={priceBeforeTaxChangeHandler}
                 />
-                <div className="flex items-center rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-12px text-sm text-input-text-input-placeholder">
+                <div className="flex items-center rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                   <Image
                     src="/currencies/twd.svg"
                     width={16}
