@@ -1,14 +1,12 @@
 // Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
 
 import html2canvas from 'html2canvas';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { ISUNFA_ROUTE } from '@/constants/url';
-// import { useGlobalCtx } from '@/contexts/global_context';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-// import { ToastType } from '@/interfaces/toastify';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import {
@@ -136,7 +134,7 @@ const ViewFinancialSection = ({
 }: IViewReportSectionProps) => {
   const { t } = useTranslation('common');
   const router = useRouter();
-  let intervalId: NodeJS.Timeout;
+  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
   // Info: (20240807 - Anna)
   // const globalCtx = useGlobalCtx();
@@ -321,7 +319,7 @@ const ViewFinancialSection = ({
       default:
         setReportThumbnails([]);
     }
-  }, []);
+  }, [reportTypesName?.id]);
 
   /* Info: (20240729 - Shirley)
   // useEffect(() => {
@@ -338,19 +336,21 @@ const ViewFinancialSection = ({
   // }, []);
   */
 
-  const generateCanvas = async () => {
+  const generateCanvas = useCallback(async () => {
     if (!isLoading && iframeRef.current) {
       const iframeWindow = iframeRef.current.contentWindow;
       const iframeDoc = iframeWindow?.document;
 
       if (iframeDoc && iframeWindow) {
         // Info: (20240909 - tzuhan) 使用 setInterval 定時輪詢檢查，直到找到第1頁的元素
-        intervalId = setInterval(() => {
+        intervalIdRef.current = setInterval(() => {
           const firstPageElement = iframeDoc.getElementById('1'); // Info: (20240909 - tzuhan) 檢查 id 為 '1' 的元素是否存在
 
           if (firstPageElement) {
             // Info: (20240909 - tzuhan) 當找到第1頁的元素後，清除輪詢並開始生成縮略圖
-            clearInterval(intervalId);
+            if (intervalIdRef.current) {
+              clearInterval(intervalIdRef.current);
+            }
 
             // Info: (20240909 - tzuhan) 創建 Promise 列表，生成所有頁面的縮略圖
             const canvasPromises = Array.from({ length: numPages }, async (_, i) => {
@@ -375,17 +375,20 @@ const ViewFinancialSection = ({
         }, 1000); // Info: (20240909 - tzuhan) 每秒檢查一次，直到找到目標元素
       }
     }
-  };
+  }, [isLoading, numPages]);
 
   useEffect(() => {
     // Info: (20240909 - tzuhan) 在 isLoading 為 false 且 iframe 引用存在時開始檢查
     if (!isLoading && iframeRef.current) {
       generateCanvas();
     }
-
     // Info: (20240909 - tzuhan)  在組件卸載時清除 setInterval，防止內存洩漏
-    return () => clearInterval(intervalId);
-  }, [isLoading, numPages]);
+    return () => {
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+      }
+    };
+  }, [generateCanvas, isLoading]);
 
   const displayedReportType = getReportFinancialIsLoading ? (
     <Skeleton width={200} height={40} />
@@ -406,7 +409,11 @@ const ViewFinancialSection = ({
     thumbnail: { number: number; active: boolean; alt: string; src: string },
     index: number
   ) => (
-    <button type="button" onClick={() => thumbnailClickHandler(index)} key={index}>
+    <button
+      type="button"
+      onClick={() => thumbnailClickHandler(index)}
+      key={thumbnail.number + index}
+    >
       <div
         className={`flex flex-col rounded-2xl px-5 py-4 ${
           index === activeIndex
@@ -444,7 +451,7 @@ const ViewFinancialSection = ({
             ) : isInvalidReport ? null : thumbnailUrls.length > 0 ? (
               thumbnailUrls.map((thumbnailUrl, index) => (
                 <div
-                  key={`thumbnail-${index + 1}`}
+                  key={`thumbnail-${thumbnailUrl + index}`}
                   className={`m-6 mb-0 self-center rounded-sm p-6 tracking-normal ${
                     index === activeIndex
                       ? 'bg-surface-brand-primary-soft'

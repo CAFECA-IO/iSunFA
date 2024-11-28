@@ -30,6 +30,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     setIsDetailCollapsed(!isDetailCollapsed);
   };
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+
+  // Deprecated: (20241128 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('進入 IncomeStatementReportBodyAll');
+
   const {
     data: reportFinancial,
     code: getReportFinancialCode,

@@ -49,6 +49,10 @@ const ViewAnalysisReportPage = ({
     reportLink: ReportLink[reportType],
   });
 
+  // Deprecated: (20241128 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('進入 ViewAnalysisReportPage', 'reportType:', reportType);
+
   // TODO: (20240429 - Shirley) [Beta] Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp`
   const {
     data: reportAnalysis,
