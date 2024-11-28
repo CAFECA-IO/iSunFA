@@ -62,7 +62,7 @@ export function checkRequestData<T extends APIName>(
 
   if (query === null && body === null) {
     loggerError({
-      userId: session.userId || DefaultValue.USER_ID.UNKNOWN,
+      userId: session.userId || DefaultValue.USER_ID.GUEST,
       errorType: `Invalid Input Parameter for ${apiName} in middleware.ts`,
       errorMessage: req.body,
     });
@@ -80,7 +80,7 @@ export async function logUserAction<T extends APIName>(
   try {
     const userActionLog = {
       sessionId: session.id || '',
-      userId: session.userId || DefaultValue.USER_ID.UNKNOWN,
+      userId: session.userId || DefaultValue.USER_ID.GUEST,
       actionType: UserActionLogActionType.API,
       actionDescription: apiName,
       ipAddress: (req.headers['x-forwarded-for'] as string) || '',
@@ -93,7 +93,7 @@ export async function logUserAction<T extends APIName>(
     await createUserActionLog(userActionLog);
   } catch (error) {
     loggerError({
-      userId: session.userId || DefaultValue.USER_ID.UNKNOWN,
+      userId: session.userId || DefaultValue.USER_ID.GUEST,
       errorType: `Failed to log user action for ${apiName} in middleware.ts`,
       errorMessage: error as Error,
     });
@@ -139,7 +139,7 @@ export async function withRequestValidation<T extends APIName, U>(
         } catch (handlerError) {
           statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
           loggerError({
-            userId: session.userId ?? 0,
+            userId: session.userId ?? DefaultValue.USER_ID.GUEST,
             errorType: `Handler Request Error for ${apiName} in middleware.ts`,
             errorMessage: handlerError as Error,
           });
