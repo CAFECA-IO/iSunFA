@@ -139,6 +139,9 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
     },
   },
   */
+  session: {
+    strategy: 'jwt', // 僅使用 JWT
+  },
   pages: {
     signIn: ISUNFA_ROUTE.LOGIN,
   },
