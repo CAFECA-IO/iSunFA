@@ -41,7 +41,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     useModalContext();
   const { trigger: updateCertificateAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.INVOICE_POST_V2);
-  const { trigger: deleteCertificatesAPI } = APIHandler<void>(APIName.CERTIFICATE_DELETE_V2);
+  const { trigger: deleteCertificatesAPI } = APIHandler<number[]>(
+    APIName.CERTIFICATE_DELETE_MULTIPLE_V2
+  ); // Info: (20241128 - Murky) @tzuhan 這邊會回傳成功被刪掉的certificate
 
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
@@ -230,8 +232,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         submitBtnFunction: async () => {
           try {
             const { success } = await deleteCertificatesAPI({
-              params: { companyId, certificateId: id },
-              query: { certificateIds: id },
+              params: { companyId },
+              body: { certificateIds: [id] }, // Info: (20241128 - Murky) @tzuhan 這邊用multiple delete，然後把要delete的東西放在array裡
             });
             if (success) {
               toastHandler({
