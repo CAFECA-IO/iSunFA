@@ -3,6 +3,7 @@ import { IUserSetting } from '@/interfaces/user_setting';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getTimestampNow } from '@/lib/utils/common';
 import { DEFAULT_USER_SETTING } from '@/constants/setting';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function createUserSetting(userId: number) {
   const nowInSecond = getTimestampNow();
@@ -22,14 +23,11 @@ export async function createUserSetting(userId: number) {
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'create user setting in createUserSetting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related create user setting in createUserSetting in user_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'create user setting in createUserSetting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return userSetting;
@@ -43,14 +41,11 @@ export async function getUserSettingByUserId(userId: number) {
       where: { userId },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'get user setting in getUserSettingByUserId failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related get user setting in getUserSettingByUserId in user_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get user setting in getUserSettingByUserId failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return userSetting;
@@ -77,14 +72,11 @@ export async function updateUserSettingById(id: number, data: IUserSetting) {
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'update user setting in updateUserSettingById failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related update user setting in updateUserSettingById in user_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'update user setting in updateUserSettingById failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return userSetting;
@@ -98,14 +90,11 @@ export async function deleteUserSettingByIdForTesting(id: number) {
       where: { id },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'delete user setting in deleteUserSettingByIdForTesting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related delete user setting in deleteUserSettingByIdForTesting in user_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'delete user setting in deleteUserSettingByIdForTesting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return userSetting;

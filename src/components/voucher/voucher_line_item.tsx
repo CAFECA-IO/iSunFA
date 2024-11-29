@@ -8,7 +8,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { FaPlus } from 'react-icons/fa6';
 import ReverseLineItem from '@/components/voucher/reverse_line_item';
 import { IAccount } from '@/interfaces/accounting_account';
-import AccountTitleDropmenu from './account_title_dropmenu';
+import AccountTitleDropmenu from '@/components/voucher/account_title_dropmenu';
 // import { useHotkeys } from 'react-hotkeys-hook';
 
 interface IVoucherLineItemProps {

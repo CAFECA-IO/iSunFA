@@ -93,9 +93,12 @@ const askAIGetResultOutputV2Schema = z
       // Info: (20241107 - Murky) 從api手動使用apiType判斷是哪一種回傳
       z.object({
         aiType: z.literal(AI_TYPE.CERTIFICATE),
+        aiStatus: z.string(),
+        count: z.number(),
       }),
       z.object({
         aiType: z.literal(AI_TYPE.VOUCHER),
+        aiStatus: z.string(),
         voucherDate: z.number(),
         type: z.string(),
         counterParty: counterpartySchema,
