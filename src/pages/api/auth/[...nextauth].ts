@@ -264,6 +264,16 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
       }
       return newToken;
     },
+    async session({ session, token }) {
+      const newSession = {
+        ...session,
+        user: {
+          id: token.userId,
+          email: token.email,
+        },
+      };
+      return newSession;
+    },
   },
   debug: false,
 });

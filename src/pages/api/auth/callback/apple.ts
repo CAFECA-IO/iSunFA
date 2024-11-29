@@ -4,7 +4,8 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
 import { getAuthOptions } from '@/pages/api/auth/[...nextauth]';
-import { Account } from 'next-auth';
+import { Account, getServerSession } from 'next-auth';
+import { AdapterUser } from 'next-auth/adapters';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -31,13 +32,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const authOptions = getAuthOptions(req, res);
     if (authOptions.callbacks && authOptions.callbacks.jwt) {
       loggerBack.info('call authOptions.callbacks.jwt', authOptions.callbacks.jwt);
-      await authOptions.callbacks.jwt({
+      const token = await authOptions.callbacks.jwt({
         token: {},
         user,
         account: account as Account,
         profile: undefined,
         isNewUser: false,
       });
+      const session = await getServerSession(req, res, authOptions);
+      if (session && authOptions.callbacks.session) {
+        loggerBack.info('call authOptions.callbacks.session', authOptions.callbacks.jwt);
+        await authOptions.callbacks.session({
+          session: {
+            user: {},
+            expires: '',
+          },
+          token,
+          user: user as AdapterUser,
+          newSession: undefined,
+          trigger: 'update',
+        });
+      } else {
+        loggerBack.info(
+          'is not call authOptions.callbacks.session',
+          authOptions?.callbacks?.session || {}
+        );
+      }
     } else {
       loggerBack.info('is not call authOptions.callbacks.jwt', authOptions?.callbacks?.jwt || {});
       loggerError(
