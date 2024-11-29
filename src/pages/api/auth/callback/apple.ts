@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { handleAppleOAuth } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { loggerError } from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
 import { getAuthOptions } from '@/pages/api/auth/[...nextauth]';
 import { Account } from 'next-auth';
@@ -30,6 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const authOptions = getAuthOptions(req, res);
     if (authOptions.callbacks && authOptions.callbacks.jwt) {
+      loggerBack.info('call authOptions.callbacks.jwt', authOptions.callbacks.jwt);
       await authOptions.callbacks.jwt({
         token: {},
         user,
@@ -38,6 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         isNewUser: false,
       });
     } else {
+      loggerBack.info('is not call authOptions.callbacks.jwt', authOptions?.callbacks?.jwt || {});
       loggerError(
         -1,
         'authOptions?.callbacks?.jwt',
