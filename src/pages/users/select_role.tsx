@@ -125,6 +125,7 @@ const SelectRolePage = () => {
 
   useEffect(() => {
     const initializeRolesData = async () => {
+      if (userRoleList.length > 0) return;
       // Deprecated: (20241122 - Liz)
       // eslint-disable-next-line no-console
       console.log('觸發 useEffect, 取得系統角色與使用者角色 (in SelectRolePage)');
