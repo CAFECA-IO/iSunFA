@@ -67,8 +67,8 @@ const Pagination = forwardRef(
 
     // Info: (20240419 - Julian) 如果位於第一頁，則將第一頁和上一頁的按鈕設為 disabled
     const isFirstPage = currentPage === 1;
-    // Info: (20240419 - Julian) 如果位於最後一頁，則將最後一頁和下一頁的按鈕設為 disabled
-    const isLastPage = currentPage === totalPages;
+    // Info: (20241127 - Liz) 如果位於最後一頁，或者 totalPages 為 0 時，把最後一頁和下一頁的按鈕設為 disabled
+    const isLastPage = currentPage === totalPages || totalPages === 0;
 
     // Info: (20240419 - Julian)  限制輸入的頁數在 1 ~ totalPages 之間
     // Info: (20240712 - Shirley) 用來處理頁數變更邏輯

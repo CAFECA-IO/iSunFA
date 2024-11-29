@@ -31,7 +31,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   setFiles,
   showErrorMessage,
 }) => {
-  const { t } = useTranslation(['certificate', 'common']);
+  const { t } = useTranslation(['certificate']);
   const { selectedCompany } = useUserCtx();
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
     useModalContext();
@@ -64,7 +64,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
             id: ToastId.UPLOAD_FILE_ERROR,
             type: ToastType.ERROR,
             closeable: true,
-            content: t('common:TOAST.UPLOAD_FILE_ERROR'),
+            content: t('certificate:TOAST.UPLOAD_FILE_ERROR'),
           });
         }
       }

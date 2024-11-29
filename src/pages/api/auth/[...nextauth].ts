@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import AppleProvider from 'next-auth/providers/apple';
-import { generateAppleClientSecret } from '@/lib/utils/apple_auth';
+// import AppleProvider from 'next-auth/providers/apple';
+// import { generateAppleClientSecret } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { destroySession, getSession, setSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -108,11 +108,33 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         clientId: process.env.GOOGLE_CLIENT_ID as string,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       }),
+    ],
+    /** Info: (20241127 - tzuhan) Apple login 單獨實作
       AppleProvider({
         clientId: process.env.APPLE_CLIENT_ID as string,
         clientSecret: generateAppleClientSecret(),
+        authorization: {
+          params: {
+            response_type: 'code', // Info: (20241127-tzuhan) 指定授權類型
+            scope: 'openid email', // Info: (20241127-tzuhan) 必須包含 openid 和 email
+            response_mode: 'form_post', // Info: (20241127-tzuhan) 使用 form_post 方式回傳
+          },
+        },
+        checks: ['pkce'],
       }),
     ],
+    cookies: {
+      pkceCodeVerifier: {
+        name: 'next-auth.pkce.code_verifier',
+        options: {
+          httpOnly: true,
+          sameSite: 'none',
+          secure: true,
+          maxAge: 900,
+        },
+      },
+    },
+    */
     pages: {
       signIn: ISUNFA_ROUTE.LOGIN,
     },

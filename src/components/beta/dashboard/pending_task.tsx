@@ -1,53 +1,27 @@
-import Image from 'next/image';
-import { Doughnut } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, type ChartData } from 'chart.js';
+import { useEffect, useState } from 'react';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import { useTranslation } from 'next-i18next';
-// import { IPendingTask, IPendingTaskTotal } from '@/interfaces/pending_task';
-
-ChartJS.register(ArcElement, Tooltip, Legend);
-
-enum IconName {
-  MISSING_CERTIFICATE = 'missing_certificate_icon',
-  UNPOSTED_VOUCHERS = 'unposted_vouchers_icon',
-  UNARCHIVED_CUSTOMER_DATA = 'unarchived_customer_data_icon',
-}
-
-enum TaskTitle {
-  MISSING_CERTIFICATE = 'MISSING_CERTIFICATE',
-  UNPOSTED_VOUCHERS = 'UNPOSTED_VOUCHERS',
-  UNARCHIVED_CUSTOMER_DATA = 'UNARCHIVED_CUSTOMER_DATA',
-}
-
-const tasks = [
-  {
-    iconName: IconName.MISSING_CERTIFICATE,
-    title: TaskTitle.MISSING_CERTIFICATE,
-  },
-  {
-    iconName: IconName.UNPOSTED_VOUCHERS,
-    title: TaskTitle.UNPOSTED_VOUCHERS,
-  },
-  {
-    iconName: IconName.UNARCHIVED_CUSTOMER_DATA,
-    title: TaskTitle.UNARCHIVED_CUSTOMER_DATA,
-  },
-];
-
-interface DonutChartProps {
-  percentageForMissingCertificate: number;
-  percentageForUnpostedVouchers: number;
-  percentageForUnarchivedCustomerData: number;
-  isChartForTotal: boolean;
-}
+import { useUserCtx } from '@/contexts/user_context';
+import APIHandler from '@/lib/utils/api_handler';
+import { ICompanyAndRole } from '@/interfaces/company';
+import { APIName } from '@/constants/api_connection';
+import DonutChart from '@/components/beta/dashboard/donut_chart';
+import TaskType from '@/components/beta/dashboard/task_type';
+import PendingTasksForCompany from '@/components/beta/dashboard/pending_task_for_company';
+import {
+  IPendingTaskTotal,
+  PendingTaskIconName,
+  TaskTitle,
+  IMissingCertificate,
+} from '@/interfaces/pending_task';
+import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data';
 
 interface CompanyListProps {
-  list: {
-    companyName: string;
-    companyLogoSrc: string;
-    count: number;
-  }[];
+  list: IMissingCertificate[];
 }
+
+// ToDo: (20241127 - Liz) 目前 API 沒有提供這個欄位的資料，所以先使用假資料
+const UNARCHIVED_CUSTOMER_DATA_LIST: IMissingCertificate[] = [];
 
 const CompanyList = ({ list }: CompanyListProps) => {
   const { t } = useTranslation('dashboard');
@@ -66,12 +40,12 @@ const CompanyList = ({ list }: CompanyListProps) => {
     <section className="flex flex-col gap-8px">
       {list.map((item) => (
         <div
-          key={item.companyName}
+          key={item.companyId}
           className="flex items-center justify-between gap-8px bg-surface-brand-primary-10 px-8px py-4px"
         >
           <div className="flex items-center gap-8px">
             <div className="h-24px w-24px overflow-hidden rounded-xxs bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS">
-              <Image src={item.companyLogoSrc} alt="company_logo" width={24} height={24}></Image>
+              {/* // ToDo: (20241127 - Liz) 目前 api 沒有提供 <Image src={item.companyLogoSrc} alt="company_logo" width={24} height={24}></Image> */}
             </div>
             <p className="text-xs font-semibold text-text-neutral-primary">{item.companyName}</p>
           </div>
@@ -83,230 +57,53 @@ const CompanyList = ({ list }: CompanyListProps) => {
   );
 };
 
-const DonutChart = ({
-  percentageForMissingCertificate,
-  percentageForUnpostedVouchers,
-  percentageForUnarchivedCustomerData,
-  isChartForTotal,
-}: DonutChartProps) => {
-  const backgroundColorSwitch = isChartForTotal
-    ? ['#FD853A', '#6CDEA0', '#9B8AFB']
-    : ['#BDF0D5', '#EBE9FE', '#FFEAD5'];
-
-  const data: ChartData<'doughnut', number[], string> = {
-    labels: ['Missing certificate', 'Unposted vouchers', 'Unarchived customer data'],
-    datasets: [
-      {
-        data: [
-          percentageForMissingCertificate,
-          percentageForUnpostedVouchers,
-          percentageForUnarchivedCustomerData,
-        ],
-        backgroundColor: backgroundColorSwitch, // Info: (20241017 - Liz) 區塊顏色依照順序設定
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  return (
-    <Doughnut
-      data={data}
-      options={{
-        responsive: true,
-        plugins: {
-          legend: {
-            display: false, // Info: (20241018 - Liz) Disable the default legend
-          },
-          tooltip: {
-            // Info: (20241018 - Liz) 可以設定 tooltip 的顯示內容或者關閉
-            // enabled: false,
-          },
-        },
-        cutout: '20%', // Info: (20241018 - Liz) This creates the donut hole
-      }}
-    />
-  );
-};
-
-const TaskType = ({ iconName, title }: { iconName: IconName; title: TaskTitle }) => {
-  const { t } = useTranslation('dashboard');
-
-  return (
-    <div className="flex items-center gap-8px">
-      <Image
-        src={`/icons/${iconName}.svg`}
-        alt={'Pending Task Type Icon'}
-        width={22}
-        height={22}
-        className="h-22px w-22px"
-      ></Image>
-      <h4 className="text-xs font-semibold text-text-neutral-primary">
-        {t(`dashboard:DASHBOARD.${title}`)}
-      </h4>
-    </div>
-  );
-};
-
-const PendingTasksNoData = () => {
-  const { t } = useTranslation('dashboard');
-
-  return (
-    <section className="flex flex-col gap-24px">
-      <h3 className="text-xl font-bold text-text-neutral-secondary">
-        {t('dashboard:DASHBOARD.PENDING_TASKS')}
-      </h3>
-      <div className="flex flex-col items-center">
-        <Image src={'/images/empty.svg'} alt="empty_image" width={120} height={134.787}></Image>
-        <p className="text-base font-medium text-text-neutral-mute">
-          {t('dashboard:DASHBOARD.NO_DATA')}
-        </p>
-      </div>
-    </section>
-  );
-};
-
-const PendingTasksForCompany = () => {
-  // ToDo: (20241105 - Liz) 這是假資料，等之後串真正資料後再刪除
-  const countForMissingCertificate: number = 40;
-  const countForUnpostedVouchers: number = 10;
-  const countForUnarchivedCustomerData: number = 40;
-  const total =
-    countForMissingCertificate + countForUnpostedVouchers + countForUnarchivedCustomerData;
-  const percentageForMissingCertificate = Math.ceil((countForMissingCertificate / total) * 100);
-  const percentageForUnpostedVouchers = Math.ceil((countForUnpostedVouchers / total) * 100);
-  const percentageForUnarchivedCustomerData =
-    countForUnarchivedCustomerData === 0
-      ? 0
-      : 100 - percentageForMissingCertificate - percentageForUnpostedVouchers;
-
-  const { t } = useTranslation('dashboard');
-  const handleAddToMyCalendar = () => {
-    // ToDo: (20241105 - Liz)
-  };
-
-  return (
-    <section className="flex flex-col gap-24px">
-      <h3 className="text-xl font-bold text-text-neutral-secondary">
-        {t('dashboard:DASHBOARD.PENDING_TASKS')}
-      </h3>
-
-      {/* --- Chart Section --- */}
-      <section className="flex items-center gap-16px">
-        <div className="w-160px">
-          <DonutChart
-            percentageForMissingCertificate={percentageForMissingCertificate}
-            percentageForUnpostedVouchers={percentageForUnpostedVouchers}
-            percentageForUnarchivedCustomerData={percentageForUnarchivedCustomerData}
-            isChartForTotal={false}
-          />
-        </div>
-
-        <div className="flex grow flex-col gap-16px">
-          <div className="flex items-center justify-between">
-            <TaskType
-              iconName={IconName.MISSING_CERTIFICATE}
-              title={TaskTitle.MISSING_CERTIFICATE}
-            />
-            <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-              {countForMissingCertificate}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <TaskType iconName={IconName.UNPOSTED_VOUCHERS} title={TaskTitle.UNPOSTED_VOUCHERS} />
-            <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-              {countForUnpostedVouchers}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <TaskType
-              iconName={IconName.UNARCHIVED_CUSTOMER_DATA}
-              title={TaskTitle.UNARCHIVED_CUSTOMER_DATA}
-            />
-            <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-              {countForUnarchivedCustomerData}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="flex flex-col gap-24px">
-        {/* --- List Section ---  */}
-        {tasks.map((task) => (
-          <section key={task.title} className="flex items-center justify-between">
-            <TaskType iconName={task.iconName} title={task.title} />
-            <button
-              type="button"
-              className="text-sm font-semibold text-link-text-primary"
-              onClick={handleAddToMyCalendar}
-            >
-              {t('dashboard:DASHBOARD.ADD_TO_MY_CALENDAR')}
-            </button>
-          </section>
-        ))}
-      </section>
-    </section>
-  );
-};
-
 const PendingTasksForAll = () => {
   const { t } = useTranslation('dashboard');
+  const [userPendingTaskTotal, setUserPendingTaskTotal] = useState<IPendingTaskTotal>();
+  const { userAuth } = useUserCtx();
 
-  // ToDo: (20241105 - Liz) MISSING_CERTIFICATE_LIST, UNPOSTED_VOUCHER_LIST, UNARCHIVED_CUSTOMER_DATA_LIST 是假資料，等之後串真正資料後再刪除
-  const MISSING_CERTIFICATE_LIST: {
-    companyName: string;
-    companyLogoSrc: string;
-    count: number;
-  }[] = [
-    { companyName: 'Company A', companyLogoSrc: '/images/fake_company_logo_01.png', count: 50 },
-    {
-      companyName: 'Company B',
-      companyLogoSrc: '/images/fake_company_logo_02.png',
-      count: 10,
-    },
-    {
-      companyName: 'Company C',
-      companyLogoSrc: '/images/fake_company_logo_03.png',
-      count: 2,
-    },
-  ];
+  // Info: (20241127 - Liz) 打 API 取得使用者的待辦任務(總數)
+  const { trigger: getUserPendingTaskAPI } = APIHandler<IPendingTaskTotal>(
+    APIName.USER_PENDING_TASK_GET
+  );
 
-  const UNPOSTED_VOUCHER_LIST: {
-    companyName: string;
-    companyLogoSrc: string;
-    count: number;
-  }[] = [
-    { companyName: 'Company A', companyLogoSrc: '/images/fake_company_logo_01.png', count: 20 },
-    {
-      companyName: 'Company B',
-      companyLogoSrc: '/images/fake_company_logo_02.png',
-      count: 10,
-    },
-    {
-      companyName: 'Company C',
-      companyLogoSrc: '/images/fake_company_logo_03.png',
-      count: 8,
-    },
-  ];
+  useEffect(() => {
+    if (!userAuth) return;
 
-  const UNARCHIVED_CUSTOMER_DATA_LIST: {
-    companyName: string;
-    companyLogoSrc: string;
-    count: number;
-  }[] = [];
+    const getUserPendingTask = async () => {
+      try {
+        const { data, success, code } = await getUserPendingTaskAPI({
+          params: { userId: userAuth.id },
+        });
 
-  const countForMissingCertificate: number = 62;
-  const countForUnpostedVouchers: number = 38;
-  const countForUnarchivedCustomerData: number = 0;
-  const total =
-    countForMissingCertificate + countForUnpostedVouchers + countForUnarchivedCustomerData;
-  const percentageForMissingCertificate = Math.ceil((countForMissingCertificate / total) * 100);
-  const percentageForUnpostedVouchers = Math.ceil((countForUnpostedVouchers / total) * 100);
-  const percentageForUnarchivedCustomerData =
-    countForUnarchivedCustomerData === 0
-      ? 0
-      : 100 - percentageForMissingCertificate - percentageForUnpostedVouchers;
+        if (success && data) {
+          setUserPendingTaskTotal(data);
+        } else {
+          // Deprecated: (20241127 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('PendingTasksForAll getUserPendingTaskAPI code:', code);
+        }
+      } catch (error) {
+        // Deprecated: (20241127 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('PendingTasksForAll getUserPendingTaskAPI error:', error);
+      }
+    };
+
+    getUserPendingTask();
+  }, []);
+
+  if (!userPendingTaskTotal) {
+    return <PendingTaskNoData />;
+  }
+
+  const percentageForMissingCertificate = userPendingTaskTotal.totalMissingCertificatePercentage;
+  const percentageForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucherPercentage;
+  const countForMissingCertificate = userPendingTaskTotal.totalMissingCertificate;
+  const countForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucher;
+  // ToDo: (20241127 - Liz) 目前 API 沒有提供這個欄位的資料，所以先設定為 0
+  const PERCENTAGE_FOR_UNARCHIVED_CUSTOMER_DATA = 0;
+  const COUNT_FOR_UNARCHIVED_CUSTOMER_DATA = 0;
 
   return (
     <section className="flex flex-col gap-24px">
@@ -320,7 +117,7 @@ const PendingTasksForAll = () => {
           <DonutChart
             percentageForMissingCertificate={percentageForMissingCertificate}
             percentageForUnpostedVouchers={percentageForUnpostedVouchers}
-            percentageForUnarchivedCustomerData={percentageForUnarchivedCustomerData}
+            percentageForUnarchivedCustomerData={PERCENTAGE_FOR_UNARCHIVED_CUSTOMER_DATA}
             isChartForTotal
           />
         </div>
@@ -329,7 +126,7 @@ const PendingTasksForAll = () => {
           {/* Missing certificate */}
           <div className="flex items-center justify-between">
             <TaskType
-              iconName={IconName.MISSING_CERTIFICATE}
+              iconName={PendingTaskIconName.MISSING_CERTIFICATE}
               title={TaskTitle.MISSING_CERTIFICATE}
             />
             <p className="text-2xl font-bold text-text-brand-secondary-lv2">
@@ -339,7 +136,10 @@ const PendingTasksForAll = () => {
 
           {/* Unposted vouchers */}
           <div className="flex items-center justify-between">
-            <TaskType iconName={IconName.UNPOSTED_VOUCHERS} title={TaskTitle.UNPOSTED_VOUCHERS} />
+            <TaskType
+              iconName={PendingTaskIconName.UNPOSTED_VOUCHERS}
+              title={TaskTitle.UNPOSTED_VOUCHERS}
+            />
             <p className="text-2xl font-bold text-text-brand-secondary-lv2">
               {percentageForUnpostedVouchers}%
             </p>
@@ -348,11 +148,11 @@ const PendingTasksForAll = () => {
           {/* Unarchived Customer Data */}
           <div className="flex items-center justify-between">
             <TaskType
-              iconName={IconName.UNARCHIVED_CUSTOMER_DATA}
+              iconName={PendingTaskIconName.UNARCHIVED_CUSTOMER_DATA}
               title={TaskTitle.UNARCHIVED_CUSTOMER_DATA}
             />
             <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-              {percentageForUnarchivedCustomerData}%
+              {PERCENTAGE_FOR_UNARCHIVED_CUSTOMER_DATA}%
             </p>
           </div>
         </div>
@@ -361,30 +161,36 @@ const PendingTasksForAll = () => {
       {/* === List Section === */}
       <section className="flex flex-col gap-24px">
         <div className="flex items-center justify-between">
-          <TaskType iconName={IconName.MISSING_CERTIFICATE} title={TaskTitle.MISSING_CERTIFICATE} />
+          <TaskType
+            iconName={PendingTaskIconName.MISSING_CERTIFICATE}
+            title={TaskTitle.MISSING_CERTIFICATE}
+          />
           <p className="text-2xl font-bold text-text-brand-secondary-lv2">
             {countForMissingCertificate}
           </p>
         </div>
 
-        <CompanyList list={MISSING_CERTIFICATE_LIST} />
+        <CompanyList list={userPendingTaskTotal.missingCertificateList} />
 
         <div className="flex items-center justify-between">
-          <TaskType iconName={IconName.UNPOSTED_VOUCHERS} title={TaskTitle.UNPOSTED_VOUCHERS} />
+          <TaskType
+            iconName={PendingTaskIconName.UNPOSTED_VOUCHERS}
+            title={TaskTitle.UNPOSTED_VOUCHERS}
+          />
           <p className="text-2xl font-bold text-text-brand-secondary-lv2">
             {countForUnpostedVouchers}
           </p>
         </div>
 
-        <CompanyList list={UNPOSTED_VOUCHER_LIST} />
+        <CompanyList list={userPendingTaskTotal.unpostedVoucherList} />
 
         <div className="flex items-center justify-between">
           <TaskType
-            iconName={IconName.UNARCHIVED_CUSTOMER_DATA}
+            iconName={PendingTaskIconName.UNARCHIVED_CUSTOMER_DATA}
             title={TaskTitle.UNARCHIVED_CUSTOMER_DATA}
           />
           <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-            {countForUnarchivedCustomerData}
+            {COUNT_FOR_UNARCHIVED_CUSTOMER_DATA}
           </p>
         </div>
 
@@ -400,21 +206,51 @@ const PendingTasks = () => {
   // 有公司列表 且 有選擇公司 : 顯示 PendingTasksForCompany
   // 有公司列表 且 沒有選擇公司 : 顯示 PendingTasksForAll
 
-  // ToDo: (20241018 - Liz) 串接真實資料
-  // 從 user context 中打 API 取得選擇的公司(selectedCompany)、所有公司的待辦事項(pendingTaskTotal)
-  // 依據 selectedCompany 是否有值，轉換為布林值 isSelectedCompany，判斷是否有選擇公司
-  // 依據 pendingTaskTotal 是否有值，轉換為布林值 hasCompanyList，判斷是否有公司列表
-
-  /* === Fake Data === */
-  // Deprecated: (20241016 - Liz) 這是假資料，等之後串真正資料後再刪除
-  const selectedCompany = '';
+  const { userAuth, selectedCompany } = useUserCtx();
   const isSelectedCompany = !!selectedCompany; // 強制轉為布林值
-  const hasCompanyList = true;
+  const [companyAndRoleList, setCompanyAndRoleList] = useState<ICompanyAndRole[]>([]);
+  const hasCompanyList = companyAndRoleList.length > 0;
+
+  // Info: (20241127 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
+  const { trigger: listUserCompanyAPI } = APIHandler<ICompanyAndRole[]>(APIName.LIST_USER_COMPANY);
+
+  useEffect(() => {
+    const getCompanyList = async () => {
+      if (!userAuth) return;
+
+      try {
+        const {
+          data: userCompanyList,
+          success,
+          code,
+        } = await listUserCompanyAPI({
+          params: { userId: userAuth.id },
+          query: { simple: true },
+        });
+
+        if (success && userCompanyList && userCompanyList.length > 0) {
+          // Info: (20241127 - Liz) 取得使用者擁有的公司列表成功
+          setCompanyAndRoleList(userCompanyList);
+        } else {
+          // Info: (20241127 - Liz)  取得使用者擁有的公司列表失敗時顯示錯誤訊息
+          // Deprecated: (20241127 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('listUserCompanyAPI(Simple) failed:', code);
+        }
+      } catch (error) {
+        // Deprecated: (20241127 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('listUserCompanyAPI(Simple) error:', error);
+      }
+    };
+
+    getCompanyList();
+  }, [userAuth]);
 
   if (!hasCompanyList) {
     return (
       <DashboardCardLayout>
-        <PendingTasksNoData />
+        <PendingTaskNoData />
       </DashboardCardLayout>
     );
   }
