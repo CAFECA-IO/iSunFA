@@ -96,37 +96,6 @@ export class AccountBook implements IAccountBook {
   }
 }
 
-// function isProfitAndLossAccount(node: any): boolean {
-//   // 根據科目的屬性判斷是否為損益表科目
-//   // 例如，type 為 'expense' 或 'income' 等
-//   return node.type === 'expense' || node.type === 'income';
-// }
-
-// function getInitialBalanceForAccount(accountId: number): { credit: number; debit: number } {
-//   // 實作獲取期初餘額的邏輯
-//   // 例如，從資料庫中查詢或根據其他條件計算
-//   // 此處僅提供示例
-//   return { credit: 1000, debit: 500 };
-// }
-
-// async function initializeInitialBalances(accountBook: AccountBook): Promise<void> {
-//   accountBook.traverse((node) => {
-//     if (isProfitAndLossAccount(node)) {
-//       node.setInitialCredit(0);
-//       node.setInitialDebit(0);
-//     } else {
-//       // 假設有一個函數來獲取期初餘額
-//       const initialBalance = getInitialBalanceForAccount(node.id);
-//       node.setInitialCredit(initialBalance.credit);
-//       node.setInitialDebit(initialBalance.debit);
-//     }
-//   });
-// }
-
-// export { initializeInitialBalances };
-
-// export default accountBook;
-
 /* Info: (20241118 - Luphia) 使用案例 Company 10000007 AnnaCryCryCry
  * 會計科目取 system = 'IFRS' and company_id = 1002 (公用) 10000007 (AnnaCryCryCry)
  * 會計傳票清單 vlist 取 company_id = 10000007 (AnnaCryCryCry)
