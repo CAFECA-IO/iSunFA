@@ -164,4 +164,3 @@ id companyId system type debit liquidity code name for_user level parent_code ro
 10000969 1002 IFRS liability false true 2121 持有供交易金融負債－流動 true 3 2120 2120 0 0 NULL
 10001032 1002 IFRS liability false false 2552 保固之長期負債準備 true 3 2550 2550 0 0 NULL
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
