@@ -13,6 +13,7 @@ import { fuzzySearchCounterpartyByName } from '@/lib/utils/repo/counterparty.rep
 import { createManyInvoice } from '@/lib/utils/repo/invoice.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
+import { ProgressStatus } from '@/constants/account';
 
 async function processCertificateContent(certificate: {
   id: number;
@@ -30,7 +31,7 @@ async function processCertificateContent(certificate: {
       // ToDo: (20241128 - Luphia) Declare expact data format for resultFromAI (why are there multiple invoices with one certificate?)
       const { payload: aiPayload } = resultFromAI;
       const { status, value } = aiPayload;
-      if (status !== 'success') {
+      if (status !== ProgressStatus.SUCCESS) {
         loggerError({
           userId: certificate.companyId,
           errorType: 'CertificateProcessingError',

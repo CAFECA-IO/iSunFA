@@ -7,6 +7,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
+import { ProgressStatus } from '@/constants/account';
 
 export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   /**
@@ -24,7 +25,7 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
 
   if (body) {
     statusMessage = STATUS_MESSAGE.CREATED;
-    payload = 'success';
+    payload = ProgressStatus.SUCCESS;
   }
 
   return {

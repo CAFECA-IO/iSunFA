@@ -50,6 +50,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { readFile } from 'fs/promises';
 import { bufferToBlob } from '@/lib/utils/parse_image_form';
+import { ProgressStatus } from '@/constants/account';
 
 export const certificateAPIPostUtils = {
   /**
@@ -398,7 +399,7 @@ export const mockCertificateList = [
     size: '3.0 MB',
     uploadProgress: 50,
     aiResultId: 'douhvjax_-1',
-    aiStatus: 'success',
+    aiStatus: ProgressStatus.SUCCESS,
     createAt: 10000000,
     updateAt: 10000000,
   },
