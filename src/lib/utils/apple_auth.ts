@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import { Account } from 'next-auth';
+import { AdapterUser } from 'next-auth/adapters';
 
 export const generateAppleClientSecret = (): string => {
   const { APPLE_PRIVATE_KEY, APPLE_TEAM_ID, APPLE_CLIENT_ID, APPLE_KEY_ID, APPLE_TOKEN_EXPIRY } =
@@ -76,16 +78,17 @@ export async function handleAppleOAuth(code: string) {
     name?: string;
     image?: string;
   };
-  const account = {
+  const account: Account = {
     provider: 'apple',
     providerAccountId: decoded?.sub,
     type: 'oauth',
   };
-  const user = {
+  const user: AdapterUser = {
     id: decoded?.sub,
-    email: decoded?.email,
+    email: decoded?.email ?? '',
     name: decoded?.name,
     image: decoded?.image,
+    emailVerified: null,
   };
 
   return { user, account };
