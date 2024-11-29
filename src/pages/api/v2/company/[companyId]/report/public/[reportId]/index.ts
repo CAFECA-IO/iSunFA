@@ -31,8 +31,12 @@ const handleGetRequest: IHandleRequest<APIName.REPORT_GET_BY_ID, PostApiResponse
     }
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   } catch (error) {
-    const logError = loggerError(userId, 'generateReport failed', error as Error);
-    logError.error('Func. generateReport in company/companyId/report/index.ts failed');
+    const errorInfo = {
+      userId,
+      errorType: 'generateReport failed',
+      errorMessage: 'Func. generateReport in company/companyId/report/index.ts failed',
+    };
+    loggerError(errorInfo);
   }
   return {
     statusMessage,
@@ -71,8 +75,12 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    const errorInfo = {
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    };
+    loggerError(errorInfo);
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);
