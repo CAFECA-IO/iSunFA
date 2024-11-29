@@ -152,7 +152,7 @@ const SelectRolePage = () => {
     };
 
     initializeRolesData();
-  }, [getSystemRoleList, getUserRoleList, router]);
+  }, [getSystemRoleList, getUserRoleList]);
 
   // Info: (20241107 - Liz) 跳轉到建立角色頁面前的 Loading 畫面
   if (userRoleList === null) {
