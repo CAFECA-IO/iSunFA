@@ -62,7 +62,7 @@ async function getVouchersWithLineItems(companyId: number): Promise<ILineItemEnt
 /** Info: (20241129 - Shirley)
  * 初始化 AccountBook
  */
-export async function initializeAccountBook(
+async function initializeAccountBook(
   companyId: number,
   publicCompanyId: number
 ): Promise<AccountBook> {

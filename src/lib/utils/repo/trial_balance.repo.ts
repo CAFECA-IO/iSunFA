@@ -87,6 +87,7 @@ export async function listTrialBalance(
       currencyAlias = accountingSettingData.currency || 'TWD';
     }
 
+    // TODO: start from here
     // Info: (20241118 - Shirley) 2. 用 public company id & my company id 搜尋 account table 取得所有會計科目
     const accounts = await prisma.account.findMany({
       where: {
@@ -197,6 +198,8 @@ export async function listTrialBalance(
         account.endingCreditAmount !== 0 ||
         account.endingDebitAmount !== 0
     );
+
+    // TODO: end here
 
     const paginatedTrialBalance = formatPaginatedTrialBalance(
       sortedTrialBalanceFromTree,

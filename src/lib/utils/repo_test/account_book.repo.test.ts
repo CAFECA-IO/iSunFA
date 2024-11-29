@@ -1,9 +1,8 @@
 import { getAccountBook, getLedger, getTrialBalance } from '@/lib/utils/repo/account_book.repo';
 import { AccountBook } from '@/lib/utils/account/accunt_book';
-// import { AccountBookNode } from '@/lib/utils/account/account_book_node';
 
 describe('Account Book Repository', () => {
-  describe('initializeAccountBook', () => {
+  describe('getAccountBook', () => {
     it('should initialize the account book with correct data', async () => {
       const accountBook = await getAccountBook(10000007);
 
