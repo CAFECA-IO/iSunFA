@@ -1,8 +1,6 @@
 import prisma from '@/client';
 
-import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
-import { CurrencyType } from '@/constants/currency';
-import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
+import { InvoiceType } from '@/constants/invoice';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { PostCertificateResponse } from '@/interfaces/certificate';
 import { SortBy, SortOrder } from '@/constants/sort';
@@ -71,30 +69,30 @@ export async function createCertificateWithEmptyInvoice(options: {
         createdAt: nowInSecond,
         updatedAt: nowInSecond,
         deletedAt: null,
-        invoices: {
-          create: {
-            counterParty: {
-              connect: {
-                id: PUBLIC_COUNTER_PARTY.id,
-              },
-            },
-            name: '',
-            inputOrOutput: InvoiceTransactionDirection.INPUT,
-            date: nowInSecond,
-            no: '',
-            currencyAlias: CurrencyType.TWD,
-            priceBeforeTax: 0,
-            taxType: InvoiceTaxType.TAXABLE,
-            taxRatio: 0,
-            taxPrice: 0,
-            totalPrice: 0,
-            type: InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
-            deductible: false,
-            createdAt: nowInSecond,
-            updatedAt: nowInSecond,
-            deletedAt: null,
-          },
-        },
+        // invoices: {
+        //   create: {
+        //     counterParty: {
+        //       connect: {
+        //         id: PUBLIC_COUNTER_PARTY.id,
+        //       },
+        //     },
+        //     name: '',
+        //     inputOrOutput: InvoiceTransactionDirection.INPUT,
+        //     date: nowInSecond,
+        //     no: '',
+        //     currencyAlias: CurrencyType.TWD,
+        //     priceBeforeTax: 0,
+        //     taxType: InvoiceTaxType.TAXABLE,
+        //     taxRatio: 0,
+        //     taxPrice: 0,
+        //     totalPrice: 0,
+        //     type: InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+        //     deductible: false,
+        //     createdAt: nowInSecond,
+        //     updatedAt: nowInSecond,
+        //     deletedAt: null,
+        //   },
+        // },
       },
       include: {
         voucherCertificates: {
@@ -113,7 +111,7 @@ export async function createCertificateWithEmptyInvoice(options: {
       },
     });
   } catch (error) {
-    loggerBack.error('createCertificateWithEmptyInvoice error', error);
+    loggerBack.error(`createCertificateWithEmptyInvoice: ${JSON.stringify(error, null, 2)}`);
   }
 
   return certificate;
@@ -182,30 +180,45 @@ export async function getCertificatesV2(options: {
     companyId,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
     voucherCertificates: getVoucherCertificateRelation(tab),
-    invoices: {
-      some: {
-        type,
-      },
-    },
-    OR: [
+    AND: [
       {
-        file: {
-          name: {
-            contains: searchQuery,
-          },
-        },
-      },
-      {
-        invoices: {
-          some: {
-            name: {
-              contains: searchQuery,
-            },
-            no: {
-              contains: searchQuery,
+        OR: [
+          {
+            invoices: {
+              some: {
+                type, // Info: (20241129 - Murky) 如果有符合的 `type`
+              },
             },
           },
-        },
+          {
+            invoices: {
+              none: {}, // Info: (20241129 - Murky) 沒有任何關聯的 `invoices`
+            },
+          },
+        ],
+      },
+      {
+        OR: [
+          {
+            file: {
+              name: {
+                contains: searchQuery,
+              },
+            },
+          },
+          {
+            invoices: {
+              some: {
+                name: {
+                  contains: searchQuery,
+                },
+                no: {
+                  contains: searchQuery,
+                },
+              },
+            },
+          },
+        ],
       },
     ],
   };
@@ -283,7 +296,7 @@ export async function getCertificatesV2(options: {
   }
 
   const hasNextPage = certificates.length > pageSize;
-  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER; // 1;
+  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER; // Info: (20241121 - Murky) DEFAULT_PAGE_NUMBER = 1;
 
   if (hasNextPage) {
     certificates.pop();

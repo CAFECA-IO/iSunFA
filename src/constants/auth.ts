@@ -62,6 +62,7 @@ export const AUTH_CHECK = {
   [APIName.CERTIFICATE_LIST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_POST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_GET_V2]: [AuthFunctionsKeysNew.user],
+  [APIName.INVOICE_POST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.INVOICE_PUT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ASSET_LIST_EXPORT]: [AuthFunctionsKeysNew.user],
   [APIName.FILE_EXPORT]: [AuthFunctionsKeysNew.user], // ToDo: (20241112 - Luphia) need to define the schema for file export

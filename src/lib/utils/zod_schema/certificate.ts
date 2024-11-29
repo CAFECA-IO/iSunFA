@@ -16,7 +16,7 @@ import {
 } from '@/lib/utils/zod_schema/invoice';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
-import { counterPartyEntityValidator } from '@/constants/counterparty';
+import { counterPartyEntityValidator, PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
 import { userEntityValidator } from '@/lib/utils/zod_schema/user';
 import { ICertificate } from '@/interfaces/certificate';
@@ -316,6 +316,39 @@ export const invoicePutV2Schema = {
   input: {
     querySchema: invoicePutV2QuerySchema,
     bodySchema: invoicePutV2BodySchema,
+  },
+  outputSchema: ICertificateValidator.strict(),
+  frontend: ICertificateValidator,
+};
+
+export const invoicePostV2BodySchema = z.object({
+  certificateId: z.number(),
+  counterPartyId: z
+    .number()
+    .optional()
+    .transform((value) => {
+      if (value === undefined) {
+        return PUBLIC_COUNTER_PARTY.id;
+      }
+      return value;
+    }),
+  inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
+  date: z.number(),
+  no: z.string(),
+  // currencyAlias: z.nativeEnum(CurrencyType),
+  priceBeforeTax: z.number(),
+  // taxType: z.nativeEnum(InvoiceTaxType),
+  taxRatio: z.number(),
+  taxPrice: z.number(),
+  totalPrice: z.number(),
+  type: z.nativeEnum(InvoiceType),
+  deductible: z.boolean(),
+});
+
+export const invoicePostV2Schema = {
+  input: {
+    querySchema: nullSchema,
+    bodySchema: invoicePostV2BodySchema,
   },
   outputSchema: ICertificateValidator.strict(),
   frontend: ICertificateValidator,
