@@ -10,7 +10,7 @@ import {
 } from '@/constants/kyc';
 import { z, ZodRawShape } from 'zod';
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { zodTimestampInSeconds } from './common';
+import { zodTimestampInSeconds } from '@/lib/utils/zod_schema/common';
 
 export const iCompanyKYCFormValidator = z.object({
   [BasicInfoKeys.LEGAL_COMPANY_NAME]: z.string(),

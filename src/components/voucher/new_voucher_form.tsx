@@ -31,6 +31,7 @@ import {
   EventType,
   EVENT_TYPE_TO_VOUCHER_TYPE_MAP,
   VOUCHER_TYPE_TO_EVENT_TYPE_MAP,
+  ProgressStatus,
 } from '@/constants/account';
 import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
@@ -58,6 +59,7 @@ import { AI_TYPE } from '@/constants/aich';
 
 const dummyAIResult: IAIResultVoucher = {
   aiType: AI_TYPE.VOUCHER,
+  aiStatus: ProgressStatus.SUCCESS,
   voucherDate: 0,
   type: '',
   note: '',

@@ -3,7 +3,7 @@ import { Invoice as PrismaInvoice } from '@prisma/client';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { CurrencyType } from '@/constants/currency';
-import { getTimestampNow } from './common';
+import { getTimestampNow } from '@/lib/utils/common';
 
 export function calculateTaxAmount(amount: number, taxRate: number): number {
   let taxRateInDecimal = taxRate;
