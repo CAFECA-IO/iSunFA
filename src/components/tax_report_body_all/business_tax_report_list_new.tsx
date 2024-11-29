@@ -1,5 +1,3 @@
-// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
-
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
@@ -26,10 +24,6 @@ const BusinessTaxList = () => {
   // Info: (20240814 - Anna) 使用 useState 定義 report401 變量的狀態，並將其類型設為 TaxReport401 | null
 
   // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
-
-  // Deprecated: (20241128 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('進入 BusinessTaxList');
 
   // Deprecated: (20241129 - Liz)
   // const {

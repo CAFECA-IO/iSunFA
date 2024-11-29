@@ -1,5 +1,3 @@
-// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
-
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
@@ -15,15 +13,11 @@ interface ITaxReportBodyAllProps {
 }
 
 const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['reports', 'report_401']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   // Info: (20240814 - Anna) 使用 useState 定義 report401 變量的狀態，並將其類型設為 TaxReport401 | null
 
   // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
-
-  // Deprecated: (20241128 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('進入 TaxReportBodyAll');
 
   // const {
   //   data: reportFinancial,
@@ -102,9 +96,9 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
     if (timestamp === null) return 'N/A';
     const date = new Date(timestamp);
     const taiwanYear = date.getFullYear() - 1911;
-    const yearTranslation = t('common:COMMON.Y');
-    const monthTranslation = t('common:COMMON.M');
-    const dayTranslation = t('common:COMMON.DAY');
+    const yearTranslation = t('reports:COMMON.Y');
+    const monthTranslation = t('reports:COMMON.M');
+    const dayTranslation = t('reports:COMMON.DAY');
     return `${taiwanYear}${yearTranslation} ${format(date, `MM'${monthTranslation}'dd'${dayTranslation}'`)}`;
   };
 
@@ -164,7 +158,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             <span>
               {/* 國稅局營業人銷售額與稅額申報書(401) */}
               {t('report_401:TAX_REPORT.IRS')}
-              {t('common:PLUGIN.REPORT_401')}
+              {t('reports:PLUGIN.REPORT_401')}
             </span>
           </h1>
           <p className="text-xs">
@@ -177,11 +171,11 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               {t('report_401:TAX_REPORT.CURRENT_PERIOD')}
               {financialReport?.content.basicInfo.currentYear ?? 'N/A'}
               {/* 年 */}
-              {t('common:COMMON.Y')}
+              {t('reports:COMMON.Y')}
               {financialReport?.content.basicInfo.startMonth ?? 'N/A'}-
               {financialReport?.content.basicInfo.endMonth ?? 'N/A'}
               {/* 月 */}
-              {t('common:COMMON.M')}
+              {t('reports:COMMON.M')}
             </p>
             <p className="text-right">
               {/* 金額單位:新臺幣元 */}

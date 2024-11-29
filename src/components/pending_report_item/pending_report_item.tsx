@@ -1,5 +1,3 @@
-// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
-
 import React, { useEffect, useState } from 'react';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { countdown, timestampToString, truncateString } from '@/lib/utils/common';
@@ -29,7 +27,7 @@ const PendingReportItem = ({
   onReportItemUpdate = () => {},
   onReportItemDelete = () => {},
 }: IPendingReportItemProps) => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['reports', 'report_401']);
   const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
   const [reportItem, setReportItem] = useState(report);
@@ -79,7 +77,7 @@ const PendingReportItem = ({
       submitBtnStr: t('report_401:PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,
-      backBtnStr: t('common:COMMON.CANCEL'),
+      backBtnStr: t('reports:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -245,7 +243,7 @@ const PendingReportItem = ({
       <td className="hidden px-16px text-left font-medium lg:table-cell">
         <span className="text-sm text-text-neutral-primary">
           {t(
-            `common:PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
+            `reports:PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
           )}
         </span>
       </td>
@@ -255,7 +253,7 @@ const PendingReportItem = ({
             {t('report_401:REPORTS_HISTORY_ITEM.FROM')}
           </span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
-          <span className="text-text-neutral-tertiary">{t('common:COMMON.TO')}</span>
+          <span className="text-text-neutral-tertiary">{t('reports:COMMON.TO')}</span>
           <span className="text-text-neutral-primary">{endDate.date}</span>
         </div>
       </td>

@@ -11,7 +11,6 @@ import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
 import IncomeStatementReportTableRow from './income_statement_report_table_row';
-// import useStateRef from 'react-usestateref'; // Deprecated: (20241129 - Liz)
 
 interface IIncomeStatementReportBodyAllProps {
   reportId: string;
@@ -243,7 +242,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 financialReport.general &&
                 financialReport.general
                   .slice(0, 10)
-                  .map((value) => <IncomeStatementReportTableRow {...value} />)}
+                  .map((value, index) => (
+                    <IncomeStatementReportTableRow {...value} key={`${'general' + index}`} />
+                  ))}
             </tbody>
           </table>
         )}
@@ -316,7 +317,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               financialReport.general &&
               financialReport.general
                 .slice(10, 24)
-                .map((value) => <IncomeStatementReportTableRow {...value} />)}
+                .map((value, index) => (
+                  <IncomeStatementReportTableRow {...value} key={`${'general' + index}`} />
+                ))}
           </tbody>
         </table>
       </section>
@@ -388,8 +391,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               financialReport.general &&
               financialReport.general
                 .slice(24, 33)
-                .map((value) => <IncomeStatementReportTableRow {...value} />)}
-
+                .map((value, index) => (
+                  <IncomeStatementReportTableRow {...value} key={`${'general' + index}`} />
+                ))}
             <tr>
               <td className="border border-stroke-brand-secondary-soft p-10px text-xs">&nbsp;</td>
               <td className="border border-stroke-brand-secondary-soft p-10px text-xs">&nbsp;</td>
@@ -411,8 +415,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {financialReport &&
               financialReport.general &&
               financialReport.general
-                .slice(34, 36)
-                .map((value) => <IncomeStatementReportTableRow {...value} />)}
+                .slice(33, 36)
+                .map((value, index) => (
+                  <IncomeStatementReportTableRow {...value} key={`${'general' + index}`} />
+                ))}
           </tbody>
         </table>
         <div className="relative mt-6">
@@ -497,7 +503,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 financialReport.details &&
                 financialReport.details
                   .slice(0, 15)
-                  .map((value) => <IncomeStatementReportTableRow {...value} />)}
+                  .map((value, index) => (
+                    <IncomeStatementReportTableRow {...value} key={`${'details' + index}`} />
+                  ))}
             </tbody>
           </table>
         )}
@@ -570,7 +578,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               financialReport.details &&
               financialReport.details
                 .slice(15, 28)
-                .map((value) => <IncomeStatementReportTableRow {...value} />)}
+                .map((value, index) => (
+                  <IncomeStatementReportTableRow {...value} key={`${'details' + index}`} />
+                ))}
           </tbody>
         </table>
       </section>
@@ -642,7 +652,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               financialReport.details &&
               financialReport.details
                 .slice(28, 39)
-                .map((value) => <IncomeStatementReportTableRow {...value} />)}
+                .map((value, index) => (
+                  <IncomeStatementReportTableRow {...value} key={`${'details' + index}`} />
+                ))}
           </tbody>
         </table>
       </section>
@@ -714,7 +726,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               financialReport.details &&
               financialReport.details
                 .slice(39, 49)
-                .map((value) => <IncomeStatementReportTableRow {...value} />)}
+                .map((value, index) => (
+                  <IncomeStatementReportTableRow {...value} key={`${'details' + index}`} />
+                ))}
           </tbody>
         </table>
       </section>
@@ -786,13 +800,15 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               financialReport.details &&
               financialReport.details
                 .slice(49, 58)
-                .map((value) => <IncomeStatementReportTableRow {...value} />)}
+                .map((value, index) => (
+                  <IncomeStatementReportTableRow {...value} key={`${'details' + index}`} />
+                ))}
           </tbody>
           <tbody>
             {financialReport &&
               financialReport.details &&
-              financialReport.details.slice(58, 62).map((value) => (
-                <tr key={value.code} className="h-40px">
+              financialReport.details.slice(58, 62).map((value, index) => (
+                <tr key={`${value.code + index}`} className="h-40px">
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
                     {value.code}
                   </td>
@@ -887,7 +903,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {otherInfo &&
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.revenue && (
-                <tr key={otherInfo.revenueAndExpenseRatio.revenue.code}>
+                <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.code}
                   </td>
@@ -919,7 +935,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {otherInfo &&
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.totalCost && (
-                <tr key={otherInfo.revenueAndExpenseRatio.totalCost.code}>
+                <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.code}
                   </td>
@@ -939,7 +955,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {otherInfo &&
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.salesExpense && (
-                <tr key={otherInfo.revenueAndExpenseRatio.salesExpense.code}>
+                <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.code}
                   </td>
@@ -959,7 +975,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {otherInfo &&
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.administrativeExpense && (
-                <tr key={otherInfo.revenueAndExpenseRatio.administrativeExpense.code}>
+                <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.code}
                   </td>
@@ -1042,8 +1058,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <tbody>
             {revenueToRD && (
               <>
-                {' '}
-                <tr key={revenueToRD.revenue.code}>
+                <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {revenueToRD.revenue.code}
                   </td>
@@ -1057,7 +1072,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                     {revenueToRD.revenue.prePeriodAmountString}
                   </td>
                 </tr>
-                <tr key={revenueToRD.researchAndDevelopmentExpense.code}>
+                <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.code}
                   </td>
@@ -1079,12 +1094,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                     收入提撥至研發費用比例
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {' '}
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
                     {revenueToRD.ratio.curRatio.toFixed(2)}%
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {' '}
                     {revenueToRD.ratio.preRatio.toFixed(2)}%
                   </td>
                 </tr>

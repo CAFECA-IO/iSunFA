@@ -22,10 +22,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const { isAuthLoading, selectedCompany } = useUserCtx();
   // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
 
-  // Deprecated: (20241128 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('進入 CashFlowStatementReportBodyAll');
-
   // Deprecated: (20241129 - Liz)
   // const {
   //   data: reportFinancial,
@@ -195,10 +191,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tr>
         </thead>
         <tbody>
-          {data.slice(startIndex, endIndex).map((value) => {
+          {data.slice(startIndex, endIndex).map((value, index) => {
             if (!value.code) {
               return (
-                <tr key={value.code}>
+                <tr key={`${value.code + value.name + index}`}>
                   <td
                     colSpan={6}
                     className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
@@ -247,8 +243,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <div className="mt-4 text-text-neutral-primary">
         <h3 className="text-base font-semibold leading-6">不動產、廠房、設備的收支項目：</h3>
         <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
-          {firstThought?.split('\n').map((line) => (
-            <li key={line} className="mb-2 ml-1">
+          {firstThought?.split('\n').map((line, index) => (
+            <li key={`${line + index}`} className="mb-2 ml-1">
               {line}
             </li>
           ))}
@@ -256,8 +252,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
 
         <h3 className="mt-4 text-base font-semibold leading-6">策略性投資項目：</h3>
         <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
-          {secondThought?.split('\n').map((line) => (
-            <li key={line} className="mb-2 ml-1">
+          {secondThought?.split('\n').map((line, index) => (
+            <li key={`${line + index}`} className="mb-2 ml-1">
               {line}
             </li>
           ))}
@@ -269,8 +265,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const renderedPage11part1 = () => {
     return (
       <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
-        {thirdThought?.split('\n').map((line) => (
-          <li key={line} className="mb-2 ml-1">
+        {thirdThought?.split('\n').map((line, index) => (
+          <li key={`${line + index}`} className="mb-2 ml-1">
             {line}
           </li>
         ))}
@@ -699,9 +695,9 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               <thead>
                 <tr className="text-xxs">
                   <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
-                  {lineChartLabels?.map((label) => (
+                  {lineChartLabels?.map((label, index) => (
                     <th
-                      key={label}
+                      key={`${label + index}`}
                       className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold"
                     >
                       {label}
@@ -717,7 +713,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
-                        key={year}
+                        key={`${year}_A`}
                         className="border border-stroke-brand-secondary-soft p-10px font-semibold"
                       ></td>
                     )
@@ -731,7 +727,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                     financialReport.otherInfo.operatingStabilized.beforeIncomeTax
                   ).map(([year, value]) => (
                     <td
-                      key={year}
+                      key={`${year}_b`}
                       className="border border-stroke-brand-secondary-soft p-10px text-end"
                     >
                       {
@@ -751,7 +747,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
-                        key={year}
+                        key={`${year}_c`}
                         className="border border-stroke-brand-secondary-soft p-10px text-end"
                       >
                         {
@@ -778,7 +774,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {Object.entries(financialReport.otherInfo.operatingStabilized.tax).map(
                     ([year, value]) => (
                       <td
-                        key={year}
+                        key={`${year}_d`}
                         className="border border-stroke-brand-secondary-soft p-10px text-end"
                       >
                         {
@@ -799,7 +795,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
-                        key={year}
+                        key={`${year}_B`}
                         className="border border-stroke-brand-secondary-soft p-10px font-semibold"
                       ></td>
                     )
@@ -813,7 +809,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                     financialReport.otherInfo.operatingStabilized.operatingIncomeCashFlow
                   ).map(([year, value]) => (
                     <td
-                      key={year}
+                      key={`${year}_e`}
                       className="border border-stroke-brand-secondary-soft p-10px text-end"
                     >
                       {value === 0
@@ -830,7 +826,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
-                        key={year}
+                        key={`${year}_f`}
                         className="border border-stroke-brand-secondary-soft p-10px"
                       ></td>
                     )
@@ -841,7 +837,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {Object.entries(financialReport.otherInfo.operatingStabilized.ratio).map(
                     ([year, value]) => (
                       <td
-                        key={year}
+                        key={`${year}_g`}
                         className="border border-stroke-brand-secondary-soft p-10px text-end"
                       >
                         {value.toFixed(2)}

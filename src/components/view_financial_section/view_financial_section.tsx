@@ -1,5 +1,3 @@
-// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
-
 import html2canvas from 'html2canvas';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/button/button';
@@ -132,7 +130,7 @@ const ViewFinancialSection = ({
   tokenId,
   reportLink,
 }: IViewReportSectionProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['reports']);
   const router = useRouter();
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -447,7 +445,7 @@ const ViewFinancialSection = ({
       ? displayedReportType.props.children
       : '';
   const translatedReportType = t(
-    `common:PLUGIN.${reportTypeString.toUpperCase().replace(/ /g, '_')}`
+    `reports:PLUGIN.${reportTypeString.toUpperCase().replace(/ /g, '_')}`
   );
 
   const renderedThumbnail = (
@@ -492,7 +490,7 @@ const ViewFinancialSection = ({
         <div className="mt-9 flex w-full flex-col items-center justify-center">
           <div className="flex h-850px flex-col gap-3">
             {isLoading || thumbnailUrls.length === 0 ? (
-              <p>{t('common:COMMON.LOADING')}</p>
+              <p>{t('reports:COMMON.LOADING')}</p>
             ) : isInvalidReport ? null : thumbnailUrls.length > 0 ? (
               thumbnailUrls.map((thumbnailUrl, index) => (
                 <div

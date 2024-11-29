@@ -1,6 +1,4 @@
-// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
-
-import NavBar from '@/components/nav_bar/nav_bar';
+// import NavBar from '@/components/nav_bar/nav_bar'; // ToDo: (20241129 - Liz) 使用新版的 Layout
 import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import ViewFinancialSection from '@/components/view_financial_section/view_financial_section';
 import {
@@ -29,11 +27,7 @@ interface IServerSideProps {
 }
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
-  // Deprecated: (20241128 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('進入 ViewFinancialReportPage', 'reportId:', reportId, 'reportType:', reportType);
-
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['reports']);
   const { toastHandler } = useModalContext();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const [reportData] = React.useState<IReportOld>({
@@ -124,8 +118,8 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {t(`common:PLUGIN.${reportData.reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}-
-          iSunFA
+          {t(`reports:PLUGIN.${reportData.reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}
+          - iSunFA
         </title>
 
         <meta
@@ -143,9 +137,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       </Head>
 
       <div className="font-barlow">
-        <div className="">
-          <NavBar />
-        </div>
+        <div className="">{/* <NavBar /> */}</div>
 
         {displayedBody}
       </div>
@@ -163,17 +155,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
     props: {
       reportId: reportId as string,
       reportType: reportType as string,
-      ...(await serverSideTranslations(locale as string, [
-        'common',
-        'report_401',
-        'journal',
-        'kyc',
-        'project',
-        'setting',
-        'terms',
-        'salary',
-        'asset',
-      ])),
+      ...(await serverSideTranslations(locale as string, ['reports', 'report_401', 'common'])),
     },
   };
 };
