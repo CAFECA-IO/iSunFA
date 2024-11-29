@@ -85,8 +85,9 @@ export class AccountBook implements IAccountBook {
   // Info: (20241118 - Luphia) 需注意應優先插入父節點，再插入子節點，插入節點時應同時更新父節點的 children 屬性
   insertNode(node: IAccountBookNode): void {
     this.nodes.set(node.id, node);
-    if (node.parentId) {
-      // ToDo: (20241118 - Luphia) IAccountNode id 為 number, parentCode 為 string 是不合理的，應統一為 number
+    if (node.parentId === node.id) {
+      // Info: (20241129 - Shirley) root 節點的邏輯是 parentId === node.id；若父節點與自身 id 相同，則不需更新父節點的 children 屬性
+    } else if (node.parentId) {
       const { parentId } = node;
       const parent = this.findNode(parentId);
       if (parent) {
