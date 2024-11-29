@@ -3,7 +3,7 @@ import GoogleProvider from 'next-auth/providers/google';
 // import AppleProvider from 'next-auth/providers/apple';
 // import { generateAppleClientSecret } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { destroySession, getSession } from '@/lib/utils/session';
+import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 /* Info: (20241128 - tzuhan) move to @/lib/utils/signIn
 import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
@@ -11,12 +11,9 @@ import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import { FileFolder, PUBLIC_IMAGE_ID } from '@/constants/file';
 */
-import { APIPath } from '@/constants/api_connection';
-import { UserActionLogActionType } from '@/constants/user_action_log';
-import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import loggerBack, { loggerError } from '@/lib/utils/logger_back';
+import { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
+import { handleSignOutSession } from '@/lib/utils/signout';
 // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
 // import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 // import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
@@ -148,21 +145,7 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
   secret: process.env.NEXTAUTH_SECRET,
   events: {
     signOut: async () => {
-      const session = await getSession(req, res);
-      loggerBack.info('nextauth signOut', session);
-      await createUserActionLog({
-        sessionId: session.id,
-        userId: session.userId,
-        actionType: UserActionLogActionType.LOGOUT,
-        actionDescription: UserActionLogActionType.LOGOUT,
-        ipAddress: (req.headers['x-forwarded-for'] as string) || '',
-        userAgent: (req.headers['user-agent'] as string) || '',
-        apiEndpoint: APIPath.SIGN_OUT,
-        httpMethod: req.method || '',
-        requestPayload: {},
-        statusMessage: STATUS_MESSAGE.SUCCESS,
-      });
-      destroySession(session);
+      await handleSignOutSession(req, res);
     },
   },
   callbacks: {
