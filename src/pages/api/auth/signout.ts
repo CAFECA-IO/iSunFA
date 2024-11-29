@@ -1,10 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { handleAppleOAuth } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { loggerError } from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  loggerBack.info('custom signOut is called', req.body);
   if (req.method !== 'POST') {
     res.redirect(`${ISUNFA_ROUTE.LOGIN}?signin=false&error=Method+Not+Allowed`);
     return;
@@ -26,9 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { user, account } = await handleAppleOAuth(code);
     await handleSignInSession(req, res, user, account);
 
-    // Info: (20241127 - tzuhan) 登錄成功，重定向到 LOGIN，帶 signin=true
-    const redirectUrl = req.headers.referer || ISUNFA_ROUTE.LOGIN;
-    res.redirect(`${redirectUrl}?signin=true`);
+    res.status(200).json({ success: true, message: 'Successfully signed out' });
   } catch (err) {
     // Info: (20241127 - tzuhan) 錯誤處理
     loggerError(-1, 'Apple sign-in failed', err as Error);
@@ -36,8 +35,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const userFriendlyMessage = errorMessage.includes('Token exchange failed')
       ? 'Failed to authenticate with Apple.'
       : 'An unexpected error occurred.';
-    res.redirect(
-      `${ISUNFA_ROUTE.LOGIN}?signin=false&error=${encodeURIComponent(userFriendlyMessage)}`
-    );
+    res.status(500).json({ success: false, message: userFriendlyMessage });
   }
 }

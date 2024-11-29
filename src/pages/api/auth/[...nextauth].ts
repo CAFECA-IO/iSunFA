@@ -149,7 +149,7 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
   events: {
     signOut: async () => {
       const session = await getSession(req, res);
-      loggerBack.info('signOut', session);
+      loggerBack.info('nextauth signOut', session);
       await createUserActionLog({
         sessionId: session.id,
         userId: session.userId,
@@ -256,23 +256,6 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
     },
     async redirect({ url, baseUrl }) {
       return url.startsWith(baseUrl) ? url : baseUrl;
-    },
-    async jwt({ token, user }) {
-      const newToken = { ...token };
-      if (user) {
-        newToken.userId = user.id;
-      }
-      return newToken;
-    },
-    async session({ session, token }) {
-      const newSession = {
-        ...session,
-        user: {
-          id: token.userId,
-          email: token.email,
-        },
-      };
-      return newSession;
     },
   },
   debug: false,
