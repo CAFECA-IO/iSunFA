@@ -184,133 +184,54 @@ export class AccountBookNode implements IAccountBookNode {
     this.initialDebit = amount;
   }
 
-  // getBalance(): number {
-  //   // Info: (20241117 - Luphia) 計算所有子節點的餘額加總
-  //   const childrenBalance = this.children.reduce((acc, cur) => {
-  //     const result = acc + cur.getBalance();
-  //     return result;
-  //   }, 0);
-
-  //   // Info: (20241117 - Luphia) 計算自己的餘額，需考量 lineItem debit 屬性決定相加或相減
-  //   const myBalance = this.datas.reduce((acc, cur) => {
-  //     const result = this.debit === cur.debit ? acc + cur.amount : acc - cur.amount;
-  //     return result;
-  //   }, 0);
-
-  //   // Info: (20241117 - Luphia) balance 為該節點與其所有子節點加總後的餘額
-  //   const balance = myBalance + childrenBalance;
-  //   return balance;
-  // }
-
   getBalance(): number {
-    // FIXME: Deprecated: (20241130 - Shirley) for dev
-    // eslint-disable-next-line no-console
-    console.log('getBalance called in AccountBookNode');
-    const visited = new Set<number>();
-    const getBalanceInterval = (node: AccountBookNode) => {
-      if (visited.has(node.id)) {
-        return 0;
-      }
+    // Info: (20241117 - Luphia) 計算所有子節點的餘額加總
+    const childrenBalance = this.children.reduce((acc, cur) => {
+      const result = acc + cur.getBalance();
+      return result;
+    }, 0);
 
-      const childrenBalance = this.children.reduce((acc, cur) => {
-        const result = acc + cur.getBalance();
-        return result;
-      }, 0);
+    // Info: (20241117 - Luphia) 計算自己的餘額，需考量 lineItem debit 屬性決定相加或相減
+    const myBalance = this.datas.reduce((acc, cur) => {
+      const result = this.debit === cur.debit ? acc + cur.amount : acc - cur.amount;
+      return result;
+    }, 0);
 
-      const myBalance = this.datas.reduce((acc, cur) => {
-        const result = this.debit === cur.debit ? acc + cur.amount : acc - cur.amount;
-        return result;
-      }, 0);
-
-      const balance = childrenBalance + myBalance;
-      return balance;
-    };
-    // FIXME: Deprecated: (20241130 - Shirley) for dev
-    // eslint-disable-next-line no-console
-    console.log('visited in getBalanceFunction', visited);
-
-    return getBalanceInterval(this);
+    // Info: (20241117 - Luphia) balance 為該節點與其所有子節點加總後的餘額
+    const balance = myBalance + childrenBalance;
+    return balance;
   }
 
-  // getSummary(): { debit: number; credit: number } {
-  //   // Info: (20241117 - Luphia) 取得所有子節點的摘要資訊
-  //   const childrenSummary = this.children.reduce(
-  //     (acc, cur) => {
-  //       acc.debit += cur.getSummary().debit;
-  //       acc.credit += cur.getSummary().credit;
-  //       return acc;
-  //     },
-  //     { debit: 0, credit: 0 }
-  //   );
-
-  //   // Info: (20241117 - Luphia) 計算自己的摘要資訊，需考量 debit 屬性決定歸類 debit 或 credit
-  //   const mySummary = this.datas.reduce(
-  //     (acc, cur) => {
-  //       if (cur.debit) {
-  //         acc.debit += cur.amount;
-  //       } else {
-  //         acc.credit += cur.amount;
-  //       }
-  //       return acc;
-  //     },
-  //     { debit: 0, credit: 0 }
-  //   );
-
-  //   // Info: (20241117 - Luphia) summary 為該節點與其所有子節點的摘要資訊加總
-  //   const summary = {
-  //     debit: mySummary.debit + childrenSummary.debit,
-  //     credit: mySummary.credit + childrenSummary.credit,
-  //   };
-  //   return summary;
-  // }
-
   getSummary(): { debit: number; credit: number } {
-    // 使用 Set 來追蹤已經訪問過的節點，避免循環引用
-    const visited = new Set<number>();
+    // Info: (20241117 - Luphia) 取得所有子節點的摘要資訊
+    const childrenSummary = this.children.reduce(
+      (acc, cur) => {
+        acc.debit += cur.getSummary().debit;
+        acc.credit += cur.getSummary().credit;
+        return acc;
+      },
+      { debit: 0, credit: 0 }
+    );
 
-    const getSummaryInternal = (node: AccountBookNode): { debit: number; credit: number } => {
-      if (visited.has(node.id)) {
-        return { debit: 0, credit: 0 };
-      }
+    // Info: (20241117 - Luphia) 計算自己的摘要資訊，需考量 debit 屬性決定歸類 debit 或 credit
+    const mySummary = this.datas.reduce(
+      (acc, cur) => {
+        if (cur.debit) {
+          acc.debit += cur.amount;
+        } else {
+          acc.credit += cur.amount;
+        }
+        return acc;
+      },
+      { debit: 0, credit: 0 }
+    );
 
-      visited.add(node.id);
-
-      // 計算子節點的摘要資訊
-      const childrenSummary = node.children.reduce(
-        (acc, cur) => {
-          const childSummary = getSummaryInternal(cur as AccountBookNode);
-          return {
-            debit: acc.debit + childSummary.debit,
-            credit: acc.credit + childSummary.credit,
-          };
-        },
-        { debit: 0, credit: 0 }
-      );
-
-      // 計算當前節點的摘要資訊
-      const nodeSummary = node.datas.reduce(
-        (acc, cur) => {
-          if (cur.debit) {
-            acc.debit += cur.amount;
-          } else {
-            acc.credit += cur.amount;
-          }
-          return acc;
-        },
-        { debit: 0, credit: 0 }
-      );
-
-      // 合併當前節點和子節點的摘要資訊
-      return {
-        debit: nodeSummary.debit + childrenSummary.debit,
-        credit: nodeSummary.credit + childrenSummary.credit,
-      };
+    // Info: (20241117 - Luphia) summary 為該節點與其所有子節點的摘要資訊加總
+    const summary = {
+      debit: mySummary.debit + childrenSummary.debit,
+      credit: mySummary.credit + childrenSummary.credit,
     };
-    // FIXME: Deprecated: (20241130 - Shirley) for dev
-    // eslint-disable-next-line no-console
-    console.log('visited in getSummaryFunction', visited);
-
-    return getSummaryInternal(this);
+    return summary;
   }
 
   toJSON(): IAccountBookNodeJSON {
