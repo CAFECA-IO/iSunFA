@@ -21,7 +21,6 @@ import { ILineItemEntity } from '@/interfaces/line_item';
 /* Info: (20241117 - Luphia)
  * 實作 IAccountBookNode
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export class AccountBookNode implements IAccountBookNode {
   id: number;
 

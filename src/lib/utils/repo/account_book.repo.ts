@@ -1,9 +1,11 @@
+/* eslint-disable */
 import prisma from '@/client';
 import { AccountBook } from '@/lib/utils/account/accunt_book';
 import { AccountBookNode } from '@/lib/utils/account/account_book_node';
 import { IAccountNode } from '@/interfaces/accounting_account';
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { isNodeCircularReference } from '@/lib/utils/account/common';
+import fs from 'fs';
 
 /** Info: (20241129 - Shirley)
  * 1. 用 companyId & publicCompanyId 搜尋 account table 取得所有會計科目
@@ -34,12 +36,20 @@ async function getAccounts(companyId: number, publicCompanyId: number): Promise<
 /** Info: (20241129 - Shirley)
  * 2. 用 companyId 搜尋 voucher 和相關的 line items
  */
-async function getVouchersWithLineItems(companyId: number): Promise<ILineItemEntity[]> {
+async function getVouchersWithLineItems(
+  companyId: number,
+  startTimestamp: number,
+  endTimestamp: number
+): Promise<ILineItemEntity[]> {
   // Info: (20241129 - Shirley) 先取得該公司的所有 vouchers
   const vouchers = await prisma.voucher.findMany({
     where: {
       companyId,
       deletedAt: null,
+      createdAt: {
+        gte: startTimestamp,
+        lte: endTimestamp,
+      },
     },
     include: {
       lineItems: {
@@ -64,7 +74,9 @@ async function getVouchersWithLineItems(companyId: number): Promise<ILineItemEnt
  */
 async function initializeAccountBook(
   companyId: number,
-  publicCompanyId: number
+  publicCompanyId: number,
+  startTimestamp: number,
+  endTimestamp: number
 ): Promise<AccountBook> {
   try {
     const accountBook = new AccountBook();
@@ -98,7 +110,7 @@ async function initializeAccountBook(
     });
 
     // Info: (20241129 - Shirley) 2. 取得並處理 vouchers 和 line items
-    const lineItems = await getVouchersWithLineItems(companyId);
+    const lineItems = await getVouchersWithLineItems(companyId, startTimestamp, endTimestamp);
 
     // Info: (20241129 - Shirley) 2.1 將每個 voucher 的 line item 合併到對應的 account node
     lineItems.forEach((lineItem) => {
@@ -117,11 +129,23 @@ async function initializeAccountBook(
   }
 }
 
-export async function getAccountBook(companyId: number): Promise<AccountBook> {
+export async function getAccountBook(
+  companyId: number,
+  startTimestamp: number,
+  endTimestamp: number
+): Promise<AccountBook> {
   const PUBLIC_COMPANY_ID = 1002;
 
   try {
-    const accountBookInstance = await initializeAccountBook(companyId, PUBLIC_COMPANY_ID);
+    const accountBookInstance = await initializeAccountBook(
+      companyId,
+      PUBLIC_COMPANY_ID,
+      startTimestamp,
+      endTimestamp
+    );
+    // write account book into json file
+    const nowHrMin = `${new Date().getHours()}_${new Date().getMinutes()}`;
+    // fs.writeFileSync(`account_book_${nowHrMin}.json`, JSON.stringify(accountBookInstance, null, 2));
     return accountBookInstance;
   } catch (error) {
     // FIXME: Deprecated: (20241130 - Shirley) for dev
@@ -131,14 +155,24 @@ export async function getAccountBook(companyId: number): Promise<AccountBook> {
   }
 }
 
-export async function getTrialBalance(companyId: number) {
-  const accountBookInstance = await getAccountBook(companyId);
+export async function getTrialBalance(
+  companyId: number,
+  startTimestamp: number,
+  endTimestamp: number
+) {
+  const accountBookInstance = await getAccountBook(companyId, startTimestamp, endTimestamp);
   const trialBalance = accountBookInstance.toJSON();
+  // write ledger into json file
+  const nowHrMin = `${new Date().getHours()}_${new Date().getMinutes()}`;
+  // fs.writeFileSync(`trial_balance_${nowHrMin}.json`, JSON.stringify(trialBalance, null, 2));
   return trialBalance;
 }
 
-export async function getLedger(companyId: number) {
-  const accountBookInstance = await getAccountBook(companyId);
+export async function getLedger(companyId: number, startTimestamp: number, endTimestamp: number) {
+  const accountBookInstance = await getAccountBook(companyId, startTimestamp, endTimestamp);
   const ledger = accountBookInstance.toLedgerJSON();
+  // write ledger into json file
+  const nowHrMin = `${new Date().getHours()}_${new Date().getMinutes()}`;
+  // fs.writeFileSync(`ledger_${nowHrMin}.json`, JSON.stringify(ledger, null, 2));
   return ledger;
 }

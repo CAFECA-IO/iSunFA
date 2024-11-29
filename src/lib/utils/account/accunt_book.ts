@@ -61,6 +61,7 @@ export class AccountBook implements IAccountBook {
   // Info: (20241118 - Luphia) 需注意應優先插入父節點，再插入子節點，插入節點時應同時更新父節點的 children 屬性
   insertNode(node: IAccountBookNode): void {
     this.nodes.set(node.id, node);
+
     if (node.parentId === node.id) {
       // Info: (20241129 - Shirley) root 節點的邏輯是 parentId === node.id；若父節點與自身 id 相同，則不需更新父節點的 children 屬性
     } else if (node.parentId) {
@@ -69,8 +70,6 @@ export class AccountBook implements IAccountBook {
       if (parent) {
         parent.addChild(node);
         node.addParent(parent);
-      } else {
-        // ToDo: (20241118 - Luphia) 父節點不存在時應拋出錯誤
       }
     }
   }
@@ -96,8 +95,6 @@ export class AccountBook implements IAccountBook {
     this.nodes.forEach(callback);
   }
 }
-
-// const accountBook = new AccountBook();
 
 // function isProfitAndLossAccount(node: any): boolean {
 //   // 根據科目的屬性判斷是否為損益表科目
