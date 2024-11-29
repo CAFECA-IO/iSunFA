@@ -14,6 +14,7 @@ import { isVoucherAmountGreaterOrEqualThenPaymentAmount } from '@/lib/utils/vouc
 import { loggerError } from '@/lib/utils/logger_back';
 import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
+import { DefaultValue } from '@/constants/default_value';
 
 type ApiResponseType = IVoucherDataForAPIResponse | null;
 
@@ -43,7 +44,7 @@ async function handleVoucherUpdatePrismaLogic(
   } catch (_error) {
     const error = _error as Error;
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'handleVoucherUpdatePrismaLogic failed',
       errorMessage: error.message,
     });
@@ -79,7 +80,7 @@ async function handlePutRequest(
     statusMessage = voucherUpdatedData.statusMessage;
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'handleVoucherUpdatePrismaLogic in handlePutRequest failed',
       errorMessage: (error as Error).message,
     });

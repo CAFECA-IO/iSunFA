@@ -12,6 +12,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { SortBy, UserActionLogActionType } from '@/constants/user_action_log';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function createUserActionLog(data: {
   sessionId: string;
@@ -76,7 +77,7 @@ export async function listUserActionLog(
     userActionLogList = await prisma.userActionLog.findMany(findManyArgs);
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find many user action logs in listUserActionLogs failed',
       errorMessage: (error as Error).message,
     });
@@ -118,7 +119,7 @@ export async function deleteUserActionLogForTesting(id: number): Promise<UserAct
     return deletedLog;
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'delete user action log failed',
       errorMessage: (error as Error).message,
     });

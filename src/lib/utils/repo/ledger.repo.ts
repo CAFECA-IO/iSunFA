@@ -12,6 +12,7 @@ import { buildAccountForestForUser } from '@/lib/utils/account/common';
 import { LabelType } from '@/constants/ledger';
 import { ledgerListSchema } from '@/lib/utils/zod_schema/ledger';
 import { z } from 'zod';
+import { DefaultValue } from '@/constants/default_value';
 
 type ListLedgerParams = z.infer<typeof ledgerListSchema.input.querySchema>;
 
@@ -251,7 +252,7 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     };
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'listLedger in ledger.repo.ts failed',
       errorMessage: error as Error,
     });

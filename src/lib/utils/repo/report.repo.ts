@@ -9,6 +9,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IReportIncludeCompanyProject } from '@/interfaces/report';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function findFirstReportByFromTo(
   companyId: number,
@@ -29,7 +30,7 @@ export async function findFirstReportByFromTo(
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find first report by from to in findFirstReportByFromTo failed',
       errorMessage: (error as Error).message,
     });
@@ -55,7 +56,7 @@ export async function findUniqueReportById(reportId: number) {
   } catch (error) {
     report = null;
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find unique report by id in findUniqueReportById failed',
       errorMessage: (error as Error).message,
     });
@@ -86,7 +87,7 @@ export async function getReportIdByFromTo(
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'get report id by from to in getReportIdByFromTo failed',
       errorMessage: (error as Error).message,
     });
@@ -127,7 +128,7 @@ export async function createReport(
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'create report in createReport failed',
       errorMessage: (error as Error).message,
     });
@@ -183,7 +184,7 @@ export async function findManyReports(
     reports = await prisma.report.findMany(findManyArgs);
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find many reports in findManyReports failed',
       errorMessage: (error as Error).message,
     });

@@ -6,6 +6,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { CurrencyType } from '@/constants/currency';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 import { PostCertificateResponse } from '@/interfaces/certificate';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function putInvoiceV2(options: {
   nowInSecond: number;
@@ -94,7 +95,7 @@ export async function putInvoiceV2(options: {
   } catch (_error) {
     const error = _error as Error;
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Put Invoice V2 Error',
       errorMessage: error,
     });

@@ -35,6 +35,7 @@ import {
 import ReportGeneratorFactory from '@/lib/utils/report/report_generator_factory';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
   let targetPageNumber = DEFAULT_PAGE_NUMBER;
@@ -246,7 +247,7 @@ async function generateReport(
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'generateReport failed',
       errorMessage: (error as Error).message,
     });

@@ -19,6 +19,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { getInvoiceVoucherJournalByJournalId } from '@/lib/utils/repo/beta_transition.repo';
+import { DefaultValue } from '@/constants/default_value';
 
 type ApiResponseType = IVoucherDataForAPIResponse | null;
 
@@ -65,7 +66,7 @@ async function handleVoucherCreatePrismaLogic(
   } catch (_error) {
     const error = _error as Error;
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'handleVoucherCreatePrismaLogic failed',
       errorMessage: error.message,
     });

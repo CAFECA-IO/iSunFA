@@ -8,6 +8,7 @@ import { ocrIncludeFile } from '@/interfaces/ocr';
 import { getTimestampNow } from '@/lib/utils/common';
 import { File, Ocr, Prisma } from '@prisma/client';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function findUniqueCompanyInPrisma(companyId: number) {
   let company: {
@@ -21,7 +22,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find unique company in findUniqueCompanyInPrisma failed',
       errorMessage: (error as Error).message,
     });
@@ -66,7 +67,7 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find many ocr in findManyOCRByCompanyIdWithoutUsedInPrisma failed',
       errorMessage: (error as Error).message,
     });
@@ -120,7 +121,7 @@ export async function createOcrInPrisma(
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'create ocr in createOcrInPrisma failed',
       errorMessage: (error as Error).message,
     });

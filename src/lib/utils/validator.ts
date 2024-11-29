@@ -4,6 +4,7 @@ import { ApiValidationError } from '@/lib/utils/error/api_validation_error';
 import { NextApiRequest } from 'next';
 import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -64,7 +65,7 @@ export function validateAndFormatData<T extends z.ZodTypeAny>(
       issues: error.issues,
     };
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Validate and format data by zod failed',
       errorMessage: JSON.stringify(errorOption),
     });

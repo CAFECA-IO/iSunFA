@@ -7,6 +7,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { getTimestampNow, pageToOffset, timestampInSeconds } from '@/lib/utils/common';
 import { Prisma, Counterparty } from '@prisma/client';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 // Info: (20241022 - Jacky) Create
 export async function createCounterparty(
@@ -70,7 +71,7 @@ export async function listCounterparty(
     counterparties = await prisma.counterparty.findMany(findManyArgs);
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find many counterparties in listCounterparties failed',
       errorMessage: (error as Error).message,
     });
@@ -198,7 +199,7 @@ export async function fuzzySearchCounterpartyByName(name: string, companyId: num
     [counterparty] = counterparties;
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Fuzzy search counterparty by name in fuzzySearchCounterpartyByName failed',
       errorMessage: (error as Error).message,
     });

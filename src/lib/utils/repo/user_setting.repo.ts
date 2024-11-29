@@ -3,6 +3,7 @@ import { IUserSetting } from '@/interfaces/user_setting';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getTimestampNow } from '@/lib/utils/common';
 import { DEFAULT_USER_SETTING } from '@/constants/setting';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function createUserSetting(userId: number) {
   const nowInSecond = getTimestampNow();
@@ -23,7 +24,7 @@ export async function createUserSetting(userId: number) {
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'create user setting in createUserSetting failed',
       errorMessage: (error as Error).message,
     });
@@ -41,7 +42,7 @@ export async function getUserSettingByUserId(userId: number) {
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'get user setting in getUserSettingByUserId failed',
       errorMessage: (error as Error).message,
     });
@@ -72,7 +73,7 @@ export async function updateUserSettingById(id: number, data: IUserSetting) {
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'update user setting in updateUserSettingById failed',
       errorMessage: (error as Error).message,
     });
@@ -90,7 +91,7 @@ export async function deleteUserSettingByIdForTesting(id: number) {
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'delete user setting in deleteUserSettingByIdForTesting failed',
       errorMessage: (error as Error).message,
     });

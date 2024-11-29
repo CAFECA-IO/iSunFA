@@ -12,6 +12,7 @@ import fs from 'fs/promises';
 import { File } from 'formidable';
 import { FileFolder, getFileFolder } from '@/constants/file';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 // Info: (20240604 - Murky) if process.env is not set, the error will stop all process, error can't be caught
 export const googleStorage = new Storage({
@@ -65,7 +66,7 @@ export async function uploadFileToGoogleCloud(
     url = `${GOOGLE_STORAGE_BUCKET_URL}${destFileName}`;
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'uploadFileToGoogleCloud failed',
       errorMessage: error as Error,
     });

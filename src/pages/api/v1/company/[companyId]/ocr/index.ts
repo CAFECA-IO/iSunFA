@@ -31,6 +31,7 @@ import { findFileById } from '@/lib/utils/repo/file.repo';
 import { decryptImageFile, parseFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
 import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function readImageFromFilePath(
   fileName: string,
@@ -87,7 +88,7 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'upload image to AICH failed',
       errorMessage: (error as Error).message,
     });
@@ -127,7 +128,7 @@ export async function getPayloadFromResponseJSON(
     json = await responseJSON;
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'get payload from response JSON failed',
       errorMessage: (error as Error).message,
     });
@@ -212,7 +213,7 @@ export async function postImageToAICH(
     loggerBack.info(result, `Ocr postImageToAICH result, field: ${fileId}`);
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'postImageToAICH failed',
       errorMessage: (error as Error).message,
     });
@@ -275,7 +276,7 @@ export async function fetchStatus(aichResultId: string) {
       status = (await result.json()).payload;
     } catch (error) {
       loggerError({
-        userId: 0,
+        userId: DefaultValue.USER_ID.SYSTEM,
         errorType: 'fetchStatus failed',
         errorMessage: (error as Error).message,
       });
@@ -375,7 +376,7 @@ export async function createOcrFromAichResults(
     );
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'createOcrFromAichResults failed',
       errorMessage: (error as Error).message,
     });
@@ -402,7 +403,7 @@ export async function handlePostRequest({
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'handlePostRequest failed',
       errorMessage: (error as Error).message,
     });
@@ -422,7 +423,7 @@ export async function handleGetRequest(companyId: number, ocrType?: ocrTypes) {
     ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType);
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'findManyOCRByCompanyIdWithoutUsedInPrisma failed',
       errorMessage: (error as Error).message,
     });

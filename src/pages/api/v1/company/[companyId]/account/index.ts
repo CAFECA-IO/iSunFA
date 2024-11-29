@@ -293,7 +293,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'handle account request failed',
       errorMessage: error.message,
     });

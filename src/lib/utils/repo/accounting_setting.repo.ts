@@ -3,6 +3,7 @@ import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getTimestampNow } from '@/lib/utils/common';
 import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function createAccountingSetting(companyId: number) {
   let accountingSetting = null;
@@ -22,7 +23,7 @@ export async function createAccountingSetting(companyId: number) {
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'create accounting setting in createAccountingSetting failed',
       errorMessage: (error as Error).message,
     });
@@ -41,7 +42,7 @@ export async function getAccountingSettingByCompanyId(companyId: number) {
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'get accounting setting in getAccountingSetting failed',
       errorMessage: (error as Error).message,
     });
@@ -87,7 +88,7 @@ export async function updateAccountingSettingById(id: number, data: IAccountingS
     }
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'update accounting setting in updateAccountingSetting failed',
       errorMessage: (error as Error).message,
     });
@@ -105,7 +106,7 @@ export async function deleteAccountingSettingByIdForTesting(id: number) {
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'delete accounting setting in deleteAccountingSettingByIdForTesting failed',
       errorMessage: (error as Error).message,
     });

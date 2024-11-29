@@ -17,6 +17,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
 import { COMPANY_TAG } from '@/constants/company';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function listAdminByCompanyId(companyId: number): Promise<
   (Admin & {
@@ -421,7 +422,7 @@ export async function listCompanyAndRole(
     });
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'list company and role in listCompanyAndRole failed',
       errorMessage: (error as Error).message,
     });

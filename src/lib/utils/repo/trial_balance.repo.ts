@@ -19,6 +19,7 @@ import {
 } from '@/lib/utils/trial_balance';
 import { DEFAULT_SORT_OPTIONS } from '@/constants/trial_balance';
 import { formatPaginatedTrialBalance } from '@/lib/utils/formatter/trial_balance.formatter';
+import { DefaultValue } from '@/constants/default_value';
 
 /* Info: (20241105 - Shirley) Trial balance repository 實作
 company id (public company || targeted company) 去找 account table 拿到所有會計科目 -> voucher -> item -> account
@@ -212,7 +213,7 @@ export async function listTrialBalance(
     };
   } catch (error) {
     loggerError({
-      userId: 0,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'listTrialBalance in trial_balance.repo.ts failed',
       errorMessage: error as Error,
     });
