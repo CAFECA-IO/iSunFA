@@ -1,13 +1,19 @@
-import { getAccountBook, getLedger, getTrialBalance } from '@/lib/utils/repo/account_book.repo';
+import {
+  getAccountBook,
+  getLedgerJSON,
+  getTrialBalanceJSON,
+} from '@/lib/utils/repo/account_book.repo';
 import { AccountBook } from '@/lib/utils/account/accunt_book';
 import { IAccountBookNode } from '@/interfaces/account_book_node';
+import { getTimestampNow } from '@/lib/utils/common';
 
 describe('Account Book Repository', () => {
   let accountBook: AccountBook;
-  const COMPANY_ID = 10000007; // public_company: 1002
+  const COMPANY_ID = 1002;
 
   beforeEach(async () => {
-    accountBook = await getAccountBook(COMPANY_ID, 0, 1731524471);
+    const now = getTimestampNow();
+    accountBook = await getAccountBook(COMPANY_ID, 0, now);
   });
 
   describe('基本初始化測試', () => {
@@ -84,7 +90,7 @@ describe('Account Book Repository', () => {
 
   describe('輸出格式測試', () => {
     it('toJSON 應該輸出正確的試算表格式', async () => {
-      const trialBalance = await getTrialBalance(COMPANY_ID, 0, 1731524471);
+      const trialBalance = await getTrialBalanceJSON(COMPANY_ID, 0, 1731524471);
       expect(trialBalance).toBeInstanceOf(Array);
       trialBalance.forEach((node) => {
         expect(node).toHaveProperty('balance');
@@ -95,7 +101,7 @@ describe('Account Book Repository', () => {
     });
 
     it('toLedgerJSON 應該輸出正確的分類帳格式', async () => {
-      const ledger = await getLedger(COMPANY_ID, 0, 1731524471);
+      const ledger = await getLedgerJSON(COMPANY_ID, 0, 1731524471);
       expect(ledger).toBeInstanceOf(Array);
       ledger.forEach((entry) => {
         expect(entry).toHaveProperty('creditAmount');

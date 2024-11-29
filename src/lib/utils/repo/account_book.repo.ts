@@ -1,11 +1,10 @@
-/* eslint-disable */
 import prisma from '@/client';
 import { AccountBook } from '@/lib/utils/account/accunt_book';
 import { AccountBookNode } from '@/lib/utils/account/account_book_node';
 import { IAccountNode } from '@/interfaces/accounting_account';
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { isNodeCircularReference } from '@/lib/utils/account/common';
-import fs from 'fs';
+import { PUBLIC_COMPANY_ID } from '@/constants/company';
 
 /** Info: (20241129 - Shirley)
  * 1. 用 companyId & publicCompanyId 搜尋 account table 取得所有會計科目
@@ -78,55 +77,48 @@ async function initializeAccountBook(
   startTimestamp: number,
   endTimestamp: number
 ): Promise<AccountBook> {
-  try {
-    const accountBook = new AccountBook();
+  const accountBook = new AccountBook();
 
-    // Info: (20241129 - Shirley) 1. 取得所有會計科目
-    const accountRecords = await getAccounts(companyId, publicCompanyId);
+  // Info: (20241129 - Shirley) 1. 取得所有會計科目
+  const accountRecords = await getAccounts(companyId, publicCompanyId);
 
-    // Info: (20241129 - Shirley) 1.2 建立節點之間的層級關係
-    const nodeMap: Map<number, AccountBookNode> = new Map();
+  // Info: (20241129 - Shirley) 1.2 建立節點之間的層級關係
+  const nodeMap: Map<number, AccountBookNode> = new Map();
 
-    // Info: (20241129 - Shirley) 1.2 先建立所有節點
-    accountRecords.forEach((account) => {
-      const node = new AccountBookNode(account);
-      nodeMap.set(account.id, node);
-    });
+  // Info: (20241129 - Shirley) 1.2 先建立所有節點
+  accountRecords.forEach((account) => {
+    const node = new AccountBookNode(account);
+    nodeMap.set(account.id, node);
+  });
 
-    // Info: (20241129 - Shirley) 1.3 建立父子關係
-    accountRecords.forEach((account) => {
-      const node = nodeMap.get(account.id);
-      if (node && account.parentId) {
-        const parentNode = nodeMap.get(account.parentId);
-        if (parentNode && !isNodeCircularReference(node, parentNode)) {
-          node.addParent(parentNode);
-        }
+  // Info: (20241129 - Shirley) 1.3 建立父子關係
+  accountRecords.forEach((account) => {
+    const node = nodeMap.get(account.id);
+    if (node && account.parentId) {
+      const parentNode = nodeMap.get(account.parentId);
+      if (parentNode && !isNodeCircularReference(node, parentNode)) {
+        node.addParent(parentNode);
       }
-    });
+    }
+  });
 
-    // Info: (20241129 - Shirley) 1.4 插入節點到 AccountBook
-    nodeMap.forEach((node) => {
-      accountBook.insertNode(node);
-    });
+  // Info: (20241129 - Shirley) 1.4 插入節點到 AccountBook
+  nodeMap.forEach((node) => {
+    accountBook.insertNode(node);
+  });
 
-    // Info: (20241129 - Shirley) 2. 取得並處理 vouchers 和 line items
-    const lineItems = await getVouchersWithLineItems(companyId, startTimestamp, endTimestamp);
+  // Info: (20241129 - Shirley) 2. 取得並處理 vouchers 和 line items
+  const lineItems = await getVouchersWithLineItems(companyId, startTimestamp, endTimestamp);
 
-    // Info: (20241129 - Shirley) 2.1 將每個 voucher 的 line item 合併到對應的 account node
-    lineItems.forEach((lineItem) => {
-      const node = accountBook.findNode(lineItem.accountId);
-      if (node) {
-        node.addData(lineItem);
-      }
-    });
+  // Info: (20241129 - Shirley) 2.1 將每個 voucher 的 line item 合併到對應的 account node
+  lineItems.forEach((lineItem) => {
+    const node = accountBook.findNode(lineItem.accountId);
+    if (node) {
+      node.addData(lineItem);
+    }
+  });
 
-    return accountBook;
-  } catch (error) {
-    // FIXME: Deprecated: (20241130 - Shirley) for dev
-    // eslint-disable-next-line no-console
-    console.error('初始化 AccountBook 時發生錯誤:', error);
-    throw error;
-  }
+  return accountBook;
 }
 
 export async function getAccountBook(
@@ -134,45 +126,31 @@ export async function getAccountBook(
   startTimestamp: number,
   endTimestamp: number
 ): Promise<AccountBook> {
-  const PUBLIC_COMPANY_ID = 1002;
-
-  try {
-    const accountBookInstance = await initializeAccountBook(
-      companyId,
-      PUBLIC_COMPANY_ID,
-      startTimestamp,
-      endTimestamp
-    );
-    // write account book into json file
-    const nowHrMin = `${new Date().getHours()}_${new Date().getMinutes()}`;
-    // fs.writeFileSync(`account_book_${nowHrMin}.json`, JSON.stringify(accountBookInstance, null, 2));
-    return accountBookInstance;
-  } catch (error) {
-    // FIXME: Deprecated: (20241130 - Shirley) for dev
-    // eslint-disable-next-line no-console
-    console.error('取得 AccountBook 時發生錯誤:', error);
-    throw error;
-  }
+  const accountBookInstance = await initializeAccountBook(
+    companyId,
+    PUBLIC_COMPANY_ID,
+    startTimestamp,
+    endTimestamp
+  );
+  return accountBookInstance;
 }
 
-export async function getTrialBalance(
+export async function getTrialBalanceJSON(
   companyId: number,
   startTimestamp: number,
   endTimestamp: number
 ) {
   const accountBookInstance = await getAccountBook(companyId, startTimestamp, endTimestamp);
   const trialBalance = accountBookInstance.toJSON();
-  // write ledger into json file
-  const nowHrMin = `${new Date().getHours()}_${new Date().getMinutes()}`;
-  // fs.writeFileSync(`trial_balance_${nowHrMin}.json`, JSON.stringify(trialBalance, null, 2));
   return trialBalance;
 }
 
-export async function getLedger(companyId: number, startTimestamp: number, endTimestamp: number) {
+export async function getLedgerJSON(
+  companyId: number,
+  startTimestamp: number,
+  endTimestamp: number
+) {
   const accountBookInstance = await getAccountBook(companyId, startTimestamp, endTimestamp);
   const ledger = accountBookInstance.toLedgerJSON();
-  // write ledger into json file
-  const nowHrMin = `${new Date().getHours()}_${new Date().getMinutes()}`;
-  // fs.writeFileSync(`ledger_${nowHrMin}.json`, JSON.stringify(ledger, null, 2));
   return ledger;
 }
