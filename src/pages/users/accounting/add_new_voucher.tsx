@@ -56,6 +56,7 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
       'date_picker',
       'certificate',
       'filter_section_type',
+      'search',
     ])),
     locale,
   },

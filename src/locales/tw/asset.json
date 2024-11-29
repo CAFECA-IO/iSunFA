@@ -82,5 +82,14 @@
     "CONFIRM_MESSAGE_TITLE": "您確定要更新此資產嗎？",
     "CONFIRM_MESSAGE_BTN": "是的，更新資產",
     "TOAST_SUCCESS": "資產已更新"
+  },
+  "COMMON": {
+    "CANCEL": "取消",
+    "M": "月",
+    "Y": "年",
+    "D": "日",
+    "TWD": "新台幣",
+    "SELECT_ALL": "全選",
+    "SELECT": "選擇"
   }
 }

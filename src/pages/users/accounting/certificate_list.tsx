@@ -34,6 +34,7 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
         'certificate',
         'filter_section_type',
         'date_picker',
+        'search',
       ])),
     },
   };

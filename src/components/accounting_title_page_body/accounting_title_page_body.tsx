@@ -247,7 +247,7 @@ const AccountingTitlePageBody = () => {
           type="text"
           value={searchValue}
           onChange={searchValueHandler}
-          placeholder={t('common:COMMON.SEARCH')}
+          placeholder={t('search:COMMON.SEARCH')}
           className="flex-1 bg-transparent text-input-text-input-filled outline-none"
         />
         <FiSearch size={20} />

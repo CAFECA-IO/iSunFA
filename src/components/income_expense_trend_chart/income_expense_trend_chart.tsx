@@ -210,7 +210,7 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const IncomeExpenseTrendChart = () => {
-  const { t } = useTranslation(['common', 'project']);
+  const { t } = useTranslation(['alpha', 'project']);
   const { toastHandler } = useModalContext();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -325,7 +325,7 @@ const IncomeExpenseTrendChart = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('common:COMMON.EMPTY')}
+          {t('alpha:COMMON.EMPTY')}
         </div>
       </section>
     </div>
@@ -380,7 +380,7 @@ const IncomeExpenseTrendChart = () => {
 
         <div className="hidden justify-end lg:flex">
           <Tooltip>
-            <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
+            <p>{t('alpha:COMMON.TOOLTIP_MESSAGE')}</p>
           </Tooltip>
         </div>
       </div>
@@ -405,8 +405,8 @@ const IncomeExpenseTrendChart = () => {
                 onClick={() => periodChangeHandler(Period.MONTH)}
               >
                 <p>
-                  <span className="lg:hidden">{t('common:COMMON.M')}</span>
-                  <span className="hidden lg:inline">{t('common:COMMON.MONTH')}</span>
+                  <span className="lg:hidden">{t('alpha:COMMON.M')}</span>
+                  <span className="hidden lg:inline">{t('alpha:COMMON.MONTH')}</span>
                 </p>
               </Button>
             </div>
@@ -424,8 +424,8 @@ const IncomeExpenseTrendChart = () => {
                 onClick={() => periodChangeHandler(Period.YEAR)}
               >
                 <p>
-                  <span className="lg:hidden">{t('common:COMMON.Y')}</span>
-                  <span className="hidden lg:inline">{t('common:COMMON.YEAR')}</span>
+                  <span className="lg:hidden">{t('alpha:COMMON.Y')}</span>
+                  <span className="hidden lg:inline">{t('alpha:COMMON.YEAR')}</span>
                 </p>
               </Button>
             </div>

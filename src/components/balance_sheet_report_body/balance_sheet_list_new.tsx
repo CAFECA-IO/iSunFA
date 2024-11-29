@@ -41,7 +41,7 @@ const COLOR_CLASSES = [
 ];
 
 const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('balance');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   // Info: (20241112 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
   const [isPrinting, setIsPrinting] = useState(false);
@@ -290,7 +290,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('common:COMMON.NO_DATA')}
+          {t('balance:COMMON.NO_DATA')}
         </text>
       </svg>
     </div>
@@ -312,7 +312,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('common:COMMON.NO_DATA')}
+          {t('balance:COMMON.NO_DATA')}
         </text>
       </svg>
     </div>
@@ -476,7 +476,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
           getToggledState={totalSubAccountsToggleHandler}
           toggleStateFromParent={totalSubAccountsToggle}
         />
-        <span className="text-neutral-600">{t('common:COMMON.DISPLAY_SUB_ACCOUNTS')}</span>
+        <span className="text-neutral-600">{t('balance:COMMON.DISPLAY_SUB_ACCOUNTS')}</span>
       </div>
       <div className="ml-auto flex items-center gap-24px">
         <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />

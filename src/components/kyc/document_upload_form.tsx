@@ -29,7 +29,7 @@ const DocumentUploadForm = ({
             {t('kyc:KYC.BUSINESS_REGISTRATION_CERTIFICATE')}
           </h3>
           <UploadArea
-            loacalStorageFilesKey={KYCFiles}
+            localStorageFilesKey={KYCFiles}
             type={UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID}
             onChange={onChange}
           />
@@ -39,7 +39,7 @@ const DocumentUploadForm = ({
             {t('kyc:KYC.TAX_STATUS_CERTIFICATE')}
           </h3>
           <UploadArea
-            loacalStorageFilesKey={KYCFiles}
+            localStorageFilesKey={KYCFiles}
             type={UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID}
             onChange={onChange}
           />
@@ -51,7 +51,7 @@ const DocumentUploadForm = ({
             })}
           </h3>
           <UploadArea
-            loacalStorageFilesKey={KYCFiles}
+            localStorageFilesKey={KYCFiles}
             type={UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID}
             onChange={onChange}
           />
