@@ -279,9 +279,12 @@ export const handleDeleteRequest: IHandleRequest<
     payload = deletedCertificateIds;
   } catch (_error) {
     const error = _error as Error;
-    statusMessage = error.message;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    const errorInfo = {
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    };
+    loggerError(errorInfo);
   }
   return {
     statusMessage,

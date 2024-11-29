@@ -69,9 +69,12 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_GET_V2, ICerti
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   } catch (_error) {
     const error = _error as Error;
-    statusMessage = error.message;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    const errorInfo = {
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    };
+    loggerError(errorInfo);
   }
 
   return {
