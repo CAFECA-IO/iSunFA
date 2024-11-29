@@ -23,6 +23,7 @@ import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_facto
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 function formatCompanyIdAccountId(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
