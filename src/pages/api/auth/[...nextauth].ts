@@ -257,6 +257,7 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
     async redirect({ url, baseUrl }) {
       return url.startsWith(baseUrl) ? url : baseUrl;
     },
+    /**
     async jwt({ token, user }) {
       const newToken = { ...token };
       if (user) {
@@ -274,6 +275,7 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
       };
       return newSession;
     },
+    */
   },
   debug: false,
 });

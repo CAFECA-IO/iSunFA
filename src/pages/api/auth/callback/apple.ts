@@ -3,9 +3,7 @@ import { handleAppleOAuth } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
-import { getAuthOptions } from '@/pages/api/auth/[...nextauth]';
-import { Account, getServerSession } from 'next-auth';
-import { AdapterUser } from 'next-auth/adapters';
+import { encode } from 'next-auth/jwt';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -29,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { user, account } = await handleAppleOAuth(code);
     await handleSignInSession(req, res, user, account);
 
+    /**
     const authOptions = getAuthOptions(req, res);
     if (authOptions.callbacks && authOptions.callbacks.jwt) {
       loggerBack.info('call authOptions.callbacks.jwt', authOptions.callbacks.jwt);
@@ -66,6 +65,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         JSON.stringify(authOptions?.callbacks?.jwt || {})
       );
     }
+    */
+
+    // Info: (20241129 - tzuhan) Set the Session Cookie Manually
+    const tokenExpiry = parseInt(process.env.APPLE_TOKEN_EXPIRY || '3600', 10);
+    const sessionToken = await encode({
+      token: { ...user },
+      secret: process.env.NEXTAUTH_SECRET!,
+      maxAge: tokenExpiry,
+    });
+
+    res.setHeader(
+      'Set-Cookie',
+      `next-auth.session-token=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${tokenExpiry}`
+    );
+    loggerBack.info('Set the Session Cookie Manually');
 
     // Info: (20241127 - tzuhan) 登錄成功，重定向到 LOGIN，帶 signin=true
     const redirectUrl = ISUNFA_ROUTE.LOGIN;
