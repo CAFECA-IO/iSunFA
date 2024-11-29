@@ -5,11 +5,14 @@ import { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
 import { APIName } from '@/constants/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { loggerError } from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { invoicePutApiUtils as putUtils } from '@/pages/api/v2/company/[companyId]/invoice/[invoiceId]/route_utils';
-import { certificateAPIPostUtils } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
+import {
+  certificateAPIGetListUtils,
+  certificateAPIPostUtils,
+} from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
@@ -45,6 +48,20 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
   const nowInSecond = getTimestampNow();
 
   try {
+    if (certificateId && !putUtils.isCertificateExistInDB(certificateId)) {
+      putUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: 'Certificate not found',
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+      });
+    }
+
+    if (counterPartyId && !putUtils.isCounterPartyExistInDB(counterPartyId)) {
+      putUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: 'CounterParty not found',
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+      });
+    }
+
     const certificateFromPrisma = await putUtils.putInvoiceInPrisma({
       nowInSecond,
       invoiceId,
@@ -89,17 +106,19 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
       userCertificates: userCertificateEntities,
     };
 
-    const certificate: ICertificate = certificateAPIPostUtils.transformCertificateEntityToResponse(
-      certificateReadyForTransfer
-    );
+    const certificate: ICertificate =
+      certificateAPIGetListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
 
     payload = certificate;
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    });
   }
 
   return {
@@ -139,8 +158,11 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    });
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);

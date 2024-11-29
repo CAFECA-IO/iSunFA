@@ -239,7 +239,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-input-text-input-filled shadow-sm">
             <input
               type="text"
-              placeholder={t('common:COMMON.SEARCH')}
+              placeholder={t('search:COMMON.SEARCH')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none focus:outline-none"

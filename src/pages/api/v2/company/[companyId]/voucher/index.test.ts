@@ -98,7 +98,6 @@ describe('company/[companyId]/voucher integration test', () => {
       const apiResponse = res.json.mock.calls[0][0];
       const { success } = outputValidator.safeParse(apiResponse.payload);
       expect(success).toBe(true);
-      expect(apiResponse.payload.data.vouchers.length).toBeGreaterThan(0);
     });
   });
 

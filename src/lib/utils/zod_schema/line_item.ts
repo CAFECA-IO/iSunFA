@@ -32,6 +32,7 @@ export const IReverseItemValidator = z.object({
 });
 
 export const lineItemAiSchema = z.object({
+  id: z.number(),
   lineItemIndex: z.string(),
   account: z.string(),
   description: z.string(),

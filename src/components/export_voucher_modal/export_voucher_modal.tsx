@@ -42,16 +42,14 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
     }
   }, [isModalVisible]);
 
-  // Info: (20241126 - Julian) 顯示 Toast
   useEffect(() => {
     if (isLoading === false) {
       // Info: (20241126 - Julian) 顯示失敗 Toast
-
       if (!success) {
         toastHandler({
           id: 'export-voucher-error',
           type: ToastType.ERROR,
-          content: 'Failed to export voucher, please try again later.',
+          content: t('journal:VOUCHER.TOAST_EXPORT_FAILED'),
           closeable: true,
         });
       } else {
@@ -59,7 +57,7 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
         toastHandler({
           id: 'export-voucher-success',
           type: ToastType.SUCCESS,
-          content: 'Voucher exported successfully.',
+          content: t('journal:VOUCHER.TOAST_EXPORT_SUCCESS'),
           closeable: true,
         });
 

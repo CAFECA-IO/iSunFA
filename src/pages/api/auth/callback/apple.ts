@@ -3,6 +3,7 @@ import { handleAppleOAuth } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
+import { DefaultValue } from '@/constants/default_value';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -25,7 +26,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Info: (20241129 - tzuhan) Step 3: Redirect on Success
     res.redirect(`${ISUNFA_ROUTE.LOGIN}?signin=true`);
   } catch (error) {
-    loggerError(-1, 'Apple sign-in failed', error as Error);
+    const errorObject = error as Error;
+    const errorInfo = {
+      userId: DefaultValue.USER_ID.GUEST,
+      errorType: 'Apple sign-in failed',
+      errorMessage: errorObject.message,
+    };
+    loggerError(errorInfo);
     res.redirect(
       `${ISUNFA_ROUTE.LOGIN}?signin=false&error=${encodeURIComponent('Sign-in failed')}`
     );

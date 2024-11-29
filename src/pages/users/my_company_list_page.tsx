@@ -49,6 +49,7 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
         'dashboard',
         'company',
         'filter_section_type',
+        'search',
       ])),
     },
   };

@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 // Info: (20240701 - Jacky) Function to get the last committed version of package.json
 function getLastCommittedVersion(): string | null {
@@ -28,9 +29,13 @@ let packageJson: { version: string };
 try {
   packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
   packageJson = JSON.parse(packageJsonContent);
-} catch (error) {
-  const logError = loggerError(0, 'Package.json parsed failed', error as Error);
-  logError.error('Retreive packageJson in update_version.ts failed');
+} catch (_error) {
+  const error = _error as Error;
+  loggerError({
+    userId: DefaultValue.USER_ID.SYSTEM,
+    errorType: 'Package.json parsed failed',
+    errorMessage: error.message,
+  });
   process.exit(1); // Info: (20240701 - Jacky) Exit the process with an error code
 }
 
@@ -61,10 +66,12 @@ if (lastCommittedVersion) {
 // Info: (20240701 - Jacky) Update package.json with the new version
 try {
   packageJson.version = newVersion;
-  // Info:(20240730 - Jacky) - Add last line to prevent EOF error
-  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
-} catch (error) {
-  const logError = loggerError(0, 'Package.json write failed', error as Error);
-  logError.error('Update(Write) packageJson into packageJsonPath in update_version.ts failed');
+} catch (_error) {
+  const error = _error as Error;
+  loggerError({
+    userId: DefaultValue.USER_ID.SYSTEM,
+    errorType: 'Package.json write failed',
+    errorMessage: error.message,
+  });
   process.exit(1); // Info: (20240701 - Jacky) Exit the process with an error code
 }

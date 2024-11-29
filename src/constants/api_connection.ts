@@ -44,9 +44,10 @@ export enum APIName {
   CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
   CERTIFICATE_PUT_V2 = 'CERTIFICATE_PUT_V2',
+  INVOICE_POST_V2 = 'INVOICE_POST_V2',
   INVOICE_PUT_V2 = 'INVOICE_PUT_V2',
   CERTIFICATE_DELETE_V2 = 'CERTIFICATE_DELETE_V2',
-  CERTIFICATE_DELETE__MULTIPLE_V2 = 'CERTIFICATE_DELETE__MULTIPLE_V2',
+  CERTIFICATE_DELETE_MULTIPLE_V2 = 'CERTIFICATE_DELETE_MULTIPLE_V2',
   COUNTERPARTY_LIST = 'COUNTERPARTY_LIST',
   COUNTERPARTY_GET_BY_ID = 'COUNTERPARTY_GET_BY_ID',
   COUNTERPARTY_ADD = 'COUNTERPARTY_ADD',
@@ -172,9 +173,10 @@ export enum APIPath {
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
+  INVOICE_POST_V2 = `${apiPrefixV2}/company/:companyId/invoice`,
   INVOICE_PUT_V2 = `${apiPrefixV2}/company/:companyId/invoice/:invoiceId`,
   CERTIFICATE_DELETE_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
-  CERTIFICATE_DELETE__MULTIPLE_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
+  CERTIFICATE_DELETE_MULTIPLE_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   COUNTERPARTY_LIST = `${apiPrefixV2}/company/:companyId/counterparty`,
   COUNTERPARTY_ADD = `${apiPrefixV2}/company/:companyId/counterparty`,
   COUNTERPARTY_GET_BY_ID = `${apiPrefixV2}/counterparty/:counterpartyId`,
@@ -802,16 +804,21 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.DELETE,
     path: APIPath.CERTIFICATE_PUT_V2,
   }),
+  [APIName.INVOICE_POST_V2]: createConfig({
+    name: APIName.INVOICE_POST_V2,
+    method: HttpMethod.POST,
+    path: APIPath.INVOICE_POST_V2,
+  }),
   [APIName.INVOICE_PUT_V2]: createConfig({
     name: APIName.INVOICE_PUT_V2,
     method: HttpMethod.PUT,
     path: APIPath.INVOICE_PUT_V2,
   }),
   // Info: (20241028 - Tzuhan) @Murky, 需要新增這個 API 用來在 certificate list 一次性刪除多張certificate
-  [APIName.CERTIFICATE_DELETE__MULTIPLE_V2]: createConfig({
-    name: APIName.CERTIFICATE_DELETE__MULTIPLE_V2,
+  [APIName.CERTIFICATE_DELETE_MULTIPLE_V2]: createConfig({
+    name: APIName.CERTIFICATE_DELETE_MULTIPLE_V2,
     method: HttpMethod.DELETE,
-    path: APIPath.CERTIFICATE_DELETE__MULTIPLE_V2,
+    path: APIPath.CERTIFICATE_DELETE_MULTIPLE_V2,
   }),
   [APIName.COUNTERPARTY_LIST]: createConfig({
     name: APIName.COUNTERPARTY_LIST,

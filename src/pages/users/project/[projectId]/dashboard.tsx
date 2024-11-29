@@ -46,7 +46,7 @@ interface IProjectDashboardPageProps {
 }
 
 const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
-  const { t } = useTranslation(['common', 'project']);
+  const { t } = useTranslation(['alpha', 'project']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const { toastHandler } = useModalContext();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -229,7 +229,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {projectName} {t('common:NAV_BAR.DASHBOARD')} - iSunFA
+          {projectName} {t('alpha:NAV_BAR.DASHBOARD')} - iSunFA
         </title>
       </Head>
 
@@ -254,17 +254,8 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       projectId: params.projectId,
-      ...(await serverSideTranslations(locale as string, [
-        'common',
-        'report_401',
-        'journal',
-        'kyc',
-        'project',
-        'setting',
-        'terms',
-        'salary',
-        'asset',
-      ])),
+      ...(await serverSideTranslations(locale as string, ['alpha'])),
+      // Info: (20241128 - Liz) 不確定這個頁面是否還會續用，目前先把翻譯都移除，等之後版本如果確定還要用這個頁面的時候再補上翻譯
     },
   };
 };

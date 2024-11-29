@@ -563,6 +563,7 @@ export type IGetManyVoucherResponseButOne = PrismaVoucher & {
 };
 
 export interface IAIResultVoucher {
+  aiStatus: string;
   aiType: AI_TYPE;
   voucherDate: number;
   type: string;

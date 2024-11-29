@@ -287,7 +287,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="pendingReportSearchBar"
             type="text"
-            placeholder={t('common:COMMON.SEARCH')}
+            placeholder={t('search:COMMON.SEARCH')}
             value={pendingSearch}
             onChange={pendingSearchChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"
@@ -343,7 +343,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="historyReportSearchBar"
             type="text"
-            placeholder={t('common:COMMON.SEARCH')}
+            placeholder={t('search:COMMON.SEARCH')}
             value={historySearch}
             onChange={historySearchChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"
