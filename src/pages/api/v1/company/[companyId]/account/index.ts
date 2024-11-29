@@ -23,6 +23,7 @@ import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_facto
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 function formatCompanyIdAccountId(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
@@ -190,8 +191,11 @@ export async function handleGetRequest(
   try {
     paginatedAccount = await accountRetriever.getAccounts();
   } catch (error) {
-    const logError = loggerError(userId, 'Failed to retrieve accounts', error as Error);
-    logError.error('Prisma related error');
+    loggerError({
+      userId,
+      errorType: 'Failed to retrieve accounts',
+      errorMessage: (error as Error).message,
+    });
   }
   return paginatedAccount;
 }
@@ -259,8 +263,11 @@ export async function handlePostRequest(
       data: newOwnAccount,
     });
   } catch (error) {
-    const logError = loggerError(userId, 'Failed to create new own account', error as Error);
-    logError.error('Prisma related error');
+    loggerError({
+      userId,
+      errorType: 'Failed to create new own account',
+      errorMessage: (error as Error).message,
+    });
   }
   return savedNewOwnAccount;
 }
@@ -286,8 +293,11 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const logError = loggerError(0, 'handle account request failed', error);
-    logError.error('handle account request failed in handler function in account/index.ts');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'handle account request failed',
+      errorMessage: error.message,
+    });
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<IAccount | IPaginatedAccount | null>(

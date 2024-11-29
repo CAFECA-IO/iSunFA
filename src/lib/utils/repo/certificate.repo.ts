@@ -5,10 +5,11 @@ import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { PostCertificateResponse } from '@/interfaces/certificate';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { Prisma } from '@prisma/client';
-import { pageToOffset } from '@/lib/utils/common';
+import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { InvoiceTabs } from '@/constants/certificate';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function countMissingCertificate(companyId: number) {
   const missingCertificatesCount = await prisma.certificate.count({
@@ -222,13 +223,13 @@ export async function getCertificatesV2(options: {
           {
             invoices: {
               some: {
-                type, // 如果有符合的 `type`
+                type, // Info: (20241129 - Murky) 如果有符合的 `type`
               },
             },
           },
           {
             invoices: {
-              none: {}, // 沒有任何關聯的 `invoices`
+              none: {}, // Info: (20241129 - Murky) 沒有任何關聯的 `invoices`
             },
           },
         ],
@@ -264,12 +265,11 @@ export async function getCertificatesV2(options: {
   try {
     totalCount = await prisma.certificate.count({ where });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Count total count of voucher in getManyVoucherV2 failed',
-      error as Error
-    );
-    logError.error('Prisma count voucher in getManyVoucherV2 failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Count total count of voucher in getManyVoucherV2 failed',
+      errorMessage: error as Error,
+    });
   }
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -325,16 +325,15 @@ export async function getCertificatesV2(options: {
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Find many accounts in findManyAccountsInPrisma failed',
-      error as Error
-    );
-    logError.error('Prisma find many accounts in account.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Find many accounts in findManyAccountsInPrisma failed',
+      errorMessage: error as Error,
+    });
   }
 
   const hasNextPage = certificates.length > pageSize;
-  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER; // 1;
+  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER; // Info: (20241121 - Murky) DEFAULT_PAGE_NUMBER = 1;
 
   if (hasNextPage) {
     certificates.pop();
@@ -400,12 +399,11 @@ export async function getUnreadCertificateCount(options: {
     });
     unreadCertificateCount = totalCertificateCount - readCertificateCount;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Count unread voucher in getUnreadVoucherCount failed',
-      error as Error
-    );
-    logError.error('Prisma count unread voucher in getUnreadVoucherCount failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Count unread voucher in getUnreadVoucherCount failed',
+      errorMessage: error as Error,
+    });
   }
 
   return unreadCertificateCount;
@@ -460,6 +458,55 @@ export async function upsertUserReadCertificates(options: {
   });
 
   await Promise.all([updateJob, createJob]);
+}
+
+export async function listCertificateWithoutInvoice() {
+  const certificates = await prisma.certificate.findMany({
+    where: {
+      invoices: {
+        none: {},
+      },
+    },
+    select: {
+      id: true,
+      companyId: true,
+      fileId: true,
+    },
+  });
+
+  return certificates;
+}
+
+export async function listCertificateWithResultId() {
+  const certificates = await prisma.certificate.findMany({
+    where: {
+      aiResultId: {
+        notIn: ['', '0', 'done'],
+      },
+    },
+    select: {
+      id: true,
+      companyId: true,
+      aiResultId: true,
+    },
+  });
+
+  return certificates;
+}
+
+export async function updateCertificateAiResultId(certificateId: number, aiResultId: string) {
+  const nowInSecond = getTimestampNow();
+  const certificate = await prisma.certificate.update({
+    where: {
+      id: certificateId,
+    },
+    data: {
+      aiResultId,
+      updatedAt: nowInSecond,
+    },
+  });
+
+  return certificate;
 }
 
 export async function deleteMultipleCertificates(options: {

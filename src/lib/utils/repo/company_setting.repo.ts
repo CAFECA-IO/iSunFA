@@ -2,6 +2,7 @@ import prisma from '@/client';
 import { ICompanySetting } from '@/interfaces/company_setting';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getTimestampNow } from '@/lib/utils/common';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function createCompanySetting(companyId: number) {
   const nowInSecond = getTimestampNow();
@@ -24,14 +25,11 @@ export async function createCompanySetting(companyId: number) {
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'create company setting in createCompanySetting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related create company setting in createCompanySetting in company_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'create company setting in createCompanySetting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return companySetting;
@@ -48,14 +46,11 @@ export async function getCompanySettingByCompanyId(companyId: number) {
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'get company setting in getCompanySettingByCompanyId failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related get company setting in getCompanySettingByCompanyId in company_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get company setting in getCompanySettingByCompanyId failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return companySetting;
@@ -87,14 +82,11 @@ export async function updateCompanySettingById(id: number, data: ICompanySetting
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'update company setting in updateCompanySettingById failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related update company setting in updateCompanySettingById in company_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'update company setting in updateCompanySettingById failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return companySetting;
@@ -108,14 +100,11 @@ export async function deleteCompanySettingByIdForTesting(id: number) {
       where: { id },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'delete company setting in deleteCompanySettingByIdForTesting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related delete company setting in deleteCompanySettingByIdForTesting in company_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'delete company setting in deleteCompanySettingByIdForTesting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return companySetting;

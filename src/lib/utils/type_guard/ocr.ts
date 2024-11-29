@@ -1,6 +1,6 @@
 import { IOCRItem, IOCR } from '@/interfaces/ocr';
 import { ProgressStatus } from '@/constants/account';
-import { isEnumValue } from './common';
+import { isEnumValue } from '@/lib/utils/type_guard/common';
 
 export const isValidEncryptedDataForOCR = (ocr: IOCRItem): boolean => {
   const requiredFields: (keyof IOCRItem)[] = [

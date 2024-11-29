@@ -42,12 +42,11 @@ async function handlePostRequest(
             statusMessage = STATUS_MESSAGE.CREATED;
           }
         } catch (error) {
-          const logger = loggerError(
+          loggerError({
             userId,
-            'post /api/v1/company/[companyId]/kyc',
-            'Failed to create company KYC'
-          );
-          logger.error(error);
+            errorType: 'post /api/v1/company/[companyId]/kyc',
+            errorMessage: 'Failed to create company KYC',
+          });
           statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
         }
       }

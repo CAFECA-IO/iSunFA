@@ -121,8 +121,12 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    const errorInfo = {
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    };
+    loggerError(errorInfo);
   }
 
   return {
@@ -162,9 +166,12 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
-    statusMessage = error.message;
+    const errorInfo = {
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    };
+    loggerError(errorInfo);
   }
   const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);
   res.status(httpCode).json(result);

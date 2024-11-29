@@ -156,8 +156,11 @@ export const handleGetRequest: IHandleRequest<
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    });
   }
 
   return {
@@ -242,8 +245,11 @@ export const handlePostRequest: IHandleRequest<
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    });
   }
   return {
     statusMessage,
@@ -314,8 +320,11 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    });
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);

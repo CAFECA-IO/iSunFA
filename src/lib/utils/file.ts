@@ -19,15 +19,19 @@ import {
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IFileEntity } from '@/interfaces/file';
-import { getTimestampNow } from './common';
+import { getTimestampNow } from '@/lib/utils/common';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
     try {
       await fs.mkdir(folder, { recursive: true });
     } catch (error) {
-      const logError = loggerError(0, 'createFileFoldersIfNotExists failed', error as Error);
-      logError.error('Func. createFileFoldersIfNotExists in file.ts failed');
+      loggerError({
+        userId: DefaultValue.USER_ID.SYSTEM,
+        errorType: 'createFileFoldersIfNotExists failed',
+        errorMessage: error as Error,
+      });
     }
   });
   CRYPTO_FOLDER_PATH.map(async (folder) => {

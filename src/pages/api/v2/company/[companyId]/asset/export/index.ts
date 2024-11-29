@@ -115,7 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
      */
 
-    const { query, body } = checkRequestData(APIName.ASSET_LIST_EXPORT, req);
+    const { query, body } = checkRequestData(APIName.ASSET_LIST_EXPORT, req, session);
 
     if (query === null || body === null) {
       statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
@@ -145,11 +145,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       statusMessage || STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],
       null
     );
-    loggerError(
-      session.userId,
-      `Handler Request Error for ${APIName.ASSET_LIST_EXPORT} in middleware.ts`,
-      err
-    );
+    loggerError({
+      userId: session.userId,
+      errorType: `Handler Request Error for ${APIName.ASSET_LIST_EXPORT} in middleware.ts`,
+      errorMessage: err.message,
+    });
     res.status(httpCode).json(result);
   } finally {
     await logUserAction(session, APIName.ASSET_LIST_EXPORT, req, statusMessage);
