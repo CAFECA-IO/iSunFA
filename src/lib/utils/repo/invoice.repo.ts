@@ -1,8 +1,12 @@
+import prisma from '@/client';
+import { IInvoiceEntity } from '@/interfaces/invoice';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { Prisma, Invoice } from '@prisma/client';
+import { loggerError } from '@/lib/utils/logger_back';
 import { CurrencyType } from '@/constants/currency';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 import { PostCertificateResponse } from '@/interfaces/certificate';
-import { loggerError } from '@/lib/utils/logger_back';
-import prisma from '@/client';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function putInvoiceV2(options: {
   nowInSecond: number;
@@ -90,10 +94,163 @@ export async function putInvoiceV2(options: {
     };
   } catch (_error) {
     const error = _error as Error;
-    const logger = loggerError(0, 'Put Invoice V2 Error', error);
-
-    logger.error(error.message);
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Put Invoice V2 Error',
+      errorMessage: error,
+    });
   }
 
   return certificate;
+}
+
+// Info: (20241107 - Jacky) Create a new Invoice
+export async function createInvoice(
+  certificateId: number,
+  counterPartyId: number,
+  name: string,
+  inputOrOutput: string,
+  date: number,
+  no: string,
+  currencyAlias: string,
+  priceBeforeTax: number,
+  taxType: string,
+  taxRatio: number,
+  taxPrice: number,
+  totalPrice: number,
+  type: string,
+  deductible: boolean
+) {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  const newInvoice = await prisma.invoice.create({
+    data: {
+      certificateId,
+      counterPartyId,
+      name,
+      inputOrOutput,
+      date,
+      no,
+      currencyAlias,
+      priceBeforeTax,
+      taxType,
+      taxRatio,
+      taxPrice,
+      totalPrice,
+      type,
+      deductible,
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
+    },
+    include: {
+      certificate: true,
+      counterParty: true,
+    },
+  });
+  return newInvoice;
+}
+
+export async function createManyInvoice(invoicelist: IInvoiceEntity[]) {
+  const newInvoices = await prisma.invoice.createMany({
+    data: invoicelist,
+  });
+  return newInvoices;
+}
+
+// Info: (20241107 - Jacky) Get an Invoice by ID
+export async function getInvoiceById(id: number) {
+  let invoice = null;
+  if (id > 0) {
+    invoice = await prisma.invoice.findUnique({
+      where: {
+        id,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      include: {
+        certificate: true,
+        counterParty: true,
+      },
+    });
+  }
+  return invoice;
+}
+
+// Info: (20241107 - Jacky) Update an Invoice
+export async function updateInvoice(
+  id: number,
+  certificateId: number,
+  counterPartyId: number,
+  name: string,
+  inputOrOutput: string,
+  date: number,
+  no: string,
+  currencyAlias: string,
+  priceBeforeTax: number,
+  taxType: string,
+  taxRatio: number,
+  taxPrice: number,
+  totalPrice: number,
+  type: string,
+  deductible: boolean
+) {
+  const nowInSecond = getTimestampNow();
+  const updatedInvoice = await prisma.invoice.update({
+    where: {
+      id,
+      deletedAt: null,
+    },
+    data: {
+      certificateId,
+      counterPartyId,
+      name,
+      inputOrOutput,
+      date,
+      no,
+      currencyAlias,
+      priceBeforeTax,
+      taxType,
+      taxRatio,
+      taxPrice,
+      totalPrice,
+      type,
+      deductible,
+      updatedAt: nowInSecond,
+    },
+    include: {
+      certificate: true,
+      counterParty: true,
+    },
+  });
+  return updatedInvoice;
+}
+
+// Info: (20241107 - Jacky) Soft delete an Invoice
+export async function deleteInvoice(id: number) {
+  const nowInSecond = getTimestampNow();
+  const deletedInvoice = await prisma.invoice.update({
+    where: {
+      id,
+      deletedAt: null,
+    },
+    data: {
+      updatedAt: nowInSecond,
+      deletedAt: nowInSecond,
+    },
+    include: {
+      certificate: true,
+      counterParty: true,
+    },
+  });
+  return deletedInvoice;
+}
+
+// Info: (20241107 - Jacky) Real delete for testing
+export async function deleteInvoiceForTesting(id: number): Promise<Invoice> {
+  const where: Prisma.InvoiceWhereUniqueInput = {
+    id,
+  };
+  const deletedInvoice = await prisma.invoice.delete({
+    where,
+  });
+  return deletedInvoice;
 }

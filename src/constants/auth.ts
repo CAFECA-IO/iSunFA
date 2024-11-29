@@ -1,5 +1,5 @@
 import { APIName } from '@/constants/api_connection';
-import { UploadType } from './file';
+import { UploadType } from '@/constants/file';
 
 export enum AuthFunctionsKeysNew {
   user = 'user',

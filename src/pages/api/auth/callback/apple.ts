@@ -12,6 +12,7 @@ import { UserActionLogActionType } from '@/constants/user_action_log';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 async function fetchImageInfo(imageUrl: string): Promise<{
   iconUrl: string;
@@ -163,8 +164,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.redirect(`${ISUNFA_ROUTE.LOGIN}`);
   } catch (err) {
     // Info: (20241127 - tzuhan) 錯誤處理
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    loggerError(-1, 'Apple sign-in failed', err as Error);
-    res.redirect(`${ISUNFA_ROUTE.LOGIN}?signin=false&error=${encodeURIComponent(errorMessage)}`);
+    const errorInfo = {
+      userId: DefaultValue.USER_ID.GUEST,
+      errorType: 'Apple sign-in failed',
+      errorMessage: err instanceof Error ? err.message : 'Unknown error',
+    };
+    loggerError(errorInfo);
+    res.redirect(
+      `${ISUNFA_ROUTE.LOGIN}?signin=false&error=${encodeURIComponent(errorInfo.errorMessage)}`
+    );
   }
 }

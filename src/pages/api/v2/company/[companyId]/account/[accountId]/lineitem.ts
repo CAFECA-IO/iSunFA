@@ -32,8 +32,6 @@ const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: GetVoucherByAccountResponse | null = null;
 
-  const logger = loggerError(userId, 'GET', 'Get reverse line item by account');
-
   try {
     const paginatedLineItemsFromDB = await getUtils.getLineItemsByAccountIdFromPrisma({
       accountId,
@@ -67,7 +65,11 @@ const handleGetRequest: IHandleRequest<
     };
   } catch (_error) {
     const error = _error as Error;
-    logger.error(error);
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    });
     statusMessage = error.message;
   }
 
@@ -109,8 +111,11 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    });
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);

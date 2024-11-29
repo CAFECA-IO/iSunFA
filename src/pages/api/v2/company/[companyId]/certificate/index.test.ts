@@ -3,8 +3,12 @@ import handler from '@/pages/api/v2/company/[companyId]/certificate/index';
 import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { InvoiceTabs } from '@/constants/certificate';
-import { certificateListSchema, certificatePostSchema } from '@/lib/utils/zod_schema/certificate';
 import { InvoiceType } from '@/constants/invoice';
+import {
+  certificateListSchema,
+  certificatePostSchema,
+  // Info: (20241122 - tzuhan) certificatePostSchema
+} from '@/lib/utils/zod_schema/certificate';
 
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({

@@ -3,7 +3,7 @@ import BalanceSheetGenerator from '@/lib/utils/report/balance_sheet_generator';
 import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
 import CashFlowStatementGenerator from '@/lib/utils/report/cash_flow_statement_generator';
 import ReportGenerator from '@/lib/utils/report/report_generator';
-import Report401Generator from './report_401_generator';
+import Report401Generator from '@/lib/utils/report/report_401_generator';
 
 export default class ReportGeneratorFactory {
   static async createGenerator(

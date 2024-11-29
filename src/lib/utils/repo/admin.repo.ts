@@ -17,6 +17,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
 import { COMPANY_TAG } from '@/constants/company';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function listAdminByCompanyId(companyId: number): Promise<
   (Admin & {
@@ -420,14 +421,11 @@ export async function listCompanyAndRole(
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'find many company roles in listCompanyAndRole failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related find many company roles in listCompanyAndRole in admin.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'list company and role in listCompanyAndRole failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   const totalCount = companyRoleList.length;

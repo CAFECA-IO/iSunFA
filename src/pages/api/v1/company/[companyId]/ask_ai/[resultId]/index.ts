@@ -132,12 +132,11 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      const logError = await loggerError(
+      loggerError({
         userId,
-        'get_ask_ai_resultId',
-        'get_ask_ai_resultId failed'
-      );
-      logError.error(error);
+        errorType: error.name,
+        errorMessage: error.message,
+      });
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

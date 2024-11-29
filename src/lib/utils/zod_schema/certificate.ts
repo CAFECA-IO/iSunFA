@@ -20,7 +20,7 @@ import { counterPartyEntityValidator } from '@/constants/counterparty';
 import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
 import { userEntityValidator } from '@/lib/utils/zod_schema/user';
 import { ICertificate } from '@/interfaces/certificate';
-import { userCertificateEntityValidator } from './user_certificate';
+import { userCertificateEntityValidator } from '@/lib/utils/zod_schema/user_certificate';
 
 const nullSchema = z.union([z.object({}), z.string()]);
 
