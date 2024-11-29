@@ -10,7 +10,7 @@ interface IPasskeySupportModal {
 }
 
 const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasskeySupportModal) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('alpha');
 
   const isDisplayedPasskeySupportModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
@@ -22,7 +22,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
         </div>
         <div className="mx-auto flex pb-4 pt-4">
           <div className="flex w-full flex-1 flex-col justify-between text-center text-xl font-bold text-card-text-primary">
-            <div className="">{t('common:PASSKEY_SUPPORT_MODAL.PASSKEY_SUPPORT_SUMMARY')}</div>
+            <div className="">{t('alpha:PASSKEY_SUPPORT_MODAL.PASSKEY_SUPPORT_SUMMARY')}</div>
           </div>
         </div>
         <div className="mt-2 flex w-full flex-col justify-center space-y-4">
@@ -31,7 +31,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
               <Image src="/icons/android_icon.svg" alt="android_icon" width={20} height={20} />
             </div>
             <div className="flex flex-1 flex-col justify-center text-xs text-tree-text-primary">
-              {t('common:PASSKEY_SUPPORT_MODAL.ANDROID')}
+              {t('alpha:PASSKEY_SUPPORT_MODAL.ANDROID')}
             </div>
             <div className="flex items-center justify-center">
               <Image src="/icons/checked_mark.svg" alt="checked_mark" width={20} height={20} />
@@ -42,7 +42,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
               <Image src="/icons/mac_os_icon.svg" alt="mac_os_icon" width={20} height={20} />
             </div>
             <div className="flex flex-1 flex-col justify-center text-xs text-tree-text-primary">
-              {t('common:PASSKEY_SUPPORT_MODAL.MACOS')}
+              {t('alpha:PASSKEY_SUPPORT_MODAL.MACOS')}
             </div>
             <div className="flex items-center justify-center">
               <Image src="/icons/checked_mark.svg" alt="checked_mark" width={20} height={20} />
@@ -54,7 +54,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
             </div>
 
             <div className="flex flex-1 flex-col justify-center text-xs text-tree-text-primary">
-              {t('common:PASSKEY_SUPPORT_MODAL.IOS')}
+              {t('alpha:PASSKEY_SUPPORT_MODAL.IOS')}
             </div>
             <div className="flex items-center justify-center">
               <Image src="/icons/checked_mark.svg" alt="checked_mark" width={20} height={20} />
@@ -68,7 +68,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
             onClick={modalVisibilityHandler}
             className="w-full lg:w-90px"
           >
-            {t('common:PASSKEY_SUPPORT_MODAL.GOT_IT')}
+            {t('alpha:PASSKEY_SUPPORT_MODAL.GOT_IT')}
           </Button>
         </div>
       </div>

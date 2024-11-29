@@ -139,12 +139,12 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
   };
 };
 
-function rocYearToAD(rocYear: string, sperator: string): string {
+function rocYearToAD(rocYear: string, separator: string): string {
   let modifiedRocYear = rocYear;
-  if (rocYear.split(sperator)[0].length < 4) {
+  if (rocYear.split(separator)[0].length < 4) {
     // Info 民國年
-    const year = parseInt(rocYear.split(sperator)[0], 10) + 1911;
-    modifiedRocYear = `${year}-${rocYear.split(sperator)[1]}-${rocYear.split(sperator)[2]}`;
+    const year = parseInt(rocYear.split(separator)[0], 10) + 1911;
+    modifiedRocYear = `${year}-${rocYear.split(separator)[1]}-${rocYear.split(separator)[2]}`;
   }
   return modifiedRocYear;
 }
@@ -572,10 +572,10 @@ export const loadFileFromLocalStorage = (
 
 export const deleteFileFromLocalStorage = (
   fileType: UploadDocumentKeys,
-  loacalStorageFilesKey: string = KYCFiles,
+  localStorageFilesKey: string = KYCFiles,
   fileId?: number
 ) => {
-  const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
+  const currentData = JSON.parse(localStorage.getItem(localStorageFilesKey) || '{}');
   const data = currentData;
   let newData = {
     ...data,
@@ -604,7 +604,7 @@ export const deleteFileFromLocalStorage = (
       }
     }
   }
-  localStorage.setItem(loacalStorageFilesKey, JSON.stringify(newData));
+  localStorage.setItem(localStorageFilesKey, JSON.stringify(newData));
 };
 
 export function getEnumValue<T extends object>(enumObj: T, value: string): T[keyof T] | undefined {

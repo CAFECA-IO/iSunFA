@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import { Account } from 'next-auth';
+import { AdapterUser } from 'next-auth/adapters';
 
 export const generateAppleClientSecret = (): string => {
   const { APPLE_PRIVATE_KEY, APPLE_TEAM_ID, APPLE_CLIENT_ID, APPLE_KEY_ID, APPLE_TOKEN_EXPIRY } =
@@ -40,3 +42,54 @@ export const generateAppleClientSecret = (): string => {
     throw new Error(`Failed to generate Apple client secret: ${(error as Error).message}`);
   }
 };
+
+export async function handleAppleOAuth(code: string) {
+  if (!process.env.APPLE_CLIENT_ID || !process.env.APPLE_REDIRECT_URI) {
+    throw new Error('Apple OAuth environment variables are missing.');
+  }
+
+  // Info: (20241127 - tzuhan) 生成 Apple Client Secret
+  const clientSecret = generateAppleClientSecret();
+
+  // Info: (20241127 - tzuhan) 使用 fetch 發送請求到 Apple 的 /auth/token 端點
+  const tokenResponse = await fetch('https://appleid.apple.com/auth/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: process.env.APPLE_CLIENT_ID!,
+      client_secret: clientSecret,
+      code,
+      grant_type: 'authorization_code',
+      redirect_uri: process.env.APPLE_REDIRECT_URI!,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    throw new Error(`Token exchange failed: ${tokenResponse.statusText}`);
+  }
+
+  const tokenData = await tokenResponse.json();
+  const { id_token: idToken } = tokenData;
+
+  // Info: (20241127 - tzuhan) 解碼 id_token 提取用戶數據
+  const decoded = jwt.decode(idToken) as {
+    email?: string;
+    sub: string;
+    name?: string;
+    image?: string;
+  };
+  const account: Account = {
+    provider: 'apple',
+    providerAccountId: decoded?.sub,
+    type: 'oauth',
+  };
+  const user: AdapterUser = {
+    id: decoded?.sub,
+    email: decoded?.email ?? '',
+    name: decoded?.name,
+    image: decoded?.image,
+    emailVerified: null,
+  };
+
+  return { user, account };
+}

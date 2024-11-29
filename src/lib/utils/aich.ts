@@ -57,7 +57,7 @@ export function getAichUrl(endPoint: AICH_APIS_TYPES, aichResultId?: string): st
 export const fetchResultIdFromAICH = async (key: AI_TYPE, formData: FormData): Promise<string> => {
   const aichPath = AICH_PATH[key];
 
-  let resultId = 'fetchAIResultIdError';
+  let resultId = '';
 
   try {
     // Info: (20241125 - Jacky) Don't set headers, let fetch handle it

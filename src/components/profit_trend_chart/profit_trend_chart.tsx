@@ -186,7 +186,7 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const ProfitTrendChart = () => {
-  const { t } = useTranslation(['common', 'project']);
+  const { t } = useTranslation(['alpha', 'project']);
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
   const [data, setData] = React.useState(DUMMY_PROFIT_TREND_CHART_DATA[selectedPeriod]);
 
@@ -202,7 +202,7 @@ const ProfitTrendChart = () => {
 
         <div className="justify-end">
           <Tooltip>
-            <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
+            <p>{t('alpha:COMMON.TOOLTIP_MESSAGE')}</p>
           </Tooltip>
         </div>
       </div>
@@ -240,7 +240,7 @@ const ProfitTrendChart = () => {
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.MONTH)}
               >
-                {t('common:COMMON.MONTH')}
+                {t('alpha:COMMON.MONTH')}
               </Button>
             </div>
             <div className="">
@@ -255,7 +255,7 @@ const ProfitTrendChart = () => {
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.YEAR)}
               >
-                {t('common:COMMON.YEAR')}
+                {t('alpha:COMMON.YEAR')}
               </Button>
             </div>
           </div>

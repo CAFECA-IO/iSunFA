@@ -4,6 +4,8 @@ import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/cons
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { PostCertificateResponse } from '@/interfaces/certificate';
 import loggerBack from '@/lib/utils/logger_back';
+import { getOneCertificateByIdWithoutInclude } from '@/lib/utils/repo/certificate.repo';
+import { getCounterpartyById } from '@/lib/utils/repo/counterparty.repo';
 import { putInvoiceV2 } from '@/lib/utils/repo/invoice.repo';
 import { Logger } from 'pino';
 
@@ -29,6 +31,16 @@ export const invoicePutApiUtils = {
   ) => {
     logger.error(errorMessage);
     throw new Error(statusMessage);
+  },
+
+  isCertificateExistInDB: async (certificateId: number): Promise<boolean> => {
+    const certificate = await getOneCertificateByIdWithoutInclude(certificateId);
+    return !!certificate;
+  },
+
+  isCounterPartyExistInDB: async (counterPartyId: number): Promise<boolean> => {
+    const counterParty = await getCounterpartyById(counterPartyId);
+    return !!counterParty;
   },
 
   putInvoiceInPrisma: async (options: {

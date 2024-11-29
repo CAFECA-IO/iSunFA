@@ -63,7 +63,7 @@ const AccountingTitlePage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'setting'])),
+    ...(await serverSideTranslations(locale, ['common', 'setting', 'search'])),
   },
 });
 

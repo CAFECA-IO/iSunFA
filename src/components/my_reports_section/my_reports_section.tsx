@@ -361,7 +361,7 @@ const MyReportsSection = () => {
           }
         }}
         type="text"
-        placeholder={t('common:COMMON.SEARCH')}
+        placeholder={t('search:COMMON.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
       />
       <div
@@ -596,7 +596,7 @@ const MyReportsSection = () => {
           }
         }}
         type="text"
-        placeholder={t('common:COMMON.SEARCH')}
+        placeholder={t('search:COMMON.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
       />
       <div

@@ -16,6 +16,8 @@
     "STATUS_NORMAL": "Normal",
     "EXPORT_ASSET_LIST_WARNING_TITLE": "Warning",
     "EXPORT_ASSET_LIST_WARNING_CONTENT": "Please select at least one asset to export.",
+    "TOAST_EXPORT_SUCCESS": "Asset exported successfully.",
+    "TOAST_EXPORT_FAILED": "Failed to export asset, please try again later.",
     "OK_BTN": "OK"
   },
   "STATUS_SETTING_MODAL": {
@@ -80,5 +82,13 @@
     "CONFIRM_MESSAGE_TITLE": "Are you sure you want to update this asset?",
     "CONFIRM_MESSAGE_BTN": "Yes, update the asset",
     "TOAST_SUCCESS": "Asset has been updated"
+  },
+  "COMMON": {
+    "CANCEL": "Cancel",
+    "M": "M",
+    "Y": "Y",
+    "D": "D",
+    "SELECT": "Select",
+    "SELECT_ALL": "Select All"
   }
 }

@@ -15,8 +15,8 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useUserCtx } from '@/contexts/user_context';
 import FilterSection from '@/components/filter_section/filter_section';
 import { IPaginatedData } from '@/interfaces/pagination';
-import PrintButton from './print_button';
-import DownloadButton from './download_button';
+import PrintButton from '@/components/button/print_button';
+import DownloadButton from '@/components/button/download_button';
 
 // Info: (20241107 - Anna) 接收父層傳入的科目名稱作為 prop
 interface BalanceDetailsButtonProps {
