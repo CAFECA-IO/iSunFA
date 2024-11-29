@@ -98,9 +98,12 @@ export async function postInvoiceV2(options: {
     };
   } catch (_error) {
     const error = _error as Error;
-    const logger = loggerError(0, 'Put Invoice V2 Error', error);
-
-    logger.error(error.message);
+    const errorInfo = {
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Post Invoice V2 Error',
+      errorMessage: error.message,
+    };
+    loggerError(errorInfo);
   }
 
   return certificate;
