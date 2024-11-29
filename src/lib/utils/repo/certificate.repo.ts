@@ -186,13 +186,13 @@ export async function getCertificatesV2(options: {
           {
             invoices: {
               some: {
-                type, // 如果有符合的 `type`
+                type, // Info: (20241129 - Murky) 如果有符合的 `type`
               },
             },
           },
           {
             invoices: {
-              none: {}, // 沒有任何關聯的 `invoices`
+              none: {}, // Info: (20241129 - Murky) 沒有任何關聯的 `invoices`
             },
           },
         ],
@@ -296,7 +296,7 @@ export async function getCertificatesV2(options: {
   }
 
   const hasNextPage = certificates.length > pageSize;
-  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER; // 1;
+  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER; // Info: (20241121 - Murky) DEFAULT_PAGE_NUMBER = 1;
 
   if (hasNextPage) {
     certificates.pop();
