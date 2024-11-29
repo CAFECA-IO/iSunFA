@@ -117,6 +117,43 @@ export async function createCertificateWithEmptyInvoice(options: {
   return certificate;
 }
 
+export async function getOneCertificateById(
+  certificateId: number,
+  optional?: {
+    isDeleted?: boolean;
+  }
+): Promise<PostCertificateResponse | null> {
+  let certificate: PostCertificateResponse | null = null;
+  const { isDeleted } = optional || {};
+  try {
+    certificate = await prisma.certificate.findUnique({
+      where: {
+        id: certificateId,
+        deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
+      },
+      include: {
+        voucherCertificates: {
+          include: {
+            voucher: true,
+          },
+        },
+        file: true,
+        UserCertificate: true,
+        invoices: {
+          include: {
+            counterParty: true,
+          },
+        },
+        uploader: true,
+      },
+    });
+  } catch (error) {
+    loggerBack.error(`getOneCertificateById: ${JSON.stringify(error, null, 2)}`);
+  }
+
+  return certificate;
+}
+
 export async function getCertificatesV2(options: {
   companyId: number;
   page: number;
@@ -470,4 +507,59 @@ export async function updateCertificateAiResultId(certificateId: number, aiResul
   });
 
   return certificate;
+}
+
+export async function deleteMultipleCertificates(options: {
+  certificateIds: number[];
+  nowInSecond: number;
+}): Promise<number[]> {
+  const { certificateIds, nowInSecond } = options;
+  const certificateUpdateWhere: Prisma.CertificateWhereInput = {
+    id: {
+      in: certificateIds,
+    },
+  };
+
+  const [updateIdResults] = await prisma.$transaction([
+    prisma.certificate.findMany({
+      where: certificateUpdateWhere,
+      select: {
+        id: true,
+      },
+    }),
+    prisma.userCertificate.deleteMany({
+      where: {
+        certificateId: {
+          in: certificateIds,
+        },
+      },
+    }),
+    prisma.voucherCertificate.deleteMany({
+      where: {
+        certificateId: {
+          in: certificateIds,
+        },
+      },
+    }),
+    prisma.invoice.updateMany({
+      where: {
+        certificateId: {
+          in: certificateIds,
+        },
+      },
+      data: {
+        updatedAt: nowInSecond,
+        deletedAt: nowInSecond,
+      },
+    }),
+    prisma.certificate.updateMany({
+      where: certificateUpdateWhere,
+      data: {
+        deletedAt: nowInSecond,
+        updatedAt: nowInSecond,
+      },
+    }),
+  ]);
+  const deletedIds = updateIdResults.map((result) => result.id);
+  return deletedIds;
 }

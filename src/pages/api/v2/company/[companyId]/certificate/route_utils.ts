@@ -1,5 +1,6 @@
 import {
   createCertificateWithEmptyInvoice,
+  deleteMultipleCertificates,
   getCertificatesV2,
   getUnreadCertificateCount,
   upsertUserReadCertificates,
@@ -363,6 +364,7 @@ export const certificateAPIGetListUtils = {
       return acc + certificate.invoice.totalPrice;
     }, 0);
   },
+
   upsertUserReadCertificates: (options: {
     certificateIdsBeenRead: number[];
     userId: number;
@@ -375,6 +377,7 @@ export const certificateAPIGetListUtils = {
       nowInSecond,
     });
   },
+
   transformCertificateEntityToResponse: (
     certificateEntity: ICertificateEntity & {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
@@ -446,6 +449,12 @@ export const certificateAPIGetListUtils = {
     };
 
     return certificate;
+  },
+};
+
+export const certificateAPIDeleteMultipleUtils = {
+  deleteCertificates: async (options: { certificateIds: number[]; nowInSecond: number }) => {
+    return deleteMultipleCertificates(options);
   },
 };
 
