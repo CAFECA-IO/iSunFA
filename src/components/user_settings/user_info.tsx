@@ -57,8 +57,10 @@ const UserInfo: React.FC<UserInfoProps> = ({
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-700">
           <FiMail size={16} />
-          <div className="flex items-center gap-1">
-            <span className="text-text-neutral-mute">{t('setting:NORMAL.LINKED_EMAIL')}:</span>
+          <div className="flex max-w-280px flex-wrap items-center gap-1">
+            <span className="min-w-130px text-text-neutral-mute">
+              {t('setting:NORMAL.LINKED_EMAIL')}:
+            </span>
             <span className="text-base font-semibold text-text-neutral-primary">{email}</span>
           </div>
         </div>
@@ -75,10 +77,9 @@ const UserInfo: React.FC<UserInfoProps> = ({
             className="justify-start p-0 text-base font-normal"
             onClick={toggleIPModal}
           >
-            <p className="flex gap-2">
-              <span>
-                {extractLoginDevice(loginDevice)} / {loginIP}
-              </span>
+            <p className="flex max-w-280px flex-wrap gap-1">
+              <span>{extractLoginDevice(loginDevice)} /</span>
+              <span>{loginIP}</span>
             </p>
           </Button>
         </div>

@@ -1,19 +1,20 @@
-import NextAuth from 'next-auth';
+import NextAuth, { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 // import AppleProvider from 'next-auth/providers/apple';
 // import { generateAppleClientSecret } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { destroySession, getSession, setSession } from '@/lib/utils/session';
+import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
+/* Info: (20241128 - tzuhan) move to @/lib/utils/signIn
 import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import { FileFolder, PUBLIC_IMAGE_ID } from '@/constants/file';
-import { APIPath } from '@/constants/api_connection';
-import { UserActionLogActionType } from '@/constants/user_action_log';
-import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
-import { STATUS_MESSAGE } from '@/constants/status_code';
+*/
 import { loggerError } from '@/lib/utils/logger_back';
+import { handleSignInSession } from '@/lib/utils/signIn';
+import { handleSignOutSession } from '@/lib/utils/signout';
+import { DefaultValue } from '@/constants/default_value';
 // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
 // import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 // import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
@@ -75,6 +76,7 @@ import { loggerError } from '@/lib/utils/logger_back';
  * - 選擇公司的操作更新資料庫和 session，確保用戶狀態的一致性。
  */
 
+/* Info: (20241128 - tzuhan) @Murky move to @/lib/utils/signIn
 async function fetchImageInfo(imageUrl: string): Promise<{
   iconUrl: string;
   mimeType: string;
@@ -100,157 +102,155 @@ async function fetchImageInfo(imageUrl: string): Promise<{
     size,
   };
 }
+*/
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  return NextAuth(req, res, {
-    providers: [
-      GoogleProvider({
-        clientId: process.env.GOOGLE_CLIENT_ID as string,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      }),
-    ],
-    /** Info: (20241127 - tzuhan) Apple login 單獨實作
-      AppleProvider({
-        clientId: process.env.APPLE_CLIENT_ID as string,
-        clientSecret: generateAppleClientSecret(),
-        authorization: {
-          params: {
-            response_type: 'code', // Info: (20241127-tzuhan) 指定授權類型
-            scope: 'openid email', // Info: (20241127-tzuhan) 必須包含 openid 和 email
-            response_mode: 'form_post', // Info: (20241127-tzuhan) 使用 form_post 方式回傳
-          },
-        },
-        checks: ['pkce'],
-      }),
-    ],
-    cookies: {
-      pkceCodeVerifier: {
-        name: 'next-auth.pkce.code_verifier',
-        options: {
-          httpOnly: true,
-          sameSite: 'none',
-          secure: true,
-          maxAge: 900,
+export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextAuthOptions => ({
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
+  ],
+  /** Info: (20241127 - tzuhan) Apple login 單獨實作
+    AppleProvider({
+      clientId: process.env.APPLE_CLIENT_ID as string,
+      clientSecret: generateAppleClientSecret(),
+      authorization: {
+        params: {
+          response_type: 'code', // Info: (20241127-tzuhan) 指定授權類型
+          scope: 'openid email', // Info: (20241127-tzuhan) 必須包含 openid 和 email
+          response_mode: 'form_post', // Info: (20241127-tzuhan) 使用 form_post 方式回傳
         },
       },
+      checks: ['pkce'],
+    }),
+  ],
+  cookies: {
+    pkceCodeVerifier: {
+      name: 'next-auth.pkce.code_verifier',
+      options: {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+        maxAge: 900,
+      },
     },
-    */
-    pages: {
-      signIn: ISUNFA_ROUTE.LOGIN,
+  },
+  */
+  session: {
+    strategy: 'jwt', // Info: (20241129-tzuhan) 僅使用 JWT
+  },
+  pages: {
+    signIn: ISUNFA_ROUTE.LOGIN,
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  events: {
+    signOut: async () => {
+      await handleSignOutSession(req, res);
     },
-    secret: process.env.NEXTAUTH_SECRET,
-    events: {
-      signOut: async () => {
-        const session = await getSession(req, res);
+  },
+  callbacks: {
+    async signIn({ user, account }) {
+      const session = await getSession(req, res);
+      try {
+        if (!account) throw Error('Account not found');
+        await handleSignInSession(req, res, user, account);
+        /* /* Info: (20241128 - tzuhan) @Anna, @Jacky, @Murky move to @/lib/utils/signIn
+        // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
+        // let Dbuser;
+        // const { invitation } = (account?.params || {}) as { invitation: string };
+        const getUser = await getUserByCredential(account?.providerAccountId || user.id);
+        if (!getUser) {
+          // Info: (20240813 - Tzuhan) check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
+          if (account && user) {
+            let userImage = {
+              iconUrl: user.image ?? '',
+              mimeType: 'image/jpeg',
+              size: 0,
+            };
+
+            if (user.image) {
+              userImage = await fetchImageInfo(user.image);
+            } else {
+              userImage = await generateIcon(user.name ?? '');
+            }
+            const imageName = user.name + '_icon';
+            const file = await createFile({
+              name: imageName,
+              size: userImage.size,
+              mimeType: userImage.mimeType,
+              type: FileFolder.TMP,
+              url: userImage.iconUrl,
+              isEncrypted: false,
+              encryptedSymmetricKey: '',
+            });
+            const createdUser = await createUserByAuth({
+              name: user.name || '',
+              email: user.email || '',
+              provider: account.provider,
+              credentialId: account.providerAccountId,
+              method: account.type,
+              authData: account,
+              imageId: file?.id ?? PUBLIC_IMAGE_ID,
+            });
+            await setSession(session, { userId: createdUser.user.id });
+
+            // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
+            // Dbuser = createdUser;
+          }
+        } else {
+          // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
+          // Dbuser = getUser;
+          // ToDo: (20241121 - Jacky) Delete User from DB if deletedAt + 7 days is less than current date
+          await setSession(session, { userId: getUser.user.id });
+        }
         await createUserActionLog({
           sessionId: session.id,
-          userId: session.userId,
-          actionType: UserActionLogActionType.LOGOUT,
-          actionDescription: UserActionLogActionType.LOGOUT,
-          ipAddress: (req.headers['x-forwarded-for'] as string) || '',
-          userAgent: (req.headers['user-agent'] as string) || '',
-          apiEndpoint: APIPath.SIGN_OUT,
+          userId: session.userId || -1,
+          actionType: UserActionLogActionType.LOGIN,
+          actionDescription: UserActionLogActionType.LOGIN,
+          ipAddress: req.headers['x-forwarded-for'] as string,
+          userAgent: req.headers['user-agent'] as string,
+          apiEndpoint: req.url || APIPath.SIGN_IN,
           httpMethod: req.method || '',
-          requestPayload: {},
+          requestPayload: req.body,
           statusMessage: STATUS_MESSAGE.SUCCESS,
         });
-        destroySession(session);
-      },
-    },
-    callbacks: {
-      async signIn({ user, account }) {
-        const session = await getSession(req, res);
-        try {
-          // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
-          // let Dbuser;
-          // const { invitation } = (account?.params || {}) as { invitation: string };
-          const getUser = await getUserByCredential(account?.providerAccountId || user.id);
-          if (!getUser) {
-            // Info: (20240813 - Tzuhan) check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
-            if (account && user) {
-              let userImage = {
-                iconUrl: user.image ?? '',
-                mimeType: 'image/jpeg',
-                size: 0,
-              };
-
-              if (user.image) {
-                userImage = await fetchImageInfo(user.image);
-              } else {
-                userImage = await generateIcon(user.name ?? '');
-              }
-              const imageName = user.name + '_icon';
-              const file = await createFile({
-                name: imageName,
-                size: userImage.size,
-                mimeType: userImage.mimeType,
-                type: FileFolder.TMP,
-                url: userImage.iconUrl,
-                isEncrypted: false,
-                encryptedSymmetricKey: '',
-              });
-              const createdUser = await createUserByAuth({
-                name: user.name || '',
-                email: user.email || '',
-                provider: account.provider,
-                credentialId: account.providerAccountId,
-                method: account.type,
-                authData: account,
-                imageId: file?.id ?? PUBLIC_IMAGE_ID,
-              });
-              await setSession(session, { userId: createdUser.user.id });
-
-              // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
-              // Dbuser = createdUser;
-            }
-          } else {
-            // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
-            // Dbuser = getUser;
-            // ToDo: (20241121 - Jacky) Delete User from DB if deletedAt + 7 days is less than current date
-            await setSession(session, { userId: getUser.user.id });
-          }
-          await createUserActionLog({
-            sessionId: session.id,
-            userId: session.userId || -1,
-            actionType: UserActionLogActionType.LOGIN,
-            actionDescription: UserActionLogActionType.LOGIN,
-            ipAddress: req.headers['x-forwarded-for'] as string,
-            userAgent: req.headers['user-agent'] as string,
-            apiEndpoint: req.url || APIPath.SIGN_IN,
-            httpMethod: req.method || '',
-            requestPayload: req.body,
-            statusMessage: STATUS_MESSAGE.SUCCESS,
-          });
-          /* Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
-          if (invitationCode) {
-            const getInvitation = await getInvitationByCode(invitationCode);
-            if (getInvitation) {
-              const isValid = await isInvitationValid(getInvitation);
-              if (isValid) {
-                await useInvitation(getInvitation, Dbuser?.id ?? 0);
-                // ToDo: (20240829 - Jacky) Add error handling with logger
-                // statusMessage = admin
-                //   ? STATUS_MESSAGE.CREATED_INVITATION
-                //   : STATUS_MESSAGE.INVITATION_CONFLICT;
-              }
+        /* Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
+        if (invitationCode) {
+          const getInvitation = await getInvitationByCode(invitationCode);
+          if (getInvitation) {
+            const isValid = await isInvitationValid(getInvitation);
+            if (isValid) {
+              await useInvitation(getInvitation, Dbuser?.id ?? 0);
+              // ToDo: (20240829 - Jacky) Add error handling with logger
+              // statusMessage = admin
+              //   ? STATUS_MESSAGE.CREATED_INVITATION
+              //   : STATUS_MESSAGE.INVITATION_CONFLICT;
             }
           }
-          */
-        } catch (_error) {
-          // ToDo: (20240829 - Jacky) Add error handling with logger
-          const error = _error as Error;
-          loggerError({
-            userId: session.userId || -1,
-            errorType: 'Error in signIn callback',
-            errorMessage: error.message,
-          });
         }
-        return true;
-      },
-      async redirect({ url, baseUrl }) {
-        return url.startsWith(baseUrl) ? url : baseUrl;
-      },
+        */
+      } catch (_error) {
+        // ToDo: (20240829 - Jacky) Add error handling with logger
+        const error = _error as Error;
+        const errorInfo = {
+          userId: session.userId || DefaultValue.USER_ID.GUEST,
+          errorType: 'signIn failed',
+          errorMessage: error.message,
+        };
+        loggerError(errorInfo);
+      }
+      return true;
     },
-    debug: false,
-  });
+    async redirect({ url, baseUrl }) {
+      return url.startsWith(baseUrl) ? url : baseUrl;
+    },
+  },
+  debug: false,
+});
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  const authOptions = getAuthOptions(req, res);
+  return NextAuth(req, res, authOptions);
 }
