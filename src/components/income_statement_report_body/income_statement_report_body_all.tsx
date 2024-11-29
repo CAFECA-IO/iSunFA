@@ -6,11 +6,12 @@ import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
 import IncomeStatementReportTableRow from './income_statement_report_table_row';
+// import useStateRef from 'react-usestateref'; // Deprecated: (20241129 - Liz)
 
 interface IIncomeStatementReportBodyAllProps {
   reportId: string;
@@ -29,43 +30,91 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   const toggleDetailTable = () => {
     setIsDetailCollapsed(!isDetailCollapsed);
   };
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
 
   // Deprecated: (20241128 - Liz)
   // eslint-disable-next-line no-console
   console.log('進入 IncomeStatementReportBodyAll');
 
-  const {
-    data: reportFinancial,
-    code: getReportFinancialCode,
-    success: getReportFinancialSuccess,
-    isLoading: getReportFinancialIsLoading,
-  } = APIHandler<FinancialReport>(
-    APIName.REPORT_GET_BY_ID,
-    {
-      params: {
-        companyId: selectedCompany?.id,
-        reportId: reportId ?? NON_EXISTING_REPORT_ID,
-      },
-    },
-    hasCompanyId
-  );
+  // const {
+  //   data: reportFinancial,
+  //   code: getReportFinancialCode,
+  //   success: getReportFinancialSuccess,
+  //   isLoading: getReportFinancialIsLoading,
+  // } = APIHandler<FinancialReport>(
+  //   APIName.REPORT_GET_BY_ID,
+  //   {
+  //     params: {
+  //       companyId: selectedCompany?.id,
+  //       reportId: reportId ?? NON_EXISTING_REPORT_ID,
+  //     },
+  //   },
+  //   hasCompanyId
+  // );
 
-  if (getReportFinancialIsLoading === undefined || getReportFinancialIsLoading) {
+  const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] = useState<boolean>(false);
+  const [errorCode, setErrorCode] = useState<string>('');
+
+  const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
+
+  useEffect(() => {
+    if (isAuthLoading || !selectedCompany) return;
+    if (isLoading) return;
+    setIsLoading(true);
+
+    const getFinancialReport = async () => {
+      try {
+        const {
+          data: report,
+          code: getFRCode,
+          success: getFRSuccess,
+        } = await getFinancialReportAPI({
+          params: { companyId: selectedCompany.id, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+        });
+
+        if (!getFRSuccess) {
+          // Deprecated: (20241129 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('getFinancialReportAPI failed:', getFRCode);
+          return;
+        }
+
+        setFinancialReport(report);
+        setIsGetFinancialReportSuccess(getFRSuccess);
+        setErrorCode(getFRCode);
+        // Deprecated: (20241128 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('call getFinancialReportAPI and getFinancialReport:', report);
+      } catch (error) {
+        // console.log('error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getFinancialReport();
+    // Deprecated: (20241128 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('in useEffect and calling getFinancialReport_in IncomeStatementReportBodyAll');
+  }, [isAuthLoading, reportId, selectedCompany]);
+
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
   } else if (
-    !getReportFinancialSuccess ||
-    !reportFinancial ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') ||
-    !reportFinancial.otherInfo ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'revenueAndExpenseRatio') ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'revenueToRD')
+    !isGetFinancialReportSuccess ||
+    !financialReport ||
+    !Object.prototype.hasOwnProperty.call(financialReport, 'otherInfo') ||
+    !financialReport.otherInfo ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'revenueAndExpenseRatio') ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'revenueToRD')
   ) {
-    return <div>錯誤 {getReportFinancialCode}</div>;
+    return <div>錯誤 {errorCode}</div>;
   }
 
   const renderedFooter = (page: number) => {
@@ -78,7 +127,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </footer>
     );
   };
-  const otherInfo = reportFinancial?.otherInfo as IncomeStatementOtherInfo;
+  const otherInfo = financialReport?.otherInfo as IncomeStatementOtherInfo;
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
   const curPeriodTotal = numberBeDashIfFalsy(
@@ -99,10 +148,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   /* Info: (20240730 - Anna) 格式化數字為千分位 */
   // const formatNumber = (num: number) => num.toLocaleString();
   /* Info: (20240730 - Anna) 轉換和格式化日期 */
-  const curDateFrom = new Date(reportFinancial.curDate.from * 1000);
-  const curDateTo = new Date(reportFinancial.curDate.to * 1000);
-  const preDateFrom = new Date(reportFinancial.preDate.from * 1000);
-  const preDateTo = new Date(reportFinancial.preDate.to * 1000);
+  const curDateFrom = new Date(financialReport.curDate.from * 1000);
+  const curDateTo = new Date(financialReport.curDate.to * 1000);
+  const preDateFrom = new Date(financialReport.preDate.from * 1000);
+  const preDateTo = new Date(financialReport.preDate.to * 1000);
   const formattedCurFromDate = format(curDateFrom, 'yyyy-MM-dd');
   const formattedCurToDate = format(curDateTo, 'yyyy-MM-dd');
   const formattedPreFromDate = format(preDateFrom, 'yyyy-MM-dd');
@@ -124,11 +173,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <header className="mb-85px flex justify-between text-white">
         <div className="w-30% bg-surface-brand-secondary pb-14px pl-10px pr-14px pt-40px font-bold">
           <div className="">
-            {reportFinancial && reportFinancial.company && (
+            {financialReport && financialReport.company && (
               <>
                 <h1 className="mb-30px text-h6">
-                  {reportFinancial.company.code} <br />
-                  {reportFinancial.company.name}
+                  {financialReport.company.code} <br />
+                  {financialReport.company.name}
                 </h1>
                 <p className="text-left text-xs font-bold leading-5">
                   {formattedCurFromDate}至{formattedCurToDate} <br />
@@ -165,7 +214,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   會計項目
                 </th>
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
-                  {!isSummaryCollapsed && reportFinancial && reportFinancial.company && (
+                  {!isSummaryCollapsed && financialReport && financialReport.company && (
                     <p className="text-left font-barlow text-xs font-semibold leading-5">
                       {formattedCurFromDate}至{formattedCurToDate}
                     </p>
@@ -178,7 +227,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  {reportFinancial && reportFinancial.company && (
+                  {financialReport && financialReport.company && (
                     <p className="text-left font-barlow text-xs font-semibold leading-5">
                       {formattedPreFromDate}至{formattedPreToDate}
                     </p>
@@ -190,9 +239,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               </tr>
             </thead>
             <tbody>
-              {reportFinancial &&
-                reportFinancial.general &&
-                reportFinancial.general
+              {financialReport &&
+                financialReport.general &&
+                financialReport.general
                   .slice(0, 10)
                   .map((value) => <IncomeStatementReportTableRow {...value} />)}
             </tbody>
@@ -238,7 +287,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
@@ -251,7 +300,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
@@ -263,9 +312,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.general &&
-              reportFinancial.general
+            {financialReport &&
+              financialReport.general &&
+              financialReport.general
                 .slice(10, 24)
                 .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
@@ -310,7 +359,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="text-left font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
@@ -323,7 +372,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="text-left font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
@@ -335,9 +384,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.general &&
-              reportFinancial.general
+            {financialReport &&
+              financialReport.general &&
+              financialReport.general
                 .slice(24, 33)
                 .map((value) => <IncomeStatementReportTableRow {...value} />)}
 
@@ -359,9 +408,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             </tr>
           </tbody>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.general &&
-              reportFinancial.general
+            {financialReport &&
+              financialReport.general &&
+              financialReport.general
                 .slice(34, 36)
                 .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
@@ -419,7 +468,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  {!isDetailCollapsed && reportFinancial && reportFinancial.company && (
+                  {!isDetailCollapsed && financialReport && financialReport.company && (
                     <p className="text-left font-barlow text-xs font-semibold leading-5">
                       {formattedCurFromDate}至{formattedCurToDate}
                     </p>
@@ -432,7 +481,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  {reportFinancial && reportFinancial.company && (
+                  {financialReport && financialReport.company && (
                     <p className="text-left font-barlow text-xs font-semibold leading-5">
                       {formattedPreFromDate}至{formattedPreToDate}
                     </p>
@@ -444,9 +493,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               </tr>
             </thead>
             <tbody>
-              {reportFinancial &&
-                reportFinancial.details &&
-                reportFinancial.details
+              {financialReport &&
+                financialReport.details &&
+                financialReport.details
                   .slice(0, 15)
                   .map((value) => <IncomeStatementReportTableRow {...value} />)}
             </tbody>
@@ -492,7 +541,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="text-left font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
@@ -505,7 +554,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="text-left font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
@@ -517,9 +566,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              reportFinancial.details
+            {financialReport &&
+              financialReport.details &&
+              financialReport.details
                 .slice(15, 28)
                 .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
@@ -564,7 +613,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="text-left font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
@@ -577,7 +626,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="text-left font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
@@ -589,9 +638,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              reportFinancial.details
+            {financialReport &&
+              financialReport.details &&
+              financialReport.details
                 .slice(28, 39)
                 .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
@@ -636,7 +685,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
@@ -649,7 +698,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
@@ -661,9 +710,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              reportFinancial.details
+            {financialReport &&
+              financialReport.details &&
+              financialReport.details
                 .slice(39, 49)
                 .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
@@ -708,7 +757,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="text-left font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
@@ -721,7 +770,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="text-left font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
@@ -733,16 +782,16 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              reportFinancial.details
+            {financialReport &&
+              financialReport.details &&
+              financialReport.details
                 .slice(49, 58)
                 .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              reportFinancial.details.slice(58, 62).map((value) => (
+            {financialReport &&
+              financialReport.details &&
+              financialReport.details.slice(58, 62).map((value) => (
                 <tr key={value.code} className="h-40px">
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
                     {value.code}
@@ -816,7 +865,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
@@ -826,7 +875,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
@@ -943,13 +992,13 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             </tr>
           </tbody>
         </table>
-        {reportFinancial && reportFinancial.company && (
+        {financialReport && financialReport.company && (
           <p className="mt-4 text-xs">
             {formattedCurFromDate}至{formattedCurToDate}
             營業收入，為投入費用和成本的{curRatio.toFixed(2)}倍
           </p>
         )}
-        {reportFinancial && reportFinancial.company && (
+        {financialReport && financialReport.company && (
           <p className="mt-4 text-xs">
             {formattedPreFromDate}至{formattedPreToDate}
             營業收入，為投入費用和成本的{preRatio.toFixed(2)}倍
@@ -972,7 +1021,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
@@ -982,7 +1031,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>

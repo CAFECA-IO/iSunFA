@@ -6,14 +6,13 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import { VscGlobe } from 'react-icons/vsc';
 
-type TranslateFunction = (s: string) => string;
 interface II18nProps {
   langIsOpen?: boolean;
   setLangIsOpen?: Dispatch<SetStateAction<boolean>>;
 }
 
 const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
-  const { t }: { t: TranslateFunction } = useTranslation('dashboard');
+  const { t } = useTranslation(['dashboard']);
 
   const [openMenuState, setOpenMenuState] = useState(false);
   const openMenu = typeof setLangIsOpen !== 'function' ? openMenuState : langIsOpen;

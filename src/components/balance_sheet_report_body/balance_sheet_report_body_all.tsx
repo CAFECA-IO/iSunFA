@@ -1,7 +1,7 @@
 import { APIName } from '@/constants/api_connection';
-// import { NON_EXISTING_REPORT_ID } from '@/constants/config';
+import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
-// import { BalanceSheetReport, FinancialReport, FinancialReportItem } from '@/interfaces/report';
+// import { BalanceSheetReport, FinancialReport, FinancialReportItem } from '@/interfaces/report'; // Deprecated: (20241129 - Liz)No use
 import { BalanceSheetReport, FinancialReportItem } from '@/interfaces/report';
 
 import APIHandler from '@/lib/utils/api_handler';
@@ -79,11 +79,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   //   hasCompanyId
   // );
 
-  const [financialReport, setFinancialReport] = React.useState<BalanceSheetReport | null>(null);
-  const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] =
-    React.useState<boolean>(false);
-  const [errorCode, setErrorCode] = useStateRef<string>('');
-  const [isLoading, setIsLoading] = useStateRef<boolean>(true);
+  const [financialReport, setFinancialReport] = useState<BalanceSheetReport | null>(null);
+  const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] = useState<boolean>(false);
+  const [errorCode, setErrorCode] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { trigger: getFinancialReportAPI } = APIHandler<BalanceSheetReport>(
     APIName.REPORT_GET_BY_ID
@@ -91,11 +90,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   useEffect(() => {
     if (isAuthLoading || !selectedCompany) return;
+    if (isLoading) return;
     setIsLoading(true);
-
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport');
 
     const getFinancialReport = async () => {
       try {
@@ -104,7 +100,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           code,
           success: getReportFinancialSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: selectedCompany.id, reportId },
+          params: { companyId: selectedCompany.id, reportId: reportId ?? NON_EXISTING_REPORT_ID },
         });
 
         if (!getReportFinancialSuccess) {
@@ -131,7 +127,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     getFinancialReport();
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport');
+    console.log('in useEffect and calling getFinancialReport_in BalanceSheetReportBodyAll');
   }, [isAuthLoading, reportId, selectedCompany]);
 
   const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
@@ -193,7 +189,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     }
   }, [financialReport]);
 
-  if (isLoading === undefined || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
@@ -284,10 +280,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 
   const rowsForPage1 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(0, 9).map((item) => {
+    const rows = items.slice(0, 9).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -340,10 +336,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage2 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(9, 20).map((item) => {
+    const rows = items.slice(9, 20).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -394,10 +390,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage3 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(0, 13).map((item) => {
+    const rows = items.slice(0, 13).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -448,10 +444,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage4 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(13, 26).map((item) => {
+    const rows = items.slice(13, 26).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -502,10 +498,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage5 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(26, 40).map((item) => {
+    const rows = items.slice(26, 40).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -556,10 +552,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage6 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(40, 54).map((item) => {
+    const rows = items.slice(40, 54).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -610,10 +606,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage7 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(54, 68).map((item) => {
+    const rows = items.slice(54, 68).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -664,10 +660,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage8 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(68, 80).map((item) => {
+    const rows = items.slice(68, 80).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -718,10 +714,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage9 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(80, 91).map((item) => {
+    const rows = items.slice(80, 91).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -1360,7 +1356,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <div className="flex items-center">
               <ul className="space-y-2">
                 {curAssetLiabilityRatioLabels.map((label, index) => (
-                  <li key={label} className="flex items-center">
+                  <li key={`${label + index}`} className="flex items-center">
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
@@ -1376,7 +1372,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <div className="flex items-center">
               <ul className="space-y-2">
                 {preAssetLiabilityRatioLabels.map((label, index) => (
-                  <li key={label} className="flex items-center">
+                  <li key={`${label + index}`} className="flex items-center">
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
@@ -1429,7 +1425,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {curAssetMixLabels.map((label, index) => (
-                  <li key={label} className="flex items-center">
+                  <li key={`${label + index}`} className="flex items-center">
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
@@ -1446,7 +1442,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {preAssetMixLabels.map((label, index) => (
-                  <li key={label} className="flex items-center">
+                  <li key={`${label + index}`} className="flex items-center">
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>

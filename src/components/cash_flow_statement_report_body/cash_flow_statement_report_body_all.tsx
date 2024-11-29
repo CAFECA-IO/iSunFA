@@ -2,7 +2,7 @@ import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import LineChart from '@/components/cash_flow_statement_report_body/line_chart';
@@ -20,27 +20,78 @@ interface ICashFlowStatementReportBodyAllProps {
 
 const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
   const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
 
   // Deprecated: (20241128 - Liz)
   // eslint-disable-next-line no-console
   console.log('進入 CashFlowStatementReportBodyAll');
 
-  const {
-    data: reportFinancial,
-    code: getReportFinancialCode,
-    success: getReportFinancialSuccess,
-    isLoading: getReportFinancialIsLoading,
-  } = APIHandler<CashFlowStatementReport>(
-    APIName.REPORT_GET_BY_ID,
-    {
-      params: {
-        companyId: selectedCompany?.id,
-        reportId: reportId ?? NON_EXISTING_REPORT_ID,
-      },
-    },
-    hasCompanyId
+  // Deprecated: (20241129 - Liz)
+  // const {
+  //   data: reportFinancial,
+  //   code: getReportFinancialCode,
+  //   success: getReportFinancialSuccess,
+  //   isLoading: getReportFinancialIsLoading,
+  // } = APIHandler<CashFlowStatementReport>(
+  //   APIName.REPORT_GET_BY_ID,
+  //   {
+  //     params: {
+  //       companyId: selectedCompany?.id,
+  //       reportId: reportId ?? NON_EXISTING_REPORT_ID,
+  //     },
+  //   },
+  //   hasCompanyId
+  // );
+
+  const [financialReport, setFinancialReport] = useState<CashFlowStatementReport | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] = useState<boolean>(false);
+  const [errorCode, setErrorCode] = useState<string>('');
+
+  const { trigger: getFinancialReportAPI } = APIHandler<CashFlowStatementReport>(
+    APIName.REPORT_GET_BY_ID
   );
+
+  useEffect(() => {
+    if (isAuthLoading || !selectedCompany) return;
+    if (isLoading) return;
+    setIsLoading(true);
+
+    const getFinancialReport = async () => {
+      try {
+        const {
+          data: reportFinancial,
+          code: getFRCode,
+          success: getFRSuccess,
+        } = await getFinancialReportAPI({
+          params: { companyId: selectedCompany.id, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+        });
+
+        if (!getFRSuccess) {
+          // Deprecated: (20241129 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('getFinancialReportAPI failed:', getFRCode);
+          return;
+        }
+
+        setFinancialReport(reportFinancial);
+        setIsGetFinancialReportSuccess(getFRSuccess);
+        setErrorCode(getFRCode);
+        // Deprecated: (20241128 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('call getFinancialReportAPI and getFinancialReport:', reportFinancial);
+      } catch (error) {
+        // console.log('error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getFinancialReport();
+    // Deprecated: (20241128 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('in useEffect and calling getFinancialReport_in CashFlowStatementReportBodyAll');
+  }, [isAuthLoading, reportId, selectedCompany]);
 
   const [curDate, setCurDate] = useStateRef<{ from: string; to: string }>({ from: '', to: '' });
   const [curYear, setCurYear] = useStateRef<string>('');
@@ -60,22 +111,22 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const [thirdThought, setThirdThought] = useStateRef<string>('');
 
   useEffect(() => {
-    if (getReportFinancialSuccess === true && reportFinancial) {
-      const currentFrom = timestampToString(reportFinancial.curDate.from ?? 0);
-      const currentTo = timestampToString(reportFinancial.curDate.to ?? 0);
-      const previousFrom = timestampToString(reportFinancial.preDate.from ?? 0);
-      const previousTo = timestampToString(reportFinancial.preDate.to ?? 0);
+    if (isGetFinancialReportSuccess === true && financialReport) {
+      const currentFrom = timestampToString(financialReport.curDate.from ?? 0);
+      const currentTo = timestampToString(financialReport.curDate.to ?? 0);
+      const previousFrom = timestampToString(financialReport.preDate.from ?? 0);
+      const previousTo = timestampToString(financialReport.preDate.to ?? 0);
       const currentYear = currentTo.year;
       const previousYear = previousTo.year;
 
-      if (reportFinancial.otherInfo?.lineChartDataForRatio) {
-        setLineChartData(reportFinancial.otherInfo.lineChartDataForRatio.data);
-        setLineChartLabels(reportFinancial.otherInfo.lineChartDataForRatio.labels);
+      if (financialReport.otherInfo?.lineChartDataForRatio) {
+        setLineChartData(financialReport.otherInfo.lineChartDataForRatio.data);
+        setLineChartLabels(financialReport.otherInfo.lineChartDataForRatio.labels);
       }
 
-      if (reportFinancial.otherInfo?.strategyInvest) {
-        const curInvestment = reportFinancial.otherInfo.strategyInvest[currentYear];
-        const preInvestment = reportFinancial.otherInfo.strategyInvest[previousYear];
+      if (financialReport.otherInfo?.strategyInvest) {
+        const curInvestment = financialReport.otherInfo.strategyInvest[currentYear];
+        const preInvestment = financialReport.otherInfo.strategyInvest[previousYear];
 
         setCurBarChartData(curInvestment.data);
         setCurBarChartLabels(curInvestment.labels);
@@ -83,34 +134,34 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         setPreBarChartLabels(preInvestment.labels);
       }
 
-      setFirstThought(reportFinancial?.otherInfo?.ourThoughts?.[0]);
-      setSecondThought(reportFinancial?.otherInfo?.ourThoughts?.[1]);
-      setThirdThought(reportFinancial?.otherInfo?.ourThoughts?.[2]);
+      setFirstThought(financialReport?.otherInfo?.ourThoughts?.[0]);
+      setSecondThought(financialReport?.otherInfo?.ourThoughts?.[1]);
+      setThirdThought(financialReport?.otherInfo?.ourThoughts?.[2]);
 
       setCurDate({ from: currentFrom.date, to: currentTo.date });
       setCurYear(currentYear);
       setPreDate({ from: previousFrom.date, to: previousTo.date });
       setPreYear(previousYear);
     }
-  }, [reportFinancial]);
+  }, [financialReport]);
 
-  if (getReportFinancialIsLoading === undefined || getReportFinancialIsLoading) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
   } else if (
-    !getReportFinancialSuccess ||
-    !reportFinancial ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') ||
-    !reportFinancial.otherInfo ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'operatingStabilized') ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'lineChartDataForRatio') ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'strategyInvest') ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'freeCash')
+    !isGetFinancialReportSuccess ||
+    !financialReport ||
+    !Object.prototype.hasOwnProperty.call(financialReport, 'otherInfo') ||
+    !financialReport.otherInfo ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'operatingStabilized') ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'lineChartDataForRatio') ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'strategyInvest') ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'freeCash')
   ) {
-    return <div>Error {getReportFinancialCode}</div>;
+    return <div>Error {errorCode}</div>;
   }
 
   const renderedFooter = (page: number) => {
@@ -228,33 +279,33 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   };
 
   const renderedPage11part2 = (currentYear: string, previousYear: string) => {
-    if (!reportFinancial?.otherInfo?.freeCash) {
+    if (!financialReport?.otherInfo?.freeCash) {
       return null;
     }
 
     const displayedTableBody =
-      reportFinancial?.otherInfo?.freeCash[currentYear] &&
-      reportFinancial?.otherInfo?.freeCash[previousYear] ? (
+      financialReport?.otherInfo?.freeCash[currentYear] &&
+      financialReport?.otherInfo?.freeCash[previousYear] ? (
         <tbody>
           <tr>
             <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
               營業活動現金流入
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow === 0
+              {financialReport?.otherInfo?.freeCash[currentYear]?.operatingCashFlow === 0
                 ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                : reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
-                  : reportFinancial?.otherInfo?.freeCash[
+                : financialReport?.otherInfo?.freeCash[currentYear]?.operatingCashFlow < 0
+                  ? `(${Math.abs(financialReport?.otherInfo?.freeCash[currentYear]?.operatingCashFlow).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : financialReport?.otherInfo?.freeCash[
                       currentYear
                     ]?.operatingCashFlow.toLocaleString()}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow === 0
+              {financialReport?.otherInfo?.freeCash[previousYear]?.operatingCashFlow === 0
                 ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                : reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
-                  : reportFinancial?.otherInfo?.freeCash[
+                : financialReport?.otherInfo?.freeCash[previousYear]?.operatingCashFlow < 0
+                  ? `(${Math.abs(financialReport?.otherInfo?.freeCash[previousYear]?.operatingCashFlow).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : financialReport?.otherInfo?.freeCash[
                       previousYear
                     ]?.operatingCashFlow.toLocaleString()}
             </td>
@@ -264,18 +315,18 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               不動產、廠房及設備
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe === 0
+              {financialReport?.otherInfo?.freeCash[currentYear]?.ppe === 0
                 ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
-                  : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
+                : financialReport?.otherInfo?.freeCash[currentYear]?.ppe < 0
+                  ? `(${Math.abs(financialReport?.otherInfo?.freeCash[currentYear]?.ppe).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : financialReport?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe === 0
+              {financialReport?.otherInfo?.freeCash[previousYear]?.ppe === 0
                 ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                : reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
-                  : reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe.toLocaleString()}
+                : financialReport?.otherInfo?.freeCash[previousYear]?.ppe < 0
+                  ? `(${Math.abs(financialReport?.otherInfo?.freeCash[previousYear]?.ppe).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : financialReport?.otherInfo?.freeCash[previousYear]?.ppe.toLocaleString()}
             </td>
           </tr>
           <tr>
@@ -283,20 +334,20 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               無形資產支出
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset === 0
+              {financialReport?.otherInfo?.freeCash[currentYear]?.intangibleAsset === 0
                 ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                : reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
-                  : reportFinancial?.otherInfo?.freeCash[
+                : financialReport?.otherInfo?.freeCash[currentYear]?.intangibleAsset < 0
+                  ? `(${Math.abs(financialReport?.otherInfo?.freeCash[currentYear]?.intangibleAsset).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : financialReport?.otherInfo?.freeCash[
                       currentYear
                     ]?.intangibleAsset.toLocaleString()}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset === 0
+              {financialReport?.otherInfo?.freeCash[previousYear]?.intangibleAsset === 0
                 ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                : reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
-                  : reportFinancial?.otherInfo?.freeCash[
+                : financialReport?.otherInfo?.freeCash[previousYear]?.intangibleAsset < 0
+                  ? `(${Math.abs(financialReport?.otherInfo?.freeCash[previousYear]?.intangibleAsset).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : financialReport?.otherInfo?.freeCash[
                       previousYear
                     ]?.intangibleAsset.toLocaleString()}
             </td>
@@ -306,18 +357,18 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               自由現金流量
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash === 0
+              {financialReport?.otherInfo?.freeCash[currentYear]?.freeCash === 0
                 ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
-                  : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
+                : financialReport?.otherInfo?.freeCash[currentYear]?.freeCash < 0
+                  ? `(${Math.abs(financialReport?.otherInfo?.freeCash[currentYear]?.freeCash).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : financialReport?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash === 0
+              {financialReport?.otherInfo?.freeCash[previousYear]?.freeCash === 0
                 ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                : reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
-                  : reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash.toLocaleString()}
+                : financialReport?.otherInfo?.freeCash[previousYear]?.freeCash < 0
+                  ? `(${Math.abs(financialReport?.otherInfo?.freeCash[previousYear]?.freeCash).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : financialReport?.otherInfo?.freeCash[previousYear]?.freeCash.toLocaleString()}
             </td>
           </tr>
         </tbody>
@@ -350,11 +401,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <header className="mb-10 flex justify-between text-white">
         <div className="w-30% bg-surface-brand-secondary pb-14px pl-10px pr-14px pt-40px font-bold">
           <div className="">
-            {reportFinancial && reportFinancial.company && (
+            {financialReport && financialReport.company && (
               <>
                 <h1 className="mb-30px text-h6">
-                  {reportFinancial.company.code} <br />
-                  {reportFinancial.company.name}
+                  {financialReport.company.code} <br />
+                  {financialReport.company.name}
                 </h1>
                 <p className="text-left text-xs font-bold leading-5">
                   {curDate.from}至{curDate.to} <br />
@@ -378,7 +429,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </div>
           <p>單位：新台幣元</p>
         </div>
-        {reportFinancial && reportFinancial.general && renderTable(reportFinancial.general, 0, 10)}
+        {financialReport && financialReport.general && renderTable(financialReport.general, 0, 10)}
       </section>
       {renderedFooter(1)}
     </div>
@@ -402,7 +453,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>一、項目彙總格式</p>
           <p>單位：新台幣元</p>
         </div>
-        {reportFinancial && reportFinancial.general && renderTable(reportFinancial.general, 10, 19)}
+        {financialReport && financialReport.general && renderTable(financialReport.general, 10, 19)}
         <div className="relative -z-10">
           <Image
             className="absolute -top-300px right-0"
@@ -445,7 +496,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>二、細項分類格式</p>
           <p>單位：新台幣元</p>
         </div>
-        {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 0, 13)}
+        {financialReport && financialReport.details && renderTable(financialReport.details, 0, 13)}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -479,7 +530,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>二、細項分類格式</p>
           <p>單位：新台幣元</p>
         </div>
-        {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 13, 26)}
+        {financialReport && financialReport.details && renderTable(financialReport.details, 13, 26)}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -513,7 +564,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>二、細項分類格式</p>
           <p>單位：新台幣元</p>
         </div>
-        {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 26, 41)}
+        {financialReport && financialReport.details && renderTable(financialReport.details, 26, 41)}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -547,7 +598,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>二、細項分類格式</p>
           <p>單位：新台幣元</p>
         </div>
-        {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 41, 55)}
+        {financialReport && financialReport.details && renderTable(financialReport.details, 41, 55)}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -581,7 +632,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>一、項目彙總格式</p>
           <p>單位：新台幣元</p>
         </div>
-        {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 55, 70)}
+        {financialReport && financialReport.details && renderTable(financialReport.details, 55, 70)}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -614,12 +665,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>
             {' '}
-            {reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.thirdTitle}
+            {financialReport && financialReport.otherInfo && financialReport.otherInfo.thirdTitle}
           </p>
         </div>
-        {reportFinancial &&
-        reportFinancial.otherInfo &&
-        Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'operatingStabilized') ? (
+        {financialReport &&
+        financialReport.otherInfo &&
+        Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'operatingStabilized') ? (
           <>
             <div className="relative mb-0 flex items-center pb-1">
               <Image
@@ -663,7 +714,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   <td className="border border-stroke-brand-secondary-soft p-10px font-semibold">
                     A
                   </td>
-                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
+                  {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
                         key={year}
@@ -677,7 +728,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                     稅前淨利（淨損）
                   </td>
                   {Object.entries(
-                    reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax
+                    financialReport.otherInfo.operatingStabilized.beforeIncomeTax
                   ).map(([year, value]) => (
                     <td
                       key={year}
@@ -697,24 +748,24 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   <td className="border border-stroke-brand-secondary-soft p-10px">
                     折舊及攤銷費用
                   </td>
-                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
+                  {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
                         key={year}
                         className="border border-stroke-brand-secondary-soft p-10px text-end"
                       >
                         {
-                          reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
+                          financialReport.otherInfo.operatingStabilized.amortizationDepreciation[
                             year
                           ] === 0
                             ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                            : reportFinancial.otherInfo.operatingStabilized
+                            : financialReport.otherInfo.operatingStabilized
                                   .amortizationDepreciation[year] < 0
                               ? `(${Math.abs(
-                                  reportFinancial.otherInfo.operatingStabilized
+                                  financialReport.otherInfo.operatingStabilized
                                     .amortizationDepreciation[year]
                                 ).toLocaleString()})` // Info: (20241021 - Anna) 負數用括號並加千分位
-                              : reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
+                              : financialReport.otherInfo.operatingStabilized.amortizationDepreciation[
                                   year
                                 ].toLocaleString() // Info: (20241021 - Anna) 正數顯示千分位
                         }
@@ -724,7 +775,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px">支付的所得稅</td>
-                  {Object.entries(reportFinancial.otherInfo.operatingStabilized.tax).map(
+                  {Object.entries(financialReport.otherInfo.operatingStabilized.tax).map(
                     ([year, value]) => (
                       <td
                         key={year}
@@ -745,7 +796,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   <td className="border border-stroke-brand-secondary-soft p-10px font-semibold">
                     B
                   </td>
-                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
+                  {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
                         key={year}
@@ -759,7 +810,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                     營業活動的現金
                   </td>
                   {Object.entries(
-                    reportFinancial.otherInfo.operatingStabilized.operatingIncomeCashFlow
+                    financialReport.otherInfo.operatingStabilized.operatingIncomeCashFlow
                   ).map(([year, value]) => (
                     <td
                       key={year}
@@ -776,7 +827,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px"></td>
-                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
+                  {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
                         key={year}
@@ -787,7 +838,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px">A和B比例關係</td>
-                  {Object.entries(reportFinancial.otherInfo.operatingStabilized.ratio).map(
+                  {Object.entries(financialReport.otherInfo.operatingStabilized.ratio).map(
                     ([year, value]) => (
                       <td
                         key={year}
@@ -832,7 +883,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-xs text-text-neutral-secondary">
         <div className="mb-16px mt-32px font-semibold text-surface-brand-secondary">
           <p className="break-words text-xs font-semibold leading-tight">
-            {reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.fourthTitle}
+            {financialReport && financialReport.otherInfo && financialReport.otherInfo.fourthTitle}
           </p>
         </div>
         <div className="mx-1 mt-8 flex items-end justify-between">
@@ -871,9 +922,9 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         </div>
         <div className="mb-16px mt-4 font-semibold text-surface-brand-secondary">
           <p className="text-xs font-semibold">
-            {reportFinancial &&
-              reportFinancial.otherInfo &&
-              reportFinancial.otherInfo.fourPointOneTitle}
+            {financialReport &&
+              financialReport.otherInfo &&
+              financialReport.otherInfo.fourPointOneTitle}
           </p>
         </div>
         <div className="relative bottom-20 right-0 -z-10">
@@ -906,9 +957,9 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-3 text-xs text-text-neutral-secondary">
         <div className="mb-16px mt-32px text-xs font-semibold leading-5 text-surface-brand-secondary">
           <p className="text-xs font-semibold">
-            {reportFinancial &&
-              reportFinancial.otherInfo &&
-              reportFinancial.otherInfo.fourPointOneTitle}{' '}
+            {financialReport &&
+              financialReport.otherInfo &&
+              financialReport.otherInfo.fourPointOneTitle}{' '}
           </p>
         </div>
         {renderedPage10part1()}

@@ -11,7 +11,7 @@ import {
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
@@ -45,18 +45,13 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     reportLink: '',
   });
 
-  const [financialReport, setFinancialReport] = React.useState<FinancialReport | null>(null);
-  const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] =
-    React.useState<boolean>(false);
+  const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
+  const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] = useState<boolean>(false);
 
   const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
 
   useEffect(() => {
     if (isAuthLoading || !selectedCompany) return;
-
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport');
 
     const getFinancialReport = async () => {
       try {
@@ -91,7 +86,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     getFinancialReport();
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport');
+    console.log('in useEffect and calling getFinancialReport_in ViewFinancialReportPage');
   }, [isAuthLoading, reportId, reportType, selectedCompany, t, toastHandler]);
 
   const displayedBody =
