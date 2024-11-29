@@ -3,8 +3,6 @@ import { handleAppleOAuth } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
-import { getAuthOptions } from '@/pages/api/auth/[...nextauth]';
-import { Account } from 'next-auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -20,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (!code) {
-    res.redirect(`${ISUNFA_ROUTE.LOGIN}?signin=false&error=Missing+authorization+code`);
+    res.redirect(`$ {ISUNFA_ROUTE.LOGIN}?signin=false&error=Missing+authorization+code`);
     return;
   }
 
@@ -28,25 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { user, account } = await handleAppleOAuth(code);
     await handleSignInSession(req, res, user, account);
 
-    const authOptions = getAuthOptions(req, res);
-    if (authOptions.callbacks && authOptions.callbacks.jwt) {
-      await authOptions.callbacks.jwt({
-        token: {},
-        user,
-        account: account as Account,
-        profile: undefined,
-        isNewUser: false,
-      });
-    } else {
-      loggerError(
-        -1,
-        'authOptions?.callbacks?.jwt',
-        JSON.stringify(authOptions?.callbacks?.jwt || {})
-      );
-    }
-
     // Info: (20241127 - tzuhan) 登錄成功，重定向到 LOGIN，帶 signin=true
-    const redirectUrl = ISUNFA_ROUTE.LOGIN;
+    const redirectUrl = req.headers.referer || ISUNFA_ROUTE.LOGIN;
     res.redirect(`${redirectUrl}?signin=true`);
   } catch (err) {
     // Info: (20241127 - tzuhan) 錯誤處理

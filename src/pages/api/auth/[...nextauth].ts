@@ -15,7 +15,7 @@ import { APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { loggerError } from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
 // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
 // import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
@@ -149,6 +149,7 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
   events: {
     signOut: async () => {
       const session = await getSession(req, res);
+      loggerBack.info('signOut', session);
       await createUserActionLog({
         sessionId: session.id,
         userId: session.userId,
