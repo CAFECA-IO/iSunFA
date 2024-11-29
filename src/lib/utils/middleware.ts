@@ -9,6 +9,7 @@ import { APIName, APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { ISessionData } from '@/interfaces/session_data';
 import { checkAuthorizationNew, isWhitelisted } from '@/lib/utils/auth_check_v2';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function checkSessionUser(
   session: ISessionData,
@@ -21,9 +22,14 @@ export async function checkSessionUser(
     return true;
   }
 
+  // Info: (20241128 - Luphia) If there is no user_id, it will be considered as a guest
   if (!session.userId) {
     isLogin = false;
-    loggerError(0, 'Unauthorized Access', 'User ID is missing in session');
+    loggerError({
+      userId: DefaultValue.USER_ID.GUEST,
+      errorType: 'Unauthorized Access',
+      errorMessage: 'User ID is missing in session',
+    });
   }
   return isLogin;
 }
@@ -39,20 +45,28 @@ async function checkUserAuthorization<T extends APIName>(
 
   const isAuth = await checkAuthorizationNew(apiName, req, session);
   if (!isAuth) {
-    loggerError(
-      session.userId,
-      `Forbidden Access for ${apiName} in middleware.ts`,
-      'User is not authorized'
-    );
+    loggerError({
+      userId: session.userId,
+      errorType: `Forbidden Access for ${apiName} in middleware.ts`,
+      errorMessage: 'User is not authorized',
+    });
   }
   return isAuth;
 }
 
-export function checkRequestData<T extends APIName>(apiName: T, req: NextApiRequest) {
+export function checkRequestData<T extends APIName>(
+  apiName: T,
+  req: NextApiRequest,
+  session: ISessionData
+) {
   const { query, body } = validateRequestData(apiName, req);
 
   if (query === null && body === null) {
-    loggerError(0, `Invalid Input Parameter for ${apiName} in middleware.ts`, req.body);
+    loggerError({
+      userId: session.userId || DefaultValue.USER_ID.GUEST,
+      errorType: `Invalid Input Parameter for ${apiName} in middleware.ts`,
+      errorMessage: req.body,
+    });
   }
 
   return { query, body };
@@ -67,7 +81,7 @@ export async function logUserAction<T extends APIName>(
   try {
     const userActionLog = {
       sessionId: session.id || '',
-      userId: session.userId || 555,
+      userId: session.userId || DefaultValue.USER_ID.GUEST,
       actionType: UserActionLogActionType.API,
       actionDescription: apiName,
       ipAddress: (req.headers['x-forwarded-for'] as string) || '',
@@ -79,11 +93,11 @@ export async function logUserAction<T extends APIName>(
     };
     await createUserActionLog(userActionLog);
   } catch (error) {
-    loggerError(
-      session.userId,
-      `Failed to log user action for ${apiName} in middleware.ts`,
-      error as Error
-    );
+    loggerError({
+      userId: session.userId || DefaultValue.USER_ID.GUEST,
+      errorType: `Failed to log user action for ${apiName} in middleware.ts`,
+      errorMessage: error as Error,
+    });
   }
 }
 
@@ -102,7 +116,7 @@ export async function withRequestValidation<T extends APIName, U>(
   if (!isLogin) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const { query, body } = checkRequestData(apiName, req);
+    const { query, body } = checkRequestData(apiName, req, session);
     if (query !== null && body !== null) {
       const isAuth = await checkUserAuthorization(apiName, req, session);
       if (!isAuth) {
@@ -125,11 +139,11 @@ export async function withRequestValidation<T extends APIName, U>(
           }
         } catch (handlerError) {
           statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-          loggerError(
-            session.userId,
-            `Handler Request Error for ${apiName} in middleware.ts`,
-            handlerError as Error
-          );
+          loggerError({
+            userId: session.userId ?? DefaultValue.USER_ID.GUEST,
+            errorType: `Handler Request Error for ${apiName} in middleware.ts`,
+            errorMessage: handlerError as Error,
+          });
         }
       }
     } else {

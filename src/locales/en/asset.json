@@ -16,6 +16,8 @@
     "STATUS_NORMAL": "Normal",
     "EXPORT_ASSET_LIST_WARNING_TITLE": "Warning",
     "EXPORT_ASSET_LIST_WARNING_CONTENT": "Please select at least one asset to export.",
+    "TOAST_EXPORT_SUCCESS": "Asset exported successfully.",
+    "TOAST_EXPORT_FAILED": "Failed to export asset, please try again later.",
     "OK_BTN": "OK"
   },
   "STATUS_SETTING_MODAL": {

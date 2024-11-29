@@ -16,6 +16,8 @@
     "STATUS_NORMAL": "使用中",
     "EXPORT_ASSET_LIST_WARNING_TITLE": "警告",
     "EXPORT_ASSET_LIST_WARNING_CONTENT": "請至少選擇一個資產以匯出。",
+    "TOAST_EXPORT_SUCCESS": "資產已成功匯出。",
+    "TOAST_EXPORT_FAILED": "資產匯出失敗，請稍後再試。",
     "OK_BTN": "好"
   },
   "STATUS_SETTING_MODAL": {

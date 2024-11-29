@@ -47,6 +47,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
         'asset',
         'dashboard',
         'date_picker',
+        'certificate',
         'filter_section_type',
         'search',
       ])),

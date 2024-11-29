@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
+import { useUserCtx } from '@/contexts/user_context';
+import { useModalContext } from '@/contexts/modal_context';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import AssetItem from '@/components/asset/asset_item';
@@ -7,8 +9,10 @@ import { IAssetItem, IAssetItemUI } from '@/interfaces/asset';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { Button } from '@/components/button/button';
 import { checkboxStyle } from '@/constants/display';
-import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IAssetListProps {
   assetList: IAssetItem[];
@@ -38,7 +42,16 @@ const AssetList: React.FC<IAssetListProps> = ({
   setRemainingLifeSort,
 }) => {
   const { t } = useTranslation('asset');
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
+  const { selectedCompany } = useUserCtx();
+
+  const {
+    trigger: exportAsset,
+    success,
+    isLoading,
+    data: downloadFile,
+  } = APIHandler(APIName.ASSET_LIST_EXPORT);
 
   const defaultAssetList: IAssetItemUI[] = assetList.map((asset) => {
     return {
@@ -90,17 +103,13 @@ const AssetList: React.FC<IAssetListProps> = ({
     setUiAssetList((prev) => {
       return prev.map((asset) => {
         if (asset.id === id) {
-          return {
-            ...asset,
-            isSelected: !asset.isSelected,
-          };
+          return { ...asset, isSelected: !asset.isSelected };
         }
         return asset;
       });
     });
   };
 
-  // ToDo: (20241024 - Julian) export to pdf
   const exportAssetHandler = () => {
     if (selectedAssetList.length === 0) {
       // Info: (20241024 - Julian) 未選取任何 asset
@@ -113,15 +122,93 @@ const AssetList: React.FC<IAssetListProps> = ({
       });
       messageModalVisibilityHandler();
     } else {
-      // eslint-disable-next-line no-console
-      console.log('export:\n', selectedAssetList);
+      // Info: (20241127 - Julian) 排序條件
+      const sortQuery: { by: string; order: string }[] = [];
+
+      if (dateSort) {
+        sortQuery.push({ by: 'acquisitionDate', order: dateSort });
+      } else {
+        // Info: (20241127 - Julian) 預設日期排序
+        sortQuery.push({ by: 'acquisitionDate', order: 'desc' });
+      }
+      if (priceSort) {
+        sortQuery.push({ by: 'purchasePrice', order: priceSort });
+      }
+      if (depreciationSort) {
+        sortQuery.push({ by: 'accumulatedDepreciation', order: depreciationSort });
+      }
+      if (residualSort) {
+        sortQuery.push({ by: 'residualValue', order: residualSort });
+      }
+      if (remainingLifeSort) {
+        sortQuery.push({ by: 'remainingLife', order: remainingLifeSort });
+      }
+
+      // Info: (20241127 - Julian) 呼叫 API
+      exportAsset({
+        params: { companyId: selectedCompany?.id },
+        body: {
+          fileType: 'csv',
+          filters: {
+            searchQuery: selectedAssetList.map((asset) => asset.id.toString()), // Info: (20241127 - Julian) 選取的 asset id
+          },
+          sort: sortQuery,
+          options: {
+            language: 'zh-TW',
+            timezone: '+0800',
+            fields: [
+              'name',
+              'type',
+              'status',
+              'assetNumber',
+              'acquisitionDate',
+              'purchasePrice',
+              'accumulatedDepreciation',
+              'residualValue',
+              'remainingLife',
+            ],
+          },
+        },
+      });
     }
   };
 
   // Info: (20241024 - Julian) 更新被選中的 asset
   useEffect(() => {
+    setIsSelectedAll(uiAssetList.every((asset) => asset.isSelected));
     setSelectedAssetList(uiAssetList.filter((asset) => asset.isSelected));
   }, [uiAssetList]);
+
+  useEffect(() => {
+    if (isLoading === false) {
+      // Info: (20241127 - Julian) 顯示失敗 Toast
+      if (!success) {
+        toastHandler({
+          id: 'export-asset-error',
+          type: ToastType.ERROR,
+          content: t('asset:ASSET.TOAST_EXPORT_FAILED'),
+          closeable: true,
+        });
+      } else {
+        // Info: (20241127 - Julian) 顯示成功 Toast ，下載檔案並關閉 Modal
+        toastHandler({
+          id: 'export-asset-success',
+          type: ToastType.SUCCESS,
+          content: t('asset:ASSET.TOAST_EXPORT_SUCCESS'),
+          closeable: true,
+        });
+
+        // Info: (20241127 - Julian) 下載檔案
+        const url = window.URL.createObjectURL(new Blob([downloadFile as BlobPart]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'voucher.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+  }, [isLoading, success, downloadFile]);
 
   // Info: (20240925 - Julian) 日期排序按鈕
   const displayedIssuedDate = SortingButton({

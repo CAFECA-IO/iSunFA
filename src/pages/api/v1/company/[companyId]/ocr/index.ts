@@ -31,6 +31,7 @@ import { findFileById } from '@/lib/utils/repo/file.repo';
 import { decryptImageFile, parseFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
 import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function readImageFromFilePath(
   fileName: string,
@@ -86,8 +87,11 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
       body: formData,
     });
   } catch (error) {
-    const logError = loggerError(0, 'upload image to AICH failed', error as Error);
-    logError.error('Ocr uploadImageToAICH error, happen when POST AICH API');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'upload image to AICH failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   if (!response || !response.ok) {
@@ -123,10 +127,11 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    const logError = loggerError(0, 'get payload from response JSON failed', error as Error);
-    logError.error(
-      'Ocr getPayloadFromResponseJSON error, happen when await responseJSON from AICH API'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get payload from response JSON failed',
+      errorMessage: (error as Error).message,
+    });
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -207,10 +212,11 @@ export async function postImageToAICH(
     };
     loggerBack.info(result, `Ocr postImageToAICH result, field: ${fileId}`);
   } catch (error) {
-    const logError = loggerError(0, 'postImageToAICH failed', error as Error);
-    logError.error(
-      'Ocr postImageToAICH error, happen when POST Image to AICH API, in postImageToAICH in ocr/index.ts'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'postImageToAICH failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   resultJson.push(result);
@@ -269,10 +275,11 @@ export async function fetchStatus(aichResultId: string) {
 
       status = (await result.json()).payload;
     } catch (error) {
-      const logError = loggerError(0, 'fetchStatus failed', error as Error);
-      logError.error(
-        'Ocr fetchStatus error, happen when fetch AICH API in fetchStatus in ocr/index.ts'
-      );
+      loggerError({
+        userId: DefaultValue.USER_ID.SYSTEM,
+        errorType: 'fetchStatus failed',
+        errorMessage: (error as Error).message,
+      });
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
     }
   }
@@ -368,10 +375,11 @@ export async function createOcrFromAichResults(
       })
     );
   } catch (error) {
-    const logError = loggerError(0, 'createOcrFromAichResults failed', error as Error);
-    logError.error(
-      'Ocr createOcrFromAichResults error, happen when create Ocr in Prisma in ocr/index.ts'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'createOcrFromAichResults failed',
+      errorMessage: (error as Error).message,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -394,8 +402,11 @@ export async function handlePostRequest({
     resultJson = await createOcrFromAichResults(companyId, aichResults);
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (error) {
-    const logError = loggerError(0, 'handlePostRequest failed', error as Error);
-    logError.error('Ocr handlePostRequest error, happen when POST Image to AICH API');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'handlePostRequest failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return {
@@ -411,14 +422,11 @@ export async function handleGetRequest(companyId: number, ocrType?: ocrTypes) {
   try {
     ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType);
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'findManyOCRByCompanyIdWithoutUsedInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Ocr handleGetRequest error, happen when findManyOCRByCompanyIdWithoutUsedInPrisma in ocr/index.ts'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'findManyOCRByCompanyIdWithoutUsedInPrisma failed',
+      errorMessage: (error as Error).message,
+    });
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
@@ -475,8 +483,11 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      const logError = loggerError(userId, 'handle OCR request failed', _error as Error);
-      logError.error('handle OCR request failed in handler function in ocr/index.ts');
+      loggerError({
+        userId,
+        errorType: 'handle OCR request failed',
+        errorMessage: (_error as Error).message,
+      });
     }
   } else {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;

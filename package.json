@@ -14,7 +14,9 @@
     "validate": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json|css)\" && next lint && eslint --fix --ext .js,.jsx,.ts,.tsx . && npm run test",
     "production": "next start -p 80",
     "update-version": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/update_version.ts && git add package.json",
-    "prepare": "husky"
+    "prepare": "husky",
+    "analyze-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/analyze_certificate.ts",
+    "retrieve-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/retrieve_certificate.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",

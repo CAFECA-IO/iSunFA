@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
-import IncomeStatementReportTableRow from './income_statement_report_table_row';
+import IncomeStatementReportTableRow from '@/components/income_statement_report_body/income_statement_report_table_row';
 
 interface IIncomeStatementReportBodyAllProps {
   reportId: string;
