@@ -177,6 +177,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSelectedCompany(null);
     localStorage.removeItem('userId');
     localStorage.removeItem('expired_at');
+    localStorage.removeItem('redirectPath');
     clearAllItems(); // Info: (20240822 - Shirley) 清空 IndexedDB 中的數據
   };
 
