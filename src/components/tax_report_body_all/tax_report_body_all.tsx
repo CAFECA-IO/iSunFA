@@ -19,6 +19,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
 
   // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
 
+  // Deprecated: (20241129 - Liz)
   // const {
   //   data: reportFinancial,
   //   // Info: (20240816 - Anna)
@@ -448,7 +449,8 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
                     financialReport?.content.sales.breakdown.duplicateAndCashRegister.zeroTax
                   )
                 : 'N/A'}{' '}
-              ({/* Info: (20240814 - Anna) 經海關出口免附證明文件者 */}){t('report_401:TAX_REPORT.EXPORT_THROUGH_CUSTOMS')}
+              ({/* Info: (20240814 - Anna) 經海關出口免附證明文件者 */})
+              {t('report_401:TAX_REPORT.EXPORT_THROUGH_CUSTOMS')}
             </td>
             <td className="border border-black px-1 py-0">10</td>
             <td className="border border-black px-1 py-0">
