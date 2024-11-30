@@ -57,33 +57,37 @@ const BalanceSheetPageBody = () => {
   // }, [isPrinting]);
 
   const handleOnBeforePrint = React.useCallback(() => {
+    // ToDo: (20241130 - Liz) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnBeforePrint (Before setting isPrinting):',
       isPrinting
     );
     setIsPrinting(true);
+    // ToDo: (20241130 - Liz) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnBeforePrint (After setting isPrinting):',
       true
     );
 
-    // 強制 React 完成渲染，確保打印模式下渲染正確內容
+    // Info: (20241130 - Liz) 強制 React 完成渲染，確保打印模式下渲染正確內容
     return new Promise<void>((resolve) => {
       setTimeout(() => {
-        resolve(); // 明確調用 resolve，表示完成
-      }, 100); // 延遲 100 毫秒
+        resolve(); // Info: (20241130 - Liz) 明確調用 resolve，表示完成
+      }, 100); // Info: (20241130 - Liz) 延遲 100 毫秒
     });
   }, [isPrinting]);
 
   const handleOnAfterPrint = React.useCallback(() => {
+    // ToDo: (20241130 - Liz) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnAfterPrint (Before resetting isPrinting):',
       isPrinting
     );
     setIsPrinting(false);
+    // ToDo: (20241130 - Liz) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnAfterPrint (After resetting isPrinting):',
