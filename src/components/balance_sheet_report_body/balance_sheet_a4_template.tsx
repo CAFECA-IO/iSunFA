@@ -34,10 +34,10 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
     const result: React.ReactNode[] = [];
     React.Children.forEach(nodes, (node) => {
       if (React.isValidElement(node) && node.props?.children) {
-        // 僅遞迴展平嵌套的子節點
+        // Info: (20241130 - Liz) 僅遞迴展平嵌套的子節點
         result.push(node, ...flattenChildren(node.props.children));
       } else {
-        result.push(node); // 保留完整的 React 元素或文本節點
+        result.push(node); // Info: (20241130 - Liz) 保留完整的 React 元素或文本節點
       }
     });
     return result;
@@ -48,18 +48,19 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
       setTimeout(() => {
         const validRows = rows.filter(
           (row) => React.isValidElement(row) && row.type === 'tr'
-        ) as ReactNode[]; // 強制轉換為 ReactNode[]
+        ) as ReactNode[]; // Info: (20241130 - Liz) 強制轉換為 ReactNode[]
         const splitPages: ReactNode[][] = [];
         for (let i = 0; i < validRows.length; i += rowsPerPage) {
           splitPages.push(validRows.slice(i, i + rowsPerPage));
         }
-        resolve(splitPages); // 渲染完成後返回分頁結果
-      }, 100); // 模擬渲染耗時
+        resolve(splitPages); // Info: (20241130 - Liz) 渲染完成後返回分頁結果
+      }, 100); // Info: (20241130 - Liz) 模擬渲染耗時
     });
   };
   // Info: (20241120 - Anna) 處理 pages[0] 表格分頁
   const firstTableRows = flattenChildren((pages[0] as React.ReactElement)?.props?.children);
   const FirstBlockSplitPages = splitTableRows(firstTableRows, 10);
+  // ToDo: (20241130 - Liz) remove eslint-disable
   // eslint-disable-next-line no-console
   console.log('FirstBlockSplitPages', FirstBlockSplitPages);
 
@@ -77,30 +78,31 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   // Info: (20241120 - Anna) 處理 pages[1] 表格分頁
   const secondTableRows = flattenChildren((pages[1] as React.ReactElement)?.props?.children);
   const SecondBlockSplitPages = splitTableRows(secondTableRows, 10);
+  // ToDo: (20241130 - Liz) remove eslint-disable
   // eslint-disable-next-line no-console
   console.log('SecondBlockSplitPages', SecondBlockSplitPages);
 
-  // 在 useEffect 中使用 async/await 確保渲染完成後更新狀態
+  // Info: (20241130 - Liz) 在 useEffect 中使用 async/await 確保渲染完成後更新狀態
   useEffect(() => {
     (async () => {
       const performSplitFirstBlock = async () => {
-        const splitPages = await splitTableRows(firstTableRows, 10); // 等待分頁完成
-        setFirstBlockSplitPages(splitPages); // 更新狀態
+        const splitPages = await splitTableRows(firstTableRows, 10); // Info: (20241130 - Liz) 等待分頁完成
+        setFirstBlockSplitPages(splitPages); // Info: (20241130 - Liz) 更新狀態
       };
 
-      if (firstTableRows) await performSplitFirstBlock(); // 確保 rows 存在才執行
-    })(); // 確保 rows 存在才執行
+      if (firstTableRows) await performSplitFirstBlock(); // Info: (20241130 - Liz) 確保 rows 存在才執行
+    })();
   }, []);
 
   useEffect(() => {
     (async () => {
       const performSplitSecondBlock = async () => {
-        const splitPages = await splitTableRows(secondTableRows, 10); // 等待分頁完成
-        setSecondBlockSplitPages(splitPages); // 更新狀態
+        const splitPages = await splitTableRows(secondTableRows, 10); // Info: (20241130 - Liz) 等待分頁完成
+        setSecondBlockSplitPages(splitPages); // Info: (20241130 - Liz) 更新狀態
       };
 
-      if (secondTableRows) await performSplitSecondBlock(); // 確保 rows 存在才執行
-    })(); // 確保 rows 存在才執行
+      if (secondTableRows) await performSplitSecondBlock(); // Info: (20241130 - Liz) 確保 rows 存在才執行
+    })();
   }, []);
 
   // Info: (20241120 - Anna)  確保表格分頁後保留表頭
@@ -272,7 +274,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
             className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
           >
             {renderedHeader(false)}
-            <div>{pageContent}</div> {/* 渲染 pageContent */}
+            <div>{pageContent}</div> {/* Info: (20241130 - Liz) 渲染 pageContent */}
             {renderedFooter(firstBlockSplitPages.length + secondBlockSplitPages.length + index + 1)}
           </div>
         </div>
