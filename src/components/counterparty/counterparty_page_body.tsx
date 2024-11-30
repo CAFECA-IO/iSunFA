@@ -8,6 +8,7 @@ import { Button } from '@/components/button/button';
 import { MdPersonAddAlt1 } from 'react-icons/md';
 import { useUserCtx } from '@/contexts/user_context';
 import { ICounterparty } from '@/interfaces/counterparty';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 const CounterpartyPageBody = () => {
   const { selectedCompany } = useUserCtx();
@@ -24,14 +25,8 @@ const CounterpartyPageBody = () => {
   };
 
   // Info: (20241112 - Anna) 使用 APIHandler 來呼叫 COUNTERPARTY_LIST API
-  const { trigger: getCounterpartyList } = APIHandler(
-    APIName.COUNTERPARTY_LIST,
-    {
-      params: { companyId: selectedCompany?.id },
-      query: queryCondition,
-    },
-    false,
-    true
+  const { trigger: getCounterpartyList } = APIHandler<IPaginatedData<ICounterparty[]>>(
+    APIName.COUNTERPARTY_LIST
   );
   const fetchCounterpartyData = async () => {
     if (!selectedCompany?.id) {
@@ -52,9 +47,10 @@ const CounterpartyPageBody = () => {
       // Deprecate: (20241118 - Anna) 檢查 response 的結構
       // eslint-disable-next-line no-console
       console.log('完整的 response:', response);
+      const { success, data: responseData } = response;
 
       // Info: (20241118 - Anna) 檢查 response.success 是否為 true
-      if (!response.success) {
+      if (!success) {
         // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.error('API response 不成功:', response);
@@ -62,10 +58,9 @@ const CounterpartyPageBody = () => {
       }
 
       // Info: (20241118 - Anna) 檢查 response.data 是否有正確的結構
-      const responseData = response.data as { data: ICounterparty[] };
       //  const responseData = response.data as { data: { data: ICounterparty[] } };
 
-      if (Array.isArray(responseData.data)) {
+      if (responseData && Array.isArray(responseData.data)) {
         // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.log('成功取得交易夥伴列表:', responseData.data);

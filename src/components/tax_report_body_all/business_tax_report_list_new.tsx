@@ -1,12 +1,10 @@
-// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
-
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { TaxReport401Content } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useTranslation } from 'next-i18next';
 
@@ -25,38 +23,85 @@ const BusinessTaxList = () => {
   const { isAuthLoading, selectedCompany } = useUserCtx();
   // Info: (20240814 - Anna) 使用 useState 定義 report401 變量的狀態，並將其類型設為 TaxReport401 | null
 
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
 
-  // Deprecated: (20241128 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('進入 BusinessTaxList');
+  // Deprecated: (20241129 - Liz)
+  // const {
+  //   data: reportFinancial,
+  //   // Info: (20240816 - Anna)
+  //   // code: getReportFinancialCode,
+  //   // success: getReportFinancialSuccess,
+  //   isLoading: getReportFinancialIsLoading,
+  // } = APIHandler<TaxReport401Content>(
+  //   APIName.REPORT_GET_BY_ID,
+  //   {
+  //     params: {
+  //       companyId: selectedCompany?.id,
+  //       // Info: (20241017 - Anna) 改用預設的reportId
+  //       // reportId: reportId ?? NON_EXISTING_REPORT_ID,
+  //       reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
+  //     },
+  //   },
+  //   hasCompanyId
+  // );
 
-  const {
-    data: reportFinancial,
-    // Info: (20240816 - Anna)
-    // code: getReportFinancialCode,
-    // success: getReportFinancialSuccess,
-    isLoading: getReportFinancialIsLoading,
-  } = APIHandler<TaxReport401Content>(
-    APIName.REPORT_GET_BY_ID,
-    {
-      params: {
-        companyId: selectedCompany?.id,
-        // Info: (20241017 - Anna) 改用預設的reportId
-        // reportId: reportId ?? NON_EXISTING_REPORT_ID,
-        reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
-      },
-    },
-    hasCompanyId
+  const [financialReport, setFinancialReport] = useState<TaxReport401Content | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const { trigger: getFinancialReportAPI } = APIHandler<TaxReport401Content>(
+    APIName.REPORT_GET_BY_ID
   );
-  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger('reportFinancial in reportId', reportFinancial)
+
+  useEffect(() => {
+    if (isAuthLoading || !selectedCompany) return;
+    if (isLoading) return;
+    setIsLoading(true);
+
+    const getFinancialReport = async () => {
+      try {
+        const {
+          data: report,
+          code: getFRCode,
+          success: getFRSuccess,
+        } = await getFinancialReportAPI({
+          params: {
+            companyId: selectedCompany.id,
+            reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
+          },
+        });
+
+        if (!getFRSuccess) {
+          // Deprecated: (20241129 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('getFinancialReportAPI failed:', getFRCode);
+          return;
+        }
+
+        setFinancialReport(report);
+        // Deprecated: (20241128 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('call getFinancialReportAPI and getFinancialReport:', report);
+      } catch (error) {
+        // console.log('error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getFinancialReport();
+    // Deprecated: (20241128 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('in useEffect and calling getFinancialReport_in BusinessTaxList');
+  }, [isAuthLoading, selectedCompany]);
+
+  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger('financialReport in reportId', financialReport)
 
   // Info: (20240730 - Anna) 格式化數字為千分位
   const formatNumber = (num: number) => num.toLocaleString();
 
   // Info: (20240816 - Anna) 轉換和格式化日期
-  const createdAt = reportFinancial?.createdAt ? new Date(reportFinancial.createdAt * 1000) : null;
-  const updatedAt = reportFinancial?.updatedAt ? new Date(reportFinancial.updatedAt * 1000) : null;
+  const createdAt = financialReport?.createdAt ? new Date(financialReport.createdAt * 1000) : null;
+  const updatedAt = financialReport?.updatedAt ? new Date(financialReport.updatedAt * 1000) : null;
 
   const formatToTaiwanDate = (timestamp: number | null) => {
     // Info: (20240816 - Anna) 如果 timestamp 為 null，返回 'N/A'
@@ -72,7 +117,7 @@ const BusinessTaxList = () => {
   const createdTaiwanDate = createdAt ? formatToTaiwanDate(createdAt.getTime()) : 'N/A';
   const updatedTaiwanDate = updatedAt ? formatToTaiwanDate(updatedAt.getTime()) : 'N/A';
 
-  const page1 = getReportFinancialIsLoading ? (
+  const page1 = isLoading ? (
     <div className="mt-5">
       <Skeleton width={80} height={20} />
     </div>
@@ -87,7 +132,7 @@ const BusinessTaxList = () => {
                 {t('report_401:TAX_REPORT.BUSINESS_ID_NUMBER')}
               </td>
               <td className="border border-black px-1 py-0">
-                {reportFinancial?.content.basicInfo.uniformNumber ?? 'N/A'}
+                {financialReport?.content.basicInfo.uniformNumber ?? 'N/A'}
               </td>
             </tr>
             <tr>
@@ -96,7 +141,7 @@ const BusinessTaxList = () => {
                 {t('report_401:TAX_REPORT.NAME_OF_BUSINESS_ENTITY')}
               </td>
               <td className="border border-black px-1 py-0">
-                {reportFinancial?.content.basicInfo.businessName ?? 'N/A'}
+                {financialReport?.content.basicInfo.businessName ?? 'N/A'}
               </td>
             </tr>
             <tr>
@@ -105,7 +150,7 @@ const BusinessTaxList = () => {
                 {t('report_401:TAX_REPORT.TAX_SERIAL_NUMBER')}
               </td>
               <td className="border border-black px-1 py-0">
-                {reportFinancial?.content.basicInfo.taxSerialNumber ?? 'N/A'}
+                {financialReport?.content.basicInfo.taxSerialNumber ?? 'N/A'}
               </td>
             </tr>
           </tbody>
@@ -136,11 +181,11 @@ const BusinessTaxList = () => {
             <p className="flex-1 text-center">
               {/* 所屬年月份: */}
               {t('report_401:TAX_REPORT.CURRENT_PERIOD')}
-              {reportFinancial?.content.basicInfo.currentYear ?? 'N/A'}
+              {financialReport?.content.basicInfo.currentYear ?? 'N/A'}
               {/* 年 */}
               {t('reports:REPORTS.Y')}
-              {reportFinancial?.content.basicInfo.startMonth ?? 'N/A'}-
-              {reportFinancial?.content.basicInfo.endMonth ?? 'N/A'}
+              {financialReport?.content.basicInfo.startMonth ?? 'N/A'}-
+              {financialReport?.content.basicInfo.endMonth ?? 'N/A'}
               {/* 月 */}
               {t('reports:REPORTS.M')}
             </p>
@@ -201,23 +246,23 @@ const BusinessTaxList = () => {
               {t('report_401:TAX_REPORT.NAME_OF_RESPONSIBLE_PERSON')}
             </td>
             <td className="border border-black px-1 py-0">
-              {reportFinancial?.content.basicInfo.personInCharge ?? 'N/A'}
+              {financialReport?.content.basicInfo.personInCharge ?? 'N/A'}
             </td>
             <td className="text-nowrap border border-black px-1 py-0">
               {/* 營業地址 */}
               {t('report_401:TAX_REPORT.BUSINESS_ADDRESS')}
             </td>
             <td className="border border-black px-1 py-0" colSpan={9}>
-              {reportFinancial?.content.basicInfo.businessAddress ?? 'N/A'}
+              {financialReport?.content.basicInfo.businessAddress ?? 'N/A'}
             </td>
             <td className="text-nowrap border border-black px-1 py-0">
               {/* 使用發票份數 */}
               {t('report_401:TAX_REPORT.NUMBER_OF_USED_INVOICES')}
             </td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.basicInfo.usedInvoiceCount !== undefined &&
-              reportFinancial?.content.basicInfo.usedInvoiceCount !== null
-                ? formatNumber(reportFinancial.content.basicInfo.usedInvoiceCount)
+              {financialReport?.content.basicInfo.usedInvoiceCount !== undefined &&
+              financialReport?.content.basicInfo.usedInvoiceCount !== null
+                ? formatNumber(financialReport.content.basicInfo.usedInvoiceCount)
                 : 'N/A'}
               {/* 份 */}
               {t('report_401:TAX_REPORT.COPIES')}
@@ -280,9 +325,9 @@ const BusinessTaxList = () => {
             </td>
             <td className="w-8% border border-black px-1 py-0">② 101</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.taxCalculation.outputTax !== undefined &&
-              reportFinancial?.content.taxCalculation.outputTax !== null
-                ? formatNumber(reportFinancial?.content.taxCalculation.outputTax)
+              {financialReport?.content.taxCalculation.outputTax !== undefined &&
+              financialReport?.content.taxCalculation.outputTax !== null
+                ? formatNumber(financialReport?.content.taxCalculation.outputTax)
                 : 'N/A'}
             </td>
           </tr>
@@ -293,19 +338,19 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">1</td>
             <td className="w-8% border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.triplicateAndElectronic.sales !==
+              {financialReport?.content.sales.breakdown.triplicateAndElectronic.sales !==
                 undefined &&
-              reportFinancial?.content.sales.breakdown.triplicateAndElectronic.sales !== null
+              financialReport?.content.sales.breakdown.triplicateAndElectronic.sales !== null
                 ? formatNumber(
-                    reportFinancial?.content.sales.breakdown.triplicateAndElectronic.sales
+                    financialReport?.content.sales.breakdown.triplicateAndElectronic.sales
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">2</td>
             <td className="w-8% border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.triplicateAndElectronic.tax !== undefined &&
-              reportFinancial?.content.sales.breakdown.triplicateAndElectronic.tax !== null
-                ? formatNumber(reportFinancial?.content.sales.breakdown.triplicateAndElectronic.tax)
+              {financialReport?.content.sales.breakdown.triplicateAndElectronic.tax !== undefined &&
+              financialReport?.content.sales.breakdown.triplicateAndElectronic.tax !== null
+                ? formatNumber(financialReport?.content.sales.breakdown.triplicateAndElectronic.tax)
                 : 'N/A'}
             </td>
             <td
@@ -313,11 +358,11 @@ const BusinessTaxList = () => {
               colSpan={2}
             >
               3
-              {reportFinancial?.content.sales.breakdown.triplicateAndElectronic.zeroTax !==
+              {financialReport?.content.sales.breakdown.triplicateAndElectronic.zeroTax !==
                 undefined &&
-              reportFinancial?.content.sales.breakdown.triplicateAndElectronic.zeroTax !== null
+              financialReport?.content.sales.breakdown.triplicateAndElectronic.zeroTax !== null
                 ? formatNumber(
-                    reportFinancial?.content.sales.breakdown.triplicateAndElectronic.zeroTax
+                    financialReport?.content.sales.breakdown.triplicateAndElectronic.zeroTax
                   )
                 : 'N/A'}{' '}
               ({/* 非經海關出口應附證明文件者 */})
@@ -330,9 +375,9 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">⑨+⑩ 107</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.taxCalculation.deductibleInputTax !== undefined &&
-              reportFinancial?.content.taxCalculation.deductibleInputTax !== null
-                ? formatNumber(reportFinancial?.content.taxCalculation.deductibleInputTax)
+              {financialReport?.content.taxCalculation.deductibleInputTax !== undefined &&
+              financialReport?.content.taxCalculation.deductibleInputTax !== null
+                ? formatNumber(financialReport?.content.taxCalculation.deductibleInputTax)
                 : 'N/A'}
             </td>
           </tr>
@@ -343,28 +388,28 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">5</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.sales !==
+              {financialReport?.content.sales.breakdown.cashRegisterTriplicate.sales !==
                 undefined &&
-              reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.sales !== null
+              financialReport?.content.sales.breakdown.cashRegisterTriplicate.sales !== null
                 ? formatNumber(
-                    reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.sales
+                    financialReport?.content.sales.breakdown.cashRegisterTriplicate.sales
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">6</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.tax !== undefined &&
-              reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.tax !== null
-                ? formatNumber(reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.tax)
+              {financialReport?.content.sales.breakdown.cashRegisterTriplicate.tax !== undefined &&
+              financialReport?.content.sales.breakdown.cashRegisterTriplicate.tax !== null
+                ? formatNumber(financialReport?.content.sales.breakdown.cashRegisterTriplicate.tax)
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">7</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.zeroTax !==
+              {financialReport?.content.sales.breakdown.cashRegisterTriplicate.zeroTax !==
                 undefined &&
-              reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.zeroTax !== null
+              financialReport?.content.sales.breakdown.cashRegisterTriplicate.zeroTax !== null
                 ? formatNumber(
-                    reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.zeroTax
+                    financialReport?.content.sales.breakdown.cashRegisterTriplicate.zeroTax
                   )
                 : 'N/A'}
             </td>
@@ -375,9 +420,9 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">108</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.taxCalculation.previousPeriodOffset !== undefined &&
-              reportFinancial?.content.taxCalculation.previousPeriodOffset !== null
-                ? formatNumber(reportFinancial?.content.taxCalculation.previousPeriodOffset)
+              {financialReport?.content.taxCalculation.previousPeriodOffset !== undefined &&
+              financialReport?.content.taxCalculation.previousPeriodOffset !== null
+                ? formatNumber(financialReport?.content.taxCalculation.previousPeriodOffset)
                 : 'N/A'}
             </td>
           </tr>
@@ -388,31 +433,31 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">9</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.sales !==
+              {financialReport?.content.sales.breakdown.duplicateAndCashRegister.sales !==
                 undefined &&
-              reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.sales !== null
+              financialReport?.content.sales.breakdown.duplicateAndCashRegister.sales !== null
                 ? formatNumber(
-                    reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.sales
+                    financialReport?.content.sales.breakdown.duplicateAndCashRegister.sales
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">10</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.tax !==
+              {financialReport?.content.sales.breakdown.duplicateAndCashRegister.tax !==
                 undefined &&
-              reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.tax !== null
+              financialReport?.content.sales.breakdown.duplicateAndCashRegister.tax !== null
                 ? formatNumber(
-                    reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.tax
+                    financialReport?.content.sales.breakdown.duplicateAndCashRegister.tax
                   )
                 : 'N/A'}
             </td>
             <td className="justify-between border border-black px-1 py-0" colSpan={2}>
               11{' '}
-              {reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.zeroTax !==
+              {financialReport?.content.sales.breakdown.duplicateAndCashRegister.zeroTax !==
                 undefined &&
-              reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.zeroTax !== null
+              financialReport?.content.sales.breakdown.duplicateAndCashRegister.zeroTax !== null
                 ? formatNumber(
-                    reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.zeroTax
+                    financialReport?.content.sales.breakdown.duplicateAndCashRegister.zeroTax
                   )
                 : 'N/A'}{' '}
               ({/* 經海關出口免附證明文件者 */}){t('report_401:TAX_REPORT.EXPORT_THROUGH_CUSTOMS')}
@@ -425,9 +470,9 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">110</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.taxCalculation.subtotal !== undefined &&
-              reportFinancial?.content.taxCalculation.subtotal !== null
-                ? formatNumber(reportFinancial?.content.taxCalculation.subtotal)
+              {financialReport?.content.taxCalculation.subtotal !== undefined &&
+              financialReport?.content.taxCalculation.subtotal !== null
+                ? formatNumber(financialReport?.content.taxCalculation.subtotal)
                 : 'N/A'}
             </td>
           </tr>
@@ -438,23 +483,23 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">13</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.invoiceExempt.sales !== undefined &&
-              reportFinancial?.content.sales.breakdown.invoiceExempt.sales !== null
-                ? formatNumber(reportFinancial?.content.sales.breakdown.invoiceExempt.sales)
+              {financialReport?.content.sales.breakdown.invoiceExempt.sales !== undefined &&
+              financialReport?.content.sales.breakdown.invoiceExempt.sales !== null
+                ? formatNumber(financialReport?.content.sales.breakdown.invoiceExempt.sales)
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">14</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.invoiceExempt.tax !== undefined &&
-              reportFinancial?.content.sales.breakdown.invoiceExempt.tax !== null
-                ? formatNumber(reportFinancial?.content.sales.breakdown.invoiceExempt.tax)
+              {financialReport?.content.sales.breakdown.invoiceExempt.tax !== undefined &&
+              financialReport?.content.sales.breakdown.invoiceExempt.tax !== null
+                ? formatNumber(financialReport?.content.sales.breakdown.invoiceExempt.tax)
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">15</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.invoiceExempt.zeroTax !== undefined &&
-              reportFinancial?.content.sales.breakdown.invoiceExempt.zeroTax !== null
-                ? formatNumber(reportFinancial?.content.sales.breakdown.invoiceExempt.zeroTax)
+              {financialReport?.content.sales.breakdown.invoiceExempt.zeroTax !== undefined &&
+              financialReport?.content.sales.breakdown.invoiceExempt.zeroTax !== null
+                ? formatNumber(financialReport?.content.sales.breakdown.invoiceExempt.zeroTax)
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">11</td>
@@ -465,9 +510,9 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">111</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.taxCalculation.currentPeriodTaxPayable !== undefined &&
-              reportFinancial?.content.taxCalculation.currentPeriodTaxPayable !== null
-                ? formatNumber(reportFinancial?.content.taxCalculation.currentPeriodTaxPayable)
+              {financialReport?.content.taxCalculation.currentPeriodTaxPayable !== undefined &&
+              financialReport?.content.taxCalculation.currentPeriodTaxPayable !== null
+                ? formatNumber(financialReport?.content.taxCalculation.currentPeriodTaxPayable)
                 : 'N/A'}
             </td>
           </tr>
@@ -478,25 +523,25 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">17</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.returnsAndAllowances.sales !== undefined &&
-              reportFinancial?.content.sales.breakdown.returnsAndAllowances.sales !== null
-                ? formatNumber(reportFinancial?.content.sales.breakdown.returnsAndAllowances.sales)
+              {financialReport?.content.sales.breakdown.returnsAndAllowances.sales !== undefined &&
+              financialReport?.content.sales.breakdown.returnsAndAllowances.sales !== null
+                ? formatNumber(financialReport?.content.sales.breakdown.returnsAndAllowances.sales)
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">18</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.returnsAndAllowances.tax !== undefined &&
-              reportFinancial?.content.sales.breakdown.returnsAndAllowances.tax !== null
-                ? formatNumber(reportFinancial?.content.sales.breakdown.returnsAndAllowances.tax)
+              {financialReport?.content.sales.breakdown.returnsAndAllowances.tax !== undefined &&
+              financialReport?.content.sales.breakdown.returnsAndAllowances.tax !== null
+                ? formatNumber(financialReport?.content.sales.breakdown.returnsAndAllowances.tax)
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">19</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.returnsAndAllowances.zeroTax !==
+              {financialReport?.content.sales.breakdown.returnsAndAllowances.zeroTax !==
                 undefined &&
-              reportFinancial?.content.sales.breakdown.returnsAndAllowances.zeroTax !== null
+              financialReport?.content.sales.breakdown.returnsAndAllowances.zeroTax !== null
                 ? formatNumber(
-                    reportFinancial?.content.sales.breakdown.returnsAndAllowances.zeroTax
+                    financialReport?.content.sales.breakdown.returnsAndAllowances.zeroTax
                   )
                 : 'N/A'}
             </td>
@@ -508,9 +553,9 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">112</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.taxCalculation.currentPeriodFilingOffset !== undefined &&
-              reportFinancial?.content.taxCalculation.currentPeriodFilingOffset !== null
-                ? formatNumber(reportFinancial?.content.taxCalculation.currentPeriodFilingOffset)
+              {financialReport?.content.taxCalculation.currentPeriodFilingOffset !== undefined &&
+              financialReport?.content.taxCalculation.currentPeriodFilingOffset !== null
+                ? formatNumber(financialReport?.content.taxCalculation.currentPeriodFilingOffset)
                 : 'N/A'}
             </td>
           </tr>
@@ -521,23 +566,23 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">21①</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.total.sales !== undefined &&
-              reportFinancial?.content.sales.breakdown.total.sales !== null
-                ? formatNumber(reportFinancial?.content.sales.breakdown.total.sales)
+              {financialReport?.content.sales.breakdown.total.sales !== undefined &&
+              financialReport?.content.sales.breakdown.total.sales !== null
+                ? formatNumber(financialReport?.content.sales.breakdown.total.sales)
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">22②</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.total.tax !== undefined &&
-              reportFinancial?.content.sales.breakdown.total.tax !== null
-                ? formatNumber(reportFinancial?.content.sales.breakdown.total.tax)
+              {financialReport?.content.sales.breakdown.total.tax !== undefined &&
+              financialReport?.content.sales.breakdown.total.tax !== null
+                ? formatNumber(financialReport?.content.sales.breakdown.total.tax)
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">23③</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.sales.breakdown.total.zeroTax !== undefined &&
-              reportFinancial?.content.sales.breakdown.total.zeroTax !== null
-                ? formatNumber(reportFinancial?.content.sales.breakdown.total.zeroTax)
+              {financialReport?.content.sales.breakdown.total.zeroTax !== undefined &&
+              financialReport?.content.sales.breakdown.total.zeroTax !== null
+                ? formatNumber(financialReport?.content.sales.breakdown.total.zeroTax)
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0">13</td>
@@ -547,9 +592,9 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">③×5%+⑩ 113</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.taxCalculation.refundCeiling !== undefined &&
-              reportFinancial?.content.taxCalculation.refundCeiling !== null
-                ? formatNumber(reportFinancial?.content.taxCalculation.refundCeiling)
+              {financialReport?.content.taxCalculation.refundCeiling !== undefined &&
+              financialReport?.content.taxCalculation.refundCeiling !== null
+                ? formatNumber(financialReport?.content.taxCalculation.refundCeiling)
                 : 'N/A'}
             </td>
           </tr>
@@ -565,9 +610,9 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={5} rowSpan={2}>
               <div className="flex items-center">
-                {reportFinancial?.content.sales.totalTaxableAmount !== undefined &&
-                reportFinancial?.content.sales.totalTaxableAmount !== null
-                  ? formatNumber(reportFinancial?.content.sales.totalTaxableAmount)
+                {financialReport?.content.sales.totalTaxableAmount !== undefined &&
+                financialReport?.content.sales.totalTaxableAmount !== null
+                  ? formatNumber(financialReport?.content.sales.totalTaxableAmount)
                   : 'N/A'}
                 {/* 元 */}
                 {t('report_401:TAX_REPORT.NTD')}(
@@ -583,9 +628,9 @@ const BusinessTaxList = () => {
                   </span>
                 </div>
                 ㉗
-                {reportFinancial?.content.sales.includeFixedAsset !== undefined &&
-                reportFinancial?.content.sales.includeFixedAsset !== null
-                  ? formatNumber(reportFinancial?.content.sales.includeFixedAsset)
+                {financialReport?.content.sales.includeFixedAsset !== undefined &&
+                financialReport?.content.sales.includeFixedAsset !== null
+                  ? formatNumber(financialReport?.content.sales.includeFixedAsset)
                   : 'N/A'}
                 {/* 元 */}
                 {t('report_401:TAX_REPORT.NTD')})
@@ -612,9 +657,9 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">114</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.taxCalculation.currentPeriodRefundableTax !== undefined &&
-              reportFinancial?.content.taxCalculation.currentPeriodRefundableTax !== null
-                ? formatNumber(reportFinancial?.content.taxCalculation.currentPeriodRefundableTax)
+              {financialReport?.content.taxCalculation.currentPeriodRefundableTax !== undefined &&
+              financialReport?.content.taxCalculation.currentPeriodRefundableTax !== null
+                ? formatNumber(financialReport?.content.taxCalculation.currentPeriodRefundableTax)
                 : 'N/A'}
             </td>
           </tr>
@@ -627,11 +672,11 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0">115</td>
             <td className="border border-black px-1 py-0 text-right">
-              {reportFinancial?.content.taxCalculation.currentPeriodAccumulatedOffset !==
+              {financialReport?.content.taxCalculation.currentPeriodAccumulatedOffset !==
                 undefined &&
-              reportFinancial?.content.taxCalculation.currentPeriodAccumulatedOffset !== null
+              financialReport?.content.taxCalculation.currentPeriodAccumulatedOffset !== null
                 ? formatNumber(
-                    reportFinancial?.content.taxCalculation.currentPeriodAccumulatedOffset
+                    financialReport?.content.taxCalculation.currentPeriodAccumulatedOffset
                   )
                 : 'N/A'}
             </td>
@@ -708,28 +753,28 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">28</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.uniformInvoice.generalPurchases
+              {/* {financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
                 .amount ?? 'N/A'} */}
-              {reportFinancial?.content.purchases.breakdown.uniformInvoice.generalPurchases
+              {financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
                 .amount !== undefined &&
-              reportFinancial?.content.purchases.breakdown.uniformInvoice.generalPurchases
+              financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
                 .amount !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.uniformInvoice.generalPurchases
+                    financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
                       .amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">29</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax ??
+              {/* {financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax ??
                 'N/A'} */}
-              {reportFinancial?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax !==
+              {financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax !==
                 undefined &&
-              reportFinancial?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax !==
+              financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax !==
                 null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax
+                    financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax
                   )
                 : 'N/A'}
             </td>
@@ -744,9 +789,9 @@ const BusinessTaxList = () => {
               <div className="flex justify-between">
                 <p>82</p>
                 <p>
-                  {reportFinancial?.content.bondedAreaSalesToTaxArea !== undefined &&
-                  reportFinancial?.content.bondedAreaSalesToTaxArea !== null
-                    ? formatNumber(reportFinancial?.content.bondedAreaSalesToTaxArea)
+                  {financialReport?.content.bondedAreaSalesToTaxArea !== undefined &&
+                  financialReport?.content.bondedAreaSalesToTaxArea !== null
+                    ? formatNumber(financialReport?.content.bondedAreaSalesToTaxArea)
                     : 'N/A'}
                   {/* 元 */}
                   {t('report_401:TAX_REPORT.NTD')}
@@ -761,24 +806,24 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">30</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount ??
+              {/* {financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount ??
                 'N/A'} */}
-              {reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount !==
+              {financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount !==
                 undefined &&
-              reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount !==
+              financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount !==
                 null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount
+                    financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">31</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax !==
+              {financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax !==
                 undefined &&
-              reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax !== null
+              financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax
+                    financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax
                   )
                 : 'N/A'}
             </td>
@@ -797,24 +842,24 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">32</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
+              {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
                 .generalPurchases.amount !== undefined &&
-              reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
+              financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
                 .generalPurchases.amount !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
+                    financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
                       .generalPurchases.amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">33</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
+              {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
                 .generalPurchases.tax !== undefined &&
-              reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
+              financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
                 .generalPurchases.tax !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
+                    financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
                       .generalPurchases.tax
                   )
                 : 'N/A'}
@@ -835,24 +880,24 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">34</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
+              {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
                 .amount !== undefined &&
-              reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
+              financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
                 .amount !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
+                    financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
                       .fixedAssets.amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">35</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
+              {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
                 .tax !== undefined &&
-              reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
+              financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
                 .tax !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
+                    financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
                       .fixedAssets.tax
                   )
                 : 'N/A'}
@@ -973,24 +1018,24 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">36</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
+              {financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
                 .amount !== undefined &&
-              reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
+              financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
                 .amount !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.otherTaxableVouchers
+                    financialReport?.content.purchases.breakdown.otherTaxableVouchers
                       .generalPurchases.amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">37</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
+              {financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
                 .tax !== undefined &&
-              reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
+              financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
                 .tax !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.otherTaxableVouchers
+                    financialReport?.content.purchases.breakdown.otherTaxableVouchers
                       .generalPurchases.tax
                   )
                 : 'N/A'}
@@ -1003,24 +1048,24 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">38</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
+              {financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
                 .amount !== undefined &&
-              reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
+              financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
                 .amount !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
+                    financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
                       .amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">39</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets.tax !==
+              {financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets.tax !==
                 undefined &&
-              reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets.tax !==
+              financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets.tax !==
                 null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
+                    financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
                       .tax
                   )
                 : 'N/A'}
@@ -1037,24 +1082,24 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">78</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
+              {financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
                 .amount !== undefined &&
-              reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
+              financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
                 .amount !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
+                    financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
                       .amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">79</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
+              {financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
                 .tax !== undefined &&
-              reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
+              financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
                 .tax !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
+                    financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
                       .tax
                   )
                 : 'N/A'}
@@ -1067,24 +1112,24 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">80</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets
+              {financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets
                 .amount !== undefined &&
-              reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets.amount !==
+              financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets.amount !==
                 null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets
+                    financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets
                       .amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">81</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax !==
+              {financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax !==
                 undefined &&
-              reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax !==
+              financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax !==
                 null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax
+                    financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax
                   )
                 : 'N/A'}
             </td>
@@ -1103,26 +1148,26 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">40</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
+              {financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
                 .amount !== undefined &&
-              reportFinancial?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
+              financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
                 .amount !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.returnsAndAllowances
+                    financialReport?.content.purchases.breakdown.returnsAndAllowances
                       .generalPurchases.amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">41</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
+              {/* {financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
                 .tax ?? 'N/A'} */}
-              {reportFinancial?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
+              {financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
                 .tax !== undefined &&
-              reportFinancial?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
+              financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
                 .tax !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.returnsAndAllowances
+                    financialReport?.content.purchases.breakdown.returnsAndAllowances
                       .generalPurchases.tax
                   )
                 : 'N/A'}
@@ -1135,28 +1180,28 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">42</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
+              {/* {financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
                 .amount ?? 'N/A'} */}
-              {reportFinancial?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
+              {financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
                 .amount !== undefined &&
-              reportFinancial?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
+              financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
                 .amount !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
+                    financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
                       .amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">43</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.returnsAndAllowances.fixedAssets.tax ??
+              {/* {financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets.tax ??
                 'N/A'} */}
-              {reportFinancial?.content.purchases.breakdown.returnsAndAllowances.fixedAssets.tax !==
+              {financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets.tax !==
                 undefined &&
-              reportFinancial?.content.purchases.breakdown.returnsAndAllowances.fixedAssets.tax !==
+              financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets.tax !==
                 null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
+                    financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
                       .tax
                   )
                 : 'N/A'}
@@ -1173,21 +1218,21 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">44</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.total.generalPurchases.amount !==
+              {financialReport?.content.purchases.breakdown.total.generalPurchases.amount !==
                 undefined &&
-              reportFinancial?.content.purchases.breakdown.total.generalPurchases.amount !== null
+              financialReport?.content.purchases.breakdown.total.generalPurchases.amount !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.total.generalPurchases.amount
+                    financialReport?.content.purchases.breakdown.total.generalPurchases.amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">45⑨</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.total.generalPurchases.tax !==
+              {financialReport?.content.purchases.breakdown.total.generalPurchases.tax !==
                 undefined &&
-              reportFinancial?.content.purchases.breakdown.total.generalPurchases.tax !== null
+              financialReport?.content.purchases.breakdown.total.generalPurchases.tax !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.total.generalPurchases.tax
+                    financialReport?.content.purchases.breakdown.total.generalPurchases.tax
                   )
                 : 'N/A'}
             </td>
@@ -1199,19 +1244,19 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">46</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.total.fixedAssets.amount !==
+              {financialReport?.content.purchases.breakdown.total.fixedAssets.amount !==
                 undefined &&
-              reportFinancial?.content.purchases.breakdown.total.fixedAssets.amount !== null
+              financialReport?.content.purchases.breakdown.total.fixedAssets.amount !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.breakdown.total.fixedAssets.amount
+                    financialReport?.content.purchases.breakdown.total.fixedAssets.amount
                   )
                 : 'N/A'}
             </td>
             <td className="border border-black px-1 py-0 text-center">47⑩</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {reportFinancial?.content.purchases.breakdown.total.fixedAssets.tax !== undefined &&
-              reportFinancial?.content.purchases.breakdown.total.fixedAssets.tax !== null
-                ? formatNumber(reportFinancial?.content.purchases.breakdown.total.fixedAssets.tax)
+              {financialReport?.content.purchases.breakdown.total.fixedAssets.tax !== undefined &&
+              financialReport?.content.purchases.breakdown.total.fixedAssets.tax !== null
+                ? formatNumber(financialReport?.content.purchases.breakdown.total.fixedAssets.tax)
                 : 'N/A'}
             </td>
           </tr>
@@ -1231,11 +1276,11 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">48</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={5}>
-              {reportFinancial?.content.purchases.totalWithNonDeductible.generalPurchases !==
+              {financialReport?.content.purchases.totalWithNonDeductible.generalPurchases !==
                 undefined &&
-              reportFinancial?.content.purchases.totalWithNonDeductible.generalPurchases !== null
+              financialReport?.content.purchases.totalWithNonDeductible.generalPurchases !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.totalWithNonDeductible.generalPurchases
+                    financialReport?.content.purchases.totalWithNonDeductible.generalPurchases
                   )
                 : 'N/A'}
               {/* 元 */}
@@ -1269,11 +1314,11 @@ const BusinessTaxList = () => {
             </td>
             <td className="border border-black px-1 py-0 text-center">49</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={5}>
-              {reportFinancial?.content.purchases.totalWithNonDeductible.fixedAssets !==
+              {financialReport?.content.purchases.totalWithNonDeductible.fixedAssets !==
                 undefined &&
-              reportFinancial?.content.purchases.totalWithNonDeductible.fixedAssets !== null
+              financialReport?.content.purchases.totalWithNonDeductible.fixedAssets !== null
                 ? formatNumber(
-                    reportFinancial?.content.purchases.totalWithNonDeductible.fixedAssets
+                    financialReport?.content.purchases.totalWithNonDeductible.fixedAssets
                   )
                 : 'N/A'}
               {/* 元 */}
@@ -1287,9 +1332,9 @@ const BusinessTaxList = () => {
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">73</td>
             <td className="text-nowrap border border-black px-1 py-0 text-end" colSpan={6}>
-              {reportFinancial?.content.imports.taxExemptGoods !== undefined &&
-              reportFinancial?.content.imports.taxExemptGoods !== null
-                ? formatNumber(reportFinancial?.content.imports.taxExemptGoods)
+              {financialReport?.content.imports.taxExemptGoods !== undefined &&
+              financialReport?.content.imports.taxExemptGoods !== null
+                ? formatNumber(financialReport?.content.imports.taxExemptGoods)
                 : 'N/A'}
               {/* 元 */}
               {t('report_401:TAX_REPORT.NTD')}
@@ -1310,9 +1355,9 @@ const BusinessTaxList = () => {
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">74</td>
             <td className="text-nowrap border border-black px-1 py-0 text-end" colSpan={6}>
-              {reportFinancial?.content.imports.foreignServices !== undefined &&
-              reportFinancial?.content.imports.foreignServices !== null
-                ? formatNumber(reportFinancial?.content.imports.foreignServices)
+              {financialReport?.content.imports.foreignServices !== undefined &&
+              financialReport?.content.imports.foreignServices !== null
+                ? formatNumber(financialReport?.content.imports.foreignServices)
                 : 'N/A'}
               {/* 元 */}
               {t('report_401:TAX_REPORT.NTD')}

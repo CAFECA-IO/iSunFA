@@ -1,6 +1,4 @@
-// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
-
-import NavBar from '@/components/nav_bar/nav_bar';
+// import NavBar from '@/components/nav_bar/nav_bar'; // ToDo: (20241129 - Liz) 使用新版的 Layout
 import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import ViewFinancialSection from '@/components/view_financial_section/view_financial_section';
 import {
@@ -11,7 +9,7 @@ import {
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
@@ -29,11 +27,7 @@ interface IServerSideProps {
 }
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
-  // Deprecated: (20241128 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('進入 ViewFinancialReportPage', 'reportId:', reportId, 'reportType:', reportType);
-
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['reports']);
   const { toastHandler } = useModalContext();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const [reportData] = React.useState<IReportOld>({
@@ -45,9 +39,8 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     reportLink: '',
   });
 
-  const [financialReport, setFinancialReport] = React.useState<FinancialReport | null>(null);
-  const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] =
-    React.useState<boolean>(false);
+  const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
+  const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] = useState<boolean>(false);
 
   const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
 
@@ -76,6 +69,9 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
 
         setFinancialReport(reportFinancial);
         setIsGetFinancialReportSuccess(getFRSuccess);
+        // Deprecated: (20241128 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('call getFinancialReportAPI and getFinancialReport:', reportFinancial);
       } catch (error) {
         // console.log('error:', error);
       }
@@ -84,7 +80,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     getFinancialReport();
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport');
+    console.log('in useEffect and calling getFinancialReport_in ViewFinancialReportPage');
   }, [isAuthLoading, reportId, reportType, selectedCompany, t, toastHandler]);
 
   const displayedBody =
@@ -122,8 +118,8 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {t(`common:PLUGIN.${reportData.reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}-
-          iSunFA
+          {t(`reports:PLUGIN.${reportData.reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}
+          - iSunFA
         </title>
 
         <meta
@@ -141,9 +137,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       </Head>
 
       <div className="font-barlow">
-        <div className="">
-          <NavBar />
-        </div>
+        <div className="">{/* <NavBar /> */}</div>
 
         {displayedBody}
       </div>
@@ -161,17 +155,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
     props: {
       reportId: reportId as string,
       reportType: reportType as string,
-      ...(await serverSideTranslations(locale as string, [
-        'common',
-        'report_401',
-        'journal',
-        'kyc',
-        'project',
-        'setting',
-        'terms',
-        'salary',
-        'asset',
-      ])),
+      ...(await serverSideTranslations(locale as string, ['reports', 'report_401', 'common'])),
     },
   };
 };

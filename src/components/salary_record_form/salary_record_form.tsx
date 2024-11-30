@@ -178,7 +178,7 @@ const SalaryRecordForm = () => {
           {/* Info: (20240715 - Julian) Date */}
           <div className="flex w-full flex-col items-start gap-8px md:w-240px">
             <p className="text-sm font-semibold text-input-text-primary">
-              {t('common:DATE_PICKER.DATE')}
+              {t('common:COMMON.DATE')}
             </p>
             <DatePicker
               period={datePeriod}

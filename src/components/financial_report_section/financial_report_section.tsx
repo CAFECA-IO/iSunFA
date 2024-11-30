@@ -1,5 +1,3 @@
-// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
-
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
@@ -34,7 +32,7 @@ interface IFinancialReportSectionProps {
 const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) => {
   // Info: (20240807 - Anna) 初始化 useRouter
   const router = useRouter();
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['reports', 'report_401']);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { selectedCompany } = useUserCtx();
   const {
@@ -158,7 +156,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           title: '',
           subtitle: t('report_401:MY_REPORTS_SECTION.WE_RECEIVED_YOUR_APPLICATION'),
           content: t('report_401:MY_REPORTS_SECTION.TAKE_MINUTES'),
-          submitBtnStr: t('common:COMMON.CLOSE'),
+          submitBtnStr: t('reports:COMMON.CLOSE'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
             // Info: (20240807 - Anna) 在成功生成報告後，將導航函數作為submitBtnFunction傳入⭢執行導航
@@ -199,7 +197,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             className="text-center text-input-text-input-filled"
             style={{ whiteSpace: 'nowrap' }}
           >
-            {t('common:COMMON.PROJECT')}
+            {t('reports:COMMON.PROJECT')}
           </div>
           <div
             className={`h-11 w-px ${
@@ -215,7 +213,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
             {DUMMY_PROJECTS_MAP[selectedProjectName].name === 'Overall'
-              ? t('common:COMMON.OVERALL')
+              ? t('reports:COMMON.OVERALL')
               : DUMMY_PROJECTS_MAP[selectedProjectName].name}
           </div>
 
@@ -239,7 +237,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-input-text-input-filled shadow-sm">
             <input
               type="text"
-              placeholder={t('common:COMMON.SEARCH')}
+              placeholder={t('reports:COMMON.SEARCH')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none focus:outline-none"
@@ -281,7 +279,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                       {/* Info: (20240710 - Anna) {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
-                        ? t('common:COMMON.OVERALL')
+                        ? t('reports:COMMON.OVERALL')
                         : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
                   </div>
@@ -303,7 +301,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         onClick={typeMenuClickHandler}
       >
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-          {t(`common:PLUGIN.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
+          {t(`reports:PLUGIN.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
@@ -327,7 +325,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               {/* Info: (20240710 - Anna) {name} */}
-              {t(`common:PLUGIN.${name.toUpperCase().replace(/ /g, '_')}`)}
+              {t(`reports:PLUGIN.${name.toUpperCase().replace(/ /g, '_')}`)}
             </li>
           ))}
         </ul>
@@ -433,7 +431,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('common:COMMON.PROJECT')}
+              {t('reports:COMMON.PROJECT')}
             </div>
 
             {displayedProjectMenu}

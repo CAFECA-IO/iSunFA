@@ -20,7 +20,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastId } from '@/constants/toast_id';
 
 const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('asset');
   const router = useRouter();
 
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
@@ -109,7 +109,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
       content: t('asset:ASSET_DETAIL_PAGE.DELETE_MESSAGE_CONTENT'),
       submitBtnStr: t('asset:ASSET_DETAIL_PAGE.DELETE_MESSAGE_SUBMIT_BTN'),
       submitBtnFunction: deleteAsset, // Info: (20241028 - Julian) Call API to delete asset (voucher will be deleted too)
-      backBtnStr: t('common:COMMON.CANCEL'),
+      backBtnStr: t('asset:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -203,17 +203,17 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
           {/* Info: (20240925 - Julian) Years */}
           <p className="text-text-neutral-primary">
             {remainingYears}{' '}
-            <span className="text-text-neutral-tertiary">{t('common:COMMON.Y')}</span>
+            <span className="text-text-neutral-tertiary">{t('asset:COMMON.Y')}</span>
           </p>
           {/* Info: (20240925 - Julian) Months */}
           <p className="text-text-neutral-primary">
             {remainingMonths}{' '}
-            <span className="text-text-neutral-tertiary">{t('common:COMMON.M')}</span>
+            <span className="text-text-neutral-tertiary">{t('asset:COMMON.M')}</span>
           </p>
           {/* Info: (20240925 - Julian) Days */}
           <p className="text-text-neutral-primary">
             {remainingDays}{' '}
-            <span className="text-text-neutral-tertiary">{t('common:COMMON.D')}</span>
+            <span className="text-text-neutral-tertiary">{t('asset:COMMON.D')}</span>
           </p>
         </div>
         {/* Info: (20240925 - Julian) process bar */}
@@ -262,7 +262,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isPurchasePrice = !isLoading ? (
     <p>
       {numberWithCommas(purchasePrice)}{' '}
-      <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{t('asset:COMMON.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -270,7 +270,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isAccumDep = !isLoading ? (
     <p>
       {numberWithCommas(accumulatedDepreciation)}{' '}
-      <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{t('asset:COMMON.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -278,7 +278,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isResidualValue = !isLoading ? (
     <p>
       {numberWithCommas(residualValue)}{' '}
-      <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{t('asset:COMMON.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />

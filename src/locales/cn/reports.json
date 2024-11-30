@@ -14,5 +14,27 @@
     "MIDTERM": "期中",
     "ENDING": "结束日",
     "TWD": "新台币"
+  },
+  "PLUGIN": {
+    "RESERVE_RATIO_BLOCK_TITLE": "最新的 TideBit ",
+    "RESERVE_RATIO_BLOCK_TITLE_HIGHLIGHT": "储备金比例",
+    "RESERVE_RATIO_BLOCK_TITLE_2": "",
+    "DOWNLOAD_REPORT": "下载报告",
+    "RESERVE_RATIO_BLOCK_CARD": "储备金比例",
+    "RESERVE_RATIO_BLOCK_CARD_2": "区块链",
+    "RESERVE_RATIO_BLOCK_DESCRIPTION": "TideBit 用户资产持有量",
+    "RESERVE_RATIO_BLOCK_DESCRIPTION_2": "TideBit 钱包资产",
+    "SMART": "人工智慧",
+    "AUDITING_REPORTS": "监管报告",
+    "LAST_UPDATED": "最后更新",
+    "COMPREHENSIVE_INCOME_STATEMENT": "综合损益表",
+    "STATEMENT_OF_COMPREHENSIVE_INCOME": "综合损益表",
+    "BALANCE_SHEET": "资产负债表",
+    "CASH_FLOW_STATEMENT": "现金流量表",
+    "STATEMENT_OF_CASH_FLOWS": "现金流量表",
+    "REPORT_401": "营业人销售额与税额申报书(401)",
+    "CHANGE_IN_EQUITY_STATEMENT": "权益变动表",
+    "RED_FLAG_ANALYSIS": "风险分析",
+    "POWERED_BY": "技术支持"
   }
 }

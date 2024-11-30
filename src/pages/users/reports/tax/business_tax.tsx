@@ -1,5 +1,3 @@
-// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
-
 import React from 'react';
 import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
@@ -33,7 +31,7 @@ const BusinessTaxPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['layout', 'common', 'reports'])),
+    ...(await serverSideTranslations(locale, ['layout', 'date_picker', 'reports', 'report_401'])),
     locale,
   },
 });

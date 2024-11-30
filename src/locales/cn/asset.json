@@ -1,7 +1,7 @@
 {
   "ASSET": {
     "ASSET_LIST_PAGE_TITLE": "资产清单",
-    "EXPORT_ASSET_LIST": "导出资产清单",
+    "EXPORT_ASSET_LIST": "汇出资产清单",
     "ACQUISITION_DATE": "取得日期",
     "TYPE": "类型",
     "ASSET_NAME": "资产编号/名称",
@@ -15,7 +15,9 @@
     "STATUS_MISSING": "已遗失",
     "STATUS_NORMAL": "使用中",
     "EXPORT_ASSET_LIST_WARNING_TITLE": "警告",
-    "EXPORT_ASSET_LIST_WARNING_CONTENT": "请至少选择一个资产以导出。",
+    "EXPORT_ASSET_LIST_WARNING_CONTENT": "请至少选择一个资产以汇出。",
+    "TOAST_EXPORT_SUCCESS": "资产已成功汇出。",
+    "TOAST_EXPORT_FAILED": "资产汇出失败，请稍后再试。",
     "OK_BTN": "好"
   },
   "STATUS_SETTING_MODAL": {
@@ -80,5 +82,14 @@
     "CONFIRM_MESSAGE_TITLE": "您确定要更新此资产吗？",
     "CONFIRM_MESSAGE_BTN": "是的，更新资产",
     "TOAST_SUCCESS": "资产已更新"
+  },
+  "COMMON": {
+    "CANCEL": "取消",
+    "M": "月",
+    "Y": "年",
+    "D": "日",
+    "TWD": "新台币",
+    "SELECT_ALL": "全选",
+    "SELECT": "选择"
   }
 }

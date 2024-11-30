@@ -15,7 +15,7 @@ interface IAssetItemProps {
 }
 
 const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isCheckBoxOpen }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('asset');
 
   const {
     id: assetId,
@@ -32,7 +32,7 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
     isSelected,
   } = assetData;
 
-  const unit = currencyAlias === 'TWD' ? t('common:COMMON.TWD') : currencyAlias;
+  const unit = currencyAlias === 'TWD' ? t('asset:COMMON.TWD') : currencyAlias;
   const assetTypeCode = assetType.split(' ')[0];
   const assetTypeTitle = assetType.split(' ').slice(1).join(' ');
 
@@ -111,17 +111,17 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
           {/* Info: (20240925 - Julian) Years */}
           <p className="text-text-neutral-primary">
             {remainingYears}{' '}
-            <span className="text-text-neutral-tertiary">{t('common:COMMON.Y')}</span>
+            <span className="text-text-neutral-tertiary">{t('asset:COMMON.Y')}</span>
           </p>
           {/* Info: (20240925 - Julian) Months */}
           <p className="text-text-neutral-primary">
             {remainingMonths}{' '}
-            <span className="text-text-neutral-tertiary">{t('common:COMMON.M')}</span>
+            <span className="text-text-neutral-tertiary">{t('asset:COMMON.M')}</span>
           </p>
           {/* Info: (20240925 - Julian) Days */}
           <p className="text-text-neutral-primary">
             {remainingDays}{' '}
-            <span className="text-text-neutral-tertiary">{t('common:COMMON.D')}</span>
+            <span className="text-text-neutral-tertiary">{t('asset:COMMON.D')}</span>
           </p>
         </div>
         {/* Info: (20240925 - Julian) process bar */}
@@ -140,12 +140,13 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
     >
       {/* Info: (20240920 - Julian) Select */}
       <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
-        <div className="relative top-20px px-8px">
+        <div className="relative top-20px z-10 px-8px">
           <input
             type="checkbox"
             className={checkboxStyle}
             checked={isSelected}
             onChange={checkboxHandler}
+            onClick={(e) => e.stopPropagation()} // Info: (20241127 - Julian) Prevent the event from bubbling up
           />
         </div>
       </div>

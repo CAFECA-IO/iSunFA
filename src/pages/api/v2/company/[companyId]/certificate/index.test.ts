@@ -3,13 +3,17 @@ import handler from '@/pages/api/v2/company/[companyId]/certificate/index';
 import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { InvoiceTabs } from '@/constants/certificate';
-import { certificateListSchema, certificatePostSchema } from '@/lib/utils/zod_schema/certificate';
+import {
+  certificateListSchema,
+  certificateMultiDeleteSchema,
+  certificatePostSchema,
+} from '@/lib/utils/zod_schema/certificate';
 import { InvoiceType } from '@/constants/invoice';
 
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
     userId: 1000,
-    companyId: 10000000,
+    companyId: 1000,
   }),
 }));
 
@@ -99,7 +103,7 @@ describe('company/[companyId]/certificate integration test', () => {
           companyId: '1000',
         },
         body: {
-          fileId: 1009,
+          fileIds: [1009],
         },
         method: 'POST',
         json: jest.fn(),
@@ -111,6 +115,36 @@ describe('company/[companyId]/certificate integration test', () => {
       } as unknown as jest.Mocked<NextApiResponse>;
 
       const outputValidator = certificatePostSchema.frontend;
+
+      await handler(req, res);
+
+      // Info: (20241105 - Murky) res.json的回傳值
+      const apiResponse = res.json.mock.calls[0][0];
+      const { success } = outputValidator.safeParse(apiResponse.payload);
+      expect(success).toBe(true);
+    });
+  });
+
+  describe('Delete certificate', () => {
+    it('should return data match frontend validator', async () => {
+      req = {
+        headers: {},
+        query: {
+          companyId: '1000',
+        },
+        body: {
+          certificateIds: [1000, 1001],
+        },
+        method: 'DELETE',
+        json: jest.fn(),
+      } as unknown as jest.Mocked<NextApiRequest>;
+
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as jest.Mocked<NextApiResponse>;
+
+      const outputValidator = certificateMultiDeleteSchema.frontend;
 
       await handler(req, res);
 

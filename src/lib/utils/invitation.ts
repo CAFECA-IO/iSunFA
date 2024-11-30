@@ -3,7 +3,7 @@ import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
 import { formatInvitation } from '@/lib/utils/formatter/invitation.formatter';
 import { IAdmin } from '@/interfaces/admin';
 import { Invitation } from '@prisma/client';
-import { timestampInSeconds } from './common';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function useInvitation(
   invitation: Invitation,

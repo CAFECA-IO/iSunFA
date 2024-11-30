@@ -193,7 +193,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
           <input
             id="search-accounting"
             type="text"
-            placeholder={t('common:COMMON.SEARCH')}
+            placeholder={t('search:COMMON.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"

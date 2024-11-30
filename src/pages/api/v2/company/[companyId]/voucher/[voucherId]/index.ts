@@ -113,7 +113,11 @@ export const handleGetRequest: IHandleRequest<
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   } catch (_error) {
     const error = _error as Error;
-    loggerError(userId, 'Voucher Get One handleGetRequest', error.message).error(error);
+    loggerError({
+      userId,
+      errorType: 'Voucher Get One handleGetRequest',
+      errorMessage: error.message,
+    });
   }
 
   return {
@@ -320,7 +324,11 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
     payload = updatedVoucher?.id || null;
   } catch (_error) {
     const error = _error as Error;
-    loggerError(userId, 'Voucher Put handlePutRequest', error.message).error(error);
+    loggerError({
+      userId,
+      errorType: 'Voucher Put handlePutRequest',
+      errorMessage: error.message,
+    });
   }
 
   return {
@@ -416,7 +424,11 @@ export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, numb
     statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
   } catch (_error) {
     const error = _error as Error;
-    loggerError(userId, 'Voucher Delete handleDeleteRequest', error.message).error(error);
+    loggerError({
+      userId,
+      errorType: 'Voucher Delete handleDeleteRequest',
+      errorMessage: error.message,
+    });
   }
   return {
     statusMessage,
@@ -459,8 +471,11 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    });
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);

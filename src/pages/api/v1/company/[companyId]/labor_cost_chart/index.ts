@@ -125,10 +125,11 @@ async function handleGetRequest(
           };
           statusMessage = STATUS_MESSAGE.SUCCESS_GET;
         } catch (error) {
-          const logError = loggerError(userId, 'handleGetRequest failed', error as Error);
-          logError.error(
-            'Prisma related func. in handleGetRequest in labor_cost_chart/index.ts failed'
-          );
+          loggerError({
+            userId,
+            errorType: 'handleGetRequest failed',
+            errorMessage: (error as Error).message,
+          });
           statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
         }
       }
