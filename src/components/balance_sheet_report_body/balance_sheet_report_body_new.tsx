@@ -26,8 +26,10 @@ const BalanceSheetPageBody = () => {
 
   useEffect(() => {
     if (isPrinting && printRef.current) {
+      // ToDo: (20241130 - Liz) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('balance_sheet_report_body.觀察 Printing content:', printRef.current.innerHTML);
+      // ToDo: (20241130 - Liz) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('balance_sheet_report_body.觀察 isPrinting?', isPrinting);
     }
