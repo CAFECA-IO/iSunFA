@@ -20,10 +20,14 @@ import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import Toggle from '@/components/toggle/toggle';
 import { useGlobalCtx } from '@/contexts/global_context';
+// import { useReactToPrint } from 'react-to-print';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
+  isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
+  printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
+  printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
 }
 
 // Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
@@ -40,20 +44,113 @@ const COLOR_CLASSES = [
   'bg-[#9B8AFB]',
 ];
 
-const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }) => {
-  const { t } = useTranslation('balance');
+const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
+  selectedDateRange,
+  isPrinting, // Info: (20241122 - Anna) 使用打印狀態
+  printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
+  printFn, // Info: (20241122 - Anna) 使用打印函數
+}) => {
+  const { t } = useTranslation(['report_401']);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+
+  // Info: (20241121 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
+  // const printRef = useRef<HTMLDivElement>(null);
+
   // Info: (20241112 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
-  const [isPrinting, setIsPrinting] = useState(false);
+  // const [isPrinting, setIsPrinting] = useState(false);
 
-  const handlePrint = () => {
-    setIsPrinting(true); // Info: (20241112 - Anna) 開啟列印模式
-    window.print(); // Info: (20241112 - Anna) 觸發列印
-  };
+  // const handlePrint = () => {
+  //   // setIsPrinting(true); // Info: (20241118 - Anna) 開啟列印模式
+  //   // setTimeout(() => {
+  //   //   window.print(); // Info: (20241118 - Anna) 觸發瀏覽器列印
+  //   //   setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
+  //   // }, 500); // Info: (20241118 - Anna) 等待渲染完成後再列印
 
-  // Info: (20241112 - Anna) 動態應用分頁樣式
-  const printContainerClass = isPrinting ? 'mx-auto w-a4-width origin-top overflow-x-auto' : '';
-  const printContentClass = isPrinting ? 'relative h-a4-height overflow-hidden' : '';
+  //   //  window.print(); // Info: (20241118 - Anna) 預覽PDF
+
+  //   setIsPrinting(true); // Info: (20241118 - Anna) 啟動列印模式 不會預覽PDF
+  // };
+  // const handlePrint = async () => {
+  //   setIsPrinting(true); // 啟用列印模式
+
+  //   const waitForRender = () => {
+  //     return new Promise<void>((resolve) => {
+  //       const observer = new MutationObserver(() => {
+  //         const allPagesRendered = document.querySelectorAll('.print-content').length > 0;
+  //         if (allPagesRendered) {
+  //           observer.disconnect();
+  //           resolve();
+  //         }
+  //       });
+
+  //       observer.observe(document.body, { childList: true, subtree: true });
+
+  //       // 超時保證流程不會卡死
+  //       setTimeout(() => {
+  //         observer.disconnect();
+  //         resolve();
+  //       }, 5000);
+  //     });
+  //   };
+
+  //   await waitForRender();
+  //   window.print(); // 觸發列印
+  //   setIsPrinting(false); // 退出列印模式
+  // };
+  // const handlePrint = () => {
+  //   setIsPrinting(true); // 啟用列印模式
+  //   setTimeout(() => {
+  //     window.print(); // 直接使用瀏覽器列印功能
+  //     setIsPrinting(false); // 列印完成後退出列印模式
+  //   }, 500); // 等待 500ms 確保渲染完成
+  // };
+
+  // const handlePrint = useReactToPrint({
+  //   content: () => printRef.current as HTMLElement,
+  //   documentTitle: 'Balance Sheet Report',
+  //   onBeforePrint: async () => {
+  //     // eslint-disable-next-line no-console
+  //     console.log('Before Print: isPrinting =', isPrinting);
+  //     return Promise.resolve();
+  //   },
+  //   onAfterPrint: async () => {
+  //     setIsPrinting(false);
+  //     // eslint-disable-next-line no-console
+  //     console.log('After Print: isPrinting =', isPrinting);
+  //     return Promise.resolve();
+  //   },
+  // } as unknown as Parameters<typeof useReactToPrint>[0]);
+
+  // const handlePrint = useReactToPrint({
+  //   printRef,
+  // } as unknown as Parameters<typeof useReactToPrint>[0]);
+
+  // const handlePrintClick = () => {
+  //   setIsPrinting(true); // 啟用列印模式
+  //   handlePrint(); // 呼叫列印
+  // };
+
+  // const handleOnAfterPrint = React.useCallback(() => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('onAfterPrint call ');
+  // }, []);
+
+  // const handleOnBeforePrint = React.useCallback(() => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('onBeforePrint call ');
+  //   return Promise.resolve();
+  // }, []);
+
+  // const printFn = useReactToPrint({
+  //   contentRef: printRef,
+  //   documentTitle: 'alance Sheet Report',
+  //   onAfterPrint: handleOnAfterPrint,
+  //   onBeforePrint: handleOnBeforePrint,
+  // });
+
+  // const handleOnClick = React.useCallback(() => {
+  //   printFn();
+  // }, [printFn]);
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
@@ -142,9 +239,11 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
 
   // Info: (20241023 - Anna) 在 useEffect 中依賴 getBalanceSheetReport，當日期範圍變更時觸發 API 請求
   useEffect(() => {
-    if (!selectedDateRange) return; // Info: (20241023 - Anna) 如果尚未選擇日期區間，不觸發請求
+    // if (!selectedDateRange) return; // Info: (20241023 - Anna) 如果尚未選擇日期區間，不觸發請求
+    if (!selectedDateRange || selectedDateRange.startTimeStamp === 0) return; // Info: (20241121 - Anna) 新增檢查
     getBalanceSheetReport();
-  }, [getBalanceSheetReport, selectedDateRange]);
+    // }, [getBalanceSheetReport, selectedDateRange]); // Info: (20241121 - Anna) 直接依賴 getBalanceSheetReport
+  }, [selectedDateRange, getBalanceSheetReport]); // Info: (20241121 - Anna) 簡化依賴
 
   const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
   const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
@@ -232,21 +331,79 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     }
   }, [reportFinancial, totalSubAccountsToggle]); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 作為依賴項
 
+  // useEffect(() => {
+  //   // Info: (20241112 - Anna) 列印之前啟動列印模式
+  //   const handleBeforePrint = () => setIsPrinting(true);
+  //   // Info: (20241112 - Anna) 列印之後退出列印模式
+  //   const handleAfterPrint = () => setIsPrinting(false);
+
+  //   window.addEventListener('beforeprint', handleBeforePrint);
+  //   window.addEventListener('afterprint', handleAfterPrint);
+
+  //   // Info: (20241112 - Anna) 清除事件監聽器
+  //   return () => {
+  //     window.removeEventListener('beforeprint', handleBeforePrint);
+  //     window.removeEventListener('afterprint', handleAfterPrint);
+  //   };
+  // }, []);
+
+  // useEffect(() => {
+  //   if (isPrinting) {
+  //     const observer = new MutationObserver(() => {
+  //       // Info: (20241118 - Anna) 檢查所有需要的 ID 是否渲染完成
+  //       const requiredIds = ['#1', '#2', '#3', '#4', '#5'];
+  //       const allRendered = requiredIds.every((id) => document.querySelector(id));
+
+  //       if (allRendered) {
+  //         observer.disconnect(); // Info: (20241118 - Anna) 停止監控
+  //         window.print(); // Info: (20241118 - Anna) 所有節點渲染完成後觸發列印
+  //        // setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
+  //       }
+  //     });
+
+  //     // Info: (20241118 - Anna) 監控目標節點的變化
+  //     observer.observe(document.body, {
+  //       childList: true,
+  //       subtree: true,
+  //     });
+
+  //     // Info: (20241118 - Anna) 返回清理函數以移除監控器
+  //     return () => {
+  //       observer.disconnect(); // Info: (20241118 - Anna) 確保監控器被清理
+  //     };
+  //   }
+
+  //   // Info: (20241118 - Anna) 如果 `isPrinting` 為假，則返回空清理函數，滿足 ESLint 的要求
+  //   return () => {};
+  // }, [isPrinting]);
+
   useEffect(() => {
-    // Info: (20241112 - Anna) 列印之前啟動列印模式
-    const handleBeforePrint = () => setIsPrinting(true);
-    // Info: (20241112 - Anna) 列印之後退出列印模式
-    const handleAfterPrint = () => setIsPrinting(false);
+    if (isPrinting && printRef.current) {
+      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('balance_sheet_list 觀察 Printing content:', printRef.current.innerHTML);
+      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('BalanceSheetList received isPrinting?', isPrinting);
+    } else {
+      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('BalanceSheetList printRef is null');
+    }
+  }, [isPrinting]);
 
-    window.addEventListener('beforeprint', handleBeforePrint);
-    window.addEventListener('afterprint', handleAfterPrint);
-
-    // Info: (20241112 - Anna) 清除事件監聽器
-    return () => {
-      window.removeEventListener('beforeprint', handleBeforePrint);
-      window.removeEventListener('afterprint', handleAfterPrint);
-    };
-  }, []);
+  // Info: (20241122 - Anna) 打印 Ref 的內容
+  useEffect(() => {
+    if (printRef.current) {
+      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('balance_sheet_list 觀察 Current printRef content:', printRef.current);
+    } else {
+      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('BalanceSheetList printRef is currently null');
+    }
+  }, [printRef]);
 
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
@@ -280,7 +437,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
 
   const displayedCurALRChart = isNoDataForCurALR ? (
     <div className="ml-20">
-      {/* // ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
+      {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="200"
@@ -290,7 +447,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('balance:COMMON.NO_DATA')}
+          {t('reports:REPORTS.NO_DATA')}
         </text>
       </svg>
     </div>
@@ -302,7 +459,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
 
   const displayedPreALRChart = isNoDataForPreALR ? (
     <div className="ml-20">
-      {/* // ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
+      {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="200"
@@ -312,7 +469,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('balance:COMMON.NO_DATA')}
+          {t('reports:REPORTS.NO_DATA')}
         </text>
       </svg>
     </div>
@@ -408,6 +565,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
               {/* Info: (20241021 - Anna) 如果有 children 才顯示 CollapseButton */}
               {item.children && item.children.length > 0 && (
                 <CollapseButton
+                  className="print:hidden"
                   // Info: (20241017 - Anna) 指定 item 的 code 作為參數
                   onClick={() => toggleSubAccounts(item.code)}
                   // Info: (20241017 - Anna) 依據每個 item 的狀態決定是否展開
@@ -444,7 +602,11 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
                     </div>
                     {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給
                     BalanceDetailsButton，用於顯示彈出視窗的標題 */}
-                    <BalanceDetailsButton accountName={child.name} accountId={child.accountId} />
+                    <BalanceDetailsButton
+                      accountName={child.name}
+                      accountId={child.accountId}
+                      className="print:hidden"
+                    />
                   </div>
                 </td>
                 <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
@@ -467,26 +629,32 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     return rows;
   };
   // Info: (20241029 - Anna) 子科目 Toggle 開關、列印及下載按鈕
-  const displayedSelectArea = (
-    <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap">
-      <div className="flex items-center gap-4">
-        <Toggle
-          id="totalSubAccounts-toggle"
-          initialToggleState={totalSubAccountsToggle}
-          getToggledState={totalSubAccountsToggleHandler}
-          toggleStateFromParent={totalSubAccountsToggle}
-        />
-        <span className="text-neutral-600">{t('balance:COMMON.DISPLAY_SUB_ACCOUNTS')}</span>
+  // const displayedSelectArea = (ref: React.RefObject<HTMLDivElement>) => {
+  const displayedSelectArea = () => {
+    // Deprecated: (20241130 - Liz) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log('[displayedSelectArea] Display Area Rendered');
+    return (
+      <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
+        <div className="flex items-center gap-4">
+          <Toggle
+            id="totalSubAccounts-toggle"
+            initialToggleState={totalSubAccountsToggle}
+            getToggledState={totalSubAccountsToggleHandler}
+            toggleStateFromParent={totalSubAccountsToggle}
+          />
+          <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
+        </div>
+        <div className="ml-auto flex items-center gap-24px">
+          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
+          <PrintButton onClick={printFn} disabled={false} />
+        </div>
       </div>
-      <div className="ml-auto flex items-center gap-24px">
-        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
-        <PrintButton onClick={handlePrint} disabled={false} />
-      </div>
-    </div>
-  );
+    );
+  };
 
   const ItemSummary = (
-    <div id="1" className={`${printContentClass} relative overflow-y-hidden`}>
+    <div id="1" className="relative overflow-y-hidden">
       {/* Info: (20240723 - Shirley) watermark logo */}
       <div className="relative right-0 top-16 z-0">
         <Image
@@ -546,7 +714,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ItemDetail = (
-    <div id="2" className={`${printContentClass} relative overflow-y-hidden`}>
+    <div id="2" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
@@ -591,7 +759,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ProportionalTable = (
-    <div id="3" className={`${printContentClass} relative overflow-y-hidden`}>
+    <div id="3" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>資產負債比例表</p>
@@ -604,7 +772,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
                 {curAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
                     <span className="w-200px">{label}</span>
                   </li>
@@ -620,7 +788,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
                 {preAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
                     <span className="w-200px">{label}</span>
                   </li>
@@ -643,7 +811,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const AssetItem = (
-    <div id="4" className={`${printContentClass} relative overflow-y-hidden`}>
+    <div id="4" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>資產分布圖</p>
@@ -662,7 +830,13 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
                   </li>
                 ))}
               </ul>
-              <PieChartAssets data={curAssetMixRatio} labels={curAssetMixLabels} colors={COLORS} />
+              <div className="relative" style={{ marginTop: '-20px' }}>
+                <PieChartAssets
+                  data={curAssetMixRatio}
+                  labels={curAssetMixLabels}
+                  colors={COLORS}
+                />
+              </div>
             </div>
           </div>
 
@@ -679,7 +853,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
                   </li>
                 ))}
               </ul>
-              <PieChartAssets data={preAssetMixRatio} labels={preAssetMixLabels} colors={COLORS} />
+              <div className="relative" style={{ marginTop: '-20px' }}>
+                {' '}
+                <PieChartAssets
+                  data={preAssetMixRatio}
+                  labels={preAssetMixLabels}
+                  colors={COLORS}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -696,7 +877,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const TurnoverDay = (
-    <div id="5" className={`${printContentClass} relative overflow-y-hidden`}>
+    <div id="5" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>應收帳款週轉天數</p>
@@ -759,11 +940,61 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
 
+  // Info: (20241118 - Anna) 如果正在列印，僅渲染列印模式的內容
+  // if (isPrinting) {
+  //   // eslint-disable-next-line no-console
+  //   console.log('printRef', printRef);
+  //   return (
+  //     <div ref={printRef} className="mx-auto w-full origin-top overflow-x-auto print:block">
+  //       <BalanceSheetA4Template
+  //         reportFinancial={reportFinancial}
+  //         curDate={curDate}
+  //         preDate={preDate}
+  //       >
+  //         {ItemSummary}
+  //         {ItemDetail}
+  //         {ProportionalTable}
+  //         {AssetItem}
+  //         {TurnoverDay}
+  //       </BalanceSheetA4Template>
+  //     </div>
+  //   );
+  // }
+
+  // return (
+  //   <div className="mx-auto w-full origin-top overflow-x-auto">
+  //     {displayedSelectArea(printRef)}
+  //     {ItemSummary}
+  //     <hr className="break-before-page" />
+  //     {ItemDetail}
+  //     <hr className="break-before-page" />
+  //     {ProportionalTable}
+  //     <hr className="mb-16px mt-32px break-before-page" />
+  //     {AssetItem}
+  //     <hr className="break-before-page" />
+  //     {TurnoverDay}
+  //   </div>
+  // );
+
   return (
-    <div className={`${printContainerClass} mx-auto w-full origin-top overflow-x-auto`}>
-      <hr className="mb-40px break-before-page" />
-      <BalanceSheetA4Template reportFinancial={reportFinancial} curDate={curDate}>
-        {displayedSelectArea}
+    <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
+      {displayedSelectArea()}
+      {/* Info: (20241125 - Tzuhan) 渲染打印模板，通過 CSS 隱藏 */}
+      <div ref={printRef} className="hidden print:block">
+        <BalanceSheetA4Template
+          reportFinancial={reportFinancial}
+          curDate={curDate}
+          preDate={preDate}
+        >
+          {ItemSummary}
+          {ItemDetail}
+          {ProportionalTable}
+          {AssetItem}
+          {TurnoverDay}
+        </BalanceSheetA4Template>
+      </div>
+      {/*  Info: (20241125 - Tzuhan) 預覽區域 */}
+      <div className="block print:hidden">
         {ItemSummary}
         <hr className="break-before-page" />
         {ItemDetail}
@@ -773,7 +1004,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
         {AssetItem}
         <hr className="break-before-page" />
         {TurnoverDay}
-      </BalanceSheetA4Template>
+      </div>
     </div>
   );
 };

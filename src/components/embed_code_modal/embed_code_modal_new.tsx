@@ -1,19 +1,22 @@
-import React, { useRef, useState, useEffect } from 'react';
+// Deprecated: (20241114 - Liz) 這是 Alpha 版本的元件，目前沒有使用到，翻譯也已拔除。
+
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
+import { useUserCtx } from '@/contexts/user_context';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { FinancialReportTypesKeyReportSheetTypeMapping, ReportType } from '@/constants/report';
+import dayjs from 'dayjs';
+import { FinancialReportTypesKey, ReportTypeToBaifaReportType } from '@/interfaces/report_type';
 import { RxCross2 } from 'react-icons/rx';
 import { IoIosArrowDown, IoMdCheckmark } from 'react-icons/io';
 import { PiCopySimpleBold } from 'react-icons/pi';
-import APIHandler from '@/lib/utils/api_handler';
-import { APIName } from '@/constants/api_connection';
-import { useUserCtx } from '@/contexts/user_context';
-import { ReportTypeToBaifaReportType } from '@/interfaces/report_type';
+import { IFinancialReportRequest } from '@/interfaces/report';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { useModalContext } from '@/contexts/modal_context';
-import { ToastType } from '@/interfaces/toastify';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;
@@ -21,13 +24,10 @@ interface IEmbedCodeModal {
 }
 
 const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['common', 'report_401', 'reports']);
   const { selectedCompany } = useUserCtx();
-  const { toastHandler } = useModalContext();
-  const balanceSheetRef = useRef<HTMLInputElement>(null);
-  const incomeStatementRef = useRef<HTMLInputElement>(null);
-  const cashFlowStatementRef = useRef<HTMLInputElement>(null);
-
+  // Info: (20241127 - Anna) 追蹤是否點擊了生成按鈕
+  const [isGenerateClicked, setIsGenerateClicked] = useState(false);
   const [isBalanceSheetChecked, setIsBalanceSheetChecked] = useState(true);
   const [isIncomeStatementChecked, setIsIncomeStatementChecked] = useState(true);
   const [isCashFlowStatementChecked, setIsCashFlowStatementChecked] = useState(true);
@@ -35,19 +35,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     ReportLanguagesKey.en
   );
   const [step, setStep] = useState<number>(0);
-  const [generatedCode, setGeneratedCode] = useState<string>('');
-
-  // Info: (20241111 - Anna) Set the current date as default for report generation
-  const todayDate = new Date().toISOString().split('T')[0];
-
-  // Info: (20241111 - Anna) 使用 APIHandler 設置 REPORT_GENERATE API 的觸發功能
-  const {
-    trigger: generateFinancialReport, // Info: (20241111 - Anna) API 觸發方法
-    code: reportId, // Info: (20241111 - Anna) 生成的報告 ID
-    isLoading: isGenerating, // Info: (20241111 - Anna) 是否正在生成
-    success: generateSuccess, // Info: (20241111 - Anna) 生成是否成功
-    error: generateError, // Info: (20241111 - Anna) 錯誤信息
-  } = APIHandler(APIName.REPORT_GENERATE); // Info: (20241111 - Anna) 使用 APIHandler 設置 API
+  const [generatedIframeCode, setGeneratedIframeCode] = useState<string>('');
 
   const {
     targetRef: languageMenuRef,
@@ -56,6 +44,14 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   } = useOuterClick<HTMLDivElement>(false);
 
   const selectedLanguage = ReportLanguagesMap[selectedReportLanguage];
+
+  // Info: (20241125 - Anna)
+  const {
+    trigger: generateFinancialReport,
+    code: generatedCode,
+    isLoading: generatedLoading,
+    success: generatedSuccess,
+  } = APIHandler<number | null>(APIName.REPORT_GENERATE);
 
   const languageMenuClickHandler = () => {
     setIsLanguageMenuOpen(!isLanguageMenuOpen);
@@ -72,109 +68,138 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   };
 
   const copyClickHandler = () => {
-    navigator.clipboard
-      .writeText(generatedCode)
-      .then(() => {
-        // Info: (20241111 - Anna) 使用 toastHandler 顯示複製成功提示
-        toastHandler({
-          id: 'copy-success', // Info: (20241111 - Anna) 固定的唯一標識
-          type: ToastType.SUCCESS,
-          content: '複製成功！',
-          closeable: true,
-        });
-      })
-      .catch(() => {
-        // Info: (20241111 - Anna) 使用 toastHandler 顯示複製失敗提示
-        toastHandler({
-          id: 'copy-error', // Info: (20241111 - Anna) 固定的唯一標識
-          type: ToastType.ERROR,
-          content: '複製失敗！',
-          closeable: true,
+    navigator.clipboard.writeText(generatedIframeCode);
+  };
+
+  const generateClickHandler = () => {
+    setStep(1);
+  };
+
+  useEffect(() => {
+    if (generatedCode && !generatedLoading && generatedSuccess) {
+      const selectedReportTypes = [];
+      if (isBalanceSheetChecked) {
+        selectedReportTypes.push(FinancialReportTypesKey.balance_sheet);
+      }
+      if (isIncomeStatementChecked) {
+        selectedReportTypes.push(FinancialReportTypesKey.comprehensive_income_statement);
+      }
+      if (isCashFlowStatementChecked) {
+        selectedReportTypes.push(FinancialReportTypesKey.cash_flow_statement);
+      }
+
+      selectedReportTypes.forEach((type) => {
+        // Deprecated: (20241130 - Liz) remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('Report generation succeeded:', {
+          code: generatedCode,
+          message: 'We received your application. The report will be ready in a few minutes.',
+          request: {
+            params: {
+              companyId: selectedCompany?.id,
+            },
+            body: {
+              type: FinancialReportTypesKeyReportSheetTypeMapping[type],
+              reportLanguage: selectedReportLanguage,
+              from: dayjs().unix(),
+              to: dayjs().unix(),
+              reportType: ReportType.FINANCIAL,
+            },
+          },
         });
       });
-  };
+    }
 
-  // Info: (20241111 - Anna) 在 generateClickHandler 中設置生成報告所需的參數並使用 todayDate
-  const generateClickHandler = async () => {
-    setStep(1);
+    // Info: (20241130 - Liz) 確保返回 void
+  }, [generatedCode, generatedLoading, generatedSuccess]);
 
-    const reportTypes = [
-      isBalanceSheetChecked ? 'balance' : null,
-      isIncomeStatementChecked ? 'comprehensive-income' : null,
-      isCashFlowStatementChecked ? 'cash-flow' : null,
-    ].filter(Boolean);
+  const generateReportHandler = async () => {
+    const getPeriod = () => {
+      const today = dayjs().startOf('day'); // Info: (20241130 - Liz) 拿今天日期
+      return {
+        startTimeStamp: today.subtract(3, 'month').unix(), // Info: (20241130 - Liz) 三個月前
+        endTimeStamp: today.unix(), // Info: (20241130 - Liz) 今天
+      };
+    };
 
-    // Info: (20241111 - Anna) 確保包含 selectedCompany 作為參數
-    if (selectedCompany) {
-      try {
-        await generateFinancialReport({
-          params: {
-            companyId: selectedCompany.id,
-          },
-          body: {
-            date: todayDate, // Info: (20241111 - Anna) 使用當前預設日期
-            language: selectedReportLanguage,
-            reportTypes,
-          },
-        });
-      } catch (error) {
-        // Deprecate: (20241118 - Anna) debug
-        // eslint-disable-next-line no-console
-        console.error('Error generating report:', generateError);
-      }
-    } else {
-      // Deprecate: (20241118 - Anna) debug
+    const period = getPeriod();
+
+    if (!period) {
+      // Deprecated: (20241130 - Liz) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.warn('No company selected for report generation');
+      console.error('No report type selected.');
+      return;
     }
+
+    const selectedReportTypes = [];
+    if (isBalanceSheetChecked) selectedReportTypes.push(FinancialReportTypesKey.balance_sheet);
+    if (isIncomeStatementChecked) {
+      selectedReportTypes.push(FinancialReportTypesKey.comprehensive_income_statement);
+    }
+    if (isCashFlowStatementChecked) {
+      selectedReportTypes.push(FinancialReportTypesKey.cash_flow_statement);
+    }
+
+    if (selectedReportTypes.length === 0) {
+      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.error('No report type selected.');
+      return;
+    }
+
+    if (selectedCompany) {
+      const iframeCodes: string[] = [];
+
+      await Promise.all(
+        selectedReportTypes.map(async (reportType) => {
+          const body: IFinancialReportRequest = {
+            type: FinancialReportTypesKeyReportSheetTypeMapping[reportType], // Info: (20241130 - Liz) 每次迭代報告類型
+            reportLanguage: selectedReportLanguage,
+            from: period.startTimeStamp,
+            to: period.endTimeStamp,
+            reportType: ReportType.FINANCIAL,
+          };
+
+          try {
+            const report = await generateFinancialReport({
+              params: { companyId: selectedCompany.id },
+              body,
+            });
+
+            const reportId = report.data; // Info: (20241130 - Liz) 從 API 響應中拿 reportId
+
+            // Info: (20241130 - Liz) 動態生成link
+            const reportLink = `https://isunfa.tw${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}`;
+
+            // Info: (20241130 - Liz) 生成 iframe
+            iframeCodes.push(
+              `<iframe src="${reportLink}" title="${reportType}" width={600} height={600} />`
+            );
+          } catch (error) {
+            // Deprecated: (20241130 - Liz) remove eslint-disable
+            // eslint-disable-next-line no-console
+            console.error(`Failed to generate report for type: ${reportType}`, error);
+          }
+        })
+      );
+
+      if (iframeCodes.length > 0) {
+        setGeneratedIframeCode(iframeCodes.join('\n')); // Info: (20241130 - Liz) 設置 iframe 到狀態
+      } else {
+        // Deprecated: (20241130 - Liz) remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.error('No matching reports found or no report type selected.');
+      }
+    }
+
+    setIsGenerateClicked(false); // Info: (20241130 - Liz) 重置按鈕
   };
 
-  // Info: (20241111 - Anna) 使用 useEffect 監聽生成成功，並更新 iframe 嵌入代碼
-  useEffect(() => {
-    if (generateSuccess && reportId) {
-      //   const balanceLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=balance`;
-      //   const comprehensiveIncomeLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=comprehensive-income`;
-      //   const cashFlowLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=cash-flow`;
-
-      // Info: (20241111 - Anna) 使用 ISUNFA_ROUTE 和 ReportTypeToBaifaReportType 的新鏈接格式
-      const balanceLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType.balance_sheet}`;
-      const comprehensiveIncomeLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType.comprehensive_income_statement}`;
-      const cashFlowLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType.cash_flow_statement}`;
-
-      let code = '';
-
-      if (
-        balanceSheetRef.current?.checked &&
-        !incomeStatementRef.current?.checked &&
-        !cashFlowStatementRef.current?.checked
-      ) {
-        code = `<iframe src="${balanceLink}" title="balance-sheet" width={600} height={600} />`;
-      } else if (
-        !balanceSheetRef.current?.checked &&
-        incomeStatementRef.current?.checked &&
-        !cashFlowStatementRef.current?.checked
-      ) {
-        code = `<iframe src="${comprehensiveIncomeLink}" title="comprehensive-income-statement" width={600} height={600} />`;
-      } else if (
-        !balanceSheetRef.current?.checked &&
-        !incomeStatementRef.current?.checked &&
-        cashFlowStatementRef.current?.checked
-      ) {
-        code = `<iframe src="${cashFlowLink}" title="cash-flow-statement" width={600} height={600} />`;
-      } else {
-        // Info: (20241111 - Anna)  如果選擇多個或全部報告，生成多個 <iframe> 標籤
-        code = `
-      <div>
-        ${balanceSheetRef.current?.checked ? `<iframe src="${balanceLink}" title="balance-sheet" width={600} height={600}></iframe>` : ''}
-        ${incomeStatementRef.current?.checked ? `<iframe src="${comprehensiveIncomeLink}" title="comprehensive-income-statement" width={600} height={600}></iframe>` : ''}
-        ${cashFlowStatementRef.current?.checked ? `<iframe src="${cashFlowLink}" title="cash-flow-statement" width={600} height={600}></iframe>` : ''}
-      </div>
-    `;
-      }
-
-      setGeneratedCode(code);
-    }
-  }, [generateSuccess, reportId]);
+  const handleGenerateClick = () => {
+    setIsGenerateClicked(true); // Info: (20241126 - Anna) 點擊按鈕時設置為 true
+    generateClickHandler(); // Info: (20241126 - Anna) 第一次處理
+    generateReportHandler(); // Info: (20241126 - Anna) 第二次處理
+  };
 
   const displayedLanguageMenu = (
     <div ref={languageMenuRef} className="relative flex w-full">
@@ -227,17 +252,17 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       <div className="flex w-full flex-col justify-center px-4 py-2.5 max-md:max-w-full">
         <div className="flex flex-col max-md:max-w-full">
           <div className="flex flex-col justify-end text-sm leading-5 tracking-normal max-md:max-w-full">
-            <div className="flex flex-col justify-center max-md:max-w-full">
-              <div className="flex flex-col gap-3 max-md:max-w-full"></div>
-            </div>
+            <div className="flex flex-col justify-center max-md:max-w-full"></div>
 
-            <div className="mt-26px font-semibold text-input-text-input-filled max-md:max-w-full">
-              {t('report_401:EMBED_CODE_MODAL.WHAT_TYPE_OF_REPORT')}
+            <div className="mt-5 font-semibold text-input-text-input-filled max-md:max-w-full">
+              {t('layout:EMBED_CODE_MODAL.WHAT_TYPE_OF_REPORT')}
             </div>
             <div className="mt-4 flex flex-wrap justify-between gap-1 text-input-text-input-filled sm:gap-2">
               <div
                 className="flex gap-2 py-2.5"
-                onClick={() => setIsBalanceSheetChecked(!isBalanceSheetChecked)}
+                onClick={() => {
+                  setIsBalanceSheetChecked(!isBalanceSheetChecked);
+                }}
               >
                 <input
                   type="checkbox"
@@ -245,11 +270,13 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('common:PLUGIN.BALANCE_SHEET')}</button>
+                <button type="button">{t('layout:EMBED_CODE_MODAL.BALANCE_SHEET')}</button>
               </div>
               <div
                 className="flex gap-2 py-2.5"
-                onClick={() => setIsIncomeStatementChecked(!isIncomeStatementChecked)}
+                onClick={() => {
+                  setIsIncomeStatementChecked(!isIncomeStatementChecked);
+                }}
               >
                 <input
                   type="checkbox"
@@ -257,11 +284,15 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</button>
+                <button type="button">
+                  {t('layout:EMBED_CODE_MODAL.COMPREHENSIVE_INCOME_STATEMENT')}
+                </button>
               </div>
               <div
                 className="flex gap-2 py-2.5"
-                onClick={() => setIsCashFlowStatementChecked(!isCashFlowStatementChecked)}
+                onClick={() => {
+                  setIsCashFlowStatementChecked(!isCashFlowStatementChecked);
+                }}
               >
                 <input
                   type="checkbox"
@@ -269,14 +300,14 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('common:PLUGIN.CASH_FLOW_STATEMENT')}</button>
+                <button type="button">{t('common:BOOKMARK_LIST.CASH_FLOW_STATEMENT')}</button>
               </div>
             </div>
           </div>
           <div className="mt-10 flex flex-col justify-center max-md:max-w-full">
             <div className="flex flex-col space-y-3 max-md:max-w-full">
               <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-input-filled max-md:max-w-full">
-                {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+                {t('layout:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
               </div>
               {displayedLanguageMenu}
             </div>
@@ -288,17 +319,21 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           <Button type="button" onClick={cancelClickHandler} variant="tertiaryBorderless">
             {t('common:COMMON.CANCEL')}
           </Button>
+          {/* Info: (20241128 - Anna) 當 isGenerateClicked 為 true 時，按鈕會被禁用，防止重複點擊。 */}
           <Button
             disabled={
               (!isBalanceSheetChecked &&
                 !isIncomeStatementChecked &&
                 !isCashFlowStatementChecked) ||
-              isGenerating // Info: (20241111 - Anna) 當 `isGenerating` 為 `true` 時禁用按鈕
+              isGenerateClicked
             }
             variant={'tertiary'}
-            onClick={generateClickHandler}
+            // Info: (20241125 - Anna)
+            // onClick={generateClickHandler}
+            // onClick={generateReportHandler}
+            onClick={handleGenerateClick}
           >
-            {t('report_401:EMBED_CODE_MODAL.GENERATE')}
+            {t('layout:EMBED_CODE_MODAL.GENERATE')}
           </Button>
         </div>
       </div>
@@ -310,7 +345,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       <div className="flex w-full flex-col justify-center px-4 py-2.5">
         <div className="flex flex-col">
           <div className="w-300px justify-center self-center overflow-x-auto overflow-y-auto text-wrap border border-solid border-stroke-neutral-quaternary bg-surface-neutral-main-background px-3 py-4 text-sm leading-5 tracking-normal text-neutral-800 md:w-full">
-            {generatedCode}
+            {generatedIframeCode}
           </div>
 
           <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
@@ -320,7 +355,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               onClick={copyClickHandler}
             >
               <PiCopySimpleBold size={16} />
-              <p>{t('report_401:EMBED_CODE_MODAL.COPY')}</p>
+              <p>{t('layout:EMBED_CODE_MODAL.COPY')}</p>
             </Button>
           </div>
 
@@ -329,19 +364,19 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               {isBalanceSheetChecked && (
                 <li className="flex items-center gap-1">
                   <IoMdCheckmark />
-                  {t('common:PLUGIN.BALANCE_SHEET')}
+                  {t('layout:EMBED_CODE_MODAL.BALANCE_SHEET')}
                 </li>
               )}
               {isIncomeStatementChecked && (
                 <li className="flex items-center gap-1">
                   <IoMdCheckmark />
-                  {t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}
+                  {t('layout:EMBED_CODE_MODAL.COMPREHENSIVE_INCOME_STATEMENT')}
                 </li>
               )}
               {isCashFlowStatementChecked && (
                 <li className="flex items-center gap-1">
                   <IoMdCheckmark />
-                  {t('common:PLUGIN.CASH_FLOW_STATEMENT')}
+                  {t('common:BOOKMARK_LIST.CASH_FLOW_STATEMENT')}
                 </li>
               )}
               {!isBalanceSheetChecked &&
@@ -350,15 +385,15 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   <>
                     <li className="flex items-center gap-1">
                       <IoMdCheckmark />
-                      {t('common:PLUGIN.BALANCE_SHEET')}
+                      {t('layout:EMBED_CODE_MODAL.BALANCE_SHEET')}
                     </li>
                     <li className="flex items-center gap-1">
                       <IoMdCheckmark />
-                      {t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}
+                      {t('layout:EMBED_CODE_MODAL.COMPREHENSIVE_INCOME_STATEMENT')}
                     </li>
                     <li className="flex items-center gap-1">
                       <IoMdCheckmark />
-                      {t('common:PLUGIN.CASH_FLOW_STATEMENT')}
+                      {t('common:BOOKMARK_LIST.CASH_FLOW_STATEMENT')}
                     </li>
                   </>
                 )}
@@ -381,10 +416,10 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         <div className="flex w-full gap-2.5 pl-10 pr-5 max-md:max-w-full max-md:flex-wrap max-md:pl-5">
           <div className="flex flex-1 flex-col items-center justify-center px-20 text-center max-md:px-5">
             <div className="justify-center text-xl font-bold leading-8 text-input-text-input-filled">
-              {t('report_401:EMBED_CODE_MODAL.EMBED_CODE')}
+              {t('layout:SIDE_MENU.EMBED_CODE')}
             </div>
             <div className="text-xs leading-5 tracking-normal text-card-text-secondary">
-              {t('report_401:EMBED_CODE_MODAL.THE_LATEST_REPORT')}
+              {t('layout:EMBED_CODE_MODAL.THE_LATEST_REPORT')}
             </div>
           </div>
           <button

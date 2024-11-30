@@ -1,7 +1,9 @@
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
+// import { BalanceSheetReport, FinancialReport, FinancialReportItem } from '@/interfaces/report'; // Deprecated: (20241129 - Liz)No use
 import { BalanceSheetReport, FinancialReportItem } from '@/interfaces/report';
+
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
@@ -36,7 +38,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const { t } = useTranslation('common');
 
   const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -57,21 +59,76 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const [preDate, setPreDate] = useStateRef<string>('');
   const [preYear, setPreYear] = useStateRef<string>('');
 
-  const {
-    data: reportFinancial,
-    code: getReportFinancialCode,
-    success: getReportFinancialSuccess,
-    isLoading: getReportFinancialIsLoading,
-  } = APIHandler<BalanceSheetReport>(
-    APIName.REPORT_GET_BY_ID,
-    {
-      params: {
-        companyId: selectedCompany?.id,
-        reportId: reportId ?? NON_EXISTING_REPORT_ID,
-      },
-    },
-    hasCompanyId
+  // Deprecated: (20241128 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('進入 BalanceSheetReportBodyAll');
+
+  // const {
+  //   data: financialReport,
+  //   code: getReportFinancialCode,
+  //   success: getReportFinancialSuccess,
+  //   isLoading: getReportFinancialIsLoading,
+  // } = APIHandler<BalanceSheetReport>(
+  //   APIName.REPORT_GET_BY_ID,
+  //   {
+  //     params: {
+  //       companyId: selectedCompany?.id,
+  //       reportId: reportId ?? NON_EXISTING_REPORT_ID,
+  //     },
+  //   },
+  //   hasCompanyId
+  // );
+
+  const [financialReport, setFinancialReport] = useState<BalanceSheetReport | null>(null);
+  const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] = useState<boolean>(false);
+  const [errorCode, setErrorCode] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const { trigger: getFinancialReportAPI } = APIHandler<BalanceSheetReport>(
+    APIName.REPORT_GET_BY_ID
   );
+
+  useEffect(() => {
+    if (isAuthLoading || !selectedCompany) return;
+    if (isLoading) return;
+    setIsLoading(true);
+
+    const getFinancialReport = async () => {
+      try {
+        const {
+          data,
+          code,
+          success: getReportFinancialSuccess,
+        } = await getFinancialReportAPI({
+          params: { companyId: selectedCompany.id, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+        });
+
+        if (!getReportFinancialSuccess) {
+          // Deprecated: (20241128 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('getFinancialReportAPI failed:', code);
+
+          setErrorCode(code);
+          return;
+        }
+
+        setFinancialReport(data);
+        setIsGetFinancialReportSuccess(getReportFinancialSuccess);
+        // Deprecated: (20241128 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('call getFinancialReportAPI and getFinancialReport:', financialReport);
+      } catch (error) {
+        // console.log('error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getFinancialReport();
+    // Deprecated: (20241128 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('in useEffect and calling getFinancialReport_in BalanceSheetReportBodyAll');
+  }, [isAuthLoading, reportId, selectedCompany]);
 
   const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
   const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
@@ -89,30 +146,30 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   useEffect(() => {
-    if (getReportFinancialSuccess === true && reportFinancial && reportFinancial?.otherInfo) {
-      const currentDateString = timestampToString(reportFinancial.curDate.to ?? 0);
-      const previousDateString = timestampToString(reportFinancial.preDate.to ?? 0);
+    if (isGetFinancialReportSuccess === true && financialReport && financialReport?.otherInfo) {
+      const currentDateString = timestampToString(financialReport.curDate.to ?? 0);
+      const previousDateString = timestampToString(financialReport.preDate.to ?? 0);
       const currentYear = currentDateString.year;
       const previousYear = previousDateString.year;
 
-      const curALR = reportFinancial.otherInfo.assetLiabilityRatio[currentDateString.date]
+      const curALR = financialReport.otherInfo.assetLiabilityRatio[currentDateString.date]
         ?.data || [0, 0, 0];
-      const preALR = reportFinancial.otherInfo.assetLiabilityRatio[previousDateString.date]
+      const preALR = financialReport.otherInfo.assetLiabilityRatio[previousDateString.date]
         ?.data || [0, 0, 0];
-      const curALRLabels = reportFinancial.otherInfo.assetLiabilityRatio[currentDateString.date]
+      const curALRLabels = financialReport.otherInfo.assetLiabilityRatio[currentDateString.date]
         ?.labels || ['', '', ''];
-      const preALRLabels = reportFinancial.otherInfo.assetLiabilityRatio[previousDateString.date]
+      const preALRLabels = financialReport.otherInfo.assetLiabilityRatio[previousDateString.date]
         ?.labels || ['', '', ''];
 
-      const curAMR = reportFinancial.otherInfo.assetMixRatio[currentDateString.date]?.data || [
+      const curAMR = financialReport.otherInfo.assetMixRatio[currentDateString.date]?.data || [
         0, 0, 0, 0, 0, 0,
       ];
-      const curAMRLabels = reportFinancial.otherInfo.assetMixRatio[currentDateString.date]
+      const curAMRLabels = financialReport.otherInfo.assetMixRatio[currentDateString.date]
         ?.labels || ['', '', '', '', '', '其他'];
-      const preAMR = reportFinancial.otherInfo.assetMixRatio[previousDateString.date]?.data || [
+      const preAMR = financialReport.otherInfo.assetMixRatio[previousDateString.date]?.data || [
         0, 0, 0, 0, 0, 0,
       ];
-      const preAMRLabels = reportFinancial.otherInfo.assetMixRatio[previousDateString.date]
+      const preAMRLabels = financialReport.otherInfo.assetMixRatio[previousDateString.date]
         ?.labels || ['', '', '', '', '', '其他'];
 
       setCurAssetLiabilityRatio(curALR);
@@ -130,25 +187,25 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       setCurYear(currentYear);
       setPreYear(previousYear);
     }
-  }, [reportFinancial]);
+  }, [financialReport]);
 
-  if (getReportFinancialIsLoading === undefined || getReportFinancialIsLoading) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
   } else if (
-    !getReportFinancialSuccess ||
-    !reportFinancial ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') ||
-    !reportFinancial.otherInfo ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'assetLiabilityRatio') ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'assetMixRatio') ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'dso') ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'inventoryTurnoverDays')
+    !isGetFinancialReportSuccess ||
+    !financialReport ||
+    !Object.prototype.hasOwnProperty.call(financialReport, 'otherInfo') ||
+    !financialReport.otherInfo ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'assetLiabilityRatio') ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'assetMixRatio') ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'dso') ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'inventoryTurnoverDays')
   ) {
-    return <div>Error {getReportFinancialCode}</div>;
+    return <div>Error {errorCode}</div>;
   }
 
   const displayedCurALRChart = isNoDataForCurALR ? (
@@ -223,10 +280,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 
   const rowsForPage1 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(0, 9).map((item) => {
+    const rows = items.slice(0, 9).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -279,10 +336,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage2 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(9, 20).map((item) => {
+    const rows = items.slice(9, 20).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -333,10 +390,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage3 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(0, 13).map((item) => {
+    const rows = items.slice(0, 13).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -387,10 +444,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage4 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(13, 26).map((item) => {
+    const rows = items.slice(13, 26).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -441,10 +498,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage5 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(26, 40).map((item) => {
+    const rows = items.slice(26, 40).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -495,10 +552,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage6 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(40, 54).map((item) => {
+    const rows = items.slice(40, 54).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -549,10 +606,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage7 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(54, 68).map((item) => {
+    const rows = items.slice(54, 68).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -603,10 +660,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage8 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(68, 80).map((item) => {
+    const rows = items.slice(68, 80).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -657,10 +714,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage9 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(80, 91).map((item) => {
+    const rows = items.slice(80, 91).map((item, index) => {
       if (!item.code) {
         return (
-          <tr key={item.code}>
+          <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
               className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
@@ -726,11 +783,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <header className="mb-12 flex justify-between pl-0 text-white">
         <div className="w-3/10 bg-surface-brand-secondary pb-14px pl-10px pr-14px pt-40px font-bold">
           <div className="">
-            {reportFinancial && reportFinancial.company && (
+            {financialReport && financialReport.company && (
               <>
                 <h1 className="mb-30px text-h6">
-                  {reportFinancial.company.code} <br />
-                  {reportFinancial.company.name}
+                  {financialReport.company.code} <br />
+                  {financialReport.company.name}
                 </h1>
                 <p className="text-left text-xs font-bold leading-5">
                   {curDate}
@@ -782,10 +839,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               </tr>
             </thead>
             <tbody>
-              {reportFinancial &&
-                reportFinancial.general &&
-                Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
-                rowsForPage1(reportFinancial.general)}
+              {financialReport &&
+                financialReport.general &&
+                Object.prototype.hasOwnProperty.call(financialReport, 'general') &&
+                rowsForPage1(financialReport.general)}
             </tbody>
           </table>
         )}
@@ -838,10 +895,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.general &&
-              Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
-              rowsForPage2(reportFinancial.general)}
+            {financialReport &&
+              financialReport.general &&
+              Object.prototype.hasOwnProperty.call(financialReport, 'general') &&
+              rowsForPage2(financialReport.general)}
           </tbody>
         </table>
 
@@ -909,10 +966,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.general &&
-              Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
-              rowsForPage3(reportFinancial.details)}
+            {financialReport &&
+              financialReport.general &&
+              Object.prototype.hasOwnProperty.call(financialReport, 'general') &&
+              rowsForPage3(financialReport.details)}
           </tbody>
         </table>
       </section>
@@ -966,10 +1023,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.general &&
-              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
-              rowsForPage4(reportFinancial.details)}
+            {financialReport &&
+              financialReport.general &&
+              Object.prototype.hasOwnProperty.call(financialReport, 'details') &&
+              rowsForPage4(financialReport.details)}
           </tbody>
         </table>
       </section>
@@ -1023,10 +1080,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
-              rowsForPage5(reportFinancial.details)}
+            {financialReport &&
+              financialReport.details &&
+              Object.prototype.hasOwnProperty.call(financialReport, 'details') &&
+              rowsForPage5(financialReport.details)}
           </tbody>
         </table>
       </section>
@@ -1080,10 +1137,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
-              rowsForPage6(reportFinancial.details)}
+            {financialReport &&
+              financialReport.details &&
+              Object.prototype.hasOwnProperty.call(financialReport, 'details') &&
+              rowsForPage6(financialReport.details)}
           </tbody>
         </table>
       </section>
@@ -1137,10 +1194,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
-              rowsForPage7(reportFinancial.details)}
+            {financialReport &&
+              financialReport.details &&
+              Object.prototype.hasOwnProperty.call(financialReport, 'details') &&
+              rowsForPage7(financialReport.details)}
           </tbody>
         </table>
       </section>
@@ -1194,10 +1251,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
-              rowsForPage8(reportFinancial.details)}
+            {financialReport &&
+              financialReport.details &&
+              Object.prototype.hasOwnProperty.call(financialReport, 'details') &&
+              rowsForPage8(financialReport.details)}
           </tbody>
         </table>
       </section>
@@ -1251,10 +1308,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
-              rowsForPage9(reportFinancial.details)}
+            {financialReport &&
+              financialReport.details &&
+              Object.prototype.hasOwnProperty.call(financialReport, 'details') &&
+              rowsForPage9(financialReport.details)}
           </tbody>
         </table>
         {/* Info: (20240723 - Anna) watermark logo */}
@@ -1299,7 +1356,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <div className="flex items-center">
               <ul className="space-y-2">
                 {curAssetLiabilityRatioLabels.map((label, index) => (
-                  <li key={label} className="flex items-center">
+                  <li key={`${label + index}`} className="flex items-center">
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
@@ -1315,7 +1372,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <div className="flex items-center">
               <ul className="space-y-2">
                 {preAssetLiabilityRatioLabels.map((label, index) => (
-                  <li key={label} className="flex items-center">
+                  <li key={`${label + index}`} className="flex items-center">
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
@@ -1368,7 +1425,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {curAssetMixLabels.map((label, index) => (
-                  <li key={label} className="flex items-center">
+                  <li key={`${label + index}`} className="flex items-center">
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
@@ -1385,7 +1442,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {preAssetMixLabels.map((label, index) => (
-                  <li key={label} className="flex items-center">
+                  <li key={`${label + index}`} className="flex items-center">
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
@@ -1448,8 +1505,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tbody>
             {renderDataRow(
               '應收帳款週轉天數',
-              reportFinancial?.otherInfo?.dso.curDso,
-              reportFinancial?.otherInfo?.dso.preDso
+              financialReport?.otherInfo?.dso.curDso,
+              financialReport?.otherInfo?.dso.preDso
             )}
           </tbody>
         </table>
@@ -1472,8 +1529,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tbody>
             {renderDataRow(
               '存貨週轉天數',
-              reportFinancial?.otherInfo?.inventoryTurnoverDays.curInventoryTurnoverDays,
-              reportFinancial?.otherInfo?.inventoryTurnoverDays.preInventoryTurnoverDays
+              financialReport?.otherInfo?.inventoryTurnoverDays.curInventoryTurnoverDays,
+              financialReport?.otherInfo?.inventoryTurnoverDays.preInventoryTurnoverDays
             )}
           </tbody>
         </table>

@@ -433,9 +433,10 @@ const MenuOption = ({
 
 interface SideMenuProps {
   toggleOverlay: () => void;
+  notPrint?: boolean;
 }
 
-const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
+const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
   const { t } = useTranslation(['layout']);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(true);
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
@@ -466,7 +467,9 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
   }, [isSubMenuOpen, selectedMenuOption]);
 
   return (
-    <div className="z-100 h-full bg-surface-neutral-main-background">
+    <div
+      className={`z-100 h-full bg-surface-neutral-main-background ${notPrint ? 'print:hidden' : ''}`}
+    >
       {isSideMenuOpen ? (
         <section
           className="relative flex h-full w-max flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu"

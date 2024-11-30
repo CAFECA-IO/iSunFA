@@ -26,7 +26,7 @@ interface TrialBalanceListProps {
 }
 
 const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('journal');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   const [subAccountsToggle, setSubAccountsToggle] = useState<boolean>(false);
@@ -157,7 +157,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       <div className="mr-42px flex w-fit items-center gap-5px rounded-full border border-orange-500 bg-white px-10px py-6px text-sm font-medium text-badge-text-error-solid">
         <RiCoinsLine className="text-orange-600" />
         <p className="whitespace-nowrap text-orange-600">
-          {t(`common:COMMON.${TrialBalanceData.currencyAlias}`)}
+          {t(`reports:REPORTS.${TrialBalanceData.currencyAlias}`)}
         </p>
       </div>
       {/* Info: (20241028 - Anna) 新增 Display Sub-Accounts Toggle 開關 */}
@@ -168,7 +168,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
           getToggledState={subAccountsToggleHandler}
           toggleStateFromParent={subAccountsToggle}
         />
-        <span className="text-neutral-600">{t('common:COMMON.DISPLAY_SUB_ACCOUNTS')}</span>
+        <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
       </div>
       {/* Info: (20241028 - Anna) Display Sub-Accounts 結束  */}
       <div className="ml-auto flex items-center gap-24px">
@@ -231,7 +231,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
             <div
               className={`table-cell w-70px border-b-0.5px border-r-0.5px border-stroke-neutral-quaternary text-center align-middle`}
             >
-              {t('common:COMMON.CODE')}
+              {t('reports:REPORTS.CODE')}
             </div>
             <div
               className={`table-cell w-350px border-b-0.5px border-stroke-neutral-quaternary text-center align-middle`}
@@ -242,42 +242,42 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
             <div
               className={`table-cell w-77px border-b-0.5px border-r-0.5px border-stroke-neutral-quaternary bg-support-olive-100 text-center align-middle`}
             >
-              {t('common:COMMON.BEGINNING')}
+              {t('reports:REPORTS.BEGINNING')}
               {displayedDebit}
             </div>
 
             <div
               className={`table-cell w-77px border-b-0.5px border-stroke-neutral-quaternary bg-support-olive-100 text-center align-middle`}
             >
-              {t('common:COMMON.BEGINNING')}
+              {t('reports:REPORTS.BEGINNING')}
               {displayedCredit}
             </div>
 
             <div
               className={`table-cell w-77px border-b-0.5px border-r-0.5px border-stroke-neutral-quaternary bg-support-baby-100 text-center align-middle`}
             >
-              {t('common:COMMON.MIDTERM')}
+              {t('reports:REPORTS.MIDTERM')}
               {displayedDebit}
             </div>
 
             <div
               className={`table-cell w-77px border-b-0.5px border-stroke-neutral-quaternary bg-support-baby-100 text-center align-middle`}
             >
-              {t('common:COMMON.MIDTERM')}
+              {t('reports:REPORTS.MIDTERM')}
               {displayedCredit}
             </div>
 
             <div
               className={`table-cell w-77px border-b-0.5px border-r-0.5px border-stroke-neutral-quaternary bg-support-pink-100 text-center align-middle`}
             >
-              {t('common:COMMON.ENDING')}
+              {t('reports:REPORTS.ENDING')}
               {displayedDebit}
             </div>
 
             <div
               className={`table-cell w-77px border-b-0.5px border-stroke-neutral-quaternary bg-support-pink-100 text-center align-middle`}
             >
-              {t('common:COMMON.ENDING')}
+              {t('reports:REPORTS.ENDING')}
               {displayedCredit}
             </div>
           </div>

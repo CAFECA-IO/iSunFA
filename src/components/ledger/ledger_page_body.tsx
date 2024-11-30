@@ -27,7 +27,7 @@ enum ReportType {
 }
 
 const LedgerPageBody = () => {
-  const { t } = useTranslation(['common', 'journal']);
+  const { t } = useTranslation(['journal']);
   const { selectedCompany } = useUserCtx();
 
   // Info: (20241105 - Anna) 定義各類別的會計科目選項

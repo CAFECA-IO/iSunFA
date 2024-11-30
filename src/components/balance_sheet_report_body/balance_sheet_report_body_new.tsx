@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import BalanceSheetList from '@/components/balance_sheet_report_body/balance_sheet_list_new';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -6,16 +6,118 @@ import { useTranslation } from 'next-i18next';
 import { ReportLanguagesMap, ReportLanguagesKey } from '@/interfaces/report_language';
 import { IoIosArrowDown } from 'react-icons/io';
 import Image from 'next/image';
+import { useReactToPrint } from 'react-to-print';
 
 // Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
 const BalanceSheetPageBody = () => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['report_401']);
 
   // Info: (20241017 - Anna) 定義日期篩選狀態
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
     startTimeStamp: 0,
     endTimeStamp: 0,
   });
+
+  // Info: (20241122 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  // Info: (20241122 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
+  const printRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isPrinting && printRef.current) {
+      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('balance_sheet_report_body.觀察 Printing content:', printRef.current.innerHTML);
+      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('balance_sheet_report_body.觀察 isPrinting?', isPrinting);
+    }
+  }, [isPrinting]);
+
+  // Info: (20241122 - Anna)
+  // const handleOnBeforePrint = React.useCallback(() => {
+  //   setIsPrinting(true);
+  //   // eslint-disable-next-line no-console
+  //   console.log('onBeforePrint call ');
+  //   return Promise.resolve();
+  // }, []);
+
+  // const handleOnBeforePrint = React.useCallback(() => {
+  //   // eslint-disable-next-line no-console
+  //   console.log(
+  //     'balance_sheet_report_body 觀察 handleOnBeforePrint (Before setting isPrinting):',
+  //     isPrinting
+  //   );
+  //   setIsPrinting(true);
+  //   // eslint-disable-next-line no-console
+  //   console.log(
+  //     'balance_sheet_report_body 觀察 handleOnBeforePrint (After setting isPrinting):',
+  //     true
+  //   );
+  //   return Promise.resolve();
+  // }, [isPrinting]);
+
+  const handleOnBeforePrint = React.useCallback(() => {
+    // Deprecated: (20241130 - Liz) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log(
+      'balance_sheet_report_body 觀察 handleOnBeforePrint (Before setting isPrinting):',
+      isPrinting
+    );
+    setIsPrinting(true);
+    // Deprecated: (20241130 - Liz) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log(
+      'balance_sheet_report_body 觀察 handleOnBeforePrint (After setting isPrinting):',
+      true
+    );
+
+    // Info: (20241130 - Liz) 強制 React 完成渲染，確保打印模式下渲染正確內容
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve(); // Info: (20241130 - Liz) 明確調用 resolve，表示完成
+      }, 100); // Info: (20241130 - Liz) 延遲 100 毫秒
+    });
+  }, [isPrinting]);
+
+  const handleOnAfterPrint = React.useCallback(() => {
+    // Deprecated: (20241130 - Liz) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log(
+      'balance_sheet_report_body 觀察 handleOnAfterPrint (Before resetting isPrinting):',
+      isPrinting
+    );
+    setIsPrinting(false);
+    // Deprecated: (20241130 - Liz) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log(
+      'balance_sheet_report_body 觀察 handleOnAfterPrint (After resetting isPrinting):',
+      false
+    );
+  }, [isPrinting]);
+
+  // Info: (20241122 - Anna)
+  const printFn = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: 'balance Sheet Report',
+    onBeforePrint: handleOnBeforePrint,
+    onAfterPrint: handleOnAfterPrint,
+  });
+
+  // Info: (20241122 - Anna) 父層中管理 beforeprint 和 afterprint 的監聽
+  // useEffect(() => {
+  //   const handleBeforePrint = () => setIsPrinting(true);
+  //   const handleAfterPrint = () => setIsPrinting(false);
+
+  //   window.addEventListener('beforeprint', handleBeforePrint);
+  //   window.addEventListener('afterprint', handleAfterPrint);
+
+  //   return () => {
+  //     window.removeEventListener('beforeprint', handleBeforePrint);
+  //     window.removeEventListener('afterprint', handleAfterPrint);
+  //   };
+  // }, []);
 
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
@@ -77,7 +179,7 @@ const BalanceSheetPageBody = () => {
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20241017 - Anna) 日期篩選器和語言選擇 */}
-        <div className="flex flex-col max-md:flex-col md:flex-row md:items-center md:gap-10">
+        <div className="flex flex-col max-md:flex-col md:flex-row md:items-center md:gap-10 print:hidden">
           {/* Info: (20241017 - Anna)日期篩選器 */}
           <div className="flex min-w-250px flex-1 flex-col space-y-0">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -100,7 +202,12 @@ const BalanceSheetPageBody = () => {
         </div>
 
         {/* Info: (20241017 - Anna) Balance Sheet List */}
-        <BalanceSheetList selectedDateRange={selectedDateRange} />
+        <BalanceSheetList
+          selectedDateRange={selectedDateRange}
+          isPrinting={isPrinting} // Info: (20241122 - Anna) 傳遞列印狀態
+          printRef={printRef} // Info: (20241122 - Anna) 傳遞列印區域 Ref
+          printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數
+        />
       </div>
     </div>
   );

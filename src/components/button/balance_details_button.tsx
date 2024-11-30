@@ -22,6 +22,7 @@ import DownloadButton from '@/components/button/download_button';
 interface BalanceDetailsButtonProps {
   accountName: string;
   accountId: number;
+  className?: string;
 }
 
 /*
@@ -53,7 +54,11 @@ const getVoucherIcon = (voucherType: VoucherType) => {
   }
 };
 
-const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({ accountName, accountId }) => {
+const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
+  accountName,
+  accountId,
+  className = '',
+}) => {
   const { t } = useTranslation(['common', 'report_401', 'journal']);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [shouldFetch, setShouldFetch] = useState(false); // Info: (20241107 - Anna) 控制是否應該請求資料
@@ -108,7 +113,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({ accountName
     <div>
       <Button
         onClick={handleShowModal} // Info: (20241107 - Anna) 點擊時才觸發 handleShowModal，顯示詳細資料的按鈕
-        className="cursor-pointer bg-transparent px-0 py-0 text-support-baby-600 underline hover:bg-transparent"
+        className={`cursor-pointer bg-transparent px-0 py-0 text-support-baby-600 underline hover:bg-transparent ${className || ''}`}
       >
         {t('report_401:AUDIT_REPORT.DETAILED_INFORMATION')}
       </Button>

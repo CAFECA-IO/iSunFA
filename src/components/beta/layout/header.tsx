@@ -10,11 +10,14 @@ interface HeaderProps {
   isDashboard: boolean;
   pageTitle?: string;
   goBackUrl?: string;
+  notPrint?: boolean;
 }
 
-const Header = ({ isDashboard, pageTitle, goBackUrl }: HeaderProps) => {
+const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint }: HeaderProps) => {
   return (
-    <header className="flex items-center gap-24px px-20px pb-8px pt-32px screen1280:px-56px">
+    <header
+      className={`flex items-center gap-24px px-20px pb-8px pt-32px screen1280:px-56px ${notPrint ? 'print:hidden' : ''}`}
+    >
       {isDashboard ? <Search /> : <PageTitle pageTitle={pageTitle} goBackUrl={goBackUrl} />}
 
       <section className="flex flex-none items-center gap-16px">

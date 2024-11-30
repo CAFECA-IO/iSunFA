@@ -67,11 +67,10 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <SideMenu toggleOverlay={toggleOverlay} />
+      <SideMenu toggleOverlay={toggleOverlay} notPrint />
 
       <div className="relative flex flex-auto flex-col bg-surface-neutral-main-background">
-        <Header isDashboard={isDashboard} pageTitle={pageTitle} goBackUrl={goBackUrl} />
-
+        <Header isDashboard={isDashboard} pageTitle={pageTitle} goBackUrl={goBackUrl} notPrint />
         {/* // Info: (20241018 - Liz) Overlay with backdrop-blur */}
         {isOverlayVisible && <div className="absolute inset-0 z-10 backdrop-blur-sm"></div>}
 

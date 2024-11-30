@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 
 const ReportsSidebar = () => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['reports', 'report_401']);
   const router = useRouter();
   const { embedCodeModalVisibilityHandler } = useGlobalCtx();
 
@@ -182,7 +182,7 @@ const ReportsSidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base transition-all duration-300 ease-in-out`}
               >
-                {t('common:COMMON.ANALYSIS_REPORTS')}
+                {t('reports:COMMON.ANALYSIS_REPORTS')}
               </p>
             </button>
             {/* </Link> */}

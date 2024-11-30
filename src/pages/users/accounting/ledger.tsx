@@ -7,7 +7,7 @@ import LedgerPageBody from '@/components/ledger/ledger_page_body';
 import Layout from '@/components/beta/layout/layout';
 
 const LedgerPage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('journal');
 
   return (
     <>
