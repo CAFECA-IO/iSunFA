@@ -177,5 +177,19 @@
   "REPORT": {
     "NO_DATA_AVAILABLE": "No data available.",
     "PLEASE_SELECT_PERIOD": "Please Select Period."
+  },
+  "COMMON": {
+    "ANALYSIS_REPORTS": "Analysis Reports",
+    "LOADING": "Loading",
+    "OVERALL": "Overall",
+    "PROJECT": "Project",
+    "CLOSE": "Close",
+    "SEARCH": "Search",
+    "CANCEL": "Cancel",
+    "TO": "to",
+    "M": "M",
+    "Y": "Y",
+    "D": "D",
+    "DAY": "Day"
   }
 }

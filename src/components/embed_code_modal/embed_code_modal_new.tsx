@@ -89,7 +89,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       }
 
       selectedReportTypes.forEach((type) => {
-        // Deprecated: (20241130 - Liz) remove eslint-disable
+        // Deprecated: (20241130 - Anna) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('Report generation succeeded:', {
           code: generatedCode,
@@ -110,22 +110,22 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       });
     }
 
-    // Info: (20241130 - Liz) 確保返回 void
+    // Info: (20241130 - Anna) 確保返回 void
   }, [generatedCode, generatedLoading, generatedSuccess]);
 
   const generateReportHandler = async () => {
     const getPeriod = () => {
-      const today = dayjs().startOf('day'); // Info: (20241130 - Liz) 拿今天日期
+      const today = dayjs().startOf('day'); // Info: (20241130 - Anna) 拿今天日期
       return {
-        startTimeStamp: today.subtract(3, 'month').unix(), // Info: (20241130 - Liz) 三個月前
-        endTimeStamp: today.unix(), // Info: (20241130 - Liz) 今天
+        startTimeStamp: today.subtract(3, 'month').unix(), // Info: (20241130 - Anna) 三個月前
+        endTimeStamp: today.unix(), // Info: (20241130 - Anna) 今天
       };
     };
 
     const period = getPeriod();
 
     if (!period) {
-      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // Deprecated: (20241130 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
       console.error('No report type selected.');
       return;
@@ -141,7 +141,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     }
 
     if (selectedReportTypes.length === 0) {
-      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // Deprecated: (20241130 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
       console.error('No report type selected.');
       return;
@@ -153,7 +153,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       await Promise.all(
         selectedReportTypes.map(async (reportType) => {
           const body: IFinancialReportRequest = {
-            type: FinancialReportTypesKeyReportSheetTypeMapping[reportType], // Info: (20241130 - Liz) 每次迭代報告類型
+            type: FinancialReportTypesKeyReportSheetTypeMapping[reportType], // Info: (20241130 - Anna) 每次迭代報告類型
             reportLanguage: selectedReportLanguage,
             from: period.startTimeStamp,
             to: period.endTimeStamp,
@@ -166,17 +166,17 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               body,
             });
 
-            const reportId = report.data; // Info: (20241130 - Liz) 從 API 響應中拿 reportId
+            const reportId = report.data; // Info: (20241130 - Anna) 從 API 響應中拿 reportId
 
-            // Info: (20241130 - Liz) 動態生成link
+            // Info: (20241130 - Anna) 動態生成link
             const reportLink = `https://isunfa.tw${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}`;
 
-            // Info: (20241130 - Liz) 生成 iframe
+            // Info: (20241130 - Anna) 生成 iframe
             iframeCodes.push(
               `<iframe src="${reportLink}" title="${reportType}" width={600} height={600} />`
             );
           } catch (error) {
-            // Deprecated: (20241130 - Liz) remove eslint-disable
+            // Deprecated: (20241130 - Anna) remove eslint-disable
             // eslint-disable-next-line no-console
             console.error(`Failed to generate report for type: ${reportType}`, error);
           }
@@ -184,15 +184,15 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       );
 
       if (iframeCodes.length > 0) {
-        setGeneratedIframeCode(iframeCodes.join('\n')); // Info: (20241130 - Liz) 設置 iframe 到狀態
+        setGeneratedIframeCode(iframeCodes.join('\n')); // Info: (20241130 - Anna) 設置 iframe 到狀態
       } else {
-        // Deprecated: (20241130 - Liz) remove eslint-disable
+        // Deprecated: (20241130 - Anna) remove eslint-disable
         // eslint-disable-next-line no-console
         console.error('No matching reports found or no report type selected.');
       }
     }
 
-    setIsGenerateClicked(false); // Info: (20241130 - Liz) 重置按鈕
+    setIsGenerateClicked(false); // Info: (20241130 - Anna) 重置按鈕
   };
 
   const handleGenerateClick = () => {

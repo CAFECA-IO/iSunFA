@@ -53,6 +53,9 @@
     "CODE_COPIED_TO_CLIPBOARD": "代码已复制到剪贴簿",
     "BALANCE_SHEET": "资产负债表",
     "COMPREHENSIVE_INCOME_STATEMENT": "综合损益表",
-    "CASH_FLOW_STATEMENT": "现金流量表"
+    "CASH_FLOW_STATEMENT": "现金流量表",
+    "PROJECT": "专案",
+    "CANCEL": "取消",
+    "OVERALL": "全部"
   }
 }

@@ -53,6 +53,9 @@
     "CODE_COPIED_TO_CLIPBOARD": "Code copied to clipboard",
     "BALANCE_SHEET": "Balance Sheet",
     "COMPREHENSIVE_INCOME_STATEMENT": "Comprehensive Income Statement",
-    "CASH_FLOW_STATEMENT": "Cash Flow Statement"
+    "CASH_FLOW_STATEMENT": "Cash Flow Statement",
+    "PROJECT": "Project",
+    "CANCEL": "Cancel",
+    "OVERALL": "Overall"
   }
 }

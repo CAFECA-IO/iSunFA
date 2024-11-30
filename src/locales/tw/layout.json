@@ -51,8 +51,11 @@
     "THE_LATEST_REPORT": "在您的網站上顯示最新報告",
     "GENERATE": "產生",
     "CODE_COPIED_TO_CLIPBOARD": "代碼已複製到剪貼簿",
-    "CASH_FLOW_STATEMENT": "現金流量表",
     "BALANCE_SHEET": "資產負債表",
-    "COMPREHENSIVE_INCOME_STATEMENT": "綜合損益表"
+    "COMPREHENSIVE_INCOME_STATEMENT": "綜合損益表",
+    "CASH_FLOW_STATEMENT": "現金流量表",
+    "PROJECT": "專案",
+    "CANCEL": "取消",
+    "OVERALL": "全部"
   }
 }

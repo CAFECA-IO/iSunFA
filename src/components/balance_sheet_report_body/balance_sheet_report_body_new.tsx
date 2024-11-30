@@ -26,10 +26,10 @@ const BalanceSheetPageBody = () => {
 
   useEffect(() => {
     if (isPrinting && printRef.current) {
-      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // Deprecated: (20241130 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('balance_sheet_report_body.觀察 Printing content:', printRef.current.innerHTML);
-      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // Deprecated: (20241130 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('balance_sheet_report_body.觀察 isPrinting?', isPrinting);
     }
@@ -59,37 +59,37 @@ const BalanceSheetPageBody = () => {
   // }, [isPrinting]);
 
   const handleOnBeforePrint = React.useCallback(() => {
-    // Deprecated: (20241130 - Liz) remove eslint-disable
+    // Deprecated: (20241130 - Anna) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnBeforePrint (Before setting isPrinting):',
       isPrinting
     );
     setIsPrinting(true);
-    // Deprecated: (20241130 - Liz) remove eslint-disable
+    // Deprecated: (20241130 - Anna) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnBeforePrint (After setting isPrinting):',
       true
     );
 
-    // Info: (20241130 - Liz) 強制 React 完成渲染，確保打印模式下渲染正確內容
+    // Info: (20241130 - Anna) 強制 React 完成渲染，確保打印模式下渲染正確內容
     return new Promise<void>((resolve) => {
       setTimeout(() => {
-        resolve(); // Info: (20241130 - Liz) 明確調用 resolve，表示完成
-      }, 100); // Info: (20241130 - Liz) 延遲 100 毫秒
+        resolve(); // Info: (20241130 - Anna) 明確調用 resolve，表示完成
+      }, 100); // Info: (20241130 - Anna) 延遲 100 毫秒
     });
   }, [isPrinting]);
 
   const handleOnAfterPrint = React.useCallback(() => {
-    // Deprecated: (20241130 - Liz) remove eslint-disable
+    // Deprecated: (20241130 - Anna) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnAfterPrint (Before resetting isPrinting):',
       isPrinting
     );
     setIsPrinting(false);
-    // Deprecated: (20241130 - Liz) remove eslint-disable
+    // Deprecated: (20241130 - Anna) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnAfterPrint (After resetting isPrinting):',
