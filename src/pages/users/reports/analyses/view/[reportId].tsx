@@ -69,7 +69,7 @@ const ViewAnalysisReportPage = ({
     if (getARSuccess === false) {
       toastHandler({
         id: `getAR-${getARCode}}`,
-        content: `${t('common:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('common:DASHBOARD.REPORT')}${getARCode}`,
+        content: `${t('alpha:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('alpha:DASHBOARD.REPORT')}${getARCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });

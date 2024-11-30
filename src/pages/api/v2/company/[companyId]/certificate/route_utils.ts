@@ -1,5 +1,6 @@
 import {
   createCertificateWithEmptyInvoice,
+  deleteMultipleCertificates,
   getCertificatesV2,
   getUnreadCertificateCount,
   upsertUserReadCertificates,
@@ -36,7 +37,7 @@ import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/cons
 import { parsePrismaCertificateToCertificateEntity } from '@/lib/utils/formatter/certificate.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
 import { IFileBeta, IFileEntity } from '@/interfaces/file';
-import { IInvoiceEntity, IInvoiceBeta } from '@/interfaces/invoice';
+import { IInvoiceEntity, IInvoiceBetaOptional } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
@@ -50,6 +51,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { readFile } from 'fs/promises';
 import { bufferToBlob } from '@/lib/utils/parse_image_form';
+import { ProgressStatus } from '@/constants/account';
 
 export const certificateAPIPostUtils = {
   /**
@@ -214,33 +216,34 @@ export const certificateAPIPostUtils = {
       existed: true,
     };
 
-    const counterParty: ICounterparty = {
-      id: certificateEntity.invoice.counterParty.id,
-      companyId: certificateEntity.invoice.counterParty.companyId,
-      name: certificateEntity.invoice.counterParty.name,
-      taxId: certificateEntity.invoice.counterParty.taxId,
-      type: certificateEntity.invoice.counterParty.type,
-      note: certificateEntity.invoice.counterParty.note,
-      createdAt: certificateEntity.invoice.counterParty.createdAt,
-      updatedAt: certificateEntity.invoice.counterParty.updatedAt,
-    };
-    const invoice: IInvoiceBeta = {
-      id: certificateEntity.invoice.id,
-      isComplete: false,
-      counterParty,
-      inputOrOutput: certificateEntity.invoice.inputOrOutput,
-      date: certificateEntity.invoice.date,
-      no: certificateEntity.invoice.no,
-      currencyAlias: certificateEntity.invoice.currencyAlias,
-      priceBeforeTax: certificateEntity.invoice.priceBeforeTax,
-      taxType: certificateEntity.invoice.taxType,
-      taxRatio: certificateEntity.invoice.taxRatio,
-      taxPrice: certificateEntity.invoice.taxPrice,
-      totalPrice: certificateEntity.invoice.totalPrice,
-      type: certificateEntity.invoice.type,
-      deductible: certificateEntity.invoice.deductible,
-      createdAt: certificateEntity.invoice.createdAt,
-      updatedAt: certificateEntity.invoice.updatedAt,
+    // Deprecated: (20241127 - Murky) 目前CreateCertificate不會創造invoice, 如果需要假的invoice再把這邊打開
+    // const counterParty: ICounterparty = {
+    //   id: certificateEntity.invoice.counterParty.id,
+    //   companyId: certificateEntity.invoice.counterParty.companyId,
+    //   name: certificateEntity.invoice.counterParty.name,
+    //   taxId: certificateEntity.invoice.counterParty.taxId,
+    //   type: certificateEntity.invoice.counterParty.type,
+    //   note: certificateEntity.invoice.counterParty.note,
+    //   createdAt: certificateEntity.invoice.counterParty.createdAt,
+    //   updatedAt: certificateEntity.invoice.counterParty.updatedAt,
+    // };
+    const invoice: IInvoiceBetaOptional = {
+      // id: certificateEntity.invoice.id,
+      // isComplete: false,
+      // counterParty,
+      // inputOrOutput: certificateEntity.invoice.inputOrOutput,
+      // date: certificateEntity.invoice.date,
+      // no: certificateEntity.invoice.no,
+      // currencyAlias: certificateEntity.invoice.currencyAlias,
+      // priceBeforeTax: certificateEntity.invoice.priceBeforeTax,
+      // taxType: certificateEntity.invoice.taxType,
+      // taxRatio: certificateEntity.invoice.taxRatio,
+      // taxPrice: certificateEntity.invoice.taxPrice,
+      // totalPrice: certificateEntity.invoice.totalPrice,
+      // type: certificateEntity.invoice.type,
+      // deductible: certificateEntity.invoice.deductible,
+      // createdAt: certificateEntity.invoice.createdAt,
+      // updatedAt: certificateEntity.invoice.updatedAt,
     };
     const isRead =
       certificateEntity.userCertificates.length > 0
@@ -361,6 +364,7 @@ export const certificateAPIGetListUtils = {
       return acc + certificate.invoice.totalPrice;
     }, 0);
   },
+
   upsertUserReadCertificates: (options: {
     certificateIdsBeenRead: number[];
     userId: number;
@@ -372,6 +376,85 @@ export const certificateAPIGetListUtils = {
       certificateIds: certificateIdsBeenRead,
       nowInSecond,
     });
+  },
+
+  transformCertificateEntityToResponse: (
+    certificateEntity: ICertificateEntity & {
+      invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
+      file: IFileEntity;
+      uploader: IUserEntity;
+      userCertificates: IUserCertificateEntity[];
+      vouchers: IVoucherEntity[];
+    }
+  ): ICertificate => {
+    const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
+    const file: IFileBeta = {
+      id: certificateEntity.file.id,
+      name: certificateEntity.file.name,
+      size: certificateEntity.file.size,
+      url: fileURL,
+      existed: true,
+    };
+
+    let invoice: IInvoiceBetaOptional = {};
+
+    if (certificateEntity.invoice?.id) {
+      const counterParty: ICounterparty = {
+        id: certificateEntity.invoice.counterParty.id,
+        companyId: certificateEntity.invoice.counterParty.companyId,
+        name: certificateEntity.invoice.counterParty.name,
+        taxId: certificateEntity.invoice.counterParty.taxId,
+        type: certificateEntity.invoice.counterParty.type,
+        note: certificateEntity.invoice.counterParty.note,
+        createdAt: certificateEntity.invoice.counterParty.createdAt,
+        updatedAt: certificateEntity.invoice.counterParty.updatedAt,
+      };
+      invoice = {
+        id: certificateEntity.invoice.id,
+        isComplete: false,
+        counterParty,
+        inputOrOutput: certificateEntity.invoice.inputOrOutput,
+        date: certificateEntity.invoice.date,
+        no: certificateEntity.invoice.no,
+        currencyAlias: certificateEntity.invoice.currencyAlias,
+        priceBeforeTax: certificateEntity.invoice.priceBeforeTax,
+        taxType: certificateEntity.invoice.taxType,
+        taxRatio: certificateEntity.invoice.taxRatio,
+        taxPrice: certificateEntity.invoice.taxPrice,
+        totalPrice: certificateEntity.invoice.totalPrice,
+        type: certificateEntity.invoice.type,
+        deductible: certificateEntity.invoice.deductible,
+        createdAt: certificateEntity.invoice.createdAt,
+        updatedAt: certificateEntity.invoice.updatedAt,
+      };
+    }
+    const isRead =
+      certificateEntity.userCertificates.length > 0
+        ? certificateEntity.userCertificates.some((data) => data.isRead)
+        : false;
+    const voucherNo = certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0].no : '';
+
+    const certificate: ICertificate = {
+      id: certificateEntity.id,
+      name: certificateEntity.file.name,
+      companyId: certificateEntity.companyId,
+      unRead: !isRead,
+      file,
+      invoice,
+      voucherNo,
+      aiResultId: certificateEntity.aiResultId,
+      createdAt: certificateEntity.createdAt,
+      updatedAt: certificateEntity.updatedAt,
+      uploader: certificateEntity.uploader.name,
+    };
+
+    return certificate;
+  },
+};
+
+export const certificateAPIDeleteMultipleUtils = {
+  deleteCertificates: async (options: { certificateIds: number[]; nowInSecond: number }) => {
+    return deleteMultipleCertificates(options);
   },
 };
 
@@ -398,7 +481,7 @@ export const mockCertificateList = [
     size: '3.0 MB',
     uploadProgress: 50,
     aiResultId: 'douhvjax_-1',
-    aiStatus: 'success',
+    aiStatus: ProgressStatus.SUCCESS,
     createAt: 10000000,
     updateAt: 10000000,
   },

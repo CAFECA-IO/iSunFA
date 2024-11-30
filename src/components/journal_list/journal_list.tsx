@@ -122,7 +122,7 @@ const JournalList = ({
                   onChange={checkAllHandler}
                 />
               </th> */}
-              <th className="whitespace-nowrap text-center">{t('common:DATE_PICKER.DATE')}</th>
+              <th className="whitespace-nowrap text-center">{t('common:COMMON.DATE')}</th>
               <th className="whitespace-nowrap px-16px">{t('common:COMMON.TYPE')}</th>
               <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.PARTICULARS')}</th>
               <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.FROM_TO')}</th>
@@ -161,7 +161,7 @@ const JournalList = ({
                   className="relative h-4 w-4 border border-tertiaryBlue bg-white accent-tertiaryBlue"
                 />
               </th> */}
-              <th className="whitespace-nowrap text-center">{t('common:DATE_PICKER.DATE')}</th>
+              <th className="whitespace-nowrap text-center">{t('common:COMMON.DATE')}</th>
               <th className="whitespace-nowrap text-center">{t('journal:JOURNAL.INFO')}</th>
               {event === JOURNAL_EVENT.UPLOADED && (
                 <th className="whitespace-nowrap px-16px text-right">

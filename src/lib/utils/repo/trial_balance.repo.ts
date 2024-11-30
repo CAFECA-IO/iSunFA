@@ -11,6 +11,19 @@ import {
 import { DEFAULT_SORT_OPTIONS } from '@/constants/trial_balance';
 import { formatPaginatedTrialBalance } from '@/lib/utils/formatter/trial_balance.formatter';
 import { getAccountBook } from '@/lib/utils/repo/account_book.repo';
+import { DefaultValue } from '@/constants/default_value';
+
+/* Info: (20241105 - Shirley) Trial balance repository 實作
+company id (public company || targeted company) 去找 account table 拿到所有會計科目 -> voucher -> item -> account
+1. 搜尋 accounting setting table 取得貨幣別
+2. 用 public company id & my company id 搜尋 account table 取得所有會計科目
+  2.1 整理 account 資料結構
+3. 用 my company id 搜尋 voucher table 取得所有憑證
+4. 用我的 company id & 所有憑證 id 搜尋 line item table 取得所有憑證對應的 line item
+5. 依照期初、期中、期末分別計算所有會計科目的借方跟貸方金額
+6. 處理子科目
+7. 加總所有子科目金額
+*/
 
 interface ListTrialBalanceParams {
   companyId: number;
@@ -81,12 +94,11 @@ export async function listTrialBalance(
       total: trialBalanceData.total,
     };
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'listTrialBalance in trial_balance.repo.ts failed',
-      error as Error
-    );
-    logError.error('Prisma related listTrialBalance in trial_balance.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'listTrialBalance in trial_balance.repo.ts failed',
+      errorMessage: error as Error,
+    });
   }
 
   return trialBalancePayload;

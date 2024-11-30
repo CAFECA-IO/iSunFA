@@ -18,7 +18,7 @@ import {
   timestampInSeconds,
 } from '@/lib/utils/common';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
-import { EventType } from '@/constants/account';
+import { EventType, ProgressStatus } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { parsePrismaCompanyToCompanyEntity } from '@/lib/utils/formatter/company.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
@@ -1085,7 +1085,7 @@ export const mockVouchersReturn = [
         size: '3.0 MB',
         uploadProgress: 50,
         aiResultId: 'douhvjax_-1',
-        aiStatus: 'success',
+        aiStatus: ProgressStatus.SUCCESS,
         createAt: 10000000,
         updateAt: 10000000,
       },

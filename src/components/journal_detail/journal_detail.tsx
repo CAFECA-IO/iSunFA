@@ -578,7 +578,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('common:DATE_PICKER.DATE')}</p>
+              <p>{t('common:COMMON.DATE')}</p>
               {displayDate}
             </div>
             {/* Info: (20240503 - Julian) Reason */}

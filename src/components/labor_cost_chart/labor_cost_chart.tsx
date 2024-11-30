@@ -196,7 +196,7 @@ const PieChart = ({ data }: PieChartProps) => {
 const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const LaborCostChart = () => {
-  const { t } = useTranslation(['common', 'salary']);
+  const { t } = useTranslation(['alpha', 'salary']);
   const { layoutAssertion } = useGlobalCtx();
 
   // TODO: (20240618 - Shirley) [Beta] 改成 company startDate
@@ -261,7 +261,7 @@ const LaborCostChart = () => {
     if (getSuccess === false) {
       toastHandler({
         id: `labor-cost-chart-${getCode}`,
-        content: `${t('common:DASHBOARD.FAILED_TO_GET_LABOR_COST')} ${getCode}`,
+        content: `${t('alpha:DASHBOARD.FAILED_TO_GET_LABOR_COST')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -303,7 +303,7 @@ const LaborCostChart = () => {
         >
           <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
           <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
-            {t('common:COMMON.NO_DATA')}
+            {t('alpha:COMMON.NO_DATA')}
           </text>
         </svg>
       </div>
@@ -368,7 +368,7 @@ const LaborCostChart = () => {
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
+              <p>{t('alpha:COMMON.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

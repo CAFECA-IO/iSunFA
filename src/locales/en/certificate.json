@@ -1,6 +1,6 @@
 {
   "LIST": {
-    "INVOICE_TOTAL_PRRICE": "Invoice Total Price",
+    "INVOICE_TOTAL_PRICE": "Invoice Total Price",
     "EXPORT_CERTIFICATES": "Export Certificates"
   },
   "TAB": {
@@ -151,5 +151,18 @@
   },
   "CREATE": {
     "FAILED": "Failed to create certificate"
+  },
+  "SELECTION": {
+    "EXPORT": "Export",
+    "CERTIFICATES": "Certificates",
+    "ADD_NEW_VOUCHER": "Add New Voucher",
+    "ADD_NEW_ASSET": "Add New Asset"
+  },
+  "COMMON": {
+    "PERIOD": "Period",
+    "CANCEL": "Cancel"
+  },
+  "TOAST": {
+    "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error"
   }
 }

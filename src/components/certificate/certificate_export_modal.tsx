@@ -35,7 +35,7 @@ const CertificateExportModal: React.FC<CertificateExportModalProps> = ({
   handleExport,
   certificates,
 }) => {
-  const { t } = useTranslation(['certificate', 'common']);
+  const { t } = useTranslation(['certificate']);
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen) return null;
 
@@ -58,7 +58,7 @@ const CertificateExportModal: React.FC<CertificateExportModalProps> = ({
           {t('certificate:EXPORT.CONTENT')}
         </p>
         <div className="mt-4 flex-1">
-          <p className="mb-1 p-1 text-input-text-primary">{t('common:COMMON.PERIOD')}</p>
+          <p className="mb-1 p-1 text-input-text-primary">{t('certificate:COMMON.PERIOD')}</p>
           <FilterSection
             // Info: (20241126 - Murky) @tzuhan, 後端把tab設定成填寫undefined或不填寫的時候會回傳所有certificate
             apiName={APIName.CERTIFICATE_LIST_V2}
@@ -76,7 +76,7 @@ const CertificateExportModal: React.FC<CertificateExportModalProps> = ({
             className="gap-x-4px px-4 py-2"
             onClick={onClose}
           >
-            {t('common:COMMON.CANCEL')}
+            {t('certificate:COMMON.CANCEL')}
           </Button>
           <Button
             id="upload-image-button"
@@ -86,7 +86,7 @@ const CertificateExportModal: React.FC<CertificateExportModalProps> = ({
             onClick={handleExport}
             disabled={!certificates || certificates.length === 0}
           >
-            <div>{t('common:SELECTION.EXPORT')}</div>
+            <div>{t('certificate:SELECTION.EXPORT')}</div>
             <FiDownload />
           </Button>
         </div>

@@ -7,7 +7,7 @@ const pusherConfig = {
   secret: process.env.PUSHER_SECRET!,
   host: process.env.NEXT_PUBLIC_PUSHER_HOST!,
   port: process.env.NEXT_PUBLIC_PUSHER_PORT!,
-  useTLS: process.env.PUSHER_USE_TLS === 'true',
+  useTLS: process.env.NEXT_PUBLIC_PUSHER_USE_TLS === 'true',
 };
 
 let pusherInstance: Pusher | null = null;

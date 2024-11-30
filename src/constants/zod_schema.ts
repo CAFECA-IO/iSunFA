@@ -14,6 +14,8 @@ import {
   certificatePostValidator,
   certificatePutValidator,
   invoicePutV2Schema,
+  invoicePostV2Schema,
+  certificateMultiDeleteSchema,
 } from '@/lib/utils/zod_schema/certificate';
 import {
   companyDeleteSchema,
@@ -32,7 +34,11 @@ import {
   companyPendingTaskSchema,
   userPendingTaskSchema,
 } from '@/lib/utils/zod_schema/pending_task';
-import { reportGetValidatorV2 } from '@/lib/utils/zod_schema/report';
+import {
+  generatePublicReportSchemaV2,
+  getPublicReportSchemaV2,
+  reportGetValidatorV2,
+} from '@/lib/utils/zod_schema/report';
 import {
   userRoleListSchema,
   userRolePostSchema,
@@ -188,6 +194,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
   [APIName.CERTIFICATE_POST_V2]: certificatePostSchema,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneSchema,
+  [APIName.CERTIFICATE_DELETE_MULTIPLE_V2]: certificateMultiDeleteSchema,
   [APIName.ASSET_LIST_EXPORT]: assetExportSchema,
   [APIName.FILE_EXPORT]: assetExportSchema, // ToDo: (20241112 - Luphia) need to define the schema for file export
 
@@ -203,9 +210,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.COMPANY_GET]: nullAPISchema,
   [APIName.COMPANY_ADD_BY_INVITATION_CODE]: nullAPISchema,
   [APIName.CERTIFICATE_PUT_V2]: nullAPISchema,
+  [APIName.INVOICE_POST_V2]: invoicePostV2Schema,
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
   [APIName.CERTIFICATE_DELETE_V2]: nullAPISchema,
-  [APIName.CERTIFICATE_DELETE__MULTIPLE_V2]: nullAPISchema,
   [APIName.PROFIT_GET_INSIGHT]: nullAPISchema,
   [APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD]: nullAPISchema,
   [APIName.LABOR_COST_CHART]: nullAPISchema,
@@ -235,9 +242,9 @@ export const ZOD_SCHEMA_API = {
   // [APIName.JOURNAL_UPDATE]: nullAPISchema, // Info: (20240723 - Tzuhan)
   [APIName.JOURNAL_DELETE]: nullAPISchema,
   [APIName.REPORT_LIST]: nullAPISchema,
-  [APIName.REPORT_GET_BY_ID]: nullAPISchema,
+  [APIName.REPORT_GET_BY_ID]: getPublicReportSchemaV2,
   [APIName.REPORT_GET_V2]: nullAPISchema,
-  [APIName.REPORT_GENERATE]: nullAPISchema,
+  [APIName.REPORT_GENERATE]: generatePublicReportSchemaV2,
   [APIName.STATUS_INFO_GET]: statusInfoGetSchema,
   [APIName.ACCOUNT_LIST]: nullAPISchema,
   [APIName.FILE_UPLOAD]: filePostSchema,

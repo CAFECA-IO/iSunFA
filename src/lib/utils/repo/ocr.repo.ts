@@ -8,6 +8,7 @@ import { ocrIncludeFile } from '@/interfaces/ocr';
 import { getTimestampNow } from '@/lib/utils/common';
 import { File, Ocr, Prisma } from '@prisma/client';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function findUniqueCompanyInPrisma(companyId: number) {
   let company: {
@@ -20,14 +21,11 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
       select: { id: true },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'find unique company in findUniqueCompanyInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related find unique company in findUniqueCompanyInPrisma in ocr.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'find unique company in findUniqueCompanyInPrisma failed',
+      errorMessage: (error as Error).message,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -68,14 +66,11 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
       orderBy,
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'find many ocr in findManyOCRByCompanyIdWithoutUsedInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related find many ocr by company id without used in findManyOCRByCompanyIdWithoutUsedInPrisma in ocr.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'find many ocr in findManyOCRByCompanyIdWithoutUsedInPrisma failed',
+      errorMessage: (error as Error).message,
+    });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -125,8 +120,11 @@ export async function createOcrInPrisma(
       },
     });
   } catch (error) {
-    const logError = loggerError(0, 'create ocr in createOcrInPrisma failed', error as Error);
-    logError.error('Prisma related create ocr in createOcrInPrisma in ocr.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'create ocr in createOcrInPrisma failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return ocrData;

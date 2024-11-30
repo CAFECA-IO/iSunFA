@@ -134,7 +134,7 @@ const AnalysisReportSection = () => {
           <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-input-text-input-filled shadow-sm">
             <input
               type="text"
-              placeholder={t('common:COMMON.SEARCH')}
+              placeholder={t('search:COMMON.SEARCH')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none focus:outline-none"
@@ -194,7 +194,7 @@ const AnalysisReportSection = () => {
         onClick={typeMenuClickHandler}
       >
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-          {t(`common:BOOKMARK_LIST.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
+          {t(`alpha:BOOKMARK_LIST.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
@@ -218,7 +218,7 @@ const AnalysisReportSection = () => {
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               {/* Info: (20240710 - Anna) {name} */}
-              {t(`common:BOOKMARK_LIST.${name.toUpperCase().replace(/ /g, '_')}`)}
+              {t(`alpha:BOOKMARK_LIST.${name.toUpperCase().replace(/ /g, '_')}`)}
             </li>
           ))}
         </ul>

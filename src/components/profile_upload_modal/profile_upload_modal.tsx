@@ -24,7 +24,7 @@ const ProfileUploadModal = ({
   modalVisibilityHandler,
   uploadType,
 }: IProfileUploadModalProps) => {
-  const { t } = useTranslation(['common', 'journal']);
+  const { t } = useTranslation(['alpha', 'journal']);
   const router = useRouter();
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
@@ -41,17 +41,17 @@ const ProfileUploadModal = ({
 
   const modalTitle =
     uploadType === UploadType.USER
-      ? t('common:PROFILE_UPLOAD_MODAL.PROFILE_PIC')
+      ? t('alpha:PROFILE_UPLOAD_MODAL.PROFILE_PIC')
       : uploadType === UploadType.COMPANY
-        ? t('common:PROFILE_UPLOAD_MODAL.COMPANY_IMAGE')
-        : t('common:PROFILE_UPLOAD_MODAL.PROJECT_IMAGE');
+        ? t('alpha:PROFILE_UPLOAD_MODAL.COMPANY_IMAGE')
+        : t('alpha:PROFILE_UPLOAD_MODAL.PROJECT_IMAGE');
 
   const modalDescription =
     uploadType === UploadType.USER
-      ? t('common:PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROFILE_PICTURE')
+      ? t('alpha:PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROFILE_PICTURE')
       : uploadType === UploadType.COMPANY
-        ? t('common:PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_COMPANY_PICTURE')
-        : t('common:PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROJECT_PICTURE');
+        ? t('alpha:PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_COMPANY_PICTURE')
+        : t('alpha:PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROJECT_PICTURE');
 
   const cancelHandler = () => {
     setUploadedImage(null);
@@ -86,9 +86,9 @@ const ProfileUploadModal = ({
   const uploadedError = () => {
     messageModalDataHandler({
       messageType: MessageType.ERROR,
-      title: t('common:PROFILE_UPLOAD_MODAL.UPLOAD_FAILED'),
-      content: `${t('common:PROFILE_UPLOAD_MODAL.PLEASE_TRY_LATER')} ${code}`,
-      submitBtnStr: t('common:COMMON.OK'),
+      title: t('alpha:PROFILE_UPLOAD_MODAL.UPLOAD_FAILED'),
+      content: `${t('alpha:PROFILE_UPLOAD_MODAL.PLEASE_TRY_LATER')} ${code}`,
+      submitBtnStr: t('alpha:PROFILE_UPLOAD_MODAL.OK'),
       submitBtnFunction: messageModalVisibilityHandler,
     });
     messageModalVisibilityHandler();
@@ -184,7 +184,7 @@ const ProfileUploadModal = ({
       />
       <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
       <p className="mt-20px font-semibold text-drag-n-drop-text-primary">
-        {t('common:PROFILE_UPLOAD_MODAL.DROP_YOUR_FILES_HERE_OR')}{' '}
+        {t('alpha:PROFILE_UPLOAD_MODAL.DROP_YOUR_FILES_HERE_OR')}{' '}
         <span className="text-link-text-primary">{t('journal:JOURNAL.BROWSE')}</span>
       </p>
       <p className="text-center text-drag-n-drop-text-note">{t('journal:JOURNAL.MAXIMUM_SIZE')}</p>
@@ -207,10 +207,10 @@ const ProfileUploadModal = ({
       {/* Info: (20240618 - Julian) Buttons */}
       <div className="ml-auto flex items-center gap-12px px-20px py-16px text-button-text-secondary">
         <Button type="button" variant="secondaryBorderless" onClick={cancelHandler}>
-          {t('common:COMMON.CANCEL')}
+          {t('alpha:PROFILE_UPLOAD_MODAL.CANCEL')}
         </Button>
         <Button type="button" className="w-full" variant="tertiary" onClick={saveImage}>
-          <p>{t('common:EDIT_BOOKMARK_MODAL.SAVE')}</p>
+          <p>{t('alpha:EDIT_BOOKMARK_MODAL.SAVE')}</p>
           <svg
             width="20"
             height="20"

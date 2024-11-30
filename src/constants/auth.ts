@@ -1,5 +1,5 @@
 import { APIName } from '@/constants/api_connection';
-import { UploadType } from './file';
+import { UploadType } from '@/constants/file';
 
 export enum AuthFunctionsKeysNew {
   user = 'user',
@@ -13,6 +13,7 @@ export enum AuthFunctionsKeysNew {
 export const AUTH_WHITELIST = {
   [APIName.FILE_UPLOAD]: { query: { type: UploadType.ROOM } },
   [APIName.STATUS_INFO_GET]: { query: {} },
+  [APIName.REPORT_GET_BY_ID]: { query: {} },
 };
 
 // ToDo: (20241111 - Jacky) Add more auth functions
@@ -61,6 +62,8 @@ export const AUTH_CHECK = {
   [APIName.CERTIFICATE_LIST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_POST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_GET_V2]: [AuthFunctionsKeysNew.user],
+  [APIName.CERTIFICATE_DELETE_MULTIPLE_V2]: [AuthFunctionsKeysNew.user],
+  [APIName.INVOICE_POST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.INVOICE_PUT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ASSET_LIST_EXPORT]: [AuthFunctionsKeysNew.user],
   [APIName.FILE_EXPORT]: [AuthFunctionsKeysNew.user], // ToDo: (20241112 - Luphia) need to define the schema for file export
@@ -83,7 +86,6 @@ export const AUTH_CHECK = {
   [APIName.COMPANY_ADD_BY_INVITATION_CODE]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_PUT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_DELETE_V2]: [AuthFunctionsKeysNew.user],
-  [APIName.CERTIFICATE_DELETE__MULTIPLE_V2]: [AuthFunctionsKeysNew.user],
   [APIName.PROFIT_GET_INSIGHT]: [AuthFunctionsKeysNew.user],
   [APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD]: [AuthFunctionsKeysNew.user],
   [APIName.LABOR_COST_CHART]: [AuthFunctionsKeysNew.user],

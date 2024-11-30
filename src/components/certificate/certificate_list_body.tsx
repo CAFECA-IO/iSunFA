@@ -32,7 +32,7 @@ import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 interface CertificateListBodyProps {}
 
 const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
-  const { t } = useTranslation(['certificate', 'common']);
+  const { t } = useTranslation(['certificate']);
   const router = useRouter();
   const { userAuth, selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
@@ -40,7 +40,10 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { trigger: updateCertificateAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
-  const { trigger: deleteCertificatesAPI } = APIHandler<void>(APIName.CERTIFICATE_DELETE_V2);
+  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.INVOICE_POST_V2);
+  const { trigger: deleteCertificatesAPI } = APIHandler<number[]>(
+    APIName.CERTIFICATE_DELETE_MULTIPLE_V2
+  ); // Info: (20241128 - Murky) @tzuhan 這邊會回傳成功被刪掉的certificate
 
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
@@ -78,7 +81,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [addOperations, setAddOperations] = useState<ISelectionToolBarOperation[]>([
     {
       operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
-      buttonStr: 'common:SELECTION.ADD_NEW_VOUCHER',
+      buttonStr: 'certificate:SELECTION.ADD_NEW_VOUCHER',
       onClick: handleAddVoucher,
     },
   ]);
@@ -218,36 +221,50 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, activeTab, isSelectedAll]
   );
 
+  const deleteSelectedCertificates = useCallback(
+    async (selectedIds: number[]) => {
+      try {
+        const { success, data: deletedIds } = await deleteCertificatesAPI({
+          params: { companyId },
+          body: { certificateIds: selectedIds }, // Info: (20241128 - Murky) @tzuhan 這邊用multiple delete，然後把要delete的東西放在array裡
+        });
+        if (success && deletedIds) {
+          setCertificates((prev) => {
+            const updatedData = { ...prev };
+            deletedIds.forEach((id) => {
+              delete updatedData[id];
+            });
+            return updatedData;
+          });
+          toastHandler({
+            id: ToastId.DELETE_CERTIFICATE_SUCCESS,
+            type: ToastType.SUCCESS,
+            content: t('certificate:DELETE.SUCCESS'),
+            closeable: true,
+          });
+        } else throw new Error(t('certificate:DELETE.ERROR'));
+      } catch (error) {
+        toastHandler({
+          id: ToastId.DELETE_CERTIFICATE_ERROR,
+          type: ToastType.ERROR,
+          content: t('certificate:ERROR.WENT_WRONG'),
+          closeable: true,
+        });
+      }
+    },
+    [certificates]
+  );
+
   const handleDeleteItem = useCallback(
-    (id: number) => {
+    (selectedId: number) => {
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
         content: t('certificate:DELETE.CONTENT'),
-        notes: `${certificates[id].name}?`,
+        notes: `${certificates[selectedId].name}?`,
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
-          try {
-            const { success } = await deleteCertificatesAPI({
-              params: { companyId, certificateId: id },
-              query: { certificateIds: id },
-            });
-            if (success) {
-              toastHandler({
-                id: ToastId.DELETE_CERTIFICATE_SUCCESS,
-                type: ToastType.SUCCESS,
-                content: t('certificate:DELETE.SUCCESS'),
-                closeable: true,
-              });
-            } else throw new Error(t('certificate:DELETE.ERROR'));
-          } catch (error) {
-            toastHandler({
-              id: ToastId.DELETE_CERTIFICATE_ERROR,
-              type: ToastType.ERROR,
-              content: t('certificate:ERROR.WENT_WRONG'),
-              closeable: true,
-            });
-          }
+          await deleteSelectedCertificates([selectedId]);
         },
         backBtnStr: t('certificate:DELETE.NO'),
       });
@@ -258,7 +275,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleDeleteSelectedItems = useCallback(() => {
     // Info: (20241025 - tzuhan) 找出所有選中的項目 ID
-    const selectedIds = Object.keys(certificates).filter((id) => certificates[id].isSelected);
+    const selectedIds = Object.values(certificates)
+      .filter((certificate) => certificate.isSelected)
+      .map((certificate) => certificate.id);
 
     // Info: (20241025 - tzuhan) 如果有選中的項目，顯示刪除確認模態框
     if (selectedIds.length > 0) {
@@ -268,36 +287,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
-          try {
-            // Info: (20241025 - tzuhan) 批量刪除選中的項目
-            // Deprecated: (20240923 - tzuhan) debugging purpose
-            // eslint-disable-next-line no-console
-            console.log('Remove multiple ids:', selectedIds);
-
-            const { success: deleteMultipleSuccess, code } = await deleteCertificatesAPI({
-              params: { companyId },
-              query: { certificateIds: selectedIds },
-            });
-            if (deleteMultipleSuccess) {
-              // Info: (20241025 - tzuhan) 顯示刪除成功的提示
-              toastHandler({
-                id: ToastId.DELETE_CERTIFICATE_SUCCESS,
-                type: ToastType.SUCCESS,
-                content: t('certificate:DELETE.SUCCESS'),
-                closeable: true,
-              });
-            } else {
-              throw new Error(code);
-            }
-          } catch (error) {
-            // Info: (20241025 - tzuhan) 顯示錯誤提示
-            toastHandler({
-              id: ToastId.DELETE_CERTIFICATE_ERROR,
-              type: ToastType.ERROR,
-              content: t('certificate:ERROR.WENT_WRONG'),
-              closeable: true,
-            });
-          }
+          // Info: (20241025 - tzuhan) 批量刪除選中的項目
+          // Deprecated: (20240923 - tzuhan) debugging purpose
+          // eslint-disable-next-line no-console
+          console.log('Remove multiple ids:', selectedIds);
+          await deleteSelectedCertificates(selectedIds);
         },
         backBtnStr: t('certificate:DELETE.NO'),
       });
@@ -320,7 +314,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         setAddOperations([
           {
             operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
-            buttonStr: 'common:SELECTION.ADD_NEW_VOUCHER',
+            buttonStr: 'certificate:SELECTION.ADD_NEW_VOUCHER',
             onClick: handleAddVoucher,
           },
         ]);
@@ -344,10 +338,30 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     async (certificate: ICertificate) => {
       try {
         // Info: (20241025 - tzuhan) @Murky, 這邊跟目前後端的接口不一致，需要調整的話再跟我說
-        const { success, data: updatedCertificate } = await updateCertificateAPI({
-          params: { companyId, invoiceId: certificate.invoice.id },
-          body: certificate.invoice,
-        });
+        const postOrPutAPI = certificate.invoice.id
+          ? updateCertificateAPI({
+              params: { companyId, invoiceId: certificate.invoice.id },
+              body: certificate.invoice,
+            })
+          : createCertificateAPI({
+              params: { companyId },
+              body: {
+                certificateId: certificate.id,
+                counterPartyId: certificate.invoice.counterParty?.id,
+                inputOrOutput: certificate.invoice.inputOrOutput,
+                date: certificate.invoice.date,
+                no: certificate.invoice.no,
+                currencyAlias: certificate.invoice.currencyAlias,
+                priceBeforeTax: certificate.invoice.priceBeforeTax,
+                taxType: certificate.invoice.taxType,
+                taxRatio: certificate.invoice.taxRatio,
+                taxPrice: certificate.invoice.taxPrice,
+                totalPrice: certificate.invoice.totalPrice,
+                type: certificate.invoice.type,
+                deductible: certificate.invoice.deductible,
+              },
+            });
+        const { success, data: updatedCertificate } = await postOrPutAPI;
         if (success && updatedCertificate) {
           const updatedData = {
             ...certificates,
@@ -523,7 +537,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               isSelectable={activeTab === InvoiceTabs.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
               items={Object.values(certificates)}
-              subtitle={`${t('certificate:LIST.INVOICE_TOTAL_PRRICE')}:`}
+              subtitle={`${t('certificate:LIST.INVOICE_TOTAL_PRICE')}:`}
               totalPrice={totalInvoicePrice}
               currency={currency}
               selectedCount={Object.values(selectedCertificates).length}

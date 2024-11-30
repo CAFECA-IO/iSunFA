@@ -36,6 +36,7 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
       'common',
       'journal',
       'filter_section_type',
+      'search',
     ])),
     locale,
   },

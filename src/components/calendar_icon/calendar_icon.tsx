@@ -13,7 +13,7 @@ const CalendarIcon = ({ timestamp, unRead = true }: ICalendarIconProps) => {
   // Info: (20240418 - Julian) 將日期轉換為數字以除去前面的 0，若為'-'則保留'-'
   const displayDay = day === '-' ? '-' : +day;
 
-  const unreadStyle = unRead === true ? 'hidden' : 'block';
+  const unreadStyle = unRead === false ? 'hidden' : 'block';
 
   return (
     <div className="relative flex w-fit scale-75 flex-col items-center justify-end font-barlow md:scale-100">

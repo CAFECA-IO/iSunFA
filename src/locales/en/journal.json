@@ -197,6 +197,8 @@
     "REVERSE": "Reverse",
     "EXPORT_VOUCHER_MODAL_TITLE": "Export Voucher",
     "EXPORT_VOUCHER_MODAL_SUBTITLE": "Please select the vouchers you want to export",
+    "TOAST_EXPORT_SUCCESS": "Voucher exported successfully.",
+    "TOAST_EXPORT_FAILED": "Failed to export voucher, please try again later.",
     "VOUCHER_NUMBER": "Voucher Number",
     "EXPORT_BTN": "Export",
     "FROM_PLACEHOLDER": "From",
@@ -224,7 +226,8 @@
     "SELECT_ACCOUNTING": "Select Accounting",
     "NO_ACCOUNTING_FOUND": "No accounting found",
     "NO_COUNTERPARTY_FOUND": "No counterparty found",
-    "EVERY": "Every"
+    "EVERY": "Every",
+    "TOAST_FAILED_TO_CREATE": "Failed to create voucher, please try again later."
   },
   "ACCOUNT_TYPE": {
     "ASSET": "Assets",
