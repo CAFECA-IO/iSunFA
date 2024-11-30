@@ -8,7 +8,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function findManyAccountsInPrisma({
   companyId,
@@ -93,7 +93,7 @@ export async function findManyAccountsInPrisma({
     totalCount = await prisma.account.count({ where });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Count total count of account in findManyAccountsInPrisma failed',
       errorMessage: error as Error,
     });
@@ -116,7 +116,7 @@ export async function findManyAccountsInPrisma({
     accounts = await prisma.account.findMany(findManyArgs);
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Find many accounts in findManyAccountsInPrisma failed',
       errorMessage: error as Error,
     });
@@ -162,7 +162,7 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Find first account in findFirstAccountInPrisma failed',
       errorMessage: error as Error,
     });
@@ -189,7 +189,7 @@ export async function updateAccountInPrisma(
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Update account in updateAccountInPrisma failed',
       errorMessage: error as Error,
     });
@@ -214,7 +214,7 @@ export async function softDeleteAccountInPrisma(accountIdNumber: number, company
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Soft delete account in softDeleteAccountInPrisma failed',
       errorMessage: error as Error,
     });
@@ -235,7 +235,7 @@ export async function findLatestSubAccountInPrisma(parentAccount: Account) {
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Find latest sub account in findLatestSubAccountInPrisma failed',
       errorMessage: error as Error,
     });
@@ -277,7 +277,7 @@ export async function fuzzySearchAccountByName(name: string) {
     [account] = accounts;
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Fuzzy search account by name in fuzzySearchAccountByName failed',
       errorMessage: error as Error,
     });

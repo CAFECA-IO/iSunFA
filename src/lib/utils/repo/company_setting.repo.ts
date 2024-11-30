@@ -2,7 +2,7 @@ import prisma from '@/client';
 import { ICompanySetting } from '@/interfaces/company_setting';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getTimestampNow } from '@/lib/utils/common';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function createCompanySetting(companyId: number) {
   const nowInSecond = getTimestampNow();
@@ -26,7 +26,7 @@ export async function createCompanySetting(companyId: number) {
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'create company setting in createCompanySetting failed',
       errorMessage: (error as Error).message,
     });
@@ -47,7 +47,7 @@ export async function getCompanySettingByCompanyId(companyId: number) {
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'get company setting in getCompanySettingByCompanyId failed',
       errorMessage: (error as Error).message,
     });
@@ -83,7 +83,7 @@ export async function updateCompanySettingById(id: number, data: ICompanySetting
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'update company setting in updateCompanySettingById failed',
       errorMessage: (error as Error).message,
     });
@@ -101,7 +101,7 @@ export async function deleteCompanySettingByIdForTesting(id: number) {
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'delete company setting in deleteCompanySettingByIdForTesting failed',
       errorMessage: (error as Error).message,
     });

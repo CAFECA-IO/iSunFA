@@ -23,7 +23,7 @@ import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_facto
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 
 function formatCompanyIdAccountId(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
@@ -294,7 +294,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'handle account request failed',
       errorMessage: error.message,
     });

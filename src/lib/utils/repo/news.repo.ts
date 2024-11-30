@@ -8,7 +8,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
 import { SortBy } from '@/constants/journal';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function createNews(imageId: number, title: string, content: string, type: NewsType) {
   const nowInSecond = getTimestampNow();
@@ -27,7 +27,7 @@ export async function createNews(imageId: number, title: string, content: string
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'create news in createNews failed',
       errorMessage: (error as Error).message,
     });
@@ -72,7 +72,7 @@ export async function listNews(
     newsList = await prisma.news.findMany(findManyArgs);
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find many news in listNews failed',
       errorMessage: (error as Error).message,
     });
@@ -126,7 +126,7 @@ export async function listNewsSimple(
     newsList = await prisma.news.findMany(findManyArgs);
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find many news in listNewsSimple failed',
       errorMessage: (error as Error).message,
     });
@@ -146,7 +146,7 @@ export async function getNewsById(newsId: number): Promise<News | null> {
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find unique news in getNewsById failed',
       errorMessage: (error as Error).message,
     });
@@ -164,7 +164,7 @@ export async function deleteNewsForTesting(newsId: number) {
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'delete news in deleteNewsForTesting failed',
       errorMessage: (error as Error).message,
     });

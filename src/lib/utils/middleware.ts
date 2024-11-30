@@ -9,7 +9,7 @@ import { APIName, APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { ISessionData } from '@/interfaces/session_data';
 import { checkAuthorizationNew, isWhitelisted } from '@/lib/utils/auth_check_v2';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function checkSessionUser(
   session: ISessionData,
@@ -26,7 +26,7 @@ export async function checkSessionUser(
   if (!session.userId) {
     isLogin = false;
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.GUEST,
+      userId: DefaultValue.USER_ID.GUEST,
       errorType: 'Unauthorized Access',
       errorMessage: 'User ID is missing in session',
     });
@@ -63,7 +63,7 @@ export function checkRequestData<T extends APIName>(
 
   if (query === null && body === null) {
     loggerError({
-      userId: session.userId || DEFAULT_VALUE.USER_ID.GUEST,
+      userId: session.userId || DefaultValue.USER_ID.GUEST,
       errorType: `Invalid Input Parameter for ${apiName} in middleware.ts`,
       errorMessage: req.body,
     });
@@ -81,7 +81,7 @@ export async function logUserAction<T extends APIName>(
   try {
     const userActionLog = {
       sessionId: session.id || '',
-      userId: session.userId || DEFAULT_VALUE.USER_ID.GUEST,
+      userId: session.userId || DefaultValue.USER_ID.GUEST,
       actionType: UserActionLogActionType.API,
       actionDescription: apiName,
       ipAddress: (req.headers['x-forwarded-for'] as string) || '',
@@ -94,7 +94,7 @@ export async function logUserAction<T extends APIName>(
     await createUserActionLog(userActionLog);
   } catch (error) {
     loggerError({
-      userId: session.userId || DEFAULT_VALUE.USER_ID.GUEST,
+      userId: session.userId || DefaultValue.USER_ID.GUEST,
       errorType: `Failed to log user action for ${apiName} in middleware.ts`,
       errorMessage: error as Error,
     });
@@ -140,7 +140,7 @@ export async function withRequestValidation<T extends APIName, U>(
         } catch (handlerError) {
           statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
           loggerError({
-            userId: session.userId ?? DEFAULT_VALUE.USER_ID.GUEST,
+            userId: session.userId ?? DefaultValue.USER_ID.GUEST,
             errorType: `Handler Request Error for ${apiName} in middleware.ts`,
             errorMessage: handlerError as Error,
           });

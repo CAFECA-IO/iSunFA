@@ -18,7 +18,7 @@ import { CurrencyType } from '@/constants/currency';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 import { IAIInvoice, IInvoiceEntity } from '@/interfaces/invoice';
 import { createManyInvoice } from '@/lib/utils/repo/invoice.repo';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 
 // ToDo: (20241128 - Luphia) Check this API carefully
 
@@ -53,8 +53,8 @@ async function certificateHandler(key: AI_TYPE, resultId: string, session: ISess
         );
         const nowTimestamp = getTimestampNow();
         const certificateParsedResult = {
-          certificateId: invoice.certificateId || DEFAULT_VALUE.CERTIFICATE_ID.UNKNOWN,
-          counterPartyId: counterparty?.id || DEFAULT_VALUE.COUNTER_PARTY_ID.PROCESSING,
+          certificateId: invoice.certificateId || DefaultValue.CERTIFICATE_ID.UNKNOWN,
+          counterPartyId: counterparty?.id || DefaultValue.COUNTER_PARTY_ID.PROCESSING,
           inputOrOutput: invoice.inputOrOutput || InvoiceTransactionDirection.INPUT,
           date: invoice.date || nowTimestamp,
           no: invoice.no || 'AI00000000',

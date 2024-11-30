@@ -14,7 +14,7 @@ import { FileFolder, PUBLIC_IMAGE_ID } from '@/constants/file';
 import { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
 import { handleSignOutSession } from '@/lib/utils/signout';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
 // import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 // import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
@@ -235,7 +235,7 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
         // ToDo: (20240829 - Jacky) Add error handling with logger
         const error = _error as Error;
         const errorInfo = {
-          userId: session.userId || DEFAULT_VALUE.USER_ID.GUEST,
+          userId: session.userId || DefaultValue.USER_ID.GUEST,
           errorType: 'signIn failed',
           errorMessage: error.message,
         };

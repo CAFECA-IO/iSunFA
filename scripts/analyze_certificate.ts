@@ -9,7 +9,7 @@ import { bufferToBlob } from '@/lib/utils/parse_image_form';
 import { findFileById } from '@/lib/utils/repo/file.repo';
 import { fetchResultIdFromAICH } from '@/lib/utils/aich';
 import { AI_TYPE } from '@/constants/aich';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 
 /* Info: (20241128 - Jacky) Decrypt the certificate image and send it to AICH for analysis
  * 1. Fetch certificates without invoice
@@ -43,7 +43,7 @@ async function processCertificateFile(certificate: {
     resultId = await fetchResultIdFromAICH(AI_TYPE.CERTIFICATE, formData);
     if (!resultId) {
       loggerError({
-        userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+        userId: DefaultValue.USER_ID.SYSTEM,
         errorType: 'FetchResultIdError',
         errorMessage: `Failed to fetch result ID for certificate ID: ${certificate.id}`,
       });
@@ -78,7 +78,7 @@ async function analyzeCertificate() {
     // Info: (20241128 - Jacky) Step 5: Record error if any
     const error = _error as Error;
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'CertificateAnalysisError',
       errorMessage: error,
     });
@@ -94,7 +94,7 @@ async function analyzeCertificate() {
   } catch (_error) {
     const error = _error as Error;
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'CertificateAnalysisError',
       errorMessage: error,
     });

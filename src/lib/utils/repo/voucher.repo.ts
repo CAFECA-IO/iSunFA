@@ -45,7 +45,7 @@ import {
   AccountCodesOfAR,
   AccountCodesOfARRegex,
 } from '@/constants/asset';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
@@ -67,7 +67,7 @@ export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
     return result;
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType:
         'find unique journal involve invoice payment in findUniqueJournalInvolveInvoicePaymentInPrisma failed',
       errorMessage: error as Error,
@@ -90,7 +90,7 @@ export async function findFirstAccountByNameInPrisma(accountName: string) {
     return result?.id || null;
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find first account by name in findFirstAccountByNameInPrisma failed',
       errorMessage: error as Error,
     });
@@ -121,7 +121,7 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
     return result;
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType:
         'find first account belongs to company in findFirstAccountBelongsToCompanyInPrisma failed',
       errorMessage: error as Error,
@@ -152,7 +152,7 @@ export async function findUniqueVoucherInPrisma(voucherId: number) {
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find unique voucher in findUniqueVoucherInPrisma failed',
       errorMessage: error as Error,
     });
@@ -214,7 +214,7 @@ export async function createLineItemInPrisma(
     return result.id;
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'create line item in createLineItemInPrisma failed',
       errorMessage: error as Error,
     });
@@ -267,7 +267,7 @@ export async function getLatestVoucherNoInPrisma(
     return `${formattedDate}${newVoucherNo}`;
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'get latest voucher no in getLatestVoucherNoInPrisma failed',
       errorMessage: error as Error,
     });
@@ -348,7 +348,7 @@ export async function findManyVoucherWithCashInPrisma(
     return vouchers;
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'find many voucher with cash in findManyVoucherWithCashInPrisma failed',
       errorMessage: error as Error,
     });
@@ -911,7 +911,7 @@ export async function getOneVoucherByIdWithoutInclude(voucherId: number) {
     return voucher;
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'get one voucher by id without include in getOneVoucherByIdWithoutInclude failed',
       errorMessage: error as Error,
     });
@@ -1013,7 +1013,7 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'get accounting setting in getAccountingSetting failed',
       errorMessage: (error as Error).message,
     });
@@ -1142,7 +1142,7 @@ export async function getManyVoucherV2(options: {
     totalCount = await prisma.voucher.count({ where });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Count total count of voucher in getManyVoucherV2 failed',
       errorMessage: error as Error,
     });
@@ -1283,7 +1283,7 @@ export async function getManyVoucherV2(options: {
     }
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Find many accounts in findManyAccountsInPrisma failed',
       errorMessage: error as Error,
     });
@@ -1419,7 +1419,7 @@ export async function getManyVoucherByAccountV2(options: {
     totalCount = await prisma.voucher.count({ where });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Count total count of voucher in getManyVoucherV2 failed',
       errorMessage: error as Error,
     });
@@ -1540,7 +1540,7 @@ export async function getManyVoucherByAccountV2(options: {
     });
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Find many accounts in findManyAccountsInPrisma failed',
       errorMessage: error as Error,
     });
@@ -1651,7 +1651,7 @@ export async function getUnreadVoucherCount(options: {
     unreadVoucherCount = totalVoucherCount - readVoucherCount;
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Count unread voucher in getUnreadVoucherCount failed',
       errorMessage: error as Error,
     });
@@ -1729,7 +1729,7 @@ export async function getOneVoucherWithLineItemAndAccountV2(voucherId: number) {
     return voucher;
   } catch (error) {
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType:
         'get one voucher with line item and account in getOneVoucherWithLineItemAndAccountV2 failed',
       errorMessage: error as Error,

@@ -6,7 +6,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { CurrencyType } from '@/constants/currency';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 import { PostCertificateResponse } from '@/interfaces/certificate';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function postInvoiceV2(options: {
   nowInSecond: number;
@@ -99,7 +99,7 @@ export async function postInvoiceV2(options: {
   } catch (_error) {
     const error = _error as Error;
     const errorInfo = {
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Post Invoice V2 Error',
       errorMessage: error.message,
     };
@@ -196,7 +196,7 @@ export async function putInvoiceV2(options: {
   } catch (_error) {
     const error = _error as Error;
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'Put Invoice V2 Error',
       errorMessage: error,
     });

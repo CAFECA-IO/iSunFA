@@ -12,7 +12,7 @@ import {
 import { fuzzySearchCounterpartyByName } from '@/lib/utils/repo/counterparty.repo';
 import { createManyInvoice } from '@/lib/utils/repo/invoice.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 import { ProgressStatus } from '@/constants/account';
 
 async function processCertificateContent(certificate: {
@@ -99,7 +99,7 @@ async function processCertificates() {
   } catch (_error) {
     const error = _error as Error;
     loggerError({
-      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+      userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'CertificateListError',
       errorMessage: error,
     });

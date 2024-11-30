@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { loggerError } from '@/lib/utils/logger_back';
-import { DEFAULT_VALUE } from '@/constants/default_value';
+import { DefaultValue } from '@/constants/default_value';
 
 // Info: (20240701 - Jacky) Function to get the last committed version of package.json
 function getLastCommittedVersion(): string | null {
@@ -32,7 +32,7 @@ try {
 } catch (_error) {
   const error = _error as Error;
   loggerError({
-    userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+    userId: DefaultValue.USER_ID.SYSTEM,
     errorType: 'Package.json parsed failed',
     errorMessage: error.message,
   });
@@ -69,7 +69,7 @@ try {
 } catch (_error) {
   const error = _error as Error;
   loggerError({
-    userId: DEFAULT_VALUE.USER_ID.SYSTEM,
+    userId: DefaultValue.USER_ID.SYSTEM,
     errorType: 'Package.json write failed',
     errorMessage: error.message,
   });
