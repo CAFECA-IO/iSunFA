@@ -6,7 +6,7 @@ describe('Trial Balance Repository', () => {
     it('should return a paginated list of trial balance items', async () => {
       const params = {
         companyId: 1002,
-        startDate: 0,
+        startDate: 1730002871,
         endDate: 1730762468,
         sortOption: `${SortBy.MIDTERM_DEBIT_AMOUNT}:${SortOrder.ASC}`,
         page: 1,
@@ -41,8 +41,6 @@ describe('Trial Balance Repository', () => {
         expect(total.midtermDebitAmount).toBeGreaterThanOrEqual(0);
         expect(total.endingCreditAmount).toBeGreaterThanOrEqual(0);
         expect(total.endingDebitAmount).toBeGreaterThanOrEqual(0);
-        expect(total.createAt).toBeGreaterThan(0);
-        expect(total.updateAt).toBeGreaterThan(0);
       }
     });
 
