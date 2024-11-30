@@ -3,7 +3,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { handleSignOutSession } from '@/lib/utils/signout';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { DefaultValue } from '@/constants/default_value';
+import { DEFAULT_VALUE } from '@/constants/default_value';
 
 async function handlePostRequest(
   req: NextApiRequest,
@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const userFriendlyMessage = 'Failed to sign out';
     statusMessage = (error as Error).message || userFriendlyMessage;
     const errorInfo = {
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'sign-out failed',
       errorMessage: statusMessage,
     };

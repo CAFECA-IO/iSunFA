@@ -15,7 +15,7 @@ import { IGetLineItemByAccount, ILineItem, ILineItemIncludeAccount } from '@/int
 import { IPaginatedData } from '@/interfaces/pagination';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
-import { DefaultValue } from '@/constants/default_value';
+import { DEFAULT_VALUE } from '@/constants/default_value';
 
 /**
  * list invoices, return paginated data
@@ -121,7 +121,7 @@ export async function listLineItems({
   } catch (_error) {
     const error = _error as Error;
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'Find many line items in listLineItems failed',
       errorMessage: error.message,
     });
@@ -203,7 +203,7 @@ export async function createLineItem({
     result = await prisma.lineItem.create(lineItemCreateArgs);
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'Create line item in createLineItem failed',
       errorMessage: (error as Error).message,
     });
@@ -270,7 +270,7 @@ export async function updateLineItem({
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'Update line item in updateLineItem failed',
       errorMessage: (error as Error).message,
     });
@@ -306,7 +306,7 @@ export async function deleteLineItem(lineItemId: number): Promise<ILineItemInclu
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'Soft delete line item in deleteLineItem failed',
       errorMessage: (error as Error).message,
     });
@@ -452,7 +452,7 @@ export async function listLineItemsByAccount({
     });
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'Find many line items in listLineItems failed',
       errorMessage: (error as Error).message,
     });

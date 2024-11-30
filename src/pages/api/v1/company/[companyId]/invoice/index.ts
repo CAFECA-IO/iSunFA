@@ -15,7 +15,7 @@ import { APIName } from '@/constants/api_connection';
 import { validateRequest } from '@/lib/utils/validator';
 import { EventType } from '@/constants/account';
 import { handlePrismaSavingLogic } from '@/lib/utils/repo/beta_transition.repo';
-import { DefaultValue } from '@/constants/default_value';
+import { DEFAULT_VALUE } from '@/constants/default_value';
 
 // Info: (20240416 - Murky) Body傳進來會是any
 function formatInvoice(invoice: IInvoice) {
@@ -60,7 +60,7 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
     });
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'upload invoice to AICH failed',
       errorMessage: (error as Error).message,
     });
@@ -89,7 +89,7 @@ export async function getPayloadFromResponseJSON(
     json = await responseJSON;
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'get payload from response JSON failed',
       errorMessage: (error as Error).message,
     });

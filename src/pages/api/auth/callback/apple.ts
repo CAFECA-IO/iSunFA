@@ -3,7 +3,7 @@ import { handleAppleOAuth } from '@/lib/utils/apple_auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
-import { DefaultValue } from '@/constants/default_value';
+import { DEFAULT_VALUE } from '@/constants/default_value';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     const errorObject = error as Error;
     const errorInfo = {
-      userId: DefaultValue.USER_ID.GUEST,
+      userId: DEFAULT_VALUE.USER_ID.GUEST,
       errorType: 'Apple sign-in failed',
       errorMessage: errorObject.message,
     };

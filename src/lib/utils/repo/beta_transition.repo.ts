@@ -21,7 +21,7 @@ import {
 import { calculateTotalPages, timestampInSeconds } from '@/lib/utils/common';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getLatestVoucherNoInPrisma } from '@/lib/utils/repo/voucher.repo';
-import { DefaultValue } from '@/constants/default_value';
+import { DEFAULT_VALUE } from '@/constants/default_value';
 
 export async function listInvoiceVoucherJournal(
   companyId: number,
@@ -115,7 +115,7 @@ export async function listInvoiceVoucherJournal(
     return paginatedJournalList;
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'listInvoiceVoucherJournal failed',
       errorMessage: error as Error,
     });
@@ -237,7 +237,7 @@ export async function createInvoice(
     });
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'Create invoice in createInvoice failed',
       errorMessage: error as Error,
     });
@@ -287,7 +287,7 @@ export async function createVoucher(
     });
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'Create voucher in createVoucher failed',
       errorMessage: error as Error,
     });
@@ -340,7 +340,7 @@ export async function createInvoiceVoucherJournal(
     });
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'Create invoice voucher journal in createInvoiceVoucherJournal failed',
       errorMessage: error as Error,
     });
@@ -509,7 +509,7 @@ export async function handlePrismaUpdateLogic(formattedInvoice: IInvoice, aichRe
     );
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'handlePrismaUpdateLogic failed',
       errorMessage: error as Error,
     });
@@ -543,7 +543,7 @@ export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<
     });
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'find unique ocr in findUniqueOcrInPrisma failed',
       errorMessage: error as Error,
     });
@@ -570,7 +570,7 @@ export async function updateOcrStatusInPrisma(ocrId: number, status: ProgressSta
     });
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'update ocr status in updateOcrStatusInPrisma failed',
       errorMessage: error as Error,
     });
@@ -630,7 +630,7 @@ export async function createJournalInPrisma(
     });
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'create journal in createJournalInPrisma failed',
       errorMessage: error as Error,
     });
@@ -711,7 +711,7 @@ export async function handlePrismaSavingLogic(
       }
     } catch (error) {
       loggerError({
-        userId: DefaultValue.USER_ID.SYSTEM,
+        userId: DEFAULT_VALUE.USER_ID.SYSTEM,
         errorType: 'handlePrismaSavingLogic failed',
         errorMessage: error as Error,
       });
@@ -720,7 +720,7 @@ export async function handlePrismaSavingLogic(
     return journalIdBeCreated;
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'handlePrismaSavingLogic failed',
       errorMessage: error as Error,
     });

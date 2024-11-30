@@ -14,7 +14,7 @@ import {
 } from '@/lib/utils/repo/employee.repo';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { loggerError } from '@/lib/utils/logger_back';
-import { DefaultValue } from '@/constants/default_value';
+import { DEFAULT_VALUE } from '@/constants/default_value';
 
 function getTargetTime(): number {
   const nowTime = new Date().getTime();
@@ -69,7 +69,7 @@ async function deleteEmployee(employeeIdNumber: number): Promise<void> {
     await updateEndDateByEmployeeId(employeeIdNumber, targetTime);
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'delete employee in deleteEmployee failed',
       errorMessage: (error as Error).message,
     });
@@ -99,7 +99,7 @@ async function updateEmployee(
     await updateEmployeeProject(employeeIdNumber, projectIdsNames, targetTime);
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'update employee in updateEmployee failed',
       errorMessage: (error as Error).message,
     });

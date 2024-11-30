@@ -1,4 +1,4 @@
-import { DefaultValue } from '@/constants/default_value';
+import { DEFAULT_VALUE } from '@/constants/default_value';
 import {
   ReportSheetType,
   ReportSheetTypeDisplayMap,
@@ -48,7 +48,7 @@ export const publicGenerateReportUtils = {
       reportContent = await financialReportGenerator.generateReport();
     } catch (error) {
       const errorInfo = {
-        userId: DefaultValue.USER_ID.SYSTEM,
+        userId: DEFAULT_VALUE.USER_ID.SYSTEM,
         errorType: 'generateReport failed',
         errorMessage: 'Func. generateReport in company/companyId/report/index.ts failed',
       };

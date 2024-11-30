@@ -9,7 +9,7 @@ import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { InvoiceTabs } from '@/constants/certificate';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { DefaultValue } from '@/constants/default_value';
+import { DEFAULT_VALUE } from '@/constants/default_value';
 
 export async function countMissingCertificate(companyId: number) {
   const missingCertificatesCount = await prisma.certificate.count({
@@ -266,7 +266,7 @@ export async function getCertificatesV2(options: {
     totalCount = await prisma.certificate.count({ where });
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'Count total count of voucher in getManyVoucherV2 failed',
       errorMessage: error as Error,
     });
@@ -326,7 +326,7 @@ export async function getCertificatesV2(options: {
     });
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'Find many accounts in findManyAccountsInPrisma failed',
       errorMessage: error as Error,
     });
@@ -400,7 +400,7 @@ export async function getUnreadCertificateCount(options: {
     unreadCertificateCount = totalCertificateCount - readCertificateCount;
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'Count unread voucher in getUnreadVoucherCount failed',
       errorMessage: error as Error,
     });

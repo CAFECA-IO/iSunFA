@@ -20,7 +20,7 @@ import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IFileEntity } from '@/interfaces/file';
 import { getTimestampNow } from '@/lib/utils/common';
-import { DefaultValue } from '@/constants/default_value';
+import { DEFAULT_VALUE } from '@/constants/default_value';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
@@ -28,7 +28,7 @@ export async function createFileFoldersIfNotExists(): Promise<void> {
       await fs.mkdir(folder, { recursive: true });
     } catch (error) {
       loggerError({
-        userId: DefaultValue.USER_ID.SYSTEM,
+        userId: DEFAULT_VALUE.USER_ID.SYSTEM,
         errorType: 'createFileFoldersIfNotExists failed',
         errorMessage: error as Error,
       });

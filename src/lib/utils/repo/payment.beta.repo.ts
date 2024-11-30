@@ -3,7 +3,7 @@ import prisma from '@/client';
 import { Prisma, Payment } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
 import { loggerError } from '@/lib/utils/logger_back';
-import { DefaultValue } from '@/constants/default_value';
+import { DEFAULT_VALUE } from '@/constants/default_value';
 
 /**
  * Create a payment record by IPaymentBeta
@@ -29,7 +29,7 @@ export async function createPayment(payment: IPaymentBeta) {
     result = await prisma.payment.create(paymentCreateArgs);
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'create payment in createPayment failed',
       errorMessage: (error as Error).message,
     });
@@ -66,7 +66,7 @@ export async function updatePayment(paymentId: number, payment: IPaymentBeta) {
     result = await prisma.payment.update(paymentUpdateArgs);
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: DEFAULT_VALUE.USER_ID.SYSTEM,
       errorType: 'update payment in updatePayment failed',
       errorMessage: (error as Error).message,
     });

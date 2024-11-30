@@ -1,5 +1,5 @@
 // Info: (20241128 - Luphia) Default Value for Undefined Parameter
-export const DefaultValue = {
+export const DEFAULT_VALUE = {
   CERTIFICATE_ID: {
     PROCESSING: 0,
     UNKNOWN: 555,
