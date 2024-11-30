@@ -60,7 +60,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   // Info: (20241120 - Anna) 處理 pages[0] 表格分頁
   const firstTableRows = flattenChildren((pages[0] as React.ReactElement)?.props?.children);
   const FirstBlockSplitPages = splitTableRows(firstTableRows, 10);
-  // ToDo: (20241130 - Liz) remove eslint-disable
+  // Deprecated: (20241130 - Liz) remove eslint-disable
   // eslint-disable-next-line no-console
   console.log('FirstBlockSplitPages', FirstBlockSplitPages);
 
@@ -78,7 +78,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   // Info: (20241120 - Anna) 處理 pages[1] 表格分頁
   const secondTableRows = flattenChildren((pages[1] as React.ReactElement)?.props?.children);
   const SecondBlockSplitPages = splitTableRows(secondTableRows, 10);
-  // ToDo: (20241130 - Liz) remove eslint-disable
+  // Deprecated: (20241130 - Liz) remove eslint-disable
   // eslint-disable-next-line no-console
   console.log('SecondBlockSplitPages', SecondBlockSplitPages);
 

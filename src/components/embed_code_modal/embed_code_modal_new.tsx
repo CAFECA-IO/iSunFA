@@ -71,9 +71,9 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     navigator.clipboard.writeText(generatedIframeCode);
   };
 
-const generateClickHandler = () => {
-  setStep(1);
-};
+  const generateClickHandler = () => {
+    setStep(1);
+  };
 
   useEffect(() => {
     if (generatedCode && !generatedLoading && generatedSuccess) {
@@ -89,7 +89,7 @@ const generateClickHandler = () => {
       }
 
       selectedReportTypes.forEach((type) => {
-        // ToDo: (20241130 - Liz) remove eslint-disable
+        // Deprecated: (20241130 - Liz) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('Report generation succeeded:', {
           code: generatedCode,
@@ -113,87 +113,87 @@ const generateClickHandler = () => {
     // Info: (20241130 - Liz) 確保返回 void
   }, [generatedCode, generatedLoading, generatedSuccess]);
 
-const generateReportHandler = async () => {
-  const getPeriod = () => {
-    const today = dayjs().startOf('day'); // Info: (20241130 - Liz) 拿今天日期
-    return {
-      startTimeStamp: today.subtract(3, 'month').unix(), // Info: (20241130 - Liz) 三個月前
-      endTimeStamp: today.unix(), // Info: (20241130 - Liz) 今天
+  const generateReportHandler = async () => {
+    const getPeriod = () => {
+      const today = dayjs().startOf('day'); // Info: (20241130 - Liz) 拿今天日期
+      return {
+        startTimeStamp: today.subtract(3, 'month').unix(), // Info: (20241130 - Liz) 三個月前
+        endTimeStamp: today.unix(), // Info: (20241130 - Liz) 今天
+      };
     };
-  };
 
-  const period = getPeriod();
+    const period = getPeriod();
 
-  if (!period) {
-    // ToDo: (20241130 - Liz) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.error('No report type selected.');
-    return;
-  }
-
-  const selectedReportTypes = [];
-  if (isBalanceSheetChecked) selectedReportTypes.push(FinancialReportTypesKey.balance_sheet);
-  if (isIncomeStatementChecked) {
-    selectedReportTypes.push(FinancialReportTypesKey.comprehensive_income_statement);
-  }
-  if (isCashFlowStatementChecked) {
-    selectedReportTypes.push(FinancialReportTypesKey.cash_flow_statement);
-  }
-
-  if (selectedReportTypes.length === 0) {
-    // ToDo: (20241130 - Liz) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.error('No report type selected.');
-    return;
-  }
-
-  if (selectedCompany) {
-    const iframeCodes: string[] = [];
-
-    await Promise.all(
-      selectedReportTypes.map(async (reportType) => {
-        const body: IFinancialReportRequest = {
-          type: FinancialReportTypesKeyReportSheetTypeMapping[reportType], // Info: (20241130 - Liz) 每次迭代報告類型
-          reportLanguage: selectedReportLanguage,
-          from: period.startTimeStamp,
-          to: period.endTimeStamp,
-          reportType: ReportType.FINANCIAL,
-        };
-
-        try {
-          const report = await generateFinancialReport({
-            params: { companyId: selectedCompany.id },
-            body,
-          });
-
-          const reportId = report.data; // Info: (20241130 - Liz) 從 API 響應中拿 reportId
-
-          // Info: (20241130 - Liz) 動態生成link
-          const reportLink = `https://isunfa.tw${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}`;
-
-          // Info: (20241130 - Liz) 生成 iframe
-          iframeCodes.push(
-            `<iframe src="${reportLink}" title="${reportType}" width={600} height={600} />`
-          );
-        } catch (error) {
-          // ToDo: (20241130 - Liz) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.error(`Failed to generate report for type: ${reportType}`, error);
-        }
-      })
-    );
-
-    if (iframeCodes.length > 0) {
-      setGeneratedIframeCode(iframeCodes.join('\n')); // Info: (20241130 - Liz) 設置 iframe 到狀態
-    } else {
-      // ToDo: (20241130 - Liz) remove eslint-disable
+    if (!period) {
+      // Deprecated: (20241130 - Liz) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.error('No matching reports found or no report type selected.');
+      console.error('No report type selected.');
+      return;
     }
-  }
 
-  setIsGenerateClicked(false); // Info: (20241130 - Liz) 重置按鈕
-};
+    const selectedReportTypes = [];
+    if (isBalanceSheetChecked) selectedReportTypes.push(FinancialReportTypesKey.balance_sheet);
+    if (isIncomeStatementChecked) {
+      selectedReportTypes.push(FinancialReportTypesKey.comprehensive_income_statement);
+    }
+    if (isCashFlowStatementChecked) {
+      selectedReportTypes.push(FinancialReportTypesKey.cash_flow_statement);
+    }
+
+    if (selectedReportTypes.length === 0) {
+      // Deprecated: (20241130 - Liz) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.error('No report type selected.');
+      return;
+    }
+
+    if (selectedCompany) {
+      const iframeCodes: string[] = [];
+
+      await Promise.all(
+        selectedReportTypes.map(async (reportType) => {
+          const body: IFinancialReportRequest = {
+            type: FinancialReportTypesKeyReportSheetTypeMapping[reportType], // Info: (20241130 - Liz) 每次迭代報告類型
+            reportLanguage: selectedReportLanguage,
+            from: period.startTimeStamp,
+            to: period.endTimeStamp,
+            reportType: ReportType.FINANCIAL,
+          };
+
+          try {
+            const report = await generateFinancialReport({
+              params: { companyId: selectedCompany.id },
+              body,
+            });
+
+            const reportId = report.data; // Info: (20241130 - Liz) 從 API 響應中拿 reportId
+
+            // Info: (20241130 - Liz) 動態生成link
+            const reportLink = `https://isunfa.tw${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}`;
+
+            // Info: (20241130 - Liz) 生成 iframe
+            iframeCodes.push(
+              `<iframe src="${reportLink}" title="${reportType}" width={600} height={600} />`
+            );
+          } catch (error) {
+            // Deprecated: (20241130 - Liz) remove eslint-disable
+            // eslint-disable-next-line no-console
+            console.error(`Failed to generate report for type: ${reportType}`, error);
+          }
+        })
+      );
+
+      if (iframeCodes.length > 0) {
+        setGeneratedIframeCode(iframeCodes.join('\n')); // Info: (20241130 - Liz) 設置 iframe 到狀態
+      } else {
+        // Deprecated: (20241130 - Liz) remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.error('No matching reports found or no report type selected.');
+      }
+    }
+
+    setIsGenerateClicked(false); // Info: (20241130 - Liz) 重置按鈕
+  };
 
   const handleGenerateClick = () => {
     setIsGenerateClicked(true); // Info: (20241126 - Anna) 點擊按鈕時設置為 true

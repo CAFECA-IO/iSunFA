@@ -26,10 +26,10 @@ const BalanceSheetPageBody = () => {
 
   useEffect(() => {
     if (isPrinting && printRef.current) {
-      // ToDo: (20241130 - Liz) remove eslint-disable
+      // Deprecated: (20241130 - Liz) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('balance_sheet_report_body.觀察 Printing content:', printRef.current.innerHTML);
-      // ToDo: (20241130 - Liz) remove eslint-disable
+      // Deprecated: (20241130 - Liz) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('balance_sheet_report_body.觀察 isPrinting?', isPrinting);
     }
@@ -59,14 +59,14 @@ const BalanceSheetPageBody = () => {
   // }, [isPrinting]);
 
   const handleOnBeforePrint = React.useCallback(() => {
-    // ToDo: (20241130 - Liz) remove eslint-disable
+    // Deprecated: (20241130 - Liz) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnBeforePrint (Before setting isPrinting):',
       isPrinting
     );
     setIsPrinting(true);
-    // ToDo: (20241130 - Liz) remove eslint-disable
+    // Deprecated: (20241130 - Liz) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnBeforePrint (After setting isPrinting):',
@@ -82,14 +82,14 @@ const BalanceSheetPageBody = () => {
   }, [isPrinting]);
 
   const handleOnAfterPrint = React.useCallback(() => {
-    // ToDo: (20241130 - Liz) remove eslint-disable
+    // Deprecated: (20241130 - Liz) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnAfterPrint (Before resetting isPrinting):',
       isPrinting
     );
     setIsPrinting(false);
-    // ToDo: (20241130 - Liz) remove eslint-disable
+    // Deprecated: (20241130 - Liz) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
       'balance_sheet_report_body 觀察 handleOnAfterPrint (After resetting isPrinting):',
