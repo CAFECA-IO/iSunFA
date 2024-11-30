@@ -51,7 +51,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     code: generatedCode,
     isLoading: generatedLoading,
     success: generatedSuccess,
-    // Murky
   } = APIHandler<number | null>(APIName.REPORT_GENERATE);
 
   const languageMenuClickHandler = () => {
@@ -90,6 +89,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       }
 
       selectedReportTypes.forEach((type) => {
+        // Deprecated: (20241130 - Liz) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('Report generation succeeded:', {
           code: generatedCode,
@@ -110,21 +110,22 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       });
     }
 
-    // 確保返回 void
+    // Info: (20241130 - Liz) 確保返回 void
   }, [generatedCode, generatedLoading, generatedSuccess]);
 
   const generateReportHandler = async () => {
     const getPeriod = () => {
-      const today = dayjs().startOf('day'); // 拿今天日期
+      const today = dayjs().startOf('day'); // Info: (20241130 - Liz) 拿今天日期
       return {
-        startTimeStamp: today.subtract(3, 'month').unix(), // 三個月前
-        endTimeStamp: today.unix(), // 今天
+        startTimeStamp: today.subtract(3, 'month').unix(), // Info: (20241130 - Liz) 三個月前
+        endTimeStamp: today.unix(), // Info: (20241130 - Liz) 今天
       };
     };
 
     const period = getPeriod();
 
     if (!period) {
+      // Deprecated: (20241130 - Liz) remove eslint-disable
       // eslint-disable-next-line no-console
       console.error('No report type selected.');
       return;
@@ -140,6 +141,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     }
 
     if (selectedReportTypes.length === 0) {
+      // Deprecated: (20241130 - Liz) remove eslint-disable
       // eslint-disable-next-line no-console
       console.error('No report type selected.');
       return;
@@ -151,7 +153,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       await Promise.all(
         selectedReportTypes.map(async (reportType) => {
           const body: IFinancialReportRequest = {
-            type: FinancialReportTypesKeyReportSheetTypeMapping[reportType], // 每次迭代報告類型
+            type: FinancialReportTypesKeyReportSheetTypeMapping[reportType], // Info: (20241130 - Liz) 每次迭代報告類型
             reportLanguage: selectedReportLanguage,
             from: period.startTimeStamp,
             to: period.endTimeStamp,
@@ -164,16 +166,17 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               body,
             });
 
-            const reportId = report.data; // 從 API 響應中拿 reportId
+            const reportId = report.data; // Info: (20241130 - Liz) 從 API 響應中拿 reportId
 
-            // 動態生成link
+            // Info: (20241130 - Liz) 動態生成link
             const reportLink = `https://isunfa.tw${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}`;
 
-            // 生成 iframe
+            // Info: (20241130 - Liz) 生成 iframe
             iframeCodes.push(
               `<iframe src="${reportLink}" title="${reportType}" width={600} height={600} />`
             );
           } catch (error) {
+            // Deprecated: (20241130 - Liz) remove eslint-disable
             // eslint-disable-next-line no-console
             console.error(`Failed to generate report for type: ${reportType}`, error);
           }
@@ -181,21 +184,21 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       );
 
       if (iframeCodes.length > 0) {
-        setGeneratedIframeCode(iframeCodes.join('\n')); // 設置 iframe 到狀態
+        setGeneratedIframeCode(iframeCodes.join('\n')); // Info: (20241130 - Liz) 設置 iframe 到狀態
       } else {
+        // Deprecated: (20241130 - Liz) remove eslint-disable
         // eslint-disable-next-line no-console
         console.error('No matching reports found or no report type selected.');
       }
     }
 
-    setIsGenerateClicked(false); // 重置按鈕
+    setIsGenerateClicked(false); // Info: (20241130 - Liz) 重置按鈕
   };
 
-  // Info: (20241126 - Anna)
   const handleGenerateClick = () => {
-    setIsGenerateClicked(true); // 點擊按鈕時設置為 true
-    generateClickHandler(); // 第一次處理
-    generateReportHandler(); // 第二次處理
+    setIsGenerateClicked(true); // Info: (20241126 - Anna) 點擊按鈕時設置為 true
+    generateClickHandler(); // Info: (20241126 - Anna) 第一次處理
+    generateReportHandler(); // Info: (20241126 - Anna) 第二次處理
   };
 
   const displayedLanguageMenu = (

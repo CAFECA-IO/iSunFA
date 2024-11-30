@@ -1,3 +1,4 @@
+// Deprecated: (20241130 - Luphia) Remove test page before version release
 import Head from 'next/head';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
@@ -14,10 +15,10 @@ const TestMe = () => {
     if (router.isReady) {
       // Deprecated: (20241129 - Liz)
       // eslint-disable-next-line no-console
-      console.log('Router Query:', router.query); // 確認是否有取得 testId
+      console.log('Router Query:', router.query); // Info: (20241129 - Liz) 確認是否有取得 testId
       // Deprecated: (20241129 - Liz)
       // eslint-disable-next-line no-console
-      console.log('testId:', testId); // 確認 testId 是否為 undefined
+      console.log('testId:', testId); // Info: (20241129 - Liz) 確認 testId 是否為 undefined
       if (testId !== undefined) {
         setCurrentTestId(testId);
       }

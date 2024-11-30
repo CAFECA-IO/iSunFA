@@ -25,82 +25,81 @@ const BalanceSheetA4Template = forwardRef<HTMLDivElement, BalanceSheetA4Template
     // Info: (20241111 - Anna) 分割內容為多頁
     const pages = React.Children.toArray(children);
 
-    // Info: (20241120 - Anna) 使用遞迴方式將子節點展平
-    const flattenChildren = (nodes: React.ReactNode): React.ReactNode[] => {
-      const result: React.ReactNode[] = [];
-      React.Children.forEach(nodes, (node) => {
-        if (React.isValidElement(node) && node.props?.children) {
-          // 僅遞迴展平嵌套的子節點
-          result.push(node, ...flattenChildren(node.props.children));
-        } else {
-          result.push(node); // 保留完整的 React 元素或文本節點
+  // Info: (20241120 - Anna) 使用遞迴方式將子節點展平
+  const flattenChildren = (nodes: React.ReactNode): React.ReactNode[] => {
+    const result: React.ReactNode[] = [];
+    React.Children.forEach(nodes, (node) => {
+      if (React.isValidElement(node) && node.props?.children) {
+        // Info: (20241130 - Liz) 僅遞迴展平嵌套的子節點
+        result.push(node, ...flattenChildren(node.props.children));
+      } else {
+        result.push(node); // Info: (20241130 - Liz) 保留完整的 React 元素或文本節點
+      }
+    });
+    return result;
+  };
+  // Info: (20241120 - Anna) 新增分頁邏輯
+  const splitTableRows = (rows: React.ReactNode[], rowsPerPage: number): Promise<ReactNode[][]> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const validRows = rows.filter(
+          (row) => React.isValidElement(row) && row.type === 'tr'
+        ) as ReactNode[]; // Info: (20241130 - Liz) 強制轉換為 ReactNode[]
+        const splitPages: ReactNode[][] = [];
+        for (let i = 0; i < validRows.length; i += rowsPerPage) {
+          splitPages.push(validRows.slice(i, i + rowsPerPage));
         }
-      });
-      return result;
-    };
-    // Info: (20241120 - Anna) 新增分頁邏輯
-    const splitTableRows = (
-      rows: React.ReactNode[],
-      rowsPerPage: number
-    ): Promise<ReactNode[][]> => {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const validRows = rows.filter(
-            (row) => React.isValidElement(row) && row.type === 'tr'
-          ) as ReactNode[]; // 強制轉換為 ReactNode[]
-          const splitPages: ReactNode[][] = [];
-          for (let i = 0; i < validRows.length; i += rowsPerPage) {
-            splitPages.push(validRows.slice(i, i + rowsPerPage));
-          }
-          resolve(splitPages); // 渲染完成後返回分頁結果
-        }, 100); // 模擬渲染耗時
-      });
-    };
-    // Info: (20241120 - Anna) 處理 pages[0] 表格分頁
-    const firstTableRows = flattenChildren((pages[0] as React.ReactElement)?.props?.children);
-    const FirstBlockSplitPages = splitTableRows(firstTableRows, 10);
-    // eslint-disable-next-line no-console
-    console.log('FirstBlockSplitPages', FirstBlockSplitPages);
+        resolve(splitPages); // Info: (20241130 - Liz) 渲染完成後返回分頁結果
+      }, 100); // Info: (20241130 - Liz) 模擬渲染耗時
+    });
+  };
+  // Info: (20241120 - Anna) 處理 pages[0] 表格分頁
+  const firstTableRows = flattenChildren((pages[0] as React.ReactElement)?.props?.children);
+  const FirstBlockSplitPages = splitTableRows(firstTableRows, 10);
+  // Deprecated: (20241130 - Liz) remove eslint-disable
+  // eslint-disable-next-line no-console
+  console.log('FirstBlockSplitPages', FirstBlockSplitPages);
 
-    // Info: (20241120 - Anna) 提取表格渲染邏輯，確保每頁表格結構完整
-    const renderTableWithRows = (
-      rows: React.ReactNode[],
-      headers: React.ReactNode,
-      isFirstPage: boolean
-    ) => (
-      <table className="relative z-1 w-full border-collapse bg-white">
-        {isFirstPage && <thead className="text-neutral-400">{headers}</thead>}
-        <tbody className="text-neutral-400">{rows}</tbody>
-      </table>
-    );
-    // Info: (20241120 - Anna) 處理 pages[1] 表格分頁
-    const secondTableRows = flattenChildren((pages[1] as React.ReactElement)?.props?.children);
-    const SecondBlockSplitPages = splitTableRows(secondTableRows, 10);
-    // eslint-disable-next-line no-console
-    console.log('SecondBlockSplitPages', SecondBlockSplitPages);
+  // Info: (20241120 - Anna) 提取表格渲染邏輯，確保每頁表格結構完整
+  const renderTableWithRows = (
+    rows: React.ReactNode[],
+    headers: React.ReactNode,
+    isFirstPage: boolean
+  ) => (
+    <table className="relative z-1 w-full border-collapse bg-white">
+      {isFirstPage && <thead className="text-neutral-400">{headers}</thead>}
+      <tbody className="text-neutral-400">{rows}</tbody>
+    </table>
+  );
+  // Info: (20241120 - Anna) 處理 pages[1] 表格分頁
+  const secondTableRows = flattenChildren((pages[1] as React.ReactElement)?.props?.children);
+  const SecondBlockSplitPages = splitTableRows(secondTableRows, 10);
+  // Deprecated: (20241130 - Liz) remove eslint-disable
+  // eslint-disable-next-line no-console
+  console.log('SecondBlockSplitPages', SecondBlockSplitPages);
 
-    // 在 useEffect 中使用 async/await 確保渲染完成後更新狀態
-    useEffect(() => {
-      (async () => {
-        const performSplitFirstBlock = async () => {
-          const splitPages = await splitTableRows(firstTableRows, 10); // 等待分頁完成
-          setFirstBlockSplitPages(splitPages); // 更新狀態
-        };
+  // Info: (20241130 - Liz) 在 useEffect 中使用 async/await 確保渲染完成後更新狀態
+  useEffect(() => {
+    (async () => {
+      const performSplitFirstBlock = async () => {
+        const splitPages = await splitTableRows(firstTableRows, 10); // Info: (20241130 - Liz) 等待分頁完成
+        setFirstBlockSplitPages(splitPages); // Info: (20241130 - Liz) 更新狀態
+      };
 
-        if (firstTableRows) await performSplitFirstBlock(); // 確保 rows 存在才執行
-      })(); // 確保 rows 存在才執行
-    }, []);
+      if (firstTableRows) await performSplitFirstBlock(); // Info: (20241130 - Liz) 確保 rows 存在才執行
+    })();
+  }, []);
 
-    useEffect(() => {
-      (async () => {
-        const performSplitSecondBlock = async () => {
-          const splitPages = await splitTableRows(secondTableRows, 10); // 等待分頁完成
-          setSecondBlockSplitPages(splitPages); // 更新狀態
-        };
+  useEffect(() => {
+    (async () => {
+      const performSplitSecondBlock = async () => {
+        const splitPages = await splitTableRows(secondTableRows, 10); // Info: (20241130 - Liz) 等待分頁完成
+        setSecondBlockSplitPages(splitPages); // Info: (20241130 - Liz) 更新狀態
+      };
 
-        if (secondTableRows) await performSplitSecondBlock(); // 確保 rows 存在才執行
-      })(); // 確保 rows 存在才執行
-    }, []);
+      if (secondTableRows) await performSplitSecondBlock(); // Info: (20241130 - Liz) 確保 rows 存在才執行
+    })();
+  }, []);
 
     // Info: (20241120 - Anna)  確保表格分頁後保留表頭
     const firstTableHeaders = (
@@ -253,29 +252,26 @@ const BalanceSheetA4Template = forwardRef<HTMLDivElement, BalanceSheetA4Template
           </div>
         ))}
 
-        {/* Info: (20241120 - Anna) 渲染額外的內容 */}
-        {pages.slice(2).map((pageContent, index) => (
+      {/* Info: (20241120 - Anna) 渲染額外的內容 */}
+      {pages.slice(2).map((pageContent, index) => (
+        <div
+          key={`additional-block-page-${index + 1}`}
+          className={printContainerClass}
+          // style={{ pageBreakBefore: 'always', pageBreakAfter: 'always' }}
+          style={{
+            pageBreakBefore: 'auto',
+            pageBreakAfter: 'auto',
+          }}
+        >
           <div
-            key={`additional-block-page-${index + 1}`}
-            className={printContainerClass}
-            // style={{ pageBreakBefore: 'always', pageBreakAfter: 'always' }}
-            style={{
-              pageBreakBefore: 'auto',
-              pageBreakAfter: 'auto',
-            }}
+            id={`additional-block-page-${
+              firstBlockSplitPages.length + secondBlockSplitPages.length + index + 1
+            }`}
+            className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
           >
-            <div
-              id={`additional-block-page-${
-                firstBlockSplitPages.length + secondBlockSplitPages.length + index + 1
-              }`}
-              className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
-            >
-              {renderedHeader(false)}
-              <div>{pageContent}</div> {/* 渲染 pageContent */}
-              {renderedFooter(
-                firstBlockSplitPages.length + secondBlockSplitPages.length + index + 1
-              )}
-            </div>
+            {renderedHeader(false)}
+            <div>{pageContent}</div> {/* Info: (20241130 - Liz) 渲染 pageContent */}
+            {renderedFooter(firstBlockSplitPages.length + secondBlockSplitPages.length + index + 1)}
           </div>
         ))}
       </div>
