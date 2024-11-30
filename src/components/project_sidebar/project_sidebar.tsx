@@ -12,7 +12,7 @@ interface IProjectDetailPageProps {
 }
 
 const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
-  const { t } = useTranslation(['common', 'project']);
+  const { t } = useTranslation(['project']);
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
@@ -58,7 +58,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
           <p
             className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm text-text-neutral-primary transition-all duration-300 ease-in-out`}
           >
-            {t('common:COMMON.PROJECT')}
+            {t('project:COMMON.PROJECT')}
           </p>
 
           {displayedCompanyName}
@@ -94,7 +94,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              {t('common:NAV_BAR.DASHBOARD')}
+              {t('project:COMMON.DASHBOARD')}
             </p>
           </Link>
           {/* Info: (20240611 - Julian) Contract List */}
@@ -178,7 +178,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              {t('common:COMMON.ANALYSIS_REPORTS')}
+              {t('project:COMMON.ANALYSIS_REPORTS')}
             </p>
           </Link>
           {/* Info: (20240611 - Julian) Divider */}

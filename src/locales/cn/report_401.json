@@ -177,5 +177,19 @@
   "REPORT": {
     "NO_DATA_AVAILABLE": "无可用数据",
     "PLEASE_SELECT_PERIOD": "请选择期间"
+  },
+  "COMMON": {
+    "ANALYSIS_REPORTS": "分析报告",
+    "LOADING": "载入中",
+    "OVERALL": "全部",
+    "PROJECT": "专案",
+    "CLOSE": "关闭",
+    "SEARCH": "搜索",
+    "CANCEL": "取消",
+    "TO": "至",
+    "M": "月",
+    "Y": "年",
+    "D": "日",
+    "DAY": "日"
   }
 }

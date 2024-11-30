@@ -50,5 +50,10 @@
   "PROFIT_TREND_CHART": {
     "PROFIT_STATUS_TREND_CHART": "獲利狀況趨勢圖",
     "WEEK": "星期"
+  },
+  "COMMON": {
+    "PROJECT": "專案",
+    "DASHBOARD": "儀表板",
+    "ANALYSIS_REPORTS": "分析報告"
   }
 }

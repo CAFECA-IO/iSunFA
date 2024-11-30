@@ -50,5 +50,10 @@
   "PROFIT_TREND_CHART": {
     "PROFIT_STATUS_TREND_CHART": "Profit Status Trend Chart",
     "WEEK": "Week"
+  },
+  "COMMON": {
+    "PROJECT": "Project",
+    "DASHBOARD": "Dashboard",
+    "ANALYSIS_REPORTS": "Analysis Reports"
   }
 }
