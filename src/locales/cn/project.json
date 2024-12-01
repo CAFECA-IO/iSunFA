@@ -50,5 +50,10 @@
   "PROFIT_TREND_CHART": {
     "PROFIT_STATUS_TREND_CHART": "获利状况趋势图",
     "WEEK": "星期"
+  },
+  "COMMON": {
+    "PROJECT": "专案",
+    "DASHBOARD": "仪表板",
+    "ANALYSIS_REPORTS": "分析报告"
   }
 }
