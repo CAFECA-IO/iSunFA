@@ -136,6 +136,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
                 variant="secondaryBorderless"
                 size={'defaultSquare'}
                 onClick={deleteHandler}
+                disabled={isLoading} // Info: (20241202 - Julian) 防止重複點擊
               >
                 <FiTrash2 size={20} />
               </Button>
