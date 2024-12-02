@@ -746,7 +746,12 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             >
               {t('common:COMMON.CANCEL')}
             </Button>
-            <Button className="px-16px py-8px" type="submit" variant="tertiary">
+            <Button
+              className="px-16px py-8px"
+              type="submit"
+              variant="tertiary"
+              disabled={isLoading} // Info: (20241202 - Julian) 避免重複送出
+            >
               <p>{t('common:COMMON.SAVE')}</p>
               <BiSave size={20} />
             </Button>
