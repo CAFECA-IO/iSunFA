@@ -1,7 +1,7 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import Image from 'next/image';
 
-interface BalanceSheetA4TemplateProps {
+interface CashFlowA4TemplateProps {
   children: React.ReactNode;
   reportFinancial?: {
     company?: {
@@ -13,7 +13,7 @@ interface BalanceSheetA4TemplateProps {
   preDate?: string;
 }
 
-const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
+const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
   children,
   reportFinancial,
   curDate,
@@ -108,23 +108,29 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   // Info: (20241120 - Anna)  確保表格分頁後保留表頭
   const firstTableHeaders = (
     <tr className="text-neutral-400">
-      <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+      <th
+        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
+        style={{ width: '55px' }}
+      >
         代號
       </th>
-      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+      <th
+        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
+        style={{ width: '261px' }}
+      >
         會計項目
       </th>
-      <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+      <th
+        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold print:whitespace-pre-line"
+        style={{ width: '120px' }}
+      >
         {curDate}
       </th>
-      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
-        %
-      </th>
-      <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+      <th
+        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold print:whitespace-pre-line"
+        style={{ width: '120px' }}
+      >
         {preDate}
-      </th>
-      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
-        %
       </th>
     </tr>
   );
@@ -132,23 +138,29 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   // Info: (20241120 - Anna)  確保表格分頁後保留表頭
   const secondTableHeaders = (
     <tr className="text-neutral-400">
-      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+      <th
+        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
+        style={{ width: '55px' }}
+      >
         代號
       </th>
-      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+      <th
+        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
+        style={{ width: '261px' }}
+      >
         會計項目
       </th>
-      <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+      <th
+        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold print:whitespace-pre-line"
+        style={{ width: '120px' }}
+      >
         {curDate}
       </th>
-      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
-        %
-      </th>
-      <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+      <th
+        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold print:whitespace-pre-line"
+        style={{ width: '120px' }}
+      >
         {preDate}
-      </th>
-      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
-        %
       </th>
     </tr>
   );
@@ -165,18 +177,18 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
                   {reportFinancial.company.code} <br />
                   {reportFinancial.company.name}
                 </h1>
-                <p className="text-left text-xs font-bold leading-5">
+                <p className="whitespace-nowrap text-left text-xs font-bold leading-5">
                   {curDate}
                   <br />
-                  財務報告 - 資產負債表
+                  財務報告 - 現金流量表
                 </p>
               </>
             )}
           </div>
         </div>
         <div className="box-border w-35% text-right">
-          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
-            Balance Sheet
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Cash Flow Statement
             <span className="absolute -bottom-20px right-0 h-5px w-9/12 bg-surface-brand-secondary"></span>
           </h2>
         </div>
@@ -193,8 +205,8 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
-            Balance Sheet
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Cash Flow Statement
             <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
@@ -283,4 +295,4 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   );
 };
 
-export default BalanceSheetA4Template;
+export default CashFlowA4Template;

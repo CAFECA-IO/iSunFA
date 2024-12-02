@@ -70,7 +70,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, labels }) => {
             minRotation: 0,
             autoSkip: false,
             font: {
-              size: 8,
+              size: 12,
               weight: 500,
             },
           },

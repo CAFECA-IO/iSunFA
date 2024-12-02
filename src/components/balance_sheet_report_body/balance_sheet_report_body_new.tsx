@@ -35,29 +35,6 @@ const BalanceSheetPageBody = () => {
     }
   }, [isPrinting]);
 
-  // Info: (20241122 - Anna)
-  // const handleOnBeforePrint = React.useCallback(() => {
-  //   setIsPrinting(true);
-  //   // eslint-disable-next-line no-console
-  //   console.log('onBeforePrint call ');
-  //   return Promise.resolve();
-  // }, []);
-
-  // const handleOnBeforePrint = React.useCallback(() => {
-  //   // eslint-disable-next-line no-console
-  //   console.log(
-  //     'balance_sheet_report_body 觀察 handleOnBeforePrint (Before setting isPrinting):',
-  //     isPrinting
-  //   );
-  //   setIsPrinting(true);
-  //   // eslint-disable-next-line no-console
-  //   console.log(
-  //     'balance_sheet_report_body 觀察 handleOnBeforePrint (After setting isPrinting):',
-  //     true
-  //   );
-  //   return Promise.resolve();
-  // }, [isPrinting]);
-
   const handleOnBeforePrint = React.useCallback(() => {
     // Deprecated: (20241130 - Anna) remove eslint-disable
     // eslint-disable-next-line no-console
@@ -104,20 +81,6 @@ const BalanceSheetPageBody = () => {
     onBeforePrint: handleOnBeforePrint,
     onAfterPrint: handleOnAfterPrint,
   });
-
-  // Info: (20241122 - Anna) 父層中管理 beforeprint 和 afterprint 的監聽
-  // useEffect(() => {
-  //   const handleBeforePrint = () => setIsPrinting(true);
-  //   const handleAfterPrint = () => setIsPrinting(false);
-
-  //   window.addEventListener('beforeprint', handleBeforePrint);
-  //   window.addEventListener('afterprint', handleAfterPrint);
-
-  //   return () => {
-  //     window.removeEventListener('beforeprint', handleBeforePrint);
-  //     window.removeEventListener('afterprint', handleAfterPrint);
-  //   };
-  // }, []);
 
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
@@ -195,7 +158,7 @@ const BalanceSheetPageBody = () => {
           {/* Info: (20241017 - Anna)語言選擇 */}
           <div className="flex flex-col space-y-6 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+              {t('layout:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
             </div>
             {displayedLanguageMenu}
           </div>
