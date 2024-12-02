@@ -31,7 +31,7 @@ const BusinessTaxPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['layout', 'date_picker', 'reports', 'report_401'])),
+    ...(await serverSideTranslations(locale, ['layout', 'date_picker', 'reports'])),
     locale,
   },
 });

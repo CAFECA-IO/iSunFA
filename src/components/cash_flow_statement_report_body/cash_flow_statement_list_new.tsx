@@ -34,7 +34,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
 }) => {
-  const { t } = useTranslation('report_401');
+  const { t } = useTranslation('reports');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -178,8 +178,8 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       <div className="flex h-screen flex-col items-center justify-center">
         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
         <div>
-          <p className="mb-0 text-neutral-300">{t('report_401:REPORT.NO_DATA_AVAILABLE')}</p>
-          <p className="mb-0 text-neutral-300">{t('report_401:REPORT.PLEASE_SELECT_PERIOD')}</p>
+          <p className="mb-0 text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
+          <p className="mb-0 text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
         </div>
       </div>
     );

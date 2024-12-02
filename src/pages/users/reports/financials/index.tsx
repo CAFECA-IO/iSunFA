@@ -20,7 +20,7 @@ const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
   // ('reportType on FinancialsReportsPage',reportType,
   //   FinancialReportTypesKey[reportType as keyof typeof FinancialReportTypesKey])
 
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['common', 'reports']);
   const { isAuthLoading } = useUserCtx();
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
@@ -43,7 +43,7 @@ const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORT')}</title>
+        <title>{t('reports:REPORTS_SIDEBAR.FINANCIAL_REPORT')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -76,7 +76,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
       reportType,
       ...(await serverSideTranslations(locale as string, [
         'common',
-        'report_401',
+        'reports',
         'journal',
         'kyc',
         'project',

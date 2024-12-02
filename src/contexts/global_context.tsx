@@ -141,7 +141,7 @@ export interface IGlobalProvider {
 const GlobalContext = createContext<IGlobalContext | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: IGlobalProvider) => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['common', 'reports']);
   const router = useRouter();
   const { pathname } = router;
   const { isSignIn } = useUserCtx();
@@ -397,7 +397,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         closeable: true,
         content: (
           <div className="flex items-center space-x-5">
-            <p>{t('report_401:AUDIT_REPORT.YOUR_REPORT_IS_DONE')}</p>
+            <p>{t('reports:AUDIT_REPORT.YOUR_REPORT_IS_DONE')}</p>
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"

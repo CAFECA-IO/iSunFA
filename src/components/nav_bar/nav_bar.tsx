@@ -163,7 +163,7 @@ const NavBar = () => {
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover"
       >
         <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
-        <p>{t('report_401:REPORTS_SIDEBAR.REPORT')}</p>
+        <p>{t('reports:REPORTS_SIDEBAR.REPORT')}</p>
       </Link>
     </div>
   );
@@ -276,7 +276,7 @@ const NavBar = () => {
           className="flex flex-col items-center gap-8px hover:text-button-text-primary-hover disabled:text-button-text-disable"
         >
           <Image src={'/icons/report.svg'} width={48} height={48} alt="report_icon" />
-          <p>{t('report_401:REPORTS_SIDEBAR.REPORT')}</p>
+          <p>{t('reports:REPORTS_SIDEBAR.REPORT')}</p>
         </Link>
       </button>
     </div>

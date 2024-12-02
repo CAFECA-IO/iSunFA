@@ -155,7 +155,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
     props: {
       reportId: reportId as string,
       reportType: reportType as string,
-      ...(await serverSideTranslations(locale as string, ['reports', 'report_401', 'common'])),
+      ...(await serverSideTranslations(locale as string, ['reports', 'common'])),
     },
   };
 };

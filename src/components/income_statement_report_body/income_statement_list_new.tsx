@@ -22,7 +22,7 @@ interface IncomeStatementListProps {
 }
 
 const IncomeStatementList: React.FC<IncomeStatementListProps> = ({ selectedDateRange }) => {
-  const { t } = useTranslation('report_401');
+  const { t } = useTranslation('reports');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   // Info: (20241024 - Anna) 接收 selectedDateRange prop
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false); // Info: (20241024 - Anna) 新增追蹤 API 是否成功請求
@@ -95,8 +95,8 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({ selectedDateR
       <div className="flex h-screen flex-col items-center justify-center">
         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
         <div>
-          <p className="text-neutral-300">{t('report_401:REPORT.NO_DATA_AVAILABLE')}</p>
-          <p className="text-neutral-300">{t('report_401:REPORT.PLEASE_SELECT_PERIOD')}</p>
+          <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
+          <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
         </div>
       </div>
     );
