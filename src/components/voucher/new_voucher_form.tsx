@@ -1105,6 +1105,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         setAiState={setAiState}
         setIsShowAnalysisPreview={setIsShowAnalysisPreview}
         retryClickHandler={retryAIHandler}
+        retryDisabled={isAskingAI || aiState === AIState.WORKING}
         fillUpClickHandler={fillUpWithAIResult}
       />
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}
