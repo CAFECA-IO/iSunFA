@@ -16,7 +16,7 @@ const IncomeStatementPageBody = () => {
   });
 
   // Info: (20241101 - Anna) 定義語言選擇狀態
-  const { t } = useTranslation(['report_401']);
+  const { t } = useTranslation(['reports']);
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
@@ -81,7 +81,7 @@ const IncomeStatementPageBody = () => {
           {/* Info: (20241017 - Anna)日期篩選器 */}
           <div className="flex min-w-250px flex-1 flex-col space-y-0">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('report_401:PENDING_REPORT_LIST.PERIOD')}
+              {t('reports:PENDING_REPORT_LIST.PERIOD')}
             </div>
             <DatePicker
               period={selectedDateRange}
@@ -93,7 +93,7 @@ const IncomeStatementPageBody = () => {
           {/* Info: (20241017 - Anna)語言選擇 */}
           <div className="flex flex-col space-y-6 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+              {t('layout:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
             </div>
             {displayedLanguageMenu}
           </div>

@@ -24,7 +24,7 @@ interface IEmbedCodeModal {
 }
 
 const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
-  const { t } = useTranslation(['common', 'report_401', 'reports']);
+  const { t } = useTranslation(['common', 'reports']);
   const { selectedCompany } = useUserCtx();
   // Info: (20241127 - Anna) 追蹤是否點擊了生成按鈕
   const [isGenerateClicked, setIsGenerateClicked] = useState(false);

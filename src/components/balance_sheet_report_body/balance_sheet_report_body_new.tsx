@@ -10,7 +10,7 @@ import { useReactToPrint } from 'react-to-print';
 
 // Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
 const BalanceSheetPageBody = () => {
-  const { t } = useTranslation(['report_401']);
+  const { t } = useTranslation(['reports']);
 
   // Info: (20241017 - Anna) 定義日期篩選狀態
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
@@ -146,7 +146,7 @@ const BalanceSheetPageBody = () => {
           {/* Info: (20241017 - Anna)日期篩選器 */}
           <div className="flex min-w-250px flex-1 flex-col space-y-0">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('report_401:PENDING_REPORT_LIST.PERIOD')}
+              {t('reports:PENDING_REPORT_LIST.PERIOD')}
             </div>
             <DatePicker
               period={selectedDateRange}

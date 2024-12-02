@@ -13,7 +13,7 @@ import { useTranslation } from 'next-i18next';
 import { FaArrowRightLong } from 'react-icons/fa6';
 
 const AnalysisReportSection = () => {
-  const { t } = useTranslation(['report_401']);
+  const { t } = useTranslation(['reports']);
   const [period, setPeriod] = useState(default30DayPeriodInSec);
   const [selectedProjectName, setSelectedProjectName] =
     useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
@@ -95,7 +95,7 @@ const AnalysisReportSection = () => {
             className="text-center text-input-text-input-filled"
             style={{ whiteSpace: 'nowrap' }}
           >
-            {t('report_401:COMMON.PROJECT')}
+            {t('reports:COMMON.PROJECT')}
           </div>
           <div
             className={`h-11 w-px ${
@@ -111,9 +111,7 @@ const AnalysisReportSection = () => {
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
             {/* Info: (20240710 - Anna) {selectedProjectName} */}
-            {selectedProjectName === 'Overall'
-              ? t('report_401:COMMON.OVERALL')
-              : selectedProjectName}
+            {selectedProjectName === 'Overall' ? t('reports:COMMON.OVERALL') : selectedProjectName}
           </div>
 
           <div className="my-auto flex flex-col justify-center">
@@ -174,7 +172,7 @@ const AnalysisReportSection = () => {
                       {/* Info: (20240710 - Anna) {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
-                        ? t('report_401:COMMON.OVERALL')
+                        ? t('reports:COMMON.OVERALL')
                         : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
                   </div>
@@ -285,7 +283,7 @@ const AnalysisReportSection = () => {
         <Link href={targetedReportViewLink}>
           <div className="flex gap-1">
             <div className="text-sm font-medium leading-5 tracking-normal">
-              {t('report_401:EMBED_CODE_MODAL.GENERATE')}
+              {t('reports:EMBED_CODE_MODAL.GENERATE')}
             </div>
             <div className="my-auto flex items-center justify-center">
               <FaArrowRightLong size={16} />
@@ -300,7 +298,7 @@ const AnalysisReportSection = () => {
       >
         <div className="flex gap-1">
           <div className="text-sm font-medium leading-5 tracking-normal">
-            {t('report_401:EMBED_CODE_MODAL.GENERATE')}
+            {t('reports:EMBED_CODE_MODAL.GENERATE')}
           </div>
           <div className="my-auto flex items-center justify-center">
             <FaArrowRightLong size={16} />
@@ -316,14 +314,14 @@ const AnalysisReportSection = () => {
           {/* Info: (20240513 - Shirley) desktop heading */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-28">
-              {t('report_401:COMMON.ANALYSIS_REPORTS')}
+              {t('reports:COMMON.ANALYSIS_REPORTS')}
             </div>
           </div>
           {/* Info: (20240513 - Shirley) mobile heading */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
               <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
-              <div className="mt-1.5">{t('report_401:COMMON.ANALYSIS_REPORTS')}</div>
+              <div className="mt-1.5">{t('reports:COMMON.ANALYSIS_REPORTS')}</div>
             </div>
           </div>
 
@@ -337,7 +335,7 @@ const AnalysisReportSection = () => {
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('report_401:COMMON.PROJECT')}
+              {t('reports:COMMON.PROJECT')}
             </div>
 
             {displayedProjectMenu}
@@ -347,7 +345,7 @@ const AnalysisReportSection = () => {
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('report_401:ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
+              {t('reports:ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
             </div>
             {displayedReportTypeMenu}
           </div>
@@ -355,7 +353,7 @@ const AnalysisReportSection = () => {
         <div className="flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+              {t('reports:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
             </div>
             {displayedLanguageMenu}
           </div>
@@ -375,7 +373,7 @@ const AnalysisReportSection = () => {
                 </div>
               </div>
               <div className="text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
-                {t('report_401:PENDING_REPORT_LIST.PERIOD')}
+                {t('reports:PENDING_REPORT_LIST.PERIOD')}
               </div>
             </div>
 
@@ -397,7 +395,7 @@ const AnalysisReportSection = () => {
         </div>
 
         <div className="my-10 flex flex-col justify-center text-text-neutral-primary">
-          <p>{t('report_401:ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
+          <p>{t('reports:ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
         </div>
         {displayedButtonOrLink}
       </div>

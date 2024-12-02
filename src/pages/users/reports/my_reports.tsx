@@ -11,7 +11,7 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 
 const MyReportsPage = () => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['common', 'reports']);
   const { isAuthLoading } = useUserCtx();
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
@@ -35,7 +35,7 @@ const MyReportsPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('report_401:REPORTS_SIDEBAR.MY_REPORTS')} - iSunFA</title>
+        <title>{t('reports:REPORTS_SIDEBAR.MY_REPORTS')} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -63,7 +63,7 @@ const MyReportsPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'report_401'])),
+    ...(await serverSideTranslations(locale, ['common', 'reports'])),
   },
 });
 

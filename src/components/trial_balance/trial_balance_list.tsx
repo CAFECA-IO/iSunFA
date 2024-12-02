@@ -199,8 +199,8 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       <div className="flex h-screen flex-col items-center justify-center">
         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
         <div>
-          <p className="text-neutral-300">{t('report_401:REPORT.NO_DATA_AVAILABLE')}</p>
-          <p className="text-neutral-300">{t('report_401:REPORT.PLEASE_SELECT_PERIOD')}</p>
+          <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
+          <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
         </div>
       </div>
     );
@@ -293,7 +293,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
             <div
               className={`col-span-3 table-cell h-full w-472px border-stroke-neutral-quaternary text-center align-middle`}
             >
-              {t('report_401:TAX_REPORT.TOTAL')}
+              {t('reports:TAX_REPORT.TOTAL')}
             </div>
 
             <div

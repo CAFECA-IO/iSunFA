@@ -32,7 +32,7 @@ interface IFinancialReportSectionProps {
 const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) => {
   // Info: (20240807 - Anna) 初始化 useRouter
   const router = useRouter();
-  const { t } = useTranslation(['reports', 'report_401']);
+  const { t } = useTranslation(['reports']);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { selectedCompany } = useUserCtx();
   const {
@@ -154,8 +154,8 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       if (generatedSuccess) {
         messageModalDataHandler({
           title: '',
-          subtitle: t('report_401:MY_REPORTS_SECTION.WE_RECEIVED_YOUR_APPLICATION'),
-          content: t('report_401:MY_REPORTS_SECTION.TAKE_MINUTES'),
+          subtitle: t('reports:MY_REPORTS_SECTION.WE_RECEIVED_YOUR_APPLICATION'),
+          content: t('reports:MY_REPORTS_SECTION.TAKE_MINUTES'),
           submitBtnStr: t('reports:COMMON.CLOSE'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
@@ -394,7 +394,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       ) : (
         <div className="flex gap-1">
           <div className="text-sm font-medium leading-5 tracking-normal">
-            {t('report_401:EMBED_CODE_MODAL.GENERATE')}
+            {t('reports:EMBED_CODE_MODAL.GENERATE')}
           </div>
           <div className="my-auto flex items-center justify-center">
             <FaArrowRight size={16} />
@@ -410,14 +410,14 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           {/* Info: (20240513 - Shirley)  desktop heading */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-28">
-              {t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
+              {t('reports:REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
             </div>
           </div>
           {/* Info: (20240513 - Shirley) mobile heading */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex items-center space-x-2 font-semibold text-text-neutral-secondary">
               <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
-              <p>{t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORTS')}</p>
+              <p>{t('reports:REPORTS_SIDEBAR.FINANCIAL_REPORTS')}</p>
             </div>
           </div>
 
@@ -440,7 +440,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('report_401:ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
+              {t('reports:ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
             </div>
             {displayedReportTypeMenu}
           </div>
@@ -448,7 +448,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         <div className="flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+              {t('reports:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
             </div>
             {displayedLanguageMenu}
           </div>
@@ -468,7 +468,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                 </div>
               </div>
               <div className="text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
-                {t('report_401:PENDING_REPORT_LIST.PERIOD')}
+                {t('reports:PENDING_REPORT_LIST.PERIOD')}
               </div>
             </div>
 
@@ -488,7 +488,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           </div>
         </div>
         <div className="my-10 flex flex-col justify-center text-text-neutral-primary">
-          <p>{t('report_401:ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
+          <p>{t('reports:ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
         </div>
         {displayedButtonOrLink}
       </div>

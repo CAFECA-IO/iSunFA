@@ -9,7 +9,7 @@ import Layout from '@/components/beta/layout/layout';
 // const BalanceSheetPage = ({ reportId }: { reportId: string }) => {
 // Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
 const BalanceSheetPage = () => {
-  const { t } = useTranslation(['report_401']);
+  const { t } = useTranslation(['reports']);
 
   return (
     <>
@@ -34,7 +34,6 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
     ...(await serverSideTranslations(locale, [
       'layout',
       'common',
-      'report_401',
       'reports',
       'date_picker',
       'dashboard',

@@ -150,7 +150,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
       reportType: reportType as string,
       ...(await serverSideTranslations(locale as string, [
         'common',
-        'report_401',
+        'reports',
         'journal',
         'kyc',
         'project',

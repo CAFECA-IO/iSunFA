@@ -10,7 +10,7 @@ interface IReportListProps {
   reports: IReport[];
 }
 const PendingReportList = ({ reports }: IReportListProps) => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['common', 'reports']);
   const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
   // Info: (20240514 - Shirley) 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來
   const [reportItems, setReportItems] = useState<IReport[]>(reports);
@@ -65,9 +65,9 @@ const PendingReportList = ({ reports }: IReportListProps) => {
 
     messageModalDataHandler({
       title: '',
-      subtitle: t('report_401:MY_REPORTS_SECTION.DELETE_PROCESS'),
-      content: t('report_401:MY_REPORTS_SECTION.APPLY_AGAIN'),
-      submitBtnStr: t('report_401:PENDING_REPORT_ITEM.YES_DELETE_IT'),
+      subtitle: t('reports:MY_REPORTS_SECTION.DELETE_PROCESS'),
+      content: t('reports:MY_REPORTS_SECTION.APPLY_AGAIN'),
+      submitBtnStr: t('reports:PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteSelectedReports,
       messageType: MessageType.WARNING,
       backBtnStr: t('common:COMMON.CANCEL'),
@@ -209,7 +209,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
         variant={'secondaryBorderless'}
       >
         {isCheckboxVisible ? (
-          <p>{t('report_401:PENDING_REPORT_LIST.CANCEL')}</p>
+          <p>{t('reports:PENDING_REPORT_LIST.CANCEL')}</p>
         ) : (
           <>
             <svg
@@ -265,17 +265,17 @@ const PendingReportList = ({ reports }: IReportListProps) => {
           <tr className="h-10 border border-stroke-neutral-quaternary bg-surface-neutral-main-background text-left text-sm text-text-neutral-tertiary">
             {/* Info: (20240514 - Shirley) checkboxes */}
             {displayedCheckbox}
-            <th className="text-center">{t('report_401:PENDING_REPORT_LIST.DATE')}</th>
-            <th className="px-16px">{t('report_401:PENDING_REPORT_LIST.REPORT_NAME')}</th>
+            <th className="text-center">{t('reports:PENDING_REPORT_LIST.DATE')}</th>
+            <th className="px-16px">{t('reports:PENDING_REPORT_LIST.REPORT_NAME')}</th>
             <th className="hidden px-16px lg:table-cell">{t('common:COMMON.TYPE')}</th>
             <th className="hidden px-16px lg:table-cell">
-              {t('report_401:PENDING_REPORT_LIST.PERIOD')}
+              {t('reports:PENDING_REPORT_LIST.PERIOD')}
             </th>
             <th className="hidden px-16px lg:table-cell">
-              {t('report_401:PENDING_REPORT_LIST.REMAINING_TIME')}
+              {t('reports:PENDING_REPORT_LIST.REMAINING_TIME')}
             </th>
             <th className="hidden px-16px lg:table-cell">
-              {t('report_401:PENDING_REPORT_LIST.OPERATIONS')}
+              {t('reports:PENDING_REPORT_LIST.OPERATIONS')}
             </th>
           </tr>
         </thead>

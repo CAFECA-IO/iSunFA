@@ -19,7 +19,7 @@ const ReportsHistoryItem = ({
   isCheckboxVisible,
   onCheckChange = () => {},
 }: IReportsHistoryItemProps) => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['common', 'reports']);
   const { id, createdAt, name, from, to, project, reportType, blockChainExplorerLink } = report;
 
   const startDate = timestampToString(from);
@@ -101,7 +101,7 @@ const ReportsHistoryItem = ({
       <td className="hidden min-w-220px px-16px text-left font-medium lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">
-            {t('report_401:REPORTS_HISTORY_ITEM.FROM')}
+            {t('reports:REPORTS_HISTORY_ITEM.FROM')}
           </span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
           <span className="text-text-neutral-tertiary">{t('common:COMMON.TO')}</span>
