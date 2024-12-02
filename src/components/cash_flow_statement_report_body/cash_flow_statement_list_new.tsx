@@ -19,12 +19,21 @@ import { useTranslation } from 'next-i18next';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import { useGlobalCtx } from '@/contexts/global_context';
+import CashFlowA4Template from '@/components/cash_flow_statement_report_body/cash_flow_statement_a4_template';
 
 interface CashFlowStatementListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
+  isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
+  printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
+  printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
 }
 
-const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedDateRange }) => {
+const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
+  selectedDateRange,
+  isPrinting, // Info: (20241122 - Anna) 使用打印狀態
+  printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
+  printFn, // Info: (20241122 - Anna) 使用打印函數
+}) => {
   const { t } = useTranslation('report_401');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
@@ -148,6 +157,21 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
     }
   }, [reportFinancial]);
 
+  useEffect(() => {
+    if (isPrinting && printRef.current) {
+      // Deprecated: (20241130 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('cash_flow_statement_list 觀察 Printing content:', printRef.current.innerHTML);
+      // Deprecated: (20241130 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('cash_flow_statement_list received isPrinting?', isPrinting);
+    } else {
+      // Deprecated: (20241130 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('cash_flow_statement_list printRef is null');
+    }
+  }, [isPrinting]);
+
   // Info: (20241024 - Anna) 檢查報表數據和載入狀態
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
     return (
@@ -182,7 +206,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
     return (
       <table className="relative z-1 w-full border-collapse bg-white">
         <thead>
-          <tr>
+          <tr className="print:hidden">
             <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
               代號
             </th>
@@ -375,10 +399,10 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
           <thead>
             <tr className="bg-surface-brand-primary-soft">
               <th className="border border-stroke-brand-secondary-soft p-10px text-left text-xxs font-semibold leading-5 text-text-neutral-secondary"></th>
-              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-xxs font-semibold leading-5 text-text-neutral-secondary">
+              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
                 {currentYear}年度
               </th>
-              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-xxs font-semibold leading-5 text-text-neutral-secondary">
+              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
                 {previousYear}年度
               </th>
             </tr>
@@ -388,15 +412,19 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
       </div>
     );
   };
-  // Info: (20241101 - Anna) 列印及下載按鈕
-  const displayedSelectArea = (
-    <div className="mb-16px flex items-center justify-end px-px max-md:flex-wrap">
-      <div className="ml-auto flex items-center gap-24px">
-        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
-        <PrintButton onClick={() => {}} disabled={false} />
+  const displayedSelectArea = () => {
+    // Deprecated: (20241130 - Anna) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log('[displayedSelectArea] Display Area Rendered');
+    return (
+      <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
+        <div className="ml-auto flex items-center gap-24px">
+          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+          <PrintButton onClick={printFn} disabled={false} />
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const ItemSummary = (
     <div id="1" className="relative overflow-y-hidden">
@@ -419,7 +447,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
     <div id="2" className="relative overflow-hidden">
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="relative -z-10"></div>
-        <div className="mb-1 mt-8 flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-4 mt-8 flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p className="mb-0">細項分類格式</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
@@ -600,7 +628,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
                     (year) => (
                       <td
                         key={year}
-                        className="border border-stroke-brand-secondary-soft p-10px"
+                        className="border border-stroke-brand-secondary-soft p-20px"
                       ></td>
                     )
                   )}
@@ -692,14 +720,30 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
   );
 
   return (
-    <div className="mx-auto w-full origin-top overflow-x-auto">
-      <hr className="mb-40px break-before-page" />
-      {displayedSelectArea}
-      {ItemSummary}
-      {ItemDetail}
-      {operatingCF5Y}
-      {investmentRatio}
-      {freeCashFlow}
+    <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
+      {displayedSelectArea()}
+      {/* Info: (20241202- Anna) 渲染打印模板，通過 CSS 隱藏 */}
+      <div ref={printRef} className="hidden print:block">
+        <CashFlowA4Template
+          reportFinancial={reportFinancial}
+          curDate={`${curDate.from}\n至${curDate.to}`} // Info: (20241202- Anna) 格式化為字符串
+          preDate={`${preDate.from}\n至${preDate.to}`} // Info: (20241202- Anna) 格式化為字符串
+        >
+          {ItemSummary}
+          {ItemDetail}
+          {/* {operatingCF5Y} Todo: (20241202- Anna) 圖表列印有問題 */}
+          {/* {investmentRatio} Todo: (20241202- Anna) 圖表列印有問題 */}
+          {freeCashFlow}
+        </CashFlowA4Template>
+      </div>
+      {/*  Info: (20241202- Anna) 預覽區域 */}
+      <div className="block print:hidden">
+        {ItemSummary}
+        {ItemDetail}
+        {operatingCF5Y}
+        {investmentRatio}
+        {freeCashFlow}
+      </div>
     </div>
   );
 };

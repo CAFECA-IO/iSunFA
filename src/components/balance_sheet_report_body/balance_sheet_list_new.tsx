@@ -53,105 +53,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   const { t } = useTranslation(['report_401']);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
-  // Info: (20241121 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
-  // const printRef = useRef<HTMLDivElement>(null);
-
-  // Info: (20241112 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
-  // const [isPrinting, setIsPrinting] = useState(false);
-
-  // const handlePrint = () => {
-  //   // setIsPrinting(true); // Info: (20241118 - Anna) 開啟列印模式
-  //   // setTimeout(() => {
-  //   //   window.print(); // Info: (20241118 - Anna) 觸發瀏覽器列印
-  //   //   setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
-  //   // }, 500); // Info: (20241118 - Anna) 等待渲染完成後再列印
-
-  //   //  window.print(); // Info: (20241118 - Anna) 預覽PDF
-
-  //   setIsPrinting(true); // Info: (20241118 - Anna) 啟動列印模式 不會預覽PDF
-  // };
-  // const handlePrint = async () => {
-  //   setIsPrinting(true); // 啟用列印模式
-
-  //   const waitForRender = () => {
-  //     return new Promise<void>((resolve) => {
-  //       const observer = new MutationObserver(() => {
-  //         const allPagesRendered = document.querySelectorAll('.print-content').length > 0;
-  //         if (allPagesRendered) {
-  //           observer.disconnect();
-  //           resolve();
-  //         }
-  //       });
-
-  //       observer.observe(document.body, { childList: true, subtree: true });
-
-  //       // 超時保證流程不會卡死
-  //       setTimeout(() => {
-  //         observer.disconnect();
-  //         resolve();
-  //       }, 5000);
-  //     });
-  //   };
-
-  //   await waitForRender();
-  //   window.print(); // 觸發列印
-  //   setIsPrinting(false); // 退出列印模式
-  // };
-  // const handlePrint = () => {
-  //   setIsPrinting(true); // 啟用列印模式
-  //   setTimeout(() => {
-  //     window.print(); // 直接使用瀏覽器列印功能
-  //     setIsPrinting(false); // 列印完成後退出列印模式
-  //   }, 500); // 等待 500ms 確保渲染完成
-  // };
-
-  // const handlePrint = useReactToPrint({
-  //   content: () => printRef.current as HTMLElement,
-  //   documentTitle: 'Balance Sheet Report',
-  //   onBeforePrint: async () => {
-  //     // eslint-disable-next-line no-console
-  //     console.log('Before Print: isPrinting =', isPrinting);
-  //     return Promise.resolve();
-  //   },
-  //   onAfterPrint: async () => {
-  //     setIsPrinting(false);
-  //     // eslint-disable-next-line no-console
-  //     console.log('After Print: isPrinting =', isPrinting);
-  //     return Promise.resolve();
-  //   },
-  // } as unknown as Parameters<typeof useReactToPrint>[0]);
-
-  // const handlePrint = useReactToPrint({
-  //   printRef,
-  // } as unknown as Parameters<typeof useReactToPrint>[0]);
-
-  // const handlePrintClick = () => {
-  //   setIsPrinting(true); // 啟用列印模式
-  //   handlePrint(); // 呼叫列印
-  // };
-
-  // const handleOnAfterPrint = React.useCallback(() => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('onAfterPrint call ');
-  // }, []);
-
-  // const handleOnBeforePrint = React.useCallback(() => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('onBeforePrint call ');
-  //   return Promise.resolve();
-  // }, []);
-
-  // const printFn = useReactToPrint({
-  //   contentRef: printRef,
-  //   documentTitle: 'alance Sheet Report',
-  //   onAfterPrint: handleOnAfterPrint,
-  //   onBeforePrint: handleOnBeforePrint,
-  // });
-
-  // const handleOnClick = React.useCallback(() => {
-  //   printFn();
-  // }, [printFn]);
-
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
 
@@ -330,52 +231,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       setIsSubAccountsCollapsed(initialCollapseState);
     }
   }, [reportFinancial, totalSubAccountsToggle]); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 作為依賴項
-
-  // useEffect(() => {
-  //   // Info: (20241112 - Anna) 列印之前啟動列印模式
-  //   const handleBeforePrint = () => setIsPrinting(true);
-  //   // Info: (20241112 - Anna) 列印之後退出列印模式
-  //   const handleAfterPrint = () => setIsPrinting(false);
-
-  //   window.addEventListener('beforeprint', handleBeforePrint);
-  //   window.addEventListener('afterprint', handleAfterPrint);
-
-  //   // Info: (20241112 - Anna) 清除事件監聽器
-  //   return () => {
-  //     window.removeEventListener('beforeprint', handleBeforePrint);
-  //     window.removeEventListener('afterprint', handleAfterPrint);
-  //   };
-  // }, []);
-
-  // useEffect(() => {
-  //   if (isPrinting) {
-  //     const observer = new MutationObserver(() => {
-  //       // Info: (20241118 - Anna) 檢查所有需要的 ID 是否渲染完成
-  //       const requiredIds = ['#1', '#2', '#3', '#4', '#5'];
-  //       const allRendered = requiredIds.every((id) => document.querySelector(id));
-
-  //       if (allRendered) {
-  //         observer.disconnect(); // Info: (20241118 - Anna) 停止監控
-  //         window.print(); // Info: (20241118 - Anna) 所有節點渲染完成後觸發列印
-  //        // setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
-  //       }
-  //     });
-
-  //     // Info: (20241118 - Anna) 監控目標節點的變化
-  //     observer.observe(document.body, {
-  //       childList: true,
-  //       subtree: true,
-  //     });
-
-  //     // Info: (20241118 - Anna) 返回清理函數以移除監控器
-  //     return () => {
-  //       observer.disconnect(); // Info: (20241118 - Anna) 確保監控器被清理
-  //     };
-  //   }
-
-  //   // Info: (20241118 - Anna) 如果 `isPrinting` 為假，則返回空清理函數，滿足 ESLint 的要求
-  //   return () => {};
-  // }, [isPrinting]);
 
   useEffect(() => {
     if (isPrinting && printRef.current) {
@@ -646,7 +501,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
         </div>
         <div className="ml-auto flex items-center gap-24px">
-          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
+          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
           <PrintButton onClick={printFn} disabled={false} />
         </div>
       </div>
@@ -681,7 +536,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         {!isSummaryCollapsed && (
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
-              <tr>
+              <tr className="print:hidden">
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   代號
                 </th>
@@ -726,7 +581,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         {!isDetailCollapsed && (
           <table className="w-full border-collapse bg-white">
             <thead>
-              <tr>
+              <tr className="print:hidden">
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   代號
                 </th>
@@ -939,42 +794,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       </section>
     </div>
   );
-
-  // Info: (20241118 - Anna) 如果正在列印，僅渲染列印模式的內容
-  // if (isPrinting) {
-  //   // eslint-disable-next-line no-console
-  //   console.log('printRef', printRef);
-  //   return (
-  //     <div ref={printRef} className="mx-auto w-full origin-top overflow-x-auto print:block">
-  //       <BalanceSheetA4Template
-  //         reportFinancial={reportFinancial}
-  //         curDate={curDate}
-  //         preDate={preDate}
-  //       >
-  //         {ItemSummary}
-  //         {ItemDetail}
-  //         {ProportionalTable}
-  //         {AssetItem}
-  //         {TurnoverDay}
-  //       </BalanceSheetA4Template>
-  //     </div>
-  //   );
-  // }
-
-  // return (
-  //   <div className="mx-auto w-full origin-top overflow-x-auto">
-  //     {displayedSelectArea(printRef)}
-  //     {ItemSummary}
-  //     <hr className="break-before-page" />
-  //     {ItemDetail}
-  //     <hr className="break-before-page" />
-  //     {ProportionalTable}
-  //     <hr className="mb-16px mt-32px break-before-page" />
-  //     {AssetItem}
-  //     <hr className="break-before-page" />
-  //     {TurnoverDay}
-  //   </div>
-  // );
 
   return (
     <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>

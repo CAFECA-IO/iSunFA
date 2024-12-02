@@ -300,7 +300,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('common:BOOKMARK_LIST.CASH_FLOW_STATEMENT')}</button>
+                <button type="button">{t('layout:EMBED_CODE_MODAL.CASH_FLOW_STATEMENT')}</button>
               </div>
             </div>
           </div>
@@ -376,7 +376,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               {isCashFlowStatementChecked && (
                 <li className="flex items-center gap-1">
                   <IoMdCheckmark />
-                  {t('common:BOOKMARK_LIST.CASH_FLOW_STATEMENT')}
+                  {t('layout:EMBED_CODE_MODAL.CASH_FLOW_STATEMENT')}
                 </li>
               )}
               {!isBalanceSheetChecked &&
@@ -393,7 +393,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                     </li>
                     <li className="flex items-center gap-1">
                       <IoMdCheckmark />
-                      {t('common:BOOKMARK_LIST.CASH_FLOW_STATEMENT')}
+                      {t('layout:EMBED_CODE_MODAL.CASH_FLOW_STATEMENT')}
                     </li>
                   </>
                 )}

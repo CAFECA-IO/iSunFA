@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import CashFlowStatementList from '@/components/cash_flow_statement_report_body/cash_flow_statement_list_new';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -6,6 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { ReportLanguagesMap, ReportLanguagesKey } from '@/interfaces/report_language';
 import { IoIosArrowDown } from 'react-icons/io';
 import Image from 'next/image';
+import { useReactToPrint } from 'react-to-print';
 
 // Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
 const CashFlowStatementPageBody = () => {
@@ -20,6 +21,59 @@ const CashFlowStatementPageBody = () => {
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
+
+  // Info: (20241122 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
+  const printRef = useRef<HTMLDivElement>(null);
+
+  // Info: (20241122 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  const handleOnBeforePrint = React.useCallback(() => {
+    // Deprecated: (20241130 - Anna) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log(
+      'cash_flow_statement_report_body 觀察 handleOnBeforePrint (Before setting isPrinting):',
+      isPrinting
+    );
+    setIsPrinting(true);
+    // Deprecated: (20241130 - Anna) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log(
+      'cash_flow_statement_report_body 觀察 handleOnBeforePrint (After setting isPrinting):',
+      true
+    );
+
+    // Info: (20241130 - Anna) 強制 React 完成渲染，確保打印模式下渲染正確內容
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve(); // Info: (20241130 - Anna) 明確調用 resolve，表示完成
+      }, 100); // Info: (20241130 - Anna) 延遲 100 毫秒
+    });
+  }, [isPrinting]);
+
+  const handleOnAfterPrint = React.useCallback(() => {
+    // Deprecated: (20241130 - Anna) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log(
+      'cash_flow_statement_report_body 觀察 handleOnAfterPrint (Before resetting isPrinting):',
+      isPrinting
+    );
+    setIsPrinting(false);
+    // Deprecated: (20241130 - Anna) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log(
+      'cash_flow_statement_report_body 觀察 handleOnAfterPrint (After resetting isPrinting):',
+      false
+    );
+  }, [isPrinting]);
+
+  const printFn = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: 'Cash Flow Statement Report',
+    onBeforePrint: handleOnBeforePrint,
+    onAfterPrint: handleOnAfterPrint,
+  });
+
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
 
   // Info: (20241101 - Anna) 語言選單開關處理
@@ -93,14 +147,19 @@ const CashFlowStatementPageBody = () => {
           {/* Info: (20241017 - Anna)語言選擇 */}
           <div className="flex flex-col space-y-6 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+              {t('layout:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
             </div>
             {displayedLanguageMenu}
           </div>
         </div>
 
         {/* Info: (20241017 - Anna) Balance Sheet List */}
-        <CashFlowStatementList selectedDateRange={selectedDateRange} />
+        <CashFlowStatementList
+          selectedDateRange={selectedDateRange}
+          isPrinting={isPrinting} // Info: (20241122 - Anna) 傳遞列印狀態
+          printRef={printRef} // Info: (20241122 - Anna) 傳遞列印區域 Ref
+          printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數
+        />
       </div>
     </div>
   );
