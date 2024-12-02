@@ -58,8 +58,9 @@ const AssetStatusSettingModal: React.FC<IAssetStatusSettingModal> = ({
     setAssetStatus(defaultStatus);
   }, [defaultStatus]);
 
-  // Info: (20240926 - Julian) 沒填日期時，禁用 Save 按鈕
-  const saveBtnDisabled = selectedPeriod.startTimeStamp === 0 && selectedPeriod.endTimeStamp === 0;
+  // Info: (20240926 - Julian) 沒填日期或 API 正在更新時，Save 按鈕 disabled
+  const saveBtnDisabled =
+    (selectedPeriod.startTimeStamp === 0 && selectedPeriod.endTimeStamp === 0) || isUpdating;
 
   const updateAssetHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

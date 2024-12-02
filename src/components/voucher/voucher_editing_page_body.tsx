@@ -1165,6 +1165,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
         setAiState={setAiState}
         setIsShowAnalysisPreview={setIsShowAnalysisPreview}
         retryClickHandler={retryAIHandler}
+        retryDisabled={!!isAskingAI || !!isAIWorking}
         fillUpClickHandler={fillUpWithAIResult}
       />
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}

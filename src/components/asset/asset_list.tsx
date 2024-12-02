@@ -260,7 +260,12 @@ const AssetList: React.FC<IAssetListProps> = ({
     <div className="flex flex-col gap-16px">
       {/* Info: (20240925 - Julian) Export Asset button */}
       <div className="ml-auto flex items-center gap-24px">
-        <Button type="button" variant="tertiaryOutline" onClick={exportAssetHandler}>
+        <Button
+          type="button"
+          variant="tertiaryOutline"
+          onClick={exportAssetHandler}
+          disabled={isLoading} // Info: (20241202 - Julian) 防止重複點擊
+        >
           <MdOutlineFileDownload />
           <p>{t('asset:ASSET.EXPORT_ASSET_LIST')}</p>
         </Button>

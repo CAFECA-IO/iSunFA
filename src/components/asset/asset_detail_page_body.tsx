@@ -79,7 +79,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   // Info: (20241016 - Julian) 可刪除資產的期限
   const now = new Date().getTime() / 1000;
   const assetDeleteDeadline = acquisitionDate + ASSET_DELETE_TERM;
-  const deleteDisabled = now > assetDeleteDeadline;
+  const deleteDisabled = now > assetDeleteDeadline || isDeleting; // Info: (20241202 - Julian) 過期或正在刪除中
   const deleteRemainingDays = Math.floor((assetDeleteDeadline - now) / 86400);
   const deleteRemainingStr =
     deleteRemainingDays > 0 ? (

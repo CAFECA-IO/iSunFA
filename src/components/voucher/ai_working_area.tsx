@@ -16,6 +16,7 @@ interface AIWorkingAreaProps {
   aiState: AIState;
   setAiState: (state: AIState) => void;
   analyzeSuccess: boolean;
+  retryDisabled: boolean;
   setIsShowAnalysisPreview: (isShow: boolean) => void;
   retryClickHandler: () => void;
   fillUpClickHandler: () => void;
@@ -25,6 +26,7 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
   aiState,
   setAiState,
   analyzeSuccess,
+  retryDisabled,
   setIsShowAnalysisPreview,
   retryClickHandler,
   fillUpClickHandler,
@@ -59,7 +61,8 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
         <button
           type="button"
           onClick={retryClickHandler}
-          className="flex items-center gap-4px px-16px py-8px text-sm text-button-text-primary hover:text-button-text-primary-hover"
+          disabled={retryDisabled}
+          className="flex items-center gap-4px px-16px py-8px text-sm text-button-text-primary hover:text-button-text-primary-hover disabled:cursor-not-allowed disabled:text-text-neutral-tertiary"
         >
           <GrRefresh size={20} className="scale-x-flip" />
           <p>{t('journal:AI_WORKING_AREA.RETRY_BTN')}</p>
