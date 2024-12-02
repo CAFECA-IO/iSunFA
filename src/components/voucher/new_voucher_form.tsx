@@ -131,9 +131,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     lineItems: aiLineItems,
   } = resultData ?? dummyAIResult;
 
-  // Info: (20241127 - Julian) 取得 AI 分析的 resultId
-  const resultId = askData?.resultId;
-
   const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
 
   const aiTotalCredit = aiLineItems.reduce(
@@ -258,11 +255,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const handleGetAIResult = useCallback(() => {
     // Info: (20241128 - Julian) 用 ResultId 來問 AI 分析結果，持續問到有結果為止；若 aiState !== AIState.WORKING 則停止問
     const interval = setInterval(async () => {
-      getAIResult({ params: { companyId, resultId }, query: { reason: 'voucher' } });
+      getAIResult({
+        params: { companyId, resultId: askData?.resultId },
+        query: { reason: 'voucher' },
+      });
     }, 5000);
 
     setApiInterval(interval);
-  }, [resultId]);
+  }, [askData]);
 
   useEffect(() => {
     if (aiState === AIState.WORKING) {
@@ -277,7 +277,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241128 - Julian) 取得 AI 分析結果
   useEffect(() => {
     if (isAskingAI === false) {
-      if (askSuccess === false || resultId === 'fetchAIResultIdError') {
+      if (askSuccess === false || askData?.resultId === 'fetchAIResultIdError') {
         //  Info: (20241021 - Julian) AI 分析失敗
         setAiState(AIState.FAILED);
       } else if (askSuccess && askData) {
