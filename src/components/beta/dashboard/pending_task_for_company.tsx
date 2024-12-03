@@ -71,6 +71,16 @@ const PendingTaskForCompany = () => {
     return <PendingTaskNoData />;
   }
 
+  const isCompanyPendingTaskEmpty =
+    companyPendingTask.missingCertificate.count === 0 &&
+    companyPendingTask.unpostedVoucher.count === 0 &&
+    companyPendingTask.missingCertificatePercentage === 0 &&
+    companyPendingTask.unpostedVoucherPercentage === 0;
+
+  if (isCompanyPendingTaskEmpty) {
+    return <PendingTaskNoData />;
+  }
+
   const percentageForMissingCertificate = companyPendingTask.missingCertificatePercentage * 100;
   const percentageForUnpostedVouchers = companyPendingTask.unpostedVoucherPercentage * 100;
 
