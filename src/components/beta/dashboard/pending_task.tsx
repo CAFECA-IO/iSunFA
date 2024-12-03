@@ -97,6 +97,16 @@ const PendingTasksForAll = () => {
     return <PendingTaskNoData />;
   }
 
+  const isUserPendingTaskTotalEmpty =
+    userPendingTaskTotal.totalMissingCertificate === 0 &&
+    userPendingTaskTotal.totalUnpostedVoucher === 0 &&
+    userPendingTaskTotal.totalMissingCertificatePercentage === 0 &&
+    userPendingTaskTotal.totalUnpostedVoucherPercentage === 0;
+
+  if (isUserPendingTaskTotalEmpty) {
+    return <PendingTaskNoData />;
+  }
+
   const percentageForMissingCertificate =
     userPendingTaskTotal.totalMissingCertificatePercentage * 100;
   const percentageForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucherPercentage * 100;
