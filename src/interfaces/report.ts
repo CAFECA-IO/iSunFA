@@ -135,6 +135,7 @@ export interface IFinancialReportRequest {
 
 export interface FinancialReportItem {
   code: string;
+
   name: string;
   curPeriodAmount: number;
   curPeriodAmountString: string;
@@ -144,7 +145,6 @@ export interface FinancialReportItem {
   prePeriodPercentage: number;
   indent: number;
 }
-
 export interface YearlyData {
   [year: string]: number;
 }

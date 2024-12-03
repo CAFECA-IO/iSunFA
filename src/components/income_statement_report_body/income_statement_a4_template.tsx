@@ -1,7 +1,7 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import Image from 'next/image';
 
-interface BalanceSheetA4TemplateProps {
+interface IncomeStatementA4TemplateProps {
   children: React.ReactNode;
   reportFinancial?: {
     company?: {
@@ -9,15 +9,19 @@ interface BalanceSheetA4TemplateProps {
       name: string;
     };
   };
-  curDate?: string;
-  preDate?: string;
+  curDateFrom: string;
+  curDateTo: string;
+  preDateFrom: string;
+  preDateTo: string;
 }
 
-const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
+const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
   children,
   reportFinancial,
-  curDate,
-  preDate,
+  curDateFrom,
+  curDateTo,
+  preDateFrom,
+  preDateTo,
 }) => {
   const [firstBlockSplitPages, setFirstBlockSplitPages] = useState<ReactNode[][]>([]);
   const [secondBlockSplitPages, setSecondBlockSplitPages] = useState<ReactNode[][]>([]);
@@ -30,18 +34,48 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   const pages = React.Children.toArray(children);
 
   // Info: (20241120 - Anna) 使用遞迴方式將子節點展平
+  //   const flattenChildren = (nodes: React.ReactNode): React.ReactNode[] => {
+  //     const result: React.ReactNode[] = [];
+  //     React.Children.forEach(nodes, (node) => {
+  //       if (React.isValidElement(node) && node.props?.children) {
+  //         // Info: (20241130 - Anna) 僅遞迴展平嵌套的子節點
+  //         result.push(node, ...flattenChildren(node.props.children));
+  //       } else {
+  //         result.push(node); // Info: (20241130 - Anna) 保留完整的 React 元素或文本節點
+  //       }
+  //     });
+  //     return result;
+  //   };
+
   const flattenChildren = (nodes: React.ReactNode): React.ReactNode[] => {
     const result: React.ReactNode[] = [];
-    React.Children.forEach(nodes, (node) => {
-      if (React.isValidElement(node) && node.props?.children) {
-        // Info: (20241130 - Anna) 僅遞迴展平嵌套的子節點
-        result.push(node, ...flattenChildren(node.props.children));
+
+    React.Children.forEach(nodes, (node, index) => {
+      const key = `empty-${index}`;
+
+      if (React.isValidElement(node)) {
+        if (node.props?.children) {
+          result.push(node, ...flattenChildren(node.props.children)); // Info: (20241203 - Anna) 遞迴處理子節點
+        } else {
+          result.push(node); // Info: (20241203 - Anna) 添加合法的 React 節點
+        }
+      } else if (typeof node === 'string' || typeof node === 'number') {
+        // Info: (20241203 - Anna) 保留可渲染的基本類型
+        result.push(node);
+      } else if (node === null || node === undefined) {
+        // ToDo: (20241203 - Liz) 這裡要處理 null 或 undefined 的情況
+        result.push(<td key={key}></td>); // Info: (20241203 - Liz) 但好像沒效
       } else {
-        result.push(node); // Info: (20241130 - Anna) 保留完整的 React 元素或文本節點
+        // Info: (20241203 - Anna) 遇到無法渲染的對象，記錄日誌
+        // Deprecate: (20241203 - Anna) remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.warn('Invalid ReactNode detected and skipped:', node);
       }
     });
+
     return result;
   };
+
   // Info: (20241120 - Anna) 新增分頁邏輯
   const splitTableRows = (rows: React.ReactNode[], rowsPerPage: number): Promise<ReactNode[][]> => {
     return new Promise((resolve) => {
@@ -58,7 +92,10 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
     });
   };
   // Info: (20241120 - Anna) 處理 pages[0] 表格分頁
-  const firstTableRows = flattenChildren((pages[0] as React.ReactElement)?.props?.children);
+  //   const firstTableRows = flattenChildren((pages[0] as React.ReactElement)?.props?.children);
+  const firstTableRows = flattenChildren(
+    React.isValidElement(pages[0]) ? pages[0].props.children : []
+  );
   const FirstBlockSplitPages = splitTableRows(firstTableRows, 10);
   // Deprecated: (20241130 - Anna) remove eslint-disable
   // eslint-disable-next-line no-console
@@ -76,7 +113,10 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
     </table>
   );
   // Info: (20241120 - Anna) 處理 pages[1] 表格分頁
-  const secondTableRows = flattenChildren((pages[1] as React.ReactElement)?.props?.children);
+  //   const secondTableRows = flattenChildren((pages[1] as React.ReactElement)?.props?.children);
+  const secondTableRows = flattenChildren(
+    React.isValidElement(pages[1]) ? pages[1].props.children : []
+  );
   const SecondBlockSplitPages = splitTableRows(secondTableRows, 10);
   // Deprecated: (20241130 - Anna) remove eslint-disable
   // eslint-disable-next-line no-console
@@ -86,7 +126,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   useEffect(() => {
     (async () => {
       const performSplitFirstBlock = async () => {
-        const splitPages = await splitTableRows(firstTableRows, 8); // Info: (20241130 - Anna) 等待分頁完成
+        const splitPages = await splitTableRows(firstTableRows, 10); // Info: (20241130 - Anna) 等待分頁完成
         setFirstBlockSplitPages(splitPages); // Info: (20241130 - Anna) 更新狀態
       };
 
@@ -97,7 +137,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   useEffect(() => {
     (async () => {
       const performSplitSecondBlock = async () => {
-        const splitPages = await splitTableRows(secondTableRows, 8); // Info: (20241130 - Anna) 等待分頁完成
+        const splitPages = await splitTableRows(secondTableRows, 10); // Info: (20241130 - Anna) 等待分頁完成
         setSecondBlockSplitPages(splitPages); // Info: (20241130 - Anna) 更新狀態
       };
 
@@ -115,13 +155,13 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
         會計項目
       </th>
       <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-        {curDate}
+        {curDateFrom} <br />至 {curDateTo}
       </th>
       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
         %
       </th>
       <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-        {preDate}
+        {preDateFrom} <br />至 {preDateTo}
       </th>
       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
         %
@@ -132,20 +172,20 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   // Info: (20241120 - Anna)  確保表格分頁後保留表頭
   const secondTableHeaders = (
     <tr className="text-neutral-400">
-      <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
         代號
       </th>
       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
         會計項目
       </th>
       <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-        {curDate}
+        {curDateFrom} <br />至 {curDateTo}
       </th>
       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
         %
       </th>
       <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-        {preDate}
+        {preDateFrom} <br />至 {preDateTo}
       </th>
       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
         %
@@ -166,9 +206,9 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
                   {reportFinancial.company.name}
                 </h1>
                 <p className="text-left text-xs font-bold leading-5">
-                  {curDate}
+                  {curDateFrom} <br />至 {curDateTo}
                   <br />
-                  財務報告 - 資產負債表
+                  財務報告 - 損益表
                 </p>
               </>
             )}
@@ -176,7 +216,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
         </div>
         <div className="box-border w-35% text-right">
           <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
-            Balance Sheet
+            Income Statement
             <span className="absolute -bottom-20px right-0 h-5px w-9/12 bg-surface-brand-secondary"></span>
           </h2>
         </div>
@@ -194,7 +234,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
         </div>
         <div className="w-35% text-right">
           <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
-            Balance Sheet
+            Income Statement
             <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
@@ -283,4 +323,4 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   );
 };
 
-export default BalanceSheetA4Template;
+export default IncomeStatementA4Template;

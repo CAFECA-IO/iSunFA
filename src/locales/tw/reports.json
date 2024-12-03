@@ -13,7 +13,13 @@
     "BEGINNING": "起始日",
     "MIDTERM": "期中",
     "ENDING": "結束日",
-    "TWD": "新台幣"
+    "TWD": "新台幣",
+    "VOUCHER_DATE": "傳票日期",
+    "NOTE": "備註",
+    "VOUCHER_NO": "憑證號碼",
+    "ISSUER": "製單人",
+    "DEBIT": "借方",
+    "CREDIT": "貸方"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "最新的 TideBit ",
