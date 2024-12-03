@@ -2,7 +2,11 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
-import { FinancialReport, IncomeStatementOtherInfo, FinancialReportItem } from '@/interfaces/report';
+import {
+  FinancialReport,
+  IncomeStatementOtherInfo,
+  FinancialReportItem,
+} from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -209,7 +213,17 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
       return [
         <React.Fragment key={item.code}>
           {/* Info: (20241202 - Anna) 使用 IncomeStatementReportTableRow 渲染單一行 */}
-          <IncomeStatementReportTableRow {...item} />
+          <IncomeStatementReportTableRow
+            code={item.code}
+            name={item.name}
+            curPeriodAmount={item.curPeriodAmount}
+            curPeriodAmountString={item.curPeriodAmountString}
+            curPeriodPercentage={item.curPeriodPercentage}
+            prePeriodAmount={item.prePeriodAmount}
+            prePeriodAmountString={item.prePeriodAmountString}
+            prePeriodPercentage={item.prePeriodPercentage}
+            indent={item.indent}
+          />
           {/* Info: (20241202 - Anna) 遞迴渲染子項目 */}
           {item.children && item.children.length > 0 && renderRows(item.children)}
         </React.Fragment>,
@@ -557,7 +571,6 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           <tbody>
             {revenueToRD && (
               <>
-                {' '}
                 <tr key={revenueToRD.revenue.code}>
                   <td className="border border-stroke-brand-secondary-soft p-10px">
                     {revenueToRD.revenue.code}
@@ -594,12 +607,12 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                     收入提撥至研發費用比例
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end">
-                    {' '}
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(2)}%
+                    {revenueToRD.ratio.curRatio.toFixed(
+                      2
+                    )}%
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end">
-                    {' '}
                     {revenueToRD.ratio.preRatio.toFixed(2)}%
                   </td>
                 </tr>

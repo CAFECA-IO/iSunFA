@@ -91,14 +91,15 @@ const PendingTasksForAll = () => {
     };
 
     getUserPendingTask();
-  }, []);
+  }, [userAuth]);
 
   if (!userPendingTaskTotal) {
     return <PendingTaskNoData />;
   }
 
-  const percentageForMissingCertificate = userPendingTaskTotal.totalMissingCertificatePercentage;
-  const percentageForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucherPercentage;
+  const percentageForMissingCertificate =
+    userPendingTaskTotal.totalMissingCertificatePercentage * 100;
+  const percentageForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucherPercentage * 100;
   const countForMissingCertificate = userPendingTaskTotal.totalMissingCertificate;
   const countForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucher;
   // ToDo: (20241127 - Liz) 目前 API 沒有提供這個欄位的資料，所以先設定為 0

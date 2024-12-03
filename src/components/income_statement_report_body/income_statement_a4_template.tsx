@@ -46,9 +46,13 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
   //     });
   //     return result;
   //   };
+
   const flattenChildren = (nodes: React.ReactNode): React.ReactNode[] => {
     const result: React.ReactNode[] = [];
-    React.Children.forEach(nodes, (node) => {
+
+    React.Children.forEach(nodes, (node, index) => {
+      const key = `empty-${index}`;
+
       if (React.isValidElement(node)) {
         if (node.props?.children) {
           result.push(node, ...flattenChildren(node.props.children)); // 遞迴處理子節點
@@ -58,6 +62,9 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
       } else if (typeof node === 'string' || typeof node === 'number') {
         // 保留可渲染的基本類型
         result.push(node);
+      } else if (node === null || node === undefined) {
+        // ToDo: (20241203 - Liz) 這裡要處理 null 或 undefined 的情況
+        result.push(<td key={key}></td>); // Info: (20241203 - Liz) 但好像沒效
       } else {
         // 遇到無法渲染的對象，記錄日誌
         // eslint-disable-next-line no-console
@@ -65,9 +72,6 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
       }
     });
 
-    // 在返回之前記錄結果
-    // eslint-disable-next-line no-console
-    console.log('Flattened children:', result);
     return result;
   };
 
