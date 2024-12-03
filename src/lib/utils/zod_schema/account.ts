@@ -1,5 +1,13 @@
-import { AccountSystem, AccountType } from '@/constants/account';
+import { AccountSystem, AccountType, EquityType } from '@/constants/account';
+import { ReportSheetType } from '@/constants/report';
 import { z } from 'zod';
+import {
+  nullSchema,
+  zodStringToBooleanOptional,
+  zodStringToNumberOptional,
+} from '@/lib/utils/zod_schema/common';
+import { SortOrder } from '@/constants/sort';
+import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
 /**
  * Info: (20241025 - Murky)
@@ -54,3 +62,27 @@ export const IAccountValidator = z.object({
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
 });
+
+const accountGetQueryV2Schema = z.object({
+  includeDefaultAccount: zodStringToBooleanOptional,
+  liquidity: zodStringToBooleanOptional,
+  type: z.nativeEnum(AccountType).optional(),
+  reportType: z.nativeEnum(ReportSheetType).optional(),
+  equityType: z.nativeEnum(EquityType).optional(),
+  forUser: zodStringToBooleanOptional,
+  page: zodStringToNumberOptional,
+  limit: zodStringToNumberOptional,
+  sortBy: z.enum(['code', 'createdAt']).optional(),
+  sortOrder: z.nativeEnum(SortOrder).optional(),
+  searchKey: z.string().optional(),
+  isDeleted: zodStringToBooleanOptional,
+});
+
+export const accountGetV2Schema = {
+  input: {
+    querySchema: accountGetQueryV2Schema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: paginatedDataSchema(IAccountValidator),
+  frontend: paginatedDataSchema(IAccountValidator),
+};

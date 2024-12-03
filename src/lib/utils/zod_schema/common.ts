@@ -4,6 +4,17 @@ import { SortBy, SortOrder } from '@/constants/sort';
 
 export const zodStringToNumber = z.string().regex(/^\d+$/).transform(Number);
 
+export const zodStringToNumberOptional = z
+  .string()
+  .regex(/^\d+$/)
+  .optional()
+  .transform((val) => {
+    if (val === undefined) {
+      return undefined;
+    }
+    return Number(val);
+  });
+
 export const zodStringToBoolean = z.string().transform((val) => val.toLowerCase() === 'true');
 
 export function zodStringToNumberWithDefault(defaultValue: number) {
@@ -81,3 +92,13 @@ export const nullAPISchema = {
   outputSchema: nullSchema,
   frontend: nullSchema,
 };
+
+export const zodStringToBooleanOptional = z
+  .string()
+  .optional()
+  .transform((val) => {
+    if (val === undefined) {
+      return undefined;
+    }
+    return val.toLowerCase() === 'true';
+  });

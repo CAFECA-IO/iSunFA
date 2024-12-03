@@ -224,7 +224,7 @@ export enum APIPath {
   ROOM_GET_BY_ID = `${apiPrefixV2}/room/:roomId`,
   ROOM_DELETE = `${apiPrefixV2}/room/:roomId`,
   STATUS_INFO_GET = `${apiPrefixV2}/status_info`,
-  ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
+  ACCOUNT_LIST = `${apiPrefixV2}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefixV2}/file`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
   FILE_GET = `${apiPrefix}/company/:companyId/file/:fileId`,
