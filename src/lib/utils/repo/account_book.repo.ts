@@ -121,6 +121,9 @@ async function initializeAccountBook(
   return accountBook;
 }
 
+/** Info: (20241203 - Shirley)
+ * 透過 companyId 或 publicCompanyId 取得自訂跟預設會計科目
+ */
 export async function getAccountBook(
   companyId: number,
   startTimestamp: number,

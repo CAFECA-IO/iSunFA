@@ -30,6 +30,8 @@ const ledgerListResponseSchema = z.object({
     data: z.array(
       z.object({
         id: z.number(),
+        accountId: z.number(),
+        voucherId: z.number(),
         voucherDate: z.number(),
         no: z.string(),
         accountingTitle: z.string(),

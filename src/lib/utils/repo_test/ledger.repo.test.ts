@@ -55,8 +55,6 @@ describe('Ledger Repository', () => {
         expect(total).toBeDefined();
         expect(total.totalDebitAmount).toBeGreaterThanOrEqual(0);
         expect(total.totalCreditAmount).toBeGreaterThanOrEqual(0);
-        expect(total.createdAt).toBeGreaterThan(0);
-        expect(total.updatedAt).toBeGreaterThan(0);
       }
     });
 

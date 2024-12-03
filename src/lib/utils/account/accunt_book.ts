@@ -37,15 +37,25 @@ export class AccountBook implements IAccountBook {
 
   toLedgerJSON(): IAccountBookLedgerJSON[] {
     // Info: (20241118 - Luphia) 獲得每個子節點的 Ledger JSON 格式
-    const rawDate = Array.from(this.nodes.values())
+    const rawData = Array.from(this.nodes.values())
       // Info: (20241118 - Luphia) 根據 code 排序節點
       .sort((a, b) => a.code.localeCompare(b.code))
       .map((node) => node.toLedgerJSON());
 
     // Info: (20241118 - Luphia) 合併所有子節點的 Ledger JSON Array
-    const result = rawDate.flat();
+    const result = rawData.flat();
 
-    return result;
+    // Info: (20241203 - Shirley) 計算累積餘額
+    const accumulatedResult = result.reduce((acc, cur) => {
+      const prevBalance = acc.length > 0 ? acc[acc.length - 1].balance : 0;
+      acc.push({
+        ...cur,
+        balance: prevBalance + cur.balance,
+      });
+      return acc;
+    }, [] as IAccountBookLedgerJSON[]);
+
+    return accumulatedResult;
   }
 
   findNode(id: number): IAccountBookNode | null {
