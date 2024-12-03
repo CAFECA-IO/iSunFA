@@ -497,7 +497,7 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
 
           {/* // Info: (20241121 - Liz) Side Menu Footer */}
           <div className="flex flex-col items-center gap-8px">
-            <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta V{version}</p>
+            <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta v{version}</p>
 
             {/* // ToDo: (20241121 - Liz) Link 到隱私權政策和服務條款頁面 */}
             <div className="flex gap-8px text-sm font-semibold">
