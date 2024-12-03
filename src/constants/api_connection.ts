@@ -150,6 +150,7 @@ export enum APIName {
   FILE_EXPORT = 'FILE_EXPORT',
   LEDGER_LIST = 'LEDGER_LIST',
   PUSHER_AUTH = 'PUSHER_AUTH',
+  TRIAL_BALANCE_EXPORT = 'TRIAL_BALANCE_EXPORT',
 }
 
 export enum APIPath {
@@ -278,6 +279,7 @@ export enum APIPath {
   FILE_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
   LEDGER_LIST = `${apiPrefixV2}/company/:companyId/ledger`,
   PUSHER_AUTH = `${apiPrefixV2}/pusher/auth`,
+  TRIAL_BALANCE_EXPORT = `${apiPrefixV2}/company/:companyId/trial_balance/export`,
 }
 const createConfig = ({
   name,
@@ -919,5 +921,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.PUSHER_AUTH,
     method: HttpMethod.POST,
     path: APIPath.PUSHER_AUTH,
+  }),
+  [APIName.TRIAL_BALANCE_EXPORT]: createConfig({
+    name: APIName.TRIAL_BALANCE_EXPORT,
+    method: HttpMethod.POST,
+    path: APIPath.TRIAL_BALANCE_EXPORT,
   }),
 };
