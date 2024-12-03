@@ -101,7 +101,6 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       }
     );
 
-    // FIXME: 把 accountId 加進 ledgerItems 裡，更新 API doc！
     const paginatedLedger = formatPaginatedLedger(filteredLedgerByLabelType, pageNumber, pageSize);
 
     ledgerPayload = {
