@@ -13,11 +13,15 @@ import { useUserCtx } from '@/contexts/user_context';
 import { ICertificate } from '@/interfaces/certificate';
 import { ProgressStatus } from '@/constants/account';
 import { IRoom } from '@/interfaces/room';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastId } from '@/constants/toast_id';
+import { ToastType } from '@/interfaces/toastify';
 
 interface CertificateFileUploadProps {}
 
 const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   const { userAuth, selectedCompany } = useUserCtx();
+  const { toastHandler } = useModalContext();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
   const [room, setRoom] = useState<IRoom | null>(null);
   const [getRoomSuccess, setGetRoomSuccess] = useState<boolean | undefined>(undefined);
@@ -70,7 +74,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
       if (successCreated && data) {
         setFiles((prev) => {
           const updateFiles = [...prev];
-          const index = updateFiles.findIndex((f) => f.id === data.file.id);
+          const index = updateFiles.findIndex((f) => f.id === fileId);
           updateFiles[index].certificateId = data?.id;
           updateFiles[index].progress = 100;
           updateFiles[index].status = ProgressStatus.SUCCESS;
@@ -139,12 +143,21 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
         `userAuth?.id: ${userAuth?.id} 註冊 privateChannel: ${PRIVATE_CHANNEL.ROOM}-${roomData.id}`,
         privateChannel
       );
-      setChannel(privateChannel);
-      privateChannel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
-      privateChannel.bind(ROOM_EVENT.DELETE, handleRoomDelete);
-      privateChannel.bind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
-        handleNewFilesComing(data, roomData.id, roomData.password);
-      });
+      if (privateChannel.subscribed) {
+        setChannel(privateChannel);
+        privateChannel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
+        privateChannel.bind(ROOM_EVENT.DELETE, handleRoomDelete);
+        privateChannel.bind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
+          handleNewFilesComing(data, roomData.id, roomData.password);
+        });
+      } else {
+        toastHandler({
+          id: ToastId.PUSHER_FAILED_TO_SUBSCRIBE,
+          type: ToastType.WARNING,
+          content: 'Failed to subscribe to the room, try to refresh the page', // ToDo: (20241203 - tzuhan) i18n
+          closeable: true,
+        });
+      }
     },
     [userAuth?.id]
   );
