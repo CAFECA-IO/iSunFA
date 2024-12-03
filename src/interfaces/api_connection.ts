@@ -127,7 +127,8 @@ export type IAPIName =
   | 'FILE_EXPORT'
   | 'LEDGER_LIST'
   | 'VOUCHER_POST_V2'
-  | 'PUSHER_AUTH';
+  | 'PUSHER_AUTH'
+  | 'TRIAL_BALANCE_EXPORT';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

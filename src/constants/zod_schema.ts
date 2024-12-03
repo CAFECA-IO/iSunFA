@@ -276,4 +276,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.LEDGER_LIST]: ledgerListSchema,
   [APIName.SIGN_IN]: nullAPISchema,
   [APIName.SIGN_OUT]: nullAPISchema,
+  [APIName.TRIAL_BALANCE_EXPORT]: nullAPISchema,
 };
