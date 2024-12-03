@@ -86,7 +86,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   useEffect(() => {
     (async () => {
       const performSplitFirstBlock = async () => {
-        const splitPages = await splitTableRows(firstTableRows, 10); // Info: (20241130 - Anna) 等待分頁完成
+        const splitPages = await splitTableRows(firstTableRows, 8); // Info: (20241130 - Anna) 等待分頁完成
         setFirstBlockSplitPages(splitPages); // Info: (20241130 - Anna) 更新狀態
       };
 
@@ -97,7 +97,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   useEffect(() => {
     (async () => {
       const performSplitSecondBlock = async () => {
-        const splitPages = await splitTableRows(secondTableRows, 10); // Info: (20241130 - Anna) 等待分頁完成
+        const splitPages = await splitTableRows(secondTableRows, 8); // Info: (20241130 - Anna) 等待分頁完成
         setSecondBlockSplitPages(splitPages); // Info: (20241130 - Anna) 更新狀態
       };
 
@@ -132,7 +132,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   // Info: (20241120 - Anna)  確保表格分頁後保留表頭
   const secondTableHeaders = (
     <tr className="text-neutral-400">
-      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+      <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
         代號
       </th>
       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">

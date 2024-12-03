@@ -409,25 +409,36 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
               {item.code}
             </td>
-            <td
+            {/* <td
               className={`flex items-center justify-between ${
                 item.children && item.children.length > 0 && !isSubAccountsCollapsed[item.code]
-                  ? ''
+                  ? 'border-b'
                   : 'border-b'
               } border-stroke-brand-secondary-soft p-10px text-sm`}
+            > */}
+            <td
+              // Info: (20241203 - Anna) 移除條件判斷，始終保留 border-b
+              className="flex items-center justify-between border-b border-stroke-brand-secondary-soft p-10px text-sm"
             >
               {item.name}
               {/* Info: (20241021 - Anna) 如果有 children 才顯示 CollapseButton */}
-              {item.children && item.children.length > 0 && (
-                <CollapseButton
-                  className="print:hidden"
-                  // Info: (20241017 - Anna) 指定 item 的 code 作為參數
-                  onClick={() => toggleSubAccounts(item.code)}
-                  // Info: (20241017 - Anna) 依據每個 item 的狀態決定是否展開
-                  isCollapsed={isSubAccountsCollapsed[item.code] ?? true}
-                  buttonType="orange"
-                />
-              )}
+              {item.children &&
+                item.children.filter(
+                  (child) =>
+                    child.curPeriodAmountString !== '-' ||
+                    child.curPeriodPercentageString !== '-' ||
+                    child.prePeriodAmountString !== '-' ||
+                    child.prePeriodPercentageString !== '-'
+                ).length > 0 && (
+                  <CollapseButton
+                    className="print:hidden"
+                    // Info: (20241017 - Anna) 指定 item 的 code 作為參數
+                    onClick={() => toggleSubAccounts(item.code)}
+                    // Info: (20241017 - Anna) 依據每個 item 的狀態決定是否展開
+                    isCollapsed={isSubAccountsCollapsed[item.code] ?? true}
+                    buttonType="orange"
+                  />
+                )}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
               {item.curPeriodAmountString}
@@ -446,38 +457,47 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           {!isSubAccountsCollapsed[item.code] &&
             item.children &&
             item.children.length > 0 &&
-            item.children.map((child) => (
-              <tr key={`sub-accounts-${child.code}`}>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-sm"></td>
-                <td className="items-center border border-stroke-brand-secondary-soft p-10px text-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="justify-start">
-                      <span>{child.code}</span>
-                      <span className="ml-2">{child.name}</span>
-                    </div>
-                    {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給
+            item.children
+              // Info: (20241203 - Anna) 過濾掉數值為 "0" 或 "-" 的子科目
+              .filter(
+                (child) =>
+                  child.curPeriodAmountString !== '-' ||
+                  child.curPeriodPercentageString !== '-' ||
+                  child.prePeriodAmountString !== '-' ||
+                  child.prePeriodPercentageString !== '-'
+              )
+              .map((child) => (
+                <tr key={`sub-accounts-${child.code}`}>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-sm"></td>
+                  <td className="items-center border border-t-0 border-stroke-brand-secondary-soft p-10px text-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="justify-start">
+                        <span>{child.code}</span>
+                        <span className="ml-2">{child.name}</span>
+                      </div>
+                      {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給
                     BalanceDetailsButton，用於顯示彈出視窗的標題 */}
-                    <BalanceDetailsButton
-                      accountName={child.name}
-                      accountId={child.accountId}
-                      className="print:hidden"
-                    />
-                  </div>
-                </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                  {child.curPeriodAmountString}
-                </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                  {child.curPeriodPercentageString}
-                </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                  {child.prePeriodAmountString}
-                </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                  {child.prePeriodPercentageString}
-                </td>
-              </tr>
-            ))}
+                      <BalanceDetailsButton
+                        accountName={child.name}
+                        accountId={child.accountId}
+                        className="print:hidden"
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                    {child.curPeriodAmountString}
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                    {child.curPeriodPercentageString}
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                    {child.prePeriodAmountString}
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                    {child.prePeriodPercentageString}
+                  </td>
+                </tr>
+              ))}
         </React.Fragment>
       );
     });
@@ -537,7 +557,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
               <tr className="print:hidden">
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   代號
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
@@ -582,7 +602,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <table className="w-full border-collapse bg-white">
             <thead>
               <tr className="print:hidden">
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   代號
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
@@ -807,8 +827,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         >
           {ItemSummary}
           {ItemDetail}
-          {ProportionalTable}
-          {AssetItem}
+          {/* {ProportionalTable} Todo: (20241203 - Anna) 圖表有問題 */}
+          {/* {AssetItem} Todo: (20241203 - Anna) 圖表有問題 */}
           {TurnoverDay}
         </BalanceSheetA4Template>
       </div>

@@ -13,7 +13,13 @@
     "BEGINNING": "起始日",
     "MIDTERM": "期中",
     "ENDING": "结束日",
-    "TWD": "新台币"
+    "TWD": "新台币",
+    "VOUCHER_DATE": "传票日期",
+    "NOTE": "备注",
+    "VOUCHER_NO": "凭证号码",
+    "ISSUER": "制单人",
+    "CREDIT": "贷方",
+    "DEBIT": "借方"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "最新的 TideBit ",

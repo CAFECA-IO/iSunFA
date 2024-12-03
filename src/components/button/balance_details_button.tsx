@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import { VoucherType } from '@/constants/account';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
@@ -17,6 +17,7 @@ import FilterSection from '@/components/filter_section/filter_section';
 import { IPaginatedData } from '@/interfaces/pagination';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
+import { useReactToPrint } from 'react-to-print';
 
 // Info: (20241107 - Anna) 接收父層傳入的科目名稱作為 prop
 interface BalanceDetailsButtonProps {
@@ -61,6 +62,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
 }) => {
   const { t } = useTranslation(['common', 'reports', 'journal']);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用彈窗內容
   const [shouldFetch, setShouldFetch] = useState(false); // Info: (20241107 - Anna) 控制是否應該請求資料
 
   const [displayedVoucherList, setDisplayedVoucherList] = useState<IVoucherForSingleAccount[]>([]); // Info: (20241107 - Anna) State for API data
@@ -87,6 +89,21 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
     }
   }, [isModalVisible, shouldFetch, params]);
 
+  const handlePrint = useReactToPrint({
+    contentRef: modalRef, // Info: (20241203 - Anna) 指定需要打印的內容 Ref
+    documentTitle: `${accountName} - 科目餘額表`,
+    onBeforePrint: async () => {
+      // eslint-disable-next-line no-console
+      console.log('Preparing to print the modal content...');
+      return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
+    },
+    onAfterPrint: async () => {
+      // eslint-disable-next-line no-console
+      console.log('Printing completed.');
+      return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
+    },
+  });
+
   // Info: (20241003 - Anna) 切換顯示狀態
   const handleShowModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -104,7 +121,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
 
   // Info: (20241003 - Anna) 日期排序按鈕
   const displayedDate = SortingButton({
-    string: t('journal:VOUCHER.VOUCHER_DATE'),
+    string: t('reports:REPORTS.VOUCHER_DATE'),
     sortOrder: dateSort,
     setSortOrder: setDateSort,
   });
@@ -113,7 +130,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
     <div>
       <Button
         onClick={handleShowModal} // Info: (20241107 - Anna) 點擊時才觸發 handleShowModal，顯示詳細資料的按鈕
-        className={`cursor-pointer bg-transparent px-0 py-0 text-support-baby-600 underline hover:bg-transparent ${className || ''}`}
+        className={`cursor-pointer bg-transparent px-6px py-0 text-support-baby-600 underline hover:bg-transparent ${className || ''}`}
       >
         {t('reports:AUDIT_REPORT.DETAILED_INFORMATION')}
       </Button>
@@ -136,8 +153,8 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
             </div>
             <div className="my-auto mt-10 flex flex-col justify-end self-stretch">
               <div className="flex justify-end gap-3">
-                <DownloadButton onClick={() => {}} />
-                <PrintButton onClick={() => {}} disabled={false} />
+                <DownloadButton onClick={() => {}} disabled />
+                <PrintButton onClick={handlePrint} disabled={false} />
               </div>
             </div>
             <div className="mt-4 flex justify-center border-stroke-neutral-quaternary">
@@ -159,30 +176,36 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
               {displayedVoucherList.length === 0 ? (
                 <SkeletonList count={5} />
               ) : (
-                <div className="table w-full overflow-hidden rounded-lg border border-neutral-100 bg-surface-neutral-surface-lv2 shadow-md">
+                <div
+                  className="table w-full overflow-hidden rounded-lg border border-neutral-100 bg-surface-neutral-surface-lv2 shadow-md"
+                  ref={modalRef}
+                >
                   {/* Info: (20241003 - Anna) 表頭 */}
                   <div className="table-header-group h-60px border-b bg-surface-neutral-surface-lv1 text-sm font-normal text-text-neutral-tertiary">
                     <div className="table-row">
-                      <div className={`${tableCellStyles} border-r`}>
+                      <div className={`${tableCellStyles} border-r print:border-b`}>
                         <div className="flex w-160px items-center">
-                          <div className="ml-4 w-32px text-center align-middle">
+                          <div className="ml-4 w-32px text-center align-middle print:hidden">
                             <input type="checkbox" className={checkboxStyle} />
                           </div>
                           {/* Info: (20241003 - Anna) 日期排序按鈕 */}
                           {displayedDate}
                         </div>
                       </div>
-                      <div className={`${tableCellStyles} w-80px border-r`}>
+                      <div className={`${tableCellStyles} w-80px border-r print:border-b`}>
                         {t('common:COMMON.TYPE')}
                       </div>
-                      <div className={`${tableCellStyles} w-236px border-r`}>
-                        {t('journal:VOUCHER.NOTE')}
+                      <div className={`${tableCellStyles} w-236px border-r print:border-b`}>
+                        {t('reports:REPORTS.NOTE')}
                       </div>
-                      <th className={`${tableCellStyles} w-236px border-r font-normal`} colSpan={2}>
+                      <th
+                        className={`${tableCellStyles} w-236px border-r font-normal print:border-b`}
+                        colSpan={2}
+                      >
                         {t('reports:TAX_REPORT.AMOUNT')}
                       </th>
-                      <div className={`${tableCellStyles} w-236px`}>
-                        {t('journal:VOUCHER.VOUCHER_NO')} & {t('journal:VOUCHER.ISSUER')}
+                      <div className={`${tableCellStyles} w-236px print:border-b`}>
+                        {t('reports:REPORTS.VOUCHER_NO')} & {t('reports:REPORTS.ISSUER')}
                       </div>
                     </div>
                   </div>
@@ -191,13 +214,14 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                     {displayedVoucherList.map((voucher) => (
                       <div className="table-row" key={voucher.id}>
                         <div className={tableCellStyles}>
-                          <div className="flex items-center justify-between">
-                            <div className="ml-4 text-center align-middle">
+                          <div className="flex items-center justify-between print:justify-center">
+                            <div className="ml-4 text-center align-middle print:hidden">
                               <input type="checkbox" className={checkboxStyle} />
                             </div>
+                            {/* Info: (20241203 - Anna) 在列印模式下使用 print-center */}
                             <div className="mb-2 mr-6 mt-4">
                               {/* Info: (20241003 - Anna) 使用 CalendarIcon 組件顯示日期 */}
-                              <CalendarIcon timestamp={voucher.date} />
+                              <CalendarIcon timestamp={voucher.date} unRead={false} />
                             </div>
                           </div>
                         </div>
@@ -219,7 +243,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                               <div
                                 className={`h-6px w-6px rounded border-3px ${lineItem.debit ? 'border-badge-text-success-solid' : 'border-badge-text-error-solid'}`}
                               ></div>
-                              <p>{t(`journal:JOURNAL.${lineItem.debit ? 'DEBIT' : 'CREDIT'}`)}</p>
+                              <p>{t(`reports:REPORTS.${lineItem.debit ? 'DEBIT' : 'CREDIT'}`)}</p>
                             </div>
                           ))}
                         </div>
@@ -244,7 +268,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                               alt="avatar"
                               width={14}
                               height={14}
-                              className="rounded-full"
+                              className="rounded-full print:hidden"
                             />
                             <p>{voucher.issuer.name}</p>
                           </div>
