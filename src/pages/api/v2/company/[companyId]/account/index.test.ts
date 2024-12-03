@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v2/company/[companyId]/account/index';
 import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
-import { accountGetV2Schema } from '@/lib/utils/zod_schema/account';
+import { accountGetV2Schema, accountPostV2Schema } from '@/lib/utils/zod_schema/account';
 
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
@@ -53,7 +53,7 @@ describe('company/[companyId]/account integration test', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
-  describe('Get list certificate', () => {
+  describe('Get list Account', () => {
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},
@@ -86,33 +86,34 @@ describe('company/[companyId]/account integration test', () => {
   });
 
   // Info: (20241122 - tzuhan) @Murky comment this test for testing
-  // xdescribe('Post certificate', () => {
-  //   it('should return data match frontend validator', async () => {
-  //     req = {
-  //       headers: {},
-  //       query: {
-  //         companyId: '1000',
-  //       },
-  //       body: {
-  //         fileIds: [1009],
-  //       },
-  //       method: 'POST',
-  //       json: jest.fn(),
-  //     } as unknown as jest.Mocked<NextApiRequest>;
+  describe('Post Sub Account', () => {
+    it('should return data match frontend validator', async () => {
+      req = {
+        headers: {},
+        query: {
+          companyId: '1000',
+        },
+        body: {
+          accountId: 1601,
+          name: 'test',
+        },
+        method: 'POST',
+        json: jest.fn(),
+      } as unknown as jest.Mocked<NextApiRequest>;
 
-  //     res = {
-  //       status: jest.fn().mockReturnThis(),
-  //       json: jest.fn(),
-  //     } as unknown as jest.Mocked<NextApiResponse>;
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as jest.Mocked<NextApiResponse>;
 
-  //     const outputValidator = certificatePostSchema.frontend;
+      const outputValidator = accountPostV2Schema.frontend;
 
-  //     await handler(req, res);
+      await handler(req, res);
 
-  //     // Info: (20241105 - Murky) res.json的回傳值
-  //     const apiResponse = res.json.mock.calls[0][0];
-  //     const { success } = outputValidator.safeParse(apiResponse.payload);
-  //     expect(success).toBe(true);
-  //   });
-  // });
+      // Info: (20241105 - Murky) res.json的回傳值
+      const apiResponse = res.json.mock.calls[0][0];
+      const { success } = outputValidator.safeParse(apiResponse.payload);
+      expect(success).toBe(true);
+    });
+  });
 });

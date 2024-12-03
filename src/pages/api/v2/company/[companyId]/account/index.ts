@@ -1,13 +1,14 @@
 import { APIName } from '@/constants/api_connection';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IPaginatedAccount } from '@/interfaces/accounting_account';
+import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IResponseData } from '@/interfaces/response_data';
 import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_factory';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { loggerError } from '@/lib/utils/logger_back';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { accountAPIPostUtils as postUtils } from '@/pages/api/v2/company/[companyId]/account/route_utils';
 
 export const handleGetRequest: IHandleRequest<
   APIName.ACCOUNT_LIST,
@@ -64,7 +65,57 @@ export const handleGetRequest: IHandleRequest<
   };
 };
 
-type APIResponse = IPaginatedAccount | null;
+export const handlePostRequest: IHandleRequest<
+  APIName.CREATE_NEW_SUB_ACCOUNT,
+  IAccount | null
+> = async ({ body, session }) => {
+  const { companyId, userId } = session;
+  const { accountId, name } = body;
+  let payload: IAccount | null = null;
+  const nowInSecond = getTimestampNow();
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+
+  try {
+    const parentAccount = await postUtils.getParentAccountFromPrisma({
+      accountId,
+      companyId,
+    });
+
+    const lastSubAccount = await postUtils.getLastSubAccountFromPrisma(parentAccount);
+    const newCode = postUtils.getNewCode({
+      parentAccount,
+      latestSubAccount: lastSubAccount,
+    });
+    const newName = postUtils.getNewName({
+      parentAccount,
+      name,
+    });
+
+    const newSubAccount = await postUtils.createNewSubAccountInPrisma({
+      parentAccount,
+      nowInSecond,
+      companyId,
+      newCode,
+      newName,
+    });
+
+    payload = newSubAccount;
+    statusMessage = STATUS_MESSAGE.CREATED;
+  } catch (error) {
+    const errorInfo = {
+      userId,
+      errorType: 'postAccounts failed',
+      errorMessage: 'Func. postAccounts in company/companyId/account/index.ts failed',
+    };
+    loggerError(errorInfo);
+  }
+  return {
+    statusMessage,
+    payload,
+  };
+};
+
+type APIResponse = IPaginatedAccount | IAccount | null;
 
 const methodHandlers: {
   [key: string]: (
@@ -76,6 +127,8 @@ const methodHandlers: {
   }>;
 } = {
   GET: (req, res) => withRequestValidation(APIName.ACCOUNT_LIST, req, res, handleGetRequest),
+  POST: (req, res) =>
+    withRequestValidation(APIName.CREATE_NEW_SUB_ACCOUNT, req, res, handlePostRequest),
 };
 
 export default async function handler(

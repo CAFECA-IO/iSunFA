@@ -246,7 +246,7 @@ export enum APIPath {
   NEWS_GET_BY_ID = `${apiPrefixV2}/news/:newsId`,
   KYC_UPLOAD = `${apiPrefixV2}/company/:companyId/kyc`,
   ACCOUNT_GET_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
-  CREATE_NEW_SUB_ACCOUNT = `${apiPrefixV2}/company/:companyId/accounting_setting/account`,
+  CREATE_NEW_SUB_ACCOUNT = `${apiPrefixV2}/company/:companyId/account`,
   UPDATE_ACCOUNT_INFO_BY_ID = `${apiPrefixV2}/company/:companyId/account/:accountId`,
   DELETE_ACCOUNT_BY_ID = `${apiPrefixV2}/company/:companyId/account/:accountId`,
   TRANSFER_OWNER = `${apiPrefix}/company/:companyId/transfer_owner`,

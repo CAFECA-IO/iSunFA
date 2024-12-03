@@ -227,7 +227,7 @@ export async function findLatestSubAccountInPrisma(parentAccount: Account) {
   try {
     latestSubAccount = await prisma.account.findFirst({
       where: {
-        parentCode: parentAccount.code,
+        parentId: parentAccount.id,
       },
       orderBy: {
         createdAt: SortOrder.DESC,
@@ -283,5 +283,71 @@ export async function fuzzySearchAccountByName(name: string) {
     });
   }
 
+  return account;
+}
+
+export async function createAccountInPrisma(options: {
+  nowInSecond: number;
+  companyId: number;
+  system: string;
+  type: string;
+  debit: boolean;
+  liquidity: boolean;
+  code: string;
+  name: string;
+  forUser: boolean;
+  parentCode: string;
+  rootCode: string;
+  level: number;
+  parentId: number;
+  rootId: number;
+  note: string | null;
+}) {
+  const {
+    companyId,
+    system,
+    type,
+    debit,
+    liquidity,
+    code,
+    name,
+    forUser,
+    parentCode,
+    rootCode,
+    level,
+    parentId,
+    rootId,
+    note,
+    nowInSecond,
+  } = options;
+  let account: Account | null = null;
+  try {
+    account = await prisma.account.create({
+      data: {
+        companyId,
+        system,
+        type,
+        debit,
+        liquidity,
+        code,
+        name,
+        forUser,
+        parentCode,
+        rootCode,
+        level,
+        parentId,
+        rootId,
+        note,
+        createdAt: nowInSecond,
+        updatedAt: nowInSecond,
+      },
+    });
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Create account in createAccountInPrisma failed',
+      errorMessage: error as Error,
+    });
+  }
   return account;
 }

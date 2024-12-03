@@ -86,3 +86,17 @@ export const accountGetV2Schema = {
   outputSchema: paginatedDataSchema(IAccountValidator),
   frontend: paginatedDataSchema(IAccountValidator),
 };
+
+const accountPostBodyV2Schema = z.object({
+  accountId: z.number(),
+  name: z.string(),
+});
+
+export const accountPostV2Schema = {
+  input: {
+    querySchema: nullSchema,
+    bodySchema: accountPostBodyV2Schema,
+  },
+  outputSchema: IAccountValidator.strip(), // Info: (20241203 - Murky)  多的部分會被刪掉要用stript 不是strict
+  frontend: IAccountValidator,
+};
