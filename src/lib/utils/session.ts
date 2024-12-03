@@ -23,10 +23,10 @@ const dummyGetSession = async (req: NextApiRequest, res: NextApiResponse) => {
       path: '/',
       secure: true,
     },
-    userId: 10000001, // 我的帳號
-    companyId: 10000002, // 我的第一家公司
+    userId: 10000006, // Info: (20241112 - Anna)
+    companyId: 10000007, // Info: (20241112 - Anna)
     challenge: 'dummy',
-    roleId: 1006, // 記帳士
+    roleId: 1006,
   };
   return sessionData;
 };

@@ -29,18 +29,18 @@ function IncomeStatementReportTableRow({
 
   return (
     <tr key={key} className="h-40px" data-key={key}>
-      <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{displayCode}</td>
-      <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">{name}</td>
-      <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+      <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{displayCode}</td>
+      <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-sm">{name}</td>
+      <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
         {displayCurPeriodAmount}
       </td>
-      <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+      <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
         {displayCurPeriodPercentage}
       </td>
-      <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+      <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
         {displayPrePeriodAmount}
       </td>
-      <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+      <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
         {displayPrePeriodPercentage}
       </td>
     </tr>
