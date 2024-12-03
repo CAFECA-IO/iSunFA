@@ -220,7 +220,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     // eslint-disable-next-line no-console
     console.log('呼叫 goBackToOriginalPath, redirectPath:', redirectPath);
 
-    if (redirectPath) {
+    if (redirectPath && redirectPath !== ISUNFA_ROUTE.LOGIN) {
       router.push(redirectPath);
     } else {
       router.push(ISUNFA_ROUTE.DASHBOARD);
@@ -266,11 +266,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     // Deprecated: (20241111 - Liz)
     // eslint-disable-next-line no-console
-    console.log('call signOut 登出並且清除 user context 所有狀態');
+    console.log('call signOut 登出並且清除 user context 所有狀態 以及 localStorage');
 
     // Info: (20241127 - Liz)  清除 localStorage 中的資料
     localStorage.removeItem('userId');
     localStorage.removeItem('expired_at');
+    localStorage.removeItem('redirectPath');
 
     await signoutAPI(); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
     clearStates(); // Info: (20241004 - Liz) 清除 context 中的狀態
@@ -278,54 +279,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const isProfileFetchNeeded = () => {
+    // Info: (20240822-Tzuhan) 如果 state 中沒有用戶資料，但 localStorage 中有記錄，則應該重新獲取 profile
+    // Info: (20240822-Tzuhan) 如果 expiredAt 未過期，應該重新獲取 profile
+    // Info: (20240822-Tzuhan) 如果 state 中有用戶資料，且 localStorage 中沒有記錄，則應該重新獲取 profile
+    // Info: (20240822-Tzuhan) 如果 state 和 localStorage 中都沒有用戶資料，則應該重新獲取 profile
+    // Info: (20240822-Tzuhan) 以上情況都不滿足，則不需要重新獲取 profile
+    // Info: (20241203 - Liz) 基於以上的邏輯，將程式碼簡化，先判斷 session 是否過期，再判斷是否有使用者資料以及 localStorage 資料，最後回傳結果， true 表示需要重新獲取使用者資料， false 表示不需要。
+
     const userId = localStorage.getItem('userId');
     const expiredAt = localStorage.getItem('expired_at');
     const isUserAuthAvailable = !!userAuthRef.current;
-    // Deprecated: (20241108 - Liz)
-    // eslint-disable-next-line no-console
-    console.log(
-      '執行 isProfileFetchNeeded, 確認目前資料: localStorage 存的 userId:',
-      userId,
-      ' / localStorage 存的 expiredAt:',
-      expiredAt,
-      ' / user context 是否有 userAuth 資料:',
-      isUserAuthAvailable
-    );
+    const hasLocalStorageData = userId && expiredAt;
+    const isSessionExpired = expiredAt && Date.now() >= Number(expiredAt);
 
-    // Info: (20240822-Tzuhan) 如果 state 中沒有用戶資料，且 localStorage 中有記錄，則應該重新獲取 profile
-    if (!isUserAuthAvailable && userId && expiredAt) {
-      // Info: (20240822-Tzuhan) 如果 expiredAt 未過期，應該重新獲取 profile
-      if (Date.now() < Number(expiredAt)) {
-        return true;
-      } else {
-        // Deprecated: (20241108 - Liz)
-        // eslint-disable-next-line no-console
-        console.log(
-          '執行 isProfileFetchNeeded 並且 !isUserAuthAvailable && userId && expiredAt 並且 expiredAt 過期，執行 signOut'
-        );
-        signOut();
-        return false;
-      }
+    if (isSessionExpired) {
+      signOut();
+      return false;
     }
-
-    // Info: (20240822-Tzuhan) 如果 state 中有用戶資料，且 localStorage 中沒有記錄，則應該重新獲取 profile
-    if (isUserAuthAvailable && (!userId || !expiredAt)) {
-      // Deprecated: (20241108 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('執行 isProfileFetchNeeded 並且 isUserAuthAvailable && (!userId || !expiredAt)');
-      return true;
-    }
-
-    // Info: (20240822-Tzuhan) 如果 state 和 localStorage 中都沒有用戶資料，則應該重新獲取 profile
-    if (!isUserAuthAvailable && (!userId || !expiredAt)) {
-      // Deprecated: (20241108 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('執行 isProfileFetchNeeded 並且 !isUserAuthAvailable && (!userId || !expiredAt');
-      return true;
-    }
-
-    // Info: (20240822-Tzuhan) 以上情況都不滿足，則不需要重新獲取 profile
-    return false;
+    return !(isUserAuthAvailable && hasLocalStorageData);
   };
 
   // ===============================================================================
