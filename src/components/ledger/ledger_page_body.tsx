@@ -8,9 +8,8 @@ import { useTranslation } from 'next-i18next';
 import { IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-// import { ILedgerPayload } from '@/interfaces/ledger';
+import { ILedgerPayload } from '@/interfaces/ledger';
 import { useUserCtx } from '@/contexts/user_context';
-import { ILedgerApiResponse } from '@/interfaces/ledger';
 
 // // Info: (20241105 - Anna) 定義完整的 API 回應結構
 // interface ILedgerApiResponse {
@@ -50,10 +49,10 @@ const LedgerPageBody = () => {
   });
   const [selectedStartAccountNo, setSelectedStartAccountNo] = useState<string>('');
   const [selectedEndAccountNo, setSelectedEndAccountNo] = useState<string>('');
-  const [ledgerData, setLedgerData] = useState<ILedgerApiResponse | null>(null);
+  const [ledgerData, setLedgerData] = useState<ILedgerPayload | null>(null);
 
   const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
-  const { trigger: fetchLedgerDataAPI, isLoading } = APIHandler<ILedgerApiResponse>(
+  const { trigger: fetchLedgerDataAPI, isLoading } = APIHandler<ILedgerPayload>(
     APIName.LEDGER_LIST
   );
 
@@ -97,8 +96,6 @@ const LedgerPageBody = () => {
             pageSize: 10,
           },
         });
-        // eslint-disable-next-line no-console
-        console.log('後端回傳:', data); //  Info: (20241203 -Anna) 檢查返回數據
         setLedgerData(data);
       };
 
@@ -128,10 +125,6 @@ const LedgerPageBody = () => {
       });
 
       if (accountTitleList) {
-        // Deprecated: (20241105 - Anna) 查看原始資料
-        // eslint-disable-next-line no-console
-        console.log('Account title list received:', accountTitleList);
-
         // Info: (20241105 - Anna) 初始化臨時陣列來分類不同類型的會計科目
         const assets: string[] = [];
         const liabilities: string[] = [];
@@ -225,15 +218,6 @@ const LedgerPageBody = () => {
     getAccountList();
   }, [selectedCompany]);
 
-  useEffect(() => {
-    if (ledgerData) {
-      // eslint-disable-next-line no-console
-      console.log('拿完資料後，更新後的 ledgerData 狀態:', ledgerData);
-      // eslint-disable-next-line no-console
-      console.log('拿完資料後，更新後的 ledgerData 狀態Payolad:', ledgerData?.payload);
-    }
-  }, [ledgerData]);
-
   const handleReportTypeChange = (type: ReportType) => {
     setSelectedReportType(type);
   };
@@ -315,17 +299,9 @@ const LedgerPageBody = () => {
             incomeOptions={incomeOptions}
             otherComprehensiveIncomeOptions={otherComprehensiveIncomeOptions}
             onRangeSelected={(startAccountNo, endAccountNo) => {
-              // Deprecate: (20241118 - Anna) debug
-              // eslint-disable-next-line no-console
-              console.log('Selected Account Range:', startAccountNo, endAccountNo);
               setSelectedStartAccountNo(startAccountNo);
               setSelectedEndAccountNo(endAccountNo);
             }}
-            // onRangeSelected={(from, to) => {
-            // Deprecate: (20241118 - Anna) debug
-            // eslint-disable-next-line no-console
-            //   console.log(`Selected From: ${from}, To: ${to}`); // Info: (20241104 - Anna) Confirm data flow here if needed
-            // }}
           />
         </div>
 

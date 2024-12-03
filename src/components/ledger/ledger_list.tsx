@@ -8,13 +8,12 @@ import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
-// import { ILedgerPayload } from '@/interfaces/ledger';
+import { ILedgerPayload } from '@/interfaces/ledger';
 import Image from 'next/image';
 import { SkeletonList } from '@/components/skeleton/skeleton';
-import { ILedgerApiResponse } from '@/interfaces/ledger';
 
 interface LedgerListProps {
-  ledgerData: ILedgerApiResponse | null; // Info: (20241118 - Anna) 接收 API 數據
+  ledgerData: ILedgerPayload | null; // Info: (20241118 - Anna) 接收 API 數據
   loading: boolean; // Info: (20241118 - Anna) 接收父组件傳遞的loading狀態
 }
 
@@ -33,9 +32,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
 
   // Info: (20241118 - Anna) 確保 ledgerItemsData 是一個有效的陣列
   // const ledgerItemsData = Array.isArray(ledgerData?.items?.data) ? ledgerData.items.data : [];
-  const ledgerItemsData = Array.isArray(ledgerData?.payload?.items?.data)
-    ? ledgerData.payload.items.data
-    : [];
+  const ledgerItemsData = Array.isArray(ledgerData?.items?.data) ? ledgerData.items.data : [];
 
   // eslint-disable-next-line no-console
   console.log('Ledger Data in LedgerList:', ledgerData);
@@ -189,13 +186,13 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
           {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          {formatNumber(ledgerData?.payload?.total?.totalDebitAmount || 0)}
+          {formatNumber(ledgerData?.total?.totalDebitAmount || 0)}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
           {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          {formatNumber(ledgerData?.payload?.total?.totalCreditAmount || 0)}
+          {formatNumber(ledgerData?.total?.totalCreditAmount || 0)}
         </div>
       </div>
 
