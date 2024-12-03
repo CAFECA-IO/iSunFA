@@ -34,18 +34,43 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
   const pages = React.Children.toArray(children);
 
   // Info: (20241120 - Anna) 使用遞迴方式將子節點展平
+  //   const flattenChildren = (nodes: React.ReactNode): React.ReactNode[] => {
+  //     const result: React.ReactNode[] = [];
+  //     React.Children.forEach(nodes, (node) => {
+  //       if (React.isValidElement(node) && node.props?.children) {
+  //         // Info: (20241130 - Anna) 僅遞迴展平嵌套的子節點
+  //         result.push(node, ...flattenChildren(node.props.children));
+  //       } else {
+  //         result.push(node); // Info: (20241130 - Anna) 保留完整的 React 元素或文本節點
+  //       }
+  //     });
+  //     return result;
+  //   };
   const flattenChildren = (nodes: React.ReactNode): React.ReactNode[] => {
     const result: React.ReactNode[] = [];
     React.Children.forEach(nodes, (node) => {
-      if (React.isValidElement(node) && node.props?.children) {
-        // Info: (20241130 - Anna) 僅遞迴展平嵌套的子節點
-        result.push(node, ...flattenChildren(node.props.children));
+      if (React.isValidElement(node)) {
+        if (node.props?.children) {
+          result.push(node, ...flattenChildren(node.props.children)); // 遞迴處理子節點
+        } else {
+          result.push(node); // 添加合法的 React 節點
+        }
+      } else if (typeof node === 'string' || typeof node === 'number') {
+        // 保留可渲染的基本類型
+        result.push(node);
       } else {
-        result.push(node); // Info: (20241130 - Anna) 保留完整的 React 元素或文本節點
+        // 遇到無法渲染的對象，記錄日誌
+        // eslint-disable-next-line no-console
+        console.warn('Invalid ReactNode detected and skipped:', node);
       }
     });
+
+    // 在返回之前記錄結果
+    // eslint-disable-next-line no-console
+    console.log('Flattened children:', result);
     return result;
   };
+
   // Info: (20241120 - Anna) 新增分頁邏輯
   const splitTableRows = (rows: React.ReactNode[], rowsPerPage: number): Promise<ReactNode[][]> => {
     return new Promise((resolve) => {
@@ -62,7 +87,10 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
     });
   };
   // Info: (20241120 - Anna) 處理 pages[0] 表格分頁
-  const firstTableRows = flattenChildren((pages[0] as React.ReactElement)?.props?.children);
+  //   const firstTableRows = flattenChildren((pages[0] as React.ReactElement)?.props?.children);
+  const firstTableRows = flattenChildren(
+    React.isValidElement(pages[0]) ? pages[0].props.children : []
+  );
   const FirstBlockSplitPages = splitTableRows(firstTableRows, 10);
   // Deprecated: (20241130 - Anna) remove eslint-disable
   // eslint-disable-next-line no-console
@@ -80,7 +108,10 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
     </table>
   );
   // Info: (20241120 - Anna) 處理 pages[1] 表格分頁
-  const secondTableRows = flattenChildren((pages[1] as React.ReactElement)?.props?.children);
+  //   const secondTableRows = flattenChildren((pages[1] as React.ReactElement)?.props?.children);
+  const secondTableRows = flattenChildren(
+    React.isValidElement(pages[1]) ? pages[1].props.children : []
+  );
   const SecondBlockSplitPages = splitTableRows(secondTableRows, 10);
   // Deprecated: (20241130 - Anna) remove eslint-disable
   // eslint-disable-next-line no-console

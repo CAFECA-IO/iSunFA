@@ -2,7 +2,7 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
-import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
+import { FinancialReport, IncomeStatementOtherInfo, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -17,6 +17,11 @@ import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import { useGlobalCtx } from '@/contexts/global_context';
 import IncomeStatementA4Template from '@/components/income_statement_report_body/income_statement_a4_template';
+
+// Info: (20241024 - Anna) 擴展 FinancialReportItem，新增 children 屬性
+export interface FinancialReportItemWithChildren extends FinancialReportItem {
+  children?: FinancialReportItemWithChildren[]; // 定義 children 屬性
+}
 
 interface IncomeStatementListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
@@ -193,6 +198,25 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
     );
   };
 
+  //  Info: (20241202 - Anna) 如果 children 存在且不為空，則遞迴調用 renderRows
+  const renderRows = (items: FinancialReportItemWithChildren[]): JSX.Element[] => {
+    return items.flatMap((item) => {
+      if (!item.code || !item.name) {
+        // eslint-disable-next-line no-console
+        console.warn('Skipped invalid item:', item);
+        return [];
+      }
+      return [
+        <React.Fragment key={item.code}>
+          {/* Info: (20241202 - Anna) 使用 IncomeStatementReportTableRow 渲染單一行 */}
+          <IncomeStatementReportTableRow {...item} />
+          {/* Info: (20241202 - Anna) 遞迴渲染子項目 */}
+          {item.children && item.children.length > 0 && renderRows(item.children)}
+        </React.Fragment>,
+      ];
+    });
+  };
+
   const ItemSummary = (
     <div id="1" className="relative overflow-hidden">
       {/* Info: (20240723 - Anna) watermark logo */}
@@ -249,12 +273,23 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 </th>
               </tr>
             </thead>
-            <tbody>
+            {/* <tbody>
               {reportFinancial &&
                 reportFinancial.general &&
                 reportFinancial.general
                   .slice(0, 10)
                   .map((value) => <IncomeStatementReportTableRow {...value} />)}
+            </tbody> */}
+            {/* <tbody>
+              {reportFinancial?.general?.slice(0, 10).map((value) => {
+                // eslint-disable-next-line no-console
+                console.log('Value passed to IncomeStatementReportTableRow:(general)', value);
+                return <IncomeStatementReportTableRow key={value.code} {...value} />;
+              })}
+            </tbody> */}
+
+            <tbody>
+              {reportFinancial?.general && renderRows(reportFinancial.general.slice(0, 10))}
             </tbody>
           </table>
         )}
@@ -309,12 +344,22 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 </th>
               </tr>
             </thead>
-            <tbody>
+            {/* <tbody>
               {reportFinancial &&
                 reportFinancial.details &&
                 reportFinancial.details
                   .slice(0, 15)
                   .map((value) => <IncomeStatementReportTableRow {...value} />)}
+            </tbody> */}
+            {/* <tbody>
+              {reportFinancial?.details?.slice(0, 15).map((value) => {
+                // eslint-disable-next-line no-console
+                console.log('Value passed to IncomeStatementReportTableRow:(details)', value);
+                return <IncomeStatementReportTableRow key={value.code} {...value} />;
+              })}
+            </tbody> */}
+            <tbody>
+              {reportFinancial?.details && renderRows(reportFinancial.details.slice(0, 15))}
             </tbody>
           </table>
         )}
