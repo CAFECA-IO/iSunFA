@@ -22,6 +22,15 @@ export interface ILedgerPayload {
   total: ILedgerTotal;
 }
 
+// Info: (20241105 - Anna) 定義完整的 API 回應結構
+export interface ILedgerApiResponse {
+  powerby: string;
+  success: boolean;
+  code: string;
+  message: string;
+  payload: ILedgerPayload; // Info: (20241105 - Anna) 這裡的 payload 使用 ILedgerPayload 類型
+}
+
 export const MOCK_RESPONSE: ILedgerPayload = {
   currencyAlias: 'TWD',
   items: {

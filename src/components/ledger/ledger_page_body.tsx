@@ -8,17 +8,18 @@ import { useTranslation } from 'next-i18next';
 import { IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ILedgerPayload } from '@/interfaces/ledger';
+// import { ILedgerPayload } from '@/interfaces/ledger';
 import { useUserCtx } from '@/contexts/user_context';
+import { ILedgerApiResponse } from '@/interfaces/ledger';
 
-// Info: (20241105 - Anna) 定義完整的 API 回應結構
-interface ILedgerApiResponse {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload: ILedgerPayload; // Info: (20241105 - Anna) 這裡的 payload 使用 ILedgerPayload 類型
-}
+// // Info: (20241105 - Anna) 定義完整的 API 回應結構
+// interface ILedgerApiResponse {
+//   powerby: string;
+//   success: boolean;
+//   code: string;
+//   message: string;
+//   payload: ILedgerPayload; // Info: (20241105 - Anna) 這裡的 payload 使用 ILedgerPayload 類型
+// }
 
 enum ReportType {
   General = 'general',
@@ -96,7 +97,8 @@ const LedgerPageBody = () => {
             pageSize: 10,
           },
         });
-
+        // eslint-disable-next-line no-console
+        console.log('後端回傳:', data); //  Info: (20241203 -Anna) 檢查返回數據
         setLedgerData(data);
       };
 
@@ -223,6 +225,15 @@ const LedgerPageBody = () => {
     getAccountList();
   }, [selectedCompany]);
 
+  useEffect(() => {
+    if (ledgerData) {
+      // eslint-disable-next-line no-console
+      console.log('拿完資料後，更新後的 ledgerData 狀態:', ledgerData);
+      // eslint-disable-next-line no-console
+      console.log('拿完資料後，更新後的 ledgerData 狀態Payolad:', ledgerData?.payload);
+    }
+  }, [ledgerData]);
+
   const handleReportTypeChange = (type: ReportType) => {
     setSelectedReportType(type);
   };
@@ -311,8 +322,8 @@ const LedgerPageBody = () => {
               setSelectedEndAccountNo(endAccountNo);
             }}
             // onRangeSelected={(from, to) => {
-                 // Deprecate: (20241118 - Anna) debug
-                 // eslint-disable-next-line no-console
+            // Deprecate: (20241118 - Anna) debug
+            // eslint-disable-next-line no-console
             //   console.log(`Selected From: ${from}, To: ${to}`); // Info: (20241104 - Anna) Confirm data flow here if needed
             // }}
           />
@@ -320,7 +331,7 @@ const LedgerPageBody = () => {
 
         <div className="h-px w-full bg-neutral-100"></div>
         <LedgerList
-          ledgerData={ledgerData?.payload || null} // Info: (20241118 - Anna) 如果 ledgerData 是 undefined，傳遞 null
+          ledgerData={ledgerData} // Info: (20241118 - Anna) 如果 ledgerData 是 undefined，傳遞 null
           loading={!!isLoading} // Info: (20241118 - Anna) 使用 !! 確保 loading 是 boolean
         />
       </div>
