@@ -18,13 +18,15 @@ interface CertificateFileUploadProps {}
 
 const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   const { userAuth, selectedCompany } = useUserCtx();
-  const [room, setRoom] = useState<IRoom | null>(null);
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
-
+  const [room, setRoom] = useState<IRoom | null>(null);
+  const [getRoomSuccess, setGetRoomSuccess] = useState<boolean | undefined>(undefined);
+  const [getRoomCode, setGetRoomCode] = useState<string | undefined>(undefined);
   const [pusher, setPusher] = useState<Pusher | undefined>(undefined);
   const [channel, setChannel] = useState<Channel | undefined>(undefined);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState<boolean>(false);
+  const { trigger: getRoomAPI } = APIHandler<IRoom>(APIName.ROOM_ADD);
   const { trigger: delectRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
   // const { trigger: getRoomByIdAPI } = APIHandler<IRoom>(APIName.ROOM_GET_BY_ID); // Info: (20241121 - tzuhan) 目前沒有用的，目前用 pusher 傳來的是足夠的
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
@@ -55,12 +57,9 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
     });
   }, []);
 
-  const toggleQRCodeModal = () => {
-    setIsQRCodeModalOpen((prev) => !prev);
-  };
-
-  const createCertificate = useCallback(async (fileId: number) => {
+  const createCertificate = useCallback(async (fileId: number | null) => {
     try {
+      if (!fileId) return;
       const { success: successCreated, data } = await createCertificateAPI({
         params: {
           companyId,
@@ -104,7 +103,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
       };
       setIsQRCodeModalOpen(false);
       setFiles((prev) => [...prev, newFile]);
-      await createCertificate(newFile.id!);
+      await createCertificate(newFile.id);
     },
     []
   );
@@ -120,19 +119,49 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
     });
   }, []);
 
-  const handleRoomCreate = useCallback((roomData: IRoom) => {
-    setRoom(roomData);
-    const pusherInstance = getPusherInstance(userAuth?.id);
-    setPusher(pusherInstance);
+  const handleRoomCreate = useCallback(
+    (roomData: IRoom) => {
+      setRoom(roomData);
+      const pusherInstance = getPusherInstance(userAuth?.id);
+      setPusher(pusherInstance);
 
-    const privateChannel = pusherInstance.subscribe(`${PRIVATE_CHANNEL.ROOM}-${roomData.id}`);
-    setChannel(privateChannel);
-    privateChannel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
-    privateChannel.bind(ROOM_EVENT.DELETE, handleRoomDelete);
-    privateChannel.bind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
-      handleNewFilesComing(data, roomData.id, roomData.password);
-    });
-  }, []);
+      const privateChannel = pusherInstance.subscribe(`${PRIVATE_CHANNEL.ROOM}-${roomData.id}`);
+      // Deprecated: (20241203 - tzuhan) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(
+        `userAuth?.id: ${userAuth?.id} 註冊 privateChannel: ${PRIVATE_CHANNEL.ROOM}-${roomData.id}`,
+        privateChannel
+      );
+      setChannel(privateChannel);
+      privateChannel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
+      privateChannel.bind(ROOM_EVENT.DELETE, handleRoomDelete);
+      privateChannel.bind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
+        handleNewFilesComing(data, roomData.id, roomData.password);
+      });
+    },
+    [userAuth?.id]
+  );
+
+  const getRoom = useCallback(async () => {
+    // Deprecated: (20241203 - tzuhan) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(`getRoom, room: ${room}`);
+    if (room) return;
+    const { success, code, data: newRoom } = await getRoomAPI();
+    setGetRoomSuccess(success);
+    setGetRoomCode(code);
+    if (success && newRoom) {
+      handleRoomCreate(newRoom);
+    }
+  }, [getRoomSuccess]);
+
+  const toggleQRCodeModal = useCallback(() => {
+    setIsQRCodeModalOpen((prev) => !prev);
+    if (!room && !getRoomSuccess) {
+      // Info: (20241203 - tzuhan) 只在首次沒有 room 時調用 getRoom
+      getRoom();
+    }
+  }, [room, getRoomSuccess, getRoom]);
 
   useEffect(() => {
     return () => {
@@ -144,14 +173,15 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
         pusher.disconnect();
       }
     };
-  }, []);
+  }, [channel, pusher]);
 
   return (
     <>
       {isQRCodeModalOpen && (
         <CertificateQRCodeModal
           room={room}
-          handleRoomCreate={handleRoomCreate}
+          success={getRoomSuccess}
+          code={getRoomCode}
           toggleQRCode={toggleQRCodeModal}
         />
       )}
