@@ -59,7 +59,6 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
 
   const createCertificate = useCallback(async (fileId: number | null) => {
     try {
-      if (!fileId) return;
       const { success: successCreated, data } = await createCertificateAPI({
         params: {
           companyId,
@@ -103,7 +102,15 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
       };
       setIsQRCodeModalOpen(false);
       setFiles((prev) => [...prev, newFile]);
-      await createCertificate(newFile.id);
+      if (newFile.id) await createCertificate(newFile.id);
+      else {
+        setFiles((prev) => {
+          const updateFiles = [...prev];
+          const index = updateFiles.findIndex((f) => f.name === newFile.name);
+          updateFiles[index].status = ProgressStatus.FAILED;
+          return prev;
+        });
+      }
     },
     []
   );
