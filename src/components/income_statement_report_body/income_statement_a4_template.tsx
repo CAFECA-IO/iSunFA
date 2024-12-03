@@ -55,20 +55,21 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
 
       if (React.isValidElement(node)) {
         if (node.props?.children) {
-          result.push(node, ...flattenChildren(node.props.children)); // 遞迴處理子節點
+          result.push(node, ...flattenChildren(node.props.children)); // Info: (20241203 - Anna) 遞迴處理子節點
         } else {
-          result.push(node); // 添加合法的 React 節點
+          result.push(node); // Info: (20241203 - Anna) 添加合法的 React 節點
         }
       } else if (typeof node === 'string' || typeof node === 'number') {
-        // 保留可渲染的基本類型
+        // Info: (20241203 - Anna) 保留可渲染的基本類型
         result.push(node);
       } else if (node === null || node === undefined) {
         // ToDo: (20241203 - Liz) 這裡要處理 null 或 undefined 的情況
         result.push(<td key={key}></td>); // Info: (20241203 - Liz) 但好像沒效
       } else {
-        // 遇到無法渲染的對象，記錄日誌
+        // Info: (20241203 - Anna) 遇到無法渲染的對象，記錄日誌
+        // Deprecate: (20241203 - Anna) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.warn('Invalid ReactNode detected and skipped:', node);
+        console.warn('Invalid ReactNode detected and skipped:', node); 
       }
     });
 
