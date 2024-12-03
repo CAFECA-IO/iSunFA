@@ -69,7 +69,7 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
         // Info: (20241203 - Anna) 遇到無法渲染的對象，記錄日誌
         // Deprecate: (20241203 - Anna) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.warn('Invalid ReactNode detected and skipped:', node); 
+        console.warn('Invalid ReactNode detected and skipped:', node);
       }
     });
 
