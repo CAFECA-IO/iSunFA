@@ -150,6 +150,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
     <>
       {isQRCodeModalOpen && (
         <CertificateQRCodeModal
+          room={room}
           handleRoomCreate={handleRoomCreate}
           toggleQRCode={toggleQRCodeModal}
         />

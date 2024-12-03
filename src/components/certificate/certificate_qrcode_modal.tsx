@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { Button } from '@/components/button/button';
@@ -10,18 +10,33 @@ import Image from 'next/image';
 import { IRoom } from '@/interfaces/room';
 
 interface CertificateQRCodeModalProps {
+  room: IRoom | null;
   toggleQRCode: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
   handleRoomCreate: (room: IRoom) => void;
 }
 
 const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
+  room: createdRoom,
   toggleQRCode,
   handleRoomCreate,
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
   const { Canvas } = useQRCode();
-  const { success, data: room, code } = APIHandler<IRoom>(APIName.ROOM_ADD, {}, true);
+  const { trigger: getRoomAPI } = APIHandler<IRoom>(APIName.ROOM_ADD);
+  const [success, setSuccess] = useState<boolean | undefined>(undefined);
+  const [code, setCode] = useState<string | undefined>(undefined);
+  const [room, setRoom] = useState<IRoom | null>(createdRoom);
   const domain = process.env.NEXT_PUBLIC_DOMAIN;
+
+  const getRoom = async () => {
+    const { success: getSuccess, code: getCode, data: newRoom } = await getRoomAPI();
+    setSuccess(getSuccess);
+    setCode(getCode);
+    if (getSuccess && newRoom) {
+      setRoom(newRoom);
+      handleRoomCreate(newRoom);
+    }
+  };
 
   const displayedQRCode = success && room && (
     <div className="mx-20 my-10 flex flex-col items-center">
@@ -62,7 +77,9 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
   const displayedError = success === false && code && <div>{code}</div>;
 
   useEffect(() => {
-    if (room) handleRoomCreate(room);
+    if (!room) {
+      getRoom();
+    }
   }, [room]);
 
   return (
