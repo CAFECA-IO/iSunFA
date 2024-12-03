@@ -53,6 +53,8 @@ export interface IAccountBookNodeJSON extends IAccountNode {
  * 宣告 ILedger 介面，用來描述 Account Book 匯出的 Ledger JSON 格式
  */
 export interface IAccountBookLedgerJSON extends ILineItemEntity {
+  accountingTitle: string;
+  no: string;
   creditAmount: number;
   debitAmount: number;
   balance: number;
