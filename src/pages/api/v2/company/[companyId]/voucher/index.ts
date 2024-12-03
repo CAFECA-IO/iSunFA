@@ -193,9 +193,8 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
       ...voucherInfo
     } = body;
 
-    const { userId } = session;
+    const { userId, companyId } = session;
     // Info: (20241111 - Murky) 暫時先用1002
-    const companyId = 1002;
 
     /**
      * Info: (20241029 - Murky)

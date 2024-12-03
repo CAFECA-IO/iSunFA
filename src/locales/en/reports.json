@@ -13,7 +13,13 @@
     "BEGINNING": "Beginning",
     "MIDTERM": "Midterm",
     "ENDING": "Ending",
-    "TWD": "TWD"
+    "TWD": "TWD",
+    "VOUCHER_DATE": "Voucher Date",
+    "NOTE": "Note",
+    "VOUCHER_NO": "Voucher No",
+    "ISSUER": "Issuer",
+    "CREDIT": "Credit",
+    "DEBIT": "Debit"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "Latest",

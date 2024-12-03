@@ -267,7 +267,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       createNewAccount({
         params: { companyId },
         body: {
-          code: manualAccountOpeningList[0].titleCode,
+          accountId: manualAccountOpeningList[0].id,
           name: manualAccountOpeningList[0].titleName,
         },
       });

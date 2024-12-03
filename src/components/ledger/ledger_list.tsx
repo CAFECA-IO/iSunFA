@@ -31,8 +31,15 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
   // const ledgerItemsData = ledgerData?.items?.data ?? [];
 
   // Info: (20241118 - Anna) 確保 ledgerItemsData 是一個有效的陣列
+  // const ledgerItemsData = Array.isArray(ledgerData?.items?.data) ? ledgerData.items.data : [];
   const ledgerItemsData = Array.isArray(ledgerData?.items?.data) ? ledgerData.items.data : [];
 
+  // Deprecate: (20241203 - Anna) remove eslint-disable
+  // eslint-disable-next-line no-console
+  console.log('Ledger Data in LedgerList:', ledgerData);
+  // Deprecate: (20241203 - Anna) remove eslint-disable
+  // eslint-disable-next-line no-console
+  console.log('Ledger Items Data in LedgerList:', ledgerItemsData);
   // Deprecate: (20241118 - Anna) debug
   // eslint-disable-next-line no-console
   console.log(ledgerItemsData);
