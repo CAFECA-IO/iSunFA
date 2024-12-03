@@ -167,7 +167,7 @@ export const IVoucherForSingleAccountValidator = z.object({
     .min(1)
     .describe('particulars and amount for display'),
   issuer: z.object({
-    avatar: z.string().url().describe('issuer avatar url'),
+    avatar: z.string().describe('issuer avatar url'),
     name: z.string().describe('issuer name'),
   }),
 });

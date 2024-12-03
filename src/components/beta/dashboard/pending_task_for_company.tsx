@@ -57,7 +57,7 @@ const PendingTaskForCompany = () => {
     };
 
     getCompanyPendingTask();
-  }, []);
+  }, [selectedCompany]);
 
   // ToDo: (20241127 - Liz) 目前 API 沒有提供這個欄位的資料，所以先設定為 0
   const PERCENTAGE_FOR_UNARCHIVED_CUSTOMER_DATA = 0;
@@ -71,6 +71,19 @@ const PendingTaskForCompany = () => {
     return <PendingTaskNoData />;
   }
 
+  const isCompanyPendingTaskEmpty =
+    companyPendingTask.missingCertificate.count === 0 &&
+    companyPendingTask.unpostedVoucher.count === 0 &&
+    companyPendingTask.missingCertificatePercentage === 0 &&
+    companyPendingTask.unpostedVoucherPercentage === 0;
+
+  if (isCompanyPendingTaskEmpty) {
+    return <PendingTaskNoData />;
+  }
+
+  const percentageForMissingCertificate = companyPendingTask.missingCertificatePercentage * 100;
+  const percentageForUnpostedVouchers = companyPendingTask.unpostedVoucherPercentage * 100;
+
   return (
     <section className="flex flex-col gap-24px">
       <h3 className="text-xl font-bold text-text-neutral-secondary">
@@ -81,8 +94,8 @@ const PendingTaskForCompany = () => {
       <section className="flex items-center gap-16px">
         <div className="w-160px">
           <DonutChart
-            percentageForMissingCertificate={companyPendingTask.missingCertificatePercentage}
-            percentageForUnpostedVouchers={companyPendingTask.unpostedVoucherPercentage}
+            percentageForMissingCertificate={percentageForMissingCertificate}
+            percentageForUnpostedVouchers={percentageForUnpostedVouchers}
             percentageForUnarchivedCustomerData={PERCENTAGE_FOR_UNARCHIVED_CUSTOMER_DATA}
             isChartForTotal={false}
           />
