@@ -10,6 +10,7 @@ import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
+import packageJson from '@package';
 
 interface IDefaultMenuOption {
   title: string;
@@ -437,6 +438,7 @@ interface SideMenuProps {
 }
 
 const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
+  const { version } = packageJson;
   const { t } = useTranslation(['layout']);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(true);
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
@@ -495,7 +497,7 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
 
           {/* // Info: (20241121 - Liz) Side Menu Footer */}
           <div className="flex flex-col items-center gap-8px">
-            <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta V1.0.0</p>
+            <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta V{version}</p>
 
             {/* // ToDo: (20241121 - Liz) Link 到隱私權政策和服務條款頁面 */}
             <div className="flex gap-8px text-sm font-semibold">
