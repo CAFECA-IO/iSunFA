@@ -1043,9 +1043,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
     return () => {
-      channel.unbind_all();
+      channel.unbind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
       channel.unsubscribe();
-      pusher.disconnect();
+      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
     };
   }, []);
 

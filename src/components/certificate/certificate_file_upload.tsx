@@ -132,32 +132,40 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
 
   const handleRoomCreate = useCallback(
     (roomData: IRoom) => {
+      if (channel) {
+        // Info: (20241203 - tzuhan) 如果已經訂閱過了，就不再訂閱
+        // Dreprecate: (20241203 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log('Channel already subscribed, skipping subscription.');
+        return;
+      }
+
       setRoom(roomData);
       const pusherInstance = getPusherInstance(userAuth?.id);
       setPusher(pusherInstance);
 
       const privateChannel = pusherInstance.subscribe(`${PRIVATE_CHANNEL.ROOM}-${roomData.id}`);
-      // Deprecated: (20241203 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(
-        `userAuth?.id: ${userAuth?.id} 註冊 privateChannel: ${PRIVATE_CHANNEL.ROOM}-${roomData.id}`,
-        privateChannel
-      );
-      if (privateChannel.subscribed) {
+
+      privateChannel.bind('pusher:subscription_succeeded', () => {
+        // Deprecated: (20241203 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log('Pusher channel subscription succeeded.');
         setChannel(privateChannel);
         privateChannel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
         privateChannel.bind(ROOM_EVENT.DELETE, handleRoomDelete);
         privateChannel.bind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
           handleNewFilesComing(data, roomData.id, roomData.password);
         });
-      } else {
+      });
+      privateChannel.bind('pusher:subscription_error', () => {
         toastHandler({
           id: ToastId.PUSHER_FAILED_TO_SUBSCRIBE,
           type: ToastType.WARNING,
-          content: 'Failed to subscribe to the room, try to refresh the page', // ToDo: (20241203 - tzuhan) i18n
+          content:
+            'Failed to subscribe to the room. Please try refreshing the page or contact support.', // Todo: (20241203 - tzuhan) i18n
           closeable: true,
         });
-      }
+      });
     },
     [userAuth?.id]
   );
@@ -180,20 +188,28 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
     if (!room && !getRoomSuccess) {
       // Info: (20241203 - tzuhan) 只在首次沒有 room 時調用 getRoom
       getRoom();
+    } else if (channel && !channel.subscribed) {
+      channel.subscribe();
     }
-  }, [room, getRoomSuccess, getRoom]);
+  }, [room, getRoomSuccess, getRoom, channel]);
 
   useEffect(() => {
     return () => {
       if (channel) {
-        channel.unbind_all();
+        channel.unbind(ROOM_EVENT.JOIN, handleRoomJoin);
+        channel.unbind(ROOM_EVENT.DELETE, handleRoomDelete);
+        if (room) {
+          channel.unbind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
+            handleNewFilesComing(data, room.id, room.password);
+          });
+        }
         channel.unsubscribe();
       }
-      if (pusher) {
-        pusher.disconnect();
+      if (pusher && room) {
+        pusher.unsubscribe(`${PRIVATE_CHANNEL.ROOM}-${room.id}`);
       }
     };
-  }, [channel, pusher]);
+  }, [channel, pusher, room, handleRoomJoin, handleRoomDelete, handleNewFilesComing]);
 
   return (
     <>
