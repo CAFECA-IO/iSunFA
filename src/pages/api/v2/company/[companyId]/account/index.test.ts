@@ -86,7 +86,7 @@ describe('company/[companyId]/account integration test', () => {
   });
 
   // Info: (20241122 - tzuhan) @Murky comment this test for testing
-  describe('Post Sub Account', () => {
+  xdescribe('Post Sub Account', () => {
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},

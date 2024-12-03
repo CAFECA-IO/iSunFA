@@ -67,7 +67,7 @@ export async function findManyAccountsInPrisma({
             ? includeDefaultAccount
               ? [{ companyId }, { companyId: PUBLIC_COMPANY_ID }]
               : [{ companyId }]
-            : [],
+            : [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
       },
       equityType && type === AccountType.EQUITY
         ? {
