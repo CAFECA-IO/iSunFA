@@ -235,6 +235,8 @@ export class AccountBookNode implements IAccountBookNode {
           creditAmount,
           debitAmount,
           balance,
+          accountingTitle: this.name,
+          no: this.code,
         };
         return ledger;
       });

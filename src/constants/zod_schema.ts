@@ -101,6 +101,7 @@ import {
 } from '@/lib/utils/zod_schema/user';
 import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
 import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
+import { accountGetV2Schema, accountPostV2Schema } from '@/lib/utils/zod_schema/account';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -246,7 +247,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.REPORT_GET_V2]: nullAPISchema,
   [APIName.REPORT_GENERATE]: generatePublicReportSchemaV2,
   [APIName.STATUS_INFO_GET]: statusInfoGetSchema,
-  [APIName.ACCOUNT_LIST]: nullAPISchema,
+  [APIName.ACCOUNT_LIST]: accountGetV2Schema,
   [APIName.FILE_UPLOAD]: filePostSchema,
   [APIName.FILE_DELETE]: fileDeleteSchema,
   [APIName.FILE_GET]: fileGetSchema,
@@ -255,7 +256,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.ROLE_UPDATE]: nullAPISchema,
   [APIName.KYC_UPLOAD]: nullAPISchema,
   [APIName.ACCOUNT_GET_BY_ID]: nullAPISchema,
-  [APIName.CREATE_NEW_SUB_ACCOUNT]: nullAPISchema,
+  [APIName.CREATE_NEW_SUB_ACCOUNT]: accountPostV2Schema,
   [APIName.UPDATE_ACCOUNT_INFO_BY_ID]: nullAPISchema,
   [APIName.DELETE_ACCOUNT_BY_ID]: nullAPISchema,
   [APIName.TRANSFER_OWNER]: nullAPISchema,

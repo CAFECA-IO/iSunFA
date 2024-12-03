@@ -11,14 +11,14 @@ import APIHandler from '@/lib/utils/api_handler';
 import { ILedgerPayload } from '@/interfaces/ledger';
 import { useUserCtx } from '@/contexts/user_context';
 
-// Info: (20241105 - Anna) 定義完整的 API 回應結構
-interface ILedgerApiResponse {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload: ILedgerPayload; // Info: (20241105 - Anna) 這裡的 payload 使用 ILedgerPayload 類型
-}
+// // Info: (20241105 - Anna) 定義完整的 API 回應結構
+// interface ILedgerApiResponse {
+//   powerby: string;
+//   success: boolean;
+//   code: string;
+//   message: string;
+//   payload: ILedgerPayload; // Info: (20241105 - Anna) 這裡的 payload 使用 ILedgerPayload 類型
+// }
 
 enum ReportType {
   General = 'general',
@@ -49,10 +49,10 @@ const LedgerPageBody = () => {
   });
   const [selectedStartAccountNo, setSelectedStartAccountNo] = useState<string>('');
   const [selectedEndAccountNo, setSelectedEndAccountNo] = useState<string>('');
-  const [ledgerData, setLedgerData] = useState<ILedgerApiResponse | null>(null);
+  const [ledgerData, setLedgerData] = useState<ILedgerPayload | null>(null);
 
   const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
-  const { trigger: fetchLedgerDataAPI, isLoading } = APIHandler<ILedgerApiResponse>(
+  const { trigger: fetchLedgerDataAPI, isLoading } = APIHandler<ILedgerPayload>(
     APIName.LEDGER_LIST
   );
 
@@ -96,7 +96,6 @@ const LedgerPageBody = () => {
             pageSize: 10,
           },
         });
-
         setLedgerData(data);
       };
 
@@ -126,10 +125,6 @@ const LedgerPageBody = () => {
       });
 
       if (accountTitleList) {
-        // Deprecated: (20241105 - Anna) 查看原始資料
-        // eslint-disable-next-line no-console
-        console.log('Account title list received:', accountTitleList);
-
         // Info: (20241105 - Anna) 初始化臨時陣列來分類不同類型的會計科目
         const assets: string[] = [];
         const liabilities: string[] = [];
@@ -304,23 +299,15 @@ const LedgerPageBody = () => {
             incomeOptions={incomeOptions}
             otherComprehensiveIncomeOptions={otherComprehensiveIncomeOptions}
             onRangeSelected={(startAccountNo, endAccountNo) => {
-              // Deprecate: (20241118 - Anna) debug
-              // eslint-disable-next-line no-console
-              console.log('Selected Account Range:', startAccountNo, endAccountNo);
               setSelectedStartAccountNo(startAccountNo);
               setSelectedEndAccountNo(endAccountNo);
             }}
-            // onRangeSelected={(from, to) => {
-                 // Deprecate: (20241118 - Anna) debug
-                 // eslint-disable-next-line no-console
-            //   console.log(`Selected From: ${from}, To: ${to}`); // Info: (20241104 - Anna) Confirm data flow here if needed
-            // }}
           />
         </div>
 
         <div className="h-px w-full bg-neutral-100"></div>
         <LedgerList
-          ledgerData={ledgerData?.payload || null} // Info: (20241118 - Anna) 如果 ledgerData 是 undefined，傳遞 null
+          ledgerData={ledgerData} // Info: (20241118 - Anna) 如果 ledgerData 是 undefined，傳遞 null
           loading={!!isLoading} // Info: (20241118 - Anna) 使用 !! 確保 loading 是 boolean
         />
       </div>

@@ -15,10 +15,10 @@ export interface ILedgerQueryParams {
 
 export type ILedgerItem = ILedgerResponse['items']['data'][number];
 export type ILedgerTotal = ILedgerResponse['total'];
-
+export interface IPaginatedLedger extends IPaginatedData<ILedgerItem[]> {}
 export interface ILedgerPayload {
   currencyAlias: string;
-  items: IPaginatedData<ILedgerItem[]>;
+  items: IPaginatedLedger;
   total: ILedgerTotal;
 }
 
@@ -28,6 +28,8 @@ export const MOCK_RESPONSE: ILedgerPayload = {
     data: [
       {
         id: 1,
+        accountId: 1341,
+        voucherId: 1,
         voucherDate: 1706745600,
         no: '1141',
         accountingTitle: '應收帳款',
@@ -42,6 +44,8 @@ export const MOCK_RESPONSE: ILedgerPayload = {
       },
       {
         id: 2,
+        accountId: 1342,
+        voucherId: 2,
         voucherDate: 1706745600,
         no: '1142',
         accountingTitle: '應收票據',
@@ -56,6 +60,8 @@ export const MOCK_RESPONSE: ILedgerPayload = {
       },
       {
         id: 3,
+        accountId: 1343,
+        voucherId: 3,
         voucherDate: 1706745600,
         no: '2141',
         accountingTitle: '應付帳款',
@@ -70,6 +76,8 @@ export const MOCK_RESPONSE: ILedgerPayload = {
       },
       {
         id: 4,
+        accountId: 1344,
+        voucherId: 4,
         voucherDate: 1706745600,
         no: '1111',
         accountingTitle: '銀行存款',

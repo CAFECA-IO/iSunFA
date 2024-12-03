@@ -250,7 +250,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       createNewAccount({
         params: { companyId },
         body: {
-          code: selectSubcategory.id,
+          accountId: selectSubcategory.id,
           name: titleName,
         },
       });

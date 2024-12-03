@@ -1,48 +1,22 @@
 import prisma from '@/client';
-import { getTimestampNow } from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
-import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ILedgerPayload } from '@/interfaces/ledger';
-import { PUBLIC_COMPANY_ID } from '@/constants/company';
-import { VoucherType } from '@/constants/account';
-import { buildAccountForestForUser } from '@/lib/utils/account/common';
+import { ILedgerItem, ILedgerPayload, ILedgerTotal } from '@/interfaces/ledger';
+import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType } from '@/constants/account';
 import { LabelType } from '@/constants/ledger';
 import { ledgerListSchema } from '@/lib/utils/zod_schema/ledger';
 import { z } from 'zod';
 import { DefaultValue } from '@/constants/default_value';
+import {
+  filterLedgerByAccountNo,
+  filterLedgerByLabelType,
+  getLedgerFromAccountBook,
+} from '@/lib/utils/ledger';
+import { formatPaginatedLedger } from '@/lib/utils/formatter/ledger.formatter';
 
 type ListLedgerParams = z.infer<typeof ledgerListSchema.input.querySchema>;
-
-interface ILedgerItemForCalculation {
-  id: number;
-  accountId: number;
-  voucherDate: number;
-  no: string;
-  accountingTitle: string;
-  voucherNumber: string;
-  particulars: string;
-  debitAmount: number;
-  creditAmount: number;
-  balance: number;
-  voucherType: VoucherType;
-  createdAt: number;
-  updatedAt: number;
-}
-
-const commonQueryConditions = {
-  deletedAt: null,
-};
-
-const commonVoucherConditions = (startTimestamp: number, endTimestamp: number) => ({
-  ...commonQueryConditions,
-  date: {
-    gte: startTimestamp,
-    lte: endTimestamp,
-  },
-});
 
 export async function listLedger(params: ListLedgerParams): Promise<ILedgerPayload | null> {
   const {
@@ -75,180 +49,64 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       currencyAlias = accountingSettingData.currency || 'TWD';
     }
 
-    // Info: (20241112 - Shirley) 2. 取得符合條件的會計科目
-    const accountsQuery = {
+    const ledgerJSON = await getLedgerFromAccountBook(companyId, startDate, endDate);
+    const voucherIds = ledgerJSON.map((item) => item.voucherId);
+    // Info: (20241203 - Shirley) use voucherIds to get voucher data in voucher table
+    const vouchers = await prisma.voucher.findMany({
       where: {
-        ...commonQueryConditions,
-        OR: [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
-        ...(startAccountNo && endAccountNo
-          ? {
-              AND: [
-                {
-                  code: {
-                    gte: startAccountNo,
-                  },
-                },
-                {
-                  code: {
-                    lte: endAccountNo,
-                  },
-                },
-              ],
-            }
-          : {}),
-        forUser: true,
-      },
-      include: {
-        lineItem: {
-          where: {
-            ...commonQueryConditions,
-            voucher: commonVoucherConditions(startDate, endDate),
-          },
-          include: {
-            voucher: true,
-          },
-        },
-      },
-    };
-
-    const accounts = await prisma.account.findMany(accountsQuery);
-
-    // Info: (20241112 - Shirley) 根據 labelType 過濾會計科目
-    let filteredAccounts = accounts;
-    if (labelType === LabelType.GENERAL) {
-      filteredAccounts = accounts.filter((account) => !account.code.includes('-'));
-    } else if (labelType === LabelType.DETAILED) {
-      filteredAccounts = accounts.filter((account) => account.code.includes('-'));
-    }
-
-    const allVoucherData = await prisma.voucher.findMany({
-      where: {
-        ...commonVoucherConditions(startDate, endDate),
-        companyId,
+        id: { in: voucherIds },
       },
       select: {
         id: true,
-      },
-      orderBy: [{ id: 'asc' }, { createdAt: 'asc' }],
-    });
-
-    const allVoucherIds = allVoucherData.map((voucher) => voucher.id);
-
-    const additionalLineItems = await prisma.lineItem.findMany({
-      where: {
-        ...commonQueryConditions,
-        voucherId: { in: allVoucherIds },
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      include: {
-        voucher: true,
-      },
-      orderBy: {
-        createdAt: 'asc',
+        date: true,
+        type: true,
+        no: true,
       },
     });
 
-    const sortedAccounts = buildAccountForestForUser(filteredAccounts);
+    const filteredLedgerByAccount = await filterLedgerByAccountNo(
+      ledgerJSON,
+      startAccountNo,
+      endAccountNo
+    );
 
-    const newSortedAccounts = sortedAccounts.map((account) => {
+    const combineAndTrimData: ILedgerItem[] = filteredLedgerByAccount.map((ledger) => {
+      const { description: particulars, deletedAt, amount, debit, ...rest } = ledger;
+      const voucherData = vouchers.find((voucher) => voucher.id === ledger.voucherId);
+      const voucherDate = voucherData?.date ?? 0;
+      const voucherNumber = voucherData?.no ?? '';
+      const voucherType =
+        EVENT_TYPE_TO_VOUCHER_TYPE_MAP[voucherData?.type as EventType] || voucherData?.type;
       return {
-        ...account,
-        lineItem: additionalLineItems.filter((lineItem) => {
-          return lineItem.accountId === account.id;
-        }),
+        ...rest,
+        particulars,
+        voucherDate,
+        voucherType,
+        voucherNumber,
       };
     });
+    const filteredLedgerByLabelType = await filterLedgerByLabelType(combineAndTrimData, labelType);
 
-    // Info: (20241112 - Shirley) 3. 整理分類帳資料
-    const ledgerItems: ILedgerItemForCalculation[] = [];
-    let balance = 0;
-    let totalDebitAmount = 0;
-    let totalCreditAmount = 0;
+    const sumUpData = filteredLedgerByLabelType.reduce(
+      (acc: ILedgerTotal, item: ILedgerItem) => {
+        acc.totalDebitAmount += item.debitAmount;
+        acc.totalCreditAmount += item.creditAmount;
+        return acc;
+      },
+      {
+        totalDebitAmount: 0,
+        totalCreditAmount: 0,
+        createdAt: 0,
+        updatedAt: 0,
+      }
+    );
 
-    newSortedAccounts.forEach((account) => {
-      account.lineItem.forEach((item) => {
-        if (item.debit) {
-          balance += item.amount;
-          totalDebitAmount += item.amount;
-        } else {
-          balance -= item.amount;
-          totalCreditAmount += item.amount;
-        }
-
-        ledgerItems.push({
-          accountId: account.id,
-
-          id: item.id,
-          voucherDate: item.voucher.date,
-          no: account.code,
-          accountingTitle: account.name,
-          voucherNumber: item.voucher.no,
-          voucherType: item.voucher.type as VoucherType,
-
-          particulars: item.description,
-          debitAmount: item.debit ? item.amount : 0,
-          creditAmount: item.debit ? 0 : item.amount,
-          balance,
-          createdAt: item.createdAt,
-          updatedAt: item.updatedAt,
-        });
-      });
-    });
-
-    // Info: (20241112 - Shirley) 4. 排序
-    ledgerItems.sort((a, b) => a.accountId - b.accountId);
-
-    // TODO: (20241112 - Shirley) 5. 分頁處理
-    /*
-    let paginatedData = trialBalanceItems;
-    let totalCount = trialBalanceItems.length;
-    let totalPages = 1;
-    let hasNextPage = false;
-    let hasPreviousPage = false;
-
-    paginatedData = trialBalanceItems.slice(skip, skip + (size || DEFAULT_PAGE_LIMIT));
-    totalCount = trialBalanceItems.length;
-    totalPages = Math.ceil(totalCount / (size || DEFAULT_PAGE_LIMIT));
-    hasNextPage = skip + (size || DEFAULT_PAGE_LIMIT) < totalCount;
-    hasPreviousPage = pageNumber > 1;
-
-    */
-
-    const paginatedData = ledgerItems.map(({ accountId, ...rest }) => rest);
-
-    const totalCount = ledgerItems.length;
-    const totalPages = 1;
-    const hasNextPage = false;
-    const hasPreviousPage = false;
-
-    const now = getTimestampNow();
+    const paginatedLedger = formatPaginatedLedger(filteredLedgerByLabelType, pageNumber, pageSize);
 
     ledgerPayload = {
       currencyAlias,
-      items: {
-        data: paginatedData,
-        page: pageNumber,
-        totalPages,
-        totalCount,
-        pageSize,
-        hasNextPage,
-        hasPreviousPage,
-        sort: [
-          {
-            sortBy: 'voucherDate',
-            sortOrder: SortOrder.ASC,
-          },
-        ],
-      },
-      total: {
-        totalDebitAmount,
-        totalCreditAmount,
-        createdAt: now,
-        updatedAt: now,
-      },
+      items: paginatedLedger,
+      total: sumUpData,
     };
   } catch (error) {
     loggerError({
