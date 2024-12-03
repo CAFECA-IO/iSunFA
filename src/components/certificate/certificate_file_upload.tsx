@@ -151,11 +151,6 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
         // eslint-disable-next-line no-console
         console.log('Pusher channel subscription succeeded.');
         setChannel(privateChannel);
-        privateChannel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
-        privateChannel.bind(ROOM_EVENT.DELETE, handleRoomDelete);
-        privateChannel.bind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
-          handleNewFilesComing(data, roomData.id, roomData.password);
-        });
       });
       privateChannel.bind('pusher:subscription_error', () => {
         toastHandler({
@@ -194,15 +189,21 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   }, [room, getRoomSuccess, getRoom, channel]);
 
   useEffect(() => {
+    if (channel && pusher && room) {
+      channel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
+      channel.bind(ROOM_EVENT.DELETE, handleRoomDelete);
+      channel.bind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
+        handleNewFilesComing(data, room.id, room.password);
+      });
+    }
+
     return () => {
       if (channel) {
         channel.unbind(ROOM_EVENT.JOIN, handleRoomJoin);
         channel.unbind(ROOM_EVENT.DELETE, handleRoomDelete);
-        if (room) {
-          channel.unbind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
-            handleNewFilesComing(data, room.id, room.password);
-          });
-        }
+        channel.unbind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
+          handleNewFilesComing(data, room?.id ?? '', room?.password ?? '');
+        });
         channel.unsubscribe();
       }
       if (pusher && room) {
