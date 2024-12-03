@@ -206,9 +206,6 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
         });
         channel.unsubscribe();
       }
-      if (pusher && room) {
-        pusher.unsubscribe(`${PRIVATE_CHANNEL.ROOM}-${room.id}`);
-      }
     };
   }, [channel, pusher, room, handleRoomJoin, handleRoomDelete, handleNewFilesComing]);
 
