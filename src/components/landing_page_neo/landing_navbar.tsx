@@ -88,7 +88,7 @@ const LandingNavbar: React.FC = () => {
         </button>
 
         {/* Info: (20241204 - Julian) Links */}
-        <div className="hidden items-center gap-16px whitespace-nowrap font-bold lg:flex">
+        <div className="hidden items-center justify-between whitespace-nowrap font-bold lg:flex">
           {navigationOptions}
         </div>
 
