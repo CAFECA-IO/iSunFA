@@ -146,6 +146,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
 
     setChannel(privateChannel);
 
+    // Deprecate: (20241204 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line consistent-return
     return () => {
       privateChannel.unbind_all();
