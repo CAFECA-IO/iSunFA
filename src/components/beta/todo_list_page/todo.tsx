@@ -37,7 +37,13 @@ const Todo = ({ todo, setTodoToUpdate, setTodoToDelete }: TodoProps) => {
           <h5>{t('dashboard:TODO_LIST_PAGE.NO_COMPANY')}</h5>
         ) : (
           <div key={todo.company.id} className="flex items-center justify-start gap-8px truncate">
-            <Image src={todo.company.imageId} width={24} height={24} alt="company_logo"></Image>
+            <Image
+              src={todo.company.imageId}
+              width={24}
+              height={24}
+              alt="company_logo"
+              className="rounded-xxs border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2"
+            ></Image>
             <h5 className="truncate">{todo.company.name}</h5>
           </div>
         )}
