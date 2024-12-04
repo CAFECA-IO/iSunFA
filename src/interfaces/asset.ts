@@ -382,3 +382,32 @@ export interface AssetHeader {
 export interface AssetHeaderWithStringDate extends Omit<AssetHeader, 'acquisitionDate'> {
   acquisitionDate: string;
 }
+
+// ToDo: (20241204 - Luphia) move to interface folder
+export interface ICreateAssetWithVouchersRepo {
+  companyId: number;
+  name: string;
+  type: string;
+  number: string;
+  acquisitionDate: number;
+  purchasePrice: number;
+  accumulatedDepreciation: number; // Deprecated: (20241204 - Shirley) no use
+  residualValue: number;
+  remainingLife: number; // Deprecated: (20241204 - Shirley) no use
+  depreciationStart: number;
+  depreciationMethod: string;
+  usefulLife: number;
+  note: string;
+  relatedVouchers: IVoucherEntity[]; // ToDo: (20241204 - Luphia) redesign a new interface
+}
+
+export interface ICreateAssetWithVouchersRepoResponse {
+  id: number;
+  name: string;
+  number: string;
+  companyId: number;
+  status: string;
+  createdAt: number;
+  updatedAt: number;
+  note: string;
+}

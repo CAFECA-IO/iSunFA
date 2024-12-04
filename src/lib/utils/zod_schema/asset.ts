@@ -1,6 +1,6 @@
 import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import { z } from 'zod';
-import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { nullSchema } from '@/lib/utils/zod_schema/common';
 
 /**
  * Info: (20241105 - Murky)

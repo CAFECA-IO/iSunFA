@@ -5,13 +5,15 @@ import {
   IAssetDetails,
   IAssetItem,
   mockAssetItem,
-  ICreateAssetInput,
+  IAssetEntity,
+  ICreateAssetWithVouchersRepo,
 } from '@/interfaces/asset';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
+import { AssetStatus } from '@/constants/asset';
 
 interface IAssetListPayload extends IPaginatedData<IAssetItem[]> {}
 
@@ -46,14 +48,17 @@ export async function handleGetRequest() {
 }
 
 /* ToDo: (20241204 - Luphia) prepare to done
- * 1. Check the User Permission (middleware)
- * 2. Check the User Input (middleware)
- * 3. Create the Asset
- * 4. Create the future Vouchers for asset
- * 5. Format the result (middleware)
- * 6. Return the result (middleware)
- * ps1. register the zod schema for the input and output (/lib/utils/zod_schema/asset.ts)
- * ps2. register the zod schema in methodHandlers
+ * o 1. Check the User Permission (middleware)
+ * o 2. Check the User Input (middleware)
+ * x 3. Create the Asset with repo
+ * x 4. Create the future Vouchers for asset with repo
+ * o 5. Format the result (middleware)
+ * o 6. Return the result (middleware)
+ * o ps1. register the zod schema for the input and output (/lib/utils/zod_schema/asset.ts)
+ * o ps2. register the zod schema in methodHandlers
+ * x ps3. register the API handler interface in middleware
+ * x ps4. check the main handler
+ * x ps5. create repo for asset database operation, repo will throw error directly
  */
 
 export async function handlePostRequest(req: NextApiRequest) {
@@ -61,50 +66,51 @@ export async function handlePostRequest(req: NextApiRequest) {
   let payload: IAssetDetails | null = null;
 
   try {
+    const companyId = req.query.companyId as string;
     const {
       assetName,
       assetType,
-      assetNumber,
+      assetNumber, // Info: (20241204 - Luphia) assetNumber is the unique identifier for the asset
       acquisitionDate,
       purchasePrice,
-      currencyAlias,
       // TODO: (20241001 - Shirley) implement API
       // Deprecated: (20241015 - Shirley) remove after API implementation
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       amount,
       depreciationStart,
       depreciationMethod,
+      residualValue,
       usefulLife,
       note,
-    } = req.body as ICreateAssetInput;
+    } = req.body;
 
-    // ToDo: (20240927 - Shirley) 驗證資產數據
-    // ToDo: (20240927 - Shirley) 在資料庫中創建資產數據
-    // ToDo: (20240927 - Shirley) 獲取並格式化創建後的資產數據
-
-    // Info: (20241204 - Luphia) Verify Input payload with zod schema
-    const newAsset: ICreateAssetInput = {
-      assetName,
-      assetType,
-      assetNumber,
+    // Info: (20241204 - Luphia) collect the new asset data with db schema
+    const newAsset: ICreateAssetWithVouchersRepo = {
+      companyId: parseInt(companyId, 10),
+      name: assetName,
+      type: assetType,
+      number: assetNumber,
       acquisitionDate,
       purchasePrice,
-      currencyAlias,
-      amount,
+      accumulatedDepreciation: 0,
+      residualValue,
+      remainingLife: usefulLife,
       depreciationStart,
       depreciationMethod,
       usefulLife,
       note,
+      relatedVouchers: [],
     };
 
-    // Info: (20241204 - Luphia) Insert the new asset to the database and get the new asset id
+    // Info: (20241204 - Luphia) Insert the new asset and vouchers to the database and get the new asset id
+    const newAssetResult = awaitcreateAssetWithVouchers(newAsset);
+
+    
     const newAssetId = await prisma.asset.create({
       data: newAsset,
     });
 
-    // ToDo: (20241204 - Luphia) Create the future Vouchers for asset by Murky's function
-
-    // return the new asset details
+    // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
     payload = {
       id: newAssetId.id,
       ...newAsset,
@@ -129,9 +135,10 @@ const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IPostRespnse>;
 } = {
   GET: handleGetRequest,
-  POST: (req, res) => withRequestValidation(APIName.ASSET_CREATE, req, res, handlePostRequest),
+  POST: (req, res) => withRequestValidation(APIName.CREATE_ASSET_V2, req, res, handlePostRequest),
 };
 
+// Info: (20241204 - Luphia) API main handler, will call the middleware to handle the request
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAssetListPayload | IAssetDetails | null>>
@@ -148,7 +155,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    // ToDo: Use logger to log the error
+    // ToDo: (20241204 - Shirley) Use logger to log the error
     statusMessage = error.message;
     payload = null;
   } finally {
