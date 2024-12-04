@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { IoCloseOutline, IoChevronDown, IoChevronUp, IoAdd } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
 import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { ITodoCompany } from '@/interfaces/todo';
@@ -258,9 +258,10 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
             type="button"
             onClick={handleSubmit}
             disabled={isLoading}
-            className="rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+            className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
-            {t('dashboard:COMMON.CREATE')}
+            {t('dashboard:COMMON.ADD')}
+            <IoAdd size={16} />
           </button>
         </section>
       </div>
