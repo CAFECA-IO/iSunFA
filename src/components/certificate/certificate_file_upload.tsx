@@ -13,18 +13,24 @@ import { useUserCtx } from '@/contexts/user_context';
 import { ICertificate } from '@/interfaces/certificate';
 import { ProgressStatus } from '@/constants/account';
 import { IRoom } from '@/interfaces/room';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastId } from '@/constants/toast_id';
+import { ToastType } from '@/interfaces/toastify';
 
 interface CertificateFileUploadProps {}
 
 const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   const { userAuth, selectedCompany } = useUserCtx();
-  const [room, setRoom] = useState<IRoom | null>(null);
+  const { toastHandler } = useModalContext();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
-
+  const [room, setRoom] = useState<IRoom | null>(null);
+  const [getRoomSuccess, setGetRoomSuccess] = useState<boolean | undefined>(undefined);
+  const [getRoomCode, setGetRoomCode] = useState<string | undefined>(undefined);
   const [pusher, setPusher] = useState<Pusher | undefined>(undefined);
   const [channel, setChannel] = useState<Channel | undefined>(undefined);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState<boolean>(false);
+  const { trigger: getRoomAPI } = APIHandler<IRoom>(APIName.ROOM_ADD);
   const { trigger: delectRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
   // const { trigger: getRoomByIdAPI } = APIHandler<IRoom>(APIName.ROOM_GET_BY_ID); // Info: (20241121 - tzuhan) 目前沒有用的，目前用 pusher 傳來的是足夠的
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
@@ -55,11 +61,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
     });
   }, []);
 
-  const toggleQRCodeModal = () => {
-    setIsQRCodeModalOpen((prev) => !prev);
-  };
-
-  const createCertificate = useCallback(async (fileId: number) => {
+  const createCertificate = useCallback(async (fileId: number | null) => {
     try {
       const { success: successCreated, data } = await createCertificateAPI({
         params: {
@@ -72,7 +74,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
       if (successCreated && data) {
         setFiles((prev) => {
           const updateFiles = [...prev];
-          const index = updateFiles.findIndex((f) => f.id === data.file.id);
+          const index = updateFiles.findIndex((f) => f.id === fileId);
           updateFiles[index].certificateId = data?.id;
           updateFiles[index].progress = 100;
           updateFiles[index].status = ProgressStatus.SUCCESS;
@@ -104,7 +106,15 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
       };
       setIsQRCodeModalOpen(false);
       setFiles((prev) => [...prev, newFile]);
-      await createCertificate(newFile.id!);
+      if (newFile.id) await createCertificate(newFile.id);
+      else {
+        setFiles((prev) => {
+          const updateFiles = [...prev];
+          const index = updateFiles.findIndex((f) => f.name === newFile.name);
+          updateFiles[index].status = ProgressStatus.FAILED;
+          return prev;
+        });
+      }
     },
     []
   );
@@ -120,37 +130,92 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
     });
   }, []);
 
-  const handleRoomCreate = useCallback((roomData: IRoom) => {
-    setRoom(roomData);
-    const pusherInstance = getPusherInstance(userAuth?.id);
-    setPusher(pusherInstance);
+  const handleRoomCreate = useCallback(
+    (roomData: IRoom) => {
+      if (channel) {
+        // Info: (20241203 - tzuhan) 如果已經訂閱過了，就不再訂閱
+        // Dreprecate: (20241203 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log('Channel already subscribed, skipping subscription.');
+        return;
+      }
 
-    const privateChannel = pusherInstance.subscribe(`${PRIVATE_CHANNEL.ROOM}-${roomData.id}`);
-    setChannel(privateChannel);
-    privateChannel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
-    privateChannel.bind(ROOM_EVENT.DELETE, handleRoomDelete);
-    privateChannel.bind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
-      handleNewFilesComing(data, roomData.id, roomData.password);
-    });
-  }, []);
+      setRoom(roomData);
+      const pusherInstance = getPusherInstance(userAuth?.id);
+      setPusher(pusherInstance);
+
+      const privateChannel = pusherInstance.subscribe(`${PRIVATE_CHANNEL.ROOM}-${roomData.id}`);
+
+      privateChannel.bind('pusher:subscription_succeeded', () => {
+        // Deprecated: (20241203 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log('Pusher channel subscription succeeded.');
+        setChannel(privateChannel);
+      });
+      privateChannel.bind('pusher:subscription_error', () => {
+        toastHandler({
+          id: ToastId.PUSHER_FAILED_TO_SUBSCRIBE,
+          type: ToastType.WARNING,
+          content:
+            'Failed to subscribe to the room. Please try refreshing the page or contact support.', // Todo: (20241203 - tzuhan) i18n
+          closeable: true,
+        });
+      });
+    },
+    [userAuth?.id]
+  );
+
+  const getRoom = useCallback(async () => {
+    // Deprecated: (20241203 - tzuhan) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(`getRoom, room: ${room}`);
+    if (room) return;
+    const { success, code, data: newRoom } = await getRoomAPI();
+    setGetRoomSuccess(success);
+    setGetRoomCode(code);
+    if (success && newRoom) {
+      handleRoomCreate(newRoom);
+    }
+  }, [getRoomSuccess]);
+
+  const toggleQRCodeModal = useCallback(() => {
+    setIsQRCodeModalOpen((prev) => !prev);
+    if (!room && !getRoomSuccess) {
+      // Info: (20241203 - tzuhan) 只在首次沒有 room 時調用 getRoom
+      getRoom();
+    } else if (channel && !channel.subscribed) {
+      channel.subscribe();
+    }
+  }, [room, getRoomSuccess, getRoom, channel]);
 
   useEffect(() => {
+    if (channel && pusher && room) {
+      channel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
+      channel.bind(ROOM_EVENT.DELETE, handleRoomDelete);
+      channel.bind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
+        handleNewFilesComing(data, room.id, room.password);
+      });
+    }
+
     return () => {
       if (channel) {
-        channel.unbind_all();
+        channel.unbind(ROOM_EVENT.JOIN, handleRoomJoin);
+        channel.unbind(ROOM_EVENT.DELETE, handleRoomDelete);
+        channel.unbind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
+          handleNewFilesComing(data, room?.id ?? '', room?.password ?? '');
+        });
         channel.unsubscribe();
       }
-      if (pusher) {
-        pusher.disconnect();
-      }
     };
-  }, []);
+  }, [channel, pusher, room, handleRoomJoin, handleRoomDelete, handleNewFilesComing]);
 
   return (
     <>
       {isQRCodeModalOpen && (
         <CertificateQRCodeModal
-          handleRoomCreate={handleRoomCreate}
+          room={room}
+          success={getRoomSuccess}
+          code={getRoomCode}
           toggleQRCode={toggleQRCodeModal}
         />
       )}
