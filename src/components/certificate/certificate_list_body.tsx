@@ -461,9 +461,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     channel.bind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
 
     return () => {
-      channel.unbind_all();
-      channel.unsubscribe();
-      pusher.disconnect();
+      if (channel) {
+        channel.unbind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
+        channel.unsubscribe();
+      }
+      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
     };
   }, []);
 

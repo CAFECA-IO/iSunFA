@@ -542,13 +542,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         query: { type: 'User' },
       });
 
-      if (success && systemRoleList) {
-        // Deprecated: (20241111 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('打 ROLE_LIST 成功, systemRoleList:', systemRoleList);
-
-        return systemRoleList;
-      }
+      if (success && systemRoleList) return systemRoleList;
 
       return null;
     } catch (error) {

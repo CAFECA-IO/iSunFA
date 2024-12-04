@@ -79,7 +79,7 @@ export async function findManyAccountsInPrisma({
       {
         OR: searchKey
           ? [
-              { name: { startsWith: searchKey, mode: 'insensitive' } },
+              { name: { contains: searchKey, mode: 'insensitive' } },
               { code: { startsWith: searchKey, mode: 'insensitive' } },
             ]
           : [],

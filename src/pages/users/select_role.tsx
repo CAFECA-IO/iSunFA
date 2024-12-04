@@ -54,6 +54,7 @@ const UserRole = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSelectRole = async () => {
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
@@ -72,6 +73,17 @@ const UserRole = ({
       setIsLoading(false);
     }
   };
+
+  // Info: (20241204 - Liz) 轉換時間戳記為日期格式
+  const timeStamps = lastLoginAt * 1000;
+  const dateObject = new Date(timeStamps);
+  const year = dateObject.getFullYear();
+  const month = dateObject.getMonth() + 1;
+  const date = dateObject.getDate();
+  const hours = dateObject.getHours();
+  const minutes = dateObject.getMinutes();
+  const seconds = dateObject.getSeconds();
+  const lastLoginTime = `${year}/${month}/${date} ${hours}:${minutes}:${seconds}`;
 
   return (
     <div className="relative flex h-480px w-280px flex-col items-center justify-between rounded-lg bg-surface-neutral-surface-lv1 p-40px shadow-Dropshadow_S">
@@ -92,7 +104,7 @@ const UserRole = ({
       <div className="space-y-16px text-center text-lg font-medium">
         <p className="text-text-neutral-secondary">{t('dashboard:LOGIN.LAST_LOGIN_TIME')}</p>
 
-        <p className="text-text-neutral-tertiary">{lastLoginAt}</p>
+        <p className="text-text-neutral-tertiary">{lastLoginTime}</p>
       </div>
 
       <button
