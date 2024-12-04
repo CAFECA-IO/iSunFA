@@ -37,5 +37,4 @@ export enum ToastId {
   USER_DELETE_ERROR = 'toast-user-delete-error',
   USER_SETTING_ERROR = 'toast-user-setting-error',
   USER_DELETE_CANCEL = 'toast-user-delete-cancel',
-  PUSHER_FAILED_TO_SUBSCRIBE = 'toast-pusher-failed-to-subscribe',
 }
