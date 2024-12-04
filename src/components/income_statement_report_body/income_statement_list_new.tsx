@@ -9,11 +9,11 @@ import {
 } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
-import IncomeStatementReportTableRow from '@/components/income_statement_report_body/income_statement_report_table_row';
+// import IncomeStatementReportTableRow from '@/components/income_statement_report_body/income_statement_report_table_row'; // Deprecated: (20241204 - Liz)
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { useTranslation } from 'next-i18next';
@@ -40,6 +40,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
 }) => {
+  // Deprecated: (20241204 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('selectedDateRange:', selectedDateRange);
+
   const { t } = useTranslation('reports');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   // Info: (20241024 - Anna) 接收 selectedDateRange prop
@@ -58,54 +62,76 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
     setIsDetailCollapsed(!isDetailCollapsed);
   };
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  const {
-    data: reportFinancial,
-    code: getReportFinancialCode,
-    success: getReportFinancialSuccess,
-    isLoading: getReportFinancialIsLoading,
-    trigger,
-  } = APIHandler<FinancialReport>(APIName.REPORT_GET_V2);
-  // Info: (20241024 - Anna) 新增 API 請求處理邏輯，使用 useCallback 包裝
-  const getIncomeStatementReport = useCallback(async () => {
-    if (!hasCompanyId || !selectedDateRange || selectedDateRange.endTimeStamp === 0) {
-      return;
-    }
 
-    if (
-      prevSelectedDateRange.current &&
-      prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
-      prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
-      hasFetchedOnce
-    ) {
-      return;
-    }
-    try {
-      const response = await trigger({
-        params: {
-          companyId: selectedCompany?.id,
-        },
-        query: {
-          startDate: selectedDateRange.startTimeStamp,
-          endDate: selectedDateRange.endTimeStamp,
-          language: 'en',
-          reportType: FinancialReportTypesKey.comprehensive_income_statement,
-        },
-      });
+  const [isGetReportAPILoading, setIsGetReportAPILoading] = useState<boolean>(false);
+  const [isGetReportAPISuccess, setIsGetReportAPISuccess] = useState<boolean>(false);
+  const [reportAPICode, setReportAPICode] = useState<string>('');
+  const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
+  // Deprecated: (20241204 - Liz)
+  // eslint-disable-next-line no-console
+  console.log(
+    'isGetReportAPILoading:',
+    isGetReportAPILoading,
+    'isGetReportAPISuccess:',
+    isGetReportAPISuccess,
+    'reportAPICode:',
+    reportAPICode,
+    'financialReport:',
+    financialReport
+  );
 
-      if (response.success) {
-        setHasFetchedOnce(true); // Info: (20241024 - Anna) 設定已成功請求過 API
-        prevSelectedDateRange.current = selectedDateRange; // Info: (20241024 - Anna) 更新日期範圍
-      }
-    } catch (error) {
-      (() => {})(); // Info: (20241024 - Anna) Empty function, does nothing
-    }
-  }, [hasCompanyId, selectedCompany?.id, selectedDateRange, trigger]);
+  const { trigger: getReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_V2);
 
-  // Info: (20241024 - Anna) 新增 useEffect，依賴 selectedDateRange 變化時觸發 API 請求
   useEffect(() => {
     if (!selectedDateRange) return;
+
+    const getIncomeStatementReport = async () => {
+      if (!hasCompanyId || !selectedDateRange || selectedDateRange.endTimeStamp === 0) return;
+      if (
+        prevSelectedDateRange.current &&
+        prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
+        prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
+        hasFetchedOnce
+      ) {
+        return;
+      }
+      setIsGetReportAPILoading(true);
+
+      try {
+        const { success, data, code } = await getReportAPI({
+          params: {
+            companyId: selectedCompany?.id,
+          },
+          query: {
+            startDate: selectedDateRange.startTimeStamp,
+            endDate: selectedDateRange.endTimeStamp,
+            language: 'en',
+            reportType: FinancialReportTypesKey.comprehensive_income_statement,
+          },
+        });
+        setIsGetReportAPISuccess(success);
+        setReportAPICode(code);
+
+        if (success && data) {
+          setHasFetchedOnce(true); // Info: (20241024 - Anna) 設定已成功請求過 API
+          prevSelectedDateRange.current = selectedDateRange; // Info: (20241024 - Anna) 更新日期範圍
+          setFinancialReport(data);
+          // Deprecated: (20241204 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('IncomeStatementList received data:', data);
+        }
+      } catch (error) {
+        // (() => {})(); // Info: (20241024 - Anna) Empty function, does nothing
+        // Deprecated: (20241204 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('Error:', error);
+      } finally {
+        setIsGetReportAPILoading(false);
+      }
+    };
+
     getIncomeStatementReport();
-  }, [getIncomeStatementReport, selectedDateRange]);
+  }, [hasCompanyId, hasFetchedOnce, selectedCompany?.id, selectedDateRange]);
 
   useEffect(() => {
     if (isPrinting && printRef.current) {
@@ -120,10 +146,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
       // eslint-disable-next-line no-console
       console.log('IncomeStatementList printRef is null');
     }
-  }, [isPrinting]);
+  }, [isPrinting, printRef]);
 
   // Info: (20241024 - Anna) 如果未選擇日期範圍，顯示初始提示圖
-  if (!hasFetchedOnce && !getReportFinancialIsLoading) {
+  if (!hasFetchedOnce && !isGetReportAPILoading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
@@ -133,24 +159,24 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
         </div>
       </div>
     );
-  } else if (getReportFinancialIsLoading) {
+  } else if (isGetReportAPILoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
   } else if (
-    !getReportFinancialSuccess ||
-    !reportFinancial ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') ||
-    !reportFinancial.otherInfo ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'revenueAndExpenseRatio') ||
-    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'revenueToRD')
+    !isGetReportAPISuccess ||
+    !financialReport ||
+    !Object.prototype.hasOwnProperty.call(financialReport, 'otherInfo') ||
+    !financialReport.otherInfo ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'revenueAndExpenseRatio') ||
+    !Object.prototype.hasOwnProperty.call(financialReport.otherInfo, 'revenueToRD')
   ) {
-    return <div>錯誤 {getReportFinancialCode}</div>;
+    return <div>錯誤 {reportAPICode}</div>;
   }
 
-  const otherInfo = reportFinancial?.otherInfo as IncomeStatementOtherInfo;
+  const otherInfo = financialReport?.otherInfo as IncomeStatementOtherInfo;
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
   const curPeriodTotal = numberBeDashIfFalsy(
@@ -170,10 +196,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   const revenueToRD = otherInfo?.revenueToRD;
 
   /* Info: (20240730 - Anna) 轉換和格式化日期 */
-  const curDateFrom = new Date(reportFinancial.curDate.from * 1000);
-  const curDateTo = new Date(reportFinancial.curDate.to * 1000);
-  const preDateFrom = new Date(reportFinancial.preDate.from * 1000);
-  const preDateTo = new Date(reportFinancial.preDate.to * 1000);
+  const curDateFrom = new Date(financialReport.curDate.from * 1000);
+  const curDateTo = new Date(financialReport.curDate.to * 1000);
+  const preDateFrom = new Date(financialReport.preDate.from * 1000);
+  const preDateTo = new Date(financialReport.preDate.to * 1000);
   const formattedCurFromDate = format(curDateFrom, 'yyyy-MM-dd');
   const formattedCurToDate = format(curDateTo, 'yyyy-MM-dd');
   const formattedPreFromDate = format(preDateFrom, 'yyyy-MM-dd');
@@ -210,23 +236,54 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
         console.warn('Skipped invalid item:', item);
         return [];
       }
+
+      const {
+        code,
+        curPeriodAmount,
+        curPeriodPercentage,
+        prePeriodAmount,
+        prePeriodPercentage,
+        name,
+      } = item;
+
+      const key = `${code}_${name}_${curPeriodAmount}_${curPeriodPercentage}_${prePeriodAmount}_${prePeriodPercentage}`;
+      const isCodeExist = code.length > 0;
+      const displayCode = isCodeExist ? code : '';
+      const displayCurPeriodAmount: string = isCodeExist
+        ? numberBeDashIfFalsy(curPeriodAmount)
+        : '';
+      const displayCurPeriodPercentage: string = isCodeExist
+        ? numberBeDashIfFalsy(curPeriodPercentage)
+        : '';
+      const displayPrePeriodAmount: string = isCodeExist
+        ? numberBeDashIfFalsy(prePeriodAmount)
+        : '';
+      const displayPrePeriodPercentage: string = isCodeExist
+        ? numberBeDashIfFalsy(prePeriodPercentage)
+        : '';
+
       return [
-        <React.Fragment key={item.code}>
-          {/* Info: (20241202 - Anna) 使用 IncomeStatementReportTableRow 渲染單一行 */}
-          <IncomeStatementReportTableRow
-            code={item.code}
-            name={item.name}
-            curPeriodAmount={item.curPeriodAmount}
-            curPeriodAmountString={item.curPeriodAmountString}
-            curPeriodPercentage={item.curPeriodPercentage}
-            prePeriodAmount={item.prePeriodAmount}
-            prePeriodAmountString={item.prePeriodAmountString}
-            prePeriodPercentage={item.prePeriodPercentage}
-            indent={item.indent}
-          />
-          {/* Info: (20241202 - Anna) 遞迴渲染子項目 */}
-          {item.children && item.children.length > 0 && renderRows(item.children)}
-        </React.Fragment>,
+        <tr key={key} className="h-40px" data-key={key} data-is-tr="true">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+            {displayCode}
+          </td>
+          <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-sm">
+            {name}
+          </td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+            {displayCurPeriodAmount}
+          </td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+            {displayCurPeriodPercentage}
+          </td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+            {displayPrePeriodAmount}
+          </td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+            {displayPrePeriodPercentage}
+          </td>
+        </tr>,
+        ...(item.children && item.children.length > 0 ? renderRows(item.children) : []),
       ];
     });
   };
@@ -263,7 +320,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                   會計項目
                 </th>
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
-                  {!isSummaryCollapsed && reportFinancial && reportFinancial.company && (
+                  {!isSummaryCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
                       {formattedCurFromDate}至{formattedCurToDate}
                     </p>
@@ -276,7 +333,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                   className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  {reportFinancial && reportFinancial.company && (
+                  {financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
                       {formattedPreFromDate}至{formattedPreToDate}
                     </p>
@@ -287,29 +344,20 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 </th>
               </tr>
             </thead>
-            {/* <tbody>
-              {reportFinancial &&
-                reportFinancial.general &&
-                reportFinancial.general
-                  .slice(0, 10)
-                  .map((value) => <IncomeStatementReportTableRow {...value} />)}
-            </tbody> */}
-            {/* <tbody>
-              {reportFinancial?.general?.slice(0, 10).map((value) => {
-                // eslint-disable-next-line no-console
-                console.log('Value passed to IncomeStatementReportTableRow:(general)', value);
-                return <IncomeStatementReportTableRow key={value.code} {...value} />;
-              })}
-            </tbody> */}
 
             <tbody>
-              {reportFinancial?.general && renderRows(reportFinancial.general.slice(0, 10))}
+              {financialReport?.general && renderRows(financialReport.general.slice(0, 10))}
             </tbody>
           </table>
         )}
       </section>
     </div>
   );
+
+  // Deprecated: (20241204 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('financialReport.general.slice(0, 10):', financialReport?.general.slice(0, 10));
+
   const ItemDetail = (
     <div id="2" className="relative overflow-hidden">
       <section className="text-text-neutral-secondary">
@@ -334,7 +382,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                   className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  {!isDetailCollapsed && reportFinancial && reportFinancial.company && (
+                  {!isDetailCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
                       {formattedCurFromDate}至{formattedCurToDate}
                     </p>
@@ -347,7 +395,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                   className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  {reportFinancial && reportFinancial.company && (
+                  {financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
                       {formattedPreFromDate}至{formattedPreToDate}
                     </p>
@@ -358,22 +406,8 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 </th>
               </tr>
             </thead>
-            {/* <tbody>
-              {reportFinancial &&
-                reportFinancial.details &&
-                reportFinancial.details
-                  .slice(0, 15)
-                  .map((value) => <IncomeStatementReportTableRow {...value} />)}
-            </tbody> */}
-            {/* <tbody>
-              {reportFinancial?.details?.slice(0, 15).map((value) => {
-                // eslint-disable-next-line no-console
-                console.log('Value passed to IncomeStatementReportTableRow:(details)', value);
-                return <IncomeStatementReportTableRow key={value.code} {...value} />;
-              })}
-            </tbody> */}
             <tbody>
-              {reportFinancial?.details && renderRows(reportFinancial.details.slice(0, 15))}
+              {financialReport?.details && renderRows(financialReport.details.slice(0, 15))}
             </tbody>
           </table>
         )}
@@ -400,7 +434,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
@@ -410,7 +444,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
                     {formattedPreFromDate} 至{formattedPreToDate}
                   </p>
@@ -521,13 +555,13 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
             </tr>
           </tbody>
         </table>
-        {reportFinancial && reportFinancial.company && (
+        {financialReport && financialReport.company && (
           <p className="mt-4">
             {formattedCurFromDate}至{formattedCurToDate}
             營業收入，為投入費用和成本的{curRatio.toFixed(2)}倍
           </p>
         )}
-        {reportFinancial && reportFinancial.company && (
+        {financialReport && financialReport.company && (
           <p className="mt-4">
             {formattedPreFromDate}至{formattedPreToDate}
             營業收入，為投入費用和成本的{preRatio.toFixed(2)}倍
@@ -550,7 +584,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
@@ -560,7 +594,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {reportFinancial && reportFinancial.company && (
+                {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
@@ -651,11 +685,11 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
       {/* Info: (20241202 - Anna)  渲染打印模板，通過 CSS 隱藏 */}
       <div ref={printRef} className="hidden print:block">
         <IncomeStatementA4Template
-          reportFinancial={reportFinancial}
+          financialReport={financialReport}
           curDateFrom={formattedCurFromDate}
           curDateTo={formattedCurToDate}
-          preDateFrom={formattedPreFromDate}
-          preDateTo={formattedPreToDate}
+          // preDateFrom={formattedPreFromDate}
+          // preDateTo={formattedPreToDate}
         >
           {ItemSummary}
           {ItemDetail}

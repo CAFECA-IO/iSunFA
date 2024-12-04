@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import IncomeStatementList from '@/components/income_statement_report_body/income_statement_list_new';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -40,7 +40,7 @@ const IncomeStatementPageBody = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  const handleOnBeforePrint = React.useCallback(() => {
+  const handleOnBeforePrint = useCallback(() => {
     // Deprecated: (20241130 - Anna) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
@@ -63,7 +63,7 @@ const IncomeStatementPageBody = () => {
     });
   }, [isPrinting]);
 
-  const handleOnAfterPrint = React.useCallback(() => {
+  const handleOnAfterPrint = useCallback(() => {
     // Deprecated: (20241130 - Anna) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(
