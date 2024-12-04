@@ -126,7 +126,7 @@ async function createCertificate() {
 }
 
 async function createDepartment() {
-  await prisma.department.createMany({
+  await department.createMany({
     data: departments,
   });
 }

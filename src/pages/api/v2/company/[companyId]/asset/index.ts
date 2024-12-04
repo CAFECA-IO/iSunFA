@@ -1,22 +1,19 @@
+import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import {
   IAssetDetails,
   IAssetItem,
   mockAssetItem,
-  mockAssetDetails,
   ICreateAssetInput,
 } from '@/interfaces/asset';
-import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
+import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
 
 interface IAssetListPayload extends IPaginatedData<IAssetItem[]> {}
-
-interface IResponse {
-  statusMessage: string;
-  payload: IAssetListPayload | IAssetDetails | null;
-}
 
 export const MOCK_ASSET_LIST_PAYLOAD: IAssetListPayload = {
   data: [mockAssetItem],
@@ -48,6 +45,17 @@ export async function handleGetRequest() {
   return { statusMessage, payload };
 }
 
+/* ToDo: (20241204 - Luphia) prepare to done
+ * 1. Check the User Permission (middleware)
+ * 2. Check the User Input (middleware)
+ * 3. Create the Asset
+ * 4. Create the future Vouchers for asset
+ * 5. Format the result (middleware)
+ * 6. Return the result (middleware)
+ * ps1. register the zod schema for the input and output (/lib/utils/zod_schema/asset.ts)
+ * ps2. register the zod schema in methodHandlers
+ */
+
 export async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
@@ -73,34 +81,55 @@ export async function handlePostRequest(req: NextApiRequest) {
     // ToDo: (20240927 - Shirley) 驗證資產數據
     // ToDo: (20240927 - Shirley) 在資料庫中創建資產數據
     // ToDo: (20240927 - Shirley) 獲取並格式化創建後的資產數據
-    payload = {
-      ...mockAssetDetails,
+
+    // Info: (20241204 - Luphia) Verify Input payload with zod schema
+    const newAsset: ICreateAssetInput = {
       assetName,
       assetType,
       assetNumber,
       acquisitionDate,
       purchasePrice,
       currencyAlias,
-      depreciationStart: depreciationStart || 0,
-      depreciationMethod: depreciationMethod || '',
-      usefulLife: usefulLife || 0,
+      amount,
+      depreciationStart,
+      depreciationMethod,
+      usefulLife,
       note,
-      createdAt: getTimestampNow(),
-      updatedAt: getTimestampNow(),
     };
+
+    // Info: (20241204 - Luphia) Insert the new asset to the database and get the new asset id
+    const newAssetId = await prisma.asset.create({
+      data: newAsset,
+    });
+
+    // ToDo: (20241204 - Luphia) Create the future Vouchers for asset by Murky's function
+
+    // return the new asset details
+    payload = {
+      id: newAssetId.id,
+      ...newAsset,
+    };
+
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (error) {
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
+  // ToDo: (20241204 - Luphia) Create the future Vouchers for asset by Murky's function
+
   return { statusMessage, payload };
 }
 
+interface IPostRespnse {
+  statusMessage: string;
+  payload: IAssetDetails | null;
+}
+
 const methodHandlers: {
-  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
+  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IPostRespnse>;
 } = {
   GET: handleGetRequest,
-  POST: handlePostRequest,
+  POST: (req, res) => withRequestValidation(APIName.ASSET_CREATE, req, res, handlePostRequest),
 };
 
 export default async function handler(

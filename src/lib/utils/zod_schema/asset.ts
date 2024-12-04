@@ -1,5 +1,6 @@
 import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import { z } from 'zod';
+import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
 /**
  * Info: (20241105 - Murky)
@@ -8,6 +9,24 @@ import { z } from 'zod';
 const IRelatedVoucherValidator = z.object({
   id: z.number(),
   number: z.string(),
+});
+
+export const AssetCreateInputBodyValidator = z.object({
+  assetName: z.string(),
+  assetType: z.string(),
+  assetNumber: z.string(),
+  acquisitionDate: z.number(),
+  purchasePrice: z.number(),
+  currencyAlias: z.string(),
+  amount: z.number(),
+  depreciationStart: z.number().optional(),
+  depreciationMethod: z.string().optional(),
+  usefulLife: z.number().optional(),
+  note: z.string().optional(),
+});
+
+export const AssetCreateOutputValidator = AssetCreateInputBodyValidator.extend({
+  id: z.number(),
 });
 
 /**
@@ -70,3 +89,13 @@ export const assetEntityValidator = z.object({
   assetVouchers: z.array(z.any()).optional(), // Info: (20241024 - Murky) @Shirley 目前沒有檢查
   company: z.any().optional(), // Info: (20241024 - Murky) @Shirley 目前沒有檢查
 });
+
+// Info: (20241204 - Luphia) define the schema for frontend (with api response)
+export const assetPostSchema = {
+  input: {
+    querySchema: nullSchema,
+    bodySchema: AssetCreateInputBodyValidator,
+  },
+  outputSchema: AssetCreateOutputValidator,
+  frontend: nullSchema,
+};
