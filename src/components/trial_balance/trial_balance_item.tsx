@@ -125,7 +125,7 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
     <>
       <div className="table-row h-20px font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
         {/* Info: (20240920 - Julian) Select */}
-        <div className={`table-cell w-32px text-center`}>{displayedCheckbox}</div>
+        <div className={`table-cell w-32px text-center print:hidden`}>{displayedCheckbox}</div>
         {/* Info: (20241004 - Anna) Accounting */}
         <div className="table-cell w-50px text-center align-middle">{displayedAccountingCode}</div>
         <div className="table-cell w-370px text-center align-middle">{displayedAccountingName}</div>

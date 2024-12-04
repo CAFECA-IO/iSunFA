@@ -20,14 +20,19 @@ import Image from 'next/image';
 import { IDatePeriod } from '@/interfaces/date_period';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
+import { useReactToPrint } from 'react-to-print';
 
 interface TrialBalanceListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241105 - Anna) 接收來自上層的日期範圍
 }
 
 const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }) => {
+  const { selectedCompany } = useUserCtx();
+  const companyId = selectedCompany?.id; // Info: (20241204 - Anna) 提取 companyId
   const { t } = useTranslation('journal');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+  const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 
   const [subAccountsToggle, setSubAccountsToggle] = useState<boolean>(false);
 
@@ -38,22 +43,107 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   const [isLoading, setIsLoading] = useState(false); // Info: (20241105 - Anna) 追蹤 API 請求的加載狀態
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null); // Info: (20241105 - Anna) 追蹤之前的日期範圍
 
+  // Info: (20241204 - Anna) 使用 trigger 方法替代直接調用 APIHandler
+  const { trigger: fetchTrialBalance } = APIHandler<ITrialBalancePayload>(
+    APIName.TRIAL_BALANCE_LIST
+  );
+
   // Info: (20241107 - Anna) API 請求邏輯
+  // const fetchTrialBalanceData = useCallback(async () => {
+  //   // Info: (20241204 - Anna) 調試 API 請求參數
+  //   // eslint-disable-next-line no-console
+  //   console.log('API Query Params: ', {
+  //     startDate: selectedDateRange?.startTimeStamp,
+  //     endDate: selectedDateRange?.endTimeStamp,
+  //     page: 1,
+  //     pageSize: 10,
+  //   });
+
+  //   if (!selectedDateRange || selectedDateRange.endTimeStamp === 0) {
+  //     // Info: (20241204 - Anna) 調試無效日期範圍
+  //     // eslint-disable-next-line no-console
+  //     console.log('Invalid date range, skipping fetch.');
+  //     return;
+  //   }
+  //   // Info: (20241204 - Anna) 調試有效的日期範圍
+  //   // eslint-disable-next-line no-console
+  //   console.log('Fetching data with date range: ', selectedDateRange);
+  //   if (
+  //     prevSelectedDateRange.current &&
+  //     prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
+  //     prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
+  //     hasFetchedOnce
+  //   ) {
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await APIHandler<ITrialBalancePayload>(
+  //       APIName.TRIAL_BALANCE_LIST,
+  //       {
+  //         query: {
+  //           startDate: selectedDateRange.startTimeStamp,
+  //           endDate: selectedDateRange.endTimeStamp,
+  //           page: 1,
+  //           pageSize: 10,
+  //         },
+  //       },
+  //       true // Info: (20241204 - Anna) 確保立即觸發 API 請求
+  //     );
+  //     // Info: (20241204 - Anna) 打印 API 回應
+  //     // eslint-disable-next-line no-console
+  //     console.log('API Response: ', response);
+  //     if (response.success && response.data) {
+  //       // Info: (20241204 - Anna) 調試 API 回應資料
+  //       // eslint-disable-next-line no-console
+  //       console.log('API Response: ', response.data);
+  //       setAccountList(response.data.items.data);
+  //       setHasFetchedOnce(true);
+  //       prevSelectedDateRange.current = selectedDateRange;
+  //     } else {
+  //       //  Info: (20241204 - Anna) 如果回應不成功，打印錯誤
+  //       // eslint-disable-next-line no-console
+  //       console.error('API response error: ', response);
+  //     }
+  //   } catch (error) {
+  //     // Deprecate: (20241118 - Anna) debug
+  //     // eslint-disable-next-line no-console
+  //     console.error('Error fetching trial balance data:', error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }, [selectedDateRange]);
+
+  // Info: (20241204 - Anna) 更新 fetchTrialBalanceData 函數為使用 trigger 方法
   const fetchTrialBalanceData = useCallback(async () => {
-    if (!selectedDateRange || selectedDateRange.endTimeStamp === 0) return;
+    // eslint-disable-next-line no-console
+    console.log('API Query Params: ', {
+      companyId,
+      startDate: selectedDateRange?.startTimeStamp,
+      endDate: selectedDateRange?.endTimeStamp,
+      page: 1,
+      pageSize: 10,
+    });
 
     if (
-      prevSelectedDateRange.current &&
-      prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
-      prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
-      hasFetchedOnce
+      !selectedDateRange ||
+      selectedDateRange.endTimeStamp === 0 ||
+      (prevSelectedDateRange.current &&
+        prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
+        prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
+        hasFetchedOnce)
     ) {
+      // eslint-disable-next-line no-console
+      console.log('Invalid date range, skipping fetch.');
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await APIHandler<ITrialBalancePayload>(APIName.TRIAL_BALANCE_LIST, {
+      // Info: (20241204 - Anna) 使用 trigger 手動觸發 APIHandler
+      const response = await fetchTrialBalance({
+        params: { companyId },
         query: {
           startDate: selectedDateRange.startTimeStamp,
           endDate: selectedDateRange.endTimeStamp,
@@ -61,24 +151,47 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
           pageSize: 10,
         },
       });
+
+      // eslint-disable-next-line no-console
+      console.log('API Response: ', response);
+
       if (response.success && response.data) {
-        setAccountList(response.data.items.data);
-        setHasFetchedOnce(true);
-        prevSelectedDateRange.current = selectedDateRange;
+        setAccountList(response.data.items.data); // Info: (20241204 - Anna) 更新帳戶列表
+        setHasFetchedOnce(true); // Info: (20241204 - Anna) 標記為已成功請求
+        prevSelectedDateRange.current = selectedDateRange; // Info: (20241204 - Anna) 更新前一个日期範圍
+      } else {
+        // eslint-disable-next-line no-console
+        console.error('API response error: ', response);
       }
     } catch (error) {
-      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.error('Error fetching trial balance data:', error);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Info: (20241204 - Anna) 請求結束，設置加載狀態為 false
     }
-  }, [selectedDateRange]);
+  }, [fetchTrialBalance, selectedDateRange, hasFetchedOnce]);
 
   useEffect(() => {
-    if (!selectedDateRange) return;
-    fetchTrialBalanceData();
-  }, [fetchTrialBalanceData, selectedDateRange]);
+    // eslint-disable-next-line no-console
+    console.log('Selected Date Range: ', selectedDateRange);
+    if (
+      !selectedDateRange ||
+      !selectedDateRange.startTimeStamp ||
+      !selectedDateRange.endTimeStamp
+    ) {
+      // Info: (20241204 - Anna) 調試不執行的條件
+      // eslint-disable-next-line no-console
+      console.log('Skipped fetching due to invalid date range.');
+      return;
+    }
+    if (
+      selectedDateRange && //  Info: (20241204 - Anna) 確保日期範圍存在
+      selectedDateRange.startTimeStamp &&
+      selectedDateRange.endTimeStamp
+    ) {
+      fetchTrialBalanceData(); //  Info: (20241204 - Anna) 僅在日期有效時觸發請求
+    }
+  }, [fetchTrialBalanceData]);
 
   // Info: (20241101 - Anna) 模擬 API 呼叫
   // const fetchTrialBalanceData = useCallback(async () => {
@@ -122,6 +235,23 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   // }, [fetchTrialBalanceData, selectedDateRange]);
 
   // Info: (20241028 - Anna) 處理 toggle 開關
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef, // Info: (20241203 - Anna) 指定需要打印的內容 Ref
+    documentTitle: `試算表`,
+    onBeforePrint: async () => {
+      // Deprecate: (20241203 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('Preparing to print the modal content...');
+      return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
+    },
+    onAfterPrint: async () => {
+      // Deprecate: (20241203 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('Printing completed.');
+      return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
+    },
+  });
   const subAccountsToggleHandler: () => void = () => {
     setSubAccountsToggle((prevState) => !prevState);
   };
@@ -172,8 +302,8 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       </div>
       {/* Info: (20241028 - Anna) Display Sub-Accounts 結束  */}
       <div className="ml-auto flex items-center gap-24px">
-        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
-        <PrintButton onClick={() => {}} disabled={false} />
+        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+        <PrintButton onClick={handlePrint} disabled={false} />
       </div>
     </div>
   );
@@ -194,6 +324,9 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
 
   // Info: (20241105 - Anna) 頁面渲染邏輯
   if (!hasFetchedOnce && !isLoading) {
+    // Info: (20241204 - Anna) 調試當前狀態
+    // eslint-disable-next-line no-console
+    console.log('No data and not loading.');
     // Info: (20241105 - Anna) 如果尚未成功請求過 API 且沒有加載
     return (
       <div className="flex h-screen flex-col items-center justify-center">
@@ -205,6 +338,9 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       </div>
     );
   } else if (isLoading) {
+    // Info: (20241105 - Anna) 調試加載狀態
+    // eslint-disable-next-line no-console
+    console.log('Loading state active.');
     // Info: (20241105 - Anna) 如果正在加載
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
@@ -216,11 +352,14 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   return (
     <div className="flex flex-col">
       {displayedSelectArea}
-      <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
+      <div
+        className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2"
+        ref={printRef}
+      >
         <div className="table-header-group border-b-0.5px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
             <div
-              className={`table-cell border-b-0.5px border-stroke-neutral-quaternary text-center align-middle`}
+              className={`table-cell border-b-0.5px border-stroke-neutral-quaternary text-center align-middle print:hidden`}
             >
               <div className="flex items-center justify-center">
                 <div className="relative">
