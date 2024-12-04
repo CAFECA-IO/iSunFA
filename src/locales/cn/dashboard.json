@@ -7,7 +7,7 @@
 
   "DASHBOARD": {
     "DASHBOARD": "仪表板",
-    "TO_DO_LIST": "待办事项",
+    "TO_DO_LIST": "事件计划",
     "CALENDAR_NOT_YET_LINKED": "行事历尚未连结",
     "LINK_MY_CALENDAR": "连结我的行事历",
     "NO_SCHEDULE_FOR_TODAY": "今天没有安排待办事项",
@@ -36,7 +36,7 @@
     "START": "开始",
     "PREVIEW": "预览",
     "CANCEL": "取消",
-    "CREATE": "新增",
+    "ADD": "新增",
     "SAVE": "储存",
     "DELETE": "删除"
   },
@@ -88,9 +88,9 @@
   },
 
   "TODO_LIST_PAGE": {
-    "TODO_LIST_TITLE": "待办事项",
-    "ADD_EVENT": "新增事件",
-    "EVENT_LIST": "事件列表",
+    "TODO_LIST_TITLE": "事件计划",
+    "NEW_EVENT": "新增事件",
+    "UPCOMING_EVENTS": "即将到期事件列表",
     "ACTION": "操作",
     "NO_PENDING_TASKS": "没有待办事项",
     "ADD_NEW_EVENT": "新增事件",
