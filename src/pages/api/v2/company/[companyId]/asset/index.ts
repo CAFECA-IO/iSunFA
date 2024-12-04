@@ -56,11 +56,25 @@ export async function handleGetRequest() {
  * o 5. Format the result (middleware)
  * o 6. Return the result (middleware)
  * o ps1. register the zod schema for the input and output (/lib/utils/zod_schema/asset.ts)
- * o ps2. register the zod schema in methodHandlers
- * x ps3. register the API handler interface in middleware
+ * o ps2. register the zod schema in constant (/constants/zod_schema.ts)
+ * o ps3. register the API handler interface in middleware
  * x ps4. check the main handler
  * o ps5. create repo for asset database operation, repo will throw error directly
  */
+
+type IHandlerResultPayload = IAssetListPayload | IAssetDetails | IHandlePostRequestResult['payload'] | null;
+
+interface IHandlerResult {
+  statusMessage: string;
+}
+
+interface IHandlePostRequestResult extends IHandlerResult {
+  payload: ICreateAssetWithVouchersRepoResponse | null;
+}
+
+interface IHandlerResponse extends IHandlerResult {
+  payload: IHandlerResultPayload;
+}
 
 export const handlePostRequest: IHandleRequest<APIName.CREATE_ASSET_V2, ICreateAssetWithVouchersRepoResponse> = async ({
   query,
@@ -101,34 +115,30 @@ export const handlePostRequest: IHandleRequest<APIName.CREATE_ASSET_V2, ICreateA
   };
 
   // Info: (20241204 - Luphia) Insert the new asset and vouchers to the database and get the new asset id
-  const newAssetResult = await createAssetWithVouchers(newAsset);
+  const newAssetResult: ICreateAssetWithVouchersRepoResponse = await createAssetWithVouchers(newAsset);
 
   // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
   const payload: ICreateAssetWithVouchersRepoResponse = newAssetResult;
   const statusMessage = STATUS_MESSAGE.CREATED;
+  const result: IHandlePostRequestResult = { statusMessage, payload };
 
-  return { statusMessage, payload };
-}
-
-interface IPostRespnse {
-  statusMessage: string;
-  payload: IAssetDetails | null;
-}
+  return result;
+};
 
 const methodHandlers: {
-  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IPostRespnse>;
+  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
 } = {
   GET: handleGetRequest,
-  POST:  (req, res) => withRequestValidation(APIName.CREATE_ASSET_V2, req, res, handlePostRequest),
+  POST: (req, res) => withRequestValidation(APIName.CREATE_ASSET_V2, req, res, handlePostRequest),
 };
 
 // Info: (20241204 - Luphia) API main handler, will call the middleware to handle the request
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAssetListPayload | IAssetDetails | null>>
+  res: NextApiResponse<IResponseData<IHandlerResultPayload>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAssetListPayload | IAssetDetails | null = null;
+  let payload: IHandlerResultPayload = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -143,7 +153,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IAssetListPayload | IAssetDetails | null>(
+    const { httpCode, result } = formatApiResponse<IHandlerResultPayload>(
       statusMessage,
       payload
     );

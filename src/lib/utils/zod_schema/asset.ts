@@ -21,6 +21,7 @@ export const AssetCreateInputBodyValidator = z.object({
   amount: z.number(),
   depreciationStart: z.number().optional(),
   depreciationMethod: z.string().optional(),
+  residualValue: z.number(),
   usefulLife: z.number().optional(),
   note: z.string().optional(),
 });

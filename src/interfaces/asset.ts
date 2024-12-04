@@ -1,6 +1,8 @@
 import type { IVoucherEntity } from '@/interfaces/voucher';
 import type { ICompanyEntity } from '@/interfaces/company';
 import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
+import { z } from 'zod';
+import { AssetCreateInputBodyValidator } from '@/lib/utils/zod_schema/asset';
 /* Info: (20240927 - Shirley) asset v1 介面 */
 export interface IAsset {
   id: number;
@@ -93,20 +95,7 @@ export interface IRelatedVoucher {
   number: string;
 }
 
-export interface ICreateAssetInput {
-  assetName: string;
-  assetType: string;
-  assetNumber: string;
-  acquisitionDate: number;
-  purchasePrice: number;
-  currencyAlias: string;
-  amount: number;
-  depreciationStart?: number;
-  depreciationMethod?: string;
-  residualValue?: number;
-  usefulLife?: number;
-  note?: string;
-}
+export type ICreateAssetInput = z.infer<typeof AssetCreateInputBodyValidator>;
 
 export interface IUpdateAssetInput {
   updatedAt: number;
@@ -146,20 +135,6 @@ export const mockAssetDetails: IAssetDetails = {
     { id: 102, number: 'V-2023-002' },
   ],
   note: 'Main office computer',
-};
-
-export const mockCreateAssetInput: ICreateAssetInput = {
-  assetName: 'New Office Laptop',
-  assetType: 'Equipment',
-  assetNumber: 'EQ-002',
-  acquisitionDate: 1632511200,
-  purchasePrice: 30000,
-  currencyAlias: 'TWD',
-  amount: 30000,
-  depreciationStart: 1632511200,
-  depreciationMethod: 'straight-line',
-  usefulLife: 36000,
-  note: 'Laptop for new employee',
 };
 
 export const mockUpdateAssetInput: IUpdateAssetInput = {
