@@ -25,7 +25,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   const [channel, setChannel] = useState<Channel | undefined>(undefined);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState<boolean>(false);
-  const { trigger: getRoomAPI } = APIHandler<IRoom>(APIName.ROOM_ADD);
+  const { trigger: createRoomAPI } = APIHandler<IRoom>(APIName.ROOM_ADD);
   const { trigger: deleteRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
   // const { trigger: getRoomByIdAPI } = APIHandler<IRoom>(APIName.ROOM_GET_BY_ID); // Info: (20241121 - tzuhan) 目前沒有用的，目前用 pusher 傳來的是足夠的
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
@@ -114,18 +114,18 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   }, [room]);
 
   // Info: (20241204 - tzuhan) 獲取房間資料
-  const getRoom = useCallback(async () => {
-    const { success, code, data: newRoom } = await getRoomAPI();
+  const createRoom = useCallback(async () => {
+    const { success, code, data: newRoom } = await createRoomAPI();
     setGetRoomSuccess(success);
     setGetRoomCode(code);
     if (success && newRoom) setRoom(newRoom);
-  }, [getRoomAPI]);
+  }, [createRoomAPI]);
 
   // Info: (20241204 - tzuhan) 切換 QR 代碼模態框
   const toggleQRCodeModal = useCallback(() => {
     setIsQRCodeModalOpen((prev) => {
       if (!prev && !room) {
-        getRoom();
+        createRoom();
       } else if (channel && !channel.subscribed) {
         channel.subscribe();
       }
