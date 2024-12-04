@@ -1,7 +1,6 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import {
-  IAssetDetails,
   IAssetItem,
   mockAssetItem,
   ICreateAssetWithVouchersRepo,
@@ -15,6 +14,8 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { createAssetWithVouchers } from '@/lib/utils/repo/asset.repo';
 import { IHandleRequest } from '@/interfaces/handleRequest';
+import { z } from 'zod';
+import { AssetCreateOutputValidator } from '@/lib/utils/zod_schema/asset';
 
 interface IAssetListPayload extends IPaginatedData<IAssetItem[]> {}
 
@@ -48,38 +49,50 @@ export async function handleGetRequest() {
   return { statusMessage, payload };
 }
 
+/* Info: (20241204 - Luphia) API develop SOP
+ * 1. Mock 階段
+ *    1. 註冊 API connection (/constants/api_connection.ts, /interfaces/api_connection.ts)
+ *    2. 建立 API input and out zod schema 檔案 (/lib/utils/zod_schema/asset.ts)
+ *    3. 註冊 zod schema (/constants/zod_schema.ts)
+ *    4. 建立獨立的 Interface 檔案，需取自 zod schema (/interfaces/asset.ts)
+ *    5. 根據 API 文件建立 API 文件與 mock data (URI)
+ * 2. 建立一個 repo 統一處理資料庫操作邏輯
+ */
+
 /* ToDo: (20241204 - Luphia) prepare to done
  * o 1. Check the User Permission (middleware)
  * o 2. Check the User Input (middleware)
- * o 3. Create the Asset with repo
+ * o 3. Create the Asset with repo 建立 repo
  * x 4. Create the future Vouchers for asset with repo
  * o 5. Format the result (middleware)
  * o 6. Return the result (middleware)
  * o ps1. register the zod schema for the input and output (/lib/utils/zod_schema/asset.ts)
  * o ps2. register the zod schema in constant (/constants/zod_schema.ts)
  * o ps3. register the API handler interface in middleware
- * x ps4. check the main handler
+ * o ps4. check the main handler
  * o ps5. create repo for asset database operation, repo will throw error directly
  */
 
-type IHandlerResultPayload = IAssetListPayload | IAssetDetails | IHandlePostRequestResult['payload'] | null;
+type IHandlerResultPayload = IAssetListPayload | IHandlePostRequestResult['payload'] | null;
 
 interface IHandlerResult {
   statusMessage: string;
 }
 
 interface IHandlePostRequestResult extends IHandlerResult {
-  payload: ICreateAssetWithVouchersRepoResponse | null;
+  payload: z.infer<typeof AssetCreateOutputValidator>;
 }
 
+// Deprecated: (20241204 - Luphia) remove eslint-disable
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface IHandlerResponse extends IHandlerResult {
   payload: IHandlerResultPayload;
 }
 
-export const handlePostRequest: IHandleRequest<APIName.CREATE_ASSET_V2, ICreateAssetWithVouchersRepoResponse> = async ({
-  query,
-  body,
-}) => {
+export const handlePostRequest: IHandleRequest<
+  APIName.CREATE_ASSET_V2,
+  ICreateAssetWithVouchersRepoResponse
+> = async ({ query, body }) => {
   const { companyId } = query as { companyId: string };
   const {
     assetName,
@@ -115,10 +128,11 @@ export const handlePostRequest: IHandleRequest<APIName.CREATE_ASSET_V2, ICreateA
   };
 
   // Info: (20241204 - Luphia) Insert the new asset and vouchers to the database and get the new asset id
-  const newAssetResult: ICreateAssetWithVouchersRepoResponse = await createAssetWithVouchers(newAsset);
+  const newAssetResult: ICreateAssetWithVouchersRepoResponse =
+    await createAssetWithVouchers(newAsset);
 
   // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
-  const payload: ICreateAssetWithVouchersRepoResponse = newAssetResult;
+  const payload = newAssetResult;
   const statusMessage = STATUS_MESSAGE.CREATED;
   const result: IHandlePostRequestResult = { statusMessage, payload };
 
@@ -126,6 +140,8 @@ export const handlePostRequest: IHandleRequest<APIName.CREATE_ASSET_V2, ICreateA
 };
 
 const methodHandlers: {
+  // Deprecated: (20241204 - Luphia) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
 } = {
   GET: handleGetRequest,
@@ -153,10 +169,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IHandlerResultPayload>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<IHandlerResultPayload>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

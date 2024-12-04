@@ -26,7 +26,18 @@ export const AssetCreateInputBodyValidator = z.object({
   note: z.string().optional(),
 });
 
-export const AssetCreateOutputValidator = AssetCreateInputBodyValidator.extend({
+const CreateAssetWithVouchersRepoResponseValidator = z.object({
+  id: z.number(),
+  name: z.string(),
+  number: z.string(),
+  companyId: z.number(),
+  status: z.string(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  note: z.string(),
+});
+
+export const AssetCreateOutputValidator = CreateAssetWithVouchersRepoResponseValidator.extend({
   id: z.number(),
 });
 
