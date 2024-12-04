@@ -103,6 +103,7 @@ export interface ICreateAssetInput {
   amount: number;
   depreciationStart?: number;
   depreciationMethod?: string;
+  residualValue?: number;
   usefulLife?: number;
   note?: string;
 }
@@ -392,13 +393,12 @@ export interface ICreateAssetWithVouchersRepo {
   acquisitionDate: number;
   purchasePrice: number;
   accumulatedDepreciation: number; // Deprecated: (20241204 - Shirley) no use
-  residualValue: number;
-  remainingLife: number; // Deprecated: (20241204 - Shirley) no use
-  depreciationStart: number;
-  depreciationMethod: string;
-  usefulLife: number;
+  residualValue?: number;
+  remainingLife?: number; // Deprecated: (20241204 - Shirley) no use
+  depreciationStart?: number;
+  depreciationMethod?: string;
+  usefulLife?: number;
   note: string;
-  relatedVouchers: IVoucherEntity[]; // ToDo: (20241204 - Luphia) redesign a new interface
 }
 
 export interface ICreateAssetWithVouchersRepoResponse {
