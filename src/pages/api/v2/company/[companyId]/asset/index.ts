@@ -49,14 +49,22 @@ export async function handleGetRequest() {
   return { statusMessage, payload };
 }
 
-/* Info: (20241204 - Luphia) API develop SOP
+/* Info: (20241204 - Luphia) API develop SOP 以 POST ASSET API 為例
+ * 0. 前置作業
+ *    1. 根據 Mockup 設計 API 並撰寫 API Wiki 文件 (URI, Method, Request, Response)
+ *    2. 設計 DB schema 並撰寫 DB schema 文件
+ *    3. 繪製 Entity Relationship Diagram (ERD)
+ *    4. 繪製 API Sequence Diagram
  * 1. Mock 階段
  *    1. 註冊 API connection (/constants/api_connection.ts, /interfaces/api_connection.ts)
- *    2. 建立 API input and out zod schema 檔案 (/lib/utils/zod_schema/asset.ts)
+ *    2. 建立 API input and output zod schema 檔案 (/lib/utils/zod_schema/asset.ts)
  *    3. 註冊 zod schema (/constants/zod_schema.ts)
  *    4. 建立獨立的 Interface 檔案，需取自 zod schema (/interfaces/asset.ts)
- *    5. 根據 API 文件建立 API 文件與 mock data (URI)
- * 2. 建立一個 repo 統一處理資料庫操作邏輯
+ *    5. 根據 URI 建立 API 文件
+ *    6. 撰寫 Mock data (/interfaces/asset.ts)
+ * 2. 實際開發階段
+ *    1. 撰寫 unittest (pages/api/v2/company/[companyId]/asset/index.test.ts)
+ *    2. 撰寫 API handler (/pages/api/v2/company/[companyId]/asset/index.ts)
  */
 
 /* ToDo: (20241204 - Luphia) prepare to done
@@ -140,8 +148,6 @@ export const handlePostRequest: IHandleRequest<
 };
 
 const methodHandlers: {
-  // Deprecated: (20241204 - Luphia) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
 } = {
   GET: handleGetRequest,
