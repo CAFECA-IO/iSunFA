@@ -11,8 +11,8 @@ import { ProgressStatus } from '@/constants/account';
 
 interface FloatingUploadPopupProps {
   files: IFileUIBeta[];
-  pauseFileUpload: (file: IFileUIBeta, index: number) => void;
-  deleteFile: (file: IFileUIBeta, index: number) => void;
+  pauseFileUpload: (fileId: number | null, fileName: string) => void;
+  deleteFile: (fileId: number | null, fileName: string) => void;
 }
 
 const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({
@@ -29,15 +29,15 @@ const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({
   ).length;
 
   // Info: (20240919 - tzuhan) 暫停或繼續上傳
-  const togglePause = (index: number) => {
+  const togglePause = (file: IFileUIBeta) => {
     messageModalDataHandler({
       title: t('certificate:PAUSE.TITLE'),
       content: t('certificate:PAUSE.CONTENT'),
-      notes: `${files[index].name}?`,
+      notes: `${file.name}?`,
       messageType: MessageType.WARNING,
       submitBtnStr: t('certificate:PAUSE.YES'),
       submitBtnFunction: () => {
-        pauseFileUpload(files[index], index);
+        pauseFileUpload(file.id, file.name);
       },
       backBtnStr: t('certificate:PAUSE.NO'),
     });
@@ -45,16 +45,16 @@ const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({
   };
 
   // Info: (20240919 - tzuhan) 刪除上傳文件
-  const handleDelete = (index: number) => {
+  const handleDelete = (file: IFileUIBeta) => {
     messageModalDataHandler({
       title: t('certificate:DELETE.TITLE'),
       content: t('certificate:DELETE.CONTENT'),
-      notes: `${files[index].name}?`,
+      notes: `${file.name}?`,
       messageType: MessageType.WARNING,
       submitBtnStr: t('certificate:DELETE.YES'),
       submitBtnFunction: () => {
         try {
-          deleteFile(files[index], index);
+          deleteFile(file.id, file.name);
           toastHandler({
             id: ToastId.DELETE_CERTIFICATE_SUCCESS,
             type: ToastType.SUCCESS,
@@ -112,8 +112,8 @@ const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({
                 <UploadCertificateItem
                   key={`uploading-${index + 1}`}
                   file={file}
-                  onPauseToggle={() => togglePause(index)}
-                  onDelete={() => handleDelete(index)}
+                  onPauseToggle={() => togglePause(file)}
+                  onDelete={() => handleDelete(file)}
                 />
               ))
             ) : (
