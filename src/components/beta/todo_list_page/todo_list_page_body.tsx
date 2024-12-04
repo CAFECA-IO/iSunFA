@@ -126,14 +126,14 @@ const TodoListPageBody = () => {
 
         <Button variant="tertiary" size="default" onClick={toggleCreateTodoModal}>
           <IoAdd size={20} />
-          <p>{t('dashboard:TODO_LIST_PAGE.ADD_EVENT')}</p>
+          <p>{t('dashboard:TODO_LIST_PAGE.NEW_EVENT')}</p>
         </Button>
       </section>
 
       <section className="flex items-center gap-16px">
         <div className="flex items-center gap-8px">
           <Image src={'/icons/event_list.svg'} width={16} height={16} alt="event_list"></Image>
-          <h3>{t('dashboard:TODO_LIST_PAGE.EVENT_LIST')}</h3>
+          <h3>{t('dashboard:TODO_LIST_PAGE.UPCOMING_EVENTS')}</h3>
         </div>
 
         <div className="h-1px grow bg-divider-stroke-lv-1"></div>
