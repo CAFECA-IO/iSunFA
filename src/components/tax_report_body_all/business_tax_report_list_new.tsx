@@ -21,14 +21,6 @@ interface BusinessTaxListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
   selectedReportLanguage: ReportLanguagesKey; // Info: (20241203 - Anna) 接收語言選擇
 }
-
-// Info: (20241017 - Anna) 不從父層拿reportId
-// interface ITaxReportBodyAllProps {
-//   reportId: string;
-// }
-
-// Info: (20241017 - Anna) 不從父層拿reportId
-// const BusinessTaxList = ({ reportId }: ITaxReportBodyAllProps) => {
 const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   selectedDateRange,
   selectedReportLanguage,
@@ -70,9 +62,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     );
   };
 
-  // Todo: (20241017 - Anna) 先reportId，為了看UI
-  // const defaultReportId = '10000035';
-
   //  Info: (20241204 - Anna) 新增 isReportGenerated 狀態
   const [isReportGenerated, setIsReportGenerated] = useState<boolean>(false);
 
@@ -84,30 +73,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     success: generatedSuccess,
   } = APIHandler<number | null>(APIName.REPORT_GENERATE);
 
-  // Info: (20240814 - Anna) 使用 useState 定義 report401 變量的狀態，並將其類型設為 TaxReport401 | null
-
-  // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
-
-  // Deprecated: (20241129 - Liz)
-  // const {
-  //   data: reportFinancial,
-  //   // Info: (20240816 - Anna)
-  //   // code: getReportFinancialCode,
-  //   // success: getReportFinancialSuccess,
-  //   isLoading: getReportFinancialIsLoading,
-  // } = APIHandler<TaxReport401Content>(
-  //   APIName.REPORT_GET_BY_ID,
-  //   {
-  //     params: {
-  //       companyId: selectedCompany?.id,
-  //       // Info: (20241017 - Anna) 改用預設的reportId
-  //       // reportId: reportId ?? NON_EXISTING_REPORT_ID,
-  //       reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
-  //     },
-  //   },
-  //   hasCompanyId
-  // );
-
   const [reportId, setReportId] = useState<string | null>(null); // Info: (20241204 - Anna) 替換 defaultReportId
   const [financialReport, setFinancialReport] = useState<TaxReport401Content | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -117,8 +82,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     APIName.REPORT_GET_BY_ID
   );
 
-  // Info: (20241204 - Anna) generate report
-  // Info: (20241204 - Anna) 新增 handleGenerateReport 方法
+  // Info: (20241204 - Anna) 新增 handleGenerateReport 方法 generate report
   const handleGenerateReport = async () => {
     if (!selectedDateRange || !selectedCompany?.id) return;
 
@@ -223,8 +187,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     }
   }, [generatedCode, generatedLoading, generatedSuccess]);
 
-  // Info: (20241204 - Anna)  監聽 reportId，觸發報告加載
-  // Info: (20241204 - Anna) get report by id
+  // Info: (20241204 - Anna)  監聽 reportId，觸發報告加載 get report by id
   useEffect(() => {
     if (isAuthLoading || !selectedCompany || !reportId || isLoading) return;
     if (isReportGenerated && !isLoading && reportId) {
@@ -1589,7 +1552,12 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       {displayedSelectArea()}
       <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
         {page1}
-        <hr className="break-before-page" />
+      </div>
+
+      <div className="mx-auto w-a4-height origin-top overflow-x-auto">
+        {financialReport && (
+          <pre>{JSON.stringify(financialReport, null, 2)}</pre> // 🌟 Output the entire response data here for debugging
+        )}
       </div>
     </>
   );
