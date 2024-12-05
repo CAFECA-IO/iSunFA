@@ -7,45 +7,17 @@ import CollapseButton from '@/components/button/collapse_button';
 interface ITrialBalanceItemProps {
   account: TrialBalanceItem;
   totalExpanded: boolean; // Info: (20241029 - Anna) Receive expanded state from parent
-  // selectedDateRange: IDatePeriod | null; // Info: (20241107 - Anna) 接收日期範圍作為 prop
 }
 
 const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanceItemProps) => {
   const [isChecked, setIsChecked] = useState(false);
   // Info: (20241025 - Anna) 新增狀態來追蹤按鈕展開狀態
   const [localIsExpanded, setLocalIsExpanded] = useState(totalExpanded); // Info: (20241029 - Anna) 使用解構的 totalExpanded 作為初始值
-  // const { selectedCompany } = useUserCtx();
-  // const companyId = selectedCompany?.id;
 
   // Info: (20241029 - Anna) Update local isExpanded when parent state changes
   useEffect(() => {
     setLocalIsExpanded(totalExpanded);
   }, [totalExpanded]);
-
-  // Info: (20241107 - Anna) 設定 API 參數與請求方法
-  // const fetchTrialBalanceData = useCallback(async () => {
-  //   if (!companyId || !selectedDateRange) return;
-  //   const response = await APIHandler<TrialBalanceItem[]>(APIName.TRIAL_BALANCE_LIST, {
-  //     params: { companyId },
-  //     query: {
-  //       startDate: selectedDateRange.startTimeStamp,
-  //       endDate: selectedDateRange.endTimeStamp,
-  //       page: 1,
-  //       pageSize: 10,
-  //     },
-  //   });
-  //    if (response.success && response.data) {
-  //      // eslint-disable-next-line no-console
-  //      console.log(response.data); // For debugging or future use
-  //    }
-  // }, [companyId, selectedDateRange]);
-
-  // Info: (20241107 - Anna) 當日期範圍變更時，重新請求 API
-  // useEffect(() => {
-  //   if (selectedDateRange) {
-  //     fetchTrialBalanceData();
-  //   }
-  // }, [fetchTrialBalanceData, selectedDateRange]);
 
   const displayedCheckbox = (
     <div className="relative px-8px py-6">
@@ -125,10 +97,14 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
     <>
       <div className="table-row h-20px font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
         {/* Info: (20240920 - Julian) Select */}
-        <div className={`table-cell w-32px text-center`}>{displayedCheckbox}</div>
+        <div className={`table-cell w-32px text-center print:hidden`}>{displayedCheckbox}</div>
         {/* Info: (20241004 - Anna) Accounting */}
-        <div className="table-cell w-50px text-center align-middle">{displayedAccountingCode}</div>
-        <div className="table-cell w-370px text-center align-middle">{displayedAccountingName}</div>
+        <div className="table-cell w-50px text-center align-middle print:bg-neutral-50">
+          {displayedAccountingCode}
+        </div>
+        <div className="table-cell w-370px text-center align-middle print:bg-neutral-50">
+          {displayedAccountingName}
+        </div>
         {/* Info: (20241009 - Anna) Beginning Debit */}
         <div
           className={`table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600`}
