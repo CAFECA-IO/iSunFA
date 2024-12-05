@@ -11,15 +11,6 @@ import APIHandler from '@/lib/utils/api_handler';
 import { ILedgerPayload } from '@/interfaces/ledger';
 import { useUserCtx } from '@/contexts/user_context';
 
-// // Info: (20241105 - Anna) 定義完整的 API 回應結構
-// interface ILedgerApiResponse {
-//   powerby: string;
-//   success: boolean;
-//   code: string;
-//   message: string;
-//   payload: ILedgerPayload; // Info: (20241105 - Anna) 這裡的 payload 使用 ILedgerPayload 類型
-// }
-
 enum ReportType {
   General = 'general',
   Detailed = 'detailed',
@@ -27,8 +18,9 @@ enum ReportType {
 }
 
 const LedgerPageBody = () => {
-  const { t } = useTranslation(['journal']);
+  const { t } = useTranslation(['journal', 'date_picker', 'filter_section_type', 'reports']);
   const { selectedCompany } = useUserCtx();
+  // const [financialReport, setFinancialReport] = useState<IPaginatedAccount | null>(null); // Info: (20241205 - Anna) 用來看回傳的會計科目 Add state to hold the financial report data for debugging output
 
   // Info: (20241105 - Anna) 定義各類別的會計科目選項
   // Info: (20241105 - Anna) 從 src/constants/account.ts 的 export enum AccountType 而來，只留下有科目的類別
@@ -125,6 +117,8 @@ const LedgerPageBody = () => {
       });
 
       if (accountTitleList) {
+        // setFinancialReport(accountTitleList); // Info: (20241205 - Anna) 用來看回傳的會計科目 Set the financial report data to state for output below
+
         // Info: (20241105 - Anna) 初始化臨時陣列來分類不同類型的會計科目
         const assets: string[] = [];
         const liabilities: string[] = [];
@@ -223,95 +217,102 @@ const LedgerPageBody = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center gap-40px">
-      <div className="flex w-full flex-col items-stretch gap-40px">
-        <div>
-          <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
-            {t('journal:LEDGER.LEDGER_PERIOD')}
-          </p>
-          <div className="flex min-w-250px flex-1 flex-col">
-            <DatePicker
-              period={selectedDateRange}
-              setFilteredPeriod={setSelectedDateRange}
-              type={DatePickerType.TEXT_PERIOD}
+    <>
+      <div className="relative flex min-h-screen flex-col items-center gap-40px">
+        <div className="flex w-full flex-col items-stretch gap-40px">
+          <div>
+            <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
+              {t('journal:LEDGER.LEDGER_PERIOD')}
+            </p>
+            <div className="flex min-w-250px flex-1 flex-col">
+              <DatePicker
+                period={selectedDateRange}
+                setFilteredPeriod={setSelectedDateRange}
+                type={DatePickerType.TEXT_PERIOD}
+              />
+            </div>
+
+            <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
+              {t('journal:LEDGER.LABEL_TYPE')}
+            </p>
+            <div className="flex w-1/3 flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-baseline md:justify-between">
+              <label
+                htmlFor="input-general"
+                className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
+              >
+                <input
+                  type="radio"
+                  id="input-general"
+                  name="ledger-type"
+                  className={radioButtonStyle}
+                  checked={selectedReportType === ReportType.General}
+                  onChange={() => handleReportTypeChange(ReportType.General)}
+                />
+                <p className="text-sm">{t('journal:LEDGER.GENERAL')}</p>
+              </label>
+              <label
+                htmlFor="input-detailed"
+                className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
+              >
+                <input
+                  type="radio"
+                  id="input-detailed"
+                  name="ledger-type"
+                  className={radioButtonStyle}
+                  checked={selectedReportType === ReportType.Detailed}
+                  onChange={() => handleReportTypeChange(ReportType.Detailed)}
+                />
+                <p className="text-sm">{t('journal:LEDGER.DETAILED')}</p>
+              </label>
+              <label
+                htmlFor="input-general-detailed"
+                className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
+              >
+                <input
+                  type="radio"
+                  id="input-general-detailed"
+                  name="ledger-type"
+                  className={radioButtonStyle}
+                  checked={selectedReportType === ReportType.All}
+                  onChange={() => handleReportTypeChange(ReportType.All)}
+                />
+                <p className="text-sm">{t('journal:LEDGER.GENERAL_DETAILED')}</p>
+              </label>
+            </div>
+
+            <p className="mt-18px text-sm font-semibold text-neutral-300">
+              {t('journal:LEDGER.SPECIFIC_ACCOUNTING_TITLE')}
+            </p>
+            <AccountRangeFilter
+              // Info: (20241105 - Anna) 傳入各類別的會計科目選項
+              assetOptions={assetOptions}
+              liabilityOptions={liabilityOptions}
+              equityOptions={equityOptions}
+              revenueOptions={revenueOptions}
+              costOptions={costOptions}
+              expenseOptions={expenseOptions}
+              incomeOptions={incomeOptions}
+              otherComprehensiveIncomeOptions={otherComprehensiveIncomeOptions}
+              onRangeSelected={(startAccountNo, endAccountNo) => {
+                setSelectedStartAccountNo(startAccountNo);
+                setSelectedEndAccountNo(endAccountNo);
+              }}
             />
           </div>
 
-          <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
-            {t('journal:LEDGER.LABEL_TYPE')}
-          </p>
-          <div className="flex w-1/3 flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-baseline md:justify-between">
-            <label
-              htmlFor="input-general"
-              className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
-            >
-              <input
-                type="radio"
-                id="input-general"
-                name="ledger-type"
-                className={radioButtonStyle}
-                checked={selectedReportType === ReportType.General}
-                onChange={() => handleReportTypeChange(ReportType.General)}
-              />
-              <p className="text-sm">{t('journal:LEDGER.GENERAL')}</p>
-            </label>
-            <label
-              htmlFor="input-detailed"
-              className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
-            >
-              <input
-                type="radio"
-                id="input-detailed"
-                name="ledger-type"
-                className={radioButtonStyle}
-                checked={selectedReportType === ReportType.Detailed}
-                onChange={() => handleReportTypeChange(ReportType.Detailed)}
-              />
-              <p className="text-sm">{t('journal:LEDGER.DETAILED')}</p>
-            </label>
-            <label
-              htmlFor="input-general-detailed"
-              className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
-            >
-              <input
-                type="radio"
-                id="input-general-detailed"
-                name="ledger-type"
-                className={radioButtonStyle}
-                checked={selectedReportType === ReportType.All}
-                onChange={() => handleReportTypeChange(ReportType.All)}
-              />
-              <p className="text-sm">{t('journal:LEDGER.GENERAL_DETAILED')}</p>
-            </label>
-          </div>
-
-          <p className="mt-18px text-sm font-semibold text-neutral-300">
-            {t('journal:LEDGER.SPECIFIC_ACCOUNTING_TITLE')}
-          </p>
-          <AccountRangeFilter
-            // Info: (20241105 - Anna) 傳入各類別的會計科目選項
-            assetOptions={assetOptions}
-            liabilityOptions={liabilityOptions}
-            equityOptions={equityOptions}
-            revenueOptions={revenueOptions}
-            costOptions={costOptions}
-            expenseOptions={expenseOptions}
-            incomeOptions={incomeOptions}
-            otherComprehensiveIncomeOptions={otherComprehensiveIncomeOptions}
-            onRangeSelected={(startAccountNo, endAccountNo) => {
-              setSelectedStartAccountNo(startAccountNo);
-              setSelectedEndAccountNo(endAccountNo);
-            }}
+          <div className="h-px w-full bg-neutral-100"></div>
+          <LedgerList
+            ledgerData={ledgerData} // Info: (20241118 - Anna) 如果 ledgerData 是 undefined，傳遞 null
+            loading={!!isLoading} // Info: (20241118 - Anna) 使用 !! 確保 loading 是 boolean
           />
         </div>
-
-        <div className="h-px w-full bg-neutral-100"></div>
-        <LedgerList
-          ledgerData={ledgerData} // Info: (20241118 - Anna) 如果 ledgerData 是 undefined，傳遞 null
-          loading={!!isLoading} // Info: (20241118 - Anna) 使用 !! 確保 loading 是 boolean
-        />
       </div>
-    </div>
+
+      {/*  Info: (20241205 - Anna) 用來看回傳的會計科目 Output the entire response data here for debugging */}
+      {/* <div className="mx-auto w-a4-height origin-top overflow-x-auto">
+        {financialReport && <pre>{JSON.stringify(financialReport, null, 2)}</pre>}
+      </div> */}
+    </>
   );
 };
 

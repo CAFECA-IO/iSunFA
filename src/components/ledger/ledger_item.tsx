@@ -30,7 +30,7 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
   const [isChecked, setIsChecked] = useState(false);
 
   const displayedCheckbox = (
-    <div className="relative top-20px px-8px">
+    <div className="relative top-20px px-8px print:hidden">
       <input
         type="checkbox"
         className={checkboxStyle}
@@ -42,7 +42,7 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
 
   const displayedDate = (
     <div className="flex h-full items-center justify-center py-4">
-      <CalendarIcon timestamp={voucherDate} />
+      <CalendarIcon timestamp={voucherDate} unRead={false} />
     </div>
   );
 
@@ -81,22 +81,6 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
     </div>
   );
 
-  // const displayedCredit = (
-  //   <div>
-  //     {ledgerItemsData.map((ledger) => (
-  //       <div
-  //         key={ledger.id}
-  //         className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary"
-  //       >
-  //         {/* Info: (20240920 - Julian) credit */}
-  //         <p className="m-0 flex items-center text-text-neutral-primary">
-  //           {numberWithCommas(ledger.creditAmount)}
-  //         </p>
-  //       </div>
-  //     ))}
-  //   </div>
-  // );
-
   // Info: (20241118 - Anna) 使用傳入的 creditAmount、debitAmount、balance，而非 ledgerItemsData 的遍歷
   const displayedCredit = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
@@ -105,39 +89,13 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
       </p>
     </div>
   );
-  // const displayedDebit = (
-  //   <div>
-  //     {ledgerItemsData.map((ledger) => (
-  //       <div
-  //         key={ledger.id}
-  //         className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary"
-  //       >
-  //         {/* Info: (20240920 - Julian) debit */}
-  //         <p className="text-text-neutral-primary">{numberWithCommas(ledger.debitAmount)}</p>
-  //       </div>
-  //     ))}
-  //   </div>
-  // );
+
   const displayedDebit = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
       <p className="text-text-neutral-primary">{numberWithCommas(ledger.debitAmount)}</p>
     </div>
   );
 
-  // const displayedBalance = (
-  //   <div>
-  //     {ledgerItemsData.map((ledger) => (
-  //       <div
-  //         key={ledger.id}
-  //         className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary"
-  //       >
-  //         <p className="align-middle text-text-neutral-primary">
-  //           {numberWithCommas(ledger.balance)}
-  //         </p>
-  //       </div>
-  //     ))}
-  //   </div>
-  // );
   const displayedBalance = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
       <p className="align-middle text-text-neutral-primary">{numberWithCommas(ledger.balance)}</p>
