@@ -683,7 +683,8 @@ module.exports = {
 
         // Info: (20241204 - Julian) New iSunFA Landing Page
         'landing-page': {
-          bg: '#120C00',
+          black: '#120C00',
+          black2: '#585142',
 
           orange: '#FFB632',
 
@@ -721,6 +722,10 @@ module.exports = {
         bg_select_role: 'url("/images/bg_select_role.png")',
         bg_bookkeeper: 'url("/images/bg_bookkeeper.png")',
         bg_educational_trial_version: 'url("/images/bg_educational_trial_version.png")',
+
+        // Info: (20241205 - Julian) Landing Page
+        'landing-btn':
+          'linear-gradient(to bottom, transparent 60%, #FFFFFF80 100%), linear-gradient(to bottom, #FFA502 0%, #FFA502 100%)',
       },
       zIndex: {
         '-10': '-10',
@@ -1370,6 +1375,10 @@ module.exports = {
           '0px 50px 17px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 28px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 11px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 6px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 2px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
 
         'landing-nav': 'inset 0px -1px 8px 4px rgba(255, 255, 255, 0.4)',
+        'landing-btn':
+          'inset 2px 4px 5px 0px rgba(255, 255, 255, 0.4), inset -2px -4px 5px 0px rgba(255, 255, 255, 0.4)',
+        'landing-btn-hover':
+          'inset 2px 4px 5px 0px rgba(255, 255, 255, 0.4), inset -2px -4px 5px 0px rgba(255, 255, 255, 0.4), 0px 0px 70px 10px rgba(255, 182, 50, 0.5)',
       },
       dropShadow: {
         xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',

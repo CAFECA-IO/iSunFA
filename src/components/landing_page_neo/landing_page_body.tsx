@@ -9,7 +9,7 @@ import {
 
 const LandingPageBody: React.FC = () => {
   return (
-    <div className="relative flex flex-auto flex-col bg-landing-page-bg px-36px py-32px font-dm-sans">
+    <div className="relative flex flex-auto flex-col bg-landing-page-black px-36px py-32px font-dm-sans">
       {/* Info: (20241204 - Julian) Header */}
       <LandingNavbar />
 

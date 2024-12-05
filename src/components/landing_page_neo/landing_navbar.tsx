@@ -1,8 +1,10 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { BsFillRocketTakeoffFill } from 'react-icons/bs';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import LandingI18n from '@/components/landing_page_neo/landing_i18n';
+import { LandingButton } from '@/components/landing_page_neo/landing_button';
 // import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
@@ -20,45 +22,31 @@ const LandingNavbar: React.FC = () => {
   const navigationOptions = (
     <>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-        <button
-          type="button"
-          className="px-24px py-10px text-landing-page-white hover:text-landing-page-orange"
-        >
+        <LandingButton type="button" variant="default">
           Users
-        </button>
+        </LandingButton>
       </Link>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-        <button
-          type="button"
-          className="px-24px py-10px text-landing-page-white hover:text-landing-page-orange"
-        >
+        <LandingButton type="button" variant="default">
           Pricing
-        </button>
+        </LandingButton>
       </Link>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-        <button
-          type="button"
-          className="px-24px py-10px text-landing-page-white hover:text-landing-page-orange"
-        >
+        <LandingButton type="button" variant="default">
           Faith
-        </button>
+        </LandingButton>
       </Link>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-        <button
-          type="button"
-          className="px-24px py-10px text-landing-page-white hover:text-landing-page-orange"
-        >
+        <LandingButton type="button" variant="default">
           Join Us
-        </button>
+        </LandingButton>
       </Link>
       {/* ToDO: (20241204 - Julian) Button */}
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-        <button
-          type="button"
-          className="px-24px py-10px text-landing-page-white hover:text-landing-page-orange"
-        >
-          Try it Now
-        </button>
+        <LandingButton type="button" variant="primary" className="w-full">
+          <BsFillRocketTakeoffFill size={20} />
+          <p>Try it Now</p>
+        </LandingButton>
       </Link>
     </>
   );
