@@ -373,7 +373,7 @@ export interface ICreateAssetWithVouchersRepo {
   depreciationStart?: number;
   depreciationMethod?: string;
   usefulLife?: number;
-  note: string;
+  note?: string;
 }
 
 export interface ICreateAssetWithVouchersRepoResponse {

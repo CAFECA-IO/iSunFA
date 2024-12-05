@@ -1,6 +1,6 @@
 import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import { z } from 'zod';
-import { nullSchema } from '@/lib/utils/zod_schema/common';
+import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
 /**
  * Info: (20241105 - Murky)
@@ -11,16 +11,20 @@ const IRelatedVoucherValidator = z.object({
   number: z.string(),
 });
 
+const AssetQueryValidator = z.object({
+  companyId: zodStringToNumber,
+});
+
 export const AssetCreateInputBodyValidator = z.object({
   assetName: z.string(),
-  assetType: z.string(),
+  assetType: z.nativeEnum(AssetEntityType),
   assetNumber: z.string(),
   acquisitionDate: z.number(),
   purchasePrice: z.number(),
-  currencyAlias: z.string(),
+  // currencyAlias: z.string(),
   amount: z.number(),
   depreciationStart: z.number().optional(),
-  depreciationMethod: z.string().optional(),
+  depreciationMethod: z.nativeEnum(AssetDepreciationMethod).optional(),
   residualValue: z.number(),
   usefulLife: z.number().optional(),
   note: z.string().optional(),
@@ -105,7 +109,7 @@ export const assetEntityValidator = z.object({
 // Info: (20241204 - Luphia) define the schema for frontend (with api response)
 export const assetPostSchema = {
   input: {
-    querySchema: nullSchema,
+    querySchema: AssetQueryValidator,
     bodySchema: AssetCreateInputBodyValidator,
   },
   outputSchema: AssetCreateOutputValidator,

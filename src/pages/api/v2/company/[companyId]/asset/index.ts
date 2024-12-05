@@ -19,7 +19,7 @@ import { AssetCreateOutputValidator } from '@/lib/utils/zod_schema/asset';
 
 interface IAssetListPayload extends IPaginatedData<IAssetItem[]> {}
 
-export const MOCK_ASSET_LIST_PAYLOAD: IAssetListPayload = {
+const MOCK_ASSET_LIST_PAYLOAD: IAssetListPayload = {
   data: [mockAssetItem],
   page: 1,
   totalPages: 1,
@@ -65,6 +65,7 @@ export async function handleGetRequest() {
  * 2. 實際開發階段
  *    1. 撰寫 unittest (pages/api/v2/company/[companyId]/asset/index.test.ts)
  *    2. 撰寫 API handler (/pages/api/v2/company/[companyId]/asset/index.ts)
+ *    3. 設置需要使用的 middleware (整理 session, 檢查權限, 檢查輸入, 格式化輸出, 紀錄使用者行為)
  */
 
 /* ToDo: (20241204 - Luphia) prepare to done
@@ -81,8 +82,6 @@ export async function handleGetRequest() {
  * o ps5. create repo for asset database operation, repo will throw error directly
  */
 
-type IHandlerResultPayload = IAssetListPayload | IHandlePostRequestResult['payload'] | null;
-
 interface IHandlerResult {
   statusMessage: string;
 }
@@ -91,8 +90,8 @@ interface IHandlePostRequestResult extends IHandlerResult {
   payload: z.infer<typeof AssetCreateOutputValidator>;
 }
 
-// Deprecated: (20241204 - Luphia) remove eslint-disable
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type IHandlerResultPayload = IAssetListPayload | IHandlePostRequestResult['payload'] | null;
+
 interface IHandlerResponse extends IHandlerResult {
   payload: IHandlerResultPayload;
 }
@@ -101,17 +100,13 @@ export const handlePostRequest: IHandleRequest<
   APIName.CREATE_ASSET_V2,
   ICreateAssetWithVouchersRepoResponse
 > = async ({ query, body }) => {
-  const { companyId } = query as { companyId: string };
+  const { companyId } = query;
   const {
     assetName,
     assetType,
     assetNumber, // Info: (20241204 - Luphia) assetNumber is the unique identifier for the asset
     acquisitionDate,
     purchasePrice,
-    // TODO: (20241001 - Shirley) implement API
-    // Deprecated: (20241015 - Shirley) remove after API implementation
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    amount,
     depreciationStart,
     depreciationMethod,
     residualValue,
@@ -121,7 +116,7 @@ export const handlePostRequest: IHandleRequest<
 
   // Info: (20241204 - Luphia) collect the new asset data with db schema
   const newAsset: ICreateAssetWithVouchersRepo = {
-    companyId: parseInt(companyId, 10),
+    companyId,
     name: assetName,
     type: assetType,
     number: assetNumber,
@@ -136,12 +131,12 @@ export const handlePostRequest: IHandleRequest<
   };
 
   // Info: (20241204 - Luphia) Insert the new asset and vouchers to the database and get the new asset id
-  const newAssetResult: ICreateAssetWithVouchersRepoResponse =
-    await createAssetWithVouchers(newAsset);
+  const rs = await createAssetWithVouchers(newAsset);
+  const payload = { ...rs };
 
-  // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
-  const payload = newAssetResult;
   const statusMessage = STATUS_MESSAGE.CREATED;
+
+  // // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
   const result: IHandlePostRequestResult = { statusMessage, payload };
 
   return result;
