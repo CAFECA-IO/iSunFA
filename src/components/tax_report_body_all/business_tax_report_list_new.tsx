@@ -35,23 +35,14 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     contentRef: printRef, // Info: (20241203 - Anna) 指定需要打印的內容 Ref
     documentTitle: `營業稅申報書`,
     onBeforePrint: async () => {
-      // Deprecate: (20241203 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Preparing to print the modal content...');
       return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
     },
     onAfterPrint: async () => {
-      // Deprecate: (20241203 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Printing completed.');
       return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
     },
   });
 
   const displayedSelectArea = () => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('[displayedSelectArea] Display Area Rendered');
     return (
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
         <div className="ml-auto flex items-center gap-24px">
@@ -90,8 +81,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
     // Info: (20241204 - Anna) 如果日期範圍的值為 0，直接返回，不執行後續邏輯
     if (startTimeStamp === 0 || endTimeStamp === 0) {
-      // eslint-disable-next-line no-console
-      console.warn('Skipping report generation due to invalid date range.');
       return;
     }
 
@@ -108,27 +97,30 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       });
 
       if (response.success && response.data) {
-        // eslint-disable-next-line no-console
-        console.log('Generated reportId successfully:', response.data);
-        // eslint-disable-next-line no-console
-        console.log('Selected date range:', selectedDateRange);
         setReportId(String(response.data)); // Info: (20241204 - Anna) 保存報告 ID
       } else {
         // eslint-disable-next-line no-console
-        console.error('Failed to generate report. Response:', response);
+        // console.error('Failed to generate report. Response:', response);
       }
 
       // Info: (20241204 - Anna) 設定 isReportGenerated 為 true
       setIsReportGenerated(true);
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Error generating report:', error);
+      // console.error('Error generating report:', error);
     }
   };
 
   // Info: (20241204 - Anna) 根據報告 ID 加載報告內容
   const getFinancialReport = async () => {
-    if (!reportId || reportId === null) {
+    if (
+      (selectedDateRange &&
+        (selectedDateRange.startTimeStamp === 0 || selectedDateRange.endTimeStamp === 0)) ||
+      selectedDateRange === null ||
+      !reportId ||
+      reportId === '0' ||
+      reportId === null
+    ) {
       return (
         <div className="flex h-screen flex-col items-center justify-center">
           <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
@@ -159,18 +151,9 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
         console.error('Failed to fetch report. Code:', getFRCode, 'Response:', report);
         return null; // Info: (20241204 - Anna) 添加返回值，避免報錯
       }
-      // eslint-disable-next-line no-console
-      console.log('API success, data received:', report);
-      // eslint-disable-next-line no-console
-      console.log('API returned date range:', financialReport?.content.basicInfo);
       setFinancialReport(report);
-      // Deprecated: (20241128 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('call getFinancialReportAPI and getFinancialReport:', report);
       return report; // Info: (20241204 - Anna) 成功時返回獲取的報告
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error fetching financial report:', error);
       return null; // Info: (20241204 - Anna) 異常時返回 null
     } finally {
       setIsLoading(false);
@@ -179,6 +162,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
   useEffect(() => {
     if (generatedCode && !generatedLoading && generatedSuccess) {
+      // Deprecated: (20241204 - Anna)
       // eslint-disable-next-line no-console
       console.log('Report generation succeeded:', {
         code: generatedCode,
@@ -193,14 +177,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     if (isReportGenerated && !isLoading && reportId) {
       setIsLoading(true);
     }
-    // eslint-disable-next-line no-console
-    console.log('Before fetching report, reportId:', reportId);
     getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in BusinessTaxList');
-    // eslint-disable-next-line no-console
-    console.log('Fetching report for reportId:', reportId);
   }, [isAuthLoading, selectedCompany, reportId]);
 
   // Deprecated: (20241204 - Anna) 在 useEffect 中監聽 selectedDateRange
@@ -211,8 +188,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
     // Info: (20241204 - Anna) 如果日期範圍無效，不生成報告
     if (startTimeStamp === 0 || endTimeStamp === 0) {
-      // eslint-disable-next-line no-console
-      console.warn('Skipping auto-generating report due to invalid date range.');
       return;
     }
 
@@ -1552,11 +1527,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       {displayedSelectArea()}
       <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
         {page1}
-      </div>
-      <div className="mx-auto w-a4-height origin-top overflow-x-auto">
-        {financialReport && (
-          <pre>{JSON.stringify(financialReport, null, 2)}</pre> // 🌟 Output the entire response data here for debugging
-        )}
       </div>
     </>
   );

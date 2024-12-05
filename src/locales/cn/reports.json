@@ -19,7 +19,8 @@
     "VOUCHER_NO": "凭证号码",
     "ISSUER": "制单人",
     "CREDIT": "贷方",
-    "DEBIT": "借方"
+    "DEBIT": "借方",
+    "TRIAL_BALANCE_PERIOD": "试算表期间"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "最新的 TideBit ",
@@ -220,7 +221,8 @@
   },
   "REPORT": {
     "NO_DATA_AVAILABLE": "无可用数据",
-    "PLEASE_SELECT_PERIOD": "请选择期间"
+    "PLEASE_SELECT_PERIOD": "请选择期间",
+    "ACCOUNTING": "会计科目"
   },
   "COMMON": {
     "ANALYSIS_REPORTS": "分析报告",
