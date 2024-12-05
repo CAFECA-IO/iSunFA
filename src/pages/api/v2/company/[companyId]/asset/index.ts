@@ -60,12 +60,14 @@ export async function handleGetRequest() {
  *    2. 建立 API input and output zod schema 檔案 (/lib/utils/zod_schema/asset.ts)
  *    3. 註冊 zod schema (/constants/zod_schema.ts)
  *    4. 建立獨立的 Interface 檔案，需取自 zod schema (/interfaces/asset.ts)
- *    5. 根據 URI 建立 API 文件
+ *    5. 根據 URI 建立 API 檔案
  *    6. 撰寫 Mock data (/interfaces/asset.ts)
  * 2. 實際開發階段
- *    1. 撰寫 unittest (pages/api/v2/company/[companyId]/asset/index.test.ts)
- *    2. 撰寫 API handler (/pages/api/v2/company/[companyId]/asset/index.ts)
- *    3. 設置需要使用的 middleware (整理 session, 檢查權限, 檢查輸入, 格式化輸出, 紀錄使用者行為)
+ *    1. 撰寫 repo 操作 DB 的 function (src/lib/utils/repo/asset.ts)
+ *    2. 撰寫 repo 單元測試 (src/lib/utils/repo_test/asset.repo.test.ts)
+ *    3. 撰寫 utils 將邏輯整理成 function (src/lib/utils/asset.ts)
+ *    4. 撰寫 API handler (/pages/api/v2/company/[companyId]/asset/index.ts)
+ *    5. 設置需要使用的 middleware (整理 session, 檢查權限, 檢查輸入, 格式化輸出, 紀錄使用者行為)
  */
 
 /* ToDo: (20241204 - Luphia) prepare to done

@@ -1,5 +1,6 @@
 import prisma from '@/client';
 import { AssetDepreciationMethod, AssetStatus } from '@/constants/asset';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICreateAssetWithVouchersRepo } from '@/interfaces/asset';
 import { getTimestampNow } from '@/lib/utils/common';
 
@@ -60,7 +61,7 @@ export async function createManyAssets(assetData: ICreateAssetWithVouchersRepo, 
   // Info: (20241205 - Shirley) 解析原始 number 的數字部分和前綴
   const match = assetData.number.match(/^([A-Za-z-]*)(\d+)$/);
   if (!match) {
-    throw new Error('Invalid asset number format');
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
   const [, prefix, numberStr] = match;
   let currentNumber = parseInt(numberStr, 10);
@@ -95,13 +96,13 @@ export async function createManyAssets(assetData: ICreateAssetWithVouchersRepo, 
     data: assets,
   });
 
-  // 查詢所有剛才創建的資產
+  // Info: (20241205 - Shirley) 查詢所有剛才創建的資產
   const createdAssets = await prisma.asset.findMany({
     where: {
       AND: [
         { companyId: assetData.companyId },
         { createdAt: timestampNow },
-        { number: { startsWith: prefix } },
+        { number: { startsWith: prefix } }, // Info: (20241205 - Shirley) 在 Jest extension 自動執行測試，會在同一毫秒根據多個測試建立資產，因此需要加上這個條件
       ],
     },
     orderBy: {
@@ -110,7 +111,7 @@ export async function createManyAssets(assetData: ICreateAssetWithVouchersRepo, 
   });
 
   if (!createdAssets.length) {
-    throw new Error('Failed to create assets');
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
   return createdAssets;
