@@ -8,6 +8,10 @@ import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { Company, Todo, File } from '@prisma/client';
 import { ITodoCompany } from '@/interfaces/todo';
+import {
+  todoListGetListApiUtils as getListUtils,
+  todoListPostApiUtils as postUtils,
+} from '@/pages/api/v2/user/[userId]/todo/route_utils';
 
 const handleGetRequest: IHandleRequest<
   APIName.TODO_GET_BY_ID,
@@ -18,8 +22,15 @@ const handleGetRequest: IHandleRequest<
     null;
 
   const { todoId } = query;
-  const todo = await getTodoById(todoId);
-  if (todo) {
+  const todoFromPrisma = await getTodoById(todoId);
+  if (todoFromPrisma) {
+    const { startTime, endTime, note } = getListUtils.splitStartEndTimeInNote(todoFromPrisma.note);
+    const todo = {
+      ...todoFromPrisma,
+      startTime,
+      endTime,
+      note,
+    };
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     payload = todo;
   }
@@ -28,18 +39,36 @@ const handleGetRequest: IHandleRequest<
 
 const handlePutRequest: IHandleRequest<
   APIName.UPDATE_TODO,
-  Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] }
+  Todo & {
+    userTodoCompanies: { company: Company & { imageFile: File } }[];
+    startTime: number;
+    endTime: number;
+  }
 > = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: (Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] }) | null =
-    null;
+  let payload:
+    | (Todo & {
+        userTodoCompanies: { company: Company & { imageFile: File } }[];
+        startTime: number;
+        endTime: number;
+      })
+    | null = null;
 
   const { todoId } = query;
-  const { name, deadline, note, companyId } = body;
-  const updatedTodo = await updateTodo(todoId, name, deadline, note, companyId);
+  const { name, deadline, note, companyId, startTime, endTime } = body;
+  const constructedNote = postUtils.combineStartEndTimeInNote({
+    startTime,
+    endTime,
+    note,
+  });
+  const updatedTodo = await updateTodo(todoId, name, deadline, constructedNote, companyId);
   if (updatedTodo) {
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    payload = updatedTodo;
+    payload = {
+      ...updatedTodo,
+      startTime,
+      endTime,
+    };
   }
   return { statusMessage, payload };
 };
@@ -53,8 +82,17 @@ const handleDeleteRequest: IHandleRequest<
     null;
 
   const { todoId } = query;
-  const deletedTodo = await deleteTodo(Number(todoId));
-  if (deletedTodo) {
+  const deletedTodoFromPrisma = await deleteTodo(Number(todoId));
+  if (deletedTodoFromPrisma) {
+    const { startTime, endTime, note } = getListUtils.splitStartEndTimeInNote(
+      deletedTodoFromPrisma.note
+    );
+    const deletedTodo = {
+      ...deletedTodoFromPrisma,
+      startTime,
+      endTime,
+      note,
+    };
     statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
     payload = deletedTodo;
   }
