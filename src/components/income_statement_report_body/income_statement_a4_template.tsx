@@ -1,3 +1,4 @@
+// Deprecated: (20241206 - Liz) This file is deprecated and will be removed in the future.
 import React, { ReactNode, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { FinancialReport } from '@/interfaces/report';
@@ -19,9 +20,6 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
   // preDateFrom,
   // preDateTo,
 }) => {
-  // Deprecated: (20241204 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('children:', children);
   const [firstBlockSplitPages, setFirstBlockSplitPages] = useState<ReactNode[][]>([]);
   const [secondBlockSplitPages, setSecondBlockSplitPages] = useState<ReactNode[][]>([]);
 

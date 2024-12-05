@@ -1,101 +1,32 @@
-import React, { useState, useRef, useCallback } from 'react';
-import IncomeStatementList from '@/components/income_statement_report_body/income_statement_list_new';
+import { useState } from 'react';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { useTranslation } from 'next-i18next';
 import { ReportLanguagesMap, ReportLanguagesKey } from '@/interfaces/report_language';
 import { IoIosArrowDown } from 'react-icons/io';
 import Image from 'next/image';
-import { useReactToPrint } from 'react-to-print';
+import IncomeStatementList from '@/components/income_statement_report_body/income_statement_list';
 
-// Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
-const IncomeStatementPageBody = () => {
-  // Info: (20241015 - Anna) 定義日期篩選狀態
-  const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
-    startTimeStamp: 0,
-    endTimeStamp: 0,
-  });
-
-  // Info: (20241122 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
-  const [isPrinting, setIsPrinting] = useState(false);
-
-  // Info: (20241122 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
-  const printRef = useRef<HTMLDivElement>(null);
-
-  // Info: (20241101 - Anna) 定義語言選擇狀態
-  const { t } = useTranslation(['reports']);
+const LanguageDropdown = () => {
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
-
-  // Info: (20241101 - Anna) 語言選單開關處理
-  const languageMenuClickHandler = () => {
-    setIsLanguageMenuOpen(!isLanguageMenuOpen);
+  const toggleLanguageMenu = () => {
+    setIsLanguageMenuOpen((prev) => !prev);
   };
-
-  // Info: (20241101 - Anna) 語言選擇處理
   const languageMenuOptionClickHandler = (id: ReportLanguagesKey) => {
     setSelectedReportLanguage(id);
     setIsLanguageMenuOpen(false);
   };
-
-  const handleOnBeforePrint = useCallback(() => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'balance_sheet_report_body 觀察 handleOnBeforePrint (Before setting isPrinting):',
-      isPrinting
-    );
-    setIsPrinting(true);
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'balance_sheet_report_body 觀察 handleOnBeforePrint (After setting isPrinting):',
-      true
-    );
-
-    // Info: (20241130 - Anna) 強制 React 完成渲染，確保打印模式下渲染正確內容
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        resolve(); // Info: (20241130 - Anna) 明確調用 resolve，表示完成
-      }, 100); // Info: (20241130 - Anna) 延遲 100 毫秒
-    });
-  }, [isPrinting]);
-
-  const handleOnAfterPrint = useCallback(() => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'income_statement_report_body 觀察 handleOnAfterPrint (Before resetting isPrinting):',
-      isPrinting
-    );
-    setIsPrinting(false);
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'income_statement_report_body 觀察 handleOnAfterPrint (After resetting isPrinting):',
-      false
-    );
-  }, [isPrinting]);
-
-  // Info: (20241122 - Anna)
-  const printFn = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: 'Income_Statement Report',
-    onBeforePrint: handleOnBeforePrint,
-    onAfterPrint: handleOnAfterPrint,
-  });
-
-  // Info: (20241101 - Anna) 渲染語言選單
-  const displayedLanguageMenu = (
+  return (
     <div className="relative flex w-full">
       <button
         type="button"
         className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-5 py-2.5 ${
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
-        onClick={languageMenuClickHandler}
+        onClick={toggleLanguageMenu}
       >
         <div className="flex items-center gap-2">
           <Image
@@ -126,6 +57,14 @@ const IncomeStatementPageBody = () => {
       )}
     </div>
   );
+};
+
+const IncomeStatementPageBody = () => {
+  const { t } = useTranslation(['reports']);
+  const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
+    startTimeStamp: 0,
+    endTimeStamp: 0,
+  });
 
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
@@ -149,17 +88,11 @@ const IncomeStatementPageBody = () => {
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
               {t('layout:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
             </div>
-            {displayedLanguageMenu}
+            <LanguageDropdown />
           </div>
         </div>
 
-        {/* Info: (20241017 - Anna) Balance Sheet List */}
-        <IncomeStatementList
-          selectedDateRange={selectedDateRange}
-          isPrinting={isPrinting} // Info: (20241122 - Anna) 傳遞列印狀態
-          printRef={printRef} // Info: (20241122 - Anna) 傳遞列印區域 Ref
-          printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數
-        />
+        <IncomeStatementList selectedDateRange={selectedDateRange} />
       </div>
     </div>
   );

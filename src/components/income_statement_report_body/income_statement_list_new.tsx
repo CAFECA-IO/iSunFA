@@ -1,3 +1,4 @@
+// Deprecated: (20241206 - Liz) This file is deprecated, we use income_statement_list.tsx instead.
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
@@ -27,28 +28,60 @@ export interface FinancialReportItemWithChildren extends FinancialReportItem {
   children?: FinancialReportItemWithChildren[]; // 定義 children 屬性
 }
 
+interface FilterBarProps {
+  printFn: () => void;
+}
+const FilterBar = ({ printFn }: FilterBarProps) => {
+  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+  return (
+    <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
+      <div className="ml-auto flex items-center gap-24px">
+        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+        <PrintButton onClick={printFn} disabled={false} />
+      </div>
+    </div>
+  );
+};
+
+const NoData = () => {
+  const { t } = useTranslation('reports');
+
+  return (
+    <div className="flex h-screen flex-col items-center justify-center">
+      <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+      <div>
+        <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
+        <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
+      </div>
+    </div>
+  );
+};
+
+const Loading = () => {
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  );
+};
 interface IncomeStatementListProps {
-  selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
-  isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
-  printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
-  printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
+  selectedDateRange: IDatePeriod | null;
+  isPrinting: boolean;
+  printRef: React.RefObject<HTMLDivElement>;
+  printFn: () => void;
 }
 
 const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   selectedDateRange,
-  isPrinting, // Info: (20241122 - Anna) 使用打印狀態
-  printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
-  printFn, // Info: (20241122 - Anna) 使用打印函數
+  isPrinting,
+  printRef,
+  printFn,
 }) => {
-  // Deprecated: (20241204 - Liz)
+  // Deprecated: (20241205 - Liz)
   // eslint-disable-next-line no-console
-  console.log('selectedDateRange:', selectedDateRange);
-
-  const { t } = useTranslation('reports');
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
-  // Info: (20241024 - Anna) 接收 selectedDateRange prop
-  const [hasFetchedOnce, setHasFetchedOnce] = useState(false); // Info: (20241024 - Anna) 新增追蹤 API 是否成功請求
-  const prevSelectedDateRange = useRef<IDatePeriod | null>(null); // Info: (20241024 - Anna) 新增 useRef 追蹤之前的日期範圍
+  console.log('isPrinting:', isPrinting);
+  const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
+  const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   // Info: (20241001 - Anna) 管理表格摺疊狀態
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
@@ -57,7 +90,6 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   const toggleSummaryTable = () => {
     setIsSummaryCollapsed(!isSummaryCollapsed);
   };
-
   const toggleDetailTable = () => {
     setIsDetailCollapsed(!isDetailCollapsed);
   };
@@ -67,18 +99,6 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   const [isGetReportAPISuccess, setIsGetReportAPISuccess] = useState<boolean>(false);
   const [reportAPICode, setReportAPICode] = useState<string>('');
   const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
-  // Deprecated: (20241204 - Liz)
-  // eslint-disable-next-line no-console
-  console.log(
-    'isGetReportAPILoading:',
-    isGetReportAPILoading,
-    'isGetReportAPISuccess:',
-    isGetReportAPISuccess,
-    'reportAPICode:',
-    reportAPICode,
-    'financialReport:',
-    financialReport
-  );
 
   const { trigger: getReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_V2);
 
@@ -133,38 +153,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
     getIncomeStatementReport();
   }, [hasCompanyId, hasFetchedOnce, selectedCompany?.id, selectedDateRange]);
 
-  useEffect(() => {
-    if (isPrinting && printRef.current) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('income_statement_list 觀察 Printing content:', printRef.current.innerHTML);
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('IncomeStatementList received isPrinting?', isPrinting);
-    } else {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('IncomeStatementList printRef is null');
-    }
-  }, [isPrinting, printRef]);
-
-  // Info: (20241024 - Anna) 如果未選擇日期範圍，顯示初始提示圖
   if (!hasFetchedOnce && !isGetReportAPILoading) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center">
-        <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
-        <div>
-          <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
-          <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
-        </div>
-      </div>
-    );
+    return <NoData />;
   } else if (isGetReportAPILoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
-        <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
-      </div>
-    );
+    return <Loading />;
   } else if (
     !isGetReportAPISuccess ||
     !financialReport ||
@@ -204,29 +196,6 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   const formattedCurToDate = format(curDateTo, 'yyyy-MM-dd');
   const formattedPreFromDate = format(preDateFrom, 'yyyy-MM-dd');
   const formattedPreToDate = format(preDateTo, 'yyyy-MM-dd');
-
-  // Info: (20241101 - Anna) 列印及下載按鈕
-  // const displayedSelectArea = (
-  //   <div className="mb-16px flex items-center justify-end px-px max-md:flex-wrap">
-  //     <div className="ml-auto flex items-center gap-24px">
-  //       <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
-  //       <PrintButton onClick={printFn} disabled={false} />
-  //     </div>
-  //   </div>
-  // );
-  const displayedSelectArea = () => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('[displayedSelectArea] Display Area Rendered');
-    return (
-      <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
-        <div className="ml-auto flex items-center gap-24px">
-          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
-          <PrintButton onClick={printFn} disabled={false} />
-        </div>
-      </div>
-    );
-  };
 
   //  Info: (20241202 - Anna) 如果 children 存在且不為空，則遞迴調用 renderRows
   const renderRows = (items: FinancialReportItemWithChildren[]): JSX.Element[] => {
@@ -668,22 +637,11 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
     </div>
   );
 
-  // return (
-  //   <div className="mx-auto w-full origin-top overflow-x-auto">
-  //     <hr className="mb-40px break-before-page" />
-  //     {displayedSelectArea}
-  //     {ItemSummary}
-  //     <hr className="break-before-page" />
-  //     {ItemDetail}
-  //     <hr className="break-before-page" />
-  //     {CostRevRatio}
-  //   </div>
-  // );
   return (
     <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
-      {displayedSelectArea()}
+      <FilterBar printFn={printFn} />
       {/* Info: (20241202 - Anna)  渲染打印模板，通過 CSS 隱藏 */}
-      <div ref={printRef} className="hidden print:block">
+      <div ref={printRef} className="hidden border-2 border-rose-500 print:block">
         <IncomeStatementA4Template
           financialReport={financialReport}
           curDateFrom={formattedCurFromDate}
@@ -697,7 +655,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
         </IncomeStatementA4Template>
       </div>
       {/* Info: (20241202 - Anna) 預覽區域 */}
-      <div className="block print:hidden">
+      <div className="block border-2 border-lime-500 print:hidden">
         {ItemSummary}
         {ItemDetail}
         {CostRevRatio}

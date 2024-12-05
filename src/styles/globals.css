@@ -1185,7 +1185,7 @@ div::-webkit-scrollbar {
 }
 
 @page {
-  /* Info: (20240729 - Shirley) size: A4 */
+  /* size: A4 */
   size: 595px 843px;
   margin: 0cm;
   padding: 0cm;
@@ -1195,7 +1195,7 @@ div::-webkit-scrollbar {
   .break-before-page {
     break-before: page;
   }
-   .print:block {
+  .print:block {
     display: block !important;
   }
 }
