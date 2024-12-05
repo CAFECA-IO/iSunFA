@@ -1553,7 +1553,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
         {page1}
       </div>
-
       <div className="mx-auto w-a4-height origin-top overflow-x-auto">
         {financialReport && (
           <pre>{JSON.stringify(financialReport, null, 2)}</pre> // 🌟 Output the entire response data here for debugging
