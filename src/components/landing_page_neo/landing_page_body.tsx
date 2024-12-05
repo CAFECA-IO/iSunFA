@@ -6,22 +6,18 @@ import {
   LinearTextSize,
   TextAlign,
 } from '@/components/landing_page_neo/linear_gradient_text';
+import CTA from '@/components/landing_page_neo/cta';
 
 const LandingPageBody: React.FC = () => {
   return (
-    <div className="relative flex flex-auto flex-col bg-landing-page-black px-36px py-32px font-dm-sans">
+    <div className="relative flex flex-auto flex-col bg-landing-page-black px-36px py-32px font-dm-sans text-landing-page-white">
       {/* Info: (20241204 - Julian) Header */}
       <LandingNavbar />
 
       {/* Info: (20241204 - Julian) Navbar */}
       <main className="h-full overflow-y-auto overflow-x-hidden">
         {/* Info: (20241205 - Julian) CTA */}
-        <div className="flex flex-col">
-          <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
-            Your Gateway to the <br />
-            Future of Accounting
-          </LinearGradientText>
-        </div>
+        <CTA />
 
         {/* Info: (20241205 - Julian) Easy to Use */}
         <div className="flex flex-col">

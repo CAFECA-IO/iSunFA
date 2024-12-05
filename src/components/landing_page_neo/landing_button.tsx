@@ -6,8 +6,9 @@ const buttonVariants = cva('gap-8px flex items-center transition-all duration-15
   variants: {
     variant: {
       primary:
-        'shadow-landing-btn bg-landing-btn hover:text-landing-page-black2 hover:shadow-landing-btn-hover text-landing-page-black rounded-sm border-b border-t border-landing-page-white',
-      default: 'text-landing-page-white hover:text-surface-brand-primary-moderate',
+        'enabled:shadow-landing-btn enabled:bg-landing-btn enabled:hover:text-landing-page-black2 enabled:hover:shadow-landing-btn-hover text-landing-page-black disabled:bg-landing-page-black3 disabled:text-landing-page-black2 rounded-sm border-b border-t border-landing-page-white disabled:border-transparent',
+      default:
+        'disabled:text-landing-page-black2 text-landing-page-white enabled:hover:text-surface-brand-primary-moderate',
     },
     size: {
       default: 'px-24px py-10px',

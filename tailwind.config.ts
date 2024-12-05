@@ -685,6 +685,7 @@ module.exports = {
         'landing-page': {
           black: '#120C00',
           black2: '#585142',
+          black3: '#2B2415',
 
           orange: '#FFB632',
 
