@@ -9,6 +9,10 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { Company, File, Todo } from '@prisma/client';
 import { createTodo, listTodo } from '@/lib/utils/repo/todo.repo';
 import { ITodoCompany } from '@/interfaces/todo';
+import {
+  todoListPostApiUtils as postUtils,
+  todoListGetListApiUtils as getUtils,
+} from '@/pages/api/v2/user/[userId]/todo/route_utils';
 
 const handleGetRequest: IHandleRequest<
   APIName.TODO_LIST,
@@ -18,7 +22,17 @@ const handleGetRequest: IHandleRequest<
   let payload: (Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] })[] = [];
 
   const { userId } = query;
-  const todoList = await listTodo(userId);
+  const todoListFromPrisma = await listTodo(userId);
+
+  const todoList = todoListFromPrisma.map((todo) => {
+    const { startTime, endTime, note } = getUtils.splitStartEndTimeInNote(todo.note);
+    return {
+      ...todo,
+      startTime,
+      endTime,
+      note,
+    };
+  });
 
   payload = todoList;
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
@@ -28,17 +42,37 @@ const handleGetRequest: IHandleRequest<
 
 const handlePostRequest: IHandleRequest<
   APIName.CREATE_TODO,
-  Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] }
+  Todo & {
+    userTodoCompanies: { company: Company & { imageFile: File } }[];
+    startTime: number;
+    endTime: number;
+  }
 > = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: (Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] }) | null =
-    null;
+  let payload:
+    | (Todo & {
+        userTodoCompanies: { company: Company & { imageFile: File } }[];
+        startTime: number;
+        endTime: number;
+      })
+    | null = null;
 
   const { userId } = query;
-  const { companyId, name, note, deadline } = body;
-  const createdTodo = await createTodo(userId, name, deadline, note, companyId);
+  const { companyId, name, note, deadline, startTime, endTime } = body;
 
-  payload = createdTodo;
+  const noteWithTime = postUtils.combineStartEndTimeInNote({
+    note,
+    startTime,
+    endTime,
+  });
+
+  const createdTodo = await createTodo(userId, name, deadline, noteWithTime, companyId);
+
+  payload = {
+    ...createdTodo,
+    startTime,
+    endTime,
+  };
   statusMessage = STATUS_MESSAGE.CREATED;
 
   return { statusMessage, payload };

@@ -5,7 +5,7 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import { useTranslation } from 'next-i18next';
 
 const TrialBalancePageBody = () => {
-  const { t } = useTranslation(['reports']);
+  const { t } = useTranslation(['reports', 'date_picker', 'common']);
   // Info: (20241015 - Anna) 定義日期篩選狀態
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
     startTimeStamp: 0,
@@ -19,7 +19,7 @@ const TrialBalancePageBody = () => {
         {/* Info: (20241015 - Anna) 日期篩選器 */}
         <div className="flex min-w-250px flex-1 flex-col space-y-0">
           <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-            {t('journal:VOUCHER.TRIAL_BALANCE_PERIOD')}
+            {t('reports:REPORTS.TRIAL_BALANCE_PERIOD')}
           </div>
           <DatePicker
             period={selectedDateRange}

@@ -305,10 +305,11 @@ export const countdown = (remainingSeconds: number) => {
 
 export const convertTimestampToROCDate = (timestampInSecond: number): ROCDate => {
   const milliSecondTimestamp = timestampInMilliSeconds(timestampInSecond);
-  const date = new Date(milliSecondTimestamp);
-  const year = date.getUTCFullYear() - 1911;
-  const month = date.getUTCMonth() + 1;
-  const day = date.getUTCDate();
+  const utcDate = new Date(milliSecondTimestamp);
+  const date = new Date(utcDate.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+  const year = date.getFullYear() - 1911;
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
   return { year, month, day };
 };
 

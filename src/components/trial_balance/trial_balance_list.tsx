@@ -20,40 +20,52 @@ import Image from 'next/image';
 import { IDatePeriod } from '@/interfaces/date_period';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
+import { useReactToPrint } from 'react-to-print';
 
 interface TrialBalanceListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241105 - Anna) 接收來自上層的日期範圍
 }
 
 const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }) => {
-  const { t } = useTranslation('journal');
+  const { selectedCompany } = useUserCtx();
+  const companyId = selectedCompany?.id; // Info: (20241204 - Anna) 提取 companyId
+  const { t } = useTranslation(['reports', 'date_picker', 'common']);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+  const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 
   const [subAccountsToggle, setSubAccountsToggle] = useState<boolean>(false);
 
   // Info: (20241101 - Anna) 將資料原始狀態設為空
-  // const [accountList] = useState<TrialBalanceItem[]>(TrialBalanceData.items.data);
   const [accountList, setAccountList] = useState<TrialBalanceItem[]>([]);
+  const [totalData, setTotalData] = useState<ITrialBalancePayload['total'] | null>(null); // Info: (20241205 - Anna) 儲存總計資料
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false); // Info: (20241105 - Anna) 追蹤是否已經成功請求過一次 API
   const [isLoading, setIsLoading] = useState(false); // Info: (20241105 - Anna) 追蹤 API 請求的加載狀態
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null); // Info: (20241105 - Anna) 追蹤之前的日期範圍
 
-  // Info: (20241107 - Anna) API 請求邏輯
-  const fetchTrialBalanceData = useCallback(async () => {
-    if (!selectedDateRange || selectedDateRange.endTimeStamp === 0) return;
+  // Info: (20241204 - Anna) 使用 trigger 方法替代直接調用 APIHandler
+  const { trigger: fetchTrialBalance } = APIHandler<ITrialBalancePayload>(
+    APIName.TRIAL_BALANCE_LIST
+  );
 
+  // Info: (20241204 - Anna) 更新 fetchTrialBalanceData 函數為使用 trigger 方法
+  const fetchTrialBalanceData = useCallback(async () => {
     if (
-      prevSelectedDateRange.current &&
-      prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
-      prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
-      hasFetchedOnce
+      !selectedDateRange ||
+      selectedDateRange.endTimeStamp === 0 ||
+      (prevSelectedDateRange.current &&
+        prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
+        prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
+        hasFetchedOnce)
     ) {
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await APIHandler<ITrialBalancePayload>(APIName.TRIAL_BALANCE_LIST, {
+      // Info: (20241204 - Anna) 使用 trigger 手動觸發 APIHandler
+      const response = await fetchTrialBalance({
+        params: { companyId },
         query: {
           startDate: selectedDateRange.startTimeStamp,
           endDate: selectedDateRange.endTimeStamp,
@@ -61,67 +73,55 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
           pageSize: 10,
         },
       });
+
       if (response.success && response.data) {
-        setAccountList(response.data.items.data);
-        setHasFetchedOnce(true);
-        prevSelectedDateRange.current = selectedDateRange;
+        setAccountList(response.data.items.data); // Info: (20241204 - Anna) 更新帳戶列表
+        setTotalData(response.data.total); // Info: (20241205 - Anna) 更新總計資料
+        setHasFetchedOnce(true); // Info: (20241204 - Anna) 標記為已成功請求
+        prevSelectedDateRange.current = selectedDateRange; // Info: (20241204 - Anna) 更新前一个日期範圍
+      } else {
+        // Deprecate: (20241205 - Anna) remove eslint-disable
+        // eslint-disable-next-line no-console
+        // console.error('API response error: ', response);
       }
     } catch (error) {
-      // Deprecate: (20241118 - Anna) debug
+      // Deprecate: (20241205 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.error('Error fetching trial balance data:', error);
+      // console.error('Error fetching trial balance data:', error);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Info: (20241204 - Anna) 請求結束，設置加載狀態為 false
     }
-  }, [selectedDateRange]);
+  }, [fetchTrialBalance, selectedDateRange, hasFetchedOnce]);
 
   useEffect(() => {
-    if (!selectedDateRange) return;
-    fetchTrialBalanceData();
-  }, [fetchTrialBalanceData, selectedDateRange]);
-
-  // Info: (20241101 - Anna) 模擬 API 呼叫
-  // const fetchTrialBalanceData = useCallback(async () => {
-  //   if (!selectedDateRange || selectedDateRange.endTimeStamp === 0) return; // Info: (20241105 - Anna) 檢查 selectedDateRange 是否有效
-
-  //   if (
-  //     prevSelectedDateRange.current &&
-  //     prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
-  //     prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
-  //     hasFetchedOnce
-  //   ) {
-  //     return; // Info: (20241105 - Anna) 避免重複請求
-  //   }
-
-  //   setIsLoading(true); // Info: (20241105 - Anna) 開始加載
-  //   const mockFetch = async (): Promise<ITrialBalancePayload> => {
-  //     return new Promise<ITrialBalancePayload>((resolve) => {
-  //       setTimeout(() => {
-  //         resolve(TrialBalanceData); // Info: (20241101 - Anna) 使用 mock data 代替 API 回應
-  //       }, 500); // Info: (20241101 - Anna) 延遲 500 毫秒模擬網路請求
-  //     });
-  //   };
-
-  //   try {
-  //     const response = await mockFetch();
-  //     setAccountList(response.items.data); // Info: (20241101 - Anna) 設定獲得的 mock 資料
-  //     setHasFetchedOnce(true); // Info: (20241105 - Anna) 設置成功請求過的狀態
-  //     prevSelectedDateRange.current = selectedDateRange; // Info: (20241105 - Anna) 更新 prevSelectedDateRange
-  //   } catch (error) {
-  //     // eslint-disable-next-line no-console
-  //     console.error('Error fetching trial balance data:', error);
-  //   } finally {
-  //     setIsLoading(false); // Info: (20241105 - Anna) 結束加載
-  //   }
-  // }, [selectedDateRange]);
-
-  // Info: (20241105 - Anna) 監測日期區間變更並觸發 API 請求
-  // useEffect(() => {
-  //   if (!selectedDateRange) return; // Info: (20241105 - Anna) 檢查日期範圍存在
-  //   fetchTrialBalanceData();
-  // }, [fetchTrialBalanceData, selectedDateRange]);
+    if (
+      !selectedDateRange ||
+      !selectedDateRange.startTimeStamp ||
+      !selectedDateRange.endTimeStamp
+    ) {
+      return;
+    }
+    if (
+      selectedDateRange && //  Info: (20241204 - Anna) 確保日期範圍存在
+      selectedDateRange.startTimeStamp &&
+      selectedDateRange.endTimeStamp
+    ) {
+      fetchTrialBalanceData(); //  Info: (20241204 - Anna) 僅在日期有效時觸發請求
+    }
+  }, [fetchTrialBalanceData]);
 
   // Info: (20241028 - Anna) 處理 toggle 開關
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef, // Info: (20241203 - Anna) 指定需要打印的內容 Ref
+    documentTitle: `試算表`,
+    onBeforePrint: async () => {
+      return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
+    },
+    onAfterPrint: async () => {
+      return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
+    },
+  });
   const subAccountsToggleHandler: () => void = () => {
     setSubAccountsToggle((prevState) => !prevState);
   };
@@ -130,29 +130,20 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
   const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
 
-  // Todo: (20241101 - Anna) API 呼叫處理 (等Shirley提供API後修改)
-  // const {
-  //   data: trialBalanceData,
-  //   trigger,
-  //   success,
-  //   isLoading,
-  //   code,
-  // } = APIHandler<ITrialBalancePayload>(APIName.TRIAL_BALANCE);
-
   const displayedCredit = SortingButton({
-    string: t('journal:JOURNAL.CREDIT'),
+    string: t('reports:REPORTS.CREDIT'),
     sortOrder: creditSort,
     setSortOrder: setCreditSort,
   });
 
   const displayedDebit = SortingButton({
-    string: t('journal:JOURNAL.DEBIT'),
+    string: t('reports:REPORTS.DEBIT'),
     sortOrder: debitSort,
     setSortOrder: setDebitSort,
   });
 
   const displayedSelectArea = (
-    <div className="flex items-center justify-between px-px max-md:flex-wrap">
+    <div className="flex items-center justify-between px-px max-md:flex-wrap print:hidden">
       {/* Info: (20241101 - Anna)幣別 */}
       <div className="mr-42px flex w-fit items-center gap-5px rounded-full border border-orange-500 bg-white px-10px py-6px text-sm font-medium text-badge-text-error-solid">
         <RiCoinsLine className="text-orange-600" />
@@ -172,20 +163,15 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       </div>
       {/* Info: (20241028 - Anna) Display Sub-Accounts 結束  */}
       <div className="ml-auto flex items-center gap-24px">
-        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
-        <PrintButton onClick={() => {}} disabled={false} />
+        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+        <PrintButton onClick={handlePrint} disabled={false} />
       </div>
     </div>
   );
 
   const displayedAccountList = accountList.map((account) => (
     // Info: (20241029 - Anna) Passing subAccountsToggle to each TrialBalanceItemRow
-    <TrialBalanceItemRow
-      key={account.id}
-      account={account}
-      totalExpanded={subAccountsToggle}
-      // selectedDateRange={selectedDateRange}
-    />
+    <TrialBalanceItemRow key={account.id} account={account} totalExpanded={subAccountsToggle} />
   ));
 
   const formatNumber = (num: number): string => {
@@ -214,13 +200,13 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" ref={printRef}>
       {displayedSelectArea}
       <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         <div className="table-header-group border-b-0.5px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
             <div
-              className={`table-cell border-b-0.5px border-stroke-neutral-quaternary text-center align-middle`}
+              className={`table-cell border-b-0.5px border-stroke-neutral-quaternary text-center align-middle print:hidden`}
             >
               <div className="flex items-center justify-center">
                 <div className="relative">
@@ -229,14 +215,14 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
               </div>
             </div>
             <div
-              className={`table-cell w-70px border-b-0.5px border-r-0.5px border-stroke-neutral-quaternary text-center align-middle`}
+              className={`table-cell w-70px whitespace-nowrap border-b-0.5px border-r-0.5px border-stroke-neutral-quaternary text-center align-middle print:bg-neutral-50`}
             >
               {t('reports:REPORTS.CODE')}
             </div>
             <div
-              className={`table-cell w-350px border-b-0.5px border-stroke-neutral-quaternary text-center align-middle`}
+              className={`table-cell w-350px border-b-0.5px border-stroke-neutral-quaternary text-center align-middle print:bg-neutral-50`}
             >
-              {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
+              {t('reports:REPORT.ACCOUNTING')}
             </div>
 
             <div
@@ -291,7 +277,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
             <div
-              className={`col-span-3 table-cell h-full w-472px border-stroke-neutral-quaternary text-center align-middle`}
+              className={`col-span-3 table-cell h-full w-472px border-stroke-neutral-quaternary text-center align-middle print:bg-neutral-50`}
             >
               {t('reports:TAX_REPORT.TOTAL')}
             </div>
@@ -299,43 +285,43 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
             <div
               className={`table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600`}
             >
-              {formatNumber(TrialBalanceData.total.beginningDebitAmount)}
+              {formatNumber(totalData?.beginningDebitAmount ?? 0)}
             </div>
 
             <div
               className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600`}
             >
-              {formatNumber(TrialBalanceData.total.beginningCreditAmount)}
+              {formatNumber(totalData?.beginningCreditAmount ?? 0)}
             </div>
 
             <div
               className={`table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600`}
             >
-              {formatNumber(TrialBalanceData.total.midtermDebitAmount)}
+              {formatNumber(totalData?.midtermDebitAmount ?? 0)}
             </div>
 
             <div
               className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600`}
             >
-              {formatNumber(TrialBalanceData.total.midtermCreditAmount)}
+              {formatNumber(totalData?.midtermCreditAmount ?? 0)}
             </div>
 
             <div
               className={`table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600`}
             >
-              {formatNumber(TrialBalanceData.total.endingDebitAmount)}
+              {formatNumber(totalData?.endingDebitAmount ?? 0)}
             </div>
 
             <div
               className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600`}
             >
-              {formatNumber(TrialBalanceData.total.endingCreditAmount)}
+              {formatNumber(totalData?.endingCreditAmount ?? 0)}
             </div>
           </div>
         </div>
       </div>
       {/* Info: (20241018 - Anna) Total結束 */}
-      <div className="mx-auto">
+      <div className="mx-auto print:hidden">
         <Pagination
           currentPage={currentPage}
           totalPages={TrialBalanceData.items.totalPages}

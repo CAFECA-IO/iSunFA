@@ -102,6 +102,7 @@ import {
 import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
 import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
 import { accountGetV2Schema, accountPostV2Schema } from '@/lib/utils/zod_schema/account';
+import { assetPostSchema } from '@/lib/utils/zod_schema/asset';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -114,6 +115,7 @@ import { accountGetV2Schema, accountPostV2Schema } from '@/lib/utils/zod_schema/
 //     [APIName.ZOD_EXAMPLE]: zodExampleValidator,
 // };
 
+// ToDo: (20241204 - Luphia) unknown for zod schema
 export const API_ZOD_SCHEMA = {
   // Info: (20241016 - Jacky) V1 Validators
   [APIName.INVOICE_CREATE]: invoiceRequestValidators.POST,
@@ -270,7 +272,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.PUSHER_AUTH]: nullAPISchema,
   [APIName.ASSET_LIST_V2]: nullAPISchema,
   [APIName.ASSET_GET_BY_ID_V2]: nullAPISchema,
-  [APIName.CREATE_ASSET_V2]: nullAPISchema,
+  [APIName.CREATE_ASSET_V2]: assetPostSchema,
   [APIName.DELETE_ASSET_V2]: nullAPISchema,
   [APIName.UPDATE_ASSET_V2]: nullAPISchema,
   [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: nullAPISchema,

@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { companyOutputSchema } from '@/lib/utils/zod_schema/company';
+import { companyOutputSchema, ICompanyValidator } from '@/lib/utils/zod_schema/company';
+import {
+  getTimestampNow,
+  getTimestampOfLastSecondOfDate,
+  timestampInMilliSeconds,
+  timestampInSeconds,
+} from '@/lib/utils/common';
 
 // Info: (20241029 - Jacky) Todo null schema
 const todoNullSchema = z.union([z.object({}), z.string()]);
@@ -17,7 +23,30 @@ const todoPostQuerySchema = z.object({
 const todoPostBodySchema = z.object({
   companyId: z.number().int().optional(),
   name: z.string(),
-  deadline: z.number().int(),
+  deadline: z
+    .number()
+    .int()
+    .transform((data) => timestampInSeconds(data)),
+  startTime: z
+    .number()
+    .int()
+    .optional()
+    .transform((data) => {
+      if (data) {
+        return timestampInSeconds(data);
+      }
+      return getTimestampNow();
+    }),
+  endTime: z
+    .number()
+    .int()
+    .optional()
+    .transform((data) => {
+      if (data) {
+        return timestampInSeconds(data);
+      }
+      return getTimestampOfLastSecondOfDate(getTimestampNow());
+    }),
   note: z.string().nullable(),
 });
 
@@ -33,7 +62,30 @@ const todoPutQuerySchema = z.object({
 const todoPutBodySchema = z.object({
   companyId: z.number().int().optional(),
   name: z.string(),
-  deadline: z.number().int(),
+  deadline: z
+    .number()
+    .int()
+    .transform((data) => timestampInSeconds(data)),
+  startTime: z
+    .number()
+    .int()
+    .optional()
+    .transform((data) => {
+      if (data) {
+        return timestampInSeconds(data);
+      }
+      return getTimestampNow();
+    }),
+  endTime: z
+    .number()
+    .int()
+    .optional()
+    .transform((data) => {
+      if (data) {
+        return timestampInSeconds(data);
+      }
+      return getTimestampOfLastSecondOfDate(getTimestampNow());
+    }),
   note: z.string().nullable(),
 });
 
@@ -46,6 +98,8 @@ const todoOutputSchema = z
     id: z.number().int(),
     name: z.string(),
     deadline: z.number().int(),
+    startTime: z.number().int(),
+    endTime: z.number().int(),
     note: z.string().default(''),
     status: z.boolean(),
     createdAt: z.number().int(),
@@ -57,16 +111,33 @@ const todoOutputSchema = z
     ),
   })
   .transform((data) => {
-    const { userTodoCompanies, ...rest } = data;
+    const { userTodoCompanies, startTime, endTime, ...rest } = data;
     const { company } = userTodoCompanies[0];
+    const startTimeInMilliseconds = timestampInMilliSeconds(startTime);
+    const endTimeInMilliseconds = timestampInMilliSeconds(endTime);
 
     return {
       ...rest,
+      startTime: startTimeInMilliseconds,
+      endTime: endTimeInMilliseconds,
       company,
     };
   });
 
 const paginatedTodoOutputSchema = z.array(todoOutputSchema);
+
+const ITodoCompanyValidator = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  deadline: z.number().int(),
+  note: z.string(),
+  status: z.boolean(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+  startTime: z.number().int(),
+  endTime: z.number().int(),
+  company: ICompanyValidator,
+});
 
 export const todoListSchema = {
   input: {
@@ -74,7 +145,7 @@ export const todoListSchema = {
     bodySchema: todoNullSchema,
   },
   outputSchema: paginatedTodoOutputSchema,
-  frontend: todoNullSchema,
+  frontend: z.array(ITodoCompanyValidator),
 };
 
 export const todoPostSchema = {

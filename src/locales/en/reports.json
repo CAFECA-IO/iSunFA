@@ -19,7 +19,8 @@
     "VOUCHER_NO": "Voucher No",
     "ISSUER": "Issuer",
     "CREDIT": "Credit",
-    "DEBIT": "Debit"
+    "DEBIT": "Debit",
+    "TRIAL_BALANCE_PERIOD": "Trial Balance Period"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "Latest",
@@ -220,7 +221,8 @@
   },
   "REPORT": {
     "NO_DATA_AVAILABLE": "No data available.",
-    "PLEASE_SELECT_PERIOD": "Please Select Period."
+    "PLEASE_SELECT_PERIOD": "Please Select Period.",
+    "ACCOUNTING": "Accounting"
   },
   "COMMON": {
     "ANALYSIS_REPORTS": "Analysis Reports",
