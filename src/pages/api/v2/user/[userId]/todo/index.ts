@@ -12,7 +12,7 @@ import { ITodoCompany } from '@/interfaces/todo';
 import {
   todoListPostApiUtils as postUtils,
   todoListGetListApiUtils as getUtils,
-} from 'src/pages/api/v2/user/[userId]/todo/route_utils';
+} from '@/pages/api/v2/user/[userId]/todo/route_utils';
 
 const handleGetRequest: IHandleRequest<
   APIName.TODO_LIST,
