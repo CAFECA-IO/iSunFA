@@ -15,7 +15,7 @@ const LandingPageBody: React.FC = () => {
       <LandingNavbar />
 
       {/* Info: (20241204 - Julian) Navbar */}
-      <main className="h-full overflow-y-auto overflow-x-hidden">
+      <main className="overflow-y-auto overflow-x-hidden pt-100px">
         {/* Info: (20241205 - Julian) CTA */}
         <CTA />
 

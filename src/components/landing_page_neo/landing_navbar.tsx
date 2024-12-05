@@ -52,42 +52,40 @@ const LandingNavbar: React.FC = () => {
   );
 
   return (
-    <nav>
-      <div className="relative flex items-center justify-between rounded-sm border-b bg-landing-page-white/30 px-16px py-12px shadow-landing-nav md:px-40px lg:px-110px">
-        {/* Info: (20241204 - Julian) Logo */}
-        <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="h-40px w-150px flex-none">
-          <Image src="/logo/isunfa_logo_new.svg" alt="logo" width={141} height={40} />
-        </Link>
+    <nav className="fixed inset-x-0 z-50 flex items-center justify-between rounded-sm border-b bg-landing-page-white/30 px-16px py-12px shadow-landing-nav backdrop-blur-md md:inset-x-36px md:px-40px lg:px-110px">
+      {/* Info: (20241204 - Julian) Logo */}
+      <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="h-40px w-150px flex-none">
+        <Image src="/logo/isunfa_logo_new.svg" alt="logo" width={141} height={40} />
+      </Link>
 
-        {/* Info: (20241204 - Julian) Language */}
-        <div className="hidden lg:block">
-          <LandingI18n />
-        </div>
+      {/* Info: (20241204 - Julian) Language */}
+      <div className="hidden lg:block">
+        <LandingI18n />
+      </div>
 
-        {/* Info: (20241204 - Julian) Hamburger Button */}
-        <button
-          type="button"
-          onClick={toggleDropdown}
-          className="group flex h-44px w-44px flex-col justify-center gap-4px p-12px lg:hidden"
-        >
-          <div className="h-2px w-full rounded-full bg-landing-page-white group-hover:bg-landing-page-orange" />
-          <div className="h-2px w-full rounded-full bg-landing-page-white group-hover:bg-landing-page-orange" />
-          <div className="h-2px w-full rounded-full bg-landing-page-white group-hover:bg-landing-page-orange" />
-        </button>
+      {/* Info: (20241204 - Julian) Hamburger Button */}
+      <button
+        type="button"
+        onClick={toggleDropdown}
+        className="group flex h-44px w-44px flex-col justify-center gap-4px p-12px lg:hidden"
+      >
+        <div className="h-2px w-full rounded-full bg-landing-page-white group-hover:bg-landing-page-orange" />
+        <div className="h-2px w-full rounded-full bg-landing-page-white group-hover:bg-landing-page-orange" />
+        <div className="h-2px w-full rounded-full bg-landing-page-white group-hover:bg-landing-page-orange" />
+      </button>
 
-        {/* Info: (20241204 - Julian) Links */}
-        <div className="hidden items-center justify-between whitespace-nowrap font-bold lg:flex">
-          {navigationOptions}
-        </div>
+      {/* Info: (20241204 - Julian) Links */}
+      <div className="hidden items-center justify-between whitespace-nowrap font-bold lg:flex">
+        {navigationOptions}
+      </div>
 
-        {/* Info: (20241204 - Julian) Dropdown */}
-        <div
-          ref={dropdownRef}
-          className={`absolute right-0 flex flex-col bg-landing-page-white/30 shadow-landing-nav ${isOpen ? 'visible top-80px opacity-100' : 'invisible top-50px opacity-0'} rounded-sm border-b px-20px py-12px font-bold transition-all duration-300 ease-in-out lg:hidden`}
-        >
-          <LandingI18n />
-          {navigationOptions}
-        </div>
+      {/* Info: (20241204 - Julian) Dropdown */}
+      <div
+        ref={dropdownRef}
+        className={`absolute right-0 flex flex-col bg-landing-page-white/30 shadow-landing-nav ${isOpen ? 'visible top-80px opacity-100' : 'invisible top-50px opacity-0'} rounded-sm border-b px-20px py-12px font-bold transition-all duration-300 ease-in-out lg:hidden`}
+      >
+        <LandingI18n />
+        {navigationOptions}
       </div>
     </nav>
   );
