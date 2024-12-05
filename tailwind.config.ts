@@ -688,7 +688,11 @@ module.exports = {
           orange: '#FFB632',
 
           white: '#FFFFFF',
+
           gray: '#C9C9C9',
+
+          taupe: '#E7E0D4',
+          taupe2: '#C1B192',
         },
       },
       backgroundImage: {
@@ -753,8 +757,10 @@ module.exports = {
         '44px': ['44px', '52px'],
         '48px': ['48px', '52px'],
         '6xl': ['56px', '60px'],
+        '60px': ['60px', '76px'],
         '64px': ['64px', '68px'],
         '7xl': ['72px', 1],
+        '80px': ['80px', '100px'],
         '8xl': ['96px', 1],
         '9xl': ['128px', 1],
         '8px': ['8px', '10px'],

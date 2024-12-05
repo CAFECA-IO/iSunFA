@@ -64,7 +64,7 @@ const LandingI18n: React.FC = () => {
       <button
         type="button"
         onClick={toggleDropdown}
-        className="flex h-44px w-170px items-center gap-8px rounded-sm bg-landing-page-white/30 px-24px font-bold text-landing-page-white shadow-landing-nav transition-all duration-300 ease-in-out hover:text-landing-page-orange"
+        className="flex h-44px w-170px items-center gap-8px rounded-sm bg-landing-page-white/30 px-24px font-bold text-landing-page-white shadow-landing-nav hover:text-landing-page-orange"
       >
         <div className="h-20px w-20px overflow-hidden rounded-full">
           <Image
@@ -75,7 +75,9 @@ const LandingI18n: React.FC = () => {
           />
         </div>
         <div className="flex-1">{currentLanguage.label}</div>
-        <FaChevronDown className={isOpen ? 'rotate-180' : ''} />
+        <FaChevronDown
+          className={`${isOpen ? 'rotate-180' : ''} transition-transform duration-300 ease-in-out`}
+        />
       </button>
 
       {/* Info: (20241204 - Julian) Dropdown */}
