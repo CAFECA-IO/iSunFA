@@ -11,7 +11,7 @@ import { ITodoCompany } from '@/interfaces/todo';
 import {
   todoListGetListApiUtils as getListUtils,
   todoListPostApiUtils as postUtils,
-} from 'src/pages/api/v2/user/[userId]/todo/route_utils';
+} from '@/pages/api/v2/user/[userId]/todo/route_utils';
 
 const handleGetRequest: IHandleRequest<
   APIName.TODO_GET_BY_ID,
