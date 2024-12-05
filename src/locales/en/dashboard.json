@@ -7,7 +7,7 @@
 
   "DASHBOARD": {
     "DASHBOARD": "Dashboard",
-    "TO_DO_LIST": "To-do List",
+    "TO_DO_LIST": "Event Planner",
     "CALENDAR_NOT_YET_LINKED": "Calendar not yet linked",
     "LINK_MY_CALENDAR": "Link My Calendar",
     "NO_SCHEDULE_FOR_TODAY": "No schedule for today",
@@ -36,7 +36,7 @@
     "START": "Start",
     "PREVIEW": "Preview",
     "CANCEL": "Cancel",
-    "CREATE": "Create",
+    "ADD": "Add",
     "SAVE": "Save",
     "DELETE": "Delete"
   },
@@ -88,9 +88,9 @@
   },
 
   "TODO_LIST_PAGE": {
-    "TODO_LIST_TITLE": "To-do List",
-    "ADD_EVENT": "Add Event",
-    "EVENT_LIST": "Event List",
+    "TODO_LIST_TITLE": "Event Planner",
+    "NEW_EVENT": "New Event",
+    "UPCOMING_EVENTS": "Upcoming Events",
     "ACTION": "Action",
     "NO_PENDING_TASKS": "No Pending Tasks",
     "ADD_NEW_EVENT": "Add New Event",
