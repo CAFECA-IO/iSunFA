@@ -26,7 +26,7 @@ ${IPFS_SWARM_KEY_BASE_16}
 export const IPFS_LISTEN_ADDRESS = `/ip4/${IPFS_HOST_IP}/tcp/0`;
 export const IPFS_BOOTSTRAP_ADDRESS = `/ip4/${IPFS_HOST_IP}/tcp/4001/p2p/${IPFS_HOST_PEER_ID}`;
 
-export const AUTH_PERIOD = 60 * 60; // 1 hr
+export const AUTH_PERIOD = 60 * 60; // Info: (20241205 - Murky) 1 hr
 
 export const COOKIE_NAME = {
   FIDO2: 'FIDO2',
