@@ -51,8 +51,9 @@ const LandingI18n: React.FC = () => {
         setCurrentLanguage(item);
         setIsOpen(false);
       }}
+      className="w-full text-left"
     >
-      <LandingButton type="button" variant="default" className="w-full text-left">
+      <LandingButton type="button" variant="default">
         <div className="h-20px w-20px overflow-hidden rounded-full">
           <Image
             src={`/flags/${item.value}.svg`}
@@ -90,11 +91,11 @@ const LandingI18n: React.FC = () => {
       {/* Info: (20241204 - Julian) Dropdown */}
       <div
         ref={dropdownRef}
-        className={`grid w-full overflow-hidden bg-landing-page-white/30 shadow-landing-nav ${
+        className={`grid w-full overflow-hidden bg-landing-page-white/30 shadow-landing-nav backdrop-blur-md ${
           isOpen ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'
         } rounded-sm border-b transition-all duration-300 ease-in-out lg:absolute lg:top-50px`}
       >
-        <div className="flex flex-col items-start px-20px py-12px">{langOptions}</div>
+        <div className="flex flex-col items-start py-12px">{langOptions}</div>
       </div>
     </div>
   );

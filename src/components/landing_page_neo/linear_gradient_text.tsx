@@ -38,7 +38,7 @@ export const LinearGradientText: React.FC<ILinearGradientTextProps> = ({
 
   return (
     <div
-      className={`${fontStyle} ${textAlign} text-dm-sans bg-gradient-to-b from-landing-page-white via-landing-page-taupe to-landing-page-taupe2 bg-clip-text text-transparent`}
+      className={`${fontStyle} ${textAlign} bg-gradient-to-b from-landing-page-white via-landing-page-taupe to-landing-page-taupe2 bg-clip-text font-dm-sans text-transparent`}
     >
       {children}
     </div>
