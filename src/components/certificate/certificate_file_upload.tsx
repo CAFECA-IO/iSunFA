@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { IFileUIBeta } from '@/interfaces/file';
-import Pusher, { Channel } from 'pusher-js';
+import { Channel } from 'pusher-js';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
@@ -18,139 +18,151 @@ interface CertificateFileUploadProps {}
 
 const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   const { userAuth, selectedCompany } = useUserCtx();
-  const [room, setRoom] = useState<IRoom | null>(null);
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
-
-  const [pusher, setPusher] = useState<Pusher | undefined>(undefined);
+  const [room, setRoom] = useState<IRoom | null>(null);
+  const [getRoomSuccess, setGetRoomSuccess] = useState<boolean | undefined>(undefined);
+  const [getRoomCode, setGetRoomCode] = useState<string | undefined>(undefined);
   const [channel, setChannel] = useState<Channel | undefined>(undefined);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState<boolean>(false);
-  const { trigger: delectRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
+  const { trigger: createRoomAPI } = APIHandler<IRoom>(APIName.ROOM_ADD);
+  const { trigger: deleteRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
   // const { trigger: getRoomByIdAPI } = APIHandler<IRoom>(APIName.ROOM_GET_BY_ID); // Info: (20241121 - tzuhan) 目前沒有用的，目前用 pusher 傳來的是足夠的
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
 
-  const pauseFileUpload = useCallback((file: IFileUIBeta, index: number) => {
-    setFiles((prev) => {
-      const updateFiles = [...prev];
-      if (file.id === updateFiles[index].id) {
-        updateFiles[index].status = ProgressStatus.PAUSED;
-      } else {
-        const indexUpdate = updateFiles.findIndex((f) => f.id === file.id);
-        updateFiles[indexUpdate].status = ProgressStatus.PAUSED;
-      }
-      return updateFiles;
+  // Info: (20241204 - tzuhan) 通用文件狀態更新函數
+  const updateFileStatus = (
+    fileId: number | null,
+    fileName: string,
+    status: ProgressStatus,
+    progress?: number,
+    certificateId?: number
+  ) => {
+    const update = (f: IFileUIBeta) => ({
+      ...f,
+      status,
+      progress: progress ?? f.progress,
+      certificateId,
     });
-  }, []);
-
-  const deleteFile = useCallback((file: IFileUIBeta, index: number) => {
-    setFiles((prev) => {
-      const updateFiles = [...prev];
-      if (file.id === updateFiles[index].id) {
-        updateFiles[index].status = ProgressStatus.PAUSED;
-      } else {
-        const indexUpdate = updateFiles.findIndex((f) => f.id === file.id);
-        updateFiles[indexUpdate].status = ProgressStatus.PAUSED;
-      }
-      return updateFiles;
-    });
-  }, []);
-
-  const toggleQRCodeModal = () => {
-    setIsQRCodeModalOpen((prev) => !prev);
+    setFiles((prev) =>
+      prev.map((f) => ((f.id && fileId && f.id === fileId) || f.name === fileName ? update(f) : f))
+    );
   };
 
-  const createCertificate = useCallback(async (fileId: number) => {
-    try {
-      const { success: successCreated, data } = await createCertificateAPI({
-        params: {
-          companyId,
-        },
-        body: {
-          fileIds: [fileId], // Info: (20241126 - Murky) @tsuhan 這邊已經可以使用批次上傳, 但是我不知道怎麼改，所以先放在array
-        },
-      });
-      if (successCreated && data) {
-        setFiles((prev) => {
-          const updateFiles = [...prev];
-          const index = updateFiles.findIndex((f) => f.id === data.file.id);
-          updateFiles[index].certificateId = data?.id;
-          updateFiles[index].progress = 100;
-          updateFiles[index].status = ProgressStatus.SUCCESS;
-          return prev;
+  // Info: (20241204 - tzuhan) 暫停文件上傳
+  const pauseFileUpload = useCallback((fileId: number | null, fileName: string) => {
+    updateFileStatus(fileId, fileName, ProgressStatus.PAUSED);
+  }, []);
+
+  // Info: (20241204 - tzuhan) 刪除文件
+  const deleteFile = useCallback((fileId: number | null, fileName: string) => {
+    setFiles((prev) =>
+      prev.filter((f) => (f.id && fileId && f.id !== fileId) || f.name !== fileName)
+    );
+  }, []);
+
+  // Info: (20241204 - tzuhan) 創建憑證
+  const createCertificate = useCallback(
+    async (fileId: number) => {
+      try {
+        const { success, data } = await createCertificateAPI({
+          params: { companyId },
+          body: { fileIds: [fileId] },
         });
+
+        if (success && data) {
+          updateFileStatus(fileId, '', ProgressStatus.SUCCESS, 100, data.id);
+        }
+      } catch (error) {
+        updateFileStatus(fileId, '', ProgressStatus.FAILED);
       }
-    } catch (error) {
-      setFiles((prev) => {
-        const updateFiles = [...prev];
-        const index = updateFiles.findIndex((f) => f.id === fileId);
-        updateFiles[index].status = ProgressStatus.FAILED;
-        return prev;
-      });
+    },
+    [companyId]
+  );
+
+  // Info: (20241204 - tzuhan) 處理來自 Pusher 的新文件
+  const handleNewFilesComing = useCallback(async (data: { message: string }) => {
+    const newFile: IFileUIBeta = {
+      ...JSON.parse(data.message),
+      progress: 80,
+      status: ProgressStatus.IN_PROGRESS,
+    };
+
+    setIsQRCodeModalOpen(false);
+    setFiles((prev) => [...prev, newFile]);
+
+    if (newFile.id) {
+      await createCertificate(newFile.id);
+    } else {
+      updateFileStatus(newFile.id, newFile.name, ProgressStatus.FAILED);
     }
   }, []);
 
-  const handleNewFilesComing = useCallback(
-    async (data: { message: string }, roomId: string, roomPassword: string) => {
-      // Deprecated: (20241120 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(
-        `handleNewFilesComing: roomId: ${roomId}, roomPassword: ${roomPassword}, data.message`,
-        JSON.parse(data.message)
-      );
-      const newFile: IFileUIBeta = {
-        ...JSON.parse(data.message),
-        progress: 80,
-        status: ProgressStatus.IN_PROGRESS,
-      };
-      setIsQRCodeModalOpen(false);
-      setFiles((prev) => [...prev, newFile]);
-      await createCertificate(newFile.id!);
-    },
-    []
-  );
-
+  // Info: (20241204 - tzuhan) 處理加入房間
   const handleRoomJoin = useCallback(() => {
     setIsQRCodeModalOpen(false);
   }, []);
 
+  // Info: (20241204 - tzuhan) 處理刪除房間
   const handleRoomDelete = useCallback(async () => {
-    await delectRoomAPI({
-      params: { roomId: room?.id },
-      body: { password: room?.password },
+    if (room) {
+      await deleteRoomAPI({
+        params: { roomId: room.id },
+        body: { password: room.password },
+      });
+    }
+  }, [room]);
+
+  // Info: (20241204 - tzuhan) 獲取房間資料
+  const createRoom = useCallback(async () => {
+    const { success, code, data: newRoom } = await createRoomAPI();
+    setGetRoomSuccess(success);
+    setGetRoomCode(code);
+    if (success && newRoom) setRoom(newRoom);
+  }, [createRoomAPI]);
+
+  // Info: (20241204 - tzuhan) 切換 QR 代碼模態框
+  const toggleQRCodeModal = useCallback(() => {
+    setIsQRCodeModalOpen((prev) => {
+      if (!prev && !room) {
+        createRoom();
+      } else if (channel && !channel.subscribed) {
+        channel.subscribe();
+      }
+      return !prev;
     });
-  }, []);
+  }, [room, channel]);
 
-  const handleRoomCreate = useCallback((roomData: IRoom) => {
-    setRoom(roomData);
+  // Info: (20241204 - tzuhan) 訂閱 Pusher 頻道並清理
+  useEffect(() => {
+    if (!room) return;
+
     const pusherInstance = getPusherInstance(userAuth?.id);
-    setPusher(pusherInstance);
+    const privateChannel = pusherInstance.subscribe(`${PRIVATE_CHANNEL.ROOM}-${room.id}`);
 
-    const privateChannel = pusherInstance.subscribe(`${PRIVATE_CHANNEL.ROOM}-${roomData.id}`);
-    setChannel(privateChannel);
     privateChannel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
     privateChannel.bind(ROOM_EVENT.DELETE, handleRoomDelete);
-    privateChannel.bind(ROOM_EVENT.NEW_FILE, (data: { message: string }) => {
-      handleNewFilesComing(data, roomData.id, roomData.password);
-    });
-  }, []);
+    privateChannel.bind(ROOM_EVENT.NEW_FILE, handleNewFilesComing);
 
-  useEffect(() => {
+    setChannel(privateChannel);
+
+    // Deprecate: (20241204 - Tzuhan) remove eslint-disable
+    // eslint-disable-next-line consistent-return
     return () => {
-      if (channel) {
-        channel.unbind_all();
-        channel.unsubscribe();
-      }
-      if (pusher) {
-        pusher.disconnect();
-      }
+      privateChannel.unbind_all();
+
+      pusherInstance.unsubscribe(`${PRIVATE_CHANNEL.ROOM}-${room.id}`);
+      handleRoomDelete();
     };
-  }, []);
+  }, [room]);
 
   return (
     <>
       {isQRCodeModalOpen && (
         <CertificateQRCodeModal
-          handleRoomCreate={handleRoomCreate}
+          room={room}
+          success={getRoomSuccess}
+          code={getRoomCode}
           toggleQRCode={toggleQRCodeModal}
         />
       )}

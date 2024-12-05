@@ -680,6 +680,16 @@ module.exports = {
         'tree-stroke-divider': 'var(--tree-stroke-divider)',
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
+
+        // Info: (20241204 - Julian) New iSunFA Landing Page
+        'landing-page': {
+          bg: '#120C00',
+
+          orange: '#FFB632',
+
+          white: '#FFFFFF',
+          gray: '#C9C9C9',
+        },
       },
       backgroundImage: {
         login_bg: "url('/images/login_bg.png')",
@@ -1352,6 +1362,8 @@ module.exports = {
 
         normal_setting_brand:
           '0px 50px 17px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 28px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 11px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 6px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 2px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
+
+        'landing-nav': 'inset 0px -1px 8px 4px rgba(255, 255, 255, 0.4)',
       },
       dropShadow: {
         xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',
@@ -1367,6 +1379,7 @@ module.exports = {
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         barlow: ['Barlow', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         poppins: ['Poppins', 'sans-serif'],
+        'dm-sans': ['DM Sans', 'sans-serif'],
       },
       width: {
         'full-available': '-webkit-fill-available',
@@ -1473,6 +1486,9 @@ module.exports = {
 
       content: {
         checked: '"✔"',
+      },
+      listStyleType: {
+        arrow: '"‣ "',
       },
       gridTemplateColumns: {
         'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板

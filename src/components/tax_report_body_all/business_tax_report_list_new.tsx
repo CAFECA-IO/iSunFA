@@ -4,95 +4,207 @@ import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { TaxReport401Content } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { format } from 'date-fns';
 import { useTranslation } from 'next-i18next';
+import { IDatePeriod } from '@/interfaces/date_period';
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
+import { ReportLanguagesKey } from '@/interfaces/report_language';
+import { ReportType } from '@/constants/report';
+import Image from 'next/image';
+import DownloadButton from '@/components/button/download_button';
+import PrintButton from '@/components/button/print_button';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useReactToPrint } from 'react-to-print';
 
-// Info: (20241017 - Anna) 不從父層拿reportId
-// interface ITaxReportBodyAllProps {
-//   reportId: string;
-// }
-
-// Info: (20241017 - Anna) 不從父層拿reportId
-// const BusinessTaxList = ({ reportId }: ITaxReportBodyAllProps) => {
-const BusinessTaxList = () => {
-  // Todo: (20241017 - Anna) 先reportId，為了看UI
-  const defaultReportId = '10000035';
-
+interface BusinessTaxListProps {
+  selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
+  selectedReportLanguage: ReportLanguagesKey; // Info: (20241203 - Anna) 接收語言選擇
+}
+const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
+  selectedDateRange,
+  selectedReportLanguage,
+}) => {
   const { t } = useTranslation(['reports']);
+  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
-  // Info: (20240814 - Anna) 使用 useState 定義 report401 變量的狀態，並將其類型設為 TaxReport401 | null
 
-  // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
+  const printRef = useRef<HTMLDivElement>(null); // Info: (20241204 - Anna) 定義需要列印內容的 ref
 
-  // Deprecated: (20241129 - Liz)
-  // const {
-  //   data: reportFinancial,
-  //   // Info: (20240816 - Anna)
-  //   // code: getReportFinancialCode,
-  //   // success: getReportFinancialSuccess,
-  //   isLoading: getReportFinancialIsLoading,
-  // } = APIHandler<TaxReport401Content>(
-  //   APIName.REPORT_GET_BY_ID,
-  //   {
-  //     params: {
-  //       companyId: selectedCompany?.id,
-  //       // Info: (20241017 - Anna) 改用預設的reportId
-  //       // reportId: reportId ?? NON_EXISTING_REPORT_ID,
-  //       reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
-  //     },
-  //   },
-  //   hasCompanyId
-  // );
+  const handlePrint = useReactToPrint({
+    contentRef: printRef, // Info: (20241203 - Anna) 指定需要打印的內容 Ref
+    documentTitle: `營業稅申報書`,
+    onBeforePrint: async () => {
+      return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
+    },
+    onAfterPrint: async () => {
+      return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
+    },
+  });
 
+  const displayedSelectArea = () => {
+    return (
+      <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
+        <div className="ml-auto flex items-center gap-24px">
+          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+          <PrintButton onClick={handlePrint} disabled={false} />
+        </div>
+      </div>
+    );
+  };
+
+  //  Info: (20241204 - Anna) 新增 isReportGenerated 狀態
+  const [isReportGenerated, setIsReportGenerated] = useState<boolean>(false);
+
+  // Info: (20241204 - Anna)
+  const {
+    trigger: generateFinancialReport,
+    code: generatedCode,
+    isLoading: generatedLoading,
+    success: generatedSuccess,
+  } = APIHandler<number | null>(APIName.REPORT_GENERATE);
+
+  const [reportId, setReportId] = useState<string | null>(null); // Info: (20241204 - Anna) 替換 defaultReportId
   const [financialReport, setFinancialReport] = useState<TaxReport401Content | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  // const [reportId, setReportId] = useState<string | null>(null); // Info: (20241204 - Anna) 保存後端返回的報告 ID
 
   const { trigger: getFinancialReportAPI } = APIHandler<TaxReport401Content>(
     APIName.REPORT_GET_BY_ID
   );
 
-  useEffect(() => {
-    if (isAuthLoading || !selectedCompany) return;
-    if (isLoading) return;
-    setIsLoading(true);
+  // Info: (20241204 - Anna) 新增 handleGenerateReport 方法 generate report
+  const handleGenerateReport = async () => {
+    if (!selectedDateRange || !selectedCompany?.id) return;
 
-    const getFinancialReport = async () => {
-      try {
-        const {
-          data: report,
-          code: getFRCode,
-          success: getFRSuccess,
-        } = await getFinancialReportAPI({
-          params: {
-            companyId: selectedCompany.id,
-            reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
-          },
-        });
+    const { startTimeStamp, endTimeStamp } = selectedDateRange;
 
-        if (!getFRSuccess) {
-          // Deprecated: (20241129 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getFinancialReportAPI failed:', getFRCode);
-          return;
-        }
+    // Info: (20241204 - Anna) 如果日期範圍的值為 0，直接返回，不執行後續邏輯
+    if (startTimeStamp === 0 || endTimeStamp === 0) {
+      return;
+    }
 
-        setFinancialReport(report);
-        // Deprecated: (20241128 - Liz)
+    try {
+      const response = await generateFinancialReport({
+        params: { companyId: selectedCompany.id },
+        body: {
+          type: FinancialReportTypesKey.report_401,
+          reportLanguage: selectedReportLanguage,
+          from: startTimeStamp,
+          to: endTimeStamp,
+          reportType: ReportType.FINANCIAL,
+        },
+      });
+
+      if (response.success && response.data) {
+        setReportId(String(response.data)); // Info: (20241204 - Anna) 保存報告 ID
+      } else {
+        // Deprecate: (20241205 - Anna) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log('call getFinancialReportAPI and getFinancialReport:', report);
+        // console.error('Failed to generate report. Response:', response);
+      }
+
+      // Info: (20241204 - Anna) 設定 isReportGenerated 為 true
+      setIsReportGenerated(true);
+    } catch (error) {
+      // Deprecate: (20241205 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      // console.error('Error generating report:', error);
+    }
+  };
+
+  // Info: (20241204 - Anna) 根據報告 ID 加載報告內容
+  const getFinancialReport = async () => {
+    if (
+      (selectedDateRange &&
+        (selectedDateRange.startTimeStamp === 0 || selectedDateRange.endTimeStamp === 0)) ||
+      selectedDateRange === null ||
+      !reportId ||
+      reportId === '0' ||
+      reportId === null
+    ) {
+      return (
+        <div className="flex h-screen flex-col items-center justify-center">
+          <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+          <div>
+            <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
+            <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
+          </div>
+        </div>
+      );
+    }
+
+    setIsLoading(true);
+    try {
+      const {
+        data: report,
+        code: getFRCode,
+        success: getFRSuccess,
+      } = await getFinancialReportAPI({
+        params: {
+          companyId: selectedCompany?.id,
+          reportId: reportId ?? NON_EXISTING_REPORT_ID,
+        },
+      });
+
+      if (!getFRSuccess) {
+        // Deprecated: (20241129 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch report. Code:', getFRCode, 'Response:', report);
+        return null; // Info: (20241204 - Anna) 添加返回值，避免報錯
+      }
+      setFinancialReport(report);
+      return report; // Info: (20241204 - Anna) 成功時返回獲取的報告
+    } catch (error) {
+      return null; // Info: (20241204 - Anna) 異常時返回 null
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (generatedCode && !generatedLoading && generatedSuccess) {
+      // Deprecated: (20241204 - Anna)
+      // eslint-disable-next-line no-console
+      console.log('Report generation succeeded:', {
+        code: generatedCode,
+        message: 'The report is being generated.',
+      });
+    }
+  }, [generatedCode, generatedLoading, generatedSuccess]);
+
+  // Info: (20241204 - Anna)  監聽 reportId，觸發報告加載 get report by id
+  useEffect(() => {
+    if (isAuthLoading || !selectedCompany || !reportId || isLoading) return;
+    if (isReportGenerated && !isLoading && reportId) {
+      setIsLoading(true);
+    }
+    getFinancialReport();
+  }, [isAuthLoading, selectedCompany, reportId]);
+
+  // Deprecated: (20241204 - Anna) 在 useEffect 中監聽 selectedDateRange
+  useEffect(() => {
+    if (!selectedDateRange || !selectedCompany?.id) return;
+
+    const { startTimeStamp, endTimeStamp } = selectedDateRange;
+
+    // Info: (20241204 - Anna) 如果日期範圍無效，不生成報告
+    if (startTimeStamp === 0 || endTimeStamp === 0) {
+      return;
+    }
+
+    const generateReport = async () => {
+      try {
+        await handleGenerateReport();
       } catch (error) {
-        // console.log('error:', error);
-      } finally {
-        setIsLoading(false);
+        // Deprecate: (20241205 - Anna) remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.error('Error in auto-generating report:', error);
       }
     };
 
-    getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in BusinessTaxList');
-  }, [isAuthLoading, selectedCompany]);
+    generateReport();
+  }, [selectedDateRange, selectedCompany?.id]);
 
   // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger('financialReport in reportId', financialReport)
 
@@ -1414,10 +1526,12 @@ const BusinessTaxList = () => {
   );
 
   return (
-    <div className="mx-auto w-a4-height origin-top overflow-x-auto">
-      {page1}
-      <hr className="break-before-page" />
-    </div>
+    <>
+      {displayedSelectArea()}
+      <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
+        {page1}
+      </div>
+    </>
   );
 };
 
