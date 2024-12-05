@@ -13,6 +13,19 @@ export const iSunFAAddressOnMap = process.env.I_SUN_FA_ADDRESS_ON_GOOGLE_MAP;
 export const iSunFAPhone = process.env.I_SUN_FA_PHONE_NUMBER;
 export const githubLink = process.env.GITHUB_LINK;
 
+/* Info: (20241204 - Murky) ----- IPFS連線資訊 ----- */
+const { IPFS_SWARM_KEY_BASE_16 } = process.env;
+export const IPFS_HOST_IP = process.env.IPFS_HOST_IP || '127.0.0.1';
+const { IPFS_HOST_PEER_ID } = process.env;
+
+export const IPFS_SWARM_KEY = `
+/key/swarm/psk/1.0.0/
+/base16/
+${IPFS_SWARM_KEY_BASE_16}
+`.trim();
+export const IPFS_LISTEN_ADDRESS = `/ip4/${IPFS_HOST_IP}/tcp/0`;
+export const IPFS_BOOTSTRAP_ADDRESS = `/ip4/${IPFS_HOST_IP}/tcp/4001/p2p/${IPFS_HOST_PEER_ID}`;
+
 export const AUTH_PERIOD = 60 * 60; // 1 hr
 
 export const COOKIE_NAME = {
