@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { FiEye, FiArrowRight } from 'react-icons/fi';
+import { FiArrowRight } from 'react-icons/fi';
+import { PiFilmStrip } from 'react-icons/pi';
 import { RoleName } from '@/constants/role';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
@@ -98,7 +99,7 @@ const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
         onClick={togglePreviewModal}
       >
         <p>{t('dashboard:COMMON.PREVIEW')}</p>
-        <FiEye size={24} />
+        <PiFilmStrip size={24} />
       </button>
 
       <button

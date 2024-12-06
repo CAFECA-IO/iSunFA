@@ -14,6 +14,7 @@ import {
   TaskTitle,
   IMissingCertificate,
 } from '@/interfaces/pending_task';
+import Image from 'next/image';
 import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data';
 
 interface CompanyListProps {
@@ -45,7 +46,7 @@ const CompanyList = ({ list }: CompanyListProps) => {
         >
           <div className="flex items-center gap-8px">
             <div className="h-24px w-24px overflow-hidden rounded-xxs bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS">
-              {/* // ToDo: (20241127 - Liz) 目前 api 沒有提供 <Image src={item.companyLogoSrc} alt="company_logo" width={24} height={24}></Image> */}
+              <Image src={item.companyLogoSrc} alt="company_logo" width={24} height={24} />
             </div>
             <p className="text-xs font-semibold text-text-neutral-primary">{item.companyName}</p>
           </div>

@@ -25,7 +25,7 @@ interface UserContextType {
   username: string | null;
   isSignIn: boolean;
   isAgreeTermsOfService: boolean;
-  isAgreePrivacyPolicy: boolean;
+  // isAgreePrivacyPolicy: boolean; // Deprecated: (20241206 - Liz)
   isSignInError: boolean;
   createRole: (roleId: number) => Promise<IUserRole | null>;
   selectRole: (roleId: number) => Promise<IUserRole | null>;
@@ -88,7 +88,7 @@ export const UserContext = createContext<UserContextType>({
   username: null,
   isSignIn: false,
   isAgreeTermsOfService: false,
-  isAgreePrivacyPolicy: false,
+  // isAgreePrivacyPolicy: false, // Deprecated: (20241206 - Liz)
   isSignInError: false,
   createRole: async () => null,
   selectRole: async () => null,
@@ -132,7 +132,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
-  const [, setIsAgreePrivacyPolicy, isAgreePrivacyPolicyRef] = useStateRef(false);
+  // const [, setIsAgreePrivacyPolicy, isAgreePrivacyPolicyRef] = useStateRef(false); // Deprecated: (20241206 - Liz)
 
   const isRouteChanging = useRef(false);
 
@@ -357,14 +357,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const hasAgreedToTermsOfService = processedUser.agreementList.includes(
       Hash.HASH_FOR_TERMS_OF_SERVICE
     );
-    const hasAgreedToPrivacyPolicy = processedUser.agreementList.includes(
-      Hash.HASH_FOR_PRIVACY_POLICY
-    );
-    setIsAgreeTermsOfService(hasAgreedToTermsOfService);
-    setIsAgreePrivacyPolicy(hasAgreedToPrivacyPolicy);
-    const hasAgreedToAll = hasAgreedToTermsOfService && hasAgreedToPrivacyPolicy;
+    // const hasAgreedToPrivacyPolicy = processedUser.agreementList.includes(
+    //   Hash.HASH_FOR_PRIVACY_POLICY
+    // );
 
-    if (!hasAgreedToAll) return;
+    setIsAgreeTermsOfService(hasAgreedToTermsOfService);
+    // setIsAgreePrivacyPolicy(hasAgreedToPrivacyPolicy);
+    // const hasAgreedToAll = hasAgreedToTermsOfService && hasAgreedToPrivacyPolicy;
+
+    if (!hasAgreedToTermsOfService) return;
 
     if (!processedRole) {
       goToSelectRolePage();
@@ -442,9 +443,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       if (hash === Hash.HASH_FOR_TERMS_OF_SERVICE) {
         setIsAgreeTermsOfService(true);
       }
-      if (hash === Hash.HASH_FOR_PRIVACY_POLICY) {
-        setIsAgreePrivacyPolicy(true);
-      }
+      // if (hash === Hash.HASH_FOR_PRIVACY_POLICY) {
+      //   setIsAgreePrivacyPolicy(true);
+      // }
 
       return response.success;
     } catch (error) {
@@ -753,7 +754,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       username: usernameRef.current,
       isSignIn: isSignInRef.current,
       isAgreeTermsOfService: isAgreeTermsOfServiceRef.current,
-      isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current,
+      // isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current, // Deprecated: (20241206 - Liz)
       isSignInError: isSignInErrorRef.current,
       createRole,
       selectRole,

@@ -26,7 +26,7 @@ const LoginAnimation = ({
       clearTimeout(titleTimer);
       clearTimeout(closeAnimation);
     };
-  }, []);
+  }, [setIsAnimationShowing]);
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">

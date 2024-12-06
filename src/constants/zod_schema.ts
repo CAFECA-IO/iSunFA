@@ -107,7 +107,7 @@ import {
 import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
 import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
 import { accountGetV2Schema, accountPostV2Schema } from '@/lib/utils/zod_schema/account';
-import { assetPostSchema } from '@/lib/utils/zod_schema/asset';
+import { assetBulkPostSchema, assetPostSchema } from '@/lib/utils/zod_schema/asset';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -286,4 +286,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.SIGN_IN]: nullAPISchema,
   [APIName.SIGN_OUT]: nullAPISchema,
   [APIName.TRIAL_BALANCE_EXPORT]: nullAPISchema,
+  [APIName.CREATE_ASSET_BULK]: assetBulkPostSchema,
 };

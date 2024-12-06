@@ -129,8 +129,8 @@ export type IAPIName =
   | 'LEDGER_LIST'
   | 'VOUCHER_POST_V2'
   | 'PUSHER_AUTH'
-  | 'TRIAL_BALANCE_EXPORT';
-
+  | 'TRIAL_BALANCE_EXPORT'
+  | 'CREATE_ASSET_BULK';
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
