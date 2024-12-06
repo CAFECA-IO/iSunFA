@@ -360,7 +360,7 @@ export interface AssetHeaderWithStringDate extends Omit<AssetHeader, 'acquisitio
 }
 
 // ToDo: (20241204 - Luphia) move to interface folder
-export interface ICreateAssetWithVouchersRepo {
+export interface ICreateAssetWithVouchersRepoInput {
   companyId: number;
   name: string;
   type: string;
@@ -386,3 +386,6 @@ export interface ICreateAssetWithVouchersRepoResponse {
   updatedAt: number;
   note: string;
 }
+
+export interface ICreateAssetBulkRepoInput extends ICreateAssetWithVouchersRepoInput {}
+export interface ICreateAssetBulkRepoResponse extends Array<ICreateAssetWithVouchersRepoResponse> {}

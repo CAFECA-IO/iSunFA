@@ -22,16 +22,20 @@ export async function getTotalPendingTaskForUser(userId: number): Promise<IPendi
         countUnpostedVoucher(company.id),
       ]);
 
+      const imageUrl = company.imageFile.url;
+
       return {
         missingCertificate: {
           companyId: company.id,
           companyName: company.name,
           count: missingCertificateCount,
+          companyLogoSrc: imageUrl,
         },
         unpostedVoucher: {
           companyId: company.id,
           companyName: company.name,
           count: unpostedVoucherCount,
+          companyLogoSrc: imageUrl,
         },
       };
     })

@@ -119,7 +119,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
       {/* Info: (20240920 - Julian) export & select button */}
       {displayedSelectArea}
 
-      <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 print:bg-neutral-50">
+      <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 print:mt-0 print:bg-neutral-50">
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
@@ -143,12 +143,12 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
               {t('reports:REPORTS.CODE')}
             </div>
             <div
-              className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
+              className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:hidden print:bg-neutral-50`}
             >
               {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
             </div>
             <div
-              className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
+              className={`table-cell whitespace-nowrap ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
             >
               {t('journal:VOUCHER.VOUCHER_NO')}
             </div>
@@ -184,7 +184,11 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
       <div className="h-px w-full bg-neutral-100"></div>
 
       {/* Info: (20241009 - Anna) 加總數字的表格 */}
-      <div className="mb-10 mt-4 grid h-70px grid-cols-9 overflow-hidden rounded-b-lg border-b border-t-0 bg-surface-neutral-surface-lv2 text-sm text-text-neutral-tertiary print:bg-neutral-50">
+      <div
+        className="mb-10 mt-4 grid h-70px grid-cols-9 overflow-hidden rounded-b-lg border-b border-t-0 bg-surface-neutral-surface-lv2 text-sm text-text-neutral-tertiary print:bg-neutral-50"
+        // Info: (20241206 - Anna) 避免行內換頁
+        style={{ pageBreakInside: 'avoid' }}
+      >
         {/* Info: (20241009 - Anna) 表格內容 */}
         <div className="col-span-1"></div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
