@@ -1,5 +1,11 @@
 import { AssetDepreciationMethod, AssetStatus } from '@/constants/asset';
-import { createAssetWithVouchers, createManyAssets } from '@/lib/utils/repo/asset.repo';
+import {
+  createAssetWithVouchers,
+  createManyAssets,
+  deleteAsset,
+  deleteManyAssets,
+  getAssetByIdLimited,
+} from '@/lib/utils/repo/asset.repo';
 import { getTimestampNow } from '@/lib/utils/common';
 
 const testCompanyId = 1000;
@@ -33,6 +39,8 @@ describe('createAssetWithVouchers (single asset)', () => {
     expect(asset.createdAt).toBeDefined();
     expect(asset.updatedAt).toBeDefined();
     expect(asset.id).toBeDefined();
+
+    // await deleteAsset(asset.id);
   });
 
   it('should handle special asset number format', async () => {
@@ -50,6 +58,8 @@ describe('createAssetWithVouchers (single asset)', () => {
 
     expect(asset).toBeDefined();
     expect(asset.number).toMatch(/^EQ-1206-[\w-]+-\d{6}$/);
+
+    await deleteAsset(asset.id);
   });
 
   it('should create asset with default values when optional fields are not provided', async () => {
@@ -74,6 +84,8 @@ describe('createAssetWithVouchers (single asset)', () => {
     expect(asset.createdAt).toBeDefined();
     expect(asset.updatedAt).toBeDefined();
     expect(asset.id).toBeDefined();
+
+    await deleteAsset(asset.id);
   });
 });
 describe('createManyAssets (multiple assets)', () => {
@@ -112,6 +124,10 @@ describe('createManyAssets (multiple assets)', () => {
       expect(asset.updatedAt).toBeDefined();
       expect(asset.id).toBeDefined();
     });
+
+    const assetIds = assets.map((asset) => asset.id);
+
+    await deleteManyAssets(assetIds);
   });
 
   it('should create assets with sequential numbers', async () => {
@@ -138,5 +154,57 @@ describe('createManyAssets (multiple assets)', () => {
     assets.forEach((asset) => {
       expect(asset.number).toMatch(uuidPattern);
     });
+
+    const assetIds = assets.map((asset) => asset.id);
+    await deleteManyAssets(assetIds);
+  });
+});
+
+describe('getAssetByIdLimited (get the asset with fixed conditions)', () => {
+  it('should return asset if it has a voucher', async () => {
+    const SEED_DATA_ASSET_ID = 1;
+    const asset = await getAssetByIdLimited(SEED_DATA_ASSET_ID);
+
+    expect(asset).toBeDefined();
+  });
+
+  it('should not return asset if it does not have a voucher', async () => {
+    const TEST_DATA_ASSET_ID = 3;
+    const asset = await getAssetByIdLimited(TEST_DATA_ASSET_ID);
+
+    expect(asset).toBeNull();
+  });
+});
+
+describe('deleteAsset', () => {
+  it('should delete an existing asset', async () => {
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: 'Test Asset',
+      type: 'Equipment',
+      number: 'TEST-004',
+      acquisitionDate: 1704067200,
+      purchasePrice: 10000,
+      accumulatedDepreciation: 0,
+    };
+
+    const asset = await createAssetWithVouchers(newAssetData);
+    const deletedAsset = await deleteAsset(asset.id);
+
+    expect(deletedAsset).toBeDefined();
+    expect(deletedAsset.id).toBe(asset.id);
+
+    const checkAsset = await getAssetByIdLimited(asset.id);
+    expect(checkAsset).toBeNull();
+  });
+
+  it('should throw an error when trying to delete a non-existent asset', async () => {
+    const nonExistentId = -1;
+
+    const deleteNonExistentAsset = async () => {
+      await deleteAsset(nonExistentId);
+    };
+
+    await expect(deleteNonExistentAsset).rejects.toThrow();
   });
 });

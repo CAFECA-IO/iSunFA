@@ -11,9 +11,18 @@ const IRelatedVoucherValidator = z.object({
   number: z.string(),
 });
 
-const AssetQueryValidator = z.object({
+// Info: (20241206 - Shirley) query for create single or bulk assets
+const AssetCreateQueryValidator = z.object({
   companyId: zodStringToNumber,
 });
+
+// Info: (20241206 - Shirley) query for get asset by id
+const AssetGetByIdQueryValidator = AssetCreateQueryValidator.extend({
+  assetId: zodStringToNumber,
+});
+
+// Info: (20241206 - Shirley) query for delete asset by id
+const AssetDeleteByIdQueryValidator = AssetGetByIdQueryValidator;
 
 export const AssetCreateInputBodyValidator = z.object({
   assetName: z.string(),
@@ -113,7 +122,7 @@ export const assetEntityValidator = z.object({
 // Info: (20241204 - Luphia) define the schema for frontend (with api response)
 export const assetPostSchema = {
   input: {
-    querySchema: AssetQueryValidator,
+    querySchema: AssetCreateQueryValidator,
     bodySchema: AssetCreateInputBodyValidator,
   },
   outputSchema: AssetCreateOutputValidator,
@@ -122,9 +131,27 @@ export const assetPostSchema = {
 
 export const assetBulkPostSchema = {
   input: {
-    querySchema: AssetQueryValidator,
+    querySchema: AssetCreateQueryValidator,
     bodySchema: AssetBulkCreateInputBodyValidator,
   },
   outputSchema: AssetBulkCreateOutputValidator,
+  frontend: nullSchema,
+};
+
+export const assetGetByIdSchema = {
+  input: {
+    querySchema: AssetGetByIdQueryValidator,
+    bodySchema: nullSchema,
+  },
+  outputSchema: IAssetDetailsValidator,
+  frontend: nullSchema,
+};
+
+export const assetDeleteByIdSchema = {
+  input: {
+    querySchema: AssetDeleteByIdQueryValidator,
+    bodySchema: nullSchema,
+  },
+  outputSchema: nullSchema,
   frontend: nullSchema,
 };
