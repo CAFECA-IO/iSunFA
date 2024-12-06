@@ -33,7 +33,7 @@ const CreateRolePage = () => {
   const [unusedSystemRoles, setUnusedSystemRoles] = useState<IRole[]>([]);
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
   const [isAbleToGoBack, setIsAbleToGoBack] = useState<boolean>(false);
-  const [isAnimationShowing, setIsAnimationShowing] = useState<boolean>(true);
+  const [isAnimationShowing, setIsAnimationShowing] = useState<boolean>(false);
 
   const togglePreviewModal = () => {
     setIsPreviewModalVisible((prev) => !prev);
@@ -50,7 +50,7 @@ const CreateRolePage = () => {
         const userRoles = await getUserRoleList();
 
         if (!userRoles || userRoles.length === 0) {
-          // Info: (20241206 - Liz) 觸發入場動畫
+          setIsAnimationShowing(true);
         }
 
         if (systemRoles && userRoles) {

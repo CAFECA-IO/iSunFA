@@ -91,7 +91,9 @@ const UserRole = ({
         <Image src={roleIconSrc} alt={roleIconAlt} width={64} height={64} />
       </div>
 
-      <h2 className="text-32px font-bold text-text-neutral-primary">{name}</h2>
+      <h2 className="text-32px font-bold text-text-neutral-primary">
+        {t(`dashboard:ROLE.${name.toUpperCase().replace(/\s+/g, '_')}`)}
+      </h2>
 
       <Image
         src={avatar}
