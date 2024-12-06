@@ -1538,12 +1538,35 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   }
 
   return (
-    <div>
-      {displayedSelectArea()}
-      <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
-        {page1}
+    <>
+      <div>
+        {displayedSelectArea()}
+        <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
+          {page1}
+        </div>
       </div>
-    </div>
+
+      {/* Info: (20241206 - Anna) */}
+      <div>
+        {displayedSelectArea()}
+        <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
+          <pre className="mt-4 rounded bg-gray-100 p-2 text-xs text-gray-500">
+            {JSON.stringify(
+              {
+                params: {
+                  companyId: selectedCompany?.id,
+                  dateRange: selectedDateRange,
+                  reportLanguage: selectedReportLanguage,
+                },
+                financialReport,
+              },
+              null,
+              2
+            )}
+          </pre>
+        </div>
+      </div>
+    </>
   );
 };
 
