@@ -14,12 +14,14 @@ export interface IMissingCertificate {
   companyId: number;
   companyName: string;
   count: number;
+  companyLogoSrc: string;
 }
 
 export interface IUnpostedVoucher {
   companyId: number;
   companyName: string;
   count: number;
+  companyLogoSrc: string;
 }
 
 export interface IPendingTask {
