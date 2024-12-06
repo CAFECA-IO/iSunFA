@@ -84,8 +84,8 @@ const LedgerPageBody = () => {
             startAccountNo,
             endAccountNo,
             labelType: selectedReportType,
-            page: 1,
-            pageSize: 10,
+            // page: 1,
+            pageSize: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
           },
         });
         setLedgerData(data);
