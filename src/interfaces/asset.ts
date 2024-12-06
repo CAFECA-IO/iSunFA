@@ -386,3 +386,12 @@ export interface ICreateAssetWithVouchersRepoResponse {
   updatedAt: number;
   note: string;
 }
+
+export interface ICreateAssetBulkRepo extends ICreateAssetWithVouchersRepo {}
+export interface ICreateAssetBulkRepoResponse extends Array<ICreateAssetWithVouchersRepoResponse> {}
+// export type ICreateAssetBulkRepoResponse = z.infer<typeof AssetBulkCreateOutputValidator>;
+// example of ICreateAssetBulkRepoResponse:
+// [
+//   { id: 1, name: 'Asset 1', number: 'A-000010', companyId: 1, status: 'normal', createdAt: 1632511200, updatedAt: 1632511200, note: 'Main office computer' },
+//   { id: 2, name: 'Asset 2', number: 'A-000011', companyId: 1, status: 'normal', createdAt: 1632511200, updatedAt: 1632511200, note: 'Marketing laptop' }
+// ]

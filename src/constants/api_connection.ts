@@ -151,6 +151,7 @@ export enum APIName {
   LEDGER_LIST = 'LEDGER_LIST',
   PUSHER_AUTH = 'PUSHER_AUTH',
   TRIAL_BALANCE_EXPORT = 'TRIAL_BALANCE_EXPORT',
+  CREATE_ASSET_BULK = 'CREATE_ASSET_BULK',
 }
 
 export enum APIPath {
@@ -280,6 +281,7 @@ export enum APIPath {
   LEDGER_LIST = `${apiPrefixV2}/company/:companyId/ledger`,
   PUSHER_AUTH = `${apiPrefixV2}/pusher/auth`,
   TRIAL_BALANCE_EXPORT = `${apiPrefixV2}/company/:companyId/trial_balance/export`,
+  CREATE_ASSET_BULK = `${apiPrefixV2}/company/:companyId/asset/bulk`,
 }
 const createConfig = ({
   name,
@@ -926,5 +928,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.TRIAL_BALANCE_EXPORT,
     method: HttpMethod.POST,
     path: APIPath.TRIAL_BALANCE_EXPORT,
+  }),
+  [APIName.CREATE_ASSET_BULK]: createConfig({
+    name: APIName.CREATE_ASSET_BULK,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_ASSET_BULK,
   }),
 };

@@ -45,6 +45,11 @@ export const AssetCreateOutputValidator = CreateAssetWithVouchersRepoResponseVal
   id: z.number(),
 });
 
+export const AssetBulkCreateInputBodyValidator = AssetCreateInputBodyValidator;
+
+export const AssetBulkCreateOutputValidator = z.array(AssetCreateOutputValidator);
+// export const AssetBulkCreateOutputValidator = z.any;
+
 /**
  * Info: (20241105 - Murky)
  * @description 這個是給前端用的 IAssetItem, 放在 IAssetDetails 裡面
@@ -113,5 +118,14 @@ export const assetPostSchema = {
     bodySchema: AssetCreateInputBodyValidator,
   },
   outputSchema: AssetCreateOutputValidator,
+  frontend: nullSchema,
+};
+
+export const assetBulkPostSchema = {
+  input: {
+    querySchema: AssetQueryValidator,
+    bodySchema: AssetBulkCreateInputBodyValidator,
+  },
+  outputSchema: AssetBulkCreateOutputValidator,
   frontend: nullSchema,
 };
