@@ -173,7 +173,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
             // Info: (20241130 - Anna) 生成 iframe
             iframeCodes.push(
-              `<iframe src="${reportLink}" title="${reportType}" width={600} height={600} />`
+              `<iframe src="${reportLink}" title="${reportType}" width="595" height="842" />`
             );
           } catch (error) {
             // Deprecated: (20241130 - Anna) remove eslint-disable

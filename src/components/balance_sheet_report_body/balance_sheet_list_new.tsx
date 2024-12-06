@@ -22,12 +22,14 @@ import Toggle from '@/components/toggle/toggle';
 import { useGlobalCtx } from '@/contexts/global_context';
 // import { useReactToPrint } from 'react-to-print';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
+// import { ReportLanguagesKey } from '@/interfaces/report_language'; // Todo: (20241206 - Anna) 下個PR繼續處理
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
   isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
   printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
   printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
+  //  selectedReportLanguage: ReportLanguagesKey; // Todo: (20241206 - Anna) 接收語言選擇 下個PR繼續處理
 }
 
 // Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
@@ -49,8 +51,10 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   isPrinting, // Info: (20241122 - Anna) 使用打印狀態
   printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
+  // selectedReportLanguage, // Todo: (20241206 - Anna)接收語言選擇 下個PR繼續處理
 }) => {
   const { t } = useTranslation(['reports']);
+  // const { t } = useTranslation(['reports'], { keyPrefix: selectedReportLanguage }); // Todo: (20241206 - Anna) 根據 selectedReportLanguage 來設置語言 下個PR繼續處理
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API

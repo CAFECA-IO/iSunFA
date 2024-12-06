@@ -19,7 +19,7 @@ import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { ASSET_CODE, SPECIAL_ACCOUNTS } from '@/constants/account';
 import { getTimestampOfFirstDateOfThisYear, timestampToString } from '@/lib/utils/common';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
-import { findFirstAccountByCodeInPrisma } from '@/lib/utils/repo/account.repo';
+import { findAccountByIdInPrisma } from '@/lib/utils/repo/account.repo';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private startSecondOfYear: number;
@@ -92,23 +92,21 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     const closeAccount: ILineItemIncludeAccount[] = [];
 
-    const netIncomeAccount = await findFirstAccountByCodeInPrisma(SPECIAL_ACCOUNTS.NET_INCOME.code);
+    const netIncomeAccount = await findAccountByIdInPrisma(SPECIAL_ACCOUNTS.NET_INCOME.id);
 
-    const otherComprehensiveIncomeAccount = await findFirstAccountByCodeInPrisma(
-      SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
+    const otherComprehensiveIncomeAccount = await findAccountByIdInPrisma(
+      SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.id
     );
 
-    const netIncomeInEquity = await findFirstAccountByCodeInPrisma(
-      SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.code
+    const netIncomeInEquity = await findAccountByIdInPrisma(
+      SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.id
     );
 
-    const accumulateProfitAndLossInEquity = await findFirstAccountByCodeInPrisma(
-      SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.code
+    const accumulateProfitAndLossInEquity = await findAccountByIdInPrisma(
+      SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.id
     );
 
-    const otherEquityOther = await findFirstAccountByCodeInPrisma(
-      SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.code
-    );
+    const otherEquityOther = await findAccountByIdInPrisma(SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.id);
 
     closeAccount.push({
       id: netIncomeInEquity?.id || -1,
