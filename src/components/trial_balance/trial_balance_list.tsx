@@ -70,7 +70,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
           startDate: selectedDateRange.startTimeStamp,
           endDate: selectedDateRange.endTimeStamp,
           page: 1,
-          pageSize: 10,
+          pageSize: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
         },
       });
 
