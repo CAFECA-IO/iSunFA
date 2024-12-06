@@ -1,3 +1,4 @@
+// Info: (20241204 - Liz) 沒用到
 import { FinancialReportItem } from '@/interfaces/report';
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
 
@@ -28,7 +29,7 @@ function IncomeStatementReportTableRow({
     : '';
 
   return (
-    <tr key={key} className="h-40px" data-key={key}>
+    <tr key={key} className="h-40px" data-key={key} data-is-tr="true">
       <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{displayCode}</td>
       <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-sm">{name}</td>
       <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
