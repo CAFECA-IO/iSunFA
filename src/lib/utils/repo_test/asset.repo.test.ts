@@ -1,4 +1,4 @@
-import { AssetDepreciationMethod } from '@/constants/asset';
+import { AssetDepreciationMethod, AssetStatus } from '@/constants/asset';
 import { createAssetWithVouchers, createManyAssets } from '@/lib/utils/repo/asset.repo';
 
 const testCompanyId = 1000;
@@ -24,20 +24,14 @@ describe('Asset Repository Tests', () => {
       const asset = await createAssetWithVouchers(newAssetData);
 
       expect(asset).toBeDefined();
-      // expect(asset.companyId).toBe(testCompanyId);
-      // expect(asset.name).toBe(newAssetData.name);
-      // expect(asset.type).toBe(newAssetData.type);
-      // expect(asset.number).toBe(newAssetData.number);
-      // expect(asset.acquisitionDate).toBe(newAssetData.acquisitionDate);
-      // expect(asset.purchasePrice).toBe(newAssetData.purchasePrice);
-      // expect(asset.accumulatedDepreciation).toBe(newAssetData.accumulatedDepreciation);
-      // expect(asset.residualValue).toBe(newAssetData.residualValue);
-      // expect(asset.remainingLife).toBe(newAssetData.usefulLife);
-      // expect(asset.status).toBe(AssetStatus.NORMAL);
-      // expect(asset.depreciationStart).toBe(newAssetData.depreciationStart);
-      // expect(asset.depreciationMethod).toBe(newAssetData.depreciationMethod);
-      // expect(asset.usefulLife).toBe(newAssetData.usefulLife);
-      // expect(asset.note).toBe(newAssetData.note);
+      expect(asset.companyId).toBe(testCompanyId);
+      expect(asset.name).toBe(newAssetData.name);
+      expect(asset.number).toBe(newAssetData.number);
+      expect(asset.status).toBe(AssetStatus.NORMAL);
+      expect(asset.note).toBe(newAssetData.note);
+      expect(asset.createdAt).toBeDefined();
+      expect(asset.updatedAt).toBeDefined();
+      expect(asset.id).toBeDefined();
     });
 
     it('should create asset with default values when optional fields are not provided', async () => {
@@ -54,11 +48,13 @@ describe('Asset Repository Tests', () => {
       const asset = await createAssetWithVouchers(newAssetData);
 
       expect(asset).toBeDefined();
-      // expect(asset.residualValue).toBe(newAssetData.purchasePrice);
-      // expect(asset.remainingLife).toBe(0);
-      // expect(asset.depreciationStart).toBe(newAssetData.acquisitionDate);
-      // expect(asset.depreciationMethod).toBe(AssetDepreciationMethod.NONE);
-      // expect(asset.usefulLife).toBe(0);
+      expect(asset.companyId).toBe(testCompanyId);
+      expect(asset.name).toBe(newAssetData.name);
+      expect(asset.number).toBe(newAssetData.number);
+      expect(asset.status).toBe(AssetStatus.NORMAL);
+      expect(asset.createdAt).toBeDefined();
+      expect(asset.updatedAt).toBeDefined();
+      expect(asset.id).toBeDefined();
     });
   });
 
@@ -85,22 +81,16 @@ describe('Asset Repository Tests', () => {
       expect(assets).toBeDefined();
       expect(assets.length).toBe(amount);
 
-      // assets.forEach((asset, index) => {
-      //   expect(asset.companyId).toBe(testCompanyId);
-      //   expect(asset.name).toBe(newAssetData.name);
-      //   expect(asset.type).toBe(newAssetData.type);
-      //   expect(asset.number).toBe(`Z-00${index + 1}`); // Info: (20241205 - Shirley) 檢查 asset number 編號格式
-      //   expect(asset.acquisitionDate).toBe(newAssetData.acquisitionDate);
-      //   expect(asset.purchasePrice).toBe(newAssetData.purchasePrice);
-      //   expect(asset.accumulatedDepreciation).toBe(newAssetData.accumulatedDepreciation);
-      //   expect(asset.residualValue).toBe(newAssetData.residualValue);
-      //   expect(asset.remainingLife).toBe(newAssetData.usefulLife);
-      //   expect(asset.status).toBe(AssetStatus.NORMAL);
-      //   expect(asset.depreciationStart).toBe(newAssetData.depreciationStart);
-      //   expect(asset.depreciationMethod).toBe(newAssetData.depreciationMethod);
-      //   expect(asset.usefulLife).toBe(newAssetData.usefulLife);
-      //   expect(asset.note).toBe(newAssetData.note);
-      // });
+      assets.forEach((asset, index) => {
+        expect(asset.companyId).toBe(testCompanyId);
+        expect(asset.name).toBe(newAssetData.name);
+        expect(asset.number).toBe(`Z-00${index + 1}`); // Info: (20241205 - Shirley) 檢查 asset number 編號格式
+        expect(asset.status).toBe(AssetStatus.NORMAL);
+        expect(asset.note).toBe(newAssetData.note);
+        expect(asset.createdAt).toBeDefined();
+        expect(asset.updatedAt).toBeDefined();
+        expect(asset.id).toBeDefined();
+      });
     });
   });
 });

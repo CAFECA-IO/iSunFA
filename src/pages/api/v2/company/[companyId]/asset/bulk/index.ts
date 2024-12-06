@@ -65,12 +65,11 @@ export const handlePostRequest: IHandleRequest<
 
   // Info: (20241204 - Luphia) Insert the new asset and vouchers to the database and get the new asset id
   const rs = await createManyAssets(newAsset, amount);
-  const payload = { ...rs };
 
   const statusMessage = STATUS_MESSAGE.CREATED;
 
   // // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
-  const result: IHandlePostRequestResult = { statusMessage, payload };
+  const result: IHandlePostRequestResult = { statusMessage, payload: rs };
 
   // eslint-disable-next-line no-console
   console.log('result in handlePostRequest', result);

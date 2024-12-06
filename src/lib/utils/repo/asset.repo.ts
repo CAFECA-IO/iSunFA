@@ -132,56 +132,9 @@ export async function createManyAssets(
     },
   });
 
-  // eslint-disable-next-line no-console
-  console.log('createdAssets in createManyAssets', createdAssets);
-
   if (!createdAssets.length) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
   return createdAssets;
-  // return [
-  //   {
-  //     id: 10060383,
-  //     name: 'Dummy asset response',
-  //     number: 'EQ-001',
-  //     companyId: 10000003,
-  //     status: 'normal',
-  //     createdAt: 1733457629,
-  //     updatedAt: 1733457629,
-  //     note: 'Laptop for new employee',
-  //   },
-  // ];
-
-  // 確保返回的是陣列格式
-  // const response: ICreateAssetBulkRepoResponse = createdAssets.map((asset) => ({
-  //   id: asset.id,
-  //   name: asset.name,
-  //   number: asset.number,
-  //   companyId: asset.companyId,
-  //   status: asset.status,
-  //   createdAt: asset.createdAt,
-  //   updatedAt: asset.updatedAt,
-  //   note: asset.note,
-  // }));
-
-  // // eslint-disable-next-line no-console
-  // console.log('response in createManyAssets', response);
-
-  // return response;
-
-  // const DUMMY_RES: ICreateAssetBulkRepoResponse = [
-  //   {
-  //     id: 10060428,
-  //     name: 'New Office Laptop',
-  //     number: 'EQ-001',
-  //     companyId: 10000003,
-  //     status: 'normal',
-  //     createdAt: 1733458746,
-  //     updatedAt: 1733458746,
-  //     note: 'Laptop for new employee',
-  //   },
-  // ];
-
-  // return DUMMY_RES;
 }
