@@ -100,6 +100,7 @@ export enum APIName {
   FILE_UPLOAD = 'FILE_UPLOAD',
   FILE_DELETE = 'FILE_DELETE',
   FILE_GET = 'FILE_GET',
+  FILE_PUT_V2 = 'FILE_PUT_V2',
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
   USER_ROLE_LIST = 'USER_ROLE_LIST', // Info: (20241120 - Liz) Beta
   USER_CREATE_ROLE = 'USER_CREATE_ROLE',
@@ -151,6 +152,7 @@ export enum APIName {
   LEDGER_LIST = 'LEDGER_LIST',
   PUSHER_AUTH = 'PUSHER_AUTH',
   TRIAL_BALANCE_EXPORT = 'TRIAL_BALANCE_EXPORT',
+  CREATE_ASSET_BULK = 'CREATE_ASSET_BULK',
 }
 
 export enum APIPath {
@@ -229,6 +231,7 @@ export enum APIPath {
   FILE_UPLOAD = `${apiPrefixV2}/file`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
   FILE_GET = `${apiPrefix}/company/:companyId/file/:fileId`,
+  FILE_PUT_V2 = `${apiPrefixV2}/file/:fileId`,
   COMPANY_GET_BY_ID = `${apiPrefix}/company/:companyId`,
   USER_ROLE_LIST = `${apiPrefixV2}/user/:userId/role`,
   USER_CREATE_ROLE = `${apiPrefixV2}/user/:userId/role`,
@@ -280,6 +283,7 @@ export enum APIPath {
   LEDGER_LIST = `${apiPrefixV2}/company/:companyId/ledger`,
   PUSHER_AUTH = `${apiPrefixV2}/pusher/auth`,
   TRIAL_BALANCE_EXPORT = `${apiPrefixV2}/company/:companyId/trial_balance/export`,
+  CREATE_ASSET_BULK = `${apiPrefixV2}/company/:companyId/asset/bulk`,
 }
 const createConfig = ({
   name,
@@ -560,6 +564,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.FILE_GET,
     method: HttpMethod.GET,
     path: APIPath.FILE_GET,
+  }),
+  [APIName.FILE_PUT_V2]: createConfig({
+    name: APIName.FILE_PUT_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.FILE_PUT_V2,
   }),
   [APIName.COMPANY_GET_BY_ID]: createConfig({
     name: APIName.COMPANY_GET_BY_ID,
@@ -926,5 +935,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.TRIAL_BALANCE_EXPORT,
     method: HttpMethod.POST,
     path: APIPath.TRIAL_BALANCE_EXPORT,
+  }),
+  [APIName.CREATE_ASSET_BULK]: createConfig({
+    name: APIName.CREATE_ASSET_BULK,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_ASSET_BULK,
   }),
 };

@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import type { calculateAssetEntityDepreciation, IAssetEntity } from '@/interfaces/asset';
 import type { IVoucherEntity } from '@/interfaces/voucher';
 import type { ICompanyEntity } from '@/interfaces/company';
@@ -169,3 +170,22 @@ export const calculateAssetDepreciationSerial = (
     }
   }
 };
+
+/** Info: (20241206 - Shirley) 產出不重複的資產編號
+ *
+ * @param prefix - 原始資產編號
+ * @param amount - 需要生成的資產編號數量
+ * @returns 生成的資產編號陣列
+ */
+export function generateAssetNumbers(prefix: string, amount: number): string[] {
+  const uuid = uuidv4();
+  const ASSET_PAD_NUMBER = 6;
+
+  const assetNumbers: string[] = [];
+  for (let i = 0; i < amount; i += 1) {
+    const serialNumber = (i + 1).toString().padStart(ASSET_PAD_NUMBER, '0');
+    assetNumbers.push(`${prefix}-${uuid}-${serialNumber}`);
+  }
+
+  return assetNumbers;
+}

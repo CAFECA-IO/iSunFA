@@ -103,14 +103,20 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
   );
 
   return (
-    <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
+    <div
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+      // Info: (20241206 - Anna) 避免行內換頁
+      style={{ pageBreakInside: 'avoid' }}
+    >
       {/* Info: (20240920 - Julian) Select */}
       <div className={`table-cell text-center`}>{displayedCheckbox}</div>
       {/* Info: (20240920 - Julian) Issued Date */}
       <div className="table-cell text-center">{displayedDate}</div>
       {/* Info: (20241004 - Anna) Accounting */}
       <div className="table-cell text-center align-middle">{displayedAccountingCode}</div>
-      <div className="table-cell text-center align-middle">{displayedAccountingName}</div>
+      <div className="table-cell text-center align-middle print:hidden">
+        {displayedAccountingName}
+      </div>
       {/* Info: (20240920 - Julian) Voucher No */}
       <div className="table-cell py-8px text-right align-middle">{displayedVoucherNo}</div>
       {/* Info: (20240920 - Julian) Note */}

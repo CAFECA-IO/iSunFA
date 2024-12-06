@@ -22,8 +22,11 @@ import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
+// Deprecated: (20241206 - tzuhan) For local testing
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { encryptFile, generateKeyPair } from '@/lib/utils/crypto';
 import { IV_LENGTH } from '@/constants/config';
+import { compressImageToTargetSize } from '@/lib/utils/image_compress';
 
 export interface IFileUIBetaWithFile extends IFileUIBeta {
   file: File;
@@ -44,19 +47,24 @@ const MobileUploadPage: React.FC = () => {
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const handleFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFilesSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       if (e.target.files) {
-        const certificates = Array.from(e.target.files).map(
-          (file) =>
+        const targetSize = 1 * 1024 * 1024; // Info: (20241206 - tzuhan) 1MB
+        const files = Array.from(e.target.files);
+        const compressedFiles = await Promise.all(
+          files.map((file) => compressImageToTargetSize(file, targetSize))
+        );
+        const certificates = compressedFiles.map(
+          ({ file, previewUrl }) =>
             ({
               id: null,
-              name: file.name, // Info: (20241009 - tzuhan)  File metadata
+              name: file.name,
               size: file.size,
-              url: URL.createObjectURL(file), // Info: (20241009 - tzuhan)  For displaying the image preview
+              url: previewUrl,
               progress: 0,
               status: ProgressStatus.IN_PROGRESS,
-              file, // Info: (20241009 - tzuhan) Store the original File object for FormData
+              file, // Info: (20241009 - tzuhan) 這裡是將壓縮後的圖片放入 file
             }) as IFileUIBetaWithFile
         );
         // Deprecated: (20241019 - tzuhan) 如果是拍照模式使用下列code就只能拍一張照片
@@ -65,7 +73,7 @@ const MobileUploadPage: React.FC = () => {
       }
     } catch (error) {
       messageModalDataHandler({
-        title: t('certificate:ERROR.SELECT_CERTIFICATE'), // ToDo: (20241015 - Tzuhan) i18n
+        title: t('certificate:ERROR.SELECT_CERTIFICATE'),
         content: `${error ? (error as Error).message : t('certificate:ERROR.WENT_WRONG')}`,
         messageType: MessageType.ERROR,
         submitBtnStr: t('common:COMMON.CLOSE'),
@@ -85,8 +93,10 @@ const MobileUploadPage: React.FC = () => {
     URL.revokeObjectURL(file.url);
   };
 
+  // Deprecated: (20241206 - tzuhan) For local testing
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const encryptFileWithPublicKey = async (file: File, publicKey: CryptoKey) => {
-    if (!token) throw new Error('token is undefined');
+    if (!token) throw new Error(t('certificate:ERROR.TOKEN_NOT_PROVIDED'));
     try {
       const arrayBuffer = await file.arrayBuffer();
       const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
@@ -97,7 +107,7 @@ const MobileUploadPage: React.FC = () => {
 
       return encryptedFile;
     } catch (error) {
-      throw new Error('faile to encrypt file'); // ToDo: (20241120 - tuzhan) 轉成i18n
+      throw new Error(t('certificate:ERROR.ENCRYPT_FILE'));
     }
   };
 
@@ -145,7 +155,7 @@ const MobileUploadPage: React.FC = () => {
       setSuccessUpload(false);
       setIsUploading(false);
       messageModalDataHandler({
-        title: t('certificate:ERROR.UPLOAD_CERTIFICATE'), // ToDo: (20241015 - Tzuhan) i18n
+        title: t('certificate:ERROR.UPLOAD_CERTIFICATE'),
         content: `${error ? (error as Error).message : t('certificate:ERROR.WENT_WRONG')}`,
         messageType: MessageType.ERROR,
         submitBtnStr: t('common:COMMON.CLOSE'),
@@ -201,7 +211,7 @@ const MobileUploadPage: React.FC = () => {
         <title>{t('certificate:TITLE.UPLOAD')} - iSunFA</title>
       </Head>
       <main
-        // Deprecated: (20241019 - tzuhan) Debugging purpose
+        // Info: (20241120 - tzuhan) 這裡的高度是為了讓底部的按鈕不會被遮住
         // eslint-disable-next-line tailwindcss/no-arbitrary-value
         className="full-height safe-area-adjustment grid h-screen grid-rows-[100px_1fr_105px] overflow-hidden"
       >

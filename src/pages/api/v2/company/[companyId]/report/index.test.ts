@@ -53,7 +53,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000009,
     amount: 1000,
     debit: false,
-    accountId: 10001093,
+    accountId: 2093,
     voucherId: 10000000,
     createdAt: 1728900671,
     updatedAt: 1728900671,
@@ -84,7 +84,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000010,
     amount: 66000,
     debit: true,
-    accountId: 10000601,
+    accountId: 1601,
     voucherId: 10000001,
     createdAt: 1728983168,
     updatedAt: 1728983168,
@@ -115,7 +115,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000011,
     amount: 4000,
     debit: false,
-    accountId: 10001061,
+    accountId: 2061,
     voucherId: 10000001,
     createdAt: 1728983168,
     updatedAt: 1728983168,
@@ -146,7 +146,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000012,
     amount: 10000,
     debit: true,
-    accountId: 10000627,
+    accountId: 1627,
     voucherId: 10000001,
     createdAt: 1728983168,
     updatedAt: 1728983168,
@@ -177,7 +177,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000013,
     amount: 30000,
     debit: false,
-    accountId: 10000975,
+    accountId: 1975,
     voucherId: 10000001,
     createdAt: 1728983168,
     updatedAt: 1728983168,
@@ -208,7 +208,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000014,
     amount: 200000,
     debit: false,
-    accountId: 10000568,
+    accountId: 1568,
     voucherId: 10000001,
     createdAt: 1728983168,
     updatedAt: 1728983168,
@@ -239,7 +239,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000015,
     amount: 100000,
     debit: true,
-    accountId: 10001206,
+    accountId: 2206,
     voucherId: 10000001,
     createdAt: 1728983168,
     updatedAt: 1728983168,
@@ -270,7 +270,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000016,
     amount: 60000,
     debit: true,
-    accountId: 10000679,
+    accountId: 1679,
     voucherId: 10000001,
     createdAt: 1728983168,
     updatedAt: 1728983168,
@@ -301,7 +301,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000017,
     amount: 50000,
     debit: false,
-    accountId: 10000965,
+    accountId: 1965,
     voucherId: 10000001,
     createdAt: 1728983168,
     updatedAt: 1728983168,
@@ -332,7 +332,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000018,
     amount: 60000,
     debit: true,
-    accountId: 10000603,
+    accountId: 1603,
     voucherId: 10000001,
     createdAt: 1728983168,
     updatedAt: 1728983168,
@@ -363,7 +363,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000019,
     amount: 12000,
     debit: false,
-    accountId: 10000981,
+    accountId: 1981,
     voucherId: 10000001,
     createdAt: 1728983168,
     updatedAt: 1728983168,
@@ -394,7 +394,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000020,
     amount: 204000,
     debit: true,
-    accountId: 10000627,
+    accountId: 1627,
     voucherId: 10000002,
     createdAt: 1728983261,
     updatedAt: 1728983261,
@@ -425,7 +425,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000021,
     amount: 2000,
     debit: true,
-    accountId: 10000299,
+    accountId: 1299,
     voucherId: 10000002,
     createdAt: 1728983261,
     updatedAt: 1728983261,
@@ -456,7 +456,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000022,
     amount: 2000,
     debit: true,
-    accountId: 10000298,
+    accountId: 1298,
     voucherId: 10000002,
     createdAt: 1728983261,
     updatedAt: 1728983261,
@@ -487,7 +487,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000023,
     amount: 208000,
     debit: false,
-    accountId: 10000801,
+    accountId: 1801,
     voucherId: 10000002,
     createdAt: 1728983261,
     updatedAt: 1728983261,
@@ -518,7 +518,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000024,
     amount: 50000,
     debit: true,
-    accountId: 10000366,
+    accountId: 1366,
     voucherId: 10000003,
     createdAt: 1728983354,
     updatedAt: 1728983354,
@@ -549,7 +549,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000025,
     amount: 12000,
     debit: true,
-    accountId: 10000367,
+    accountId: 1367,
     voucherId: 10000003,
     createdAt: 1728983354,
     updatedAt: 1728983354,
@@ -580,7 +580,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000026,
     amount: 2000,
     debit: true,
-    accountId: 10000374,
+    accountId: 1374,
     voucherId: 10000003,
     createdAt: 1728983354,
     updatedAt: 1728983354,
@@ -611,7 +611,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000027,
     amount: 12000,
     debit: true,
-    accountId: 10000373,
+    accountId: 1373,
     voucherId: 10000003,
     createdAt: 1728983354,
     updatedAt: 1728983354,
@@ -642,7 +642,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000028,
     amount: 76000,
     debit: false,
-    accountId: 10000603,
+    accountId: 1603,
     voucherId: 10000003,
     createdAt: 1728983354,
     updatedAt: 1728983354,
@@ -673,7 +673,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000029,
     amount: 54000,
     debit: true,
-    accountId: 10000322,
+    accountId: 1322,
     voucherId: 10000004,
     createdAt: 1728983415,
     updatedAt: 1728983415,
@@ -704,7 +704,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000030,
     amount: 54000,
     debit: false,
-    accountId: 10001099,
+    accountId: 2099,
     voucherId: 10000004,
     createdAt: 1728983415,
     updatedAt: 1728983415,
@@ -735,7 +735,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000031,
     amount: 3000,
     debit: true,
-    accountId: 10000603,
+    accountId: 1603,
     voucherId: 10000005,
     createdAt: 1728983415,
     updatedAt: 1728983415,
@@ -766,7 +766,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000032,
     amount: 3000,
     debit: false,
-    accountId: 10000417,
+    accountId: 1417,
     voucherId: 10000005,
     createdAt: 1728983415,
     updatedAt: 1728983415,
@@ -797,7 +797,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000033,
     amount: 500,
     debit: true,
-    accountId: 10000014,
+    accountId: 1014,
     voucherId: 20000000,
     createdAt: 1728983415,
     updatedAt: 1728983415,
@@ -828,7 +828,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     id: 10000034,
     amount: 500,
     debit: false,
-    accountId: 10000603,
+    accountId: 1603,
     voucherId: 20000000,
     createdAt: 1728983415,
     updatedAt: 1728983415,
@@ -1033,8 +1033,7 @@ describe('company/[companyId]/report', () => {
     });
   });
 
-  // TODO: (20241126 - Shirley) FIXME: account table schema 有修改，account code 可能重複，需要改用 account id
-  xdescribe('report handlers', () => {
+  describe('report handlers', () => {
     describe('balance sheet handler', () => {
       // Info: (20241017 - Murky) 2024/01/01 ~ 2024/01/31
       const mockStartDate = timestampInSeconds(0);
@@ -1220,8 +1219,7 @@ describe('company/[companyId]/report', () => {
       });
     });
 
-    // TODO: (20241126 - Shirley) FIXME: account table schema 有修改，account code 可能重複，需要改用 account id
-    xdescribe('income statement handler', () => {
+    describe('income statement handler', () => {
       // Info: (20241017 - Murky) 2024/01/01 ~ 2024/01/31
       const mockStartDate = timestampInSeconds(1704038400000); // (new Date(2024, 0, 1, 0, 0, 0).getTime());
       const mockEndDate = timestampInSeconds(1706716799000); // new Date(2024, 0, 31, 23, 59, 59).getTime());
@@ -1378,8 +1376,7 @@ describe('company/[companyId]/report', () => {
       });
     });
 
-    // TODO: (20241126 - Shirley) FIXME: account table schema 有修改，account code 可能重複，需要改用 account id
-    xdescribe('cash flow statement handler', () => {
+    describe('cash flow statement handler', () => {
       // Info: (20241017 - Murky) 2024/01/01 ~ 2024/06/31
       const mockStartDate = timestampInSeconds(1704038400000); // (new Date(2024, 0, 1, 0, 0, 0).getTime());
       const mockEndDate = timestampInSeconds(1719849599000); // new Date(2024, 0, 31, 23, 59, 59).getTime());
