@@ -166,5 +166,8 @@
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error"
+  },
+  "CURRENCY_ALIAS": {
+    "TWD": "TWD"
   }
 }
