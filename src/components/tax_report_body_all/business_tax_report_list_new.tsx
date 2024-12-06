@@ -1506,28 +1506,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     </div>
   );
 
-  // return (
-  //   // eslint-disable-next-line react/jsx-no-useless-fragment
-  //   <>
-  //     {!reportId ? (
-  //       <div className="flex h-screen flex-col items-center justify-center">
-  //         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
-  //         <div>
-  //           <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
-  //           <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
-  //         </div>
-  //       </div>
-  //     ) : (
-  //       <div>
-  //         {displayedSelectArea()}
-  //         <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
-  //           {page1}
-  //         </div>
-  //       </div>
-  //     )}
-  //   </>
-  // );
-
   if (!reportId) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
@@ -1541,35 +1519,12 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   }
 
   return (
-    <>
-      <div>
-        {displayedSelectArea()}
-        <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
-          {page1}
-        </div>
+    <div>
+      {displayedSelectArea()}
+      <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
+        {page1}
       </div>
-
-      {/* Info: (20241206 - Anna) */}
-      <div>
-        {displayedSelectArea()}
-        <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
-          <pre className="mt-4 rounded bg-gray-100 p-2 text-xs text-gray-500">
-            {JSON.stringify(
-              {
-                params: {
-                  companyId: selectedCompany?.id,
-                  dateRange: selectedDateRange,
-                  reportLanguage: selectedReportLanguage,
-                },
-                financialReport,
-              },
-              null,
-              2
-            )}
-          </pre>
-        </div>
-      </div>
-    </>
+    </div>
   );
 };
 
