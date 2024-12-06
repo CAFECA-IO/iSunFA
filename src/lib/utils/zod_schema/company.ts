@@ -157,3 +157,13 @@ export const companyEntityValidator = z.object({
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
 });
+
+export const ICompanyValidator = z.object({
+  id: z.number().int(),
+  imageId: z.string(),
+  name: z.string(),
+  taxId: z.string(),
+  startDate: z.number().int(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+});

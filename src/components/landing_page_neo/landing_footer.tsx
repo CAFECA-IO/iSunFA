@@ -103,40 +103,38 @@ const LandingFooter: React.FC = () => {
   );
 
   return (
-    <footer>
-      <div className="flex flex-col gap-24px rounded-sm border-b bg-landing-page-white/30 px-16px py-48px shadow-landing-nav md:px-80px">
-        <div className="flex flex-col gap-40px lg:flex-row">
-          <div className="flex flex-col items-center justify-between gap-40px md:flex-row">
-            {/* Info: (20241204 - Julian) Logo */}
-            <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="w-150px">
-              <Image src="/logo/isunfa_logo_new.svg" alt="logo" width={141} height={40} />
-            </Link>
-
-            {/* Info: (20241204 - Julian) Social Media */}
-            <div className="flex items-start justify-end gap-20px text-landing-page-white lg:hidden">
-              {displaySocialMedia}
-            </div>
-          </div>
-
-          {/* Info: (20241204 - Julian) Navigation */}
-          <div className="hidden w-300px flex-col gap-24px text-landing-page-white lg:flex">
-            {displayNavigation}
-          </div>
-
-          {/* Info: (20241204 - Julian) Contact Us */}
-          <div className="flex flex-col gap-24px text-landing-page-white lg:w-300px">
-            {displayContactUs}
-          </div>
+    <footer className="flex flex-col gap-24px rounded-sm border-b bg-landing-page-white/30 px-16px py-48px shadow-landing-nav backdrop-blur-md md:px-80px">
+      <div className="flex flex-col gap-40px lg:flex-row">
+        <div className="flex flex-col items-center justify-between gap-40px md:flex-row">
+          {/* Info: (20241204 - Julian) Logo */}
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="w-150px">
+            <Image src="/logo/isunfa_logo_new.svg" alt="logo" width={141} height={40} />
+          </Link>
 
           {/* Info: (20241204 - Julian) Social Media */}
-          <div className="hidden flex-1 items-start justify-end gap-20px text-landing-page-white lg:flex">
+          <div className="flex items-start justify-end gap-20px text-landing-page-white lg:hidden">
             {displaySocialMedia}
           </div>
         </div>
 
-        {/* Info: (20241204 - Julian) Copy Right */}
-        <div className="ml-auto text-sm font-normal text-landing-page-gray">{COPYRIGHT}</div>
+        {/* Info: (20241204 - Julian) Navigation */}
+        <div className="hidden w-300px flex-col gap-24px text-landing-page-white lg:flex">
+          {displayNavigation}
+        </div>
+
+        {/* Info: (20241204 - Julian) Contact Us */}
+        <div className="flex flex-col gap-24px text-landing-page-white lg:w-300px">
+          {displayContactUs}
+        </div>
+
+        {/* Info: (20241204 - Julian) Social Media */}
+        <div className="hidden flex-1 items-start justify-end gap-20px text-landing-page-white lg:flex">
+          {displaySocialMedia}
+        </div>
       </div>
+
+      {/* Info: (20241204 - Julian) Copy Right */}
+      <div className="ml-auto text-sm font-normal text-landing-page-gray">{COPYRIGHT}</div>
     </footer>
   );
 };
