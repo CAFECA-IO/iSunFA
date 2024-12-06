@@ -14,8 +14,8 @@ const compressImageRecursively = async (
   targetSize: number,
   canvas: HTMLCanvasElement,
   fileType: string,
-  attempt: number = 0, // 避免無窮迴圈
-  maxAttempts: number = 20 // 最大嘗試次數
+  attempt: number = 0, // Info: (20241206 - tzuhan) 避免無窮迴圈
+  maxAttempts: number = 20 // Info: (20241206 - tzuhan) 最大嘗試次數
 ): Promise<Blob> => {
   // Deprecated: (20241206 - tzuhan) for debug purpose
   // eslint-disable-next-line no-console
@@ -125,7 +125,7 @@ export const compressImageToTargetSize = async (
       const ctx = canvas.getContext('2d');
       ctx?.drawImage(image, 0, 0, width, height);
 
-      // 將尺寸壓縮後的圖片轉換為 Blob
+      // Info: (20241206 - tzuhan) 將尺寸壓縮後的圖片轉換為 Blob
       const resizedBlob = await compressWithQuality(canvas, file.type, 1);
 
       if (!resizedBlob) {
@@ -135,7 +135,7 @@ export const compressImageToTargetSize = async (
       // eslint-disable-next-line no-console
       console.log(`Resized image: ${resizedBlob.size} bytes`);
 
-      // 檢查尺寸壓縮後的文件大小
+      // Info: (20241206 - tzuhan) 檢查尺寸壓縮後的文件大小
       if (resizedBlob.size <= targetSize) {
         // Deprecated: (20241206 - tzuhan) for debug purpose
         // eslint-disable-next-line no-console
@@ -143,7 +143,7 @@ export const compressImageToTargetSize = async (
         compressedFile = new File([resizedBlob], file.name, { type: file.type });
         previewUrl = URL.createObjectURL(resizedBlob);
       } else {
-        // 如果尺寸壓縮後大小仍然超過目標，進行質量壓縮
+        // Info: (20241206 - tzuhan) 如果尺寸壓縮後大小仍然超過目標，進行質量壓縮
         // Deprecated: (20241206 - tzuhan) for debug purpose
         // eslint-disable-next-line no-console
         console.log('Proceeding to quality compression...');
