@@ -65,9 +65,9 @@
 
   "MODAL": {
     "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "首次登入時，請閱讀並同意",
-    "AGREE_TO_OUR_TERMS_OF_SERVICE": "同意我們的服務條款",
-    "AGREE_TO_OUR_PRIVACY_POLICY": "同意我們的隱私權政策",
-    "CANCEL": "取消"
+    "CONFIRM": "確認",
+    "CANCEL": "取消",
+    "I_AGREE_WITH_THE_TERM_AFTER_READING_IT_CAREFULLY": "我已仔細閱讀並同意條款"
   },
 
   "TERMS_OF_SERVICE_FOR_LANDING_PAGE": {

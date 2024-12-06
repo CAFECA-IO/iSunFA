@@ -65,9 +65,9 @@
 
   "MODAL": {
     "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "Please read and agree the first time you login",
-    "AGREE_TO_OUR_TERMS_OF_SERVICE": "Agree to our Terms of Service",
-    "AGREE_TO_OUR_PRIVACY_POLICY": "Agree to our Privacy Policy",
-    "CANCEL": "Cancel"
+    "CONFIRM": "Confirm",
+    "CANCEL": "Cancel",
+    "I_AGREE_WITH_THE_TERM_AFTER_READING_IT_CAREFULLY": "I agree with the term after reading it carefully."
   },
 
   "TERMS_OF_SERVICE_FOR_LANDING_PAGE": {
