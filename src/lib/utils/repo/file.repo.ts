@@ -117,6 +117,32 @@ export async function findFileById(fileId: number): Promise<File | null> {
   return file;
 }
 
+export async function putFileById(fileId: number, options: Partial<File>): Promise<File | null> {
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.FileWhereUniqueInput = {
+    id: fileId,
+  };
+
+  const data: Prisma.FileUpdateInput = {
+    ...options,
+    updatedAt: nowInSecond,
+  };
+
+  let file: File | null = null;
+
+  try {
+    file = await prisma.file.update({
+      where,
+      data,
+    });
+  } catch (error) {
+    loggerBack.error(error, 'Error happened in putFileById in file.repo.ts');
+  }
+
+  return file;
+}
+
 export async function listFileByIdList(fileIdList: number[]): Promise<File[]> {
   let files: File[] = [];
 

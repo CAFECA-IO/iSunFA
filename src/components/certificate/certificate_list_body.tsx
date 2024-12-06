@@ -443,6 +443,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       // eslint-disable-next-line no-console
       console.log(`CertificateListBody handleNewCertificateComing: newCertificate`, newCertificate);
       handleNewCertificateComing(newCertificate);
+
+      // Info: (20241206 - Murky) @tzuhan 我在這邊設定上傳成功之後會把unRead + 1
+      const newUnread = {
+        withVoucher: unRead.withVoucher,
+        withoutVoucher: unRead.withoutVoucher + 1,
+      };
+      setUnRead(newUnread);
     },
     [companyId, certificates, activeTab]
   );

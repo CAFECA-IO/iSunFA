@@ -1,7 +1,13 @@
 import prisma from '@/client';
 import { AssetDepreciationMethod, AssetStatus } from '@/constants/asset';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICreateAssetWithVouchersRepo } from '@/interfaces/asset';
+import {
+  ICreateAssetBulkRepoInput,
+  ICreateAssetBulkRepoResponse,
+  ICreateAssetWithVouchersRepoInput,
+  ICreateAssetWithVouchersRepoResponse,
+} from '@/interfaces/asset';
+import { generateAssetNumbers } from '@/lib/utils/asset';
 import { getTimestampNow } from '@/lib/utils/common';
 
 export async function getOneAssetByIdWithoutInclude(assetId: number) {
@@ -14,8 +20,11 @@ export async function getOneAssetByIdWithoutInclude(assetId: number) {
   return asset;
 }
 
-export async function createAssetWithVouchers(assetData: ICreateAssetWithVouchersRepo) {
+export async function createAssetWithVouchers(
+  assetData: ICreateAssetWithVouchersRepoInput
+): Promise<ICreateAssetWithVouchersRepoResponse> {
   const timestampNow = getTimestampNow();
+  const assetNumber = generateAssetNumbers(assetData.number, 1)[0];
   // ToDo: (20241204 - Luphia) Create the future Vouchers for asset by Murky's function
   /*
   residualValue?: number;
@@ -24,12 +33,13 @@ export async function createAssetWithVouchers(assetData: ICreateAssetWithVoucher
   depreciationMethod?: string;
   usefulLife?: number;
   */
+
   // Info: (20241204 - Luphia) Create the Asset
   const newAsset = {
     companyId: assetData.companyId,
     name: assetData.name,
     type: assetData.type,
-    number: assetData.number,
+    number: assetNumber,
     acquisitionDate: assetData.acquisitionDate,
     purchasePrice: assetData.purchasePrice,
     accumulatedDepreciation: assetData.accumulatedDepreciation,
@@ -53,28 +63,22 @@ export async function createAssetWithVouchers(assetData: ICreateAssetWithVoucher
   return result;
 }
 
-export async function createManyAssets(assetData: ICreateAssetWithVouchersRepo, amount: number) {
+// TODO: (20241206 - Shirley) 建立 voucher，綁定 voucher 跟 asset
+export async function createManyAssets(
+  assetData: ICreateAssetBulkRepoInput,
+  amount: number
+): Promise<ICreateAssetBulkRepoResponse> {
   const timestampNow = getTimestampNow();
   const assets = [];
 
-  // TODO: (20241205 - Shirley) 將 asset number 作為 prefix，加上 `-SERIAL_NUMBER` 後綴
-  // Info: (20241205 - Shirley) 解析原始 number 的數字部分和前綴
-  const match = assetData.number.match(/^([A-Za-z-]*)(\d+)$/);
-  if (!match) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-  const [, prefix, numberStr] = match;
-  let currentNumber = parseInt(numberStr, 10);
+  const assetNumbers = generateAssetNumbers(assetData.number, amount);
 
   for (let i = 0; i < amount; i += 1) {
-    const paddedNumber = currentNumber.toString().padStart(numberStr.length, '0');
-    const newAssetNumber = `${prefix}${paddedNumber}`;
-
     const newAsset = {
       companyId: assetData.companyId,
       name: assetData.name,
       type: assetData.type,
-      number: newAssetNumber,
+      number: assetNumbers[i],
       acquisitionDate: assetData.acquisitionDate,
       purchasePrice: assetData.purchasePrice,
       accumulatedDepreciation: assetData.accumulatedDepreciation,
@@ -89,7 +93,6 @@ export async function createManyAssets(assetData: ICreateAssetWithVouchersRepo, 
       updatedAt: timestampNow,
     };
     assets.push(newAsset);
-    currentNumber += 1;
   }
 
   await prisma.asset.createMany({
@@ -102,11 +105,22 @@ export async function createManyAssets(assetData: ICreateAssetWithVouchersRepo, 
       AND: [
         { companyId: assetData.companyId },
         { createdAt: timestampNow },
-        { number: { startsWith: prefix } }, // Info: (20241205 - Shirley) 在 Jest extension 自動執行測試，會在同一毫秒根據多個測試建立資產，因此需要加上這個條件
+        // Info: (20241205 - Shirley) 在 Jest extension 自動執行測試，會在同一秒根據多個測試建立資產，因此需要加上這個條件
+        { number: { startsWith: assetData.number.match(/^(.*?(?=\d))/)?.[1] || '' } },
       ],
     },
     orderBy: {
       id: 'asc',
+    },
+    select: {
+      id: true,
+      name: true,
+      number: true,
+      companyId: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      note: true,
     },
   });
 

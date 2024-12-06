@@ -18,12 +18,14 @@ const missingCertificateSchema = z.object({
   companyId: z.number().int(),
   companyName: z.string(),
   count: z.number().int(),
+  companyLogoSrc: z.string(),
 });
 
 const unpostedVoucherSchema = z.object({
   companyId: z.number().int(),
   companyName: z.string(),
   count: z.number().int(),
+  companyLogoSrc: z.string(),
 });
 
 const pendingTaskSchema = z.object({
