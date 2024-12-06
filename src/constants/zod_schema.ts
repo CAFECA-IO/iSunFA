@@ -90,7 +90,12 @@ import { assetExportSchema } from '@/lib/utils/zod_schema/export_asset';
 import { nullAPISchema } from '@/lib/utils/zod_schema/common';
 import { ledgerListSchema } from '@/lib/utils/zod_schema/ledger';
 import { roomDeleteSchema, roomGetSchema, roomPostSchema } from '@/lib/utils/zod_schema/room';
-import { fileDeleteSchema, fileGetSchema, filePostSchema } from '@/lib/utils/zod_schema/file';
+import {
+  fileDeleteSchema,
+  fileGetSchema,
+  filePostSchema,
+  filePutSchema,
+} from '@/lib/utils/zod_schema/file';
 import { imageGetSchema } from '@/lib/utils/zod_schema/image';
 import {
   userDeleteSchema,
@@ -253,6 +258,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.FILE_UPLOAD]: filePostSchema,
   [APIName.FILE_DELETE]: fileDeleteSchema,
   [APIName.FILE_GET]: fileGetSchema,
+  [APIName.FILE_PUT_V2]: filePutSchema,
   [APIName.ROLE_GET_BY_ID]: nullAPISchema,
   [APIName.ROLE_DELETE]: nullAPISchema,
   [APIName.ROLE_UPDATE]: nullAPISchema,

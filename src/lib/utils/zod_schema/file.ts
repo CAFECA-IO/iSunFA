@@ -115,3 +115,20 @@ export const fileDeleteSchema = {
   outputSchema: fileOutputSchema.nullable(),
   frontend: nullSchema,
 };
+
+const filePutQuerySchema = z.object({
+  fileId: zodStringToNumber,
+});
+
+const filePutBodySchema = z.object({
+  name: z.string()?.optional(),
+});
+
+export const filePutSchema = {
+  input: {
+    querySchema: filePutQuerySchema,
+    bodySchema: filePutBodySchema,
+  },
+  outputSchema: fileOutputSchema.nullable(),
+  frontend: nullSchema,
+};

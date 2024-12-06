@@ -65,6 +65,7 @@ export type IAPIName =
   | 'FILE_UPLOAD'
   | 'FILE_DELETE'
   | 'FILE_GET'
+  | 'FILE_PUT_V2'
   | 'COMPANY_GET_BY_ID'
   | 'COMPANY_DELETE'
   | 'COMPANY_UPDATE'
