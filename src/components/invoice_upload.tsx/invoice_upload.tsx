@@ -8,13 +8,12 @@ import { APIName } from '@/constants/api_connection';
 import UploadArea from '@/components/upload_area/upload_area';
 import { ProgressStatus } from '@/constants/account';
 import { ICertificate } from '@/interfaces/certificate';
-// import { getPusherInstance } from '@/lib/utils/pusher_client';
-// import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { compressImageToTargetSize } from '@/lib/utils/image_compress';
 
 interface InvoiceUploadProps {
   isDisabled: boolean;
@@ -83,14 +82,16 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
       try {
         const formData = new FormData();
         formData.append('file', file);
+        const targetSize = 1 * 1024 * 1024; // Info: (20241206 - tzuhan) 1MB
+        const compressedFile = await compressImageToTargetSize(file, targetSize);
 
         setFiles((prevFiles) => [
           ...prevFiles,
           {
             id: null,
-            name: file.name,
-            size: file.size,
-            url: URL.createObjectURL(file),
+            name: compressedFile.file.name,
+            size: compressedFile.file.size,
+            url: URL.createObjectURL(compressedFile.file),
             progress: 0,
             status: ProgressStatus.IN_PROGRESS,
           },
@@ -106,12 +107,14 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
         });
 
         if (!success || !fileMeta) {
-          handleUploadFailed(file.name, new Error(t('certificate:UPLOAD.FAILED')));
+          handleUploadFailed(compressedFile.file.name, new Error(t('certificate:UPLOAD.FAILED')));
           return;
         }
 
         setFiles((prevFiles) =>
-          prevFiles.map((f) => (f.name === file.name ? { ...f, id: fileMeta.id, progress: 50 } : f))
+          prevFiles.map((f) =>
+            (f.name === compressedFile.file.name ? { ...f, id: fileMeta.id, progress: 50 } : f)
+          )
         );
 
         const { success: successCreated, data: certificate } = await createCertificateAPI({
@@ -119,13 +122,13 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
           body: { fileIds: [fileMeta.id] }, // Info: (20241126 - Murky) @tsuhan 這邊已經可以使用批次上傳, 但是我不知道怎麼改，所以先放在array
         });
         if (!successCreated || !certificate) {
-          handleUploadFailed(file.name, new Error(t('certificate:CREATE.FAILED')));
+          handleUploadFailed(compressedFile.file.name, new Error(t('certificate:CREATE.FAILED')));
           return;
         }
 
         setFiles((prevFiles) =>
           prevFiles.map((f) => {
-            return f.name === file.name
+            return f.name === compressedFile.file.name
               ? {
                   ...f,
                   progress: 100,
@@ -141,27 +144,6 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
     },
     [selectedCompany?.id, handleUploadFailed, setFiles, t, uploadFileAPI]
   );
-
-  // const certificateCreatedHandler = useCallback(
-  //   (data: { message: string }) => {
-  //     const newCertificate: ICertificate = JSON.parse(data.message);
-  //     setFiles((prevFiles) => prevFiles.filter((f) => f.certificateId !== newCertificate.id));
-  //   },
-  //   [setFiles]
-  // );
-
-  // useEffect(() => {
-  //   const pusher = getPusherInstance(userAuth?.id);
-  //   const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
-
-  //   channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
-
-  //   return () => {
-  //     channel.unbind_all();
-  //     channel.unsubscribe();
-  //     pusher.disconnect();
-  //   };
-  // }, [certificateCreatedHandler]);
 
   return (
     <UploadArea

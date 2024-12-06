@@ -41,7 +41,9 @@
     "NOTIFY_WEB": "Failed to notify web",
     "WENT_WRONG": "Something went wrong, please try again.",
     "UPLOAD_AND_NOTIFY": "Failed to upload and notify web",
-    "UPDATE_CERTIFICATE": "Failed to update certificate, {{reason}}"
+    "UPDATE_CERTIFICATE": "Failed to update certificate, {{reason}}",
+    "ENCRYPT_FILE": "Failed to encrypt file",
+    "COMPRESS_IMAGE": "Failed to compress image"
   },
   "WARNING": {
     "UPLOAD_FAILED": "Uploading fail",

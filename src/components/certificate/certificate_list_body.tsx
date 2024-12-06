@@ -411,7 +411,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           [newCertificate.id]: {
             ...newCertificate,
             isSelected: false,
-            unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
             actions: !newCertificate.voucherNo
               ? [
                   CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,

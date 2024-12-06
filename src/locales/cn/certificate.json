@@ -41,7 +41,9 @@
     "NOTIFY_WEB": "通知网页失败",
     "WENT_WRONG": "出错了，请再试一次。",
     "UPLOAD_AND_NOTIFY": "上传并通知网页失败",
-    "UPDATE_CERTIFICATE": "更新发票失败，{{reason}}"
+    "UPDATE_CERTIFICATE": "更新发票失败，{{reason}}",
+    "ENCRYPT_FILE": "加密文件失败",
+    "COMPRESS_IMAGE": "压缩图片失败"
   },
   "WARNING": {
     "UPLOAD_FAILED": "上传失败",
