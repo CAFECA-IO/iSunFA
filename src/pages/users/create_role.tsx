@@ -12,6 +12,7 @@ import { IUserRole } from '@/interfaces/user_role';
 import { PiArrowUUpLeftBold } from 'react-icons/pi';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import LoginAnimation from '@/components/login/login_animation';
 
 const findUnusedRoles = (systemRoles: IRole[], userRoles: IUserRole[]): IRole[] => {
   // Info: (20241122 - Liz) 將 userRoles 中的角色 ID 建立為一個 Set
@@ -32,6 +33,7 @@ const CreateRolePage = () => {
   const [unusedSystemRoles, setUnusedSystemRoles] = useState<IRole[]>([]);
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
   const [isAbleToGoBack, setIsAbleToGoBack] = useState<boolean>(false);
+  const [isAnimationShowing, setIsAnimationShowing] = useState<boolean>(true);
 
   const togglePreviewModal = () => {
     setIsPreviewModalVisible((prev) => !prev);
@@ -46,6 +48,10 @@ const CreateRolePage = () => {
       try {
         const systemRoles = await getSystemRoleList();
         const userRoles = await getUserRoleList();
+
+        if (!userRoles || userRoles.length === 0) {
+          // Info: (20241206 - Liz) 觸發入場動畫
+        }
 
         if (systemRoles && userRoles) {
           const unusedRoles = findUnusedRoles(systemRoles, userRoles);
@@ -86,41 +92,45 @@ const CreateRolePage = () => {
         />
       </Head>
 
-      <main className="relative h-screen overflow-hidden">
-        {isAbleToGoBack && (
-          <Link
-            href={ISUNFA_ROUTE.SELECT_ROLE}
-            className="group absolute z-1 ml-40px mt-30px flex items-center gap-8px hover:text-button-text-primary-hover"
-          >
-            <PiArrowUUpLeftBold
-              size={24}
-              className="text-button-text-secondary group-hover:text-button-text-primary-hover"
+      {isAnimationShowing && <LoginAnimation setIsAnimationShowing={setIsAnimationShowing} />}
+
+      {!isAnimationShowing && (
+        <main className="relative h-screen overflow-hidden">
+          {isAbleToGoBack && (
+            <Link
+              href={ISUNFA_ROUTE.SELECT_ROLE}
+              className="group absolute z-1 ml-40px mt-30px flex items-center gap-8px hover:text-button-text-primary-hover"
+            >
+              <PiArrowUUpLeftBold
+                size={24}
+                className="text-button-text-secondary group-hover:text-button-text-primary-hover"
+              />
+              <p className="text-lg font-semibold text-text-neutral-secondary group-hover:text-button-text-primary-hover">
+                {t('dashboard:CREATE_ROLE_PAGE.BACK_TO_SELECT_ROLE_PAGE')}
+              </p>
+            </Link>
+          )}
+
+          <div className="h-75%">
+            <Introduction
+              showingRole={showingRole}
+              selectedRoleId={selectedRoleId}
+              togglePreviewModal={togglePreviewModal}
             />
-            <p className="text-lg font-semibold text-text-neutral-secondary group-hover:text-button-text-primary-hover">
-              {t('dashboard:CREATE_ROLE_PAGE.BACK_TO_SELECT_ROLE_PAGE')}
-            </p>
-          </Link>
-        )}
+          </div>
 
-        <div className="h-75%">
-          <Introduction
-            showingRole={showingRole}
-            selectedRoleId={selectedRoleId}
-            togglePreviewModal={togglePreviewModal}
-          />
-        </div>
+          <div className="mx-100px mb-40px">
+            <RoleCard
+              roleList={unusedSystemRoles}
+              showingRole={showingRole}
+              setShowingRole={setShowingRole}
+              setSelectedRoleId={setSelectedRoleId}
+            />
+          </div>
 
-        <div className="mx-100px mb-40px">
-          <RoleCard
-            roleList={unusedSystemRoles}
-            showingRole={showingRole}
-            setShowingRole={setShowingRole}
-            setSelectedRoleId={setSelectedRoleId}
-          />
-        </div>
-
-        {isPreviewModalVisible && <PreviewModal togglePreviewModal={togglePreviewModal} />}
-      </main>
+          {isPreviewModalVisible && <PreviewModal togglePreviewModal={togglePreviewModal} />}
+        </main>
+      )}
     </>
   );
 };

@@ -101,10 +101,11 @@ const UserRole = ({
         className="rounded-full"
       ></Image>
 
-      <div className="space-y-16px text-center text-lg font-medium">
-        <p className="text-text-neutral-secondary">{t('dashboard:LOGIN.LAST_LOGIN_TIME')}</p>
-
-        <p className="text-text-neutral-tertiary">{lastLoginTime}</p>
+      <div className="space-y-16px text-center">
+        <p className="text-xs font-medium leading-5 text-text-neutral-secondary">
+          {t('dashboard:LOGIN.LAST_LOGIN_TIME')}
+        </p>
+        <p className="text-lg font-medium text-text-neutral-tertiary">{lastLoginTime}</p>
       </div>
 
       <button
@@ -164,7 +165,7 @@ const SelectRolePage = () => {
     };
 
     initializeRolesData();
-  }, []);
+  }, [router]);
 
   // Info: (20241107 - Liz) 跳轉到建立角色頁面前的 Loading 畫面
   if (userRoleList === null) {

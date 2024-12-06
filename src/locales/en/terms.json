@@ -1,25 +1,49 @@
 {
   "TERMS_OF_SERVICE": {
-    "TEXT_01": "1. Once a customer account or business registration number is registered on this website (including the app, hereafter referred to as this website or 'we'), the account and registration number cannot be changed. Please ensure the accuracy of your account and registration number. If the account or registration number needs to be changed in the future, it cannot be modified simultaneously, and you will need to re-register.",
-    "TEXT_02": "2. Any changes or modifications to customer rights will be announced on this website, and there will be no separate individual notifications.",
-    "TEXT_03": "3. By using or continuing to use any services provided by this website, you acknowledge that you have read, understood, and agreed to accept all the terms and conditions of the services/orders, including any subsequent modifications, and agree to express your consent through electronic documents.",
-    "TEXT_04": "4. For paid services provided by this website, once you choose a service and make a payment, you agree that no refunds will be issued for any reason, unless the company has acted with intent or gross negligence.",
-    "TEXT_05": "5. When you link to, access, or download data through this website, you have the right to store that data on any device or space you designate. If you choose to store it in the storage space provided by this website, it will be considered as if you downloaded the data yourself, and the website is not responsible for the download or use of that data.",
-    "TEXT_06": "6. This website reserves the right to terminate the account services of any customer who violates legal regulations, fails to comply with mutual agreements, or maliciously abuses service privileges.",
-    "TEXT_07": "7. When this website needs to notify customers of necessary information for service provision, it may do so using any contact information provided by the customer. Customers must promptly update their contact details via the website to maintain accuracy, timeliness, and completeness. If notifications cannot be received due to incorrect, outdated, or other reasons not attributable to this website, it will still be considered as the notification being duly delivered.",
-    "TEXT_08": "8. You are required to provide accurate information when entering necessary data. If errors or omissions occur, or if loss or legal issues arise due to the customer disclosing their account and password, this website will not be liable for damages. Furthermore, this website will record, store, and utilize all accessed data in accordance with the Personal Data Protection Act, and customers may exercise their rights under this law.",
-    "TEXT_09": "9. In the event of disputes or conflicts, both parties agree that the Taipei District Court of Taiwan shall be the court of first instance, and all other unresolved matters shall be governed by the laws of the Republic of China.",
-    "TEXT_10": "10. If your customer status is revoked due to legal matters, you will lose all customer rights, and all benefits associated with your account will be permanently canceled and cannot be restored.",
-    "TEXT_11": "11. This website reserves the right to interpret, modify, cancel, or terminate any activities within the customer system.",
-    "TEXT_12": "12. Service content and fees: The company provides a platform for users to manage cloud-based financial services. The service content and fees will be based on the latest announcements from the company.",
-    "TEXT_13": "13. Neutrality statement: This website provides a neutral platform for users to manage cloud-based financial services and does not conduct substantive reviews of the content entered by users. Users must ensure that the data they obtain and input does not violate the laws of the Republic of China or infringe on the rights of others, and may not illegally use the website or related services.",
-    "TEXT_14": "14. Disclaimer: Within the scope of compliance with the laws of the Republic of China, these terms of service, and the privacy policy, users are free to use this website and related services. Any violations of laws, these terms, incorrect operations, provision of false information, infringement of others' rights, malicious actions, or intent to harm others will be unrelated to the personnel of this company. Any risks, legal responsibilities, or damages caused to the company, its personnel, or third parties will be borne and compensated by the user.",
-    "TEXT_15": "15. User data backup and service interruption liability:",
-    "TEXT_15_01": "The company is not responsible for service interruptions caused by software or hardware issues and reserves the right to terminate support for any hardware or software without prior notice. The company has the right to update the service content and interface at any time, and users are advised to back up their data regularly to avoid damage or loss. If data is damaged or lost due to the user's failure to back it up promptly, this website will not be liable for any damages.",
-    "TEXT_15_02": "All data that you provide, input, or store on the company, website, and related services may be retained for up to five years after the service is terminated, though the company is not obligated to do so."
+    "DEAR_USER": "Dear User,",
+    "TEXT0": "Thank you for choosing to use our accounting software. During your use of this software, we may collect and process some of your personal information. This statement aims to inform you about the information we collect, how it is used, and how we protect your privacy.",
+
+    "TEXT1_TITLE": "1. Types of Information Collected",
+    "TEXT1_P": "During your use of the accounting software, we may collect the following information:",
+    "TEXT1_1": "Personal Identification Information: Including but not limited to your name, email address, phone number, company name, etc.",
+    "TEXT1_2": "Usage Data: Such as your operation records within the software, usage duration, access frequency, etc.",
+    "TEXT1_3": "Technical Information: Such as IP address, device information, operating system, browser type, etc.",
+
+    "TEXT2_TITLE": "2. Use of Information",
+    "TEXT2_P": "The information we collect will primarily be used for the following purposes:",
+    "TEXT2_1": "Providing and Maintaining Services: Ensuring the normal operation of the accounting software and improving the user experience.",
+    "TEXT2_2": "Personalized Services: Providing customized features and recommendations based on your needs and preferences.",
+    "TEXT2_3": "Customer Support: Addressing your questions, handling your requests and complaints.",
+    "TEXT2_4": "Security Assurance: Detecting and preventing potential security threats, protecting your data security.",
+    "TEXT2_5": "Data Analysis: Conducting statistical analysis to improve our products and services.",
+
+    "TEXT3_TITLE": "3. Protection of Information",
+    "TEXT3_P": "We commit to taking reasonable technical and organizational measures to protect your personal information from unauthorized access, disclosure, alteration, or destruction. These measures include but are not limited to:",
+    "TEXT3_1": "Data Encryption: Encrypting sensitive data.",
+    "TEXT3_2": "Access Control: Restricting data access rights to employees and third parties.",
+    "TEXT3_3": "Regular Audits: Regularly reviewing our security measures and policies.",
+
+    "TEXT4_TITLE": "4. Sharing of Information",
+    "TEXT4_P": "We will not sell, rent, or trade your personal information to any third party without your consent. However, we may share your information in the following circumstances:",
+    "TEXT4_1": "Legal Requirements: When required by law or requested by government authorities.",
+    "TEXT4_2": "Service Providers: With third-party service providers who work with us, provided they only use your information to perform our instructions and comply with appropriate confidentiality and security measures.",
+    "TEXT4_3": "Business Transfers: In the event of a company merger, acquisition, or asset sale, we may transfer your information.",
+
+    "TEXT5_TITLE": "5. Your Rights",
+    "TEXT5_P": "You have the right to access, correct, or delete your personal information at any time. If you wish to exercise these rights or have any questions, please contact us via:",
+    "TEXT5_1": "Email: ",
+    "TEXT5_2": "Phone: ",
+    "TEXT5_3": "We will strive to respond to your request within a reasonable time frame.",
+
+    "TEXT6_TITLE": "6. Changes to the Statement",
+    "TEXT6_P": "We may update this statement from time to time to reflect changes in our information handling practices. When we make significant changes to this statement, we will notify you through in-software notifications or via email.",
+
+    "TEXT_END": "Thank you for your trust and support in our accounting software!",
+    "TEXT_BY": "iSunFA  August 6, 2024"
   },
 
   "PRIVACY_POLICY": {
+    "PRIVACY_POLICY": "Privacy Policy",
     "TEXT_01": "1. This privacy policy applies to the personal information you provide when using this website (including the App, hereafter referred to as this website or 'we'). When you click on links provided by this website to access other websites, the privacy policy of this website does not apply to those other websites.",
     "TEXT_02": "2. To provide you with more accurate services or respond to your inquiries, we may need you to provide personal information under the following circumstances:",
     "TEXT_02_01": "When you join as a customer of this website to receive our customer services.",
@@ -44,5 +68,25 @@
     "AGREE_TO_OUR_TERMS_OF_SERVICE": "Agree to our Terms of Service",
     "AGREE_TO_OUR_PRIVACY_POLICY": "Agree to our Privacy Policy",
     "CANCEL": "Cancel"
+  },
+
+  "TERMS_OF_SERVICE_FOR_LANDING_PAGE": {
+    "TEXT_01": "1. Once a customer account or business registration number is registered on this website (including the app, hereafter referred to as this website or 'we'), the account and registration number cannot be changed. Please ensure the accuracy of your account and registration number. If the account or registration number needs to be changed in the future, it cannot be modified simultaneously, and you will need to re-register.",
+    "TEXT_02": "2. Any changes or modifications to customer rights will be announced on this website, and there will be no separate individual notifications.",
+    "TEXT_03": "3. By using or continuing to use any services provided by this website, you acknowledge that you have read, understood, and agreed to accept all the terms and conditions of the services/orders, including any subsequent modifications, and agree to express your consent through electronic documents.",
+    "TEXT_04": "4. For paid services provided by this website, once you choose a service and make a payment, you agree that no refunds will be issued for any reason, unless the company has acted with intent or gross negligence.",
+    "TEXT_05": "5. When you link to, access, or download data through this website, you have the right to store that data on any device or space you designate. If you choose to store it in the storage space provided by this website, it will be considered as if you downloaded the data yourself, and the website is not responsible for the download or use of that data.",
+    "TEXT_06": "6. This website reserves the right to terminate the account services of any customer who violates legal regulations, fails to comply with mutual agreements, or maliciously abuses service privileges.",
+    "TEXT_07": "7. When this website needs to notify customers of necessary information for service provision, it may do so using any contact information provided by the customer. Customers must promptly update their contact details via the website to maintain accuracy, timeliness, and completeness. If notifications cannot be received due to incorrect, outdated, or other reasons not attributable to this website, it will still be considered as the notification being duly delivered.",
+    "TEXT_08": "8. You are required to provide accurate information when entering necessary data. If errors or omissions occur, or if loss or legal issues arise due to the customer disclosing their account and password, this website will not be liable for damages. Furthermore, this website will record, store, and utilize all accessed data in accordance with the Personal Data Protection Act, and customers may exercise their rights under this law.",
+    "TEXT_09": "9. In the event of disputes or conflicts, both parties agree that the Taipei District Court of Taiwan shall be the court of first instance, and all other unresolved matters shall be governed by the laws of the Republic of China.",
+    "TEXT_10": "10. If your customer status is revoked due to legal matters, you will lose all customer rights, and all benefits associated with your account will be permanently canceled and cannot be restored.",
+    "TEXT_11": "11. This website reserves the right to interpret, modify, cancel, or terminate any activities within the customer system.",
+    "TEXT_12": "12. Service content and fees: The company provides a platform for users to manage cloud-based financial services. The service content and fees will be based on the latest announcements from the company.",
+    "TEXT_13": "13. Neutrality statement: This website provides a neutral platform for users to manage cloud-based financial services and does not conduct substantive reviews of the content entered by users. Users must ensure that the data they obtain and input does not violate the laws of the Republic of China or infringe on the rights of others, and may not illegally use the website or related services.",
+    "TEXT_14": "14. Disclaimer: Within the scope of compliance with the laws of the Republic of China, these terms of service, and the privacy policy, users are free to use this website and related services. Any violations of laws, these terms, incorrect operations, provision of false information, infringement of others' rights, malicious actions, or intent to harm others will be unrelated to the personnel of this company. Any risks, legal responsibilities, or damages caused to the company, its personnel, or third parties will be borne and compensated by the user.",
+    "TEXT_15": "15. User data backup and service interruption liability:",
+    "TEXT_15_01": "The company is not responsible for service interruptions caused by software or hardware issues and reserves the right to terminate support for any hardware or software without prior notice. The company has the right to update the service content and interface at any time, and users are advised to back up their data regularly to avoid damage or loss. If data is damaged or lost due to the user's failure to back it up promptly, this website will not be liable for any damages.",
+    "TEXT_15_02": "All data that you provide, input, or store on the company, website, and related services may be retained for up to five years after the service is terminated, though the company is not obligated to do so."
   }
 }
