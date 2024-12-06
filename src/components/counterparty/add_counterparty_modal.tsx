@@ -27,22 +27,13 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
   const { selectedCompany } = useUserCtx();
-  const [inputName, setInputName] = useState<string>(name || '');
-  const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
+  const [inputName, setInputName] = useState<string>('');
+  const [inputTaxId, setInputTaxId] = useState<string>('');
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
   const [inputNote, setInputNote] = useState<string>('');
   const [showHint, setShowHint] = useState(false);
 
-  const {
-    trigger: addCounterpartyTrigger,
-    success,
-    error,
-  } = APIHandler(
-    APIName.COUNTERPARTY_ADD,
-    { params: { companyId: selectedCompany?.id } },
-    false,
-    true
-  );
+  const { trigger: addCounterpartyTrigger, success, error } = APIHandler(APIName.COUNTERPARTY_ADD);
 
   const { targetRef: typeRef, setComponentVisible: setIsTypeSelecting } =
     useOuterClick<HTMLDivElement>(false);
@@ -131,7 +122,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
         type: counterpartyData.type.toString(),
       };
 
-      await addCounterpartyTrigger({ body: apiData });
+      await addCounterpartyTrigger({ params: { companyId: selectedCompany?.id }, body: apiData });
     }
   };
 
@@ -147,7 +138,17 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       // eslint-disable-next-line no-console
       console.error('Failed to create counterparty:', error);
     }
-  }, [success, error, onSave]);
+  }, [success, error]);
+
+  useEffect(() => {
+    // Info: (20241206 - Julian) 若有預設值，則填入輸入欄位
+    if (name) {
+      setInputName(name);
+    }
+    if (taxId) {
+      setInputTaxId(taxId);
+    }
+  }, [name, taxId]);
 
   useEffect(() => {
     // Info: (20241206 - Julian) 關閉 Modal 時，清空輸入欄位
@@ -161,7 +162,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   }, [isModalVisible]);
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-80 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-620px w-90vw max-w-480px flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 p-8">
         {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
         <button

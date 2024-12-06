@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoIosArrowDown } from 'react-icons/io';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -16,7 +16,7 @@ import { inputStyle } from '@/constants/display';
 import { FiSearch } from 'react-icons/fi';
 import { MessageType } from '@/interfaces/message_modal';
 import { useModalContext } from '@/contexts/modal_context';
-import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
+// import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { IoCloseOutline } from 'react-icons/io5';
@@ -81,9 +81,11 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     isMessageModalVisible,
     messageModalDataHandler,
     messageModalVisibilityHandler,
+    addCounterPartyModalDataHandler,
+    addCounterPartyModalVisibilityHandler,
     toastHandler,
   } = useModalContext();
-  const [isAddCounterPartyModalOpen, setIsAddCounterPartyModalOpen] = useState(false);
+  //  const [isAddCounterPartyModalOpen, setIsAddCounterPartyModalOpen] = useState(false);
   const isFormValid = priceBeforeTax > 0 && totalPrice > 0 && certificateNo !== '';
 
   const {
@@ -122,6 +124,17 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     setTotalPrice(value + updateTaxPrice);
   };
 
+  // Info: (20241206 - Julian) currency alias setting
+  const currencyAliasImageSrc = certificate.invoice?.currencyAlias
+    ? `/currencies/${certificate.invoice.currencyAlias.toLowerCase()}.svg`
+    : '/elements/avatar_default.svg';
+  const currencyAliasImageAlt = certificate.invoice?.currencyAlias
+    ? `currency-${certificate.invoice.currencyAlias.toLowerCase()}-icon`
+    : 'default-currency-icon';
+  const currencyAliasStr = certificate.invoice?.currencyAlias
+    ? t(`certificate:CURRENCY_ALIAS.${certificate.invoice.currencyAlias.toUpperCase()}`)
+    : '';
+
   // Info: (20241017 - tzuhan) 參考 AddAssetModal
   const {
     targetRef: counterPartyRef,
@@ -153,12 +166,56 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   };
 
   const onCancelAddCounterParty = () => {
-    setIsAddCounterPartyModalOpen(false);
     setIsCounterPartyEditing(false);
     setCounterPartyMenuOpen(false);
     setSearchName('');
     setSearchTaxId('');
   };
+
+  useEffect(() => {
+    // Info: (20241206 - Julian) 退出編輯時，清空 input 的值
+    if (!isCounterPartyEditing) {
+      setSearchName('');
+      setSearchTaxId('');
+    }
+  }, [isCounterPartyEditing]);
+
+  useEffect(() => {
+    // Info: (20241206 - Julian) Add Counterparty Event
+    const handleAddCounterParty = (data: {
+      name: string;
+      taxId: string;
+      type: CounterpartyType;
+      note: string;
+    }) => {
+      if (!companyId) return;
+
+      const newCounterParty: ICounterparty = {
+        ...data,
+        id: counterPartyList.length + 1,
+        companyId,
+        createdAt: Math.floor(new Date().getTime() / 1000),
+        updatedAt: Math.floor(new Date().getTime() / 1000),
+      };
+
+      filteredCounterPartyList.push(newCounterParty);
+      toastHandler({
+        id: ToastId.ADD_COUNTERPARTY_SUCCESS,
+        type: ToastType.SUCCESS,
+        content: t('certificate:COUNTERPARTY.SUCCESS'),
+        closeable: true,
+      });
+
+      // Info: (20241206 - Julian) 選中新增的交易夥伴
+      setCounterParty(newCounterParty);
+    };
+
+    addCounterPartyModalDataHandler({
+      onSave: handleAddCounterParty,
+      name: searchName,
+      taxId: searchTaxId,
+    });
+  }, [companyId, filteredCounterPartyList, searchName, searchTaxId]);
 
   const CounterPartyItems =
     filteredCounterPartyList.length > 0 ? (
@@ -212,7 +269,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   );
 
   const counterPartySearchHandler = useCallback(() => {
-    if (!searchName && searchTaxId) return;
+    if (!searchName && !searchTaxId) return;
     messageModalDataHandler({
       messageType: MessageType.INFO,
       title: t('certificate:COUNTERPARTY.TITLE'),
@@ -224,9 +281,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         onCancelAddCounterParty();
       },
       submitBtnStr: t('certificate:COUNTERPARTY.YES'),
-      submitBtnFunction: () => {
-        setIsAddCounterPartyModalOpen(true);
-      },
+      submitBtnFunction: addCounterPartyModalVisibilityHandler,
     });
     messageModalVisibilityHandler();
   }, [searchName, searchTaxId]);
@@ -234,7 +289,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const counterPartyInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isMessageModalVisible) return;
     setCounterPartyMenuOpen(true);
-    if (e.target.id === 'counterparty-taxid') {
+    if (e.target.id === 'counterparty-tax-id') {
       setSearchTaxId(e.target.value);
     }
     if (e.target.id === 'counterparty-name') {
@@ -266,7 +321,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       <input
         ref={counterPartyTaxIdInputRef}
         value={searchTaxId}
-        id="counterparty-taxid"
+        id="counterparty-tax-id"
         onChange={counterPartyInputHandler}
         type="number"
         placeholder={counterParty?.taxId}
@@ -314,41 +369,18 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     toggleModel();
   };
 
-  const handleAddCounterParty = (data: {
-    name: string;
-    taxId: string;
-    type: CounterpartyType;
-    note: string;
-  }) => {
-    if (!companyId) return;
-    filteredCounterPartyList.push({
-      ...data,
-      id: filteredCounterPartyList.length + 1,
-      companyId,
-      createdAt: Math.floor(new Date().getTime() / 1000),
-      updatedAt: Math.floor(new Date().getTime() / 1000),
-    });
-    toastHandler({
-      id: ToastId.ADD_COUNTERPARTY_SUCCESS,
-      type: ToastType.SUCCESS,
-      content: t('certificate:COUNTERPARTY.SUCCESS'),
-      closeable: true,
-    });
-    setIsAddCounterPartyModalOpen(false);
-  };
-
   return (
     <div
-      className={`fixed inset-0 z-70 flex items-center justify-center ${isMessageModalVisible || isAddCounterPartyModalOpen ? '' : 'bg-black/50'}`}
+      className={`fixed inset-0 z-70 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
     >
-      {isAddCounterPartyModalOpen && (
+      {/* {isAddCounterPartyModalOpen && (
         <AddCounterPartyModal
           onClose={onCancelAddCounterParty}
           onSave={handleAddCounterParty}
           name={searchName}
           taxId={searchTaxId}
         />
-      )}
+      )} */}
       <form
         className={`relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-h-96vh md:max-w-800px`}
         onSubmit={handleSave}
@@ -381,7 +413,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
           />
           {/* Info: (20240924 - tzuhan) 編輯表單 */}
 
-          <div className="w-full flex-col items-start space-y-4 overflow-y-scroll">
+          <div className="flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
             {/* Info: (20240924 - tzuhan) 切換輸入/輸出 */}
             <div className="flex flex-col items-start gap-2">
               <p className="text-sm font-semibold text-input-text-primary">
@@ -469,19 +501,15 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                   triggerWhenChanged={priceBeforeTaxChangeHandler}
                 />
-                <div className="flex items-center rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                   <Image
-                    src="/currencies/twd.svg"
+                    src={currencyAliasImageSrc}
                     width={16}
                     height={16}
-                    alt="twd_icon"
+                    alt={currencyAliasImageAlt}
                     className="rounded-full"
                   />
-                  <p>
-                    {certificate.invoice?.currencyAlias
-                      ? t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)
-                      : ''}
-                  </p>
+                  <p>{currencyAliasStr}</p>
                 </div>
               </div>
             </div>
@@ -533,19 +561,15 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     hasComma
                     className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                   />
-                  <div className="flex items-center rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                  <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                     <Image
-                      src="/currencies/twd.svg"
+                      src={currencyAliasImageSrc}
                       width={16}
                       height={16}
-                      alt="twd_icon"
+                      alt={currencyAliasImageAlt}
                       className="rounded-full"
                     />
-                    <p>
-                      {certificate.invoice?.currencyAlias
-                        ? t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)
-                        : ''}
-                    </p>
+                    <p>{currencyAliasStr}</p>
                   </div>
                 </div>
               </div>
@@ -569,19 +593,15 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   hasComma
                   className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                 />
-                <div className="flex items-center rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                   <Image
-                    src="/currencies/twd.svg"
+                    src={currencyAliasImageSrc}
                     width={16}
                     height={16}
-                    alt="twd_icon"
+                    alt={currencyAliasImageAlt}
                     className="rounded-full"
                   />
-                  <p>
-                    {certificate.invoice?.currencyAlias
-                      ? t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)
-                      : ''}
-                  </p>
+                  <p>{currencyAliasStr}</p>
                 </div>
               </div>
             </div>
@@ -685,7 +705,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               variant="tertiaryOutline"
             >
               <p>{t('common:COMMON.CANCEL')}</p>
-              <BiSave size={20} />
             </Button>
             <Button
               id="certificate-save-btn"
