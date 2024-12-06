@@ -20,6 +20,10 @@ const Profile = () => {
     setIsDropdownOpen((prev) => !prev);
   };
 
+  const switchRole = () => {
+    // console.log('switchRole');
+  };
+
   return (
     <section className="relative" ref={profileRef}>
       <button type="button" onClick={toggleDropdown} className="rounded-full">
@@ -59,6 +63,20 @@ const Profile = () => {
           >
             <Image src={'/icons/bell.svg'} alt="subscription_icon" width={16} height={16}></Image>
             <p>{t('dashboard:HEADER.SUBSCRIPTION_AND_BILLS')}</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={switchRole}
+            className="flex items-center gap-12px rounded-xs px-12px py-8px hover:bg-dropdown-surface-item-hover"
+          >
+            <Image
+              src={'/icons/switch_role_icon.svg'}
+              alt="switch_role_icon"
+              width={16}
+              height={16}
+            ></Image>
+            <p>{t('dashboard:HEADER.SWITCH_ROLE')}</p>
           </button>
 
           {/* // Info: (20241014 - Liz) ===== 登出 ===== */}

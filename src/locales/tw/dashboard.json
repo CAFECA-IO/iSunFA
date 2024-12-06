@@ -47,7 +47,8 @@
     "SUBSCRIPTION_AND_BILLS": "訂閱與帳單",
     "LOGOUT": "登出",
     "LOGIN": "登入",
-    "LANGUAGE": "語言"
+    "LANGUAGE": "語言",
+    "SWITCH_ROLE": "切換角色"
   },
 
   "ROLE": {

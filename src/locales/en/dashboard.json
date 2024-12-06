@@ -47,7 +47,8 @@
     "SUBSCRIPTION_AND_BILLS": "Subscription and Bills",
     "LOGOUT": "Logout",
     "LOGIN": "Login",
-    "LANGUAGE": "Language"
+    "LANGUAGE": "Language",
+    "SWITCH_ROLE": "Switch Role"
   },
 
   "ROLE": {
