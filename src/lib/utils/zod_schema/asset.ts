@@ -48,7 +48,6 @@ export const AssetCreateOutputValidator = CreateAssetWithVouchersRepoResponseVal
 export const AssetBulkCreateInputBodyValidator = AssetCreateInputBodyValidator;
 
 export const AssetBulkCreateOutputValidator = z.array(AssetCreateOutputValidator);
-// export const AssetBulkCreateOutputValidator = z.any;
 
 /**
  * Info: (20241105 - Murky)

@@ -2,9 +2,9 @@ import prisma from '@/client';
 import { AssetDepreciationMethod, AssetStatus } from '@/constants/asset';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
-  ICreateAssetBulkRepo,
+  ICreateAssetBulkRepoInput,
   ICreateAssetBulkRepoResponse,
-  ICreateAssetWithVouchersRepo,
+  ICreateAssetWithVouchersRepoInput,
   ICreateAssetWithVouchersRepoResponse,
 } from '@/interfaces/asset';
 import { generateAssetNumbers } from '@/lib/utils/asset';
@@ -21,7 +21,7 @@ export async function getOneAssetByIdWithoutInclude(assetId: number) {
 }
 
 export async function createAssetWithVouchers(
-  assetData: ICreateAssetWithVouchersRepo
+  assetData: ICreateAssetWithVouchersRepoInput
 ): Promise<ICreateAssetWithVouchersRepoResponse> {
   const timestampNow = getTimestampNow();
   const assetNumber = generateAssetNumbers(assetData.number, 1)[0];
@@ -65,7 +65,7 @@ export async function createAssetWithVouchers(
 
 // TODO: (20241206 - Shirley) 建立 voucher，綁定 voucher 跟 asset
 export async function createManyAssets(
-  assetData: ICreateAssetBulkRepo,
+  assetData: ICreateAssetBulkRepoInput,
   amount: number
 ): Promise<ICreateAssetBulkRepoResponse> {
   const timestampNow = getTimestampNow();

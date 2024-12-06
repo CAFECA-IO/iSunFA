@@ -1,7 +1,7 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import {
-  ICreateAssetWithVouchersRepo,
+  ICreateAssetWithVouchersRepoInput,
   ICreateAssetInput,
   ICreateAssetBulkRepoResponse,
 } from '@/interfaces/asset';
@@ -48,7 +48,7 @@ export const handlePostRequest: IHandleRequest<
   } = body as ICreateAssetInput;
 
   // Info: (20241204 - Luphia) collect the new asset data with db schema
-  const newAsset: ICreateAssetWithVouchersRepo = {
+  const newAsset: ICreateAssetWithVouchersRepoInput = {
     companyId,
     name: assetName,
     type: assetType,
@@ -70,9 +70,6 @@ export const handlePostRequest: IHandleRequest<
 
   // // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
   const result: IHandlePostRequestResult = { statusMessage, payload: rs };
-
-  // eslint-disable-next-line no-console
-  console.log('result in handlePostRequest', result);
 
   return result;
 };
