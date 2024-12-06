@@ -4,7 +4,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFileBeta } from '@/interfaces/file';
 import { formatApiResponse } from '@/lib/utils/common';
-import { deleteFileById, findFileById } from '@/lib/utils/repo/file.repo';
+import { deleteFileById, findFileById, putFileById } from '@/lib/utils/repo/file.repo';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
@@ -20,6 +20,26 @@ const handleGetRequest: IHandleRequest<APIName.FILE_GET, File> = async ({ query 
     const file = await findFileById(fileId);
     payload = file;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+  } catch (error) {
+    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  }
+
+  return { statusMessage, payload };
+};
+
+const handlePutRequest: IHandleRequest<APIName.FILE_PUT_V2, File> = async ({ query, body }) => {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: File | null = null;
+
+  try {
+    const { fileId } = query;
+    const { name } = body;
+
+    const file = await putFileById(fileId, {
+      name,
+    });
+    payload = file;
+    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (error) {
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
@@ -64,6 +84,7 @@ const methodHandlers: {
 } = {
   GET: (req, res) => withRequestValidation(APIName.FILE_GET, req, res, handleGetRequest),
   DELETE: (req, res) => withRequestValidation(APIName.FILE_DELETE, req, res, handleDeleteRequest),
+  PUT: (req, res) => withRequestValidation(APIName.FILE_PUT_V2, req, res, handlePutRequest),
 };
 
 export default async function handler(

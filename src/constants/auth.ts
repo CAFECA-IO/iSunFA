@@ -123,6 +123,7 @@ export const AUTH_CHECK = {
   [APIName.FILE_UPLOAD]: [AuthFunctionsKeysNew.user],
   [APIName.FILE_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.FILE_GET]: [AuthFunctionsKeysNew.user],
+  [APIName.FILE_PUT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ROLE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ROLE_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.ROLE_UPDATE]: [AuthFunctionsKeysNew.user],
