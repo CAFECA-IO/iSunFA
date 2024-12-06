@@ -18,7 +18,9 @@ const Breadcrumb = () => {
         <IoIosArrowForward size={20} />
       </Link>
 
-      <h5 className="text-input-text-highlight">{t('common:LANDING_FOOTER.TERMS_OF_SERVICE')}</h5>
+      <h5 className="text-input-text-highlight">
+        {t('common:LANDING_FOOTER.TERMS_OF_SERVICE_FOR_LANDING_PAGE')}
+      </h5>
     </div>
   );
 };
@@ -32,28 +34,28 @@ const TermsOfServicePageBody = () => {
 
       <main className="mb-240px mt-120px flex flex-col gap-20px px-160px text-lg font-semibold">
         <h1 className="mb-20px text-44px font-bold text-text-brand-primary-lv3">
-          {t('common:LANDING_FOOTER.TERMS_OF_SERVICE')}
+          {t('common:LANDING_FOOTER.TERMS_OF_SERVICE_FOR_LANDING_PAGE')}
         </h1>
 
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_01')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_02')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_03')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_04')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_05')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_06')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_07')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_08')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_09')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_10')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_11')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_12')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_13')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE.TEXT_14')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_01')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_02')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_03')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_04')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_05')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_06')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_07')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_08')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_09')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_10')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_11')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_12')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_13')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_14')}</p>
         <p>
-          {t('terms:TERMS_OF_SERVICE.TEXT_15')}
+          {t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_15')}
           <ul className="list-inside list-disc indent-6">
-            <li>{t('terms:TERMS_OF_SERVICE.TEXT_15_01')}</li>
-            <li>{t('terms:TERMS_OF_SERVICE.TEXT_15_02')}</li>
+            <li>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_15_01')}</li>
+            <li>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_15_02')}</li>
           </ul>
         </p>
       </main>

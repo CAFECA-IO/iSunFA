@@ -7,24 +7,18 @@ import { Provider } from '@/constants/provider';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import { FiHome } from 'react-icons/fi';
-import I18n from '@/components/i18n/i18n';
-import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
-import Loader from '@/components/loader/loader';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import I18n from '@/components/i18n/i18n';
+import TermsOfServiceModal from '@/components/login/terms_of_service_modal';
+import Loader from '@/components/loader/loader';
 
 // ToDo: (20241119 - Liz) Beta version 不支援 Apple 登入
 const IS_APPLE_LOGIN_ENABLED = true;
 
 const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
   const { t } = useTranslation('dashboard');
-  const {
-    isAuthLoading,
-    authenticateUser,
-    isSignIn,
-    isAgreeTermsOfService,
-    isAgreePrivacyPolicy,
-    handleAppleSignIn,
-  } = useUserCtx();
+  const { isAuthLoading, authenticateUser, isSignIn, isAgreeTermsOfService, handleAppleSignIn } =
+    useUserCtx();
 
   const googleAuthSignIn = () => {
     authenticateUser(Provider.GOOGLE, {
@@ -33,26 +27,15 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
     });
   };
 
-  const [isTermsOfServiceConfirmModalVisible, setIsTermsOfServiceConfirmModalVisible] =
-    useState<boolean>(false);
-
-  const [isPrivacyPolicyConfirmModalVisible, setIsPrivacyPolicyConfirmModalVisible] =
-    useState<boolean>(false);
-
-  const toggleTermsOfServiceConfirmModal = (visibility: boolean) => {
-    setIsTermsOfServiceConfirmModalVisible(visibility);
-  };
-
-  const togglePrivacyPolicyConfirmModal = (visibility: boolean) => {
-    setIsPrivacyPolicyConfirmModalVisible(visibility);
+  const [isTermsOfServiceModalVisible, setIsTermsOfServiceModalVisible] = useState<boolean>(false);
+  const closeTermsOfServiceModal = () => {
+    setIsTermsOfServiceModalVisible(false);
   };
 
   useEffect(() => {
     if (!isSignIn) return;
-
-    setIsTermsOfServiceConfirmModalVisible(!isAgreeTermsOfService);
-    setIsPrivacyPolicyConfirmModalVisible(isAgreeTermsOfService && !isAgreePrivacyPolicy);
-  }, [isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy]);
+    setIsTermsOfServiceModalVisible(!isAgreeTermsOfService);
+  }, [isSignIn, isAgreeTermsOfService]);
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
@@ -108,28 +91,10 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
         </div>
       )}
 
-      {/* Modal */}
-      <LoginConfirmModal
-        id="terms-of-service"
-        isModalVisible={isTermsOfServiceConfirmModalVisible}
-        modalData={{
-          title: t('terms:MODAL.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
-          content: 'terms_of_service',
-          buttonText: t('terms:MODAL.AGREE_TO_OUR_TERMS_OF_SERVICE'),
-        }}
-        toggleTermsOfServiceConfirmModal={toggleTermsOfServiceConfirmModal}
-        togglePrivacyPolicyConfirmModal={togglePrivacyPolicyConfirmModal}
-      />
-      <LoginConfirmModal
-        id="privacy-policy"
-        isModalVisible={isPrivacyPolicyConfirmModalVisible}
-        modalData={{
-          title: t('terms:MODAL.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
-          content: 'privacy_policy',
-          buttonText: t('terms:MODAL.AGREE_TO_OUR_PRIVACY_POLICY'),
-        }}
-        toggleTermsOfServiceConfirmModal={toggleTermsOfServiceConfirmModal}
-        togglePrivacyPolicyConfirmModal={togglePrivacyPolicyConfirmModal}
+      {/* // Info: (20241206 - Liz) 服務條款彈窗 */}
+      <TermsOfServiceModal
+        isModalVisible={isTermsOfServiceModalVisible}
+        closeTermsOfServiceModal={closeTermsOfServiceModal}
       />
     </div>
   );
