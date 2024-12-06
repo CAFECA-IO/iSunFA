@@ -80,10 +80,12 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         setHasFetchedOnce(true); // Info: (20241204 - Anna) 標記為已成功請求
         prevSelectedDateRange.current = selectedDateRange; // Info: (20241204 - Anna) 更新前一个日期範圍
       } else {
+        // Deprecate: (20241205 - Anna) remove eslint-disable
         // eslint-disable-next-line no-console
         // console.error('API response error: ', response);
       }
     } catch (error) {
+      // Deprecate: (20241205 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
       // console.error('Error fetching trial balance data:', error);
     } finally {

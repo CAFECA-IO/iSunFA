@@ -45,6 +45,7 @@ export async function handlePutRequest(req: NextApiRequest) {
   return { statusMessage, payload };
 }
 
+// ToDo: (20241204 - Luphia) prepare to done
 export async function handleDeleteRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;

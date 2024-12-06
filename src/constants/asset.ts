@@ -31,6 +31,7 @@ export enum AssetDepreciationMethod {
   STRAIGHT_LINE = 'straight_line',
   // DOUBLE_DECLINING = 'double_declining',
   // UNITS_OF_PRODUCTION = 'units_of_production',
+  NONE = 'none', // Info: (20241204 - Luphia) 不需折舊，如土地
 }
 
 export const AccountCodesOfAsset = [

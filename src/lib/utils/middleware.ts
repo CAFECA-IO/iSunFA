@@ -116,6 +116,7 @@ export async function withRequestValidation<T extends APIName, U>(
   if (!isLogin) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
+    // Info: (20241204 - Luphia) zod validation for input data
     const { query, body } = checkRequestData(apiName, req, session);
     if (query !== null && body !== null) {
       const isAuth = await checkUserAuthorization(apiName, req, session);
@@ -131,6 +132,7 @@ export async function withRequestValidation<T extends APIName, U>(
             req,
           });
           statusMessage = handlerStatusMessage;
+          // Info: (20241204 - Luphia) zod validation for output data
           const { isOutputDataValid, outputData } = validateOutputData(apiName, handlerOutput);
           if (!isOutputDataValid) {
             statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
