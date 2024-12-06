@@ -113,25 +113,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
   // Info: (20241204 - Anna) 根據報告 ID 加載報告內容
   const getFinancialReport = async () => {
-    if (
-      (selectedDateRange &&
-        (selectedDateRange.startTimeStamp === 0 || selectedDateRange.endTimeStamp === 0)) ||
-      selectedDateRange === null ||
-      !reportId ||
-      reportId === '0' ||
-      reportId === null
-    ) {
-      return (
-        <div className="flex h-screen flex-col items-center justify-center">
-          <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
-          <div>
-            <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
-            <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
-          </div>
-        </div>
-      );
-    }
-
     setIsLoading(true);
     try {
       const {
@@ -1522,13 +1503,47 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     </div>
   );
 
+  // return (
+  //   // eslint-disable-next-line react/jsx-no-useless-fragment
+  //   <>
+  //     {!reportId ? (
+  //       <div className="flex h-screen flex-col items-center justify-center">
+  //         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+  //         <div>
+  //           <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
+  //           <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
+  //         </div>
+  //       </div>
+  //     ) : (
+  //       <div>
+  //         {displayedSelectArea()}
+  //         <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
+  //           {page1}
+  //         </div>
+  //       </div>
+  //     )}
+  //   </>
+  // );
+
+  if (!reportId) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center">
+        <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+        <div>
+          <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
+          <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <>
+    <div>
       {displayedSelectArea()}
       <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
         {page1}
       </div>
-    </>
+    </div>
   );
 };
 
