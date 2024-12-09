@@ -1,9 +1,10 @@
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { FaPlus } from 'react-icons/fa6';
 import { ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorThumbnail from '@/components/certificate/certificate_selector_thumbnail';
-import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 
 interface CertificateSelectionProps {
@@ -21,6 +22,7 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
   setOpenModal,
   className = '',
 }: CertificateSelectionProps) => {
+  const { t } = useTranslation(['certificate', 'common']);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [maxWidth, setMaxWidth] = useState<number>(0);
@@ -140,7 +142,8 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
       </div>
       <div className="mt-2 w-full text-center">
         <p className="text-text-neutral-tertiary">
-          {isSelectable ? 'Uploaded' : 'Total'} {selectedCertificates.length} certificates
+          {isSelectable ? t('certificate:COMMON.UPLOADED') : t('certificate:COMMON.UPLOADED')}{' '}
+          {selectedCertificates.length} {t('certificate:COMMON.CERTIFICATES')}
         </p>
         <div className="mt-2 flex items-center justify-center space-x-2">
           <Button
