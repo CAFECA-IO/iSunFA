@@ -171,6 +171,9 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
     rootId: account.rootId,
     note: account.note,
   };
+  // if (account.code === '1100') {
+  // console.log('account: ', account, 'newAmount: ', newAmount);
+  // }
 
   // updatedAccount.amount = newAmount; // Info: (20240801 - Murky)
 

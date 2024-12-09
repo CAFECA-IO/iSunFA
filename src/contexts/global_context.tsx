@@ -45,6 +45,7 @@ import SelectReverseItemsModal from '@/components/voucher/select_reverse_items_m
 import { IReverseItemModal, defaultReverseItemModal } from '@/interfaces/reverse';
 import AccountingTitleSettingModal from '@/components/account_settings/accounting_title_setting_modal';
 import ManualAccountOpeningModal from '@/components/account_settings/manual_account_opening_modal';
+import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
 
 interface IGlobalContext {
   width: number;
@@ -157,6 +158,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     confirmModalVisibilityHandler,
     isAddBookmarkModalVisible,
     addBookmarkModalVisibilityHandler,
+    isAddCounterPartyModalVisible,
+    addCounterPartyModalVisibilityHandler,
+    addCounterPartyModalData,
   } = useModalContext();
 
   const windowSize = useWindowSize();
@@ -599,6 +603,15 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isMessageModalVisible}
         modalVisibilityHandler={messageModalVisibilityHandler}
         messageModalData={messageModalData}
+      />
+
+      <AddCounterPartyModal
+        isModalVisible={isAddCounterPartyModalVisible}
+        modalVisibilityHandler={addCounterPartyModalVisibilityHandler}
+        //  onClose={addCounterPartyModalData.onClose}
+        onSave={addCounterPartyModalData.onSave}
+        name={addCounterPartyModalData.name}
+        taxId={addCounterPartyModalData.taxId}
       />
 
       <ConfirmModal

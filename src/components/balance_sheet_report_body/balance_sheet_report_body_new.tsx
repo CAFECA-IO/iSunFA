@@ -170,6 +170,7 @@ const BalanceSheetPageBody = () => {
           isPrinting={isPrinting} // Info: (20241122 - Anna) 傳遞列印狀態
           printRef={printRef} // Info: (20241122 - Anna) 傳遞列印區域 Ref
           printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數
+          // selectedReportLanguage={selectedReportLanguage} // Todo: (20241206 - Anna) 將語言選擇傳遞給子組件 下個PR繼續處理
         />
       </div>
     </div>

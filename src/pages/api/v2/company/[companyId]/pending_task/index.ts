@@ -39,18 +39,21 @@ export async function getPendingTaskByCompanyId(
       missingCertificatePercentage = 1 - unpostedVoucherPercentage;
     }
 
+    const imageUrl = company.imageFile.url;
     pendingTask = {
       companyId,
       missingCertificate: {
         companyId: company.id,
         companyName: company.name,
         count: missingCertificateCount,
+        companyLogoSrc: imageUrl,
       },
       missingCertificatePercentage,
       unpostedVoucher: {
         companyId: company.id,
         companyName: company.name,
         count: unpostedVoucherCount,
+        companyLogoSrc: imageUrl,
       },
       unpostedVoucherPercentage,
     };

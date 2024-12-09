@@ -2,6 +2,7 @@ import React, { useState, useContext, createContext, useMemo, useCallback } from
 import Image from 'next/image';
 import { IMessageModal, dummyMessageModalData } from '@/interfaces/message_modal';
 import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
+import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
 
@@ -16,6 +17,10 @@ interface ModalContextType {
   eliminateToast: (id?: string) => void;
   isAddBookmarkModalVisible: boolean;
   addBookmarkModalVisibilityHandler: () => void;
+  isAddCounterPartyModalVisible: boolean;
+  addCounterPartyModalVisibilityHandler: () => void;
+  addCounterPartyModalData: IAddCounterPartyModalData;
+  addCounterPartyModalDataHandler: (data: IAddCounterPartyModalData) => void;
 }
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
 interface ModalProviderProps {
@@ -26,15 +31,31 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
   const [isMessageModalVisible, setIsMessageModalVisible] = useState(false);
   const [messageModalData, setMessageModalData] = useState<IMessageModal>(dummyMessageModalData);
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
+  const [isAddCounterPartyModalVisible, setIsAddCounterPartyModalVisible] = useState(false);
+  const [addCounterPartyModalData, setAddCounterPartyModalData] =
+    useState<IAddCounterPartyModalData>({
+      //  onClose: () => {},
+      onSave: () => {},
+    });
+
   const confirmModalVisibilityHandler = () => {
     setIsConfirmModalVisible(!isConfirmModalVisible);
   };
+
   const messageModalVisibilityHandler = () => {
     setIsMessageModalVisible(!isMessageModalVisible);
   };
   const messageModalDataHandler = (data: IMessageModal) => {
     setMessageModalData(data);
   };
+
+  const addCounterPartyModalVisibilityHandler = () => {
+    setIsAddCounterPartyModalVisible(!isAddCounterPartyModalVisible);
+  };
+  const addCounterPartyModalDataHandler = (data: IAddCounterPartyModalData) => {
+    setAddCounterPartyModalData(data);
+  };
+
   const toastHandler = useCallback((props: IToastify) => {
     const {
       // Info: (20240909 - Anna) TypeScript 本身已經有型別檢查系統。因此 ESLint 不需要針對 TypeScript 檔案強制使用 prop-types。因此這裡的ESLint註解不做移除。
@@ -159,6 +180,10 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
       eliminateToast,
       isAddBookmarkModalVisible,
       addBookmarkModalVisibilityHandler,
+      isAddCounterPartyModalVisible,
+      addCounterPartyModalVisibilityHandler,
+      addCounterPartyModalData,
+      addCounterPartyModalDataHandler,
     }),
     [
       isConfirmModalVisible,
@@ -171,6 +196,10 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
       eliminateToast,
       isAddBookmarkModalVisible,
       addBookmarkModalVisibilityHandler,
+      isAddCounterPartyModalVisible,
+      addCounterPartyModalVisibilityHandler,
+      addCounterPartyModalData,
+      addCounterPartyModalDataHandler,
     ]
   );
   return <ModalContext.Provider value={value}>{children}</ModalContext.Provider>;

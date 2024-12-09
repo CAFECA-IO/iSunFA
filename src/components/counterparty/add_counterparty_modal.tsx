@@ -10,43 +10,30 @@ import { inputStyle } from '@/constants/display';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
+import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
 
-interface AddCounterPartyModalProps {
-  onClose: () => void;
-  onSave: (counterpartyData: {
-    name: string;
-    taxId: string;
-    type: CounterpartyType;
-    note: string;
-  }) => void;
-  name?: string;
-  taxId?: string;
+interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
+  isModalVisible: boolean;
+  modalVisibilityHandler: () => void;
 }
 
-const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
+const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
+  isModalVisible,
+  modalVisibilityHandler,
   onSave,
-  onClose,
+  //  onClose,
   name,
   taxId,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
   const { selectedCompany } = useUserCtx();
-  const [inputName, setInputName] = useState<string>(name || '');
-  const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
+  const [inputName, setInputName] = useState<string>('');
+  const [inputTaxId, setInputTaxId] = useState<string>('');
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
   const [inputNote, setInputNote] = useState<string>('');
   const [showHint, setShowHint] = useState(false);
 
-  const {
-    trigger: addCounterpartyTrigger,
-    success,
-    error,
-  } = APIHandler(
-    APIName.COUNTERPARTY_ADD,
-    { params: { companyId: selectedCompany?.id } },
-    false,
-    true
-  );
+  const { trigger: addCounterpartyTrigger, success, error } = APIHandler(APIName.COUNTERPARTY_ADD);
 
   const { targetRef: typeRef, setComponentVisible: setIsTypeSelecting } =
     useOuterClick<HTMLDivElement>(false);
@@ -135,7 +122,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
         type: counterpartyData.type.toString(),
       };
 
-      await addCounterpartyTrigger({ body: apiData });
+      await addCounterpartyTrigger({ params: { companyId: selectedCompany?.id }, body: apiData });
     }
   };
 
@@ -145,22 +132,43 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
       // eslint-disable-next-line no-console
       console.log('Counterparty created successfully.');
       onSave({ name: inputName, taxId: inputTaxId, type: inputType!, note: inputNote });
-      onClose();
+      modalVisibilityHandler();
     } else if (error) {
       // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.error('Failed to create counterparty:', error);
     }
-  }, [success, error, onSave, onClose, inputName, inputTaxId, inputType, inputNote]);
+  }, [success, error]);
 
-  return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+  useEffect(() => {
+    // Info: (20241206 - Julian) 若有預設值，則填入輸入欄位
+    if (name) {
+      setInputName(name);
+    }
+    if (taxId) {
+      setInputTaxId(taxId);
+    }
+  }, [name, taxId]);
+
+  useEffect(() => {
+    // Info: (20241206 - Julian) 關閉 Modal 時，清空輸入欄位
+    if (!isModalVisible) {
+      setInputName('');
+      setInputTaxId('');
+      setInputType(null);
+      setInputNote('');
+      setShowHint(false);
+    }
+  }, [isModalVisible]);
+
+  const isDisplayModal = isModalVisible ? (
+    <div className="fixed inset-0 z-80 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-620px w-90vw max-w-480px flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 p-8">
         {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
         <button
           type="button"
           className="absolute right-4 top-4 text-checkbox-text-primary"
-          onClick={onClose}
+          onClick={modalVisibilityHandler}
         >
           <RxCross1 size={32} />
         </button>
@@ -251,7 +259,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
             <Button
               className="px-16px py-8px"
               type="button"
-              onClick={onClose}
+              onClick={modalVisibilityHandler}
               variant="secondaryBorderless"
             >
               {t('common:COMMON.CANCEL')}
@@ -264,7 +272,9 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
         </form>
       </div>
     </div>
-  );
+  ) : null;
+
+  return isDisplayModal;
 };
 
 export default AddCounterPartyModal;

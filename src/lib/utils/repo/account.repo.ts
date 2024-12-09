@@ -264,6 +264,15 @@ export async function findFirstAccountByCodeInPrisma(code: string, companyId?: n
   return account;
 }
 
+export async function findAccountByIdInPrisma(accountId: number) {
+  const account: Account | null = await prisma.account.findUnique({
+    where: {
+      id: accountId,
+    },
+  });
+  return account;
+}
+
 export async function fuzzySearchAccountByName(name: string) {
   let account: Account | null = null;
 

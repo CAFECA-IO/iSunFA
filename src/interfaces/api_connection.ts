@@ -65,6 +65,7 @@ export type IAPIName =
   | 'FILE_UPLOAD'
   | 'FILE_DELETE'
   | 'FILE_GET'
+  | 'FILE_PUT_V2'
   | 'COMPANY_GET_BY_ID'
   | 'COMPANY_DELETE'
   | 'COMPANY_UPDATE'
@@ -128,8 +129,8 @@ export type IAPIName =
   | 'LEDGER_LIST'
   | 'VOUCHER_POST_V2'
   | 'PUSHER_AUTH'
-  | 'TRIAL_BALANCE_EXPORT';
-
+  | 'TRIAL_BALANCE_EXPORT'
+  | 'CREATE_ASSET_BULK';
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {

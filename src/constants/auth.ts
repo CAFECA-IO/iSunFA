@@ -123,6 +123,7 @@ export const AUTH_CHECK = {
   [APIName.FILE_UPLOAD]: [AuthFunctionsKeysNew.user],
   [APIName.FILE_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.FILE_GET]: [AuthFunctionsKeysNew.user],
+  [APIName.FILE_PUT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ROLE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ROLE_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.ROLE_UPDATE]: [AuthFunctionsKeysNew.user],
@@ -148,4 +149,5 @@ export const AUTH_CHECK = {
   [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: [AuthFunctionsKeysNew.user],
   [APIName.LEDGER_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.TRIAL_BALANCE_EXPORT]: [AuthFunctionsKeysNew.user],
+  [APIName.CREATE_ASSET_BULK]: [AuthFunctionsKeysNew.user],
 };
