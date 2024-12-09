@@ -21,9 +21,6 @@ interface CompanyListProps {
   list: IMissingCertificate[];
 }
 
-// ToDo: (20241127 - Liz) 目前 API 沒有提供這個欄位的資料，所以先使用假資料
-const UNARCHIVED_CUSTOMER_DATA_LIST: IMissingCertificate[] = [];
-
 const CompanyList = ({ list }: CompanyListProps) => {
   const { t } = useTranslation('dashboard');
 
@@ -45,7 +42,7 @@ const CompanyList = ({ list }: CompanyListProps) => {
           className="flex items-center justify-between gap-8px bg-surface-brand-primary-10 px-8px py-4px"
         >
           <div className="flex items-center gap-8px">
-            <div className="h-24px w-24px overflow-hidden rounded-xxs bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS">
+            <div className="h-24px w-24px overflow-hidden rounded-xxs border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
               <Image src={item.companyLogoSrc} alt="company_logo" width={24} height={24} />
             </div>
             <p className="text-xs font-semibold text-text-neutral-primary">{item.companyName}</p>
@@ -113,9 +110,6 @@ const PendingTasksForAll = () => {
   const percentageForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucherPercentage * 100;
   const countForMissingCertificate = userPendingTaskTotal.totalMissingCertificate;
   const countForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucher;
-  // ToDo: (20241127 - Liz) 目前 API 沒有提供這個欄位的資料，所以先設定為 0
-  const PERCENTAGE_FOR_UNARCHIVED_CUSTOMER_DATA = 0;
-  const COUNT_FOR_UNARCHIVED_CUSTOMER_DATA = 0;
 
   return (
     <section className="flex flex-col gap-24px">
@@ -123,19 +117,17 @@ const PendingTasksForAll = () => {
         {t('dashboard:DASHBOARD.PENDING_TASKS_TOTAL')}
       </h3>
 
-      {/* === Chart Section === */}
+      {/* === // Info: (20241209 - Liz) Chart Section === */}
       <section className="flex items-center gap-16px">
         <div className="w-160px">
           <DonutChart
             percentageForMissingCertificate={percentageForMissingCertificate}
             percentageForUnpostedVouchers={percentageForUnpostedVouchers}
-            percentageForUnarchivedCustomerData={PERCENTAGE_FOR_UNARCHIVED_CUSTOMER_DATA}
             isChartForTotal
           />
         </div>
 
         <div className="flex grow flex-col gap-16px">
-          {/* Missing certificate */}
           <div className="flex items-center justify-between">
             <TaskType
               iconName={PendingTaskIconName.MISSING_CERTIFICATE}
@@ -146,7 +138,6 @@ const PendingTasksForAll = () => {
             </p>
           </div>
 
-          {/* Unposted vouchers */}
           <div className="flex items-center justify-between">
             <TaskType
               iconName={PendingTaskIconName.UNPOSTED_VOUCHERS}
@@ -156,21 +147,10 @@ const PendingTasksForAll = () => {
               {percentageForUnpostedVouchers}%
             </p>
           </div>
-
-          {/* Unarchived Customer Data */}
-          <div className="flex items-center justify-between">
-            <TaskType
-              iconName={PendingTaskIconName.UNARCHIVED_CUSTOMER_DATA}
-              title={TaskTitle.UNARCHIVED_CUSTOMER_DATA}
-            />
-            <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-              {PERCENTAGE_FOR_UNARCHIVED_CUSTOMER_DATA}%
-            </p>
-          </div>
         </div>
       </section>
 
-      {/* === List Section === */}
+      {/* === // Info: (20241209 - Liz) List Section === */}
       <section className="flex flex-col gap-24px">
         <div className="flex items-center justify-between">
           <TaskType
@@ -195,18 +175,6 @@ const PendingTasksForAll = () => {
         </div>
 
         <CompanyList list={userPendingTaskTotal.unpostedVoucherList} />
-
-        <div className="flex items-center justify-between">
-          <TaskType
-            iconName={PendingTaskIconName.UNARCHIVED_CUSTOMER_DATA}
-            title={TaskTitle.UNARCHIVED_CUSTOMER_DATA}
-          />
-          <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-            {COUNT_FOR_UNARCHIVED_CUSTOMER_DATA}
-          </p>
-        </div>
-
-        <CompanyList list={UNARCHIVED_CUSTOMER_DATA_LIST} />
       </section>
     </section>
   );
