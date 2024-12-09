@@ -5,7 +5,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IAssetDetails, mockAssetDetails } from '@/interfaces/asset';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
-import { getLegitAssetById, getVouchersByAssetId } from '@/lib/utils/repo/asset.repo';
+import { deleteAsset, getLegitAssetById, getVouchersByAssetId } from '@/lib/utils/repo/asset.repo';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { AssetDepreciationMethod } from '@/constants/asset';
@@ -15,20 +15,25 @@ interface IHandlerResult {
 }
 
 interface IGetResult extends IHandlerResult {
-  // TODO: (20241204 - Shirley) add more options to payload
   payload: IAssetDetails;
 }
 
-type IHandlerResultPayload = IGetResult['payload'] | null;
+interface IDeleteResult extends IHandlerResult {
+  payload: IAssetDetails;
+}
+
+type IHandlerResultPayload = IGetResult['payload'] | IDeleteResult['payload'] | null;
 
 interface IHandlerResponse extends IHandlerResult {
   payload: IHandlerResultPayload;
 }
 
-export const handleGetRequest: IHandleRequest<APIName.ASSET_GET_BY_ID_V2, IAssetDetails> = async ({
-  query,
-}) => {
+export const handleGetRequest: IHandleRequest<
+  APIName.ASSET_GET_BY_ID_V2,
+  IGetResult['payload']
+> = async ({ query }) => {
   const { assetId, companyId } = query;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
 
   const asset = await getLegitAssetById(assetId);
@@ -69,9 +74,10 @@ export const handleGetRequest: IHandleRequest<APIName.ASSET_GET_BY_ID_V2, IAsset
     };
 
     payload = sortedAsset;
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   }
 
-  return { statusMessage: STATUS_MESSAGE.SUCCESS_GET, payload };
+  return { statusMessage, payload };
 };
 
 export async function handlePutRequest(req: NextApiRequest) {
@@ -93,32 +99,64 @@ export async function handlePutRequest(req: NextApiRequest) {
   return { statusMessage, payload };
 }
 
-// ToDo: (20241204 - Luphia) prepare to done
-export async function handleDeleteRequest() {
+export const handleDeleteRequest: IHandleRequest<
+  APIName.DELETE_ASSET_V2,
+  IDeleteResult['payload']
+> = async ({ query }) => {
+  const { assetId, companyId } = query;
+
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
 
-  // ToDo: (20240927 - Shirley) 從請求中獲取assetId
-  // const { assetId } = req.query;
+  const asset = await getLegitAssetById(assetId);
 
-  // ToDo: (20240927 - Shirley) 在資料庫中軟刪除資產
-  // ToDo: (20240927 - Shirley) 獲取並格式化被刪除的資產數據
+  if (!asset) {
+    payload = null;
+  } else {
+    // TODO: (20241209 - Shirley) 確認刪除 asset API 回傳資料是否需要 vouchers 跟 currencyAlias，若不需要就改 API 文件然後刪除getAccountingSettingByCompanyId, getVouchersByAssetId
+    const accountingSetting = await getAccountingSettingByCompanyId(companyId);
+    const vouchers = await getVouchersByAssetId(assetId);
+    const sortedAsset = {
+      id: asset.id,
+      currencyAlias: accountingSetting?.currency || 'TWD',
+      acquisitionDate: asset.acquisitionDate,
+      assetType: asset.type,
+      assetNumber: asset.number,
+      assetName: asset.name,
+      purchasePrice: asset.purchasePrice,
+      accumulatedDepreciation: 0, // Info: (20241209 - Shirley) 即時計算的欄位在刪除 asset 時不需要被計算
+      residualValue: 0, // Info: (20241209 - Shirley) 即時計算的欄位在刪除 asset 時不需要被計算
+      remainingLife: 0, // Info: (20241209 - Shirley) 即時計算的欄位在刪除 asset 時不需要被計算
+      assetStatus: asset.status,
+      createdAt: asset.createdAt,
+      updatedAt: asset.updatedAt,
+      depreciationStart: asset.depreciationStart,
+      depreciationMethod: asset.depreciationMethod,
+      usefulLife: asset.usefulLife,
+      relatedVouchers: vouchers,
+      note: asset.note,
+      deletedAt: asset.deletedAt,
+    };
+    const deletedAsset = await deleteAsset(assetId);
 
-  const now = getTimestampNow();
-
-  // 暫時返回模擬數據
-  payload = { ...mockAssetDetails, deletedAt: now, updatedAt: now };
-  statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+    if (!deletedAsset) {
+      payload = null;
+    } else {
+      payload = sortedAsset;
+      statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+    }
+  }
 
   return { statusMessage, payload };
-}
+};
 
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
 } = {
   GET: (req, res) => withRequestValidation(APIName.ASSET_GET_BY_ID_V2, req, res, handleGetRequest),
   PUT: handlePutRequest,
-  DELETE: handleDeleteRequest,
+  DELETE: (req, res) =>
+    withRequestValidation(APIName.DELETE_ASSET_V2, req, res, handleDeleteRequest),
 };
 
 export default async function handler(

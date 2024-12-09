@@ -22,7 +22,9 @@ const AssetGetByIdQueryValidator = AssetCreateQueryValidator.extend({
 });
 
 // Info: (20241206 - Shirley) query for delete asset by id
-const AssetDeleteByIdQueryValidator = AssetGetByIdQueryValidator;
+const AssetDeleteByIdQueryValidator = AssetCreateQueryValidator.extend({
+  assetId: zodStringToNumber,
+});
 
 export const AssetCreateInputBodyValidator = z.object({
   assetName: z.string(),
@@ -147,11 +149,11 @@ export const assetGetByIdSchema = {
   frontend: nullSchema,
 };
 
-export const assetDeleteByIdSchema = {
+export const assetDeleteSchema = {
   input: {
     querySchema: AssetDeleteByIdQueryValidator,
     bodySchema: nullSchema,
   },
-  outputSchema: nullSchema,
+  outputSchema: IAssetDetailsValidator,
   frontend: nullSchema,
 };
