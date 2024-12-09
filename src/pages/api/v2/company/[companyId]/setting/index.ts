@@ -6,7 +6,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import {
   createCompanySetting,
   getCompanySettingByCompanyId,
-  updateCompanySettingById,
+  updateCompanySettingByCompanyId,
 } from '@/lib/utils/repo/company_setting.repo';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
@@ -49,7 +49,10 @@ const handlePutRequest: IHandleRequest<APIName.COMPANY_SETTING_UPDATE, CompanySe
   const companySettingData = body;
 
   try {
-    const updatedCompanySetting = await updateCompanySettingById(companyId, companySettingData);
+    const updatedCompanySetting = await updateCompanySettingByCompanyId({
+      companyId,
+      data: companySettingData,
+    });
 
     if (updatedCompanySetting) {
       payload = updatedCompanySetting;

@@ -2,7 +2,12 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { ALLOWED_ORIGINS, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
+import {
+  ALLOWED_ORIGINS,
+  DEFAULT_END_DATE,
+  DEFAULT_PAGE_LIMIT,
+  DEFAULT_PAGE_START_AT,
+} from '@/constants/config';
 import {
   MILLISECONDS_IN_A_SECOND,
   MONTH_LIST,
@@ -446,6 +451,9 @@ export function transformYYYYMMDDToTimeStampInSecond(str: string) {
 }
 
 export function setTimestampToDayEnd(timestamp: number) {
+  if (timestamp >= DEFAULT_END_DATE) {
+    return timestamp;
+  }
   const timestampMilliSeconds = timestampInMilliSeconds(timestamp);
   const date = new Date(timestampMilliSeconds);
   date.setHours(23, 59, 59, 999);
@@ -453,6 +461,9 @@ export function setTimestampToDayEnd(timestamp: number) {
 }
 
 export function setTimestampToDayStart(timestamp: number) {
+  if (timestamp <= 0) {
+    return 0;
+  }
   const timestampMilliSeconds = timestampInMilliSeconds(timestamp);
   const date = new Date(timestampMilliSeconds);
   date.setHours(0, 0, 0, 0);

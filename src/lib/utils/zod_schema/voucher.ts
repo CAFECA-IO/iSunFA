@@ -469,11 +469,7 @@ const voucherGetOneOutputValidatorV2 = z
       voucherDate: data.date,
       type: data.type,
       note: data.note ?? '',
-      counterParty: {
-        id: data.counterParty.id,
-        companyId: data.counterParty.companyId,
-        name: data.counterParty.name,
-      },
+      counterParty: data.counterParty,
       // Info: (20241105 - Murky) Recurring info 不需要，所以都會是 空值
       recurringInfo: {
         type: '',
@@ -601,6 +597,11 @@ const IVoucherDetailForFrontendValidator = z.object({
     id: z.number(),
     companyId: z.number(),
     name: z.string(),
+    taxId: z.string(),
+    type: z.string(),
+    note: z.string(),
+    createdAt: z.number(),
+    updatedAt: z.number(),
   }),
   recurringInfo: z.object({
     // Deprecated: (20241105 - Murky)
