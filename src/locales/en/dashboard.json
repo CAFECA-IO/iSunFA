@@ -25,8 +25,7 @@
     "PENDING_TASKS_TOTAL": "Pending Tasks (Total)",
     "MISSING_CERTIFICATE": "Missing certificate",
     "UNPOSTED_VOUCHERS": "Unposted vouchers",
-    "UNARCHIVED_CUSTOMER_DATA": "Unarchived Customer Data",
-    "ADD_TO_MY_CALENDAR": "Add to My Calendar",
+    "ADD_EVENT": "Add Event",
     "NO_DATA_AVAILABLE": "No Data Available",
     "NO_DATA": "No Data"
   },

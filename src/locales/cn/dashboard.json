@@ -25,8 +25,7 @@
     "PENDING_TASKS_TOTAL": "待处理任务 (全部)",
     "MISSING_CERTIFICATE": "缺少凭证",
     "UNPOSTED_VOUCHERS": "尚未入帐",
-    "UNARCHIVED_CUSTOMER_DATA": "尚未封存的客户资料",
-    "ADD_TO_MY_CALENDAR": "新增至我的行事历",
+    "ADD_EVENT": "新增事件",
     "NO_DATA_AVAILABLE": "没有可用资料",
     "NO_DATA": "没有资料"
   },
