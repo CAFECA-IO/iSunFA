@@ -25,6 +25,20 @@ describe('getPendingTaskByCompanyId', () => {
       createdAt: 1620000000,
       updatedAt: 1620000000,
       deletedAt: null,
+      imageFile: {
+        id: 1,
+        name: 'imageA',
+        size: 512.25,
+        mimeType: 'image/png',
+        type: 'invoice',
+        url: 'urlA',
+        isEncrypted: true,
+        iv: Buffer.from('a'),
+        encryptedSymmetricKey: 'c29tZUVuY3J5cHRlZEtleQ==',
+        createdAt: 1620000000,
+        updatedAt: 1620000000,
+        deletedAt: null,
+      },
     };
     const mockMissingCertificateCount = 5;
     const mockUnpostedVoucherCount = 3;
@@ -43,12 +57,14 @@ describe('getPendingTaskByCompanyId', () => {
         companyId: mockCompany.id,
         companyName: mockCompany.name,
         count: mockMissingCertificateCount,
+        companyLogoSrc: 'urlA',
       },
       missingCertificatePercentage: 0.62,
       unpostedVoucher: {
         companyId: mockCompany.id,
         companyName: mockCompany.name,
         count: mockUnpostedVoucherCount,
+        companyLogoSrc: 'urlA',
       },
       unpostedVoucherPercentage: 0.38,
     });

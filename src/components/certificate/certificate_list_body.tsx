@@ -411,7 +411,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           [newCertificate.id]: {
             ...newCertificate,
             isSelected: false,
-            unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
             actions: !newCertificate.voucherNo
               ? [
                   CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
@@ -444,6 +443,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       // eslint-disable-next-line no-console
       console.log(`CertificateListBody handleNewCertificateComing: newCertificate`, newCertificate);
       handleNewCertificateComing(newCertificate);
+
+      // Info: (20241206 - Murky) @tzuhan 我在這邊設定上傳成功之後會把unRead + 1
+      const newUnread = {
+        withVoucher: unRead.withVoucher,
+        withoutVoucher: unRead.withoutVoucher + 1,
+      };
+      setUnRead(newUnread);
     },
     [companyId, certificates, activeTab]
   );

@@ -100,6 +100,7 @@ export enum APIName {
   FILE_UPLOAD = 'FILE_UPLOAD',
   FILE_DELETE = 'FILE_DELETE',
   FILE_GET = 'FILE_GET',
+  FILE_PUT_V2 = 'FILE_PUT_V2',
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
   USER_ROLE_LIST = 'USER_ROLE_LIST', // Info: (20241120 - Liz) Beta
   USER_CREATE_ROLE = 'USER_CREATE_ROLE',
@@ -230,6 +231,7 @@ export enum APIPath {
   FILE_UPLOAD = `${apiPrefixV2}/file`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
   FILE_GET = `${apiPrefix}/company/:companyId/file/:fileId`,
+  FILE_PUT_V2 = `${apiPrefixV2}/file/:fileId`,
   COMPANY_GET_BY_ID = `${apiPrefix}/company/:companyId`,
   USER_ROLE_LIST = `${apiPrefixV2}/user/:userId/role`,
   USER_CREATE_ROLE = `${apiPrefixV2}/user/:userId/role`,
@@ -562,6 +564,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.FILE_GET,
     method: HttpMethod.GET,
     path: APIPath.FILE_GET,
+  }),
+  [APIName.FILE_PUT_V2]: createConfig({
+    name: APIName.FILE_PUT_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.FILE_PUT_V2,
   }),
   [APIName.COMPANY_GET_BY_ID]: createConfig({
     name: APIName.COMPANY_GET_BY_ID,

@@ -3,20 +3,23 @@ import CounterpartyList from '@/components/counterparty/counterparty_list';
 import SearchInput from '@/components/filter_section/search_input';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
+// import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
 import { Button } from '@/components/button/button';
 import { MdPersonAddAlt1 } from 'react-icons/md';
 import { useUserCtx } from '@/contexts/user_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { ICounterparty } from '@/interfaces/counterparty';
 import { IPaginatedData } from '@/interfaces/pagination';
 
 const CounterpartyPageBody = () => {
   const { selectedCompany } = useUserCtx();
+  const { addCounterPartyModalVisibilityHandler, addCounterPartyModalDataHandler } =
+    useModalContext();
 
   // Info: (20241112 - Anna) 新增用於儲存 API 回傳資料的狀態，並定義 counterpartyList 為 ICounterparty 型別的陣列
   const [counterparties, setCounterparties] = useState<ICounterparty[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>(''); // Info: (20241106 - Anna) 定義搜尋關鍵字狀態
-  const [isModalOpen, setIsModalOpen] = useState(false); // Info: (20241106 - Anna) State to handle modal visibility
+  // const [isModalOpen, setIsModalOpen] = useState(false); // Info: (20241106 - Anna) State to handle modal visibility
   const queryCondition = {
     limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
     forUser: true,
@@ -102,20 +105,34 @@ const CounterpartyPageBody = () => {
     fetchCounterpartyData();
   }, [selectedCompany]);
 
-  const handleModalOpen = () => {
-    setIsModalOpen(true); // Info: (20241106 - Anna) Function to open the modal
-  };
+  // const handleModalOpen = () => {
+  //   setIsModalOpen(true); // Info: (20241106 - Anna) Function to open the modal
+  // };
 
-  const handleModalClose = () => {
-    setIsModalOpen(false); // Info: (20241106 - Anna)  Function to close the modal
-  };
+  // const handleModalClose = () => {
+  //   setIsModalOpen(false); // Info: (20241106 - Anna)  Function to close the modal
+  // };
 
   const handleSave = async () => {
     // Info: (20241106 - Anna) Handle the data from the modal
-    setIsModalOpen(false); // Info: (20241106 - Anna) Close modal after saving
+    // setIsModalOpen(false); // Info: (20241106 - Anna) Close modal after saving
     setSearchQuery(''); // Info: (20241113 - Anna) 清空搜尋條件
     await fetchCounterpartyData(); // Info: (20241113 - Anna) 重新加載交易夥伴列表
   };
+
+  useEffect(() => {
+    addCounterPartyModalDataHandler({
+      onSave: handleSave,
+    });
+  }, []);
+
+  // const handleAddCounterPartyModalOpen = () => {
+  //   addCounterPartyModalDataHandler({
+  //     //  onClose: addCounterPartyModalVisibilityHandler,
+  //     onSave: handleSave,
+  //   });
+  //   addCounterPartyModalVisibilityHandler();
+  // };
 
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
@@ -126,7 +143,8 @@ const CounterpartyPageBody = () => {
             type="button"
             variant="tertiary"
             className="hidden items-center gap-4px px-4 py-8px md:flex"
-            onClick={handleModalOpen}
+            //  onClick={handleModalOpen}
+            onClick={addCounterPartyModalVisibilityHandler}
           >
             <MdPersonAddAlt1 size={24} />
             Add New
@@ -139,9 +157,9 @@ const CounterpartyPageBody = () => {
           handleSave={handleSave}
         />
       </div>
-      {isModalOpen && ( // Info: (20241106 - Anna) Render modal if open
+      {/* {isModalOpen && ( // Info: (20241106 - Anna) Render modal if open
         <AddCounterPartyModal onClose={handleModalClose} onSave={handleSave} />
-      )}
+      )} */}
     </div>
   );
 };

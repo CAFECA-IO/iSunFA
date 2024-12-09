@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* colors */
+    /* Info: (20240506 - Shirley) colors */
     --green-100: #d3f4e5;
     --green-200: #b1ecd0;
     --green-25: #fcfffe;
@@ -144,7 +144,7 @@
     --yellow-900: #322907;
     --card-text-sub: #878eac;
 
-    /* spacing */
+    /* Info: (20240506 - Shirley) spacing */
     --number-none: 0px;
     --number-1: 1px;
     --number-2: 2px;
@@ -171,7 +171,7 @@
     --number-120: 120px;
     --number-full: 999px;
 
-    /* light mode colors */
+    /* Info: (20240506 - Shirley) light mode colors */
     --shadow-lv-1: #31436200;
     --shadow-lv-2: #31436203;
     --shadow-lv-3: #3143620d;
@@ -300,7 +300,7 @@
     --text-support-rose: var(--support-rose-600);
     --text-support-taro: var(--support-taro-600);
 
-    /* light mode spacing */
+    /* Info: (20240506 - Shirley) light mode spacing */
     --radius-xxs: var(--number-3);
     --radius-xs: var(--number-5);
     --radius-s: var(--number-10);
@@ -328,7 +328,7 @@
     --stroke-width-lv-5: 5px;
     --stroke-width-lv-6: 10px;
 
-    /* component token in light mode */
+    /* Info: (20240506 - Shirley) component token in light mode */
     --accordion-stroke-border: var(--stroke-neutral-tertiary);
     --accordion-surface-background-primary: var(--surface-neutral-surface-lv2);
     --accordion-surface-background-secondary: var(--surface-neutral-surface-lv1);
@@ -599,7 +599,7 @@
   }
 
   .dark {
-    /* dark mode colors */
+    /* Info: (20240506 - Shirley) dark mode colors */
     --shadow-lv-1: #06080c00;
     --shadow-lv-2: #06080c03;
     --shadow-lv-3: #06080c17;
@@ -726,7 +726,7 @@
     --text-support-rose: var(--support-rose-300);
     --text-support-taro: var(--support-taro-300);
 
-    /* dark mode spacing */
+    /* Info: (20240506 - Shirley) dark mode spacing */
     --radius-xxs: var(--number-3);
     --radius-xs: var(--number-5);
     --radius-s: var(--number-10);
@@ -754,7 +754,7 @@
     --stroke-width-lv-5: 5px;
     --stroke-width-lv-6: 10px;
 
-    /* component token in dark mode */
+    /* Info: (20240506 - Shirley) component token in dark mode */
     --accordion-stroke-border: var(--stroke-neutral-tertiary);
     --accordion-surface-background-primary: var(--surface-neutral-surface-lv2);
     --accordion-surface-background-secondary: var(--surface-neutral-surface-lv1);
@@ -1091,7 +1091,7 @@ a {
   background: radial-gradient(50% 50% at 50% 50%, rgba(0, 24, 64, 0.7) 0%, rgba(0, 24, 64, 0) 100%);
 }
 
-/* Custom bottom shadow */
+/* Info: (20240306 - Shirley) Custom bottom shadow */
 .bottomShadow {
   @apply shadow-lg;
   box-shadow:
@@ -1100,11 +1100,11 @@ a {
 }
 
 /* Info: (20240415 - Shirley) Hide horizontal scrollbar */
-/* For Webkit browser */
+/* Info: (20240415 - Shirley) For Webkit browser */
 .hideScrollbar::-webkit-scrollbar {
   display: none;
 }
-/* For Firefox */
+/* Info: (20240415 - Shirley) For Firefox */
 .hideScrollbar {
   scrollbar-width: none;
 }
@@ -1179,8 +1179,8 @@ div::-webkit-scrollbar {
 
 @media (max-width: 768px) {
   .fixed-top-right {
-    top: 20px; /* Adjust as needed */
-    right: 20px; /* Adjust as needed */
+    top: 20px; /* Info: (20240415 - Shirley) Adjust as needed */
+    right: 20px; /* Info: (20240415 - Shirley) Adjust as needed */
   }
 }
 
@@ -1195,7 +1195,7 @@ div::-webkit-scrollbar {
   .break-before-page {
     break-before: page;
   }
-   .print:block {
+  .print:block {
     display: block !important;
   }
 }
