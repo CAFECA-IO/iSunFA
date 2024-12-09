@@ -105,7 +105,8 @@
     "PARTNER_TYPE": "Partner Type",
     "NOTE": "Note",
     "ENTER_TEXT": "Enter Text",
-    "EDIT_NEW": "Edit New Client/Supplier"
+    "EDIT_NEW": "Edit New Client/Supplier",
+    "REMOVE_THIS": "Remove this Client/Supplier"
   },
   "LABEL": {
     "NEW": "New"

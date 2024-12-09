@@ -21,7 +21,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   isModalVisible,
   modalVisibilityHandler,
   onSave,
-  //  onClose,
   name,
   taxId,
 }) => {
@@ -101,7 +100,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   };
 
   // Info: (20241113 - Anna) 檢查是否有未填寫的欄位
-  // const disabled = !inputName || !inputTaxId || !inputType;
   const disabled = !(inputName && inputTaxId && inputType);
 
   const addNewCounterPartyHandler = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -170,7 +168,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
           className="absolute right-4 top-4 text-checkbox-text-primary"
           onClick={modalVisibilityHandler}
         >
-          <RxCross1 size={32} />
+          <RxCross1 size={24} />
         </button>
         <h2 className="flex justify-center text-xl font-semibold">
           {t('certificate:COUNTERPARTY.ADD_NEW')}
@@ -189,7 +187,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
               </p>
               <div className="flex w-full items-center">
                 <input
-                  id="input-parter-name"
+                  id="input-party-name"
                   type="text"
                   placeholder={t('certificate:COUNTERPARTY.ENTER_NAME')}
                   value={inputName}
@@ -202,14 +200,14 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
             {/* Info: (20240924 - tzuhan) Tax Id */}
             <div className="relative flex w-full flex-1 flex-col items-start gap-2">
-              <div id="counterpart-taxid" className="absolute -top-20"></div>
+              <div id="counterparty-tax-id" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('certificate:COUNTERPARTY.TAX_NUMBER')}
                 <span className="text-text-state-error">*</span>
               </p>
               <div className="flex w-full items-center">
                 <input
-                  id="input-parter-tax-id"
+                  id="input-party-tax-id"
                   type="text"
                   placeholder={t('certificate:COUNTERPARTY.ENTER_NUMBER')}
                   value={inputTaxId}
@@ -236,7 +234,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
                   <span className="text-input-text-input-filled">
                     {inputType
                       ? t(`certificate:COUNTERPARTY.${inputType.toUpperCase()}`)
-                      : t('certificate:COUNTERPARTY.BOTH')}
+                      : '選擇類型'}
                   </span>
                   <FaChevronDown />
                 </div>
@@ -246,7 +244,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
             <div className="flex w-full flex-col items-start gap-y-8px">
               <p className="font-semibold">{t('certificate:COUNTERPARTY:NOTE')}</p>
               <input
-                id="input-parter-note"
+                id="input-party-note"
                 type="text"
                 placeholder={t('certificate:COUNTERPARTY.ENTER_TEXT')}
                 value={inputNote}

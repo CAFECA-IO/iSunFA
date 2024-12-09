@@ -3,7 +3,7 @@ import CounterpartyList from '@/components/counterparty/counterparty_list';
 import SearchInput from '@/components/filter_section/search_input';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-// import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
+import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
 import { MdPersonAddAlt1 } from 'react-icons/md';
 import { useUserCtx } from '@/contexts/user_context';
@@ -12,6 +12,8 @@ import { ICounterparty } from '@/interfaces/counterparty';
 import { IPaginatedData } from '@/interfaces/pagination';
 
 const CounterpartyPageBody = () => {
+  const { t } = useTranslation('common');
+
   const { selectedCompany } = useUserCtx();
   const { addCounterPartyModalVisibilityHandler, addCounterPartyModalDataHandler } =
     useModalContext();
@@ -126,14 +128,6 @@ const CounterpartyPageBody = () => {
     });
   }, []);
 
-  // const handleAddCounterPartyModalOpen = () => {
-  //   addCounterPartyModalDataHandler({
-  //     //  onClose: addCounterPartyModalVisibilityHandler,
-  //     onSave: handleSave,
-  //   });
-  //   addCounterPartyModalVisibilityHandler();
-  // };
-
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
@@ -147,7 +141,7 @@ const CounterpartyPageBody = () => {
             onClick={addCounterPartyModalVisibilityHandler}
           >
             <MdPersonAddAlt1 size={24} />
-            Add New
+            {t('setting:NORMAL.ADD_NEW_CLIENT_SUPPLIER')}
           </Button>
         </div>
         {/* Info: (20241112 - Anna) 傳入 API 資料到 CounterpartyList */}
@@ -157,9 +151,6 @@ const CounterpartyPageBody = () => {
           handleSave={handleSave}
         />
       </div>
-      {/* {isModalOpen && ( // Info: (20241106 - Anna) Render modal if open
-        <AddCounterPartyModal onClose={handleModalClose} onSave={handleSave} />
-      )} */}
     </div>
   );
 };
