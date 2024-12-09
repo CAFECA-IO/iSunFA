@@ -36,7 +36,7 @@ export const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
 
-  const asset = await getLegitAssetById(assetId);
+  const asset = await getLegitAssetById(assetId, companyId);
   if (!asset) {
     payload = null;
   } else {
@@ -108,12 +108,12 @@ export const handleDeleteRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
 
-  const asset = await getLegitAssetById(assetId);
+  const asset = await getLegitAssetById(assetId, companyId);
 
   if (!asset) {
     payload = null;
   } else {
-    // TODO: (20241209 - Shirley) 確認刪除 asset API 回傳資料是否需要 vouchers 跟 currencyAlias，若不需要就改 API 文件然後刪除getAccountingSettingByCompanyId, getVouchersByAssetId
+    // TODO: (20241209 - Shirley) 確認 delete asset API 回傳資料是否需要 vouchers 跟 currencyAlias，若不需要就改 API 文件然後刪除getAccountingSettingByCompanyId, getVouchersByAssetId
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
     const vouchers = await getVouchersByAssetId(assetId);
     const sortedAsset = {
@@ -124,9 +124,9 @@ export const handleDeleteRequest: IHandleRequest<
       assetNumber: asset.number,
       assetName: asset.name,
       purchasePrice: asset.purchasePrice,
-      accumulatedDepreciation: 0, // Info: (20241209 - Shirley) 即時計算的欄位在刪除 asset 時不需要被計算
-      residualValue: 0, // Info: (20241209 - Shirley) 即時計算的欄位在刪除 asset 時不需要被計算
-      remainingLife: 0, // Info: (20241209 - Shirley) 即時計算的欄位在刪除 asset 時不需要被計算
+      accumulatedDepreciation: 0, // Info: (20241209 - Shirley) 此為即時計算的欄位
+      residualValue: 0, // Info: (20241209 - Shirley) 此為即時計算的欄位
+      remainingLife: 0, // Info: (20241209 - Shirley) 此為即時計算的欄位
       assetStatus: asset.status,
       createdAt: asset.createdAt,
       updatedAt: asset.updatedAt,

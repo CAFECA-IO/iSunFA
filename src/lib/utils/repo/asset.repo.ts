@@ -9,6 +9,7 @@ import {
 } from '@/interfaces/asset';
 import { generateAssetNumbers } from '@/lib/utils/asset';
 import { getTimestampNow } from '@/lib/utils/common';
+import { Prisma } from '@prisma/client';
 
 export async function getOneAssetByIdWithoutInclude(assetId: number) {
   const asset = await prisma.asset.findUnique({
@@ -131,18 +132,20 @@ export async function createManyAssets(
   return createdAssets;
 }
 
-/** Info: (20241206 - Shirley) 獲取資產，限制有 voucher 或者建立時間與當下不超過 1 天的資產
+/** Info: (20241206 - Shirley) 獲取公司單一資產，限制有 voucher 或者建立時間與當下不超過 1 天的資產
  * 獲取資產，限制條件：
  * 1. 資產必須存在相關的 voucher，或
  * 2. 資產的建立時間在最近24小時內
  * @param assetId 資產ID
  */
-export async function getLegitAssetById(assetId: number) {
+export async function getLegitAssetById(assetId: number, companyId: number) {
   const oneDayAgo = getTimestampNow() - 60 * 60 * 24;
 
   const asset = await prisma.asset.findFirst({
     where: {
       id: assetId,
+      companyId,
+      deletedAt: null,
       OR: [
         { assetVouchers: { some: {} } }, // Info: (20241206 - Shirley) 檢查是否有關聯的 voucher
         { createdAt: { gt: oneDayAgo } }, // Info: (20241206 - Shirley) 檢查是否在24小時內創建
@@ -194,16 +197,25 @@ export async function deleteManyAssets(assetIds: number[]) {
  * @param companyId 公司ID（可選）
  * @returns 資產列表
  */
-export async function getAllAssetsWithVouchers(companyId: number) {
-  const where = {
-    assetVouchers: {
-      some: {}, // Info: (20241206 - Shirley) 確保至少有一個關聯的 voucher
-    },
-    companyId, // Info: (20241206 - Shirley) 如果提供了 companyId，則加入篩選條件
-  };
-
+export async function getAllAssetsWithVouchers(
+  companyId: number,
+  filterCondition?: Prisma.AssetWhereInput,
+  sortCondition?: Prisma.AssetOrderByWithRelationInput
+) {
   const assets = await prisma.asset.findMany({
-    where,
+    where: {
+      AND: [
+        { deletedAt: null },
+        { companyId },
+        {
+          assetVouchers: {
+            some: {}, // Info: (20241206 - Shirley) 確保至少有一個關聯的 voucher
+          },
+          companyId, // Info: (20241206 - Shirley) 如果提供了 companyId，則加入篩選條件
+        },
+      ],
+      ...filterCondition,
+    },
     select: {
       id: true,
       name: true,
@@ -220,8 +232,8 @@ export async function getAllAssetsWithVouchers(companyId: number) {
         },
       },
     },
-    orderBy: {
-      createdAt: 'desc', // Info: (20241206 - Shirley) 依建立時間降序排序
+    orderBy: sortCondition || {
+      createdAt: 'desc',
     },
   });
 
