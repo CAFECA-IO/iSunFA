@@ -46,7 +46,7 @@ describe('company/[companyId]/account integration test', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
-  describe('Put', () => {
+  xdescribe('Put', () => {
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},

@@ -14,13 +14,12 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { UserSetting } from '@prisma/client';
 
 const handleGetRequest: IHandleRequest<APIName.USER_SETTING_GET, UserSetting> = async ({
-  query,
+  session,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: UserSetting | null = null;
 
-  const { userId } = query;
-
+  const { userId } = session;
   const getUserSetting = await getUserSettingByUserId(userId);
   if (getUserSetting) {
     payload = getUserSetting;
