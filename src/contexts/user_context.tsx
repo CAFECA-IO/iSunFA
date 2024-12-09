@@ -25,13 +25,13 @@ interface UserContextType {
   username: string | null;
   isSignIn: boolean;
   isAgreeTermsOfService: boolean;
-  // isAgreePrivacyPolicy: boolean; // Deprecated: (20241206 - Liz)
   isSignInError: boolean;
   createRole: (roleId: number) => Promise<IUserRole | null>;
   selectRole: (roleId: number) => Promise<IUserRole | null>;
   getUserRoleList: () => Promise<IUserRole[] | null>;
   getSystemRoleList: () => Promise<IRole[] | null>;
   selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
+  switchRole: () => void;
 
   createCompany: ({
     name,
@@ -95,6 +95,7 @@ export const UserContext = createContext<UserContextType>({
   getUserRoleList: async () => null,
   getSystemRoleList: async () => null,
   selectedRole: null,
+  switchRole: () => {},
   createCompany: async () => ({ success: false, code: '', errorMsg: '' }),
 
   selectedCompany: null,
@@ -225,6 +226,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     } else {
       router.push(ISUNFA_ROUTE.DASHBOARD);
     }
+  };
+
+  // Info: (20241209 - Liz) 切換角色的功能
+  const switchRole = () => {
+    setSelectedRole(null);
+    setSelectedCompany(null);
+    goToSelectRolePage();
   };
 
   const checkIsRegistered = async (): Promise<{
@@ -761,6 +769,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       getUserRoleList,
       getSystemRoleList,
       selectedRole: selectedRoleRef.current,
+      switchRole,
       createCompany,
       selectCompany,
       updateCompany,
