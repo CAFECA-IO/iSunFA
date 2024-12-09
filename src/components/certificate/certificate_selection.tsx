@@ -13,6 +13,7 @@ interface CertificateSelectionProps {
   isDeletable: boolean;
   setOpenModal?: () => void;
   className?: string;
+  onDelete?: (id: number) => void;
 }
 
 const CertificateSelection: React.FC<CertificateSelectionProps> = ({
@@ -21,6 +22,7 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
   isDeletable,
   setOpenModal,
   className = '',
+  onDelete,
 }: CertificateSelectionProps) => {
   const { t } = useTranslation(['certificate', 'common']);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -107,6 +109,7 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
                 isSelected={false}
                 isSelectable={false}
                 isDeletable={isDeletable}
+                onDelete={onDelete}
               />
             ))
           ) : (

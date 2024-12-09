@@ -34,13 +34,15 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
 
   return (
     // Info: (20241015 - Anna) 在這裡使用containerClassName屬性
-    <div className={`flex w-full flex-col gap-8px lg:w-200px ${containerClassName}`}>
+    <div
+      className={`flex w-full flex-col gap-8px lg:w-200px ${containerClassName}`}
+      onClick={toggleMenuHandler}
+    >
       <p className="text-sm font-semibold text-input-text-primary">
         {t(`filter_section_type:FILTER_SECTION_TYPE.${label.toUpperCase()}`)}
       </p>
       {/* Info: (20241015 - Anna) 在這裡使用className屬性 */}
       <div
-        onClick={toggleMenuHandler}
         className={`relative flex h-44px items-center justify-between rounded-sm border bg-input-surface-input-background text-sm ${menuVisibility ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer ${className}`}
       >
         <p className="flex-1 truncate text-input-text-input-placeholder">
@@ -49,7 +51,11 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
             : selectedValue}
         </p>
         <div className="flex h-20px w-20px items-center justify-center">
-          <FaChevronDown />
+          <FaChevronDown
+            className={`transition-transform duration-300 ${
+              menuVisibility ? 'rotate-90' : 'rotate-0'
+            }`}
+          />
         </div>
         <div
           ref={menuRef}
