@@ -156,13 +156,17 @@
   },
   "SELECTION": {
     "EXPORT": "匯出",
-    "CERTIFICATES": "證書",
     "ADD_NEW_VOUCHER": "新增傳票",
     "ADD_NEW_ASSET": "新增資產"
   },
   "COMMON": {
     "PERIOD": "期間",
-    "CANCEL": "取消"
+    "CANCEL": "取消",
+    "SELECT": "選擇",
+    "SELECT_ALL": "全選",
+    "UPLOADED": "已上傳",
+    "TOTAL": "總計",
+    "CERTIFICATES": "發票"
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤"
