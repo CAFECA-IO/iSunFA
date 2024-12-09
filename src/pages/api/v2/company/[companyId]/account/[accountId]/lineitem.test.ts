@@ -55,7 +55,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('company/[companyId]/voucher/account/[accountId] integration test', () => {
+describe('company/[companyId]/voucher/account/[accountId]/lineitem integration test', () => {
   let req: jest.Mocked<NextApiRequest>;
   let res: jest.Mocked<NextApiResponse>;
   let accountId: number;
@@ -69,7 +69,7 @@ describe('company/[companyId]/voucher/account/[accountId] integration test', () 
   afterEach(() => {
     jest.clearAllMocks();
   });
-  describe('Get one voucher', () => {
+  describe('Get lineitems', () => {
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},
@@ -79,8 +79,8 @@ describe('company/[companyId]/voucher/account/[accountId] integration test', () 
           pageSize: '10',
           // tab: VoucherListTabV2.UPLOADED,
           // type: EventType.PAYMENT,
-          startDate: '1',
-          endDate: '1772531200',
+          // startDate: '1',
+          // endDate: '1772531200',
           // searchQuery: 'string',
           // sortOption: '',
         },

@@ -37,7 +37,10 @@ const counterpartyPostQuerySchema = z.object({
 });
 const counterpartyPostBodySchema = z.object({
   name: z.string(),
-  taxId: z.string(),
+  taxId: z
+    .string()
+    .optional()
+    .transform((val) => val || ''),
   type: z.string(),
   note: z.string().optional(),
 });
@@ -53,7 +56,10 @@ const counterpartyPutQuerySchema = z.object({
 });
 const counterpartyPutBodySchema = z.object({
   name: z.string(),
-  taxId: z.string(),
+  taxId: z
+    .string()
+    .optional()
+    .transform((val) => val || ''),
   type: z.string(),
   note: z.string(),
 });
