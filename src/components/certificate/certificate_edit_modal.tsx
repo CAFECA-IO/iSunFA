@@ -51,6 +51,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const { trigger: getCounterpartyList } = APIHandler<IPaginatedData<ICounterparty[]>>(
     APIName.COUNTERPARTY_LIST
   );
+  const { trigger: updateFilename } = APIHandler(APIName.FILE_PUT_V2);
+  const [isNameEditing, setIsNameEditing] = useState(false);
+  const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
   const [isLoadingCounterParty, setIsLoadingCounterParty] = useState(false);
   const [counterPartyList, setCounterPartyList] = useState<ICounterparty[]>([]);
   const [filteredCounterPartyList, setFilteredCounterPartyList] = useState<ICounterparty[]>([]);
@@ -346,6 +349,26 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     </p>
   );
 
+  const handleEditName = () => {
+    setIsNameEditing(true);
+  };
+
+  const updateFilenameHandler = async () => {
+    const { success } = await updateFilename({
+      params: { fileId: certificate.file.id },
+      body: { name: certificateFilename },
+    });
+    if (success === false) {
+      toastHandler({
+        id: ToastId.UPDATE_FILENAME_ERROR,
+        type: ToastType.SUCCESS,
+        content: t('certificate:ERROR.UPDATE_FILENAME'),
+        closeable: true,
+      });
+    }
+    setIsNameEditing(false);
+  };
+
   // Info: (20240924 - tzuhan) 處理保存
   const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -395,10 +418,35 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         </button>
 
         <div className="flex w-full flex-col items-center">
-          <h2 className="flex justify-center gap-2 text-xl font-semibold">
-            {certificate.name}
-            <Image alt="edit" src="/elements/edit.svg" width={16} height={16} />
-          </h2>
+          {isNameEditing ? (
+            <h2 className="flex justify-center gap-2 text-xl font-semibold">
+              <input
+                id="invoicenname"
+                type="text"
+                onChange={(e) => setCertificateFilename(e.target.value)}
+                className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                placeholder="0"
+              />
+              <Image
+                alt="edit"
+                src="/icons/save.svg"
+                width={16}
+                height={16}
+                onClick={updateFilenameHandler}
+              />
+            </h2>
+          ) : (
+            <h2 className="flex justify-center gap-2 text-xl font-semibold">
+              {certificate.file.name}
+              <Image
+                alt="edit"
+                src="/elements/edit.svg"
+                width={16}
+                height={16}
+                onClick={handleEditName}
+              />
+            </h2>
+          )}
           <p className="text-xs text-card-text-secondary">{t('certificate:EDIT.HEADER')}</p>
         </div>
         <div className="flex w-full items-start justify-between gap-5 md:flex-row">
@@ -473,7 +521,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               </p>
               <div className="flex w-full items-center">
                 <input
-                  id="invoiceno-id"
+                  id="invoiceno"
                   type="text"
                   value={certificateNo}
                   onChange={(e) => setCertificateNo(e.target.value)}

@@ -50,24 +50,26 @@ export async function handleGetRequest() {
 }
 
 /* Info: (20241204 - Luphia) API develop SOP 以 POST ASSET API 為例
- * 0. 前置作業
+ * 1. 前置作業
  *    1. 根據 Mockup 設計 API 並撰寫 API Wiki 文件 (URI, Method, Request, Response)
  *    2. 設計 DB schema 並撰寫 DB schema 文件
  *    3. 繪製 Entity Relationship Diagram (ERD)
  *    4. 繪製 API Sequence Diagram
- * 1. Mock 階段
+ * 2. Mock 階段
  *    1. 註冊 API connection (/constants/api_connection.ts, /interfaces/api_connection.ts)
  *    2. 建立 API input and output zod schema 檔案 (/lib/utils/zod_schema/asset.ts)
  *    3. 註冊 zod schema (/constants/zod_schema.ts)
  *    4. 建立獨立的 Interface 檔案，需取自 zod schema (/interfaces/asset.ts)
  *    5. 根據 URI 建立 API 檔案
  *    6. 撰寫 Mock data (/interfaces/asset.ts)
- * 2. 實際開發階段
- *    1. 撰寫 repo 操作 DB 的 function (src/lib/utils/repo/asset.ts)
- *    2. 撰寫 repo 單元測試 (src/lib/utils/repo_test/asset.repo.test.ts)
- *    3. 撰寫 utils 將邏輯整理成 function (src/lib/utils/asset.ts)
- *    4. 撰寫 API handler (/pages/api/v2/company/[companyId]/asset/index.ts)
- *    5. 設置需要使用的 middleware (整理 session, 檢查權限, 檢查輸入, 格式化輸出, 紀錄使用者行為)
+ * 3. 實際開發階段
+ *    1. 註冊 Auth (src/constants/auth.ts)
+ *    2. 撰寫 repo 操作 DB 的 function (src/lib/utils/repo/asset.ts)
+ *    3. 撰寫 repo 單元測試 (src/lib/utils/repo_test/asset.repo.test.ts)
+ *    4. 撰寫 utils 將邏輯整理成 function (src/lib/utils/asset.ts)
+ *    5. 撰寫 API handler (/pages/api/v2/company/\[companyId\]/asset/index.ts)
+ *    6. 設置需要使用的 middleware (整理 session, 檢查權限, 檢查輸入, 格式化輸出, 紀錄使用者行為)
+ *    7. 使用 Postman 、Hoppsctoch 進行功能測試
  */
 
 /* ToDo: (20241204 - Luphia) prepare to done
