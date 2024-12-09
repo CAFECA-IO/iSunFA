@@ -114,10 +114,10 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
       ) : (
         <>
           {/* Info: (20240920 - tzuhan) 左側選擇計數顯示 */}
-          {subtitle && currency && totalPrice && (
+          {subtitle && currency && (
             <div className="font-medium text-text-neutral-tertiary">
               <span>{subtitle} </span>
-              <span className="text-black">{totalPrice} </span>
+              <span className="text-black">{totalPrice ?? 0} </span>
               <span>{currency}</span>
             </div>
           )}

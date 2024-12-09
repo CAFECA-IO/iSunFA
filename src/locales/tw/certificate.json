@@ -162,6 +162,7 @@
   "COMMON": {
     "PERIOD": "期間",
     "CANCEL": "取消",
+    "SELECT": "選擇",
     "SELECT_ALL": "全選",
     "UPLOADED": "已上傳",
     "TOTAL": "總計",
