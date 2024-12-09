@@ -40,7 +40,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   modalVisibilityHandler,
   defaultData,
 }) => {
-  const { t } = useTranslation(['common', 'journal']);
+  const { t } = useTranslation(['common', 'journal', 'asset']);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { selectedCompany, userAuth } = useUserCtx();
@@ -98,7 +98,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   // Info: (20241015 - Julian) Account state
   const [accountTitle, setAccountTitle] = useState<string>(
-    t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
+    assetData?.assetType ?? t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
   );
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(assetAccountList);
@@ -465,7 +465,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       className="w-full truncate bg-transparent outline-none"
     />
   ) : (
-    <p className={`truncate text-input-text-input-filled`}>{accountTitle}</p>
+    <p className="truncate">{accountTitle}</p>
   );
 
   const depreciationMethodList = Object.values(DepreciationMethod);
@@ -522,9 +522,10 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                   ref={accountRef}
                   type="button"
                   onClick={accountEditingHandler}
+                  disabled={modalType === AssetModalType.EDIT} // Info: (20241209 - Julian) 編輯時不能修改
                   className={`flex w-full items-center justify-between gap-8px rounded-sm border ${
                     isShowTypeHint ? inputStyle.ERROR : inputStyle.NORMAL
-                  } bg-input-surface-input-background px-12px py-10px hover:cursor-pointer`}
+                  } bg-input-surface-input-background px-12px py-10px text-input-text-input-filled hover:cursor-pointer disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
                 >
                   {isEditAccounting}
                   <FaChevronDown />
@@ -546,7 +547,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 onChange={assetNoChangeHandler}
                 required
                 disabled={modalType === AssetModalType.EDIT} // Info: (20241119 - Julian) 編輯時不能修改
-                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
+                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
               />
             </div>
             {/* Info: (20241015 - Julian) Asset name */}
@@ -562,7 +563,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 value={inputName}
                 onChange={nameChangeHandler}
                 required
-                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
+                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
               />
             </div>
             {/* Info: (20241015 - Julian) Amount */}
@@ -574,8 +575,8 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 value={inputAmount}
                 onChange={amountChangeHandler}
                 min={1}
-                required
-                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
+                disabled={modalType === AssetModalType.EDIT} // Info: (20241209 - Julian) 編輯時不能修改
+                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
               />
             </div>
             {/* Info: (20241015 - Julian) Total Price */}
@@ -606,7 +607,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>{t('common:COMMON.TWD')}</p>
+                  <p>{t('asset:COMMON.TWD')}</p>
                 </div>
               </div>
             </div>
@@ -638,7 +639,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>{t('common:COMMON.TWD')}</p>
+                  <p>{t('asset:COMMON.TWD')}</p>
                 </div>
               </div>
             </div>
@@ -694,7 +695,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                     className="flex-1 bg-transparent px-10px text-right outline-none"
                   />
                   <div className="flex w-60px items-center justify-center p-12px text-sm text-input-text-input-placeholder">
-                    <p>{t('common:COMMON.MONTH')}</p>
+                    <p>{t('asset:COMMON.M')}</p>
                   </div>
                 </div>
               </div>

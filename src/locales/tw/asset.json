@@ -32,7 +32,7 @@
     "SUBTITLE": "請輸入資產資訊",
     "ASSET_TYPE": "資產類型",
     "ASSET_NO": "資產編號",
-    "ASSET_NO_PLACEHOLDER": "例: A-000001",
+    "ASSET_NO_PLACEHOLDER": "例：Printer",
     "ASSET_NAME": "資產名稱",
     "ASSET_NAME_PLACEHOLDER": "例: Printer",
     "AMOUNT": "數量",

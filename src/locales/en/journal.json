@@ -240,6 +240,7 @@
   },
   "ASSET_SECTION": {
     "TITLE": "Asset",
+    "EMPTY": "Empty",
     "EMPTY_HINT": "Please add at least 1 asset!",
     "ADD_BTN": "Add New Asset"
   },
