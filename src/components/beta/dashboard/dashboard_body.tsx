@@ -1,5 +1,5 @@
 import Announcement from '@/components/beta/dashboard/announcement';
-import RecentCompanyList from '@/components/beta/dashboard/recent_company_list';
+import MyCompanyList from '@/components/beta/dashboard/my_company_list';
 import PendingTasks from '@/components/beta/dashboard/pending_task';
 import TodayTodoList from '@/components/beta/dashboard/today_todo_list';
 import LatestNews from '@/components/beta/dashboard/latest_news';
@@ -13,7 +13,7 @@ const DashboardBody = () => {
         <section className="flex flex-wrap items-start gap-24px">
           <TodayTodoList />
 
-          <RecentCompanyList />
+          <MyCompanyList />
         </section>
 
         <section className="flex flex-wrap items-start gap-24px">

@@ -655,6 +655,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (success && company) {
+        setSelectedCompany(null);
         return company;
       }
       return null;

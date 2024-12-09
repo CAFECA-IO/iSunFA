@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { useCallback, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
@@ -8,19 +8,15 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import { CANCEL_COMPANY_ID } from '@/constants/company';
 import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
+import MessageModal from '@/components/message_modal/message_modal';
+import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 
 interface NoDataProps {
-  getCompanyList: () => void;
+  toggleCreateCompanyModal: () => void;
 }
-const NoData = ({ getCompanyList }: NoDataProps) => {
+const NoData = ({ toggleCreateCompanyModal }: NoDataProps) => {
   const { t } = useTranslation('dashboard');
-  const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
-
-  const toggleCreateCompanyModal = () => {
-    setIsCreateCompanyModalOpen((prev) => !prev);
-  };
 
   return (
     <div className="flex flex-col items-center justify-center py-26px">
@@ -37,51 +33,29 @@ const NoData = ({ getCompanyList }: NoDataProps) => {
           {t('dashboard:DASHBOARD.CREATE_A_COMPANY')}
         </button>
       </p>
-
-      {/* // Info: (20241209 - Liz) Modal */}
-      <CreateCompanyModal
-        isModalOpen={isCreateCompanyModalOpen}
-        toggleModal={toggleCreateCompanyModal}
-        getCompanyList={getCompanyList}
-      />
     </div>
   );
 };
 
 interface CompanyItemProps {
   companyAndRole: ICompanyAndRole;
+  setCompanyToSelect: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
-const CompanyItem = ({ companyAndRole }: CompanyItemProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  // Info: (20241126 - Liz) 選擇公司 API
-  const { selectCompany, selectedCompany } = useUserCtx();
+const CompanyItem = ({ companyAndRole, setCompanyToSelect }: CompanyItemProps) => {
+  const { selectedCompany } = useUserCtx();
   const isCompanySelected = companyAndRole.company.id === selectedCompany?.id;
 
-  // Info: (20241126 - Liz) 打 API 選擇公司
-  const handleSelectCompany = () => {
-    if (isLoading) return;
-
-    setIsLoading(true);
-
-    const companyId = isCompanySelected ? CANCEL_COMPANY_ID : companyAndRole.company.id;
-
-    try {
-      selectCompany(companyId);
-    } catch (error) {
-      // Deprecated: (20241126 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('CompanyList handleConnect error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const openMessageModal = () => {
+    setCompanyToSelect(companyAndRole);
   };
 
   return (
     <button
       key={companyAndRole.company.id}
       type="button"
-      onClick={handleSelectCompany}
+      onClick={openMessageModal}
+      disabled={isCompanySelected}
       className={`h-100px w-100px overflow-hidden rounded-sm shadow-Dropshadow_XS ${
         isCompanySelected
           ? 'border-2 border-stroke-brand-primary bg-surface-brand-primary-10'
@@ -100,23 +74,80 @@ const CompanyItem = ({ companyAndRole }: CompanyItemProps) => {
 
 interface CompanyListProps {
   companyAndRoleList: ICompanyAndRole[];
+  setCompanyToSelect: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
-const CompanyList = ({ companyAndRoleList }: CompanyListProps) => {
+const CompanyList = ({ companyAndRoleList, setCompanyToSelect }: CompanyListProps) => {
   return (
     <div className="flex justify-center gap-40px">
       {companyAndRoleList.map((companyAndRole) => (
-        <CompanyItem key={companyAndRole.company.id} companyAndRole={companyAndRole} />
+        <CompanyItem
+          key={companyAndRole.company.id}
+          companyAndRole={companyAndRole}
+          setCompanyToSelect={setCompanyToSelect}
+        />
       ))}
     </div>
   );
 };
 
-const RecentCompanyList = () => {
+const MyCompanyList = () => {
   const { t } = useTranslation('dashboard');
   const { userAuth } = useUserCtx();
   const [companyAndRoleList, setCompanyAndRoleList] = useState<ICompanyAndRole[]>([]);
   const isCompanyListEmpty = companyAndRoleList.length === 0;
+  const [companyToSelect, setCompanyToSelect] = useState<ICompanyAndRole | undefined>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
+
+  // Info: (20241126 - Liz) 選擇公司 API
+  const { selectCompany } = useUserCtx();
+
+  const closeMessageModal = () => {
+    setCompanyToSelect(undefined);
+  };
+
+  const toggleCreateCompanyModal = () => {
+    setIsCreateCompanyModalOpen((prev) => !prev);
+  };
+
+  // Info: (20241126 - Liz) 打 API 選擇公司
+  const handleSelectCompany = () => {
+    if (isLoading) return;
+    if (!companyToSelect) return;
+
+    setIsLoading(true);
+
+    try {
+      selectCompany(companyToSelect.company.id);
+    } catch (error) {
+      // Deprecated: (20241126 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('CompanyList handleConnect error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const messageModalData: IMessageModal = {
+    title: t('dashboard:DASHBOARD.CHOOSE_THE_COMPANY'),
+    content: (
+      <div>
+        <p className="font-normal text-text-neutral-secondary">
+          {t('dashboard:DASHBOARD.ARE_YOU_SURE_YOU_WANT_TO')}{' '}
+          <span className="font-semibold">{t('dashboard:DASHBOARD.CHOOSE_THE_COMPANY')}</span>{' '}
+          {t('dashboard:DASHBOARD.SURE')}
+        </p>
+        <br />
+        <p className="font-semibold text-text-neutral-primary">{companyToSelect?.company.name}</p>
+      </div>
+    ),
+    submitBtnStr: t('dashboard:DASHBOARD.CHOOSE'),
+    submitBtnFunction: handleSelectCompany,
+    messageType: MessageType.WARNING,
+    backBtnFunction: closeMessageModal,
+    backBtnStr: t('dashboard:COMMON.CANCEL'),
+  };
 
   // Info: (20241120 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
   const { trigger: listUserCompanyAPI } = APIHandler<ICompanyAndRole[]>(APIName.LIST_USER_COMPANY);
@@ -170,13 +201,33 @@ const RecentCompanyList = () => {
         </div>
 
         {isCompanyListEmpty ? (
-          <NoData getCompanyList={getCompanyList} />
+          <NoData toggleCreateCompanyModal={toggleCreateCompanyModal} />
         ) : (
-          <CompanyList companyAndRoleList={companyAndRoleList} />
+          <CompanyList
+            companyAndRoleList={companyAndRoleList}
+            setCompanyToSelect={setCompanyToSelect}
+          />
+        )}
+
+        {/* // Info: (20241209 - Liz) Modals */}
+        {companyToSelect && (
+          <MessageModal
+            messageModalData={messageModalData}
+            isModalVisible={!!companyToSelect}
+            modalVisibilityHandler={closeMessageModal}
+          />
+        )}
+
+        {isCreateCompanyModalOpen && (
+          <CreateCompanyModal
+            isModalOpen={isCreateCompanyModalOpen}
+            toggleModal={toggleCreateCompanyModal}
+            getCompanyList={getCompanyList}
+          />
         )}
       </section>
     </DashboardCardLayout>
   );
 };
 
-export default RecentCompanyList;
+export default MyCompanyList;

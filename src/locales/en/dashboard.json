@@ -27,7 +27,11 @@
     "UNPOSTED_VOUCHERS": "Unposted vouchers",
     "ADD_EVENT": "Add Event",
     "NO_DATA_AVAILABLE": "No Data Available",
-    "NO_DATA": "No Data"
+    "NO_DATA": "No Data",
+    "ARE_YOU_SURE_YOU_WANT_TO": "Are you sure you want to",
+    "CHOOSE_THE_COMPANY": "Choose the Company",
+    "SURE": "?",
+    "CHOOSE": "Choose"
   },
 
   "COMMON": {

@@ -27,7 +27,11 @@
     "UNPOSTED_VOUCHERS": "尚未入帳",
     "ADD_EVENT": "新增事件",
     "NO_DATA_AVAILABLE": "沒有可用資料",
-    "NO_DATA": "沒有資料"
+    "NO_DATA": "沒有資料",
+    "ARE_YOU_SURE_YOU_WANT_TO": "您確定要",
+    "CHOOSE_THE_COMPANY": "選擇這家公司",
+    "SURE": "嗎？",
+    "CHOOSE": "選擇"
   },
 
   "COMMON": {

@@ -27,7 +27,11 @@
     "UNPOSTED_VOUCHERS": "尚未入帐",
     "ADD_EVENT": "新增事件",
     "NO_DATA_AVAILABLE": "没有可用资料",
-    "NO_DATA": "没有资料"
+    "NO_DATA": "没有资料",
+    "ARE_YOU_SURE_YOU_WANT_TO": "您确定要",
+    "CHOOSE_THE_COMPANY": "选择这家公司",
+    "SURE": "吗？",
+    "CHOOSE": "选择"
   },
 
   "COMMON": {
