@@ -3,8 +3,6 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IAssetDetails, mockAssetDetails } from '@/interfaces/asset';
-import { IAssetDetailsValidator } from '@/lib/utils/zod_schema/asset';
-import { z } from 'zod';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { getLegitAssetById, getVouchersByAssetId } from '@/lib/utils/repo/asset.repo';
@@ -16,12 +14,12 @@ interface IHandlerResult {
   statusMessage: string;
 }
 
-interface IHandlePostRequestResult extends IHandlerResult {
+interface IGetResult extends IHandlerResult {
   // TODO: (20241204 - Shirley) add more options to payload
-  payload: z.infer<typeof IAssetDetailsValidator>;
+  payload: IAssetDetails;
 }
 
-type IHandlerResultPayload = IHandlePostRequestResult['payload'] | null;
+type IHandlerResultPayload = IGetResult['payload'] | null;
 
 interface IHandlerResponse extends IHandlerResult {
   payload: IHandlerResultPayload;
