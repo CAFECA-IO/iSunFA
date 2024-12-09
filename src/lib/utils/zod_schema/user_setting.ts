@@ -1,17 +1,18 @@
 import { z } from 'zod';
-import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
 // Info: (20241029 - Jacky) User setting null schema
-const userSettingNullSchema = z.union([z.object({}), z.string()]);
+const userSettingNullSchema = z.union([z.object({}), z.string(), z.null()]);
 
 // Info: (20241023 - Jacky) User setting get schema
-const userSettingGetQuerySchema = z.object({
-  userId: zodStringToNumber,
-});
+const userSettingGetQuerySchema = z
+  .object({
+    // userId: zodStringToNumber,
+  })
+  .optional();
 
 // Info: (20241023 - Jacky) User setting put schema
 const userSettingPutQuerySchema = z.object({
-  userId: zodStringToNumber,
+  // userId: zodStringToNumber,
 });
 const userSettingPutBodySchema = z.object({
   id: z.number(),

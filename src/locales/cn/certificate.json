@@ -156,13 +156,17 @@
   },
   "SELECTION": {
     "EXPORT": "导出",
-    "CERTIFICATES": "证书",
     "ADD_NEW_VOUCHER": "新增传票",
     "ADD_NEW_ASSET": "新增资产"
   },
   "COMMON": {
     "PERIOD": "期間",
-    "CANCEL": "取消"
+    "CANCEL": "取消",
+    "SELECT": "选择",
+    "SELECT_ALL": "全选",
+    "UPLOADED": "已上传",
+    "TOTAL": "总计",
+    "CERTIFICATES": "发票"
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误"

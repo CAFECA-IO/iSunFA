@@ -2,7 +2,10 @@ import type { IVoucherEntity } from '@/interfaces/voucher';
 import type { ICompanyEntity } from '@/interfaces/company';
 import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import { z } from 'zod';
-import { AssetCreateInputBodyValidator } from '@/lib/utils/zod_schema/asset';
+import {
+  AssetCreateInputBodyValidator,
+  IAssetDetailsValidator,
+} from '@/lib/utils/zod_schema/asset';
 /* Info: (20240927 - Shirley) asset v1 介面 */
 export interface IAsset {
   id: number;
@@ -82,13 +85,15 @@ export interface IAssetItem {
   deletedAt: number | null;
 }
 
-export interface IAssetDetails extends IAssetItem {
-  depreciationStart: number;
-  depreciationMethod: string;
-  usefulLife: number;
-  relatedVouchers: IRelatedVoucher[];
-  note?: string;
-}
+export type IAssetDetails = z.infer<typeof IAssetDetailsValidator>;
+
+// export interface IAssetDetails extends IAssetItem {
+//   depreciationStart: number;
+//   depreciationMethod: string;
+//   usefulLife: number;
+//   relatedVouchers: IRelatedVoucher[];
+//   note?: string;
+// }
 
 export interface IRelatedVoucher {
   id: number;

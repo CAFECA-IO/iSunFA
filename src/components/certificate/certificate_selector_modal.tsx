@@ -96,14 +96,14 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
         <div className="mt-12px px-4">
           <div className="flex items-center justify-between">
             <div className="font-medium text-text-neutral-secondary">
-              (Select {selectedIds.length}/{certificates.length})
+              ({t('certificate:COMMON.SELECT')} {selectedIds.length}/{certificates.length})
             </div>
             <button
               type="button"
               className="text-link-text-primary hover:underline"
               onClick={handleSelectAll}
             >
-              {t('common:COMMON.SELECT_ALL')}
+              {t('certificate:COMMON.SELECT_ALL')}
             </button>
           </div>
         </div>

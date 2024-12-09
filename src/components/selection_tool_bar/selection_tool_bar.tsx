@@ -45,7 +45,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
   addOperations,
   exportOperations,
 }) => {
-  const { t } = useTranslation(['common', 'certificate']);
+  const { t } = useTranslation(['certificate']);
   // Info: (20240920 - tzuhan) 全選操作
   const handleSelectAll = () => {
     handleSelect(
@@ -77,7 +77,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
         <>
           {/* Info: (20240920 - tzuhan) 左側選擇計數顯示 */}
           <div className="font-medium text-text-neutral-secondary">
-            {`(${t('common:COMMON.SELECT')} ${selectedCount}/${totalCount})`}
+            {`(${t('certificate:COMMON.SELECT')} ${selectedCount}/${totalCount})`}
           </div>
 
           {/* Info: (20240920 - tzuhan) 中間操作按鈕 */}
@@ -103,10 +103,10 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
             {/* Info: (20240920 - tzuhan) 右側選擇控制連結 */}
             <div className="m-2.5 flex space-x-4">
               <button type="button" className="hover:underline" onClick={handleSelectAll}>
-                {t('common:COMMON.SELECT_ALL')}
+                {t('certificate:COMMON.SELECT_ALL')}
               </button>
               <button type="button" className="hover:underline" onClick={handleCancel}>
-                {t('common:COMMON.CANCEL')}
+                {t('certificate:COMMON.CANCEL')}
               </button>
             </div>
           </div>
@@ -114,10 +114,10 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
       ) : (
         <>
           {/* Info: (20240920 - tzuhan) 左側選擇計數顯示 */}
-          {subtitle && currency && totalPrice && (
+          {subtitle && currency && (
             <div className="font-medium text-text-neutral-tertiary">
               <span>{subtitle} </span>
-              <span className="text-black">{totalPrice} </span>
+              <span className="text-black">{totalPrice ?? 0} </span>
               <span>{currency}</span>
             </div>
           )}
@@ -140,7 +140,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
                 className="hover:underline"
                 onClick={onActiveChange.bind(null, true)}
               >
-                {t('common:COMMON.SELECT')}
+                {t('certificate:COMMON.SELECT')}
               </button>
             )}
           </div>

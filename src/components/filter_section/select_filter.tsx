@@ -29,7 +29,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
   } = useOuterClick<HTMLDivElement>(false);
 
   const toggleMenuHandler = () => {
-    setMenuVisibility(!menuVisibility);
+    setMenuVisibility((prev) => !prev);
   };
 
   return (
@@ -40,8 +40,9 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
       </p>
       {/* Info: (20241015 - Anna) 在這裡使用className屬性 */}
       <div
-        onClick={toggleMenuHandler}
+        ref={menuRef}
         className={`relative flex h-44px items-center justify-between rounded-sm border bg-input-surface-input-background text-sm ${menuVisibility ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer ${className}`}
+        onClick={toggleMenuHandler}
       >
         <p className="flex-1 truncate text-input-text-input-placeholder">
           {selectedValue
@@ -49,10 +50,13 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
             : selectedValue}
         </p>
         <div className="flex h-20px w-20px items-center justify-center">
-          <FaChevronDown />
+          <FaChevronDown
+            className={`transition-transform duration-300 ${
+              menuVisibility ? 'rotate-180' : 'rotate-0'
+            }`}
+          />
         </div>
         <div
-          ref={menuRef}
           className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input ${
             menuVisibility
               ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
