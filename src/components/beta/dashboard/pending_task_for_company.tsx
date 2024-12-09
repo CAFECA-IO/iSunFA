@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import DonutChart from '@/components/beta/dashboard/donut_chart';
 import TaskType from '@/components/beta/dashboard/task_type';
@@ -7,6 +8,7 @@ import { APIName } from '@/constants/api_connection';
 import { useEffect, useState } from 'react';
 import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data';
 import { useUserCtx } from '@/contexts/user_context';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const TASKS_ICON = [
   {
@@ -16,10 +18,6 @@ const TASKS_ICON = [
   {
     iconName: PendingTaskIconName.UNPOSTED_VOUCHERS,
     title: TaskTitle.UNPOSTED_VOUCHERS,
-  },
-  {
-    iconName: PendingTaskIconName.UNARCHIVED_CUSTOMER_DATA,
-    title: TaskTitle.UNARCHIVED_CUSTOMER_DATA,
   },
 ];
 
@@ -59,11 +57,7 @@ const PendingTaskForCompany = () => {
     getCompanyPendingTask();
   }, [selectedCompany]);
 
-  // ToDo: (20241127 - Liz) 目前 API 沒有提供這個欄位的資料，所以先設定為 0
-  const PERCENTAGE_FOR_UNARCHIVED_CUSTOMER_DATA = 0;
-  const COUNT_FOR_UNARCHIVED_CUSTOMER_DATA = 0;
-
-  const handleAddToMyCalendar = () => {
+  const handleAddEvent = () => {
     // ToDo: (20241105 - Liz)
   };
 
@@ -96,7 +90,6 @@ const PendingTaskForCompany = () => {
           <DonutChart
             percentageForMissingCertificate={percentageForMissingCertificate}
             percentageForUnpostedVouchers={percentageForUnpostedVouchers}
-            percentageForUnarchivedCustomerData={PERCENTAGE_FOR_UNARCHIVED_CUSTOMER_DATA}
             isChartForTotal={false}
           />
         </div>
@@ -107,9 +100,12 @@ const PendingTaskForCompany = () => {
               iconName={PendingTaskIconName.MISSING_CERTIFICATE}
               title={TaskTitle.MISSING_CERTIFICATE}
             />
-            <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-              {companyPendingTask?.missingCertificate.count ?? 0}
-            </p>
+            <Link
+              href={ISUNFA_ROUTE.CERTIFICATE_LIST}
+              className="text-2xl font-bold text-text-brand-secondary-lv2"
+            >
+              {companyPendingTask.missingCertificate.count}
+            </Link>
           </div>
 
           <div className="flex items-center justify-between">
@@ -117,34 +113,27 @@ const PendingTaskForCompany = () => {
               iconName={PendingTaskIconName.UNPOSTED_VOUCHERS}
               title={TaskTitle.UNPOSTED_VOUCHERS}
             />
-            <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-              {companyPendingTask?.unpostedVoucher.count ?? 0}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <TaskType
-              iconName={PendingTaskIconName.UNARCHIVED_CUSTOMER_DATA}
-              title={TaskTitle.UNARCHIVED_CUSTOMER_DATA}
-            />
-            <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-              {COUNT_FOR_UNARCHIVED_CUSTOMER_DATA}
-            </p>
+            <Link
+              href={ISUNFA_ROUTE.ADD_NEW_VOUCHER}
+              className="text-2xl font-bold text-text-brand-secondary-lv2"
+            >
+              {companyPendingTask.unpostedVoucher.count}
+            </Link>
           </div>
         </div>
       </section>
 
+      {/* Info: (20241127 - Liz) --- List Section ---  */}
       <section className="flex flex-col gap-24px">
-        {/* Info: (20241127 - Liz) --- List Section ---  */}
         {TASKS_ICON.map((task) => (
           <section key={task.title} className="flex items-center justify-between">
             <TaskType iconName={task.iconName} title={task.title} />
             <button
               type="button"
               className="text-sm font-semibold text-link-text-primary"
-              onClick={handleAddToMyCalendar}
+              onClick={handleAddEvent}
             >
-              {t('dashboard:DASHBOARD.ADD_TO_MY_CALENDAR')}
+              {t('dashboard:DASHBOARD.ADD_EVENT')}
             </button>
           </section>
         ))}

@@ -25,10 +25,13 @@
     "PENDING_TASKS_TOTAL": "待处理任务 (全部)",
     "MISSING_CERTIFICATE": "缺少凭证",
     "UNPOSTED_VOUCHERS": "尚未入帐",
-    "UNARCHIVED_CUSTOMER_DATA": "尚未封存的客户资料",
-    "ADD_TO_MY_CALENDAR": "新增至我的行事历",
+    "ADD_EVENT": "新增事件",
     "NO_DATA_AVAILABLE": "没有可用资料",
-    "NO_DATA": "没有资料"
+    "NO_DATA": "没有资料",
+    "ARE_YOU_SURE_YOU_WANT_TO": "您确定要",
+    "CHOOSE_THE_COMPANY": "选择这家公司",
+    "SURE": "吗？",
+    "CHOOSE": "选择"
   },
 
   "COMMON": {
@@ -47,7 +50,8 @@
     "SUBSCRIPTION_AND_BILLS": "订阅与账单",
     "LOGOUT": "登出",
     "LOGIN": "登录",
-    "LANGUAGE": "语言"
+    "LANGUAGE": "语言",
+    "SWITCH_ROLE": "切换角色"
   },
 
   "ROLE": {
@@ -105,5 +109,23 @@
     "EDIT_MY_EVENT": "编辑我的事件",
     "DELETE_MESSAGE_TITLE": "删除此事件",
     "DELETE_MESSAGE_CONTENT": "您确定要删除此事件吗？"
+  },
+
+  "CREATE_COMPANY_MODAL": {
+    "COMPANY_NAME": "公司名称",
+    "TAX_ID": "营业税号",
+    "WORK_TAG": "工作标签",
+    "CREATE_NEW_COMPANY": "创建新公司",
+    "ENTER_NAME": "输入名称",
+    "ENTER_NUMBER": "输入营业税号",
+    "ENTER_FULL_ADDRESS": "输入完整地址",
+    "CANCEL": "取消",
+    "ADD": "添加"
+  },
+
+  "COMPANY_TAG": {
+    "FINANCIAL": "财务",
+    "TAX": "税务",
+    "ALL": "全部"
   }
 }

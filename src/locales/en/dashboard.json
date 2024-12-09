@@ -25,10 +25,13 @@
     "PENDING_TASKS_TOTAL": "Pending Tasks (Total)",
     "MISSING_CERTIFICATE": "Missing certificate",
     "UNPOSTED_VOUCHERS": "Unposted vouchers",
-    "UNARCHIVED_CUSTOMER_DATA": "Unarchived Customer Data",
-    "ADD_TO_MY_CALENDAR": "Add to My Calendar",
+    "ADD_EVENT": "Add Event",
     "NO_DATA_AVAILABLE": "No Data Available",
-    "NO_DATA": "No Data"
+    "NO_DATA": "No Data",
+    "ARE_YOU_SURE_YOU_WANT_TO": "Are you sure you want to",
+    "CHOOSE_THE_COMPANY": "Choose the Company",
+    "SURE": "?",
+    "CHOOSE": "Choose"
   },
 
   "COMMON": {
@@ -47,7 +50,8 @@
     "SUBSCRIPTION_AND_BILLS": "Subscription and Bills",
     "LOGOUT": "Logout",
     "LOGIN": "Login",
-    "LANGUAGE": "Language"
+    "LANGUAGE": "Language",
+    "SWITCH_ROLE": "Switch Role"
   },
 
   "ROLE": {
@@ -105,5 +109,23 @@
     "EDIT_MY_EVENT": "Edit My Event",
     "DELETE_MESSAGE_TITLE": "Delete the event",
     "DELETE_MESSAGE_CONTENT": "Are you sure you want to delete this event?"
+  },
+
+  "CREATE_COMPANY_MODAL": {
+    "COMPANY_NAME": "Company Name",
+    "TAX_ID": "Business Tax ID Number",
+    "WORK_TAG": "Work Tag",
+    "CREATE_NEW_COMPANY": "Create New Company",
+    "ENTER_NAME": "Enter Name",
+    "ENTER_NUMBER": "Enter Tax ID",
+    "ENTER_FULL_ADDRESS": "Please enter the full address",
+    "CANCEL": "Cancel",
+    "ADD": "Add"
+  },
+
+  "COMPANY_TAG": {
+    "FINANCIAL": "Financial",
+    "TAX": "Tax",
+    "ALL": "All"
   }
 }

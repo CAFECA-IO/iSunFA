@@ -42,8 +42,13 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
 }) => {
   const { t } = useTranslation(['setting', 'common']);
   const disabled = !firstName || !lastName || !country || !phoneNumber;
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // Info: (202412009 - tzuhan) Prevent page refresh
+    onSubmit();
+  };
+
   return (
-    <form className="flex flex-col gap-lv-7" onSubmit={onSubmit}>
+    <form className="flex flex-col gap-lv-7" onSubmit={handleSubmit}>
       <div className="grid grid-cols-2 gap-lv-7">
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
