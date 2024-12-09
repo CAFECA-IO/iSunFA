@@ -137,7 +137,6 @@ const CounterpartyPageBody = () => {
             type="button"
             variant="tertiary"
             className="hidden items-center gap-4px px-4 py-8px md:flex"
-            //  onClick={handleModalOpen}
             onClick={addCounterPartyModalVisibilityHandler}
           >
             <MdPersonAddAlt1 size={24} />

@@ -196,7 +196,7 @@ const CounterpartyInput: React.FC<ICounterpartyInputProps> = ({
         ref={counterpartyTaxIdInputRef}
         value={searchTaxId}
         onChange={counterpartyInputHandler}
-        type="number"
+        type="text"
         placeholder={counterparty?.taxId}
         className="w-100px truncate border-r bg-transparent px-12px py-10px outline-none"
       />

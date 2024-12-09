@@ -93,6 +93,7 @@
     "BOTH": "Both",
     "CLIENT": "Client",
     "SUPPLIER": "Supplier",
+    "SELECT_TYPE": "Select Type",
     "TITLE": "Add this counterparty to Client/Supplier list",
     "CONTENT": "{{counterparty}} is not in your Client/Supplier list. Do you want to add it?",
     "YES": "Yes, Add it",

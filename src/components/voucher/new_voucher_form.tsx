@@ -1036,33 +1036,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           />
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
-        {!isShowCounter && (
+        {isShowCounter && (
           <CounterpartyInput
             counterparty={counterparty}
             setCounterparty={setCounterparty}
             flagOfSubmit={flagOfSubmit}
             className="col-span-2"
           />
-          // <div className="relative col-span-2 flex flex-col gap-8px">
-          //   <p className="font-bold text-input-text-primary">
-          //     {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
-          //     <span className="text-text-state-error">*</span>
-          //   </p>
-          //   <button
-          //     id="voucher-counterparty"
-          //     type="button"
-          //     ref={counterpartyRef}
-          //     onClick={counterSearchToggleHandler}
-          //     className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
-          //   >
-          //     {displayedCounterparty}
-          //     <div className="h-20px w-20px">
-          //       <FiSearch size={20} />
-          //     </div>
-          //   </button>
-          //   {/* Info: (20241004 - Julian) Counterparty drop menu */}
-          //   {counterpartyDropMenu}
-          // </div>
         )}
         {/* Info: (20241007 - Julian) Recurring */}
 

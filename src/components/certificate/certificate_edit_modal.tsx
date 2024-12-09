@@ -16,7 +16,6 @@ import { inputStyle } from '@/constants/display';
 import { FiSearch } from 'react-icons/fi';
 import { MessageType } from '@/interfaces/message_modal';
 import { useModalContext } from '@/contexts/modal_context';
-// import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { IoCloseOutline } from 'react-icons/io5';
@@ -373,14 +372,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     <div
       className={`fixed inset-0 z-70 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
     >
-      {/* {isAddCounterPartyModalOpen && (
-        <AddCounterPartyModal
-          onClose={onCancelAddCounterParty}
-          onSave={handleAddCounterParty}
-          name={searchName}
-          taxId={searchTaxId}
-        />
-      )} */}
       <form
         className={`relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-h-96vh md:max-w-800px`}
         onSubmit={handleSave}

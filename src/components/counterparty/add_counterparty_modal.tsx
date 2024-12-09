@@ -234,7 +234,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
                   <span className="text-input-text-input-filled">
                     {inputType
                       ? t(`certificate:COUNTERPARTY.${inputType.toUpperCase()}`)
-                      : '選擇類型'}
+                      : t('certificate:COUNTERPARTY.SELECT_TYPE')}
                   </span>
                   <FaChevronDown />
                 </div>
