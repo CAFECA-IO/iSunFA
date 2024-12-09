@@ -137,8 +137,8 @@ export async function createManyAssets(
  * 2. 資產的建立時間在最近24小時內
  * @param assetId 資產ID
  */
-export async function getAssetByIdLimited(assetId: number) {
-  const oneDayAgo = getTimestampNow() - 1000 * 60 * 60 * 24;
+export async function getLegitAssetById(assetId: number) {
+  const oneDayAgo = getTimestampNow() - 60 * 60 * 24;
 
   const asset = await prisma.asset.findFirst({
     where: {
@@ -148,14 +148,26 @@ export async function getAssetByIdLimited(assetId: number) {
         { createdAt: { gt: oneDayAgo } }, // Info: (20241206 - Shirley) 檢查是否在24小時內創建
       ],
     },
-    select: {
-      id: true,
-      createdAt: true,
-    },
   });
 
   return asset;
 }
+
+export const getVouchersByAssetId = async (assetId: number) => {
+  const voucher = await prisma.assetVoucher.findMany({
+    where: {
+      assetId,
+    },
+    select: {
+      id: true,
+      voucher: true,
+    },
+  });
+  const vouchers = voucher.map((v) => {
+    return { id: v.id, number: v.voucher.no };
+  });
+  return vouchers;
+};
 
 export async function deleteAsset(assetId: number) {
   const deletedAsset = await prisma.asset.delete({

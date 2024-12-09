@@ -1,10 +1,10 @@
-import { AssetDepreciationMethod, AssetStatus } from '@/constants/asset';
+import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import {
   createAssetWithVouchers,
   createManyAssets,
   deleteAsset,
   deleteManyAssets,
-  getAssetByIdLimited,
+  getLegitAssetById,
 } from '@/lib/utils/repo/asset.repo';
 import { getTimestampNow } from '@/lib/utils/common';
 
@@ -15,8 +15,8 @@ describe('createAssetWithVouchers (single asset)', () => {
     const assetNumberPrefix = 'A';
     const newAssetData = {
       companyId: testCompanyId,
-      name: 'Test Asset',
-      type: 'Equipment',
+      name: 'Test Asset Land',
+      type: AssetEntityType.LAND,
       number: assetNumberPrefix,
       acquisitionDate: 1704067200,
       purchasePrice: 10000,
@@ -40,14 +40,14 @@ describe('createAssetWithVouchers (single asset)', () => {
     expect(asset.updatedAt).toBeDefined();
     expect(asset.id).toBeDefined();
 
-    // await deleteAsset(asset.id);
+    await deleteAsset(asset.id);
   });
 
   it('should handle special asset number format', async () => {
     const newAssetData = {
       companyId: testCompanyId,
       name: 'Test Asset',
-      type: 'Equipment',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
       number: 'EQ-1206',
       acquisitionDate: 1704067200,
       purchasePrice: 10000,
@@ -66,8 +66,8 @@ describe('createAssetWithVouchers (single asset)', () => {
     const assetNumberPrefix = 'B';
     const newAssetData = {
       companyId: testCompanyId,
-      name: 'Test Asset',
-      type: 'Equipment',
+      name: 'Test Asset Office Equipment',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
       number: assetNumberPrefix,
       acquisitionDate: 1704067200,
       purchasePrice: 10000,
@@ -97,7 +97,7 @@ describe('createManyAssets (multiple assets)', () => {
       companyId: testCompanyId,
       amount,
       name: 'Test Asset',
-      type: 'Equipment',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
       number: assetNumberPrefix,
       acquisitionDate: 1704067200,
       purchasePrice: 10000,
@@ -134,7 +134,7 @@ describe('createManyAssets (multiple assets)', () => {
     const newAssetData = {
       companyId: testCompanyId,
       name: 'Test Asset',
-      type: 'Equipment',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
       number: 'SEQ-001',
       acquisitionDate: 1704067200,
       purchasePrice: 10000,
@@ -163,14 +163,14 @@ describe('createManyAssets (multiple assets)', () => {
 describe('getAssetByIdLimited (get the asset with fixed conditions)', () => {
   it('should return asset if it has a voucher', async () => {
     const SEED_DATA_ASSET_ID = 1;
-    const asset = await getAssetByIdLimited(SEED_DATA_ASSET_ID);
+    const asset = await getLegitAssetById(SEED_DATA_ASSET_ID);
 
     expect(asset).toBeDefined();
   });
 
   it('should not return asset if it does not have a voucher', async () => {
     const TEST_DATA_ASSET_ID = 3;
-    const asset = await getAssetByIdLimited(TEST_DATA_ASSET_ID);
+    const asset = await getLegitAssetById(TEST_DATA_ASSET_ID);
 
     expect(asset).toBeNull();
   });
@@ -181,7 +181,7 @@ describe('deleteAsset', () => {
     const newAssetData = {
       companyId: testCompanyId,
       name: 'Test Asset',
-      type: 'Equipment',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
       number: 'TEST-004',
       acquisitionDate: 1704067200,
       purchasePrice: 10000,
@@ -194,7 +194,7 @@ describe('deleteAsset', () => {
     expect(deletedAsset).toBeDefined();
     expect(deletedAsset.id).toBe(asset.id);
 
-    const checkAsset = await getAssetByIdLimited(asset.id);
+    const checkAsset = await getLegitAssetById(asset.id);
     expect(checkAsset).toBeNull();
   });
 

@@ -63,6 +63,7 @@ export async function handleGetRequest() {
  *    5. 根據 URI 建立 API 檔案
  *    6. 撰寫 Mock data (/interfaces/asset.ts)
  * 2. 實際開發階段
+ *    0. 註冊 Auth
  *    1. 撰寫 repo 操作 DB 的 function (src/lib/utils/repo/asset.ts)
  *    2. 撰寫 repo 單元測試 (src/lib/utils/repo_test/asset.repo.test.ts)
  *    3. 撰寫 utils 將邏輯整理成 function (src/lib/utils/asset.ts)
