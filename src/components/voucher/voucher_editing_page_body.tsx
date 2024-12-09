@@ -53,6 +53,11 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
     id: 1000,
     companyId: 1000,
     name: 'ABC Corp',
+    taxId: '123456789',
+    type: 'SUPPLIER',
+    note: 'Preferred supplier',
+    createdAt: 1622548800,
+    updatedAt: 1625130800,
   },
   payableInfo: {
     total: 1000,
