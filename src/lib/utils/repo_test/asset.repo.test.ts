@@ -160,7 +160,7 @@ describe('createManyAssets (multiple assets)', () => {
   });
 });
 
-describe('getAssetByIdLimited (get the asset with fixed conditions)', () => {
+describe('getAssetById (get the asset with fixed conditions)', () => {
   it('should return asset if it has a voucher', async () => {
     const SEED_DATA_ASSET_ID = 1;
     const asset = await getLegitAssetById(SEED_DATA_ASSET_ID);

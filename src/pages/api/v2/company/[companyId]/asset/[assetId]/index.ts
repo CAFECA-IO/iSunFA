@@ -56,7 +56,7 @@ export const handleGetRequest: IHandleRequest<APIName.ASSET_GET_BY_ID_V2, IAsset
       purchasePrice: asset.purchasePrice,
       accumulatedDepreciation: asset.accumulatedDepreciation, // TODO: (20241209 - Shirley) 計算累計折舊
       residualValue: asset.residualValue, // TODO: (20241209 - Shirley) 計算 purchasePrice-accumulatedDepreciation
-      remainingLife,
+      remainingLife, // Info: (20241209 - Shirley) 即時計算剩餘年限
       assetStatus: asset.status,
       createdAt: asset.createdAt,
       updatedAt: asset.updatedAt,
