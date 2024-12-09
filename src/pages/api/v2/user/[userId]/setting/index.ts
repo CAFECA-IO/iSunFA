@@ -39,17 +39,15 @@ const handleGetRequest: IHandleRequest<APIName.USER_SETTING_GET, UserSetting> = 
 };
 
 const handlePutRequest: IHandleRequest<APIName.USER_SETTING_UPDATE, UserSetting> = async ({
-  query,
   body,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: UserSetting | null = null;
 
-  const { userId } = query;
   const userSettingData = body;
 
   try {
-    const updatedUserSetting = await updateUserSettingById(userId, userSettingData);
+    const updatedUserSetting = await updateUserSettingById(userSettingData.id, userSettingData);
 
     if (updatedUserSetting) {
       payload = updatedUserSetting;
