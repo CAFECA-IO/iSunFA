@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import FocusLock from 'react-focus-lock';
 import { useRouter } from 'next/router';
 import { FaChevronDown } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
-import { FiSearch } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -49,13 +47,12 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
 import { IAIResultVoucher } from '@/interfaces/voucher';
 import { AI_TYPE } from '@/constants/aich';
+import CounterpartyInput from '@/components/voucher/counterparty_input';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
 //   WEEK = 'week',
 // }
-
-// type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
 
 const dummyAIResult: IAIResultVoucher = {
   aiType: AI_TYPE.VOUCHER,
@@ -108,13 +105,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     isLoading: isAIWorking,
     success: analyzeSuccess,
   } = APIHandler<IAIResultVoucher>(APIName.ASK_AI_RESULT_V2);
-
-  // Info: (20241108 - Julian) 取得交易對象列表
-  const {
-    trigger: getCounterpartyList,
-    data: counterpartyData,
-    isLoading: isCounterpartyLoading,
-  } = APIHandler<IPaginatedData<ICounterparty[]>>(APIName.COUNTERPARTY_LIST);
 
   const {
     trigger: createVoucher,
@@ -177,13 +167,10 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 交易對象相關 state
-  const [counterKeyword, setCounterKeyword] = useState<string>('');
   const [counterparty, setCounterparty] = useState<ICounterparty | undefined>(undefined);
-  const [filteredCounterparty, setFilteredCounterparty] = useState<ICounterparty[]>([]);
 
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
-  const [isShowCounterHint, setIsShowCounterHint] = useState<boolean>(false);
   // const [isShowRecurringPeriodHint, setIsShowRecurringPeriodHint] = useState<boolean>(false);
   // const [isShowRecurringArrayHint, setIsShowRecurringArrayHint] = useState<boolean>(false);
   const [isShowAssetHint, setIsShowAssetHint] = useState<boolean>(false);
@@ -201,13 +188,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
-
-  // Info: (20241108 - Julian) 需要交易對象的時候才拿 counterparty list
-  useEffect(() => {
-    if (isCounterpartyRequired) {
-      getCounterpartyList({ params: { companyId } });
-    }
-  }, [isCounterpartyRequired]);
 
   // Info: (20241018 - Tzuhan) 選擇憑證
   const handleSelect = useCallback(
@@ -373,20 +353,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setComponentVisible: setTypeVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
-  // Info: (20241004 - Julian) Counterparty 下拉選單
-  const {
-    targetRef: counterMenuRef,
-    componentVisible: isCounterMenuOpen,
-    setComponentVisible: setCounterMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  // Info: (20241004 - Julian) Counterparty 搜尋
-  const {
-    targetRef: counterpartyRef,
-    componentVisible: isSearchCounterparty,
-    setComponentVisible: setIsSearchCounterparty,
-  } = useOuterClick<HTMLButtonElement>(false);
-
   // Info: (20241007 - Julian) Recurring 下拉選單
   // const {
   //   targetRef: recurringRef,
@@ -498,7 +464,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // useHotkeys('tab', handleTabPress);
 
   const dateRef = useRef<HTMLDivElement>(null);
-  const counterpartyInputRef = useRef<HTMLInputElement>(null);
   const assetRef = useRef<HTMLDivElement>(null);
   const voucherLineRef = useRef<HTMLDivElement>(null);
 
@@ -508,28 +473,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       getAccountListHandler(selectedCompany.id);
     }
   }, [selectedCompany]);
-
-  useEffect(() => {
-    // Info: (20241004 - Julian) 查詢交易對象關鍵字時聚焦
-    if (isSearchCounterparty && counterpartyInputRef.current) {
-      counterpartyInputRef.current.focus();
-    }
-
-    // Info: (20241001 - Julian) 查詢模式關閉後清除搜尋關鍵字
-    if (!isSearchCounterparty) {
-      setCounterKeyword('');
-    }
-  }, [isSearchCounterparty]);
-
-  // Info: (20241004 - Julian) 搜尋交易對象
-  useEffect(() => {
-    getCounterpartyList({ params: { companyId }, query: { searchQuery: counterKeyword } });
-  }, [counterKeyword]);
-  useEffect(() => {
-    if (counterpartyData && !isCounterpartyLoading) {
-      setFilteredCounterparty(counterpartyData.data);
-    }
-  }, [counterpartyData, isCounterpartyLoading]);
 
   // Info: (20241007 - Julian) 如果單位改變，則重設 Recurring Array
   // useEffect(() => {
@@ -542,13 +485,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       setIsShowDateHint(false);
     }
   }, [date]);
-
-  // Info: (20241004 - Julian) 交易對象未選擇時顯示提示
-  useEffect(() => {
-    if (counterparty) {
-      setIsShowCounterHint(false);
-    }
-  }, [counterparty]);
 
   // Info: (20241007 - Julian) 週期區間未選擇時顯示提示
   // useEffect(() => {
@@ -572,17 +508,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const typeToggleHandler = () => setTypeVisible(!typeVisible);
 
-  const counterSearchToggleHandler = () => {
-    setIsSearchCounterparty(!isSearchCounterparty);
-    setCounterMenuOpen(!isCounterMenuOpen);
-  };
+  // const counterSearchToggleHandler = () => {
+  //   setIsSearchCounterparty(!isSearchCounterparty);
+  //   setCounterMenuOpen(!isCounterMenuOpen);
+  // };
 
   const noteChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNote(e.target.value);
-  };
-
-  const counterKeywordChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCounterKeyword(e.target.value);
   };
 
   // const recurringToggleHandler = () => {
@@ -604,14 +536,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       return t(`journal:ADD_NEW_VOUCHER.TYPE_${typeStr.toUpperCase()}`);
     } else {
       return t(`journal:ADD_NEW_VOUCHER.TYPE_${voucherType.toUpperCase()}`);
-    }
-  };
-
-  const getCounterpartyStr = (counterParty: ICounterparty | undefined) => {
-    if (counterParty) {
-      return `${counterParty.companyId} - ${counterParty.name}`;
-    } else {
-      return t('journal:ADD_NEW_VOUCHER.COUNTERPARTY');
     }
   };
 
@@ -741,9 +665,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       setIsShowDateHint(true);
       if (dateRef.current) dateRef.current.scrollIntoView();
       // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示類型提示，並定位到類型欄位
-    } else if (isCounterpartyRequired && !counterparty) {
-      setIsShowCounterHint(true);
-      if (counterpartyRef.current) counterpartyRef.current.scrollIntoView();
       // } else if (
       //   // Info: (20241007 - Julian) 如果開啟週期，但週期區間未選擇，則顯示週期提示，並定位到週期欄位
       //   isRecurring &&
@@ -777,7 +698,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
       // Info: (20241007 - Julian) 重設提示
       setIsShowDateHint(false);
-      setIsShowCounterHint(false);
       // setIsShowRecurringPeriodHint(false);
       // setIsShowRecurringArrayHint(false);
       setIsShowAssetHint(false);
@@ -828,62 +748,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           </button>
         );
       })}
-    </div>
-  ) : null;
-
-  const displayedCounterparty = isSearchCounterparty ? (
-    <input
-      ref={counterpartyInputRef}
-      value={counterKeyword}
-      onChange={counterKeywordChangeHandler}
-      placeholder={getCounterpartyStr(counterparty)}
-      className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
-    />
-  ) : (
-    <p
-      className={`truncate ${isShowCounterHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : inputStyle.NORMAL}`}
-    >
-      {isShowAnalysisPreview
-        ? getCounterpartyStr(aiCounterParty)
-        : getCounterpartyStr(counterparty)}
-    </p>
-  );
-
-  const counterMenu = isCounterpartyLoading ? (
-    <div className="px-12px py-8px text-sm text-input-text-input-placeholder">
-      {t('common:COMMON.LOADING')}
-    </div>
-  ) : filteredCounterparty && filteredCounterparty.length > 0 ? (
-    filteredCounterparty.map((counter) => {
-      const counterClickHandler = () => {
-        setCounterparty(counter);
-        setCounterMenuOpen(false);
-      };
-
-      return (
-        <button
-          key={counter.id}
-          type="button"
-          onClick={counterClickHandler}
-          className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-        >
-          <p className="text-dropdown-text-primary">{counter.taxId}</p>
-          <p className="text-dropdown-text-secondary">{counter.name}</p>
-        </button>
-      );
-    })
-  ) : (
-    <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
-      {t('journal:ADD_NEW_VOUCHER.NO_COUNTERPARTY_FOUND')}
-    </p>
-  );
-
-  const counterpartyDropMenu = isCounterMenuOpen ? (
-    <div
-      ref={counterMenuRef}
-      className="absolute top-85px z-30 w-full rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-dropmenu"
-    >
-      {counterMenu}
     </div>
   ) : null;
 
@@ -1137,149 +1001,132 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         onDelete={handleDelete}
       />
 
-      {/* Info: (20241125 - Julian) 限制焦點只能在 Form 內 */}
-      <FocusLock className="w-full">
-        {/* Info: (20240926 - Julian) form */}
-        <form ref={formRef} onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
-          {/* Info: (20240926 - Julian) Date */}
-          <div ref={dateRef} className="flex flex-col gap-8px whitespace-nowrap">
-            <p className="font-bold text-input-text-primary">
-              {t('journal:ADD_NEW_VOUCHER.VOUCHER_DATE')}
-              <span className="text-text-state-error">*</span>
-            </p>
-            <DatePicker
-              id="voucher-date"
-              type={DatePickerType.TEXT_DATE}
-              period={isShowAnalysisPreview ? aiDate : date}
-              setFilteredPeriod={setDate}
-              btnClassName={
-                isShowDateHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : ''
-              }
-            />
-          </div>
-          {/* Info: (20240926 - Julian) Type */}
-          <div className="flex flex-col gap-8px">
-            <p className="font-bold text-input-text-primary">
-              {t('journal:ADD_NEW_VOUCHER.VOUCHER_TYPE')}
-              <span className="text-text-state-error">*</span>
-            </p>
-            <div className="relative">
-              <button
-                id="voucher-type"
-                type="button"
-                onClick={typeToggleHandler}
-                className="flex w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
-              >
-                <p
-                  className={`text-base ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'text-input-text-input-filled'}`}
-                >
-                  {isShowAnalysisPreview ? translateType(aiType) : translateType(type)}
-                </p>
-                <FaChevronDown size={20} />
-              </button>
-              {/* Info: (20240926 - Julian) Type dropdown */}
-              {typeDropdownMenu}
-            </div>
-          </div>
-
-          {/* Info: (20240926 - Julian) Note */}
-          <div className="col-span-2 flex flex-col gap-8px">
-            <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
-            <input
-              id="voucher-note"
-              type="text"
-              value={note}
-              onChange={noteChangeHandler}
-              placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
-              className={`rounded-sm border border-input-stroke-input px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
-            />
-          </div>
-          {/* Info: (20240926 - Julian) Counterparty */}
-          {isShowCounter && (
-            <div className="relative col-span-2 flex flex-col gap-8px">
-              <p className="font-bold text-input-text-primary">
-                {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
-                <span className="text-text-state-error">*</span>
-              </p>
-              <button
-                id="voucher-counterparty"
-                type="button"
-                ref={counterpartyRef}
-                onClick={counterSearchToggleHandler}
-                className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
-              >
-                {displayedCounterparty}
-                <div className="h-20px w-20px">
-                  <FiSearch size={20} />
-                </div>
-              </button>
-              {/* Info: (20241004 - Julian) Counterparty drop menu */}
-              {counterpartyDropMenu}
-            </div>
-          )}
-          {/* Info: (20241007 - Julian) Recurring */}
-
-          {/* Info: (20241009 - Julian) Asset */}
-          {isAssetRequired && (
-            <div ref={assetRef} className="col-span-2 flex flex-col">
-              <AssetSection isShowAssetHint={isShowAssetHint} lineItems={voucherLineItems} />
-            </div>
-          )}
-          {/* Info: (20240926 - Julian) Voucher line block */}
-          {isShowAnalysisPreview ? (
-            <VoucherLinePreview
-              totalCredit={aiTotalCredit}
-              totalDebit={aiTotalDebit}
-              lineItems={aiLineItems}
-            />
-          ) : (
-            <>
-              {isShowReverseHint ? (
-                <p className="text-text-state-error">
-                  {t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}
-                </p>
-              ) : null}
-              <div ref={voucherLineRef} className="col-span-2">
-                <VoucherLineBlock
-                  lineItems={voucherLineItems}
-                  setLineItems={setLineItems}
-                  flagOfClear={flagOfClear}
-                  flagOfSubmit={flagOfSubmit}
-                  setIsTotalZero={setIsTotalZero}
-                  setIsTotalNotEqual={setIsTotalNotEqual}
-                  setHaveZeroLine={setHaveZeroLine}
-                  setIsAccountingNull={setIsAccountingNull}
-                  setIsVoucherLineEmpty={setIsVoucherLineEmpty}
-                  setIsCounterpartyRequired={setIsCounterpartyRequired}
-                  setIsAssetRequired={setIsAssetRequired}
-                />
-              </div>
-            </>
-          )}
-          {/* Info: (20240926 - Julian) buttons */}
-          <div className="col-span-2 ml-auto flex items-center gap-12px">
-            <Button
-              id="voucher-clear-button"
+      {/* Info: (20240926 - Julian) form */}
+      <form ref={formRef} onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
+        {/* Info: (20240926 - Julian) Date */}
+        <div ref={dateRef} className="flex flex-col gap-8px whitespace-nowrap">
+          <p className="font-bold text-input-text-primary">
+            {t('journal:ADD_NEW_VOUCHER.VOUCHER_DATE')}
+            <span className="text-text-state-error">*</span>
+          </p>
+          <DatePicker
+            id="voucher-date"
+            type={DatePickerType.TEXT_DATE}
+            period={isShowAnalysisPreview ? aiDate : date}
+            setFilteredPeriod={setDate}
+            btnClassName={
+              isShowDateHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : ''
+            }
+          />
+        </div>
+        {/* Info: (20240926 - Julian) Type */}
+        <div className="flex flex-col gap-8px">
+          <p className="font-bold text-input-text-primary">
+            {t('journal:ADD_NEW_VOUCHER.VOUCHER_TYPE')}
+            <span className="text-text-state-error">*</span>
+          </p>
+          <div className="relative">
+            <button
+              id="voucher-type"
               type="button"
-              variant="secondaryOutline"
-              onClick={clearClickHandler}
+              onClick={typeToggleHandler}
+              className="flex w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
             >
-              {t('journal:JOURNAL.CLEAR_ALL')}
-            </Button>
-            <Button
-              id="voucher-save-button"
-              type="submit"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') e.preventDefault();
-              }}
-              disabled={isCreating} // Info: (20241120 - Julian) 防止重複送出
-            >
-              <p>{t('common:COMMON.SAVE')}</p>
-              <BiSave size={20} />
-            </Button>
+              <p
+                className={`text-base ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'text-input-text-input-filled'}`}
+              >
+                {isShowAnalysisPreview ? translateType(aiType) : translateType(type)}
+              </p>
+              <FaChevronDown size={20} />
+            </button>
+            {/* Info: (20240926 - Julian) Type dropdown */}
+            {typeDropdownMenu}
           </div>
-        </form>
-      </FocusLock>
+        </div>
+
+        {/* Info: (20240926 - Julian) Note */}
+        <div className="col-span-2 flex flex-col gap-8px">
+          <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
+          <input
+            id="voucher-note"
+            type="text"
+            value={note}
+            onChange={noteChangeHandler}
+            placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
+            className={`rounded-sm border border-input-stroke-input px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
+          />
+        </div>
+        {/* Info: (20240926 - Julian) Counterparty */}
+        {isShowCounter && (
+          <CounterpartyInput
+            counterparty={counterparty}
+            setCounterparty={setCounterparty}
+            flagOfSubmit={flagOfSubmit}
+            className="col-span-2"
+          />
+        )}
+        {/* Info: (20241007 - Julian) Recurring */}
+
+        {/* Info: (20241009 - Julian) Asset */}
+        {isAssetRequired && (
+          <div ref={assetRef} className="col-span-2 flex flex-col">
+            <AssetSection isShowAssetHint={isShowAssetHint} lineItems={voucherLineItems} />
+          </div>
+        )}
+        {/* Info: (20240926 - Julian) Voucher line block */}
+        {isShowAnalysisPreview ? (
+          <VoucherLinePreview
+            totalCredit={aiTotalCredit}
+            totalDebit={aiTotalDebit}
+            lineItems={aiLineItems}
+          />
+        ) : (
+          <>
+            {isShowReverseHint ? (
+              <p className="text-text-state-error">
+                {t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}
+              </p>
+            ) : null}
+            <div ref={voucherLineRef} className="col-span-2">
+              <VoucherLineBlock
+                lineItems={voucherLineItems}
+                setLineItems={setLineItems}
+                flagOfClear={flagOfClear}
+                flagOfSubmit={flagOfSubmit}
+                setIsTotalZero={setIsTotalZero}
+                setIsTotalNotEqual={setIsTotalNotEqual}
+                setHaveZeroLine={setHaveZeroLine}
+                setIsAccountingNull={setIsAccountingNull}
+                setIsVoucherLineEmpty={setIsVoucherLineEmpty}
+                setIsCounterpartyRequired={setIsCounterpartyRequired}
+                setIsAssetRequired={setIsAssetRequired}
+              />
+            </div>
+          </>
+        )}
+        {/* Info: (20240926 - Julian) buttons */}
+        <div className="col-span-2 ml-auto flex items-center gap-12px">
+          <Button
+            id="voucher-clear-button"
+            type="button"
+            variant="secondaryOutline"
+            onClick={clearClickHandler}
+          >
+            {t('journal:JOURNAL.CLEAR_ALL')}
+          </Button>
+          <Button
+            id="voucher-save-button"
+            type="submit"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.preventDefault();
+            }}
+            disabled={isCreating} // Info: (20241120 - Julian) 防止重複送出
+          >
+            <p>{t('common:COMMON.SAVE')}</p>
+            <BiSave size={20} />
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

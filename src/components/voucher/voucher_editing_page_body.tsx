@@ -3,7 +3,6 @@ import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 import { FaChevronDown } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
-import { FiSearch } from 'react-icons/fi';
 import { useHotkeys } from 'react-hotkeys-hook';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
@@ -42,6 +41,7 @@ import { CurrencyType } from '@/constants/currency';
 import { IAssetDetails } from '@/interfaces/asset';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
+import CounterpartyInput from '@/components/voucher/counterparty_input';
 
 // ToDo: (20241118 - Julian) For debug, remove later
 const defaultVoucherDetail: IVoucherDetailForFrontend = {
@@ -53,6 +53,11 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
     id: 1000,
     companyId: 1000,
     name: 'ABC Corp',
+    taxId: '123456789',
+    type: 'SUPPLIER',
+    note: 'Preferred supplier',
+    createdAt: 1622548800,
+    updatedAt: 1625130800,
   },
   payableInfo: {
     total: 1000,
@@ -375,17 +380,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     success: analyzeSuccess,
   } = APIHandler<IAIResultVoucher>(APIName.ASK_AI_RESULT_V2);
 
-  // Info: (20241108 - Julian) 取得交易對象列表
-  const {
-    trigger: getCounterpartyList,
-    data: counterpartyData,
-    isLoading: isCounterpartyLoading,
-  } = APIHandler<IPaginatedData<ICounterparty[]>>(APIName.COUNTERPARTY_LIST);
-
   // Info: (20241118 - Julian) 取得 Voucher 資料
   const { trigger: getVoucherData, data: voucherData } = APIHandler<IVoucherDetailForFrontend>(
     APIName.VOUCHER_GET_BY_ID_V2,
-    { params: { companyId, voucherId } }
+    {
+      params: { companyId, voucherId },
+    }
   );
 
   // Info: (20241118 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
@@ -480,20 +480,10 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 交易對象相關 state
-  const [counterKeyword, setCounterKeyword] = useState<string>('');
-  const [counterparty, setCounterparty] = useState<
-    | {
-        id: number;
-        companyId: number;
-        name: string;
-      }
-    | undefined
-  >(voucherCounterParty);
-  const [filteredCounterparty, setFilteredCounterparty] = useState<ICounterparty[]>([]);
+  const [counterparty, setCounterparty] = useState<ICounterparty | undefined>(voucherCounterParty);
 
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
-  const [isShowCounterHint, setIsShowCounterHint] = useState<boolean>(false);
   const [isShowAssetHint, setIsShowAssetHint] = useState<boolean>(false);
   const [isShowReverseHint, setIsShowReverseHint] = useState<boolean>(false);
 
@@ -533,13 +523,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       setAssetList(newAssetList);
     }
   }, [temporaryAssetList]);
-
-  // Info: (20241108 - Julian) 需要交易對象的時候才拿 counterparty list
-  useEffect(() => {
-    if (isCounterpartyRequired) {
-      getCounterpartyList({ params: { companyId } });
-    }
-  }, [isCounterpartyRequired]);
 
   // Info: (20241018 - Tzuhan) 選擇憑證
   const handleSelect = useCallback(
@@ -650,20 +633,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     setComponentVisible: setTypeVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
-  // Info: (20241004 - Julian) Counterparty 下拉選單
-  const {
-    targetRef: counterMenuRef,
-    componentVisible: isCounterMenuOpen,
-    setComponentVisible: setCounterMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  // Info: (20241004 - Julian) Counterparty 搜尋
-  const {
-    targetRef: counterpartyRef,
-    componentVisible: isSearchCounterparty,
-    setComponentVisible: setIsSearchCounterparty,
-  } = useOuterClick<HTMLButtonElement>(false);
-
   // Info: (20241107 - Julian) ============ 熱鍵設置 ============
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -687,7 +656,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       const voucherTypeIndex = focusableElements.findIndex((el) => el.id === 'voucher-type');
       const noteIndex = focusableElements.findIndex((el) => el.id === 'voucher-note');
       const counterpartyIndex = focusableElements.findIndex(
-        (el) => el.id === 'voucher-counterparty'
+        (el) => el.id === 'counterparty-tax-id'
       );
       const assetIndex = focusableElements.findIndex((el) => el.id === 'voucher-asset');
       const accountTitleIndex = focusableElements.findIndex((el) =>
@@ -739,7 +708,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   useHotkeys('tab', handleTabPress);
 
   const dateRef = useRef<HTMLDivElement>(null);
-  const counterpartyInputRef = useRef<HTMLInputElement>(null);
   const assetRef = useRef<HTMLDivElement>(null);
   const voucherLineRef = useRef<HTMLDivElement>(null);
 
@@ -750,41 +718,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     }
   }, [selectedCompany]);
 
-  useEffect(() => {
-    // Info: (20241004 - Julian) 查詢交易對象關鍵字時聚焦
-    if (isSearchCounterparty && counterpartyInputRef.current) {
-      counterpartyInputRef.current.focus();
-    }
-
-    // Info: (20241001 - Julian) 查詢模式關閉後清除搜尋關鍵字
-    if (!isSearchCounterparty) {
-      setCounterKeyword('');
-    }
-  }, [isSearchCounterparty]);
-
-  // Info: (20241004 - Julian) 搜尋交易對象
-  useEffect(() => {
-    getCounterpartyList({ params: { companyId }, query: { searchQuery: counterKeyword } });
-  }, [counterKeyword]);
-  useEffect(() => {
-    if (counterpartyData && !isCounterpartyLoading) {
-      setFilteredCounterparty(counterpartyData.data);
-    }
-  }, [counterpartyData, isCounterpartyLoading]);
-
   // Info: (20241007 - Julian) 日期未選擇時顯示提示
   useEffect(() => {
     if (date.startTimeStamp !== 0 && date.endTimeStamp !== 0) {
       setIsShowDateHint(false);
     }
   }, [date]);
-
-  // Info: (20241004 - Julian) 交易對象未選擇時顯示提示
-  useEffect(() => {
-    if (counterparty) {
-      setIsShowCounterHint(false);
-    }
-  }, [counterparty]);
 
   useEffect(() => {
     if (isAssetRequired && assetList.length > 0) {
@@ -794,17 +733,8 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
 
   const typeToggleHandler = () => setTypeVisible(!typeVisible);
 
-  const counterSearchToggleHandler = () => {
-    setIsSearchCounterparty(!isSearchCounterparty);
-    setCounterMenuOpen(!isCounterMenuOpen);
-  };
-
   const noteChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNote(e.target.value);
-  };
-
-  const counterKeywordChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCounterKeyword(e.target.value);
   };
 
   // Info: (20241018 - Julian) 欄位顯示
@@ -818,14 +748,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       return t(`journal:ADD_NEW_VOUCHER.TYPE_${eventTypeToVoucherType.toUpperCase()}`);
     } else {
       return t(`journal:ADD_NEW_VOUCHER.TYPE_${typeStr.toUpperCase()}`);
-    }
-  };
-
-  const getCounterpartyStr = (counterParty: ICounterparty | undefined) => {
-    if (counterParty) {
-      return `${counterParty.companyId} - ${counterParty.name}`;
-    } else {
-      return t('journal:ADD_NEW_VOUCHER.COUNTERPARTY');
     }
   };
 
@@ -949,10 +871,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位
       setIsShowDateHint(true);
       if (dateRef.current) dateRef.current.scrollIntoView();
-      // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示類型提示，並定位到類型欄位
-    } else if (isCounterpartyRequired && !counterparty) {
-      setIsShowCounterHint(true);
-      if (counterpartyRef.current) counterpartyRef.current.scrollIntoView();
     } else if (
       isTotalZero || // Info: (20241004 - Julian) 借貸總金額不可為 0
       isTotalNotEqual || // Info: (20241004 - Julian) 借貸金額需相等
@@ -975,7 +893,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
 
       // Info: (20241007 - Julian) 重設提示
       setIsShowDateHint(false);
-      setIsShowCounterHint(false);
       setIsShowAssetHint(false);
       setIsShowReverseHint(false);
       setFlagOfSubmit(!flagOfSubmit);
@@ -1037,60 +954,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
           </button>
         );
       })}
-    </div>
-  ) : null;
-
-  const displayedCounterparty = isSearchCounterparty ? (
-    <input
-      ref={counterpartyInputRef}
-      value={counterKeyword}
-      onChange={counterKeywordChangeHandler}
-      placeholder={`${counterparty?.id} - ${counterparty?.name}`}
-      className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
-    />
-  ) : (
-    <p
-      className={`truncate ${isShowCounterHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : inputStyle.NORMAL}`}
-    >
-      {isShowAnalysisPreview
-        ? getCounterpartyStr(aiCounterParty)
-        : `${counterparty?.id} - ${counterparty?.name}`}
-    </p>
-  );
-
-  const counterMenu = isCounterpartyLoading ? (
-    <div className="px-12px py-8px text-sm text-input-text-input-placeholder">Loading...</div>
-  ) : filteredCounterparty && filteredCounterparty.length > 0 ? (
-    filteredCounterparty.map((counter) => {
-      const counterClickHandler = () => {
-        setCounterparty(counter);
-        setCounterMenuOpen(false);
-      };
-
-      return (
-        <button
-          key={counter.id}
-          type="button"
-          onClick={counterClickHandler}
-          className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-        >
-          <p className="text-dropdown-text-primary">{counter.taxId}</p>
-          <p className="text-dropdown-text-secondary">{counter.name}</p>
-        </button>
-      );
-    })
-  ) : (
-    <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
-      {t('journal:ADD_NEW_VOUCHER.NO_COUNTERPARTY_FOUND')}
-    </p>
-  );
-
-  const counterpartyDropMenu = isCounterMenuOpen ? (
-    <div
-      ref={counterMenuRef}
-      className="absolute top-85px z-30 w-full rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-dropmenu"
-    >
-      {counterMenu}
     </div>
   ) : null;
 
@@ -1231,29 +1094,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
         {isShowCounter && (
-          <div className="relative col-span-2 flex flex-col gap-8px">
-            <p className="font-bold text-input-text-primary">
-              {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
-              <span className="text-text-state-error">*</span>
-            </p>
-            <button
-              id="voucher-counterparty"
-              type="button"
-              // Info: (20241108 - Julian) 透過 tabIndex 讓 div 可以被 focus
-              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-              // tabIndex={0}
-              ref={counterpartyRef}
-              onClick={counterSearchToggleHandler}
-              className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
-            >
-              {displayedCounterparty}
-              <div className="h-20px w-20px">
-                <FiSearch size={20} />
-              </div>
-            </button>
-            {/* Info: (20241004 - Julian) Counterparty drop menu */}
-            {counterpartyDropMenu}
-          </div>
+          <CounterpartyInput
+            counterparty={counterparty}
+            setCounterparty={setCounterparty}
+            className="col-span-2"
+            flagOfSubmit={flagOfSubmit}
+          />
         )}
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (

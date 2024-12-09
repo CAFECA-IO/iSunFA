@@ -115,11 +115,7 @@ export interface IVoucherDetailForFrontend {
   voucherDate: number;
   type: string;
   note: string;
-  counterParty: {
-    id: number;
-    companyId: number;
-    name: string;
-  };
+  counterParty: ICounterparty;
   recurringInfo?: {
     // Info: (20241105 - Murky) @Julian 如過不需要的話可以加上?
     type: string;
@@ -162,6 +158,11 @@ export const defaultVoucherDetail: IVoucherDetailForFrontend = {
     id: 0,
     companyId: 0,
     name: '',
+    taxId: '',
+    type: '',
+    note: '',
+    createdAt: 0,
+    updatedAt: 0,
   },
   recurringInfo: {
     type: '',
