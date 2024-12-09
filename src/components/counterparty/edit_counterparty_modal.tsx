@@ -345,7 +345,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
             onClick={deleteCounterpartyHandler}
           >
             <RiDeleteBinLine className="text-neutral-500" />
-            <p className="text-red-600">Remove this Client/Supplier</p>
+            <p className="text-red-600">{t('certificate:COUNTERPARTY.REMOVE_THIS')}</p>
           </div>
           <div className="flex items-center justify-end gap-12px">
             <Button

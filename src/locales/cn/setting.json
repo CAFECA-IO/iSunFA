@@ -68,7 +68,8 @@
     "ENTER_NUMBER": "输入号码",
     "PHONE_NUMBER": "电话号码",
     "COST": "成本",
-    "CLIENT_SUPPLIER_SETTING": "交易伙伴设定"
+    "CLIENT_SUPPLIER_SETTING": "交易伙伴设定",
+    "ADD_NEW_CLIENT_SUPPLIER": "新增客户/供应商"
   },
   "ACCOUNTING": {
     "TITLE": "会计设定",

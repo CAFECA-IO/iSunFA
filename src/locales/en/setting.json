@@ -68,7 +68,8 @@
     "ENTER_NUMBER": "Enter Number",
     "PHONE_NUMBER": "Phone Number",
     "COST": "Cost",
-    "CLIENT_SUPPLIER_SETTING": "Client/Supplier setting"
+    "CLIENT_SUPPLIER_SETTING": "Client/Supplier setting",
+    "ADD_NEW_CLIENT_SUPPLIER": "Add New Client/Supplier"
   },
   "ACCOUNTING": {
     "TITLE": "Accounting Setting",
