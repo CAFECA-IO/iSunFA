@@ -32,7 +32,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
   const [companyAddress, setCompanyAddress] = React.useState('');
   const [country, setCountry] = React.useState<LocaleKey | null>(null);
   const [countryCode, setCountryCode] = React.useState<LocaleKey>(LocaleKey.en);
-  const [phoneNumber, setPhoneNumber] = React.useState('');
+  const [phoneNumber, setPhoneNumber] = React.useState<string | undefined>('');
   const { toastHandler, messageModalVisibilityHandler, messageModalDataHandler } =
     useModalContext();
   const { trigger: getCompanySettingAPI } = APIHandler<ICompanySetting>(
