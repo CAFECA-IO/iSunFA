@@ -4,7 +4,7 @@ import {
   createManyAssets,
   deleteAsset,
   deleteManyAssets,
-  getAllAssetsWithVouchers,
+  getAllAssetsByCompanyId,
   getLegitAssetById,
 } from '@/lib/utils/repo/asset.repo';
 import { getTimestampNow } from '@/lib/utils/common';
@@ -213,7 +213,7 @@ describe('deleteAsset', () => {
 describe('getAllAssetsWithVouchers', () => {
   it('should only return assets with vouchers', async () => {
     // Info: (20241209 - Shirley) 使用種子資料中已知有 voucher 的資產進行測試
-    const assets = await getAllAssetsWithVouchers(testCompanyId);
+    const assets = await getAllAssetsByCompanyId(testCompanyId);
 
     expect(assets).toBeDefined();
     expect(Array.isArray(assets)).toBe(true);
@@ -227,7 +227,7 @@ describe('getAllAssetsWithVouchers', () => {
   });
 
   it('should include correct asset fields', async () => {
-    const assets = await getAllAssetsWithVouchers(testCompanyId);
+    const assets = await getAllAssetsByCompanyId(testCompanyId);
 
     if (assets.length > 0) {
       const asset = assets[0];
@@ -249,7 +249,7 @@ describe('getAllAssetsWithVouchers', () => {
       status: AssetStatus.NORMAL,
     };
 
-    const assets = await getAllAssetsWithVouchers(testCompanyId, searchCondition);
+    const assets = await getAllAssetsByCompanyId(testCompanyId, searchCondition);
 
     expect(assets).toBeDefined();
     assets.forEach((asset) => {
@@ -259,7 +259,7 @@ describe('getAllAssetsWithVouchers', () => {
 
   it('should return different asset lists for different company IDs', async () => {
     const differentCompanyId = 999;
-    const assets = await getAllAssetsWithVouchers(differentCompanyId);
+    const assets = await getAllAssetsByCompanyId(differentCompanyId);
 
     // Info: (20241209 - Shirley) 假設測試資料庫中 companyId 999 沒有資產
     expect(assets).toHaveLength(0);
@@ -270,7 +270,7 @@ describe('getAllAssetsWithVouchers', () => {
     const sortByNameAsc = {
       name: 'asc' as const,
     };
-    const assetsNameAsc = await getAllAssetsWithVouchers(testCompanyId, undefined, sortByNameAsc);
+    const assetsNameAsc = await getAllAssetsByCompanyId(testCompanyId, undefined, sortByNameAsc);
 
     expect(assetsNameAsc).toBeDefined();
     if (assetsNameAsc.length > 1) {
@@ -283,7 +283,7 @@ describe('getAllAssetsWithVouchers', () => {
     const sortByPriceDesc = {
       purchasePrice: 'desc' as const,
     };
-    const assetsPriceDesc = await getAllAssetsWithVouchers(
+    const assetsPriceDesc = await getAllAssetsByCompanyId(
       testCompanyId,
       undefined,
       sortByPriceDesc
@@ -300,7 +300,7 @@ describe('getAllAssetsWithVouchers', () => {
   });
 
   it('should default sort by creation time in descending order when no sort condition is specified', async () => {
-    const assets = await getAllAssetsWithVouchers(testCompanyId);
+    const assets = await getAllAssetsByCompanyId(testCompanyId);
 
     expect(assets).toBeDefined();
     if (assets.length > 1) {

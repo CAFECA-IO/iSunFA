@@ -1,7 +1,10 @@
 import { Asset as PrismaAsset } from '@prisma/client';
-import { IAssetEntity } from '@/interfaces/asset';
+import { IAssetEntity, IAssetItem, IPaginatedAsset } from '@/interfaces/asset';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
 import { assetEntityValidator } from '@/lib/utils/zod_schema/asset';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { ISortOption } from '@/interfaces/sort';
+import { pageToOffset } from '@/lib/utils/common';
 
 /**
  * Info: (20241025 - Murky)
@@ -30,4 +33,31 @@ export function parsePrismaAssetToAssetEntity(dto: PrismaAsset): IAssetEntity {
   };
 
   return assetEntity;
+}
+
+export function formatPaginatedAsset(
+  data: IAssetItem[],
+  sortOption: ISortOption[],
+  page: number,
+  pageSize: number = DEFAULT_PAGE_LIMIT
+) {
+  const skip = pageToOffset(page, pageSize);
+  const totalCount = data.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const paginatedData = data.slice(skip, skip + pageSize);
+  const hasNextPage = skip + pageSize < totalCount;
+  const hasPreviousPage = page > 1;
+
+  const paginatedAsset: IPaginatedAsset = {
+    data: paginatedData,
+    page,
+    totalPages,
+    totalCount,
+    pageSize,
+    hasNextPage,
+    hasPreviousPage,
+    sort: sortOption,
+  };
+
+  return paginatedAsset;
 }

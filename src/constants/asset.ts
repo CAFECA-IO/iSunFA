@@ -1,3 +1,5 @@
+import { SortOrder, SortBy } from '@/constants/sort';
+
 export enum AssetStatus {
   SCRAPPED = 'scrapped',
   SOLD = 'sold',
@@ -216,3 +218,7 @@ export const AccountCodesOfAPandAR = [...AccountCodesOfAR, ...AccountCodesOfAP];
 export const AccountCodesOfARRegex = new RegExp(`^(${AccountCodesOfAR.join('|')}).*`);
 export const AccountCodesOfAPRegex = new RegExp(`^(${AccountCodesOfAP.join('|')}).*`);
 export const AccountCodesOfAPandARRegex = new RegExp(`^(${AccountCodesOfAPandAR.join('|')}).*`);
+
+export const DEFAULT_SORT_OPTIONS = [
+  { sortBy: SortBy.ACQUISITION_DATE, sortOrder: SortOrder.DESC },
+];

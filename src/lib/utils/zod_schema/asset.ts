@@ -1,12 +1,13 @@
 import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import { z } from 'zod';
 import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
 /**
  * Info: (20241105 - Murky)
  * @description 這個是給前端用的 IRelatedVoucher, 放在 IAssetDetails 裡面
  */
-const IRelatedVoucherValidator = z.object({
+export const IRelatedVoucherValidator = z.object({
   id: z.number(),
   number: z.string(),
 });
@@ -24,6 +25,14 @@ const AssetGetByIdQueryValidator = AssetCreateQueryValidator.extend({
 // Info: (20241206 - Shirley) query for delete asset by id
 const AssetDeleteByIdQueryValidator = AssetCreateQueryValidator.extend({
   assetId: zodStringToNumber,
+});
+
+// Info: (20241206 - Shirley) query for list assets
+const AssetListQueryValidator = AssetCreateQueryValidator.extend({
+  page: zodStringToNumber.optional(),
+  pageSize: zodStringToNumber.optional(),
+  // TODO: (20241210 - Shirley) 現在在 middleware 驗證用 z.string().optional()、進到 trial balance repo 再用 `parseSortOption` 去 parse 或給予預設 sort option；之後要改成用 zodFilterSectionSortingOptions 去 parse
+  sortOption: z.string().optional(),
 });
 
 export const AssetCreateInputBodyValidator = z.object({
@@ -64,7 +73,7 @@ export const AssetBulkCreateOutputValidator = z.array(AssetCreateOutputValidator
  * Info: (20241105 - Murky)
  * @description 這個是給前端用的 IAssetItem, 放在 IAssetDetails 裡面
  */
-const IAssetItemValidator = z.object({
+export const IAssetItemValidator = z.object({
   id: z.number(),
   currencyAlias: z.string(),
   acquisitionDate: z.number(),
@@ -121,6 +130,8 @@ export const assetEntityValidator = z.object({
   company: z.any().optional(), // Info: (20241024 - Murky) @Shirley 目前沒有檢查
 });
 
+export const AssetListOutputValidator = paginatedDataSchema(IAssetItemValidator);
+
 // Info: (20241204 - Luphia) define the schema for frontend (with api response)
 export const assetPostSchema = {
   input: {
@@ -155,5 +166,14 @@ export const assetDeleteSchema = {
     bodySchema: nullSchema,
   },
   outputSchema: IAssetDetailsValidator,
+  frontend: nullSchema,
+};
+
+export const assetListSchema = {
+  input: {
+    querySchema: AssetListQueryValidator,
+    bodySchema: nullSchema,
+  },
+  outputSchema: AssetListOutputValidator,
   frontend: nullSchema,
 };

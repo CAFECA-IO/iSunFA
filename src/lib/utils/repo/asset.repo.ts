@@ -197,7 +197,7 @@ export async function deleteManyAssets(assetIds: number[]) {
  * @param companyId 公司ID（可選）
  * @returns 資產列表
  */
-export async function getAllAssetsWithVouchers(
+export async function getAllAssetsByCompanyId(
   companyId: number,
   filterCondition?: Prisma.AssetWhereInput,
   sortCondition?: Prisma.AssetOrderByWithRelationInput

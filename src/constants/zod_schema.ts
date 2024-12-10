@@ -111,6 +111,7 @@ import {
   assetBulkPostSchema,
   assetDeleteSchema,
   assetGetByIdSchema,
+  assetListSchema,
   assetPostSchema,
 } from '@/lib/utils/zod_schema/asset';
 
@@ -281,7 +282,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.ZOD_EXAMPLE]: nullAPISchema, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: nullAPISchema,
   [APIName.PUSHER_AUTH]: nullAPISchema,
-  [APIName.ASSET_LIST_V2]: nullAPISchema,
+  [APIName.ASSET_LIST_V2]: assetListSchema,
   [APIName.ASSET_GET_BY_ID_V2]: assetGetByIdSchema,
   [APIName.CREATE_ASSET_V2]: assetPostSchema,
   [APIName.DELETE_ASSET_V2]: assetDeleteSchema,
