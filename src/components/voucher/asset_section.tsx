@@ -14,8 +14,8 @@ import { IAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import { AssetModalType } from '@/interfaces/asset_modal';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IAssetSectionProps {
   isShowAssetHint: boolean;
@@ -29,7 +29,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
   defaultAssetList = [],
 }) => {
   const { t } = useTranslation('common');
-  const { selectedCompany, userAuth } = useUserCtx();
+  const { selectedCompany } = useUserCtx();
   const { addAssetModalVisibilityHandler, addAssetModalDataHandler } = useGlobalCtx();
   const { deleteTemporaryAssetHandler, temporaryAssetList } = useAccountingCtx();
   const { toastHandler } = useModalContext();
@@ -38,12 +38,12 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     APIName.DELETE_ASSET_V2
   );
 
-  const userId = userAuth?.id ?? -1;
-  const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
+  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const temporaryAssetListByCompany = temporaryAssetList[companyId] ?? [];
 
   const [assetList, setAssetList] = useState<IAssetDetails[]>([
     ...defaultAssetList,
-    ...temporaryAssetListByUser,
+    ...temporaryAssetListByCompany,
   ]);
 
   // Info: (20241025 - Julian) 根據 lineItems 取得資產類別的會計科目
@@ -71,7 +71,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     if (!isLoading) {
       if (success && data) {
         // Info: (20241025 - Julian) 確定 API 刪除成功後，更新畫面
-        deleteTemporaryAssetHandler(userId, data.assetNumber);
+        deleteTemporaryAssetHandler(companyId, data.assetNumber);
       } else if (error) {
         // Info: (20241025 - Julian) 刪除失敗後，提示使用者
         toastHandler({
@@ -86,8 +86,13 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
 
   useEffect(() => {
     // Info: (20241119 - Julian) 更新 assetList
-    const newTemporaryAssetList = temporaryAssetList[userId] ?? [];
+    const newTemporaryAssetList = temporaryAssetList[companyId] ?? [];
     setAssetList([...defaultAssetList, ...newTemporaryAssetList]);
+
+    // eslint-disable-next-line
+    console.log('assetList', assetList);
+    // eslint-disable-next-line
+    console.log('length', assetList.length);
   }, [temporaryAssetList]);
 
   const displayedAssetList =
@@ -105,10 +110,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
         const deleteHandler = () => {
           // Info: (20241025 - Julian) trigger API to delete asset
           trigger({
-            params: {
-              companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-              assetId: asset.id,
-            },
+            params: { companyId, assetId: asset.id },
           });
         };
 
@@ -119,8 +121,10 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
           >
             <Image src="/icons/number_sign.svg" alt="number_sign" width={24} height={24} />
             <div className="flex flex-1 flex-col">
-              <p className="font-semibold text-file-uploading-text-primary">{asset.assetName}</p>
-              <p className="text-xs text-file-uploading-text-disable">{asset.assetNumber}</p>
+              <p className="font-semibold text-file-uploading-text-primary">
+                {asset.assetName ?? '-'}
+              </p>
+              <p className="text-xs text-file-uploading-text-disable">{asset.assetNumber ?? '-'}</p>
             </div>
             <div className="flex items-center gap-16px">
               <Button
