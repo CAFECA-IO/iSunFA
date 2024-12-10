@@ -33,6 +33,11 @@ const AssetListQueryValidator = AssetCreateQueryValidator.extend({
   pageSize: zodStringToNumber.optional(),
   // TODO: (20241210 - Shirley) 現在在 middleware 驗證用 z.string().optional()、進到 trial balance repo 再用 `parseSortOption` 去 parse 或給予預設 sort option；之後要改成用 zodFilterSectionSortingOptions 去 parse
   sortOption: z.string().optional(),
+  type: z.nativeEnum(AssetEntityType).optional(),
+  status: z.nativeEnum(AssetStatus).optional(),
+  startDate: zodStringToNumber.optional(),
+  endDate: zodStringToNumber.optional(),
+  searchQuery: z.string().optional(),
 });
 
 export const AssetCreateInputBodyValidator = z.object({

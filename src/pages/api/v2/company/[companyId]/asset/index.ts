@@ -16,24 +16,7 @@ import { formatPaginatedAsset } from '@/lib/utils/formatter/asset.formatter';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { parseSortOption } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_SORT_OPTIONS } from '@/constants/asset';
-
-// interface IAssetListPayload extends IPaginatedData<IAssetItem[]> {}
-
-// const MOCK_ASSET_LIST_PAYLOAD: IPaginatedAsset = {
-//   data: [mockAssetItem],
-//   page: 1,
-//   totalPages: 1,
-//   totalCount: 1,
-//   pageSize: 10,
-//   hasNextPage: false,
-//   hasPreviousPage: false,
-//   sort: [
-//     {
-//       sortBy: 'acquisitionDate',
-//       sortOrder: 'desc',
-//     },
-//   ],
-// };
+import { Prisma } from '@prisma/client';
 
 /* Info: (20241204 - Luphia) API develop SOP 以 POST ASSET API 為例
  * 1. 前置作業
@@ -94,16 +77,46 @@ export const handleGetRequest: IHandleRequest<
   APIName.ASSET_LIST_V2,
   IGetResult['payload']
 > = async ({ query }) => {
-  const { companyId, page = 1, pageSize, sortOption } = query;
+  const {
+    companyId,
+    page = 1,
+    pageSize,
+    sortOption,
+    type,
+    status,
+    startDate,
+    endDate,
+    searchQuery,
+  } = query;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedAsset | null = null;
 
-  const assets = await getAllAssetsByCompanyId(companyId);
+  const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
+
+  const filterCondition: Prisma.AssetWhereInput = {
+    ...(type ? { type } : {}),
+    ...(status ? { status } : {}),
+    ...(startDate || endDate
+      ? {
+          acquisitionDate: {
+            ...(startDate ? { gte: Number(startDate) } : {}),
+            ...(endDate ? { lte: Number(endDate) } : {}),
+          },
+        }
+      : {}),
+  };
+
+  const assets = await getAllAssetsByCompanyId(companyId, {
+    sortOption: parsedSortOption,
+    filterCondition,
+    searchQuery,
+  });
+
   if (!assets) {
     payload = null;
   } else {
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
-    // sort assets into fit tptrihe `IAssetItem`
+    // Info: (20241210 - Shirley) sort assets into fit tptrihe `IAssetItem`
     const sortedAssets = assets.map((item) => {
       return {
         id: item.id,
@@ -122,7 +135,6 @@ export const handleGetRequest: IHandleRequest<
         deletedAt: null,
       };
     });
-    const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
 
     const paginatedAssets = formatPaginatedAsset(sortedAssets, parsedSortOption, page, pageSize);
     payload = paginatedAssets;
@@ -132,20 +144,6 @@ export const handleGetRequest: IHandleRequest<
 
   return { statusMessage, payload };
 };
-
-// export async function handleGetRequest() {
-//   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-//   let payload: IPaginatedAsset | null = null;
-
-//   // ToDo: (20240927 - Shirley) 從請求中獲取查詢參數
-//   // ToDo: (20240927 - Shirley) 從資料庫獲取資產數據
-//   // ToDo: (20240927 - Shirley) 將資產數據格式化為資產介面
-
-//   payload = MOCK_ASSET_LIST_PAYLOAD;
-//   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-
-//   return { statusMessage, payload };
-// }
 
 export const handlePostRequest: IHandleRequest<
   APIName.CREATE_ASSET_V2,
@@ -195,7 +193,6 @@ export const handlePostRequest: IHandleRequest<
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
 } = {
-  // GET: handleGetRequest,
   GET: (req, res) => withRequestValidation(APIName.ASSET_LIST_V2, req, res, handleGetRequest),
   POST: (req, res) => withRequestValidation(APIName.CREATE_ASSET_V2, req, res, handlePostRequest),
 };

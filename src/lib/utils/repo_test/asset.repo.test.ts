@@ -8,6 +8,7 @@ import {
   getLegitAssetById,
 } from '@/lib/utils/repo/asset.repo';
 import { getTimestampNow } from '@/lib/utils/common';
+import { SortOrder, SortBy } from '@/constants/sort';
 
 const testCompanyId = 1000;
 
@@ -17,7 +18,6 @@ describe('createAssetWithVouchers (single asset)', () => {
     const newAssetData = {
       companyId: testCompanyId,
       name: 'Test Asset Land',
-      type: AssetEntityType.LAND,
       number: assetNumberPrefix,
       acquisitionDate: 1704067200,
       purchasePrice: 10000,
@@ -25,6 +25,7 @@ describe('createAssetWithVouchers (single asset)', () => {
       residualValue: 1000,
       usefulLife: 60,
       depreciationStart: 1704067200,
+      type: AssetEntityType.LAND,
       depreciationMethod: AssetDepreciationMethod.STRAIGHT_LINE,
       note: 'Test asset note',
     };
@@ -213,7 +214,7 @@ describe('deleteAsset', () => {
 describe('getAllAssetsWithVouchers', () => {
   it('should only return assets with vouchers', async () => {
     // Info: (20241209 - Shirley) 使用種子資料中已知有 voucher 的資產進行測試
-    const assets = await getAllAssetsByCompanyId(testCompanyId);
+    const assets = await getAllAssetsByCompanyId(testCompanyId, {});
 
     expect(assets).toBeDefined();
     expect(Array.isArray(assets)).toBe(true);
@@ -227,7 +228,11 @@ describe('getAllAssetsWithVouchers', () => {
   });
 
   it('should include correct asset fields', async () => {
-    const assets = await getAllAssetsByCompanyId(testCompanyId);
+    const assets = await getAllAssetsByCompanyId(testCompanyId, {
+      filterCondition: {
+        type: AssetEntityType.LAND,
+      },
+    });
 
     if (assets.length > 0) {
       const asset = assets[0];
@@ -245,11 +250,11 @@ describe('getAllAssetsWithVouchers', () => {
   });
 
   it('should correctly filter assets when search conditions are provided', async () => {
-    const searchCondition = {
-      status: AssetStatus.NORMAL,
-    };
-
-    const assets = await getAllAssetsByCompanyId(testCompanyId, searchCondition);
+    const assets = await getAllAssetsByCompanyId(testCompanyId, {
+      filterCondition: {
+        status: AssetStatus.NORMAL,
+      },
+    });
 
     expect(assets).toBeDefined();
     assets.forEach((asset) => {
@@ -259,7 +264,7 @@ describe('getAllAssetsWithVouchers', () => {
 
   it('should return different asset lists for different company IDs', async () => {
     const differentCompanyId = 999;
-    const assets = await getAllAssetsByCompanyId(differentCompanyId);
+    const assets = await getAllAssetsByCompanyId(differentCompanyId, {});
 
     // Info: (20241209 - Shirley) 假設測試資料庫中 companyId 999 沒有資產
     expect(assets).toHaveLength(0);
@@ -267,27 +272,31 @@ describe('getAllAssetsWithVouchers', () => {
 
   it('should correctly sort assets based on specified conditions', async () => {
     // Info: (20241209 - Shirley) 測試按名稱升序排序
-    const sortByNameAsc = {
-      name: 'asc' as const,
+    const sort = {
+      sortBy: SortBy.ACQUISITION_DATE,
+      sortOrder: SortOrder.ASC,
     };
-    const assetsNameAsc = await getAllAssetsByCompanyId(testCompanyId, undefined, sortByNameAsc);
+    const assetsAcqDateASC = await getAllAssetsByCompanyId(testCompanyId, {
+      sortOption: [sort],
+    });
 
-    expect(assetsNameAsc).toBeDefined();
-    if (assetsNameAsc.length > 1) {
-      for (let i = 1; i < assetsNameAsc.length; i += 1) {
-        expect(assetsNameAsc[i - 1].name <= assetsNameAsc[i].name).toBeTruthy();
+    expect(assetsAcqDateASC).toBeDefined();
+    if (assetsAcqDateASC.length > 1) {
+      for (let i = 1; i < assetsAcqDateASC.length; i += 1) {
+        expect(
+          assetsAcqDateASC[i - 1].acquisitionDate <= assetsAcqDateASC[i].acquisitionDate
+        ).toBeTruthy();
       }
     }
 
     // Info: (20241209 - Shirley) 測試按購買價格降序排序
     const sortByPriceDesc = {
-      purchasePrice: 'desc' as const,
+      sortBy: SortBy.PURCHASE_PRICE,
+      sortOrder: SortOrder.DESC,
     };
-    const assetsPriceDesc = await getAllAssetsByCompanyId(
-      testCompanyId,
-      undefined,
-      sortByPriceDesc
-    );
+    const assetsPriceDesc = await getAllAssetsByCompanyId(testCompanyId, {
+      sortOption: [sortByPriceDesc],
+    });
 
     expect(assetsPriceDesc).toBeDefined();
     if (assetsPriceDesc.length > 1) {
@@ -299,14 +308,26 @@ describe('getAllAssetsWithVouchers', () => {
     }
   });
 
-  it('should default sort by creation time in descending order when no sort condition is specified', async () => {
-    const assets = await getAllAssetsByCompanyId(testCompanyId);
+  it('should default sort by acquisition date in descending order when no sort condition is specified', async () => {
+    const assets = await getAllAssetsByCompanyId(testCompanyId, {
+      sortOption: undefined,
+    });
 
     expect(assets).toBeDefined();
     if (assets.length > 1) {
       for (let i = 1; i < assets.length; i += 1) {
-        expect(assets[i - 1].createdAt >= assets[i].createdAt).toBeTruthy();
+        expect(assets[i - 1].acquisitionDate <= assets[i].acquisitionDate).toBeTruthy();
       }
     }
+  });
+
+  it('should filter assets based on provided conditions', async () => {
+    const filterCondition = { status: AssetStatus.NORMAL };
+    const assets = await getAllAssetsByCompanyId(testCompanyId, { filterCondition });
+
+    expect(assets).toBeDefined();
+    assets.forEach((asset) => {
+      expect(asset.status).toBe(AssetStatus.NORMAL);
+    });
   });
 });
