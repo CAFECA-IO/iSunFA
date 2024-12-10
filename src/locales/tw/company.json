@@ -51,5 +51,8 @@
   "DELETE": {
     "TITLE": "移除公司",
     "WARNING": "您確定要移除公司嗎？"
+  },
+  "UPLOAD_COMPANY_AVATAR_MODAL": {
+    "CHANGE_COMPANY_AVATAR": "變更公司頭像"
   }
 }

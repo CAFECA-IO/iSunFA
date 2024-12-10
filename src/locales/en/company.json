@@ -51,5 +51,8 @@
   "DELETE": {
     "TITLE": "Remove the Company",
     "WARNING": "Are you sure you want to Remove the Company?"
+  },
+  "UPLOAD_COMPANY_AVATAR_MODAL": {
+    "CHANGE_COMPANY_AVATAR": "Change Company Avatar"
   }
 }

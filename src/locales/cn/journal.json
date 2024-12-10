@@ -308,5 +308,8 @@
   },
   "EDIT_VOUCHER": {
     "PAGE_TITLE": "编辑传票"
+  },
+  "COMMON": {
+    "STATUS": "状态"
   }
 }
