@@ -63,7 +63,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
               : 'grid-rows-0 border-transparent'
           } overflow-hidden transition-all duration-300 ease-in-out`}
         >
-          <ul className={`flex max-h-400px w-full flex-col items-start overflow-y-auto p-2`}>
+          <ul className={`z-20 flex max-h-400px w-full flex-col items-start overflow-y-auto p-2`}>
             {options.map((option) => (
               <li
                 key={option}
