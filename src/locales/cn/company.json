@@ -43,6 +43,7 @@
     "SUBMIT": "提交",
     "SAVE": "保存",
     "CONNECT": "连接",
+    "LINKED": "已连接",
     "CHANGE_WORK_TAG": "更改标签",
     "DELETE": "删除",
     "DELETE_MESSAGE_TITLE": "删除公司",

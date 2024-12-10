@@ -2,7 +2,8 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
 import { ICompanyAndRole } from '@/interfaces/company';
 import { BsThreeDotsVertical } from 'react-icons/bs';
-import { IoArrowForward } from 'react-icons/io5';
+import { IoArrowForward, IoClose } from 'react-icons/io5';
+import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
 import CompanyTag from '@/components/beta/my_company_list_page/company_tag';
 import { CANCEL_COMPANY_ID } from '@/constants/company';
@@ -107,7 +108,7 @@ const CompanyItem = ({
           className="flex-none rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2"
         ></Image>
 
-        <div className="absolute inset-0 flex items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
+        <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
           <FiEdit2 size={24} />
         </div>
       </button>
@@ -156,14 +157,28 @@ const CompanyItem = ({
       <div className="flex w-120px items-center justify-end">
         <button
           type="button"
-          className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-button-text-primary-solid hover:bg-button-surface-soft-primary-hover"
+          className="group relative text-button-text-secondary"
           onClick={handleConnect}
           disabled={isLoading}
         >
-          <p className="text-sm font-medium">
-            {isCompanySelected ? t('company:PAGE_BODY.CANCEL') : t('company:PAGE_BODY.CONNECT')}
-          </p>
-          <IoArrowForward size={16} />
+          {isCompanySelected ? (
+            <div className="flex items-center gap-4px rounded-xs border border-button-stroke-secondary bg-surface-state-success px-16px py-8px group-hover:opacity-0">
+              <p className="text-sm font-medium">{t('company:PAGE_BODY.LINKED')}</p>
+              <FaRegCircleCheck size={16} />
+            </div>
+          ) : (
+            <div className="flex items-center gap-4px rounded-xs border border-button-stroke-secondary px-16px py-8px">
+              <p className="text-sm font-medium">{t('company:PAGE_BODY.CONNECT')}</p>
+              <IoArrowForward size={16} />
+            </div>
+          )}
+
+          {isCompanySelected && (
+            <div className="absolute inset-0 flex items-center justify-center gap-4px rounded-xs border border-surface-state-success-soft bg-surface-state-success-soft px-16px py-8px text-sm opacity-0 group-hover:opacity-100">
+              <p className="text-sm font-medium">{t('company:PAGE_BODY.CANCEL')}</p>
+              <IoClose size={16} />
+            </div>
+          )}
         </button>
       </div>
     </div>
