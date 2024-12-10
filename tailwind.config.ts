@@ -1256,6 +1256,8 @@ module.exports = {
         // Info: (20240315- Shirley) A4 尺寸
         'a4-width': '595px',
         'a4-height': '842px',
+
+        auto: 'auto',
       },
       translate: {
         '19rem': '19rem',
@@ -1518,6 +1520,9 @@ module.exports = {
         'dynamic-fill': 'repeat(auto-fill, minmax(200px, 1fr))',
         13: 'repeat(13, minmax(0, 1fr))', // Info: (20240927 - Julian) Voucher line 用
         14: 'repeat(14, minmax(0, 1fr))', // Info: (20241105 - Julian) Reverse item 用
+      },
+      gridAutoFlow: {
+        dense: 'dense',
       },
       gridAutoRows: {
         'min-content': 'min-content',

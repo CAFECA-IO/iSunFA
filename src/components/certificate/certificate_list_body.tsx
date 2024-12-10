@@ -519,7 +519,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       )}
       {/* Info: (20240919 - tzuhan) Main Content */}
       <div
-        className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'overflow-scroll' : ''} `}
+        // Info: (20241210 - tzuhan) 隱藏 scrollbar
+        // eslint-disable-next-line tailwindcss/no-custom-classname
+        className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
         <CertificateFileUpload />

@@ -1293,6 +1293,16 @@ input[type='checkbox']:checked::before {
     var(--surface-neutral-surface-lv2, #fff);
 }
 
+/* Info: (20241210 - tzuhan) 隱藏所有瀏覽器的默認滾動條樣式 */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}
+
 @media (max-width: 769px) {
   .toast-container {
     margin-bottom: 40px;

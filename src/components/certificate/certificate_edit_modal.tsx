@@ -324,9 +324,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       return true;
     });
     setFilteredCounterPartyList(filteredList);
-    if (filteredList.length === 0) {
-      counterPartySearchHandler();
-    }
   };
 
   const CounterPartyInput = isCounterPartyEditing ? (
@@ -386,6 +383,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   // Info: (20240924 - tzuhan) 處理保存
   const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (filteredCounterPartyList.length === 0) {
+      counterPartySearchHandler();
+    }
     const updatedData: ICertificate = {
       ...certificate,
       invoice: {
@@ -430,7 +430,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 id="invoicenname"
                 type="text"
                 onChange={(e) => setCertificateFilename(e.target.value)}
-                className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                className="flex-1 p-10px outline-none"
                 placeholder="0"
               />
               <Image
@@ -467,7 +467,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
           />
           {/* Info: (20240924 - tzuhan) 編輯表單 */}
 
-          <div className="flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
+          {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
+          {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
+          <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
             {/* Info: (20240924 - tzuhan) 切換輸入/輸出 */}
             <div className="flex flex-col items-start gap-2">
               <p className="text-sm font-semibold text-input-text-primary">
@@ -703,7 +705,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     onClick={invoiceTypeMenuClickHandler}
                     className={`group relative flex h-46px w-full cursor-pointer ${isInvoiceTypeMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                   >
-                    <p className="flex h-46px items-center gap-1 overflow-y-scroll">
+                    {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
+                    {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
+                    <p className="hide-scrollbar flex h-46px items-center gap-1 overflow-y-scroll">
                       <span>{t(`filter_section_type:FILTER_SECTION_TYPE.${invoiceType}`)}</span>
                       <div className="flex h-20px w-20px items-center justify-center">
                         <FaChevronDown

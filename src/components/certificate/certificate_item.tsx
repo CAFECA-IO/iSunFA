@@ -103,7 +103,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       <BorderCell isSelected={certificate.isSelected} className="min-w-170px">
         <div className="flex-col items-center gap-lv-1">
           <div className="flex justify-between">
-            <div className="gap-badge-gap-spacing-sm px-badge-spacing-x-sm py-badge-spacing-y-sm flex w-75px items-center rounded-full bg-surface-support-soft-rose text-xs">
+            <div className="flex w-75px items-center gap-badge-gap-spacing-sm rounded-full bg-surface-support-soft-rose px-badge-spacing-x-sm py-badge-spacing-y-sm text-xs">
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-rose`}
               ></div>
@@ -117,7 +117,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             </div>
           </div>
           <div className="flex justify-between">
-            <div className="gap-badge-gap-spacing-sm px-badge-spacing-x-sm py-badge-spacing-y-sm flex w-75px items-center rounded-full bg-surface-support-soft-baby text-xs">
+            <div className="flex w-75px items-center gap-badge-gap-spacing-sm rounded-full bg-surface-support-soft-baby px-badge-spacing-x-sm py-badge-spacing-y-sm text-xs">
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-baby`}
               ></div>
