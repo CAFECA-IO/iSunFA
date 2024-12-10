@@ -6,7 +6,7 @@ export interface ICounterparty {
   companyId: number;
   name: string;
   taxId: string;
-  type: string; // Info: (20241210 - tzuhan) @Murky 這裡的 type 是不是應該要改成 CounterpartyType 呢？
+  type: CounterpartyType;
   note: string;
   createdAt: number;
   updatedAt: number;
