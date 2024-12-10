@@ -8,7 +8,6 @@ import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
 import { InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { ICounterparty } from '@/interfaces/counterparty';
-import { CounterpartyType } from '@/constants/counterparty';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -50,8 +49,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 }) => {
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
-  const { trigger: updateFilename } = APIHandler(APIName.FILE_PUT_V2);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
+  const { trigger: updateFilename } = APIHandler(APIName.FILE_PUT_V2);
   const { trigger: getCounterpartyList } = APIHandler<IPaginatedData<ICounterparty[]>>(
     APIName.COUNTERPARTY_LIST
   );
@@ -193,23 +192,10 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 
   useEffect(() => {
     // Info: (20241206 - Julian) Add Counterparty Event
-    const handleAddCounterParty = (data: {
-      name: string;
-      taxId: string;
-      type: CounterpartyType;
-      note: string;
-    }) => {
+    const handleAddCounterParty = (newCounterParty: ICounterparty) => {
       if (!companyId) return;
 
-      const newCounterParty: ICounterparty = {
-        ...data,
-        id: counterPartyList.length + 1,
-        companyId,
-        createdAt: Math.floor(new Date().getTime() / 1000),
-        updatedAt: Math.floor(new Date().getTime() / 1000),
-      };
-
-      filteredCounterPartyList.push(newCounterParty);
+      setFilteredCounterPartyList([...filteredCounterPartyList, newCounterParty]);
       toastHandler({
         id: ToastId.ADD_COUNTERPARTY_SUCCESS,
         type: ToastType.SUCCESS,
@@ -229,40 +215,32 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   }, [companyId, filteredCounterPartyList, searchName, searchTaxId]);
 
   const CounterPartyItems =
-    filteredCounterPartyList.length > 0 ? (
-      filteredCounterPartyList.map((partner) => {
-        const counterPartyClickHandler = () => {
-          setCounterParty(partner);
-          // Info: (20241017 - Tzuhan) 關閉 CounterPartyI Menu 和編輯狀態
-          setCounterPartyMenuOpen(false);
-          setIsCounterPartyEditing(false);
-          // Info: (20241017 - Tzuhan) 重置搜尋關鍵字
-          setSearchName('');
-          setSearchTaxId('');
-        };
+    filteredCounterPartyList.length > 0 &&
+    filteredCounterPartyList.map((partner) => {
+      const counterPartyClickHandler = () => {
+        setCounterParty(partner);
+        // Info: (20241017 - Tzuhan) 關閉 CounterPartyI Menu 和編輯狀態
+        setCounterPartyMenuOpen(false);
+        setIsCounterPartyEditing(false);
+        // Info: (20241017 - Tzuhan) 重置搜尋關鍵字
+        setSearchName('');
+        setSearchTaxId('');
+      };
 
-        return (
-          <button
-            key={partner.id}
-            type="button"
-            onClick={counterPartyClickHandler}
-            className="flex w-full text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-          >
-            <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">
-              {partner.taxId}
-            </p>
-            <p className="px-12px py-8px text-dropdown-text-secondary">{partner.name}</p>
-          </button>
-        );
-      })
-    ) : (
-      <div className="flex text-left text-sm" onClick={() => setCounterPartyMenuOpen(false)}>
-        <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">
-          {t('certificate:EDIT.ID_NUMBER')}
-        </p>
-        <p className="px-12px py-8px text-dropdown-text-secondary">{t('certificate:EDIT.NAME')}</p>
-      </div>
-    );
+      return (
+        <button
+          key={partner.id}
+          type="button"
+          onClick={counterPartyClickHandler}
+          className="flex w-full text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
+        >
+          <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">
+            {partner.taxId}
+          </p>
+          <p className="px-12px py-8px text-dropdown-text-secondary">{partner.name}</p>
+        </button>
+      );
+    });
 
   const DisplayedCounterPartyMenu = (
     <div
@@ -282,7 +260,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   );
 
   const counterPartySearchHandler = useCallback(() => {
-    if (!searchName && !searchTaxId) return;
+    if (!searchName && !searchTaxId && filteredCounterPartyList.length > 0) return;
     messageModalDataHandler({
       messageType: MessageType.INFO,
       title: t('certificate:COUNTERPARTY.TITLE'),
@@ -334,7 +312,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         id="counterparty-tax-id"
         onChange={counterPartyInputHandler}
         type="number"
-        placeholder={counterParty?.taxId}
+        placeholder={counterParty?.taxId ?? t('certificate:EDIT.ID_NUMBER')}
         className="w-100px truncate border-r bg-transparent px-12px py-10px outline-none"
       />
       <input
@@ -343,16 +321,18 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         id="counterparty-name"
         onChange={counterPartyInputHandler}
         type="text"
-        placeholder={counterParty?.name}
+        placeholder={counterParty?.name ?? t('certificate:EDIT.NAME')}
         className="truncate bg-transparent px-12px py-10px outline-none"
       />
     </div>
   ) : (
     <p className={`flex truncate text-input-text-input-filled`}>
       <p className="w-100px border-r px-12px py-10px text-dropdown-text-primary">
-        {counterParty?.taxId ?? 'N/A'}
+        {counterParty?.taxId ?? t('certificate:EDIT.ID_NUMBER')}
       </p>
-      <p className="px-12px py-10px text-dropdown-text-secondary">{counterParty?.name ?? 'N/A'}</p>
+      <p className="px-12px py-10px text-dropdown-text-secondary">
+        {counterParty?.name ?? t('certificate:EDIT.NAME')}
+      </p>
     </p>
   );
 
@@ -411,7 +391,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       className={`fixed inset-0 z-70 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
     >
       <form
-        className={`relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-h-96vh md:max-w-800px`}
+        className={`relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 overflow-y-hidden rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-h-96vh md:max-w-800px`}
         onSubmit={handleSave}
       >
         {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
@@ -430,8 +410,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 id="invoicenname"
                 type="text"
                 onChange={(e) => setCertificateFilename(e.target.value)}
-                className="flex-1 p-10px outline-none"
-                placeholder="0"
+                className="outline-none"
+                placeholder="|"
               />
               <Image
                 alt="edit"
@@ -455,7 +435,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
           )}
           <p className="text-xs text-card-text-secondary">{t('certificate:EDIT.HEADER')}</p>
         </div>
-        <div className="flex w-full items-start justify-between gap-5 md:flex-row">
+        {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
+        {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
+        <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
           {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
           <Image
             className="h-400px w-250px items-start"

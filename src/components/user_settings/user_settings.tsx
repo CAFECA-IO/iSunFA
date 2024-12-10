@@ -24,14 +24,16 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs
   const loginDevice = userActionLogs ? userActionLogs.data[0].userAgent : '';
   const loginIP = userActionLogs ? userActionLogs.data[0].ipAddress : '';
 
-  const [firstName, setFirstName] = useState<string>(userSetting?.personalInfo.firstName || '');
-  const [lastName, setLastName] = useState<string>(userSetting?.personalInfo.lastName || '');
+  const [firstName, setFirstName] = useState<string | undefined>();
+  const [lastName, setLastName] = useState<string | undefined>();
   const [country, setCountry] = useState<LocaleKey | null>(null);
   const [language, setLanguage] = useState<LocaleKey>(
+    (userSetting?.personalInfo.language as LocaleKey) || LocaleKey.en
+  );
+  const [countryCode, setCountryCode] = useState<LocaleKey>(
     (userSetting?.personalInfo.country as LocaleKey) || LocaleKey.en
-  ); // Info: (20241114 - tzuhan) @Jacky 這裡也需要改成 LocalKey
-  const [countryCode, setCountryCode] = useState<LocaleKey>(LocaleKey.en); // Info: (20241114 - tzuhan) @Jacky 這裡也需要提供 countryCode
-  const [phoneNumber, setPhoneNumber] = useState<string>(userSetting?.personalInfo.phone || '');
+  ); // Info: (20241114 - tzuhan) @Jacky 這裡也需要提供 countryCode
+  const [phoneNumber, setPhoneNumber] = useState<string | undefined>();
   const { toastHandler } = useModalContext();
   const { trigger: updateUserSettingAPI } = APIHandler<IUserSetting>(APIName.USER_SETTING_UPDATE);
 

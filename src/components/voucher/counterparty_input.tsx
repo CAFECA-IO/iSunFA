@@ -4,7 +4,6 @@ import { FiSearch } from 'react-icons/fi';
 import { inputStyle } from '@/constants/display';
 import { ToastId } from '@/constants/toast_id';
 import { APIName } from '@/constants/api_connection';
-import { CounterpartyType } from '@/constants/counterparty';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import APIHandler from '@/lib/utils/api_handler';
@@ -112,21 +111,8 @@ const CounterpartyInput: React.FC<ICounterpartyInputProps> = ({
 
   useEffect(() => {
     // Info: (20241206 - Julian) Add Counterparty Event
-    const handleAddCounterparty = (data: {
-      name: string;
-      taxId: string;
-      type: CounterpartyType;
-      note: string;
-    }) => {
+    const handleAddCounterparty = (newCounterparty: ICounterparty) => {
       if (!companyId) return;
-
-      const newCounterparty: ICounterparty = {
-        ...data,
-        id: counterpartyList.length + 1,
-        companyId,
-        createdAt: Math.floor(new Date().getTime() / 1000),
-        updatedAt: Math.floor(new Date().getTime() / 1000),
-      };
 
       filteredCounterpartyList.push(newCounterparty);
       toastHandler({

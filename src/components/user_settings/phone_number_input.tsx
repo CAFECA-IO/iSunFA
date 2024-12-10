@@ -7,8 +7,8 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 interface PhoneNumberInputProps {
   countryCode: LocaleKey;
   setCountryCode: React.Dispatch<React.SetStateAction<LocaleKey>>;
-  phoneNumber: string;
-  setPhoneNumber: React.Dispatch<React.SetStateAction<string>>;
+  phoneNumber: string | undefined;
+  setPhoneNumber: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
 const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
@@ -43,24 +43,24 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
         className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-5 py-3 max-md:max-w-full ${
           isCountryCodeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
-        onClick={countryCodeMenuClickHandler}
       >
-        <Image
-          width={20}
-          height={20}
-          src={selectedCountryCode?.icon ?? '/icons/en.svg'}
-          alt="countryCode icon"
-          className="mr-2"
-        />
+        <div className="flex items-center" onClick={countryCodeMenuClickHandler}>
+          <Image
+            width={20}
+            height={20}
+            src={selectedCountryCode?.icon ?? '/icons/en.svg'}
+            alt="countryCode icon"
+            className="mr-2"
+          />
 
-        <Image
-          src="/elements/arrow_down.svg"
-          alt="arrow_down"
-          width={20}
-          height={20}
-          className="mr-5"
-        />
-
+          <Image
+            src="/elements/arrow_down.svg"
+            alt="arrow_down"
+            width={20}
+            height={20}
+            className="mr-5"
+          />
+        </div>
         <input
           id="note-input"
           type="text"
