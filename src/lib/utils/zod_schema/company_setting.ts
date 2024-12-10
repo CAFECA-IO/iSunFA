@@ -15,8 +15,8 @@ const companySettingPutQuerySchema = z.object({
   companyId: zodStringToNumber,
 });
 const companySettingPutBodySchema = z.object({
-  id: z.number(),
-  companyId: z.number().int(),
+  id: z.number().optional(),
+  companyId: z.number().int().optional(),
   companyName: z.string(),
   companyTaxId: z.string(),
   taxSerialNumber: z.string(),
@@ -25,8 +25,8 @@ const companySettingPutBodySchema = z.object({
   countryCode: z.nativeEnum(LocaleKey),
   phone: z.string(),
   address: z.string(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
+  createdAt: z.number().optional(),
+  updatedAt: z.number().optional(),
 });
 
 // Info: (20241029 - Jacky) Company setting output schema

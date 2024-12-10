@@ -1,4 +1,5 @@
 export enum InvoiceType {
+  ALL = 'ALL',
   /**
    * Info: (20241024 - Murky)
    * @description 進項三聯式、電子計算機統一發票

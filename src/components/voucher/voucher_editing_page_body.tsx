@@ -44,8 +44,7 @@ import { ToastType } from '@/interfaces/toastify';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
 
 // ToDo: (20241118 - Julian) For debug, remove later
-// ToDo: (20241209 - Julian) IVoucherDetailForFrontend 須調整
-const defaultVoucherDetail /* : IVoucherDetailForFrontend  */ = {
+const defaultVoucherDetail: IVoucherDetailForFrontend = {
   id: 1000,
   voucherDate: 1704134230,
   type: 'payment',
@@ -382,11 +381,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   } = APIHandler<IAIResultVoucher>(APIName.ASK_AI_RESULT_V2);
 
   // Info: (20241118 - Julian) 取得 Voucher 資料
-  // ToDo: (20241209 - Julian) IVoucherDetailForFrontend 須調整
-  const { trigger: getVoucherData /* , data: voucherData  */ } =
-    APIHandler<IVoucherDetailForFrontend>(APIName.VOUCHER_GET_BY_ID_V2, {
+  const { trigger: getVoucherData, data: voucherData } = APIHandler<IVoucherDetailForFrontend>(
+    APIName.VOUCHER_GET_BY_ID_V2,
+    {
       params: { companyId, voucherId },
-    });
+    }
+  );
 
   // Info: (20241118 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
   const {
@@ -436,7 +436,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     certificates: voucherCertificates,
     counterParty: voucherCounterParty,
     assets: voucherAssets,
-  } = /* voucherData ?? */ defaultVoucherDetail; // ToDo: (20241209 - Julian) IVoucherDetailForFrontend 須調整
+  } = voucherData ?? defaultVoucherDetail;
 
   const defaultDate: IDatePeriod = { startTimeStamp: voucherDate, endTimeStamp: voucherDate };
   const defaultType = EVENT_TYPE_TO_VOUCHER_TYPE_MAP[voucherType as EventType] || voucherType;

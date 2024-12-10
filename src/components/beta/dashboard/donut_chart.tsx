@@ -6,29 +6,21 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 interface DonutChartProps {
   percentageForMissingCertificate: number;
   percentageForUnpostedVouchers: number;
-  percentageForUnarchivedCustomerData: number;
   isChartForTotal: boolean;
 }
 
 const DonutChart = ({
   percentageForMissingCertificate,
   percentageForUnpostedVouchers,
-  percentageForUnarchivedCustomerData,
   isChartForTotal,
 }: DonutChartProps) => {
-  const backgroundColorSwitch = isChartForTotal
-    ? ['#FD853A', '#6CDEA0', '#9B8AFB']
-    : ['#BDF0D5', '#EBE9FE', '#FFEAD5'];
+  const backgroundColorSwitch = isChartForTotal ? ['#FD853A', '#6CDEA0'] : ['#BDF0D5', '#EBE9FE'];
 
   const data: ChartData<'doughnut', number[], string> = {
-    labels: ['Missing certificate', 'Unposted vouchers', 'Unarchived customer data'],
+    labels: ['Missing certificate', 'Unposted vouchers'],
     datasets: [
       {
-        data: [
-          percentageForMissingCertificate,
-          percentageForUnpostedVouchers,
-          percentageForUnarchivedCustomerData,
-        ],
+        data: [percentageForMissingCertificate, percentageForUnpostedVouchers],
         backgroundColor: backgroundColorSwitch, // Info: (20241017 - Liz) 區塊顏色依照順序設定
         borderWidth: 0,
       },

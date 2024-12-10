@@ -16,6 +16,7 @@ import { IUserRole } from '@/interfaces/user_role';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { IRole } from '@/interfaces/role';
+import { SkeletonList } from '@/components/skeleton/skeleton';
 
 interface UserRoleProps {
   name: string;
@@ -137,6 +138,7 @@ const SelectRolePage = () => {
   const router = useRouter();
   const [userRoleList, setUserRoleList] = useState<IUserRole[]>([]);
   const [isAbleToCreateRole, setIsAbleToCreateRole] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const initializeRolesData = async () => {
@@ -144,6 +146,7 @@ const SelectRolePage = () => {
       // eslint-disable-next-line no-console
       console.log('觸發 useEffect, 取得系統角色與使用者角色 (in SelectRolePage)');
 
+      setIsLoading(true);
       try {
         const userRoles = await getUserRoleList();
         const systemRoles = await getSystemRoleList();
@@ -163,6 +166,8 @@ const SelectRolePage = () => {
         // Deprecated: (20241122 - Liz)
         // eslint-disable-next-line no-console
         console.log('Failed to fetch or compute roles:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -217,32 +222,35 @@ const SelectRolePage = () => {
         </button>
 
         {/* // Info: (20241009 - Liz) User Roles */}
-        <section className="flex items-center justify-center gap-40px">
-          {userRoleList.map((userRole) => {
-            const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.role.name);
+        {isLoading && <SkeletonList count={4} />}
+        {!isLoading && (
+          <section className="flex items-center justify-center gap-40px">
+            {userRoleList.map((userRole) => {
+              const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.role.name);
 
-            return (
-              <UserRole
-                key={userRole.id}
-                name={userRole.role.name}
-                roleId={userRole.role.id}
-                roleIconSrc={roleIcon?.roleIconSrc ?? ''}
-                roleIconAlt={roleIcon?.roleIconAlt ?? ''}
-                avatar={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
-                lastLoginAt={userRole.lastLoginAt}
-              />
-            );
-          })}
+              return (
+                <UserRole
+                  key={userRole.id}
+                  name={userRole.role.name}
+                  roleId={userRole.role.id}
+                  roleIconSrc={roleIcon?.roleIconSrc ?? ''}
+                  roleIconAlt={roleIcon?.roleIconAlt ?? ''}
+                  avatar={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
+                  lastLoginAt={userRole.lastLoginAt}
+                />
+              );
+            })}
 
-          {isAbleToCreateRole && (
-            <Link
-              href={ISUNFA_ROUTE.CREATE_ROLE}
-              className="z-1 rounded-lg bg-surface-neutral-surface-lv1 p-18px text-text-neutral-secondary shadow-Dropshadow_S"
-            >
-              <HiPlus size={64} />
-            </Link>
-          )}
-        </section>
+            {isAbleToCreateRole && (
+              <Link
+                href={ISUNFA_ROUTE.CREATE_ROLE}
+                className="z-1 rounded-lg bg-surface-neutral-surface-lv1 p-18px text-text-neutral-secondary shadow-Dropshadow_S"
+              >
+                <HiPlus size={64} />
+              </Link>
+            )}
+          </section>
+        )}
       </div>
     </>
   );

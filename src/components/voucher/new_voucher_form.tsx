@@ -219,6 +219,26 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     [certificates]
   );
 
+  const handleDelete = useCallback(
+    (id: number) => {
+      const updatedData = {
+        ...certificates,
+      };
+      updatedData[id] = {
+        ...updatedData[id],
+        isSelected: false,
+      };
+
+      const selectedCerts = Object.values(updatedData).filter(
+        (item) => item.isSelected
+      ) as ICertificateUI[];
+
+      setCertificates(updatedData);
+      setSelectedCertificates(selectedCerts);
+    },
+    [certificates]
+  );
+
   // useEffect(() => {
   //   if (selectedCertificates.length > 0 && selectedIds.length > 0) {
   //     // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
@@ -978,6 +998,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         isSelectable
         isDeletable
         className="my-8"
+        onDelete={handleDelete}
       />
 
       {/* Info: (20240926 - Julian) form */}

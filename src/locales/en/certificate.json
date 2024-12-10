@@ -158,13 +158,17 @@
   },
   "SELECTION": {
     "EXPORT": "Export",
-    "CERTIFICATES": "Certificates",
     "ADD_NEW_VOUCHER": "Add New Voucher",
     "ADD_NEW_ASSET": "Add New Asset"
   },
   "COMMON": {
     "PERIOD": "Period",
-    "CANCEL": "Cancel"
+    "CANCEL": "Cancel",
+    "SELECT": "Select",
+    "SELECT_ALL": "Select All",
+    "UPLOADED": "Uploaded",
+    "TOTAL": "Total",
+    "CERTIFICATES": "Certificates"
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error"
