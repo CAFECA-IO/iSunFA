@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
-import { IoIosArrowDown } from 'react-icons/io';
+import { FaChevronDown } from 'react-icons/fa6';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import Toggle from '@/components/toggle/toggle';
@@ -31,6 +31,7 @@ interface CertificateEditModalProps {
   companyId?: number;
   toggleModel: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
   certificate?: ICertificateUI;
+  onUpdateFilename: (certificateId: number, name: string) => void;
   onSave: (data: ICertificate) => void; // Info: (20240924 - tzuhan) 保存數據的回調函數
   onDelete: (id: number) => void;
 }
@@ -40,17 +41,17 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   companyId,
   toggleModel,
   certificate,
+  onUpdateFilename,
   onSave,
   onDelete,
 }) => {
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
-
-  const { t } = useTranslation(['certificate', 'common']);
+  const { trigger: updateFilename } = APIHandler(APIName.FILE_PUT_V2);
+  const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
   const { trigger: getCounterpartyList } = APIHandler<IPaginatedData<ICounterparty[]>>(
     APIName.COUNTERPARTY_LIST
   );
-  const { trigger: updateFilename } = APIHandler(APIName.FILE_PUT_V2);
   const [isNameEditing, setIsNameEditing] = useState(false);
   const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
   const [isLoadingCounterParty, setIsLoadingCounterParty] = useState(false);
@@ -94,13 +95,13 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     targetRef: taxRatioMenuRef,
     componentVisible: isTaxRatioMenuOpen,
     setComponentVisible: setIsTaxRatioMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
+  } = useOuterClick<HTMLDivElement>(false);
 
   const {
     targetRef: invoiceTypeMenuRef,
     componentVisible: isInvoiceTypeMenuOpen,
     setComponentVisible: setIsInvoiceTypeMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
+  } = useOuterClick<HTMLDivElement>(false);
 
   const invoiceTypeMenuClickHandler = () => {
     setIsInvoiceTypeMenuOpen(!isInvoiceTypeMenuOpen);
@@ -124,6 +125,15 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     const updateTaxPrice = Math.round((value * taxRatio) / 100);
     setTaxPrice(updateTaxPrice);
     setTotalPrice(value + updateTaxPrice);
+  };
+
+  const totalPriceChangeHandler = (value: number) => {
+    setTotalPrice(value);
+    const ratio = (100 + taxRatio) / 100;
+    const updatePriceBeforeTax = Math.round(value / ratio);
+    setPriceBeforeTax(updatePriceBeforeTax);
+    const updateTaxPrice = value - updatePriceBeforeTax;
+    setTaxPrice(updateTaxPrice);
   };
 
   // Info: (20241206 - Julian) currency alias setting
@@ -248,8 +258,10 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       })
     ) : (
       <div className="flex text-left text-sm" onClick={() => setCounterPartyMenuOpen(false)}>
-        <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">N/A</p>
-        <p className="px-12px py-8px text-dropdown-text-secondary">N/A</p>
+        <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">
+          {t('certificate:EDIT.ID_NUMBER')}
+        </p>
+        <p className="px-12px py-8px text-dropdown-text-secondary">{t('certificate:EDIT.NAME')}</p>
       </div>
     );
 
@@ -365,6 +377,10 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         closeable: true,
       });
     }
+    if (success) {
+      setCertificateFilename(certificateFilename);
+      onUpdateFilename(certificate.id, certificateFilename);
+    }
     setIsNameEditing(false);
   };
 
@@ -428,7 +444,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
             </h2>
           ) : (
             <h2 className="flex justify-center gap-2 text-xl font-semibold">
-              {certificate.file.name}
+              {certificateFilename}
               <Image
                 alt="edit"
                 src="/elements/edit.svg"
@@ -517,7 +533,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   value={certificateNo}
                   onChange={(e) => setCertificateNo(e.target.value)}
                   className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
-                  placeholder="0"
+                  placeholder="AB-12345678"
                 />
               </div>
             </div>
@@ -562,20 +578,24 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               <div className="flex w-full items-center gap-2">
                 <div
                   id="tax-rate-menu"
+                  ref={taxRatioMenuRef}
                   onClick={() => setIsTaxRatioMenuOpen(!isTaxRatioMenuOpen)}
                   className={`group relative flex h-46px w-full cursor-pointer md:w-220px ${isTaxRatioMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                 >
                   <p className="text-input-text-input-filled">
                     {t('certificate:EDIT.TAXABLE')} {taxRatio}%
                   </p>
-                  <IoIosArrowDown />
+                  <div className="flex h-20px w-20px items-center justify-center">
+                    <FaChevronDown
+                      className={`transition-transform duration-300 ${
+                        isTaxRatioMenuOpen ? 'rotate-180' : 'rotate-0'
+                      }`}
+                    />
+                  </div>
                   <div
                     className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxRatioMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                   >
-                    <ul
-                      ref={taxRatioMenuRef}
-                      className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary p-8px"
-                    >
+                    <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary p-8px">
                       {[0, 5, 10, 15].map((value) => (
                         <li
                           key={`taxable-${value}`}
@@ -631,6 +651,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   required
                   hasComma
                   className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                  triggerWhenChanged={totalPriceChangeHandler}
                 />
                 <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                   <Image
@@ -678,21 +699,25 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               <div className="flex w-full items-center gap-4">
                 <div className="flex w-full items-center">
                   <div
+                    ref={invoiceTypeMenuRef}
                     id="invoice-type-menu"
                     onClick={invoiceTypeMenuClickHandler}
                     className={`group relative flex h-46px w-full cursor-pointer ${isInvoiceTypeMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                   >
                     <p className="flex h-46px items-center gap-1 overflow-y-scroll">
-                      <span>{t(`certificate:INVOICE_TYPE.${invoiceType}`)}</span>
-                      <IoIosArrowDown size={32} />
+                      <span>{t(`filter_section_type:FILTER_SECTION_TYPE.${invoiceType}`)}</span>
+                      <div className="flex h-20px w-20px items-center justify-center">
+                        <FaChevronDown
+                          className={`transition-transform duration-300 ${
+                            isInvoiceTypeMenuOpen ? 'rotate-180' : 'rotate-0'
+                          }`}
+                        />
+                      </div>
                     </p>
                     <div
                       className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isInvoiceTypeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                     >
-                      <ul
-                        ref={invoiceTypeMenuRef}
-                        className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
-                      >
+                      <ul className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px">
                         {Object.values(InvoiceType).map((value) => (
                           <li
                             key={`taxable-${value}`}
@@ -700,7 +725,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                             className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
                             onClick={invoiceTypeMenuOptionClickHandler.bind(null, value)}
                           >
-                            {t(`certificate:INVOICE_TYPE.${value}`)}
+                            {t(`filter_section_type:FILTER_SECTION_TYPE.${value}`)}
                           </li>
                         ))}
                       </ul>

@@ -28,6 +28,8 @@ import CertificateExportModal from '@/components/certificate/certificate_export_
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { CurrencyType } from '@/constants/currency';
 
 interface CertificateListBodyProps {}
 
@@ -35,6 +37,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate']);
   const router = useRouter();
   const { userAuth, selectedCompany } = useUserCtx();
+  const { getAccountingSettingHandler } = useAccountingCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
   const params = { companyId: selectedCompany?.id };
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
@@ -334,9 +337,29 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [editingId]
   );
 
+  const onUpdateFilename = useCallback(
+    (id: number, filename: string) => {
+      setCertificates((prev) => {
+        const updatedData = {
+          ...prev,
+          [id]: {
+            ...prev[id],
+            file: {
+              ...prev[id].file,
+              name: filename,
+            },
+          },
+        };
+        return updatedData;
+      });
+    },
+    [certificates]
+  );
+
   const handleEditItem = useCallback(
     async (certificate: ICertificate) => {
       try {
+        const accountingSetting = await getAccountingSettingHandler(companyId);
         // Info: (20241025 - tzuhan) @Murky, 這邊跟目前後端的接口不一致，需要調整的話再跟我說
         const postOrPutAPI = certificate.invoice.id
           ? updateCertificateAPI({
@@ -351,7 +374,10 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 inputOrOutput: certificate.invoice.inputOrOutput,
                 date: certificate.invoice.date,
                 no: certificate.invoice.no,
-                currencyAlias: certificate.invoice.currencyAlias,
+                currencyAlias:
+                  certificate.invoice.currencyAlias ||
+                  (accountingSetting?.currency as CurrencyType) ||
+                  CurrencyType.TWD,
                 priceBeforeTax: certificate.invoice.priceBeforeTax,
                 taxType: certificate.invoice.taxType,
                 taxRatio: certificate.invoice.taxRatio,
@@ -402,7 +428,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   );
 
   const handleNewCertificateComing = useCallback(
-    (newCertificate: ICertificate) => {
+    async (newCertificate: ICertificate) => {
       setCertificates((prev) => {
         // Deprecated: (20241122 - tzuhan) Debugging purpose
         // eslint-disable-next-line no-console
@@ -492,6 +518,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           companyId={companyId}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           certificate={editingId ? certificates[editingId] : undefined}
+          onUpdateFilename={onUpdateFilename}
           onSave={handleEditItem}
           onDelete={handleDeleteItem}
         />

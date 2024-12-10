@@ -37,7 +37,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
   handleSelect,
   onEdit,
 }) => {
-  const { t } = useTranslation(['common', 'certificate']);
+  const { t } = useTranslation(['common', 'certificate', 'filter_section_type']);
 
   return (
     <div
@@ -90,7 +90,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       <BorderCell isSelected={certificate.isSelected} className="max-w-120px overflow-hidden">
         <div className="overflow-scroll text-text-neutral-primary">
           {certificate.invoice?.type
-            ? t(`certificate:INVOICE_TYPE.${certificate.invoice?.type}`)
+            ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.invoice?.type}`)
             : ''}
         </div>
       </BorderCell>
