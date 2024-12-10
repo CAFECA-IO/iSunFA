@@ -1,43 +1,34 @@
 import { Dispatch, SetStateAction, useState } from 'react';
-import Image from 'next/image';
-import Pagination from '@/components/pagination/pagination';
 import { TbSquarePlus2, TbCodeCircle } from 'react-icons/tb';
-
-import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
-import ChangeTagModal from '@/components/beta/my_company_list_page/change_tag_modal';
-import FilterSection from '@/components/filter_section/filter_section';
-import CompanyItem from '@/components/beta/my_company_list_page/company_item';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { ICompanyAndRole } from '@/interfaces/company';
 import { useTranslation } from 'react-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT_FOR_COMPANY_LIST } from '@/constants/config';
-import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
+import Pagination from '@/components/pagination/pagination';
+import MessageModal from '@/components/message_modal/message_modal';
+import FilterSection from '@/components/filter_section/filter_section';
+import NoData from '@/components/beta/my_company_list_page/no_data';
+import CompanyItem from '@/components/beta/my_company_list_page/company_item';
+import UploadCompanyAvatarModal from '@/components/beta/my_company_list_page/upload_company_avatar_modal';
+import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
+import ChangeTagModal from '@/components/beta/my_company_list_page/change_tag_modal';
 
 interface CompanyListProps {
   companyList: ICompanyAndRole[];
   setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setCompanyToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setCompanyToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
-const NoData = () => {
-  const { t } = useTranslation(['company']);
-
-  return (
-    <section className="flex flex-auto flex-col items-center justify-center gap-16px">
-      <Image src={'/images/empty.svg'} alt="empty" width={120} height={134.787}></Image>
-
-      <div className="text-center text-base font-medium text-text-neutral-mute">
-        <p>{t('company:PAGE_BODY.NO_COMPANY_DATA_AVAILABLE')}</p>
-        <p>{t('company:PAGE_BODY.PLEASE_ADD_A_NEW_COMPANY')}</p>
-      </div>
-    </section>
-  );
-};
-
-const CompanyList = ({ companyList, setCompanyToEdit, setCompanyToDelete }: CompanyListProps) => {
+const CompanyList = ({
+  companyList,
+  setCompanyToEdit,
+  setCompanyToDelete,
+  setCompanyToUploadAvatar,
+}: CompanyListProps) => {
   return (
     <section className="flex flex-auto flex-col gap-8px">
       {companyList.map((myCompany) => (
@@ -46,6 +37,7 @@ const CompanyList = ({ companyList, setCompanyToEdit, setCompanyToDelete }: Comp
           myCompany={myCompany}
           setCompanyToEdit={setCompanyToEdit}
           setCompanyToDelete={setCompanyToDelete}
+          setCompanyToUploadAvatar={setCompanyToUploadAvatar}
         />
       ))}
     </section>
@@ -62,6 +54,7 @@ const MyCompanyListPageBody = () => {
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
   const [companyToEdit, setCompanyToEdit] = useState<ICompanyAndRole | undefined>();
   const [companyToDelete, setCompanyToDelete] = useState<ICompanyAndRole | undefined>();
+  const [companyToUploadAvatar, setCompanyToUploadAvatar] = useState<ICompanyAndRole | undefined>();
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [companyList, setCompanyList] = useState<ICompanyAndRole[]>([]);
@@ -156,6 +149,7 @@ const MyCompanyListPageBody = () => {
             companyList={companyList}
             setCompanyToEdit={setCompanyToEdit}
             setCompanyToDelete={setCompanyToDelete}
+            setCompanyToUploadAvatar={setCompanyToUploadAvatar}
           />
           <Pagination
             totalPages={totalPage}
@@ -177,6 +171,15 @@ const MyCompanyListPageBody = () => {
           companyToEdit={companyToEdit}
           isModalOpen={!!companyToEdit}
           setCompanyToEdit={setCompanyToEdit}
+          setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {companyToUploadAvatar && (
+        <UploadCompanyAvatarModal
+          companyToUploadAvatar={companyToUploadAvatar}
+          isModalOpen={!!companyToUploadAvatar}
+          setCompanyToUploadAvatar={setCompanyToUploadAvatar}
           setRefreshKey={setRefreshKey}
         />
       )}

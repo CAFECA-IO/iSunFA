@@ -236,6 +236,8 @@
     "M": "M",
     "Y": "Y",
     "D": "D",
-    "DAY": "Day"
+    "DAY": "Day",
+    "FILTER": "Filter",
+    "STATUS": "Status"
   }
 }

@@ -51,5 +51,8 @@
   "DELETE": {
     "TITLE": "删除公司",
     "WARNING": "您确定要删除公司吗？"
+  },
+  "UPLOAD_COMPANY_AVATAR_MODAL": {
+    "CHANGE_COMPANY_AVATAR": "变更公司头像"
   }
 }

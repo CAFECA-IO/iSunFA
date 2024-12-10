@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { ICompanyAndRole } from '@/interfaces/company';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoArrowForward } from 'react-icons/io5';
-import { FiTag, FiTrash2 } from 'react-icons/fi';
+import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
 import CompanyTag from '@/components/beta/my_company_list_page/company_tag';
 import { CANCEL_COMPANY_ID } from '@/constants/company';
 import { useTranslation } from 'react-i18next';
@@ -14,9 +14,15 @@ interface ICompanyItemProps {
   myCompany: ICompanyAndRole;
   setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setCompanyToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setCompanyToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
-const CompanyItem = ({ myCompany, setCompanyToEdit, setCompanyToDelete }: ICompanyItemProps) => {
+const CompanyItem = ({
+  myCompany,
+  setCompanyToEdit,
+  setCompanyToDelete,
+  setCompanyToUploadAvatar,
+}: ICompanyItemProps) => {
   const { t } = useTranslation(['company']);
   const { selectCompany, selectedCompany } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +49,11 @@ const CompanyItem = ({ myCompany, setCompanyToEdit, setCompanyToDelete }: ICompa
 
   const openDeleteCompanyModal = () => {
     setCompanyToDelete(myCompany);
+    closeOptionsDropdown();
+  };
+
+  const openUploadCompanyAvatarModal = () => {
+    setCompanyToUploadAvatar(myCompany);
     closeOptionsDropdown();
   };
 
@@ -73,8 +84,6 @@ const CompanyItem = ({ myCompany, setCompanyToEdit, setCompanyToDelete }: ICompa
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
       console.log('執行 selectCompany api 回傳:', data);
-
-      // ToDo: (20241114 - Liz) 選擇公司成功後的相關處理
     } catch (error) {
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
@@ -89,13 +98,19 @@ const CompanyItem = ({ myCompany, setCompanyToEdit, setCompanyToDelete }: ICompa
       key={myCompany.company.id}
       className="flex items-center justify-between gap-60px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
     >
-      <Image
-        src={myCompany.company.imageId}
-        alt={myCompany.company.name}
-        width={60}
-        height={60}
-        className="flex-none rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS"
-      ></Image>
+      <button type="button" onClick={openUploadCompanyAvatarModal} className="group relative">
+        <Image
+          src={myCompany.company.imageId}
+          alt={myCompany.company.name}
+          width={60}
+          height={60}
+          className="flex-none rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2"
+        ></Image>
+
+        <div className="absolute inset-0 flex items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
+          <FiEdit2 size={24} />
+        </div>
+      </button>
 
       <div className="flex flex-auto items-center gap-8px">
         <p className="text-base font-medium text-text-neutral-solid-dark">
