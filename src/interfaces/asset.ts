@@ -4,8 +4,13 @@ import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constan
 import { z } from 'zod';
 import {
   AssetCreateInputBodyValidator,
+  AssetCreateOutputValidator,
   IAssetDetailsValidator,
+  IAssetItemValidator,
+  IRelatedVoucherValidator,
+  UpdateAssetRepoInputValidator,
 } from '@/lib/utils/zod_schema/asset';
+import { IPaginatedData } from '@/interfaces/pagination';
 /* Info: (20240927 - Shirley) asset v1 介面 */
 export interface IAsset {
   id: number;
@@ -68,37 +73,28 @@ export const mockAssetData: IAsset[] = [
 
 /* Info: (20240927 - Shirley) asset v2 介面 */
 
-export interface IAssetItem {
-  id: number;
-  currencyAlias: string;
-  acquisitionDate: number;
-  assetType: string;
-  assetNumber: string;
-  assetName: string;
-  purchasePrice: number;
-  accumulatedDepreciation: number;
-  residualValue: number;
-  remainingLife: number;
-  assetStatus: string;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-}
+// export interface IAssetItem {
+//   id: number;
+//   currencyAlias: string;
+//   acquisitionDate: number;
+//   assetType: string;
+//   assetNumber: string;
+//   assetName: string;
+//   purchasePrice: number;
+//   accumulatedDepreciation: number;
+//   residualValue: number;
+//   remainingLife: number;
+//   assetStatus: string;
+//   createdAt: number;
+//   updatedAt: number;
+//   deletedAt: number | null;
+// }
+
+export type IAssetItem = z.infer<typeof IAssetItemValidator>;
 
 export type IAssetDetails = z.infer<typeof IAssetDetailsValidator>;
 
-// export interface IAssetDetails extends IAssetItem {
-//   depreciationStart: number;
-//   depreciationMethod: string;
-//   usefulLife: number;
-//   relatedVouchers: IRelatedVoucher[];
-//   note?: string;
-// }
-
-export interface IRelatedVoucher {
-  id: number;
-  number: string;
-}
+export type IRelatedVoucher = z.infer<typeof IRelatedVoucherValidator>;
 
 export type ICreateAssetInput = z.infer<typeof AssetCreateInputBodyValidator>;
 
@@ -381,16 +377,22 @@ export interface ICreateAssetWithVouchersRepoInput {
   note?: string;
 }
 
-export interface ICreateAssetWithVouchersRepoResponse {
-  id: number;
-  name: string;
-  number: string;
-  companyId: number;
-  status: string;
-  createdAt: number;
-  updatedAt: number;
-  note: string;
-}
+// export interface ICreateAssetWithVouchersRepoResponse {
+//   id: number;
+//   name: string;
+//   number: string;
+//   companyId: number;
+//   status: string;
+//   createdAt: number;
+//   updatedAt: number;
+//   note: string;
+// }
+
+export type ICreateAssetWithVouchersRepoResponse = z.infer<typeof AssetCreateOutputValidator>;
 
 export interface ICreateAssetBulkRepoInput extends ICreateAssetWithVouchersRepoInput {}
 export interface ICreateAssetBulkRepoResponse extends Array<ICreateAssetWithVouchersRepoResponse> {}
+
+export interface IPaginatedAsset extends IPaginatedData<IAssetItem[]> {}
+
+export type IUpdateAssetRepoInput = z.infer<typeof UpdateAssetRepoInputValidator>;

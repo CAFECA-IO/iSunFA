@@ -1,11 +1,13 @@
 import prisma from '@/client';
 import { AssetDepreciationMethod, AssetStatus } from '@/constants/asset';
+import { SortBy, SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
   ICreateAssetBulkRepoInput,
   ICreateAssetBulkRepoResponse,
   ICreateAssetWithVouchersRepoInput,
   ICreateAssetWithVouchersRepoResponse,
+  IUpdateAssetRepoInput,
 } from '@/interfaces/asset';
 import { generateAssetNumbers } from '@/lib/utils/asset';
 import { getTimestampNow } from '@/lib/utils/common';
@@ -192,30 +194,71 @@ export async function deleteManyAssets(assetIds: number[]) {
   return deletedAssets;
 }
 
+function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
+  const orderBy: Prisma.AssetOrderByWithRelationInput[] = [];
+  sortOptions.forEach((sort) => {
+    const { sortBy, sortOrder } = sort;
+    switch (sortBy) {
+      case SortBy.ACQUISITION_DATE:
+        orderBy.push({ acquisitionDate: sortOrder });
+        break;
+      case SortBy.PURCHASE_PRICE:
+        orderBy.push({ purchasePrice: sortOrder });
+        break;
+      case SortBy.ACCUMULATED_DEPRECIATION:
+        orderBy.push({ accumulatedDepreciation: sortOrder });
+        break;
+      case SortBy.RESIDUAL_VALUE:
+        orderBy.push({ residualValue: sortOrder });
+        break;
+      case SortBy.REMAINING_LIFE:
+        orderBy.push({ remainingLife: sortOrder });
+        break;
+      default:
+        break;
+    }
+  });
+  return orderBy;
+}
+
 /**
  * Info: (20241206 - Shirley) 獲取所有具有 voucher 的資產列表
  * @param companyId 公司ID（可選）
  * @returns 資產列表
  */
-export async function getAllAssetsWithVouchers(
+export async function getAllAssetsByCompanyId(
   companyId: number,
-  filterCondition?: Prisma.AssetWhereInput,
-  sortCondition?: Prisma.AssetOrderByWithRelationInput
+  options: {
+    sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
+    filterCondition?: Prisma.AssetWhereInput;
+    searchQuery?: string;
+  }
 ) {
+  const { sortOption, filterCondition, searchQuery } = options;
+
+  const where: Prisma.AssetWhereInput = {
+    companyId,
+    deletedAt: null,
+    assetVouchers: { some: {} }, // Info: (20241206 - Shirley) 獲取具有 voucher 的資產
+    ...(filterCondition || {}),
+    OR: searchQuery
+      ? [
+          { name: { contains: searchQuery, mode: 'insensitive' } },
+          { number: { contains: searchQuery, mode: 'insensitive' } },
+          { type: { contains: searchQuery, mode: 'insensitive' } },
+          { status: { contains: searchQuery, mode: 'insensitive' } },
+          { note: { contains: searchQuery, mode: 'insensitive' } },
+        ]
+      : undefined,
+  };
+
+  const orderBy = createOrderByList(sortOption || []) || {
+    createdAt: 'desc',
+  };
+
   const assets = await prisma.asset.findMany({
-    where: {
-      AND: [
-        { deletedAt: null },
-        { companyId },
-        {
-          assetVouchers: {
-            some: {}, // Info: (20241206 - Shirley) 確保至少有一個關聯的 voucher
-          },
-          companyId, // Info: (20241206 - Shirley) 如果提供了 companyId，則加入篩選條件
-        },
-      ],
-      ...filterCondition,
-    },
+    where,
+    orderBy,
     select: {
       id: true,
       name: true,
@@ -232,10 +275,38 @@ export async function getAllAssetsWithVouchers(
         },
       },
     },
-    orderBy: sortCondition || {
-      createdAt: 'desc',
-    },
   });
 
   return assets;
+}
+
+/**
+ * Info: (20241210 - Shirley) 更新資產
+ * @param companyId 公司ID
+ * @param assetId 資產ID
+ * @param assetData 可以更新的資產欄位
+ * @returns 更新後的資產
+ */
+export async function updateAsset(
+  companyId: number,
+  assetId: number,
+  assetData: IUpdateAssetRepoInput
+) {
+  const dataForUpdate = {
+    name: assetData.assetName,
+    acquisitionDate: assetData.acquisitionDate,
+    purchasePrice: assetData.purchasePrice,
+    status: assetData.assetStatus,
+    depreciationStart: assetData.depreciationStart,
+    depreciationMethod: assetData.depreciationMethod,
+    usefulLife: assetData.usefulLife,
+    residualValue: assetData.residualValue,
+    note: assetData.note,
+  };
+
+  const updatedAsset = await prisma.asset.update({
+    where: { id: assetId, companyId },
+    data: dataForUpdate,
+  });
+  return updatedAsset;
 }
