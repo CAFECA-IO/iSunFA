@@ -100,12 +100,20 @@ const MobileUploadPage: React.FC = () => {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-      const { encryptedContent } = await encryptFile(arrayBuffer, publicKey, iv);
+      const { encryptedContent, encryptedSymmetricKey } = await encryptFile(
+        arrayBuffer,
+        publicKey,
+        iv
+      );
       const encryptedFile = new File([encryptedContent], file.name, {
         type: file.type,
       });
 
-      return encryptedFile;
+      return {
+        encryptedFile,
+        iv,
+        encryptedSymmetricKey,
+      };
     } catch (error) {
       throw new Error(t('certificate:ERROR.ENCRYPT_FILE'));
     }
@@ -126,9 +134,15 @@ const MobileUploadPage: React.FC = () => {
       const keyPair = await generateKeyPair();
       await Promise.all(
         selectedFiles.map(async (fileUI) => {
-          const encryptedFile = await encryptFileWithPublicKey(fileUI.file, keyPair.publicKey);
+          const { encryptedFile, iv, encryptedSymmetricKey } = await encryptFileWithPublicKey(
+            fileUI.file,
+            keyPair.publicKey
+          );
           const formData = new FormData();
           formData.append('file', encryptedFile);
+          formData.append('encryptedSymmetricKey', encryptedSymmetricKey);
+          formData.append('publicKey', JSON.stringify(keyPair.publicKey));
+          formData.append('iv', Array.from(iv).join(','));
 
           const { success, data: fileId } = await uploadFileAPI({
             query: {
