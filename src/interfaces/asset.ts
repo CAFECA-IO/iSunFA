@@ -135,10 +135,7 @@ export const mockAssetDetails: IAssetDetails = {
   depreciationStart: 1632511200,
   depreciationMethod: 'straight-line',
   usefulLife: 36000,
-  relatedVouchers: [
-    { id: 101, number: 'V-2023-001' },
-    { id: 102, number: 'V-2023-002' },
-  ],
+  relatedVouchers: [],
   note: 'Main office computer',
 };
 
