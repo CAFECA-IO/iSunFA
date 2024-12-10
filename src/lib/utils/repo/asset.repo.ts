@@ -223,7 +223,7 @@ function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }
 
 /**
  * Info: (20241206 - Shirley) 獲取所有具有 voucher 的資產列表
- * @param companyId 公司ID（可選）
+ * @param companyId 公司ID
  * @returns 資產列表
  */
 export async function getAllAssetsByCompanyId(
