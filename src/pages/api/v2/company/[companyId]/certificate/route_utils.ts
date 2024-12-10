@@ -378,6 +378,17 @@ export const certificateAPIGetListUtils = {
     });
   },
 
+  isInvoiceComplete: (invoice: IInvoiceEntity) => {
+    const isComplete = !!(
+      invoice.no &&
+      invoice.date &&
+      invoice.priceBeforeTax &&
+      invoice.totalPrice &&
+      invoice.counterPartyId
+    );
+    return isComplete;
+  },
+
   transformCertificateEntityToResponse: (
     certificateEntity: ICertificateEntity & {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
@@ -409,9 +420,13 @@ export const certificateAPIGetListUtils = {
         createdAt: certificateEntity.invoice.counterParty.createdAt,
         updatedAt: certificateEntity.invoice.counterParty.updatedAt,
       };
+
+      const isInvoiceComplete = certificateAPIGetListUtils.isInvoiceComplete(
+        certificateEntity.invoice
+      );
       invoice = {
         id: certificateEntity.invoice.id,
-        isComplete: false,
+        isComplete: isInvoiceComplete,
         counterParty,
         inputOrOutput: certificateEntity.invoice.inputOrOutput,
         date: certificateEntity.invoice.date,
