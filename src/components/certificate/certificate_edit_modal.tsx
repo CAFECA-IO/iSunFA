@@ -417,8 +417,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               <Image
                 alt="edit"
                 src="/icons/save.svg"
-                width={16}
-                height={16}
+                width={20}
+                height={20}
                 onClick={updateFilenameHandler}
               />
             </h2>
@@ -428,8 +428,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               <Image
                 alt="edit"
                 src="/elements/edit.svg"
-                width={16}
-                height={16}
+                width={20}
+                height={20}
                 onClick={handleEditName}
               />
             </h2>
