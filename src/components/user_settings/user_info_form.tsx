@@ -5,11 +5,9 @@ import { LocaleKey } from '@/constants/normal_setting';
 import SelectCountryDropdown from '@/components/user_settings/select_country_dropdown';
 import SelectLauguageDropdown from '@/components/user_settings/select_language_dropdown';
 import PhoneNumberInput from '@/components/user_settings/phone_number_input';
-import { IUserSetting } from '@/interfaces/user_setting';
 import { useRouter } from 'next/router';
 
 interface UserInfoFormProps {
-  userSetting: IUserSetting | null;
   firstName: string | undefined;
   setFirstName: React.Dispatch<React.SetStateAction<string | undefined>>;
   lastName: string | undefined;
@@ -26,7 +24,6 @@ interface UserInfoFormProps {
 }
 
 const UserInfoForm: React.FC<UserInfoFormProps> = ({
-  userSetting,
   firstName,
   setFirstName,
   lastName,
@@ -43,19 +40,30 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
 }) => {
   const { t } = useTranslation(['setting', 'common']);
   const { locale } = useRouter();
-  const disabled = !firstName || !lastName || !country || !phoneNumber;
+  const [updateInput, setUpdateInput] = React.useState(false);
+  const [isCancelled, setIsCancelled] = React.useState(false);
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault(); // Info: (202412009 - tzuhan) Prevent page refresh
     onSubmit();
   };
 
+  React.useEffect(() => {
+    if (!isCancelled) {
+      if (!updateInput) setUpdateInput(true);
+    } else {
+      setIsCancelled(false);
+    }
+  }, [firstName, lastName, country, language, countryCode, phoneNumber]);
+
   const handelCancel = () => {
+    setIsCancelled(true);
     setFirstName(undefined);
     setLastName(undefined);
     setCountry(null);
     setLanguage(locale as LocaleKey);
     setCountryCode(LocaleKey.en);
     setPhoneNumber(undefined);
+    setUpdateInput(false);
   };
 
   return (
@@ -70,7 +78,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
             type="text"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            placeholder={userSetting?.personalInfo.firstName || t('setting:NORMAL.FIRST_NAME')}
+            placeholder={t('setting:NORMAL.FIRST_NAME')}
             className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
           />
         </div>
@@ -83,7 +91,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
             type="text"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            placeholder={userSetting?.personalInfo.lastName || t('setting:NORMAL.LAST_NAME')}
+            placeholder={t('setting:NORMAL.LAST_NAME')}
             className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
           />
         </div>
@@ -94,7 +102,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
         <PhoneNumberInput
           countryCode={countryCode}
           setCountryCode={setCountryCode}
-          phoneNumber={userSetting?.personalInfo.phone}
+          phoneNumber={phoneNumber}
           setPhoneNumber={setPhoneNumber}
         />
       </div>
@@ -105,12 +113,12 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
         <Button
           type="button"
           variant="secondaryBorderless"
-          disabled={disabled}
+          disabled={!updateInput}
           onClick={handelCancel}
         >
           {t('common:COMMON.CANCEL')}
         </Button>
-        <Button type="submit" variant="default" disabled={disabled}>
+        <Button type="submit" variant="default" disabled={!updateInput}>
           {t('common:COMMON.SAVE')}
         </Button>
       </div>

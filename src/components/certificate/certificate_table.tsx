@@ -84,7 +84,7 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
                 ({t('certificate:COUNTERPARTY.CLIENT')}/{t('certificate:COUNTERPARTY.SUPPLIER')})
               </div>
             </div>
-            <div className="col-span-full table-cell border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div className="col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.INVOICE_TYPE')}
             </div>
             <div className="table-cell w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">

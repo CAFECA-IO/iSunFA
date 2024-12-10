@@ -67,7 +67,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
 
       {/* Info: (20240924 - tzuhan) Invoice Information */}
       <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
-        <div className="flex items-center gap-lv-2">
+        <div className="flex items-center space-y-2">
           {!certificate.invoice?.isComplete && (
             <IoWarningOutline size={16} className="text-surface-state-error" />
           )}
@@ -78,7 +78,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
-        <div className="flex-col items-center gap-2">
+        <div className="flex-col items-center space-y-2">
           <div className="text-text-neutral-tertiary">
             {certificate.invoice?.counterParty?.taxId ?? ''}
           </div>
@@ -87,7 +87,10 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
           </div>
         </div>
       </BorderCell>
-      <BorderCell isSelected={certificate.isSelected} className="col-span-full overflow-hidden">
+      <BorderCell
+        isSelected={certificate.isSelected}
+        className="col-span-full max-h-72px min-w-100px overflow-hidden"
+      >
         <div className="text-center text-text-neutral-primary">
           {certificate.invoice?.type
             ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.invoice?.type}`)
@@ -101,7 +104,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
       {/* Info: (20240924 - tzuhan) Price Information */}
       <BorderCell isSelected={certificate.isSelected} className="w-170px">
-        <div className="flex-col items-center gap-lv-1">
+        <div className="flex-col items-center space-y-2">
           <div className="flex justify-between">
             <div className="flex w-75px items-center gap-badge-gap-spacing-sm rounded-full bg-surface-support-soft-rose px-badge-spacing-x-sm py-badge-spacing-y-sm text-xs">
               <div
@@ -144,7 +147,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
 
       {/* Info: (20240924 - tzuhan) Voucher Information */}
       <BorderCell isSelected={certificate.isSelected} className="w-120px">
-        <div className="flex items-center gap-lv-2">
+        <div className="flex items-center space-y-2">
           <div className="text-right text-link-text-primary">{certificate?.voucherNo ?? ''}</div>
           <div className="text-right text-text-neutral-primary">
             {certificate.uploader && (
