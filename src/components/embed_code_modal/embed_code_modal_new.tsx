@@ -70,9 +70,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     modalVisibilityHandler();
   };
 
-  // const copyClickHandler = () => {
-  //   navigator.clipboard.writeText(generatedIframeCode);
-  // };
   const copyClickHandler = () => {
     navigator.clipboard.writeText(generatedIframeCode).then(
       () => {
