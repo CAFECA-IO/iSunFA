@@ -107,7 +107,8 @@
     "NOTE": "備註",
     "ENTER_TEXT": "輸入文字",
     "EDIT_NEW": "編輯客戶/供應商",
-    "REMOVE_THIS": "刪除該客戶/供應商"
+    "REMOVE_THIS": "刪除該客戶/供應商",
+    "NO_DATA_AVAILABLE": "沒有可用資料"
   },
   "LABEL": {
     "NEW": "新增"
