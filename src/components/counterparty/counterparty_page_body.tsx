@@ -12,7 +12,7 @@ import { ICounterparty } from '@/interfaces/counterparty';
 import { IPaginatedData } from '@/interfaces/pagination';
 
 const CounterpartyPageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['search', 'common']);
 
   const { selectedCompany } = useUserCtx();
   const { addCounterPartyModalVisibilityHandler, addCounterPartyModalDataHandler } =

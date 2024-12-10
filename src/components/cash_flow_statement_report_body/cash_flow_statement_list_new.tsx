@@ -208,10 +208,10 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         <thead>
           <tr className="print:hidden">
             <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-              代號
+              {t('reports:TAX_REPORT.CODE_NUMBER')}
             </th>
             <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-              會計項目
+              {t('reports:REPORTS.ACCOUNTING_ITEMS')}
             </th>
             <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
               {curDate.from}至{curDate.to}
@@ -431,7 +431,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       <section className="mx-1 text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p className="mb-0">項目彙總格式</p>
+            <p className="mb-0">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p>單位：新台幣元</p>
@@ -449,7 +449,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         <div className="relative -z-10"></div>
         <div className="mb-4 mt-8 flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p className="mb-0">細項分類格式</p>
+            <p className="mb-0">{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p>單位：新台幣元</p>

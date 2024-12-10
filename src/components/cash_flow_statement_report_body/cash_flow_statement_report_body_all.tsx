@@ -13,6 +13,7 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import useStateRef from 'react-usestateref';
 import { timestampToString } from '@/lib/utils/common';
+import { useTranslation } from 'next-i18next';
 
 interface ICashFlowStatementReportBodyAllProps {
   reportId: string;
@@ -20,6 +21,7 @@ interface ICashFlowStatementReportBodyAllProps {
 
 const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
   const { isAuthLoading, selectedCompany } = useUserCtx();
+  const { t } = useTranslation(['reports']);
   // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
 
   // Deprecated: (20241129 - Liz)
@@ -177,10 +179,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <thead>
           <tr>
             <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-              代號
+              {t('reports:TAX_REPORT.CODE_NUMBER')}
             </th>
             <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-              會計項目
+              {t('reports:REPORTS.ACCOUNTING_ITEMS')}
             </th>
             <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
               {curDate.from}至{curDate.to}
@@ -421,7 +423,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-16px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p>一、項目彙總格式</p>
+            <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           </div>
           <p>單位：新台幣元</p>
         </div>
@@ -446,7 +448,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </header>
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
-          <p>一、項目彙總格式</p>
+          <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         {financialReport && financialReport.general && renderTable(financialReport.general, 10, 19)}
@@ -489,7 +491,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </header>
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
+          <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         {financialReport && financialReport.details && renderTable(financialReport.details, 0, 13)}
@@ -523,7 +525,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </header>
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
+          <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         {financialReport && financialReport.details && renderTable(financialReport.details, 13, 26)}
@@ -557,7 +559,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </header>
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
+          <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         {financialReport && financialReport.details && renderTable(financialReport.details, 26, 41)}
@@ -591,7 +593,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </header>
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
+          <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         {financialReport && financialReport.details && renderTable(financialReport.details, 41, 55)}
@@ -625,7 +627,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </header>
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
-          <p>一、項目彙總格式</p>
+          <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         {financialReport && financialReport.details && renderTable(financialReport.details, 55, 70)}
