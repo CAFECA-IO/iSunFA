@@ -3,6 +3,7 @@ import Rows from '@/components/income_statement_report_body/rows';
 import CollapseButton from '@/components/button/collapse_button';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { FinancialReport } from '@/interfaces/report';
+import { useTranslation } from 'next-i18next';
 
 interface ItemDetailProps {
   financialReport: FinancialReport;
@@ -18,6 +19,7 @@ const ItemDetail = ({
   formattedPreFromDate,
   formattedPreToDate,
 }: ItemDetailProps) => {
+  const { t } = useTranslation(['reports']);
   const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
   const toggleDetailTable = () => {
     setIsDetailCollapsed((prev) => !prev);
@@ -43,7 +45,9 @@ const ItemDetail = ({
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p className="font-bold leading-5">細項分類格式</p>
+            <p className="font-bold leading-5">
+              {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
+            </p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p className="font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
@@ -53,10 +57,10 @@ const ItemDetail = ({
             <thead>
               <tr>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                  代號
+                  {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                  會計項目
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th
                   className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"

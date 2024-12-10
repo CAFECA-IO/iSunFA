@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
 import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
+import { useTranslation } from 'next-i18next';
 
 const NormalHeader = () => {
   return (
@@ -34,6 +35,7 @@ const PrintCostRevRatio = ({
   formattedPreToDate,
   defaultPageNumber,
 }: CostRevRatioProps) => {
+  const { t } = useTranslation(['reports']);
   const otherInfo = financialReport?.otherInfo as IncomeStatementOtherInfo;
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
@@ -65,10 +67,10 @@ const PrintCostRevRatio = ({
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
@@ -215,10 +217,10 @@ const PrintCostRevRatio = ({
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
@@ -282,9 +284,7 @@ const PrintCostRevRatio = ({
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(
-                      2
-                    )}%
+                    {revenueToRD.ratio.curRatio.toFixed(2)}%
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end">
                     {revenueToRD.ratio.preRatio.toFixed(2)}%

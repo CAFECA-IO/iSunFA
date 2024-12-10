@@ -809,7 +809,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p>一、項目彙總格式</p>
+            <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p>單位：新台幣元</p>
@@ -819,10 +819,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <thead>
               <tr>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  代號
+                  {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  會計項目
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                   {curDate}
@@ -868,17 +868,17 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>一、項目彙總格式</p>
+          <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}{' '}
@@ -937,7 +937,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p>二、細項分類格式</p>
+            <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p>單位：新台幣元</p>
@@ -946,10 +946,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
@@ -996,17 +996,17 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
+          <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
@@ -1053,17 +1053,17 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
+          <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {curDate}
@@ -1110,17 +1110,17 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
+          <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
@@ -1167,17 +1167,17 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
+          <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
@@ -1224,17 +1224,17 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
+          <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
@@ -1281,17 +1281,17 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
+          <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
@@ -1348,7 +1348,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>三、資產負債比例表</p>
+          <p>{t('reports:REPORTS.ASSET_LIABILITY_RATIO')}</p>
         </div>
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-0">
