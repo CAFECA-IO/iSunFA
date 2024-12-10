@@ -41,7 +41,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
 
   return (
     <div
-      className={`group table-row h-72px w-full max-w-920px text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10`}
+      className={`group table-row h-72px w-full max-w-920px overflow-y-hidden text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10`}
       onClick={
         activeSelection
           ? handleSelect.bind(null, [certificate.id], !certificate.isSelected)
@@ -59,14 +59,14 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
           </div>
         </BorderCell>
       )}
-      <BorderCell isSelected={certificate.isSelected} className="min-w-100px text-center">
+      <BorderCell isSelected={certificate.isSelected} className="w-100px text-center">
         <div className="inline-block">
           <CalendarIcon timestamp={certificate.invoice?.date ?? 0} unRead={!!certificate.unRead} />
         </div>
       </BorderCell>
 
       {/* Info: (20240924 - tzuhan) Invoice Information */}
-      <BorderCell isSelected={certificate.isSelected} className="flex min-w-120px gap-1">
+      <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
         <div className="flex items-center gap-lv-2">
           {!certificate.invoice?.isComplete && (
             <IoWarningOutline size={16} className="text-surface-state-error" />
@@ -77,7 +77,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
           </div>
         </div>
       </BorderCell>
-      <BorderCell isSelected={certificate.isSelected} className="min-w-100px">
+      <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div className="flex-col items-center gap-2">
           <div className="text-text-neutral-tertiary">
             {certificate.invoice?.counterParty?.taxId ?? ''}
@@ -87,20 +87,20 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
           </div>
         </div>
       </BorderCell>
-      <BorderCell isSelected={certificate.isSelected} className="overflow-hidden">
+      <BorderCell isSelected={certificate.isSelected} className="col-span-full overflow-hidden">
         <div className="text-center text-text-neutral-primary">
           {certificate.invoice?.type
             ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.invoice?.type}`)
             : ''}
         </div>
       </BorderCell>
-      <BorderCell isSelected={certificate.isSelected} className="min-w-100px">
+      <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div className="text-center text-text-neutral-primary">
           Taxable {certificate.invoice?.taxRatio ?? 0}%
         </div>
       </BorderCell>
       {/* Info: (20240924 - tzuhan) Price Information */}
-      <BorderCell isSelected={certificate.isSelected} className="min-w-170px">
+      <BorderCell isSelected={certificate.isSelected} className="w-170px">
         <div className="flex-col items-center gap-lv-1">
           <div className="flex justify-between">
             <div className="flex w-75px items-center gap-badge-gap-spacing-sm rounded-full bg-surface-support-soft-rose px-badge-spacing-x-sm py-badge-spacing-y-sm text-xs">
@@ -132,7 +132,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
           </div>
         </div>
       </BorderCell>
-      <BorderCell isSelected={certificate.isSelected}>
+      <BorderCell isSelected={certificate.isSelected} className="w-80px">
         <div className="flex items-center justify-center">
           {certificate.invoice?.deductible ? (
             <Image src="/elements/check.svg" alt="Yes" width={20} height={20} />
@@ -143,7 +143,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
 
       {/* Info: (20240924 - tzuhan) Voucher Information */}
-      <BorderCell isSelected={certificate.isSelected} className="min-w-120px">
+      <BorderCell isSelected={certificate.isSelected} className="w-120px">
         <div className="flex items-center gap-lv-2">
           <div className="text-right text-link-text-primary">{certificate?.voucherNo ?? ''}</div>
           <div className="text-right text-text-neutral-primary">

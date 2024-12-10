@@ -1,13 +1,8 @@
-import { CounterpartyType } from '@/constants/counterparty';
+import { ICounterparty } from './counterparty';
 
 export interface IAddCounterPartyModalData {
   //  onClose: () => void;
-  onSave: (counterpartyData: {
-    name: string;
-    taxId: string;
-    type: CounterpartyType;
-    note: string;
-  }) => void;
+  onSave: (counterpartyData: ICounterparty) => void;
   name?: string;
   taxId?: string;
 }
