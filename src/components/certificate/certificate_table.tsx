@@ -58,10 +58,10 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
   return (
     <div className="min-h-500px w-full flex-auto overflow-x-scroll">
       <div className="table w-full border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
-        <div className="table-header-group h-60px w-full bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+        <div className="table-header-group h-60px w-full max-w-920px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row w-full">
             {activeSelection && (
-              <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+              <div className="table-cell border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
                 <div
                   className={`relative h-16px w-16px rounded border border-checkbox-stroke-unselected text-center ${isSelectedAll ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
                 >
@@ -69,30 +69,32 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
                 </div>
               </div>
             )}
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+            <div className="table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {displayedIssuedDate}
             </div>
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+            <div className="table-cell min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
               <div>{t('certificate:TABLE.INVOICE_NAME')}</div>
               <div>{t('certificate:TABLE.INVOICE_NUMBER')}</div>
             </div>
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-              {t('certificate:TABLE.COUNTERPARTY')}({t('certificate:COUNTERPARTY.CLIENT')}/
-              {t('certificate:COUNTERPARTY.SUPPLIER')})
+            <div className="table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
+              <div>{t('certificate:TABLE.COUNTERPARTY')}</div>
+              <div>
+                ({t('certificate:COUNTERPARTY.CLIENT')}/{t('certificate:COUNTERPARTY.SUPPLIER')})
+              </div>
             </div>
-            <div className="table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+            <div className="table-cell border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.INVOICE_TYPE')}
             </div>
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+            <div className="table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.TAX')}
             </div>
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+            <div className="table-cell min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {displayedAmount}
             </div>
-            <div className="table-cell min-w-80px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+            <div className="table-cell min-w-80px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.DEDUCTABLE')}
             </div>
-            <div className="table-cell border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
+            <div className="table-cell min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-right align-middle">
               <div>{t('certificate:TABLE.UPLOADER')}</div>
               {activeTab === InvoiceTabs.WITH_VOUCHER && displayedVoucherNumber}
             </div>

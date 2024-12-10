@@ -19,7 +19,6 @@ import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { ToastType } from '@/interfaces/toastify';
 import { CurrencyType } from '@/constants/currency';
 import { ToastId } from '@/constants/toast_id';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 
 type ITaxTypeForFrontend =
   | number
@@ -42,8 +41,6 @@ const AccountingSettingPageBody: React.FC = () => {
     accountingTitleSettingModalVisibilityHandler,
     manualAccountOpeningModalVisibilityHandler,
   } = useGlobalCtx();
-  const { accountingSetting, getAccountingSettingHandler } = useAccountingCtx();
-
   const { toastHandler } = useModalContext();
   const { selectedCompany } = useUserCtx();
 
@@ -51,12 +48,11 @@ const AccountingSettingPageBody: React.FC = () => {
   const currencyList = Object.values(CurrencyType);
 
   // Info: (20241113 - Julian) 取得會計設定資料
-  /** Info: (20241210 - tzuhan) 這裡的 getAccountSetting 我移到 useAccountingCtx 裡面了
   const { trigger: getAccountSetting, data: accountingSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET,
     { params: { companyId } }
   );
-  */
+
   const {
     trigger: updateSetting,
     isLoading: isUpdating,
@@ -207,7 +203,7 @@ const AccountingSettingPageBody: React.FC = () => {
           closeable: true,
         });
 
-        getAccountingSettingHandler(companyId);
+        getAccountSetting({ params: { companyId } });
       } else if (updatedError) {
         // Info: (20241114 - Julian) 更新失敗顯示 Toast
         toastHandler({

@@ -321,6 +321,9 @@
     --spacing-lv-10: var(--number-80);
     --spacing-lv-11: var(--number-96);
     --spacing-lv-12: var(--number-120);
+    --badge-gap-spacing-sm: var(--number-1);
+    --badge-spacing-y-sm: var(--number-1);
+    --badge-spacing-x-sm: var(--number-3);
     --stroke-width-lv-1: 1px;
     --stroke-width-lv-2: 2px;
     --stroke-width-lv-3: 3px;

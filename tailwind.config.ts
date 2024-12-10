@@ -863,6 +863,9 @@ module.exports = {
         'lv-10': 'var(--spacing-lv-10)',
         'lv-11': 'var(--spacing-lv-11)',
         'lv-12': 'var(--spacing-lv-12)',
+        'badge-gap-spacing-sm': 'var(--badge-gap-spacing-sm)',
+        'badge-spacing-x-sm': 'var(--badge-spacing-x-sm)',
+        'badge-spacing-y-sm': 'var(--badge-spacing-y-sm)',
 
         'stroke-width-lv-1': 'var(--stroke-width-lv-1)',
         'stroke-width-lv-2': 'var(--stroke-width-lv-2)',
