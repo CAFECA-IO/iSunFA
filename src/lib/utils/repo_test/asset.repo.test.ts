@@ -4,10 +4,12 @@ import {
   createManyAssets,
   deleteAsset,
   deleteManyAssets,
-  getAllAssetsWithVouchers,
+  getAllAssetsByCompanyId,
   getLegitAssetById,
+  updateAsset,
 } from '@/lib/utils/repo/asset.repo';
 import { getTimestampNow } from '@/lib/utils/common';
+import { SortOrder, SortBy } from '@/constants/sort';
 
 const testCompanyId = 1000;
 
@@ -17,7 +19,6 @@ describe('createAssetWithVouchers (single asset)', () => {
     const newAssetData = {
       companyId: testCompanyId,
       name: 'Test Asset Land',
-      type: AssetEntityType.LAND,
       number: assetNumberPrefix,
       acquisitionDate: 1704067200,
       purchasePrice: 10000,
@@ -25,6 +26,7 @@ describe('createAssetWithVouchers (single asset)', () => {
       residualValue: 1000,
       usefulLife: 60,
       depreciationStart: 1704067200,
+      type: AssetEntityType.LAND,
       depreciationMethod: AssetDepreciationMethod.STRAIGHT_LINE,
       note: 'Test asset note',
     };
@@ -213,7 +215,7 @@ describe('deleteAsset', () => {
 describe('getAllAssetsWithVouchers', () => {
   it('should only return assets with vouchers', async () => {
     // Info: (20241209 - Shirley) 使用種子資料中已知有 voucher 的資產進行測試
-    const assets = await getAllAssetsWithVouchers(testCompanyId);
+    const assets = await getAllAssetsByCompanyId(testCompanyId, {});
 
     expect(assets).toBeDefined();
     expect(Array.isArray(assets)).toBe(true);
@@ -227,7 +229,11 @@ describe('getAllAssetsWithVouchers', () => {
   });
 
   it('should include correct asset fields', async () => {
-    const assets = await getAllAssetsWithVouchers(testCompanyId);
+    const assets = await getAllAssetsByCompanyId(testCompanyId, {
+      filterCondition: {
+        type: AssetEntityType.LAND,
+      },
+    });
 
     if (assets.length > 0) {
       const asset = assets[0];
@@ -245,11 +251,11 @@ describe('getAllAssetsWithVouchers', () => {
   });
 
   it('should correctly filter assets when search conditions are provided', async () => {
-    const searchCondition = {
-      status: AssetStatus.NORMAL,
-    };
-
-    const assets = await getAllAssetsWithVouchers(testCompanyId, searchCondition);
+    const assets = await getAllAssetsByCompanyId(testCompanyId, {
+      filterCondition: {
+        status: AssetStatus.NORMAL,
+      },
+    });
 
     expect(assets).toBeDefined();
     assets.forEach((asset) => {
@@ -259,7 +265,7 @@ describe('getAllAssetsWithVouchers', () => {
 
   it('should return different asset lists for different company IDs', async () => {
     const differentCompanyId = 999;
-    const assets = await getAllAssetsWithVouchers(differentCompanyId);
+    const assets = await getAllAssetsByCompanyId(differentCompanyId, {});
 
     // Info: (20241209 - Shirley) 假設測試資料庫中 companyId 999 沒有資產
     expect(assets).toHaveLength(0);
@@ -267,27 +273,31 @@ describe('getAllAssetsWithVouchers', () => {
 
   it('should correctly sort assets based on specified conditions', async () => {
     // Info: (20241209 - Shirley) 測試按名稱升序排序
-    const sortByNameAsc = {
-      name: 'asc' as const,
+    const sort = {
+      sortBy: SortBy.ACQUISITION_DATE,
+      sortOrder: SortOrder.ASC,
     };
-    const assetsNameAsc = await getAllAssetsWithVouchers(testCompanyId, undefined, sortByNameAsc);
+    const assetsAcqDateASC = await getAllAssetsByCompanyId(testCompanyId, {
+      sortOption: [sort],
+    });
 
-    expect(assetsNameAsc).toBeDefined();
-    if (assetsNameAsc.length > 1) {
-      for (let i = 1; i < assetsNameAsc.length; i += 1) {
-        expect(assetsNameAsc[i - 1].name <= assetsNameAsc[i].name).toBeTruthy();
+    expect(assetsAcqDateASC).toBeDefined();
+    if (assetsAcqDateASC.length > 1) {
+      for (let i = 1; i < assetsAcqDateASC.length; i += 1) {
+        expect(
+          assetsAcqDateASC[i - 1].acquisitionDate <= assetsAcqDateASC[i].acquisitionDate
+        ).toBeTruthy();
       }
     }
 
     // Info: (20241209 - Shirley) 測試按購買價格降序排序
     const sortByPriceDesc = {
-      purchasePrice: 'desc' as const,
+      sortBy: SortBy.PURCHASE_PRICE,
+      sortOrder: SortOrder.DESC,
     };
-    const assetsPriceDesc = await getAllAssetsWithVouchers(
-      testCompanyId,
-      undefined,
-      sortByPriceDesc
-    );
+    const assetsPriceDesc = await getAllAssetsByCompanyId(testCompanyId, {
+      sortOption: [sortByPriceDesc],
+    });
 
     expect(assetsPriceDesc).toBeDefined();
     if (assetsPriceDesc.length > 1) {
@@ -299,14 +309,133 @@ describe('getAllAssetsWithVouchers', () => {
     }
   });
 
-  it('should default sort by creation time in descending order when no sort condition is specified', async () => {
-    const assets = await getAllAssetsWithVouchers(testCompanyId);
+  it('should default sort by acquisition date in descending order when no sort condition is specified', async () => {
+    const assets = await getAllAssetsByCompanyId(testCompanyId, {
+      sortOption: undefined,
+    });
 
     expect(assets).toBeDefined();
     if (assets.length > 1) {
       for (let i = 1; i < assets.length; i += 1) {
-        expect(assets[i - 1].createdAt >= assets[i].createdAt).toBeTruthy();
+        expect(assets[i - 1].acquisitionDate <= assets[i].acquisitionDate).toBeTruthy();
       }
     }
+  });
+
+  it('should filter assets based on provided conditions', async () => {
+    const filterCondition = { status: AssetStatus.NORMAL };
+    const assets = await getAllAssetsByCompanyId(testCompanyId, { filterCondition });
+
+    expect(assets).toBeDefined();
+    assets.forEach((asset) => {
+      expect(asset.status).toBe(AssetStatus.NORMAL);
+    });
+  });
+});
+
+describe('updateAsset', () => {
+  it('應該成功更新資產資訊', async () => {
+    const now = getTimestampNow();
+    // Info: (20241210 - Shirley) 先建立一個測試用資產
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: `測試資產-${now}`,
+      type: AssetEntityType.OFFICE_EQUIPMENT,
+      number: 'TEST-UPDATE',
+      acquisitionDate: now,
+      purchasePrice: 10000,
+      accumulatedDepreciation: 0,
+    };
+
+    const asset = await createAssetWithVouchers(newAssetData);
+
+    // Info: (20241210 - Shirley) 準備更新資料
+    const updateData = {
+      assetName: `更新後的資產名稱-${now}`,
+      note: `更新後的備註-${now}`,
+      assetStatus: AssetStatus.SCRAPPED,
+    };
+
+    // Info: (20241210 - Shirley) 執行更新
+    const updatedAsset = await updateAsset(testCompanyId, asset.id, updateData);
+
+    // Info: (20241210 - Shirley) 驗證更新結果
+    expect(updatedAsset).toBeDefined();
+    expect(updatedAsset.name).toBe(updateData.assetName);
+    expect(updatedAsset.note).toBe(updateData.note);
+    expect(updatedAsset.status).toBe(updateData.assetStatus);
+    expect(updatedAsset.id).toBe(asset.id);
+
+    // Info: (20241210 - Shirley) 清理測試資料
+    await deleteAsset(asset.id);
+  });
+
+  it('當嘗試更新不存在的資產時應該拋出錯誤', async () => {
+    const nonExistentId = -1;
+    const updateData = {
+      assetName: '測試名稱',
+    };
+
+    await expect(updateAsset(testCompanyId, nonExistentId, updateData)).rejects.toThrow();
+  });
+
+  it('當嘗試更新不屬於該公司的資產時應該拋出錯誤', async () => {
+    // Info: (20241210 - Shirley) 先建立一個測試用資產
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: '測試資產',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
+      number: 'TEST-UPDATE-2',
+      acquisitionDate: 1704067200,
+      purchasePrice: 10000,
+      accumulatedDepreciation: 0,
+    };
+
+    const asset = await createAssetWithVouchers(newAssetData);
+
+    const wrongCompanyId = 999;
+    const updateData = {
+      assetName: '更新後的資產名稱',
+    };
+
+    // Info: (20241210 - Shirley) 使用錯誤的公司ID嘗試更新
+    await expect(updateAsset(wrongCompanyId, asset.id, updateData)).rejects.toThrow();
+
+    // Info: (20241210 - Shirley) 清理測試資料
+    await deleteAsset(asset.id);
+  });
+
+  it('應該能夠更新多個欄位', async () => {
+    // Info: (20241210 - Shirley) 先建立一個測試用資產
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: '測試資產',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
+      number: 'TEST-UPDATE-3',
+      acquisitionDate: 1704067200,
+      purchasePrice: 10000,
+      accumulatedDepreciation: 0,
+    };
+
+    const asset = await createAssetWithVouchers(newAssetData);
+
+    // Info: (20241210 - Shirley) 準備更新多個欄位
+    const data = {
+      assetName: '更新後的資產名稱',
+      purchasePrice: 20000,
+      acquisitionDate: 1754067200,
+      note: '新的備註',
+    };
+
+    const updatedAsset = await updateAsset(testCompanyId, asset.id, data);
+
+    // Info: (20241210 - Shirley) 驗證所有更新的欄位
+    expect(updatedAsset.name).toBe(data.assetName);
+    expect(updatedAsset.purchasePrice).toBe(data.purchasePrice);
+    expect(updatedAsset.acquisitionDate).toBe(data.acquisitionDate);
+    expect(updatedAsset.note).toBe(data.note);
+
+    // Info: (20241210 - Shirley) 清理測試資料
+    await deleteAsset(asset.id);
   });
 });
