@@ -66,6 +66,18 @@ const CreateAssetWithVouchersRepoResponseValidator = z.object({
   note: z.string(),
 });
 
+export const UpdateAssetRepoInputValidator = z.object({
+  assetStatus: z.nativeEnum(AssetStatus).optional(),
+  assetName: z.string().optional(),
+  acquisitionDate: z.number().optional(),
+  purchasePrice: z.number().optional(),
+  depreciationStart: z.number().optional(),
+  depreciationMethod: z.nativeEnum(AssetDepreciationMethod).optional(),
+  usefulLife: z.number().optional(),
+  residualValue: z.number().optional(),
+  note: z.string().optional(),
+});
+
 export const AssetCreateOutputValidator = CreateAssetWithVouchersRepoResponseValidator.extend({
   id: z.number(),
 });

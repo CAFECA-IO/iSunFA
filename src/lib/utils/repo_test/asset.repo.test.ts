@@ -6,6 +6,7 @@ import {
   deleteManyAssets,
   getAllAssetsByCompanyId,
   getLegitAssetById,
+  updateAsset,
 } from '@/lib/utils/repo/asset.repo';
 import { getTimestampNow } from '@/lib/utils/common';
 import { SortOrder, SortBy } from '@/constants/sort';
@@ -329,5 +330,112 @@ describe('getAllAssetsWithVouchers', () => {
     assets.forEach((asset) => {
       expect(asset.status).toBe(AssetStatus.NORMAL);
     });
+  });
+});
+
+describe('updateAsset', () => {
+  it('應該成功更新資產資訊', async () => {
+    const now = getTimestampNow();
+    // 先建立一個測試用資產
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: `測試資產-${now}`,
+      type: AssetEntityType.OFFICE_EQUIPMENT,
+      number: 'TEST-UPDATE',
+      acquisitionDate: now,
+      purchasePrice: 10000,
+      accumulatedDepreciation: 0,
+    };
+
+    const asset = await createAssetWithVouchers(newAssetData);
+
+    // 準備更新資料
+    const updateData = {
+      assetName: `更新後的資產名稱-${now}`,
+      note: `更新後的備註-${now}`,
+      assetStatus: AssetStatus.SCRAPPED,
+    };
+
+    // 執行更新
+    const updatedAsset = await updateAsset(testCompanyId, asset.id, updateData);
+
+    // 驗證更新結果
+    expect(updatedAsset).toBeDefined();
+    expect(updatedAsset.name).toBe(updateData.assetName);
+    expect(updatedAsset.note).toBe(updateData.note);
+    expect(updatedAsset.status).toBe(updateData.assetStatus);
+    expect(updatedAsset.id).toBe(asset.id);
+
+    // 清理測試資料
+    await deleteAsset(asset.id);
+  });
+
+  it('當嘗試更新不存在的資產時應該拋出錯誤', async () => {
+    const nonExistentId = -1;
+    const updateData = {
+      assetName: '測試名稱',
+    };
+
+    await expect(updateAsset(testCompanyId, nonExistentId, updateData)).rejects.toThrow();
+  });
+
+  it('當嘗試更新不屬於該公司的資產時應該拋出錯誤', async () => {
+    // 先建立一個測試用資產
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: '測試資產',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
+      number: 'TEST-UPDATE-2',
+      acquisitionDate: 1704067200,
+      purchasePrice: 10000,
+      accumulatedDepreciation: 0,
+    };
+
+    const asset = await createAssetWithVouchers(newAssetData);
+
+    const wrongCompanyId = 999;
+    const updateData = {
+      assetName: '更新後的資產名稱',
+    };
+
+    // 使用錯誤的公司ID嘗試更新
+    await expect(updateAsset(wrongCompanyId, asset.id, updateData)).rejects.toThrow();
+
+    // 清理測試資料
+    await deleteAsset(asset.id);
+  });
+
+  it('應該能夠更新多個欄位', async () => {
+    // 先建立一個測試用資產
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: '測試資產',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
+      number: 'TEST-UPDATE-3',
+      acquisitionDate: 1704067200,
+      purchasePrice: 10000,
+      accumulatedDepreciation: 0,
+    };
+
+    const asset = await createAssetWithVouchers(newAssetData);
+
+    // 準備更新多個欄位
+    const data = {
+      assetName: '更新後的資產名稱',
+      purchasePrice: 20000,
+      acquisitionDate: 1754067200,
+      note: '新的備註',
+    };
+
+    const updatedAsset = await updateAsset(testCompanyId, asset.id, data);
+
+    // 驗證所有更新的欄位
+    expect(updatedAsset.name).toBe(data.assetName);
+    expect(updatedAsset.purchasePrice).toBe(data.purchasePrice);
+    expect(updatedAsset.acquisitionDate).toBe(data.acquisitionDate);
+    expect(updatedAsset.note).toBe(data.note);
+
+    // 清理測試資料
+    await deleteAsset(asset.id);
   });
 });

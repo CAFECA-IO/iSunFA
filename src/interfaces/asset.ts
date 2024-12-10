@@ -8,6 +8,7 @@ import {
   IAssetDetailsValidator,
   IAssetItemValidator,
   IRelatedVoucherValidator,
+  UpdateAssetRepoInputValidator,
 } from '@/lib/utils/zod_schema/asset';
 import { IPaginatedData } from '@/interfaces/pagination';
 /* Info: (20240927 - Shirley) asset v1 介面 */
@@ -393,3 +394,5 @@ export interface ICreateAssetBulkRepoInput extends ICreateAssetWithVouchersRepoI
 export interface ICreateAssetBulkRepoResponse extends Array<ICreateAssetWithVouchersRepoResponse> {}
 
 export interface IPaginatedAsset extends IPaginatedData<IAssetItem[]> {}
+
+export type IUpdateAssetRepoInput = z.infer<typeof UpdateAssetRepoInputValidator>;

@@ -7,6 +7,7 @@ import {
   ICreateAssetBulkRepoResponse,
   ICreateAssetWithVouchersRepoInput,
   ICreateAssetWithVouchersRepoResponse,
+  IUpdateAssetRepoInput,
 } from '@/interfaces/asset';
 import { generateAssetNumbers } from '@/lib/utils/asset';
 import { getTimestampNow } from '@/lib/utils/common';
@@ -277,4 +278,35 @@ export async function getAllAssetsByCompanyId(
   });
 
   return assets;
+}
+
+/**
+ * Info: (20241210 - Shirley) 更新資產
+ * @param companyId 公司ID
+ * @param assetId 資產ID
+ * @param assetData 可以更新的資產欄位
+ * @returns 更新後的資產
+ */
+export async function updateAsset(
+  companyId: number,
+  assetId: number,
+  assetData: IUpdateAssetRepoInput
+) {
+  const dataForUpdate = {
+    name: assetData.assetName,
+    acquisitionDate: assetData.acquisitionDate,
+    purchasePrice: assetData.purchasePrice,
+    status: assetData.assetStatus,
+    depreciationStart: assetData.depreciationStart,
+    depreciationMethod: assetData.depreciationMethod,
+    usefulLife: assetData.usefulLife,
+    residualValue: assetData.residualValue,
+    note: assetData.note,
+  };
+
+  const updatedAsset = await prisma.asset.update({
+    where: { id: assetId, companyId },
+    data: dataForUpdate,
+  });
+  return updatedAsset;
 }
