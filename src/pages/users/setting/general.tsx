@@ -69,9 +69,10 @@ const GeneralSettingsPage: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!userAuth) return;
     getUserSetting();
     getUserActions();
-  }, []);
+  }, [userAuth]);
 
   return (
     <>
