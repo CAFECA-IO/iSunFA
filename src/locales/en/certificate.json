@@ -10,7 +10,7 @@
   "TABLE": {
     "DATE": "Date",
     "INVOICE_NAME": "Invoice Name",
-    "INVOICE_NUMBER": "Invoice NO.",
+    "INVOICE_NUMBER": "Invoice No.",
     "COUNTERPARTY": "Counterparty",
     "INVOICE_TYPE": "Invoice Type",
     "TAX": "Tax",
@@ -64,7 +64,7 @@
     "INPUT": "Input",
     "OUTPUT": "Output",
     "INVOICE_NAME": "Invoice Name",
-    "INVOICE_NUMBER": "Invoice NO.",
+    "INVOICE_NUMBER": "Invoice No.",
     "PRICE_BEFORE_TAX": "Price Before Tax",
     "TAX": "Tax",
     "TAXABLE": "Taxable",

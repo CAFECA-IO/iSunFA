@@ -19,7 +19,6 @@ import {
 } from '@/lib/utils/indexed_db/ocr';
 import { isValidEncryptedDataForOCR } from '@/lib/utils/type_guard/ocr';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
-import { IAccountingSetting } from '@/interfaces/accounting_setting';
 
 interface IAccountingProvider {
   children: React.ReactNode;
@@ -147,10 +146,6 @@ interface IAccountingContext {
   };
   addReverseListHandler: (lineItemId: number, item: IReverseItemUI[]) => void;
   clearReverseListHandler: () => void;
-
-  // Info: (20241210 - tzuhan)會計設定資料
-  accountingSetting: IAccountingSetting | undefined;
-  getAccountingSettingHandler: (companyId: number) => Promise<IAccountingSetting>;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -205,9 +200,6 @@ const initialAccountingContext: IAccountingContext = {
   reverseList: {},
   addReverseListHandler: () => {},
   clearReverseListHandler: () => {},
-
-  accountingSetting: undefined,
-  getAccountingSettingHandler: () => Promise.reject(),
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -243,9 +235,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     listSuccess: undefined,
     listCode: undefined,
   });
-  const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
-    APIName.ACCOUNTING_SETTING_GET
-  );
 
   const [selectedOCR, setSelectedOCR] = useState<IOCR | undefined>(undefined);
   const [selectedJournal, setSelectedJournal] = useState<IJournal | undefined>(undefined);
@@ -275,9 +264,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }>({});
 
   const [reverseList, setReverseList] = useState<{ [key: string]: IReverseItemUI[] }>({});
-  const [accountingSetting, setAccountingSetting] = useState<IAccountingSetting | undefined>(
-    undefined
-  );
 
   const getAccountListHandler = (
     companyId: number,
@@ -823,25 +809,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     [inputDescription]
   );
 
-  const getAccountingSettingHandler = useCallback(
-    async (companyId: number) => {
-      if (accountingSetting && accountingSetting.companyId === companyId) {
-        return accountingSetting;
-      } else {
-        const { success, data } = await getAccountSetting({
-          params: { companyId },
-        });
-        if (success && data) {
-          setAccountingSetting(data);
-          return data;
-        } else {
-          throw new Error('getAccountingSettingHandler failed');
-        }
-      }
-    },
-    [accountingSetting]
-  );
-
   const value = useMemo(
     () => ({
       OCRList,
@@ -894,8 +861,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       reverseList,
       addReverseListHandler,
       clearReverseListHandler,
-      accountingSetting,
-      getAccountingSettingHandler,
     }),
     [
       OCRList,
@@ -929,7 +894,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       reverseList,
       addReverseListHandler,
       clearReverseListHandler,
-      accountingSetting,
     ]
   );
 

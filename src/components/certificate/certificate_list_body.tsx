@@ -28,7 +28,6 @@ import CertificateExportModal from '@/components/certificate/certificate_export_
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { CurrencyType } from '@/constants/currency';
 
 interface CertificateListBodyProps {}
@@ -37,7 +36,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate']);
   const router = useRouter();
   const { userAuth, selectedCompany } = useUserCtx();
-  const { getAccountingSettingHandler } = useAccountingCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
   const params = { companyId: selectedCompany?.id };
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
@@ -73,7 +71,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [currency, setCurrency] = useState<string>('TWD');
+  const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
 
   const handleAddVoucher = useCallback(() => {
     router.push({
@@ -151,7 +149,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           withVoucher: number;
           withoutVoucher: number;
         };
-        currency: string;
+        currency: CurrencyType;
         certificates: ICertificate[];
       }>
     ) => {
@@ -359,8 +357,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const handleEditItem = useCallback(
     async (certificate: ICertificate) => {
       try {
-        const accountingSetting = await getAccountingSettingHandler(companyId);
-        // Info: (20241025 - tzuhan) @Murky, 這邊跟目前後端的接口不一致，需要調整的話再跟我說
         const postOrPutAPI = certificate.invoice.id
           ? updateCertificateAPI({
               params: { companyId, invoiceId: certificate.invoice.id },
@@ -374,10 +370,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 inputOrOutput: certificate.invoice.inputOrOutput,
                 date: certificate.invoice.date,
                 no: certificate.invoice.no,
-                currencyAlias:
-                  certificate.invoice.currencyAlias ||
-                  (accountingSetting?.currency as CurrencyType) ||
-                  CurrencyType.TWD,
+                currencyAlias: certificate.invoice.currencyAlias || currency,
                 priceBeforeTax: certificate.invoice.priceBeforeTax,
                 taxType: certificate.invoice.taxType,
                 taxRatio: certificate.invoice.taxRatio,
@@ -517,6 +510,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           isOpen={isEditModalOpen}
           companyId={companyId}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
+          currencyAlias={currency}
           certificate={editingId ? certificates[editingId] : undefined}
           onUpdateFilename={onUpdateFilename}
           onSave={handleEditItem}
@@ -525,7 +519,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       )}
       {/* Info: (20240919 - tzuhan) Main Content */}
       <div
-        className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'overflow-y-scroll' : ''} `}
+        className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'overflow-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
         <CertificateFileUpload />
@@ -545,7 +539,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             withVoucher: number;
             withoutVoucher: number;
           };
-          currency: string;
+          currency: CurrencyType;
           certificates: ICertificate[];
         }>
           className="mt-2"

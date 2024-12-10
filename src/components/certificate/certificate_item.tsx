@@ -20,7 +20,7 @@ const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; classN
 }) => {
   return (
     <div
-      className={`relative table-cell border-b p-2 align-middle ${
+      className={`relative table-cell border-b px-lv-2 align-middle ${
         isSelected
           ? 'border-stroke-brand-primary bg-surface-brand-primary-10'
           : 'border-stroke-neutral-quaternary'
@@ -41,7 +41,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
 
   return (
     <div
-      className={`group table-row h-72px text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10`}
+      className={`group table-row h-72px w-full max-w-920px text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10`}
       onClick={
         activeSelection
           ? handleSelect.bind(null, [certificate.id], !certificate.isSelected)
@@ -59,7 +59,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
           </div>
         </BorderCell>
       )}
-      <BorderCell isSelected={certificate.isSelected} className="text-center">
+      <BorderCell isSelected={certificate.isSelected} className="min-w-100px text-center">
         <div className="inline-block">
           <CalendarIcon timestamp={certificate.invoice?.date ?? 0} unRead={!!certificate.unRead} />
         </div>
@@ -67,45 +67,45 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
 
       {/* Info: (20240924 - tzuhan) Invoice Information */}
       <BorderCell isSelected={certificate.isSelected} className="flex min-w-120px gap-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-lv-2">
           {!certificate.invoice?.isComplete && (
             <IoWarningOutline size={16} className="text-surface-state-error" />
           )}
-          <div className="flex-col gap-2">
+          <div className="flex-col">
             <div className="text-text-neutral-tertiary">{certificate.name ?? ''}</div>
             <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
           </div>
         </div>
       </BorderCell>
-      <BorderCell isSelected={certificate.isSelected} className="space-y-2">
-        <>
+      <BorderCell isSelected={certificate.isSelected} className="min-w-100px">
+        <div className="flex-col items-center gap-2">
           <div className="text-text-neutral-tertiary">
             {certificate.invoice?.counterParty?.taxId ?? ''}
           </div>
           <div className="text-text-neutral-primary">
             {certificate.invoice?.counterParty?.name ?? ''}
           </div>
-        </>
+        </div>
       </BorderCell>
-      <BorderCell isSelected={certificate.isSelected} className="max-w-120px overflow-hidden">
-        <div className="overflow-scroll text-text-neutral-primary">
+      <BorderCell isSelected={certificate.isSelected} className="overflow-hidden">
+        <div className="text-center text-text-neutral-primary">
           {certificate.invoice?.type
             ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.invoice?.type}`)
             : ''}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="min-w-100px">
-        <div className="text-text-neutral-primary">
+        <div className="text-center text-text-neutral-primary">
           Taxable {certificate.invoice?.taxRatio ?? 0}%
         </div>
       </BorderCell>
       {/* Info: (20240924 - tzuhan) Price Information */}
-      <BorderCell isSelected={certificate.isSelected}>
-        <div className="flex-col items-center space-y-2">
-          <div className="flex">
-            <div className="mr-4 flex w-75px items-center rounded-full bg-surface-support-soft-rose px-2 py-1 text-xs">
+      <BorderCell isSelected={certificate.isSelected} className="min-w-170px">
+        <div className="flex-col items-center gap-lv-1">
+          <div className="flex justify-between">
+            <div className="gap-badge-gap-spacing-sm px-badge-spacing-x-sm py-badge-spacing-y-sm flex w-75px items-center rounded-full bg-surface-support-soft-rose text-xs">
               <div
-                className={`mr-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-rose`}
+                className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-rose`}
               ></div>
               <div>Pre-Tax</div>
             </div>
@@ -116,10 +116,10 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
               </span>
             </div>
           </div>
-          <div className="flex">
-            <div className="mr-4 flex w-75px items-center rounded-full bg-surface-support-soft-baby px-2 py-1 text-xs">
+          <div className="flex justify-between">
+            <div className="gap-badge-gap-spacing-sm px-badge-spacing-x-sm py-badge-spacing-y-sm flex w-75px items-center rounded-full bg-surface-support-soft-baby text-xs">
               <div
-                className={`mr-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-baby`}
+                className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-baby`}
               ></div>
               <div>After-Tax</div>
             </div>
@@ -143,10 +143,10 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
 
       {/* Info: (20240924 - tzuhan) Voucher Information */}
-      <BorderCell isSelected={certificate.isSelected} className="min-w-110px space-y-2 text-right">
-        <>
-          <div className="text-link-text-primary">{certificate?.voucherNo ?? ''}</div>
-          <div className="text-text-neutral-primary">
+      <BorderCell isSelected={certificate.isSelected} className="min-w-120px">
+        <div className="flex items-center gap-lv-2">
+          <div className="text-right text-link-text-primary">{certificate?.voucherNo ?? ''}</div>
+          <div className="text-right text-text-neutral-primary">
             {certificate.uploader && (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">
                 {certificate.uploader.slice(0, 2).toUpperCase()}
@@ -154,7 +154,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             )}
             <span>{certificate.uploader ?? ''}</span>
           </div>
-        </>
+        </div>
       </BorderCell>
     </div>
   );

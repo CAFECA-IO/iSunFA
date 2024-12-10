@@ -25,11 +25,13 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import Loader, { LoaderSize } from '@/components/loader/loader';
+import { CurrencyType } from '@/constants/currency';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
   companyId?: number;
   toggleModel: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
+  currencyAlias: CurrencyType;
   certificate?: ICertificateUI;
   onUpdateFilename: (certificateId: number, name: string) => void;
   onSave: (data: ICertificate) => void; // Info: (20240924 - tzuhan) 保存數據的回調函數
@@ -40,6 +42,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   isOpen,
   companyId,
   toggleModel,
+  currencyAlias,
   certificate,
   onUpdateFilename,
   onSave,
@@ -137,15 +140,11 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   };
 
   // Info: (20241206 - Julian) currency alias setting
-  const currencyAliasImageSrc = certificate.invoice?.currencyAlias
-    ? `/currencies/${certificate.invoice.currencyAlias.toLowerCase()}.svg`
-    : '/elements/avatar_default.svg';
-  const currencyAliasImageAlt = certificate.invoice?.currencyAlias
-    ? `currency-${certificate.invoice.currencyAlias.toLowerCase()}-icon`
-    : 'default-currency-icon';
-  const currencyAliasStr = certificate.invoice?.currencyAlias
-    ? t(`certificate:CURRENCY_ALIAS.${certificate.invoice.currencyAlias.toUpperCase()}`)
-    : '';
+  const currencyAliasImageSrc = `/currencies/${(certificate.invoice?.currencyAlias || currencyAlias).toLowerCase()}.svg`;
+  const currencyAliasImageAlt = `currency-${(certificate.invoice?.currencyAlias || currencyAlias).toLowerCase()}-icon`;
+  const currencyAliasStr = t(
+    `certificate:CURRENCY_ALIAS.${(certificate.invoice?.currencyAlias || currencyAlias).toUpperCase()}`
+  );
 
   // Info: (20241017 - tzuhan) 參考 AddAssetModal
   const {
