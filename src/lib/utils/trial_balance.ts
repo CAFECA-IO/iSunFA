@@ -5,37 +5,6 @@ import {
   ITrialBalanceTotal,
   TrialBalanceItem,
 } from '@/interfaces/trial_balance';
-import { zodFilterSectionSortingOptions } from '@/lib/utils/zod_schema/common';
-
-export function parseSortOption(
-  defaultSortOption: {
-    sortBy: SortBy;
-    sortOrder: SortOrder;
-  }[],
-  sortOption: string | undefined
-): {
-  sortBy: SortBy;
-  sortOrder: SortOrder;
-}[] {
-  try {
-    if (!sortOption) {
-      return defaultSortOption;
-    }
-
-    const optionsString = sortOption.startsWith('sortOption=')
-      ? sortOption.substring('sortOption='.length)
-      : sortOption;
-
-    const parseResult = zodFilterSectionSortingOptions().safeParse(optionsString);
-    if (!parseResult.success) {
-      return defaultSortOption;
-    }
-    const sortOptionParsed = parseResult.data;
-    return sortOptionParsed;
-  } catch (error) {
-    return defaultSortOption;
-  }
-}
 
 export function filterUserAccounts(nodes: IAccountBookNodeJSON[]): IAccountBookNodeJSON[] {
   const filteredAccounts = nodes.reduce((filtered, node) => {

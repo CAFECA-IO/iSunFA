@@ -11,12 +11,14 @@ import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
 import IncomeStatementReportTableRow from '@/components/income_statement_report_body/income_statement_report_table_row';
+import { useTranslation } from 'next-i18next';
 
 interface IIncomeStatementReportBodyAllProps {
   reportId: string;
 }
 
 const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAllProps) => {
+  const { t } = useTranslation('reports');
   const { isAuthLoading, selectedCompany } = useUserCtx();
   // Info: (20241001 - Anna) 管理表格摺疊狀態
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
@@ -197,7 +199,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p className="text-xs font-bold leading-5">一、項目彙總格式</p>
+            <p className="text-xs font-bold leading-5">
+              {t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}
+            </p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
@@ -207,10 +211,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             <thead>
               <tr>
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                  代號
+                  {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                  會計項目
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                   {!isSummaryCollapsed && financialReport && financialReport.company && (
@@ -272,17 +276,17 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-bold leading-5">一、項目彙總格式</p>
+          <p className="text-xs font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold"
@@ -346,17 +350,17 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-bold leading-5">一、項目彙總格式</p>
+          <p className="text-xs font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
@@ -455,7 +459,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p className="text-xs font-bold leading-5">二、細項分類格式</p>
+            <p className="text-xs font-bold leading-5">
+              {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
+            </p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
@@ -465,10 +471,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             <thead>
               <tr>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                  代號
+                  {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                  會計項目
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th
                   className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
@@ -533,17 +539,19 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-bold leading-5">二、細項分類格式</p>
+          <p className="text-xs font-bold leading-5">
+            {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
+          </p>
           <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
@@ -607,17 +615,19 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-bold leading-5">二、細項分類格式</p>
+          <p className="text-xs font-bold leading-5">
+            {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
+          </p>
           <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
@@ -681,17 +691,19 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-bold leading-5">二、細項分類格式</p>
+          <p className="text-xs font-bold leading-5">
+            {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
+          </p>
           <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
@@ -755,17 +767,19 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="relative text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-bold leading-5">二、細項分類格式</p>
+          <p className="text-xs font-bold leading-5">
+            {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
+          </p>
           <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
@@ -872,10 +886,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
@@ -1028,10 +1042,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
@@ -1095,7 +1109,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(2)}%
+                    {revenueToRD.ratio.curRatio.toFixed(
+                      2
+                    )}%
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {revenueToRD.ratio.preRatio.toFixed(2)}%

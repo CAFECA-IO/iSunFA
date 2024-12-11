@@ -1,53 +1,22 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import {
-  IAssetItem,
-  mockAssetItem,
   ICreateAssetWithVouchersRepoInput,
   ICreateAssetWithVouchersRepoResponse,
   ICreateAssetInput,
+  IPaginatedAsset,
 } from '@/interfaces/asset';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IPaginatedData } from '@/interfaces/pagination';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
-import { createAssetWithVouchers } from '@/lib/utils/repo/asset.repo';
+import { createAssetWithVouchers, getAllAssetsByCompanyId } from '@/lib/utils/repo/asset.repo';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { z } from 'zod';
-import { AssetCreateOutputValidator } from '@/lib/utils/zod_schema/asset';
-
-interface IAssetListPayload extends IPaginatedData<IAssetItem[]> {}
-
-const MOCK_ASSET_LIST_PAYLOAD: IAssetListPayload = {
-  data: [mockAssetItem],
-  page: 1,
-  totalPages: 1,
-  totalCount: 1,
-  pageSize: 10,
-  hasNextPage: false,
-  hasPreviousPage: false,
-  sort: [
-    {
-      sortBy: 'acquisitionDate',
-      sortOrder: 'desc',
-    },
-  ],
-};
-
-export async function handleGetRequest() {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAssetListPayload | null = null;
-
-  // ToDo: (20240927 - Shirley) 從請求中獲取查詢參數
-  // ToDo: (20240927 - Shirley) 從資料庫獲取資產數據
-  // ToDo: (20240927 - Shirley) 將資產數據格式化為資產介面
-
-  payload = MOCK_ASSET_LIST_PAYLOAD;
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-
-  return { statusMessage, payload };
-}
+import { formatPaginatedAsset } from '@/lib/utils/formatter/asset.formatter';
+import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
+import { parseSortOption } from '@/lib/utils/zod_schema/common';
+import { DEFAULT_SORT_OPTIONS } from '@/constants/asset';
+import { Prisma } from '@prisma/client';
 
 /* Info: (20241204 - Luphia) API develop SOP 以 POST ASSET API 為例
  * 1. 前置作業
@@ -90,15 +59,91 @@ interface IHandlerResult {
   statusMessage: string;
 }
 
-interface IHandlePostRequestResult extends IHandlerResult {
-  payload: z.infer<typeof AssetCreateOutputValidator>;
+interface IPostResult extends IHandlerResult {
+  payload: ICreateAssetWithVouchersRepoResponse;
 }
 
-type IHandlerResultPayload = IAssetListPayload | IHandlePostRequestResult['payload'] | null;
+interface IGetResult extends IHandlerResult {
+  payload: IPaginatedAsset;
+}
+
+type IHandlerResultPayload = IGetResult['payload'] | IPostResult['payload'] | null;
 
 interface IHandlerResponse extends IHandlerResult {
   payload: IHandlerResultPayload;
 }
+
+export const handleGetRequest: IHandleRequest<
+  APIName.ASSET_LIST_V2,
+  IGetResult['payload']
+> = async ({ query }) => {
+  const {
+    companyId,
+    page = 1,
+    pageSize,
+    sortOption,
+    type,
+    status,
+    startDate,
+    endDate,
+    searchQuery,
+  } = query;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IPaginatedAsset | null = null;
+
+  const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
+
+  const filterCondition: Prisma.AssetWhereInput = {
+    ...(type ? { type } : {}),
+    ...(status ? { status } : {}),
+    ...(startDate || endDate
+      ? {
+          acquisitionDate: {
+            ...(startDate ? { gte: Number(startDate) } : {}),
+            ...(endDate ? { lte: Number(endDate) } : {}),
+          },
+        }
+      : {}),
+  };
+
+  const assets = await getAllAssetsByCompanyId(companyId, {
+    sortOption: parsedSortOption,
+    filterCondition,
+    searchQuery,
+  });
+
+  if (!assets) {
+    payload = null;
+  } else {
+    const accountingSetting = await getAccountingSettingByCompanyId(companyId);
+    // Info: (20241210 - Shirley) sort assets into fit tptrihe `IAssetItem`
+    const sortedAssets = assets.map((item) => {
+      return {
+        id: item.id,
+        currencyAlias: accountingSetting?.currency || 'TWD',
+        acquisitionDate: item.acquisitionDate,
+        assetType: item.type,
+        assetName: item.name,
+        assetNumber: item.number,
+        purchasePrice: item.purchasePrice,
+        accumulatedDepreciation: 0,
+        residualValue: 0,
+        remainingLife: 0,
+        assetStatus: item.status,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        deletedAt: null,
+      };
+    });
+
+    const paginatedAssets = formatPaginatedAsset(sortedAssets, parsedSortOption, page, pageSize);
+    payload = paginatedAssets;
+  }
+
+  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+
+  return { statusMessage, payload };
+};
 
 export const handlePostRequest: IHandleRequest<
   APIName.CREATE_ASSET_V2,
@@ -139,8 +184,8 @@ export const handlePostRequest: IHandleRequest<
 
   const statusMessage = STATUS_MESSAGE.CREATED;
 
-  // // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
-  const result: IHandlePostRequestResult = { statusMessage, payload: rs };
+  // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
+  const result: IPostResult = { statusMessage, payload: rs };
 
   return result;
 };
@@ -148,7 +193,7 @@ export const handlePostRequest: IHandleRequest<
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
 } = {
-  GET: handleGetRequest,
+  GET: (req, res) => withRequestValidation(APIName.ASSET_LIST_V2, req, res, handleGetRequest),
   POST: (req, res) => withRequestValidation(APIName.CREATE_ASSET_V2, req, res, handlePostRequest),
 };
 

@@ -1350,9 +1350,18 @@ export async function getManyVoucherByAccountV2(options: {
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
     lineItems: {
       some: {
-        account: {
-          id: accountId,
-        },
+        OR: [
+          {
+            account: {
+              id: accountId,
+            },
+          },
+          {
+            account: {
+              parentId: accountId,
+            },
+          },
+        ],
       },
     },
     OR: [

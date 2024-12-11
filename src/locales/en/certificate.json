@@ -107,7 +107,8 @@
     "NOTE": "Note",
     "ENTER_TEXT": "Enter Text",
     "EDIT_NEW": "Edit New Client/Supplier",
-    "REMOVE_THIS": "Remove this Client/Supplier"
+    "REMOVE_THIS": "Remove this Client/Supplier",
+    "NO_DATA_AVAILABLE": "No Data Available"
   },
   "LABEL": {
     "NEW": "New"
