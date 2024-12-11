@@ -17,7 +17,6 @@ interface NoticeSettingsProps {
 const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
   const { t } = useTranslation(['setting', 'common']);
   const { toastHandler } = useModalContext();
-  const [isLoading, setIsLoading] = useState(false);
   const { trigger: updateUserSettingAPI } = APIHandler<IUserSetting>(APIName.USER_SETTING_UPDATE);
 
   const [enableSystemNotifications, setEnableSystemNotifications] = useState(
@@ -32,7 +31,6 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
 
   const updateUseSetting = async () => {
     if (!userSetting) return;
-    setIsLoading(true);
     const { success } = await updateUserSettingAPI({
       params: { userId: userSetting?.userId },
       body: {
@@ -55,13 +53,49 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
         content: t('setting:USER.UPDATE_SUCCESS'),
         closeable: true,
       });
+    } else {
+      toastHandler({
+        id: ToastId.USER_SETTING_UPDATE_ERROR,
+        type: ToastType.ERROR,
+        content: t('setting:USER.UPDATE_ERROR'),
+        closeable: true,
+      });
     }
-    setIsLoading(false);
+  };
+
+  const handleSystemNotificationsToggle = () => {
+    setEnableSystemNotifications((prev) => {
+      const newState = !prev;
+      updateUseSetting();
+      return newState;
+    });
+  };
+
+  const handleUpdatesNotificationsToggle = () => {
+    setEnableUpdatesNotifications((prev) => {
+      const newState = !prev;
+      updateUseSetting();
+      return newState;
+    });
+  };
+
+  const handleEmailNotificationsToggle = () => {
+    setEnableEmailNotifications((prev) => {
+      const newState = !prev;
+      updateUseSetting();
+      return newState;
+    });
   };
 
   useEffect(() => {
-    if (!isLoading) updateUseSetting();
-  }, [enableSystemNotifications, enableUpdatesNotifications, enableEmailNotifications]);
+    if (userSetting) {
+      setEnableSystemNotifications(userSetting.notificationSetting.systemNotification);
+      setEnableUpdatesNotifications(
+        userSetting.notificationSetting.updateAndSubscriptionNotification
+      );
+      setEnableEmailNotifications(userSetting.notificationSetting.emailNotification);
+    }
+  }, [userSetting]);
 
   return (
     <div>
@@ -81,7 +115,7 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
         <Toggle
           id="tax-toggle"
           initialToggleState={enableSystemNotifications}
-          getToggledState={() => setEnableSystemNotifications((prev) => !prev)}
+          getToggledState={handleSystemNotificationsToggle}
           toggleStateFromParent={enableSystemNotifications}
         />
       </div>
@@ -93,7 +127,7 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
         <Toggle
           id="tax-toggle"
           initialToggleState={enableUpdatesNotifications}
-          getToggledState={() => setEnableUpdatesNotifications((prev) => !prev)}
+          getToggledState={handleUpdatesNotificationsToggle}
           toggleStateFromParent={enableUpdatesNotifications}
         />
       </div>
@@ -105,7 +139,7 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
         <Toggle
           id="tax-toggle"
           initialToggleState={enableEmailNotifications}
-          getToggledState={() => setEnableEmailNotifications((prev) => !prev)}
+          getToggledState={handleEmailNotificationsToggle}
           toggleStateFromParent={enableEmailNotifications}
         />
       </div>

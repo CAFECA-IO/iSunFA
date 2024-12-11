@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ICounterparty } from '@/interfaces/counterparty';
+import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -11,27 +11,31 @@ import {
   getCounterpartyById,
   updateCounterpartyById,
 } from '@/lib/utils/repo/counterparty.repo';
+import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 
-const handleGetRequest: IHandleRequest<APIName.COUNTERPARTY_GET_BY_ID, ICounterparty> = async ({
-  query,
-}) => {
+const handleGetRequest: IHandleRequest<
+  APIName.COUNTERPARTY_GET_BY_ID,
+  ICounterPartyEntity
+> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICounterparty | null = null;
+  let payload: ICounterPartyEntity | null = null;
 
   const { counterpartyId } = query;
   const counterparty = await getCounterpartyById(counterpartyId);
-  statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-  payload = counterparty;
+  if (counterparty) {
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    payload = parsePrismaCounterPartyToCounterPartyEntity(counterparty);
+  }
 
   return { statusMessage, payload };
 };
 
-const handlePutRequest: IHandleRequest<APIName.COUNTERPARTY_UPDATE, ICounterparty> = async ({
+const handlePutRequest: IHandleRequest<APIName.COUNTERPARTY_UPDATE, ICounterPartyEntity> = async ({
   query,
   body,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICounterparty | null = null;
+  let payload: ICounterPartyEntity | null = null;
 
   const { counterpartyId } = query;
   const { name, taxId, type, note } = body;
@@ -40,22 +44,25 @@ const handlePutRequest: IHandleRequest<APIName.COUNTERPARTY_UPDATE, ICounterpart
     statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
   } else {
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    payload = updatedCounterparty;
+    payload = parsePrismaCounterPartyToCounterPartyEntity(updatedCounterparty);
   }
 
   return { statusMessage, payload };
 };
 
-const handleDeleteRequest: IHandleRequest<APIName.COUNTERPARTY_DELETE, ICounterparty> = async ({
-  query,
-}) => {
+const handleDeleteRequest: IHandleRequest<
+  APIName.COUNTERPARTY_DELETE,
+  ICounterPartyEntity
+> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICounterparty | null = null;
+  let payload: ICounterPartyEntity | null = null;
 
   const { counterpartyId } = query;
   const deletedCounterparty = await deleteCounterpartyById(counterpartyId);
-  statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-  payload = deletedCounterparty;
+  if (deletedCounterparty) {
+    statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+    payload = parsePrismaCounterPartyToCounterPartyEntity(deletedCounterparty);
+  }
 
   return { statusMessage, payload };
 };

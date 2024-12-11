@@ -8,6 +8,7 @@ import { getTimestampNow, pageToOffset, timestampInSeconds } from '@/lib/utils/c
 import { Prisma, Counterparty } from '@prisma/client';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
+import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 
 // Info: (20241022 - Jacky) Create
 export async function createCounterparty(
@@ -86,7 +87,10 @@ export async function listCounterparty(
 
   const skip = pageToOffset(targetPage, pageSize);
 
-  const paginatedCounterparties = counterparties.slice(skip, skip + pageSize);
+  const paginatedCounterpartiesFromDB = counterparties.slice(skip, skip + pageSize);
+  const paginatedCounterparties = paginatedCounterpartiesFromDB.map((counterparty) =>
+    parsePrismaCounterPartyToCounterPartyEntity(counterparty)
+  );
 
   const hasNextPage = skip + pageSize < totalCount;
   const hasPreviousPage = targetPage > 1;

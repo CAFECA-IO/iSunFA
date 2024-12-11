@@ -28,6 +28,7 @@ import CertificateExportModal from '@/components/certificate/certificate_export_
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { CurrencyType } from '@/constants/currency';
 
 interface CertificateListBodyProps {}
 
@@ -70,7 +71,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [currency, setCurrency] = useState<string>('TWD');
+  const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
 
   const handleAddVoucher = useCallback(() => {
     router.push({
@@ -148,7 +149,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           withVoucher: number;
           withoutVoucher: number;
         };
-        currency: string;
+        currency: CurrencyType;
         certificates: ICertificate[];
       }>
     ) => {
@@ -334,10 +335,28 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [editingId]
   );
 
+  const onUpdateFilename = useCallback(
+    (id: number, filename: string) => {
+      setCertificates((prev) => {
+        const updatedData = {
+          ...prev,
+          [id]: {
+            ...prev[id],
+            file: {
+              ...prev[id].file,
+              name: filename,
+            },
+          },
+        };
+        return updatedData;
+      });
+    },
+    [certificates]
+  );
+
   const handleEditItem = useCallback(
     async (certificate: ICertificate) => {
       try {
-        // Info: (20241025 - tzuhan) @Murky, 這邊跟目前後端的接口不一致，需要調整的話再跟我說
         const postOrPutAPI = certificate.invoice.id
           ? updateCertificateAPI({
               params: { companyId, invoiceId: certificate.invoice.id },
@@ -351,7 +370,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 inputOrOutput: certificate.invoice.inputOrOutput,
                 date: certificate.invoice.date,
                 no: certificate.invoice.no,
-                currencyAlias: certificate.invoice.currencyAlias,
+                currencyAlias: certificate.invoice.currencyAlias || currency,
                 priceBeforeTax: certificate.invoice.priceBeforeTax,
                 taxType: certificate.invoice.taxType,
                 taxRatio: certificate.invoice.taxRatio,
@@ -402,7 +421,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   );
 
   const handleNewCertificateComing = useCallback(
-    (newCertificate: ICertificate) => {
+    async (newCertificate: ICertificate) => {
       setCertificates((prev) => {
         // Deprecated: (20241122 - tzuhan) Debugging purpose
         // eslint-disable-next-line no-console
@@ -489,16 +508,19 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       {isEditModalOpen && (
         <CertificateEditModal
           isOpen={isEditModalOpen}
-          companyId={companyId}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
+          currencyAlias={currency}
           certificate={editingId ? certificates[editingId] : undefined}
+          onUpdateFilename={onUpdateFilename}
           onSave={handleEditItem}
           onDelete={handleDeleteItem}
         />
       )}
       {/* Info: (20240919 - tzuhan) Main Content */}
       <div
-        className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'overflow-y-scroll' : ''} `}
+        // Info: (20241210 - tzuhan) 隱藏 scrollbar
+        // eslint-disable-next-line tailwindcss/no-custom-classname
+        className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
         <CertificateFileUpload />
@@ -518,7 +540,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             withVoucher: number;
             withoutVoucher: number;
           };
-          currency: string;
+          currency: CurrencyType;
           certificates: ICertificate[];
         }>
           className="mt-2"
