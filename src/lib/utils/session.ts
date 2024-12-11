@@ -16,6 +16,7 @@ export async function setSession(
   data: { userId?: number; companyId?: number; challenge?: string; roleId?: number }
 ) {
   const { userId, companyId, challenge, roleId } = data;
+
   const updatedSession = session;
 
   if (userId) updatedSession.userId = userId;
