@@ -1,9 +1,9 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
 import { ICompanyAndRole } from '@/interfaces/company';
-import { BsThreeDotsVertical } from 'react-icons/bs';
-import { IoArrowForward } from 'react-icons/io5';
-import { FiTag, FiTrash2 } from 'react-icons/fi';
+import { IoArrowForward, IoClose } from 'react-icons/io5';
+import { FaRegCircleCheck } from 'react-icons/fa6';
+import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
 import CompanyTag from '@/components/beta/my_company_list_page/company_tag';
 import { CANCEL_COMPANY_ID } from '@/constants/company';
 import { useTranslation } from 'react-i18next';
@@ -14,9 +14,15 @@ interface ICompanyItemProps {
   myCompany: ICompanyAndRole;
   setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setCompanyToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setCompanyToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
-const CompanyItem = ({ myCompany, setCompanyToEdit, setCompanyToDelete }: ICompanyItemProps) => {
+const CompanyItem = ({
+  myCompany,
+  setCompanyToEdit,
+  setCompanyToDelete,
+  setCompanyToUploadAvatar,
+}: ICompanyItemProps) => {
   const { t } = useTranslation(['company']);
   const { selectCompany, selectedCompany } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +49,11 @@ const CompanyItem = ({ myCompany, setCompanyToEdit, setCompanyToDelete }: ICompa
 
   const openDeleteCompanyModal = () => {
     setCompanyToDelete(myCompany);
+    closeOptionsDropdown();
+  };
+
+  const openUploadCompanyAvatarModal = () => {
+    setCompanyToUploadAvatar(myCompany);
     closeOptionsDropdown();
   };
 
@@ -73,8 +84,6 @@ const CompanyItem = ({ myCompany, setCompanyToEdit, setCompanyToDelete }: ICompa
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
       console.log('執行 selectCompany api 回傳:', data);
-
-      // ToDo: (20241114 - Liz) 選擇公司成功後的相關處理
     } catch (error) {
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
@@ -87,24 +96,39 @@ const CompanyItem = ({ myCompany, setCompanyToEdit, setCompanyToDelete }: ICompa
   return (
     <div
       key={myCompany.company.id}
-      className="flex items-center justify-between gap-60px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
+      className="flex items-center gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
     >
-      <Image
-        src={myCompany.company.imageId}
-        alt={myCompany.company.name}
-        width={60}
-        height={60}
-        className="flex-none rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS"
-      ></Image>
+      <button
+        type="button"
+        onClick={openUploadCompanyAvatarModal}
+        className="group relative shrink-0"
+      >
+        <Image
+          src={myCompany.company.imageId}
+          alt={myCompany.company.name}
+          width={60}
+          height={60}
+          className="flex-none rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2"
+        ></Image>
+
+        <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
+          <FiEdit2 size={24} />
+        </div>
+      </button>
 
       <div className="flex flex-auto items-center gap-8px">
-        <p className="text-base font-medium text-text-neutral-solid-dark">
+        <p className="max-w-170px truncate text-base font-medium text-text-neutral-solid-dark">
           {myCompany.company.name}
         </p>
 
-        <div className="relative flex items-center">
+        <div className="relative flex flex-none items-center">
           <button type="button" onClick={toggleOptionsDropdown}>
-            <BsThreeDotsVertical size={16} className="text-icon-surface-single-color-primary" />
+            <Image
+              src="/icons/square_mouse_pointer.svg"
+              width={16}
+              height={16}
+              alt="square_mouse_pointer"
+            />
           </button>
 
           {isOptionsDropdownOpen && (
@@ -141,14 +165,28 @@ const CompanyItem = ({ myCompany, setCompanyToEdit, setCompanyToDelete }: ICompa
       <div className="flex w-120px items-center justify-end">
         <button
           type="button"
-          className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-button-text-primary-solid hover:bg-button-surface-soft-primary-hover"
+          className="group relative text-button-text-secondary"
           onClick={handleConnect}
           disabled={isLoading}
         >
-          <p className="text-sm font-medium">
-            {isCompanySelected ? t('company:PAGE_BODY.CANCEL') : t('company:PAGE_BODY.CONNECT')}
-          </p>
-          <IoArrowForward size={16} />
+          {isCompanySelected ? (
+            <div className="flex items-center gap-4px rounded-xs border border-surface-state-success bg-surface-state-success px-16px py-8px group-hover:opacity-0">
+              <p className="text-sm font-medium">{t('company:PAGE_BODY.LINKED')}</p>
+              <FaRegCircleCheck size={16} />
+            </div>
+          ) : (
+            <div className="flex items-center gap-4px rounded-xs border border-button-stroke-secondary px-16px py-8px hover:bg-button-surface-soft-secondary-hover">
+              <p className="text-sm font-medium">{t('company:PAGE_BODY.CONNECT')}</p>
+              <IoArrowForward size={16} />
+            </div>
+          )}
+
+          {isCompanySelected && (
+            <div className="absolute inset-0 flex items-center justify-center gap-4px rounded-xs border border-surface-state-success-soft bg-surface-state-success-soft px-16px py-8px text-sm opacity-0 group-hover:opacity-100">
+              <p className="text-sm font-medium">{t('company:PAGE_BODY.CANCEL')}</p>
+              <IoClose size={16} />
+            </div>
+          )}
         </button>
       </div>
     </div>

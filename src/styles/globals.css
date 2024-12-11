@@ -321,6 +321,9 @@
     --spacing-lv-10: var(--number-80);
     --spacing-lv-11: var(--number-96);
     --spacing-lv-12: var(--number-120);
+    --badge-gap-spacing-sm: var(--number-1);
+    --badge-spacing-y-sm: var(--number-1);
+    --badge-spacing-x-sm: var(--number-3);
     --stroke-width-lv-1: 1px;
     --stroke-width-lv-2: 2px;
     --stroke-width-lv-3: 3px;
@@ -1288,6 +1291,16 @@ input[type='checkbox']:checked::before {
       var(--surface-brand-primary-10, rgba(255, 165, 2, 0.1)) 100%
     ),
     var(--surface-neutral-surface-lv2, #fff);
+}
+
+/* Info: (20241210 - tzuhan) 隱藏所有瀏覽器的默認滾動條樣式 */
+.hide-scrollbar {
+  scrollbar-width: none; /* Info: (20241210 - tzuhan) Firefox */
+  -ms-overflow-style: none; /* Info: (20241210 - tzuhan) IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Info: (20241210 - tzuhan) Chrome, Safari, and Opera */
 }
 
 @media (max-width: 769px) {

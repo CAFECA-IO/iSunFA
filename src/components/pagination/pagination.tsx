@@ -38,8 +38,8 @@ const Pagination = forwardRef(
     }: IPaginationProps,
     ref
   ) => {
-    const { t } = useTranslation('common');
-    const [, /* targetPage */ setTargetPage, targetPageRef] = useStateRef<number>(currentPage);
+    const { t } = useTranslation(['common']);
+    const [, setTargetPage, targetPageRef] = useStateRef<number>(currentPage);
     const router = useRouter();
 
     // Info: (20240712 - Shirley) 從 URL 獲取初始頁碼
