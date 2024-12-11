@@ -2,13 +2,11 @@ import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constan
 import {
   createAssetWithVouchers,
   createManyAssets,
-  deleteAssetForTesting,
-  deleteManyAssetsForTesting,
+  deleteAsset,
+  deleteManyAssets,
   listAssetsByCompanyId,
   getLegitAssetById,
   updateAsset,
-  deleteAsset,
-  deleteAssets,
 } from '@/lib/utils/repo/asset.repo';
 import { getTimestampNow } from '@/lib/utils/common';
 import { SortOrder, SortBy } from '@/constants/sort';
@@ -45,7 +43,7 @@ describe('createAssetWithVouchers (single asset)', () => {
     expect(asset.updatedAt).toBeDefined();
     expect(asset.id).toBeDefined();
 
-    await deleteAssetForTesting(asset.id);
+    await deleteAsset(asset.id);
   });
 
   it('should handle special asset number format', async () => {
@@ -64,7 +62,7 @@ describe('createAssetWithVouchers (single asset)', () => {
     expect(asset).toBeDefined();
     expect(asset.number).toMatch(/^EQ-1206-[\w-]+-\d{6}$/);
 
-    await deleteAssetForTesting(asset.id);
+    await deleteAsset(asset.id);
   });
 
   it('should create asset with default values when optional fields are not provided', async () => {
@@ -90,7 +88,7 @@ describe('createAssetWithVouchers (single asset)', () => {
     expect(asset.updatedAt).toBeDefined();
     expect(asset.id).toBeDefined();
 
-    await deleteAssetForTesting(asset.id);
+    await deleteAsset(asset.id);
   });
 });
 describe('createManyAssets (multiple assets)', () => {
@@ -131,7 +129,7 @@ describe('createManyAssets (multiple assets)', () => {
 
     const assetIds = assets.map((asset) => asset.id);
 
-    await deleteManyAssetsForTesting(assetIds);
+    await deleteManyAssets(assetIds);
   });
 
   it('should create assets with sequential numbers', async () => {
@@ -160,7 +158,7 @@ describe('createManyAssets (multiple assets)', () => {
     });
 
     const assetIds = assets.map((asset) => asset.id);
-    await deleteManyAssetsForTesting(assetIds);
+    await deleteManyAssets(assetIds);
   });
 });
 
@@ -193,7 +191,7 @@ describe('deleteAsset', () => {
     };
 
     const asset = await createAssetWithVouchers(newAssetData);
-    const deletedAsset = await deleteAssetForTesting(asset.id);
+    const deletedAsset = await deleteAsset(asset.id);
 
     expect(deletedAsset).toBeDefined();
     expect(deletedAsset.id).toBe(asset.id);
@@ -206,7 +204,7 @@ describe('deleteAsset', () => {
     const nonExistentId = -1;
 
     const deleteNonExistentAsset = async () => {
-      await deleteAssetForTesting(nonExistentId);
+      await deleteAsset(nonExistentId);
     };
 
     await expect(deleteNonExistentAsset).rejects.toThrow();
@@ -368,7 +366,7 @@ describe('updateAsset', () => {
     expect(updatedAsset.id).toBe(asset.id);
 
     // Info: (20241210 - Shirley) 清理測試資料
-    await deleteAssetForTesting(asset.id);
+    await deleteAsset(asset.id);
   });
 
   it('當嘗試更新不存在的資產時應該拋出錯誤', async () => {
@@ -403,7 +401,7 @@ describe('updateAsset', () => {
     await expect(updateAsset(wrongCompanyId, asset.id, updateData)).rejects.toThrow();
 
     // Info: (20241210 - Shirley) 清理測試資料
-    await deleteAssetForTesting(asset.id);
+    await deleteAsset(asset.id);
   });
 
   it('應該能夠更新多個欄位', async () => {
@@ -437,7 +435,7 @@ describe('updateAsset', () => {
     expect(updatedAsset.note).toBe(data.note);
 
     // Info: (20241210 - Shirley) 清理測試資料
-    await deleteAssetForTesting(asset.id);
+    await deleteAsset(asset.id);
   });
 });
 
@@ -468,7 +466,7 @@ describe('Soft Delete 功能測試', () => {
     expect(fetchedAsset).toBeNull();
 
     // 清理測試資料（實際上已被軟刪除，可選擇永久刪除）
-    // await deleteAssetForTesting(asset.id);
+    // await deleteAsset(asset.id);
   });
 
   it('應該能夠軟刪除多個資產並設置 deletedAt', async () => {
@@ -485,15 +483,12 @@ describe('Soft Delete 功能測試', () => {
     };
 
     const assets = await createManyAssets(assetData, assetData.amount);
-    // console.log('應該能夠軟刪除多個資產並設置assets', assets);
-    // expect(assets.length).toBe(assetData.amount);
+    expect(assets.length).toBe(assetData.amount);
 
     const assetIds = assets.map((asset) => asset.id);
 
-    // console.log('assetIds', assetIds);
-
     // 執行多個軟刪除
-    const deletedAssets = await deleteAssets(assetIds);
+    const deletedAssets = await deleteManyAssets(assetIds);
     expect(deletedAssets).toBeDefined();
     expect(deletedAssets.count).toBe(assetData.amount);
 
@@ -506,7 +501,7 @@ describe('Soft Delete 功能測試', () => {
     }
 
     // 清理測試資料（實際上已被軟刪除，可選擇永久刪除）
-    // await deleteManyAssetsForTesting(assetIds);
+    // await deleteManyAssets(assetIds);
   });
 
   it('軟刪除後資產不應出現在資產列表中', async () => {
@@ -533,7 +528,7 @@ describe('Soft Delete 功能測試', () => {
     expect(deletedAsset).toBeUndefined();
 
     // 清理測試資料
-    // await deleteAssetForTesting(asset.id);
+    // await deleteAsset(asset.id);
   });
 
   it('應該無法更新已軟刪除的資產', async () => {
@@ -563,6 +558,6 @@ describe('Soft Delete 功能測試', () => {
     await expect(updateAsset(testCompanyId, asset.id, updateData)).rejects.toThrow();
 
     // 清理測試資料
-    // await deleteAssetForTesting(asset.id);
+    // await deleteAsset(asset.id);
   });
 });
