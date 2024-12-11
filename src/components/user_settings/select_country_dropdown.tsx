@@ -5,13 +5,13 @@ import { CountriesMap, LocaleKey } from '@/constants/normal_setting';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface SelectCountryDropdownProps {
-  country: LocaleKey | null;
-  setCountry: React.Dispatch<React.SetStateAction<LocaleKey | null>>;
+  country: LocaleKey | undefined;
+  onSelect: (country: LocaleKey) => void;
 }
 
-const SelectCountryDropdown: React.FC<SelectCountryDropdownProps> = ({ country, setCountry }) => {
+const SelectCountryDropdown: React.FC<SelectCountryDropdownProps> = ({ country, onSelect }) => {
   const { t } = useTranslation(['setting', 'common']);
-  const selectedCountry = country ? CountriesMap[country] : null;
+  const selectedCountry = country ? CountriesMap[country] : undefined;
 
   const {
     targetRef: countryMenuRef,
@@ -24,7 +24,7 @@ const SelectCountryDropdown: React.FC<SelectCountryDropdownProps> = ({ country, 
   };
 
   const countryMenuOptionClickHandler = (id: LocaleKey) => {
-    setCountry(id);
+    onSelect(id);
     setIsCountryMenuOpen(false);
   };
 
@@ -40,7 +40,7 @@ const SelectCountryDropdown: React.FC<SelectCountryDropdownProps> = ({ country, 
         <Image
           width={20}
           height={20}
-          src={selectedCountry?.icon ?? '/icons/en.svg'}
+          src={selectedCountry?.icon ?? '/icons/null.svg'}
           alt="country icon"
         />
         <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-input-text-primary">
@@ -48,7 +48,13 @@ const SelectCountryDropdown: React.FC<SelectCountryDropdownProps> = ({ country, 
         </div>
         <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
-            <Image src="/elements/arrow_down.svg" alt="arrow_down" width={20} height={20} />
+            <Image
+              src="/elements/arrow_down.svg"
+              alt="arrow down"
+              width={20}
+              height={20}
+              className={`${isCountryMenuOpen ? 'rotate-180' : 'rotate-0'}`}
+            />
           </div>
         </div>
       </button>

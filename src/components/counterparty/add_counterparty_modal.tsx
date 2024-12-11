@@ -11,6 +11,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
+import { ICounterparty } from '@/interfaces/counterparty';
 
 interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
   isModalVisible: boolean;
@@ -32,7 +33,12 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   const [inputNote, setInputNote] = useState<string>('');
   const [showHint, setShowHint] = useState(false);
 
-  const { trigger: addCounterpartyTrigger, success, error } = APIHandler(APIName.COUNTERPARTY_ADD);
+  const {
+    trigger: addCounterpartyTrigger,
+    success,
+    error,
+    data,
+  } = APIHandler<ICounterparty>(APIName.COUNTERPARTY_ADD);
 
   const { targetRef: typeRef, setComponentVisible: setIsTypeSelecting } =
     useOuterClick<HTMLDivElement>(false);
@@ -125,18 +131,18 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   };
 
   useEffect(() => {
-    if (success) {
+    if (success && data) {
       // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.log('Counterparty created successfully.');
-      onSave({ name: inputName, taxId: inputTaxId, type: inputType!, note: inputNote });
+      onSave(data);
       modalVisibilityHandler();
     } else if (error) {
       // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.error('Failed to create counterparty:', error);
     }
-  }, [success, error]);
+  }, [success, error, data]);
 
   useEffect(() => {
     // Info: (20241206 - Julian) 若有預設值，則填入輸入欄位
