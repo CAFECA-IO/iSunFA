@@ -10,7 +10,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
-import { createAssetWithVouchers, getAllAssetsByCompanyId } from '@/lib/utils/repo/asset.repo';
+import { createAssetWithVouchers, listAssetsByCompanyId } from '@/lib/utils/repo/asset.repo';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { formatPaginatedAsset } from '@/lib/utils/formatter/asset.formatter';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
@@ -107,7 +107,7 @@ export const handleGetRequest: IHandleRequest<
   // Info: (20241211 - Shirley) 將 sortOption 轉換成 prisma 的 orderBy 條件，如果 sortOption 不符合預設的格式，則使用預設的排序條件 `DEFAULT_SORT_OPTIONS`
   const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
 
-  const assets = await getAllAssetsByCompanyId(companyId, {
+  const assets = await listAssetsByCompanyId(companyId, {
     sortOption: parsedSortOption,
     filterCondition,
     searchQuery,
