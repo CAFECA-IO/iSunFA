@@ -1,15 +1,15 @@
 import prisma from '@/client';
-import { AssetDepreciationMethod, AssetStatus } from '@/constants/asset';
+import { AssetDepreciationMethod, AssetStatus, DEFAULT_SORT_OPTIONS } from '@/constants/asset';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
-  ICreateAssetBulkRepoInput,
-  ICreateAssetBulkRepoResponse,
+  IAssetBulkPostRepoInput,
+  IAssetBulkPostRepoOutput,
   ICreateAssetWithVouchersRepoInput,
-  ICreateAssetWithVouchersRepoResponse,
-  IUpdateAssetRepoInput,
+  IAssetPostOutput,
+  IAssetPutRepoInput,
 } from '@/interfaces/asset';
-import { generateAssetNumbers } from '@/lib/utils/asset';
+import { createAssetOrderBy, generateAssetNumbers } from '@/lib/utils/asset';
 import { getTimestampNow } from '@/lib/utils/common';
 import { Prisma } from '@prisma/client';
 
@@ -25,7 +25,7 @@ export async function getOneAssetByIdWithoutInclude(assetId: number) {
 
 export async function createAssetWithVouchers(
   assetData: ICreateAssetWithVouchersRepoInput
-): Promise<ICreateAssetWithVouchersRepoResponse> {
+): Promise<IAssetPostOutput> {
   const timestampNow = getTimestampNow();
   const assetNumber = generateAssetNumbers(assetData.number, 1)[0];
   // ToDo: (20241204 - Luphia) Create the future Vouchers for asset by Murky's function
@@ -68,9 +68,9 @@ export async function createAssetWithVouchers(
 
 // TODO: (20241206 - Shirley) 建立 voucher，綁定 voucher 跟 asset
 export async function createManyAssets(
-  assetData: ICreateAssetBulkRepoInput,
+  assetData: IAssetBulkPostRepoInput,
   amount: number
-): Promise<ICreateAssetBulkRepoResponse> {
+): Promise<IAssetBulkPostRepoOutput> {
   const timestampNow = getTimestampNow();
   const assets = [];
 
@@ -194,36 +194,9 @@ export async function deleteManyAssets(assetIds: number[]) {
   return deletedAssets;
 }
 
-function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
-  const orderBy: Prisma.AssetOrderByWithRelationInput[] = [];
-  sortOptions.forEach((sort) => {
-    const { sortBy, sortOrder } = sort;
-    switch (sortBy) {
-      case SortBy.ACQUISITION_DATE:
-        orderBy.push({ acquisitionDate: sortOrder });
-        break;
-      case SortBy.PURCHASE_PRICE:
-        orderBy.push({ purchasePrice: sortOrder });
-        break;
-      case SortBy.ACCUMULATED_DEPRECIATION:
-        orderBy.push({ accumulatedDepreciation: sortOrder });
-        break;
-      case SortBy.RESIDUAL_VALUE:
-        orderBy.push({ residualValue: sortOrder });
-        break;
-      case SortBy.REMAINING_LIFE:
-        orderBy.push({ remainingLife: sortOrder });
-        break;
-      default:
-        break;
-    }
-  });
-  return orderBy;
-}
-
 /**
  * Info: (20241206 - Shirley) 獲取所有具有 voucher 的資產列表
- * @param companyId 公司ID（可選）
+ * @param companyId 公司ID
  * @returns 資產列表
  */
 export async function getAllAssetsByCompanyId(
@@ -252,9 +225,8 @@ export async function getAllAssetsByCompanyId(
       : undefined,
   };
 
-  const orderBy = createOrderByList(sortOption || []) || {
-    createdAt: 'desc',
-  };
+  // Info: (20241211 - Shirley) 根據 sortOption 公版的格式，整理出 prisma 的 asset table orderBy 條件
+  const orderBy = createAssetOrderBy(sortOption || DEFAULT_SORT_OPTIONS);
 
   const assets = await prisma.asset.findMany({
     where,
@@ -290,8 +262,9 @@ export async function getAllAssetsByCompanyId(
 export async function updateAsset(
   companyId: number,
   assetId: number,
-  assetData: IUpdateAssetRepoInput
+  assetData: IAssetPutRepoInput
 ) {
+  const now = getTimestampNow();
   const dataForUpdate = {
     name: assetData.assetName,
     acquisitionDate: assetData.acquisitionDate,
@@ -302,6 +275,7 @@ export async function updateAsset(
     usefulLife: assetData.usefulLife,
     residualValue: assetData.residualValue,
     note: assetData.note,
+    updatedAt: now,
   };
 
   const updatedAsset = await prisma.asset.update({
