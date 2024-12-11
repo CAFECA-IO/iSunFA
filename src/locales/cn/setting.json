@@ -58,7 +58,7 @@
     "LOGIN_DEVICE_N_IP": "登录设备与 IP",
     "SUBSCRIPTION_MANAGEMENT": "订阅管理",
     "FIRST_NAME": "名字",
-    "EX_JANE": "例：Jane",
+    "EX_JOHN": "例：John",
     "LAST_NAME": "姓氏",
     "EX_DOE": "例：Doe",
     "SELECT_COUNTRY": "选择国家",
@@ -172,5 +172,8 @@
     "REMOVE": "删除此账户",
     "CONFIRM_REMOVE": "您确定要删除这个账户吗？",
     "REMOVE_BTN": "是的，刪除此账户"
+  },
+  "ERROR": {
+    "FETCH_DATA": "获取数据时出错，请稍后重试。"
   }
 }

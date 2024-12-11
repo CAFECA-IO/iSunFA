@@ -6,7 +6,7 @@ export interface ICounterparty {
   companyId: number;
   name: string;
   taxId: string;
-  type: string;
+  type: CounterpartyType;
   note: string;
   createdAt: number;
   updatedAt: number;

@@ -200,7 +200,7 @@ const FilterOptionsModal = ({
     // Info: (20240620 - Julian)
     filterType === FilterOptionsModalType.contract ? (
       <div className="flex flex-col items-start gap-8px">
-        <p className="font-semibold text-input-text-primary">{t('common:COMMON.STATUS')}</p>
+        <p className="font-semibold text-input-text-primary">{t('reports:COMMON.STATUS')}</p>
         {displayedStatusMenu}
       </div>
     ) : (
@@ -217,7 +217,7 @@ const FilterOptionsModal = ({
     <div className="fixed inset-0 z-10000 -mt-40 flex items-center justify-center bg-black/50">
       <div className="relative mx-5 flex w-full flex-col items-center rounded-md bg-surface-neutral-surface-lv2 pb-10 pt-3 shadow-lg shadow-black/80 sm:mx-auto sm:w-400px sm:px-3">
         <div className="flex w-full justify-between whitespace-nowrap px-5 py-4 text-xl font-bold leading-8 text-card-text-primary">
-          <div className="flex-1">{t('common:COMMON.FILTER')}</div>
+          <div className="flex-1">{t('reports:COMMON.FILTER')}</div>
 
           {/* Info: (20240528 - Shirley) close button */}
           <Button
