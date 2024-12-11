@@ -5,21 +5,21 @@ import { CountryCodeMap, LocaleKey } from '@/constants/normal_setting';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface PhoneNumberInputProps {
-  countryCode: LocaleKey;
-  setCountryCode: React.Dispatch<React.SetStateAction<LocaleKey>>;
+  countryCode: LocaleKey | undefined;
+  onSelect: (countryCode: LocaleKey) => void;
   phoneNumber: string | undefined;
-  setPhoneNumber: React.Dispatch<React.SetStateAction<string | undefined>>;
+  onUpdate: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   countryCode,
-  setCountryCode,
+  onSelect,
   phoneNumber,
-  setPhoneNumber,
+  onUpdate,
 }) => {
   const { t } = useTranslation(['setting', 'common']);
 
-  const selectedCountryCode = CountryCodeMap[countryCode];
+  const selectedCountryCode = countryCode ? CountryCodeMap[countryCode] : undefined;
 
   const {
     targetRef: countryCodeMenuRef,
@@ -32,7 +32,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   };
 
   const countryCodeMenuOptionClickHandler = (id: LocaleKey) => {
-    setCountryCode(id);
+    onSelect(id);
     setIsCountryCodeMenuOpen(false);
   };
 
@@ -48,7 +48,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
           <Image
             width={20}
             height={20}
-            src={selectedCountryCode?.icon ?? '/icons/en.svg'}
+            src={selectedCountryCode?.icon ?? '/icons/null.svg'}
             alt="countryCode icon"
             className="mr-2"
           />
@@ -65,7 +65,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
           id="note-input"
           type="text"
           value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
+          onChange={onUpdate}
           placeholder={t('setting:NORMAL.ENTER_NUMBER')}
           className="block flex-1 outline-none placeholder:text-input-text-input-placeholder"
         />
