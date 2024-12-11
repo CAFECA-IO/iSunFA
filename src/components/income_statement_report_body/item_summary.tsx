@@ -4,6 +4,7 @@ import { FinancialReport } from '@/interfaces/report';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import CollapseButton from '@/components/button/collapse_button';
 import Rows from '@/components/income_statement_report_body/rows';
+import { useTranslation } from 'next-i18next';
 
 interface ItemSummaryProps {
   financialReport: FinancialReport;
@@ -19,6 +20,7 @@ const ItemSummary = ({
   formattedPreFromDate,
   formattedPreToDate,
 }: ItemSummaryProps) => {
+  const { t } = useTranslation(['reports']);
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
   const toggleSummaryTable = () => {
     setIsSummaryCollapsed((prev) => !prev);
@@ -55,7 +57,7 @@ const ItemSummary = ({
       <section className="text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p className="font-bold leading-5">項目彙總格式</p>
+            <p className="font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p className="font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
@@ -65,10 +67,10 @@ const ItemSummary = ({
             <thead>
               <tr>
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                  代號
+                  {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                  會計項目
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
                   {!isSummaryCollapsed && financialReport && financialReport.company && (

@@ -4,6 +4,7 @@ import { ICounterparty } from '@/interfaces/counterparty';
 import Image from 'next/image';
 import { FiEdit } from 'react-icons/fi';
 import EditCounterPartyModal from '@/components/counterparty/edit_counterparty_modal';
+import { useTranslation } from 'next-i18next';
 
 interface ICounterpartyItemProps {
   counterparty: ICounterparty; // Info: (20241106 - Anna) 符合 ICounterparty 資料格式
@@ -11,6 +12,7 @@ interface ICounterpartyItemProps {
 }
 
 const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterpartyItemProps) => {
+  const { t } = useTranslation(['certificate']);
   // Info: (20241115 - Anna)  添加 handleSave 解構
   // eslint-disable-next-line no-console
   console.log('Rendering CounterpartyItem with data:', counterparty);
@@ -38,19 +40,21 @@ const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterparty
   const displayedType =
     // Info: (20241106 - Anna) 使用 CounterpartyType 來判斷
     type === CounterpartyType.CLIENT ? (
-      <div className="relative mx-auto flex w-100px items-center gap-8px rounded-full bg-navy-blue-500 px-8px py-4px">
+      <div className="relative mx-auto flex w-120px items-center gap-4px rounded-full bg-navy-blue-500 px-8px py-4px">
         <Image src="/icons/client.png" alt="client" width={16} height={16} />
-        <p className="text-sm text-neutral-25">{type}</p>
+        <p className="text-sm text-neutral-25">{t(`certificate:COUNTERPARTY.${type}`)}</p>
       </div>
     ) : type === CounterpartyType.SUPPLIER ? (
-      <div className="relative mx-auto flex w-100px items-center gap-4px rounded-full bg-orange-500 px-8px py-4px">
+      <div className="relative mx-auto flex w-120px items-center gap-4px rounded-full bg-orange-500 px-8px py-4px">
         <Image src="/icons/supplier.png" alt="supplier" width={16} height={16} />
-        <p className="text-sm text-neutral-25">{type}</p>
+        <p className="text-sm text-neutral-25">{t(`certificate:COUNTERPARTY.${type}`)}</p>
       </div>
     ) : (
-      <div className="relative mx-auto flex w-100px items-center gap-12px rounded-full bg-navy-blue-100 px-8px py-4px">
+      <div className="relative mx-auto flex w-120px items-center gap-4px rounded-full bg-navy-blue-100 px-8px py-4px">
         <Image src="/icons/both.png" alt="both" width={16} height={16} />
-        <p className="text-sm text-navy-blue-600">{type}</p>
+        <p className="whitespace-nowrap text-sm text-navy-blue-600">
+          {t(`certificate:COUNTERPARTY.${type}`)}
+        </p>
       </div>
     );
 

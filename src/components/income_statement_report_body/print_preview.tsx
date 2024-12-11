@@ -6,6 +6,7 @@ import PrintCostRevRatio from '@/components/income_statement_report_body/print_c
 import { format } from 'date-fns';
 import Rows from '@/components/income_statement_report_body/rows';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+import { useTranslation } from 'next-i18next';
 
 interface FirstHeaderProps {
   financialReport: FinancialReport;
@@ -85,6 +86,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
     },
     ref
   ) => {
+    const { t } = useTranslation(['reports']);
     // const [totalPagesForSummary, setTotalPagesForSummary] = useState<number>(0);
 
     const flattenAccounts = (accounts: IAccountReadyForFrontend[]): IAccountReadyForFrontend[] => {
@@ -159,7 +161,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         colSpan={2}
                         className="text-left text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
-                        一、項目彙總格式
+                        {t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}
                       </th>
                       <th
                         colSpan={4}
@@ -172,10 +174,10 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
 
                     <tr>
                       <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                        代號
+                        {t('reports:TAX_REPORT.CODE_NUMBER')}
                       </th>
                       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                        會計項目
+                        {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                       </th>
                       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
                         {financialReport && financialReport.company && (
@@ -247,7 +249,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         colSpan={2}
                         className="text-left text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
-                        二、細項分類格式
+                        {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
                       </th>
                       <th
                         colSpan={4}
@@ -260,10 +262,10 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
 
                     <tr>
                       <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                        代號
+                        {t('reports:TAX_REPORT.CODE_NUMBER')}
                       </th>
                       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                        會計項目
+                        {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                       </th>
                       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
                         {financialReport && financialReport.company && (

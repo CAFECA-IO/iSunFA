@@ -109,7 +109,8 @@
     "NOTE": "备注",
     "ENTER_TEXT": "输入文字",
     "EDIT_NEW": "编辑客户/供应商",
-    "REMOVE_THIS": "删除该客户/供应商"
+    "REMOVE_THIS": "删除该客户/供应商",
+    "NO_DATA_AVAILABLE": "没有可用资料"
   },
   "LABEL": {
     "NEW": "新增"
