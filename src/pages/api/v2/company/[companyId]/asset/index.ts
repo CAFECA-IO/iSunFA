@@ -2,7 +2,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import {
   ICreateAssetWithVouchersRepoInput,
-  ICreateAssetWithVouchersRepoResponse,
+  IAssetPostOutput,
   ICreateAssetInput,
   IPaginatedAsset,
 } from '@/interfaces/asset';
@@ -60,7 +60,7 @@ interface IHandlerResult {
 }
 
 interface IPostResult extends IHandlerResult {
-  payload: ICreateAssetWithVouchersRepoResponse;
+  payload: IAssetPostOutput;
 }
 
 interface IGetResult extends IHandlerResult {
@@ -148,7 +148,7 @@ export const handleGetRequest: IHandleRequest<
 
 export const handlePostRequest: IHandleRequest<
   APIName.CREATE_ASSET_V2,
-  ICreateAssetWithVouchersRepoResponse
+  IPostResult['payload']
 > = async ({ query, body }) => {
   const { companyId } = query;
   const {

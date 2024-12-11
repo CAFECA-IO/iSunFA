@@ -3,11 +3,11 @@ import { AssetDepreciationMethod, AssetStatus, DEFAULT_SORT_OPTIONS } from '@/co
 import { SortBy, SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
-  ICreateAssetBulkRepoInput,
-  ICreateAssetBulkRepoResponse,
+  IAssetBulkPostRepoInput,
+  IAssetBulkPostRepoOutput,
   ICreateAssetWithVouchersRepoInput,
-  ICreateAssetWithVouchersRepoResponse,
-  IUpdateAssetRepoInput,
+  IAssetPostOutput,
+  IAssetPutRepoInput,
 } from '@/interfaces/asset';
 import { createAssetOrderBy, generateAssetNumbers } from '@/lib/utils/asset';
 import { getTimestampNow } from '@/lib/utils/common';
@@ -25,7 +25,7 @@ export async function getOneAssetByIdWithoutInclude(assetId: number) {
 
 export async function createAssetWithVouchers(
   assetData: ICreateAssetWithVouchersRepoInput
-): Promise<ICreateAssetWithVouchersRepoResponse> {
+): Promise<IAssetPostOutput> {
   const timestampNow = getTimestampNow();
   const assetNumber = generateAssetNumbers(assetData.number, 1)[0];
   // ToDo: (20241204 - Luphia) Create the future Vouchers for asset by Murky's function
@@ -68,9 +68,9 @@ export async function createAssetWithVouchers(
 
 // TODO: (20241206 - Shirley) 建立 voucher，綁定 voucher 跟 asset
 export async function createManyAssets(
-  assetData: ICreateAssetBulkRepoInput,
+  assetData: IAssetBulkPostRepoInput,
   amount: number
-): Promise<ICreateAssetBulkRepoResponse> {
+): Promise<IAssetBulkPostRepoOutput> {
   const timestampNow = getTimestampNow();
   const assets = [];
 
@@ -262,7 +262,7 @@ export async function getAllAssetsByCompanyId(
 export async function updateAsset(
   companyId: number,
   assetId: number,
-  assetData: IUpdateAssetRepoInput
+  assetData: IAssetPutRepoInput
 ) {
   const now = getTimestampNow();
   const dataForUpdate = {

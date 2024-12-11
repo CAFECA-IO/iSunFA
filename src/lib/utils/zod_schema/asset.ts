@@ -85,22 +85,22 @@ export const assetListSortOptions = z.enum([
 export type IAssetListSortOptions = z.infer<typeof assetListSortOptions>;
 
 // Info: (20241206 - Shirley) query for create single or bulk assets
-const AssetCreateQueryValidator = z.object({
+const IAssetPostInputQueryValidator = z.object({
   companyId: zodStringToNumber,
 });
 
 // Info: (20241206 - Shirley) query for get asset by id
-const AssetGetByIdQueryValidator = AssetCreateQueryValidator.extend({
+const IAssetGetInputQueryValidator = IAssetPostInputQueryValidator.extend({
   assetId: zodStringToNumber,
 });
 
 // Info: (20241206 - Shirley) query for delete asset by id
-const AssetDeleteByIdQueryValidator = AssetCreateQueryValidator.extend({
+const IAssetDeleteInputQueryValidator = IAssetPostInputQueryValidator.extend({
   assetId: zodStringToNumber,
 });
 
 // Info: (20241206 - Shirley) query for list assets
-const AssetListQueryValidator = AssetCreateQueryValidator.extend({
+const IAssetListInputQueryValidator = IAssetPostInputQueryValidator.extend({
   page: zodStringToNumber.optional(),
   pageSize: zodStringToNumber.optional(),
   // TODO: (20241210 - Shirley) 現在在 middleware 驗證用 z.string().optional()、進到 repo 再用 `parseSortOption` 去 parse 或給予預設 sort option；之後要改成用 zodFilterSectionSortingOptions 去 parse
@@ -112,17 +112,16 @@ const AssetListQueryValidator = AssetCreateQueryValidator.extend({
   searchQuery: z.string().optional(),
 });
 
-const AssetPutQueryValidator = AssetCreateQueryValidator.extend({
+const IAssetPutInputQueryValidator = IAssetPostInputQueryValidator.extend({
   assetId: zodStringToNumber,
 });
 
-export const AssetCreateInputBodyValidator = z.object({
+export const IAssetPostInputBodyValidator = z.object({
   assetName: z.string(),
   assetType: z.nativeEnum(AssetEntityType),
   assetNumber: z.string(),
   acquisitionDate: z.number(),
   purchasePrice: z.number(),
-  // currencyAlias: z.string(),
   amount: z.number(),
   depreciationStart: z.number().optional(),
   depreciationMethod: z.nativeEnum(AssetDepreciationMethod).optional(),
@@ -131,7 +130,7 @@ export const AssetCreateInputBodyValidator = z.object({
   note: z.string().optional(),
 });
 
-const CreateAssetWithVouchersRepoResponseValidator = z.object({
+const IAssetPostRepoOutputValidator = z.object({
   id: z.number(),
   name: z.string(),
   number: z.string(),
@@ -142,7 +141,7 @@ const CreateAssetWithVouchersRepoResponseValidator = z.object({
   note: z.string(),
 });
 
-export const UpdateAssetRepoInputValidator = z.object({
+export const IAssetPutRepoInputValidator = z.object({
   assetName: z.string().optional(),
   assetStatus: z.nativeEnum(AssetStatus).optional(),
   acquisitionDate: z.number().optional(),
@@ -154,42 +153,42 @@ export const UpdateAssetRepoInputValidator = z.object({
   note: z.string().optional(),
 });
 
-export const AssetCreateOutputValidator = CreateAssetWithVouchersRepoResponseValidator.extend({
+export const IAssetPostOutputValidator = IAssetPostRepoOutputValidator.extend({
   id: z.number(),
 });
 
-export const AssetBulkCreateInputBodyValidator = AssetCreateInputBodyValidator;
+export const IAssetBulkPostInputBodyValidator = IAssetPostInputBodyValidator;
 
-export const AssetBulkCreateOutputValidator = z.array(AssetCreateOutputValidator);
+export const IAssetBulkPostOutputValidator = z.array(IAssetPostOutputValidator);
 
-export const AssetListOutputValidator = paginatedDataSchema(IAssetItemValidator);
+export const IAssetListOutputValidator = paginatedDataSchema(IAssetItemValidator);
 
-export const AssetPutInputBodyValidator = UpdateAssetRepoInputValidator.extend({
+export const IAssetPutInputBodyValidator = IAssetPutRepoInputValidator.extend({
   updateDate: z.number().optional(),
 });
 
 // Info: (20241204 - Luphia) define the schema for frontend (with api response)
 export const assetPostSchema = {
   input: {
-    querySchema: AssetCreateQueryValidator,
-    bodySchema: AssetCreateInputBodyValidator,
+    querySchema: IAssetPostInputQueryValidator,
+    bodySchema: IAssetPostInputBodyValidator,
   },
-  outputSchema: AssetCreateOutputValidator,
+  outputSchema: IAssetPostOutputValidator,
   frontend: nullSchema,
 };
 
 export const assetBulkPostSchema = {
   input: {
-    querySchema: AssetCreateQueryValidator,
-    bodySchema: AssetBulkCreateInputBodyValidator,
+    querySchema: IAssetPostInputQueryValidator,
+    bodySchema: IAssetBulkPostInputBodyValidator,
   },
-  outputSchema: AssetBulkCreateOutputValidator,
+  outputSchema: IAssetBulkPostOutputValidator,
   frontend: nullSchema,
 };
 
-export const assetGetByIdSchema = {
+export const assetGetSchema = {
   input: {
-    querySchema: AssetGetByIdQueryValidator,
+    querySchema: IAssetGetInputQueryValidator,
     bodySchema: nullSchema,
   },
   outputSchema: IAssetDetailsValidator,
@@ -198,7 +197,7 @@ export const assetGetByIdSchema = {
 
 export const assetDeleteSchema = {
   input: {
-    querySchema: AssetDeleteByIdQueryValidator,
+    querySchema: IAssetDeleteInputQueryValidator,
     bodySchema: nullSchema,
   },
   outputSchema: IAssetDetailsValidator,
@@ -207,17 +206,17 @@ export const assetDeleteSchema = {
 
 export const assetListSchema = {
   input: {
-    querySchema: AssetListQueryValidator,
+    querySchema: IAssetListInputQueryValidator,
     bodySchema: nullSchema,
   },
-  outputSchema: AssetListOutputValidator,
+  outputSchema: IAssetListOutputValidator,
   frontend: nullSchema,
 };
 
 export const assetPutSchema = {
   input: {
-    querySchema: AssetPutQueryValidator,
-    bodySchema: AssetPutInputBodyValidator,
+    querySchema: IAssetPutInputQueryValidator,
+    bodySchema: IAssetPutInputBodyValidator,
   },
   outputSchema: IAssetDetailsValidator,
   frontend: nullSchema,
