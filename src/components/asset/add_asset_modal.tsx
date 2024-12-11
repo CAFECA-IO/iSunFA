@@ -387,7 +387,11 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const addAssetSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (accountTitle === t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')) {
+    if (
+      // Info: (20241211 - Julian) 如果新增資產時未選擇會計科目
+      modalType === AssetModalType.ADD &&
+      accountTitle === t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
+    ) {
       // Info: (20241015 - Julian) 顯示提示訊息 & 滾動到最上方
       setIsShowTypeHint(true);
       accountRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -535,7 +539,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
           {/* Info: (20241015 - Julian) input fields */}
           <div className="grid max-h-500px flex-1 grid-cols-1 items-center gap-16px overflow-y-auto overflow-x-hidden px-10px text-center md:grid-cols-2">
             {/* Info: (20241015 - Julian) Asset Type */}
-            {modalType === AssetModalType.EDIT ? (
+            {modalType === AssetModalType.ADD ? (
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
                 <p className="font-semibold">
                   {t('asset:ADD_ASSET_MODAL.ASSET_TYPE')}{' '}
@@ -546,7 +550,6 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                     ref={accountRef}
                     type="button"
                     onClick={accountEditingHandler}
-                    disabled={modalType === AssetModalType.EDIT} // Info: (20241209 - Julian) 編輯時不能修改
                     className={`flex w-full items-center justify-between gap-8px rounded-sm border ${
                       isShowTypeHint ? inputStyle.ERROR : inputStyle.NORMAL
                     } bg-input-surface-input-background px-12px py-10px text-input-text-input-filled hover:cursor-pointer disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
