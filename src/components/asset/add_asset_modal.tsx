@@ -22,6 +22,7 @@ import { APIName } from '@/constants/api_connection';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { IAssetDetails } from '@/interfaces/asset';
 import { AssetModalType, IAssetModal } from '@/interfaces/asset_modal';
+import { AssetDepreciationMethod } from '@/constants/asset';
 
 interface IAddAssetModalProps {
   isModalVisible: boolean;
@@ -29,25 +30,18 @@ interface IAddAssetModalProps {
   defaultData: IAssetModal;
 }
 
-enum DepreciationMethod {
-  STRAIGHT_LINE = 'Straight line',
-  DOUBLE_DECLINING = 'Double declining',
-  SUM_OF_YEAR_DIGIT = 'Sum of year digit',
-}
-
 const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   isModalVisible,
   modalVisibilityHandler,
   defaultData,
 }) => {
-  const { t } = useTranslation(['common', 'journal']);
+  const { t } = useTranslation(['common', 'journal', 'asset']);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { selectedCompany, userAuth } = useUserCtx();
+  const { selectedCompany } = useUserCtx();
   const { addTemporaryAssetHandler } = useAccountingCtx();
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
-  const userId = userAuth?.id ?? -1;
 
   const { assetAccountList, modalType, assetData } = defaultData;
 
@@ -72,6 +66,15 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     error,
     data: assetResult,
   } = APIHandler<IAssetDetails>(apiName);
+
+  // Info: (20241210 - Julian) Create asset bulk
+  const {
+    trigger: createAssetBulk,
+    success: createAssetBulkSuccess,
+    isLoading: createAssetBulkLoading,
+    error: createAssetBulkError,
+    data: assetBulkResult,
+  } = APIHandler<IAssetDetails[]>(APIName.CREATE_ASSET_BULK);
 
   const accountInputRef = useRef<HTMLInputElement>(null);
 
@@ -98,7 +101,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   // Info: (20241015 - Julian) Account state
   const [accountTitle, setAccountTitle] = useState<string>(
-    t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
+    assetData?.assetType ?? t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
   );
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(assetAccountList);
@@ -112,9 +115,8 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const [depreciationStartDate, setDepreciationStartDate] =
     useState<IDatePeriod>(default30DayPeriodInSec);
   const [inputUsefulLife, setInputUsefulLife] = useState<number>(0);
-  const [selectedDepreciationMethod, setSelectedDepreciationMethod] = useState<DepreciationMethod>(
-    DepreciationMethod.STRAIGHT_LINE
-  );
+  const [selectedDepreciationMethod, setSelectedDepreciationMethod] =
+    useState<AssetDepreciationMethod>(AssetDepreciationMethod.STRAIGHT_LINE);
   const [inputNote, setInputNote] = useState<string>('');
 
   // Info: (20241015 - Julian) 提示訊息
@@ -142,7 +144,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       setAcquisitionDate(default30DayPeriodInSec);
       setDepreciationStartDate(default30DayPeriodInSec);
       setInputUsefulLife(0);
-      setSelectedDepreciationMethod(DepreciationMethod.STRAIGHT_LINE);
+      setSelectedDepreciationMethod(AssetDepreciationMethod.STRAIGHT_LINE);
       setInputNote('');
 
       setIsShowTypeHint(false);
@@ -175,7 +177,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
         endTimeStamp: assetData.depreciationStart,
       });
       setInputUsefulLife(assetData.usefulLife);
-      setSelectedDepreciationMethod(assetData.depreciationMethod as DepreciationMethod);
+      setSelectedDepreciationMethod(assetData.depreciationMethod as AssetDepreciationMethod);
       setInputNote(assetData.note ?? '');
     }
   }, [defaultData]);
@@ -270,11 +272,6 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const assetNoChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputNo(event.target.value);
   };
-  const amountChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // Info: (20241015 - Julian) 限制只能輸入數字，並去掉前面的0
-    const amountOnlyNumber = event.target.value.replace(/[^0-9]/g, '').replace(/^0+/, '');
-    setInputAmount(Number(amountOnlyNumber));
-  };
   const noteChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputNote(event.target.value);
   };
@@ -286,28 +283,28 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const submitHandler = async () => {
     const generalBody = {
       assetName: inputName,
-      assetType: accountTitle,
+      assetType: accountTitle.split(' ')[0], // Info: (20241210 - Julian) 取得編號
       assetNumber: inputNo,
       acquisitionDate: acquisitionDate.startTimeStamp,
       purchasePrice: inputTotal,
-      currencyAlias: 'TWD',
       amount: inputAmount,
       depreciationStart: depreciationStartDate.startTimeStamp,
       depreciationMethod: selectedDepreciationMethod,
       usefulLife: inputUsefulLife,
       note: inputNote,
+      residualValue: inputResidualValue,
     };
 
     // Info: (20241025 - Julian) 土地成本不會有折舊日期、折舊方法和使用年限
     const landBody = {
       assetName: inputName,
-      assetType: accountTitle,
+      assetType: accountTitle.split(' ')[0], // Info: (20241210 - Julian) 取得編號
       assetNumber: inputNo,
       acquisitionDate: acquisitionDate.startTimeStamp,
       purchasePrice: inputTotal,
-      currencyAlias: 'TWD',
       amount: inputAmount,
       note: inputNote,
+      residualValue: inputResidualValue,
     };
 
     // Info: (20241028 - Julian) 新增資產只需 companyId
@@ -316,10 +313,19 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     // Info: (20241028 - Julian) 更新資產需 assetId
     const updateParams = { companyId, assetId: assetData?.id };
 
-    trigger({
-      params: modalType === AssetModalType.ADD ? addParams : updateParams,
-      body: isLandCost ? landBody : generalBody,
-    });
+    if (inputAmount > 1) {
+      // Info: (20241210 - Julian) 若數量大於 1，則使用 createAssetBulk API
+      createAssetBulk({
+        params: addParams,
+        body: isLandCost ? landBody : generalBody,
+      });
+    } else {
+      // Info: (20241210 - Julian) 呼叫 API (新增或更新)
+      trigger({
+        params: modalType === AssetModalType.ADD ? addParams : updateParams,
+        body: isLandCost ? landBody : generalBody,
+      });
+    }
   };
 
   useEffect(() => {
@@ -329,7 +335,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
           // Info: (20241028 - Julian) 新增資產的處理
           case AssetModalType.ADD:
             // Info: (20241025 - Julian) 新增資產至暫存
-            addTemporaryAssetHandler(userId, assetResult);
+            addTemporaryAssetHandler(companyId, assetResult);
 
             // Info: (20241025 - Julian) 顯示成功 toast 訊息
             toastHandler({
@@ -363,6 +369,33 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       }
     }
   }, [success, isLoading, error, assetResult]);
+
+  useEffect(() => {
+    if (!createAssetBulkLoading) {
+      if (createAssetBulkSuccess && assetBulkResult) {
+        // Info: (20241210 - Julian) 新增資產至暫存
+        assetBulkResult.forEach((asset) => {
+          addTemporaryAssetHandler(companyId, asset);
+        });
+
+        // Info: (20241210 - Julian) 顯示成功 toast 訊息
+        toastHandler({
+          id: ToastId.ADD_ASSET_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: t('asset:ADD_ASSET_MODAL.TOAST_SUCCESS'),
+          closeable: true,
+        });
+      } else if (createAssetBulkError) {
+        // Info: (20241210 - Julian) 顯示錯誤 toast 訊息
+        toastHandler({
+          id: ToastId.ADD_ASSET_ERROR,
+          type: ToastType.ERROR,
+          content: t('asset:ADD_ASSET_MODAL.TOAST_ERROR'),
+          closeable: true,
+        });
+      }
+    }
+  }, [createAssetBulkSuccess, createAssetBulkLoading, createAssetBulkError, assetBulkResult]);
 
   const addAssetSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -408,7 +441,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     }
   };
 
-  const translateMethod = (method: DepreciationMethod) => {
+  const translateMethod = (method: AssetDepreciationMethod) => {
     const key = method.toUpperCase().replace(/ /g, '_').replace(/-/g, '_');
     return t(`asset:ADD_ASSET_MODAL.${key}`);
   };
@@ -465,17 +498,20 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       className="w-full truncate bg-transparent outline-none"
     />
   ) : (
-    <p className={`truncate text-input-text-input-filled`}>{accountTitle}</p>
+    <p className="truncate">{accountTitle}</p>
   );
 
-  const depreciationMethodList = Object.values(DepreciationMethod);
+  // Info: (20241210 - Julian) 排除 NONE
+  const depreciationMethodList = Object.values(AssetDepreciationMethod).filter(
+    (method) => method !== AssetDepreciationMethod.NONE
+  );
 
   const depreciationMethodMenu = depreciationMethodList.map((method) => (
     <button
       key={method}
       type="button"
       onClick={() => {
-        setSelectedDepreciationMethod(method as DepreciationMethod);
+        setSelectedDepreciationMethod(method as AssetDepreciationMethod);
         setMethodVisible(false);
       }}
       className="flex h-46px w-full items-center justify-between px-12px py-8px text-base font-medium text-input-text-input-filled hover:bg-dropdown-surface-item-hover"
@@ -522,9 +558,10 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                   ref={accountRef}
                   type="button"
                   onClick={accountEditingHandler}
+                  disabled={modalType === AssetModalType.EDIT} // Info: (20241209 - Julian) 編輯時不能修改
                   className={`flex w-full items-center justify-between gap-8px rounded-sm border ${
                     isShowTypeHint ? inputStyle.ERROR : inputStyle.NORMAL
-                  } bg-input-surface-input-background px-12px py-10px hover:cursor-pointer`}
+                  } bg-input-surface-input-background px-12px py-10px text-input-text-input-filled hover:cursor-pointer disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
                 >
                   {isEditAccounting}
                   <FaChevronDown />
@@ -546,7 +583,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 onChange={assetNoChangeHandler}
                 required
                 disabled={modalType === AssetModalType.EDIT} // Info: (20241119 - Julian) 編輯時不能修改
-                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
+                className={`${inputStyle.NORMAL} h-46px w-full rounded-sm border px-12px outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable`}
               />
             </div>
             {/* Info: (20241015 - Julian) Asset name */}
@@ -562,20 +599,23 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 value={inputName}
                 onChange={nameChangeHandler}
                 required
-                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
+                className={`${inputStyle.NORMAL} h-46px w-full rounded-sm border px-12px outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable`}
               />
             </div>
             {/* Info: (20241015 - Julian) Amount */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
               <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.AMOUNT')}</p>
-              <input
+              <NumericInput
                 id="input-amount"
                 type="number"
                 value={inputAmount}
-                onChange={amountChangeHandler}
-                min={1}
+                setValue={setInputAmount}
+                isDecimal
+                hasComma
                 required
-                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
+                min={1}
+                disabled={modalType === AssetModalType.EDIT} // Info: (20241209 - Julian) 編輯時不能修改
+                className={`${inputStyle.NORMAL} h-46px w-full rounded-sm border px-12px outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable`}
               />
             </div>
             {/* Info: (20241015 - Julian) Total Price */}
@@ -606,7 +646,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>{t('common:COMMON.TWD')}</p>
+                  <p>{t('asset:COMMON.TWD')}</p>
                 </div>
               </div>
             </div>
@@ -638,7 +678,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>{t('common:COMMON.TWD')}</p>
+                  <p>{t('asset:COMMON.TWD')}</p>
                 </div>
               </div>
             </div>
@@ -694,7 +734,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                     className="flex-1 bg-transparent px-10px text-right outline-none"
                   />
                   <div className="flex w-60px items-center justify-center p-12px text-sm text-input-text-input-placeholder">
-                    <p>{t('common:COMMON.MONTH')}</p>
+                    <p>{t('asset:COMMON.M')}</p>
                   </div>
                 </div>
               </div>

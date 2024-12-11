@@ -10,7 +10,7 @@ const trialBalanceListQueryValidator = z.object({
   companyId: zodStringToNumber,
   startDate: zodStringToNumber,
   endDate: zodStringToNumber,
-  // TODO: (20241118 - Shirley) 現在在 middleware 驗證用 z.string().optional()、進到 trial balance repo 再用 `parseSortOption` 去 parse 或給予預設 sort option；之後要改成用 zodFilterSectionSortingOptions 去 parse
+  // TODO: (20241118 - Shirley) 現在在 middleware 驗證用 z.string().optional()、進到 repo 再用 `parseSortOption` 去 parse 或給予預設 sort option；之後要改成用 zodFilterSectionSortingOptions 去 parse
   sortOption: z.string().optional(),
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),

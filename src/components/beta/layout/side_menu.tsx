@@ -474,7 +474,7 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
     >
       {isSideMenuOpen ? (
         <section
-          className="relative flex h-full w-max flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu"
+          className="relative flex h-full w-280px flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu"
           ref={subMenuTargetRef}
         >
           {/* // Info: (20241121 - Liz) Side Menu Icon */}

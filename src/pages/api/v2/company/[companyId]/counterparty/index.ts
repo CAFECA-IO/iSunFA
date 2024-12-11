@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ICounterparty } from '@/interfaces/counterparty';
+import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -8,6 +8,7 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { createCounterparty, listCounterparty } from '@/lib/utils/repo/counterparty.repo';
+import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 
 const handleGetRequest: IHandleRequest<
   APIName.COUNTERPARTY_LIST,
@@ -17,7 +18,7 @@ const handleGetRequest: IHandleRequest<
   let payload: IPaginatedData<ICounterparty[]> | null = null;
 
   const { companyId, page, pageSize, type, searchQuery } = query;
-  const counterpartyList: IPaginatedData<ICounterparty[]> = await listCounterparty(
+  const counterpartyList: IPaginatedData<ICounterPartyEntity[]> = await listCounterparty(
     companyId,
     page,
     pageSize,
@@ -35,13 +36,15 @@ const handlePostRequest: IHandleRequest<APIName.COUNTERPARTY_ADD, ICounterparty>
   body,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICounterparty | null = null;
+  let payload: ICounterPartyEntity | null = null;
 
   const { companyId } = query;
   const { name, taxId, type, note } = body;
   const newClient = await createCounterparty(companyId, name, taxId, type, note);
-  statusMessage = STATUS_MESSAGE.CREATED;
-  payload = newClient;
+  if (newClient) {
+    statusMessage = STATUS_MESSAGE.CREATED;
+    payload = parsePrismaCounterPartyToCounterPartyEntity(newClient);
+  }
 
   return { statusMessage, payload };
 };

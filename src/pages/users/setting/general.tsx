@@ -43,7 +43,7 @@ const GeneralSettingsPage: React.FC = () => {
       toastHandler({
         id: ToastId.USER_SETTING_ERROR,
         type: ToastType.ERROR,
-        content: (error as Error).message,
+        content: t('setting:ERROR.FETCH_DATA'),
         closeable: true,
       });
     }
@@ -62,16 +62,17 @@ const GeneralSettingsPage: React.FC = () => {
       toastHandler({
         id: ToastId.USER_SETTING_ERROR,
         type: ToastType.ERROR,
-        content: (error as Error).message,
+        content: t('setting:ERROR.FETCH_DATA'),
         closeable: true,
       });
     }
   };
 
   useEffect(() => {
+    if (!userAuth) return;
     getUserSetting();
     getUserActions();
-  }, []);
+  }, [userAuth]);
 
   return (
     <>
