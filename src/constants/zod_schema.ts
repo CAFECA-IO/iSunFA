@@ -24,6 +24,7 @@ import {
   companyPostSchema,
   companyPutIconSchema,
   companyPutSchema,
+  companySearchSchema,
   companySelectSchema,
 } from '@/lib/utils/zod_schema/company';
 import { invoiceRequestValidators } from '@/lib/utils/zod_schema/invoice';
@@ -225,6 +226,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_DELETE]: userDeleteSchema,
   [APIName.COMPANY_ADD]: nullAPISchema,
   [APIName.COMPANY_GET]: nullAPISchema,
+  [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: companySearchSchema,
   [APIName.COMPANY_ADD_BY_INVITATION_CODE]: nullAPISchema,
   [APIName.CERTIFICATE_PUT_V2]: nullAPISchema,
   [APIName.INVOICE_POST_V2]: invoicePostV2Schema,
