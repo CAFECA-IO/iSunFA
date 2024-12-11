@@ -1,5 +1,6 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 
 interface CashFlowA4TemplateProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
   curDate,
   preDate,
 }) => {
+  const { t } = useTranslation(['reports']);
   const [firstBlockSplitPages, setFirstBlockSplitPages] = useState<ReactNode[][]>([]);
   const [secondBlockSplitPages, setSecondBlockSplitPages] = useState<ReactNode[][]>([]);
 
@@ -112,13 +114,13 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
         className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
         style={{ width: '55px' }}
       >
-        代號
+        {t('reports:TAX_REPORT.CODE_NUMBER')}
       </th>
       <th
         className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
         style={{ width: '261px' }}
       >
-        會計項目
+        {t('reports:REPORTS.ACCOUNTING_ITEMS')}
       </th>
       <th
         className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold print:whitespace-pre-line"
@@ -142,13 +144,13 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
         className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
         style={{ width: '55px' }}
       >
-        代號
+        {t('reports:TAX_REPORT.CODE_NUMBER')}
       </th>
       <th
         className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
         style={{ width: '261px' }}
       >
-        會計項目
+        {t('reports:REPORTS.ACCOUNTING_ITEMS')}
       </th>
       <th
         className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold print:whitespace-pre-line"

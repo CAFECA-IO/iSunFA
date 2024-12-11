@@ -56,6 +56,9 @@
     "CASH_FLOW_STATEMENT": "现金流量表",
     "PROJECT": "专案",
     "CANCEL": "取消",
-    "OVERALL": "全部"
+    "OVERALL": "全部",
+    "COPIED": "复制成功!",
+    "COPY_FAILED": "复制失败",
+    "CLOSE": "关闭"
   }
 }

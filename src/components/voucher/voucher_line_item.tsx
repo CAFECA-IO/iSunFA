@@ -49,10 +49,144 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   const lineItemDebitAmount = lineItemDebit === true ? lineItemAmount : 0;
   const lineItemCreditAmount = lineItemDebit === false ? lineItemAmount : 0;
 
-  // Info: (20241121 - Julian) 判斷是否顯示反轉分錄
-  const isShowReverse =
-    (lineItemAccount?.code === '2171' && lineItemDebitAmount > 0) || // Info: (20241001 - Julian) 應付帳款
-    (lineItemAccount?.code === '1172' && lineItemCreditAmount > 0); // Info: (20241001 - Julian) 應收帳款
+  // Info: (20241210 - Anna) 判斷是否顯示沖銷項目
+  const defaultCondition = (amount: number) => amount > 0; // Info: (20241210 - Anna) 默認條件
+
+  // Info: (20241210 - Anna) 基於 lineItemDebitAmount 的會計科目 (應付、預收、租賃負債、合約負債、借款)
+  const debitConditions = [
+    '2102',
+    '2108',
+    '2131',
+    '2132',
+    '2133',
+    '2139',
+    '2151',
+    '2152',
+    '2161',
+    '2162',
+    '2171',
+    '2172',
+    '2181',
+    '2182',
+    '2190',
+    '2195',
+    '2202',
+    '2203',
+    '2204',
+    '2209',
+    '2211',
+    '2212',
+    '2213',
+    '2215',
+    '2219',
+    '2220',
+    '2281',
+    '2282',
+    '2313',
+    '2315',
+    '2322',
+    '2323',
+    '2324',
+    '2330',
+    '2335',
+    '2350',
+    '2355',
+    '2365',
+    '2370',
+    '2527',
+    '2541',
+    '2542',
+    '2543',
+    '2581',
+    '2582',
+    '2611',
+    '2612',
+    '2613',
+    '2614',
+    '2621',
+    '2622',
+    '2623',
+    '2624',
+    '2630',
+    '2645',
+    '2675',
+    '2680',
+  ].map((code) => ({
+    code,
+    amount: lineItemDebitAmount, // Info: (20241210 - Anna) 默認使用 lineItemDebitAmount
+    condition: defaultCondition, // Info: (20241210 - Anna) 默認條件
+  }));
+
+  // Info: (20241210 - Anna) 基於 lineItemCreditAmount 的會計科目 (應收、預付、合約資產)
+  const creditConditions = [
+    '1141',
+    '1151',
+    '1152',
+    '1161',
+    '1162',
+    '1172',
+    '1173',
+    '1175',
+    '1181',
+    '1182',
+    '1184',
+    '1190',
+    '1195',
+    '119A',
+    '119C',
+    '119F',
+    '119H',
+    '1201',
+    '1202',
+    '1203',
+    '1204',
+    '1205',
+    '1206',
+    '1211',
+    '1212',
+    '1221',
+    '1222',
+    '1325',
+    '1412',
+    '1414',
+    '1419',
+    '1421',
+    '1422',
+    '1429',
+    '1471',
+    '1472',
+    '1475',
+    '1478',
+    '1561',
+    '1915',
+    '1920',
+    '1931',
+    '1932',
+    '1933',
+    '1935',
+    '1941',
+    '1942',
+    '1943',
+    '1945',
+    '1947',
+    '194B',
+    '194E',
+    '194I',
+    '194L',
+    '1985',
+  ].map((code) => ({
+    code,
+    amount: lineItemCreditAmount, // Info: (20241210 - Anna) 默認使用 lineItemCreditAmount
+    condition: defaultCondition, // Info: (20241210 - Anna) 默認條件
+  }));
+
+  // Info: (20241210 - Anna) 合併條件
+  const reverseConditions = [...creditConditions, ...debitConditions];
+
+  // Info: (20241210 - Anna) 檢查條件
+  const isShowReverse = reverseConditions.some(
+    ({ code, amount, condition }) => lineItemAccount?.code === code && condition(amount)
+  );
 
   const inputStyle = {
     NORMAL:

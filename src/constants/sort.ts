@@ -66,4 +66,10 @@ export enum SortBy {
   MIDTERM_DEBIT_AMOUNT = 'MidtermDebitAmount',
   ENDING_CREDIT_AMOUNT = 'EndingCreditAmount',
   ENDING_DEBIT_AMOUNT = 'EndingDebitAmount',
+
+  /**
+   * Info: (20241210 - Shirley)
+   * @description 資產列表排序
+   */
+  ACQUISITION_DATE = 'AcquisitionDate',
 }

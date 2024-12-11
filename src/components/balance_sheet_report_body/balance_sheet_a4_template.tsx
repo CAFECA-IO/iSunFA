@@ -1,5 +1,6 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 
 interface BalanceSheetA4TemplateProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   curDate,
   preDate,
 }) => {
+  const { t } = useTranslation(['reports']);
   const [firstBlockSplitPages, setFirstBlockSplitPages] = useState<ReactNode[][]>([]);
   const [secondBlockSplitPages, setSecondBlockSplitPages] = useState<ReactNode[][]>([]);
 
@@ -109,10 +111,10 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   const firstTableHeaders = (
     <tr className="text-neutral-400">
       <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-        代號
+        {t('reports:TAX_REPORT.CODE_NUMBER')}
       </th>
       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-        會計項目
+        {t('reports:REPORTS.ACCOUNTING_ITEMS')}
       </th>
       <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
         {curDate}
@@ -133,10 +135,10 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   const secondTableHeaders = (
     <tr className="text-neutral-400">
       <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-        代號
+        {t('reports:TAX_REPORT.CODE_NUMBER')}
       </th>
       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-        會計項目
+        {t('reports:REPORTS.ACCOUNTING_ITEMS')}
       </th>
       <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
         {curDate}
