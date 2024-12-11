@@ -1,4 +1,4 @@
-import { ICounterparty } from './counterparty';
+import { ICounterparty } from '@/interfaces/counterparty';
 
 export interface IAddCounterPartyModalData {
   //  onClose: () => void;
