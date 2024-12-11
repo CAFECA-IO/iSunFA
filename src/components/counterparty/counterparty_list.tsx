@@ -62,7 +62,7 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({
   if (!filteredCounterparties.length) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
-        <p className="text-neutral-300">{t('common:BETA_DASHBOARD.NO_DATA_AVAILABLE')}</p>
+        <p className="text-neutral-300">{t('certificate:COUNTERPARTY.NO_DATA_AVAILABLE')}</p>
       </div>
     );
   }

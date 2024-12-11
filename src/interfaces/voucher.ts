@@ -30,6 +30,7 @@ import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate'
 import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import type { IUserEntity } from '@/interfaces/user';
 import { AI_TYPE } from '@/constants/aich';
+import { CounterpartyType } from '@/constants/counterparty';
 
 export interface IVoucherMetaData {
   date: number;
@@ -159,7 +160,7 @@ export const defaultVoucherDetail: IVoucherDetailForFrontend = {
     companyId: 0,
     name: '',
     taxId: '',
-    type: '',
+    type: CounterpartyType.SUPPLIER,
     note: '',
     createdAt: 0,
     updatedAt: 0,

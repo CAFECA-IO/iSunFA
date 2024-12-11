@@ -77,6 +77,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   printRef,
   printFn,
 }) => {
+  const { t } = useTranslation('reports');
   // Deprecated: (20241205 - Liz)
   // eslint-disable-next-line no-console
   console.log('isPrinting:', isPrinting);
@@ -273,7 +274,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
       <section className="text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p className="font-bold leading-5">項目彙總格式</p>
+            <p className="font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p className="font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
@@ -283,10 +284,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
             <thead>
               <tr>
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                  代號
+                  {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                  會計項目
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
                   {!isSummaryCollapsed && financialReport && financialReport.company && (
@@ -332,7 +333,9 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p className="font-bold leading-5">細項分類格式</p>
+            <p className="font-bold leading-5">
+              {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
+            </p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p className="font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
@@ -342,10 +345,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
             <thead>
               <tr>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                  代號
+                  {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                  會計項目
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th
                   className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
@@ -394,10 +397,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
@@ -544,10 +547,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           <thead>
             <tr>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                代號
+                {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
-                會計項目
+                {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
                 className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"

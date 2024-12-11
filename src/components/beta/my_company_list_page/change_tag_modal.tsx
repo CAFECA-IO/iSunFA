@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useTranslation } from 'react-i18next';
 import { useUserCtx } from '@/contexts/user_context';
@@ -8,8 +8,8 @@ import { COMPANY_TAG } from '@/constants/company';
 interface ChangeTagModalProps {
   companyToEdit: ICompanyAndRole;
   isModalOpen: boolean;
-  setCompanyToEdit: React.Dispatch<React.SetStateAction<ICompanyAndRole | undefined>>;
-  setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
+  setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setRefreshKey?: Dispatch<SetStateAction<number>>;
 }
 
 const ChangeTagModal = ({

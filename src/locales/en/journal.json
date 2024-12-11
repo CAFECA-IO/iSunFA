@@ -308,5 +308,8 @@
   },
   "EDIT_VOUCHER": {
     "PAGE_TITLE": "Edit Voucher"
+  },
+  "COMMON": {
+    "STATUS": "Status"
   }
 }

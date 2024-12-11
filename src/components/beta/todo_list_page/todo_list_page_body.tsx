@@ -55,7 +55,7 @@ const TodoListPageBody = () => {
     try {
       const { data: userTodoList, success } = await listUserTodoAPI({ params: { userId } });
 
-      if (success && userTodoList && userTodoList.length > 0) {
+      if (success && userTodoList) {
         userTodoList.sort((a, b) => a.deadline - b.deadline);
 
         setTodoList(userTodoList);

@@ -7,7 +7,7 @@ import CounterpartyPageBody from '@/components/counterparty/counterparty_page_bo
 import Layout from '@/components/beta/layout/layout';
 
 const CounterpartyPage = () => {
-  const { t } = useTranslation(['common', 'setting', 'certificate']);
+  const { t } = useTranslation(['common', 'setting', 'certificate', 'search']);
 
   return (
     <>

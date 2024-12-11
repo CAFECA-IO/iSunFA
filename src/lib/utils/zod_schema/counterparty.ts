@@ -74,7 +74,7 @@ export const counterpartySchema = z.object({
   companyId: z.number().int(),
   name: z.string(),
   taxId: z.string(),
-  type: z.string(),
+  type: z.nativeEnum(CounterpartyType),
   note: z.string().default(''),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
@@ -88,7 +88,7 @@ export const counterpartyListSchema = {
     querySchema: counterpartyListQuerySchema,
     bodySchema: counterpartyNullSchema,
   },
-  outputSchema: paginatedCounterpartySchema,
+  outputSchema: paginatedCounterpartySchema.strip(),
   frontend: counterpartyNullSchema,
 };
 
@@ -97,7 +97,7 @@ export const counterpartyPostSchema = {
     querySchema: counterpartyPostQuerySchema,
     bodySchema: counterpartyPostBodySchema,
   },
-  outputSchema: counterpartySchema,
+  outputSchema: counterpartySchema.strip(),
   frontend: counterpartyPostBodySchema,
 };
 
@@ -106,7 +106,7 @@ export const counterpartyGetByIdSchema = {
     querySchema: counterpartyGetByIdQuerySchema,
     bodySchema: counterpartyNullSchema,
   },
-  outputSchema: counterpartySchema,
+  outputSchema: counterpartySchema.strip(),
   frontend: counterpartyNullSchema,
 };
 
@@ -115,7 +115,7 @@ export const counterpartyPutSchema = {
     querySchema: counterpartyPutQuerySchema,
     bodySchema: counterpartyPutBodySchema,
   },
-  outputSchema: counterpartySchema,
+  outputSchema: counterpartySchema.strip(),
   frontend: counterpartyNullSchema,
 };
 
@@ -124,6 +124,6 @@ export const counterpartyDeleteSchema = {
     querySchema: counterpartyDeleteQuerySchema,
     bodySchema: counterpartyNullSchema,
   },
-  outputSchema: counterpartySchema,
+  outputSchema: counterpartySchema.strip(),
   frontend: counterpartyNullSchema,
 };

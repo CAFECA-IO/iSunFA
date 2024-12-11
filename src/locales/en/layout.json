@@ -56,6 +56,9 @@
     "CASH_FLOW_STATEMENT": "Cash Flow Statement",
     "PROJECT": "Project",
     "CANCEL": "Cancel",
-    "OVERALL": "Overall"
+    "OVERALL": "Overall",
+    "COPIED": "Copied!",
+    "COPY_FAILED": "Copy Failed",
+    "CLOSE": "Close"
   }
 }

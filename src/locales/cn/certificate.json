@@ -70,6 +70,8 @@
     "TAXABLE": "应税金额",
     "TOTAL_PRICE": "总价（含税）",
     "COUNTERPARTY": "交易对象（客户/供应商）",
+    "ID_NUMBER": "统一编号",
+    "NAME": "名称",
     "INVOICE_TYPE": "发票类型",
     "DEDUCTIBLE": "可抵扣税额",
     "SUCCESS": "您的发票信息已更新。"
@@ -107,7 +109,8 @@
     "NOTE": "备注",
     "ENTER_TEXT": "输入文字",
     "EDIT_NEW": "编辑客户/供应商",
-    "REMOVE_THIS": "删除该客户/供应商"
+    "REMOVE_THIS": "删除该客户/供应商",
+    "NO_DATA_AVAILABLE": "没有可用资料"
   },
   "LABEL": {
     "NEW": "新增"
@@ -115,28 +118,6 @@
   "OPERATION": {
     "DOWNLOAD": "下载",
     "REMOVE": "删除"
-  },
-  "INVOICE_TYPE": {
-    "PURCHASE_TRIPLICATE_AND_ELECTRONIC": "进项三联式、电子计算机统一发票",
-    "PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER": "进项二联式、二联式收银机统一发票",
-    "PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC": "三联式、电子计算机及三联式收银机统一发票及一般税额计算之电子发票之销货退回或折让证明单",
-    "PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER": "二联式收银机统一发票及载有税额之其他凭证之进货退出或折让证明单",
-    "PURCHASE_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC": "进项三联式收银机统一发票及一般税额计算之电子发票",
-    "PURCHASE_UTILITY_ELECTRONIC_INVOICE": "进项公用事业电子发票",
-    "PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC": "汇总登录每张税额五百元以下之进项三联式、电子计算机统一发票",
-    "PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER": "汇总登录每张税额五百元以下之进项二联式收银机统一发票、载有税额之其他凭证",
-    "PURCHASE_CUSTOMS_DUTY_PAYMENT": "进项海关代征营业税缴纳证",
-    "PURCHASE_CUSTOMS_DUTY_REFUND": "进项海关退还溢缴营业税申报单",
-    "SALES_TRIPLICATE_INVOICE": "销项三联式统一发票",
-    "SALES_DUPLICATE_CASH_REGISTER_INVOICE": "销项二联式、二联式收银机统一发票",
-    "SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC": "三联式、电子计算机、三联式收银机统一发票及一般税额计算之电子发票之销货退回或折让证明单",
-    "SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM": "二联式、二联式收银机统一发票及销项免用统一发票之销货退回或折让证明单",
-    "SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC": "销项三联式收银机统一发票及一般税额计算之电子发票",
-    "SALES_NON_UNIFORM_INVOICE": "销项免用统一发票",
-    "SALES_SPECIAL_TAX_CALCULATION": "销项凭证、特种税额计算之电子发票",
-    "SALES_SPECIAL_TAX_RETURNS": "特种税额之销货退回或折让证明单",
-    "FOREIGN_SERVICE_PAYMENT": "进口劳务费用支付证明",
-    "FOREIGN_TAX_EXEMPT_GOODS": "进口免税物品进口证明"
   },
   "UPLOAD": {
     "TITLE": "上传发票",
