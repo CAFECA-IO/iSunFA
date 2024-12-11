@@ -197,6 +197,9 @@ describe('voucher/:voucherId', () => {
                   updatedAt: 0,
                   level: 3,
                   deletedAt: null,
+                  parentId: 1544,
+                  rootId: 1544,
+                  note: 'First voucher',
                 },
               },
               {
@@ -225,6 +228,9 @@ describe('voucher/:voucherId', () => {
                   updatedAt: 0,
                   level: 4,
                   deletedAt: null,
+                  parentId: 1544,
+                  rootId: 1544,
+                  note: 'First voucher',
                 },
               },
               {
@@ -253,6 +259,9 @@ describe('voucher/:voucherId', () => {
                   updatedAt: 0,
                   level: 3,
                   deletedAt: null,
+                  parentId: 1544,
+                  rootId: 1544,
+                  note: 'First voucher',
                 },
               },
             ],
@@ -322,6 +331,9 @@ describe('voucher/:voucherId', () => {
                   updatedAt: 0,
                   level: 3,
                   deletedAt: null,
+                  parentId: 1544,
+                  rootId: 1544,
+                  note: 'First voucher',
                 },
               },
               {
@@ -350,6 +362,9 @@ describe('voucher/:voucherId', () => {
                   updatedAt: 0,
                   level: 4,
                   deletedAt: null,
+                  parentId: 1544,
+                  rootId: 1544,
+                  note: 'First voucher',
                 },
               },
               {
@@ -378,6 +393,9 @@ describe('voucher/:voucherId', () => {
                   updatedAt: 0,
                   level: 3,
                   deletedAt: null,
+                  parentId: 1544,
+                  rootId: 1544,
+                  note: 'First voucher',
                 },
               },
             ],
@@ -443,6 +461,9 @@ describe('voucher/:voucherId', () => {
             updatedAt: 0,
             level: 3,
             deletedAt: null,
+            parentId: 1544,
+            rootId: 1544,
+            note: 'First voucher',
           },
         },
         {
@@ -492,6 +513,9 @@ describe('voucher/:voucherId', () => {
                   updatedAt: 0,
                   level: 3,
                   deletedAt: null,
+                  parentId: 1544,
+                  rootId: 1544,
+                  note: 'First voucher',
                 },
               },
               associateVoucher: {
@@ -554,6 +578,9 @@ describe('voucher/:voucherId', () => {
                   updatedAt: 0,
                   level: 3,
                   deletedAt: null,
+                  parentId: 1544,
+                  rootId: 1544,
+                  note: 'First voucher',
                 },
               },
               associateVoucher: {
@@ -611,6 +638,9 @@ describe('voucher/:voucherId', () => {
             updatedAt: 0,
             level: 3,
             deletedAt: null,
+            parentId: 1544,
+            rootId: 1544,
+            note: 'First voucher',
           },
         },
       ],
@@ -769,6 +799,9 @@ describe('voucher/:voucherId', () => {
           updatedAt: 0,
           level: 3,
           deletedAt: null,
+          parentId: 1544,
+          rootId: 1544,
+          note: 'First voucher',
         },
       };
 
@@ -823,6 +856,8 @@ describe('voucher/:voucherId', () => {
             updatedAt: 0,
             level: 3,
             deletedAt: null,
+            parentId: 1544,
+            rootId: 1544,
           },
         },
         {
@@ -851,6 +886,8 @@ describe('voucher/:voucherId', () => {
             updatedAt: 0,
             level: 4,
             deletedAt: null,
+            parentId: 1544,
+            rootId: 1544,
           },
         },
         {
@@ -879,6 +916,9 @@ describe('voucher/:voucherId', () => {
             updatedAt: 0,
             level: 3,
             deletedAt: null,
+
+            parentId: 1544,
+            rootId: 1544,
           },
         },
       ];
@@ -910,6 +950,8 @@ describe('voucher/:voucherId', () => {
             updatedAt: 0,
             level: 3,
             deletedAt: null,
+            parentId: 1544,
+            rootId: 1544,
           },
         },
         {
@@ -939,6 +981,8 @@ describe('voucher/:voucherId', () => {
             updatedAt: 0,
             level: 3,
             deletedAt: null,
+            parentId: 1544,
+            rootId: 1544,
           },
         },
       ];
