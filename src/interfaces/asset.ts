@@ -73,23 +73,6 @@ export const mockAssetData: IAsset[] = [
 
 /* Info: (20240927 - Shirley) asset v2 介面 */
 
-// export interface IAssetItem {
-//   id: number;
-//   currencyAlias: string;
-//   acquisitionDate: number;
-//   assetType: string;
-//   assetNumber: string;
-//   assetName: string;
-//   purchasePrice: number;
-//   accumulatedDepreciation: number;
-//   residualValue: number;
-//   remainingLife: number;
-//   assetStatus: string;
-//   createdAt: number;
-//   updatedAt: number;
-//   deletedAt: number | null;
-// }
-
 export type IAssetItem = z.infer<typeof IAssetItemValidator>;
 
 export type IAssetDetails = z.infer<typeof IAssetDetailsValidator>;
@@ -376,17 +359,6 @@ export interface ICreateAssetWithVouchersRepoInput {
   usefulLife?: number;
   note?: string;
 }
-
-// export interface ICreateAssetWithVouchersRepoResponse {
-//   id: number;
-//   name: string;
-//   number: string;
-//   companyId: number;
-//   status: string;
-//   createdAt: number;
-//   updatedAt: number;
-//   note: string;
-// }
 
 export type ICreateAssetWithVouchersRepoResponse = z.infer<typeof AssetCreateOutputValidator>;
 
