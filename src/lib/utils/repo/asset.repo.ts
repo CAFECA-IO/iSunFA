@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { AssetDepreciationMethod, AssetStatus } from '@/constants/asset';
+import { AssetDepreciationMethod, AssetStatus, DEFAULT_SORT_OPTIONS } from '@/constants/asset';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
@@ -9,7 +9,7 @@ import {
   ICreateAssetWithVouchersRepoResponse,
   IUpdateAssetRepoInput,
 } from '@/interfaces/asset';
-import { generateAssetNumbers } from '@/lib/utils/asset';
+import { createAssetOrderBy, generateAssetNumbers } from '@/lib/utils/asset';
 import { getTimestampNow } from '@/lib/utils/common';
 import { Prisma } from '@prisma/client';
 
@@ -194,33 +194,6 @@ export async function deleteManyAssets(assetIds: number[]) {
   return deletedAssets;
 }
 
-function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
-  const orderBy: Prisma.AssetOrderByWithRelationInput[] = [];
-  sortOptions.forEach((sort) => {
-    const { sortBy, sortOrder } = sort;
-    switch (sortBy) {
-      case SortBy.ACQUISITION_DATE:
-        orderBy.push({ acquisitionDate: sortOrder });
-        break;
-      case SortBy.PURCHASE_PRICE:
-        orderBy.push({ purchasePrice: sortOrder });
-        break;
-      case SortBy.ACCUMULATED_DEPRECIATION:
-        orderBy.push({ accumulatedDepreciation: sortOrder });
-        break;
-      case SortBy.RESIDUAL_VALUE:
-        orderBy.push({ residualValue: sortOrder });
-        break;
-      case SortBy.REMAINING_LIFE:
-        orderBy.push({ remainingLife: sortOrder });
-        break;
-      default:
-        break;
-    }
-  });
-  return orderBy;
-}
-
 /**
  * Info: (20241206 - Shirley) 獲取所有具有 voucher 的資產列表
  * @param companyId 公司ID
@@ -252,9 +225,8 @@ export async function getAllAssetsByCompanyId(
       : undefined,
   };
 
-  const orderBy = createOrderByList(sortOption || []) || {
-    createdAt: 'desc',
-  };
+  // Info: (20241211 - Shirley) 根據 sortOption 公版的格式，整理出 prisma 的 asset table orderBy 條件
+  const orderBy = createAssetOrderBy(sortOption || DEFAULT_SORT_OPTIONS);
 
   const assets = await prisma.asset.findMany({
     where,

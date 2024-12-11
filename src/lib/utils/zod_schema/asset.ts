@@ -2,6 +2,7 @@ import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constan
 import { z } from 'zod';
 import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { SortBy } from '@/constants/sort';
 
 /**
  * Info: (20241105 - Murky)
@@ -73,6 +74,16 @@ export const assetEntityValidator = z.object({
   company: z.any().optional(), // Info: (20241024 - Murky) @Shirley 目前沒有檢查
 });
 
+export const assetListSortOptions = z.enum([
+  SortBy.ACQUISITION_DATE,
+  SortBy.PURCHASE_PRICE,
+  SortBy.ACCUMULATED_DEPRECIATION,
+  SortBy.RESIDUAL_VALUE,
+  SortBy.REMAINING_LIFE,
+]);
+
+export type IAssetListSortOptions = z.infer<typeof assetListSortOptions>;
+
 // Info: (20241206 - Shirley) query for create single or bulk assets
 const AssetCreateQueryValidator = z.object({
   companyId: zodStringToNumber,
@@ -92,7 +103,7 @@ const AssetDeleteByIdQueryValidator = AssetCreateQueryValidator.extend({
 const AssetListQueryValidator = AssetCreateQueryValidator.extend({
   page: zodStringToNumber.optional(),
   pageSize: zodStringToNumber.optional(),
-  // TODO: (20241210 - Shirley) 現在在 middleware 驗證用 z.string().optional()、進到 trial balance repo 再用 `parseSortOption` 去 parse 或給予預設 sort option；之後要改成用 zodFilterSectionSortingOptions 去 parse
+  // TODO: (20241210 - Shirley) 現在在 middleware 驗證用 z.string().optional()、進到 repo 再用 `parseSortOption` 去 parse 或給予預設 sort option；之後要改成用 zodFilterSectionSortingOptions 去 parse
   sortOption: z.string().optional(),
   type: z.nativeEnum(AssetEntityType).optional(),
   status: z.nativeEnum(AssetStatus).optional(),

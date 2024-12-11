@@ -14,9 +14,9 @@ import { createAssetWithVouchers, getAllAssetsByCompanyId } from '@/lib/utils/re
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { formatPaginatedAsset } from '@/lib/utils/formatter/asset.formatter';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
-import { parseSortOption } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_SORT_OPTIONS } from '@/constants/asset';
 import { Prisma } from '@prisma/client';
+import { parseSortOption } from '@/lib/utils/sort';
 
 /* Info: (20241204 - Luphia) API develop SOP 以 POST ASSET API 為例
  * 1. 前置作業
@@ -91,8 +91,6 @@ export const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedAsset | null = null;
 
-  const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
-
   const filterCondition: Prisma.AssetWhereInput = {
     ...(type ? { type } : {}),
     ...(status ? { status } : {}),
@@ -106,6 +104,9 @@ export const handleGetRequest: IHandleRequest<
       : {}),
   };
 
+  // Info: (20241211 - Shirley) 將 sortOption 轉換成 prisma 的 orderBy 條件，如果 sortOption 不符合預設的格式，則使用預設的排序條件 `DEFAULT_SORT_OPTIONS`
+  const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
+
   const assets = await getAllAssetsByCompanyId(companyId, {
     sortOption: parsedSortOption,
     filterCondition,
@@ -116,7 +117,7 @@ export const handleGetRequest: IHandleRequest<
     payload = null;
   } else {
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
-    // Info: (20241210 - Shirley) sort assets into fit tptrihe `IAssetItem`
+    // Info: (20241210 - Shirley) sort assets into fit the `IAssetItem`
     const sortedAssets = assets.map((item) => {
       return {
         id: item.id,
