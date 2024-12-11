@@ -26,7 +26,7 @@ interface ICounterpartyInputProps {
   setCounterparty: React.Dispatch<React.SetStateAction<ICounterparty | undefined>>;
   flagOfSubmit?: boolean;
   className?: string;
-  onTriggerAdd?: () => void;
+  onTriggerSave?: () => Promise<void>;
 }
 
 export interface CounterpartyInputRef {
@@ -35,7 +35,7 @@ export interface CounterpartyInputRef {
 
 const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputProps>(
   (props, ref) => {
-    const { counterparty, setCounterparty, flagOfSubmit, className, onTriggerAdd } = props;
+    const { counterparty, setCounterparty, flagOfSubmit, className, onTriggerSave } = props;
     const { t } = useTranslation(['certificate', 'common']);
 
     const { selectedCompany } = useUserCtx();
@@ -103,14 +103,14 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
 
     const onAddCounterparty = () => {
       addCounterPartyModalVisibilityHandler();
-      if (onTriggerAdd) {
-        onTriggerAdd();
+      if (onTriggerSave) {
+        onTriggerSave();
       }
     };
 
     // Info: (20241209 - Julian) 變更 Counterparty 事件：顯示是否新增 Counterparty 的視窗
     const counterpartySearchHandler = useCallback(() => {
-      if (searchName && searchTaxId && filteredCounterpartyList.length <= 0) {
+      if ((searchName || searchTaxId) && filteredCounterpartyList.length <= 0) {
         messageModalDataHandler({
           messageType: MessageType.INFO,
           title: t('certificate:COUNTERPARTY.TITLE'),
@@ -123,8 +123,8 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
           submitBtnFunction: onAddCounterparty,
         });
         messageModalVisibilityHandler();
-      } else if (onTriggerAdd) {
-        onTriggerAdd();
+      } else if (onTriggerSave) {
+        onTriggerSave();
       }
     }, [searchName, searchTaxId]);
 

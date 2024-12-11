@@ -48,7 +48,13 @@ const SelectCountryDropdown: React.FC<SelectCountryDropdownProps> = ({ country, 
         </div>
         <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
-            <Image src="/elements/arrow_down.svg" alt="arrow_down" width={20} height={20} />
+            <Image
+              src="/elements/arrow_down.svg"
+              alt="arrow down"
+              width={20}
+              height={20}
+              className={`${isCountryMenuOpen ? 'rotate-180' : 'rotate-0'}`}
+            />
           </div>
         </div>
       </button>

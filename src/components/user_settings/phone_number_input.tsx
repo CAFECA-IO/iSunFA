@@ -58,7 +58,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
             alt="arrow_down"
             width={20}
             height={20}
-            className="mr-5"
+            className={`mr-5 ${isCountryCodeMenuOpen ? 'rotate-180' : 'rotate-0'}`}
           />
         </div>
         <input

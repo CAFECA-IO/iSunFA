@@ -28,7 +28,7 @@ interface CertificateEditModalProps {
   currencyAlias: CurrencyType;
   certificate?: ICertificateUI;
   onUpdateFilename: (certificateId: number, name: string) => void;
-  onSave: (data: ICertificate) => void; // Info: (20240924 - tzuhan) 保存數據的回調函數
+  onSave: (data: ICertificate) => Promise<void>; // Info: (20240924 - tzuhan) 保存數據的回調函數
   onDelete: (id: number) => void;
 }
 
@@ -155,6 +155,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     if (counterpartyInputRef.current) {
       counterpartyInputRef.current.triggerSearch();
     }
+  };
+
+  const onTriggerSave = async () => {
     const updatedData: ICertificate = {
       ...certificate,
       invoice: {
@@ -171,7 +174,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         deductible,
       },
     };
-    onSave(updatedData);
+    await onSave(updatedData);
     toggleModel();
   };
 
@@ -193,8 +196,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         </button>
 
         <div className="flex w-full flex-col items-center">
-          {isNameEditing ? (
-            <h2 className="flex justify-center gap-2 text-xl font-semibold">
+          <h2 className="flex items-center justify-center gap-2 text-xl font-semibold">
+            {isNameEditing ? (
               <input
                 id="invoicenname"
                 type="text"
@@ -203,28 +206,22 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 placeholder="|"
                 style={{ width: `${certificateFilename.length + 2 || 1}ch` }}
               />
+            ) : (
+              <span>{certificateFilename}</span>
+            )}
+            <div className="flex h-8 w-8 items-center justify-center">
               <Image
-                alt="edit"
-                src="/icons/save.svg"
+                alt={isNameEditing ? 'save' : 'edit'}
+                src={isNameEditing ? '/icons/save.svg' : '/elements/edit.svg'}
                 width={20}
                 height={20}
-                onClick={updateFilenameHandler}
+                onClick={isNameEditing ? updateFilenameHandler : handleEditName}
               />
-            </h2>
-          ) : (
-            <h2 className="flex justify-center gap-2 text-xl font-semibold">
-              {certificateFilename}
-              <Image
-                alt="edit"
-                src="/elements/edit.svg"
-                width={20}
-                height={20}
-                onClick={handleEditName}
-              />
-            </h2>
-          )}
+            </div>
+          </h2>
           <p className="text-xs text-card-text-secondary">{t('certificate:EDIT.HEADER')}</p>
         </div>
+
         {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
         {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
@@ -444,6 +441,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               ref={counterpartyInputRef}
               counterparty={counterParty}
               setCounterparty={setCounterParty}
+              onTriggerSave={onTriggerSave}
             />
 
             {/* Info: (20240924 - tzuhan) Invoice Type */}

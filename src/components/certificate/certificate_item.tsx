@@ -72,17 +72,19 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             <IoWarningOutline size={16} className="text-surface-state-error" />
           )}
           <div className="flex-col">
-            <div className="text-text-neutral-tertiary">{certificate.name ?? ''}</div>
-            <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
+            <div className="truncate text-text-neutral-tertiary">{certificate.name ?? ''}</div>
+            <div className="truncate text-text-neutral-primary">
+              {certificate.invoice?.no ?? ''}
+            </div>
           </div>
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div className="flex-col items-center space-y-2">
-          <div className="text-text-neutral-tertiary">
+          <div className="truncate text-text-neutral-tertiary">
             {certificate.invoice?.counterParty?.taxId ?? ''}
           </div>
-          <div className="text-text-neutral-primary">
+          <div className="truncate text-text-neutral-primary">
             {certificate.invoice?.counterParty?.name ?? ''}
           </div>
         </div>
@@ -91,7 +93,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
         isSelected={certificate.isSelected}
         className="col-span-full max-h-72px min-w-100px overflow-hidden"
       >
-        <div className="text-center text-text-neutral-primary">
+        <div className="truncate text-center text-text-neutral-primary">
           {certificate.invoice?.type
             ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.invoice?.type}`)
             : ''}
@@ -148,7 +150,9 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       {/* Info: (20240924 - tzuhan) Voucher Information */}
       <BorderCell isSelected={certificate.isSelected} className="w-120px">
         <div className="flex items-center space-y-2">
-          <div className="text-right text-link-text-primary">{certificate?.voucherNo ?? ''}</div>
+          <div className="truncate text-right text-link-text-primary">
+            {certificate?.voucherNo ?? ''}
+          </div>
           <div className="text-right text-text-neutral-primary">
             {certificate.uploader && (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">
