@@ -169,11 +169,11 @@
     "DELETE_CANCEL_SUCCESS": "刪除流程已成功取消。"
   },
   "ACCOUNT": {
-    "REMOVE": "删除此账户",
-    "CONFIRM_REMOVE": "您确定要删除这个账户吗？",
-    "REMOVE_BTN": "是的，刪除此账户"
+    "REMOVE": "刪除此帳號",
+    "CONFIRM_REMOVE": "您確定要刪除此帳號嗎？",
+    "REMOVE_BTN": "是的，刪除帳號"
   },
   "ERROR": {
-    "FETCH_DATA": "获取数据时出错，请稍后重试。"
+    "FETCH_DATA": "取得資料時發生錯誤，請稍後再試。"
   }
 }
