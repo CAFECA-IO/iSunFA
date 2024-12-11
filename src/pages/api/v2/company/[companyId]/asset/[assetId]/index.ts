@@ -93,6 +93,7 @@ export const handleGetRequest: IHandleRequest<
   return { statusMessage, payload };
 };
 
+// TODO: (20241211 - Shirley) 使用 body.updateDate 更新資產相關的 voucher
 export const handlePutRequest: IHandleRequest<
   APIName.UPDATE_ASSET_V2,
   IPutResult['payload']

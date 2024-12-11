@@ -164,9 +164,9 @@ export const AssetBulkCreateOutputValidator = z.array(AssetCreateOutputValidator
 
 export const AssetListOutputValidator = paginatedDataSchema(IAssetItemValidator);
 
-export const AssetPutInputBodyValidator = UpdateAssetRepoInputValidator;
-
-// export const AssetPutOutputValidator = IAssetItemValidator;
+export const AssetPutInputBodyValidator = UpdateAssetRepoInputValidator.extend({
+  updateDate: z.number().optional(),
+});
 
 // Info: (20241204 - Luphia) define the schema for frontend (with api response)
 export const assetPostSchema = {
