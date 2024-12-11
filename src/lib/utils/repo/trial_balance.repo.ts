@@ -9,7 +9,7 @@ import { DEFAULT_SORT_OPTIONS } from '@/constants/trial_balance';
 import { formatPaginatedTrialBalance } from '@/lib/utils/formatter/trial_balance.formatter';
 import { getAccountBook } from '@/lib/utils/repo/account_book.repo';
 import { DefaultValue } from '@/constants/default_value';
-import { parseSortOption } from '@/lib/utils/zod_schema/common';
+import { parseSortOption } from '@/lib/utils/sort';
 
 /* Info: (20241105 - Shirley) Trial balance repository 實作
 company id (public company || targeted company) 去找 account table 拿到所有會計科目 -> voucher -> item -> account

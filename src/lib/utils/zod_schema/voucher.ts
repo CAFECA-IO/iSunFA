@@ -712,7 +712,7 @@ const voucherGetByAccountOutputValidatorV2 = paginatedDataSchema(
           account: accountEntityValidator,
         })
       )
-      .min(1),
+      .min(0),
     issuer: z.object({
       ...userEntityValidator.shape,
       imageFile: fileEntityValidator,

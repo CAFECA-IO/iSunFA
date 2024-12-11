@@ -10,6 +10,7 @@ import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
 import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
 import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { getImageUrlFromFileIdV1 } from '@/lib/utils/file';
 
 // Info: (20241016 - Jacky) Company list schema
 const companyListQuerySchema = z.object({
@@ -68,11 +69,11 @@ const companyPrismaSchema = z.object({
   updatedAt: z.number().int(),
 });
 
-export const companyOutputSchema = companyPrismaSchema.transform((data) => {
+export const companyOutputSchema = companyPrismaSchema.strip().transform((data) => {
   const { imageFile, ...rest } = data;
   const output = {
     ...rest,
-    imageId: imageFile.url,
+    imageId: getImageUrlFromFileIdV1(imageFile.id, data.id),
   };
   return output;
 });
@@ -142,6 +143,28 @@ export const companySelectSchema = {
   frontend: nullSchema,
 };
 
+const companySearchQuerySchema = z.object({
+  taxId: z.string().optional(),
+  name: z.string().optional(),
+});
+
+export const companySearchSchema = {
+  input: {
+    querySchema: companySearchQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: z
+    .object({
+      taxId: z.string(),
+      name: z.string(),
+    })
+    .strip(),
+  frontend: z.object({
+    taxId: z.string(),
+    name: z.string(),
+  }),
+};
+
 /**
  * Info: (20241025 - Murky)
  * @description schema for init company entity or parsed prisma company
@@ -167,3 +190,25 @@ export const ICompanyValidator = z.object({
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
 });
+
+/**
+ * Info: (20241211 - Murky)
+ * @note used in APIName.COMPANY_PUT_ICON
+ */
+
+const companyPutIconQuerySchema = z.object({
+  companyId: zodStringToNumber,
+});
+
+const companyPutIconBodySchema = z.object({
+  fileId: z.number().int(),
+});
+
+export const companyPutIconSchema = {
+  input: {
+    querySchema: companyPutIconQuerySchema,
+    bodySchema: companyPutIconBodySchema,
+  },
+  outputSchema: companyOutputSchema.nullable(),
+  frontend: companyOutputSchema.nullable(),
+};

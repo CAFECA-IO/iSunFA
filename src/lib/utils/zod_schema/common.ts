@@ -102,33 +102,3 @@ export const zodStringToBooleanOptional = z
     }
     return val.toLowerCase() === 'true';
   });
-
-export function parseSortOption(
-  defaultSortOption: {
-    sortBy: SortBy;
-    sortOrder: SortOrder;
-  }[],
-  sortOptionString: string | undefined
-): {
-  sortBy: SortBy;
-  sortOrder: SortOrder;
-}[] {
-  try {
-    if (!sortOptionString) {
-      return defaultSortOption;
-    }
-
-    const optionsString = sortOptionString.startsWith('sortOption=')
-      ? sortOptionString.substring('sortOption='.length)
-      : sortOptionString;
-
-    const parseResult = zodFilterSectionSortingOptions().safeParse(optionsString);
-    if (!parseResult.success) {
-      return defaultSortOption;
-    }
-    const sortOptionParsed = parseResult.data;
-    return sortOptionParsed;
-  } catch (error) {
-    return defaultSortOption;
-  }
-}

@@ -49,6 +49,7 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
         'dashboard',
         'date_picker',
         'search',
+        'common',
       ])),
     },
   };

@@ -240,6 +240,7 @@
   },
   "ASSET_SECTION": {
     "TITLE": "资产",
+    "EMPTY": "无资料",
     "EMPTY_HINT": "请新增至少 1 笔资产！",
     "ADD_BTN": "新增资产"
   },
@@ -307,5 +308,8 @@
   },
   "EDIT_VOUCHER": {
     "PAGE_TITLE": "编辑传票"
+  },
+  "COMMON": {
+    "STATUS": "状态"
   }
 }
