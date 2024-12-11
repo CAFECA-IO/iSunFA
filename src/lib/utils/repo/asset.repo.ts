@@ -174,6 +174,7 @@ export const getVouchersByAssetId = async (assetId: number) => {
   return vouchers;
 };
 
+// Info: (20241211 - Shirley) hard delete asset
 export async function deleteAssetForTesting(assetId: number) {
   const deletedAsset = await prisma.asset.delete({
     where: {
@@ -184,6 +185,7 @@ export async function deleteAssetForTesting(assetId: number) {
   return deletedAsset;
 }
 
+// Info: (20241211 - Shirley) hard delete assets
 export async function deleteManyAssetsForTesting(assetIds: number[]) {
   const deletedAssets = await prisma.asset.deleteMany({
     where: {
@@ -204,7 +206,7 @@ export async function deleteAsset(assetId: number) {
 }
 
 // Info: (20241211 - Shirley) soft delete assets
-export async function deleteAssets(assetIds: number[]) {
+export async function deleteManyAssets(assetIds: number[]) {
   const deletedAssets = await prisma.asset.updateMany({
     where: { id: { in: assetIds } },
     data: { deletedAt: getTimestampNow() },
