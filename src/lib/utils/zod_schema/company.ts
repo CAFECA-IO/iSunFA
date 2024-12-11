@@ -68,7 +68,7 @@ const companyPrismaSchema = z.object({
   updatedAt: z.number().int(),
 });
 
-export const companyOutputSchema = companyPrismaSchema.transform((data) => {
+export const companyOutputSchema = companyPrismaSchema.strip().transform((data) => {
   const { imageFile, ...rest } = data;
   const output = {
     ...rest,
@@ -189,3 +189,25 @@ export const ICompanyValidator = z.object({
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
 });
+
+/**
+ * Info: (20241211 - Murky)
+ * @note used in APIName.COMPANY_PUT_ICON
+ */
+
+const companyPutIconQuerySchema = z.object({
+  companyId: zodStringToNumber,
+});
+
+const companyPutIconBodySchema = z.object({
+  fileId: z.number().int(),
+});
+
+export const companyPutIconSchema = {
+  input: {
+    querySchema: companyPutIconQuerySchema,
+    bodySchema: companyPutIconBodySchema,
+  },
+  outputSchema: companyOutputSchema.nullable(),
+  frontend: companyOutputSchema.nullable(),
+};

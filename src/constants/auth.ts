@@ -26,6 +26,7 @@ export const AUTH_CHECK = {
   [APIName.COMPANY_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_SETTING_GET]: [AuthFunctionsKeysNew.user],
+  [APIName.COMPANY_PUT_ICON]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_SETTING_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_ADD]: [AuthFunctionsKeysNew.user],
