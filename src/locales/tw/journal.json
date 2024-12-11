@@ -307,5 +307,8 @@
   },
   "EDIT_VOUCHER": {
     "PAGE_TITLE": "編輯傳票"
+  },
+  "COMMON": {
+    "STATUS": "狀態"
   }
 }

@@ -38,11 +38,12 @@
     "NO_COMPANY_DATA_AVAILABLE": "No company data available.",
     "PLEASE_ADD_A_NEW_COMPANY": "Please add a new company.",
     "ADD_NEW": "Add New",
-    "CODE": "Code",
+    "INVITE_CODE": "Invite Code",
     "CANCEL": "Cancel",
     "SUBMIT": "Submit",
     "SAVE": "Save",
     "CONNECT": "Connect",
+    "LINKED": "Linked",
     "CHANGE_WORK_TAG": "Change Work Tag",
     "DELETE": "Delete",
     "DELETE_MESSAGE_TITLE": "Delete the Company",
@@ -51,5 +52,8 @@
   "DELETE": {
     "TITLE": "Remove the Company",
     "WARNING": "Are you sure you want to Remove the Company?"
+  },
+  "UPLOAD_COMPANY_AVATAR_MODAL": {
+    "CHANGE_COMPANY_AVATAR": "Change Company Avatar"
   }
 }

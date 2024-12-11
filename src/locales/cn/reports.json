@@ -240,7 +240,9 @@
     "M": "月",
     "Y": "年",
     "D": "日",
-    "DAY": "日"
+    "DAY": "日",
+    "FILTER": "筛选",
+    "STATUS": "状态"
   },
   "ACCOUNTING_ACCOUNT": {
     "資產": "资产",

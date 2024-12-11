@@ -15,7 +15,7 @@ const FACEBOOK_LINK = 'https://www.facebook.com/profile.php?id=61555435381112';
 const YOUTUBE_LINK = 'https://www.youtube.com/@isunfa';
 
 function LandingFooter() {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['landing_page']);
 
   return (
     <footer className="space-y-24px bg-navy-blue-700 px-20px py-48px text-text-neutral-invert tablet:px-80px">
@@ -27,24 +27,26 @@ function LandingFooter() {
       <section className="flex flex-col justify-between gap-20px laptop:flex-row">
         <div className="flex flex-col gap-40px tablet:flex-row">
           <div className="space-y-20px text-lg font-medium">
-            <h5>{t('common:LANDING_FOOTER.QUICK_LINKS')}</h5>
+            <h5>{t('landing_page:LANDING_FOOTER.QUICK_LINKS')}</h5>
             <div className="flex flex-col gap-8px">
-              <Link href={ISUNFA_ROUTE.LANDING_PAGE}>‣ {t('common:LANDING_FOOTER.HOME')}</Link>
+              <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+                ‣ {t('landing_page:LANDING_FOOTER.HOME')}
+              </Link>
               <Link href={ISUNFA_ROUTE.TERMS_OF_SERVICE}>
-                ‣ {t('common:LANDING_FOOTER.TERMS_OF_SERVICE')}
+                ‣ {t('landing_page:LANDING_FOOTER.TERMS_OF_SERVICE')}
               </Link>
               <Link href={ISUNFA_ROUTE.PRIVACY_POLICY}>
-                ‣ {t('common:LANDING_FOOTER.PRIVACY_POLICY')}
+                ‣ {t('landing_page:LANDING_FOOTER.PRIVACY_POLICY')}
               </Link>
             </div>
           </div>
 
           <div className="space-y-20px">
-            <h5 className="text-lg font-medium">{t('common:LANDING_FOOTER.CONTACT_US')}</h5>
+            <h5 className="text-lg font-medium">{t('landing_page:LANDING_FOOTER.CONTACT_US')}</h5>
             <ul className="flex flex-col gap-16px font-poppins text-sm">
               <li className="flex items-center gap-8px">
                 <GrLocation size={20} />
-                <p>{t('common:LANDING_FOOTER.CONTACT_ADDRESS')}</p>
+                <p>{t('landing_page:LANDING_FOOTER.CONTACT_ADDRESS')}</p>
               </li>
               <li className="flex items-center gap-8px">
                 <BiPhoneCall size={20} />
@@ -53,8 +55,8 @@ function LandingFooter() {
               <li className="flex items-center gap-8px">
                 <LuAlarmClock size={20} />
                 <p>
-                  {t('common:LANDING_FOOTER.SERVICE_HOURS')} : <br />
-                  {t('common:LANDING_FOOTER.MON_TO_FRI_9AM_6PM')}
+                  {t('landing_page:LANDING_FOOTER.SERVICE_HOURS')} : <br />
+                  {t('landing_page:LANDING_FOOTER.MON_TO_FRI_9AM_6PM')}
                 </p>
               </li>
             </ul>
