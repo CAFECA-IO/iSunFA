@@ -109,7 +109,7 @@ export async function createManyAssets(
         { companyId: assetData.companyId },
         { createdAt: timestampNow },
         // Info: (20241205 - Shirley) 在 Jest extension 自動執行測試，會在同一秒根據多個測試建立資產，因此需要加上這個條件
-        { number: { startsWith: assetData.number.match(/^(.*?(?=\d))/)?.[1] || '' } },
+        { number: { startsWith: assetData.number || '' } },
       ],
     },
     orderBy: {
@@ -174,7 +174,7 @@ export const getVouchersByAssetId = async (assetId: number) => {
   return vouchers;
 };
 
-export async function deleteAsset(assetId: number) {
+export async function deleteAssetForTesting(assetId: number) {
   const deletedAsset = await prisma.asset.delete({
     where: {
       id: assetId,
@@ -184,7 +184,7 @@ export async function deleteAsset(assetId: number) {
   return deletedAsset;
 }
 
-export async function deleteManyAssets(assetIds: number[]) {
+export async function deleteManyAssetsForTesting(assetIds: number[]) {
   const deletedAssets = await prisma.asset.deleteMany({
     where: {
       id: { in: assetIds },
@@ -194,12 +194,30 @@ export async function deleteManyAssets(assetIds: number[]) {
   return deletedAssets;
 }
 
+// Info: (20241211 - Shirley) soft delete asset
+export async function deleteAsset(assetId: number) {
+  const deletedAsset = await prisma.asset.update({
+    where: { id: assetId },
+    data: { deletedAt: getTimestampNow() },
+  });
+  return deletedAsset;
+}
+
+// Info: (20241211 - Shirley) soft delete assets
+export async function deleteAssets(assetIds: number[]) {
+  const deletedAssets = await prisma.asset.updateMany({
+    where: { id: { in: assetIds } },
+    data: { deletedAt: getTimestampNow() },
+  });
+  return deletedAssets;
+}
+
 /**
  * Info: (20241206 - Shirley) 獲取所有具有 voucher 的資產列表
  * @param companyId 公司ID
  * @returns 資產列表
  */
-export async function getAllAssetsByCompanyId(
+export async function listAssetsByCompanyId(
   companyId: number,
   options: {
     sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
@@ -279,7 +297,7 @@ export async function updateAsset(
   };
 
   const updatedAsset = await prisma.asset.update({
-    where: { id: assetId, companyId },
+    where: { id: assetId, companyId, deletedAt: null },
     data: dataForUpdate,
   });
   return updatedAsset;

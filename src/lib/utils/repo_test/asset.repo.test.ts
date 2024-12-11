@@ -2,11 +2,13 @@ import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constan
 import {
   createAssetWithVouchers,
   createManyAssets,
-  deleteAsset,
-  deleteManyAssets,
-  getAllAssetsByCompanyId,
+  deleteAssetForTesting,
+  deleteManyAssetsForTesting,
+  listAssetsByCompanyId,
   getLegitAssetById,
   updateAsset,
+  deleteAsset,
+  deleteAssets,
 } from '@/lib/utils/repo/asset.repo';
 import { getTimestampNow } from '@/lib/utils/common';
 import { SortOrder, SortBy } from '@/constants/sort';
@@ -43,7 +45,7 @@ describe('createAssetWithVouchers (single asset)', () => {
     expect(asset.updatedAt).toBeDefined();
     expect(asset.id).toBeDefined();
 
-    await deleteAsset(asset.id);
+    await deleteAssetForTesting(asset.id);
   });
 
   it('should handle special asset number format', async () => {
@@ -62,7 +64,7 @@ describe('createAssetWithVouchers (single asset)', () => {
     expect(asset).toBeDefined();
     expect(asset.number).toMatch(/^EQ-1206-[\w-]+-\d{6}$/);
 
-    await deleteAsset(asset.id);
+    await deleteAssetForTesting(asset.id);
   });
 
   it('should create asset with default values when optional fields are not provided', async () => {
@@ -88,7 +90,7 @@ describe('createAssetWithVouchers (single asset)', () => {
     expect(asset.updatedAt).toBeDefined();
     expect(asset.id).toBeDefined();
 
-    await deleteAsset(asset.id);
+    await deleteAssetForTesting(asset.id);
   });
 });
 describe('createManyAssets (multiple assets)', () => {
@@ -120,9 +122,8 @@ describe('createManyAssets (multiple assets)', () => {
       expect(asset.companyId).toBe(testCompanyId);
       expect(asset.name).toBe(newAssetData.name);
       expect(asset.status).toBe(AssetStatus.NORMAL);
-      // TODO: (20241206 - Shirley) 雖然 DB 會成功建立資產，但 expect 拿到其他資產，所以先註解掉
-      // expect(asset.number).toContain(assetNumberPrefix);
-      // expect(asset.note).toBe(newAssetData.note);
+      expect(asset.number).toContain(assetNumberPrefix);
+      expect(asset.note).toBe(newAssetData.note);
       expect(asset.createdAt).toBeDefined();
       expect(asset.updatedAt).toBeDefined();
       expect(asset.id).toBeDefined();
@@ -130,7 +131,7 @@ describe('createManyAssets (multiple assets)', () => {
 
     const assetIds = assets.map((asset) => asset.id);
 
-    await deleteManyAssets(assetIds);
+    await deleteManyAssetsForTesting(assetIds);
   });
 
   it('should create assets with sequential numbers', async () => {
@@ -159,7 +160,7 @@ describe('createManyAssets (multiple assets)', () => {
     });
 
     const assetIds = assets.map((asset) => asset.id);
-    await deleteManyAssets(assetIds);
+    await deleteManyAssetsForTesting(assetIds);
   });
 });
 
@@ -192,7 +193,7 @@ describe('deleteAsset', () => {
     };
 
     const asset = await createAssetWithVouchers(newAssetData);
-    const deletedAsset = await deleteAsset(asset.id);
+    const deletedAsset = await deleteAssetForTesting(asset.id);
 
     expect(deletedAsset).toBeDefined();
     expect(deletedAsset.id).toBe(asset.id);
@@ -205,7 +206,7 @@ describe('deleteAsset', () => {
     const nonExistentId = -1;
 
     const deleteNonExistentAsset = async () => {
-      await deleteAsset(nonExistentId);
+      await deleteAssetForTesting(nonExistentId);
     };
 
     await expect(deleteNonExistentAsset).rejects.toThrow();
@@ -215,7 +216,7 @@ describe('deleteAsset', () => {
 describe('getAllAssetsWithVouchers', () => {
   it('should only return assets with vouchers', async () => {
     // Info: (20241209 - Shirley) 使用種子資料中已知有 voucher 的資產進行測試
-    const assets = await getAllAssetsByCompanyId(testCompanyId, {});
+    const assets = await listAssetsByCompanyId(testCompanyId, {});
 
     expect(assets).toBeDefined();
     expect(Array.isArray(assets)).toBe(true);
@@ -229,7 +230,7 @@ describe('getAllAssetsWithVouchers', () => {
   });
 
   it('should include correct asset fields', async () => {
-    const assets = await getAllAssetsByCompanyId(testCompanyId, {
+    const assets = await listAssetsByCompanyId(testCompanyId, {
       filterCondition: {
         type: AssetEntityType.LAND,
       },
@@ -251,7 +252,7 @@ describe('getAllAssetsWithVouchers', () => {
   });
 
   it('should correctly filter assets when search conditions are provided', async () => {
-    const assets = await getAllAssetsByCompanyId(testCompanyId, {
+    const assets = await listAssetsByCompanyId(testCompanyId, {
       filterCondition: {
         status: AssetStatus.NORMAL,
       },
@@ -265,7 +266,7 @@ describe('getAllAssetsWithVouchers', () => {
 
   it('should return different asset lists for different company IDs', async () => {
     const differentCompanyId = 999;
-    const assets = await getAllAssetsByCompanyId(differentCompanyId, {});
+    const assets = await listAssetsByCompanyId(differentCompanyId, {});
 
     // Info: (20241209 - Shirley) 假設測試資料庫中 companyId 999 沒有資產
     expect(assets).toHaveLength(0);
@@ -277,7 +278,7 @@ describe('getAllAssetsWithVouchers', () => {
       sortBy: SortBy.ACQUISITION_DATE,
       sortOrder: SortOrder.ASC,
     };
-    const assetsAcqDateASC = await getAllAssetsByCompanyId(testCompanyId, {
+    const assetsAcqDateASC = await listAssetsByCompanyId(testCompanyId, {
       sortOption: [sort],
     });
 
@@ -295,7 +296,7 @@ describe('getAllAssetsWithVouchers', () => {
       sortBy: SortBy.PURCHASE_PRICE,
       sortOrder: SortOrder.DESC,
     };
-    const assetsPriceDesc = await getAllAssetsByCompanyId(testCompanyId, {
+    const assetsPriceDesc = await listAssetsByCompanyId(testCompanyId, {
       sortOption: [sortByPriceDesc],
     });
 
@@ -310,7 +311,7 @@ describe('getAllAssetsWithVouchers', () => {
   });
 
   it('should default sort by acquisition date in descending order when no sort condition is specified', async () => {
-    const assets = await getAllAssetsByCompanyId(testCompanyId, {
+    const assets = await listAssetsByCompanyId(testCompanyId, {
       sortOption: undefined,
     });
 
@@ -324,7 +325,7 @@ describe('getAllAssetsWithVouchers', () => {
 
   it('should filter assets based on provided conditions', async () => {
     const filterCondition = { status: AssetStatus.NORMAL };
-    const assets = await getAllAssetsByCompanyId(testCompanyId, { filterCondition });
+    const assets = await listAssetsByCompanyId(testCompanyId, { filterCondition });
 
     expect(assets).toBeDefined();
     assets.forEach((asset) => {
@@ -367,7 +368,7 @@ describe('updateAsset', () => {
     expect(updatedAsset.id).toBe(asset.id);
 
     // Info: (20241210 - Shirley) 清理測試資料
-    await deleteAsset(asset.id);
+    await deleteAssetForTesting(asset.id);
   });
 
   it('當嘗試更新不存在的資產時應該拋出錯誤', async () => {
@@ -402,7 +403,7 @@ describe('updateAsset', () => {
     await expect(updateAsset(wrongCompanyId, asset.id, updateData)).rejects.toThrow();
 
     // Info: (20241210 - Shirley) 清理測試資料
-    await deleteAsset(asset.id);
+    await deleteAssetForTesting(asset.id);
   });
 
   it('應該能夠更新多個欄位', async () => {
@@ -436,6 +437,132 @@ describe('updateAsset', () => {
     expect(updatedAsset.note).toBe(data.note);
 
     // Info: (20241210 - Shirley) 清理測試資料
+    await deleteAssetForTesting(asset.id);
+  });
+});
+
+// 新增 Soft Delete 相關的測試
+describe('Soft Delete 功能測試', () => {
+  it('應該成功進行軟刪除並設置 deletedAt', async () => {
+    // 建立一個測試用資產
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: 'Soft Delete 測試資產',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
+      number: 'SOFT-DELETE-001',
+      acquisitionDate: 1704067200,
+      purchasePrice: 5000,
+      accumulatedDepreciation: 0,
+    };
+
+    const asset = await createAssetWithVouchers(newAssetData);
+    expect(asset).toBeDefined();
+
+    // 執行軟刪除
+    const deletedAsset = await deleteAsset(asset.id);
+    expect(deletedAsset).toBeDefined();
+    expect(deletedAsset.deletedAt).toBeDefined();
+
+    // 確認資產已被軟刪除，不應該透過 getLegitAssetById 取得
+    const fetchedAsset = await getLegitAssetById(asset.id, testCompanyId);
+    expect(fetchedAsset).toBeNull();
+
+    // 清理測試資料（實際上已被軟刪除，可選擇永久刪除）
+    // await deleteAssetForTesting(asset.id);
+  });
+
+  it('應該能夠軟刪除多個資產並設置 deletedAt', async () => {
+    // 建立多個測試用資產
+    const assetData = {
+      companyId: testCompanyId,
+      name: 'Soft Delete 多資產測試',
+      type: AssetEntityType.LAND,
+      number: 'SOFT-DELETE-MULTI',
+      acquisitionDate: 1704067200,
+      purchasePrice: 15000,
+      accumulatedDepreciation: 0,
+      amount: 3,
+    };
+
+    const assets = await createManyAssets(assetData, assetData.amount);
+    // console.log('應該能夠軟刪除多個資產並設置assets', assets);
+    // expect(assets.length).toBe(assetData.amount);
+
+    const assetIds = assets.map((asset) => asset.id);
+
+    // console.log('assetIds', assetIds);
+
+    // 執行多個軟刪除
+    const deletedAssets = await deleteAssets(assetIds);
+    expect(deletedAssets).toBeDefined();
+    expect(deletedAssets.count).toBe(assetData.amount);
+
+    // 確認每個資產已被軟刪除
+    // eslint-disable-next-line no-restricted-syntax
+    for (const id of assetIds) {
+      // eslint-disable-next-line no-await-in-loop
+      const fetchedAsset = await getLegitAssetById(id, testCompanyId);
+      expect(fetchedAsset).toBeNull();
+    }
+
+    // 清理測試資料（實際上已被軟刪除，可選擇永久刪除）
+    // await deleteManyAssetsForTesting(assetIds);
+  });
+
+  it('軟刪除後資產不應出現在資產列表中', async () => {
+    // 建立一個測試用資產
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: 'Soft Delete 列表測試資產',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
+      number: 'SOFT-DELETE-LIST',
+      acquisitionDate: 1704067200,
+      purchasePrice: 8000,
+      accumulatedDepreciation: 0,
+    };
+
+    const asset = await createAssetWithVouchers(newAssetData);
+    expect(asset).toBeDefined();
+
+    // 執行軟刪除
     await deleteAsset(asset.id);
+
+    // 獲取資產列表，確認已刪除的資產不在其中
+    const assets = await listAssetsByCompanyId(testCompanyId, {});
+    const deletedAsset = assets.find((a) => a.id === asset.id);
+    expect(deletedAsset).toBeUndefined();
+
+    // 清理測試資料
+    // await deleteAssetForTesting(asset.id);
+  });
+
+  it('應該無法更新已軟刪除的資產', async () => {
+    // 建立一個測試用資產
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: 'Soft Delete 更新測試資產',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
+      number: 'SOFT-DELETE-UPDATE',
+      acquisitionDate: 1704067200,
+      purchasePrice: 12000,
+      accumulatedDepreciation: 0,
+    };
+
+    const asset = await createAssetWithVouchers(newAssetData);
+    expect(asset).toBeDefined();
+
+    // 執行軟刪除
+    await deleteAsset(asset.id);
+
+    // 準備更新資料
+    const updateData = {
+      assetName: '更新後的名稱',
+    };
+
+    // 嘗試更新已軟刪除的資產，應拋出錯誤
+    await expect(updateAsset(testCompanyId, asset.id, updateData)).rejects.toThrow();
+
+    // 清理測試資料
+    // await deleteAssetForTesting(asset.id);
   });
 });
