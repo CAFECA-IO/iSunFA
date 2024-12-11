@@ -130,21 +130,23 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   };
 
   const updateFilenameHandler = async () => {
-    const { success } = await updateFilename({
-      params: { fileId: certificate.file.id },
-      body: { name: certificateFilename },
-    });
-    if (success === false) {
-      toastHandler({
-        id: ToastId.UPDATE_FILENAME_ERROR,
-        type: ToastType.SUCCESS,
-        content: t('certificate:ERROR.UPDATE_FILENAME'),
-        closeable: true,
+    if (certificateFilename !== certificate.file.name && certificateFilename !== '') {
+      const { success } = await updateFilename({
+        params: { fileId: certificate.file.id },
+        body: { name: certificateFilename },
       });
-    }
-    if (success) {
-      setCertificateFilename(certificateFilename);
-      onUpdateFilename(certificate.id, certificateFilename);
+      if (success === false) {
+        toastHandler({
+          id: ToastId.UPDATE_FILENAME_ERROR,
+          type: ToastType.SUCCESS,
+          content: t('certificate:ERROR.UPDATE_FILENAME'),
+          closeable: true,
+        });
+      }
+      if (success) {
+        setCertificateFilename(certificateFilename);
+        onUpdateFilename(certificate.id, certificateFilename);
+      }
     }
     setIsNameEditing(false);
   };
@@ -202,9 +204,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 id="invoicenname"
                 type="text"
                 onChange={(e) => setCertificateFilename(e.target.value)}
-                className="w-auto text-right caret-transparent outline-none placeholder:text-card-text-primary"
+                className="w-auto text-center caret-transparent outline-none placeholder:text-card-text-primary"
                 placeholder="|"
-                style={{ width: `${certificateFilename.length + 2 || 1}ch` }}
+                style={{ width: `${certificateFilename.length || 1}ch` }}
               />
             ) : (
               <span>{certificateFilename}</span>

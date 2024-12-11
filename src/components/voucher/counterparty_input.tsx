@@ -101,32 +101,35 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       setIsLoadingCounterparty(false);
     };
 
-    const onAddCounterparty = () => {
+    const onAddCounterparty = (trigger: boolean) => {
       addCounterPartyModalVisibilityHandler();
-      if (onTriggerSave) {
+      if (onTriggerSave && trigger) {
         onTriggerSave();
       }
     };
 
     // Info: (20241209 - Julian) 變更 Counterparty 事件：顯示是否新增 Counterparty 的視窗
-    const counterpartySearchHandler = useCallback(() => {
-      if ((searchName || searchTaxId) && filteredCounterpartyList.length <= 0) {
-        messageModalDataHandler({
-          messageType: MessageType.INFO,
-          title: t('certificate:COUNTERPARTY.TITLE'),
-          content: t('certificate:COUNTERPARTY.CONTENT', {
-            counterparty: `${searchTaxId} ${searchName}`,
-          }),
-          backBtnStr: t('certificate:COUNTERPARTY.NO'),
-          backBtnFunction: onCancelAddCounterparty,
-          submitBtnStr: t('certificate:COUNTERPARTY.YES'),
-          submitBtnFunction: onAddCounterparty,
-        });
-        messageModalVisibilityHandler();
-      } else if (onTriggerSave) {
-        onTriggerSave();
-      }
-    }, [searchName, searchTaxId]);
+    const counterpartySearchHandler = useCallback(
+      (trigger = true) => {
+        if ((searchName || searchTaxId) && filteredCounterpartyList.length <= 0) {
+          messageModalDataHandler({
+            messageType: MessageType.INFO,
+            title: t('certificate:COUNTERPARTY.TITLE'),
+            content: t('certificate:COUNTERPARTY.CONTENT', {
+              counterparty: `${searchTaxId} ${searchName}`,
+            }),
+            backBtnStr: t('certificate:COUNTERPARTY.NO'),
+            backBtnFunction: onCancelAddCounterparty,
+            submitBtnStr: t('certificate:COUNTERPARTY.YES'),
+            submitBtnFunction: () => onAddCounterparty(trigger),
+          });
+          messageModalVisibilityHandler();
+        } else if (onTriggerSave && trigger) {
+          onTriggerSave();
+        }
+      },
+      [searchName, searchTaxId]
+    );
 
     useEffect(() => {
       // Info: (20241206 - Julian) Add Counterparty Event
@@ -191,37 +194,38 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       setFilteredCounterpartyList(filteredList);
     };
 
-    const counterpartyInput = isCounterpartyEditing ? (
-      <div className="flex w-full">
-        <input
-          id="counterparty-tax-id"
-          ref={counterpartyTaxIdInputRef}
-          value={searchTaxId}
-          onChange={counterpartyInputHandler}
-          type="text"
-          placeholder={t('certificate:EDIT.ID_NUMBER')}
-          className="w-100px truncate border-r bg-transparent px-12px py-10px outline-none"
-        />
-        <input
-          id="counterparty-name"
-          ref={counterpartyNameInputRef}
-          value={searchName}
-          onChange={counterpartyInputHandler}
-          type="text"
-          placeholder={t('certificate:EDIT.NAME')}
-          className="flex-1 truncate bg-transparent px-12px py-10px outline-none"
-        />
-      </div>
-    ) : (
-      <div
-        className={`flex truncate ${counterparty ? 'text-dropdown-text-input-filled' : 'text-dropdown-text-secondary'}`}
-      >
-        <p className="w-100px border-r px-12px py-10px">
-          {counterparty?.taxId ?? t('certificate:EDIT.ID_NUMBER')}
-        </p>
-        <p className="px-12px py-10px">{counterparty?.name ?? t('certificate:EDIT.NAME')}</p>
-      </div>
-    );
+    const counterpartyInput =
+      isCounterpartyEditing || !!searchTaxId || !!searchName ? (
+        <div className="flex w-full">
+          <input
+            id="counterparty-tax-id"
+            ref={counterpartyTaxIdInputRef}
+            value={searchTaxId}
+            onChange={counterpartyInputHandler}
+            type="text"
+            placeholder={t('certificate:EDIT.ID_NUMBER')}
+            className="w-100px truncate border-r bg-transparent px-12px py-10px outline-none"
+          />
+          <input
+            id="counterparty-name"
+            ref={counterpartyNameInputRef}
+            value={searchName}
+            onChange={counterpartyInputHandler}
+            type="text"
+            placeholder={t('certificate:EDIT.NAME')}
+            className="flex-1 truncate bg-transparent px-12px py-10px outline-none"
+          />
+        </div>
+      ) : (
+        <div
+          className={`flex truncate ${counterparty ? 'text-dropdown-text-input-filled' : 'text-dropdown-text-secondary'}`}
+        >
+          <p className="w-100px border-r px-12px py-10px">
+            {counterparty?.taxId ?? t('certificate:EDIT.ID_NUMBER')}
+          </p>
+          <p className="px-12px py-10px">{counterparty?.name ?? t('certificate:EDIT.NAME')}</p>
+        </div>
+      );
 
     const counterpartyItems =
       filteredCounterpartyList.length > 0
@@ -256,7 +260,9 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       <div
         ref={counterpartyMenuRef}
         className={`absolute left-0 top-50px z-30 grid w-full overflow-hidden ${
-          isCounterpartyMenuOpen ? 'grid-rows-1' : 'grid-rows-0'
+          isCounterpartyMenuOpen && (filteredCounterpartyList.length > 0 || isLoadingCounterparty)
+            ? 'grid-rows-1'
+            : 'grid-rows-0'
         } rounded-sm shadow-dropmenu transition-all duration-150 ease-in-out`}
       >
         {isLoadingCounterparty ? (
@@ -290,7 +296,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
             <FiSearch
               size={20}
               className={`absolute right-3 top-3 cursor-pointer ${!searchName && !searchTaxId ? 'text-input-text-primary' : 'text-input-text-input-filled'}`}
-              onClick={counterpartySearchHandler}
+              onClick={() => counterpartySearchHandler(false)}
             />
           </div>
           {displayedCounterpartyMenu}
