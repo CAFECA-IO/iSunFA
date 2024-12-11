@@ -19,15 +19,10 @@ export interface IInvoice {
   payment: IPayment;
 }
 
-/**
- * Info: (20241022 - tzuhan)
- * @description for frontend
- * @Murky, @Jacky 這裡是參考 data model 來更新 IInvoiceBeta 的介面，需要確認是否有遺漏或錯誤
- */
 export interface IInvoiceBeta {
   id: number;
   isComplete: boolean;
-  counterParty: ICounterparty; // Info: (20241108 - Tzuhan) !!! not provided by backend @Murky
+  counterParty: ICounterparty;
   inputOrOutput: InvoiceTransactionDirection;
   date: number;
   no: string;

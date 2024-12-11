@@ -48,8 +48,8 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
         'layout',
         'dashboard',
         'company',
-        'filter_section_type',
         'search',
+        'common',
       ])),
     },
   };

@@ -124,7 +124,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
       >
         <div className="flex w-full items-center gap-8px">
           <VscGlobe size={20} />
-          <p> {t('dashboard:HEADER.LANGUAGE')}</p>
+          <p>{t('dashboard:HEADER.LANGUAGE')}</p>
         </div>
 
         <IoIosArrowForward size={20} />

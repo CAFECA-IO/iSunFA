@@ -20,7 +20,6 @@ import {
   Counterparty as PrismaCounterparty,
 } from '@prisma/client';
 
-// Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來定義 Certificate 的介面，需要確認是否有遺漏或錯誤
 export interface ICertificate {
   id: number;
   name: string;

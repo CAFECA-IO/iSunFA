@@ -240,6 +240,7 @@
   },
   "ASSET_SECTION": {
     "TITLE": "資產",
+    "EMPTY": "無資料",
     "EMPTY_HINT": "請新增至少 1 筆資產！",
     "ADD_BTN": "新增資產"
   },
@@ -307,5 +308,8 @@
   },
   "EDIT_VOUCHER": {
     "PAGE_TITLE": "編輯傳票"
+  },
+  "COMMON": {
+    "STATUS": "狀態"
   }
 }
