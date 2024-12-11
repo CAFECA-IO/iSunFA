@@ -44,7 +44,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
         src={imageId}
         width={80}
         height={80}
-        className="group-hover:brightness-50"
+        className="rounded-full group-hover:brightness-50"
       />
       <div>
         <div className="mb-lv-4 flex items-center gap-3 text-sm text-gray-700">

@@ -614,7 +614,9 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(2)}%
+                    {revenueToRD.ratio.curRatio.toFixed(
+                      2
+                    )}%
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end">
                     {revenueToRD.ratio.preRatio.toFixed(2)}%

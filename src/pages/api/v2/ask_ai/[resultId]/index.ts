@@ -19,6 +19,7 @@ import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/cons
 import { IAIInvoice, IInvoiceEntity } from '@/interfaces/invoice';
 import { createManyInvoice } from '@/lib/utils/repo/invoice.repo';
 import { DefaultValue } from '@/constants/default_value';
+import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 
 // ToDo: (20241128 - Luphia) Check this API carefully
 
@@ -99,7 +100,13 @@ async function voucherHandler(key: AI_TYPE, resultId: string, session: ISessionD
     const { payload: aiPayload } = resultFromAI;
     const { status, value } = aiPayload;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    const counterparty = await fuzzySearchCounterpartyByName(value.counterpartyName, companyId);
+    const counterpartyFromDB = await fuzzySearchCounterpartyByName(
+      value.counterpartyName,
+      companyId
+    );
+    const counterparty = counterpartyFromDB
+      ? parsePrismaCounterPartyToCounterPartyEntity(counterpartyFromDB)
+      : null;
     const lineItems = await formatLineItemsFromAICH(value.lineItems);
 
     const nowTimestamp = getTimestampNow();

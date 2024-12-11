@@ -115,3 +115,26 @@ export async function deleteCompanyByIdForTesting(companyId: number): Promise<Co
   });
   return company;
 }
+
+export async function putCompanyIcon(options: { companyId: number; fileId: number }) {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  const { companyId, fileId } = options;
+  const updatedCompany = await prisma.company.update({
+    where: {
+      id: companyId,
+    },
+    data: {
+      imageFile: {
+        connect: {
+          id: fileId,
+        },
+      },
+      updatedAt: nowTimestamp,
+    },
+    include: {
+      imageFile: true,
+    },
+  });
+  return updatedCompany;
+}

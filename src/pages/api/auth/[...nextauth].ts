@@ -155,7 +155,7 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
       try {
         if (!account) throw Error('Account not found');
         await handleSignInSession(req, res, user, account);
-        /* /* Info: (20241128 - tzuhan) @Anna, @Jacky, @Murky move to @/lib/utils/signIn
+        /* /* Info: (20241128 - tzuhan) @Anna, @Murky move to @/lib/utils/signIn
         // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
         // let Dbuser;
         // const { invitation } = (account?.params || {}) as { invitation: string };
