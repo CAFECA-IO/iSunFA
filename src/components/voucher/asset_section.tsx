@@ -88,11 +88,6 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     // Info: (20241119 - Julian) 更新 assetList
     const newTemporaryAssetList = temporaryAssetList[companyId] ?? [];
     setAssetList([...defaultAssetList, ...newTemporaryAssetList]);
-
-    // eslint-disable-next-line
-    console.log('assetList', assetList);
-    // eslint-disable-next-line
-    console.log('length', assetList.length);
   }, [temporaryAssetList]);
 
   const displayedAssetList =
