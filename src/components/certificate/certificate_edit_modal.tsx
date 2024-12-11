@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import React, { useCallback, useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -11,9 +11,6 @@ import { ICounterparty } from '@/interfaces/counterparty';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { inputStyle } from '@/constants/display';
-import { FiSearch } from 'react-icons/fi';
-import { MessageType } from '@/interfaces/message_modal';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
@@ -22,13 +19,11 @@ import { BiSave } from 'react-icons/bi';
 import { LuTrash2 } from 'react-icons/lu';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IPaginatedData } from '@/interfaces/pagination';
-import Loader, { LoaderSize } from '@/components/loader/loader';
 import { CurrencyType } from '@/constants/currency';
+import CounterpartyInput, { CounterpartyInputRef } from '@/components/voucher/counterparty_input';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
-  companyId?: number;
   toggleModel: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
   currencyAlias: CurrencyType;
   certificate?: ICertificateUI;
@@ -39,7 +34,6 @@ interface CertificateEditModalProps {
 
 const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   isOpen,
-  companyId,
   toggleModel,
   currencyAlias,
   certificate,
@@ -47,18 +41,13 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   onSave,
   onDelete,
 }) => {
+  const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
   const { trigger: updateFilename } = APIHandler(APIName.FILE_PUT_V2);
-  const { trigger: getCounterpartyList } = APIHandler<IPaginatedData<ICounterparty[]>>(
-    APIName.COUNTERPARTY_LIST
-  );
   const [isNameEditing, setIsNameEditing] = useState(false);
   const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
-  const [isLoadingCounterParty, setIsLoadingCounterParty] = useState(false);
-  const [counterPartyList, setCounterPartyList] = useState<ICounterparty[]>([]);
-  const [filteredCounterPartyList, setFilteredCounterPartyList] = useState<ICounterparty[]>([]);
   const [counterParty, setCounterParty] = useState<ICounterparty | undefined>(
     certificate.invoice.counterParty
   );
@@ -76,20 +65,11 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const [taxRatio, setTaxRatio] = useState<number>(certificate.invoice.taxRatio ?? 5);
   const [taxPrice, setTaxPrice] = useState<number>(certificate.invoice.taxPrice ?? 0);
   const [totalPrice, setTotalPrice] = useState<number>(certificate.invoice.totalPrice ?? 0);
-  const [searchName, setSearchName] = useState<string>('');
-  const [searchTaxId, setSearchTaxId] = useState<string>('');
   const [invoiceType, setInvoiceType] = useState<InvoiceType>(
     certificate.invoice.type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE
   );
   const [deductible, setDeductible] = useState<boolean>(!!certificate.invoice.deductible);
-  const {
-    isMessageModalVisible,
-    messageModalDataHandler,
-    messageModalVisibilityHandler,
-    addCounterPartyModalDataHandler,
-    addCounterPartyModalVisibilityHandler,
-    toastHandler,
-  } = useModalContext();
+  const { isMessageModalVisible, toastHandler } = useModalContext();
   //  const [isAddCounterPartyModalOpen, setIsAddCounterPartyModalOpen] = useState(false);
   const isFormValid = priceBeforeTax > 0 && totalPrice > 0 && certificateNo !== '';
 
@@ -145,197 +125,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     `certificate:CURRENCY_ALIAS.${(certificate.invoice?.currencyAlias || currencyAlias).toUpperCase()}`
   );
 
-  // Info: (20241017 - tzuhan) 參考 AddAssetModal
-  const {
-    targetRef: counterPartyRef,
-    componentVisible: isCounterPartyEditing,
-    setComponentVisible: setIsCounterPartyEditing,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  const {
-    targetRef: counterPartyMenuRef,
-    componentVisible: isCounterPartyMenuOpen,
-    setComponentVisible: setCounterPartyMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  const counterPartyNameInputRef = useRef<HTMLInputElement>(null);
-  const counterPartyTaxIdInputRef = useRef<HTMLInputElement>(null);
-
-  const counterPartyEditingHandler = async () => {
-    setIsCounterPartyEditing(true);
-    setIsLoadingCounterParty(true);
-    setCounterPartyMenuOpen(true);
-    const { success, data } = await getCounterpartyList({
-      params: { companyId },
-    });
-    if (success) {
-      setCounterPartyList(data?.data ?? []);
-      setFilteredCounterPartyList(data?.data ?? []);
-    }
-    setIsLoadingCounterParty(false);
-  };
-
-  const onCancelAddCounterParty = () => {
-    setIsCounterPartyEditing(false);
-    setCounterPartyMenuOpen(false);
-    setSearchName('');
-    setSearchTaxId('');
-  };
-
-  useEffect(() => {
-    // Info: (20241206 - Julian) 退出編輯時，清空 input 的值
-    if (!isCounterPartyEditing) {
-      setSearchName('');
-      setSearchTaxId('');
-    }
-  }, [isCounterPartyEditing]);
-
-  useEffect(() => {
-    // Info: (20241206 - Julian) Add Counterparty Event
-    const handleAddCounterParty = (newCounterParty: ICounterparty) => {
-      if (!companyId) return;
-
-      setFilteredCounterPartyList([...filteredCounterPartyList, newCounterParty]);
-      toastHandler({
-        id: ToastId.ADD_COUNTERPARTY_SUCCESS,
-        type: ToastType.SUCCESS,
-        content: t('certificate:COUNTERPARTY.SUCCESS'),
-        closeable: true,
-      });
-
-      // Info: (20241206 - Julian) 選中新增的交易夥伴
-      setCounterParty(newCounterParty);
-    };
-
-    addCounterPartyModalDataHandler({
-      onSave: handleAddCounterParty,
-      name: searchName,
-      taxId: searchTaxId,
-    });
-  }, [companyId, filteredCounterPartyList, searchName, searchTaxId]);
-
-  const CounterPartyItems =
-    filteredCounterPartyList.length > 0 &&
-    filteredCounterPartyList.map((partner) => {
-      const counterPartyClickHandler = () => {
-        setCounterParty(partner);
-        // Info: (20241017 - Tzuhan) 關閉 CounterPartyI Menu 和編輯狀態
-        setCounterPartyMenuOpen(false);
-        setIsCounterPartyEditing(false);
-        // Info: (20241017 - Tzuhan) 重置搜尋關鍵字
-        setSearchName('');
-        setSearchTaxId('');
-      };
-
-      return (
-        <button
-          key={partner.id}
-          type="button"
-          onClick={counterPartyClickHandler}
-          className="flex w-full text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-        >
-          <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">
-            {partner.taxId}
-          </p>
-          <p className="px-12px py-8px text-dropdown-text-secondary">{partner.name}</p>
-        </button>
-      );
-    });
-
-  const DisplayedCounterPartyMenu = (
-    <div
-      ref={counterPartyMenuRef}
-      className={`absolute left-0 top-50px z-30 grid w-full overflow-hidden ${
-        isCounterPartyMenuOpen ? 'grid-rows-1' : 'grid-rows-0'
-      } rounded-sm shadow-dropmenu transition-all duration-150 ease-in-out`}
-    >
-      {isLoadingCounterParty ? (
-        <Loader size={LoaderSize.SMALL} />
-      ) : (
-        <div className="flex max-h-150px flex-col overflow-y-auto rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary py-8px">
-          {CounterPartyItems}
-        </div>
-      )}
-    </div>
-  );
-
-  const counterPartySearchHandler = useCallback(() => {
-    if (!searchName && !searchTaxId && filteredCounterPartyList.length > 0) return;
-    messageModalDataHandler({
-      messageType: MessageType.INFO,
-      title: t('certificate:COUNTERPARTY.TITLE'),
-      content: t('certificate:COUNTERPARTY.CONTENT', {
-        counterparty: `${searchTaxId} ${searchName}`,
-      }),
-      backBtnStr: t('certificate:COUNTERPARTY.NO'),
-      backBtnFunction: () => {
-        onCancelAddCounterParty();
-      },
-      submitBtnStr: t('certificate:COUNTERPARTY.YES'),
-      submitBtnFunction: addCounterPartyModalVisibilityHandler,
-    });
-    messageModalVisibilityHandler();
-  }, [searchName, searchTaxId]);
-
-  const counterPartyInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isMessageModalVisible) return;
-    setCounterPartyMenuOpen(true);
-    if (e.target.id === 'counterparty-tax-id') {
-      setSearchTaxId(e.target.value);
-    }
-    if (e.target.id === 'counterparty-name') {
-      setSearchName(e.target.value);
-    }
-    const filteredList = counterPartyList.filter((parter) => {
-      // Info: (20241017 - Tzuhan) 編號(數字)搜尋: 字首符合
-      if (e.target.value.match(/^\d+$/)) {
-        const codeMatch = parter.taxId
-          .toString()
-          .toLowerCase()
-          .startsWith(e.target.value.toLowerCase());
-        return codeMatch;
-      } else if (e.target.value !== '') {
-        // Info: (20241017 - Tzuhan) 名稱搜尋: 部分符合
-        const nameMatch = parter.name.toLowerCase().includes(e.target.value.toLowerCase());
-        return nameMatch;
-      }
-      return true;
-    });
-    setFilteredCounterPartyList(filteredList);
-  };
-
-  const CounterPartyInput = isCounterPartyEditing ? (
-    <div className="flex">
-      <input
-        ref={counterPartyTaxIdInputRef}
-        value={searchTaxId}
-        id="counterparty-tax-id"
-        onChange={counterPartyInputHandler}
-        type="number"
-        placeholder={counterParty?.taxId ?? t('certificate:EDIT.ID_NUMBER')}
-        className="w-100px truncate border-r bg-transparent px-12px py-10px outline-none"
-      />
-      <input
-        ref={counterPartyNameInputRef}
-        value={searchName}
-        id="counterparty-name"
-        onChange={counterPartyInputHandler}
-        type="text"
-        placeholder={counterParty?.name ?? t('certificate:EDIT.NAME')}
-        className="truncate bg-transparent px-12px py-10px outline-none"
-      />
-    </div>
-  ) : (
-    <p className={`flex truncate text-input-text-input-filled`}>
-      <p className="w-100px border-r px-12px py-10px text-dropdown-text-primary">
-        {counterParty?.taxId ?? t('certificate:EDIT.ID_NUMBER')}
-      </p>
-      <p className="px-12px py-10px text-dropdown-text-secondary">
-        {counterParty?.name ?? t('certificate:EDIT.NAME')}
-      </p>
-    </p>
-  );
-
   const handleEditName = () => {
     setIsNameEditing(true);
   };
@@ -363,8 +152,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   // Info: (20240924 - tzuhan) 處理保存
   const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (filteredCounterPartyList.length === 0) {
-      counterPartySearchHandler();
+    if (counterpartyInputRef.current) {
+      counterpartyInputRef.current.triggerSearch();
     }
     const updatedData: ICertificate = {
       ...certificate,
@@ -412,7 +201,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 onChange={(e) => setCertificateFilename(e.target.value)}
                 className="w-auto text-right caret-transparent outline-none placeholder:text-card-text-primary"
                 placeholder="|"
-                style={{ width: `${certificateFilename.length || 1}ch` }}
+                style={{ width: `${certificateFilename.length + 2 || 1}ch` }}
               />
               <Image
                 alt="edit"
@@ -651,29 +440,11 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
             </div>
 
             {/* Info: (20240924 - tzuhan) CounterParty */}
-            <div className="relative flex w-full flex-1 flex-col items-start gap-2">
-              <div id="price" className="absolute -top-20"></div>
-              <p className="text-sm font-semibold text-input-text-primary">
-                {t('certificate:EDIT.COUNTERPARTY')}
-                <span className="text-text-state-error">*</span>
-              </p>
-              <div ref={counterPartyRef} className="relative w-full">
-                <div
-                  onClick={counterPartyEditingHandler}
-                  className={`flex items-center justify-between rounded-sm border ${
-                    inputStyle.NORMAL // TODO: (20241017 - tzuhan) isShowTypeHint ? inputStyle.ERROR : inputStyle.NORMAL
-                  } bg-input-surface-input-background hover:cursor-pointer`}
-                >
-                  {CounterPartyInput}
-                  <FiSearch
-                    size={20}
-                    className={`absolute right-3 top-3 cursor-pointer ${!searchName && !searchTaxId ? 'text-input-text-primary' : 'text-input-text-input-filled'}`}
-                    onClick={counterPartySearchHandler}
-                  />
-                </div>
-                {DisplayedCounterPartyMenu}
-              </div>
-            </div>
+            <CounterpartyInput
+              ref={counterpartyInputRef}
+              counterparty={counterParty}
+              setCounterparty={setCounterParty}
+            />
 
             {/* Info: (20240924 - tzuhan) Invoice Type */}
             <div className="flex flex-col items-start gap-2">

@@ -25,16 +25,13 @@ const SelectLanguageDropdown: React.FC<SelectLanguageDropdownProps> = ({ languag
   const toggleLanguageMenu = () => setIsLanguageMenuOpen(!isLanguageMenuOpen);
 
   const renderLanguageOption = (id: string, name: string, icon: string) => (
-    <li
-      key={id}
-      className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
-    >
+    <li key={id}>
       <Link
         id={`${id.toUpperCase()}ButtonDesktop`}
         scroll={false}
         locale={id}
         href={asPath}
-        className="block rounded-none py-3 text-center hover:text-button-text-primary-hover"
+        className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
         onClick={() => onSelect(id as LocaleKey)}
       >
         <Image src={icon} alt={name} width={20} height={20} />
@@ -62,6 +59,7 @@ const SelectLanguageDropdown: React.FC<SelectLanguageDropdownProps> = ({ languag
             height={20}
             src={selectedLanguage?.icon ?? '/icons/en.svg'}
             alt="language icon"
+            className="rounded-full"
           />
           <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-input-text-primary">
             {selectedLanguage?.name}
