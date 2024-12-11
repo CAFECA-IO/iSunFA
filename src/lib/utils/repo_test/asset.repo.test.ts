@@ -333,7 +333,7 @@ describe('getAllAssetsWithVouchers', () => {
 });
 
 describe('updateAsset', () => {
-  it('應該成功更新資產資訊', async () => {
+  it('should successfully update asset information', async () => {
     const now = getTimestampNow();
     // Info: (20241210 - Shirley) 先建立一個測試用資產
     const newAssetData = {
@@ -369,7 +369,7 @@ describe('updateAsset', () => {
     await deleteAsset(asset.id);
   });
 
-  it('當嘗試更新不存在的資產時應該拋出錯誤', async () => {
+  it('should throw an error when trying to update a non-existent asset', async () => {
     const nonExistentId = -1;
     const updateData = {
       assetName: '測試名稱',
@@ -378,7 +378,7 @@ describe('updateAsset', () => {
     await expect(updateAsset(testCompanyId, nonExistentId, updateData)).rejects.toThrow();
   });
 
-  it('當嘗試更新不屬於該公司的資產時應該拋出錯誤', async () => {
+  it('should throw an error when trying to update an asset not belonging to the company', async () => {
     // Info: (20241210 - Shirley) 先建立一個測試用資產
     const newAssetData = {
       companyId: testCompanyId,
@@ -404,7 +404,7 @@ describe('updateAsset', () => {
     await deleteAsset(asset.id);
   });
 
-  it('應該能夠更新多個欄位', async () => {
+  it('should be able to update multiple fields', async () => {
     // Info: (20241210 - Shirley) 先建立一個測試用資產
     const newAssetData = {
       companyId: testCompanyId,
@@ -439,10 +439,8 @@ describe('updateAsset', () => {
   });
 });
 
-// 新增 Soft Delete 相關的測試
-describe('Soft Delete 功能測試', () => {
-  it('應該成功進行軟刪除並設置 deletedAt', async () => {
-    // 建立一個測試用資產
+describe('Soft Delete functionality tests', () => {
+  it('should successfully perform soft delete and set deletedAt', async () => {
     const newAssetData = {
       companyId: testCompanyId,
       name: 'Soft Delete 測試資產',
@@ -456,21 +454,17 @@ describe('Soft Delete 功能測試', () => {
     const asset = await createAssetWithVouchers(newAssetData);
     expect(asset).toBeDefined();
 
-    // 執行軟刪除
+    // Info: (20241211 - Shirley) 執行軟刪除
     const deletedAsset = await deleteAsset(asset.id);
     expect(deletedAsset).toBeDefined();
     expect(deletedAsset.deletedAt).toBeDefined();
 
-    // 確認資產已被軟刪除，不應該透過 getLegitAssetById 取得
+    // Info: (20241211 - Shirley) 確認資產已被軟刪除，不應該透過 getLegitAssetById 取得
     const fetchedAsset = await getLegitAssetById(asset.id, testCompanyId);
     expect(fetchedAsset).toBeNull();
-
-    // 清理測試資料（實際上已被軟刪除，可選擇永久刪除）
-    // await deleteAsset(asset.id);
   });
 
-  it('應該能夠軟刪除多個資產並設置 deletedAt', async () => {
-    // 建立多個測試用資產
+  it('should be able to soft delete multiple assets and set deletedAt', async () => {
     const assetData = {
       companyId: testCompanyId,
       name: 'Soft Delete 多資產測試',
@@ -487,25 +481,21 @@ describe('Soft Delete 功能測試', () => {
 
     const assetIds = assets.map((asset) => asset.id);
 
-    // 執行多個軟刪除
+    // Info: (20241211 - Shirley) 執行多個軟刪除
     const deletedAssets = await deleteManyAssets(assetIds);
     expect(deletedAssets).toBeDefined();
     expect(deletedAssets.count).toBe(assetData.amount);
 
-    // 確認每個資產已被軟刪除
+    // Info: (20241211 - Shirley) 確認每個資產已被軟刪除
     // eslint-disable-next-line no-restricted-syntax
     for (const id of assetIds) {
       // eslint-disable-next-line no-await-in-loop
       const fetchedAsset = await getLegitAssetById(id, testCompanyId);
       expect(fetchedAsset).toBeNull();
     }
-
-    // 清理測試資料（實際上已被軟刪除，可選擇永久刪除）
-    // await deleteManyAssets(assetIds);
   });
 
-  it('軟刪除後資產不應出現在資產列表中', async () => {
-    // 建立一個測試用資產
+  it('soft deleted assets should not appear in the asset list', async () => {
     const newAssetData = {
       companyId: testCompanyId,
       name: 'Soft Delete 列表測試資產',
@@ -519,20 +509,16 @@ describe('Soft Delete 功能測試', () => {
     const asset = await createAssetWithVouchers(newAssetData);
     expect(asset).toBeDefined();
 
-    // 執行軟刪除
+    // Info: (20241211 - Shirley) 執行軟刪除
     await deleteAsset(asset.id);
 
-    // 獲取資產列表，確認已刪除的資產不在其中
+    // Info: (20241211 - Shirley) 獲取資產列表，確認已刪除的資產不在其中
     const assets = await listAssetsByCompanyId(testCompanyId, {});
     const deletedAsset = assets.find((a) => a.id === asset.id);
     expect(deletedAsset).toBeUndefined();
-
-    // 清理測試資料
-    // await deleteAsset(asset.id);
   });
 
-  it('應該無法更新已軟刪除的資產', async () => {
-    // 建立一個測試用資產
+  it('should not be able to update a soft deleted asset', async () => {
     const newAssetData = {
       companyId: testCompanyId,
       name: 'Soft Delete 更新測試資產',
@@ -546,18 +532,15 @@ describe('Soft Delete 功能測試', () => {
     const asset = await createAssetWithVouchers(newAssetData);
     expect(asset).toBeDefined();
 
-    // 執行軟刪除
+    // Info: (20241211 - Shirley) 執行軟刪除
     await deleteAsset(asset.id);
 
-    // 準備更新資料
+    // Info: (20241211 - Shirley) 準備更新資料
     const updateData = {
       assetName: '更新後的名稱',
     };
 
-    // 嘗試更新已軟刪除的資產，應拋出錯誤
+    // Info: (20241211 - Shirley) 嘗試更新已軟刪除的資產，應拋出錯誤
     await expect(updateAsset(testCompanyId, asset.id, updateData)).rejects.toThrow();
-
-    // 清理測試資料
-    // await deleteAsset(asset.id);
   });
 });
