@@ -48,6 +48,23 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     setTypeMenuOpen(true);
   };
 
+  // Info:(20241211 - Anna) 透過公司名稱查詢統編
+  const fetchTaxIdByCompanyName = async (companyName: string) => {
+    const encodedName = encodeURIComponent(companyName);
+    const apiUrl = `https://data.gcis.nat.gov.tw/od/data/api/6BBA2268-1367-4B42-9CCA-BC17499EBE8C?$format=json&$filter=Company_Name%20like%20${encodedName}%20and%20Company_Status%20eq%2001&$skip=0&$top=1`;
+
+    try {
+      const response = await fetch(apiUrl);
+      const taxIdData = await response.json();
+      if (taxIdData && taxIdData.length > 0) {
+        setInputTaxId(taxIdData[0].Business_Accounting_NO || '');
+      }
+    } catch (fetchError) {
+      // eslint-disable-next-line no-console
+      console.error('Error fetching tax ID:', fetchError);
+    }
+  };
+
   const typeItems = [CounterpartyType.BOTH, CounterpartyType.CLIENT, CounterpartyType.SUPPLIER].map(
     (type) => {
       const accountClickHandler = () => {
@@ -88,7 +105,9 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   );
 
   const nameChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputName(event.target.value);
+    const newName = event.target.value;
+    setInputName(newName);
+    fetchTaxIdByCompanyName(newName); // Info:(20241211 - Anna) 自動帶出統一編號
   };
 
   const taxIdChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
