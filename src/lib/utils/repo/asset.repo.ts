@@ -264,6 +264,7 @@ export async function updateAsset(
   assetId: number,
   assetData: IUpdateAssetRepoInput
 ) {
+  const now = getTimestampNow();
   const dataForUpdate = {
     name: assetData.assetName,
     acquisitionDate: assetData.acquisitionDate,
@@ -274,6 +275,7 @@ export async function updateAsset(
     usefulLife: assetData.usefulLife,
     residualValue: assetData.residualValue,
     note: assetData.note,
+    updatedAt: now,
   };
 
   const updatedAsset = await prisma.asset.update({
