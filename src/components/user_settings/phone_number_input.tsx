@@ -37,14 +37,18 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   };
 
   const displayedCountryCodeMenu = (
-    <div ref={countryCodeMenuRef} className="relative flex w-full">
+    <div className="relative flex w-full">
       <button
         type="button"
         className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-5 py-3 max-md:max-w-full ${
           isCountryCodeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
       >
-        <div className="flex items-center" onClick={countryCodeMenuClickHandler}>
+        <div
+          className="flex items-center"
+          ref={countryCodeMenuRef}
+          onClick={countryCodeMenuClickHandler}
+        >
           <Image
             width={20}
             height={20}
@@ -52,7 +56,6 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
             alt="countryCode icon"
             className="mr-2"
           />
-
           <Image
             src="/elements/arrow_down.svg"
             alt="arrow_down"
