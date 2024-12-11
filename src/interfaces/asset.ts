@@ -5,6 +5,7 @@ import { z } from 'zod';
 import {
   AssetCreateInputBodyValidator,
   AssetCreateOutputValidator,
+  AssetPutInputBodyValidator,
   IAssetDetailsValidator,
   IAssetItemValidator,
   IRelatedVoucherValidator,
@@ -368,3 +369,5 @@ export interface ICreateAssetBulkRepoResponse extends Array<ICreateAssetWithVouc
 export interface IPaginatedAsset extends IPaginatedData<IAssetItem[]> {}
 
 export type IUpdateAssetRepoInput = z.infer<typeof UpdateAssetRepoInputValidator>;
+
+export type IAssetPutBodyInput = z.infer<typeof AssetPutInputBodyValidator>;
