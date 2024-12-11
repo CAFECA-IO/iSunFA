@@ -184,7 +184,7 @@ export const handlePostRequest: IHandleRequest<
 
   const statusMessage = STATUS_MESSAGE.CREATED;
 
-  // // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
+  // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
   const result: IPostResult = { statusMessage, payload: rs };
 
   return result;

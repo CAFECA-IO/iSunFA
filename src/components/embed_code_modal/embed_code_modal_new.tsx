@@ -17,6 +17,8 @@ import { IoIosArrowDown, IoMdCheckmark } from 'react-icons/io';
 import { PiCopySimpleBold } from 'react-icons/pi';
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { ToastType } from '@/interfaces/toastify';
+import { useModalContext } from '@/contexts/modal_context';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;
@@ -26,6 +28,7 @@ interface IEmbedCodeModal {
 const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
   const { t } = useTranslation(['common', 'reports']);
   const { selectedCompany } = useUserCtx();
+  const { toastHandler } = useModalContext();
   // Info: (20241127 - Anna) 追蹤是否點擊了生成按鈕
   const [isGenerateClicked, setIsGenerateClicked] = useState(false);
   const [isBalanceSheetChecked, setIsBalanceSheetChecked] = useState(true);
@@ -68,7 +71,28 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   };
 
   const copyClickHandler = () => {
-    navigator.clipboard.writeText(generatedIframeCode);
+    navigator.clipboard.writeText(generatedIframeCode).then(
+      () => {
+        // Info: (20241210 - Anna) 複製成功的吐司通知
+        toastHandler({
+          id: 'copyIframeCodeSuccess',
+          type: ToastType.SUCCESS,
+          content: t('layout:EMBED_CODE_MODAL.COPIED'),
+          closeable: true,
+        });
+      },
+      (error) => {
+        // Info: (20241210 - Anna) 複製失敗的吐司通知
+        toastHandler({
+          id: 'copyIframeCodeError',
+          type: ToastType.ERROR,
+          content: t('layout:EMBED_CODE_MODAL.COPY_FAILED'),
+          closeable: true,
+        });
+        // eslint-disable-next-line no-console
+        console.error('Failed to copy iframe code:', error);
+      }
+    );
   };
 
   const generateClickHandler = () => {
@@ -317,7 +341,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
         <div className="flex gap-3">
           <Button type="button" onClick={cancelClickHandler} variant="tertiaryBorderless">
-            {t('common:COMMON.CANCEL')}
+            {t('layout:EMBED_CODE_MODAL.CANCEL')}
           </Button>
           {/* Info: (20241128 - Anna) 當 isGenerateClicked 為 true 時，按鈕會被禁用，防止重複點擊。 */}
           <Button
@@ -404,7 +428,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
       <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
         <Button variant={'tertiary'} onClick={cancelClickHandler}>
-          <p>{t('common:COMMON.CANCEL')}</p>
+          <p>{t('layout:EMBED_CODE_MODAL.CLOSE')}</p>
         </Button>
       </div>
     </>

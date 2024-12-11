@@ -372,7 +372,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       return (
         <tr key={item.code}>
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+            {t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}
+          </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
@@ -424,7 +426,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               // Info: (20241203 - Anna) 移除條件判斷，始終保留 border-b
               className="flex items-center justify-between border-b border-stroke-brand-secondary-soft p-10px text-sm"
             >
-              {item.name}
+              {t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}
               {/* Info: (20241021 - Anna) 如果有 children 才顯示 CollapseButton */}
               {item.children &&
                 item.children.filter(
@@ -548,7 +550,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       <section className="mx-1 text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p>項目彙總格式</p>
+            <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton
               onClick={toggleSummaryTable}
               isCollapsed={isSummaryCollapsed}
@@ -562,10 +564,10 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             <thead>
               <tr className="print:hidden">
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  代號
+                  {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  會計項目
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                   {curDate}
@@ -597,7 +599,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p className="font-bold leading-5">細項分類格式</p>
+            <p className="font-bold leading-5">
+              {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
+            </p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p className="font-bold leading-5">單位：新台幣元</p>
@@ -607,10 +611,10 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             <thead>
               <tr className="print:hidden">
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  代號
+                  {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  會計項目
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                   {curDate}
@@ -641,7 +645,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     <div id="3" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>資產負債比例表</p>
+          <p>{t('reports:REPORTS.ASSET_LIABILITY_RATIO')}</p>
         </div>
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-0">
