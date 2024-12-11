@@ -198,18 +198,20 @@ export async function deleteManyAssetsForTesting(assetIds: number[]) {
 
 // Info: (20241211 - Shirley) soft delete asset
 export async function deleteAsset(assetId: number) {
+  const now = getTimestampNow();
   const deletedAsset = await prisma.asset.update({
     where: { id: assetId },
-    data: { deletedAt: getTimestampNow() },
+    data: { deletedAt: now },
   });
   return deletedAsset;
 }
 
 // Info: (20241211 - Shirley) soft delete assets
 export async function deleteManyAssets(assetIds: number[]) {
+  const now = getTimestampNow();
   const deletedAssets = await prisma.asset.updateMany({
     where: { id: { in: assetIds } },
-    data: { deletedAt: getTimestampNow() },
+    data: { deletedAt: now },
   });
   return deletedAssets;
 }
