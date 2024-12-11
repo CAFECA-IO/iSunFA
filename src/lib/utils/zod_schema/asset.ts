@@ -112,6 +112,10 @@ const AssetListQueryValidator = AssetCreateQueryValidator.extend({
   searchQuery: z.string().optional(),
 });
 
+const AssetPutQueryValidator = AssetCreateQueryValidator.extend({
+  assetId: zodStringToNumber,
+});
+
 export const AssetCreateInputBodyValidator = z.object({
   assetName: z.string(),
   assetType: z.nativeEnum(AssetEntityType),
@@ -139,8 +143,8 @@ const CreateAssetWithVouchersRepoResponseValidator = z.object({
 });
 
 export const UpdateAssetRepoInputValidator = z.object({
-  assetStatus: z.nativeEnum(AssetStatus).optional(),
   assetName: z.string().optional(),
+  assetStatus: z.nativeEnum(AssetStatus).optional(),
   acquisitionDate: z.number().optional(),
   purchasePrice: z.number().optional(),
   depreciationStart: z.number().optional(),
@@ -160,7 +164,9 @@ export const AssetBulkCreateOutputValidator = z.array(AssetCreateOutputValidator
 
 export const AssetListOutputValidator = paginatedDataSchema(IAssetItemValidator);
 
-export const AssetUpdateOutputValidator = IAssetItemValidator;
+export const AssetPutInputBodyValidator = UpdateAssetRepoInputValidator;
+
+// export const AssetPutOutputValidator = IAssetItemValidator;
 
 // Info: (20241204 - Luphia) define the schema for frontend (with api response)
 export const assetPostSchema = {
@@ -205,5 +211,14 @@ export const assetListSchema = {
     bodySchema: nullSchema,
   },
   outputSchema: AssetListOutputValidator,
+  frontend: nullSchema,
+};
+
+export const assetPutSchema = {
+  input: {
+    querySchema: AssetPutQueryValidator,
+    bodySchema: AssetPutInputBodyValidator,
+  },
+  outputSchema: IAssetDetailsValidator,
   frontend: nullSchema,
 };

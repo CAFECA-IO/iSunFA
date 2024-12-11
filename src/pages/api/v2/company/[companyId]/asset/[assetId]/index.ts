@@ -2,10 +2,15 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IAssetDetails, mockAssetDetails } from '@/interfaces/asset';
+import { IAssetDetails, IAssetPutBodyInput } from '@/interfaces/asset';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
-import { deleteAsset, getLegitAssetById, getVouchersByAssetId } from '@/lib/utils/repo/asset.repo';
+import {
+  deleteAsset,
+  getLegitAssetById,
+  getVouchersByAssetId,
+  updateAsset,
+} from '@/lib/utils/repo/asset.repo';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { AssetDepreciationMethod } from '@/constants/asset';
@@ -22,7 +27,15 @@ interface IDeleteResult extends IHandlerResult {
   payload: IAssetDetails;
 }
 
-type IHandlerResultPayload = IGetResult['payload'] | IDeleteResult['payload'] | null;
+interface IPutResult extends IHandlerResult {
+  payload: IAssetDetails;
+}
+
+type IHandlerResultPayload =
+  | IGetResult['payload']
+  | IDeleteResult['payload']
+  | IPutResult['payload']
+  | null;
 
 interface IHandlerResponse extends IHandlerResult {
   payload: IHandlerResultPayload;
@@ -80,24 +93,80 @@ export const handleGetRequest: IHandleRequest<
   return { statusMessage, payload };
 };
 
-export async function handlePutRequest(req: NextApiRequest) {
+export const handlePutRequest: IHandleRequest<
+  APIName.UPDATE_ASSET_V2,
+  IPutResult['payload']
+> = async ({ query, body }) => {
+  const { assetId, companyId } = query;
+  const {
+    assetName,
+    acquisitionDate,
+    purchasePrice,
+    depreciationStart,
+    depreciationMethod,
+    usefulLife,
+    residualValue,
+    note,
+  } = body as IAssetPutBodyInput;
+
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
 
-  // ToDo: (20240927 - Shirley) 從請求中獲取assetId和更新的資產數據
-  // const { assetId } = req.query;
-  const updatedAssetData = req.body;
+  const asset = await getLegitAssetById(assetId, companyId);
+  if (!asset) {
+    payload = null;
+  } else {
+    const vouchers = await getVouchersByAssetId(assetId);
+    const accountingSetting = await getAccountingSettingByCompanyId(companyId);
 
-  // ToDo: (20240927 - Shirley) 驗證更新的資產數據
-  // ToDo: (20240927 - Shirley) 在資料庫中更新資產數據
-  // ToDo: (20240927 - Shirley) 獲取並格式化更新後的資產數據
+    const updatedAsset = await updateAsset(companyId, assetId, {
+      assetName,
+      acquisitionDate,
+      purchasePrice,
+      depreciationStart,
+      depreciationMethod,
+      usefulLife,
+      residualValue,
+      note,
+    });
+    // Info: (20241211 - Shirley) 計算更新後的資產的剩餘年限
+    const now = getTimestampNow();
+    const { usefulLife: newUsefulLife, depreciationMethod: newDepreciationMethod } = updatedAsset;
+    // Info: (20241209 - Shirley) 計算剩餘年限
+    const calRemainingLife =
+      newDepreciationMethod === AssetDepreciationMethod.NONE
+        ? newUsefulLife
+        : newUsefulLife - (now - asset.acquisitionDate);
+    const remainingLife = calRemainingLife < 0 ? 0 : calRemainingLife;
 
-  // 暫時返回模擬數據
-  payload = { ...mockAssetDetails, ...updatedAssetData, updatedAt: getTimestampNow() };
-  statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    const sortedAsset: IAssetDetails = {
+      id: updatedAsset.id,
+      currencyAlias: accountingSetting?.currency || 'TWD',
+      acquisitionDate: updatedAsset.acquisitionDate,
+      assetType: updatedAsset.type,
+      assetNumber: updatedAsset.number,
+      assetName: updatedAsset.name,
+      purchasePrice: updatedAsset.purchasePrice,
+      accumulatedDepreciation: updatedAsset.accumulatedDepreciation, // TODO: (20241209 - Shirley) 計算累計折舊
+      residualValue: updatedAsset.residualValue, // TODO: (20241209 - Shirley) 計算 purchasePrice-accumulatedDepreciation
+      remainingLife, // Info: (20241209 - Shirley) 即時計算剩餘年限
+      assetStatus: updatedAsset.status,
+      createdAt: updatedAsset.createdAt,
+      updatedAt: updatedAsset.updatedAt,
+      deletedAt: updatedAsset.deletedAt,
+      depreciationStart: updatedAsset.depreciationStart,
+      depreciationMethod: updatedAsset.depreciationMethod,
+      usefulLife: updatedAsset.usefulLife,
+      relatedVouchers: vouchers,
+      note: updatedAsset.note,
+    };
+
+    payload = sortedAsset;
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+  }
 
   return { statusMessage, payload };
-}
+};
 
 export const handleDeleteRequest: IHandleRequest<
   APIName.DELETE_ASSET_V2,
@@ -154,7 +223,7 @@ const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
 } = {
   GET: (req, res) => withRequestValidation(APIName.ASSET_GET_BY_ID_V2, req, res, handleGetRequest),
-  PUT: handlePutRequest,
+  PUT: (req, res) => withRequestValidation(APIName.UPDATE_ASSET_V2, req, res, handlePutRequest),
   DELETE: (req, res) =>
     withRequestValidation(APIName.DELETE_ASSET_V2, req, res, handleDeleteRequest),
 };
