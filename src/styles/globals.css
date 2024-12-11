@@ -1295,12 +1295,12 @@ input[type='checkbox']:checked::before {
 
 /* Info: (20241210 - tzuhan) 隱藏所有瀏覽器的默認滾動條樣式 */
 .hide-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Info: (20241210 - tzuhan) Firefox */
+  -ms-overflow-style: none; /* Info: (20241210 - tzuhan) IE and Edge */
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, and Opera */
+  display: none; /* Info: (20241210 - tzuhan) Chrome, Safari, and Opera */
 }
 
 @media (max-width: 769px) {
