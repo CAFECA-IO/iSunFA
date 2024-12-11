@@ -181,5 +181,5 @@ export const todoDeleteSchema = {
     bodySchema: todoNullSchema,
   },
   outputSchema: todoOutputSchema,
-  frontend: todoNullSchema,
+  frontend: ITodoCompanyValidator,
 };
