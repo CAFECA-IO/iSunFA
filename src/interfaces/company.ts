@@ -28,6 +28,11 @@ export interface ICompanyAndRole {
   role: IRole;
 }
 
+export interface ICompanyTaxIdAndName {
+  taxId: string;
+  name: string;
+}
+
 /**
  * Info: (20241023 - Murky)
  * @description Company entity interface specific for backend

@@ -142,6 +142,28 @@ export const companySelectSchema = {
   frontend: nullSchema,
 };
 
+const companySearchQuerySchema = z.object({
+  taxId: z.string().optional(),
+  name: z.string().optional(),
+});
+
+export const companySearchSchema = {
+  input: {
+    querySchema: companySearchQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: z
+    .object({
+      taxId: z.string(),
+      name: z.string(),
+    })
+    .strip(),
+  frontend: z.object({
+    taxId: z.string(),
+    name: z.string(),
+  }),
+};
+
 /**
  * Info: (20241025 - Murky)
  * @description schema for init company entity or parsed prisma company
