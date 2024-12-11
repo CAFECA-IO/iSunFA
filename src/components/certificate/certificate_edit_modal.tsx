@@ -410,7 +410,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 id="invoicenname"
                 type="text"
                 onChange={(e) => setCertificateFilename(e.target.value)}
-                className="w-auto text-right outline-none placeholder:text-card-text-primary"
+                className="w-auto text-right caret-transparent outline-none placeholder:text-card-text-primary"
                 placeholder="|"
                 style={{ width: `${certificateFilename.length || 1}ch` }}
               />

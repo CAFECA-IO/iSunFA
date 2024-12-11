@@ -111,7 +111,7 @@ const FilterSection = <T,>({
           tab, // Info: (20241022 - tzuhan) @Murky, 這個不夠泛用，需要修改成 tab（for voucherList or certificateList)
           type: selectedType,
           status: selectedStatus, // Info: (20241022 - tzuhan) 這個如果是用在<CertificateListBody> 或是 <CertificateSelectorModal>, 會是 undefined，所以不會被加入 query 參數
-          // Info: (20241105 - Murky) @tzuhan, @Julian @Jacky, @Shirley, 這邊改用 `sortOption=by:order-by:order` 的方式來傳遞排序條件
+          // Info: (20241105 - Murky) @tzuhan, @Julian, @Shirley, 這邊改用 `sortOption=by:order-by:order` 的方式來傳遞排序條件
           // sortOption: JSON.stringify(selectedSortOptions),
           sortOption: Object.values(selectedSortOptions)
             .map((option) => `${option.by}:${option.order}`)
