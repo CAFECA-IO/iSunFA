@@ -727,6 +727,7 @@ module.exports = {
         // Info: (20241205 - Julian) Landing Page
         'landing-btn':
           'linear-gradient(to bottom, transparent 60%, #FFFFFF80 100%), linear-gradient(to bottom, #FFA502 0%, #FFA502 100%)',
+        cta: 'url("/elements/planet_edge.png")',
       },
       zIndex: {
         '-10': '-10',
@@ -1048,6 +1049,7 @@ module.exports = {
         '520px': '520px',
         '530px': '530px',
         '540px': '540px',
+        '546px': '546px',
         '549px': '549px',
         '550px': '550px',
         '555px': '555px',
@@ -1062,6 +1064,7 @@ module.exports = {
         '640px': '640px',
         '650px': '650px',
         '660px': '660px',
+        '670px': '670px',
         '675px': '675px',
         '678px': '678px',
         '700px': '700px',
@@ -1076,6 +1079,7 @@ module.exports = {
         '950px': '950px',
         '960px': '960px',
         '1000px': '1000px',
+        '1024px': '1024px',
         '1100px': '1100px',
         '1200px': '1200px',
         '1280px': '1280px',
