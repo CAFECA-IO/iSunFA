@@ -186,28 +186,29 @@ export const handleDeleteRequest: IHandleRequest<
     // TODO: (20241209 - Shirley) 確認 delete asset API 回傳資料是否需要 vouchers 跟 currencyAlias，若不需要就改 API 文件然後刪除getAccountingSettingByCompanyId, getVouchersByAssetId
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
     const vouchers = await getVouchersByAssetId(assetId);
+    const deletedAsset = await deleteAsset(assetId);
+
     const sortedAsset = {
-      id: asset.id,
+      id: deletedAsset.id,
       currencyAlias: accountingSetting?.currency || 'TWD',
-      acquisitionDate: asset.acquisitionDate,
-      assetType: asset.type,
-      assetNumber: asset.number,
-      assetName: asset.name,
-      purchasePrice: asset.purchasePrice,
+      acquisitionDate: deletedAsset.acquisitionDate,
+      assetType: deletedAsset.type,
+      assetNumber: deletedAsset.number,
+      assetName: deletedAsset.name,
+      purchasePrice: deletedAsset.purchasePrice,
       accumulatedDepreciation: 0, // Info: (20241209 - Shirley) 此為即時計算的欄位
       residualValue: 0, // Info: (20241209 - Shirley) 此為即時計算的欄位
       remainingLife: 0, // Info: (20241209 - Shirley) 此為即時計算的欄位
-      assetStatus: asset.status,
-      createdAt: asset.createdAt,
-      updatedAt: asset.updatedAt,
-      depreciationStart: asset.depreciationStart,
-      depreciationMethod: asset.depreciationMethod,
-      usefulLife: asset.usefulLife,
+      assetStatus: deletedAsset.status,
+      createdAt: deletedAsset.createdAt,
+      updatedAt: deletedAsset.updatedAt,
+      depreciationStart: deletedAsset.depreciationStart,
+      depreciationMethod: deletedAsset.depreciationMethod,
+      usefulLife: deletedAsset.usefulLife,
       relatedVouchers: vouchers,
-      note: asset.note,
-      deletedAt: asset.deletedAt,
+      note: deletedAsset.note,
+      deletedAt: deletedAsset.deletedAt,
     };
-    const deletedAsset = await deleteAsset(assetId);
 
     if (!deletedAsset) {
       payload = null;
