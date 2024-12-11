@@ -30,13 +30,13 @@ const SelectLanguageDropdown: React.FC<SelectLanguageDropdownProps> = ({ languag
   };
 
   const renderLanguageOption = (id: string, name: string, icon: string) => (
-    <li key={id}>
+    <li key={id} className="w-full">
       <Link
         id={`${id.toUpperCase()}ButtonDesktop`}
         scroll={false}
         locale={id}
         href={asPath}
-        className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
+        className="mt-1 flex cursor-pointer items-center space-x-5 px-3 py-2.5 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
         onClick={() => handleLanguageChange(id as LocaleKey)}
       >
         <Image src={icon} alt={name} width={20} height={20} />
