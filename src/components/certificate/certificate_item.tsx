@@ -87,11 +87,8 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
           </div>
         </div>
       </BorderCell>
-      <BorderCell
-        isSelected={certificate.isSelected}
-        className="col-span-full max-h-72px min-w-100px overflow-hidden"
-      >
-        <div className="text-center text-text-neutral-primary">
+      <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
+        <div className="hide-scrollbar max-h-72px overflow-y-auto text-center text-text-neutral-primary">
           {certificate.invoice?.type
             ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.invoice?.type}`)
             : ''}

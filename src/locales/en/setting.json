@@ -58,7 +58,7 @@
     "LOGIN_DEVICE_N_IP": "Login Device & IP",
     "SUBSCRIPTION_MANAGEMENT": "Subscription Management",
     "FIRST_NAME": "First Name",
-    "EX_JANE": "Ex. Jane",
+    "EX_JOHN": "Ex. John",
     "LAST_NAME": "Last Name",
     "EX_DOE": "Ex. Doe",
     "SELECT_COUNTRY": "Select Country",
@@ -172,5 +172,8 @@
     "REMOVE": "Remove this account",
     "CONFIRM_REMOVE": "Are you sure you want to delete this account?",
     "REMOVE_BTN": "Yes, Delete Account"
+  },
+  "ERROR": {
+    "FETCH_DATA": "There was an error fetching the data, please try again later."
   }
 }
