@@ -101,7 +101,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   // Info: (20241015 - Julian) Account state
   const [accountTitle, setAccountTitle] = useState<string>(
-    assetData?.assetType ?? t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
+    t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
   );
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(assetAccountList);
@@ -163,21 +163,8 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   // Info: (20241028 - Julian) 編輯資產時，填入原本資料
   useEffect(() => {
     if (assetData) {
-      setAccountTitle(assetData.assetType);
-      setInputNo(assetData.assetNumber);
-      setInputName(assetData.assetName);
-      setInputResidualValue(assetData.residualValue);
-      setInputTotal(assetData.purchasePrice);
-      setAcquisitionDate({
-        startTimeStamp: assetData.acquisitionDate,
-        endTimeStamp: assetData.acquisitionDate,
-      });
-      setDepreciationStartDate({
-        startTimeStamp: assetData.depreciationStart,
-        endTimeStamp: assetData.depreciationStart,
-      });
-      setInputUsefulLife(assetData.usefulLife);
-      setSelectedDepreciationMethod(assetData.depreciationMethod as AssetDepreciationMethod);
+      setInputNo(assetData.number);
+      setInputName(assetData.name);
       setInputNote(assetData.note ?? '');
     }
   }, [defaultData]);
@@ -548,27 +535,29 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
           {/* Info: (20241015 - Julian) input fields */}
           <div className="grid max-h-500px flex-1 grid-cols-1 items-center gap-16px overflow-y-auto overflow-x-hidden px-10px text-center md:grid-cols-2">
             {/* Info: (20241015 - Julian) Asset Type */}
-            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">
-                {t('asset:ADD_ASSET_MODAL.ASSET_TYPE')}{' '}
-                <span className="text-text-state-error">*</span>
-              </p>
-              <div className="relative w-full">
-                <button
-                  ref={accountRef}
-                  type="button"
-                  onClick={accountEditingHandler}
-                  disabled={modalType === AssetModalType.EDIT} // Info: (20241209 - Julian) 編輯時不能修改
-                  className={`flex w-full items-center justify-between gap-8px rounded-sm border ${
-                    isShowTypeHint ? inputStyle.ERROR : inputStyle.NORMAL
-                  } bg-input-surface-input-background px-12px py-10px text-input-text-input-filled hover:cursor-pointer disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
-                >
-                  {isEditAccounting}
-                  <FaChevronDown />
-                </button>
-                {displayedAccountingMenu}
+            {modalType === AssetModalType.EDIT ? (
+              <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
+                <p className="font-semibold">
+                  {t('asset:ADD_ASSET_MODAL.ASSET_TYPE')}{' '}
+                  <span className="text-text-state-error">*</span>
+                </p>
+                <div className="relative w-full">
+                  <button
+                    ref={accountRef}
+                    type="button"
+                    onClick={accountEditingHandler}
+                    disabled={modalType === AssetModalType.EDIT} // Info: (20241209 - Julian) 編輯時不能修改
+                    className={`flex w-full items-center justify-between gap-8px rounded-sm border ${
+                      isShowTypeHint ? inputStyle.ERROR : inputStyle.NORMAL
+                    } bg-input-surface-input-background px-12px py-10px text-input-text-input-filled hover:cursor-pointer disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
+                  >
+                    {isEditAccounting}
+                    <FaChevronDown />
+                  </button>
+                  {displayedAccountingMenu}
+                </div>
               </div>
-            </div>
+            ) : null}
             {/* Info: (20241015 - Julian) Asset no */}
             <div className="flex w-full flex-col items-start gap-y-8px">
               <p className="font-semibold">
@@ -771,7 +760,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 placeholder={t('asset:ADD_ASSET_MODAL.NOTE_PLACEHOLDER')}
                 value={inputNote}
                 onChange={noteChangeHandler}
-                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
+                className={`${inputStyle.NORMAL} h-46px w-full rounded-sm border px-12px outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable`}
               />
             </div>
           </div>

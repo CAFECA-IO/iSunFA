@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FiEdit, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
-import { IAssetDetails } from '@/interfaces/asset';
+import { IAssetDetails, ICreateAssetWithVouchersRepoResponse } from '@/interfaces/asset';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -39,10 +39,20 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
   );
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
-  const temporaryAssetListByCompany = temporaryAssetList[companyId] ?? [];
 
-  const [assetList, setAssetList] = useState<IAssetDetails[]>([
-    ...defaultAssetList,
+  const defaultList: ICreateAssetWithVouchersRepoResponse[] = defaultAssetList.map((asset) => ({
+    ...asset,
+    name: asset.assetName,
+    number: asset.assetNumber,
+    note: asset.note ?? '',
+    status: 'normal',
+    companyId: companyId ?? '',
+  }));
+  const temporaryAssetListByCompany: ICreateAssetWithVouchersRepoResponse[] =
+    temporaryAssetList[companyId] ?? [];
+
+  const [assetList, setAssetList] = useState<ICreateAssetWithVouchersRepoResponse[]>([
+    ...defaultList,
     ...temporaryAssetListByCompany,
   ]);
 
@@ -71,7 +81,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     if (!isLoading) {
       if (success && data) {
         // Info: (20241025 - Julian) 確定 API 刪除成功後，更新畫面
-        deleteTemporaryAssetHandler(companyId, data.assetNumber);
+        deleteTemporaryAssetHandler(companyId, data.id);
       } else if (error) {
         // Info: (20241025 - Julian) 刪除失敗後，提示使用者
         toastHandler({
@@ -86,8 +96,9 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
 
   useEffect(() => {
     // Info: (20241119 - Julian) 更新 assetList
-    const newTemporaryAssetList = temporaryAssetList[companyId] ?? [];
-    setAssetList([...defaultAssetList, ...newTemporaryAssetList]);
+    const newTemporaryAssetList: ICreateAssetWithVouchersRepoResponse[] =
+      temporaryAssetList[companyId] ?? [];
+    setAssetList([...defaultList, ...newTemporaryAssetList]);
   }, [temporaryAssetList]);
 
   const displayedAssetList =
@@ -104,22 +115,19 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
 
         const deleteHandler = () => {
           // Info: (20241025 - Julian) trigger API to delete asset
-          trigger({
-            params: { companyId, assetId: asset.id },
-          });
+          trigger({ params: { companyId, assetId: asset.id } });
         };
 
         return (
           <div
-            key={`${asset.id} - ${asset.assetName}`}
+            id={`asset-${asset.id}`}
+            key={`${asset.id} - ${asset.name}`}
             className="flex gap-16px rounded-sm border border-file-uploading-stroke-outline bg-file-uploading-surface-primary p-20px"
           >
             <Image src="/icons/number_sign.svg" alt="number_sign" width={24} height={24} />
             <div className="flex flex-1 flex-col">
-              <p className="font-semibold text-file-uploading-text-primary">
-                {asset.assetName ?? '-'}
-              </p>
-              <p className="text-xs text-file-uploading-text-disable">{asset.assetNumber ?? '-'}</p>
+              <p className="font-semibold text-file-uploading-text-primary">{asset.name ?? '-'}</p>
+              <p className="text-xs text-file-uploading-text-disable">{asset.number ?? '-'}</p>
             </div>
             <div className="flex items-center gap-16px">
               <Button
@@ -127,6 +135,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
                 variant="secondaryBorderless"
                 size={'defaultSquare'}
                 onClick={editClickHandler}
+                disabled={asset.name === ''}
               >
                 <FiEdit size={20} />
               </Button>
