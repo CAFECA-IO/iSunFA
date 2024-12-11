@@ -24,6 +24,11 @@ const SelectLanguageDropdown: React.FC<SelectLanguageDropdownProps> = ({ languag
 
   const toggleLanguageMenu = () => setIsLanguageMenuOpen(!isLanguageMenuOpen);
 
+  const handleLanguageChange = (id: LocaleKey) => {
+    onSelect(id);
+    setIsLanguageMenuOpen(false);
+  };
+
   const renderLanguageOption = (id: string, name: string, icon: string) => (
     <li key={id}>
       <Link
@@ -32,7 +37,7 @@ const SelectLanguageDropdown: React.FC<SelectLanguageDropdownProps> = ({ languag
         locale={id}
         href={asPath}
         className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
-        onClick={() => onSelect(id as LocaleKey)}
+        onClick={() => handleLanguageChange(id as LocaleKey)}
       >
         <Image src={icon} alt={name} width={20} height={20} />
         <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
@@ -65,7 +70,13 @@ const SelectLanguageDropdown: React.FC<SelectLanguageDropdownProps> = ({ languag
             {selectedLanguage?.name}
           </div>
           <div className="my-auto flex items-center justify-center">
-            <Image src="/elements/arrow_down.svg" alt="arrow down" width={20} height={20} />
+            <Image
+              src="/elements/arrow_down.svg"
+              alt="arrow down"
+              width={20}
+              height={20}
+              className={`${isLanguageMenuOpen ? 'rotate-180' : 'rotate-0'}`}
+            />
           </div>
         </button>
 
