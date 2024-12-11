@@ -1,7 +1,6 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
 import { ICompanyAndRole } from '@/interfaces/company';
-import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoArrowForward, IoClose } from 'react-icons/io5';
 import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
@@ -97,9 +96,13 @@ const CompanyItem = ({
   return (
     <div
       key={myCompany.company.id}
-      className="flex items-center justify-between gap-60px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
+      className="flex items-center gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
     >
-      <button type="button" onClick={openUploadCompanyAvatarModal} className="group relative">
+      <button
+        type="button"
+        onClick={openUploadCompanyAvatarModal}
+        className="group relative shrink-0"
+      >
         <Image
           src={myCompany.company.imageId}
           alt={myCompany.company.name}
@@ -114,13 +117,18 @@ const CompanyItem = ({
       </button>
 
       <div className="flex flex-auto items-center gap-8px">
-        <p className="text-base font-medium text-text-neutral-solid-dark">
+        <p className="max-w-170px truncate text-base font-medium text-text-neutral-solid-dark">
           {myCompany.company.name}
         </p>
 
-        <div className="relative flex items-center">
+        <div className="relative flex flex-none items-center">
           <button type="button" onClick={toggleOptionsDropdown}>
-            <BsThreeDotsVertical size={16} className="text-icon-surface-single-color-primary" />
+            <Image
+              src="/icons/square_mouse_pointer.svg"
+              width={16}
+              height={16}
+              alt="square_mouse_pointer"
+            />
           </button>
 
           {isOptionsDropdownOpen && (
@@ -162,12 +170,12 @@ const CompanyItem = ({
           disabled={isLoading}
         >
           {isCompanySelected ? (
-            <div className="flex items-center gap-4px rounded-xs border border-button-stroke-secondary bg-surface-state-success px-16px py-8px group-hover:opacity-0">
+            <div className="flex items-center gap-4px rounded-xs border border-surface-state-success bg-surface-state-success px-16px py-8px group-hover:opacity-0">
               <p className="text-sm font-medium">{t('company:PAGE_BODY.LINKED')}</p>
               <FaRegCircleCheck size={16} />
             </div>
           ) : (
-            <div className="flex items-center gap-4px rounded-xs border border-button-stroke-secondary px-16px py-8px">
+            <div className="flex items-center gap-4px rounded-xs border border-button-stroke-secondary px-16px py-8px hover:bg-button-surface-soft-secondary-hover">
               <p className="text-sm font-medium">{t('company:PAGE_BODY.CONNECT')}</p>
               <IoArrowForward size={16} />
             </div>

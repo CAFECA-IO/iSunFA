@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useState } from 'react';
-import { TbSquarePlus2, TbCodeCircle } from 'react-icons/tb';
+import { BsEnvelope, BsPlusLg } from 'react-icons/bs';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { ICompanyAndRole } from '@/interfaces/company';
 import { useTranslation } from 'react-i18next';
@@ -128,7 +128,7 @@ const MyCompanyListPageBody = () => {
             onClick={toggleCreateCompanyModal}
             className="flex items-center gap-8px rounded-xs bg-button-surface-strong-secondary px-24px py-10px text-base font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
-            <TbSquarePlus2 size={20} />
+            <BsPlusLg size={20} />
             <p>{t('company:PAGE_BODY.ADD_NEW')}</p>
           </button>
 
@@ -136,8 +136,8 @@ const MyCompanyListPageBody = () => {
             type="button"
             className="flex items-center gap-8px rounded-xs border border-button-stroke-secondary bg-button-surface-soft-secondary px-24px py-10px text-base font-medium text-button-text-secondary-solid hover:border-button-stroke-secondary-hover hover:bg-button-surface-soft-secondary-hover disabled:border-button-stroke-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
-            <TbCodeCircle size={20} />
-            <p>{t('company:PAGE_BODY.CODE')}</p>
+            <BsEnvelope size={20} />
+            <p>{t('company:PAGE_BODY.INVITE_CODE')}</p>
           </button>
         </div>
       </section>
