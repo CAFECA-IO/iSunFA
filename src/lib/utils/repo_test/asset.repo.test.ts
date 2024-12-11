@@ -487,12 +487,12 @@ describe('Soft Delete functionality tests', () => {
     expect(deletedAssets.count).toBe(assetData.amount);
 
     // Info: (20241211 - Shirley) 確認每個資產已被軟刪除
-    // eslint-disable-next-line no-restricted-syntax
-    for (const id of assetIds) {
-      // eslint-disable-next-line no-await-in-loop
-      const fetchedAsset = await getLegitAssetById(id, testCompanyId);
+    const fetchPromises = assetIds.map((id) => getLegitAssetById(id, testCompanyId));
+    const fetchedAssets = await Promise.all(fetchPromises);
+
+    fetchedAssets.forEach((fetchedAsset) => {
       expect(fetchedAsset).toBeNull();
-    }
+    });
   });
 
   it('soft deleted assets should not appear in the asset list', async () => {
