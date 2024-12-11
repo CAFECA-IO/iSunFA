@@ -3,13 +3,13 @@ import type { ICompanyEntity } from '@/interfaces/company';
 import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import { z } from 'zod';
 import {
-  AssetCreateInputBodyValidator,
-  AssetCreateOutputValidator,
-  AssetPutInputBodyValidator,
+  IAssetPostInputBodyValidator,
+  IAssetPostOutputValidator,
+  IAssetPutInputBodyValidator,
   IAssetDetailsValidator,
   IAssetItemValidator,
   IRelatedVoucherValidator,
-  UpdateAssetRepoInputValidator,
+  IAssetPutRepoInputValidator,
 } from '@/lib/utils/zod_schema/asset';
 import { IPaginatedData } from '@/interfaces/pagination';
 /* Info: (20240927 - Shirley) asset v1 介面 */
@@ -80,7 +80,7 @@ export type IAssetDetails = z.infer<typeof IAssetDetailsValidator>;
 
 export type IRelatedVoucher = z.infer<typeof IRelatedVoucherValidator>;
 
-export type ICreateAssetInput = z.infer<typeof AssetCreateInputBodyValidator>;
+export type ICreateAssetInput = z.infer<typeof IAssetPostInputBodyValidator>;
 
 export interface IUpdateAssetInput {
   updatedAt: number;
@@ -358,13 +358,13 @@ export interface ICreateAssetWithVouchersRepoInput {
   note?: string;
 }
 
-export type ICreateAssetWithVouchersRepoResponse = z.infer<typeof AssetCreateOutputValidator>;
+export type IAssetPostOutput = z.infer<typeof IAssetPostOutputValidator>;
 
-export interface ICreateAssetBulkRepoInput extends ICreateAssetWithVouchersRepoInput {}
-export interface ICreateAssetBulkRepoResponse extends Array<ICreateAssetWithVouchersRepoResponse> {}
+export interface IAssetBulkPostRepoInput extends ICreateAssetWithVouchersRepoInput {}
+export interface IAssetBulkPostRepoOutput extends Array<IAssetPostOutput> {}
 
 export interface IPaginatedAsset extends IPaginatedData<IAssetItem[]> {}
 
-export type IUpdateAssetRepoInput = z.infer<typeof UpdateAssetRepoInputValidator>;
+export type IAssetPutRepoInput = z.infer<typeof IAssetPutRepoInputValidator>;
 
-export type IAssetPutBodyInput = z.infer<typeof AssetPutInputBodyValidator>;
+export type IAssetPutInputBody = z.infer<typeof IAssetPutInputBodyValidator>;

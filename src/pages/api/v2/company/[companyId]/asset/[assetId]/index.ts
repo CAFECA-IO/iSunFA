@@ -2,7 +2,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IAssetDetails, IAssetPutBodyInput } from '@/interfaces/asset';
+import { IAssetDetails, IAssetPutInputBody } from '@/interfaces/asset';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import {
@@ -108,7 +108,7 @@ export const handlePutRequest: IHandleRequest<
     usefulLife,
     residualValue,
     note,
-  } = body as IAssetPutBodyInput;
+  } = body as IAssetPutInputBody;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
