@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { DefaultValue } from '@/constants/default_value';
 import {
   filterLedgerByAccountNo,
-  filterLedgerByLabelType,
+  filterLedgerItemsByLabelType,
   getLedgerFromAccountBook,
 } from '@/lib/utils/ledger';
 import { formatPaginatedLedger } from '@/lib/utils/formatter/ledger.formatter';
@@ -85,7 +85,10 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
         voucherNumber,
       };
     });
-    const filteredLedgerByLabelType = await filterLedgerByLabelType(combineAndTrimData, labelType);
+    const filteredLedgerByLabelType = await filterLedgerItemsByLabelType(
+      combineAndTrimData,
+      labelType
+    );
 
     const sumUpData = filteredLedgerByLabelType.reduce(
       (acc: ILedgerTotal, item: ILedgerItem) => {
@@ -118,3 +121,20 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
 
   return ledgerPayload;
 }
+
+export const findVouchersByVoucherIds = async (
+  voucherIds: number[]
+): Promise<{ id: number; date: number; no: string; type: string }[]> => {
+  const vouchers = await prisma.voucher.findMany({
+    where: {
+      id: { in: voucherIds },
+    },
+    select: {
+      id: true,
+      date: true,
+      no: true,
+      type: true,
+    },
+  });
+  return vouchers;
+};

@@ -9,8 +9,8 @@ const IExportLedgerPostQueryValidator = z.object({
 
 // Info: (20241212 - Shirley) 過濾條件驗證器
 const exportLedgerFiltersSchema = z.object({
-  startDate: z.number().optional(),
-  endDate: z.number().optional(),
+  startDate: z.number(),
+  endDate: z.number(),
   startAccountNo: z.string().optional(),
   endAccountNo: z.string().optional(),
   labelType: z
@@ -19,28 +19,29 @@ const exportLedgerFiltersSchema = z.object({
     .default(LabelType.GENERAL),
 });
 
+export const exportLedgerFieldsSchema = z.enum([
+  'accountId',
+  'no',
+  'accountingTitle',
+  'voucherNumber',
+  'voucherDate',
+  'particulars',
+  'debitAmount',
+  'creditAmount',
+  'balance',
+]);
+
 // Info: (20241212 - Shirley) 匯出選項驗證器
 const exportLedgerOptionsSchema = z.object({
   language: z.enum(['zh-TW', 'en-US']).optional().default('zh-TW'),
   timezone: z.string().optional().default('+0800'),
-  fields: z
-    .array(
-      z.enum([
-        'voucherDate',
-        'accountTitle',
-        'debitAmount',
-        'creditAmount',
-        'balance',
-        'particulars',
-      ])
-    )
-    .optional(),
+  fields: z.array(exportLedgerFieldsSchema).optional().default([]),
 });
 
 // Info: (20241212 - Shirley) Post body schema
 const IExportLedgerPostBodySchema = z.object({
   fileType: z.literal('csv'),
-  filters: exportLedgerFiltersSchema.optional(),
+  filters: exportLedgerFiltersSchema,
   options: exportLedgerOptionsSchema.optional(),
 });
 
