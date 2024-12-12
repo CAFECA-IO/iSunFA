@@ -42,7 +42,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
     <div className="relative mx-auto hidden max-w-1920px lg:flex">
       <div
         id="I18nMenuDesktop"
-        className={`absolute -left-16 top-30px z-20 w-150px rounded-sm ${
+        className={`absolute -left-16 top-30px z-100 w-150px rounded-sm ${
           globalVisible ? 'visible opacity-100' : 'invisible opacity-0'
         } rounded-none bg-white shadow-dropmenu transition-all duration-300`}
       >

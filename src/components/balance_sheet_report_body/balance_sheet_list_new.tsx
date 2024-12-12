@@ -415,36 +415,28 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
               {item.code}
             </td>
-            {/* <td
-              className={`flex items-center justify-between ${
-                item.children && item.children.length > 0 && !isSubAccountsCollapsed[item.code]
-                  ? 'border-b'
-                  : 'border-b'
-              } border-stroke-brand-secondary-soft p-10px text-sm`}
-            > */}
-            <td
-              // Info: (20241203 - Anna) 移除條件判斷，始終保留 border-b
-              className="flex items-center justify-between border-b border-stroke-brand-secondary-soft p-10px text-sm"
-            >
-              {t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}
-              {/* Info: (20241021 - Anna) 如果有 children 才顯示 CollapseButton */}
-              {item.children &&
-                item.children.filter(
-                  (child) =>
-                    child.curPeriodAmountString !== '-' ||
-                    child.curPeriodPercentageString !== '-' ||
-                    child.prePeriodAmountString !== '-' ||
-                    child.prePeriodPercentageString !== '-'
-                ).length > 0 && (
-                  <CollapseButton
-                    className="print:hidden"
-                    // Info: (20241017 - Anna) 指定 item 的 code 作為參數
-                    onClick={() => toggleSubAccounts(item.code)}
-                    // Info: (20241017 - Anna) 依據每個 item 的狀態決定是否展開
-                    isCollapsed={isSubAccountsCollapsed[item.code] ?? true}
-                    buttonType="orange"
-                  />
-                )}
+            <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+              <div className="flex items-center justify-between">
+                {t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}
+                {/* Info: (20241021 - Anna) 如果有 children 才顯示 CollapseButton */}
+                {item.children &&
+                  item.children.filter(
+                    (child) =>
+                      child.curPeriodAmountString !== '-' ||
+                      child.curPeriodPercentageString !== '-' ||
+                      child.prePeriodAmountString !== '-' ||
+                      child.prePeriodPercentageString !== '-'
+                  ).length > 0 && (
+                    <CollapseButton
+                      className="print:hidden"
+                      // Info: (20241017 - Anna) 指定 item 的 code 作為參數
+                      onClick={() => toggleSubAccounts(item.code)}
+                      // Info: (20241017 - Anna) 依據每個 item 的狀態決定是否展開
+                      isCollapsed={isSubAccountsCollapsed[item.code] ?? true}
+                      buttonType="orange"
+                    />
+                  )}
+              </div>
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
               {item.curPeriodAmountString}

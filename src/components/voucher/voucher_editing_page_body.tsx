@@ -35,296 +35,13 @@ import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { VoucherV2Action } from '@/constants/voucher';
-import { IVoucherDetailForFrontend /* , defaultVoucherDetail  */ } from '@/interfaces/voucher';
-import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
-import { CurrencyType } from '@/constants/currency';
+import { IVoucherDetailForFrontend } from '@/interfaces/voucher';
 import { IAssetPostOutput } from '@/interfaces/asset';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
-import { CounterpartyType } from '@/constants/counterparty';
-
-// ToDo: (20241118 - Julian) For debug, remove later
-const defaultVoucherDetail: IVoucherDetailForFrontend = {
-  id: 1000,
-  voucherDate: 1704134230,
-  type: 'payment',
-  note: 'I am a test voucher',
-  counterParty: {
-    id: 1000,
-    companyId: 1000,
-    name: 'ABC Corp',
-    taxId: '123456789',
-    type: CounterpartyType.SUPPLIER,
-    note: 'Preferred supplier',
-    createdAt: 1622548800,
-    updatedAt: 1625130800,
-  },
-  payableInfo: {
-    total: 1000,
-    alreadyHappened: 100,
-    remain: 900,
-  },
-  receivingInfo: undefined,
-  reverseVoucherIds: [
-    {
-      id: 1002,
-      voucherNo: '20240101003',
-    },
-  ],
-  assets: [
-    {
-      id: 1000,
-      assetName: 'Bank',
-      assetNumber: 'A-000010',
-      assetType: 'asset',
-      depreciationStart: 1672531200,
-      depreciationMethod: 'straight-line',
-      usefulLife: 5,
-      relatedVouchers: [],
-      currencyAlias: CurrencyType.TWD,
-      acquisitionDate: 1672531200,
-      purchasePrice: 1000,
-      accumulatedDepreciation: 0,
-      residualValue: 0,
-      remainingLife: 5,
-      assetStatus: 'active',
-      createdAt: 1672531200,
-      updatedAt: 1672531200,
-      deletedAt: null,
-    },
-  ],
-  certificates: [
-    {
-      id: 1000,
-      name: 'Invoice-00000001',
-      companyId: 1000,
-      voucherNo: '20240101001',
-      unRead: true,
-      uploader: 'Updated Test_User_1',
-      invoice: {
-        id: 1000,
-        isComplete: true,
-        inputOrOutput: InvoiceTransactionDirection.OUTPUT,
-        date: 1,
-        no: '1',
-        currencyAlias: CurrencyType.TWD,
-        priceBeforeTax: 1000,
-        taxType: InvoiceTaxType.TAXABLE,
-        taxRatio: 5,
-        taxPrice: 50,
-        totalPrice: 1050,
-        type: InvoiceType.SALES_SPECIAL_TAX_CALCULATION,
-        deductible: true,
-        createdAt: 1,
-        updatedAt: 1,
-        counterParty: {
-          id: 1000,
-          companyId: 1000,
-          name: 'ABC Corp',
-          taxId: '123456789',
-          type: CounterpartyType.SUPPLIER,
-          note: 'Preferred supplier',
-          createdAt: 1622548800,
-          updatedAt: 1625130800,
-        },
-      },
-      file: {
-        id: 1000,
-        name: '100000.jpg',
-        url: 'https://example.com/uploads/100000.jpg',
-        size: 1024.5,
-        existed: true,
-      },
-      createdAt: 1672531200,
-      updatedAt: 1672531200,
-    },
-  ],
-  lineItems: [
-    {
-      id: 10000280,
-      description: '償還應付帳款-銀行現金',
-      debit: false,
-      amount: 100,
-      account: {
-        id: 10000603,
-        companyId: 1002,
-        system: 'IFRS',
-        debit: true,
-        liquidity: true,
-        name: '銀行存款',
-        code: '1103',
-        type: 'asset',
-        createdAt: 0,
-        updatedAt: 0,
-        deletedAt: null,
-      },
-      reverseList: [],
-    },
-    {
-      id: 10000281,
-      description: '購買存貨-機具設備成本',
-      debit: false,
-      amount: 500,
-      account: {
-        id: 10000981,
-        companyId: 1002,
-        system: 'IFRS',
-        debit: false,
-        liquidity: true,
-        name: '機具設備成本',
-        code: '1701',
-        type: 'liability',
-        createdAt: 0,
-        updatedAt: 0,
-        deletedAt: null,
-      },
-      reverseList: [],
-    },
-    {
-      id: 10000285,
-      description: '購買存貨-銀行現金',
-      debit: false,
-      amount: 1000,
-      account: {
-        id: 10000603,
-        companyId: 1002,
-        system: 'IFRS',
-        debit: true,
-        liquidity: true,
-        name: '銀行存款',
-        code: '1103',
-        type: 'asset',
-        createdAt: 0,
-        updatedAt: 0,
-        deletedAt: null,
-      },
-      reverseList: [],
-    },
-    {
-      id: 10000286,
-      description: '償還應付帳款-應付帳款',
-      debit: true,
-      amount: 100,
-      account: {
-        id: 10000981,
-        companyId: 1002,
-        system: 'IFRS',
-        debit: false,
-        liquidity: true,
-        name: '應付帳款',
-        code: '2171',
-        type: 'liability',
-        createdAt: 0,
-        updatedAt: 0,
-        deletedAt: null,
-      },
-      reverseList: [
-        {
-          voucherId: 1000,
-          amount: 100,
-          description: '購買存貨-應付帳款hehe',
-          debit: true,
-          account: {
-            id: 10000981,
-            companyId: 1002,
-            system: 'IFRS',
-            type: 'liability',
-            debit: false,
-            liquidity: true,
-            code: '2171',
-            name: '應付帳款',
-            createdAt: 0,
-            updatedAt: 0,
-            deletedAt: null,
-          },
-          voucherNo: 'VCH001',
-          lineItemBeReversedId: 1001,
-        },
-      ],
-    },
-    {
-      id: 10000287,
-      description: '購買存貨-商品存貨',
-      debit: true,
-      amount: 1500,
-      account: {
-        id: 10001099,
-        companyId: 1002,
-        system: 'IFRS',
-        debit: true,
-        liquidity: true,
-        name: '商品存貨',
-        code: '1301',
-        type: 'asset',
-        createdAt: 0,
-        updatedAt: 0,
-        deletedAt: null,
-      },
-      reverseList: [],
-    },
-    {
-      id: 1000,
-      description: '購買存貨-銀行現金',
-      debit: false,
-      amount: 1000,
-      account: {
-        id: 10000603,
-        companyId: 1002,
-        system: 'IFRS',
-        debit: true,
-        liquidity: true,
-        name: '銀行存款',
-        code: '1103',
-        type: 'asset',
-        createdAt: 0,
-        updatedAt: 0,
-        deletedAt: null,
-      },
-      reverseList: [],
-    },
-    {
-      id: 1001,
-      description: '購買存貨-應付帳款',
-      debit: false,
-      amount: 500,
-      account: {
-        id: 10000981,
-        companyId: 1002,
-        system: 'IFRS',
-        debit: false,
-        liquidity: true,
-        name: '應付帳款',
-        code: '2171',
-        type: 'liability',
-        createdAt: 0,
-        updatedAt: 0,
-        deletedAt: null,
-      },
-      reverseList: [],
-    },
-    {
-      id: 1002,
-      description: '購買存貨-商品存貨',
-      debit: true,
-      amount: 1500,
-      account: {
-        id: 10001099,
-        companyId: 1002,
-        system: 'IFRS',
-        debit: true,
-        liquidity: true,
-        name: '商品存貨',
-        code: '1301',
-        type: 'asset',
-        createdAt: 0,
-        updatedAt: 0,
-        deletedAt: null,
-      },
-      reverseList: [],
-    },
-  ],
-};
+import { ToastId } from '@/constants/toast_id';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
 
@@ -344,11 +61,13 @@ const dummyAIResult: IAIResultVoucher = {
   lineItems: [],
 };
 
-const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) => {
+const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend }> = ({
+  voucherData,
+}) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { selectedCompany, userAuth } = useUserCtx();
+  const { selectedCompany } = useUserCtx();
   const {
     getAccountListHandler,
     temporaryAssetList,
@@ -358,9 +77,8 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedCompany?.id;
-  const userId = userAuth?.id ?? -1;
-  const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
+  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const temporaryAssetListByCompany = temporaryAssetList[companyId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
   const {
@@ -380,14 +98,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     isLoading: isAIWorking,
     success: analyzeSuccess,
   } = APIHandler<IAIResultVoucher>(APIName.ASK_AI_RESULT_V2);
-
-  // Info: (20241118 - Julian) 取得 Voucher 資料
-  const { trigger: getVoucherData, data: voucherData } = APIHandler<IVoucherDetailForFrontend>(
-    APIName.VOUCHER_GET_BY_ID_V2,
-    {
-      params: { companyId, voucherId },
-    }
-  );
 
   // Info: (20241118 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
   const {
@@ -430,6 +140,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
 
   // Info: (20241118 - Julian) 將 API 回傳的資料轉換成 UI 顯示用的格式
   const {
+    id: voucherId,
     voucherDate,
     type: voucherType,
     note: voucherNote,
@@ -437,7 +148,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     certificates: voucherCertificates,
     counterParty: voucherCounterParty,
     assets: voucherAssets,
-  } = voucherData ?? defaultVoucherDetail;
+  } = voucherData;
 
   const defaultDate: IDatePeriod = { startTimeStamp: voucherDate, endTimeStamp: voucherDate };
   const defaultType = EVENT_TYPE_TO_VOUCHER_TYPE_MAP[voucherType as EventType] || voucherType;
@@ -511,12 +222,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const [selectedCertificatesUI, setSelectedCertificatesUI] =
     useState<ICertificateUI[]>(defaultCertificateUI);
 
-  useEffect(() => {
-    // Info: (20241121 - Julian) Get voucher data when companyId is ready
-    if (companyId) {
-      getVoucherData();
-    }
-  }, [companyId]);
+  // useEffect(() => {
+  //   // Info: (20241121 - Julian) Get voucher data when companyId is ready
+  //   if (companyId) {
+  //     getVoucherData();
+  //   }
+  // }, [companyId]);
 
   useEffect(() => {
     const storedCertificates = localStorage.getItem('selectedCertificates');
@@ -528,8 +239,11 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
 
   // Info: (20241119 - Julian) 更新 asset 列表
   useEffect(() => {
-    if (temporaryAssetListByUser && temporaryAssetListByUser.length > 0) {
-      const newAssetList: IAssetPostOutput[] = [...defaultAssetList, ...temporaryAssetListByUser];
+    if (temporaryAssetListByCompany && temporaryAssetListByCompany.length > 0) {
+      const newAssetList: IAssetPostOutput[] = [
+        ...defaultAssetList,
+        ...temporaryAssetListByCompany,
+      ];
       setAssetList(newAssetList);
     }
   }, [temporaryAssetList]);
@@ -767,7 +481,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     setType(VoucherType.EXPENSE);
     setNote('');
     setCounterparty(undefined);
-    clearTemporaryAssetHandler(userId);
+    clearTemporaryAssetHandler(companyId);
     clearReverseListHandler();
     setLineItems([initialVoucherLine]);
     setFlagOfClear(!flagOfClear);
@@ -878,8 +592,14 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
 
     // Info: (20241007 - Julian) 若任一條件不符，則中斷 function
     if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
-      // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位
+      // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位、吐司通知
       setIsShowDateHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
       if (dateRef.current) dateRef.current.scrollIntoView();
     } else if (
       isTotalZero || // Info: (20241004 - Julian) 借貸總金額不可為 0
@@ -890,13 +610,31 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     ) {
       setFlagOfSubmit(!flagOfSubmit);
       if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
     } else if (isAssetRequired && assetList.length === 0) {
-      // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位
+      // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位、吐司通知
       setIsShowAssetHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
       if (assetRef.current) assetRef.current.scrollIntoView();
     } else if (isReverseRequired /* && reverses.length === 0 */) {
-      // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位
+      // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位、吐司通知
       setIsShowReverseHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
     } else {
       // Info: (20241007 - Julian) 儲存傳票
       saveVoucher();
@@ -913,12 +651,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   useEffect(() => {
     if (isUpdating === false) {
       if (updateSuccess) {
-        router.push(ISUNFA_ROUTE.VOUCHER_LIST); // ToDo: (20241119 - Julian) Should be replaced by voucher detail page
+        router.push(`/user/accounting/${voucherId}`);
       } else {
         toastHandler({
-          id: 'update-voucher-fail',
+          id: ToastId.UPDATE_VOUCHER_ERROR,
           type: ToastType.ERROR,
-          content: 'Failed to update voucher, please try again later.',
+          content: t('journal:ADD_NEW_VOUCHER.TOAST_FAILED_TO_UPDATE'),
           closeable: true,
         });
       }
@@ -929,12 +667,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   useEffect(() => {
     if (isDeleting === false && isCreating === false) {
       if (deleteSuccess && createNewSuccess) {
-        router.push(ISUNFA_ROUTE.VOUCHER_LIST); // ToDo: (20241119 - Julian) Should be replaced by voucher detail page
+        router.push(ISUNFA_ROUTE.VOUCHER_LIST);
       } else {
         toastHandler({
-          id: 'delete-voucher-fail',
+          id: ToastId.DELETE_VOUCHER_ERROR,
           type: ToastType.ERROR,
-          content: 'Failed to update voucher, please try again later.',
+          content: t('journal:ADD_NEW_VOUCHER.TOAST_FAILED_TO_UPDATE'),
           closeable: true,
         });
       }

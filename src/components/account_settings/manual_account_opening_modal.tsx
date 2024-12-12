@@ -213,7 +213,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
 
   const queryCondition = {
-    limit: 1000, // Info: (20241108 - Julian) 一次取得 1000 筆
+    limit: 9999, // Info: (20241212 - Julian) 全部取出
     forUser: true,
     sortBy: 'code', // Info: (20241108 - Julian) 依 code 排序
     sortOrder: 'asc',

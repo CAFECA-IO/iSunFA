@@ -210,7 +210,9 @@
     "UPLOADED_TAB": "已過帳傳票",
     "UPCOMING_TAB": "未過帳傳票",
     "RECEIVING_TAB": "應收傳票",
-    "PAYMENT_TAB": "應付傳票"
+    "PAYMENT_TAB": "應付傳票",
+    "SELECT": "選擇",
+    "SELECT_ALL": "全選"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增傳票",
@@ -226,7 +228,9 @@
     "NO_ACCOUNTING_FOUND": "查無會計科目",
     "NO_COUNTERPARTY_FOUND": "查無交易對象",
     "EVERY": "每",
-    "TOAST_FAILED_TO_CREATE": "建立傳票失敗，請稍後再試。"
+    "TOAST_FAILED_TO_CREATE": "建立傳票失敗，請稍後再試。",
+    "TOAST_FILL_UP_FORM": "請完整填寫表格",
+    "TOAST_FAILED_TO_UPDATE": "更新傳票失敗，請稍後再試"
   },
   "ACCOUNT_TYPE": {
     "ASSET": "資產",
