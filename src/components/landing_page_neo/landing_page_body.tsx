@@ -11,11 +11,14 @@ import CTA from '@/components/landing_page_neo/cta';
 const LandingPageBody: React.FC = () => {
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black px-36px py-32px font-dm-sans text-landing-page-white">
+      {/* Info: (20241204 - Julian) Background */}
+      <div className="absolute inset-x-0 top-0 h-546px w-full bg-cta bg-cover bg-top bg-no-repeat md:h-670px lg:h-1024px"></div>
+
       {/* Info: (20241204 - Julian) Header */}
       <LandingNavbar />
 
       {/* Info: (20241204 - Julian) Navbar */}
-      <main className="overflow-y-auto overflow-x-hidden pt-100px">
+      <main className="z-10 overflow-y-auto overflow-x-hidden pt-70px lg:pt-100px">
         {/* Info: (20241205 - Julian) CTA */}
         <CTA />
 
