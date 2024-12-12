@@ -210,7 +210,9 @@
     "UPLOADED_TAB": "Uploaded Voucher",
     "UPCOMING_TAB": "Upcoming Events",
     "RECEIVING_TAB": "Receiving",
-    "PAYMENT_TAB": "Payment"
+    "PAYMENT_TAB": "Payment",
+    "SELECT": "Select",
+    "SELECT_ALL": "Select All"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "Add New Voucher",

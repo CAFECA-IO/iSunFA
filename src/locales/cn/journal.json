@@ -210,7 +210,9 @@
     "UPLOADED_TAB": "已过账传票",
     "UPCOMING_TAB": "未过账传票",
     "RECEIVING_TAB": "应收传票",
-    "PAYMENT_TAB": "应付传票"
+    "PAYMENT_TAB": "应付传票",
+    "SELECT": "选择",
+    "SELECT_ALL": "全选"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增传票",
