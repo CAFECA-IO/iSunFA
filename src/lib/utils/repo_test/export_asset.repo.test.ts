@@ -1,13 +1,13 @@
 import { exportAssets } from '@/lib/utils/repo/export_asset.repo';
 import { IAssetExportRequestBody } from '@/interfaces/export_asset';
-import { AssetSortBy, ExportFileType } from '@/constants/export_asset';
+import { AssetSortBy, ExportAssetFileType } from '@/constants/export_asset';
 import { SortOrder } from '@/constants/sort';
 
 describe('Export File Repository', () => {
   describe('exportAssets', () => {
     it('should return a complete list of assets', async () => {
       const params: IAssetExportRequestBody = {
-        fileType: ExportFileType.CSV,
+        fileType: ExportAssetFileType.CSV,
         filters: {
           type: 'Equipment',
           startDate: 1609459200,
@@ -49,7 +49,7 @@ describe('Export File Repository', () => {
 
     it('should handle cases with no filters', async () => {
       const params: IAssetExportRequestBody = {
-        fileType: ExportFileType.CSV,
+        fileType: ExportAssetFileType.CSV,
         filters: {},
         sort: [],
         options: {},
@@ -77,7 +77,7 @@ describe('Export File Repository', () => {
 
     it('should correctly sort assets based on sorting criteria', async () => {
       const params: IAssetExportRequestBody = {
-        fileType: ExportFileType.CSV,
+        fileType: ExportAssetFileType.CSV,
         filters: {},
         sort: [
           {

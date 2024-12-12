@@ -7,16 +7,16 @@ export const getLedgerFromAccountBook = async (
   companyId: number,
   startDate: number,
   endDate: number
-) => {
+): Promise<IAccountBookLedgerJSON[]> => {
   const ledger = await getLedgerJSON(companyId, startDate, endDate);
   return ledger;
 };
 
-export const filterLedgerByAccountNo = async (
+export const filterLedgerByAccountNo = (
   ledgers: IAccountBookLedgerJSON[],
   startAccountNo?: string,
   endAccountNo?: string
-) => {
+): IAccountBookLedgerJSON[] => {
   if (!startAccountNo || !endAccountNo) {
     return ledgers;
   }
@@ -28,7 +28,22 @@ export const filterLedgerByAccountNo = async (
   return filteredLedgers;
 };
 
-export const filterLedgerByLabelType = async (ledgers: ILedgerItem[], labelType: LabelType) => {
+export const filterLedgerJSONByLabelType = (
+  ledgerJSON: IAccountBookLedgerJSON[],
+  labelType: LabelType
+) => {
+  const filteredLedgers = ledgerJSON.filter((ledger) => {
+    if (labelType === LabelType.GENERAL) {
+      return !ledger.no.toString().includes('-');
+    } else if (labelType === LabelType.DETAILED) {
+      return ledger.no.toString().includes('-');
+    }
+    return true;
+  });
+  return filteredLedgers;
+};
+
+export const filterLedgerItemsByLabelType = (ledgers: ILedgerItem[], labelType: LabelType) => {
   const filteredLedgers = ledgers.filter((ledger) => {
     if (labelType === LabelType.GENERAL) {
       return !ledger.no.toString().includes('-');
@@ -38,4 +53,33 @@ export const filterLedgerByLabelType = async (ledgers: ILedgerItem[], labelType:
     return true;
   });
   return filteredLedgers;
+};
+
+export const convertLedgerJsonToCsvData = (
+  ledgerJSON: IAccountBookLedgerJSON[],
+  voucherMap: Map<
+    number,
+    {
+      id: number;
+      date: string;
+      no: string;
+      type: string;
+    }
+  >
+) => {
+  const csvData = ledgerJSON.map((ledger) => {
+    const newLedger = {
+      accountId: ledger.accountId,
+      no: ledger.no,
+      accountingTitle: ledger.accountingTitle,
+      voucherNumber: voucherMap.get(ledger.voucherId)?.no,
+      voucherDate: voucherMap.get(ledger.voucherId)?.date,
+      particulars: ledger.description,
+      debitAmount: ledger.debitAmount,
+      creditAmount: ledger.creditAmount,
+      balance: ledger.balance,
+    };
+    return newLedger;
+  });
+  return csvData;
 };
