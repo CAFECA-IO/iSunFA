@@ -409,7 +409,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Deprecated: (20241008 - Liz)
     // eslint-disable-next-line no-console
-    console.log('儲存現在路由 currentPath:', currentPath);
+    console.log('執行 getStatusInfo() 並且儲存現在路由 currentPath:', currentPath);
 
     const {
       data: statusInfo,

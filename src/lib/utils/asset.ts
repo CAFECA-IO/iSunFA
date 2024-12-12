@@ -2,13 +2,15 @@ import { v4 as uuidv4 } from 'uuid';
 import type { calculateAssetEntityDepreciation, IAssetEntity } from '@/interfaces/asset';
 import type { IVoucherEntity } from '@/interfaces/voucher';
 import type { ICompanyEntity } from '@/interfaces/company';
-import { Asset as PrismaAsset } from '@prisma/client';
+import { Prisma, Asset as PrismaAsset } from '@prisma/client';
 import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import {
   getLastSecondsOfEachMonth,
   getTimestampNow,
   timestampInMilliSeconds,
 } from '@/lib/utils/common';
+import { assetListSortOptions, IAssetListSortOptions } from '@/lib/utils/zod_schema/asset';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 /**
  * Info: (20241024 - Murky)
@@ -188,4 +190,43 @@ export function generateAssetNumbers(prefix: string, amount: number): string[] {
   }
 
   return assetNumbers;
+}
+
+/**
+ * Info: (20241211 - Shirley) 根據 sortOption 公版的格式，整理出 prisma 的 orderBy 條件
+ * @param sortOptions - 排序選項
+ * @returns 排序條件
+ */
+export function createAssetOrderBy(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
+  const orderBy: Prisma.AssetOrderByWithRelationInput[] = [];
+  sortOptions.forEach((sort) => {
+    const { sortBy, sortOrder } = sort;
+    const isValidSortOption = assetListSortOptions.safeParse(sortBy);
+
+    if (!isValidSortOption.success) {
+      return;
+    }
+
+    switch (sortBy as IAssetListSortOptions) {
+      case SortBy.ACQUISITION_DATE:
+        orderBy.push({ acquisitionDate: sortOrder });
+        break;
+      case SortBy.PURCHASE_PRICE:
+        orderBy.push({ purchasePrice: sortOrder });
+        break;
+      case SortBy.ACCUMULATED_DEPRECIATION:
+        orderBy.push({ accumulatedDepreciation: sortOrder });
+        break;
+      case SortBy.RESIDUAL_VALUE:
+        orderBy.push({ residualValue: sortOrder });
+        break;
+      case SortBy.REMAINING_LIFE:
+        orderBy.push({ remainingLife: sortOrder });
+        break;
+      default:
+        orderBy.push({ acquisitionDate: SortOrder.DESC });
+        break;
+    }
+  });
+  return orderBy;
 }

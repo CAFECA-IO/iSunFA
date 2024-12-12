@@ -3,7 +3,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import {
   ICreateAssetWithVouchersRepoInput,
   ICreateAssetInput,
-  ICreateAssetBulkRepoResponse,
+  IAssetBulkPostRepoOutput,
 } from '@/interfaces/asset';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -12,14 +12,14 @@ import { APIName } from '@/constants/api_connection';
 import { createManyAssets } from '@/lib/utils/repo/asset.repo';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { z } from 'zod';
-import { AssetBulkCreateOutputValidator } from '@/lib/utils/zod_schema/asset';
+import { IAssetBulkPostOutputValidator } from '@/lib/utils/zod_schema/asset';
 
 interface IHandlerResult {
   statusMessage: string;
 }
 
 interface IHandlePostRequestResult extends IHandlerResult {
-  payload: z.infer<typeof AssetBulkCreateOutputValidator>;
+  payload: z.infer<typeof IAssetBulkPostOutputValidator>;
 }
 
 type IHandlerResultPayload = IHandlePostRequestResult['payload'] | null;
@@ -30,7 +30,7 @@ interface IHandlerResponse extends IHandlerResult {
 
 export const handlePostRequest: IHandleRequest<
   APIName.CREATE_ASSET_BULK,
-  ICreateAssetBulkRepoResponse
+  IAssetBulkPostRepoOutput
 > = async ({ query, body }) => {
   const { companyId } = query;
   const {

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -12,7 +11,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
-import { ICompanyTaxIdAndName } from '@/interfaces/company';
+import { ICounterparty } from '@/interfaces/counterparty';
 
 interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
   isModalVisible: boolean;
@@ -34,10 +33,12 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   const [inputNote, setInputNote] = useState<string>('');
   const [showHint, setShowHint] = useState(false);
 
-  const { trigger: addCounterpartyTrigger, success, error } = APIHandler(APIName.COUNTERPARTY_ADD);
-  const { trigger: fetchCompanyDataAPI } = APIHandler<ICompanyTaxIdAndName>(
-    APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID
-  );
+  const {
+    trigger: addCounterpartyTrigger,
+    success,
+    error,
+    data,
+  } = APIHandler<ICounterparty>(APIName.COUNTERPARTY_ADD);
 
   const { targetRef: typeRef, setComponentVisible: setIsTypeSelecting } =
     useOuterClick<HTMLDivElement>(false);
@@ -51,27 +52,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   const selectTypeHandler = () => {
     setIsTypeSelecting(true);
     setTypeMenuOpen(true);
-  };
-
-  // Info:(20241211 - Anna) 透過公司名稱查詢統編
-  const fetchTaxIdByCompanyName = async (
-    companyName: string,
-    taxIdNumber?: string
-  ): Promise<void> => {
-    try {
-      const { data } = await fetchCompanyDataAPI({
-        query: {
-          name: companyName || undefined,
-          taxId: taxIdNumber || undefined,
-        },
-      });
-      if (data) {
-        setInputName(data.name || '');
-        setInputTaxId(data.taxId || '');
-      }
-    } catch (fetchError) {
-      console.error('Error fetching company data:', fetchError);
-    }
   };
 
   const typeItems = [CounterpartyType.BOTH, CounterpartyType.CLIENT, CounterpartyType.SUPPLIER].map(
@@ -114,9 +94,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   );
 
   const nameChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = event.target.value;
-    setInputName(newName);
-    fetchTaxIdByCompanyName(newName).catch(console.error); // Info:(20241211 - Anna) 自動帶出統一編號
+    setInputName(event.target.value);
   };
 
   const taxIdChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,18 +131,18 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   };
 
   useEffect(() => {
-    if (success) {
+    if (success && data) {
       // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.log('Counterparty created successfully.');
-      onSave({ name: inputName, taxId: inputTaxId, type: inputType!, note: inputNote });
+      onSave(data);
       modalVisibilityHandler();
     } else if (error) {
       // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.error('Failed to create counterparty:', error);
     }
-  }, [success, error]);
+  }, [success, error, data]);
 
   useEffect(() => {
     // Info: (20241206 - Julian) 若有預設值，則填入輸入欄位

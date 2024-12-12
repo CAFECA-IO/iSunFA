@@ -41,6 +41,7 @@ export enum APIName {
   COMPANY_SETTING_GET = 'COMPANY_SETTING_GET',
   COMPANY_SETTING_UPDATE = 'COMPANY_SETTING_UPDATE',
   COMPANY_SEARCH_BY_NAME_OR_TAX_ID = 'COMPANY_SEARCH_BY_NAME_OR_TAX_ID',
+  COMPANY_PUT_ICON = 'COMPANY_PUT_ICON',
   CERTIFICATE_LIST_V2 = 'CERTIFICATE_LIST_V2',
   CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
@@ -174,6 +175,7 @@ export enum APIPath {
   COMPANY_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/company/search`,
   COMPANY_SETTING_GET = `${apiPrefixV2}/company/:companyId/setting`,
   COMPANY_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/setting`,
+  COMPANY_PUT_ICON = `${apiPrefixV2}/company/:companyId/icon`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
@@ -455,6 +457,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID,
     method: HttpMethod.GET,
     path: APIPath.COMPANY_SEARCH_BY_NAME_OR_TAX_ID,
+  }),
+  COMPANY_PUT_ICON: createConfig({
+    name: APIName.COMPANY_PUT_ICON,
+    method: HttpMethod.PUT,
+    path: APIPath.COMPANY_PUT_ICON,
   }),
   PROFIT_GET_INSIGHT: createConfig({
     name: APIName.PROFIT_GET_INSIGHT,

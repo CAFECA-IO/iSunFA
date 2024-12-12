@@ -26,6 +26,8 @@ const basicAccountEntityValidator = z.object({
   level: z.number(),
   parentCode: z.string(),
   rootCode: z.string(),
+  parentId: z.number(),
+  rootId: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),

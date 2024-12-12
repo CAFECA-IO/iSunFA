@@ -30,9 +30,9 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
   const [taxSerialNumber, setTaxSerialNumber] = React.useState('');
   const [representativeName, setRepresentativeName] = React.useState('');
   const [companyAddress, setCompanyAddress] = React.useState('');
-  const [country, setCountry] = React.useState<LocaleKey | null>(null);
+  const [country, setCountry] = React.useState<LocaleKey>(LocaleKey.en);
   const [countryCode, setCountryCode] = React.useState<LocaleKey>(LocaleKey.en);
-  const [phoneNumber, setPhoneNumber] = React.useState('');
+  const [phoneNumber, setPhoneNumber] = React.useState<string | undefined>('');
   const { toastHandler, messageModalVisibilityHandler, messageModalDataHandler } =
     useModalContext();
   const { trigger: getCompanySettingAPI } = APIHandler<ICompanySetting>(
@@ -225,12 +225,12 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
-            <SelectCountryDropdown country={country} setCountry={setCountry} />
+            <SelectCountryDropdown country={country} onSelect={setCountry} />
             <PhoneNumberInput
               countryCode={countryCode}
-              setCountryCode={setCountryCode}
+              onSelect={setCountryCode}
               phoneNumber={phoneNumber}
-              setPhoneNumber={setPhoneNumber}
+              onUpdate={(e) => setPhoneNumber(e.target.value)}
             />
           </div>
           <div className="grid grid-cols-1 gap-lv-7">
