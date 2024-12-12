@@ -1,11 +1,11 @@
-import { LedgerHeader } from '@/interfaces/export_ledger';
+import { ILedgerHeader } from '@/interfaces/export_ledger';
 import { exportLedgerFieldsSchema } from '@/lib/utils/zod_schema/export_ledger';
 
 export enum ExportLedgerFileType {
   CSV = 'csv',
 }
 
-export const LedgerFieldsMap: Record<LedgerHeader, string> = {
+export const LedgerFieldsMap: Record<ILedgerHeader, string> = {
   accountId: '會計科目編號',
   no: '會計科目代號',
   accountingTitle: '會計科目',
