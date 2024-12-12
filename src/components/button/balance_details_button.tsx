@@ -170,7 +170,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                     apiName={APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2}
                     onApiResponse={handleApiResponse}
                     page={1}
-                    pageSize={10}
+                    pageSize={99999}
                     dateSort={dateSort}
                     otherSorts={[]}
                   />

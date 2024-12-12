@@ -8,7 +8,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { MessageType } from '@/interfaces/message_modal';
-import { IAssetDetails, mockAssetDetails } from '@/interfaces/asset';
+import { IAssetDetails, IAssetPostOutput, mockAssetDetails } from '@/interfaces/asset';
 import { numberWithCommas, timestampToString, timestampToYMD } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -26,8 +26,8 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
   const {
-    assetStatusSettingModalDataHandler,
-    assetStatusSettingModalVisibilityHandler,
+    // assetStatusSettingModalDataHandler,
+    // assetStatusSettingModalVisibilityHandler,
     addAssetModalDataHandler,
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
@@ -53,7 +53,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   } = APIHandler<IAssetDetails>(APIName.DELETE_ASSET_V2, { params });
 
   // Info: (20241028 - Julian) Update asset API
-  const { trigger: updateAsset, data: defaultAssetData } = APIHandler<IAssetDetails>(
+  const { trigger: updateAsset, data: defaultAssetData } = APIHandler<IAssetPostOutput>(
     APIName.UPDATE_ASSET_V2,
     { params }
   );
@@ -125,10 +125,10 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     addAssetModalVisibilityHandler();
   };
 
-  const statusSettingClickHandler = () => {
-    assetStatusSettingModalDataHandler(assetId, assetStatus as AssetStatus);
-    assetStatusSettingModalVisibilityHandler();
-  };
+  // const statusSettingClickHandler = () => {
+  //   assetStatusSettingModalDataHandler(assetId, assetStatus as AssetStatus);
+  //   assetStatusSettingModalVisibilityHandler();
+  // };
 
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail when companyId is ready
@@ -333,14 +333,15 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
           >
             <FiEdit size={20} />
           </Button>
-          <Button
+          {/* Info: (20241212 - Julian) 目前先隱藏功能 */}
+          {/* <Button
             id="asset-status-setting-btn"
             type="button"
             variant="tertiary"
             onClick={statusSettingClickHandler}
           >
             {t('asset:ASSET_DETAIL_PAGE.STATUS_SETTING')}
-          </Button>
+          </Button> */}
         </div>
       </div>
       {/* Info: (20241016 - Julian) Asset Details */}

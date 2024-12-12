@@ -410,24 +410,30 @@ const MenuOption = ({
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => onClickMenuOption(title)}
-        disabled={disabled}
-        className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
-      >
-        <div className="flex h-24px w-24px items-center justify-center">
-          <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
-        </div>
-
-        {link ? (
-          <Link href={link}>{t(`layout:SIDE_MENU.${title}`)}</Link>
-        ) : (
+      {link ? (
+        <Link
+          href={link}
+          className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
+        >
+          <div className="flex h-24px w-24px items-center justify-center">
+            <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
+          </div>
           <p className="grow text-left">{t(`layout:SIDE_MENU.${title}`)}</p>
-        )}
-
-        {subMenu && <IoIosArrowForward size={20} />}
-      </button>
+        </Link>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onClickMenuOption(title)}
+          disabled={disabled}
+          className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
+        >
+          <div className="flex h-24px w-24px items-center justify-center">
+            <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
+          </div>
+          <p className="grow text-left">{t(`layout:SIDE_MENU.${title}`)}</p>
+          {subMenu && <IoIosArrowForward size={20} />}
+        </button>
+      )}
     </div>
   );
 };
@@ -499,11 +505,15 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
           <div className="flex flex-col items-center gap-8px">
             <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta v{version}</p>
 
-            {/* // ToDo: (20241121 - Liz) Link 到隱私權政策和服務條款頁面 */}
+            {/* // Info: (20241212 - Liz) 隱私權政策和服務條款頁面 */}
             <div className="flex gap-8px text-sm font-semibold">
-              <p className="text-link-text-primary">{t('layout:SIDE_MENU.PRIVACY_POLICY')}</p>
+              <Link href={ISUNFA_ROUTE.PRIVACY_POLICY} className="text-link-text-primary">
+                {t('layout:SIDE_MENU.PRIVACY_POLICY')}
+              </Link>
               <div className="w-1px bg-stroke-neutral-quaternary"></div>
-              <p className="text-link-text-primary">{t('layout:SIDE_MENU.TERMS_OF_SERVICE')}</p>
+              <Link href={ISUNFA_ROUTE.TERMS_OF_SERVICE} className="text-link-text-primary">
+                {t('layout:SIDE_MENU.TERMS_OF_SERVICE')}
+              </Link>
             </div>
           </div>
         </section>
