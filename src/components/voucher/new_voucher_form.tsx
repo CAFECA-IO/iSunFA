@@ -49,6 +49,7 @@ import { IAIResultVoucher } from '@/interfaces/voucher';
 import { AI_TYPE } from '@/constants/aich';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
 import { ToastId } from '@/constants/toast_id';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -72,7 +73,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { selectedCompany, userAuth } = useUserCtx();
+  const { selectedCompany } = useUserCtx();
   const {
     getAccountListHandler,
     temporaryAssetList,
@@ -83,10 +84,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedCompany?.id;
-  const userId = userAuth?.id ?? -1;
+  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
 
-  const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
+  const temporaryAssetListByUser = temporaryAssetList[companyId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
   const {
@@ -557,7 +557,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     // setRecurringPeriod(default30DayPeriodInSec);
     // setRecurringUnit(RecurringUnit.MONTH);
     // setRecurringArray([]);
-    clearTemporaryAssetHandler(userId);
+    clearTemporaryAssetHandler(companyId);
     clearReverseListHandler();
     setLineItems([initialVoucherLine]);
     setFlagOfClear(!flagOfClear);
@@ -651,7 +651,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       reverseVouchers,
     };
 
-    clearTemporaryAssetHandler(userId);
+    clearTemporaryAssetHandler(companyId);
     clearReverseListHandler();
     createVoucher({ params: { companyId }, body });
   };
