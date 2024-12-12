@@ -108,7 +108,7 @@ const CompanyItem = ({
           alt={myCompany.company.name}
           width={60}
           height={60}
-          className="flex-none rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2"
+          className="h-60px w-60px flex-none rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
         ></Image>
 
         <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">

@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import { useState } from 'react';
 import { BsEnvelope, BsPlusLg } from 'react-icons/bs';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { ICompanyAndRole } from '@/interfaces/company';
@@ -11,38 +11,10 @@ import Pagination from '@/components/pagination/pagination';
 import MessageModal from '@/components/message_modal/message_modal';
 import FilterSection from '@/components/filter_section/filter_section';
 import NoData from '@/components/beta/my_company_list_page/no_data';
-import CompanyItem from '@/components/beta/my_company_list_page/company_item';
 import UploadCompanyAvatarModal from '@/components/beta/my_company_list_page/upload_company_avatar_modal';
 import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import ChangeTagModal from '@/components/beta/my_company_list_page/change_tag_modal';
-
-interface CompanyListProps {
-  companyList: ICompanyAndRole[];
-  setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setCompanyToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setCompanyToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-}
-
-const CompanyList = ({
-  companyList,
-  setCompanyToEdit,
-  setCompanyToDelete,
-  setCompanyToUploadAvatar,
-}: CompanyListProps) => {
-  return (
-    <section className="flex flex-auto flex-col gap-8px">
-      {companyList.map((myCompany) => (
-        <CompanyItem
-          key={myCompany.company.id}
-          myCompany={myCompany}
-          setCompanyToEdit={setCompanyToEdit}
-          setCompanyToDelete={setCompanyToDelete}
-          setCompanyToUploadAvatar={setCompanyToUploadAvatar}
-        />
-      ))}
-    </section>
-  );
-};
+import CompanyList from '@/components/beta/my_company_list_page/company_list';
 
 const MyCompanyListPageBody = () => {
   const { t } = useTranslation(['company']);
