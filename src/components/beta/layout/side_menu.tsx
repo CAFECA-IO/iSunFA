@@ -505,11 +505,15 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
           <div className="flex flex-col items-center gap-8px">
             <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta v{version}</p>
 
-            {/* // ToDo: (20241121 - Liz) Link 到隱私權政策和服務條款頁面 */}
+            {/* // Info: (20241212 - Liz) 隱私權政策和服務條款頁面 */}
             <div className="flex gap-8px text-sm font-semibold">
-              <p className="text-link-text-primary">{t('layout:SIDE_MENU.PRIVACY_POLICY')}</p>
+              <Link href={ISUNFA_ROUTE.PRIVACY_POLICY} className="text-link-text-primary">
+                {t('layout:SIDE_MENU.PRIVACY_POLICY')}
+              </Link>
               <div className="w-1px bg-stroke-neutral-quaternary"></div>
-              <p className="text-link-text-primary">{t('layout:SIDE_MENU.TERMS_OF_SERVICE')}</p>
+              <Link href={ISUNFA_ROUTE.TERMS_OF_SERVICE} className="text-link-text-primary">
+                {t('layout:SIDE_MENU.TERMS_OF_SERVICE')}
+              </Link>
             </div>
           </div>
         </section>
