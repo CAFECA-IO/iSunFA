@@ -12,8 +12,8 @@ import { useReactToPrint } from 'react-to-print';
 const BalanceSheetPageBody = () => {
   const { t } = useTranslation(['reports']);
 
-  // Info: (20241017 - Anna) 定義日期篩選狀態
-  const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
+  // Info: (20241212 - Anna) 將日期篩選狀態改為單日期模式
+  const [selectedDate, setSelectedDate] = useState<IDatePeriod>({
     startTimeStamp: 0,
     endTimeStamp: 0,
   });
@@ -143,19 +143,19 @@ const BalanceSheetPageBody = () => {
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20241017 - Anna) 日期篩選器和語言選擇 */}
         <div className="flex flex-col max-md:flex-col md:flex-row md:items-center md:gap-10 print:hidden">
-          {/* Info: (20241017 - Anna)日期篩選器 */}
+          {/* Info: (20241212 - Anna) 單日期選擇器 */}
           <div className="flex min-w-250px flex-1 flex-col space-y-0">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('reports:PENDING_REPORT_LIST.PERIOD')}
+              {t('reports:PENDING_REPORT_LIST.DATE')}
             </div>
             <DatePicker
-              period={selectedDateRange}
-              setFilteredPeriod={setSelectedDateRange}
-              type={DatePickerType.TEXT_PERIOD}
+              period={selectedDate} // Info: (20241212 - Anna) 使用單日期狀態
+              setFilteredPeriod={setSelectedDate}
+              type={DatePickerType.TEXT_DATE} // Info: (20241212 - Anna) 設定為單日期選擇器
               btnClassName="mt-28px"
             />
           </div>
-          {/* Info: (20241017 - Anna)語言選擇 */}
+          {/* Info: (20241017 - Anna) 語言選擇 */}
           <div className="flex flex-col space-y-6 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
               {t('layout:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
@@ -166,7 +166,7 @@ const BalanceSheetPageBody = () => {
 
         {/* Info: (20241017 - Anna) Balance Sheet List */}
         <BalanceSheetList
-          selectedDateRange={selectedDateRange}
+          selectedDateRange={selectedDate} // Info: (20241212 - Anna) 傳遞單日期選擇結果
           isPrinting={isPrinting} // Info: (20241122 - Anna) 傳遞列印狀態
           printRef={printRef} // Info: (20241122 - Anna) 傳遞列印區域 Ref
           printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數
