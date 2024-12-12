@@ -3,7 +3,7 @@ import { APIName } from '@/constants/api_connection';
 import { EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
-import { IAssetDetails, ICreateAssetWithVouchersRepoResponse } from '@/interfaces/asset';
+import { IAssetDetails, IAssetPostOutput } from '@/interfaces/asset';
 import { IJournal } from '@/interfaces/journal';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
 import { IReverseItemUI } from '@/interfaces/line_item';
@@ -135,10 +135,10 @@ interface IAccountingContext {
   excludeUploadIdentifier: (OCRs: IOCR[], pendingOCRs: IOCRItem[]) => IOCRItem[];
 
   // Info: (20241025 - Julian) 暫存的資產列表 (用於新增資產顯示)
-  temporaryAssetList: { [key: number]: ICreateAssetWithVouchersRepoResponse[] };
-  addTemporaryAssetHandler: (userId: number, asset: IAssetDetails) => void;
+  temporaryAssetList: { [key: number]: IAssetPostOutput[] };
+  addTemporaryAssetHandler: (companyId: number, asset: IAssetDetails) => void;
   deleteTemporaryAssetHandler: (companyId: number, assetId: number) => void;
-  clearTemporaryAssetHandler: (userId: number) => void;
+  clearTemporaryAssetHandler: (companyId: number) => void;
 
   // Info: (20241105 - Julian) 反轉分錄列表
   reverseList: {
@@ -260,7 +260,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [unprocessedOCRs, setUnprocessedOCRs] = useState<IOCR[]>([]);
 
   const [temporaryAssetList, setTemporaryAssetList] = useState<{
-    [key: string]: ICreateAssetWithVouchersRepoResponse[];
+    [key: string]: IAssetPostOutput[];
   }>({});
 
   const [reverseList, setReverseList] = useState<{ [key: string]: IReverseItemUI[] }>({});
@@ -747,11 +747,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   );
 
   // Info: (20241119 - Julian) 將 Asset list 與 user id 綁定，用於新增資產顯示
-  const addTemporaryAssetHandler = (userId: number, asset: IAssetDetails) => {
+  const addTemporaryAssetHandler = (companyId: number, asset: IAssetDetails) => {
     setTemporaryAssetList((prev) => {
       return {
         ...prev,
-        [userId]: [...(prev[userId] ?? []), asset],
+        [companyId]: [...(prev[companyId] ?? []), asset],
       };
     });
   };
@@ -767,11 +767,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   };
 
   // Info: (20241119 - Julian) 清空該用戶暫存在資產列表
-  const clearTemporaryAssetHandler = (userId: number) => {
+  const clearTemporaryAssetHandler = (companyId: number) => {
     setTemporaryAssetList((prev) => {
       return {
         ...prev,
-        [userId]: [],
+        [companyId]: [],
       };
     });
   };

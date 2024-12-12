@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FiEdit, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
-import { IAssetDetails, ICreateAssetWithVouchersRepoResponse } from '@/interfaces/asset';
+import { IAssetDetails, IAssetPostOutput } from '@/interfaces/asset';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -40,7 +40,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
 
-  const defaultList: ICreateAssetWithVouchersRepoResponse[] = defaultAssetList.map((asset) => ({
+  const defaultList: IAssetPostOutput[] = defaultAssetList.map((asset) => ({
     ...asset,
     name: asset.assetName,
     number: asset.assetNumber,
@@ -48,10 +48,9 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     status: 'normal',
     companyId: companyId ?? '',
   }));
-  const temporaryAssetListByCompany: ICreateAssetWithVouchersRepoResponse[] =
-    temporaryAssetList[companyId] ?? [];
+  const temporaryAssetListByCompany: IAssetPostOutput[] = temporaryAssetList[companyId] ?? [];
 
-  const [assetList, setAssetList] = useState<ICreateAssetWithVouchersRepoResponse[]>([
+  const [assetList, setAssetList] = useState<IAssetPostOutput[]>([
     ...defaultList,
     ...temporaryAssetListByCompany,
   ]);
@@ -96,8 +95,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
 
   useEffect(() => {
     // Info: (20241119 - Julian) 更新 assetList
-    const newTemporaryAssetList: ICreateAssetWithVouchersRepoResponse[] =
-      temporaryAssetList[companyId] ?? [];
+    const newTemporaryAssetList: IAssetPostOutput[] = temporaryAssetList[companyId] ?? [];
     setAssetList([...defaultList, ...newTemporaryAssetList]);
   }, [temporaryAssetList]);
 

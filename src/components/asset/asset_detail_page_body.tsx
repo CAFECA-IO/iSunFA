@@ -8,11 +8,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { MessageType } from '@/interfaces/message_modal';
-import {
-  IAssetDetails,
-  ICreateAssetWithVouchersRepoResponse,
-  mockAssetDetails,
-} from '@/interfaces/asset';
+import { IAssetDetails, IAssetPostOutput, mockAssetDetails } from '@/interfaces/asset';
 import { numberWithCommas, timestampToString, timestampToYMD } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -57,8 +53,10 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   } = APIHandler<IAssetDetails>(APIName.DELETE_ASSET_V2, { params });
 
   // Info: (20241028 - Julian) Update asset API
-  const { trigger: updateAsset, data: defaultAssetData } =
-    APIHandler<ICreateAssetWithVouchersRepoResponse>(APIName.UPDATE_ASSET_V2, { params });
+  const { trigger: updateAsset, data: defaultAssetData } = APIHandler<IAssetPostOutput>(
+    APIName.UPDATE_ASSET_V2,
+    { params }
+  );
 
   // Info: (20241016 - Julian) Get asset details from API
   const {
