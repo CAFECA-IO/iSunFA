@@ -114,6 +114,7 @@ import {
   assetListSchema,
   assetPostSchema,
 } from '@/lib/utils/zod_schema/asset';
+import { exportLedgerPostSchema } from '@/lib/utils/zod_schema/export_ledger';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -293,4 +294,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.SIGN_OUT]: nullAPISchema,
   [APIName.TRIAL_BALANCE_EXPORT]: nullAPISchema,
   [APIName.CREATE_ASSET_BULK]: assetBulkPostSchema,
+  [APIName.LEDGER_EXPORT]: exportLedgerPostSchema,
 };

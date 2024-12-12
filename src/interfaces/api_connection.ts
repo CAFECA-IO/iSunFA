@@ -130,7 +130,8 @@ export type IAPIName =
   | 'VOUCHER_POST_V2'
   | 'PUSHER_AUTH'
   | 'TRIAL_BALANCE_EXPORT'
-  | 'CREATE_ASSET_BULK';
+  | 'CREATE_ASSET_BULK'
+  | 'LEDGER_EXPORT';
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
