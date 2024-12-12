@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -11,6 +12,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
+import { ICompanyTaxIdAndName } from '@/interfaces/company';
 
 interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
   isModalVisible: boolean;
@@ -33,6 +35,9 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   const [showHint, setShowHint] = useState(false);
 
   const { trigger: addCounterpartyTrigger, success, error } = APIHandler(APIName.COUNTERPARTY_ADD);
+  const { trigger: fetchCompanyDataAPI } = APIHandler<ICompanyTaxIdAndName>(
+    APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID
+  );
 
   const { targetRef: typeRef, setComponentVisible: setIsTypeSelecting } =
     useOuterClick<HTMLDivElement>(false);
@@ -49,19 +54,23 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   };
 
   // Info:(20241211 - Anna) 透過公司名稱查詢統編
-  const fetchTaxIdByCompanyName = async (companyName: string) => {
-    const encodedName = encodeURIComponent(companyName);
-    const apiUrl = `https://data.gcis.nat.gov.tw/od/data/api/6BBA2268-1367-4B42-9CCA-BC17499EBE8C?$format=json&$filter=Company_Name%20like%20${encodedName}%20and%20Company_Status%20eq%2001&$skip=0&$top=1`;
-
+  const fetchTaxIdByCompanyName = async (
+    companyName: string,
+    taxIdNumber?: string
+  ): Promise<void> => {
     try {
-      const response = await fetch(apiUrl);
-      const taxIdData = await response.json();
-      if (taxIdData && taxIdData.length > 0) {
-        setInputTaxId(taxIdData[0].Business_Accounting_NO || '');
+      const { data } = await fetchCompanyDataAPI({
+        query: {
+          name: companyName || undefined,
+          taxId: taxIdNumber || undefined,
+        },
+      });
+      if (data) {
+        setInputName(data.name || '');
+        setInputTaxId(data.taxId || '');
       }
     } catch (fetchError) {
-      // eslint-disable-next-line no-console
-      console.error('Error fetching tax ID:', fetchError);
+      console.error('Error fetching company data:', fetchError);
     }
   };
 
@@ -107,7 +116,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   const nameChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newName = event.target.value;
     setInputName(newName);
-    fetchTaxIdByCompanyName(newName); // Info:(20241211 - Anna) 自動帶出統一編號
+    fetchTaxIdByCompanyName(newName).catch(console.error); // Info:(20241211 - Anna) 自動帶出統一編號
   };
 
   const taxIdChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
