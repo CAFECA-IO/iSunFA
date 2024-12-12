@@ -410,24 +410,30 @@ const MenuOption = ({
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => onClickMenuOption(title)}
-        disabled={disabled}
-        className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
-      >
-        <div className="flex h-24px w-24px items-center justify-center">
-          <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
-        </div>
-
-        {link ? (
-          <Link href={link}>{t(`layout:SIDE_MENU.${title}`)}</Link>
-        ) : (
+      {link ? (
+        <Link
+          href={link}
+          className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
+        >
+          <div className="flex h-24px w-24px items-center justify-center">
+            <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
+          </div>
           <p className="grow text-left">{t(`layout:SIDE_MENU.${title}`)}</p>
-        )}
-
-        {subMenu && <IoIosArrowForward size={20} />}
-      </button>
+        </Link>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onClickMenuOption(title)}
+          disabled={disabled}
+          className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
+        >
+          <div className="flex h-24px w-24px items-center justify-center">
+            <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
+          </div>
+          <p className="grow text-left">{t(`layout:SIDE_MENU.${title}`)}</p>
+          {subMenu && <IoIosArrowForward size={20} />}
+        </button>
+      )}
     </div>
   );
 };
