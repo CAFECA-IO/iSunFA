@@ -666,7 +666,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
         closeable: true,
       });
       if (dateRef.current) dateRef.current.scrollIntoView();
@@ -694,7 +694,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
         closeable: true,
       });
     } else if (isAssetRequired && temporaryAssetListByUser.length === 0) {
@@ -703,7 +703,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
         closeable: true,
       });
       if (assetRef.current) assetRef.current.scrollIntoView();
@@ -713,7 +713,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
         closeable: true,
       });
     } else {

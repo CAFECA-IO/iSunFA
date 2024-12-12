@@ -41,4 +41,6 @@ export enum ToastId {
   UPDATE_FILENAME_ERROR = 'toast-update-filename-error',
   FILL_UP_VOUCHER_FORM = 'toast-fill-up-voucher-form',
   CREATE_VOUCHER_ERROR = 'toast-create-voucher-error',
+  UPDATE_VOUCHER_ERROR = 'toast-update-voucher-error',
+  DELETE_VOUCHER_ERROR = 'toast-delete-voucher-error',
 }

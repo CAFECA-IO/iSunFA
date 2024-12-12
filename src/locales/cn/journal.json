@@ -134,8 +134,7 @@
     "DOWNLOAD_SELECTED_VOUCHER": "下载传票",
     "DOWNLOAD_SELECTED_ITEMS": "您确定要下载所选项目吗？",
     "GET_OCR_RESULT_FAILED": "获取 OCR 结果失败",
-    "GET_OCR_RESULT_FAILED_CODE": "获取 OCR 结果失败: {{getCode}}",
-    "TOAST_FILL_UP_FORM": "请完整填写表格"
+    "GET_OCR_RESULT_FAILED_CODE": "获取 OCR 结果失败: {{getCode}}"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -227,7 +226,9 @@
     "NO_ACCOUNTING_FOUND": "查无会计科目",
     "NO_COUNTERPARTY_FOUND": "查无交易对象",
     "EVERY": "每",
-    "TOAST_FAILED_TO_CREATE": "建立传票失败，请稍后再试。"
+    "TOAST_FAILED_TO_CREATE": "建立传票失败，请稍后再试。",
+    "TOAST_FILL_UP_FORM": "请完整填写表格",
+    "TOAST_FAILED_TO_UPDATE": "更新传票失败，请稍后再试"
   },
   "ACCOUNT_TYPE": {
     "ASSET": "资产",

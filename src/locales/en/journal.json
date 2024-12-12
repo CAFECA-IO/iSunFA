@@ -134,8 +134,7 @@
     "DOWNLOAD_SELECTED_VOUCHER": "Download Selected Voucher",
     "DOWNLOAD_SELECTED_ITEMS": "Are you sure you want to download the selected items?",
     "GET_OCR_RESULT_FAILED": "Get OCR result Failed",
-    "GET_OCR_RESULT_FAILED_CODE": "Get OCR result failed: {{getCode}}",
-    "TOAST_FILL_UP_FORM": "Please fill up the form."
+    "GET_OCR_RESULT_FAILED_CODE": "Get OCR result failed: {{getCode}}"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",
@@ -227,7 +226,9 @@
     "NO_ACCOUNTING_FOUND": "No accounting found",
     "NO_COUNTERPARTY_FOUND": "No counterparty found",
     "EVERY": "Every",
-    "TOAST_FAILED_TO_CREATE": "Failed to create voucher, please try again later."
+    "TOAST_FAILED_TO_CREATE": "Failed to create voucher, please try again later.",
+    "TOAST_FILL_UP_FORM": "Please fill up the form.",
+    "TOAST_FAILED_TO_UPDATE": "Failed to update voucher, please try again later."
   },
   "ACCOUNT_TYPE": {
     "ASSET": "Assets",

@@ -875,7 +875,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
         closeable: true,
       });
       if (dateRef.current) dateRef.current.scrollIntoView();
@@ -891,7 +891,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
         closeable: true,
       });
     } else if (isAssetRequired && assetList.length === 0) {
@@ -900,7 +900,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
         closeable: true,
       });
       if (assetRef.current) assetRef.current.scrollIntoView();
@@ -910,7 +910,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
         closeable: true,
       });
     } else {
@@ -929,12 +929,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   useEffect(() => {
     if (isUpdating === false) {
       if (updateSuccess) {
-        router.push(ISUNFA_ROUTE.VOUCHER_LIST); // ToDo: (20241119 - Julian) Should be replaced by voucher detail page
+        router.push(`/user/accounting/${voucherId}`);
       } else {
         toastHandler({
-          id: 'update-voucher-fail',
+          id: ToastId.UPDATE_VOUCHER_ERROR,
           type: ToastType.ERROR,
-          content: 'Failed to update voucher, please try again later.',
+          content: t('journal:ADD_NEW_VOUCHER.TOAST_FAILED_TO_UPDATE'),
           closeable: true,
         });
       }
@@ -945,12 +945,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   useEffect(() => {
     if (isDeleting === false && isCreating === false) {
       if (deleteSuccess && createNewSuccess) {
-        router.push(ISUNFA_ROUTE.VOUCHER_LIST); // ToDo: (20241119 - Julian) Should be replaced by voucher detail page
+        router.push(ISUNFA_ROUTE.VOUCHER_LIST);
       } else {
         toastHandler({
-          id: 'delete-voucher-fail',
+          id: ToastId.DELETE_VOUCHER_ERROR,
           type: ToastType.ERROR,
-          content: 'Failed to update voucher, please try again later.',
+          content: t('journal:ADD_NEW_VOUCHER.TOAST_FAILED_TO_UPDATE'),
           closeable: true,
         });
       }
