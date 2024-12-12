@@ -152,4 +152,5 @@ export const AUTH_CHECK = {
   [APIName.LEDGER_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.TRIAL_BALANCE_EXPORT]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_ASSET_BULK]: [AuthFunctionsKeysNew.user],
+  [APIName.LEDGER_EXPORT]: [AuthFunctionsKeysNew.user],
 };
