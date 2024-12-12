@@ -43,6 +43,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
 import { CounterpartyType } from '@/constants/counterparty';
+import { ToastId } from '@/constants/toast_id';
 
 // ToDo: (20241118 - Julian) For debug, remove later
 const defaultVoucherDetail: IVoucherDetailForFrontend = {
@@ -869,8 +870,14 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
 
     // Info: (20241007 - Julian) 若任一條件不符，則中斷 function
     if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
-      // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位
+      // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位、吐司通知
       setIsShowDateHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
       if (dateRef.current) dateRef.current.scrollIntoView();
     } else if (
       isTotalZero || // Info: (20241004 - Julian) 借貸總金額不可為 0
@@ -881,13 +888,31 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     ) {
       setFlagOfSubmit(!flagOfSubmit);
       if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
     } else if (isAssetRequired && assetList.length === 0) {
-      // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位
+      // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位、吐司通知
       setIsShowAssetHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
       if (assetRef.current) assetRef.current.scrollIntoView();
     } else if (isReverseRequired /* && reverses.length === 0 */) {
-      // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位
+      // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位、吐司通知
       setIsShowReverseHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
     } else {
       // Info: (20241007 - Julian) 儲存傳票
       saveVoucher();

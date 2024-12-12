@@ -48,6 +48,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { IAIResultVoucher } from '@/interfaces/voucher';
 import { AI_TYPE } from '@/constants/aich';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
+import { ToastId } from '@/constants/toast_id';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -402,7 +403,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   //       focusableElements[nextIndex]?.focus();
   //     };
 
-  //     // ToDo: (20241107 - Julian) ============ 施工中🔧 ============
   //     if (currentIndex === -1 || currentIndex === focusableElements.length - 1) {
   //       focusableElements[0]?.focus();
   //     } else if (currentIndex >= formIndexOrder[0] && currentIndex < formIndexOrder[1]) {
@@ -661,8 +661,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
     // Info: (20241007 - Julian) 若任一條件不符，則中斷 function
     if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
-      // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位
+      // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位、吐司通知
       setIsShowDateHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
       if (dateRef.current) dateRef.current.scrollIntoView();
       // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示類型提示，並定位到類型欄位
       // } else if (
@@ -685,13 +691,31 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     ) {
       setFlagOfSubmit(!flagOfSubmit);
       if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
     } else if (isAssetRequired && temporaryAssetListByUser.length === 0) {
-      // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位
+      // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位、吐司通知
       setIsShowAssetHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
       if (assetRef.current) assetRef.current.scrollIntoView();
     } else if (isReverseRequired && reverses.length === 0) {
-      // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位
+      // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位、吐司通知
       setIsShowReverseHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:JOURNAL.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
     } else {
       // Info: (20241007 - Julian) 儲存傳票
       saveVoucher();
@@ -712,11 +736,10 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   useEffect(() => {
     if (isCreating === false) {
       if (createSuccess) {
-        router.push(ISUNFA_ROUTE.VOUCHER_LIST); // ToDo: (20241108 - Julian) Should be replaced by voucher detail page
+        router.push(ISUNFA_ROUTE.VOUCHER_LIST);
       } else {
         toastHandler({
-          // ToDo: (20241108 - Julian) i18n
-          id: 'create-voucher-fail',
+          id: ToastId.CREATE_VOUCHER_ERROR,
           type: ToastType.ERROR,
           content: t('journal:ADD_NEW_VOUCHER.TOAST_FAILED_TO_CREATE'),
           closeable: true,

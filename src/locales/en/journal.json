@@ -134,7 +134,8 @@
     "DOWNLOAD_SELECTED_VOUCHER": "Download Selected Voucher",
     "DOWNLOAD_SELECTED_ITEMS": "Are you sure you want to download the selected items?",
     "GET_OCR_RESULT_FAILED": "Get OCR result Failed",
-    "GET_OCR_RESULT_FAILED_CODE": "Get OCR result failed: {{getCode}}"
+    "GET_OCR_RESULT_FAILED_CODE": "Get OCR result failed: {{getCode}}",
+    "TOAST_FILL_UP_FORM": "Please fill up the form."
   },
   "JOURNAL_TYPES": {
     "ALL": "All",

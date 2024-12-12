@@ -134,7 +134,8 @@
     "DOWNLOAD_SELECTED_VOUCHER": "下载传票",
     "DOWNLOAD_SELECTED_ITEMS": "您确定要下载所选项目吗？",
     "GET_OCR_RESULT_FAILED": "获取 OCR 结果失败",
-    "GET_OCR_RESULT_FAILED_CODE": "获取 OCR 结果失败: {{getCode}}"
+    "GET_OCR_RESULT_FAILED_CODE": "获取 OCR 结果失败: {{getCode}}",
+    "TOAST_FILL_UP_FORM": "请完整填写表格"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",

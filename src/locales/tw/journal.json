@@ -134,7 +134,8 @@
     "DOWNLOAD_SELECTED_VOUCHER": "下載傳票",
     "DOWNLOAD_SELECTED_ITEMS": "您確定要下載所選項目嗎？",
     "GET_OCR_RESULT_FAILED": "取得 OCR 結果失敗",
-    "GET_OCR_RESULT_FAILED_CODE": "取得 OCR 結果失敗: {{getCode}}"
+    "GET_OCR_RESULT_FAILED_CODE": "取得 OCR 結果失敗: {{getCode}}",
+    "TOAST_FILL_UP_FORM": "請完整填寫表格"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
