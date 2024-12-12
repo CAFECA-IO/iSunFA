@@ -152,7 +152,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
       })
     ) : (
       <div className="flex flex-col items-center text-xs">
-        <p className="text-text-neutral-tertiary">{t('journal:ASSET_SECTION.EMPTY')}</p>
+        <p className="text-text-neutral-tertiary">{t('common:COMMON.EMPTY')}</p>
         <p className={`${isShowAssetHint ? 'text-text-state-error' : 'text-text-neutral-primary'}`}>
           {t('journal:ASSET_SECTION.EMPTY_HINT')}
         </p>

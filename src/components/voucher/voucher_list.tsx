@@ -182,7 +182,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
         onClick={selectAllHandler}
       >
-        {t('common:COMMON.SELECT_ALL')}
+        {t('journal:VOUCHER.SELECT_ALL')}
       </button>
       {/* Info: (20240920 - Julian) Cancel selecting button */}
       <button
@@ -198,7 +198,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         onClick={selectToggleHandler}
         className={`${isCheckBoxOpen ? 'hidden' : 'block'} font-semibold text-link-text-primary hover:opacity-70`}
       >
-        {t('common:COMMON.SELECT')}
+        {t('journal:VOUCHER.SELECT')}
       </button>
     </div>
   );

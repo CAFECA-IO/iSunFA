@@ -26,8 +26,8 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
   const {
-    assetStatusSettingModalDataHandler,
-    assetStatusSettingModalVisibilityHandler,
+    // assetStatusSettingModalDataHandler,
+    // assetStatusSettingModalVisibilityHandler,
     addAssetModalDataHandler,
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
@@ -125,10 +125,10 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     addAssetModalVisibilityHandler();
   };
 
-  const statusSettingClickHandler = () => {
-    assetStatusSettingModalDataHandler(assetId, assetStatus as AssetStatus);
-    assetStatusSettingModalVisibilityHandler();
-  };
+  // const statusSettingClickHandler = () => {
+  //   assetStatusSettingModalDataHandler(assetId, assetStatus as AssetStatus);
+  //   assetStatusSettingModalVisibilityHandler();
+  // };
 
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail when companyId is ready
@@ -333,14 +333,15 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
           >
             <FiEdit size={20} />
           </Button>
-          <Button
+          {/* Info: (20241212 - Julian) 目前先隱藏功能 */}
+          {/* <Button
             id="asset-status-setting-btn"
             type="button"
             variant="tertiary"
             onClick={statusSettingClickHandler}
           >
             {t('asset:ASSET_DETAIL_PAGE.STATUS_SETTING')}
-          </Button>
+          </Button> */}
         </div>
       </div>
       {/* Info: (20241016 - Julian) Asset Details */}

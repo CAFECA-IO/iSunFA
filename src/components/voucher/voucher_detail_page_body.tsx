@@ -15,7 +15,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import Skeleton from '@/components/skeleton/skeleton';
-import { WEEK_FULL_LIST } from '@/constants/display';
+// import { WEEK_FULL_LIST } from '@/constants/display';
 import { ToastType } from '@/interfaces/toastify';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { IVoucherDetailForFrontend, defaultVoucherDetail } from '@/interfaces/voucher';
@@ -53,7 +53,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     type,
     note,
     counterParty,
-    recurringInfo,
+    // recurringInfo,
     payableInfo,
     receivingInfo,
     reverseVoucherIds,
@@ -317,28 +317,28 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
       </div>
     ) : null;
 
-  const isRecurringEntry = recurringInfo ? (
-    <div className="flex justify-between">
-      <p className="text-text-neutral-tertiary">
-        {t('journal:VOUCHER_DETAIL_PAGE.RECURRING_ENTRY')}
-      </p>
-      {!isLoading ? (
-        <div className="flex flex-col text-right">
-          {/* ToDo: (20241111 - Julian) Replace with real recurring string */}
-          <p className="text-input-text-primary">
-            {t('journal:ADD_NEW_VOUCHER.EVERY')}{' '}
-            {recurringInfo.daysOfWeek.map((day) => t(WEEK_FULL_LIST[day])).join(', ')}
-          </p>
-          <p className="text-input-text-primary">
-            {t('common:COMMON.FROM')} {timestampToString(recurringInfo.startDate).date}{' '}
-            {t('common:COMMON.TO')} {timestampToString(recurringInfo.endDate).date}
-          </p>
-        </div>
-      ) : (
-        <Skeleton width={200} height={48} rounded />
-      )}
-    </div>
-  ) : null;
+  // const isRecurringEntry = recurringInfo ? (
+  //   <div className="flex justify-between">
+  //     <p className="text-text-neutral-tertiary">
+  //       {t('journal:VOUCHER_DETAIL_PAGE.RECURRING_ENTRY')}
+  //     </p>
+  //     {!isLoading ? (
+  //       <div className="flex flex-col text-right">
+  //         {/* ToDo: (20241111 - Julian) Replace with real recurring string */}
+  //         <p className="text-input-text-primary">
+  //           {t('journal:ADD_NEW_VOUCHER.EVERY')}{' '}
+  //           {recurringInfo.daysOfWeek.map((day) => t(WEEK_FULL_LIST[day])).join(', ')}
+  //         </p>
+  //         <p className="text-input-text-primary">
+  //           {t('common:COMMON.FROM')} {timestampToString(recurringInfo.startDate).date}{' '}
+  //           {t('common:COMMON.TO')} {timestampToString(recurringInfo.endDate).date}
+  //         </p>
+  //       </div>
+  //     ) : (
+  //       <Skeleton width={200} height={48} rounded />
+  //     )}
+  //   </div>
+  // ) : null;
 
   return (
     <div className="overflow-y-auto px-40px pb-32px pt-10px">
@@ -393,7 +393,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           {isDisplayCounterParty}
         </div>
         {/* Info: (20241007 - Julian) Recurring Entry */}
-        {isRecurringEntry}
+        {/* {isRecurringEntry} */}
         {/* Info: (20241007 - Julian) Payable Amount */}
         {isPayableAmount}
         {/* Info: (20241007 - Julian) Paid Amount */}
