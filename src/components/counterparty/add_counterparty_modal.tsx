@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -12,6 +13,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
 import { ICounterparty } from '@/interfaces/counterparty';
+import { ICompanyTaxIdAndName } from '@/interfaces/company';
 
 interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
   isModalVisible: boolean;
@@ -39,6 +41,56 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     error,
     data,
   } = APIHandler<ICounterparty>(APIName.COUNTERPARTY_ADD);
+
+  // Info: (20241212 - Anna) 透過公司名稱或統一編號查詢公司資料
+  const { trigger: fetchCompanyDataAPI } = APIHandler<ICompanyTaxIdAndName>(
+    APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID
+  );
+
+  // Info: (20241212 - Anna) 透過公司名稱查詢統一編號
+  const fetchTaxIdByCompanyName = async (
+    companyName: string,
+    taxIdNumber?: string
+  ): Promise<void> => {
+    try {
+      const { data: companyData } = await fetchCompanyDataAPI({
+        query: {
+          name: companyName || undefined,
+          taxId: taxIdNumber || undefined,
+        },
+      });
+
+      if (companyData && companyData.name.includes(companyName)) {
+        setInputName(companyData.name || '');
+        setInputTaxId(companyData.taxId || '');
+      } else {
+        setInputTaxId(''); //  Info: (20241212 - Anna) 清空統一編號
+      }
+    } catch (fetchError) {
+      console.error('Error fetching company data:', fetchError);
+    }
+  };
+
+  // Info: (20241212 - Anna) 透過統一編號查詢公司名稱
+  const fetchCompanyNameByTaxId = async (taxIdNumber: string): Promise<void> => {
+    try {
+      const { data: companyData } = await fetchCompanyDataAPI({
+        query: {
+          name: undefined, // Info: (20241212 - Anna) 不需要公司名稱
+          taxId: taxIdNumber,
+        },
+      });
+
+      if (companyData) {
+        setInputName(companyData.name || ''); // Info: (20241212 - Anna) 更新公司名稱
+      } else {
+        setInputName(''); // Info: (20241212 - Anna) 查無資料時清空名稱
+      }
+    } catch (fetchError) {
+      console.error('Error fetching company data by Tax ID:', fetchError);
+      setInputName(''); // Info: (20241212 - Anna) 查詢失敗時清空名稱
+    }
+  };
 
   const { targetRef: typeRef, setComponentVisible: setIsTypeSelecting } =
     useOuterClick<HTMLDivElement>(false);
@@ -93,12 +145,38 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     </div>
   );
 
+  // Info: (20241212 - Anna) 等到按下 Enter 再發送 API
+  const nameKeyDownHandler = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      // Info: (20241212 - Anna) 檢查輸入是否包含有效漢字
+      if (/^[\u4e00-\u9fa5]+$/.test(inputName)) {
+        fetchTaxIdByCompanyName(inputName).catch(console.error);
+      } else {
+        console.warn('輸入無效或不包含漢字');
+      }
+    }
+  };
+
   const nameChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputName(event.target.value);
+    const newName = event.target.value.trim();
+    setInputName(newName);
+
+    // Info: (20241212 - Anna) 當輸入為空時，直接清空結果不觸發 API
+    if (newName === '') {
+      setInputTaxId('');
+    }
   };
 
   const taxIdChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputTaxId(event.target.value);
+    const newTaxId = event.target.value.trim();
+    setInputTaxId(newTaxId);
+
+    // Info: (20241212 - Anna) 當輸入的統一編號滿 8 碼時，觸發 API
+    if (newTaxId.length === 8 && /^[0-9]{8}$/.test(newTaxId)) {
+      fetchCompanyNameByTaxId(newTaxId).catch(console.error);
+    } else if (newTaxId === '') {
+      setInputName(''); // Info: (20241212 - Anna) 清空公司名稱
+    }
   };
 
   const noteChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -198,6 +276,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
                   placeholder={t('certificate:COUNTERPARTY.ENTER_NAME')}
                   value={inputName}
                   onChange={nameChangeHandler}
+                  onKeyDown={nameKeyDownHandler} // Info: (20241212 - Anna) 監聽 Enter 鍵
                   required
                   className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none"
                 />
