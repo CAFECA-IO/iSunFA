@@ -7,11 +7,11 @@ import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse } from '@/lib/utils/common';
 
-// TODO: (20241203 - Shirley) 模擬資料
+// TODO: (20241212 - Shirley) 模擬資料
 const MOCK_LEDGER = [
   {
     accountId: 1001,
-    no: '1001', // account number
+    no: '1001', // Info: (20241212 - Shirley) account number
     voucherNumber: '1234567890',
     accountingTitle: '現金',
     voucherDate: 1717728000,
@@ -22,7 +22,7 @@ const MOCK_LEDGER = [
   },
   {
     accountId: 1002,
-    no: '1002', // account number
+    no: '1002',
     voucherNumber: '2234567890',
     accountingTitle: '應收帳款',
     voucherDate: 1757728000,
@@ -34,15 +34,15 @@ const MOCK_LEDGER = [
 ];
 
 export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
-  // TODO: (20241203 - Shirley) implement the param and query validation when dev the API
+  // TODO: (20241212 - Shirley) implement the param and query validation when dev the API
   // Deprecated: (20241214 - Shirley) remove the unused params
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { fileType, filters, sort, options } = req.body;
+  const { fileType, filters, options } = req.body;
 
-  // TODO: (20241203 - Shirley) 從資料庫獲取資產資料
+  // TODO: (20241212 - Shirley) 從資料庫、account book 取得 ledger資料
   const data = MOCK_LEDGER;
 
-  // TODO: (20241203 - Shirley) 處理欄位選擇
+  // TODO: (20241212 - Shirley) 處理欄位選擇
   const fields = options?.fields || [
     'accountId',
     'no',
