@@ -158,6 +158,9 @@ export interface IAccountEntity {
    */
   rootCode?: string;
 
+  parentId: number;
+  rootId: number;
+
   /**
    * Info: (20241023 - Murky)
    * @description level is for the account hierarchy level in accounting tree

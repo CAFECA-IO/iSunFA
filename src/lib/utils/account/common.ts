@@ -21,6 +21,9 @@ export function initAccountEntity(
     name: string;
     forUser: boolean;
     parentCode: string;
+    rootCode: string;
+    parentId: number;
+    rootId: number;
     level: number;
     parent?: IAccountEntity;
     root?: IAccountEntity;
@@ -40,6 +43,8 @@ export function initAccountEntity(
     level: dto.level,
     parentCode: dto.parentCode,
     rootCode: dto.rootCode,
+    parentId: dto.parentId,
+    rootId: dto.rootId,
     parent: dto.parent,
     root: dto.root,
     createdAt: dto.createdAt || nowInSecond,

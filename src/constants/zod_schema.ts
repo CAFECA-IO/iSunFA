@@ -22,7 +22,9 @@ import {
   companyGetByIdSchema,
   companyListSchema,
   companyPostSchema,
+  companyPutIconSchema,
   companyPutSchema,
+  companySearchSchema,
   companySelectSchema,
 } from '@/lib/utils/zod_schema/company';
 import { invoiceRequestValidators } from '@/lib/utils/zod_schema/invoice';
@@ -110,9 +112,10 @@ import { accountGetV2Schema, accountPostV2Schema } from '@/lib/utils/zod_schema/
 import {
   assetBulkPostSchema,
   assetDeleteSchema,
-  assetGetByIdSchema,
+  assetGetSchema,
   assetListSchema,
   assetPostSchema,
+  assetPutSchema,
 } from '@/lib/utils/zod_schema/asset';
 import { exportLedgerPostSchema } from '@/lib/utils/zod_schema/export_ledger';
 
@@ -168,6 +171,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.COMPANY_GET_BY_ID]: companyGetByIdSchema,
   [APIName.COMPANY_UPDATE]: companyPutSchema,
   [APIName.COMPANY_DELETE]: companyDeleteSchema,
+  [APIName.COMPANY_PUT_ICON]: companyPutIconSchema,
   [APIName.COMPANY_SETTING_GET]: companySettingGetSchema,
   [APIName.COMPANY_SETTING_UPDATE]: companySettingPutSchema,
   [APIName.COUNTERPARTY_LIST]: counterpartyListSchema,
@@ -223,6 +227,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_DELETE]: userDeleteSchema,
   [APIName.COMPANY_ADD]: nullAPISchema,
   [APIName.COMPANY_GET]: nullAPISchema,
+  [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: companySearchSchema,
   [APIName.COMPANY_ADD_BY_INVITATION_CODE]: nullAPISchema,
   [APIName.CERTIFICATE_PUT_V2]: nullAPISchema,
   [APIName.INVOICE_POST_V2]: invoicePostV2Schema,
@@ -284,10 +289,10 @@ export const ZOD_SCHEMA_API = {
   [APIName.CERTIFICATE_LIST]: nullAPISchema,
   [APIName.PUSHER_AUTH]: nullAPISchema,
   [APIName.ASSET_LIST_V2]: assetListSchema,
-  [APIName.ASSET_GET_BY_ID_V2]: assetGetByIdSchema,
+  [APIName.ASSET_GET_BY_ID_V2]: assetGetSchema,
   [APIName.CREATE_ASSET_V2]: assetPostSchema,
   [APIName.DELETE_ASSET_V2]: assetDeleteSchema,
-  [APIName.UPDATE_ASSET_V2]: nullAPISchema,
+  [APIName.UPDATE_ASSET_V2]: assetPutSchema,
   [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: nullAPISchema,
   [APIName.LEDGER_LIST]: ledgerListSchema,
   [APIName.SIGN_IN]: nullAPISchema,

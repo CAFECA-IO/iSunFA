@@ -169,7 +169,9 @@ const CameraWithFrame: React.FC<CameraWithFrameProps> = ({
 
         {/* Info: (20241011 - tzuhan) 拍照預覽區域 */}
         <div className="flex-1">
-          <div className="flex gap-2 overflow-x-scroll">
+          {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
+          {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
+          <div className="hide-scrollbar flex gap-2 overflow-x-scroll">
             {selectedCertificates.map((certificate, index) => (
               <div key={`image-${index + 1}`} className="h-77px w-50px">
                 <Image

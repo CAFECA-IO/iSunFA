@@ -138,6 +138,17 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   }, [companyId]);
 
   useEffect(() => {
+    // Info: (20241210 - Julian) Redirect to 404 page if the asset is not connected to any voucher
+    if (!!assetDetail && relatedVouchers.length === 0) {
+      router.push('/404');
+    }
+
+    if (assetDetail === null) {
+      router.push('/404');
+    }
+  }, [assetDetail]);
+
+  useEffect(() => {
     if (!isDeleting) {
       if (deleteSuccess) {
         // Info: (20241029 - Julian) 刪除成功後，跳轉至列表頁，並顯示成功 toast

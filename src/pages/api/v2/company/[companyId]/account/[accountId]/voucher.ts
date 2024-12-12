@@ -78,7 +78,9 @@ const handleGetRequest: IHandleRequest<
       const issuerEntity = getUtils.initIssuerAndFileEntity(voucherFromPrisma);
       const lineItemEntities = getUtils
         .initLineItemAndAccountEntities(voucherFromPrisma)
-        .filter((lineItem) => lineItem.account.id === accountId);
+        .filter(
+          (lineItem) => lineItem.account.id === accountId || lineItem.account.parentId === accountId
+        );
       const voucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
 
       if (!isAccountARorAP) {

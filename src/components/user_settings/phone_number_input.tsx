@@ -5,21 +5,21 @@ import { CountryCodeMap, LocaleKey } from '@/constants/normal_setting';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface PhoneNumberInputProps {
-  countryCode: LocaleKey;
-  setCountryCode: React.Dispatch<React.SetStateAction<LocaleKey>>;
-  phoneNumber: string;
-  setPhoneNumber: React.Dispatch<React.SetStateAction<string>>;
+  countryCode: LocaleKey | undefined;
+  onSelect: (countryCode: LocaleKey) => void;
+  phoneNumber: string | undefined;
+  onUpdate: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   countryCode,
-  setCountryCode,
+  onSelect,
   phoneNumber,
-  setPhoneNumber,
+  onUpdate,
 }) => {
   const { t } = useTranslation(['setting', 'common']);
 
-  const selectedCountryCode = CountryCodeMap[countryCode];
+  const selectedCountryCode = countryCode ? CountryCodeMap[countryCode] : undefined;
 
   const {
     targetRef: countryCodeMenuRef,
@@ -32,40 +32,43 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   };
 
   const countryCodeMenuOptionClickHandler = (id: LocaleKey) => {
-    setCountryCode(id);
+    onSelect(id);
     setIsCountryCodeMenuOpen(false);
   };
 
   const displayedCountryCodeMenu = (
-    <div ref={countryCodeMenuRef} className="relative flex w-full">
+    <div className="relative flex w-full">
       <button
         type="button"
         className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-5 py-3 max-md:max-w-full ${
           isCountryCodeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
-        onClick={countryCodeMenuClickHandler}
       >
-        <Image
-          width={20}
-          height={20}
-          src={selectedCountryCode?.icon ?? '/icons/en.svg'}
-          alt="countryCode icon"
-          className="mr-2"
-        />
-
-        <Image
-          src="/elements/arrow_down.svg"
-          alt="arrow_down"
-          width={20}
-          height={20}
-          className="mr-5"
-        />
-
+        <div
+          className="flex items-center"
+          ref={countryCodeMenuRef}
+          onClick={countryCodeMenuClickHandler}
+        >
+          <Image
+            width={20}
+            height={20}
+            src={selectedCountryCode?.icon ?? '/icons/null.svg'}
+            alt="countryCode icon"
+            className="mr-2"
+          />
+          <Image
+            src="/elements/arrow_down.svg"
+            alt="arrow_down"
+            width={20}
+            height={20}
+            className={`mr-5 ${isCountryCodeMenuOpen ? 'rotate-180' : 'rotate-0'}`}
+          />
+        </div>
         <input
           id="note-input"
           type="text"
           value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
+          onChange={onUpdate}
           placeholder={t('setting:NORMAL.ENTER_NUMBER')}
           className="block flex-1 outline-none placeholder:text-input-text-input-placeholder"
         />

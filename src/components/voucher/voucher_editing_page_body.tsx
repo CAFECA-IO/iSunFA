@@ -42,6 +42,7 @@ import { IAssetDetails } from '@/interfaces/asset';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
+import { CounterpartyType } from '@/constants/counterparty';
 
 // ToDo: (20241118 - Julian) For debug, remove later
 const defaultVoucherDetail: IVoucherDetailForFrontend = {
@@ -54,7 +55,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
     companyId: 1000,
     name: 'ABC Corp',
     taxId: '123456789',
-    type: 'SUPPLIER',
+    type: CounterpartyType.SUPPLIER,
     note: 'Preferred supplier',
     createdAt: 1622548800,
     updatedAt: 1625130800,
@@ -122,7 +123,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
           companyId: 1000,
           name: 'ABC Corp',
           taxId: '123456789',
-          type: 'SUPPLIER',
+          type: CounterpartyType.SUPPLIER,
           note: 'Preferred supplier',
           createdAt: 1622548800,
           updatedAt: 1625130800,
