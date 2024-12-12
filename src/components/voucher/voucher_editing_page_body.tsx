@@ -38,7 +38,7 @@ import { VoucherV2Action } from '@/constants/voucher';
 import { IVoucherDetailForFrontend /* , defaultVoucherDetail  */ } from '@/interfaces/voucher';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
-import { IAssetDetails } from '@/interfaces/asset';
+import { IAssetPostOutput } from '@/interfaces/asset';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
@@ -455,12 +455,21 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     };
   });
 
+  const defaultAssetList: IAssetPostOutput[] = voucherAssets.map((asset) => ({
+    ...asset,
+    name: asset.assetName,
+    number: asset.assetNumber,
+    note: asset.note ?? '',
+    status: 'normal',
+    companyId: companyId ?? 0,
+  }));
+
   // Info: (20241118 - Julian) State
   const [date, setDate] = useState<IDatePeriod>(defaultDate);
   const [type, setType] = useState<string>(defaultType);
   const [note, setNote] = useState<string>(voucherNote);
   const [lineItems, setLineItems] = useState<ILineItemUI[]>(defaultLineItems);
-  const [assetList, setAssetList] = useState<IAssetDetails[]>([...voucherAssets]);
+  const [assetList, setAssetList] = useState<IAssetPostOutput[]>(defaultAssetList);
 
   // Info: (20241004 - Julian) 傳票列驗證條件
   const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
@@ -521,7 +530,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   // Info: (20241119 - Julian) 更新 asset 列表
   useEffect(() => {
     if (temporaryAssetListByUser && temporaryAssetListByUser.length > 0) {
-      const newAssetList = [...voucherAssets, ...temporaryAssetListByUser];
+      const newAssetList: IAssetPostOutput[] = [...defaultAssetList, ...temporaryAssetListByUser];
       setAssetList(newAssetList);
     }
   }, [temporaryAssetList]);

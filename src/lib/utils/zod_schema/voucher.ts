@@ -193,7 +193,10 @@ const voucherListAllSortOptions = z.enum([
 const voucherGetAllQueryValidatorV2 = z.object({
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
-  type: z.nativeEnum(EventType).optional(),
+  type: z.preprocess((input) => {
+    if (typeof input === 'string' && input.toLowerCase() === 'all') return undefined;
+    return input;
+  }, z.nativeEnum(EventType).optional()),
   tab: z.nativeEnum(VoucherListTabV2),
   startDate: zodStringToNumberWithDefault(0),
   endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),

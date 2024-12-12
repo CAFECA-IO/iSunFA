@@ -10,7 +10,6 @@ import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
 import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
 import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
-import { getImageUrlFromFileIdV1 } from '@/lib/utils/file';
 
 // Info: (20241016 - Jacky) Company list schema
 const companyListQuerySchema = z.object({
@@ -73,7 +72,7 @@ export const companyOutputSchema = companyPrismaSchema.strip().transform((data) 
   const { imageFile, ...rest } = data;
   const output = {
     ...rest,
-    imageId: getImageUrlFromFileIdV1(imageFile.id, data.id),
+    imageId: imageFile.url,
   };
   return output;
 });

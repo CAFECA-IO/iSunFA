@@ -1,5 +1,5 @@
 import { IAccount } from '@/interfaces/accounting_account';
-import { IAssetDetails } from '@/interfaces/asset';
+import { IAssetPostOutput } from '@/interfaces/asset';
 
 export enum AssetModalType {
   ADD = 'ADD',
@@ -9,7 +9,7 @@ export enum AssetModalType {
 export interface IAssetModal {
   modalType: AssetModalType;
   assetAccountList: IAccount[];
-  assetData: IAssetDetails | null;
+  assetData: IAssetPostOutput | null;
 }
 
 export const initialAssetModal: IAssetModal = {
