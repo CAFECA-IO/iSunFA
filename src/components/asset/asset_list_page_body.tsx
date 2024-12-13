@@ -52,7 +52,7 @@ const AssetListPageBody: React.FC = () => {
   // Info: (20241024 - Julian) 資產類別列表
   const assetTypeList = accountList
     .filter((account) => AccountCodesOfAsset.includes(account.code))
-    .map((account) => account.name);
+    .map((account) => account.code);
 
   // Info: (20241024 - Julian) 資產狀態列表
   const assetStatusList = Object.values(AssetStatus);
