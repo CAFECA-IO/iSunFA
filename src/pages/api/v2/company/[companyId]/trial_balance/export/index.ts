@@ -1,7 +1,12 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { convertToCSV } from '@/lib/utils/export_file';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { checkRequestData, checkSessionUser, logUserAction } from '@/lib/utils/middleware';
+import {
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
 import { getSession } from '@/lib/utils/session';
 import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
@@ -81,6 +86,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!isLogin) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
       throw new Error(statusMessage);
+    }
+
+    const isAuth = await checkUserAuthorization(APIName.TRIAL_BALANCE_EXPORT, req, session);
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
     }
 
     const { query, body } = checkRequestData(APIName.TRIAL_BALANCE_EXPORT, req, session);
