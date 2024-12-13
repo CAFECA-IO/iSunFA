@@ -65,25 +65,18 @@ const CompanyItem = ({
 
     const companyId = isCompanySelected ? CANCEL_COMPANY_ID : myCompany.company.id;
 
-    // Deprecated: (20241113 - Liz)
-    // eslint-disable-next-line no-console
-    console.log(
-      '這個公司原本是否已經被選擇 isCompanySelected:',
-      isCompanySelected,
-      '這個按鈕是 myCompany.company.id:',
-      myCompany.company.id,
-      'user context 目前存的狀態 selectedCompany?.id:',
-      selectedCompany?.id,
-      '按下去會傳給選擇公司 api 的 companyId:',
-      companyId
-    );
-
     try {
       const data = selectCompany(companyId);
 
-      // Deprecated: (20241113 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('執行 selectCompany api 回傳:', data);
+      if (data) {
+        // Deprecated: (20241113 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('selectCompany success:', data);
+      } else {
+        // Deprecated: (20241113 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('selectCompany failed!');
+      }
     } catch (error) {
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
@@ -98,17 +91,13 @@ const CompanyItem = ({
       key={myCompany.company.id}
       className="flex items-center gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
     >
-      <button
-        type="button"
-        onClick={openUploadCompanyAvatarModal}
-        className="group relative shrink-0"
-      >
+      <button type="button" onClick={openUploadCompanyAvatarModal} className="group relative">
         <Image
           src={myCompany.company.imageId}
           alt={myCompany.company.name}
           width={60}
           height={60}
-          className="h-60px w-60px flex-none rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
+          className="h-60px w-60px rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
         ></Image>
 
         <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
@@ -121,7 +110,7 @@ const CompanyItem = ({
           {myCompany.company.name}
         </p>
 
-        <div className="relative flex flex-none items-center">
+        <div className="relative flex items-center" ref={optionsDropdownRef}>
           <button type="button" onClick={toggleOptionsDropdown}>
             <Image
               src="/icons/square_mouse_pointer.svg"
@@ -132,10 +121,7 @@ const CompanyItem = ({
           </button>
 
           {isOptionsDropdownOpen && (
-            <div
-              ref={optionsDropdownRef}
-              className="absolute left-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS"
-            >
+            <div className="absolute left-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS">
               <button
                 type="button"
                 onClick={openChangeTagModal}
