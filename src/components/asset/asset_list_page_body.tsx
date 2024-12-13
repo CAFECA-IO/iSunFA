@@ -6,7 +6,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
-import { AssetStatus, AccountCodesOfAsset } from '@/constants/asset';
+import { AssetStatus, AccountCodesOfAsset, AssetEntityType } from '@/constants/asset';
 import { useTranslation } from 'next-i18next';
 import { IAssetItem } from '@/interfaces/asset';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -52,7 +52,7 @@ const AssetListPageBody: React.FC = () => {
   // Info: (20241024 - Julian) 資產類別列表
   const assetTypeList = accountList
     .filter((account) => AccountCodesOfAsset.includes(account.code))
-    .map((account) => account.name);
+    .map((account) => account.code);
 
   // Info: (20241024 - Julian) 資產狀態列表
   const assetStatusList = Object.values(AssetStatus);
@@ -72,8 +72,8 @@ const AssetListPageBody: React.FC = () => {
           params={params}
           apiName={APIName.ASSET_LIST_V2}
           onApiResponse={handleApiResponse}
-          types={['All', ...assetTypeList]}
-          statuses={['All', ...assetStatusList]}
+          types={[AssetEntityType.ALL, ...assetTypeList]}
+          statuses={[AssetStatus.ALL, ...assetStatusList]}
           page={currentPage}
           pageSize={DEFAULT_PAGE_LIMIT}
           dateSort={dateSort}

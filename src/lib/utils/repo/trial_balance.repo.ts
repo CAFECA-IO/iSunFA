@@ -10,6 +10,7 @@ import { formatPaginatedTrialBalance } from '@/lib/utils/formatter/trial_balance
 import { getAccountBook } from '@/lib/utils/repo/account_book.repo';
 import { DefaultValue } from '@/constants/default_value';
 import { parseSortOption } from '@/lib/utils/sort';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 /* Info: (20241105 - Shirley) Trial balance repository 實作
 company id (public company || targeted company) 去找 account table 拿到所有會計科目 -> voucher -> item -> account
@@ -31,6 +32,36 @@ interface ListTrialBalanceParams {
   page?: number;
   pageSize?: number;
 }
+
+export const initTrialBalanceData = async (
+  companyId: number,
+  startDate: number,
+  endDate: number,
+  sort: {
+    by: SortBy;
+    order: SortOrder;
+  }[]
+) => {
+  const beginningAccountBook = await getAccountBook(companyId, 0, startDate);
+  const midtermAccountBook = await getAccountBook(companyId, startDate, endDate);
+  const endingAccountBook = await getAccountBook(companyId, 0, endDate);
+
+  const beginningAccountBookJSON = beginningAccountBook.toJSON();
+  const midtermAccountBookJSON = midtermAccountBook.toJSON();
+  const endingAccountBookJSON = endingAccountBook.toJSON();
+
+  const convertedSortOption = sort.map((item) => `${item.by}:${item.order}`).join('-');
+  const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, convertedSortOption);
+
+  const trialBalanceData = convertAccountBookJsonToTrialBalanceItem(
+    beginningAccountBookJSON,
+    midtermAccountBookJSON,
+    endingAccountBookJSON,
+    parsedSortOption
+  );
+
+  return trialBalanceData;
+};
 
 export async function listTrialBalance(
   params: ListTrialBalanceParams
