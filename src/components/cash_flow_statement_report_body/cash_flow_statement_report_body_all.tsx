@@ -1,5 +1,4 @@
 import { APIName } from '@/constants/api_connection';
-import { useUserCtx } from '@/contexts/user_context';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import React, { useEffect, useState } from 'react';
@@ -20,26 +19,7 @@ interface ICashFlowStatementReportBodyAllProps {
 }
 
 const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
-  const { isAuthLoading, selectedCompany } = useUserCtx();
   const { t } = useTranslation(['reports']);
-  // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
-
-  // Deprecated: (20241129 - Liz)
-  // const {
-  //   data: reportFinancial,
-  //   code: getReportFinancialCode,
-  //   success: getReportFinancialSuccess,
-  //   isLoading: getReportFinancialIsLoading,
-  // } = APIHandler<CashFlowStatementReport>(
-  //   APIName.REPORT_GET_BY_ID,
-  //   {
-  //     params: {
-  //       companyId: selectedCompany?.id,
-  //       reportId: reportId ?? NON_EXISTING_REPORT_ID,
-  //     },
-  //   },
-  //   hasCompanyId
-  // );
 
   const [financialReport, setFinancialReport] = useState<CashFlowStatementReport | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -51,7 +31,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   );
 
   useEffect(() => {
-    if (isAuthLoading || !selectedCompany) return;
     if (isLoading) return;
     setIsLoading(true);
 
@@ -62,7 +41,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: selectedCompany.id, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+          params: { companyId: 1, reportId: reportId ?? NON_EXISTING_REPORT_ID },
         });
 
         if (!getFRSuccess) {
@@ -89,7 +68,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
     console.log('in useEffect and calling getFinancialReport_in CashFlowStatementReportBodyAll');
-  }, [isAuthLoading, reportId, selectedCompany]);
+  }, [reportId]);
 
   const [curDate, setCurDate] = useStateRef<{ from: string; to: string }>({ from: '', to: '' });
   const [curYear, setCurYear] = useStateRef<string>('');
@@ -407,7 +386,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 </h1>
                 <p className="text-left text-xs font-bold leading-5">
                   {curDate.from}至{curDate.to} <br />
-                  合併財務報告 - 現金流量表
+                  財務報告 - 現金流量表
                 </p>
               </>
             )}

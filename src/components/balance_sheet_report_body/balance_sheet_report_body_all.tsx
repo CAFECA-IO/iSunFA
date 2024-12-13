@@ -1,7 +1,5 @@
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
-import { useUserCtx } from '@/contexts/user_context';
-// import { BalanceSheetReport, FinancialReport, FinancialReportItem } from '@/interfaces/report'; // Deprecated: (20241129 - Liz)No use
 import { BalanceSheetReport, FinancialReportItem } from '@/interfaces/report';
 
 import APIHandler from '@/lib/utils/api_handler';
@@ -37,9 +35,6 @@ const COLOR_CLASSES = [
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
   const { t } = useTranslation('common');
 
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [curAssetLiabilityRatioLabels, setCurAssetLiabilityRatioLabels] = useStateRef<
@@ -63,22 +58,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   // eslint-disable-next-line no-console
   console.log('進入 BalanceSheetReportBodyAll');
 
-  // const {
-  //   data: financialReport,
-  //   code: getReportFinancialCode,
-  //   success: getReportFinancialSuccess,
-  //   isLoading: getReportFinancialIsLoading,
-  // } = APIHandler<BalanceSheetReport>(
-  //   APIName.REPORT_GET_BY_ID,
-  //   {
-  //     params: {
-  //       companyId: selectedCompany?.id,
-  //       reportId: reportId ?? NON_EXISTING_REPORT_ID,
-  //     },
-  //   },
-  //   hasCompanyId
-  // );
-
   const [financialReport, setFinancialReport] = useState<BalanceSheetReport | null>(null);
   const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] = useState<boolean>(false);
   const [errorCode, setErrorCode] = useState<string>('');
@@ -89,7 +68,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 
   useEffect(() => {
-    if (isAuthLoading || !selectedCompany) return;
     if (isLoading) return;
     setIsLoading(true);
 
@@ -100,7 +78,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           code,
           success: getReportFinancialSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: selectedCompany.id, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+          params: { companyId: 1, reportId: reportId ?? NON_EXISTING_REPORT_ID },
         });
 
         if (!getReportFinancialSuccess) {
@@ -128,7 +106,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
     console.log('in useEffect and calling getFinancialReport_in BalanceSheetReportBodyAll');
-  }, [isAuthLoading, reportId, selectedCompany]);
+  }, [reportId]);
 
   const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
   const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
@@ -792,7 +770,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 <p className="text-left text-xs font-bold leading-5">
                   {curDate}
                   <br />
-                  合併財務報告 - 資產負債表
+                  財務報告 - 資產負債表
                 </p>
               </>
             )}
