@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import AvatarSVG from '@/components/avatar_svg/avatar_svg';
@@ -11,6 +11,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import I18n from '@/components/i18n/i18n';
 import TermsOfServiceModal from '@/components/login/terms_of_service_modal';
 import Loader from '@/components/loader/loader';
+import useClickManager from '@/lib/hooks/use_click_manager';
 
 // ToDo: (20241119 - Liz) Beta version 不支援 Apple 登入
 const IS_APPLE_LOGIN_ENABLED = true;
@@ -37,12 +38,28 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
     setIsTermsOfServiceModalVisible(!isAgreeTermsOfService);
   }, [isSignIn, isAgreeTermsOfService]);
 
+  const { registerRef, visibleMap, setVisibility } = useClickManager<HTMLDivElement>();
+
+  const globalRef = useRef<HTMLDivElement>(null); // 定義 I18n 元件的 ref
+
+  useEffect(() => {
+    // 註冊 ref
+    if (globalRef.current) {
+      registerRef('menu', globalRef);
+    }
+  }, []);
+
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
       <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
 
       <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
-        <I18n />
+        <div ref={globalRef}>
+          <I18n
+            isMenuVisible={visibleMap.menu}
+            setIsMenuVisible={(visible) => setVisibility('menu', visible)}
+          />
+        </div>
         <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
           <FiHome size={22} />
         </Link>
