@@ -1,7 +1,7 @@
 // Deprecated: (20241111 - Liz) 這是 Alpha 版本的元件
 import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React from 'react';
 import { FiEdit, FiLayout, FiMail, FiPlusSquare, FiSettings } from 'react-icons/fi';
 import { BiBuildings } from 'react-icons/bi';
 import { TbLogout, TbGridDots } from 'react-icons/tb';
@@ -20,7 +20,7 @@ import {
 } from '@/constants/display';
 import version from '@/lib/version';
 import { useRouter } from 'next/router';
-import I18n from '@/components/i18n/i18n';
+// import I18n from '@/components/i18n/i18n';
 import { TranslateFunction } from '@/interfaces/locale';
 // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
 // import Notification from '@/components/notification/notification';
@@ -40,7 +40,6 @@ const NavBar = () => {
   const abbreviateCompanyName =
     companyName.length > 10 ? companyName.slice(0, 5) + '...' : companyName;
 
-  const [langIsOpen, setLangIsOpen] = useState(false);
   // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
   // const [notificationIsOpen, setNotificationIsOpen] = useState(false);
 
@@ -76,7 +75,6 @@ const NavBar = () => {
   const appMenuMobileClickHandler = () => setIsAppMenuMobileOpen(!isAppMenuMobileOpen);
   const burgerMenuClickHandler = () => {
     setIsBurgerMenuOpen(!isBurgerMenuOpen);
-    setLangIsOpen(false);
     // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
     // setNotificationIsOpen(false);
   };
@@ -207,7 +205,7 @@ const NavBar = () => {
         mobileMenuIsOpen={notificationIsOpen}
         setMobileMenuIsOpen={setNotificationIsOpen}
       /> */}
-      <I18n langIsOpen={langIsOpen} setLangIsOpen={setLangIsOpen} />
+      {/* <I18n /> */}
       {displayedAppMenuMobile}
     </div>
   );
@@ -505,7 +503,7 @@ const NavBar = () => {
         {/* Info: (20240408 - Shirley) desktop */}
         <div className="relative hidden space-x-8 text-button-text-secondary lg:flex">
           {/* Info: (20240605 - Shirley) globe (i18n) */}
-          <I18n />
+          {/* <I18n /> */}
           {/* Info: (20240606 - Shirley) notification */}
           {/* Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺) */}
           {/* <Notification /> */}
