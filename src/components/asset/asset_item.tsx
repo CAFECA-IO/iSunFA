@@ -32,7 +32,7 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
     isSelected,
   } = assetData;
 
-  const unit = currencyAlias === 'TWD' ? t('asset:COMMON.TWD') : currencyAlias;
+  const unit = t(`asset:CURRENCY_ALIAS.${currencyAlias}`);
   const assetTypeCode = assetType.split(' ')[0];
   const assetTypeTitle = assetType.split(' ').slice(1).join(' ');
 
