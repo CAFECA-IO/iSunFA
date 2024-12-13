@@ -93,7 +93,8 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
           }
           tokenContract={reportData.tokenContract}
           tokenId={reportData.tokenId}
-          reportLink={`/users/reports/${reportId}/${ReportUrlMap[financialReport?.reportType as keyof typeof ReportUrlMap]}`}
+          // Info: (20241213 - Anna) reportLink is used to redirect to the report page
+          reportLink={`/reports/${reportId}/${ReportUrlMap[financialReport?.reportType as keyof typeof ReportUrlMap]}`}
           reportId={reportId}
         />
       </div>

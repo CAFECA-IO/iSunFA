@@ -2,7 +2,6 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
-import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
@@ -19,7 +18,6 @@ interface IIncomeStatementReportBodyAllProps {
 
 const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAllProps) => {
   const { t } = useTranslation('reports');
-  const { isAuthLoading, selectedCompany } = useUserCtx();
   // Info: (20241001 - Anna) 管理表格摺疊狀態
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
   const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
@@ -31,27 +29,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   const toggleDetailTable = () => {
     setIsDetailCollapsed(!isDetailCollapsed);
   };
-  // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
-
   // Deprecated: (20241128 - Liz)
   // eslint-disable-next-line no-console
   console.log('進入 IncomeStatementReportBodyAll');
-
-  // const {
-  //   data: reportFinancial,
-  //   code: getReportFinancialCode,
-  //   success: getReportFinancialSuccess,
-  //   isLoading: getReportFinancialIsLoading,
-  // } = APIHandler<FinancialReport>(
-  //   APIName.REPORT_GET_BY_ID,
-  //   {
-  //     params: {
-  //       companyId: selectedCompany?.id,
-  //       reportId: reportId ?? NON_EXISTING_REPORT_ID,
-  //     },
-  //   },
-  //   hasCompanyId
-  // );
 
   const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -61,7 +41,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
 
   useEffect(() => {
-    if (isAuthLoading || !selectedCompany) return;
     if (isLoading) return;
     setIsLoading(true);
 
@@ -72,7 +51,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: selectedCompany.id, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+          params: { companyId: 1, reportId: reportId ?? NON_EXISTING_REPORT_ID },
         });
 
         if (!getFRSuccess) {
@@ -99,7 +78,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
     console.log('in useEffect and calling getFinancialReport_in IncomeStatementReportBodyAll');
-  }, [isAuthLoading, reportId, selectedCompany]);
+  }, [reportId]);
 
   if (isLoading) {
     return (
@@ -182,7 +161,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 </h1>
                 <p className="text-left text-xs font-bold leading-5">
                   {formattedCurFromDate}至{formattedCurToDate} <br />
-                  合併財務報告 - 綜合損益表
+                  財務報告 - 綜合損益表
                 </p>
               </>
             )}
