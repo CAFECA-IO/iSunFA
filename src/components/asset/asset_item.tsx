@@ -32,7 +32,7 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
     isSelected,
   } = assetData;
 
-  const unit = currencyAlias === 'TWD' ? t('asset:COMMON.TWD') : currencyAlias;
+  const unit = t(`asset:CURRENCY_ALIAS.${currencyAlias}`);
   const assetTypeName = t(`filter_section_type:FILTER_SECTION_TYPE.${assetType}`);
 
   const displayedDate = (

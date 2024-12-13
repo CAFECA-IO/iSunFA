@@ -91,5 +91,9 @@
     "D": "D",
     "SELECT": "Select",
     "SELECT_ALL": "Select All"
+  },
+  "CURRENCY_ALIAS": {
+    "TWD": "TWD",
+    "EUR": "EUR"
   }
 }
