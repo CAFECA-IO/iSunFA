@@ -13,6 +13,53 @@ interface CertificateListIrops {
   onEdit: (id: number) => void;
 }
 
+/**
+ * Info: (20241213 - tzuhan) 簡化文件名稱，適配中英文字符
+ * @param name 文件名稱
+ * @param maxWidth 最大顯示寬度（如 120 px）
+ * @returns 簡化後的文件名稱
+ */
+const simplifyFileName = (name: string, maxWidth: number = 120): string => {
+  const getCharWidth = (char: string) => (/[\u4e00-\u9fa5]/.test(char) ? 2 : 1); // Info: (20241213 - tzuhan) 中文占2個單位寬
+  const calculateWidth = (str: string) =>
+    str.split('').reduce((acc, char) => acc + getCharWidth(char), 0);
+
+  if (calculateWidth(name) <= maxWidth) return name;
+
+  const extensionIndex = name.lastIndexOf('.');
+  const extension = extensionIndex !== -1 ? name.slice(extensionIndex) : '';
+  const baseName = extensionIndex !== -1 ? name.slice(0, extensionIndex) : name;
+
+  const ellipsisWidth = 3; // Info: (20241213 - tzuhan) "..." 寬度
+  const maxBaseWidth = maxWidth - ellipsisWidth - calculateWidth(extension);
+
+  let currentWidth = 0;
+  let start = '';
+  let end = '';
+
+  // Info: (20241213 - tzuhan) 從頭開始裁剪前半部分
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0; i < baseName.length; i++) {
+    const charWidth = getCharWidth(baseName[i]);
+    if (currentWidth + charWidth > maxBaseWidth / 2) break;
+    start += baseName[i];
+    currentWidth += charWidth;
+  }
+
+  currentWidth = 0;
+
+  // Info: (20241213 - tzuhan) 從尾開始裁剪後半部分
+  // eslint-disable-next-line no-plusplus
+  for (let i = baseName.length - 1; i >= 0; i--) {
+    const charWidth = getCharWidth(baseName[i]);
+    if (currentWidth + charWidth > maxBaseWidth / 2) break;
+    end = baseName[i] + end;
+    currentWidth += charWidth;
+  }
+
+  return `${start}...${end}${extension}`;
+};
+
 const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; className?: string }> = ({
   isSelected,
   children,
@@ -64,13 +111,18 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
 
       {/* Info: (20240924 - tzuhan) Invoice Information */}
-      <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
-        <div className="flex items-center space-y-2">
+      <BorderCell
+        isSelected={certificate.isSelected}
+        className="flex w-120px gap-1 overflow-hidden"
+      >
+        <div className="flex items-center space-x-2">
           {!certificate.invoice?.isComplete && (
             <IoWarningOutline size={16} className="text-surface-state-error" />
           )}
           <div className="flex-col">
-            <div className="text-text-neutral-tertiary">{certificate.name ?? ''}</div>
+            <div className="text-text-neutral-tertiary">
+              {simplifyFileName(certificate.name) ?? ''}
+            </div>
             <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
           </div>
         </div>
