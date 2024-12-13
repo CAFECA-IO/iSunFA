@@ -1,19 +1,17 @@
 import { FiBell } from 'react-icons/fi';
-import useOuterClick from '@/lib/hooks/use_outer_click'; // Info: (20241011 - Liz) 加上這個 hook 讓使用者點擊外部時可以關閉選單
 
-const Notification = () => {
-  const {
-    targetRef: notificationRef,
-    componentVisible: isPanelOpen, // Info: (20241011 - Liz) 這個變數是用來判斷訊息面板是否開啟
-    setComponentVisible: setIsPanelOpen,
-  } = useOuterClick<HTMLDivElement>(false);
+interface NotificationProps {
+  isPanelOpen: boolean;
+  setIsPanelOpen: (visible: boolean) => void; // Info: (20241213 - Liz) 控制顯示狀態的函數
+}
 
+const Notification = ({ isPanelOpen, setIsPanelOpen }: NotificationProps) => {
   const TogglePanel = () => {
-    setIsPanelOpen((prev) => !prev);
+    setIsPanelOpen(!isPanelOpen); // Info: (20241213 - Liz) 切換顯示狀態
   };
 
   return (
-    <section className="relative" ref={notificationRef}>
+    <section className="relative border-2 border-sky-400">
       {/* // Info: (20241011 - Liz) 通知鈴鐺 icon */}
       <button
         type="button"
@@ -25,7 +23,7 @@ const Notification = () => {
 
       {/* // Info: (20241011 - Liz) 通知訊息面板 */}
       {isPanelOpen && (
-        <div className="absolute right-0 top-full z-10 w-400px translate-y-6 rounded-lg bg-surface-neutral-surface-lv2 px-24px py-12px shadow-Dropshadow_M">
+        <div className="absolute right-0 top-full z-10 mt-10px w-400px rounded-lg bg-surface-neutral-surface-lv2 px-24px py-12px shadow-Dropshadow_M">
           <p className="p-16px font-medium text-text-neutral-primary">
             This is a test notification, in order to test whether the notification message panel is
             successfully displayed.

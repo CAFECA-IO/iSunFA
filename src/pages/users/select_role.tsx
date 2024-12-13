@@ -13,10 +13,11 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { DEFAULT_AVATAR_URL } from '@/constants/display';
 import { RoleName } from '@/constants/role';
 import { IUserRole } from '@/interfaces/user_role';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { IRole } from '@/interfaces/role';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import useClickManager from '@/lib/hooks/use_click_manager';
 
 interface UserRoleProps {
   name: string;
@@ -140,6 +141,17 @@ const SelectRolePage = () => {
   const [isAbleToCreateRole, setIsAbleToCreateRole] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const { registerRef, visibleMap, setVisibility } = useClickManager<HTMLDivElement>();
+
+  const globalRef = useRef<HTMLDivElement>(null); // 定義 I18n 元件的 ref
+
+  useEffect(() => {
+    // 註冊 ref
+    if (globalRef.current) {
+      registerRef('menu', globalRef);
+    }
+  }, []);
+
   useEffect(() => {
     const initializeRolesData = async () => {
       // Deprecated: (20241122 - Liz)
@@ -205,7 +217,12 @@ const SelectRolePage = () => {
         <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
 
         <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
-          <I18n />
+          <div ref={globalRef}>
+            <I18n
+              isMenuVisible={visibleMap.menu}
+              setIsMenuVisible={(visible) => setVisibility('menu', visible)}
+            />
+          </div>
 
           <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
             <FiHome size={22} />

@@ -1,74 +1,57 @@
 import { useTranslation } from 'next-i18next';
-import React, { Dispatch, SetStateAction, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import { VscGlobe } from 'react-icons/vsc';
 
-interface II18nProps {
-  langIsOpen?: boolean;
-  setLangIsOpen?: Dispatch<SetStateAction<boolean>>;
+const INTERNATIONALIZATION_LIST = [
+  { label: 'English', value: 'en' },
+  { label: '繁體中文', value: 'tw' },
+  { label: '简体中文', value: 'cn' },
+];
+
+interface I18nProps {
+  isMenuVisible: boolean;
+  setIsMenuVisible: (visible: boolean) => void; // Info: (20241213 - Liz) 控制顯示狀態的函數
 }
 
-const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
+const I18n = ({ isMenuVisible, setIsMenuVisible }: I18nProps) => {
   const { t } = useTranslation(['dashboard']);
-
-  const [openMenuState, setOpenMenuState] = useState(false);
-  const openMenu = typeof setLangIsOpen !== 'function' ? openMenuState : langIsOpen;
-  const setOpenMenu = typeof setLangIsOpen !== 'function' ? setOpenMenuState : setLangIsOpen;
+  const toggleMenu = () => {
+    setIsMenuVisible(!isMenuVisible); // Info: (20241213 - Liz) 切換顯示狀態
+  };
 
   const { asPath } = useRouter();
-  const {
-    targetRef: globalRef,
-    componentVisible: globalVisible,
-    setComponentVisible: setGlobalVisible,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  const desktopClickHandler = () => {
-    setGlobalVisible(!globalVisible);
-  };
-  const mobileClickHandler = () => {
-    setOpenMenu(!openMenu);
-  };
-
-  const internationalizationList = [
-    { label: 'English', value: 'en' },
-    { label: '繁體中文', value: 'tw' },
-    { label: '简体中文', value: 'cn' },
-  ];
 
   const displayedDesktopMenu = (
-    <div className="relative mx-auto hidden max-w-1920px lg:flex">
-      <div
-        id="I18nMenuDesktop"
-        className={`absolute -left-16 top-30px z-100 w-150px rounded-sm ${
-          globalVisible ? 'visible opacity-100' : 'invisible opacity-0'
-        } rounded-none bg-white shadow-dropmenu transition-all duration-300`}
-      >
-        <ul className="py-1 text-base text-button-text-secondary" aria-labelledby="i18nButton">
-          {internationalizationList.map((item) => (
-            <li key={item.value} onClick={desktopClickHandler}>
-              <Link
-                id={`${item.value.toUpperCase()}ButtonDesktop`}
-                scroll={false}
-                locale={item.value}
-                href={asPath}
-                className="block rounded-none py-3 text-center hover:text-button-text-primary-hover"
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div
+      id="I18nMenuDesktop"
+      className={`absolute start-1/2 top-full z-50 mt-10px w-150px -translate-x-1/2 rounded-sm border-2 ${
+        isMenuVisible ? 'visible opacity-100' : 'invisible opacity-0'
+      } bg-white shadow-dropmenu transition-all duration-300`}
+    >
+      <ul className="py-1 text-base text-button-text-secondary" aria-labelledby="i18nButton">
+        {INTERNATIONALIZATION_LIST.map((item) => (
+          <li key={item.value} onClick={toggleMenu}>
+            <Link
+              id={`${item.value.toUpperCase()}ButtonDesktop`}
+              scroll={false}
+              locale={item.value}
+              href={asPath}
+              className="block rounded-none py-3 text-center hover:text-button-text-primary-hover"
+            >
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 
   const displayedMobileMenu = (
     <div
-      className={`transition-all duration-300 ${
-        openMenu
+      className={`border-2 border-violet-500 transition-all duration-300 ${
+        isMenuVisible
           ? 'visible -translate-y-7rem opacity-100'
           : 'invisible -translate-y-36rem opacity-0'
       } lg:hidden`}
@@ -78,7 +61,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
         className="absolute left-0 top-0 z-10 h-300px w-screen bg-white shadow"
       >
         <button
-          onClick={mobileClickHandler}
+          onClick={toggleMenu}
           type="button"
           className="px-4 pt-2 text-button-text-secondary hover:text-button-text-primary-hover"
         >
@@ -88,8 +71,8 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
           className="text-center text-base text-button-text-secondary"
           aria-labelledby="i18nButton"
         >
-          {internationalizationList.map((item) => (
-            <li key={item.value} onClick={mobileClickHandler}>
+          {INTERNATIONALIZATION_LIST.map((item) => (
+            <li key={item.value} onClick={toggleMenu}>
               <Link
                 id={`${item.value.toUpperCase()}ButtonMobile`}
                 scroll={false}
@@ -110,7 +93,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
     <>
       <button
         type="button"
-        onClick={desktopClickHandler}
+        onClick={toggleMenu}
         className="hidden p-10px text-icon-surface-single-color-primary hover:text-button-text-primary-hover disabled:text-button-text-disable laptop:flex"
       >
         <VscGlobe size={26} />
@@ -118,7 +101,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
 
       <button
         id="NavLanguageMobile"
-        onClick={mobileClickHandler}
+        onClick={toggleMenu}
         type="button"
         className="flex w-screen items-center justify-between gap-8px py-10px pl-6 pr-6 text-button-text-secondary hover:text-button-text-primary-hover disabled:text-button-text-secondary disabled:opacity-50 laptop:hidden"
       >
@@ -133,7 +116,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
   );
 
   return (
-    <div ref={globalRef}>
+    <div className="relative border-2 border-pink-400">
       {displayedI18n}
       {displayedDesktopMenu}
       {displayedMobileMenu}
