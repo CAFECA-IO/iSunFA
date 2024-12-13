@@ -33,8 +33,7 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
   } = assetData;
 
   const unit = currencyAlias === 'TWD' ? t('asset:COMMON.TWD') : currencyAlias;
-  const assetTypeCode = assetType.split(' ')[0];
-  const assetTypeTitle = assetType.split(' ').slice(1).join(' ');
+  const assetTypeName = t(`filter_section_type:FILTER_SECTION_TYPE.${assetType}`);
 
   const displayedDate = (
     <div className="flex items-center justify-center">
@@ -47,8 +46,8 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
 
   const displayedAssetType = (
     <p className="text-text-neutral-primary">
-      {assetTypeCode}
-      <span className="text-text-neutral-tertiary"> {assetTypeTitle}</span>
+      {assetType}
+      <span className="text-text-neutral-tertiary"> {assetTypeName}</span>
     </p>
   );
 
