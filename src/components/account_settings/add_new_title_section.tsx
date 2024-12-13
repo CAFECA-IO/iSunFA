@@ -95,7 +95,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     );
   const subcategoryString = selectSubcategory
     ? `${selectSubcategory?.code} ${selectSubcategory?.name}`
-    : t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING');
+    : t('setting:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER');
 
   const submitDisabled = selectCategory === '' || selectSubcategory === null;
 
@@ -286,10 +286,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     <div
       className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${isCategoryMenuOpen ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
     >
-      <div
-        ref={categoryRef}
-        className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px"
-      >
+      <div className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
         {categoryList}
       </div>
     </div>
@@ -299,10 +296,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     <div
       className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${isAccountEditing ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
     >
-      <div
-        ref={subcategoryRef}
-        className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px"
-      >
+      <div className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
         {subcategoryList}
       </div>
     </div>
@@ -373,6 +367,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
             <span className="text-text-state-error">*</span>
           </p>
           <div
+            ref={categoryRef}
             onClick={toggleCategoryMenu}
             className="relative flex items-center rounded-sm border border-input-stroke-input px-12px py-10px hover:cursor-pointer"
           >
@@ -392,6 +387,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
             <span className="text-text-state-error">*</span>
           </p>
           <div
+            ref={subcategoryRef}
             onClick={toggleSubcategoryMenu}
             className="relative flex items-center rounded-sm border border-input-stroke-input px-12px py-10px hover:cursor-pointer"
           >
