@@ -1,4 +1,4 @@
-import { AssetSortBy, ExportFileType } from '@/constants/export_asset';
+import { AssetSortBy, ExportAssetFileType } from '@/constants/export_asset';
 import { SortOrder } from '@/constants/sort';
 
 // TODO: (20241108 - Shirley) 改成 zod input / output schema
@@ -8,7 +8,7 @@ export interface IAssetSort {
 }
 
 export interface IAssetExportRequestBody {
-  fileType: ExportFileType;
+  fileType: ExportAssetFileType;
   filters?: {
     type?: string;
     status?: string;

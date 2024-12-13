@@ -284,7 +284,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
                 <span className="text-text-neutral-primary">
                   {numberWithCommas(totalReverseAmount)}
                 </span>{' '}
-                {t('common:COMMON.TWD')}
+                {t('journal:JOURNAL.TWD')}
               </p>
             </div>
             <div className="flex flex-1 flex-col items-center px-16px py-8px text-sm">
@@ -297,6 +297,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
                     className={checkboxStyle}
                     checked={isSelectedAll}
                     onChange={checkAllHandler}
+                    disabled={totalItems === 0} // Info: (20241212 - Julian) 無 reverse item 時，全選無效
                   />
                 </div>
                 {/* Info: (20241104 - Julian) Voucher No */}

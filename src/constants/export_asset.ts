@@ -1,6 +1,6 @@
 import { AssetHeader } from '@/interfaces/asset';
 
-export enum ExportFileType {
+export enum ExportAssetFileType {
   CSV = 'csv',
 }
 
@@ -11,8 +11,6 @@ export enum AssetSortBy {
   RESIDUAL_VALUE = 'residualValue',
   REMAINING_LIFE = 'remainingLife',
 }
-
-export const DEFAULT_TIMEZONE = '+0800';
 
 export const AssetFieldsMap: Record<keyof AssetHeader, string> = {
   acquisitionDate: '取得日期',

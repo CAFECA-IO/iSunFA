@@ -50,7 +50,7 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
   } = useOuterClick<HTMLButtonElement>(false);
 
   const queryCondition = {
-    limit: 100, // Info: (20241018 - Julian) 限制每次取出 100 筆
+    limit: 9999, // Info: (20241212 - Julian) 全部取出
     forUser: true,
     sortBy: 'code', // Info: (20241018 - Julian) 依 code 排序
     sortOrder: 'asc',

@@ -1,5 +1,5 @@
 import { exportAssets } from '@/lib/utils/repo/export_asset.repo';
-import { AssetFieldsMap, DEFAULT_TIMEZONE } from '@/constants/export_asset';
+import { AssetFieldsMap } from '@/constants/export_asset';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAssetExportRequestBody } from '@/interfaces/export_asset';
 import { formatApiResponse, formatTimestampByTZ, getTimestampNow } from '@/lib/utils/common';
@@ -10,6 +10,7 @@ import { checkRequestData, checkSessionUser, logUserAction } from '@/lib/utils/m
 import { getSession } from '@/lib/utils/session';
 import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DEFAULT_TIMEZONE } from '@/constants/common';
 
 async function handleAssetExport(
   req: NextApiRequest,

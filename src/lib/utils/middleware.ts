@@ -34,7 +34,7 @@ export async function checkSessionUser(
   return isLogin;
 }
 
-async function checkUserAuthorization<T extends APIName>(
+export async function checkUserAuthorization<T extends APIName>(
   apiName: T,
   req: NextApiRequest,
   session: ISessionData

@@ -210,7 +210,9 @@
     "UPLOADED_TAB": "Uploaded Voucher",
     "UPCOMING_TAB": "Upcoming Events",
     "RECEIVING_TAB": "Receiving",
-    "PAYMENT_TAB": "Payment"
+    "PAYMENT_TAB": "Payment",
+    "SELECT": "Select",
+    "SELECT_ALL": "Select All"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "Add New Voucher",
@@ -226,7 +228,9 @@
     "NO_ACCOUNTING_FOUND": "No accounting found",
     "NO_COUNTERPARTY_FOUND": "No counterparty found",
     "EVERY": "Every",
-    "TOAST_FAILED_TO_CREATE": "Failed to create voucher, please try again later."
+    "TOAST_FAILED_TO_CREATE": "Failed to create voucher, please try again later.",
+    "TOAST_FILL_UP_FORM": "Please fill up the form.",
+    "TOAST_FAILED_TO_UPDATE": "Failed to update voucher, please try again later."
   },
   "ACCOUNT_TYPE": {
     "ASSET": "Assets",

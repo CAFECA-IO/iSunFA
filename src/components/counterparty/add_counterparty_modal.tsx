@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -67,6 +66,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
         setInputTaxId(''); //  Info: (20241212 - Anna) 清空統一編號
       }
     } catch (fetchError) {
+      // Deprecate: (20241212 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
       console.error('Error fetching company data:', fetchError);
     }
   };
@@ -87,6 +88,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
         setInputName(''); // Info: (20241212 - Anna) 查無資料時清空名稱
       }
     } catch (fetchError) {
+      // Deprecate: (20241212 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
       console.error('Error fetching company data by Tax ID:', fetchError);
       setInputName(''); // Info: (20241212 - Anna) 查詢失敗時清空名稱
     }
@@ -150,8 +153,12 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     if (event.key === 'Enter') {
       // Info: (20241212 - Anna) 檢查輸入是否包含有效漢字
       if (/^[\u4e00-\u9fa5]+$/.test(inputName)) {
+        // Deprecate: (20241212 - Anna) remove eslint-disable
+        // eslint-disable-next-line no-console
         fetchTaxIdByCompanyName(inputName).catch(console.error);
       } else {
+        // Deprecate: (20241212 - Anna) remove eslint-disable
+        // eslint-disable-next-line no-console
         console.warn('輸入無效或不包含漢字');
       }
     }
@@ -173,6 +180,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
     // Info: (20241212 - Anna) 當輸入的統一編號滿 8 碼時，觸發 API
     if (newTaxId.length === 8 && /^[0-9]{8}$/.test(newTaxId)) {
+      // Deprecate: (20241212 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
       fetchCompanyNameByTaxId(newTaxId).catch(console.error);
     } else if (newTaxId === '') {
       setInputName(''); // Info: (20241212 - Anna) 清空公司名稱
