@@ -56,18 +56,20 @@ const CompanyItem = ({ companyAndRole, setCompanyToSelect }: CompanyItemProps) =
       type="button"
       onClick={openMessageModal}
       disabled={isCompanySelected}
-      className={`h-100px w-100px overflow-hidden rounded-sm shadow-Dropshadow_XS ${
+      className={`flex h-120px w-120px flex-none flex-col items-center justify-center gap-8px overflow-hidden rounded-sm border-2 px-8px py-12px ${
         isCompanySelected
-          ? 'border-2 border-stroke-brand-primary bg-surface-brand-primary-10'
-          : 'bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10'
+          ? 'border-stroke-brand-primary bg-surface-brand-primary-10'
+          : 'border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10'
       }`}
     >
       <Image
         src={companyAndRole.company.imageId}
         alt={companyAndRole.company.name}
-        width={100}
-        height={100}
+        width={60}
+        height={60}
+        className="h-60px w-60px rounded-sm bg-white"
       ></Image>
+      <p className="w-full truncate">{companyAndRole.company.name}</p>
     </button>
   );
 };
@@ -79,7 +81,7 @@ interface CompanyListProps {
 
 const CompanyList = ({ companyAndRoleList, setCompanyToSelect }: CompanyListProps) => {
   return (
-    <div className="flex justify-center gap-40px">
+    <div className="flex justify-center gap-24px">
       {companyAndRoleList.map((companyAndRole) => (
         <CompanyItem
           key={companyAndRole.company.id}
@@ -170,6 +172,8 @@ const MyCompanyList = () => {
         const recentCompanies = userCompanyList
           .sort((a, b) => b.company.id - a.company.id)
           .slice(0, 3);
+
+        // ToDo: (20241213 - Liz) 改成取得所有公司不要只拿前三個，並且已被選擇的公司要顯示在第一個
 
         setCompanyAndRoleList(recentCompanies);
       } else {
