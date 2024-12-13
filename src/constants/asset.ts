@@ -6,6 +6,7 @@ export enum AssetStatus {
   DONATED = 'donated',
   MISSING = 'missing',
   NORMAL = 'normal',
+  ALL = 'All',
 }
 
 /**
@@ -14,10 +15,65 @@ export enum AssetStatus {
  * @note value is Account Code of asset
  * @shirley 目前我只有寫一個type，不確定要有哪些type
  */
+// Info: (20241213 - Shirley) 除了 1602, 1611, 1691 以外，為了讓前端可以 query 其他資產類型，先補上所有 `AccountCodesOfAsset`
 export enum AssetEntityType {
-  LAND = '1602',
-  BUILDING = '1611',
-  OFFICE_EQUIPMENT = '1691',
+  LAND = '1602', // Info: (20241213 - Shirley) 土地成本
+  LAND_IMPROVEMENT = '1606', // Info: (20241213 - Shirley) 土地改良物成本
+  BUILDING = '1611', // Info: (20241213 - Shirley) 房屋及建築成本
+  MACHINERY = '1616', // Info: (20241213 - Shirley) 機器設備成本
+  LOADING_EQUIPMENT = '1621', // Info: (20241213 - Shirley) 裝卸設備成本
+  STORAGE_EQUIPMENT = '1626', // Info: (20241213 - Shirley) 倉儲設備成本
+  GAS_EQUIPMENT = '1631', // Info: (20241213 - Shirley) 售氣及輸氣設備成本
+  MOLD_EQUIPMENT = '1636', // Info: (20241213 - Shirley) 模具設備成本
+  POWER_EQUIPMENT = '1641', // Info: (20241213 - Shirley) 水電設備成本
+  FREEZING_EQUIPMENT = '1646', // Info: (20241213 - Shirley) 冷凍設備成本
+  FISHING_EQUIPMENT = '1651', // Info: (20241213 - Shirley) 漁船設備成本
+  COMPUTER_EQUIPMENT = '1656', // Info: (20241213 - Shirley) 電腦通訊設備成本
+  TEST_EQUIPMENT = '1661', // Info: (20241213 - Shirley) 試驗設備成本
+  POLLUTION_EQUIPMENT = '1666', // Info: (20241213 - Shirley) 污染防治設備成本
+  TRANSPORT_EQUIPMENT = '1671', // Info: (20241213 - Shirley) 運輸設備成本
+  SHIP_EQUIPMENT = '1676', // Info: (20241213 - Shirley) 船舶設備成本
+  DOCK_EQUIPMENT = '1681', // Info: (20241213 - Shirley) 碼頭設備成本
+  AVIATION_EQUIPMENT = '1686', // Info: (20241213 - Shirley) 飛航設備成本
+  OFFICE_EQUIPMENT = '1691', // Info: (20241213 - Shirley) 辦公設備成本
+  BUSINESS_EQUIPMENT = '1696', // Info: (20241213 - Shirley) 營業器具成本
+  MACHINE_EQUIPMENT = '1701', // Info: (20241213 - Shirley) 機具設備成本
+  AMUSEMENT_EQUIPMENT = '1706', // Info: (20241213 - Shirley) 遊樂設備成本
+  LANDSCAPE_COST = '1711', // Info: (20241213 - Shirley) 景觀園藝成本
+  LEASED_ASSET = '1716', // Info: (20241213 - Shirley) 租賃資產成本
+  LEASED_MACHINERY = '1721', // Info: (20241213 - Shirley) 出租資產－機器設備成本
+  OTHER_LEASED_ASSET = '1726', // Info: (20241213 - Shirley) 出租資產－其他成本
+  LEASEHOLD_IMPROVEMENT = '1731', // Info: (20241213 - Shirley) 租賃改良成本
+  OTHER_EQUIPMENT = '1736', // Info: (20241213 - Shirley) 其他設備成本
+  CONSTRUCTION_IN_PROGRESS = '1740', // Info: (20241213 - Shirley) 未完工程及待驗設備
+  PRODUCTIVE_PLANT = '1746', // Info: (20241213 - Shirley) 生產性植物成本
+  MINERAL_RESOURCE = '1751', // Info: (20241213 - Shirley) 礦產資源成本
+  RIGHT_OF_USE_LAND = '17AA', // Info: (20241213 - Shirley) 使用權資產－土地成本
+  RIGHT_OF_USE_LAND_IMPROVEMENT = '17BA', // Info: (20241213 - Shirley) 使用權資產－土地改良物成本
+  RIGHT_OF_USE_BUILDING = '17CA', // Info: (20241213 - Shirley) 使用權資產－房屋及建築成本
+  RIGHT_OF_USE_MACHINERY = '17DA', // Info: (20241213 - Shirley) 使用權資產－機器設備成本
+  RIGHT_OF_USE_TRANSPORT = '17EA', // Info: (20241213 - Shirley) 使用權資產－運輸設備成本
+  RIGHT_OF_USE_OFFICE = '17FA', // Info: (20241213 - Shirley) 使用權資產－辦公設備成本
+  RIGHT_OF_USE_OTHER = '17GA', // Info: (20241213 - Shirley) 使用權資產－其他資產成本
+  INVESTMENT_PROPERTY_LAND = '1761', // Info: (20241213 - Shirley) 投資性不動產－土地
+  INVESTMENT_PROPERTY_BUILDING = '1765', // Info: (20241213 - Shirley) 投資性不動產－建築物
+  INVESTMENT_PROPERTY_LEASE = '1771', // Info: (20241213 - Shirley) 投資性不動產－租賃權益
+  INVESTMENT_PROPERTY_RIGHT_OF_USE = '1776', // Info: (20241213 - Shirley) 投資性不動產－使用權資產
+  INVESTMENT_PROPERTY_CONSTRUCTION = '1773', // Info: (20241213 - Shirley) 建造中之投資性不動產
+  TRADEMARK = '1782', // Info: (20241213 - Shirley) 商標權
+  PATENT = '1786', // Info: (20241213 - Shirley) 專利權
+  FRANCHISE = '1792', // Info: (20241213 - Shirley) 特許權
+  COPYRIGHT = '1796', // Info: (20241213 - Shirley) 著作權
+  SOFTWARE = '1802', // Info: (20241213 - Shirley) 電腦軟體
+  GOODWILL = '1805', // Info: (20241213 - Shirley) 商譽
+  TECHNICAL_KNOWHOW = '1812', // Info: (20241213 - Shirley) 專門技術
+  OTHER_INTANGIBLE = '1822', // Info: (20241213 - Shirley) 其他無形資產
+  INTANGIBLE_IN_DEVELOPMENT = '1826', // Info: (20241213 - Shirley) 發展中之無形資產
+  CONSUMABLE_BIOLOGICAL = '1831', // Info: (20241213 - Shirley) 消耗性生物資產－非流動
+  PRODUCTIVE_BIOLOGICAL = '1835', // Info: (20241213 - Shirley) 生產性生物資產－非流動
+  TANGIBLE_EXPLORATION = '1906', // Info: (20241213 - Shirley) 有形探勘及評估資產成本
+  INTANGIBLE_EXPLORATION = '1911', // Info: (20241213 - Shirley) 無形探勘及評估資產成本
+  ALL = 'All',
 }
 
 /**

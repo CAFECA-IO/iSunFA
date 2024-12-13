@@ -343,3 +343,27 @@ export function convertAccountBookJsonToTrialBalanceItem(
 
   return trialBalanceData;
 }
+
+export const convertTrialBalanceDataToCsvData = (trialBalanceData: ITrialBalanceData) => {
+  const csvData = trialBalanceData.items.map((item) => {
+    return {
+      accountingTitle: item.accountingTitle,
+    };
+  });
+  return csvData;
+};
+
+export function transformTrialBalanceData(
+  items: TrialBalanceItem[]
+): Record<string, string | number>[] {
+  const data = items.map((item) => ({
+    accountingTitle: item.accountingTitle,
+    beginningCreditAmount: item.beginningCreditAmount,
+    beginningDebitAmount: item.beginningDebitAmount,
+    midtermCreditAmount: item.midtermCreditAmount,
+    midtermDebitAmount: item.midtermDebitAmount,
+    endingCreditAmount: item.endingCreditAmount,
+    endingDebitAmount: item.endingDebitAmount,
+  }));
+  return data;
+}
