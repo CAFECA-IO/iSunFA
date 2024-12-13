@@ -115,7 +115,7 @@ export const userSettingOutputSchema = z
       },
       createdAt: userSetting.createdAt,
       updatedAt: userSetting.updatedAt,
-      deletedAt: userSetting.deletedAt || 0, // 如果 deletedAt 是 null，默认设置为 0
+      deletedAt: userSetting.deletedAt || 0, // Info: (20241213 - Murky) 如果 deletedAt 是 null，默認設置為 0
     };
 
     const data = userSettingValidateSchema.parse(correctUserSetting);
