@@ -71,6 +71,13 @@ export async function createAssetWithVouchers(
   return result;
 }
 
+/**
+ * Info: (20241206 - Shirley) 殘值 === 剩餘帳面價值
+ * 批量建立資產，每個資產的購買價格為總價除以建立的資產數量，殘值為總殘值除以建立的資產數量，如果殘值為undefined (不為0)，則殘值為總價除以建立的資產數量；總價跟總殘值除不盡的餘數會加在則最後一個資產上
+ * @param assetData 資產資料
+ * @param amount 建立的資產數量
+ * @returns 建立的資產列表
+ */
 // TODO: (20241206 - Shirley) 建立 voucher，綁定 voucher 跟 asset
 export async function createManyAssets(
   assetData: IAssetBulkPostRepoInput,
@@ -78,8 +85,19 @@ export async function createManyAssets(
 ): Promise<IAssetBulkPostRepoOutput> {
   const timestampNow = getTimestampNow();
   const assets = [];
-
   const assetNumbers = generateAssetNumbers(assetData.number, amount);
+
+  const pricePerAsset = Math.floor(assetData.purchasePrice / amount);
+
+  const residualValuePerAsset =
+    assetData.residualValue !== undefined
+      ? Math.floor(assetData.residualValue / amount)
+      : pricePerAsset;
+
+  const remainder = assetData.purchasePrice % amount;
+
+  const remainderResidualValue =
+    assetData.residualValue !== undefined ? assetData.residualValue % amount : remainder;
 
   for (let i = 0; i < amount; i += 1) {
     const newAsset = {
@@ -88,9 +106,10 @@ export async function createManyAssets(
       type: assetData.type,
       number: assetNumbers[i],
       acquisitionDate: assetData.acquisitionDate,
-      purchasePrice: assetData.purchasePrice,
+      purchasePrice: i === amount - 1 ? pricePerAsset + remainder : pricePerAsset,
       accumulatedDepreciation: assetData.accumulatedDepreciation,
-      residualValue: assetData.residualValue || assetData.purchasePrice,
+      residualValue:
+        i === amount - 1 ? residualValuePerAsset + remainderResidualValue : residualValuePerAsset,
       remainingLife: assetData.usefulLife || 0,
       status: AssetStatus.NORMAL,
       depreciationStart: assetData.depreciationStart || assetData.acquisitionDate,
