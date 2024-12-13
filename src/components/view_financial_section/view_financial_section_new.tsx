@@ -116,7 +116,7 @@ const ViewFinancialSectionNew = ({
           code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
-          params: { reportId },
+          params: { companyId: 1, reportId },
         });
 
         if (!getFRSuccess) {

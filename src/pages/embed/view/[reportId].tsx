@@ -12,7 +12,6 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
-import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { FinancialReport, IReportOld } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
@@ -27,7 +26,6 @@ interface IServerSideProps {
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
   const { t } = useTranslation(['reports']);
   const { toastHandler } = useModalContext();
-  const { selectedCompany, isAuthLoading } = useUserCtx();
   const [reportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
@@ -43,8 +41,6 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
 
   useEffect(() => {
-    if (isAuthLoading || !selectedCompany) return;
-
     const getFinancialReport = async () => {
       try {
         const {
@@ -52,7 +48,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
           code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: selectedCompany.id, reportId },
+          params: { companyId: 1, reportId },
         });
 
         if (!getFRSuccess) {
@@ -79,31 +75,30 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
     console.log('in useEffect and calling getFinancialReport_in ViewFinancialReportPage');
-  }, [isAuthLoading, reportId, reportType, selectedCompany, t, toastHandler]);
+  }, [reportId, reportType, t, toastHandler]);
 
-  const displayedBody =
-    isAuthLoading || !isGetFinancialReportSuccess ? (
-      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
-        <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
-      </div>
-    ) : (
-      <div>
-        <div className="h-1400px bg-surface-neutral-main-background">
-          <ViewFinancialSectionNew
-            reportTypesName={
-              reportData.reportTypesName as {
-                id: keyof typeof FinancialReportTypesMap;
-                name: string;
-              }
+  const displayedBody = !isGetFinancialReportSuccess ? (
+    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    <div>
+      <div className="h-1400px bg-surface-neutral-main-background">
+        <ViewFinancialSectionNew
+          reportTypesName={
+            reportData.reportTypesName as {
+              id: keyof typeof FinancialReportTypesMap;
+              name: string;
             }
-            tokenContract={reportData.tokenContract}
-            tokenId={reportData.tokenId}
-            reportLink={`/users/reports/${reportId}/${ReportUrlMap[financialReport?.reportType as keyof typeof ReportUrlMap]}`}
-            reportId={reportId}
-          />
-        </div>
+          }
+          tokenContract={reportData.tokenContract}
+          tokenId={reportData.tokenId}
+          reportLink={`/users/reports/${reportId}/${ReportUrlMap[financialReport?.reportType as keyof typeof ReportUrlMap]}`}
+          reportId={reportId}
+        />
       </div>
-    );
+    </div>
+  );
 
   return (
     <div>

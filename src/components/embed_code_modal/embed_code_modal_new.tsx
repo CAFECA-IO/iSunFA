@@ -16,7 +16,6 @@ import { RxCross2 } from 'react-icons/rx';
 import { IoIosArrowDown, IoMdCheckmark } from 'react-icons/io';
 import { PiCopySimpleBold } from 'react-icons/pi';
 import { IFinancialReportRequest } from '@/interfaces/report';
-import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
 
@@ -192,12 +191,12 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
             const reportId = report.data; // Info: (20241130 - Anna) 從 API 響應中拿 reportId
 
-            // Info: (20241130 - Anna) 動態生成link
-            const reportLink = `https://isunfa.tw${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}`;
+            // Info: (20241213 - Anna) 動態生成link
+            const reportLink = `https://isunfa.tw/embed/view/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}`;
 
             // Info: (20241130 - Anna) 生成 iframe
             iframeCodes.push(
-              `<iframe src="${reportLink}" title="${reportType}" width="595" height="842" />`
+              `<iframe src="${reportLink}" title="${reportType}" width="1280" height="720" />`
             );
           } catch (error) {
             // Deprecated: (20241130 - Anna) remove eslint-disable
