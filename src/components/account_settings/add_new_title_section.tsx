@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
@@ -14,6 +14,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import { FiBookOpen } from 'react-icons/fi';
 
 interface IAddNewTitleSectionProps {
   accountTitleList: IAccount[];
@@ -32,6 +33,9 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const { selectedCompany } = useUserCtx();
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+
+  // Info: (20241121 - Julian) 會計科目 input ref
+  const accountInputRef = useRef<HTMLInputElement>(null);
 
   // Info: (20241112 - Julian) 新增會計科目的 API
   const {
@@ -55,10 +59,11 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     setComponentVisible: setIsCategoryMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
+  // Info: (20241213 - Julian) Account 編輯狀態
   const {
     targetRef: subcategoryRef,
-    componentVisible: isSubcategoryMenuOpen,
-    setComponentVisible: setIsSubcategoryMenuOpen,
+    componentVisible: isAccountEditing,
+    setComponentVisible: setIsAccountEditing,
   } = useOuterClick<HTMLDivElement>(false);
 
   // Info: (20241112 - Julian) form content
@@ -67,6 +72,9 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const [titleName, setTitleName] = useState<string>('');
   const [titleCode, setTitleCode] = useState<string>('-');
   const [titleNote, setTitleNote] = useState<string>('');
+  // Info: (20241213 - Julian) 會計科目搜尋
+  const [searchKeyword, setSearchKeyword] = useState<string>('');
+  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(accountTitleList);
 
   const formTitle =
     formType === TitleFormType.add
@@ -85,20 +93,14 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         {t(`setting:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${selectCategory.toUpperCase()}`)}
       </p>
     );
-  const subcategoryString = !selectSubcategory ? (
-    <p className="flex-1 text-input-text-input-placeholder">
-      {t('setting:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER')}
-    </p>
-  ) : (
-    <p className="w-200px flex-1 truncate text-input-text-input-filled">
-      {selectSubcategory?.code} {selectSubcategory?.name}
-    </p>
-  );
+  const subcategoryString = selectSubcategory
+    ? `${selectSubcategory?.code} ${selectSubcategory?.name}`
+    : t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING');
 
   const submitDisabled = selectCategory === '' || selectSubcategory === null;
 
   const toggleCategoryMenu = () => setIsCategoryMenuOpen(!isCategoryMenuOpen);
-  const toggleSubcategoryMenu = () => setIsSubcategoryMenuOpen(!isSubcategoryMenuOpen);
+  const toggleSubcategoryMenu = () => setIsAccountEditing(!isAccountEditing);
   const changeNameHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitleName(e.target.value);
   };
@@ -112,6 +114,12 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     setTitleName('');
     setTitleCode('');
     setTitleNote('');
+  };
+
+  // Info: (20241213 - Julian) 會計科目搜尋
+  const accountSearchHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchKeyword(e.target.value);
+    setIsAccountEditing(true);
   };
 
   useEffect(() => {
@@ -194,6 +202,50 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     }
   }, [selectSubcategory]);
 
+  useEffect(() => {
+    // Info: (20241213 - Julian) 查詢會計科目關鍵字時聚焦
+    if (isAccountEditing && accountInputRef.current) {
+      accountInputRef.current.focus();
+    }
+
+    // Info: (20241213 - Julian) 查詢模式關閉後清除搜尋關鍵字
+    if (!isAccountEditing) {
+      setSearchKeyword('');
+    }
+  }, [isAccountEditing]);
+
+  useEffect(() => {
+    if (searchKeyword === '') {
+      setFilteredAccountList(accountTitleList);
+    } else {
+      const filteredList = accountTitleList.filter((account) => {
+        // Info: (20241213 - Julian) 名稱搜尋：包含關鍵字
+        const isNameMatch = account.name.includes(searchKeyword);
+        // Info: (20241213 - Julian) 代碼搜尋：開頭符合關鍵字
+        const isCodeMatch = account.code.startsWith(searchKeyword);
+        return isNameMatch || isCodeMatch;
+      });
+      setFilteredAccountList(filteredList);
+    }
+  }, [searchKeyword]);
+
+  const isEditAccounting = isAccountEditing ? (
+    <input
+      id="account-input"
+      ref={accountInputRef}
+      value={searchKeyword}
+      onChange={accountSearchHandler}
+      placeholder={subcategoryString}
+      className="w-full truncate bg-transparent text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
+    />
+  ) : (
+    <p
+      className={`flex-1 truncate ${selectSubcategory ? 'text-input-text-input-filled' : 'text-input-text-input-placeholder'}`}
+    >
+      {subcategoryString}
+    </p>
+  );
+
   const categoryList = accountTypeList.map((category) => {
     const categoryClickHandler = () => setSelectCategory(category);
     return (
@@ -207,28 +259,37 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     );
   });
 
-  const subcategoryList = accountTitleList
-    .filter((title) => !title.code.includes('-'))
-    .map((title) => {
-      const subcategoryClickHandler = () => setSelectSubcategory(title);
-      return (
-        <div
-          key={title.id}
-          onClick={subcategoryClickHandler}
-          className="flex items-center gap-4px px-12px py-8px hover:bg-drag-n-drop-surface-hover"
-        >
-          <p className="text-sm text-dropdown-text-primary">{title.code}</p>
-          <p className="text-xs text-dropdown-text-secondary">{title.name}</p>
-        </div>
-      );
-    });
+  const subcategoryList =
+    filteredAccountList.length > 0 ? (
+      filteredAccountList
+        .filter((title) => !title.code.includes('-'))
+        .map((title) => {
+          const subcategoryClickHandler = () => setSelectSubcategory(title);
+          return (
+            <div
+              key={title.id}
+              onClick={subcategoryClickHandler}
+              className="flex items-center gap-4px px-12px py-8px hover:bg-drag-n-drop-surface-hover"
+            >
+              <p className="text-sm text-dropdown-text-primary">{title.code}</p>
+              <p className="text-xs text-dropdown-text-secondary">{title.name}</p>
+            </div>
+          );
+        })
+    ) : (
+      <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
+        {t('setting:ACCOUNTING_SETTING_MODAL.NO_ACCOUNTING_FOUND')}
+      </p>
+    );
 
   const displayCategoryMenu = (
     <div
-      ref={categoryRef}
       className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${isCategoryMenuOpen ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
     >
-      <div className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
+      <div
+        ref={categoryRef}
+        className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px"
+      >
         {categoryList}
       </div>
     </div>
@@ -236,10 +297,12 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
 
   const displaySubcategoryMenu = (
     <div
-      ref={subcategoryRef}
-      className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${isSubcategoryMenuOpen ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${isAccountEditing ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
     >
-      <div className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
+      <div
+        ref={subcategoryRef}
+        className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px"
+      >
         {subcategoryList}
       </div>
     </div>
@@ -314,7 +377,9 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
             className="relative flex items-center rounded-sm border border-input-stroke-input px-12px py-10px hover:cursor-pointer"
           >
             {categoryString}
-            <div className="text-icon-surface-single-color-primary">
+            <div
+              className={`text-icon-surface-single-color-primary ${isCategoryMenuOpen ? 'rotate-180' : 'rotate-0'}`}
+            >
               <FaChevronDown />
             </div>
             {displayCategoryMenu}
@@ -330,9 +395,9 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
             onClick={toggleSubcategoryMenu}
             className="relative flex items-center rounded-sm border border-input-stroke-input px-12px py-10px hover:cursor-pointer"
           >
-            {subcategoryString}
-            <div className="text-icon-surface-single-color-primary">
-              <FaChevronDown />
+            {isEditAccounting}
+            <div className="h-20px w-20px">
+              <FiBookOpen size={20} />
             </div>
             {displaySubcategoryMenu}
           </div>

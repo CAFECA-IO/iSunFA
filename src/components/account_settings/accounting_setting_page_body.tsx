@@ -412,7 +412,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 alt="currency_icon"
                 className="rounded-full"
               />
-              <p>{currency}</p>
+              <p>{t(`setting:CURRENCY_ALIAS.${currency}`)}</p>
             </div>
           );
         })}
@@ -523,7 +523,9 @@ const AccountingSettingPageBody: React.FC = () => {
               />
             </div>
             <div className="flex flex-1 items-center justify-between px-12px py-10px">
-              <p className="text-input-text-input-filled">{currentCurrency}</p>
+              <p className="text-input-text-input-filled">
+                {t(`setting:CURRENCY_ALIAS.${currentCurrency}`)}
+              </p>
               <div className="text-icon-surface-single-color-primary">
                 <FaChevronDown />
               </div>
