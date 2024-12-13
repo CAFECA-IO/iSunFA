@@ -25,12 +25,12 @@ export const CountriesMap: Record<LocaleKey, LocaleEntry> = {
   tw: { id: LocaleKey.tw, name: 'Taiwan', icon: '/icons/tw.svg' },
   cn: { id: LocaleKey.cn, name: 'China', icon: '/icons/cn.svg' },
   //   us: { id: LocaleKey.us, name: 'United States', icon: '/icons/us.svg' },
-  en: { id: LocaleKey.en, name: 'United Kingdom', icon: '/icons/en.svg' }, // Info: (20241105 - Tzuhan) Optional if needed
+  en: { id: LocaleKey.en, name: 'United States', icon: '/icons/en.svg' }, // Info: (20241105 - Tzuhan) Optional if needed
 };
 
 // Info: (20241105 - Tzuhan) Phone Country Code Map
 export const CountryCodeMap: Record<LocaleKey, LocaleEntry> = {
-  en: { id: LocaleKey.en, name: 'English', icon: '/icons/en.svg' }, // Info: (20241105 - Tzuhan) No code since "en" is a language, not a country
+  en: { id: LocaleKey.en, name: 'United State', icon: '/icons/en.svg', code: '+1' }, // Info: (20241105 - Tzuhan) No code since "en" is a language, not a country, 先用美國
   tw: { id: LocaleKey.tw, name: 'Taiwan', icon: '/icons/tw.svg', code: '+886' },
   cn: { id: LocaleKey.cn, name: 'China', icon: '/icons/cn.svg', code: '+86' },
   //   us: { id: LocaleKey.us, name: 'United States', icon: '/icons/us.svg', code: '+1' }, // "us" for United States with code +1

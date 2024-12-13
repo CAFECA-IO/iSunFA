@@ -1,3 +1,5 @@
+import { LocaleKey } from '@/constants/normal_setting';
+
 export interface IUserSetting {
   id: number;
   userId: number;
@@ -15,8 +17,8 @@ interface INotificationSetting {
 interface IUserPersonalInfo {
   firstName: string;
   lastName: string;
-  country: string; // Info: (20241211 - tzuhan) @Murky 可以改用 LocaleKey 嗎？
-  language: string; // Info: (20241211 - tzuhan) @Murky 可以改用 LocaleKey 嗎？
+  country: LocaleKey; // Info: (20241211 - tzuhan) @Murky 可以改用 LocaleKey 嗎？
+  language: LocaleKey; // Info: (20241211 - tzuhan) @Murky 可以改用 LocaleKey 嗎？
   // countryCode: string; // Info: (20241211 - tzuhan) @Murky 這裡可以幫提供 countryCode 使用 LocaleKey 嗎？
   phone: string;
 }
