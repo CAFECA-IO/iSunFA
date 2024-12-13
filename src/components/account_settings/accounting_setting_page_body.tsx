@@ -435,7 +435,9 @@ const AccountingSettingPageBody: React.FC = () => {
               className="relative flex items-center gap-8px rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px font-medium hover:cursor-pointer"
             >
               {showTaxStr(currentSalesTax)}
-              <div className="text-icon-surface-single-color-primary">
+              <div
+                className={`text-icon-surface-single-color-primary ${salesTaxVisible ? 'rotate-180' : 'rotate-0'}`}
+              >
                 <FaChevronDown />
               </div>
               {/* Info: (20241113 - Julian) ===== 銷售稅下拉選單內容 ===== */}
@@ -454,7 +456,9 @@ const AccountingSettingPageBody: React.FC = () => {
               className="relative flex items-center gap-8px rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px font-medium hover:cursor-pointer"
             >
               {showTaxStr(currentPurchaseTax)}
-              <div className="text-icon-surface-single-color-primary">
+              <div
+                className={`text-icon-surface-single-color-primary ${purchaseTaxVisible ? 'rotate-180' : 'rotate-0'}`}
+              >
                 <FaChevronDown />
               </div>
               {/* Info: (20241113 - Julian) ===== 消費稅下拉選單內容 ===== */}
@@ -479,7 +483,9 @@ const AccountingSettingPageBody: React.FC = () => {
                 <p className="text-input-text-input-filled">
                   {t(`setting:ACCOUNTING.${currentTaxPeriod.toUpperCase()}`)}
                 </p>
-                <div className="text-icon-surface-single-color-primary">
+                <div
+                  className={`text-icon-surface-single-color-primary ${periodVisible ? 'rotate-180' : 'rotate-0'}`}
+                >
                   <FaChevronDown />
                 </div>
                 {periodDropdown}
@@ -521,7 +527,9 @@ const AccountingSettingPageBody: React.FC = () => {
               <p className="text-input-text-input-filled">
                 {t(`setting:CURRENCY_ALIAS.${currentCurrency}`)}
               </p>
-              <div className="text-icon-surface-single-color-primary">
+              <div
+                className={`text-icon-surface-single-color-primary ${currencyMenuVisible ? 'rotate-180' : 'rotate-0'}`}
+              >
                 <FaChevronDown />
               </div>
             </div>

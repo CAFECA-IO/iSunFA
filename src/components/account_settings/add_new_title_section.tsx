@@ -112,7 +112,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     setSelectCategory('');
     setSelectSubcategory(null);
     setTitleName('');
-    setTitleCode('');
+    setTitleCode('-');
     setTitleNote('');
   };
 
