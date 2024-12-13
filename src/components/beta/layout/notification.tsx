@@ -1,23 +1,27 @@
+import { Dispatch, SetStateAction } from 'react';
 import { FiBell } from 'react-icons/fi';
-import useOuterClick from '@/lib/hooks/use_outer_click'; // Info: (20241011 - Liz) 加上這個 hook 讓使用者點擊外部時可以關閉選單
 
-const Notification = () => {
-  const {
-    targetRef: notificationRef,
-    componentVisible: isPanelOpen, // Info: (20241011 - Liz) 這個變數是用來判斷訊息面板是否開啟
-    setComponentVisible: setIsPanelOpen,
-  } = useOuterClick<HTMLDivElement>(false);
+interface NotificationProps {
+  isPanelOpen: boolean;
+  setIsPanelOpen: Dispatch<SetStateAction<boolean>>;
+  toggleNotificationPanel: () => void;
+}
 
-  const TogglePanel = () => {
-    setIsPanelOpen((prev) => !prev);
+const Notification = ({
+  isPanelOpen,
+  setIsPanelOpen,
+  toggleNotificationPanel,
+}: NotificationProps) => {
+  const closePanel = () => {
+    setIsPanelOpen(false);
   };
 
   return (
-    <section className="relative" ref={notificationRef}>
+    <section className="relative">
       {/* // Info: (20241011 - Liz) 通知鈴鐺 icon */}
       <button
         type="button"
-        onClick={TogglePanel}
+        onClick={toggleNotificationPanel}
         className="p-10px text-icon-surface-single-color-primary hover:text-button-text-primary-hover disabled:text-button-text-disable"
       >
         <FiBell size={24} className="cursor-pointer" />
@@ -25,20 +29,20 @@ const Notification = () => {
 
       {/* // Info: (20241011 - Liz) 通知訊息面板 */}
       {isPanelOpen && (
-        <div className="absolute right-0 top-full z-10 w-400px translate-y-6 rounded-lg bg-surface-neutral-surface-lv2 px-24px py-12px shadow-Dropshadow_M">
-          <p className="p-16px font-medium text-text-neutral-primary">
+        <div className="absolute right-0 top-full z-10 mt-10px w-400px rounded-lg bg-surface-neutral-surface-lv2 px-24px py-12px shadow-Dropshadow_M">
+          <p className="p-16px font-medium text-text-neutral-primary" onClick={closePanel}>
             This is a test notification, in order to test whether the notification message panel is
             successfully displayed.
           </p>
-          <p className="p-16px font-medium text-text-neutral-tertiary">
+          <p className="p-16px font-medium text-text-neutral-tertiary" onClick={closePanel}>
             This is a test notification, in order to test whether the notification message panel is
             successfully displayed.
           </p>
-          <p className="p-16px font-medium text-text-neutral-tertiary">
+          <p className="p-16px font-medium text-text-neutral-tertiary" onClick={closePanel}>
             This is a test notification, in order to test whether the notification message panel is
             successfully displayed.
           </p>
-          <p className="p-16px font-medium text-text-neutral-tertiary">
+          <p className="p-16px font-medium text-text-neutral-tertiary" onClick={closePanel}>
             This is a test notification, in order to test whether the notification message panel is
             successfully displayed.
           </p>
