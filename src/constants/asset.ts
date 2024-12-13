@@ -6,6 +6,7 @@ export enum AssetStatus {
   DONATED = 'donated',
   MISSING = 'missing',
   NORMAL = 'normal',
+  ALL = 'All',
 }
 
 /**
@@ -18,6 +19,7 @@ export enum AssetEntityType {
   LAND = '1602',
   BUILDING = '1611',
   OFFICE_EQUIPMENT = '1691',
+  ALL = 'All',
 }
 
 /**

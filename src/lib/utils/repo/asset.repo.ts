@@ -1,5 +1,10 @@
 import prisma from '@/client';
-import { AssetDepreciationMethod, AssetStatus, DEFAULT_SORT_OPTIONS } from '@/constants/asset';
+import {
+  AssetDepreciationMethod,
+  AssetEntityType,
+  AssetStatus,
+  DEFAULT_SORT_OPTIONS,
+} from '@/constants/asset';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
@@ -231,11 +236,21 @@ export async function listAssetsByCompanyId(
 ) {
   const { sortOption, filterCondition, searchQuery } = options;
 
+  const cleanedFilterCondition = {
+    ...filterCondition,
+    ...(filterCondition?.type === AssetEntityType.ALL
+      ? { type: undefined }
+      : { type: filterCondition?.type }),
+    ...(filterCondition?.status === AssetStatus.ALL
+      ? { status: undefined }
+      : { status: filterCondition?.status }),
+  };
+
   const where: Prisma.AssetWhereInput = {
     companyId,
     deletedAt: null,
-    assetVouchers: { some: {} }, // Info: (20241206 - Shirley) 獲取具有 voucher 的資產
-    ...(filterCondition || {}),
+    assetVouchers: { some: {} },
+    ...cleanedFilterCondition,
     OR: searchQuery
       ? [
           { name: { contains: searchQuery, mode: 'insensitive' } },
