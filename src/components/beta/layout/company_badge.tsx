@@ -11,15 +11,16 @@ const CompanyBadge = () => {
       {selectedCompany ? (
         <Link
           href={ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE}
-          className="flex items-center justify-center gap-1px rounded-md bg-badge-surface-soft-primary px-3px py-4px text-badge-text-primary-solid"
+          className="flex w-80px items-center justify-center gap-1px rounded-md bg-badge-surface-soft-primary px-3px py-1px text-badge-text-primary-solid"
         >
           <Image
             src={selectedCompany.imageId}
             alt="company_avatar_in_header"
             width={14}
             height={14}
+            className="h-14px w-14px rounded-full bg-surface-neutral-surface-lv2 object-contain"
           ></Image>
-          <p className="px-2.5px text-xs font-medium">{selectedCompany.name}</p>
+          <p className="truncate px-2.5px py-3px text-xs font-medium">{selectedCompany.name}</p>
         </Link>
       ) : null}
     </div>
