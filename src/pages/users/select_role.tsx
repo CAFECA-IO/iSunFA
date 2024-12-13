@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { IRole } from '@/interfaces/role';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface UserRoleProps {
   name: string;
@@ -174,6 +175,12 @@ const SelectRolePage = () => {
     initializeRolesData();
   }, [router]);
 
+  const {
+    targetRef: globalRef,
+    componentVisible: isMenuVisible,
+    setComponentVisible: setIsMenuVisible,
+  } = useOuterClick<HTMLDivElement>(false);
+
   // Info: (20241107 - Liz) 跳轉到建立角色頁面前的 Loading 畫面
   if (userRoleList === null) {
     // 顯示載入指示器，直到完成 `getUserRoleList` 的請求
@@ -205,7 +212,9 @@ const SelectRolePage = () => {
         <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
 
         <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
-          <I18n />
+          <div ref={globalRef}>
+            <I18n isMenuVisible={isMenuVisible} setIsMenuVisible={setIsMenuVisible} />
+          </div>
 
           <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
             <FiHome size={22} />

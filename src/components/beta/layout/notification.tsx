@@ -4,13 +4,13 @@ import { FiBell } from 'react-icons/fi';
 interface NotificationProps {
   isPanelOpen: boolean;
   setIsPanelOpen: Dispatch<SetStateAction<boolean>>;
-  toggleNotificationPanel: () => void;
+  toggleNotificationPanel?: () => void;
 }
 
 const Notification = ({
   isPanelOpen,
   setIsPanelOpen,
-  toggleNotificationPanel,
+  toggleNotificationPanel = () => setIsPanelOpen((prev) => !prev),
 }: NotificationProps) => {
   const closePanel = () => {
     setIsPanelOpen(false);

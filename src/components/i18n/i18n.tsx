@@ -14,14 +14,19 @@ const INTERNATIONALIZATION_LIST = [
 interface I18nProps {
   isMenuVisible: boolean;
   setIsMenuVisible: Dispatch<SetStateAction<boolean>>;
-  toggleI18nMenu: () => void;
+  toggleI18nMenu?: () => void;
 }
 
-const I18n = ({ isMenuVisible, setIsMenuVisible, toggleI18nMenu }: I18nProps) => {
+const I18n = ({
+  isMenuVisible,
+  setIsMenuVisible,
+  toggleI18nMenu = () => setIsMenuVisible((prev) => !prev),
+}: I18nProps) => {
   const { t } = useTranslation(['dashboard']);
   const closeMenu = () => {
     setIsMenuVisible(false);
   };
+
   const { asPath } = useRouter();
 
   const displayedDesktopMenu = (
