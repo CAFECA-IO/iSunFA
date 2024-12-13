@@ -1,3 +1,4 @@
+import { LocaleKey } from '@/constants/normal_setting';
 import { z } from 'zod';
 
 // Info: (20241029 - Jacky) User setting null schema
@@ -20,9 +21,39 @@ const userSettingPutBodySchema = z.object({
   personalInfo: z.object({
     firstName: z.string(),
     lastName: z.string(),
-    country: z.string(),
-    language: z.string(),
+    country: z.nativeEnum(LocaleKey),
+    language: z.nativeEnum(LocaleKey),
     phone: z.string(),
+  }),
+  notificationSetting: z.object({
+    systemNotification: z.boolean(),
+    updateAndSubscriptionNotification: z.boolean(),
+    emailNotification: z.boolean(),
+  }),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+});
+
+// Info: (20241023 - Jacky) User setting validate schema
+const userSettingValidateSchema = z.object({
+  id: z.number(),
+  userId: z.number(),
+  personalInfo: z.object({
+    firstName: z
+      .string()
+      .nullable()
+      .transform((value) => value || ''),
+    lastName: z
+      .string()
+      .nullable()
+      .transform((value) => value || ''),
+    country: z.nativeEnum(LocaleKey).transform((value) => value || LocaleKey.tw),
+    language: z.nativeEnum(LocaleKey).transform((value) => value || LocaleKey.tw),
+    phone: z
+      .string()
+      .nullable()
+      .transform((value) => value || ''),
   }),
   notificationSetting: z.object({
     systemNotification: z.boolean(),
@@ -39,58 +70,57 @@ export const userSettingOutputSchema = z
   .object({
     id: z.number(),
     userId: z.number(),
-    firstName: z.string().nullable().default(''),
-    lastName: z.string().nullable().default(''),
-    country: z.string().nullable().default(''),
-    language: z.string().nullable().default(''),
-    phone: z.string().nullable().default(''),
+    firstName: z
+      .string()
+      .nullable()
+      .transform((value) => value || ''),
+    lastName: z
+      .string()
+      .nullable()
+      .transform((value) => value || ''),
+    country: z
+      .nativeEnum(LocaleKey)
+      .nullable()
+      .transform((value) => value || LocaleKey.tw),
+    language: z
+      .nativeEnum(LocaleKey)
+      .nullable()
+      .transform((value) => value || LocaleKey.tw),
+    phone: z
+      .string()
+      .nullable()
+      .transform((value) => value || ''),
     systemNotification: z.boolean(),
     updateAndSubscriptionNotification: z.boolean(),
     emailNotification: z.boolean(),
     createdAt: z.number(),
     updatedAt: z.number(),
-    deletedAt: z.number().nullable().default(0),
+    deletedAt: z.number().nullable(),
   })
-  .transform((userSetting) => ({
-    id: userSetting.id,
-    userId: userSetting.userId,
-    personalInfo: {
-      firstName: userSetting.firstName || '',
-      lastName: userSetting.lastName || '',
-      country: userSetting.country || '',
-      language: userSetting.language || '',
-      phone: userSetting.phone || '',
-    },
-    notificationSetting: {
-      systemNotification: userSetting.systemNotification,
-      updateAndSubscriptionNotification: userSetting.updateAndSubscriptionNotification,
-      emailNotification: userSetting.emailNotification,
-    },
-    createdAt: userSetting.createdAt,
-    updatedAt: userSetting.updatedAt,
-    deletedAt: userSetting.deletedAt || 0, // 如果 deletedAt 是 null，默认设置为 0
-  }));
+  .transform((userSetting) => {
+    const correctUserSetting = {
+      id: userSetting.id,
+      userId: userSetting.userId,
+      personalInfo: {
+        firstName: userSetting.firstName || '',
+        lastName: userSetting.lastName || '',
+        country: userSetting.country || LocaleKey.tw,
+        language: userSetting.language || LocaleKey.tw,
+        phone: userSetting.phone || '',
+      },
+      notificationSetting: {
+        systemNotification: userSetting.systemNotification,
+        updateAndSubscriptionNotification: userSetting.updateAndSubscriptionNotification,
+        emailNotification: userSetting.emailNotification,
+      },
+      createdAt: userSetting.createdAt,
+      updatedAt: userSetting.updatedAt,
+      deletedAt: userSetting.deletedAt || 0, // Info: (20241213 - Murky) 如果 deletedAt 是 null，默認設置為 0
+    };
 
-// Info: (20241023 - Jacky) User setting validate schema
-const userSettingValidateSchema = z.object({
-  id: z.number(),
-  userId: z.number(),
-  personalInfo: z.object({
-    firstName: z.string().nullable().default(''),
-    lastName: z.string().nullable().default(''),
-    country: z.string().nullable().default(''),
-    language: z.string().nullable().default(''),
-    phone: z.string().nullable().default(''),
-  }),
-  notificationSetting: z.object({
-    systemNotification: z.boolean(),
-    updateAndSubscriptionNotification: z.boolean(),
-    emailNotification: z.boolean(),
-  }),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable().default(0),
-});
+    const data = userSettingValidateSchema.parse(correctUserSetting);
+    return data;
+  });
 
 export const userSettingGetSchema = {
   input: {
