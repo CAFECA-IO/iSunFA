@@ -20,10 +20,8 @@ const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; classN
 }) => {
   return (
     <div
-      className={`relative table-cell border-b px-lv-2 align-middle ${
-        isSelected
-          ? 'border-stroke-brand-primary bg-surface-brand-primary-10'
-          : 'border-stroke-neutral-quaternary'
+      className={`relative table-cell px-lv-2 align-middle ${
+        isSelected ? 'bg-surface-brand-primary-10' : ''
       } group-hover:border-stroke-brand-primary ${className}`}
     >
       {children}

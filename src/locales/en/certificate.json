@@ -124,6 +124,7 @@
     "CONTENT": "Upload the certificates you want to attach with the voucher",
     "NO_FILE": "No files uploading",
     "REMAIN": "{{count}} left",
+    "COMPLETE": "{{success}} success, {{failed}} failed",
     "FAILED": "Upload failed",
     "LOADING": "Uploadng...",
     "URL": "Url",
