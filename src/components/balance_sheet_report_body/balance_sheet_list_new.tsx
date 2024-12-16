@@ -317,7 +317,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   );
 
   const displayedPreALRChart = isNoDataForPreALR ? (
-    <div className="ml-20">
+    <div className="w-300px">
       {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -641,8 +641,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         </div>
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-0">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
-            <div className="flex items-center">
+            <p className="text-base font-semibold text-text-brand-secondary-lv2">{curDate}</p>
+            <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {curAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
@@ -653,12 +653,12 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                   </li>
                 ))}
               </ul>
-              {displayedCurALRChart}{' '}
+              {displayedCurALRChart}
             </div>
           </div>
           <div className="flex flex-col space-y-0">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
-            <div className="flex items-center">
+            <p className="text-base font-semibold text-text-brand-secondary-lv2">{preDate}</p>
+            <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {preAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
@@ -669,7 +669,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                   </li>
                 ))}
               </ul>
-              {displayedPreALRChart}{' '}
+              {displayedPreALRChart}
             </div>
           </div>
         </div>
@@ -693,7 +693,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         </div>
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-5">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
+            <p className="text-base font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {curAssetMixLabels.map((label, index) => (
@@ -706,17 +706,35 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                 ))}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
-                <PieChartAssets
-                  data={curAssetMixRatio}
-                  labels={curAssetMixLabels}
-                  colors={COLORS}
-                />
+                {curAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
+                  <div className="ml-20">
+                    {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="200"
+                      height="200"
+                      fill="none"
+                      viewBox="0 0 200 200"
+                    >
+                      <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
+                      <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
+                        {t('reports:REPORTS.NO_DATA')}
+                      </text>
+                    </svg>
+                  </div>
+                ) : (
+                  <PieChartAssets
+                    data={curAssetMixRatio}
+                    labels={curAssetMixLabels}
+                    colors={COLORS}
+                  />
+                )}
               </div>
             </div>
           </div>
 
           <div className="flex flex-col space-y-5">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
+            <p className="text-base font-semibold text-text-brand-secondary-lv2">{preDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {preAssetMixLabels.map((label, index) => (
@@ -729,12 +747,29 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                 ))}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
-                {' '}
-                <PieChartAssets
-                  data={preAssetMixRatio}
-                  labels={preAssetMixLabels}
-                  colors={COLORS}
-                />
+                {preAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
+                  <div className="ml-20">
+                    {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="200"
+                      height="200"
+                      fill="none"
+                      viewBox="0 0 200 200"
+                    >
+                      <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
+                      <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
+                        {t('reports:REPORTS.NO_DATA')}
+                      </text>
+                    </svg>
+                  </div>
+                ) : (
+                  <PieChartAssets
+                    data={preAssetMixRatio}
+                    labels={preAssetMixLabels}
+                    colors={COLORS}
+                  />
+                )}
               </div>
             </div>
           </div>

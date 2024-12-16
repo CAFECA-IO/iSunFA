@@ -234,22 +234,22 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
 
       return [
         <tr key={key} className="h-40px" data-key={key} data-is-tr="true">
-          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+          <td className="w-77px border border-stroke-brand-secondary-soft p-10px text-sm">
             {displayCode}
           </td>
-          <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-sm">
+          <td className="w-77px border border-stroke-brand-secondary-soft p-10px text-sm">
             {name}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {displayCurPeriodAmount}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+          <td className="w-50px border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {displayCurPeriodPercentage}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {displayPrePeriodAmount}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+          <td className="w-50px border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {displayPrePeriodPercentage}
           </td>
         </tr>,
@@ -277,26 +277,29 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
             <p className="font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
-          <p className="font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="font-bold leading-5">
+            <span>單位：新台幣元</span>
+            <span className="pl-10">每股盈餘單位：新台幣元</span>
+          </p>
         </div>
         {!isSummaryCollapsed && (
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+                <th className="w-77px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
+                <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
                   {!isSummaryCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
                       {formattedCurFromDate}至{formattedCurToDate}
                     </p>
                   )}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
                   %
                 </th>
                 <th
@@ -309,7 +312,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                     </p>
                   )}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
                   %
                 </th>
               </tr>
@@ -338,7 +341,11 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
             </p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p className="font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="font-bold leading-5">
+            {' '}
+            <span>單位：新台幣元</span>
+            <span className="pl-5">每股盈餘單位：新台幣元</span>
+          </p>
         </div>
         {!isDetailCollapsed && (
           <table className="w-full border-collapse bg-white">
