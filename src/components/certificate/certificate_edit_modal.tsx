@@ -178,10 +178,10 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
           {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
           <Image
-            className="h-400px w-250px items-start"
+            className="h-310px w-210px min-w-210px items-start"
             src={certificate.file.url}
-            width={250}
-            height={400}
+            width={210}
+            height={310}
             alt="certificate"
             priority
           />
@@ -401,7 +401,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 {t('certificate:EDIT.INVOICE_TYPE')}
               </p>
               <div className="flex w-full items-center gap-4">
-                <div className="flex w-full items-center">
+                <div className="flex w-full min-w-300px items-center justify-between">
                   <div
                     ref={invoiceTypeMenuRef}
                     id="invoice-type-menu"

@@ -4,7 +4,6 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
-import { IoWarningOutline } from 'react-icons/io5';
 
 interface CertificateListIrops {
   activeSelection: boolean;
@@ -19,45 +18,35 @@ interface CertificateListIrops {
  * @param maxWidth 最大顯示寬度（如 120 px）
  * @returns 簡化後的文件名稱
  */
-const simplifyFileName = (name: string, maxWidth: number = 120): string => {
-  const getCharWidth = (char: string) => (/[\u4e00-\u9fa5]/.test(char) ? 2 : 1); // Info: (20241213 - tzuhan) 中文占2個單位寬
-  const calculateWidth = (str: string) =>
-    str.split('').reduce((acc, char) => acc + getCharWidth(char), 0);
-
-  if (calculateWidth(name) <= maxWidth) return name;
+export const simplifyFileName = (name: string): string => {
+  const isChinese = (char: string) => /[\u4e00-\u9fff]/.test(char);
+  const getMaxLengths = (hasChinese: boolean) => {
+    return hasChinese
+      ? { maxBaseLength: 4, maxExtensionLength: 4 }
+      : { maxBaseLength: 8, maxExtensionLength: 4 };
+  };
 
   const extensionIndex = name.lastIndexOf('.');
   const extension = extensionIndex !== -1 ? name.slice(extensionIndex) : '';
   const baseName = extensionIndex !== -1 ? name.slice(0, extensionIndex) : name;
 
-  const ellipsisWidth = 3; // Info: (20241213 - tzuhan) "..." 寬度
-  const maxBaseWidth = maxWidth - ellipsisWidth - calculateWidth(extension);
+  // Info: (20241216 - tzuhan) 確認名稱是否包含中文
+  const hasChinese = [...baseName].some(isChinese);
+  const { maxBaseLength, maxExtensionLength } = getMaxLengths(hasChinese);
 
-  let currentWidth = 0;
-  let start = '';
-  let end = '';
+  // Info: (20241216 - tzuhan) 簡化副檔名
+  const simplifiedExtension =
+    extension.length > maxExtensionLength
+      ? `${extension.slice(0, maxExtensionLength - 1)}..`
+      : extension;
 
-  // Info: (20241213 - tzuhan) 從頭開始裁剪前半部分
-  // eslint-disable-next-line no-plusplus
-  for (let i = 0; i < baseName.length; i++) {
-    const charWidth = getCharWidth(baseName[i]);
-    if (currentWidth + charWidth > maxBaseWidth / 2) break;
-    start += baseName[i];
-    currentWidth += charWidth;
-  }
+  // Info: (20241216 - tzuhan) 簡化主名稱
+  const simplifiedBaseName =
+    [...baseName].length > maxBaseLength
+      ? `${[...baseName].slice(0, maxBaseLength).join('')}..`
+      : baseName;
 
-  currentWidth = 0;
-
-  // Info: (20241213 - tzuhan) 從尾開始裁剪後半部分
-  // eslint-disable-next-line no-plusplus
-  for (let i = baseName.length - 1; i >= 0; i--) {
-    const charWidth = getCharWidth(baseName[i]);
-    if (currentWidth + charWidth > maxBaseWidth / 2) break;
-    end = baseName[i] + end;
-    currentWidth += charWidth;
-  }
-
-  return `${start}...${end}${extension}`;
+  return `${simplifiedBaseName}${simplifiedExtension}`;
 };
 
 const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; className?: string }> = ({
@@ -117,9 +106,9 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       >
         <div className="flex items-center space-x-2">
           {!certificate.invoice?.isComplete && (
-            <IoWarningOutline size={16} className="text-surface-state-error" />
+            <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
           )}
-          <div className="flex-col">
+          <div className="flex flex-col space-y-2">
             <div className="text-text-neutral-tertiary">
               {simplifyFileName(certificate.name) ?? ''}
             </div>
@@ -193,10 +182,10 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
 
       {/* Info: (20240924 - tzuhan) Voucher Information */}
-      <BorderCell isSelected={certificate.isSelected} className="w-120px">
-        <div className="flex items-center space-y-2">
+      <BorderCell isSelected={certificate.isSelected} className="w-120px text-center">
+        <div className="flex flex-col items-center space-y-2">
           <div className="text-right text-link-text-primary">{certificate?.voucherNo ?? ''}</div>
-          <div className="text-right text-text-neutral-primary">
+          <div className="flex gap-lv-1 text-right text-text-neutral-primary">
             {certificate.uploader && (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">
                 {certificate.uploader.slice(0, 2).toUpperCase()}
