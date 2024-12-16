@@ -94,6 +94,7 @@ interface CompanyListProps {
 }
 
 const CompanyList = ({ companyAndRoleList, setCompanyToSelect }: CompanyListProps) => {
+  const { selectedCompany } = useUserCtx();
   const containerRef = useRef<HTMLDivElement>(null);
   const [disabledCards, setDisabledCards] = useState<number[]>([]);
 
@@ -130,10 +131,20 @@ const CompanyList = ({ companyAndRoleList, setCompanyToSelect }: CompanyListProp
     };
   }, [companyAndRoleList]);
 
+  // Info: (20241216 - Liz) 當選擇公司後，將滾動條重設到最左側
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (selectedCompany) {
+      container.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+  }, [selectedCompany]);
+
   return (
     <div
       ref={containerRef}
-      className="flex max-w-full gap-24px overflow-x-auto pb-4px scrollbar scrollbar-track-transparent scrollbar-thumb-dropdown-surface-scrollbar"
+      className="flex max-w-full gap-24px overflow-x-auto px-1px pb-4px scrollbar scrollbar-track-transparent scrollbar-thumb-dropdown-surface-scrollbar"
     >
       {companyAndRoleList.map((companyAndRole, index) => (
         <CompanyItem
@@ -158,7 +169,7 @@ const MyCompanyList = () => {
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
 
   // Info: (20241126 - Liz) 選擇公司 API
-  const { selectCompany } = useUserCtx();
+  const { selectCompany, selectedCompany } = useUserCtx();
 
   const closeMessageModal = () => {
     setCompanyToSelect(undefined);
@@ -223,12 +234,19 @@ const MyCompanyList = () => {
       });
 
       if (success && userCompanyList && userCompanyList.length > 0) {
-        // Info: (20241126 - Liz) 取得使用者擁有的公司列表成功，依照 ICompanyAndRole.company.id 降冪排序並取前三個
-        const recentCompanies = userCompanyList.sort((a, b) => b.company.id - a.company.id);
+        // Info: (20241216 - Liz) 已被選擇的公司顯示在第一個
+        if (selectedCompany) {
+          const selectedCompanyIndex = userCompanyList.findIndex(
+            (companyAndRole) => companyAndRole.company.id === selectedCompany.id
+          );
 
-        // ToDo: (20241213 - Liz) 改成取得所有公司不要只拿前三個，並且已被選擇的公司要顯示在第一個
+          if (selectedCompanyIndex > -1) {
+            const selectedCompanyItem = userCompanyList.splice(selectedCompanyIndex, 1);
+            userCompanyList.unshift(selectedCompanyItem[0]);
+          }
+        }
 
-        setCompanyAndRoleList(recentCompanies);
+        setCompanyAndRoleList(userCompanyList);
       } else {
         // Info: (20241120 - Liz) 取得使用者擁有的公司列表失敗時顯示錯誤訊息
         // Deprecated: (20241120 - Liz)
@@ -240,7 +258,7 @@ const MyCompanyList = () => {
       // eslint-disable-next-line no-console
       console.error('listUserCompanyAPI(Simple) error:', error);
     }
-  }, [userAuth]);
+  }, [selectedCompany, userAuth]);
 
   useEffect(() => {
     getCompanyList();
