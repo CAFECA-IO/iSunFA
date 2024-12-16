@@ -124,6 +124,7 @@
     "CONTENT": "請選擇您要上傳的發票",
     "NO_FILE": "沒有上傳中的文件",
     "REMAIN": "剩下 {{count}} 文件",
+    "COMPLETE": "成功 {{success}} 文件, 失敗 {{failed}} 文件",
     "FAILED": "上傳失敗",
     "LOADING": "上傳中...",
     "URL": "網站",

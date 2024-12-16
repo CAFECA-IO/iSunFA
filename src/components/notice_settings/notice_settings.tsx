@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import { FiSend } from 'react-icons/fi';
@@ -19,81 +19,63 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
   const { toastHandler } = useModalContext();
   const { trigger: updateUserSettingAPI } = APIHandler<IUserSetting>(APIName.USER_SETTING_UPDATE);
 
-  const [enableSystemNotifications, setEnableSystemNotifications] = useState(
-    userSetting?.notificationSetting.systemNotification ?? false
-  );
-  const [enableUpdatesNotifications, setEnableUpdatesNotifications] = useState(
-    userSetting?.notificationSetting.updateAndSubscriptionNotification ?? false
-  );
-  const [enableEmailNotifications, setEnableEmailNotifications] = useState(
-    userSetting?.notificationSetting.emailNotification ?? false
-  );
+  const [notificationSettings, setNotificationSettings] = useState({
+    systemNotification: userSetting?.notificationSetting.systemNotification ?? false,
+    updateAndSubscriptionNotification:
+      userSetting?.notificationSetting.updateAndSubscriptionNotification ?? false,
+    emailNotification: userSetting?.notificationSetting.emailNotification ?? false,
+  });
 
-  const updateUseSetting = async () => {
-    if (!userSetting) return;
-    const { success } = await updateUserSettingAPI({
-      params: { userId: userSetting?.userId },
-      body: {
-        ...userSetting,
-        notificationSetting: {
-          ...userSetting.notificationSetting,
-          systemNotification: enableSystemNotifications,
-          updateAndSubscriptionNotification: enableUpdatesNotifications,
-          emailNotification: enableEmailNotifications,
+  const updateUseSetting = useCallback(
+    async (updatedSettings: typeof notificationSettings) => {
+      if (!userSetting) return;
+
+      const { success } = await updateUserSettingAPI({
+        params: { userId: userSetting?.userId },
+        body: {
+          ...userSetting,
+          notificationSetting: updatedSettings,
+          personalInfo: {
+            ...userSetting.personalInfo,
+          },
         },
-        personalInfo: {
-          ...userSetting.personalInfo,
-        },
-      },
-    });
-    if (success) {
-      toastHandler({
-        id: ToastId.USER_SETTING_UPDATE_SUCCESS, // ToDo:  (20241114 - tzuhan) 跟設計師確認更新成功或失敗的UI
-        type: ToastType.SUCCESS,
-        content: t('setting:USER.UPDATE_SUCCESS'),
-        closeable: true,
       });
-    } else {
-      toastHandler({
-        id: ToastId.USER_SETTING_UPDATE_ERROR,
-        type: ToastType.ERROR,
-        content: t('setting:USER.UPDATE_ERROR'),
-        closeable: true,
-      });
-    }
-  };
 
-  const handleSystemNotificationsToggle = () => {
-    setEnableSystemNotifications((prev) => {
-      const newState = !prev;
-      updateUseSetting();
-      return newState;
-    });
-  };
+      if (success) {
+        toastHandler({
+          id: ToastId.USER_SETTING_UPDATE_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: t('setting:USER.UPDATE_SUCCESS'),
+          closeable: true,
+        });
+      } else {
+        toastHandler({
+          id: ToastId.USER_SETTING_UPDATE_ERROR,
+          type: ToastType.ERROR,
+          content: t('setting:USER.UPDATE_ERROR'),
+          closeable: true,
+        });
+      }
+    },
+    [toastHandler, t, updateUserSettingAPI, userSetting]
+  );
 
-  const handleUpdatesNotificationsToggle = () => {
-    setEnableUpdatesNotifications((prev) => {
-      const newState = !prev;
-      updateUseSetting();
-      return newState;
-    });
-  };
-
-  const handleEmailNotificationsToggle = () => {
-    setEnableEmailNotifications((prev) => {
-      const newState = !prev;
-      updateUseSetting();
-      return newState;
+  const handleToggle = (key: keyof typeof notificationSettings) => {
+    setNotificationSettings((prev) => {
+      const updatedSettings = { ...prev, [key]: !prev[key] };
+      updateUseSetting(updatedSettings); // 使用最新值更新 API
+      return updatedSettings;
     });
   };
 
   useEffect(() => {
     if (userSetting) {
-      setEnableSystemNotifications(userSetting.notificationSetting.systemNotification);
-      setEnableUpdatesNotifications(
-        userSetting.notificationSetting.updateAndSubscriptionNotification
-      );
-      setEnableEmailNotifications(userSetting.notificationSetting.emailNotification);
+      setNotificationSettings({
+        systemNotification: userSetting.notificationSetting.systemNotification,
+        updateAndSubscriptionNotification:
+          userSetting.notificationSetting.updateAndSubscriptionNotification,
+        emailNotification: userSetting.notificationSetting.emailNotification,
+      });
     }
   }, [userSetting]);
 
@@ -113,10 +95,10 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
           <span>{t('setting:NORMAL.SYSTEM_NOTIFICATION')}</span>
         </p>
         <Toggle
-          id="tax-toggle"
-          initialToggleState={enableSystemNotifications}
-          getToggledState={handleSystemNotificationsToggle}
-          toggleStateFromParent={enableSystemNotifications}
+          id="system-notification-toggle"
+          initialToggleState={notificationSettings.systemNotification}
+          getToggledState={() => handleToggle('systemNotification')}
+          toggleStateFromParent={notificationSettings.systemNotification}
         />
       </div>
       <div className="mb-lv-5 flex items-center space-x-2">
@@ -125,10 +107,10 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
           <span>{t('setting:NORMAL.UPDATES_N_SUBSCRIPTION_NOTIFICATION')}</span>
         </p>
         <Toggle
-          id="tax-toggle"
-          initialToggleState={enableUpdatesNotifications}
-          getToggledState={handleUpdatesNotificationsToggle}
-          toggleStateFromParent={enableUpdatesNotifications}
+          id="updates-notification-toggle"
+          initialToggleState={notificationSettings.updateAndSubscriptionNotification}
+          getToggledState={() => handleToggle('updateAndSubscriptionNotification')}
+          toggleStateFromParent={notificationSettings.updateAndSubscriptionNotification}
         />
       </div>
       <div className="flex items-center space-x-2">
@@ -137,10 +119,10 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
           <span>{t('setting:NORMAL.EMAIL_NOTIFICATION')}</span>
         </p>
         <Toggle
-          id="tax-toggle"
-          initialToggleState={enableEmailNotifications}
-          getToggledState={handleEmailNotificationsToggle}
-          toggleStateFromParent={enableEmailNotifications}
+          id="email-notification-toggle"
+          initialToggleState={notificationSettings.emailNotification}
+          getToggledState={() => handleToggle('emailNotification')}
+          toggleStateFromParent={notificationSettings.emailNotification}
         />
       </div>
     </div>

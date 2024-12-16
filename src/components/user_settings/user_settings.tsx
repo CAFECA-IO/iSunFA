@@ -15,12 +15,15 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs
   const { userAuth } = useUserCtx();
   const loginDevice = userActionLogs ? userActionLogs.data[0].userAgent : '';
   const loginIP = userActionLogs ? userActionLogs.data[0].ipAddress : '';
+  const name = userSetting?.personalInfo
+    ? `${userSetting?.personalInfo?.firstName} ${userSetting?.personalInfo?.lastName}`
+    : (userAuth?.name ?? '');
 
   return (
     <>
       <UserInfo
         userId={userAuth?.id ?? 1}
-        username={userAuth?.name ?? ''}
+        username={name}
         email={userAuth?.email ?? ''}
         loginDevice={loginDevice}
         loginIP={loginIP}

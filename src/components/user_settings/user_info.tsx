@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import { FiEdit3, FiLink, FiMail } from 'react-icons/fi';
+import { FiLink, FiMail } from 'react-icons/fi';
 import { TbUserCircle } from 'react-icons/tb';
 import { Button } from '@/components/button/button';
 import IPModal, { extractLoginDevice } from '@/components/user_settings/ip_modal';
@@ -53,7 +53,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
             <span className="text-text-neutral-mute">{t('setting:NORMAL.USER_NAME')}:</span>
             <span className="text-base font-semibold text-text-neutral-primary">{username}</span>
           </div>
-          <FiEdit3 size={16} />
+          {/* <FiEdit3 size={16} /> */}
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-700">
           <FiMail size={16} />
