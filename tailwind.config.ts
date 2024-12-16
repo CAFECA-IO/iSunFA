@@ -1539,7 +1539,9 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  // Info: (20241216 - Liz) 用 import 也不行，用 require 也不行，很怪
+  // eslint-disable-next-line global-require
+  plugins: [require('tailwind-scrollbar')],
   safelist: [
     // Info: (20240726 - Liz) 在這裡添加自定義類別名稱
     'toast-container',

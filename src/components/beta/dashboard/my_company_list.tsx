@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
@@ -40,27 +40,41 @@ const NoData = ({ toggleCreateCompanyModal }: NoDataProps) => {
 interface CompanyItemProps {
   companyAndRole: ICompanyAndRole;
   setCompanyToSelect: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  isDisabled: boolean;
+  dataIndex: number;
 }
 
-const CompanyItem = ({ companyAndRole, setCompanyToSelect }: CompanyItemProps) => {
+const CompanyItem = ({
+  companyAndRole,
+  setCompanyToSelect,
+  isDisabled,
+  dataIndex,
+}: CompanyItemProps) => {
   const { selectedCompany } = useUserCtx();
   const isCompanySelected = companyAndRole.company.id === selectedCompany?.id;
 
   const openMessageModal = () => {
-    setCompanyToSelect(companyAndRole);
+    if (!isDisabled && !isCompanySelected) {
+      setCompanyToSelect(companyAndRole);
+    }
   };
+
+  const dynamicStyles = `
+  flex h-120px w-120px flex-none flex-col items-center justify-center gap-8px 
+  overflow-hidden rounded-sm border-2 px-8px py-12px
+  ${isCompanySelected ? 'border-stroke-brand-primary bg-surface-brand-primary-10' : ''}
+  ${isDisabled ? 'opacity-50 pointer-events-none border-stroke-neutral-quaternary bg-surface-neutral-main-background' : ''}
+  ${!isCompanySelected && !isDisabled ? 'border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10' : ''}
+`;
 
   return (
     <button
+      data-index={dataIndex}
       key={companyAndRole.company.id}
       type="button"
       onClick={openMessageModal}
-      disabled={isCompanySelected}
-      className={`flex h-120px w-120px flex-none flex-col items-center justify-center gap-8px overflow-hidden rounded-sm border-2 px-8px py-12px ${
-        isCompanySelected
-          ? 'border-stroke-brand-primary bg-surface-brand-primary-10'
-          : 'border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10'
-      }`}
+      disabled={isCompanySelected || isDisabled}
+      className={dynamicStyles}
     >
       <Image
         src={companyAndRole.company.imageId}
@@ -80,13 +94,54 @@ interface CompanyListProps {
 }
 
 const CompanyList = ({ companyAndRoleList, setCompanyToSelect }: CompanyListProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [disabledCards, setDisabledCards] = useState<number[]>([]);
+
+  // Info: (20241216 - Liz) 監聽滾動事件，計算元素是否部分超出容器的左右邊界，得到左右滾動和部分遮蔽的效果
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+
+    const updateDisabledCards = () => {
+      const newDisabledCards: number[] = [];
+      const containerRect = container.getBoundingClientRect();
+
+      Array.from(container.children).forEach((child, index) => {
+        const cardRect = child.getBoundingClientRect();
+        // Info: (20241216 - Liz) 判斷元素是否部分超出容器的左右邊界
+        if (cardRect.left < containerRect.left || cardRect.right > containerRect.right) {
+          newDisabledCards.push(index);
+        }
+      });
+
+      setDisabledCards(newDisabledCards);
+    };
+
+    // Info: (20241216 - Liz) 監聽滾動事件
+    container.addEventListener('scroll', updateDisabledCards);
+    window.addEventListener('resize', updateDisabledCards);
+
+    updateDisabledCards(); // Info: (20241216 - Liz) 初始化計算
+
+    // Info: (20241216 - Liz) 回傳清理函式給 useEffect
+    return () => {
+      container.removeEventListener('scroll', updateDisabledCards);
+      window.removeEventListener('resize', updateDisabledCards);
+    };
+  }, [companyAndRoleList]);
+
   return (
-    <div className="flex justify-center gap-24px">
-      {companyAndRoleList.map((companyAndRole) => (
+    <div
+      ref={containerRef}
+      className="flex max-w-full gap-24px overflow-x-auto pb-4px scrollbar scrollbar-track-transparent scrollbar-thumb-dropdown-surface-scrollbar"
+    >
+      {companyAndRoleList.map((companyAndRole, index) => (
         <CompanyItem
           key={companyAndRole.company.id}
           companyAndRole={companyAndRole}
           setCompanyToSelect={setCompanyToSelect}
+          isDisabled={disabledCards.includes(index)}
+          dataIndex={index}
         />
       ))}
     </div>
@@ -169,9 +224,7 @@ const MyCompanyList = () => {
 
       if (success && userCompanyList && userCompanyList.length > 0) {
         // Info: (20241126 - Liz) 取得使用者擁有的公司列表成功，依照 ICompanyAndRole.company.id 降冪排序並取前三個
-        const recentCompanies = userCompanyList
-          .sort((a, b) => b.company.id - a.company.id)
-          .slice(0, 3);
+        const recentCompanies = userCompanyList.sort((a, b) => b.company.id - a.company.id);
 
         // ToDo: (20241213 - Liz) 改成取得所有公司不要只拿前三個，並且已被選擇的公司要顯示在第一個
 
