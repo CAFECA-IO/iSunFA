@@ -178,7 +178,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
           {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
           <Image
-            className="h-310px w-210px min-w-210px items-start"
+            className="w-210px min-w-210px items-start"
             src={certificate.file.url}
             width={210}
             height={310}
@@ -410,7 +410,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   >
                     {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
                     {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
-                    <p className="hide-scrollbar flex h-46px items-center gap-1 overflow-y-scroll">
+                    <p className="hide-scrollbar items-centerjustify-between flex h-46px gap-1 overflow-y-scroll">
                       <span>{t(`filter_section_type:FILTER_SECTION_TYPE.${invoiceType}`)}</span>
                       <div className="flex h-20px w-20px items-center justify-center">
                         <FaChevronDown

@@ -20,33 +20,29 @@ interface CertificateListIrops {
  */
 export const simplifyFileName = (name: string): string => {
   const isChinese = (char: string) => /[\u4e00-\u9fff]/.test(char);
-  const getMaxLengths = (hasChinese: boolean) => {
-    return hasChinese
-      ? { maxBaseLength: 4, maxExtensionLength: 4 }
-      : { maxBaseLength: 8, maxExtensionLength: 4 };
-  };
 
   const extensionIndex = name.lastIndexOf('.');
   const extension = extensionIndex !== -1 ? name.slice(extensionIndex) : '';
   const baseName = extensionIndex !== -1 ? name.slice(0, extensionIndex) : name;
 
-  // Info: (20241216 - tzuhan) 確認名稱是否包含中文
-  const hasChinese = [...baseName].some(isChinese);
-  const { maxBaseLength, maxExtensionLength } = getMaxLengths(hasChinese);
+  // Info: (20241216 - tzuhan) 判斷是否包含中文，設定最大長度
+  const hasChinese = baseName.split('').some(isChinese);
+  const maxBaseLength = hasChinese ? 4 : 8;
+  const maxExtensionLength = 4; // Info: (20241216 - tzuhan) 副檔名最多 4 字元
 
   // Info: (20241216 - tzuhan) 簡化副檔名
   const simplifiedExtension =
-    extension.length > maxExtensionLength
-      ? `${extension.slice(0, maxExtensionLength - 1)}..`
-      : extension;
+    extension.length > maxExtensionLength ? `${extension.slice(0, maxExtensionLength)}` : extension;
 
-  // Info: (20241216 - tzuhan) 簡化主名稱
-  const simplifiedBaseName =
-    [...baseName].length > maxBaseLength
-      ? `${[...baseName].slice(0, maxBaseLength).join('')}..`
-      : baseName;
+  // Info: (20241216 - tzuhan) 簡化主名稱並在中間加入 "..."
+  if (baseName.length > maxBaseLength) {
+    const halfLength = Math.floor(maxBaseLength / 2);
+    const start = baseName.slice(0, halfLength);
+    const end = baseName.slice(baseName.length - halfLength);
+    return `${start}...${end}${simplifiedExtension}`;
+  }
 
-  return `${simplifiedBaseName}${simplifiedExtension}`;
+  return `${baseName}${simplifiedExtension}`;
 };
 
 const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; className?: string }> = ({
