@@ -1,65 +1,51 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { convertToCSV } from '@/lib/utils/export_file';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { checkRequestData, checkSessionUser, logUserAction } from '@/lib/utils/middleware';
+import {
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
 import { getSession } from '@/lib/utils/session';
 import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse } from '@/lib/utils/common';
-
-// TODO: (20241203 - Shirley) 模擬資料
-const MOCK_TRIAL_BALANCE = [
-  {
-    accountingTitle: '現金',
-    beginningCreditAmount: 0,
-    beginningDebitAmount: 100000,
-    midtermCreditAmount: 50000,
-    midtermDebitAmount: 30000,
-    endingCreditAmount: 0,
-    endingDebitAmount: 80000,
-  },
-  {
-    accountingTitle: '應付帳款',
-    beginningCreditAmount: 50000,
-    beginningDebitAmount: 0,
-    midtermCreditAmount: 20000,
-    midtermDebitAmount: 30000,
-    endingCreditAmount: 40000,
-    endingDebitAmount: 0,
-  },
-];
+import { initTrialBalanceData } from '@/lib/utils/repo/trial_balance.repo';
+import { transformTrialBalanceData } from '@/lib/utils/trial_balance';
+import {
+  trialBalanceAvailableFields,
+  TrialBalanceFieldsMap,
+} from '@/constants/export_trial_balance';
 
 export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
-  // TODO: (20241203 - Shirley) implement the param and query validation when dev the API
-  // Deprecated: (20241214 - Shirley) remove the unused params
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { fileType, filters, sort, options } = req.body;
+  const { companyId } = req.query;
+  const { startDate, endDate } = filters;
 
-  // TODO: (20241203 - Shirley) 從資料庫獲取資產資料
-  const data = MOCK_TRIAL_BALANCE;
+  if (!companyId) {
+    throw new Error(STATUS_MESSAGE.INVALID_COMPANY_ID);
+  }
+
+  if ((!startDate && startDate !== 0) || (!endDate && endDate !== 0)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  if (fileType !== 'csv') {
+    throw new Error(STATUS_MESSAGE.INVALID_FILE_TYPE);
+  }
+
+  const trialBalance = await initTrialBalanceData(+companyId, +startDate, +endDate, sort);
+  const trialBalanceData = transformTrialBalanceData(trialBalance.items);
+
+  // TODO: (20241213 - Shirley) 刪掉 API wiki 裡的時區切換
+  // TODO: (20241213 - Shirley) 將 sort 去重構成公版的樣子 (refer to FilterSection.tsx)
+  const data = trialBalanceData;
 
   // TODO: (20241203 - Shirley) 處理欄位選擇
-  const fields = options?.fields || [
-    'accountingTitle',
-    'beginningCreditAmount',
-    'beginningDebitAmount',
-    'midtermCreditAmount',
-    'midtermDebitAmount',
-    'endingCreditAmount',
-    'endingDebitAmount',
-  ];
+  const fields = options?.fields || trialBalanceAvailableFields;
 
-  const FIELD_NAME_MAP = {
-    accountingTitle: '會計科目',
-    beginningCreditAmount: '期初借方餘額',
-    beginningDebitAmount: '期初貸方餘額',
-    midtermCreditAmount: '期中借方餘額',
-    midtermDebitAmount: '期中貸方餘額',
-    endingCreditAmount: '期末借方餘額',
-    endingDebitAmount: '期末貸方餘額',
-  };
-
-  const csv = convertToCSV(fields, data, FIELD_NAME_MAP);
+  const csv = convertToCSV(fields, data, TrialBalanceFieldsMap);
 
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename=trial_balance_${Date.now()}.csv`);
@@ -78,9 +64,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const session = await getSession(req, res);
   try {
     const isLogin = await checkSessionUser(session, APIName.TRIAL_BALANCE_EXPORT, req);
+    // TODO: (20241213 - Shirley) after the dev is done, remove the following code
+    // const isLogin = true;
     if (!isLogin) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
       throw new Error(statusMessage);
+    }
+
+    const isAuth = await checkUserAuthorization(APIName.TRIAL_BALANCE_EXPORT, req, session);
+    // TODO: (20241213 - Shirley) after the dev is done, remove the following code
+    // const isAuth = true;
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
     }
 
     const { query, body } = checkRequestData(APIName.TRIAL_BALANCE_EXPORT, req, session);

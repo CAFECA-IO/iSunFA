@@ -160,6 +160,78 @@ describe('createManyAssets (multiple assets)', () => {
     const assetIds = assets.map((asset) => asset.id);
     await deleteManyAssets(assetIds);
   });
+
+  it('should correctly distribute purchase price among assets', async () => {
+    const amount = 3;
+    const totalPrice = 10000;
+    const expectedPricePerAsset = Math.floor(totalPrice / amount);
+    const remainder = totalPrice % amount;
+
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: 'Test Asset',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
+      number: 'PRICE-TEST',
+      acquisitionDate: 1704067200,
+      purchasePrice: totalPrice,
+      accumulatedDepreciation: 0,
+    };
+
+    const assets = await createManyAssets(newAssetData, amount);
+    expect(assets).toBeDefined();
+    expect(assets).toHaveLength(amount);
+
+    // Info: (20241213 - Shirley) 檢查前兩個資產的價格應該是平均值
+    assets.slice(0, -1).forEach(async (item) => {
+      const asset = await getLegitAssetById(item.id, testCompanyId);
+      expect(asset?.purchasePrice).toBe(expectedPricePerAsset);
+    });
+
+    // Info: (20241213 - Shirley) 檢查最後一個資產的價格應該是平均值加上餘數
+    const lastAsset = await getLegitAssetById(assets[amount - 1].id, testCompanyId);
+    expect(lastAsset?.purchasePrice).toBe(expectedPricePerAsset + remainder);
+
+    // Info: (20241213 - Shirley) 清理測試資料
+    const assetIds = assets.map((asset) => asset.id);
+    await deleteManyAssets(assetIds);
+  });
+
+  it('should correctly distribute residual value among assets', async () => {
+    const amount = 3;
+    const totalPrice = 10000;
+    const totalResidualValue = 1000;
+    const expectedResidualValuePerAsset = Math.floor(totalResidualValue / amount);
+    const residualRemainder = totalResidualValue % amount;
+
+    const newAssetData = {
+      companyId: testCompanyId,
+      name: 'Test Asset',
+      type: AssetEntityType.OFFICE_EQUIPMENT,
+      number: 'RESIDUAL-TEST',
+      acquisitionDate: 1704067200,
+      purchasePrice: totalPrice,
+      accumulatedDepreciation: 0,
+      residualValue: totalResidualValue,
+    };
+
+    const assets = await createManyAssets(newAssetData, amount);
+    expect(assets).toBeDefined();
+    expect(assets).toHaveLength(amount);
+
+    // Info: (20241213 - Shirley) 檢查前兩個資產的殘值應該是平均值
+    assets.slice(0, -1).forEach(async (item) => {
+      const asset = await getLegitAssetById(item.id, testCompanyId);
+      expect(asset?.residualValue).toBe(expectedResidualValuePerAsset);
+    });
+
+    // Info: (20241213 - Shirley) 檢查最後一個資產的殘值應該是平均值加上餘數
+    const lastAsset = await getLegitAssetById(assets[amount - 1].id, testCompanyId);
+    expect(lastAsset?.residualValue).toBe(expectedResidualValuePerAsset + residualRemainder);
+
+    // Info: (20241213 - Shirley) 清理測試資料
+    const assetIds = assets.map((asset) => asset.id);
+    await deleteManyAssets(assetIds);
+  });
 });
 
 describe('getAssetById (get the asset with fixed conditions)', () => {
