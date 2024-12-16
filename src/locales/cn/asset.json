@@ -92,5 +92,9 @@
     "TWD": "新台币",
     "SELECT_ALL": "全选",
     "SELECT": "选择"
+  },
+  "CURRENCY_ALIAS": {
+    "TWD": "新台币",
+    "EUR": "欧元"
   }
 }

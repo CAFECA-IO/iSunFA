@@ -1,3 +1,5 @@
+import { LocaleKey } from '@/constants/normal_setting';
+
 export const DEFAULT_ACCOUNTING_SETTING = {
   SALES_TAX_TAXABLE: true,
   SALES_TAX_RATE: 0.05,
@@ -8,7 +10,7 @@ export const DEFAULT_ACCOUNTING_SETTING = {
 };
 
 export const DEFAULT_USER_SETTING = {
-  LANGUAGE: 'English',
+  LANGUAGE: LocaleKey.tw,
   SYSTEM_NOTIFICATION: true,
   UPDATE_AND_SUBSCRIPTION_NOTIFICATION: true,
   EMAIL_NOTIFICATION: true,

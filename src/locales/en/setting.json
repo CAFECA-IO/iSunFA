@@ -134,7 +134,8 @@
     "CANCEL_BTN": "Cancel",
     "ADD_BTN": "Add",
     "SAVE_BTN": "Save",
-    "DELETE_BTN": "Yes, Delete Account"
+    "DELETE_BTN": "Yes, Delete Account",
+    "NO_ACCOUNTING_FOUND": "No Accounting Title Found."
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "Manual Account Opening",
@@ -175,5 +176,9 @@
   },
   "ERROR": {
     "FETCH_DATA": "There was an error fetching the data, please try again later."
+  },
+  "CURRENCY_ALIAS": {
+    "TWD": "TWD",
+    "EUR": "EUR"
   }
 }

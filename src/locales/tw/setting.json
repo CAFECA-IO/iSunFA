@@ -134,7 +134,8 @@
     "CANCEL_BTN": "取消",
     "ADD_BTN": "新增",
     "SAVE_BTN": "保存",
-    "DELETE_BTN": "是的，刪除科目"
+    "DELETE_BTN": "是的，刪除科目",
+    "NO_ACCOUNTING_FOUND": "找不到會計科目。"
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "手動開戶",
@@ -175,5 +176,9 @@
   },
   "ERROR": {
     "FETCH_DATA": "取得資料時發生錯誤，請稍後再試。"
+  },
+  "CURRENCY_ALIAS": {
+    "TWD": "新臺幣",
+    "EUR": "歐元"
   }
 }

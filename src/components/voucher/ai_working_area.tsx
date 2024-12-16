@@ -56,7 +56,7 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
         </button>
       </div>
     ) : aiState === AIState.FAILED ? (
-      <div className="flex items-center gap-16px font-medium text-text-neutral-primary">
+      <div className="flex items-center font-medium text-text-neutral-primary">
         <p>{t('journal:AI_WORKING_AREA.FAILED_CONTENT')}</p>
         <button
           type="button"
@@ -69,7 +69,7 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
         </button>
       </div>
     ) : analyzeSuccess && AIState.FINISH ? (
-      <div className="flex items-center gap-16px font-medium text-text-neutral-primary">
+      <div className="flex items-center font-medium text-text-neutral-primary">
         <p>{t('journal:AI_WORKING_AREA.FINISH_CONTENT')}</p>
         <button
           type="button"
