@@ -50,7 +50,10 @@ const ItemDetail = ({
             </p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p className="font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="font-bold leading-5">
+            <span>單位：新台幣元</span>
+            <span className="pl-5">每股盈餘單位：新台幣元</span>
+          </p>
         </div>
         {!isDetailCollapsed && (
           <table className="w-full border-collapse bg-white">
@@ -63,7 +66,7 @@ const ItemDetail = ({
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th
-                  className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                  className="w-285px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {!isDetailCollapsed && financialReport && financialReport.company && (
@@ -72,11 +75,11 @@ const ItemDetail = ({
                     </p>
                   )}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
                   %
                 </th>
                 <th
-                  className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                  className="w-285px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {financialReport && financialReport.company && (
@@ -85,7 +88,7 @@ const ItemDetail = ({
                     </p>
                   )}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
                   %
                 </th>
               </tr>

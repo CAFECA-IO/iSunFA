@@ -1622,6 +1622,18 @@
     "處分透過其他綜合損益按公允價值衡量之權益工具": "Disposal of investments in equity instruments designated at fair value through other comprehensive income",
     "權益增加(減少)總額": "Total increase (decrease) in equity",
     "期末餘額": "Equity at end of period",
-    "非控制權益": "Non-controlling interests"
+    "非控制權益": "Non-controlling interests",
+    "透過損益按公允價值衡量之⾦融資產－流動": "Current Financial Assets at Fair Value through Profit or Loss (FVTPL)",
+    "避險之⾦融資產－流動": "Current Hedging Financial Assets",
+    "應收帳款－關係⼈淨額": "Accounts receivable due from related parties, net",
+    "應收營業租賃款淨額－關係人": "Operating lease receivable due from related parties, net",
+    "應收融資租賃款淨額－關係人": "Finance lease receivable due from related parties, net",
+    "其他應收款－關係⼈": "Other receivables due from related parties",
+    "透過損益按公允價值衡量之⾦融資產－非流動": "Non-Current Financial Assets at Fair Value through Profit or Loss (FVTPL)",
+    "透過其他綜合損益按公允價值衡量之⾦融資產－非流動": "Non-Current Financial Assets at Fair Value through Other Comprehensive Income (FVOCI)",
+    "使⽤權資產": "Right-of-Use Asset",
+    "投資性不動產淨額使⽤權資產": "Net Right-of-Use Assets – Investment Property",
+    "避險之⾦融負債－流動": "Current Hedging Financial Liabilities",
+    "應付帳款－關係⼈": "Accounts payable to related parties"
   }
 }
