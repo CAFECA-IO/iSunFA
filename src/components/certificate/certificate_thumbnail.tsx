@@ -5,6 +5,7 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { HiCheck } from 'react-icons/hi';
+import { timestampToString } from '@/lib/utils/common';
 
 interface CertificateThumbnailProps {
   data: ICertificateUI;
@@ -32,26 +33,30 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       className={`relative h-200px w-200px rounded-md border ${data.isSelected ? 'border-stroke-brand-primary bg-surface-brand-primary-30' : 'border-stroke-neutral-quaternary'} hover:border-stroke-brand-primary hover:bg-surface-brand-primary-30`}
     >
       <div
-        className="my-3"
+        className="my-3 flex flex-col items-center"
         onClick={
           activeSelection
             ? handleSelect.bind(null, [data.id], !data.isSelected)
             : onEdit.bind(null, data.id)
         }
       >
-        {/* Info: (20240924 - Tzuhan) 縮略圖 */}
-        <Image
-          src={data.file.url}
-          alt={`Certificate ${data.name}`}
-          height={136}
-          width={93}
-          className="mx-auto h-134px w-90px overflow-hidden object-cover"
-        />
+        <div className="max-h-134px min-h-134px max-w-90px overflow-hidden">
+          {/* Info: (20240924 - Tzuhan) 縮略圖 */}
+          <Image
+            src={data.file.url}
+            alt={`Certificate ${data.name}`}
+            height={136}
+            width={93}
+            className="w-full object-cover"
+          />
+        </div>
 
         {/* Info: (20240924 - Tzuhan) 發票號碼和日期 */}
         <div className="mt-2 text-center">
           <div className="text-sm font-medium">{data.invoice.no}</div>
-          <div className="mt-1 text-xs text-gray-500">{data.invoice.date}</div>
+          <div className="mt-1 text-xs text-gray-500">
+            {data.invoice.date ? timestampToString(data.invoice.date).date : data.invoice.date}
+          </div>
         </div>
       </div>
 

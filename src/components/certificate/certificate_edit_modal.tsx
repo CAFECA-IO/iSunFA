@@ -18,6 +18,7 @@ import { LuTrash2 } from 'react-icons/lu';
 import { CurrencyType } from '@/constants/currency';
 import CounterpartyInput, { CounterpartyInputRef } from '@/components/voucher/counterparty_input';
 import EditableFilename from '@/components/certificate/edible_file_name';
+import Magnifier from '@/components/magnifier/magifier';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
@@ -174,21 +175,17 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         />
 
         {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
-        {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
           {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
-          <Image
-            className="w-210px min-w-210px items-start"
-            src={certificate.file.url}
+          <Magnifier
+            imageUrl={certificate.file.url}
             width={210}
             height={310}
-            alt="certificate"
-            priority
+            className="w-210px min-w-210px"
           />
           {/* Info: (20240924 - tzuhan) 編輯表單 */}
 
           {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
-          {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
           <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
             {/* Info: (20240924 - tzuhan) 切換輸入/輸出 */}
             <div className="flex flex-col items-start gap-2">

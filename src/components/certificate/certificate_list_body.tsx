@@ -338,6 +338,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const onUpdateFilename = useCallback(
     (id: number, filename: string) => {
+      // Deprecate: (20241217 - tzuhan) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log('onUpdateFilename', id, filename);
       setCertificates((prev) => {
         const updatedData = {
           ...prev,
@@ -520,7 +523,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       {/* Info: (20240919 - tzuhan) Main Content */}
       <div
         // Info: (20241210 - tzuhan) 隱藏 scrollbar
-        // eslint-disable-next-line tailwindcss/no-custom-classname
         className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
