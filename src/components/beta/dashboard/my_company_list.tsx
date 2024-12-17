@@ -11,31 +11,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
-
-interface NoDataProps {
-  toggleCreateCompanyModal: () => void;
-}
-const NoData = ({ toggleCreateCompanyModal }: NoDataProps) => {
-  const { t } = useTranslation('dashboard');
-
-  return (
-    <div className="flex flex-col items-center justify-center py-26px">
-      <p className="text-base text-text-neutral-mute">
-        {t('dashboard:DASHBOARD.COMPANY_NOT_YET_CREATED')}
-      </p>
-      <p className="text-base text-text-neutral-mute">
-        {t('dashboard:DASHBOARD.PLEASE_PROCEED_TO')}{' '}
-        <button
-          type="button"
-          onClick={toggleCreateCompanyModal}
-          className="text-text-neutral-link underline underline-offset-4"
-        >
-          {t('dashboard:DASHBOARD.CREATE_A_COMPANY')}
-        </button>
-      </p>
-    </div>
-  );
-};
+import MyCompanyListNoData from '@/components/beta/dashboard/my_company_list_no_data';
 
 interface CompanyItemProps {
   companyAndRole: ICompanyAndRole;
@@ -59,14 +35,6 @@ const CompanyItem = ({
     }
   };
 
-  const dynamicStyles = `
-  flex h-120px w-120px flex-none flex-col items-center justify-center gap-8px 
-  overflow-hidden rounded-sm border-2 px-8px py-12px
-  ${isCompanySelected ? 'border-stroke-brand-primary bg-surface-brand-primary-10' : ''}
-  ${isDisabled ? 'opacity-50 pointer-events-none border-stroke-neutral-quaternary bg-surface-neutral-main-background' : ''}
-  ${!isCompanySelected && !isDisabled ? 'border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10' : ''}
-`;
-
   return (
     <button
       data-index={dataIndex}
@@ -74,7 +42,7 @@ const CompanyItem = ({
       type="button"
       onClick={openMessageModal}
       disabled={isCompanySelected || isDisabled}
-      className={dynamicStyles}
+      className={`flex h-120px w-120px flex-none flex-col items-center justify-center gap-8px overflow-hidden rounded-sm border-2 px-8px py-12px ${isCompanySelected ? 'border-stroke-neutral-quaternary bg-surface-brand-primary-30' : ''} ${isDisabled ? 'border-stroke-neutral-quaternary bg-surface-neutral-main-background opacity-70' : ''} ${!isCompanySelected && !isDisabled ? 'border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10' : ''} `}
     >
       <Image
         src={companyAndRole.company.imageId}
@@ -142,10 +110,7 @@ const CompanyList = ({ companyAndRoleList, setCompanyToSelect }: CompanyListProp
   }, [selectedCompany]);
 
   return (
-    <div
-      ref={containerRef}
-      className="flex max-w-full gap-24px overflow-x-auto px-1px pb-4px scrollbar scrollbar-track-transparent scrollbar-thumb-dropdown-surface-scrollbar"
-    >
+    <div ref={containerRef} className="flex max-w-full gap-24px overflow-x-auto px-1px pb-8px">
       {companyAndRoleList.map((companyAndRole, index) => (
         <CompanyItem
           key={companyAndRole.company.id}
@@ -266,7 +231,7 @@ const MyCompanyList = () => {
 
   return (
     <DashboardCardLayout>
-      <section className="flex flex-col gap-32px">
+      <section className="flex flex-col gap-24px">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-text-neutral-secondary">
             {t('dashboard:DASHBOARD.MY_COMPANY_LIST')}
@@ -276,7 +241,7 @@ const MyCompanyList = () => {
         </div>
 
         {isCompanyListEmpty ? (
-          <NoData toggleCreateCompanyModal={toggleCreateCompanyModal} />
+          <MyCompanyListNoData toggleCreateCompanyModal={toggleCreateCompanyModal} />
         ) : (
           <CompanyList
             companyAndRoleList={companyAndRoleList}
