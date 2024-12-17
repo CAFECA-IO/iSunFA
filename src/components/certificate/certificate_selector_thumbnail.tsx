@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ICertificateUI } from '@/interfaces/certificate';
 import CertificatePreviewModal from '@/components/certificate/certificate_preview_modal';
 import { DEFAULT_CERTIFICATE_IMAGE_URL } from '@/constants/display';
+import { simplifyFileName } from '@/lib/utils/common';
 
 interface CertificateSelectorThumbnailProps {
   certificate: ICertificateUI;
@@ -24,10 +25,6 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
   isOnTopOfModal = false,
 }) => {
   const [selectedCertificate, setSelectedCertificate] = useState<ICertificateUI | null>(null);
-
-  // Info: (20241127 - Julian) 將檔名拆開，以便縮短檔名長度，避免 UI 過長
-  const certificateFilename = certificate.name.split('.')[0];
-  const certificateFilenameExtension = certificate.name.split('.').pop();
 
   const handleClicked = (
     e: React.MouseEvent<HTMLDivElement>,
@@ -53,13 +50,15 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
         className={`flex flex-col items-center gap-2 rounded-sm px-4 py-3 ${isSelected || !isSelectable ? (isSelectable ? 'border border-stroke-brand-primary bg-surface-brand-primary-30' : 'hover:group hover:cursor-pointer') : ''}`}
         onClick={handleSelect?.bind(null, certificate.id)}
       >
-        <div className={`relative h-136px w-85px ${!isSelected || !isSelectable ? 'group' : ''}`}>
+        <div
+          className={`relative flex h-136px w-85px flex-col overflow-hidden ${!isSelected || !isSelectable ? 'group' : ''}`}
+        >
           <Image
             src={certificate.file?.url ?? DEFAULT_CERTIFICATE_IMAGE_URL}
             alt="AI"
             width={85}
             height={136}
-            className="h-full w-full"
+            className="w-full"
           />
           <div className="absolute left-0 top-0 hidden h-full w-full bg-black/50 group-hover:block">
             {isDeletable && (
@@ -80,9 +79,8 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
             </div>
           </div>
         </div>
-        <div className="flex text-xs font-medium text-text-neutral-primary">
-          <p className="w-80px truncate">{certificateFilename}</p>
-          <p>{certificateFilenameExtension}</p>
+        <div className="text-xs font-medium text-text-neutral-primary">
+          {simplifyFileName(certificate.name)}
         </div>
       </div>
     </>

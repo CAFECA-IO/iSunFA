@@ -39,7 +39,7 @@ const WorkTag = ({ type }: WorkTagProps) => {
 
   return (
     <div
-      className={`flex w-max items-center gap-1px rounded-full p-6px text-xs font-medium ${backgroundColor} ${textColor}`}
+      className={`mx-auto my-0 flex w-max items-center gap-1px rounded-full p-6px text-xs font-medium ${backgroundColor} ${textColor}`}
     >
       {icon}
       <p className="px-4px">{type}</p>

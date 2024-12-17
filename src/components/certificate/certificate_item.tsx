@@ -4,6 +4,7 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
+import { simplifyFileName } from '@/lib/utils/common';
 
 interface CertificateListIrops {
   activeSelection: boolean;
@@ -11,39 +12,6 @@ interface CertificateListIrops {
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;
 }
-
-/**
- * Info: (20241213 - tzuhan) 簡化文件名稱，適配中英文字符
- * @param name 文件名稱
- * @param maxWidth 最大顯示寬度（如 120 px）
- * @returns 簡化後的文件名稱
- */
-export const simplifyFileName = (name: string): string => {
-  const isChinese = (char: string) => /[\u4e00-\u9fff]/.test(char);
-
-  const extensionIndex = name.lastIndexOf('.');
-  const extension = extensionIndex !== -1 ? name.slice(extensionIndex) : '';
-  const baseName = extensionIndex !== -1 ? name.slice(0, extensionIndex) : name;
-
-  // Info: (20241216 - tzuhan) 判斷是否包含中文，設定最大長度
-  const hasChinese = baseName.split('').some(isChinese);
-  const maxBaseLength = hasChinese ? 4 : 8;
-  const maxExtensionLength = 4; // Info: (20241216 - tzuhan) 副檔名最多 4 字元
-
-  // Info: (20241216 - tzuhan) 簡化副檔名
-  const simplifiedExtension =
-    extension.length > maxExtensionLength ? `${extension.slice(0, maxExtensionLength)}` : extension;
-
-  // Info: (20241216 - tzuhan) 簡化主名稱並在中間加入 "..."
-  if (baseName.length > maxBaseLength) {
-    const halfLength = Math.floor(maxBaseLength / 2);
-    const start = baseName.slice(0, halfLength);
-    const end = baseName.slice(baseName.length - halfLength);
-    return `${start}...${end}${simplifiedExtension}`;
-  }
-
-  return `${baseName}${simplifiedExtension}`;
-};
 
 const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; className?: string }> = ({
   isSelected,
