@@ -38,6 +38,7 @@ export enum ToastId {
   USER_DELETE_ERROR = 'toast-user-delete-error',
   USER_SETTING_ERROR = 'toast-user-setting-error',
   USER_DELETE_CANCEL = 'toast-user-delete-cancel',
+  UPDATE_FILENAME_SUCCESS = 'toast-update-filename-success',
   UPDATE_FILENAME_ERROR = 'toast-update-filename-error',
   FILL_UP_VOUCHER_FORM = 'toast-fill-up-voucher-form',
   CREATE_VOUCHER_ERROR = 'toast-create-voucher-error',
