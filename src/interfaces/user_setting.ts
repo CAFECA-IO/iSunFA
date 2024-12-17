@@ -21,4 +21,5 @@ interface IUserPersonalInfo {
   language: LocaleKey; // Info: (20241211 - tzuhan) @Murky 可以改用 LocaleKey 嗎？
   // countryCode: string; // Info: (20241211 - tzuhan) @Murky 這裡可以幫提供 countryCode 使用 LocaleKey 嗎？
   phone: string;
+  countryId?: number; // Info: (20241217 - Shirley) 使用 countryId 取代 country， countryId 從 Country table 中取得
 }

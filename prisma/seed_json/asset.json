@@ -2,6 +2,7 @@
   {
     "id": 1,
     "companyId": 1000,
+    "userId": 1000,
     "name": "Notebook",
     "type": "1691",
     "number": "LAPTOP-001",
@@ -21,6 +22,7 @@
   {
     "id": 2,
     "companyId": 1001,
+    "userId": 1000,
     "name": "Desk",
     "type": "1691",
     "number": "DESK-001",

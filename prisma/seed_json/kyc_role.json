@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "roleId": 1,
+    "name": "John Doe",
+    "birthDate": "1980-01-01",
+    "email": "john.doe@example.com",
+    "phone": "123456789",
+    "qualification": true,
+    "startDateOfPractice": "1622531200",
+    "certificationNumber": "CERT123456",
+    "association": "Professional Association",
+    "membershipNumber": "MEM123456",
+    "personalIdType": "ID Card",
+    "personalIdFileId": 1,
+    "certificationFileId": 2,
+    "createdAt": 1672531200,
+    "updatedAt": 1672531200,
+    "deletedAt": null
+  },
+  {
+    "id": 2,
+    "userId": 2,
+    "roleId": 2,
+    "name": "Jane Smith",
+    "birthDate": "1990-02-02",
+    "email": "jane.smith@example.com",
+    "phone": "987654321",
+    "qualification": false,
+    "startDateOfPractice": "1534427535",
+    "certificationNumber": "CERT654321",
+    "association": "Another Association",
+    "membershipNumber": "MEM654321",
+    "personalIdType": "Passport",
+    "personalIdFileId": 3,
+    "certificationFileId": 4,
+    "createdAt": 1734427535,
+    "updatedAt": 1734427535,
+    "deletedAt": null
+  }
+]

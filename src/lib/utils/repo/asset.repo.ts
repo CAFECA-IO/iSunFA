@@ -45,12 +45,12 @@ export async function createAssetWithVouchers(
   // Info: (20241204 - Luphia) Create the Asset
   const newAsset = {
     companyId: assetData.companyId,
+    userId: assetData.userId,
     name: assetData.name,
     type: assetData.type,
     number: assetNumber,
     acquisitionDate: assetData.acquisitionDate,
     purchasePrice: assetData.purchasePrice,
-    accumulatedDepreciation: assetData.accumulatedDepreciation,
     residualValue: assetData.residualValue || assetData.purchasePrice,
     remainingLife: assetData.usefulLife || 0,
     status: AssetStatus.NORMAL,
@@ -102,6 +102,7 @@ export async function createManyAssets(
   for (let i = 0; i < amount; i += 1) {
     const newAsset = {
       companyId: assetData.companyId,
+      userId: assetData.userId,
       name: assetData.name,
       type: assetData.type,
       number: assetNumbers[i],
@@ -131,6 +132,7 @@ export async function createManyAssets(
     where: {
       AND: [
         { companyId: assetData.companyId },
+        { userId: assetData.userId },
         { createdAt: timestampNow },
         // Info: (20241205 - Shirley) 在 Jest extension 自動執行測試，會在同一秒根據多個測試建立資產，因此需要加上這個條件
         { number: { startsWith: assetData.number || '' } },
@@ -144,6 +146,7 @@ export async function createManyAssets(
       name: true,
       number: true,
       companyId: true,
+      // userId: true, // TODO: (20241217 - Shirley) FIXME: 修改 interface 後，回傳 userId
       status: true,
       createdAt: true,
       updatedAt: true,

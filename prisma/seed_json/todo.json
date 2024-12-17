@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "name": "Complete project report",
+    "deadline": 1672531200,
+    "note": "Ensure all sections are completed",
+    "status": false,
+    "startDate": 1672444800,
+    "endDate": 1672617600,
+    "createdAt": 1672444800,
+    "updatedAt": 1672444800,
+    "deletedAt": null
+  },
+  {
+    "id": 2,
+    "name": "Prepare presentation slides",
+    "deadline": 1672704000,
+    "note": "Focus on key points",
+    "status": true,
+    "startDate": 1672617600,
+    "endDate": 1672704000,
+    "createdAt": 1672617600,
+    "updatedAt": 1672617600,
+    "deletedAt": null
+  }
+]

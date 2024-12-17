@@ -13,6 +13,7 @@ export async function createUserSetting(userId: number) {
     userSetting = await prisma.userSetting.create({
       data: {
         userId,
+        countryId: DEFAULT_USER_SETTING.COUNTRY_ID,
         language: DEFAULT_USER_SETTING.LANGUAGE,
         systemNotification: DEFAULT_USER_SETTING.SYSTEM_NOTIFICATION,
         updateAndSubscriptionNotification:
@@ -61,7 +62,7 @@ export async function updateUserSettingById(id: number, data: IUserSetting) {
       data: {
         firstName: data.personalInfo.firstName,
         lastName: data.personalInfo.lastName,
-        country: data.personalInfo.country,
+        countryId: data.personalInfo.countryId,
         language: data.personalInfo.language,
         phone: data.personalInfo.phone,
         systemNotification: data.notificationSetting.systemNotification,
