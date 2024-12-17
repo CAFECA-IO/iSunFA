@@ -67,18 +67,18 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
 
       {/* Info: (20240924 - tzuhan) Invoice Information */}
       <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
-        <div className="flex items-center space-y-2">
+        <div className="flex items-center gap-2">
           {!certificate.invoice?.isComplete && (
             <IoWarningOutline size={16} className="text-surface-state-error" />
           )}
-          <div className="flex-col">
+          <div className="flex flex-col">
             <div className="text-text-neutral-tertiary">{certificate.name ?? ''}</div>
             <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
           </div>
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
-        <div className="flex-col items-center space-y-2">
+        <div className="flex flex-col items-center gap-2">
           <div className="text-text-neutral-tertiary">
             {certificate.invoice?.counterParty?.taxId ?? ''}
           </div>
@@ -146,7 +146,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       <BorderCell isSelected={certificate.isSelected} className="w-120px">
         <div className="flex items-center space-y-2">
           <div className="text-right text-link-text-primary">{certificate?.voucherNo ?? ''}</div>
-          <div className="text-right text-text-neutral-primary">
+          <div className="flex items-center gap-2 text-right text-text-neutral-primary">
             {certificate.uploader && (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">
                 {certificate.uploader.slice(0, 2).toUpperCase()}
