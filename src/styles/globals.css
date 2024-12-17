@@ -1314,3 +1314,23 @@ input[type='checkbox']:checked::before {
     margin-bottom: 70px;
   }
 }
+
+/* Info: (20241217 - Liz) 全域的 scroll bar 樣式設定 */
+/* Info: (20241217 - Liz) width 長寬 */
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+/* Info: (20241217 - Liz) Track 軌道 */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* Info: (20241217 - Liz) Handle 把手 */
+::-webkit-scrollbar-thumb {
+  background: #cdd1d9;
+  border-radius: 999px;
+}
+/* Info: (20241217 - Liz) Handle on hover 把手懸停效果 */
+::-webkit-scrollbar-thumb:hover {
+  background: #304872;
+}

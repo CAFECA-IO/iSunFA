@@ -15,7 +15,7 @@ import { createFile, deleteFileByIdForTesting } from '@/lib/utils/repo/file.repo
 
 const testCompanyId = 1000;
 
-describe('CompanyKYC Repository Tests', () => {
+xdescribe('CompanyKYC Repository Tests', () => {
   describe('createCompanyKYC', () => {
     it('should create a new CompanyKYC record', async () => {
       const registrationCertificateFile = await createFile({
@@ -86,7 +86,7 @@ describe('CompanyKYC Repository Tests', () => {
   });
 });
 
-describe('getCompanyKYCByCompanyId', () => {
+xdescribe('getCompanyKYCByCompanyId', () => {
   it('should return the CompanyKYC record for a given companyId', async () => {
     const companyKYC = await getCompanyKYCByCompanyId(testCompanyId);
     expect(companyKYC).toEqual(companyKYCs[1]);

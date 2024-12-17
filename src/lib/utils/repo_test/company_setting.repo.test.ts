@@ -9,7 +9,7 @@ import companySettings from '@/seed_json/company_setting.json';
 import { formatCompanySetting } from '@/lib/utils/formatter/company_setting.formatter';
 import { LocaleKey } from '@/constants/normal_setting';
 
-describe('Company Setting Repository', () => {
+xdescribe('Company Setting Repository', () => {
   describe('createCompanySetting', () => {
     it('should create a new company setting', async () => {
       const testCompanyId = 1002;

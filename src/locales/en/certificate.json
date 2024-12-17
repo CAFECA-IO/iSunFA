@@ -34,6 +34,9 @@
     "SUCCESS": "Certificates have been deleted.",
     "ERROR": "Something went wrong, please try again."
   },
+  "SUCCESS": {
+    "UPDATE_FILENAME": "Update file name successfully"
+  },
   "ERROR": {
     "SELECT_CERTIFICATE": "Failed to select certificate",
     "UPLOAD_CERTIFICATE": "Failed to upload certificate",
@@ -43,7 +46,8 @@
     "UPLOAD_AND_NOTIFY": "Failed to upload and notify web",
     "UPDATE_CERTIFICATE": "Failed to update certificate, {{reason}}",
     "ENCRYPT_FILE": "Failed to encrypt file",
-    "COMPRESS_IMAGE": "Failed to compress image"
+    "COMPRESS_IMAGE": "Failed to compress image",
+    "UPDATE_FILENAME": "Failed to update file name"
   },
   "WARNING": {
     "UPLOAD_FAILED": "Uploading fail",
@@ -124,6 +128,7 @@
     "CONTENT": "Upload the certificates you want to attach with the voucher",
     "NO_FILE": "No files uploading",
     "REMAIN": "{{count}} left",
+    "COMPLETE": "{{success}} success, {{failed}} failed",
     "FAILED": "Upload failed",
     "LOADING": "Uploadng...",
     "URL": "Url",

@@ -46,16 +46,9 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
             <Image src="/elements/downloader.svg" alt="⬇" width={16} height={16} />
           </Button>
         </div>
-        <div className="mx-20">
+        <div className="hide-scrollbar mx-20 h-60vh min-w-400px max-w-600px overflow-scroll">
           {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
-          <Image
-            className="h-60vh items-center"
-            src={certificate.file.url}
-            width={375}
-            height={600}
-            alt="certificate"
-            priority
-          />
+          <Image src={certificate.file.url} width={400} height={600} alt="certificate" priority />
         </div>
         <div className="flex justify-end gap-2 border-t border-stroke-neutral-quaternary px-4 py-3">
           <Button

@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { Admin, Company, Prisma, File } from '@prisma/client';
+import { Admin, Company, Prisma, File, CompanySetting } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { CompanyRoleName } from '@/constants/role';
 
@@ -15,6 +15,34 @@ export async function getCompanyById(
       },
       include: {
         imageFile: true,
+      },
+    });
+  }
+  return company;
+}
+
+export async function getCompanyWithSettingById(companyId: number): Promise<
+  | (Company & {
+      imageFile: File | null;
+      companySettings: CompanySetting[];
+    })
+  | null
+> {
+  let company:
+    | (Company & {
+        imageFile: File | null;
+        companySettings: CompanySetting[];
+      })
+    | null = null;
+  if (companyId > 0) {
+    company = await prisma.company.findUnique({
+      where: {
+        id: companyId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      include: {
+        imageFile: true,
+        companySettings: true,
       },
     });
   }
