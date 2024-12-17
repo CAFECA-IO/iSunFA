@@ -83,9 +83,9 @@ const LandingI18n: React.FC = () => {
           />
         </div>
         <div className="flex-1">{currentLanguage.label}</div>
-        <FaChevronDown
-          className={`${isOpen ? 'rotate-180' : ''} transition-transform duration-300 ease-in-out`}
-        />
+        <div className={isOpen ? 'rotate-180' : 'rotate-0'}>
+          <FaChevronDown />
+        </div>
       </LandingButton>
 
       {/* Info: (20241204 - Julian) Dropdown */}

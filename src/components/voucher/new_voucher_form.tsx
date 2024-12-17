@@ -1060,7 +1060,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
               >
                 {isShowAnalysisPreview ? translateType(aiType) : translateType(type)}
               </p>
-              <FaChevronDown size={20} />
+              <div className={typeVisible ? 'rotate-180' : 'rotate-0'}>
+                <FaChevronDown size={20} />
+              </div>
             </button>
             {/* Info: (20240926 - Julian) Type dropdown */}
             {typeDropdownMenu}

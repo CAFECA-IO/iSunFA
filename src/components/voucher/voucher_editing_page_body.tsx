@@ -822,7 +822,9 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
             >
               {isShowAnalysisPreview ? translateType(aiType) : translateType(type)}
             </p>
-            <FaChevronDown size={20} />
+            <div className={typeVisible ? 'rotate-180' : 'rotate-0'}>
+              <FaChevronDown size={20} />
+            </div>
             {/* Info: (20240926 - Julian) Type dropdown */}
             {typeDropdownMenu}
           </button>

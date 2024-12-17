@@ -322,7 +322,9 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
                       ? t(`certificate:COUNTERPARTY.${inputType.toUpperCase()}`)
                       : t('certificate:COUNTERPARTY.BOTH')}
                   </span>
-                  <FaChevronDown />
+                  <div className={isTypeMenuOpen ? 'rotate-180' : 'rotate-0'}>
+                    <FaChevronDown />
+                  </div>
                 </div>
                 {displayedTypeMenu}
               </div>

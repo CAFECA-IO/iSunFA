@@ -50,11 +50,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
             : selectedValue}
         </p>
         <div className="flex h-20px w-20px items-center justify-center">
-          <FaChevronDown
-            className={`transition-transform duration-300 ${
-              menuVisibility ? 'rotate-180' : 'rotate-0'
-            }`}
-          />
+          <FaChevronDown className={menuVisibility ? 'rotate-180' : 'rotate-0'} />
         </div>
         <div
           className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input ${
