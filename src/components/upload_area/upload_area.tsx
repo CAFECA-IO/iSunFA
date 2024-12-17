@@ -142,7 +142,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({
               />
               <p className="font-semibold text-drag-n-drop-text-primary group-disabled:text-drag-n-drop-text-disable">
                 {t('certificate:UPLOAD.USE_YOUR_PHONE_AS')}
-                <span className="cursor-pointer text-text-brand-primary-lv2 group-disabled:cursor-not-allowed group-disabled:text-drag-n-drop-text-disable">
+                <span className="cursor-pointer text-link-text-primary group-disabled:cursor-not-allowed group-disabled:text-drag-n-drop-text-disable">
                   {t('certificate:UPLOAD.SCANNER')}
                 </span>
               </p>

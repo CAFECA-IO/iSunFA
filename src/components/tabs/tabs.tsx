@@ -23,9 +23,11 @@ const Tabs: React.FC<TabProps> = ({ tabs, tabsString, activeTab, onTabClick, cou
           >
             {tabsString[index]}
           </p>
-          <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
-            {`${counts[index]} ${counts[index] > 0 ? '+' : ''}`}
-          </div>
+          {counts[index] > 0 && (
+            <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
+              {`${counts[index]} +`}
+            </div>
+          )}
         </button>
       ))}
     </div>

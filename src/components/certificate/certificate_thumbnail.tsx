@@ -5,7 +5,6 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { HiCheck } from 'react-icons/hi';
-import { IoWarningOutline } from 'react-icons/io5';
 
 interface CertificateThumbnailProps {
   data: ICertificateUI;
@@ -66,7 +65,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       {/* Info: (20240924 - Tzuhan) 資料不完整 */}
       {!data.invoice?.isComplete && (
         <div className="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center rounded-xs text-xs text-surface-state-error">
-          <IoWarningOutline size={16} />
+          <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
         </div>
       )}
 
@@ -85,18 +84,12 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       <div
         className="absolute right-0 top-0 h-36px w-36px text-stroke-brand-secondary-moderate"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        onMouseEnter={() => setIsMenuOpen(true)}
-        onMouseLeave={() => setIsMenuOpen(false)}
       >
         <BsThreeDotsVertical className="absolute right-2 top-3" />
       </div>
       {/* Info: (20240924 - Tzuhan) 操作選單 */}
       {isMenuOpen && (
-        <div
-          className="group absolute left-20 top-2 z-10 mt-7 w-36 rounded-sm border bg-white shadow-dropmenu group-hover:pointer-events-none"
-          onMouseEnter={() => setIsMenuOpen(true)}
-          onMouseLeave={() => setIsMenuOpen(false)}
-        >
+        <div className="group absolute left-20 top-2 z-10 mt-7 w-36 rounded-sm border bg-white shadow-dropmenu group-hover:pointer-events-none">
           <ul>
             {data.actions.includes(CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD) && (
               <li
