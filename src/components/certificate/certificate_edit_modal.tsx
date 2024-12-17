@@ -401,7 +401,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 {t('certificate:EDIT.INVOICE_TYPE')}
               </p>
               <div className="flex w-full items-center gap-4">
-                <div className="flex w-full min-w-300px items-center justify-between">
+                <div className="flex w-full">
                   <div
                     ref={invoiceTypeMenuRef}
                     id="invoice-type-menu"
@@ -410,7 +410,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   >
                     {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
                     {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
-                    <p className="hide-scrollbar items-centerjustify-between flex h-46px gap-1 overflow-y-scroll">
+                    <p className="hide-scrollbar items-centerjustify-between flex h-46px min-w-300px items-center justify-between overflow-y-scroll">
                       <span>{t(`filter_section_type:FILTER_SECTION_TYPE.${invoiceType}`)}</span>
                       <div className="flex h-20px w-20px items-center justify-center">
                         <FaChevronDown

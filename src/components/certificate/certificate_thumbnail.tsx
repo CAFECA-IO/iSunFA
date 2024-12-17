@@ -5,7 +5,6 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { HiCheck } from 'react-icons/hi';
-import { IoWarningOutline } from 'react-icons/io5';
 
 interface CertificateThumbnailProps {
   data: ICertificateUI;
@@ -66,7 +65,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       {/* Info: (20240924 - Tzuhan) 資料不完整 */}
       {!data.invoice?.isComplete && (
         <div className="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center rounded-xs text-xs text-surface-state-error">
-          <IoWarningOutline size={16} />
+          <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
         </div>
       )}
 
