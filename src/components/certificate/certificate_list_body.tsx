@@ -323,6 +323,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         setAddOperations([]);
       }
       setActiveTab(tab as InvoiceTabs);
+      setActiveSelection(false);
     },
     [activeTab, handleAddVoucher, handleExport]
   );
