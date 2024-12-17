@@ -295,12 +295,12 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   }
 
   const displayedCurALRChart = isNoDataForCurALR ? (
-    <div className="ml-20">
+    <div className="flex w-300px items-center justify-center">
       {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="200"
-        height="200"
+        width="232"
+        height="232"
         fill="none"
         viewBox="0 0 200 200"
       >
@@ -317,12 +317,12 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   );
 
   const displayedPreALRChart = isNoDataForPreALR ? (
-    <div className="w-300px">
+    <div className="flex w-300px items-center justify-center">
       {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="200"
-        height="200"
+        width="232"
+        height="232"
         fill="none"
         viewBox="0 0 200 200"
       >
@@ -371,9 +371,11 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
 
       return (
         <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="w-50px border border-stroke-brand-secondary-soft p-10px text-sm">
+            {item.code}
+          </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
-            {t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}
+            <p>{t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}</p>
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
@@ -467,7 +469,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               .map((child) => (
                 <tr key={`sub-accounts-${child.code}`}>
                   <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-sm"></td>
-                  <td className="items-center border border-t-0 border-stroke-brand-secondary-soft p-10px text-sm">
+                  <td className="items-center border border-t-0 border-stroke-brand-secondary-soft px-10px py-3px text-sm">
                     <div className="flex items-center justify-between">
                       <div className="justify-start">
                         <span>{child.code}</span>
@@ -475,11 +477,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                       </div>
                       {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給
                     BalanceDetailsButton，用於顯示彈出視窗的標題 */}
-                      <BalanceDetailsButton
-                        accountName={child.name}
-                        accountId={child.accountId}
-                        className="print:hidden"
-                      />
+                      {/*  Info: (20241217 - Anna) 判斷 child.code 是否為 3353（本期損益（結轉來，沒有分錄）），若不是才顯示按鈕 */}
+                      {child.code !== '3353' && (
+                        <BalanceDetailsButton
+                          accountName={child.name}
+                          accountId={child.accountId}
+                          className="print:hidden"
+                        />
+                      )}
                     </div>
                   </td>
                   <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
@@ -555,22 +560,24 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
               <tr className="print:hidden">
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th
+                  className={`w-800px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold`}
+                >
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                   {curDate}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   %
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                   {preDate}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   %
                 </th>
               </tr>
@@ -602,22 +609,22 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <table className="w-full border-collapse bg-white">
             <thead>
               <tr className="print:hidden">
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="w-800px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                   {curDate}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   %
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                   {preDate}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   %
                 </th>
               </tr>
@@ -687,7 +694,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   );
   const AssetItem = (
     <div id="4" className={`relative overflow-y-hidden print:break-before-page`}>
-      <section className="mx-1 text-text-neutral-secondary">
+      <section className="mx-1 mb-6 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>資產分布圖</p>
         </div>
@@ -707,12 +714,12 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {curAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
-                  <div className="ml-20">
+                  <div className="flex w-300px items-center justify-center">
                     {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      width="200"
-                      height="200"
+                      width="232"
+                      height="232"
                       fill="none"
                       viewBox="0 0 200 200"
                     >
@@ -748,12 +755,12 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {preAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
-                  <div className="ml-20">
+                  <div className="flex w-300px items-center justify-center">
                     {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      width="200"
-                      height="200"
+                      width="232"
+                      height="232"
                       fill="none"
                       viewBox="0 0 200 200"
                     >
