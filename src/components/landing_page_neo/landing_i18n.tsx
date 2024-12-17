@@ -68,7 +68,7 @@ const LandingI18n: React.FC = () => {
   ));
 
   return (
-    <div className="relative flex flex-col gap-8px whitespace-nowrap">
+    <div ref={dropdownRef} className="relative flex flex-col gap-8px whitespace-nowrap">
       <LandingButton
         type="button"
         onClick={toggleDropdown}
@@ -90,7 +90,6 @@ const LandingI18n: React.FC = () => {
 
       {/* Info: (20241204 - Julian) Dropdown */}
       <div
-        ref={dropdownRef}
         className={`grid w-full overflow-hidden bg-landing-page-white/30 shadow-landing-nav backdrop-blur-md ${
           isOpen ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'
         } rounded-sm border-b transition-all duration-300 ease-in-out lg:absolute lg:top-50px`}

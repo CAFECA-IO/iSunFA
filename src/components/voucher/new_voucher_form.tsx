@@ -749,10 +749,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   }, [createSuccess, isCreating]);
 
   const typeDropdownMenu = typeVisible ? (
-    <div
-      ref={typeRef}
-      className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu"
-    >
+    <div className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu">
       {Object.values(VoucherType).map((voucherType) => {
         const typeClickHandler = () => {
           setType(voucherType);
@@ -1048,7 +1045,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             {t('journal:ADD_NEW_VOUCHER.VOUCHER_TYPE')}
             <span className="text-text-state-error">*</span>
           </p>
-          <div className="relative">
+          <div ref={typeRef} className="relative">
             <button
               id="voucher-type"
               type="button"

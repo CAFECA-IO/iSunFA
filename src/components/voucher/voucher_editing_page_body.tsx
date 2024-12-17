@@ -680,10 +680,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
   }, [deleteSuccess, isDeleting, createNewSuccess, isCreating]);
 
   const typeDropdownMenu = typeVisible ? (
-    <div
-      ref={typeRef}
-      className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu"
-    >
+    <div className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu">
       {Object.values(VoucherType).map((v) => {
         const typeClickHandler = () => {
           setType(v);
@@ -806,7 +803,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
           />
         </div>
         {/* Info: (20240926 - Julian) Type */}
-        <div className="flex flex-col gap-8px">
+        <div ref={typeRef} className="flex flex-col gap-8px">
           <p className="font-bold text-input-text-primary">
             {t('journal:ADD_NEW_VOUCHER.VOUCHER_TYPE')}
             <span className="text-text-state-error">*</span>
