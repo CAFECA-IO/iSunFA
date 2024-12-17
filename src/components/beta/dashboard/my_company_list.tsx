@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
@@ -11,63 +11,47 @@ import { useUserCtx } from '@/contexts/user_context';
 import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
-
-interface NoDataProps {
-  toggleCreateCompanyModal: () => void;
-}
-const NoData = ({ toggleCreateCompanyModal }: NoDataProps) => {
-  const { t } = useTranslation('dashboard');
-
-  return (
-    <div className="flex flex-col items-center justify-center py-26px">
-      <p className="text-base text-text-neutral-mute">
-        {t('dashboard:DASHBOARD.COMPANY_NOT_YET_CREATED')}
-      </p>
-      <p className="text-base text-text-neutral-mute">
-        {t('dashboard:DASHBOARD.PLEASE_PROCEED_TO')}{' '}
-        <button
-          type="button"
-          onClick={toggleCreateCompanyModal}
-          className="text-text-neutral-link underline underline-offset-4"
-        >
-          {t('dashboard:DASHBOARD.CREATE_A_COMPANY')}
-        </button>
-      </p>
-    </div>
-  );
-};
+import MyCompanyListNoData from '@/components/beta/dashboard/my_company_list_no_data';
 
 interface CompanyItemProps {
   companyAndRole: ICompanyAndRole;
   setCompanyToSelect: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  isDisabled: boolean;
+  dataIndex: number;
 }
 
-const CompanyItem = ({ companyAndRole, setCompanyToSelect }: CompanyItemProps) => {
+const CompanyItem = ({
+  companyAndRole,
+  setCompanyToSelect,
+  isDisabled,
+  dataIndex,
+}: CompanyItemProps) => {
   const { selectedCompany } = useUserCtx();
   const isCompanySelected = companyAndRole.company.id === selectedCompany?.id;
 
   const openMessageModal = () => {
-    setCompanyToSelect(companyAndRole);
+    if (!isDisabled && !isCompanySelected) {
+      setCompanyToSelect(companyAndRole);
+    }
   };
 
   return (
     <button
+      data-index={dataIndex}
       key={companyAndRole.company.id}
       type="button"
       onClick={openMessageModal}
-      disabled={isCompanySelected}
-      className={`h-100px w-100px overflow-hidden rounded-sm shadow-Dropshadow_XS ${
-        isCompanySelected
-          ? 'border-2 border-stroke-brand-primary bg-surface-brand-primary-10'
-          : 'bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10'
-      }`}
+      disabled={isCompanySelected || isDisabled}
+      className={`flex h-120px w-120px flex-none flex-col items-center justify-center gap-8px overflow-hidden rounded-sm border-2 px-8px py-12px ${isCompanySelected ? 'border-stroke-neutral-quaternary bg-surface-brand-primary-30' : ''} ${isDisabled ? 'border-stroke-neutral-quaternary bg-surface-neutral-main-background opacity-70' : ''} ${!isCompanySelected && !isDisabled ? 'border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10' : ''} `}
     >
       <Image
         src={companyAndRole.company.imageId}
         alt={companyAndRole.company.name}
-        width={100}
-        height={100}
+        width={60}
+        height={60}
+        className="h-60px w-60px rounded-sm bg-white"
       ></Image>
+      <p className="w-full truncate">{companyAndRole.company.name}</p>
     </button>
   );
 };
@@ -78,13 +62,62 @@ interface CompanyListProps {
 }
 
 const CompanyList = ({ companyAndRoleList, setCompanyToSelect }: CompanyListProps) => {
+  const { selectedCompany } = useUserCtx();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [disabledCards, setDisabledCards] = useState<number[]>([]);
+
+  // Info: (20241216 - Liz) 監聽滾動事件，計算元素是否部分超出容器的左右邊界，得到左右滾動和部分遮蔽的效果
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+
+    const updateDisabledCards = () => {
+      const newDisabledCards: number[] = [];
+      const containerRect = container.getBoundingClientRect();
+
+      Array.from(container.children).forEach((child, index) => {
+        const cardRect = child.getBoundingClientRect();
+        // Info: (20241216 - Liz) 判斷元素是否部分超出容器的左右邊界
+        if (cardRect.left < containerRect.left || cardRect.right > containerRect.right) {
+          newDisabledCards.push(index);
+        }
+      });
+
+      setDisabledCards(newDisabledCards);
+    };
+
+    // Info: (20241216 - Liz) 監聽滾動事件
+    container.addEventListener('scroll', updateDisabledCards);
+    window.addEventListener('resize', updateDisabledCards);
+
+    updateDisabledCards(); // Info: (20241216 - Liz) 初始化計算
+
+    // Info: (20241216 - Liz) 回傳清理函式給 useEffect
+    return () => {
+      container.removeEventListener('scroll', updateDisabledCards);
+      window.removeEventListener('resize', updateDisabledCards);
+    };
+  }, [companyAndRoleList]);
+
+  // Info: (20241216 - Liz) 當選擇公司後，將滾動條重設到最左側
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (selectedCompany) {
+      container.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+  }, [selectedCompany]);
+
   return (
-    <div className="flex justify-center gap-40px">
-      {companyAndRoleList.map((companyAndRole) => (
+    <div ref={containerRef} className="flex max-w-full gap-24px overflow-x-auto px-1px pb-8px">
+      {companyAndRoleList.map((companyAndRole, index) => (
         <CompanyItem
           key={companyAndRole.company.id}
           companyAndRole={companyAndRole}
           setCompanyToSelect={setCompanyToSelect}
+          isDisabled={disabledCards.includes(index)}
+          dataIndex={index}
         />
       ))}
     </div>
@@ -101,7 +134,7 @@ const MyCompanyList = () => {
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
 
   // Info: (20241126 - Liz) 選擇公司 API
-  const { selectCompany } = useUserCtx();
+  const { selectCompany, selectedCompany } = useUserCtx();
 
   const closeMessageModal = () => {
     setCompanyToSelect(undefined);
@@ -166,12 +199,19 @@ const MyCompanyList = () => {
       });
 
       if (success && userCompanyList && userCompanyList.length > 0) {
-        // Info: (20241126 - Liz) 取得使用者擁有的公司列表成功，依照 ICompanyAndRole.company.id 降冪排序並取前三個
-        const recentCompanies = userCompanyList
-          .sort((a, b) => b.company.id - a.company.id)
-          .slice(0, 3);
+        // Info: (20241216 - Liz) 已被選擇的公司顯示在第一個
+        if (selectedCompany) {
+          const selectedCompanyIndex = userCompanyList.findIndex(
+            (companyAndRole) => companyAndRole.company.id === selectedCompany.id
+          );
 
-        setCompanyAndRoleList(recentCompanies);
+          if (selectedCompanyIndex > -1) {
+            const selectedCompanyItem = userCompanyList.splice(selectedCompanyIndex, 1);
+            userCompanyList.unshift(selectedCompanyItem[0]);
+          }
+        }
+
+        setCompanyAndRoleList(userCompanyList);
       } else {
         // Info: (20241120 - Liz) 取得使用者擁有的公司列表失敗時顯示錯誤訊息
         // Deprecated: (20241120 - Liz)
@@ -183,7 +223,7 @@ const MyCompanyList = () => {
       // eslint-disable-next-line no-console
       console.error('listUserCompanyAPI(Simple) error:', error);
     }
-  }, [userAuth]);
+  }, [selectedCompany, userAuth]);
 
   useEffect(() => {
     getCompanyList();
@@ -191,7 +231,7 @@ const MyCompanyList = () => {
 
   return (
     <DashboardCardLayout>
-      <section className="flex flex-col gap-32px">
+      <section className="flex flex-col gap-24px">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-text-neutral-secondary">
             {t('dashboard:DASHBOARD.MY_COMPANY_LIST')}
@@ -201,7 +241,7 @@ const MyCompanyList = () => {
         </div>
 
         {isCompanyListEmpty ? (
-          <NoData toggleCreateCompanyModal={toggleCreateCompanyModal} />
+          <MyCompanyListNoData toggleCreateCompanyModal={toggleCreateCompanyModal} />
         ) : (
           <CompanyList
             companyAndRoleList={companyAndRoleList}

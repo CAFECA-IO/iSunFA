@@ -5,7 +5,7 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { HiCheck } from 'react-icons/hi';
-import { IoWarningOutline } from 'react-icons/io5';
+import { timestampToString } from '@/lib/utils/common';
 
 interface CertificateThumbnailProps {
   data: ICertificateUI;
@@ -33,26 +33,30 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       className={`relative h-200px w-200px rounded-md border ${data.isSelected ? 'border-stroke-brand-primary bg-surface-brand-primary-30' : 'border-stroke-neutral-quaternary'} hover:border-stroke-brand-primary hover:bg-surface-brand-primary-30`}
     >
       <div
-        className="my-3"
+        className="my-3 flex flex-col items-center"
         onClick={
           activeSelection
             ? handleSelect.bind(null, [data.id], !data.isSelected)
             : onEdit.bind(null, data.id)
         }
       >
-        {/* Info: (20240924 - Tzuhan) 縮略圖 */}
-        <Image
-          src={data.file.url}
-          alt={`Certificate ${data.name}`}
-          height={136}
-          width={93}
-          className="mx-auto h-134px w-90px overflow-hidden object-cover"
-        />
+        <div className="max-h-134px min-h-134px max-w-90px overflow-hidden">
+          {/* Info: (20240924 - Tzuhan) 縮略圖 */}
+          <Image
+            src={data.file.url}
+            alt={`Certificate ${data.name}`}
+            height={136}
+            width={93}
+            className="w-full object-cover"
+          />
+        </div>
 
         {/* Info: (20240924 - Tzuhan) 發票號碼和日期 */}
         <div className="mt-2 text-center">
           <div className="text-sm font-medium">{data.invoice.no}</div>
-          <div className="mt-1 text-xs text-gray-500">{data.invoice.date}</div>
+          <div className="mt-1 text-xs text-gray-500">
+            {data.invoice.date ? timestampToString(data.invoice.date).date : data.invoice.date}
+          </div>
         </div>
       </div>
 
@@ -66,7 +70,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       {/* Info: (20240924 - Tzuhan) 資料不完整 */}
       {!data.invoice?.isComplete && (
         <div className="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center rounded-xs text-xs text-surface-state-error">
-          <IoWarningOutline size={16} />
+          <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
         </div>
       )}
 
@@ -85,18 +89,12 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       <div
         className="absolute right-0 top-0 h-36px w-36px text-stroke-brand-secondary-moderate"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        onMouseEnter={() => setIsMenuOpen(true)}
-        onMouseLeave={() => setIsMenuOpen(false)}
       >
         <BsThreeDotsVertical className="absolute right-2 top-3" />
       </div>
       {/* Info: (20240924 - Tzuhan) 操作選單 */}
       {isMenuOpen && (
-        <div
-          className="group absolute left-20 top-2 z-10 mt-7 w-36 rounded-sm border bg-white shadow-dropmenu group-hover:pointer-events-none"
-          onMouseEnter={() => setIsMenuOpen(true)}
-          onMouseLeave={() => setIsMenuOpen(false)}
-        >
+        <div className="group absolute left-20 top-2 z-10 mt-7 w-36 rounded-sm border bg-white shadow-dropmenu group-hover:pointer-events-none">
           <ul>
             {data.actions.includes(CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD) && (
               <li

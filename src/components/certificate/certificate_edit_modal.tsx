@@ -12,15 +12,13 @@ import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { useModalContext } from '@/contexts/modal_context';
-import { ToastId } from '@/constants/toast_id';
-import { ToastType } from '@/interfaces/toastify';
 import { IoCloseOutline } from 'react-icons/io5';
 import { BiSave } from 'react-icons/bi';
 import { LuTrash2 } from 'react-icons/lu';
-import APIHandler from '@/lib/utils/api_handler';
-import { APIName } from '@/constants/api_connection';
 import { CurrencyType } from '@/constants/currency';
 import CounterpartyInput, { CounterpartyInputRef } from '@/components/voucher/counterparty_input';
+import EditableFilename from '@/components/certificate/edible_file_name';
+import Magnifier from '@/components/magnifier/magifier';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
@@ -45,8 +43,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
-  const { trigger: updateFilename } = APIHandler(APIName.FILE_PUT_V2);
-  const [isNameEditing, setIsNameEditing] = useState(false);
   const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
   const [counterParty, setCounterParty] = useState<ICounterparty | undefined>(
     certificate.invoice.counterParty
@@ -69,7 +65,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     certificate.invoice.type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE
   );
   const [deductible, setDeductible] = useState<boolean>(!!certificate.invoice.deductible);
-  const { isMessageModalVisible, toastHandler } = useModalContext();
+  const { isMessageModalVisible } = useModalContext();
   //  const [isAddCounterPartyModalOpen, setIsAddCounterPartyModalOpen] = useState(false);
   const isFormValid = priceBeforeTax > 0 && totalPrice > 0 && certificateNo !== '';
 
@@ -125,32 +121,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     `certificate:CURRENCY_ALIAS.${(certificate.invoice?.currencyAlias || currencyAlias).toUpperCase()}`
   );
 
-  const handleEditName = () => {
-    setIsNameEditing(true);
-  };
-
-  const updateFilenameHandler = async () => {
-    if (certificateFilename !== certificate.file.name && certificateFilename !== '') {
-      const { success } = await updateFilename({
-        params: { fileId: certificate.file.id },
-        body: { name: certificateFilename },
-      });
-      if (success === false) {
-        toastHandler({
-          id: ToastId.UPDATE_FILENAME_ERROR,
-          type: ToastType.SUCCESS,
-          content: t('certificate:ERROR.UPDATE_FILENAME'),
-          closeable: true,
-        });
-      }
-      if (success) {
-        setCertificateFilename(certificateFilename);
-        onUpdateFilename(certificate.id, certificateFilename);
-      }
-    }
-    setIsNameEditing(false);
-  };
-
   // Info: (20240924 - tzuhan) 處理保存
   const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -197,49 +167,25 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
           <IoCloseOutline size={32} />
         </button>
 
-        <div className="flex w-full flex-col items-center">
-          <h2 className="flex items-center justify-center gap-2 text-xl font-semibold">
-            {isNameEditing ? (
-              <input
-                id="invoicenname"
-                type="text"
-                onChange={(e) => setCertificateFilename(e.target.value)}
-                className="w-auto text-center caret-transparent outline-none placeholder:text-card-text-primary"
-                placeholder="|"
-                style={{ width: `${certificateFilename.length || 1}ch` }}
-              />
-            ) : (
-              <span>{certificateFilename}</span>
-            )}
-            <div className="flex h-8 w-8 items-center justify-center">
-              <Image
-                alt={isNameEditing ? 'save' : 'edit'}
-                src={isNameEditing ? '/icons/save.svg' : '/elements/edit.svg'}
-                width={20}
-                height={20}
-                onClick={isNameEditing ? updateFilenameHandler : handleEditName}
-              />
-            </div>
-          </h2>
-          <p className="text-xs text-card-text-secondary">{t('certificate:EDIT.HEADER')}</p>
-        </div>
+        <EditableFilename
+          certificate={certificate}
+          certificateFilename={certificateFilename}
+          setCertificateFilename={setCertificateFilename}
+          onUpdateFilename={onUpdateFilename}
+        />
 
         {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
-        {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
           {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
-          <Image
-            className="h-400px w-250px items-start"
-            src={certificate.file.url}
-            width={250}
-            height={400}
-            alt="certificate"
-            priority
+          <Magnifier
+            imageUrl={certificate.file.url}
+            width={210}
+            height={310}
+            className="w-210px min-w-210px"
           />
           {/* Info: (20240924 - tzuhan) 編輯表單 */}
 
           {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
-          {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
           <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
             {/* Info: (20240924 - tzuhan) 切換輸入/輸出 */}
             <div className="flex flex-col items-start gap-2">
@@ -448,7 +394,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 {t('certificate:EDIT.INVOICE_TYPE')}
               </p>
               <div className="flex w-full items-center gap-4">
-                <div className="flex w-full items-center">
+                <div className="flex w-full">
                   <div
                     ref={invoiceTypeMenuRef}
                     id="invoice-type-menu"
@@ -457,7 +403,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   >
                     {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
                     {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
-                    <p className="hide-scrollbar flex h-46px items-center gap-1 overflow-y-scroll">
+                    <p className="hide-scrollbar items-centerjustify-between flex h-46px min-w-300px items-center justify-between overflow-y-scroll">
                       <span>{t(`filter_section_type:FILTER_SECTION_TYPE.${invoiceType}`)}</span>
                       <div className="flex h-20px w-20px items-center justify-center">
                         <FaChevronDown

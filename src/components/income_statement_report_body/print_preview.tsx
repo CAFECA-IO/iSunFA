@@ -167,7 +167,8 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         colSpan={4}
                         className="text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
-                        單位：新台幣元 每股盈餘單位：新台幣元
+                        <span>單位：新台幣元</span>
+                        <span className="pl-5">每股盈餘單位：新台幣元</span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>
@@ -181,7 +182,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                       </th>
                       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
                         {financialReport && financialReport.company && (
-                          <p className="text-center font-barlow font-semibold leading-5">
+                          <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
                             {formattedCurFromDate}至{formattedCurToDate}
                           </p>
                         )}
@@ -194,7 +195,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         style={{ whiteSpace: 'nowrap' }}
                       >
                         {financialReport && financialReport.company && (
-                          <p className="text-center font-barlow font-semibold leading-5">
+                          <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
                             {formattedPreFromDate}至{formattedPreToDate}
                           </p>
                         )}
@@ -255,7 +256,8 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         colSpan={4}
                         className="text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
-                        單位：新台幣元 每股盈餘單位：新台幣元
+                        <span>單位：新台幣元</span>
+                        <span className="pl-5">每股盈餘單位：新台幣元</span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>
@@ -269,7 +271,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                       </th>
                       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
                         {financialReport && financialReport.company && (
-                          <p className="text-center font-barlow font-semibold leading-5">
+                          <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
                             {formattedCurFromDate}至{formattedCurToDate}
                           </p>
                         )}
@@ -282,7 +284,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         style={{ whiteSpace: 'nowrap' }}
                       >
                         {financialReport && financialReport.company && (
-                          <p className="text-center font-barlow font-semibold leading-5">
+                          <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
                             {formattedPreFromDate}至{formattedPreToDate}
                           </p>
                         )}

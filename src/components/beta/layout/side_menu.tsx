@@ -35,7 +35,7 @@ type TMenuOption = IMenuOptionWithLink | IMenuOptionWithSubMenu;
 
 interface ISubMenuSubMenuSection {
   caption: string;
-  subMenu: (ISubMenuOptionWithLink | ISubMenuOptionWithModal)[];
+  subMenu: (ISubMenuOptionWithLink | ISubMenuOptionWithButton)[];
 }
 
 interface IDefaultSubMenuOption {
@@ -53,7 +53,7 @@ interface ISubMenuOptionWithLink extends IDefaultSubMenuOption {
   type: SubMenuOptionType.LINK;
   link: string;
 }
-interface ISubMenuOptionWithModal extends IDefaultSubMenuOption {
+interface ISubMenuOptionWithButton extends IDefaultSubMenuOption {
   type: SubMenuOptionType.BUTTON;
   link?: undefined;
 }
@@ -248,7 +248,7 @@ const MENU_CONFIG: TMenuOption[] = [
   },
 ];
 
-type TSubMenuOption = ISubMenuOptionWithLink | ISubMenuOptionWithModal;
+type TSubMenuOption = ISubMenuOptionWithLink | ISubMenuOptionWithButton;
 type SubMenuOptionProps = TSubMenuOption & {
   toggleOverlay?: () => void;
 };
@@ -271,46 +271,53 @@ const SubMenuOption = ({
     setIsEmbedCodeModalOpen((prev) => !prev);
   };
 
+  const showCompanyNeededToast = () => {
+    toastHandler({
+      id: 'company-needed',
+      type: ToastType.INFO,
+      content: (
+        <div className="flex items-center gap-32px">
+          <p className="text-sm text-text-neutral-primary">
+            {t('layout:TOAST.PLEASE_SELECT_A_COMPANY_BEFORE_PROCEEDING_WITH_THE_OPERATION')}
+          </p>
+          <Link
+            href={ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE}
+            className="text-base font-semibold text-link-text-primary"
+          >
+            {t('layout:TOAST.GO_TO_SELECT_COMPANY')}
+          </Link>
+        </div>
+      ),
+      closeable: true,
+      position: ToastPosition.TOP_CENTER,
+      onOpen: () => {
+        // Info: (20241018 - Liz) 開啟 Toast 時順便開啟 Overlay
+        toggleOverlay();
+      },
+      onClose: () => {
+        // Info: (20241018 - Liz) 關閉 Toast 時順便關閉 Overlay
+        toggleOverlay();
+      },
+    });
+  };
+
   const onClickButton = () => {
+    if (needToVerifyCompany && noSelectedCompany) {
+      showCompanyNeededToast();
+      return;
+    }
+
     if (title === 'GENERATE_EMBED_CODE') {
       toggleEmbedCodeModal();
     }
-
-    // Info: (20241126 - Liz) 其他按鈕的 onClick 事件新增在這裡
+    // Info: (20241126 - Liz) 如果有其他按鈕的 onClick 事件就新增在這裡: if (title === 'XXX') { ... }
   };
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const onClickLink = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (needToVerifyCompany && noSelectedCompany) {
       // Info: (20241018 - Liz) 阻止導航
       e.preventDefault();
-
-      toastHandler({
-        id: 'company-needed',
-        type: ToastType.INFO,
-        content: (
-          <div className="flex items-center gap-32px">
-            <p className="text-sm text-text-neutral-primary">
-              {t('layout:TOAST.PLEASE_SELECT_A_COMPANY_BEFORE_PROCEEDING_WITH_THE_OPERATION')}
-            </p>
-            <Link
-              href={ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE}
-              className="text-base font-semibold text-link-text-primary"
-            >
-              {t('layout:TOAST.GO_TO_SELECT_COMPANY')}
-            </Link>
-          </div>
-        ),
-        closeable: true,
-        position: ToastPosition.TOP_CENTER,
-        onOpen: () => {
-          // Info: (20241018 - Liz) 開啟 Toast 時順便開啟 Overlay
-          toggleOverlay();
-        },
-        onClose: () => {
-          // Info: (20241018 - Liz) 關閉 Toast 時順便關閉 Overlay
-          toggleOverlay();
-        },
-      });
+      showCompanyNeededToast();
     }
   };
 
@@ -318,7 +325,7 @@ const SubMenuOption = ({
     return (
       <Link
         href={link}
-        onClick={handleClick}
+        onClick={onClickLink}
         className={`rounded-xs px-12px py-10px font-medium hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:bg-transparent disabled:text-button-text-disable ${disabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
       >
         {t(`layout:SIDE_MENU.${title}`)}

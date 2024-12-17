@@ -57,7 +57,7 @@ const CompanyItem = ({
     closeOptionsDropdown();
   };
 
-  // Info: (20241113 - Liz) call Select Company API
+  // Info: (20241113 - Liz) 打 API 選擇公司
   const handleConnect = async () => {
     if (isLoading) return;
 
