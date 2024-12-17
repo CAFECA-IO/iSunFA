@@ -37,14 +37,12 @@ const Magnifier: React.FC<MagnifierProps> = ({
     const yPercent = (offsetY / height) * 100;
 
     // Info: (20241217 - tzuhan) 設置放大鏡位置，偏移量讓滑鼠游標在邊緣
-    const magnifierOffset = 10; // Info: (20241217 - tzuhan) 放大鏡與滑鼠的間距
-    // Deprecated: (20241217 - tzuhan) debug log
-    // eslint-disable-next-line no-console
-    console.log('e.clientX:', e.clientX, 'e.clientY:', e.clientY);
+    const magnifierYOffset = 200; // Info: (20241217 - tzuhan) 放大鏡與滑鼠的間距
+    const magnifierXOffset = 250; // Info: (20241217 - tzuhan) 放大鏡與滑鼠的間距
     setMagnifierStyle({
       display: 'block',
-      top: `${e.clientX - magnifierOffset}px`,
-      left: `${e.clientY - magnifierOffset}px`,
+      top: `${e.clientY - magnifierYOffset}px`,
+      left: `${e.clientX - magnifierXOffset}px`,
       backgroundPosition: `${xPercent}% ${yPercent}%`,
     });
   };
