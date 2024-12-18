@@ -7,6 +7,7 @@ import {
   TextAlign,
 } from '@/components/landing_page_neo/linear_gradient_text';
 import CTA from '@/components/landing_page_neo/cta';
+import EasyToUse from '@/components/landing_page_neo/easy_to_use';
 
 const LandingPageBody: React.FC = () => {
   return (
@@ -23,19 +24,7 @@ const LandingPageBody: React.FC = () => {
         <CTA />
 
         {/* Info: (20241205 - Julian) Easy to Use */}
-        <div className="flex flex-col">
-          {/* Info: (20241205 - Julian) Title */}
-          <LinearGradientText size={LinearTextSize.MD} align={TextAlign.LEFT}>
-            Simply take a photo to record transactions
-          </LinearGradientText>
-
-          {/* Info: (20241205 - Julian) Content */}
-          <div className="">
-            <LinearGradientText size={LinearTextSize.SM} align={TextAlign.CENTER}>
-              No Accounting Expertise Required
-            </LinearGradientText>
-          </div>
-        </div>
+        <EasyToUse />
 
         {/* Info: (20241205 - Julian) Multinational Corporations */}
         <div className="flex flex-col">

@@ -45,12 +45,13 @@ const CTAIntroCard: React.FC<{
         alt="nail_icon"
         className="absolute bottom-10px right-10px" // Info: (20241211 - Julian) 右下角
       />
+      {/* Info: (20241218 - Julian) Highlight */}
       <Image
         src="/elements/light.svg"
         width={162}
         height={9}
         alt="light"
-        className="absolute -top-4px left-0" // Info: (20241218 - Julian) highlight
+        className="absolute -top-4px left-0"
       />
 
       {/* Info: (20241205 - Julian) Content */}
