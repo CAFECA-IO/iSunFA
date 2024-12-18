@@ -1,33 +1,37 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
-// import LedgerItem, { ILedgerBeta } from '@/components/ledger/ledger_item';
 import LedgerItem from '@/components/ledger/ledger_item';
 import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
-import { useGlobalCtx } from '@/contexts/global_context';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import { ILedgerPayload } from '@/interfaces/ledger';
 import Image from 'next/image';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useReactToPrint } from 'react-to-print';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface LedgerListProps {
   ledgerData: ILedgerPayload | null; // Info: (20241118 - Anna) 接收 API 數據
   loading: boolean; // Info: (20241118 - Anna) 接收父组件傳遞的loading狀態
+  selectedDateRange: { startTimeStamp: number; endTimeStamp: number }; // Info: (20241218 - Anna) 從父組件傳來的日期範圍
+  labelType: string; // Info: (20241218 - Anna) 從父組件傳來的 labelType
 }
 
-const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, loading }) => {
+const LedgerList: React.FunctionComponent<LedgerListProps> = ({
+  ledgerData,
+  loading,
+  selectedDateRange,
+  labelType,
+}) => {
+  const { selectedCompany } = useUserCtx();
+  const companyId = selectedCompany?.id;
   const { t } = useTranslation(['journal', 'date_picker', 'reports']);
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 
   const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
-
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
-
-  // const [ledgerList] = useState<ILedgerBeta[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages] = useState(1);
 
@@ -75,10 +79,61 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
     },
   });
 
+  // Info: (20241218 - Anna) 匯出csv
+  const handleDownload = async () => {
+    const body = {
+      fileType: 'csv',
+      filters: {
+        startDate: selectedDateRange.startTimeStamp,
+        endDate: selectedDateRange.endTimeStamp,
+        labelType,
+      },
+      options: {
+        language: 'zh-TW',
+        timezone: '+0800',
+      },
+    };
+
+    try {
+      // Info: (20241218 - Anna) 使用 fetch 直接調用 API，處理非 JSON 格式的回應、解析 headers
+      // Info: (20241218 - Anna) 因為 APIHandler 將所有回應解析為 JSON，當遇到非 JSON 內容（ 如csv ），會SyntaxError，導致 response.data 為 null。
+      const response = await fetch(`/api/v2/company/${companyId}/ledger/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+
+      // Info: (20241218 - Anna) 獲取 Blob 內容
+      const blob = await response.blob();
+
+      const contentDisposition = response.headers.get('content-disposition'); // Info: (20241218 - Anna) 從 headers 提取檔名
+      const fileNameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
+      const fileName = fileNameMatch ? fileNameMatch[1] : 'ledger_export.csv';
+
+      // Info: (20241218 - Anna) 創建下載連結並觸發下載
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url); // Info: (20241218 - Anna) 釋放 URL 資源
+      link.parentNode?.removeChild(link);
+    } catch (error) {
+      // Deprecate: (20241218 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.error('Download failed:', error);
+    }
+  };
+
   const displayedSelectArea = (
     <div className="ml-auto flex items-center gap-24px print:hidden">
       {/* Info: (20241004 - Anna) Export button */}
-      <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+      <DownloadButton onClick={handleDownload} disabled={false} />
       {/* Info: (20241004 - Anna) PrintButton */}
       <PrintButton onClick={handlePrint} disabled={false} />
     </div>

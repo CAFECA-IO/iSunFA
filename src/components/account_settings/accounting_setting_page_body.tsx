@@ -425,9 +425,9 @@ const AccountingSettingPageBody: React.FC = () => {
           <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
         {/* Info: (20241106 - Julian) ===== 稅務設定內容 ===== */}
-        <div ref={salesTaxRef} className="grid grid-cols-2 gap-x-40px gap-y-24px">
+        <div className="grid grid-cols-2 gap-x-40px gap-y-24px">
           {/* Info: (20241106 - Julian) ===== 銷售稅 ===== */}
-          <div className="flex flex-col gap-10px">
+          <div ref={salesTaxRef} className="flex flex-col gap-10px">
             <p className="text-sm text-input-text-primary">{t('setting:ACCOUNTING.TAX_SALES')}</p>
             {/* Info: (20241106 - Julian) ===== 銷售稅下拉選單 ===== */}
             <div
