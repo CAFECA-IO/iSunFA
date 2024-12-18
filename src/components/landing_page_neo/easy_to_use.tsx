@@ -31,7 +31,7 @@ const EasyIntroCard: React.FC<{
   return (
     <div
       onClick={onClick}
-      className={`${cardStyle} absolute top-0 flex h-500px origin-bottom flex-col items-center gap-12px overflow-hidden rounded-lg border-x border-b bg-landing-page-white/30 p-40px text-center backdrop-blur-md transition-all duration-500 ease-in-out md:w-400px`}
+      className={`${cardStyle} absolute top-0 flex h-300px w-250px origin-bottom flex-col items-center gap-12px overflow-hidden rounded-lg border-x border-b bg-landing-page-white/30 p-20px text-center backdrop-blur-md transition-all duration-500 ease-in-out md:h-500px md:w-400px md:p-40px`}
     >
       {/* Info: (20241218 - Julian) Nail Icon */}
       <Image
@@ -76,7 +76,7 @@ const EasyIntroCard: React.FC<{
         {title}
       </LinearGradientText>
       {/* Info: (20241218 - Julian) Description */}
-      <p className="w-full flex-1 text-left text-lg font-normal">{description}</p>
+      <p className="w-full flex-1 text-left text-xs font-normal md:text-lg">{description}</p>
       {/* Info: (20241218 - Julian) Image */}
       <div className="relative h-300px w-full">
         <Image src={imageSrc} alt={imageAlt} fill objectFit="contain" objectPosition="bottom" />
@@ -143,14 +143,14 @@ const EasyToUse: React.FC = () => {
   });
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col py-120px">
       {/* Info: (20241218 - Julian) Title */}
       <LinearGradientText size={LinearTextSize.LG} align={TextAlign.CENTER}>
         Easy to Use Without Accounting Expertise
       </LinearGradientText>
 
       {/* Info: (20241218 - Julian) Carousel */}
-      <div className="relative mx-auto mt-80px h-550px w-full overflow-hidden bg-digital bg-cover bg-bottom bg-no-repeat lg:px-120px">
+      <div className="relative mx-auto mt-80px h-300px w-full overflow-hidden bg-digital bg-cover bg-bottom bg-no-repeat md:h-550px lg:px-120px">
         <div className="relative flex transform-gpu items-center justify-center">
           {displayedCards}
         </div>
