@@ -4,7 +4,6 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
-import { simplifyFileName } from '@/lib/utils/common';
 
 interface CertificateListIrops {
   activeSelection: boolean;
