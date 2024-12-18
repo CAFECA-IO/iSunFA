@@ -86,6 +86,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   };
 
   const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
+    // Deprecate: (20241218 - tzuhan) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log('invoiceTypeMenuOptionClickHandler', id);
     setInvoiceType(id);
     setIsInvoiceTypeMenuOpen(false);
   };
@@ -130,6 +133,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   };
 
   const onTriggerSave = async () => {
+    // eslint-disable-next-line no-console
+    console.log('onTriggerSave', invoiceType);
     const updatedData: ICertificate = {
       ...certificate,
       invoice: {

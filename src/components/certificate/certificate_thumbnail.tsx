@@ -40,7 +40,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
             : onEdit.bind(null, data.id)
         }
       >
-        <div className="max-h-134px min-h-134px max-w-90px overflow-hidden">
+        <div className="flex max-h-134px min-h-134px max-w-90px items-center overflow-hidden">
           {/* Info: (20240924 - Tzuhan) 縮略圖 */}
           <Image
             src={data.file.url}
