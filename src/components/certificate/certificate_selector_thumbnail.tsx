@@ -51,7 +51,7 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
         onClick={handleSelect?.bind(null, certificate.id)}
       >
         <div
-          className={`relative flex h-136px w-85px flex-col overflow-hidden ${!isSelected || !isSelectable ? 'group' : ''}`}
+          className={`relative flex h-136px w-85px items-center overflow-hidden ${!isSelected || !isSelectable ? 'group' : ''}`}
         >
           <Image
             src={certificate.file?.url ?? DEFAULT_CERTIFICATE_IMAGE_URL}
