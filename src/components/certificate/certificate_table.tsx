@@ -59,8 +59,8 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
     // Info: (20241210 - tzuhan) 隱藏 scrollbar
     // Deprecate: (20241211 tzuhan) remove eslint-disable
     // eslint-disable-next-line tailwindcss/no-custom-classname
-    <div className="hide-scrollbar min-h-500px w-full flex-auto overflow-x-scroll">
-      <div className="table w-full border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
+    <div className="min-h-500px w-full flex-auto overflow-hidden rounded-md">
+      <div className="table w-full rounded-md bg-surface-neutral-surface-lv2 shadow-normal_setting_brand">
         <div className="table-header-group h-60px w-full max-w-920px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row w-full">
             {activeSelection && (
@@ -72,14 +72,14 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
                 </div>
               </div>
             )}
-            <div className="table-cell w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div className="table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {displayedIssuedDate}
             </div>
-            <div className="table-cell w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
+            <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
               <div>{t('certificate:TABLE.INVOICE_NAME')}</div>
               <div>{t('certificate:TABLE.INVOICE_NUMBER')}</div>
             </div>
-            <div className="table-cell w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
+            <div className="table-cell w-100px min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
               <div>{t('certificate:TABLE.COUNTERPARTY')}</div>
               <div>
                 ({t('certificate:COUNTERPARTY.CLIENT')}/{t('certificate:COUNTERPARTY.SUPPLIER')})
@@ -88,16 +88,16 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
             <div className="col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.INVOICE_TYPE')}
             </div>
-            <div className="table-cell w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div className="table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.TAX')}
             </div>
-            <div className="table-cell w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div className="table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {displayedAmount}
             </div>
-            <div className="table-cell w-80px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div className="table-cell w-80px min-w-80px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.DEDUCTABLE')}
             </div>
-            <div className="table-cell w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-right align-middle">
+            <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               <div>{t('certificate:TABLE.UPLOADER')}</div>
               {activeTab === InvoiceTabs.WITH_VOUCHER && displayedVoucherNumber}
             </div>

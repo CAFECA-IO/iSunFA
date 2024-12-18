@@ -183,7 +183,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             </p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
-          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            {' '}
+            <span>單位：新台幣元</span>
+            <span className="pl-5">每股盈餘單位：新台幣元</span>
+          </p>
         </div>
         {!isSummaryCollapsed && (
           <table className="relative z-1 w-full border-collapse bg-white">
@@ -256,7 +260,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            <span>單位：新台幣元</span>
+            <span className="pl-5">每股盈餘單位：新台幣元</span>
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -330,7 +337,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            <span>單位：新台幣元</span>
+            <span className="pl-5">每股盈餘單位：新台幣元</span>
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -443,7 +453,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             </p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            <span>單位：新台幣元</span>
+            <span className="pl-5">每股盈餘單位：新台幣元</span>
+          </p>
         </div>
         {!isDetailCollapsed && (
           <table className="w-full border-collapse bg-white">
@@ -521,7 +534,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
           </p>
-          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            <span>單位：新台幣元</span>
+            <span className="pl-5">每股盈餘單位：新台幣元</span>
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -597,7 +613,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
           </p>
-          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            <span>單位：新台幣元</span>
+            <span className="pl-5">每股盈餘單位：新台幣元</span>
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -673,7 +692,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
           </p>
-          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            <span>單位：新台幣元</span>
+            <span className="pl-5">每股盈餘單位：新台幣元</span>
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -749,7 +771,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
           </p>
-          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            <span>單位：新台幣元</span>
+            <span className="pl-5">每股盈餘單位：新台幣元</span>
+          </p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>

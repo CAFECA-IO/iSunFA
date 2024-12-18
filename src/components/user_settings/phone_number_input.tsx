@@ -40,7 +40,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
     <div className="relative flex w-full">
       <button
         type="button"
-        className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-5 py-3 max-md:max-w-full ${
+        className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
           isCountryCodeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
       >

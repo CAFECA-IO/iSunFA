@@ -17,7 +17,6 @@ import { SPECIAL_ACCOUNTS } from '@/constants/account';
 import { importsCategories, purchasesCategories, salesCategories } from '@/constants/invoice';
 import {
   Account,
-  Company,
   CompanyKYC,
   Invoice,
   InvoiceVoucherJournal,
@@ -25,7 +24,7 @@ import {
   LineItem,
   Voucher,
 } from '@prisma/client';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyWithSettingById } from '@/lib/utils/repo/company.repo';
 
 export default class Report401Generator extends ReportGenerator {
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
@@ -293,7 +292,12 @@ export default class Report401Generator extends ReportGenerator {
     to: number
   ): Promise<TaxReport401> {
     const companyKYC: CompanyKYC | null = await getCompanyKYCByCompanyId(companyId);
-    const company: Company | null = await getCompanyById(companyId);
+    const company = await getCompanyWithSettingById(companyId);
+
+    // Info: (20241217 - Murky) Get Company Setting from company in prisma
+    const companySetting =
+      company && company.companySettings.length ? company.companySettings[0] : null;
+
     if (!companyKYC) {
       // Info: (20240912 - Murky) temporary allow to generate report without KYC
       // throw new Error(STATUS_MESSAGE.FORBIDDEN);
@@ -309,9 +313,9 @@ export default class Report401Generator extends ReportGenerator {
     const basicInfo = {
       uniformNumber: companyKYC?.registrationNumber ?? company?.taxId ?? '',
       businessName: companyKYC?.legalName ?? company?.name ?? '',
-      personInCharge: companyKYC?.representativeName ?? '',
-      taxSerialNumber: '', // TODO (20240808 - Jacky): Implement this field in next sprint
-      businessAddress: companyKYC?.address ?? '',
+      personInCharge: companySetting?.representativeName ?? '',
+      taxSerialNumber: companySetting?.taxSerialNumber || '', // TODO (20240808 - Jacky): Implement this field in next sprint
+      businessAddress: companySetting?.address ?? '',
       currentYear: ROCStartDate.year.toString(),
       startMonth: ROCStartDate.month.toString(),
       endMonth: ROCEndDate.month.toString(),
