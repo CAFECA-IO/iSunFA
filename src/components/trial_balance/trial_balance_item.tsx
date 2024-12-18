@@ -146,11 +146,11 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
       {localIsExpanded &&
         account.subAccounts.map((subAccount) => (
           <div key={subAccount.id} className="table-row h-20px font-normal">
-            <div className="table-cell w-32px text-center">{displayedCheckbox}</div>
-            <div className="table-cell w-50px text-center align-middle">
+            <div className="table-cell w-32px text-center print:hidden">{displayedCheckbox}</div>
+            <div className="table-cell w-50px text-center align-middle print:bg-neutral-50">
               <span className="ml-6 text-neutral-400">{subAccount.no}</span>
             </div>
-            <div className="table-cell w-370px text-center align-middle">
+            <div className="table-cell w-370px text-center align-middle print:bg-neutral-50">
               <div className="flex h-full items-center justify-center font-normal text-neutral-600">
                 <span className="ml-12 flex items-center text-neutral-400">
                   {subAccount.accountingTitle}
