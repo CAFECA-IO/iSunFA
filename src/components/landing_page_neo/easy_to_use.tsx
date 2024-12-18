@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import {
   LinearGradientText,
@@ -12,18 +12,26 @@ const EasyIntroCard: React.FC<{
   imageSrc: string;
   imageAlt: string;
   order: number;
-}> = ({ title, description, imageSrc, imageAlt, order }) => {
+  onLeftClick: () => void;
+  onRightClick: () => void;
+}> = ({ title, description, imageSrc, imageAlt, order, onLeftClick, onRightClick }) => {
+  // Info: (20241218 - Julian) 正中間的卡片樣式
   const activeStyle = 'opacity-100 scale-100 z-10 translate-x-0';
-  const rightStyle = 'opacity-90 scale-90 z-0 -translate-x-2/3';
-  const leftStyle = 'opacity-90 scale-90 z-0 translate-x-2/3';
+  // Info: (20241218 - Julian) 右後方的卡片樣式
+  const rightStyle = 'opacity-90 scale-90 z-0 -translate-x-2/3 hover:cursor-pointer';
+  // Info: (20241218 - Julian) 左後方的卡片樣式
+  const leftStyle = 'opacity-90 scale-90 z-0 translate-x-2/3 hover:cursor-pointer';
 
+  // Info: (20241218 - Julian) 根據 order 決定卡片位置（0: 右, 1: 中, 2: 左）
   const cardStyle = order === 0 ? rightStyle : order === 1 ? activeStyle : leftStyle;
+
+  // Info: (20241218 - Julian) 根據 order 決定點擊事件
+  const onClick = order === 0 ? onRightClick : order === 2 ? onLeftClick : undefined;
 
   return (
     <div
-      className={`${
-        cardStyle
-      } absolute top-0 flex h-500px origin-bottom flex-col items-center gap-12px overflow-hidden rounded-lg border-x border-b bg-landing-page-white/30 p-40px text-center backdrop-blur-md md:w-400px`}
+      onClick={onClick}
+      className={`${cardStyle} absolute top-0 flex h-500px origin-bottom flex-col items-center gap-12px overflow-hidden rounded-lg border-x border-b bg-landing-page-white/30 p-40px text-center backdrop-blur-md transition-all duration-500 ease-in-out md:w-400px`}
     >
       {/* Info: (20241218 - Julian) Nail Icon */}
       <Image
@@ -99,16 +107,40 @@ const EasyToUse: React.FC = () => {
     },
   ];
 
-  const displayedCards = cardInfo.map((card, index) => (
-    <EasyIntroCard
-      key={card.title}
-      title={card.title}
-      description={card.description}
-      imageSrc={card.imageSrc}
-      imageAlt={card.imageAlt}
-      order={index}
-    />
-  ));
+  const [currentOrder, setCurrentOrder] = useState<number[]>([0, 1, 2]);
+
+  const toLeft = () => {
+    // Info: (20241218 - Julian) 左移:將最後一個元素移到第一個
+    setCurrentOrder((prev) => {
+      const newOrder = [...prev];
+      newOrder.unshift(newOrder.pop()!);
+      return newOrder;
+    });
+  };
+
+  const toRight = () => {
+    // Info: (20241218 - Julian) 右移:將第一個元素移到最後一個
+    setCurrentOrder((prev) => {
+      const newOrder = [...prev];
+      newOrder.push(newOrder.shift()!);
+      return newOrder;
+    });
+  };
+
+  const displayedCards = cardInfo.map((card, index) => {
+    return (
+      <EasyIntroCard
+        key={card.title}
+        title={card.title}
+        description={card.description}
+        imageSrc={card.imageSrc}
+        imageAlt={card.imageAlt}
+        order={currentOrder[index]}
+        onLeftClick={toLeft}
+        onRightClick={toRight}
+      />
+    );
+  });
 
   return (
     <div className="flex flex-col">
@@ -118,8 +150,8 @@ const EasyToUse: React.FC = () => {
       </LinearGradientText>
 
       {/* Info: (20241218 - Julian) Carousel */}
-      <div className="perspective-distant relative mx-auto mt-80px h-550px w-full overflow-hidden bg-digital bg-cover bg-bottom bg-no-repeat lg:px-120px">
-        <div className="relative flex transform-gpu items-center justify-center duration-500 ease-in-out">
+      <div className="relative mx-auto mt-80px h-550px w-full overflow-hidden bg-digital bg-cover bg-bottom bg-no-repeat lg:px-120px">
+        <div className="relative flex transform-gpu items-center justify-center">
           {displayedCards}
         </div>
       </div>
