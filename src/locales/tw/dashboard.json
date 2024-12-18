@@ -108,7 +108,9 @@
     "NO_COMPANY": "沒有公司",
     "EDIT_MY_EVENT": "編輯我的事件",
     "DELETE_MESSAGE_TITLE": "刪除此事件",
-    "DELETE_MESSAGE_CONTENT": "您確定要刪除此事件嗎？"
+    "DELETE_MESSAGE_CONTENT": "您確定要刪除此事件嗎？",
+    "START_TIME": "開始時間",
+    "END_TIME": "結束時間"
   },
 
   "CREATE_COMPANY_MODAL": {
