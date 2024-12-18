@@ -304,11 +304,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     {t('certificate:EDIT.TAXABLE')} {taxRatio}%
                   </p>
                   <div className="flex h-20px w-20px items-center justify-center">
-                    <FaChevronDown
-                      className={`transition-transform duration-300 ${
-                        isTaxRatioMenuOpen ? 'rotate-180' : 'rotate-0'
-                      }`}
-                    />
+                    <FaChevronDown className={isTaxRatioMenuOpen ? 'rotate-180' : 'rotate-0'} />
                   </div>
                   <div
                     className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxRatioMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
@@ -411,9 +407,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                       <span>{t(`filter_section_type:FILTER_SECTION_TYPE.${invoiceType}`)}</span>
                       <div className="flex h-20px w-20px items-center justify-center">
                         <FaChevronDown
-                          className={`transition-transform duration-300 ${
-                            isInvoiceTypeMenuOpen ? 'rotate-180' : 'rotate-0'
-                          }`}
+                          className={isInvoiceTypeMenuOpen ? 'rotate-180' : 'rotate-0'}
                         />
                       </div>
                     </p>
