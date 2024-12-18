@@ -192,6 +192,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       window.URL.revokeObjectURL(fileUrl);
       link.parentNode?.removeChild(link);
     } catch (error) {
+      // Deprecate: (20241218 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
       console.error('Download failed:', error);
     }
