@@ -25,7 +25,7 @@ const FinancialReport: React.FC = () => {
       </div>
 
       {/* Info: (20241218 - Julian) Image */}
-      <div className="order-1 lg:order-2 lg:w-1/2">
+      <div className="order-1 mx-auto max-w-400px lg:order-2 lg:w-1/2">
         <Image
           src="/elements/real_time_report.png"
           width={544}
