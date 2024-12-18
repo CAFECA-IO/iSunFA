@@ -95,19 +95,13 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     }
   };
 
-  const { targetRef: typeRef, setComponentVisible: setIsTypeSelecting } =
-    useOuterClick<HTMLDivElement>(false);
-
   const {
     targetRef: typeMenuRef,
     componentVisible: isTypeMenuOpen,
     setComponentVisible: setTypeMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const selectTypeHandler = () => {
-    setIsTypeSelecting(true);
-    setTypeMenuOpen(true);
-  };
+  const selectTypeHandler = () => setTypeMenuOpen(!isTypeMenuOpen);
 
   const typeItems = [CounterpartyType.BOTH, CounterpartyType.CLIENT, CounterpartyType.SUPPLIER].map(
     (type) => {
@@ -117,7 +111,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
         // eslint-disable-next-line no-console
         console.log('Selected Type:', type); // Info: (20241113 - Anna) 確認選擇的類型是否正確
         setTypeMenuOpen(false);
-        setIsTypeSelecting(false);
       };
 
       return (
@@ -137,7 +130,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
   const displayedTypeMenu = (
     <div
-      ref={typeMenuRef}
       className={`absolute left-0 top-50px z-30 grid w-full overflow-hidden ${
         isTypeMenuOpen ? 'grid-rows-1' : 'grid-rows-0'
       } rounded-sm shadow-dropmenu transition-all duration-150 ease-in-out`}
@@ -313,23 +305,23 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
             </div>
 
             {/* Info: (20240924 - tzuhan) Partner Type */}
-            <div className="flex w-full flex-col items-start gap-2">
+            <div ref={typeMenuRef} className="flex w-full flex-col items-start gap-2">
               <p className="font-semibold">
                 {t('certificate:COUNTERPARTY.PARTNER_TYPE')}
                 <span className="text-text-state-error">*</span>
               </p>
-              <div ref={typeRef} className="relative w-full">
-                <div
-                  onClick={selectTypeHandler}
-                  className={`flex items-center justify-between gap-8px rounded-sm border ${
-                    showHint && !inputType ? inputStyle.ERROR : inputStyle.NORMAL
-                  } bg-input-surface-input-background px-10px py-12px hover:cursor-pointer`}
-                >
-                  <span className="text-input-text-input-filled">
-                    {inputType
-                      ? t(`certificate:COUNTERPARTY.${inputType.toUpperCase()}`)
-                      : t('certificate:COUNTERPARTY.SELECT_TYPE')}
-                  </span>
+              <div
+                onClick={selectTypeHandler}
+                className={`relative flex w-full items-center justify-between gap-8px rounded-sm border ${
+                  showHint && !inputType ? inputStyle.ERROR : inputStyle.NORMAL
+                } bg-input-surface-input-background px-10px py-12px hover:cursor-pointer`}
+              >
+                <p className="text-input-text-input-filled">
+                  {inputType
+                    ? t(`certificate:COUNTERPARTY.${inputType.toUpperCase()}`)
+                    : t('certificate:COUNTERPARTY.SELECT_TYPE')}
+                </p>
+                <div className={isTypeMenuOpen ? 'rotate-180' : 'rotate-0'}>
                   <FaChevronDown />
                 </div>
                 {displayedTypeMenu}

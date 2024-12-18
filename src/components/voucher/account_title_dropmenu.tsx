@@ -2,8 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { inputStyle } from '@/constants/display';
+import { AccountTypeBeta } from '@/constants/account';
 import { FiBookOpen } from 'react-icons/fi';
-import { AccountType } from '@/constants/account';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -127,12 +127,7 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
   };
 
   // Info: (20241004 - Julian) Remove AccountType.OTHER_COMPREHENSIVE_INCOME, AccountType.CASH_FLOW, AccountType.OTHER
-  const accountTypeList = Object.values(AccountType).filter(
-    (value) =>
-      value !== AccountType.OTHER_COMPREHENSIVE_INCOME &&
-      value !== AccountType.CASH_FLOW &&
-      value !== AccountType.OTHER
-  );
+  const accountTypeList = Object.values(AccountTypeBeta);
 
   const accountTitleMenu = accountTypeList.map((value) => {
     // Info: (20241004 - Julian) 子項目

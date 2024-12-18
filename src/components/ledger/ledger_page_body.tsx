@@ -304,6 +304,8 @@ const LedgerPageBody = () => {
           <LedgerList
             ledgerData={ledgerData} // Info: (20241118 - Anna) 如果 ledgerData 是 undefined，傳遞 null
             loading={!!isLoading} // Info: (20241118 - Anna) 使用 !! 確保 loading 是 boolean
+            selectedDateRange={selectedDateRange} // Info: (20241218 - Anna) 傳遞日期範圍
+            labelType={selectedReportType} // Info: (20241218 - Anna) 傳遞報表類型（general/detailed/all）
           />
         </div>
       </div>

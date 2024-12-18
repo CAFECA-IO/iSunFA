@@ -4,7 +4,6 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
-import { simplifyFileName } from '@/lib/utils/common';
 
 interface CertificateListIrops {
   activeSelection: boolean;
@@ -64,24 +63,21 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
 
       {/* Info: (20240924 - tzuhan) Invoice Information */}
-      <BorderCell
-        isSelected={certificate.isSelected}
-        className="flex w-120px gap-1 overflow-hidden"
-      >
-        <div className="flex items-center space-x-2">
+      <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
+        <div className="flex items-center gap-2">
           {!certificate.invoice?.isComplete && (
             <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
           )}
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col">
             <div className="text-text-neutral-tertiary">
-              {simplifyFileName(certificate.name) ?? ''}
+              {certificate.name ?? ''}
             </div>
             <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
           </div>
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
-        <div className="flex-col items-center space-y-2">
+        <div className="flex flex-col items-center gap-2">
           <div className="text-text-neutral-tertiary">
             {certificate.invoice?.counterParty?.taxId ?? ''}
           </div>
@@ -149,7 +145,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       <BorderCell isSelected={certificate.isSelected} className="w-120px text-center">
         <div className="flex flex-col items-center space-y-2">
           <div className="text-right text-link-text-primary">{certificate?.voucherNo ?? ''}</div>
-          <div className="flex gap-lv-1 text-right text-text-neutral-primary">
+          <div className="flex items-center gap-2 text-right text-text-neutral-primary">
             {certificate.uploader && (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">
                 {certificate.uploader.slice(0, 2).toUpperCase()}

@@ -728,6 +728,7 @@ module.exports = {
         'landing-btn':
           'linear-gradient(to bottom, transparent 60%, #FFFFFF80 100%), linear-gradient(to bottom, #FFA502 0%, #FFA502 100%)',
         cta: 'url("/elements/planet_edge.png")',
+        digital: 'url("/elements/digital.svg")',
       },
       zIndex: {
         '-10': '-10',
