@@ -24,15 +24,19 @@ const handleGetRequest: IHandleRequest<
   const { userId } = query;
   const todoListFromPrisma = await listTodo(userId);
 
-  const todoList = todoListFromPrisma.map((todo) => {
-    const { startTime, endTime, note } = getUtils.splitStartEndTimeInNote(todo.note);
-    return {
-      ...todo,
-      startTime,
-      endTime,
-      note,
-    };
-  });
+  const todoList = todoListFromPrisma
+    .map((todo) => {
+      const { startTime, endTime, note } = getUtils.splitStartEndTimeInNote(todo.note);
+      return {
+        ...todo,
+        startTime,
+        endTime,
+        note,
+      };
+    })
+    .sort((a, b) => {
+      return a.endTime - b.endTime;
+    });
 
   payload = todoList;
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
