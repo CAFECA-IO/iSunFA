@@ -8,6 +8,8 @@ export interface ITodo {
   status: boolean;
   createdAt: number;
   updatedAt: number;
+  startTime: number;
+  endTime: number;
 }
 
 export interface ITodoCompany extends ITodo {

@@ -22,10 +22,12 @@ const Todo = ({ todo, setTodoToUpdate, setTodoToDelete }: TodoProps) => {
     setTodoToDelete(todo);
   };
 
+  const unixTimeStamp = Math.floor(todo.endTime / 1000); // Info: (20241218 - Liz) 月曆元件需要 unix timestamp 格式(秒級)
+
   return (
     <section className="flex divide-x-2 divide-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
       <div className="flex w-120px items-center justify-center px-16px pb-8px pt-16px">
-        <CalendarIcon timestamp={todo.deadline} />
+        <CalendarIcon timestamp={unixTimeStamp} />
       </div>
 
       <div className="flex grow items-center truncate px-16px py-8px text-base font-semibold text-surface-brand-secondary">
