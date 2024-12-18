@@ -32,8 +32,6 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 
   const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
-
-  // const [ledgerList] = useState<ILedgerBeta[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages] = useState(1);
 

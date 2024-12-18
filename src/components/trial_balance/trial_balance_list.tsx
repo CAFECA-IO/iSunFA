@@ -5,7 +5,6 @@ import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
-import { useGlobalCtx } from '@/contexts/global_context';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import {
@@ -31,7 +30,6 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   const { selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id; // Info: (20241204 - Anna) 提取 companyId
   const { t } = useTranslation(['reports', 'date_picker', 'common']);
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 
   const [subAccountsToggle, setSubAccountsToggle] = useState<boolean>(false);
@@ -142,9 +140,66 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     setSortOrder: setDebitSort,
   });
 
+  // Info: (20241218 - Anna) 匯出csv
+  const handleDownload = async () => {
+    const url = `/api/v2/company/${companyId}/trial_balance/export`; // Info: (20241218 - Anna) API 路徑
+    const body = {
+      fileType: 'csv',
+      filters: {
+        startDate: selectedDateRange?.startTimeStamp || 0,
+        endDate: selectedDateRange?.endTimeStamp || 0,
+      },
+      sort: [
+        {
+          by: 'beginningCreditAmount',
+          order: 'desc',
+        },
+      ],
+      options: {
+        language: 'zh-TW',
+        timezone: '+0800',
+      },
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+
+      // Info: (20241218 - Anna) 解析為 Blob
+      const blob = await response.blob();
+
+      // Info: (20241218 - Anna) 從 headers 中取得 filename
+      const contentDisposition = response.headers.get('content-disposition');
+      const fileNameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
+      const fileName = fileNameMatch ? fileNameMatch[1] : 'trial_balance_export.csv';
+
+      // Info: (20241218 - Anna) 觸發檔案下載
+      const fileUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+
+      // Info: (20241218 - Anna) 清理資源
+      window.URL.revokeObjectURL(fileUrl);
+      link.parentNode?.removeChild(link);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Download failed:', error);
+    }
+  };
+
   const displayedSelectArea = (
     <div className="flex items-center justify-between px-px max-md:flex-wrap print:hidden">
-      {/* Info: (20241101 - Anna)幣別 */}
+      {/* Info: (20241101 - Anna) 幣別 */}
       <div className="mr-42px flex w-fit items-center gap-5px rounded-full border border-orange-500 bg-white px-10px py-6px text-sm font-medium text-badge-text-error-solid">
         <RiCoinsLine className="text-orange-600" />
         <p className="whitespace-nowrap text-orange-600">
@@ -163,7 +218,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       </div>
       {/* Info: (20241028 - Anna) Display Sub-Accounts 結束  */}
       <div className="ml-auto flex items-center gap-24px">
-        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+        <DownloadButton onClick={handleDownload} />
         <PrintButton onClick={handlePrint} disabled={false} />
       </div>
     </div>
