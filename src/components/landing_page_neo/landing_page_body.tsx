@@ -8,10 +8,12 @@ import {
 } from '@/components/landing_page_neo/linear_gradient_text';
 import CTA from '@/components/landing_page_neo/cta';
 import EasyToUse from '@/components/landing_page_neo/easy_to_use';
+import GlobalMap from '@/components/landing_page_neo/global_map';
+import FinancialReport from '@/components/landing_page_neo/financial_report';
 
 const LandingPageBody: React.FC = () => {
   return (
-    <div className="relative flex flex-auto flex-col bg-landing-page-black px-36px py-32px font-dm-sans text-landing-page-white">
+    <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
       {/* Info: (20241204 - Julian) Background */}
       <div className="absolute inset-x-0 top-0 h-546px w-full bg-cta bg-cover bg-top bg-no-repeat md:h-670px lg:h-1024px"></div>
 
@@ -27,20 +29,10 @@ const LandingPageBody: React.FC = () => {
         <EasyToUse />
 
         {/* Info: (20241205 - Julian) Multinational Corporations */}
-        <div className="flex flex-col">
-          <LinearGradientText size={LinearTextSize.LG} align={TextAlign.LEFT}>
-            Suitable for Local Businesses to <br />
-            Multinational Corporations
-          </LinearGradientText>
-        </div>
+        <GlobalMap />
 
         {/* Info: (20241205 - Julian) Financial Report */}
-        <div className="flex flex-col">
-          <LinearGradientText size={LinearTextSize.LG} align={TextAlign.LEFT}>
-            Real-Time <br />
-            Financial Report
-          </LinearGradientText>
-        </div>
+        <FinancialReport />
 
         {/* Info: (20241205 - Julian) Flexible Feature Selection */}
         <div className="flex flex-col">
