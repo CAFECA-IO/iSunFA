@@ -124,6 +124,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
       window.URL.revokeObjectURL(url); // Info: (20241218 - Anna) 釋放 URL 資源
       link.parentNode?.removeChild(link);
     } catch (error) {
+      // Deprecate: (20241218 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
       console.error('Download failed:', error);
     }
