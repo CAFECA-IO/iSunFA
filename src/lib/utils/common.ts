@@ -881,7 +881,7 @@ export const simplifyFileName = (name: string): string => {
   // Info: (20241216 - tzuhan) 簡化主名稱並在中間加入 "..."
   if (baseName.length > maxBaseLength) {
     const halfLength = Math.floor(maxBaseLength / 2);
-    const start = baseName.slice(0, halfLength);
+    const start = baseName.slice(0, halfLength - 1);
     const end = baseName.slice(baseName.length - halfLength);
     return `${start}...${end}${simplifiedExtension}`;
   }
