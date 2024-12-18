@@ -100,9 +100,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   } = useOuterClick<HTMLDivElement>(false);
 
   // Info: (20241015 - Julian) Account state
-  const [accountTitle, setAccountTitle] = useState<string>(
-    t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
-  );
+  const [accountTitle, setAccountTitle] = useState<string>('');
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(assetAccountList);
 
@@ -555,7 +553,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                     } bg-input-surface-input-background px-12px py-10px text-input-text-input-filled hover:cursor-pointer disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
                   >
                     {isEditAccounting}
-                    <FaChevronDown />
+                    <div className={isAccountingMenuOpen ? 'rotate-180' : 'rotate-0'}>
+                      <FaChevronDown />
+                    </div>
                   </button>
                   {displayedAccountingMenu}
                 </div>
@@ -736,13 +736,15 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
                 <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.DEPRECIATION_METHOD')}</p>
                 <div
+                  ref={methodRef}
                   onClick={toggleMethodMenu}
                   className="relative flex h-46px w-full items-center justify-between rounded-sm border border-input-stroke-input px-12px text-base font-medium text-input-text-input-filled hover:cursor-pointer"
                 >
                   <p>{translateMethod(selectedDepreciationMethod)}</p>
-                  <FaChevronDown />
+                  <div className={isMethodVisible ? 'rotate-180' : 'rotate-0'}>
+                    <FaChevronDown />
+                  </div>
                   <div
-                    ref={methodRef}
                     className={`absolute left-0 top-50px grid w-full overflow-hidden ${
                       isMethodVisible ? 'grid-rows-1' : 'grid-rows-0'
                     } drop-shadow transition-all duration-150 ease-in-out`}
