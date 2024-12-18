@@ -21,7 +21,7 @@ const GlobalMap: React.FC = () => {
 
       <div className="relative flex h-300px w-full items-center lg:h-700px">
         <Image src="/elements/map.svg" fill objectFit="contain" alt="map" />
-        <p className="absolute right-20px -mt-10px text-xxs md:right-50px md:-mt-30px md:text-base">
+        <p className="absolute right-1/5 -mt-10px text-xxs md:right-1/8 md:-mt-30px md:text-base">
           COMING SOON
         </p>
       </div>
