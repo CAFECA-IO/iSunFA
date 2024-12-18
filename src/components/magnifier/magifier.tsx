@@ -32,6 +32,7 @@ const Magnifier: React.FC<MagnifierProps> = ({
     if (!imgRef.current) return;
     if (imgRef.current) {
       const rect = imgRef.current.getBoundingClientRect();
+      // Deprecate: (20241218 - tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Image Rect:', rect);
       window.imgRef = imgRef.current;
@@ -45,6 +46,7 @@ const Magnifier: React.FC<MagnifierProps> = ({
     const offsetX = e.clientX - left;
     const offsetY = e.clientY - top;
 
+    // Deprecate: (20241218 - tzuhan) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('Mouse Position (clientX, clientY):', e.clientX, e.clientY);
 
