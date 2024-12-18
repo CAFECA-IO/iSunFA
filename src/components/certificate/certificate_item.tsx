@@ -147,7 +147,6 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
         <div className="flex flex-col items-center space-y-2">
           <div className="text-right text-link-text-primary">{certificate?.voucherNo ?? ''}</div>
           <div className="flex items-center gap-2 text-right text-text-neutral-primary">
-          <div className="flex gap-lv-1 text-right text-text-neutral-primary">
             {certificate.uploader && (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">
                 {certificate.uploader.slice(0, 2).toUpperCase()}
