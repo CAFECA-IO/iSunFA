@@ -86,6 +86,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   };
 
   const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
+    // Deprecate: (20241218 - tzuhan) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log('invoiceTypeMenuOptionClickHandler', id);
     setInvoiceType(id);
     setIsInvoiceTypeMenuOpen(false);
   };
@@ -130,6 +133,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   };
 
   const onTriggerSave = async () => {
+    // Deprecate: (20241218 - tzuhan) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log('onTriggerSave', invoiceType);
     const updatedData: ICertificate = {
       ...certificate,
       invoice: {
@@ -402,6 +408,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     className={`group relative flex h-46px w-full cursor-pointer ${isInvoiceTypeMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                   >
                     {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
+                    {/* Deprecate: (20241218 - tzuhan) remove eslint-disable */}
                     {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
                     <p className="hide-scrollbar items-centerjustify-between flex h-46px min-w-300px items-center justify-between overflow-y-scroll">
                       <span>{t(`filter_section_type:FILTER_SECTION_TYPE.${invoiceType}`)}</span>

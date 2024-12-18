@@ -338,7 +338,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const onUpdateFilename = useCallback(
     (id: number, filename: string) => {
-      // Deprecate: (20241217 - tzuhan) Debugging purpose
+      // Deprecate: (20241218 - tzuhan) Debugging purpose
       // eslint-disable-next-line no-console
       console.log('onUpdateFilename', id, filename);
       setCertificates((prev) => {
@@ -350,8 +350,12 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               ...prev[id].file,
               name: filename,
             },
+            name: filename,
           },
-        };
+        } as { [id: string]: ICertificateUI };
+        // Deprecate: (20241218 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log('updatedData[id]', updatedData[id]);
         return updatedData;
       });
     },
@@ -361,43 +365,61 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const handleEditItem = useCallback(
     async (certificate: ICertificate) => {
       try {
-        const postOrPutAPI = certificate.invoice.id
+        const { invoice } = certificate;
+
+        const invoicePayload = {
+          certificateId: certificate.id,
+          counterPartyId: invoice.counterParty?.id,
+          inputOrOutput: invoice.inputOrOutput,
+          date: invoice.date,
+          no: invoice.no,
+          currencyAlias: invoice.currencyAlias || currency,
+          priceBeforeTax: invoice.priceBeforeTax,
+          taxType: invoice.taxType,
+          taxRatio: invoice.taxRatio,
+          taxPrice: invoice.taxPrice,
+          totalPrice: invoice.totalPrice,
+          type: invoice.type,
+          deductible: invoice.deductible,
+        };
+
+        const postOrPutAPI = invoice.id
           ? updateCertificateAPI({
-              params: { companyId, invoiceId: certificate.invoice.id },
-              body: certificate.invoice,
+              params: { companyId, invoiceId: invoice.id },
+              body: invoice,
             })
           : createCertificateAPI({
               params: { companyId },
-              body: {
-                certificateId: certificate.id,
-                counterPartyId: certificate.invoice.counterParty?.id,
-                inputOrOutput: certificate.invoice.inputOrOutput,
-                date: certificate.invoice.date,
-                no: certificate.invoice.no,
-                currencyAlias: certificate.invoice.currencyAlias || currency,
-                priceBeforeTax: certificate.invoice.priceBeforeTax,
-                taxType: certificate.invoice.taxType,
-                taxRatio: certificate.invoice.taxRatio,
-                taxPrice: certificate.invoice.taxPrice,
-                totalPrice: certificate.invoice.totalPrice,
-                type: certificate.invoice.type,
-                deductible: certificate.invoice.deductible,
-              },
+              body: invoicePayload,
             });
+
         const { success, data: updatedCertificate } = await postOrPutAPI;
+
         if (success && updatedCertificate) {
-          const updatedData = {
-            ...certificates,
-            [certificate.id]: {
-              ...updatedCertificate,
-              isSelected: false,
-              actions: [
-                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-              ],
-            },
-          };
-          setCertificates(updatedData);
+          // Deprecate: (20241218 - tzuhan) Debugging purpose
+          // eslint-disable-next-line no-console
+          console.log('updatedCertificate', updatedCertificate);
+          setCertificates((prevCertificates) => {
+            const updatedData = {
+              ...prevCertificates,
+              [certificate.id]: {
+                ...updatedCertificate,
+                isSelected: false,
+                actions: [
+                  CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                  CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+                ],
+              },
+            } as { [id: string]: ICertificateUI };
+            // Deprecate: (20241218 - tzuhan) Debugging purpose
+            // eslint-disable-next-line no-console
+            console.log(
+              `updatedData[certificate.id:${certificate.id}]`,
+              updatedData[certificate.id]
+            );
+            return updatedData;
+          });
+
           toastHandler({
             id: ToastId.UPDATE_CERTIFICATE_SUCCESS,
             type: ToastType.SUCCESS,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useUserCtx } from '@/contexts/user_context';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { IUserSetting } from '@/interfaces/user_setting';
@@ -13,11 +13,27 @@ interface UserSettingsProps {
 
 const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs }) => {
   const { userAuth } = useUserCtx();
-  const loginDevice = userActionLogs ? userActionLogs.data[0].userAgent : '';
-  const loginIP = userActionLogs ? userActionLogs.data[0].ipAddress : '';
-  const name = userSetting?.personalInfo
-    ? `${userSetting?.personalInfo?.firstName} ${userSetting?.personalInfo?.lastName}`
-    : (userAuth?.name ?? '');
+
+  // Info: (20241218 - tzuhan) 計算用戶名稱：優先使用 userSetting，否則使用 userAuth
+  const getUserName = useMemo(() => {
+    if (userSetting?.personalInfo?.firstName || userSetting?.personalInfo?.lastName) {
+      return `${userSetting.personalInfo.firstName ?? ''} ${userSetting.personalInfo.lastName ?? ''}`.trim();
+    }
+    return userAuth?.name ?? '';
+  }, [userSetting, userAuth]);
+
+  const [name, setName] = useState<string>(getUserName);
+
+  const loginDevice = userActionLogs?.data[0]?.userAgent ?? '';
+  const loginIP = userActionLogs?.data[0]?.ipAddress ?? '';
+
+  const handleUsernameUpdate = (newName: string) => {
+    setName(newName);
+  };
+
+  useEffect(() => {
+    setName(getUserName);
+  }, [userSetting]);
 
   return (
     <>
@@ -30,7 +46,11 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs
         imageId={userAuth?.imageId ?? ''}
         userActionLogs={userActionLogs}
       />
-      <UserInfoForm userSetting={userSetting} />
+      <UserInfoForm
+        name={name}
+        userSetting={userSetting}
+        handleUsernameUpdate={handleUsernameUpdate}
+      />
     </>
   );
 };
