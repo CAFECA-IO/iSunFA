@@ -17,6 +17,7 @@ import { SortBy, SortOrder } from '@/constants/sort';
  * @description Initialize Asset Entity from scratch
  * @shirley 之後可以在這個function用zod檢查資料
  */
+// TODO: (20241218 - Shirley) FIXME: 在 db migration 後，需要修改 function & interface
 export function initAssetEntity(
   dto: Partial<PrismaAsset> & {
     companyId: number;
@@ -47,9 +48,9 @@ export function initAssetEntity(
     number: dto.number,
     acquisitionDate: dto.acquisitionDate,
     purchasePrice: dto.purchasePrice,
-    accumulatedDepreciation: dto.accumulatedDepreciation,
+    // accumulatedDepreciation: dto.accumulatedDepreciation,
     residualValue: dto.residualValue,
-    remainingLife: dto.remainingLife,
+    // remainingLife: dto.remainingLife,
     status: dto.status,
     depreciationStart: dto.depreciationStart,
     depreciationMethod: dto.depreciationMethod,
@@ -70,6 +71,7 @@ export function initAssetEntity(
  * @Shirley 直線法折舊
  * @note 不滿月者，當作一個月 (營利事業所得稅查核準則 第 95 條)
  */
+// TODO: (20241218 - Shirley) FIXME: 在 db migration 後，需要修改 function & interface
 export const calculateAssetStraightLineDepreciate: calculateAssetEntityDepreciation = (
   asset: IAssetEntity,
   { nowInSecond }
@@ -109,7 +111,7 @@ export const calculateAssetStraightLineDepreciate: calculateAssetEntityDepreciat
       accumulatedDepreciation,
       remainingValue: asset.purchasePrice - accumulatedDepreciation - currentPeriodDepreciation,
       residualValue: asset.residualValue,
-      remainingLife: asset.remainingLife,
+      remainingLife: 0,
     };
   }
 
@@ -122,7 +124,7 @@ export const calculateAssetStraightLineDepreciate: calculateAssetEntityDepreciat
     accumulatedDepreciation,
     remainingValue: asset.residualValue,
     residualValue: asset.residualValue,
-    remainingLife: asset.remainingLife,
+    remainingLife: 0,
   };
 };
 
@@ -131,6 +133,7 @@ export const calculateAssetStraightLineDepreciate: calculateAssetEntityDepreciat
  * @Shirley 折舊公式的Interface, 直接放一個assetEntity進來就可以用了
  * @param asset - IAssetEntity 用來計算折舊的資產Entity
  */
+// TODO: (20241218 - Shirley) FIXME: 在 db migration 後，需要修改 function & interface
 export const calculateAssetDepreciation: calculateAssetEntityDepreciation = (
   asset: IAssetEntity,
   {
@@ -152,6 +155,7 @@ export const calculateAssetDepreciation: calculateAssetEntityDepreciation = (
  * @description Calculate asset depreciation for each month
  * start from max(depreciationStart, nowInSecond) to usefulLife
  */
+// TODO: (20241218 - Shirley) FIXME: 在 db migration 後，需要修改 function & interface
 export const calculateAssetDepreciationSerial = (
   asset: IAssetEntity,
   {
@@ -214,15 +218,16 @@ export function createAssetOrderBy(sortOptions: { sortBy: SortBy; sortOrder: Sor
       case SortBy.PURCHASE_PRICE:
         orderBy.push({ purchasePrice: sortOrder });
         break;
-      case SortBy.ACCUMULATED_DEPRECIATION:
-        orderBy.push({ accumulatedDepreciation: sortOrder });
-        break;
-      case SortBy.RESIDUAL_VALUE:
-        orderBy.push({ residualValue: sortOrder });
-        break;
-      case SortBy.REMAINING_LIFE:
-        orderBy.push({ remainingLife: sortOrder });
-        break;
+      // TODO: (20241218 - Shirley) FIXME: 在更改 interface 之後，把以下 sort 選項打開
+      // case SortBy.ACCUMULATED_DEPRECIATION:
+      //   orderBy.push({ accumulatedDepreciation: sortOrder });
+      //   break;
+      // case SortBy.RESIDUAL_VALUE:
+      //   orderBy.push({ residualValue: sortOrder });
+      //   break;
+      // case SortBy.REMAINING_LIFE:
+      //   orderBy.push({ remainingLife: sortOrder });
+      //   break;
       default:
         orderBy.push({ acquisitionDate: SortOrder.DESC });
         break;

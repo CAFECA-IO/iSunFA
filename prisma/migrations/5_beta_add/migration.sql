@@ -22,9 +22,7 @@ ALTER TABLE "asset" ADD CONSTRAINT "asset_user_id_fkey" FOREIGN KEY ("user_id") 
 
 -- 1-5. 刪掉 asset table 的 accumulated_depreciation, remaining_life, residual_value 欄位
 ALTER TABLE "asset" DROP COLUMN "accumulated_depreciation",
-DROP COLUMN "remaining_life",
-DROP COLUMN "residual_value";
-
+DROP COLUMN "remaining_life";
 
 -- Step 2. todo table ✅
 -- 2-1. 新增 end_date 和 start_date 選填(optional)欄位

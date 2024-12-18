@@ -172,7 +172,9 @@ export const handlePostRequest: IHandleRequest<
     number: assetNumber,
     acquisitionDate,
     purchasePrice,
-    accumulatedDepreciation: 0,
+    // TODO: (20241218 - Shirley) FIXME: 在 db migration 後，需要修改 function & interface
+    userId: 0,
+    // accumulatedDepreciation: 0,
     residualValue,
     depreciationStart,
     depreciationMethod,

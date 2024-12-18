@@ -24,7 +24,8 @@ import { parsePrismaCompanyToCompanyEntity } from '@/lib/utils/formatter/company
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
 import { IUserEntity } from '@/interfaces/user';
 import { ICompanyEntity } from '@/interfaces/company';
-import { calculateAssetDepreciationSerial } from '@/lib/utils/asset';
+// TODO: (20241218 - Shirley) FIXME: 在 db migration 後，需要修改 function & interface
+// import { calculateAssetDepreciationSerial } from '@/lib/utils/asset';
 import { IAssetEntity } from '@/interfaces/asset';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -55,6 +56,7 @@ import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import { IAccountEntity } from '@/interfaces/accounting_account';
+import { calculateAssetDepreciationSerial } from '@/lib/utils/asset';
 
 /**
  * Info: (20241121 - Murky)
@@ -935,6 +937,7 @@ export const voucherAPIPostUtils = {
     }
   ) => {
     // Info: (20241029 - Murky) 每個asset都有一整串的折舊
+    // TODO: (20241218 - Shirley) FIXME: 在 db migration 後，需要修改 function & interface
     const depreciateExpenseInfoArray = calculateAssetDepreciationSerial(assetEntity, {
       nowInSecond,
     });

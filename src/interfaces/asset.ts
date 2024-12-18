@@ -192,12 +192,21 @@ export interface IAssetEntity {
    */
   purchasePrice: number;
 
-  /**
-   * Info: (20241024 - Murky)
-   * @Float
-   * @description Sum of depreciation expense from the acquisition date to the current date
-   */
-  accumulatedDepreciation: number;
+  // Deprecated: (20241231 - Shirley) asset table 已刪除以下三個欄位
+  // /**
+  //  * Info: (20241024 - Murky)
+  //  * @Float
+  //  * @description Sum of depreciation expense from the acquisition date to the current date
+  //  */
+  // accumulatedDepreciation: number;
+
+  // /**
+  //  * Info: (20241024 - Murky)
+  //  * @description The remaining useful life of the asset,
+  //  * decrease when time pass
+  //  * @note need to be in seconds
+  //  */
+  // remainingLife: number;
 
   /**
    * Info: (20241024 - Murky)
@@ -205,14 +214,6 @@ export interface IAssetEntity {
    * @description The remaining value of the asset after depreciated through the useful life
    */
   residualValue: number;
-
-  /**
-   * Info: (20241024 - Murky)
-   * @description The remaining useful life of the asset,
-   * decrease when time pass
-   * @note need to be in seconds
-   */
-  remainingLife: number;
 
   /**
    * Info: (20241024 - Murky)
@@ -329,9 +330,10 @@ export interface AssetHeader {
   acquisitionDate: number;
   name: string;
   purchasePrice: number;
-  accumulatedDepreciation: number;
-  residualValue: number;
-  remainingLife: number;
+  // TODO: (20241218 - Shirley) FIXME: 在 db migration 後，需要修改 function & interface
+  // accumulatedDepreciation: number;
+  // residualValue: number;
+  // remainingLife: number;
   type: string;
   status: string;
   number: string;
@@ -350,7 +352,6 @@ export interface ICreateAssetWithVouchersRepoInput {
   number: string;
   acquisitionDate: number;
   purchasePrice: number;
-  accumulatedDepreciation: number; // Deprecated: (20241204 - Shirley) no use
   residualValue?: number;
   remainingLife?: number; // Deprecated: (20241204 - Shirley) no use
   depreciationStart?: number;

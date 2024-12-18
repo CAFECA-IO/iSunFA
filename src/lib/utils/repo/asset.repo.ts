@@ -108,7 +108,6 @@ export async function createManyAssets(
       number: assetNumbers[i],
       acquisitionDate: assetData.acquisitionDate,
       purchasePrice: i === amount - 1 ? pricePerAsset + remainder : pricePerAsset,
-      accumulatedDepreciation: assetData.accumulatedDepreciation,
       residualValue:
         i === amount - 1 ? residualValuePerAsset + remainderResidualValue : residualValuePerAsset,
       remainingLife: assetData.usefulLife || 0,

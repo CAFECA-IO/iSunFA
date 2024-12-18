@@ -46,6 +46,7 @@ model Asset {
   number             String
   acquisitionDate    Int    @map("acquisition_date")
   purchasePrice      Float  @map("purchase_price")
+  residualValue      Float  @map("residual_value")
   status             String
   depreciationStart  Int    @map("depreciation_start")
   depreciationMethod String @map("depreciation_method")

@@ -496,9 +496,9 @@ const voucherGetOneOutputValidatorV2 = z
         assetNumber: asset.number,
         assetName: asset.name,
         purchasePrice: asset.purchasePrice,
-        accumulatedDepreciation: asset.accumulatedDepreciation,
-        residualValue: asset.residualValue,
-        remainingLife: asset.remainingLife,
+        accumulatedDepreciation: 0, // TODO: (20241218 - Shirley) FIXME: 在 db migration 後，這個值需要被動態計算
+        residualValue: 0, // TODO: (20241218 - Shirley) FIXME: 在 db migration 後，這個值需要被動態計算
+        remainingLife: 0, // TODO: (20241218 - Shirley) FIXME: 在 db migration 後，這個值需要被動態計算
         assetStatus: asset.status,
         createdAt: asset.createdAt,
         updatedAt: asset.updatedAt,

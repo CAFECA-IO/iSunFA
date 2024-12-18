@@ -29,6 +29,7 @@ export function parsePrismaAssetToAssetEntity(dto: PrismaAsset): IAssetEntity {
 
   const assetEntity: IAssetEntity = {
     ...data,
+    residualValue: data.residualValue ?? 0,
     assetVouchers: data.assetVouchers ?? [],
   };
 

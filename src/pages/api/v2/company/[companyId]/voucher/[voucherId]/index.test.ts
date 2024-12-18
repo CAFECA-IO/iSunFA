@@ -58,6 +58,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
+// TODO: (20241218 - Shirley) FIXME: 因為 asset table schema 修改，導致 asset 相關的測試失敗，這個測試可能跟 list asset or get asset 的 function 跟 interface 有關
 describe('company/[companyId]/voucher/voucherId integration test', () => {
   let req: jest.Mocked<NextApiRequest>;
   let res: jest.Mocked<NextApiResponse>;

@@ -15,6 +15,8 @@ export async function createTodo(
   const nowTimestamp = timestampInSeconds(now);
   const newTodo = await prisma.todo.create({
     data: {
+      startDate: nowTimestamp,
+      endDate: nowTimestamp,
       name,
       deadline,
       note,
