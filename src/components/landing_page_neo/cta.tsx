@@ -15,7 +15,7 @@ const CTAIntroCard: React.FC<{
   buttonText: string;
 }> = ({ imageSrc, imageAlt, description, buttonText }) => {
   return (
-    <div className="relative flex flex-col items-center gap-24px rounded-lg border-x border-b bg-landing-page-white/30 px-40px py-20px text-center backdrop-blur-md">
+    <div className="relative flex max-w-300px flex-col items-center gap-24px overflow-hidden rounded-lg border-x border-b bg-landing-page-white/30 px-40px py-20px text-center backdrop-blur-md">
       {/* Info: (20241205 - Julian) Nail Icon */}
       <Image
         src="/icons/nail.svg"
@@ -45,10 +45,17 @@ const CTAIntroCard: React.FC<{
         alt="nail_icon"
         className="absolute bottom-10px right-10px" // Info: (20241211 - Julian) 右下角
       />
+      <Image
+        src="/elements/light.svg"
+        width={162}
+        height={9}
+        alt="light"
+        className="absolute -top-4px left-0" // Info: (20241218 - Julian) highlight
+      />
 
       {/* Info: (20241205 - Julian) Content */}
       <Image src={imageSrc} width={64} height={64} alt={imageAlt} />
-      <p>{description}</p>
+      <p className="flex-1">{description}</p>
       <LandingButton type="button" variant="primary" className="whitespace-nowrap font-bold">
         {buttonText}
       </LandingButton>
@@ -57,6 +64,7 @@ const CTAIntroCard: React.FC<{
 };
 
 const CTA: React.FC = () => {
+  // Info: (20241218 - Julian) 卡片內容
   const introCards = [
     {
       imageSrc: '/icons/calculation.svg',
@@ -89,7 +97,7 @@ const CTA: React.FC = () => {
   ));
 
   return (
-    <div className="flex flex-col items-center px-50px py-14px md:py-20px lg:py-70px">
+    <div className="flex flex-col items-center py-14px md:px-50px md:py-20px lg:py-70px">
       {/* Info: (20241211 - Julian) CTA Main */}
       <div className="flex flex-col items-center">
         {/* Info: (20241205 - Julian) CTA Main */}
@@ -112,7 +120,7 @@ const CTA: React.FC = () => {
       </div>
 
       {/* Info: (20241211 - Julian) CTA Intro Card */}
-      <div className="grid grid-cols-1 gap-36px lg:mt-120px lg:grid-cols-3">
+      <div className="mt-140px grid grid-cols-1 gap-36px md:mt-80px lg:mt-120px lg:grid-cols-3">
         {displayIntroCards}
       </div>
     </div>
