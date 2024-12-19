@@ -980,6 +980,7 @@ module.exports = {
         // '100px': '100px',
         '105px': '105px',
         '110px': '110px',
+        '112px': '112px',
         '114px': '114px',
         '122px': '122px',
         '125px': '125px',
@@ -1402,6 +1403,7 @@ module.exports = {
 
         '3xl': '0 35px 35px rgba(0, 0, 0, 0.25)',
         '4xl': ['0 35px 35px rgba(0, 0, 0, 0.25)', '0 45px 65px rgba(0, 0, 0, 0.15)'],
+        halo: '0px 0px 40px rgba(255, 182, 50, 0.5)',
       },
       fontFamily: {
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],

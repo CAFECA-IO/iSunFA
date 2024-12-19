@@ -10,6 +10,7 @@ import CTA from '@/components/landing_page_neo/cta';
 import EasyToUse from '@/components/landing_page_neo/easy_to_use';
 import GlobalMap from '@/components/landing_page_neo/global_map';
 import FinancialReport from '@/components/landing_page_neo/financial_report';
+import FlexibleFeatureSelection from '@/components/landing_page_neo/flexible_feature_selection';
 
 const LandingPageBody: React.FC = () => {
   return (
@@ -35,11 +36,7 @@ const LandingPageBody: React.FC = () => {
         <FinancialReport />
 
         {/* Info: (20241205 - Julian) Flexible Feature Selection */}
-        <div className="flex flex-col">
-          <LinearGradientText size={LinearTextSize.LG} align={TextAlign.CENTER}>
-            Flexible Feature Selection
-          </LinearGradientText>
-        </div>
+        <FlexibleFeatureSelection />
 
         {/* Info: (20241205 - Julian) Technical Features */}
         <div className="flex flex-col">
