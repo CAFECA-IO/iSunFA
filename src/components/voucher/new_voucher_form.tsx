@@ -210,7 +210,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       setCertificates(updatedData);
       setSelectedCertificates(selectedCerts);
 
-      const targetIdList = selectedCerts.map((item) => item.id);
+      const targetIdList = selectedCerts.map((item) => item.file.id);
 
       // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
       setAiState(AIState.WORKING);
@@ -1082,7 +1082,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         {isShowCounter && (
           <CounterpartyInput
             counterparty={counterparty}
-            setCounterparty={setCounterparty}
+            onSelect={setCounterparty}
             flagOfSubmit={flagOfSubmit}
             className="col-span-2"
           />

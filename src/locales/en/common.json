@@ -58,6 +58,6 @@
   "UPLOAD_AREA": {
     "DROP_YOUR_FILES_HERE_OR": "Drop your files here or ",
     "BROWSE": "Browse",
-    "MAXIMUM_SIZE": "Maximum size: 50MB"
+    "MAXIMUM_SIZE": "Maximum size: 4MB"
   }
 }
