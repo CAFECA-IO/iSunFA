@@ -23,7 +23,7 @@ const FlexibleFeatureIcon: React.FC<{ feature: string; size?: number; halo?: boo
         alt={imageAlt}
         className={halo ? 'drop-shadow-halo' : ''}
       />
-      <p className="lg:text-base">{feature}</p>
+      <p className="text-center text-base">{feature}</p>
     </div>
   );
 };
@@ -45,6 +45,19 @@ const FlexibleFeatureSelection: React.FC = () => {
   // Info: (20241219 - Julian) 第二分類
   const featuresOfSecondPart = ['Financial Health Check', 'Financial Auditing', 'Audit System'];
 
+  // Info: (20241219 - Julian) 第三分類
+  const featuresOfThirdPart = [
+    'HR Management',
+    'Access Control',
+    'Time and Attendance',
+    'Leave Management',
+    'Online Communication',
+    'Project Management',
+    'Contract Management',
+    'Procurement Management',
+    'Inventory Management',
+  ];
+
   return (
     <div className="flex flex-col gap-120px px-16px py-120px md:px-80px lg:px-112px">
       {/* Info: (20241219 - Julian) Title */}
@@ -63,6 +76,13 @@ const FlexibleFeatureSelection: React.FC = () => {
       <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
         {featuresOfSecondPart.map((feature) => (
           <FlexibleFeatureIcon key={feature} feature={feature} size={160} halo />
+        ))}
+      </div>
+
+      {/* Info: (20241219 - Julian) Features of Third Part */}
+      <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
+        {featuresOfThirdPart.map((feature) => (
+          <FlexibleFeatureIcon key={feature} feature={feature} />
         ))}
       </div>
     </div>
