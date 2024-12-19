@@ -134,7 +134,7 @@ const EasyToUse: React.FC = () => {
   const displayedCards = cardInfo.map((card, index) => {
     return (
       <EasyIntroCard
-        key={card.title}
+        key={card.imageAlt}
         title={card.title}
         description={card.description}
         imageSrc={card.imageSrc}

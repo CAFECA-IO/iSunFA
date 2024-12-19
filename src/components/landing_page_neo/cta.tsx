@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import { BsFillRocketTakeoffFill } from 'react-icons/bs';
 import {
   LinearGradientText,
@@ -65,25 +66,27 @@ const CTAIntroCard: React.FC<{
 };
 
 const CTA: React.FC = () => {
+  const { t } = useTranslation('common');
+
   // Info: (20241218 - Julian) 卡片內容
   const introCards = [
     {
       imageSrc: '/icons/calculation.svg',
       imageAlt: 'calculation_icon',
-      description: 'Helping companies with bookkeeping and tax operations',
-      buttonText: 'Apply Business Account',
+      description: t('landing_page_v2:CTA.BUSINESS_DESCRIPTION'),
+      buttonText: t('landing_page_v2:CTA.BUSINESS_BTN'),
     },
     {
       imageSrc: '/icons/pie_chart.svg',
       imageAlt: 'pie_chart_icon',
-      description: 'Providing clients with financial statements and audit reports',
-      buttonText: 'Apply Firm Account',
+      description: t('landing_page_v2:CTA.FIRM_DESCRIPTION'),
+      buttonText: t('landing_page_v2:CTA.FIRM_BTN'),
     },
     {
       imageSrc: '/icons/case.svg',
       imageAlt: 'case_icon',
-      description: 'Outsourcing financial work through the platform',
-      buttonText: 'Apply Personal Account',
+      description: t('landing_page_v2:CTA.PERSONAL_DESCRIPTION'),
+      buttonText: t('landing_page_v2:CTA.PERSONAL_BTN'),
     },
   ];
 
@@ -104,18 +107,17 @@ const CTA: React.FC = () => {
         {/* Info: (20241205 - Julian) CTA Main */}
         <div className="flex flex-col items-center gap-12px lg:gap-24px">
           <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
-            Your Gateway to the <br />
-            Future of Accounting
+            {t('landing_page_v2:CTA.MAIN_TITLE')}
           </LinearGradientText>
           <p className="text-center text-xs font-medium md:text-lg lg:text-xl">
-            A comprehensive accounting service platform that <br /> addresses all financial matters.
+            {t('landing_page_v2:CTA.MAIN_DESCRIPTION')}
           </p>
         </div>
 
         <div className="mt-20px md:mt-30px lg:mt-60px">
           <LandingButton type="button" variant="primary">
             <BsFillRocketTakeoffFill size={20} />
-            <p className="text-base font-bold">Start Your Free Trial Now</p>
+            <p className="text-base font-bold">{t('landing_page_v2:CTA.FREE_TRIAL_BTN')}</p>
           </LandingButton>
         </div>
       </div>
