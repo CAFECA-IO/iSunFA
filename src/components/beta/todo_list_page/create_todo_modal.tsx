@@ -262,7 +262,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
               disabled={isLoading}
               className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
-              {t('dashboard:COMMON.ADD')}
+              <span>{t('dashboard:COMMON.ADD')}</span>
               <IoAdd size={16} />
             </button>
           </section>

@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useState } from 'react';
-import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { useTranslation } from 'react-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { ICompanyAndRole } from '@/interfaces/company';
@@ -153,9 +153,10 @@ const ChangeTagModal = ({
             type="button"
             onClick={handleChangeTag}
             disabled={isLoading}
-            className="rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+            className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
-            {t('company:PAGE_BODY.SAVE')}
+            <span>{t('company:PAGE_BODY.SAVE')}</span>
+            <IoSaveOutline size={16} />
           </button>
         </section>
       </div>
