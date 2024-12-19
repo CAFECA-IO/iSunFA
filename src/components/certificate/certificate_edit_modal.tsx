@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -19,6 +19,13 @@ import { CurrencyType } from '@/constants/currency';
 import CounterpartyInput, { CounterpartyInputRef } from '@/components/voucher/counterparty_input';
 import EditableFilename from '@/components/certificate/edible_file_name';
 import Magnifier from '@/components/magnifier/magifier';
+
+enum TaxRatio {
+  Z = 0,
+  F = 5,
+  T = 10,
+  FT = 15,
+}
 
 interface CertificateEditModalProps {
   isOpen: boolean;
@@ -40,34 +47,52 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   onDelete,
 }) => {
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
+  const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
-  const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
   const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
-  const [counterParty, setCounterParty] = useState<ICounterparty | undefined>(
-    certificate.invoice.counterParty
-  );
-  const [type, setType] = useState<InvoiceTransactionDirection>(
-    certificate.invoice.inputOrOutput ?? InvoiceTransactionDirection.INPUT
-  );
   const [date, setDate] = useState<IDatePeriod>({
     startTimeStamp: certificate.invoice?.date ?? 0,
     endTimeStamp: 0,
   });
-  const [certificateNo, setCertificateNo] = useState<string>(certificate.invoice.no ?? '');
-  const [priceBeforeTax, setPriceBeforeTax] = useState<number>(
-    certificate.invoice.priceBeforeTax ?? 0
-  );
-  const [taxRatio, setTaxRatio] = useState<number>(certificate.invoice.taxRatio ?? 5);
-  const [taxPrice, setTaxPrice] = useState<number>(certificate.invoice.taxPrice ?? 0);
-  const [totalPrice, setTotalPrice] = useState<number>(certificate.invoice.totalPrice ?? 0);
-  const [invoiceType, setInvoiceType] = useState<InvoiceType>(
-    certificate.invoice.type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE
-  );
-  const [deductible, setDeductible] = useState<boolean>(!!certificate.invoice.deductible);
   const { isMessageModalVisible } = useModalContext();
   //  const [isAddCounterPartyModalOpen, setIsAddCounterPartyModalOpen] = useState(false);
-  const isFormValid = priceBeforeTax > 0 && totalPrice > 0 && certificateNo !== '';
+  const [formState, setFormState] = useState(() => ({
+    inputOrOutput: certificate.invoice.inputOrOutput ?? InvoiceTransactionDirection.INPUT,
+    date: certificate.invoice.date,
+    no: certificate.invoice.no,
+    priceBeforeTax: certificate.invoice.priceBeforeTax ?? 0,
+    taxRatio: certificate.invoice.taxRatio ?? TaxRatio.Z,
+    taxPrice: certificate.invoice.taxPrice ?? 0,
+    totalPrice: certificate.invoice.totalPrice ?? 0,
+    counterParty: certificate.invoice.counterParty,
+    type: certificate.invoice.type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE,
+    deductible: certificate.invoice.deductible,
+  }));
+
+  const isFormValid = useCallback(() => {
+    const { no, date: formDate, priceBeforeTax, taxPrice, totalPrice, counterParty } = formState;
+    return (
+      no &&
+      no.trim() !== '' &&
+      formDate &&
+      formDate > 0 &&
+      priceBeforeTax > 0 &&
+      taxPrice >= 0 &&
+      totalPrice > 0 &&
+      counterParty !== undefined
+    );
+  }, [formState]);
+
+  const handleInputChange = useCallback(
+    (
+      field: keyof typeof formState,
+      value: string | number | InvoiceTransactionDirection | ICounterparty | InvoiceType | boolean
+    ) => {
+      setFormState((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
   const {
     targetRef: taxRatioMenuRef,
@@ -86,35 +111,33 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   };
 
   const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
-    // Deprecate: (20241218 - tzuhan) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('invoiceTypeMenuOptionClickHandler', id);
-    setInvoiceType(id);
     setIsInvoiceTypeMenuOpen(false);
-  };
-
-  const selectTaxHandler = (value: number) => {
-    setTaxRatio(value);
-    const updateTaxPrice = Math.round((priceBeforeTax * value) / 100);
-    setTaxPrice(updateTaxPrice);
-    setTotalPrice(priceBeforeTax + updateTaxPrice);
-    setIsTaxRatioMenuOpen(false);
+    handleInputChange('type', id);
   };
 
   const priceBeforeTaxChangeHandler = (value: number) => {
-    setPriceBeforeTax(value);
-    const updateTaxPrice = Math.round((value * taxRatio) / 100);
-    setTaxPrice(updateTaxPrice);
-    setTotalPrice(value + updateTaxPrice);
+    handleInputChange('priceBeforeTax', value);
+    const updateTaxPrice = Math.round((value * formState.taxRatio) / 100);
+    handleInputChange('taxPrice', updateTaxPrice);
+    handleInputChange('totalPrice', value + updateTaxPrice);
+  };
+
+  const selectTaxHandler = (value: TaxRatio) => {
+    handleInputChange('taxRatio', value);
+    const updateTaxPrice = Math.round((formState.priceBeforeTax * value) / 100);
+    handleInputChange('taxPrice', updateTaxPrice);
+    handleInputChange('totalPrice', formState.priceBeforeTax + updateTaxPrice);
+
+    setIsTaxRatioMenuOpen(false);
   };
 
   const totalPriceChangeHandler = (value: number) => {
-    setTotalPrice(value);
-    const ratio = (100 + taxRatio) / 100;
+    handleInputChange('totalPrice', value);
+    const ratio = (100 + formState.taxRatio) / 100;
     const updatePriceBeforeTax = Math.round(value / ratio);
-    setPriceBeforeTax(updatePriceBeforeTax);
+    handleInputChange('priceBeforeTax', updatePriceBeforeTax);
     const updateTaxPrice = value - updatePriceBeforeTax;
-    setTaxPrice(updateTaxPrice);
+    handleInputChange('taxPrice', updateTaxPrice);
   };
 
   // Info: (20241206 - Julian) currency alias setting
@@ -123,6 +146,12 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const currencyAliasStr = t(
     `certificate:CURRENCY_ALIAS.${(certificate.invoice?.currencyAlias || currencyAlias).toUpperCase()}`
   );
+
+  const formStateRef = useRef(formState);
+
+  useEffect(() => {
+    formStateRef.current = formState;
+  }, [formState]);
 
   // Info: (20240924 - tzuhan) 處理保存
   const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
@@ -135,21 +164,12 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const onTriggerSave = async () => {
     // Deprecate: (20241218 - tzuhan) remove eslint-disable
     // eslint-disable-next-line no-console
-    console.log('onTriggerSave', invoiceType);
+    console.log('onTriggerSave formStateRef.current:', formStateRef.current);
     const updatedData: ICertificate = {
       ...certificate,
       invoice: {
         ...certificate.invoice,
-        inputOrOutput: type,
-        date: date.startTimeStamp,
-        no: certificateNo,
-        priceBeforeTax,
-        taxRatio,
-        taxPrice,
-        totalPrice,
-        counterParty,
-        type: invoiceType,
-        deductible,
+        ...formStateRef.current,
       },
     };
     await onSave(updatedData);
@@ -199,33 +219,23 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 {t('certificate:EDIT.TYPE')}
               </p>
               <div className="flex flex-row items-start gap-20">
-                <label
-                  htmlFor="invoice-input"
-                  className="flex flex-row items-center gap-2 whitespace-nowrap text-checkbox-text-primary"
-                >
-                  <input
-                    type="radio"
-                    id="invoice-input"
-                    name="invoice-type"
-                    className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
-                    defaultChecked
-                    onClick={() => setType(InvoiceTransactionDirection.INPUT)}
-                  />
-                  <p>{t('certificate:EDIT.INPUT')}</p>
-                </label>
-                <label
-                  htmlFor="invoice-output"
-                  className="flex flex-row items-center gap-2 whitespace-nowrap text-checkbox-text-primary"
-                >
-                  <input
-                    type="radio"
-                    id="invoice-output"
-                    name="invoice-type"
-                    className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
-                    onClick={() => setType(InvoiceTransactionDirection.OUTPUT)}
-                  />
-                  <p>{t('certificate:EDIT.OUTPUT')}</p>
-                </label>
+                {Object.values(InvoiceTransactionDirection).map((value) => (
+                  <label
+                    key={value}
+                    htmlFor={`invoice-${value}`}
+                    className="flex flex-row items-center gap-2 whitespace-nowrap text-checkbox-text-primary"
+                  >
+                    <input
+                      type="radio"
+                      id={`invoice-${value}`}
+                      name="invoice-type"
+                      className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
+                      defaultChecked={formState.inputOrOutput === value}
+                      onClick={() => handleInputChange('inputOrOutput', value)}
+                    />
+                    <p>{t(`certificate:EDIT.${value.toUpperCase()}`)}</p>
+                  </label>
+                ))}
               </div>
             </div>
 
@@ -240,6 +250,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 setFilteredPeriod={setDate}
                 type={DatePickerType.TEXT_DATE}
                 btnClassName=""
+                datePickerHandler={(start: number) => handleInputChange('date', start)}
               />
             </div>
 
@@ -254,8 +265,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 <input
                   id="invoiceno"
                   type="text"
-                  value={certificateNo}
-                  onChange={(e) => setCertificateNo(e.target.value)}
+                  value={formState.no}
+                  onChange={(e) => handleInputChange('no', e.target.value)}
                   className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                   placeholder="AB-12345678"
                 />
@@ -272,8 +283,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 <NumericInput
                   id="input-price-before-tax"
                   name="input-price-before-tax"
-                  value={priceBeforeTax}
-                  setValue={setPriceBeforeTax}
+                  value={formState.priceBeforeTax}
                   isDecimal
                   required
                   hasComma
@@ -307,7 +317,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   className={`group relative flex h-46px w-full cursor-pointer md:w-220px ${isTaxRatioMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                 >
                   <p className="text-input-text-input-filled">
-                    {t('certificate:EDIT.TAXABLE')} {taxRatio}%
+                    {t('certificate:EDIT.TAXABLE')} {formState.taxRatio}%
                   </p>
                   <div className="flex h-20px w-20px items-center justify-center">
                     <FaChevronDown className={isTaxRatioMenuOpen ? 'rotate-180' : 'rotate-0'} />
@@ -316,12 +326,12 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxRatioMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                   >
                     <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary p-8px">
-                      {[0, 5, 10, 15].map((value) => (
+                      {Object.values(TaxRatio).map((value) => (
                         <li
                           key={`taxable-${value}`}
                           value={value}
                           className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
-                          onClick={selectTaxHandler.bind(null, value)}
+                          onClick={selectTaxHandler.bind(null, value as TaxRatio)}
                         >
                           {t('certificate:EDIT.TAXABLE')} {value}%
                         </li>
@@ -333,8 +343,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   <NumericInput
                     id="input-tax"
                     name="input-tax"
-                    value={taxPrice}
-                    setValue={setTaxPrice}
+                    value={formState.taxPrice}
                     isDecimal
                     required
                     hasComma
@@ -365,8 +374,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 <NumericInput
                   id="input-total-price"
                   name="input-total-price"
-                  value={totalPrice}
-                  setValue={setTotalPrice}
+                  value={formState.totalPrice}
                   isDecimal
                   required
                   hasComma
@@ -389,8 +397,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
             {/* Info: (20240924 - tzuhan) CounterParty */}
             <CounterpartyInput
               ref={counterpartyInputRef}
-              counterparty={counterParty}
-              setCounterparty={setCounterParty}
+              counterparty={formState.counterParty}
+              onSelect={(cp: ICounterparty) => handleInputChange('counterParty', cp)}
               onTriggerSave={onTriggerSave}
             />
 
@@ -411,7 +419,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     {/* Deprecate: (20241218 - tzuhan) remove eslint-disable */}
                     {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
                     <p className="hide-scrollbar items-centerjustify-between flex h-46px min-w-300px items-center justify-between overflow-y-scroll">
-                      <span>{t(`filter_section_type:FILTER_SECTION_TYPE.${invoiceType}`)}</span>
+                      <span>{t(`filter_section_type:FILTER_SECTION_TYPE.${formState.type}`)}</span>
                       <div className="flex h-20px w-20px items-center justify-center">
                         <FaChevronDown
                           className={isInvoiceTypeMenuOpen ? 'rotate-180' : 'rotate-0'}
@@ -441,9 +449,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   <p>{t('certificate:EDIT.DEDUCTIBLE')}</p>
                   <Toggle
                     id="tax-toggle"
-                    initialToggleState={deductible}
-                    getToggledState={() => setDeductible(!deductible)}
-                    toggleStateFromParent={deductible}
+                    initialToggleState={formState.deductible}
+                    getToggledState={() => handleInputChange('deductible', !formState.deductible)}
+                    toggleStateFromParent={formState.deductible}
                   />
                 </div>
               </div>
@@ -479,7 +487,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               type="submit"
               variant="tertiary"
               className="px-16px py-8px"
-              disabled={!isFormValid}
+              disabled={!isFormValid()}
             >
               <p>{t('common:COMMON.SAVE')}</p>
               <BiSave size={20} />

@@ -23,7 +23,7 @@ import Loader, { LoaderSize } from '@/components/loader/loader';
 
 interface ICounterpartyInputProps {
   counterparty: ICounterparty | undefined;
-  setCounterparty: React.Dispatch<React.SetStateAction<ICounterparty | undefined>>;
+  onSelect: (counterparty: ICounterparty) => void;
   flagOfSubmit?: boolean;
   className?: string;
   onTriggerSave?: () => Promise<void>;
@@ -35,7 +35,7 @@ export interface CounterpartyInputRef {
 
 const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputProps>(
   (props, ref) => {
-    const { counterparty, setCounterparty, flagOfSubmit, className, onTriggerSave } = props;
+    const { counterparty, onSelect, flagOfSubmit, className, onTriggerSave } = props;
     const { t } = useTranslation(['certificate', 'common']);
 
     const { selectedCompany } = useUserCtx();
@@ -101,16 +101,16 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       setIsLoadingCounterparty(false);
     };
 
-    const onAddCounterparty = (trigger: boolean) => {
+    const onAddCounterparty = async (trigger: boolean) => {
       addCounterPartyModalVisibilityHandler();
       if (onTriggerSave && trigger) {
-        onTriggerSave();
+        await onTriggerSave();
       }
     };
 
     // Info: (20241209 - Julian) 變更 Counterparty 事件：顯示是否新增 Counterparty 的視窗
     const counterpartySearchHandler = useCallback(
-      (trigger = true) => {
+      async (trigger = true) => {
         if ((searchName || searchTaxId) && filteredCounterpartyList.length <= 0) {
           messageModalDataHandler({
             messageType: MessageType.INFO,
@@ -125,7 +125,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
           });
           messageModalVisibilityHandler();
         } else if (onTriggerSave && trigger) {
-          onTriggerSave();
+          await onTriggerSave();
         }
       },
       [searchName, searchTaxId]
@@ -145,7 +145,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         });
 
         // Info: (20241206 - Julian) 選中新增的交易夥伴
-        setCounterparty(newCounterparty);
+        onSelect(newCounterparty);
       };
 
       // Info: (20241209 - Julian) 將資料傳入 AddCounterpartyModal
@@ -231,7 +231,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       filteredCounterpartyList.length > 0
         ? filteredCounterpartyList.map((partner) => {
             const counterpartyClickHandler = () => {
-              setCounterparty(partner);
+              onSelect(partner);
               // Info: (20241209 - Julian) 關閉 Counterparty Menu 和編輯狀態
               setCounterpartyMenuOpen(false);
               setIsCounterpartyEditing(false);
