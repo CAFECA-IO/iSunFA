@@ -1082,7 +1082,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         {isShowCounter && (
           <CounterpartyInput
             counterparty={counterparty}
-            setCounterparty={setCounterparty}
+            onSelect={setCounterparty}
             flagOfSubmit={flagOfSubmit}
             className="col-span-2"
           />

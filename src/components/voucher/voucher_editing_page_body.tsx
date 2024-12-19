@@ -843,7 +843,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
         {isShowCounter && (
           <CounterpartyInput
             counterparty={counterparty}
-            setCounterparty={setCounterparty}
+            onSelect={setCounterparty}
             className="col-span-2"
             flagOfSubmit={flagOfSubmit}
           />

@@ -57,6 +57,6 @@
   "UPLOAD_AREA": {
     "DROP_YOUR_FILES_HERE_OR": "将您的文件拖放到此处或",
     "BROWSE": "浏览",
-    "MAXIMUM_SIZE": "最大档案大小：50MB"
+    "MAXIMUM_SIZE": "最大档案大小：4MB"
   }
 }
