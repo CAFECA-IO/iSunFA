@@ -149,7 +149,7 @@ const TodoListPageBody = () => {
         />
       )}
 
-      {/* Modals */}
+      {/* Info: (20241219 - Liz) Modals */}
 
       {isCreateTodoModalOpen && (
         <CreateTodoModal toggleModal={toggleCreateTodoModal} getTodoList={getTodoList} />
