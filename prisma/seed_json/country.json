@@ -1,7 +1,10 @@
 {
-  "name": "Test country",
-  "locale_key": "tw",
-  "currency_key": "TWD",
-  "currency_name": "New Taiwan Dollar",
-  "phone_code": "+1724"
+  "id": 1,
+  "name": "N/A",
+  "code": "N/A",
+  "localeKey": "N/A",
+  "currencyCode": "N/A",
+  "currencyName": "N/A",
+  "phoneCode": "N/A",
+  "phoneExample": "N/A"
 }

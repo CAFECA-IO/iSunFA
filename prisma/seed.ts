@@ -39,6 +39,7 @@ import userSettings from '@/seed_json/user_setting.json';
 import companySettings from '@/seed_json/company_setting.json';
 import userActionLogs from '@/seed_json/user_action_log.json';
 import invoice from '@/seed_json/invoice.json';
+import country from '@/seed_json/country.json';
 
 // Info: (20241112 - Murky) Associate Related
 import associateLineItems from '@/seed_json/associate_line_item.json';
@@ -333,6 +334,12 @@ async function createInvoice() {
   });
 }
 
+async function createCountry() {
+  await prisma.country.createMany({
+    data: country,
+  });
+}
+
 async function main() {
   await createFile();
   await createCompany();
@@ -404,13 +411,16 @@ async function main() {
   await createAssociateVoucher();
   await createAssociateLineItem();
   await createInvoice();
+  await createCountry();
 }
 
 main()
   .then(async () => {
     await prisma.$disconnect();
   })
-  .catch(async () => {
+  .catch(async (error) => {
+    // eslint-disable-next-line no-console
+    console.error('seed error', error);
     // Info (20240316 - Murky) - disconnect prisma
     await prisma.$disconnect();
     process.exit(1);

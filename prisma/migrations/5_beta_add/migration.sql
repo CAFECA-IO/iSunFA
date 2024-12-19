@@ -1,3 +1,6 @@
+/* Info: (20241219 - Shirley)
+第一批 db migration
+*/
 -- Step 1. asset table ✅
 -- 1-1. 新增 user_id 欄位為可選
 ALTER TABLE "asset"
@@ -131,3 +134,85 @@ ADD CONSTRAINT "user_setting_country_id_fkey" FOREIGN KEY ("country_id") REFEREN
 -- 5-5. 刪掉 user_setting 表中的 country 欄位
 ALTER TABLE "user_setting"
 DROP COLUMN "country";
+
+/* Info: (20241219 - Shirley)
+第二批 db migration
+*/
+
+-- DropIndex
+DROP INDEX "account_id_key";
+
+/*
+Step 1. country table
+1-1. 新增 code 欄位為 optional
+1-2. 新增 phone_example 欄位為 optional
+1-3. 將現有 data 的 code 和 phone_example 設定為對應的值
+1-4. 將 code 和 phone_example 設定為 required
+
+
+
+Step 2. account table
+2-1. 新增 for_user_ledger 欄位為 optional
+2-2. 新增 for_user_voucher 欄位
+2-3. 將 for_user 欄位的值複製到 for_user_voucher
+2-4. 將現有 data 的 for_user_ledger 欄位的值，從 for_user 欄位複製過來
+2-5. 將 for_user_ledger 設定為 required
+2-6. 將 for_user_voucher 設定為 required
+2-7. 刪除 for_user 欄位
+2-8. 將預設會計科目的 for_user_voucher 改為 false，將自訂會計科目的 for_user_voucher 保留原本的值
+2-9. 在 for_user 為 true 的值，複製一份並將其設為複製對象的 children
+*/
+
+
+-- Step 1. country table ✅
+-- 1-1. 新增 code 欄位為 optional
+-- 1-2. 新增 phone_example 欄位為 optional
+ALTER TABLE "country" ADD COLUMN     "code" TEXT,
+ADD COLUMN     "phone_example" TEXT;
+
+-- 1-3. 將現有 data 的 code 和 phone_example 設定為對應的值
+UPDATE "country"
+SET "code" = 'tw',
+    "phone_example" = '0912345678'
+WHERE "locale_key" = 'tw';
+
+-- 1-4. 將 code 和 phone_example 設定為 required
+ALTER TABLE "country" ALTER COLUMN "code" SET NOT NULL,
+ALTER COLUMN "phone_example" SET NOT NULL;
+
+
+-- Step 2. account table ✅
+-- 2-1. 新增 for_user_ledger 欄位為 optional
+ALTER TABLE "account" ADD COLUMN "for_user_ledger" BOOLEAN;
+
+-- 2-2. 新增 for_user_voucher 欄位
+ALTER TABLE "account" ADD COLUMN "for_user_voucher" BOOLEAN;
+
+-- 2-3. 將 for_user 欄位的值複製到 for_user_voucher
+UPDATE "account"
+SET "for_user_voucher" = "for_user"
+WHERE "for_user_voucher" IS NULL;
+
+-- 2-4. 將現有 data 的 for_user_ledger 欄位的值，從 for_user 欄位複製過來
+UPDATE "account"
+SET "for_user_ledger" = "for_user"
+WHERE "for_user_ledger" IS NULL;
+
+-- 2-5. 在 for_user 為 true 的值，複製一份並將其設為複製對象的 children
+INSERT INTO "account" ("id","name","root_code","root_id","for_user", "code", "for_user_voucher", "for_user_ledger", "level", "parent_id", "parent_code", "system", "company_id", "type", "debit", "liquidity", "note", "created_at", "updated_at", "deleted_at")
+SELECT "id" * 10, "name","root_code","root_id", "for_user", "code" || '-0', true, true, "level" + 1, "id", "code", "system", "company_id", "type", "debit", "liquidity", "note", "created_at", "updated_at", "deleted_at"
+FROM "account"
+WHERE "for_user" = true;
+
+-- 2-6. 將 for_user_ledger 設定為 required
+ALTER TABLE "account" ALTER COLUMN "for_user_ledger" SET NOT NULL;
+-- 2-7. 將 for_user_voucher 設定為 required
+ALTER TABLE "account" ALTER COLUMN "for_user_voucher" SET NOT NULL;
+
+-- 2-8. 刪除 for_user 欄位
+ALTER TABLE "account" DROP COLUMN "for_user";
+
+-- 2-9. 將預設會計科目的 for_user_voucher 改為 false，將自訂會計科目的 for_user_voucher 保留原本的值
+UPDATE "account"
+SET "for_user_voucher" = false
+WHERE "company_id" = 1002;
