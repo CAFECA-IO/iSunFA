@@ -1,10 +1,13 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   LinearGradientText,
   LinearTextSize,
   TextAlign,
 } from '@/components/landing_page_neo/linear_gradient_text';
+import { LandingButton } from '@/components/landing_page_neo/landing_button';
+import { LuBellPlus } from 'react-icons/lu';
 
 const FlexibleFeatureIcon: React.FC<{ feature: string; size?: number; halo?: boolean }> = ({
   feature,
@@ -58,6 +61,12 @@ const FlexibleFeatureSelection: React.FC = () => {
     'Inventory Management',
   ];
 
+  // Info: (20241219 - Julian) 第四分類
+  const featuresOfFourthPart = ['Sales Management', 'POS', 'Online Store'];
+
+  // Info: (20241219 - Julian) 第五分類
+  const featuresOfFifthPart = ['Manufacturing Management', 'Supply Chain Management'];
+
   return (
     <div className="flex flex-col gap-120px px-16px py-120px md:px-80px lg:px-112px">
       {/* Info: (20241219 - Julian) Title */}
@@ -85,6 +94,29 @@ const FlexibleFeatureSelection: React.FC = () => {
           <FlexibleFeatureIcon key={feature} feature={feature} />
         ))}
       </div>
+
+      {/* Info: (20241219 - Julian) Features of Fourth Part */}
+      <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
+        {featuresOfFourthPart.map((feature) => (
+          <FlexibleFeatureIcon key={feature} feature={feature} />
+        ))}
+      </div>
+
+      {/* Info: (20241219 - Julian) Features of Fifth Part */}
+      <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
+        {featuresOfFifthPart.map((feature) => (
+          <FlexibleFeatureIcon key={feature} feature={feature} />
+        ))}
+      </div>
+
+      {/* Info: (20241219 - Julian) Make a Wish Link */}
+      {/* Info: (20241219 - Julian) 先隱藏 */}
+      <Link href="/" className="hidden w-fit">
+        <LandingButton className="p-20px">
+          <LuBellPlus size={24} />
+          <p className="text-base font-bold">Make a Wish</p>
+        </LandingButton>
+      </Link>
     </div>
   );
 };
