@@ -42,7 +42,7 @@ interface IDatePickerProps {
   minDate?: Date;
   maxDate?: Date;
   loading?: boolean;
-  datePickerHandler?: (start: number, end: number) => Promise<void>;
+  datePickerHandler?: (start: number, end: number) => void;
   btnClassName?: string;
   calenderClassName?: string;
   buttonStyleAfterDateSelected?: string;
