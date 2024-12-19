@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -14,8 +15,14 @@ const FlexibleFeatureIcon: React.FC<{ feature: string; size?: number; halo?: boo
   size = 120,
   halo = false,
 }) => {
+  const { t } = useTranslation('common');
+
   const imageSrc = `/flexible_feature/${feature.toLowerCase().replaceAll(' ', '_')}.svg`;
   const imageAlt = `${feature}_icon`;
+
+  const featureText = t(
+    `landing_page_v2:FLEXIBLE_FEATURE_SELECTION.${feature.toUpperCase().replaceAll(' ', '_')}`
+  );
 
   return (
     <div className="flex w-120px flex-col items-center justify-center gap-16px justify-self-center md:h-160px md:w-180px">
@@ -26,12 +33,14 @@ const FlexibleFeatureIcon: React.FC<{ feature: string; size?: number; halo?: boo
         alt={imageAlt}
         className={halo ? 'drop-shadow-halo' : ''}
       />
-      <p className="text-center text-base">{feature}</p>
+      <p className="text-center text-base">{featureText}</p>
     </div>
   );
 };
 
 const FlexibleFeatureSelection: React.FC = () => {
+  const { t } = useTranslation('common');
+
   // Info: (20241219 - Julian) 第一分類
   const featuresOfFirstPart = [
     'Dashboard',
@@ -71,7 +80,7 @@ const FlexibleFeatureSelection: React.FC = () => {
     <div className="flex flex-col gap-120px px-16px py-120px md:px-80px lg:px-112px">
       {/* Info: (20241219 - Julian) Title */}
       <LinearGradientText size={LinearTextSize.LG} align={TextAlign.CENTER}>
-        Flexible Feature Selection
+        {t('landing_page_v2:FLEXIBLE_FEATURE_SELECTION.MAIN_TITLE')}
       </LinearGradientText>
 
       {/* Info: (20241219 - Julian) Features of First Part */}
@@ -114,7 +123,9 @@ const FlexibleFeatureSelection: React.FC = () => {
       <Link href="/" className="hidden w-fit">
         <LandingButton className="p-20px">
           <LuBellPlus size={24} />
-          <p className="text-base font-bold">Make a Wish</p>
+          <p className="text-base font-bold">
+            {t('landing_page_v2:FLEXIBLE_FEATURE_SELECTION.MAKE_A_WISH')}
+          </p>
         </LandingButton>
       </Link>
     </div>

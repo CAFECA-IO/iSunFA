@@ -1,0 +1,71 @@
+{
+  "NAVBAR": {
+    "USERS": "Users",
+    "PRICING": "Pricing",
+    "FAITH": "Faith",
+    "JOIN_US": "Join Us",
+    "TRY_IT_NOW": "Try it now"
+  },
+  "CTA": {
+    "MAIN_TITLE": "Your Gateway to the Future of Accounting",
+    "MAIN_DESCRIPTION": "A comprehensive accounting service platform that addresses all financial matters.",
+    "FREE_TRIAL_BTN": "Start Your Free Trial Now",
+    "BUSINESS_DESCRIPTION": "Helping companies with bookkeeping and tax operations",
+    "BUSINESS_BTN": "Apply Business Account",
+    "FIRM_DESCRIPTION": "Providing clients with financial statements and audit reports",
+    "FIRM_BTN": "Apply Firm Account",
+    "PERSONAL_DESCRIPTION": "Outsourcing financial work through the platform",
+    "PERSONAL_BTN": "Apply Personal Account"
+  },
+  "EASY_TO_USE": {
+    "MAIN_TITLE": "Easy to Use Without Accounting Expertise",
+    "AUTOMATED_TITLE": "Automated input & real-time analysis",
+    "AUTOMATED_DESCRIPTION": "Generates financial statements every 24 hours",
+    "SIMPLY_TITLE": "Simply take a photo to record transactions",
+    "SIMPLY_DESCRIPTION": "Saves 85% of daily workflows",
+    "AI_TITLE": "AI-assistant",
+    "AI_DESCRIPTION": "Increases audit efficiency by 150 times"
+  },
+  "GLOBAL_MAP": {
+    "MAIN_TITLE": "Suitable for Local Businesses to Multinational Corporations",
+    "MAIN_DESCRIPTION": "Countries/Regions Providing iSunFA Accounting Platform Services",
+    "COMING_SOON": "COMING SOON"
+  },
+  "REAL_TIME_REPORT": {
+    "MAIN_TITLE": "Real-Time Financial Report",
+    "BS": "Balance Sheet",
+    "CFS": "Cash Flow Statement",
+    "CIS": "Comprehensive Income Statement",
+    "401": "401 Report"
+  },
+  "FLEXIBLE_FEATURE_SELECTION": {
+    "MAIN_TITLE": "FLEXIBLE_FEATURE_SELECTION",
+    "DASHBOARD": "Dashboard",
+    "AI_ASSISTANT": "AI Assistant",
+    "ACCOUNTING_SYSTEM": "Accounting System",
+    "ASSET_MANAGEMENT": "Asset Management",
+    "CRM": "CRM",
+    "CALENDAR": "Calendar",
+    "REPORTS_SYSTEM": "Reports System",
+    "OUTSOURCING_MATCHING": "Outsourcing Matching",
+    "TECHNICAL_SUPPORT": "Technical Support",
+    "FINANCIAL_HEALTH_CHECK": "Financial Health Check",
+    "FINANCIAL_AUDITING": "Financial Auditing",
+    "AUDIT_SYSTEM": "Audit System",
+    "HR_MANAGEMENT": "HR Management",
+    "ACCESS_CONTROL": "Access Control",
+    "TIME_AND_ATTENDANCE": "Time and Attendance",
+    "LEAVE_MANAGEMENT": "Leave Management",
+    "ONLINE_COMMUNICATION": "Online Communication",
+    "PROJECT_MANAGEMENT": "Project Management",
+    "CONTRACT_MANAGEMENT": "Contract Management",
+    "PROCUREMENT_MANAGEMENT": "Procurement Management",
+    "INVENTORY_MANAGEMENT": "Inventory Management",
+    "SALES_MANAGEMENT": "Sales Management",
+    "POS": "POS",
+    "ONLINE_STORE": "Online Store",
+    "MANUFACTURING_MANAGEMENT": "Manufacturing Management",
+    "SUPPLY_CHAIN_MANAGEMENT": "Supply Chain Management",
+    "MAKE_A_WISH": "Make a Wish"
+  }
+}

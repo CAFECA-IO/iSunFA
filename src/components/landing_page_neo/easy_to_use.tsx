@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import {
   LinearGradientText,
@@ -86,27 +87,30 @@ const EasyIntroCard: React.FC<{
 };
 
 const EasyToUse: React.FC = () => {
+  const { t } = useTranslation('common');
+
   const cardInfo = [
     {
-      title: 'Automated input & real-time analysis',
-      description: 'Generates financial statements every 24 hours',
+      title: t('landing_page_v2:EASY_TO_USE.AUTOMATED_TITLE'),
+      description: t('landing_page_v2:EASY_TO_USE.AUTOMATED_DESCRIPTION'),
       imageSrc: '/elements/glass_financial.svg',
       imageAlt: 'financial_icon',
     },
     {
-      title: 'Simply take a photo to record transactions',
-      description: 'Saves 85% of daily workflows',
+      title: t('landing_page_v2:EASY_TO_USE.SIMPLY_TITLE'),
+      description: t('landing_page_v2:EASY_TO_USE.SIMPLY_DESCRIPTION'),
       imageSrc: '/elements/glass_phone.svg',
       imageAlt: 'phone_icon',
     },
     {
-      title: ' AI-assistant',
-      description: 'Increases audit efficiency by 150 times',
+      title: t('landing_page_v2:EASY_TO_USE.AI_TITLE'),
+      description: t('landing_page_v2:EASY_TO_USE.AI_DESCRIPTION'),
       imageSrc: '/elements/glass_AI.svg',
       imageAlt: 'AI_icon',
     },
   ];
 
+  // Info: (20241218 - Julian) 卡片順序
   const [currentOrder, setCurrentOrder] = useState<number[]>([0, 1, 2]);
 
   const toLeft = () => {
@@ -146,7 +150,7 @@ const EasyToUse: React.FC = () => {
     <div className="flex flex-col py-120px">
       {/* Info: (20241218 - Julian) Title */}
       <LinearGradientText size={LinearTextSize.LG} align={TextAlign.CENTER}>
-        Easy to Use Without Accounting Expertise
+        {t('landing_page_v2:EASY_TO_USE.MAIN_TITLE')}
       </LinearGradientText>
 
       {/* Info: (20241218 - Julian) Carousel */}
