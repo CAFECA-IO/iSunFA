@@ -11,12 +11,11 @@ import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import DateTimePicker from '@/components/beta/todo_list_page/date_time_picker';
 
 interface CreateTodoModalProps {
-  isModalOpen: boolean;
   toggleModal: () => void;
-  getTodoList: () => void;
+  getTodoList: () => Promise<void>;
 }
 
-const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoModalProps) => {
+const CreateTodoModal = ({ toggleModal, getTodoList }: CreateTodoModalProps) => {
   const { t } = useTranslation(['dashboard']);
   const { userAuth } = useUserCtx();
   const { toastHandler } = useModalContext();
@@ -25,7 +24,6 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
   const [todoName, setTodoName] = useState('');
   const [startTimeStamp, setStartTimeStamp] = useState<number>();
   const [endTimeStamp, setEndTimeStamp] = useState<number>();
-
   const [note, setNote] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [company, setCompany] = useState<ICompany>();
@@ -34,16 +32,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
   const [noDataForStartTime, setNoDataForStartTime] = useState(false);
   const [noDataForEndTime, setNoDataForEndTime] = useState(false);
 
-  // Info: (20241218 - Liz) 關閉 Modal 並且清空表單
   const closeModal = () => {
-    setTodoName('');
-    setNote('');
-    setCompany(undefined);
-    setStartTimeStamp(undefined);
-    setEndTimeStamp(undefined);
-    setNoDataForTodoName(false);
-    setNoDataForStartTime(false);
-    setNoDataForEndTime(false);
     toggleModal();
   };
 
@@ -61,6 +50,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
     if (!userAuth) return;
     if (isLoading) return;
 
+    // Info: (20241219 - Liz) 檢查是否有未填寫的必填欄位
     if (!todoName || !startTimeStamp || !endTimeStamp) {
       setNoDataForTodoName(!todoName);
       setNoDataForStartTime(!startTimeStamp);
@@ -79,7 +69,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
         params: { userId: userAuth.id },
         body: {
           name: todoName,
-          deadline: 0,
+          deadline: 0, // Info: (20241219 - Liz) 之後會捨棄 deadline 欄位，先傳 0
           startTime: startTimeStamp,
           endTime: endTimeStamp,
           companyId: company?.id,
@@ -88,7 +78,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
       });
 
       if (success) {
-        // Info: (20241119 - Liz) 新增待辦事項成功後清空表單、關閉 Modal、重新取得待辦事項列表
+        // Info: (20241119 - Liz) 新增待辦事項成功後關閉 Modal、重新取得待辦事項列表
         closeModal();
         getTodoList();
 
@@ -147,7 +137,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
     getCompanyList();
   }, [userAuth]);
 
-  return isModalOpen ? (
+  return (
     <main className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
       <div className="overflow-hidden rounded-lg">
         <div className="flex max-h-80vh w-400px flex-col overflow-y-auto bg-surface-neutral-surface-lv2">
@@ -269,7 +259,7 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, getTodoList }: CreateTodoMo
         </div>
       </div>
     </main>
-  ) : null;
+  );
 };
 
 export default CreateTodoModal;

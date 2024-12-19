@@ -149,17 +149,15 @@ const TodoListPageBody = () => {
         />
       )}
 
-      {/* Modal */}
-      <CreateTodoModal
-        isModalOpen={isCreateTodoModalOpen}
-        toggleModal={toggleCreateTodoModal}
-        getTodoList={getTodoList}
-      />
+      {/* Modals */}
+
+      {isCreateTodoModalOpen && (
+        <CreateTodoModal toggleModal={toggleCreateTodoModal} getTodoList={getTodoList} />
+      )}
 
       {todoToUpdate && (
         <UpdateTodoModal
           todoToUpdate={todoToUpdate}
-          isModalOpen={!!todoToUpdate}
           setTodoToUpdate={setTodoToUpdate}
           getTodoList={getTodoList}
         />
