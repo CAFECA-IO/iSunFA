@@ -53,7 +53,7 @@ const LandingNavbar: React.FC = () => {
   );
 
   return (
-    <nav className="fixed inset-x-0 z-50 flex items-center justify-between rounded-sm border-b bg-landing-page-white/30 px-16px py-12px shadow-landing-nav backdrop-blur-md md:inset-x-36px md:px-40px lg:px-110px">
+    <nav className="fixed inset-x-0 z-50 flex items-center justify-between rounded-sm border-b bg-landing-page-white/30 px-16px py-12px shadow-landing-nav backdrop-blur-md md:inset-x-36px md:px-40px lg:px-112px">
       <div className="flex items-center gap-16px">
         {/* Info: (20241204 - Julian) Logo */}
         <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="h-40px w-150px flex-none">

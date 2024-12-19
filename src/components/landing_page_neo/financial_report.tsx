@@ -8,7 +8,7 @@ import {
 
 const FinancialReport: React.FC = () => {
   return (
-    <div className="flex flex-col items-start justify-between bg-landing-page-black3 px-16px py-120px md:px-80px lg:flex-row lg:items-center lg:px-110px">
+    <div className="flex flex-col items-start justify-between bg-landing-page-black3 px-16px py-120px md:px-80px lg:flex-row lg:items-center lg:px-112px">
       <div className="order-2 flex flex-col gap-16px lg:order-1 lg:w-1/2">
         {/* Info: (20241218 - Julian) Title */}
         <LinearGradientText size={LinearTextSize.LG} align={TextAlign.LEFT}>
