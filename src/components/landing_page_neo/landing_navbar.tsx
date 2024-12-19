@@ -6,11 +6,11 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import LandingI18n from '@/components/landing_page_neo/landing_i18n';
 import { LandingButton } from '@/components/landing_page_neo/landing_button';
 import version from '@/lib/version';
-// import { useTranslation } from 'next-i18next';
+import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const LandingNavbar: React.FC = () => {
-  //  const { t } = useTranslation('common');
+  const { t } = useTranslation('common');
 
   const {
     targetRef: dropdownRef,
@@ -20,33 +20,34 @@ const LandingNavbar: React.FC = () => {
 
   const toggleDropdown = () => setIsOpen((prev) => !prev);
 
+  // ToDo: (20241219 - Julian) 補上正確的路徑
   const navigationOptions = (
     <>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
         <LandingButton type="button" variant="default">
-          Users
+          {t('landing_page_v2:NAVBAR.USERS')}
         </LandingButton>
       </Link>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
         <LandingButton type="button" variant="default">
-          Pricing
+          {t('landing_page_v2:NAVBAR.PRICING')}
         </LandingButton>
       </Link>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
         <LandingButton type="button" variant="default">
-          Faith
+          {t('landing_page_v2:NAVBAR.FAITH')}
         </LandingButton>
       </Link>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
         <LandingButton type="button" variant="default">
-          Join Us
+          {t('landing_page_v2:NAVBAR.JOIN_US')}
         </LandingButton>
       </Link>
       {/* ToDO: (20241204 - Julian) Button */}
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
         <LandingButton type="button" variant="primary" className="w-full">
           <BsFillRocketTakeoffFill size={20} />
-          <p>Try it Now</p>
+          <p>{t('landing_page_v2:NAVBAR.TRY_IT_NOW')}</p>
         </LandingButton>
       </Link>
     </>

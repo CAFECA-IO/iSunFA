@@ -67,5 +67,51 @@
     "MANUFACTURING_MANAGEMENT": "Manufacturing Management",
     "SUPPLY_CHAIN_MANAGEMENT": "Supply Chain Management",
     "MAKE_A_WISH": "Make a Wish"
+  },
+  "TECHNICAL_FEATURES": {
+    "MAIN_TITLE": "Technical Features",
+    "FINANCIAL_1": "Financial analysis & reasoning model",
+    "FINANCIAL_2": "Precise Decision-Making",
+    "FINANCIAL_3": "Trained on over 800 million financial data points",
+    "ZERO_KNOWLEDGE_1": "Zero-knowledge proof and homomorphic encryption",
+    "ZERO_KNOWLEDGE_2": "Secure and Trust",
+    "ZERO_KNOWLEDGE_3": "Meets privacy needs, building consensus and trust",
+    "TW_GAAP_1": "TW-GAAP standard with visual reasoning support",
+    "TW_GAAP_2": "Intelligent Evaluation",
+    "TW_GAAP_3": "Integrates advanced GPT technology",
+    "TECHNICAL_PATENTS": "Technical Patents",
+    "EFFICIENT_TITLE": "Efficient Peer-to-Peer Network Architecture",
+    "EFFICIENT_DESCRIPTION": "Through a bio-inspired routing model and role-based mechanism, we develop a highly efficient peer-to-peer network architecture. This system enables fast communication and protocol execution, supporting a blockchain system operating near traditional database efficiency. This ensures seamless handling of vast access requests from zero-knowledge bookkeeping (zk-bookkeeping) while minimizing data tampering risks.",
+    "DECENTRALIZED_TITLE": "Decentralized Identity Verification",
+    "DECENTRALIZED_DESCRIPTION": "We authenticate user identity using elliptic curve digital signature technology. Users provide proof of identity, validity period, purpose, and supplementary information, generating a time-limited and authorized identity certificate using a designated private key. This independent verification process ensures each zero-knowledge bookkeeping entry is endorsed by professionals or enterprises, deterring errors in bookkeeping.",
+    "ZK_PROOF_TITLE": "ZK- Proof Blockchain Preservation of Evidence",
+    "ZK_PROOF_DESCRIPTION": "Our method transforms data into matrix format, incorporating noise data and performing coordinate axis rotations. This process creates verifiable metadata consistent with the original data but cannot be reversed to obtain the original data.",
+    "REAL_TIME_TITLE": "Real-Time Generation of Accounting Reports Based on ZK- Proof Blockchain Preservation of Evidence",
+    "REAL_TIME_DESCRIPTION": "By embedding difference value metadata of accounting reports into the noise injection process, we achieve zero-knowledge bookkeeping. This enables real-time generation of accounting reports, including reporting period, list of included metadata, and environmental parameters like exchange rates, based on zero-knowledge blockchain certification.",
+    "AUDIT_TITLE": "Audit Method Based on ZK- Proof Blockchain Preservation of Evidence",
+    "AUDIT_DESCRIPTION": "Using specific algorithms, audits are swiftly conducted to verify the existence, order, and accuracy of metadata in accounting reports. The zero-knowledge proof method confirms metadata authenticity and consistency with the blockchain. This ensures an efficient audit method based on zero-knowledge blockchain certification."
+  },
+  "HAPPY_CUSTOMER": {
+    "MAIN_TITLE": "Trusted by Happy Customer",
+    "MESSAGE_1": "Uses AI to improve company decision-making quality",
+    "MESSAGE_2": "Continuous auditing to grasp critical growth data",
+    "MESSAGE_3": "Reduces the daily workload of audit teams",
+    "MESSAGE_4": "Focusing the finance team on corporate development planning",
+    "MESSAGE_5": "Aligns with multiple international accounting standards",
+    "MESSAGE_6": "Enables auditors to review company data at any time and take immediate action if issues are detected",
+    "MESSAGE_7": "Identify and resolve potential risks and problems more quickly to reduce the risks faced by the business",
+    "MESSAGE_8": "Complies with continuous auditing regulations in specific industries and jurisdictions",
+    "MESSAGE_9": "Demonstrate to investors the company's continuous attention and supervision of operations, and enhance corporate trust and transparency"
+  },
+  "FOOTER": {
+    "QUICK_LINKS": "Quick Links",
+    "HOME": "Home",
+    "USERS": "Users",
+    "PRICING": "Pricing",
+    "FAITH": "Faith",
+    "JOIN_US": "Join Us",
+    "PRIVACY_POLICY": "Terms of Service & Privacy Policy",
+    "CONTACT_US": "Contact Us",
+    "SERVICE_HOURS": "Service Hours"
   }
 }

@@ -67,5 +67,51 @@
     "MANUFACTURING_MANAGEMENT": "製造管理",
     "SUPPLY_CHAIN_MANAGEMENT": "供應鏈管理",
     "MAKE_A_WISH": "我要許願"
+  },
+  "TECHNICAL_FEATURES": {
+    "MAIN_TITLE": "技術特色",
+    "FINANCIAL_1": "財務分析與推理模型",
+    "FINANCIAL_2": "精準決策",
+    "FINANCIAL_3": "超過八億筆財務數據進行訓練",
+    "ZERO_KNOWLEDGE_1": "零知識證明與同態加密",
+    "ZERO_KNOWLEDGE_2": "安全信任",
+    "ZERO_KNOWLEDGE_3": "滿足隱私需求，建立共識信任",
+    "TW_GAAP_1": "TW-GAAP 大語言與視覺推理輔助",
+    "TW_GAAP_2": "智能評鑒",
+    "TW_GAAP_3": "先進 GPT 技術整合",
+    "TECHNICAL_PATENTS": "技術專利",
+    "EFFICIENT_TITLE": "Efficient Peer-to-Peer Network Architecture",
+    "EFFICIENT_DESCRIPTION": "Through a bio-inspired routing model and role-based mechanism, we develop a highly efficient peer-to-peer network architecture. This system enables fast communication and protocol execution, supporting a blockchain system operating near traditional database efficiency. This ensures seamless handling of vast access requests from zero-knowledge bookkeeping (zk-bookkeeping) while minimizing data tampering risks.",
+    "DECENTRALIZED_TITLE": "Decentralized Identity Verification",
+    "DECENTRALIZED_DESCRIPTION": "We authenticate user identity using elliptic curve digital signature technology. Users provide proof of identity, validity period, purpose, and supplementary information, generating a time-limited and authorized identity certificate using a designated private key. This independent verification process ensures each zero-knowledge bookkeeping entry is endorsed by professionals or enterprises, deterring errors in bookkeeping.",
+    "ZK_PROOF_TITLE": "ZK- Proof Blockchain Preservation of Evidence",
+    "ZK_PROOF_DESCRIPTION": "Our method transforms data into matrix format, incorporating noise data and performing coordinate axis rotations. This process creates verifiable metadata consistent with the original data but cannot be reversed to obtain the original data.",
+    "REAL_TIME_TITLE": "Real-Time Generation of Accounting Reports Based on ZK- Proof Blockchain Preservation of Evidence",
+    "REAL_TIME_DESCRIPTION": "By embedding difference value metadata of accounting reports into the noise injection process, we achieve zero-knowledge bookkeeping. This enables real-time generation of accounting reports, including reporting period, list of included metadata, and environmental parameters like exchange rates, based on zero-knowledge blockchain certification.",
+    "AUDIT_TITLE": "Audit Method Based on ZK- Proof Blockchain Preservation of Evidence",
+    "AUDIT_DESCRIPTION": "Using specific algorithms, audits are swiftly conducted to verify the existence, order, and accuracy of metadata in accounting reports. The zero-knowledge proof method confirms metadata authenticity and consistency with the blockchain. This ensures an efficient audit method based on zero-knowledge blockchain certification."
+  },
+  "HAPPY_CUSTOMER": {
+    "MAIN_TITLE": "選擇陽光智能會計",
+    "MESSAGE_1": "用人工智能，提升公司決策品質",
+    "MESSAGE_2": "用持續審計，掌握公司成長潛力的關鍵數據",
+    "MESSAGE_3": "減輕審計團隊的日常作業負擔",
+    "MESSAGE_4": "讓財務團隊專注於企業發展規劃",
+    "MESSAGE_5": "與多種國際會計準則規範接軌",
+    "MESSAGE_6": "讓審計人員在任何時間點對企業的資料進行審核，並在發現問題時立即採取行動",
+    "MESSAGE_7": "更快地識別和解決潛在的風險和問題，降低企業面臨的風險",
+    "MESSAGE_8": "在一些行業和司法管轄區遵守持續審計之規範",
+    "MESSAGE_9": "向提供投資人展示企業對運營的持續關注和監督，提升企業的信任與透明度"
+  },
+  "FOOTER": {
+    "QUICK_LINKS": "快速連結",
+    "HOME": "首頁",
+    "USERS": "適用對象",
+    "PRICING": "收費模式",
+    "FAITH": "GPT",
+    "JOIN_US": "加入我們",
+    "PRIVACY_POLICY": "服務條款與隱私權政策",
+    "CONTACT_US": "聯絡我們",
+    "SERVICE_HOURS": "服務時間"
   }
 }

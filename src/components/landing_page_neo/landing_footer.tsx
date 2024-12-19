@@ -1,47 +1,54 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-// import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
+import { useTranslation } from 'next-i18next';
 import { IoLogoFacebook } from 'react-icons/io';
 import { AiFillGithub } from 'react-icons/ai';
 import { TiSocialYoutubeCircular } from 'react-icons/ti';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import {
+  iSunFAAddress,
+  iSunFAAddressInChinese,
+  iSunFAPhone,
+  githubLink,
+  facebookLink,
+  youtubeLink,
+  iSunFAAddressOnMap,
+  copyright,
+} from '@/constants/config';
 
-const CONTACT_ADDRESS =
-  '13F.-6, No. 2, Ln. 150, Sec. 5, Xinyi Rd., Xinyi Dist., Taipei City 110416 , Taiwan';
-const CONTACT_PHONE_NUMBER = '+886-2-2700-1979';
 const SERVICE_HOURS = 'Mon to Fri, 09:00 AM - 06:00 PM.';
-const MAP_LINK =
-  'https://www.google.com/maps/place/%E5%8F%B0%E7%81%A3%E9%99%BD%E5%85%89%E9%9B%B2%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/@25.0284838,121.5686008,17z/data=!3m2!4b1!5s0x3442abb276dbfb95:0x7472f9fce7899834!4m6!3m5!1s0x3442abcd4d78e29f:0x1501ae59ce954655!8m2!3d25.028479!4d121.5711757!16s%2Fg%2F11g9vrbw65?entry=ttu&g_ep=EgoyMDI0MTIwMS4xIKXMDSoASAFQAw%3D%3D';
-const FACEBOOK_LINK = 'https://www.facebook.com/profile.php?id=61555435381112';
-const GITHUB_LINK = 'https://github.com/CAFECA-IO/iSunFA';
-const YOUTUBE_LINK = 'https://www.youtube.com/@isunfa';
-const COPYRIGHT = 'iSunFA @ 2024. All rights reserved.';
 
 const LandingFooter: React.FC = () => {
-  //  const { t } = useTranslation('common');
+  const { t } = useTranslation('common');
+  const { locale } = useRouter();
 
+  // Info: (20241204 - Julian) 從語言判斷要顯示哪個地址
+  const address = locale === 'en' ? iSunFAAddress : iSunFAAddressInChinese;
+
+  // ToDo: (20241219 - Julian) 補上正確的路徑
   const displayNavigation = (
     <>
-      <h3 className="text-lg font-bold">Quick Links</h3>
+      <h3 className="text-lg font-bold">{t('landing_page_v2:FOOTER.QUICK_LINKS')}</h3>
       <ul className="flex list-inside list-arrow flex-col gap-4px">
         <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>Home</Link>
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.HOME')}</Link>
         </li>
         <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>Users</Link>
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.USERS')}</Link>
         </li>
         <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>Pricing</Link>
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.PRICING')}</Link>
         </li>
         <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>Faith</Link>
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.FAITH')}</Link>
         </li>
         <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>Join Us</Link>
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.JOIN_US')}</Link>
         </li>
         <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>Terms of Service & Privacy Policy</Link>
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.PRIVACY_POLICY')}</Link>
         </li>
       </ul>
     </>
@@ -49,31 +56,31 @@ const LandingFooter: React.FC = () => {
 
   const displayContactUs = (
     <>
-      <h3 className="text-lg font-bold">Contact Us</h3>
+      <h3 className="text-lg font-bold">{t('landing_page_v2:FOOTER.CONTACT_US')}</h3>
       <ul className="flex list-none flex-col gap-24px text-sm lg:gap-4px">
         <li className="flex gap-8px">
           <Image src="/icons/map_symbol.svg" alt="map_symbol" width={16} height={16} />
           <Link
-            href={MAP_LINK}
+            href={iSunFAAddressOnMap ?? '/'}
             target="_blank"
             className="flex-1 hover:cursor-pointer hover:text-landing-page-orange"
           >
-            {CONTACT_ADDRESS}
+            {address}
           </Link>
         </li>
         <li className="flex gap-8px">
           <Image src="/icons/phone.svg" alt="phone" width={16} height={16} />
           <Link
-            href={`tel:${CONTACT_PHONE_NUMBER}`}
+            href={`tel:${iSunFAPhone}`}
             className="flex-1 hover:cursor-pointer hover:text-landing-page-orange"
           >
-            {CONTACT_PHONE_NUMBER}
+            {iSunFAPhone}
           </Link>
         </li>
         <li className="flex gap-8px">
           <Image src="/icons/alarm.svg" alt="alarm" width={16} height={16} />
           <p>
-            Service Hours : <br />
+            {t('landing_page_v2:FOOTER.SERVICE_HOURS')}: <br />
             {SERVICE_HOURS}
           </p>
         </li>
@@ -83,18 +90,18 @@ const LandingFooter: React.FC = () => {
 
   const displaySocialMedia = (
     <>
-      <Link href={FACEBOOK_LINK} target="_blank" className="hover:text-landing-page-orange">
+      <Link href={facebookLink ?? '/'} target="_blank" className="hover:text-landing-page-orange">
         <button type="button">
           <IoLogoFacebook size={40} />
         </button>
       </Link>
-      <Link href={GITHUB_LINK} target="_blank" className="hover:text-landing-page-orange">
+      <Link href={githubLink ?? '/'} target="_blank" className="hover:text-landing-page-orange">
         <button type="button">
           <AiFillGithub size={40} />
         </button>
       </Link>
       {/* ToDO: (20241204 - Julian) React icon 中沒有和設計稿一樣的 Youtube icon，先以這個代替 */}
-      <Link href={YOUTUBE_LINK} target="_blank" className="hover:text-landing-page-orange">
+      <Link href={youtubeLink ?? '/'} target="_blank" className="hover:text-landing-page-orange">
         <button type="button">
           <TiSocialYoutubeCircular size={40} />
         </button>
@@ -134,7 +141,7 @@ const LandingFooter: React.FC = () => {
       </div>
 
       {/* Info: (20241204 - Julian) Copy Right */}
-      <div className="ml-auto text-sm font-normal text-landing-page-gray">{COPYRIGHT}</div>
+      <div className="ml-auto text-sm font-normal text-landing-page-gray">{copyright}</div>
     </footer>
   );
 };

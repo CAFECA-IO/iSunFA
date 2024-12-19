@@ -9,9 +9,12 @@ export const BOOKMARK_SCROLL_STEP = 200;
 
 /* Info: (20230814 - Shirley) ----- Landing Footer ----- */
 export const iSunFAAddress = process.env.I_SUN_FA_ADDRESS_IN_ENGLISH;
+export const iSunFAAddressInChinese = process.env.I_SUN_FA_ADDRESS_IN_CHINESE;
 export const iSunFAAddressOnMap = process.env.I_SUN_FA_ADDRESS_ON_GOOGLE_MAP;
 export const iSunFAPhone = process.env.I_SUN_FA_PHONE_NUMBER;
 export const githubLink = process.env.GITHUB_LINK;
+export const facebookLink = process.env.FACEBOOK_LINK;
+export const youtubeLink = process.env.YOUTUBE_LINK;
 
 export const AUTH_PERIOD = 60 * 60; // 1 hr
 
