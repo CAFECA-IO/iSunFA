@@ -10,6 +10,13 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import TodayTodoListNoData from '@/components/beta/dashboard/today_todo_list_no_data';
 
+const getTimeFromTimestamp = (timestamp: number): string => {
+  const date = new Date(timestamp); // Info: (20241219 - Liz) 將毫秒級時間戳記轉換為 Date 物件
+  const hours = date.getHours().toString().padStart(2, '0'); // Info: (20241219 - Liz) 獲取小時，並補零
+  const minutes = date.getMinutes().toString().padStart(2, '0'); // Info: (20241219 - Liz) 獲取分鐘，並補零
+  return `${hours}:${minutes}`; // Info: (20241219 - Liz) 格式化為 "HH:mm"
+};
+
 const TodayTodoListData = () => {
   const { t } = useTranslation('dashboard');
   const { userAuth } = useUserCtx();
@@ -86,21 +93,6 @@ const TodayTodoListData = () => {
     return () => clearInterval(timer);
   }, [todayTodoList]);
 
-  //   const planList = [
-  //     {
-  //       id: 1,
-  //       title: 'Doc Plan 12345678910',
-  //       time: '14:00',
-  //       color: 'bg-surface-brand-secondary-moderate',
-  //     },
-  //     {
-  //       id: 2,
-  //       title: 'Close Meeting',
-  //       time: '17:30-18:00',
-  //       color: 'bg-surface-brand-primary-soft',
-  //     },
-  //   ];
-
   if (!isToDoListHasPlan) return <TodayTodoListNoData />;
 
   return (
@@ -118,16 +110,25 @@ const TodayTodoListData = () => {
         </div>
 
         <div className="flex flex-auto items-center justify-between gap-10px overflow-x-auto py-5px">
-          {filterTodoList.map((todo) => (
-            <div key={todo.id} className="flex gap-16px">
-              <div className={`w-10px rounded-xs bg-surface-brand-secondary-moderate`}></div>
+          {filterTodoList.map((todo, index) => {
+            const timeOfStartTime = getTimeFromTimestamp(todo.startTime);
+            const timeOfEndTime = getTimeFromTimestamp(todo.endTime);
+            const isSameTime = timeOfStartTime === timeOfEndTime;
+            const time = isSameTime ? timeOfEndTime : `${timeOfStartTime}-${timeOfEndTime}`;
 
-              <div className="w-100px space-y-8px">
-                <p className="truncate font-medium text-text-neutral-primary">{todo.name}</p>
-                <p className="font-medium text-text-neutral-primary">{todo.note}</p>
+            return (
+              <div key={todo.id} className="flex gap-16px">
+                <div
+                  className={`w-10px rounded-xs ${index === 0 ? 'bg-surface-brand-secondary-moderate' : 'bg-surface-brand-primary-soft'}`}
+                ></div>
+
+                <div className="w-100px space-y-8px">
+                  <p className="truncate font-medium text-text-neutral-primary">{todo.name}</p>
+                  <p className="font-medium text-text-neutral-primary">{time}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
