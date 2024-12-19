@@ -1,13 +1,34 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
+// Info: (20241219 - Liz) 把 timeStamp 格式化為 YYYY-MM-DD
+const formatDate = (timeStamp: number) => {
+  return (
+    new Date(timeStamp).getFullYear() +
+    '-' +
+    String(new Date(timeStamp).getMonth() + 1).padStart(2, '0') +
+    '-' +
+    String(new Date(timeStamp).getDate()).padStart(2, '0')
+  );
+};
+
+// Info: (20241219 - Liz) 把 timeStamp 格式化為 HH:mm
+const formatTime = (timeStamp: number) => {
+  return (
+    String(new Date(timeStamp).getHours()).padStart(2, '0') +
+    ':' +
+    String(new Date(timeStamp).getMinutes()).padStart(2, '0')
+  );
+};
+
 interface DateTimePickerProps {
   setTimeStamp: Dispatch<SetStateAction<number | undefined>>;
   isAlert?: boolean;
+  defaultTimestamp?: number; // Info: (20241219 - Liz) 預設顯示的時間戳記
 }
 
-const DateTimePicker = ({ setTimeStamp, isAlert }: DateTimePickerProps) => {
-  const [date, setDate] = useState<string>('');
-  const [time, setTime] = useState<string>('');
+const DateTimePicker = ({ setTimeStamp, isAlert, defaultTimestamp }: DateTimePickerProps) => {
+  const [date, setDate] = useState<string>(defaultTimestamp ? formatDate(defaultTimestamp) : '');
+  const [time, setTime] = useState<string>(defaultTimestamp ? formatTime(defaultTimestamp) : '');
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDate(e.target.value);
