@@ -158,6 +158,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
+    loggerBack.error(error);
     statusMessage = error.message;
   } finally {
     const { httpCode, result } = formatApiResponse<IAskResult | null>(statusMessage, payload);
