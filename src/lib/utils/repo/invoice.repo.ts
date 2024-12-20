@@ -7,6 +7,7 @@ import { CurrencyType } from '@/constants/currency';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 import { PostCertificateResponse } from '@/interfaces/certificate';
 import { DefaultValue } from '@/constants/default_value';
+import { CounterpartyType } from '@/constants/counterparty';
 
 export async function postInvoiceV2(options: {
   nowInSecond: number;
@@ -110,10 +111,18 @@ export async function postInvoiceV2(options: {
 }
 
 export async function putInvoiceV2(options: {
+  companyId: number;
+  isNeedToCreateNewCounterParty: boolean;
   nowInSecond: number;
   invoiceId: number;
   certificateId?: number;
-  counterPartyId?: number;
+  counterParty?: {
+    name: string;
+    taxId: string;
+    type: CounterpartyType;
+    id?: number | undefined;
+    note?: string | undefined;
+  };
   inputOrOutput?: InvoiceTransactionDirection;
   date?: number;
   no?: string;
@@ -127,10 +136,11 @@ export async function putInvoiceV2(options: {
   deductible?: boolean;
 }): Promise<PostCertificateResponse | null> {
   const {
+    companyId,
+    isNeedToCreateNewCounterParty,
     nowInSecond,
     invoiceId,
-    certificateId,
-    counterPartyId,
+    counterParty,
     inputOrOutput,
     date,
     no,
@@ -152,8 +162,34 @@ export async function putInvoiceV2(options: {
         id: invoiceId,
       },
       data: {
-        certificateId,
-        counterPartyId,
+        counterParty:
+          isNeedToCreateNewCounterParty && counterParty
+            ? {
+                create: {
+                  company: {
+                    connect: {
+                      id: companyId,
+                    },
+                  },
+                  type: counterParty.type,
+                  name: counterParty.name,
+                  note: counterParty.note || '',
+                  taxId: counterParty.taxId,
+                  createdAt: nowInSecond,
+                  updatedAt: nowInSecond,
+                },
+              }
+            : {
+                update: {
+                  data: {
+                    type: counterParty?.type,
+                    name: counterParty?.name,
+                    note: counterParty?.note,
+                    taxId: counterParty?.taxId,
+                    updatedAt: nowInSecond,
+                  },
+                },
+              },
         inputOrOutput,
         date,
         no,

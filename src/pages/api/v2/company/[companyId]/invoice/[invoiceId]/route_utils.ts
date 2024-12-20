@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { CounterpartyType } from '@/constants/counterparty';
 import { CurrencyType } from '@/constants/currency';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -43,11 +44,37 @@ export const invoicePutApiUtils = {
     return !!counterParty;
   },
 
+  isNeedToCreateNewCounterParty: async (counterPartyFromBody?: {
+    name: string;
+    taxId: string;
+    type: CounterpartyType;
+    id?: number | undefined;
+    note?: string | undefined;
+  }): Promise<boolean> => {
+    if (!counterPartyFromBody) return true;
+
+    const { id } = counterPartyFromBody;
+
+    if (!id) return true;
+
+    const isCounterPartyExistInDB = await invoicePutApiUtils.isCounterPartyExistInDB(id);
+
+    return !isCounterPartyExistInDB;
+  },
+
   putInvoiceInPrisma: async (options: {
+    companyId: number;
+    isNeedToCreateNewCounterParty: boolean;
     nowInSecond: number;
     invoiceId: number;
     certificateId?: number;
-    counterPartyId?: number;
+    counterParty?: {
+      name: string;
+      taxId: string;
+      type: CounterpartyType;
+      id?: number | undefined;
+      note?: string | undefined;
+    };
     inputOrOutput?: InvoiceTransactionDirection;
     date?: number;
     no?: string;

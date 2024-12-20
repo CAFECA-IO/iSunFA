@@ -29,10 +29,10 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
   let payload: ICertificate | null = null;
 
   const { invoiceId } = query;
-  const { userId } = session;
+  const { userId, companyId } = session;
   const {
     certificateId,
-    counterPartyId,
+    counterParty,
     inputOrOutput,
     date,
     no,
@@ -55,18 +55,16 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
       });
     }
 
-    if (counterPartyId && !putUtils.isCounterPartyExistInDB(counterPartyId)) {
-      putUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: 'CounterParty not found',
-        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
-      });
-    }
+    const isNeedToCreateNewCounterParty =
+      await putUtils.isNeedToCreateNewCounterParty(counterParty);
 
     const certificateFromPrisma = await putUtils.putInvoiceInPrisma({
+      companyId,
+      isNeedToCreateNewCounterParty,
       nowInSecond,
       invoiceId,
       certificateId,
-      counterPartyId,
+      counterParty,
       inputOrOutput,
       date,
       no,

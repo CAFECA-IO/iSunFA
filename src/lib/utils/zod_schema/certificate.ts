@@ -15,7 +15,7 @@ import {
 } from '@/lib/utils/zod_schema/invoice';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
-import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
+import { CounterpartyType, PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
 
 const nullSchema = z.union([z.object({}), z.string()]);
@@ -257,7 +257,25 @@ const invoicePutV2QuerySchema = z.object({
 const invoicePutV2BodySchema = z.object({
   // id: z.number(),
   certificateId: z.number().optional(),
-  counterPartyId: z.number().optional(),
+
+  // Info: (20241220 - Murky) 如果沒有id 的話，就會自動創一個新的counterParty
+  counterParty: z
+    .object({
+      id: z.number().optional(),
+      name: z.string(),
+      taxId: z.string(),
+      note: z.string().optional(),
+      type: z
+        .nativeEnum(CounterpartyType)
+        .optional()
+        .transform((type) => {
+          if (!type) {
+            return CounterpartyType.SUPPLIER;
+          }
+          return type;
+        }),
+    })
+    .optional(),
   inputOrOutput: z.nativeEnum(InvoiceTransactionDirection).optional(),
   date: z.number().optional(),
   no: z.string().optional(),
