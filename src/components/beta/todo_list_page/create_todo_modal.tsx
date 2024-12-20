@@ -12,21 +12,28 @@ import DateTimePicker from '@/components/beta/todo_list_page/date_time_picker';
 
 interface CreateTodoModalProps {
   toggleModal: () => void;
-  getTodoList: () => Promise<void>;
+  getTodoList?: () => Promise<void>;
+  defaultTodoName?: string;
+  defaultCompany?: ICompany;
 }
 
-const CreateTodoModal = ({ toggleModal, getTodoList }: CreateTodoModalProps) => {
+const CreateTodoModal = ({
+  toggleModal,
+  getTodoList,
+  defaultTodoName,
+  defaultCompany,
+}: CreateTodoModalProps) => {
   const { t } = useTranslation(['dashboard']);
   const { userAuth } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [todoName, setTodoName] = useState('');
+  const [todoName, setTodoName] = useState(defaultTodoName || '');
   const [startTimeStamp, setStartTimeStamp] = useState<number>();
   const [endTimeStamp, setEndTimeStamp] = useState<number>();
   const [note, setNote] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [company, setCompany] = useState<ICompany>();
+  const [company, setCompany] = useState<ICompany | undefined>(defaultCompany || undefined);
   const [companyAndRoleList, setCompanyAndRoleList] = useState<ICompanyAndRole[]>([]);
   const [noDataForTodoName, setNoDataForTodoName] = useState(false);
   const [noDataForStartTime, setNoDataForStartTime] = useState(false);
@@ -80,7 +87,7 @@ const CreateTodoModal = ({ toggleModal, getTodoList }: CreateTodoModalProps) => 
       if (success) {
         // Info: (20241119 - Liz) 新增待辦事項成功後關閉 Modal、重新取得待辦事項列表
         closeModal();
-        getTodoList();
+        if (getTodoList) await getTodoList();
 
         // Deprecated: (20241119 - Liz)
         // eslint-disable-next-line no-console
@@ -189,16 +196,19 @@ const CreateTodoModal = ({ toggleModal, getTodoList }: CreateTodoModalProps) => 
               <div className="relative flex">
                 <button
                   type="button"
-                  className="flex flex-auto items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM outline-none hover:border-input-stroke-input-hover focus:border-input-stroke-selected"
+                  className="flex flex-auto items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM outline-none hover:border-input-stroke-input-hover focus:border-input-stroke-selected disabled:cursor-not-allowed disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
                   onClick={toggleDropdown}
+                  disabled={defaultCompany !== undefined}
                 >
                   <p className="px-12px py-10px text-base font-medium">
                     {company?.name || t('dashboard:TODO_LIST_PAGE.SELECT_COMPANY')}
                   </p>
 
-                  <div className="px-12px py-10px">
-                    {isDropdownOpen ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
-                  </div>
+                  {defaultCompany === undefined && (
+                    <div className="px-12px py-10px">
+                      {isDropdownOpen ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
+                    </div>
+                  )}
                 </button>
 
                 {isDropdownOpen && (
