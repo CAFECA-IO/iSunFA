@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data';
 import { useUserCtx } from '@/contexts/user_context';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import CreateTodoModal from '@/components/beta/todo_list_page/create_todo_modal';
 
 const TASKS_ICON = [
   {
@@ -21,10 +22,18 @@ const TASKS_ICON = [
   },
 ];
 
-const PendingTaskForCompany = () => {
+interface PendingTaskForCompanyProps {
+  getTodoList: () => Promise<void>;
+}
+
+const PendingTaskForCompany = ({ getTodoList }: PendingTaskForCompanyProps) => {
   const { t } = useTranslation('dashboard');
   const { selectedCompany } = useUserCtx();
-  const [companyPendingTask, setCompanyPendingTask] = useState<IPendingTask>();
+  const [companyPendingTask, setCompanyPendingTask] = useState<IPendingTask | null>(null);
+  const [isCreateTodoModalOpen, setIsCreateTodoModalOpen] = useState(false);
+  const [defaultTodoName, setDefaultTodoName] = useState('');
+
+  const toggleCreateTodoModal = () => setIsCreateTodoModalOpen((prev) => !prev);
 
   // Info: (20241127 - Liz) 打 API 取得使用者的待辦任務(公司)
   const { trigger: getCompanyPendingTaskAPI } = APIHandler<IPendingTask>(
@@ -40,7 +49,7 @@ const PendingTaskForCompany = () => {
           params: { companyId: selectedCompany.id },
         });
 
-        if (success && data) {
+        if (success) {
           setCompanyPendingTask(data);
         } else {
           // Deprecated: (20241127 - Liz)
@@ -57,8 +66,10 @@ const PendingTaskForCompany = () => {
     getCompanyPendingTask();
   }, [selectedCompany]);
 
-  const handleAddEvent = () => {
-    // ToDo: (20241105 - Liz)
+  const handleAddEvent = (title: string) => {
+    toggleCreateTodoModal();
+    const translatedTodoName = t(`dashboard:DASHBOARD.${title}`);
+    setDefaultTodoName(translatedTodoName);
   };
 
   if (!companyPendingTask) {
@@ -131,13 +142,23 @@ const PendingTaskForCompany = () => {
             <button
               type="button"
               className="text-sm font-semibold text-link-text-primary"
-              onClick={handleAddEvent}
+              onClick={() => handleAddEvent(task.title)}
             >
               {t('dashboard:DASHBOARD.ADD_EVENT')}
             </button>
           </section>
         ))}
       </section>
+
+      {/* Info: (20241220 - Liz) Modal */}
+      {isCreateTodoModalOpen && (
+        <CreateTodoModal
+          toggleModal={toggleCreateTodoModal}
+          getTodoList={getTodoList}
+          defaultTodoName={defaultTodoName}
+          defaultCompany={selectedCompany ?? undefined}
+        />
+      )}
     </section>
   );
 };

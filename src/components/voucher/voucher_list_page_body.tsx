@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { LuPlus } from 'react-icons/lu';
@@ -9,17 +9,20 @@ import Pagination from '@/components/pagination/pagination';
 import { EventType } from '@/constants/account';
 import Tabs from '@/components/tabs/tabs';
 import { APIName } from '@/constants/api_connection';
-import { IVoucherBeta } from '@/interfaces/voucher';
+import { IVoucherBeta, IVoucherUI } from '@/interfaces/voucher';
 import { useUserCtx } from '@/contexts/user_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { VoucherListTabV2 } from '@/constants/voucher';
+import { ToastType } from '@/interfaces/toastify';
 
 const VoucherListPageBody: React.FC = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
+  const { toastHandler } = useModalContext();
 
   const [activeTab, setActiveTab] = useState<VoucherListTabV2>(VoucherListTabV2.UPLOADED);
   const [page, setPage] = useState(1);
@@ -36,7 +39,7 @@ const VoucherListPageBody: React.FC = () => {
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
   const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
   const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
-  const [voucherList, setVoucherList] = useState<IVoucherBeta[]>([]);
+  const [voucherList, setVoucherList] = useState<IVoucherUI[]>([]);
 
   useEffect(() => {
     setOtherSorts([
@@ -53,21 +56,41 @@ const VoucherListPageBody: React.FC = () => {
   const params = { companyId: selectedCompany?.id ?? FREE_COMPANY_ID };
   const tabQuery = activeTab === VoucherListTabV2.UPLOADED ? 'uploaded' : 'upcoming';
 
-  const handleApiResponse = (
-    data: IPaginatedData<{
-      unRead: {
-        uploadedVoucher: number;
-        upcomingEvents: number;
-      };
-      vouchers: IVoucherBeta[];
-    }>
-  ) => {
-    setPage(data.page);
-    setUnRead(data.data.unRead);
-    setTotalPages(data.totalPages);
-    setTotalCount(data.totalCount);
-    setVoucherList(data.data.vouchers);
-  };
+  const handleApiResponse = useCallback(
+    (
+      data: IPaginatedData<{
+        unRead: {
+          uploadedVoucher: number;
+          upcomingEvents: number;
+        };
+        vouchers: IVoucherBeta[];
+      }>
+    ) => {
+      try {
+        setPage(data.page);
+        setUnRead(data.data.unRead);
+        setTotalPages(data.totalPages);
+        setTotalCount(data.totalCount);
+
+        const voucherListUI: IVoucherUI[] = data.data.vouchers.map((voucher) => {
+          return {
+            ...voucher,
+            isSelected: false,
+          };
+        });
+
+        setVoucherList(voucherListUI);
+      } catch (error) {
+        toastHandler({
+          id: 'voucher-list-error',
+          type: ToastType.ERROR,
+          content: 'Get voucher list failed',
+          closeable: true,
+        });
+      }
+    },
+    [activeTab]
+  );
 
   const tabClick = (tab: string) => setActiveTab(tab as VoucherListTabV2);
 

@@ -1,6 +1,6 @@
 import { IPayment } from '@/interfaces/payment';
 import { EventType } from '@/constants/account';
-import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
+import { ICounterPartyEntity, ICounterpartyOptional } from '@/interfaces/counterparty';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 
@@ -22,7 +22,7 @@ export interface IInvoice {
 export interface IInvoiceBeta {
   id: number;
   isComplete: boolean;
-  counterParty: ICounterparty;
+  counterParty: ICounterpartyOptional;
   inputOrOutput: InvoiceTransactionDirection;
   date: number;
   no: string;

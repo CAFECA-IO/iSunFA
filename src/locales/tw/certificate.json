@@ -137,7 +137,8 @@
     "COMPLETED": "完成",
     "USE_YOUR_PHONE_AS": "使用您的手機作為",
     "SCANNER": "掃描器",
-    "SCAN_THE_QRCODE": "請掃描二維碼開始用手機掃描"
+    "SCAN_THE_QRCODE": "請掃描二維碼開始用手機掃描",
+    "FILE_SIZE_EXCEEDED": "檔案大小超過 4 MB 上限"
   },
   "CREATE": {
     "FAILED": "創建失敗"

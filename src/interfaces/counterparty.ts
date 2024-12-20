@@ -12,6 +12,8 @@ export interface ICounterparty {
   updatedAt: number;
 }
 
+export type ICounterpartyOptional = Partial<ICounterparty>;
+
 export const dummyCounterparty: ICounterparty[] = [
   {
     id: 2,

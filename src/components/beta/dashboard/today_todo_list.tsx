@@ -7,6 +7,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ICompanyAndRole } from '@/interfaces/company';
+import { ITodoCompany } from '@/interfaces/todo';
 
 const ToDoListNotLink = () => {
   const { t } = useTranslation('dashboard');
@@ -30,7 +31,11 @@ const ToDoListNotLink = () => {
   );
 };
 
-const TodayTodoList = () => {
+interface TodayTodoListProps {
+  todayTodoList: ITodoCompany[];
+}
+
+const TodayTodoList = ({ todayTodoList }: TodayTodoListProps) => {
   const [companyList, setCompanyList] = useState<ICompanyAndRole[]>([]);
 
   // Info: (20241122 - Liz) 判斷是否有公司列表
@@ -84,7 +89,7 @@ const TodayTodoList = () => {
 
   return (
     <DashboardCardLayout>
-      <TodayTodoListData />
+      <TodayTodoListData todayTodoList={todayTodoList} />
     </DashboardCardLayout>
   );
 };
