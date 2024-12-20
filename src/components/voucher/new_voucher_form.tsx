@@ -89,49 +89,21 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const temporaryAssetListByUser = temporaryAssetList[companyId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
-  const {
-    trigger: askAI,
-    success: askSuccess,
-    data: askData,
-    isLoading: isAskingAI,
-  } = APIHandler<{
+  const { trigger: askAI, isLoading: isAskingAI } = APIHandler<{
     reason: string;
     resultId: string;
   }>(APIName.ASK_AI_V2);
 
   // Info: (20241108 - Julian) GET AI RESULT
-  const {
-    trigger: getAIResult,
-    data: resultData,
-    isLoading: isAIWorking,
-    success: analyzeSuccess,
-  } = APIHandler<IAIResultVoucher>(APIName.ASK_AI_RESULT_V2);
+  const { trigger: getAIResult, success: analyzeSuccess } = APIHandler<IAIResultVoucher>(
+    APIName.ASK_AI_RESULT_V2
+  );
 
   const {
     trigger: createVoucher,
     success: createSuccess,
     isLoading: isCreating,
   } = APIHandler(APIName.VOUCHER_POST_V2);
-
-  // Info: (20241108 - Julian) 取得 AI 分析結果
-  const {
-    voucherDate: aiVoucherDate,
-    type: aiType,
-    note: aiNote,
-    counterParty: aiCounterParty,
-    lineItems: aiLineItems,
-  } = resultData ?? dummyAIResult;
-
-  const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
-
-  const aiTotalCredit = aiLineItems.reduce(
-    (acc, item) => (item.debit === false ? acc + item.amount : acc),
-    0
-  );
-  const aiTotalDebit = aiLineItems.reduce(
-    (acc, item) => (item.debit === true ? acc + item.amount : acc),
-    0
-  );
 
   // Info: (20241105 - Julian) 從 useAccountingCtx 取得反轉傳票
   const reverses = Object.values(reverseList).flatMap((reverse) => reverse);
@@ -180,7 +152,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241018 - Tzuhan) AI 分析相關 state
   const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
   const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
-  const [apiInterval, setApiInterval] = useState<NodeJS.Timeout | null>(null);
+  const [targetIdList, setTargetIdList] = useState<number[]>([]);
+  const [resultId, setResultId] = useState<string>('');
+  const [resultData, setResultData] = useState<IAIResultVoucher | null>(null);
 
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
@@ -189,6 +163,57 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+
+  // Info: (20241108 - Julian) 取得 AI 分析結果
+  const {
+    voucherDate: aiVoucherDate,
+    type: aiType,
+    note: aiNote,
+    counterParty: aiCounterParty,
+    lineItems: aiLineItems,
+  } = resultData ?? dummyAIResult;
+
+  const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
+
+  const aiTotalCredit = aiLineItems.reduce(
+    (acc, item) => (item.debit === false ? acc + item.amount : acc),
+    0
+  );
+  const aiTotalDebit = aiLineItems.reduce(
+    (acc, item) => (item.debit === true ? acc + item.amount : acc),
+    0
+  );
+
+  const getResult = useCallback(async () => {
+    // Info: (20241220 - Julian) 問 AI 分析結果
+    const analysisResult = await getAIResult({
+      params: { companyId, resultId },
+      query: { reason: 'voucher' },
+    });
+
+    if (analysisResult.data) {
+      setResultData(analysisResult.data);
+      setAiState(AIState.FINISH);
+    } else {
+      setAiState(AIState.FAILED);
+    }
+  }, [resultId]);
+
+  // Info: (20241220 - Julian) 從 resultId 判斷是否已經 POST 成功
+  const askAIAnalysis = async (targetIds: number[]) => {
+    const aiResult = await askAI({
+      params: { companyId },
+      query: { reason: 'voucher' },
+      body: { targetIdList: targetIds },
+    });
+
+    setResultId(aiResult.data?.resultId ?? '');
+  };
+
+  useEffect(() => {
+    // Info: (20241220 - Julian) 如果有 resultId，則問 AI 分析結果
+    if (resultId) getResult();
+  }, [resultId]);
 
   // Info: (20241018 - Tzuhan) 選擇憑證
   const handleSelect = useCallback(
@@ -210,12 +235,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       setCertificates(updatedData);
       setSelectedCertificates(selectedCerts);
 
-      const targetIdList = selectedCerts.map((item) => item.file.id);
+      const targetIds = selectedCerts.map((item) => item.file.id);
+      setTargetIdList(targetIds);
 
       // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
       setAiState(AIState.WORKING);
       // Info: (20241021 - Julian) 呼叫 ask AI
-      askAI({ params: { companyId }, query: { reason: 'voucher' }, body: { targetIdList } });
+      askAIAnalysis(targetIds);
+      // askAI({ params: { companyId }, query: { reason: 'voucher' }, body: { targetIdList } });
     },
     [certificates]
   );
@@ -240,70 +267,10 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     [certificates]
   );
 
-  // useEffect(() => {
-  //   if (selectedCertificates.length > 0 && selectedIds.length > 0) {
-  //     // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
-  //     setAiState(AIState.WORKING);
-  //     // Info: (20241021 - Julian) 呼叫 ask AI
-  //     askAI({
-  //       params: { companyId },
-  //       query: { reason: 'voucher' },
-  //       body: { targetIdList: [100] },
-  //     });
-  //   }
-  // }, [selectedCertificates, selectedIds]);
-
-  const handleGetAIResult = useCallback(() => {
-    // Info: (20241128 - Julian) 用 ResultId 來問 AI 分析結果，持續問到有結果為止；若 aiState !== AIState.WORKING 則停止問
-    const interval = setInterval(async () => {
-      getAIResult({
-        params: { companyId, resultId: askData?.resultId },
-        query: { reason: 'voucher' },
-      });
-    }, 5000);
-
-    setApiInterval(interval);
-  }, [askData]);
-
   useEffect(() => {
-    if (aiState === AIState.WORKING) {
-      // Info: (20241128 - Julian) 問 AI 分析結果
-      handleGetAIResult();
-    } else if (apiInterval) {
-      // Info: (20241128 - Julian) 如果 AI 分析結束，則停止問 API
-      clearInterval(apiInterval);
-    }
-  }, [aiState]);
-
-  // Info: (20241128 - Julian) 取得 AI 分析結果
-  useEffect(() => {
-    if (isAskingAI === false) {
-      if (askSuccess === false || askData?.resultId === 'fetchAIResultIdError') {
-        //  Info: (20241021 - Julian) AI 分析失敗
-        setAiState(AIState.FAILED);
-      } else if (askSuccess && askData) {
-        //  Info: (20241021 - Julian) AI 分析中
-        setAiState(AIState.WORKING);
-      }
-    }
-  }, [askSuccess, askData, isAskingAI]);
-
-  // Info: (20241021 - Julian) AI 分析結果
-  useEffect(() => {
-    if (isAIWorking === false) {
-      if (resultData) {
-        setAiState(AIState.FINISH);
-      } else if (analyzeSuccess === false) {
-        // Info: (20241021 - Julian) AI 分析失敗
-        setAiState(AIState.FAILED);
-      }
-    }
-  }, [isAIWorking, resultData, analyzeSuccess]);
-
-  useEffect(() => {
-    const isReverse = reverses.length > 0;
+    const isReverse = voucherLineItems.some((item) => item.isReverse);
     setIsReverseRequired(isReverse);
-  }, [reverseList]);
+  }, [voucherLineItems]);
 
   // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
   const handleOpenSelectorModal = useCallback(() => {
@@ -508,11 +475,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const typeToggleHandler = () => setTypeVisible(!typeVisible);
 
-  // const counterSearchToggleHandler = () => {
-  //   setIsSearchCounterparty(!isSearchCounterparty);
-  //   setCounterMenuOpen(!isCounterMenuOpen);
-  // };
-
   const noteChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNote(e.target.value);
   };
@@ -593,11 +555,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const retryAIHandler = () => {
     setAiState(AIState.WORKING);
-    askAI({
-      params: { companyId },
-      query: { reason: 'voucher' },
-      body: { targetIdList: selectedIds },
-    });
+    if (resultId) {
+      // Info: (20241220 - Julian) 如果有 resultId，則直接 GET AI 分析結果
+      getResult();
+    } else {
+      // Info: (20241220 - Julian) 如果沒有 resultId，則重新 POST ASK AI
+      askAIAnalysis(targetIdList);
+    }
   };
 
   const saveVoucher = async () => {
