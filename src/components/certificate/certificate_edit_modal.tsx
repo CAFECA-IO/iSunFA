@@ -60,7 +60,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     totalPrice: certificate.invoice.totalPrice ?? 0,
     counterParty: certificate.invoice.counterParty,
     type: certificate.invoice.type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE,
-    deductible: certificate.invoice.deductible,
+    deductible: certificate.invoice.deductible ?? false,
   }));
 
   const isFormValid = useCallback(() => {
