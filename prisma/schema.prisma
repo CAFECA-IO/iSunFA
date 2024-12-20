@@ -16,8 +16,8 @@ model Account {
   liquidity      Boolean
   code           String
   name           String // Info: (20240625 - Murky) empty if is not sub account
-  forUserVoucher Boolean @map("for_user_voucher") // Info: (20240625 - Murky) is account the last layer of account tree
-  forUserLedger  Boolean @map("for_user_ledger") // Info: (20241218 - Shirley) is account able to show on ledger and trial balance
+  forUserVoucher Boolean @default(true) @map("for_user_voucher") // Info: (20240625 - Murky) is account the last layer of account tree
+  forUserLedger  Boolean @default(true) @map("for_user_ledger") // Info: (20241218 - Shirley) is account able to show on ledger and trial balance
   parentCode     String  @map("parent_code")
   rootCode       String  @map("root_code")
   parentId       Int     @map("parent_id")

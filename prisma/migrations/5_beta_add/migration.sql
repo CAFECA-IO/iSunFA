@@ -161,6 +161,7 @@ Step 2. account table
 2-7. 刪除 for_user 欄位
 2-8. 將預設會計科目的 for_user_voucher 改為 false，將自訂會計科目的 for_user_voucher 保留原本的值
 2-9. 在 for_user 為 true 的值，複製一份並將其設為複製對象的 children
+2-10. 在新增的欄位 "for_user_ledger", "for_user_voucher" 加上 default 值，讓以後沒有給值也能正常運作
 */
 
 
@@ -216,3 +217,7 @@ ALTER TABLE "account" DROP COLUMN "for_user";
 UPDATE "account"
 SET "for_user_voucher" = false
 WHERE "company_id" = 1002;
+
+-- 2-10. 在新增的欄位 "for_user_ledger", "for_user_voucher" 加上 default 值，讓以後沒有給值也能正常運作
+ALTER TABLE "account" ALTER COLUMN "for_user_ledger" SET DEFAULT true,
+ALTER COLUMN "for_user_voucher" SET DEFAULT true;
