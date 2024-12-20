@@ -7,7 +7,7 @@ import NumericInput from '@/components/numeric_input/numeric_input';
 import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
 import { InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
-import { ICounterparty } from '@/interfaces/counterparty';
+import { ICounterpartyOptional } from '@/interfaces/counterparty';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -16,16 +16,11 @@ import { IoCloseOutline } from 'react-icons/io5';
 import { BiSave } from 'react-icons/bi';
 import { LuTrash2 } from 'react-icons/lu';
 import { CurrencyType } from '@/constants/currency';
-import CounterpartyInput, { CounterpartyInputRef } from '@/components/voucher/counterparty_input';
+import CounterpartyInput, {
+  CounterpartyInputRef,
+} from '@/components/certificate/counterparty_input';
 import EditableFilename from '@/components/certificate/edible_file_name';
 import Magnifier from '@/components/magnifier/magifier';
-
-enum TaxRatio {
-  Z = 0,
-  F = 5,
-  T = 10,
-  FT = 15,
-}
 
 interface CertificateEditModalProps {
   isOpen: boolean;
@@ -62,7 +57,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     date: certificate.invoice.date,
     no: certificate.invoice.no,
     priceBeforeTax: certificate.invoice.priceBeforeTax ?? 0,
-    taxRatio: certificate.invoice.taxRatio ?? TaxRatio.Z,
+    taxRatio: certificate.invoice.taxRatio ?? 0,
     taxPrice: certificate.invoice.taxPrice ?? 0,
     totalPrice: certificate.invoice.totalPrice ?? 0,
     counterParty: certificate.invoice.counterParty,
@@ -71,14 +66,13 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   }));
 
   const isFormValid = useCallback(() => {
-    const { no, date: formDate, priceBeforeTax, taxPrice, totalPrice, counterParty } = formState;
+    const { no, date: formDate, priceBeforeTax, totalPrice, counterParty } = formState;
     return (
       no &&
       no.trim() !== '' &&
       formDate &&
       formDate > 0 &&
       priceBeforeTax > 0 &&
-      taxPrice >= 0 &&
       totalPrice > 0 &&
       counterParty !== undefined
     );
@@ -87,7 +81,13 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const handleInputChange = useCallback(
     (
       field: keyof typeof formState,
-      value: string | number | InvoiceTransactionDirection | ICounterparty | InvoiceType | boolean
+      value:
+        | string
+        | number
+        | InvoiceTransactionDirection
+        | ICounterpartyOptional
+        | InvoiceType
+        | boolean
     ) => {
       setFormState((prev) => ({ ...prev, [field]: value }));
     },
@@ -122,7 +122,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     handleInputChange('totalPrice', value + updateTaxPrice);
   };
 
-  const selectTaxHandler = (value: TaxRatio) => {
+  const selectTaxHandler = (value: number) => {
     handleInputChange('taxRatio', value);
     const updateTaxPrice = Math.round((formState.priceBeforeTax * value) / 100);
     handleInputChange('taxPrice', updateTaxPrice);
@@ -326,12 +326,12 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxRatioMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                   >
                     <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary p-8px">
-                      {Object.values(TaxRatio).map((value) => (
+                      {[0, 5, 10, 15].map((value) => (
                         <li
                           key={`taxable-${value}`}
                           value={value}
                           className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
-                          onClick={selectTaxHandler.bind(null, value as TaxRatio)}
+                          onClick={() => selectTaxHandler(value)}
                         >
                           {t('certificate:EDIT.TAXABLE')} {value}%
                         </li>
@@ -398,7 +398,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
             <CounterpartyInput
               ref={counterpartyInputRef}
               counterparty={formState.counterParty}
-              onSelect={(cp: ICounterparty) => handleInputChange('counterParty', cp)}
+              onSelect={(cp: ICounterpartyOptional) => handleInputChange('counterParty', cp)}
               onTriggerSave={onTriggerSave}
             />
 
