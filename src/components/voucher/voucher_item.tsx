@@ -60,35 +60,39 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
 
   const displayedNote = <p className="relative top-20px">{note}</p>;
 
-  const accounting = lineItemsInfo.lineItems.map((item) => item.account);
-  const credit = lineItemsInfo.lineItems.filter((item) => !item.debit).map((item) => item.amount);
-  const debit = lineItemsInfo.lineItems.filter((item) => item.debit).map((item) => item.amount);
+  // Info: (20241220 - Julian) 借方排在前面，貸方排在後面
+  const lineItems = lineItemsInfo.lineItems.sort((a, b) => {
+    if (a.debit && !b.debit) return -1; // Info: (20241220 - Julian) 若 a 為借方，b 為貸方，把 a 排在前面
+    if (!a.debit && b.debit) return 1; // Info: (20241220 - Julian) 若 a 為貸方，b 為借方，把 b 排在前面
+    return 0; // Info: (20241220 - Julian) 若 a 與 b 同為借方或同為貸方，保持原本順序
+  });
+
+  //  Info: (20241220 - Julian) 會計科目
+  const accounting = lineItems.map((item) => item.account);
+
+  // Info: (20241220 - Julian) 借貸金額
+  const credit = lineItems.map((item) => (item.debit ? 0 : item.amount));
+  const debit = lineItems.map((item) => (item.debit ? item.amount : 0));
 
   const displayedAccounting = (
     <div className="flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
-      {accounting.map((account, index) => (
-        // Deprecated: (20240924 - Julian) array index as key
-        // eslint-disable-next-line react/no-array-index-key
-        <p key={index}>
+      {accounting.map((account) => (
+        <p key={account?.code}>
           {account?.code} - {account?.name}
         </p>
       ))}
     </div>
   );
 
-  const displayedCredit = (
+  const displayedDebit = (
     <>
-      <div className="flex flex-col">
-        {/* Info: (20240920 - Julian) credit */}
-        {credit.map((cre) => (
-          <p key={cre} className="text-text-neutral-primary">
-            {numberWithCommas(cre)}
-          </p>
-        ))}
-        {/* Info: (20240920 - Julian) debit */}
-        {debit.map((d) => (
-          <p key={d} className="text-text-neutral-tertiary">
-            0
+      <div className="flex flex-col text-right">
+        {debit.map((de) => (
+          <p
+            key={de}
+            className={de === 0 ? 'text-text-neutral-tertiary' : 'text-text-neutral-primary'}
+          >
+            {numberWithCommas(de)}
           </p>
         ))}
       </div>
@@ -96,25 +100,21 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     </>
   );
 
-  const displayedDebit = (
+  const displayedCredit = (
     <>
-      <div className="flex flex-col">
-        {/* Info: (20240920 - Julian) credit */}
-        {credit.map((c) => (
-          <p key={c} className="text-text-neutral-tertiary">
-            0
-          </p>
-        ))}
-        {/* Info: (20240920 - Julian) debit */}
-        {debit.map((de) => (
-          <p key={de} className="text-text-neutral-primary">
-            {numberWithCommas(de)}
+      <div className="flex flex-col text-right">
+        {credit.map((cre) => (
+          <p
+            key={cre}
+            className={cre === 0 ? 'text-text-neutral-tertiary' : 'text-text-neutral-primary'}
+          >
+            {numberWithCommas(cre)}
           </p>
         ))}
       </div>
       <hr className="my-10px border-divider-stroke-lv-1" />
       {/* Info: (20240920 - Julian) Total */}
-      <p className="text-text-neutral-primary">{numberWithCommas(total)}</p>
+      <p className="text-right text-text-neutral-primary">{numberWithCommas(total)}</p>
     </>
   );
 
@@ -144,6 +144,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
             type="checkbox"
             className={checkboxStyle}
             checked={isSelected}
+            onClick={(e) => e.stopPropagation()} // Info: (20241220 - Julian) 防止點擊 checkbox 時觸發 Link
             onChange={checkboxHandler}
           />
         </div>
@@ -156,10 +157,10 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       <div className="table-cell text-center">{displayedNote}</div>
       {/* Info: (20240920 - Julian) Accounting */}
       <div className="table-cell">{displayedAccounting}</div>
-      {/* Info: (20240920 - Julian) Credit */}
-      <div className="table-cell">{displayedCredit}</div>
       {/* Info: (20240920 - Julian) Debit */}
       <div className="table-cell">{displayedDebit}</div>
+      {/* Info: (20240920 - Julian) Credit */}
+      <div className="table-cell">{displayedCredit}</div>
       {/* Info: (20240920 - Julian) Counterparty */}
       <div className="table-cell">{displayedCounterparty}</div>
       {/* Info: (20240920 - Julian) Issuer */}

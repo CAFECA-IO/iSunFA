@@ -137,7 +137,8 @@
     "COMPLETED": "Complete",
     "USE_YOUR_PHONE_AS": "Use Your Phone as ",
     "SCANNER": "Scanner",
-    "SCAN_THE_QRCODE": "Please scan the QRcode to start scanning with your phone"
+    "SCAN_THE_QRCODE": "Please scan the QRcode to start scanning with your phone",
+    "FILE_SIZE_EXCEEDED": "File size exceeded 4 MB limit"
   },
   "CREATE": {
     "FAILED": "Failed to create certificate"
