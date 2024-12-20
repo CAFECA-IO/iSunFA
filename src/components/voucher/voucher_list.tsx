@@ -242,8 +242,8 @@ const VoucherList: React.FC<IVoucherListProps> = ({
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.ACCOUNTING')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedCredit}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDebit}</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedCredit}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.COUNTRYPARTY')}
             </div>
