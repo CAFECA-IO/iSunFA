@@ -83,6 +83,11 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
         const formData = new FormData();
         formData.append('file', file);
         const targetSize = 1 * 1024 * 1024; // Info: (20241206 - tzuhan) 1MB
+        const maxSize = 4 * 1024 * 1024;
+        if (file.size > maxSize) {
+          handleUploadFailed(file.name, new Error(t('certificate:UPLOAD.FILE_SIZE_EXCEEDED')));
+          return;
+        }
         const compressedFile = await compressImageToTargetSize(file, targetSize);
 
         setFiles((prevFiles) => [
