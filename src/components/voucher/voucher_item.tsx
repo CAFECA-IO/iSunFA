@@ -144,6 +144,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
             type="checkbox"
             className={checkboxStyle}
             checked={isSelected}
+            onClick={(e) => e.stopPropagation()} // Info: (20241220 - Julian) 防止點擊 checkbox 時觸發 Link
             onChange={checkboxHandler}
           />
         </div>
