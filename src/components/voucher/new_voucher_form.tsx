@@ -242,7 +242,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       setAiState(AIState.WORKING);
       // Info: (20241021 - Julian) 呼叫 ask AI
       askAIAnalysis(targetIds);
-      // askAI({ params: { companyId }, query: { reason: 'voucher' }, body: { targetIdList } });
     },
     [certificates]
   );
