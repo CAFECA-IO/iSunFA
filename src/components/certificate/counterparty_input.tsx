@@ -180,10 +180,12 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       if (e.target.id === 'counterparty-tax-id') {
         taxId = e.target.value;
         setSearchTaxId(taxId);
+        onSelect({ taxId, name: searchName });
       }
       if (e.target.id === 'counterparty-name') {
         name = e.target.value;
         setSearchName(name);
+        onSelect({ name, taxId: searchTaxId });
       }
       const filteredList = counterpartyList.filter((party) => {
         // Info: (20241209 - Julian) 編號(數字)搜尋: 字首符合
