@@ -9,11 +9,15 @@ import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useModalContext } from '@/contexts/modal_context';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { IVoucherBeta, IVoucherUI } from '@/interfaces/voucher';
+import { useUserCtx } from '@/contexts/user_context';
+import { IVoucherUI } from '@/interfaces/voucher';
 import { MessageType } from '@/interfaces/message_modal';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IVoucherListProps {
-  voucherList: IVoucherBeta[];
+  voucherList: IVoucherUI[];
   creditSort: null | SortOrder;
   setCreditSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
   debitSort: null | SortOrder;
@@ -32,20 +36,15 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   setDateSort,
 }) => {
   const { t } = useTranslation('common');
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+  const { selectedCompany } = useUserCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
-
-  const defaultVoucherList: IVoucherUI[] = voucherList.map((voucher) => {
-    return {
-      ...voucher,
-      isSelected: false,
-    };
-  });
 
   // Info: (20241022 - Julian) checkbox 是否開啟
   const [isCheckBoxOpen, setIsCheckBoxOpen] = useState(false);
   // Info: (20241022 - Julian) IVoucherBeta[] 轉換成 IVoucherUI[]
-  const [uiVoucherList, setUiVoucherList] = useState<IVoucherUI[]>(defaultVoucherList);
+  const [uiVoucherList, setUiVoucherList] = useState<IVoucherUI[]>(voucherList);
   // Info: (20241022 - Julian) 全選狀態
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   // Info: (20241022 - Julian) 被選中的 voucher
@@ -55,6 +54,14 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const tableCellStyles = 'table-cell text-center align-middle';
   const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
   const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
+
+  // Info: (20241029 - Julian) Delete voucher API
+  const {
+    trigger: deleteVoucher,
+    isLoading: isDeleting,
+    success: deleteSuccess,
+    error: deleteError,
+  } = APIHandler(APIName.VOUCHER_DELETE_V2);
 
   const selectToggleHandler = () => setIsCheckBoxOpen((prev) => !prev);
 
@@ -102,6 +109,50 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     });
   };
 
+  // Info: (20241220 - Julian) 刪除功能
+  const removeVoucher = async () => {
+    // Info: (20241220 - Julian) 避免重複送出
+    if (!isDeleting) {
+      selectedVoucherList.forEach((voucher) => {
+        deleteVoucher({
+          params: { companyId: selectedCompany?.id, voucherId: voucher.id },
+        });
+      });
+
+      messageModalVisibilityHandler();
+    }
+  };
+
+  // Info: (20241220 - Julian) 刪除按鈕
+  const removeVoucherHandler = () => {
+    if (selectedVoucherList.length === 0) {
+      // Info: (20241220 - Julian) 未選擇 voucher 警告
+      messageModalDataHandler({
+        messageType: MessageType.WARNING,
+        title: 'Warning',
+        content: 'Please select at least one voucher to delete',
+        submitBtnStr: t('common:COMMON.OK'),
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    } else {
+      // Info: (20241220 - Julian) 顯示刪除確認視窗
+      messageModalDataHandler({
+        messageType: MessageType.WARNING,
+        title: 'Warning',
+        content: 'Are you sure you want to delete the selected voucher?',
+        submitBtnStr: 'Delete',
+        submitBtnFunction: removeVoucher,
+      });
+      messageModalVisibilityHandler();
+    }
+  };
+
+  // Info: (20241220 - Julian) 更新 voucherList
+  useEffect(() => {
+    setUiVoucherList(voucherList);
+  }, [voucherList]);
+
   useEffect(() => {
     // Info: (20241022 - Julian) 更新被選中的 voucher
     setSelectedVoucherList(uiVoucherList.filter((voucher) => voucher.isSelected === true));
@@ -112,25 +163,25 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     setIsSelectedAll(selectedCount === totalCount);
   }, [uiVoucherList]);
 
-  // ToDo: (20241022 - Julian) 刪除功能
-  const removeVoucherHandler = () => {
-    if (selectedVoucherList.length === 0) {
-      messageModalDataHandler({
-        messageType: MessageType.WARNING,
-        title: 'Warning',
-        content: 'Please select at least one voucher to delete',
-        submitBtnStr: t('common:COMMON.OK'),
-        submitBtnFunction: () => messageModalVisibilityHandler(),
+  useEffect(() => {
+    if (deleteSuccess) {
+      // Info: (20241220 - Julian) 刪除成功
+      toastHandler({
+        id: 'delete-voucher-success',
+        type: ToastType.SUCCESS,
+        content: 'Delete vouchers successfully',
+        closeable: true,
       });
-      messageModalVisibilityHandler();
-    } else {
-      // eslint-disable-next-line no-console
-      console.log(
-        'remove voucher:\n',
-        selectedVoucherList.map((voucher) => voucher.id)
-      );
+    } else if (deleteError) {
+      // Info: (20241220 - Julian) 刪除失敗
+      toastHandler({
+        id: 'delete-voucher-error',
+        type: ToastType.ERROR,
+        content: 'Delete vouchers failed',
+        closeable: true,
+      });
     }
-  };
+  }, [deleteSuccess, deleteError]);
 
   // Info: (20240920 - Julian) 日期排序按鈕
   const displayedDate = SortingButton({
@@ -242,8 +293,8 @@ const VoucherList: React.FC<IVoucherListProps> = ({
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.ACCOUNTING')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedCredit}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDebit}</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedCredit}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.COUNTRYPARTY')}
             </div>
