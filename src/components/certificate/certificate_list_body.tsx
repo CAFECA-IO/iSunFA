@@ -367,22 +367,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       try {
         const { invoice } = certificate;
 
-        const invoicePayload = {
-          certificateId: certificate.id,
-          counterPartyId: invoice.counterParty?.id,
-          inputOrOutput: invoice.inputOrOutput,
-          date: invoice.date,
-          no: invoice.no,
-          currencyAlias: invoice.currencyAlias || currency,
-          priceBeforeTax: invoice.priceBeforeTax,
-          taxType: invoice.taxType,
-          taxRatio: invoice.taxRatio,
-          taxPrice: invoice.taxPrice,
-          totalPrice: invoice.totalPrice,
-          type: invoice.type,
-          deductible: invoice.deductible,
-        };
-
         const postOrPutAPI = invoice.id
           ? updateCertificateAPI({
               params: { companyId, invoiceId: invoice.id },
@@ -390,7 +374,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             })
           : createCertificateAPI({
               params: { companyId },
-              body: invoicePayload,
+              body: invoice,
             });
 
         const { success, data: updatedCertificate } = await postOrPutAPI;

@@ -203,7 +203,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         return true;
       });
       setFilteredCounterpartyList(filteredList);
-
+      setIsLoadingCounterparty(true);
       const { success, data } = await fetchCompanyDataAPI({
         query: {
           name,
@@ -213,6 +213,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       if (success) {
         setSearchedCompany(data || undefined);
       }
+      setIsLoadingCounterparty(false);
     };
 
     const counterpartyInput =
@@ -294,7 +295,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
             {searchedCompany && (
               <button
                 type="button"
-                onClick={() => counterpartyClickHandler(searchedCompany)}
+                onClick={() => counterpartyClickHandler(searchedCompany as ICounterpartyOptional)}
                 className="flex w-full text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
               >
                 <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">
