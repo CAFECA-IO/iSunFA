@@ -40,8 +40,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const params = { companyId: selectedCompany?.id };
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { trigger: updateCertificateAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
-  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.INVOICE_POST_V2);
+  const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
+  const { trigger: createInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_POST_V2);
   const { trigger: deleteCertificatesAPI } = APIHandler<number[]>(
     APIName.CERTIFICATE_DELETE_MULTIPLE_V2
   ); // Info: (20241128 - Murky) @tzuhan 這邊會回傳成功被刪掉的certificate
@@ -368,12 +368,12 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         const { invoice } = certificate;
 
         const postOrPutAPI = invoice.id
-          ? updateCertificateAPI({
-              params: { companyId, invoiceId: invoice.id },
+          ? updateInvoiceAPI({
+              params: { companyId, certificateId: certificate.id, invoiceId: invoice.id },
               body: invoice,
             })
-          : createCertificateAPI({
-              params: { companyId },
+          : createInvoiceAPI({
+              params: { companyId, certificateId: certificate.id },
               body: invoice,
             });
 
