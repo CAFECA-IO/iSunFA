@@ -137,7 +137,8 @@
     "COMPLETED": "完成",
     "USE_YOUR_PHONE_AS": "使用您的手机作为",
     "SCANNER": "扫描器",
-    "SCAN_THE_QRCODE": "请扫描二维码开始用手机扫描"
+    "SCAN_THE_QRCODE": "请扫描二维码开始用手机扫描",
+    "FILE_SIZE_EXCEEDED": "文件大小超过 4 MB 上限"
   },
   "CREATE": {
     "FAILED": "创建失败"
