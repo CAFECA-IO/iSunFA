@@ -10,9 +10,17 @@ import { DefaultValue } from '@/constants/default_value';
 import { CounterpartyType } from '@/constants/counterparty';
 
 export async function postInvoiceV2(options: {
+  companyId: number;
+  isNeedToCreateNewCounterParty: boolean;
+  counterParty: {
+    name: string;
+    taxId: string;
+    type: CounterpartyType;
+    id?: number | undefined;
+    note?: string | undefined;
+  };
   nowInSecond: number;
   certificateId: number;
-  counterPartyId: number;
   inputOrOutput: InvoiceTransactionDirection;
   date: number;
   no: string;
@@ -28,7 +36,9 @@ export async function postInvoiceV2(options: {
   const {
     nowInSecond,
     certificateId,
-    counterPartyId,
+    companyId,
+    isNeedToCreateNewCounterParty,
+    counterParty,
     inputOrOutput,
     date,
     no,
@@ -52,11 +62,27 @@ export async function postInvoiceV2(options: {
             id: certificateId,
           },
         },
-        counterParty: {
-          connect: {
-            id: counterPartyId,
-          },
-        },
+        counterParty: isNeedToCreateNewCounterParty
+          ? {
+              create: {
+                company: {
+                  connect: {
+                    id: companyId,
+                  },
+                },
+                type: counterParty.type,
+                name: counterParty.name,
+                note: counterParty.note || '',
+                taxId: counterParty.taxId,
+                createdAt: nowInSecond,
+                updatedAt: nowInSecond,
+              },
+            }
+          : {
+              connect: {
+                id: counterParty.id!,
+              },
+            },
         inputOrOutput,
         date,
         no,

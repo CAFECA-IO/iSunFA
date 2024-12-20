@@ -1,3 +1,4 @@
+import { CounterpartyType } from '@/constants/counterparty';
 import { CurrencyType, OEN_CURRENCY } from '@/constants/currency';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -42,6 +43,23 @@ export const invoicePostApiUtils = {
     const counterParty = await getCounterpartyById(counterPartyId);
     return !!counterParty;
   },
+  isNeedToCreateNewCounterParty: async (counterPartyFromBody?: {
+    name: string;
+    taxId: string;
+    type: CounterpartyType;
+    id?: number | undefined;
+    note?: string | undefined;
+  }): Promise<boolean> => {
+    if (!counterPartyFromBody) return true;
+
+    const { id } = counterPartyFromBody;
+
+    if (!id) return true;
+
+    const isCounterPartyExistInDB = await invoicePostApiUtils.isCounterPartyExistInDB(id);
+
+    return !isCounterPartyExistInDB;
+  },
   getCurrencyFromSetting: async (companyId: number) => {
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
     const currencyKey =
@@ -50,9 +68,17 @@ export const invoicePostApiUtils = {
     return currency;
   },
   postInvoiceInPrisma: async (options: {
+    companyId: number;
+    isNeedToCreateNewCounterParty: boolean;
+    counterParty: {
+      name: string;
+      taxId: string;
+      type: CounterpartyType;
+      id?: number | undefined;
+      note?: string | undefined;
+    };
     nowInSecond: number;
     certificateId: number;
-    counterPartyId: number;
     inputOrOutput: InvoiceTransactionDirection;
     date: number;
     no: string;

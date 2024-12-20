@@ -15,7 +15,7 @@ import {
 } from '@/lib/utils/zod_schema/invoice';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
-import { CounterpartyType, PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
+import { CounterpartyType } from '@/constants/counterparty';
 import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
 
 const nullSchema = z.union([z.object({}), z.string()]);
@@ -252,12 +252,10 @@ export const certificateMultiDeleteSchema = {
  */
 const invoicePutV2QuerySchema = z.object({
   invoiceId: zodStringToNumber,
+  certificateId: zodStringToNumber,
 });
 
 const invoicePutV2BodySchema = z.object({
-  // id: z.number(),
-  certificateId: z.number().optional(),
-
   // Info: (20241220 - Murky) 如果沒有id 的話，就會自動創一個新的counterParty
   counterParty: z
     .object({
@@ -298,17 +296,26 @@ export const invoicePutV2Schema = {
   frontend: ICertificateValidator,
 };
 
+const invoicePostV2QuerySchema = z.object({
+  certificateId: zodStringToNumber,
+});
+
 export const invoicePostV2BodySchema = z.object({
-  certificateId: z.number(),
-  counterPartyId: z
-    .number()
-    .optional()
-    .transform((value) => {
-      if (value === undefined) {
-        return PUBLIC_COUNTER_PARTY.id;
-      }
-      return value;
-    }),
+  counterParty: z.object({
+    id: z.number().optional(),
+    name: z.string(),
+    taxId: z.string(),
+    note: z.string().optional(),
+    type: z
+      .nativeEnum(CounterpartyType)
+      .optional()
+      .transform((type) => {
+        if (!type) {
+          return CounterpartyType.SUPPLIER;
+        }
+        return type;
+      }),
+  }),
   inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
   date: z.number(),
   no: z.string(),
@@ -319,12 +326,15 @@ export const invoicePostV2BodySchema = z.object({
   taxPrice: z.number(),
   totalPrice: z.number(),
   type: z.nativeEnum(InvoiceType),
-  deductible: z.boolean(),
+  deductible: z
+    .boolean()
+    .optional()
+    .transform((data) => !!data),
 });
 
 export const invoicePostV2Schema = {
   input: {
-    querySchema: nullSchema,
+    querySchema: invoicePostV2QuerySchema,
     bodySchema: invoicePostV2BodySchema,
   },
   outputSchema: ICertificateValidator.strict(),
