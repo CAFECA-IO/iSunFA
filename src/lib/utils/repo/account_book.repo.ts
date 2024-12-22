@@ -148,26 +148,27 @@ async function initializeAccountBook(
     );
     if (node) {
       const debitAsset = node.debit;
-      const debitSide = (lineItem.debit && debitAsset) || (!lineItem.debit && !debitAsset);
+      const debitSide = debitAsset;
       loggerBack.warn(`會計科目 ${lineItem.accountId} ${node.debit ? '借方資產' : '貸方資產'}`);
 
       loggerBack.warn(`${debitSide ? '借方' : '貸方'}, ${lineItem.amount}`);
-      if (debitSide) {
-        debitTotal += lineItem.amount;
+      if (debitAsset) {
+        debitTotal += lineItem.debit ? lineItem.amount : -lineItem.amount;
       } else {
-        creditTotal += lineItem.amount;
+        creditTotal += !lineItem.debit ? lineItem.amount : -lineItem.amount;
       }
       loggerBack.warn(`借方: ${debitTotal}, 貸方: ${creditTotal}`);
       loggerBack.warn('----------');
       node.addData(lineItem);
     } else {
-      const debitSide = lineItem.debit;
+      const debitAsset = true;
+      const debitSide = debitAsset;
       loggerBack.warn(`找不到會計科目 ${lineItem.accountId}`);
       loggerBack.warn(`${debitSide ? '借方' : '貸方'}, ${lineItem.amount}`);
-      if (debitSide) {
-        debitTotal += lineItem.amount;
+      if (debitAsset) {
+        debitTotal += lineItem.debit ? lineItem.amount : -lineItem.amount;
       } else {
-        creditTotal += lineItem.amount;
+        creditTotal += !lineItem.debit ? lineItem.amount : -lineItem.amount;
       }
       loggerBack.warn(`借方: ${debitTotal}, 貸方: ${creditTotal}`);
       loggerBack.warn('----------');
