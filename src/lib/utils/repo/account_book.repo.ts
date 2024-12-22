@@ -140,8 +140,8 @@ async function initializeAccountBook(
       loggerBack.warn(`====== 傳票 ${currentVoucherId} ======`);
     }
     loggerBack.warn('----------');
-    // eslint-disable-next-line no-plusplus
-    loggerBack.warn(++x);
+    x += 1;
+    loggerBack.warn(x);
     const node = accountBook.findNode(lineItem.accountId);
     loggerBack.warn(
       `傳票 ${lineItem.voucherId} 會計科目 ${lineItem.accountId} ${lineItem.debit ? '借方' : '貸方'} ${lineItem.amount}`
