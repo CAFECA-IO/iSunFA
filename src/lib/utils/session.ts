@@ -11,12 +11,20 @@ const options = {
  */
 
 // export const getSession = nextSession<ISessionData>(options);
-export const getSession = () => {
+import { NextApiRequest, NextApiResponse } from 'next';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const getSession = (req: NextApiRequest, res: NextApiResponse) => {
   const session = {
+    id: 'session',
     userId: 10000006,
     companyId: 10000007,
     challenge: 'challenge',
     roleId: 1003,
+    cookie: {
+      httpOnly: true,
+      path: '/',
+      secure: true,
+    },
   };
   return session;
 };

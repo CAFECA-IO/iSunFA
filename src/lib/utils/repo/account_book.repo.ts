@@ -5,6 +5,7 @@ import { IAccountNode } from '@/interfaces/accounting_account';
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { isNodeCircularReference } from '@/lib/utils/account/common';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import loggerBack from '@/lib/utils/logger_back';
 
 /** Info: (20241129 - Shirley)
  * 1. 用 companyId & publicCompanyId 搜尋 account table 取得所有會計科目
@@ -107,14 +108,69 @@ async function initializeAccountBook(
     accountBook.insertNode(node);
   });
 
-  // Info: (20241129 - Shirley) 2. 取得並處理 vouchers 和 line items
-  const lineItems = await getVouchersWithLineItems(companyId, startTimestamp, endTimestamp);
+  // Info: (20241129 - Shirley) 2. 取得並處理 vouchers 和 line items 再根據 voucherId 排序
+  const lineItems = (await getVouchersWithLineItems(companyId, startTimestamp, endTimestamp)).sort(
+    (a, b) => a.voucherId - b.voucherId
+  );
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const summary = lineItems.reduce((acc: any, item: any) => {
+    if (item.amount) {
+      const accountId = item.accountId || 0;
+      acc[accountId] = acc[accountId] || { debit: 0, credit: 0 };
+      if (item.debit) {
+        acc[accountId].debit += item.amount;
+      } else {
+        acc[accountId].credit += item.amount;
+      }
+    }
+    return acc;
+  }, {});
+  loggerBack.warn(summary);
+
+  let x = 0;
+  let debitTotal = 0;
+  let creditTotal = 0;
+  let currentVoucherId = 0;
   // Info: (20241129 - Shirley) 2.1 將每個 voucher 的 line item 合併到對應的 account node
   lineItems.forEach((lineItem) => {
+    if (lineItem.voucherId !== currentVoucherId) {
+      currentVoucherId = lineItem.voucherId;
+      loggerBack.warn('');
+      loggerBack.warn(`====== 傳票 ${currentVoucherId} ======`);
+    }
+    loggerBack.warn('----------');
+    // eslint-disable-next-line no-plusplus
+    loggerBack.warn(++x);
     const node = accountBook.findNode(lineItem.accountId);
+    loggerBack.warn(
+      `傳票 ${lineItem.voucherId} 會計科目 ${lineItem.accountId} ${lineItem.debit ? '借方' : '貸方'} ${lineItem.amount}`
+    );
     if (node) {
+      const debitAsset = node.debit;
+      const debitSide = (lineItem.debit && debitAsset) || (!lineItem.debit && !debitAsset);
+      loggerBack.warn(`會計科目 ${lineItem.accountId} ${node.debit ? '借方資產' : '貸方資產'}`);
+
+      loggerBack.warn(`${debitSide ? '借方' : '貸方'}, ${lineItem.amount}`);
+      if (debitSide) {
+        debitTotal += lineItem.amount;
+      } else {
+        creditTotal += lineItem.amount;
+      }
+      loggerBack.warn(`借方: ${debitTotal}, 貸方: ${creditTotal}`);
+      loggerBack.warn('----------');
       node.addData(lineItem);
+    } else {
+      const debitSide = lineItem.debit;
+      loggerBack.warn(`找不到會計科目 ${lineItem.accountId}`);
+      loggerBack.warn(`${debitSide ? '借方' : '貸方'}, ${lineItem.amount}`);
+      if (debitSide) {
+        debitTotal += lineItem.amount;
+      } else {
+        creditTotal += lineItem.amount;
+      }
+      loggerBack.warn(`借方: ${debitTotal}, 貸方: ${creditTotal}`);
+      loggerBack.warn('----------');
     }
   });
 
