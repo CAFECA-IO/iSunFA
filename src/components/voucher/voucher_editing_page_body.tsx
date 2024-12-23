@@ -81,23 +81,15 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
   const temporaryAssetListByCompany = temporaryAssetList[companyId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
-  const {
-    trigger: askAI,
-    success: askSuccess,
-    data: askData,
-    isLoading: isAskingAI,
-  } = APIHandler<{
+  const { trigger: askAI, isLoading: isAskingAI } = APIHandler<{
     reason: string;
     resultId: string;
   }>(APIName.ASK_AI_V2);
 
   // Info: (20241108 - Julian) GET AI RESULT
-  const {
-    trigger: getAIResult,
-    data: resultData,
-    isLoading: isAIWorking,
-    success: analyzeSuccess,
-  } = APIHandler<IAIResultVoucher>(APIName.ASK_AI_RESULT_V2);
+  const { trigger: getAIResult, success: analyzeSuccess } = APIHandler<IAIResultVoucher>(
+    APIName.ASK_AI_RESULT_V2
+  );
 
   // Info: (20241118 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
   const {
@@ -117,26 +109,6 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
     success: createNewSuccess,
     isLoading: isCreating,
   } = APIHandler(APIName.VOUCHER_CREATE);
-
-  // Info: (20241108 - Julian) 取得 AI 分析結果
-  const {
-    voucherDate: aiVoucherDate,
-    type: aiType,
-    note: aiNote,
-    counterParty: aiCounterParty,
-    lineItems: aiLineItems,
-  } = resultData ?? dummyAIResult;
-
-  const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
-
-  const aiTotalCredit = aiLineItems.reduce(
-    (acc, item) => (item.debit === false ? acc + item.amount : acc),
-    0
-  );
-  const aiTotalDebit = aiLineItems.reduce(
-    (acc, item) => (item.debit === true ? acc + item.amount : acc),
-    0
-  );
 
   // Info: (20241118 - Julian) 將 API 回傳的資料轉換成 UI 顯示用的格式
   const {
@@ -211,6 +183,9 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
   // Info: (20241018 - Tzuhan) AI 分析相關 state
   const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
   const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
+  const [targetIdList, setTargetIdList] = useState<number[]>([]);
+  const [resultId, setResultId] = useState<string>('');
+  const [resultData, setResultData] = useState<IAIResultVoucher | null>(null);
 
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
@@ -222,12 +197,56 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
   const [selectedCertificatesUI, setSelectedCertificatesUI] =
     useState<ICertificateUI[]>(defaultCertificateUI);
 
-  // useEffect(() => {
-  //   // Info: (20241121 - Julian) Get voucher data when companyId is ready
-  //   if (companyId) {
-  //     getVoucherData();
-  //   }
-  // }, [companyId]);
+  // Info: (20241108 - Julian) 取得 AI 分析結果
+  const {
+    voucherDate: aiVoucherDate,
+    type: aiType,
+    note: aiNote,
+    counterParty: aiCounterParty,
+    lineItems: aiLineItems,
+  } = resultData ?? dummyAIResult;
+
+  const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
+
+  const aiTotalCredit = aiLineItems.reduce(
+    (acc, item) => (item.debit === false ? acc + item.amount : acc),
+    0
+  );
+  const aiTotalDebit = aiLineItems.reduce(
+    (acc, item) => (item.debit === true ? acc + item.amount : acc),
+    0
+  );
+
+  const getResult = useCallback(async () => {
+    // Info: (20241220 - Julian) 問 AI 分析結果
+    const analysisResult = await getAIResult({
+      params: { companyId, resultId },
+      query: { reason: 'voucher' },
+    });
+
+    if (analysisResult.data) {
+      setResultData(analysisResult.data);
+      setAiState(AIState.FINISH);
+    } else {
+      setAiState(AIState.FAILED);
+    }
+  }, [resultId]);
+
+  // Info: (20241220 - Julian) 從 resultId 判斷是否已經 POST 成功
+  const askAIAnalysis = async (targetIds: number[]) => {
+    const aiResult = await askAI({
+      params: { companyId },
+      query: { reason: 'voucher' },
+      body: { targetIdList: targetIds },
+    });
+
+    setResultId(aiResult.data?.resultId ?? '');
+  };
+
+  useEffect(() => {
+    // Info: (20241220 - Julian) 如果有 resultId，則問 AI 分析結果
+    if (resultId) getResult();
+  }, [resultId]);
 
   useEffect(() => {
     const storedCertificates = localStorage.getItem('selectedCertificates');
@@ -260,10 +279,39 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
           isSelected,
         };
       });
+      const selectedCerts = Object.values(updatedData).filter(
+        (item) => item.isSelected
+      ) as ICertificateUI[];
+
       setCertificates(updatedData);
-      setSelectedCertificatesUI(
-        Object.values(updatedData).filter((item) => item.isSelected) as ICertificateUI[]
-      );
+      setSelectedCertificatesUI(selectedCerts);
+
+      const targetIds = selectedCerts.map((item) => item.file.id);
+      setTargetIdList(targetIds);
+
+      setAiState(AIState.WORKING);
+      // Info: (20241220 - Julian) 呼叫 ask AI
+      askAIAnalysis(targetIds);
+    },
+    [certificates]
+  );
+
+  const handleDelete = useCallback(
+    (id: number) => {
+      const updatedData = {
+        ...certificates,
+      };
+      updatedData[id] = {
+        ...updatedData[id],
+        isSelected: false,
+      };
+
+      const selectedCerts = Object.values(updatedData).filter(
+        (item) => item.isSelected
+      ) as ICertificateUI[];
+
+      setCertificates(updatedData);
+      setSelectedCertificatesUI(selectedCerts);
     },
     [certificates]
   );
@@ -280,33 +328,6 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
       });
     }
   }, [selectedCertificatesUI, selectedIds]);
-
-  useEffect(() => {
-    if (isAskingAI === false) {
-      if (askSuccess && askData) {
-        // Info: (20241018 - Tzuhan) 呼叫 AI 分析 API
-        getAIResult({
-          params: { companyId, resultId: askData.resultId },
-          query: { reason: 'voucher' },
-        });
-      } else if (!askSuccess) {
-        //  Info: (20241021 - Julian) AI 分析失敗
-        setAiState(AIState.FAILED);
-      }
-    }
-  }, [askSuccess, askData, isAskingAI]);
-
-  // Info: (20241021 - Julian) AI 分析結果
-  useEffect(() => {
-    if (isAskingAI === false && isAIWorking === false) {
-      if (resultData) {
-        setAiState(AIState.FINISH);
-      } else if (!resultData || !analyzeSuccess) {
-        // Info: (20241021 - Julian) AI 分析失敗
-        setAiState(AIState.FAILED);
-      }
-    }
-  }, [isAIWorking, resultData, analyzeSuccess, isAskingAI]);
 
   // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
   const handleOpenSelectorModal = useCallback(() => {
@@ -517,11 +538,13 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
 
   const retryAIHandler = () => {
     setAiState(AIState.WORKING);
-    askAI({
-      params: { companyId },
-      query: { reason: 'voucher' },
-      body: { certificateId: selectedIds[0] },
-    });
+    if (resultId) {
+      // Info: (20241220 - Julian) 如果有 resultId，則直接 GET AI 分析結果
+      getResult();
+    } else {
+      // Info: (20241220 - Julian) 如果沒有 resultId，則重新 POST ASK AI
+      askAIAnalysis(targetIdList);
+    }
   };
 
   // Info: (20241119 - Julian) 逐一比對 line item 是否有異動
@@ -772,7 +795,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
         setAiState={setAiState}
         setIsShowAnalysisPreview={setIsShowAnalysisPreview}
         retryClickHandler={retryAIHandler}
-        retryDisabled={!!isAskingAI || !!isAIWorking}
+        retryDisabled={!!isAskingAI || aiState === AIState.WORKING}
         fillUpClickHandler={fillUpWithAIResult}
       />
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}
@@ -782,6 +805,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
         isSelectable
         isDeletable
         className="my-8"
+        onDelete={handleDelete}
       />
 
       {/* Info: (20240926 - Julian) form */}
