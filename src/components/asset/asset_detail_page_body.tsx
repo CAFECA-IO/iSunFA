@@ -319,7 +319,6 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
             variant="tertiary"
             onClick={deleteClickHandler}
             disabled={deleteDisabled}
-            size={'defaultSquare'}
           >
             <FiTrash2 size={20} />
             {deleteRemainingStr}
