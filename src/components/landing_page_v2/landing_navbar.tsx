@@ -3,8 +3,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { BsFillRocketTakeoffFill } from 'react-icons/bs';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import LandingI18n from '@/components/landing_page_neo/landing_i18n';
-import { LandingButton } from '@/components/landing_page_neo/landing_button';
+import LandingI18n from '@/components/landing_page_v2/landing_i18n';
+import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import version from '@/lib/version';
 import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -54,7 +54,7 @@ const LandingNavbar: React.FC = () => {
   );
 
   return (
-    <nav className="fixed inset-x-0 z-50 flex items-center justify-between rounded-sm border-b bg-landing-page-white/30 px-16px py-12px shadow-landing-nav backdrop-blur-md md:inset-x-36px md:px-40px lg:px-112px">
+    <nav className="fixed inset-x-0 z-50 flex items-center justify-between rounded-sm border-b bg-landing-nav px-16px py-12px shadow-landing-nav backdrop-blur-md md:inset-x-36px md:px-40px lg:px-112px">
       <div className="flex items-center gap-16px">
         {/* Info: (20241204 - Julian) Logo */}
         <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="h-40px w-150px flex-none">
@@ -92,7 +92,7 @@ const LandingNavbar: React.FC = () => {
       {/* Info: (20241204 - Julian) Dropdown */}
       <div
         ref={dropdownRef}
-        className={`absolute right-0 flex flex-col bg-landing-page-white/30 shadow-landing-nav backdrop-blur-md ${isOpen ? 'visible top-80px opacity-100' : 'invisible top-50px opacity-0'} rounded-sm border-b px-20px py-12px font-bold transition-all duration-300 ease-in-out lg:hidden`}
+        className={`absolute right-0 flex flex-col rounded-sm border-b bg-landing-page-white/30 px-20px py-12px font-bold shadow-landing-nav transition-all duration-300 ease-in-out lg:hidden ${isOpen ? 'visible top-80px opacity-100' : 'invisible top-50px opacity-0'}`}
       >
         <LandingI18n />
         {navigationOptions}

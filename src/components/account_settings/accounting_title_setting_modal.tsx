@@ -49,6 +49,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
   const [formType, setFormType] = useState<TitleFormType>(TitleFormType.add);
   const [selectedAccountTitle, setSelectedAccountTitle] = useState<IAccount | null>(null);
+  const [isRecallApi, setIsRecallApi] = useState<boolean>(false);
 
   const changeSearchWordHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchWord(e.target.value);
@@ -65,8 +66,14 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   };
 
   useEffect(() => {
+    if (isModalVisible) {
+      getAccountList({ params: { companyId } });
+    }
+  }, [isModalVisible]);
+
+  useEffect(() => {
     getAccountList({ params: { companyId } });
-  }, []);
+  }, [isRecallApi]);
 
   useEffect(() => {
     setFilteredAccountList(accountList);
@@ -122,6 +129,8 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
             accountTitleList={accountList}
             formType={formType}
             selectedAccountTitle={selectedAccountTitle}
+            isRecallApi={isRecallApi}
+            setIsRecallApi={setIsRecallApi}
           />
         </div>
       </div>

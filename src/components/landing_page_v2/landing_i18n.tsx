@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { FaChevronDown } from 'react-icons/fa6';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { LandingButton } from '@/components/landing_page_neo/landing_button';
+import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import Link from 'next/link';
 
 interface IInternationalization {
@@ -72,7 +72,7 @@ const LandingI18n: React.FC = () => {
       <LandingButton
         type="button"
         onClick={toggleDropdown}
-        className="w-170px rounded-sm bg-landing-page-white/30 px-24px font-bold shadow-landing-nav"
+        className="w-170px rounded-sm bg-landing-nav px-24px font-bold shadow-landing-nav"
       >
         <div className="h-20px w-20px overflow-hidden rounded-full">
           <Image
@@ -90,9 +90,9 @@ const LandingI18n: React.FC = () => {
 
       {/* Info: (20241204 - Julian) Dropdown */}
       <div
-        className={`grid w-full overflow-hidden bg-landing-page-white/30 shadow-landing-nav backdrop-blur-md ${
+        className={`grid w-full overflow-hidden rounded-sm border-b bg-landing-page-white/30 shadow-landing-nav transition-all duration-300 ease-in-out lg:absolute lg:top-50px ${
           isOpen ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'
-        } rounded-sm border-b transition-all duration-300 ease-in-out lg:absolute lg:top-50px`}
+        }`}
       >
         <div className="flex flex-col items-start py-12px">{langOptions}</div>
       </div>

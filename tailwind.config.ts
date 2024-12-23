@@ -724,11 +724,14 @@ module.exports = {
         bg_bookkeeper: 'url("/images/bg_bookkeeper.png")',
         bg_educational_trial_version: 'url("/images/bg_educational_trial_version.png")',
 
-        // Info: (20241205 - Julian) Landing Page
+        // Info: (20241205 - Julian) Landing Page v2
         'landing-btn':
-          'linear-gradient(to bottom, transparent 60%, #FFFFFF80 100%), linear-gradient(to bottom, #FFA502 0%, #FFA502 100%)',
+          'radial-gradient(circle at 50% 120%, #FFFFFF80, #FFA502 60%), linear-gradient(to bottom, #FFA502 0%, #FFA502 100%)',
+        'landing-nav': 'radial-gradient(farthest-corner at 50% 200%, #FFFFFF, #FFFFFF4D 50%)',
+        'cloudy-glass': 'radial-gradient(circle at 50% 150%, #FFFFFF, #FFFFFF4D 40%)',
         cta: 'url("/elements/planet_edge.png")',
         digital: 'url("/elements/digital.svg")',
+        sunrise: 'url("/elements/sunrise.png")',
       },
       zIndex: {
         '-10': '-10',
@@ -1395,6 +1398,7 @@ module.exports = {
           'inset 2px 4px 5px 0px rgba(255, 255, 255, 0.4), inset -2px -4px 5px 0px rgba(255, 255, 255, 0.4)',
         'landing-btn-hover':
           'inset 2px 4px 5px 0px rgba(255, 255, 255, 0.4), inset -2px -4px 5px 0px rgba(255, 255, 255, 0.4), 0px 0px 70px 10px rgba(255, 182, 50, 0.5)',
+        'technical-card': '0px 0px 80px 50px #120C00',
       },
       dropShadow: {
         xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',
