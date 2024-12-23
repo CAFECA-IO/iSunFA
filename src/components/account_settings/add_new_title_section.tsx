@@ -20,12 +20,16 @@ interface IAddNewTitleSectionProps {
   accountTitleList: IAccount[];
   formType: TitleFormType;
   selectedAccountTitle: IAccount | null;
+  isRecallApi: boolean;
+  setIsRecallApi: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   accountTitleList,
   formType,
   selectedAccountTitle,
+  isRecallApi,
+  setIsRecallApi,
 }) => {
   const { t } = useTranslation('common');
 
@@ -125,14 +129,14 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   useEffect(() => {
     if (!isCreating) {
       if (createSuccess) {
-        // Info: (20241112 - Julian) 顯示新增成功訊息，並清空表單
+        // Info: (20241112 - Julian) 顯示新增成功訊息，重新呼叫 API，並清空表單
         toastHandler({
           id: ToastId.ACCOUNTING_CREATE_SUCCESS,
           type: ToastType.SUCCESS,
           content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_SUCCESS'),
           closeable: true,
         });
-
+        setIsRecallApi(!isRecallApi);
         clearAllHandler();
       } else if (createError) {
         // Info: (20241112 - Julian) 顯示新增失敗訊息
@@ -149,14 +153,14 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   useEffect(() => {
     if (!isUpdating) {
       if (updateSuccess) {
-        // Info: (20241112 - Julian) 顯示更新成功訊息，並清空表單
+        // Info: (20241112 - Julian) 顯示更新成功訊息，重新呼叫 API，並清空表單
         toastHandler({
           id: ToastId.ACCOUNTING_UPDATE_SUCCESS,
           type: ToastType.SUCCESS,
           content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_SUCCESS'),
           closeable: true,
         });
-
+        setIsRecallApi(!isRecallApi);
         clearAllHandler();
       } else if (updateError) {
         // Info: (20241112 - Julian) 顯示更新失敗訊息
