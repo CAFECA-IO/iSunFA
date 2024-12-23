@@ -95,6 +95,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         | InvoiceType
         | boolean
     ) => {
+      // Deprecate: (20241220 - tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('handleInputChange field:', field, 'value:', value);
       setFormState((prev) => ({ ...prev, [field]: value }));
