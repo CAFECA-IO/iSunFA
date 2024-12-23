@@ -34,3 +34,25 @@ export function initCounterPartyEntity(
 
   return counterPartyEntity;
 }
+
+export function parseCounterPartyFromNoInInvoice(no: string): {
+  note: string;
+  name: string;
+  taxId: string;
+  type: CounterpartyType;
+} {
+  let result = {
+    note: '',
+    name: '',
+    taxId: '',
+    type: CounterpartyType.SUPPLIER,
+  };
+
+  try {
+    result = JSON.parse(no);
+  } catch {
+    // Info: (20241223 - Murky) 如果解析失敗，保持預設值
+  }
+
+  return result;
+}

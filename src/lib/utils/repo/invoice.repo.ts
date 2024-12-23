@@ -1,17 +1,18 @@
 import prisma from '@/client';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
-import { Prisma, Invoice } from '@prisma/client';
+import { Prisma, Invoice, Certificate, Counterparty } from '@prisma/client';
 import { loggerError } from '@/lib/utils/logger_back';
 import { CurrencyType } from '@/constants/currency';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 import { PostCertificateResponse } from '@/interfaces/certificate';
 import { DefaultValue } from '@/constants/default_value';
+import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 
 export async function postInvoiceV2(options: {
+  companyId: number;
   nowInSecond: number;
   certificateId: number;
-  counterPartyId: number;
   inputOrOutput: InvoiceTransactionDirection;
   date: number;
   no: string;
@@ -27,7 +28,6 @@ export async function postInvoiceV2(options: {
   const {
     nowInSecond,
     certificateId,
-    counterPartyId,
     inputOrOutput,
     date,
     no,
@@ -53,7 +53,7 @@ export async function postInvoiceV2(options: {
         },
         counterParty: {
           connect: {
-            id: counterPartyId,
+            id: PUBLIC_COUNTER_PARTY.id,
           },
         },
         inputOrOutput,
@@ -110,10 +110,10 @@ export async function postInvoiceV2(options: {
 }
 
 export async function putInvoiceV2(options: {
+  companyId: number;
   nowInSecond: number;
   invoiceId: number;
   certificateId?: number;
-  counterPartyId?: number;
   inputOrOutput?: InvoiceTransactionDirection;
   date?: number;
   no?: string;
@@ -129,8 +129,6 @@ export async function putInvoiceV2(options: {
   const {
     nowInSecond,
     invoiceId,
-    certificateId,
-    counterPartyId,
     inputOrOutput,
     date,
     no,
@@ -152,8 +150,6 @@ export async function putInvoiceV2(options: {
         id: invoiceId,
       },
       data: {
-        certificateId,
-        counterPartyId,
         inputOrOutput,
         date,
         no,
@@ -203,6 +199,44 @@ export async function putInvoiceV2(options: {
   }
 
   return certificate;
+}
+
+export async function getInvoiceByIdV2(id: number): Promise<
+  | (Invoice & {
+      certificate: Certificate;
+      counterParty: Counterparty;
+    })
+  | null
+> {
+  let invoice:
+    | (Invoice & {
+        certificate: Certificate;
+        counterParty: Counterparty;
+      })
+    | null = null;
+
+  try {
+    invoice = await prisma.invoice.findUnique({
+      where: {
+        id,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      include: {
+        certificate: true,
+        counterParty: true,
+      },
+    });
+  } catch (_error) {
+    const error = _error as Error;
+    const errorInfo = {
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Get Invoice By Id V2 Error',
+      errorMessage: error.message,
+    };
+    loggerError(errorInfo);
+  }
+
+  return invoice;
 }
 
 // Info: (20241107 - Jacky) Create a new Invoice
