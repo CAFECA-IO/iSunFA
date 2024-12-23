@@ -41,18 +41,13 @@ export function parseCounterPartyFromNoInInvoice(no: string): {
   taxId: string;
   type: CounterpartyType;
 } {
-  let result: Partial<{
-    note: string;
-    name: string;
-    taxId: string;
-    type: string;
-  }> = {
+  let result = {
     note: '',
     name: '',
     taxId: '',
     type: CounterpartyType.SUPPLIER,
   };
-  
+
   try {
     result = JSON.parse(no);
   } catch {
