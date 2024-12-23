@@ -17,7 +17,6 @@ import { compressImageToTargetSize } from '@/lib/utils/image_compress';
 
 interface InvoiceUploadProps {
   isDisabled: boolean;
-  withScanner: boolean;
   toggleQRCode?: () => void;
   setFiles: React.Dispatch<React.SetStateAction<IFileUIBeta[]>>;
   showErrorMessage: boolean;
@@ -25,7 +24,6 @@ interface InvoiceUploadProps {
 
 const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   isDisabled,
-  withScanner,
   toggleQRCode,
   setFiles,
   showErrorMessage,
@@ -153,7 +151,6 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   return (
     <UploadArea
       isDisabled={isDisabled}
-      withScanner={withScanner}
       toggleQRCode={toggleQRCode}
       handleUpload={handleUpload}
       multiple

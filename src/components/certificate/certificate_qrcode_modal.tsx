@@ -26,7 +26,7 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
 
   const displayedQRCode =
     success && room ? (
-      <div className="mx-20 my-10 flex flex-col items-center">
+      <div className="mx-24 my-5 flex flex-col items-center">
         <Canvas
           text={`${domain}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
           options={{
@@ -40,12 +40,6 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
             },
           }}
         />
-        <a
-          className="mt-2 text-center text-xs text-card-text-sub"
-          href={`${domain}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
-          target="_blank"
-          rel="noreferrer"
-        >{`${domain}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}</a>
       </div>
     ) : success === undefined ? (
       <div className="flex flex-col items-center gap-2">
@@ -66,10 +60,10 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
     <main className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="relative">
-          <h1 className="flex flex-col items-center justify-center gap-2 border-b border-stroke-neutral-quaternary p-2 text-xl font-semibold text-card-text-title">
-            <div className="text-xl font-semibold">{t('certificate:UPLOAD.URL')}</div>
+          <h1 className="flex flex-col items-center justify-center gap-2 p-2 text-xl font-semibold text-card-text-title">
+            <div className="text-xl font-semibold">{t('certificate:UPLOAD.PHONE_SCANNER')}</div>
             <div className="text-xs font-normal text-card-text-sub">
-              {t('certificate:UPLOAD.FOR_MOBILE')}
+              {t('certificate:UPLOAD.SCAN_WITH_PHONE')}
             </div>
           </h1>
           <button type="button" onClick={toggleQRCode} className="absolute right-24px top-24px">
@@ -77,10 +71,10 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
           </button>
         </section>
         {displayedQRCode}
-        <div className="flex justify-end gap-2 border-t border-stroke-neutral-quaternary px-4 py-3">
+        <div className="flex justify-end gap-2 px-4 py-3">
           <Button
             type="button"
-            variant="tertiaryOutlineGrey"
+            variant="tertiaryOutline"
             className="p-2 px-4"
             onClick={toggleQRCode}
           >

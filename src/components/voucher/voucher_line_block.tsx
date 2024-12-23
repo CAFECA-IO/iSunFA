@@ -29,8 +29,8 @@ interface IVoucherLineBlockProps {
   setHaveZeroLine: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否有金額為 0 的傳票列
   setIsAccountingNull: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否有空的會計科目
   setIsVoucherLineEmpty: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否傳票列為空
-  setIsCounterpartyRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要 Counterparty
-  setIsAssetRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要 Asset
+  setIsCounterpartyRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要交易對象
+  setIsAssetRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要資產
 }
 
 interface IVoucherLinePreviewProps {

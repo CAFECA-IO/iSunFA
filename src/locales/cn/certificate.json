@@ -131,14 +131,16 @@
     "COMPLETE": "成功 {{success}} 文件, 失败 {{failed}} 文件",
     "FAILED": "上传失败",
     "LOADING": "上传中...",
-    "URL": "网址",
-    "FOR_MOBILE": "用于手机上传文件",
+    "PHONE_SCANNER": "手机扫描",
+    "SCAN_WITH_PHONE": "请使用您的手机扫描二维码开始扫描",
     "BACK": "返回",
     "COMPLETED": "完成",
     "USE_YOUR_PHONE_AS": "使用您的手机作为",
     "SCANNER": "扫描器",
     "SCAN_THE_QRCODE": "请扫描二维码开始用手机扫描",
-    "FILE_SIZE_EXCEEDED": "文件大小超过 4 MB 上限"
+    "FILE_SIZE_EXCEEDED": "文件大小超过 4 MB 上限",
+    "INDEX": "No.{{index}}",
+    "PREVIEW": "预览"
   },
   "CREATE": {
     "FAILED": "创建失败"

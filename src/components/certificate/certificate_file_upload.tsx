@@ -4,7 +4,6 @@ import { Channel } from 'pusher-js';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
-import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
 import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
 import APIHandler from '@/lib/utils/api_handler';
@@ -14,16 +13,23 @@ import { ICertificate } from '@/interfaces/certificate';
 import { ProgressStatus } from '@/constants/account';
 import { IRoom } from '@/interfaces/room';
 
-interface CertificateFileUploadProps {}
+interface CertificateFileUploadProps {
+  isDisabled: boolean;
+  showErrorMessage: boolean;
+  setFiles: React.Dispatch<React.SetStateAction<IFileUIBeta[]>>;
+}
 
-const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
+const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({
+  isDisabled,
+  showErrorMessage,
+  setFiles,
+}) => {
   const { userAuth, selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
   const [room, setRoom] = useState<IRoom | null>(null);
   const [getRoomSuccess, setGetRoomSuccess] = useState<boolean | undefined>(undefined);
   const [getRoomCode, setGetRoomCode] = useState<string | undefined>(undefined);
   const [channel, setChannel] = useState<Channel | undefined>(undefined);
-  const [files, setFiles] = useState<IFileUIBeta[]>([]);
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState<boolean>(false);
   const { trigger: createRoomAPI } = APIHandler<IRoom>(APIName.ROOM_ADD);
   const { trigger: deleteRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
@@ -48,18 +54,6 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
       prev.map((f) => ((f.id && fileId && f.id === fileId) || f.name === fileName ? update(f) : f))
     );
   };
-
-  // Info: (20241204 - tzuhan) 暫停文件上傳
-  const pauseFileUpload = useCallback((fileId: number | null, fileName: string) => {
-    updateFileStatus(fileId, fileName, ProgressStatus.PAUSED);
-  }, []);
-
-  // Info: (20241204 - tzuhan) 刪除文件
-  const deleteFile = useCallback((fileId: number | null, fileName: string) => {
-    setFiles((prev) =>
-      prev.filter((f) => (f.id && fileId && f.id !== fileId) || f.name !== fileName)
-    );
-  }, []);
 
   // Info: (20241204 - tzuhan) 創建憑證
   const createCertificate = useCallback(
@@ -167,16 +161,10 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
         />
       )}
       <InvoiceUpload
-        isDisabled={false}
-        withScanner
+        isDisabled={isDisabled}
         toggleQRCode={toggleQRCodeModal}
         setFiles={setFiles}
-        showErrorMessage={false}
-      />
-      <FloatingUploadPopup
-        files={files}
-        pauseFileUpload={pauseFileUpload}
-        deleteFile={deleteFile}
+        showErrorMessage={showErrorMessage}
       />
     </>
   );
