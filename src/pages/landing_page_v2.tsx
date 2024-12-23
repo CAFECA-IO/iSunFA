@@ -1,6 +1,6 @@
 import React from 'react';
 import Head from 'next/head';
-import LandingPageBody from '@/components/landing_page_neo/landing_page_body';
+import LandingPageBody from '@/components/landing_page_v2/landing_page_body';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 

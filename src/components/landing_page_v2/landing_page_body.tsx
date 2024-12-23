@@ -1,16 +1,16 @@
 import React from 'react';
-import LandingNavbar from '@/components/landing_page_neo/landing_navbar';
-import LandingFooter from '@/components/landing_page_neo/landing_footer';
+import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
+import LandingFooter from '@/components/landing_page_v2/landing_footer';
 import {
   LinearGradientText,
   LinearTextSize,
   TextAlign,
-} from '@/components/landing_page_neo/linear_gradient_text';
-import CTA from '@/components/landing_page_neo/cta';
-import EasyToUse from '@/components/landing_page_neo/easy_to_use';
-import GlobalMap from '@/components/landing_page_neo/global_map';
-import FinancialReport from '@/components/landing_page_neo/financial_report';
-import FlexibleFeatureSelection from '@/components/landing_page_neo/flexible_feature_selection';
+} from '@/components/landing_page_v2/linear_gradient_text';
+import CTA from '@/components/landing_page_v2/cta';
+import EasyToUse from '@/components/landing_page_v2/easy_to_use';
+import GlobalMap from '@/components/landing_page_v2/global_map';
+import FinancialReport from '@/components/landing_page_v2/financial_report';
+import FlexibleFeatureSelection from '@/components/landing_page_v2/flexible_feature_selection';
 
 const LandingPageBody: React.FC = () => {
   return (

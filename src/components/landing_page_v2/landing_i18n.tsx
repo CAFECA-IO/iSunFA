@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { FaChevronDown } from 'react-icons/fa6';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { LandingButton } from '@/components/landing_page_neo/landing_button';
+import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import Link from 'next/link';
 
 interface IInternationalization {

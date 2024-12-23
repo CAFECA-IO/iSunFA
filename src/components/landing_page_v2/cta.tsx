@@ -6,8 +6,8 @@ import {
   LinearGradientText,
   LinearTextSize,
   TextAlign,
-} from '@/components/landing_page_neo/linear_gradient_text';
-import { LandingButton } from '@/components/landing_page_neo/landing_button';
+} from '@/components/landing_page_v2/linear_gradient_text';
+import { LandingButton } from '@/components/landing_page_v2/landing_button';
 
 const CTAIntroCard: React.FC<{
   imageSrc: string;

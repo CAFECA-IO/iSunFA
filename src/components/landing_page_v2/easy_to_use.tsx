@@ -5,7 +5,7 @@ import {
   LinearGradientText,
   LinearTextSize,
   TextAlign,
-} from '@/components/landing_page_neo/linear_gradient_text';
+} from '@/components/landing_page_v2/linear_gradient_text';
 
 const EasyIntroCard: React.FC<{
   title: string;
