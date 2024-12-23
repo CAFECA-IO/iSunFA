@@ -41,31 +41,23 @@ export function parseCounterPartyFromNoInInvoice(no: string): {
   taxId: string;
   type: CounterpartyType;
 } {
-  let parsed: Partial<{
+  let result: Partial<{
     note: string;
     name: string;
     taxId: string;
     type: string;
-  }> = {};
-
+  }> = {
+    note: '',
+    name: '',
+    taxId: '',
+    type: CounterpartyType.SUPPLIER,
+  };
+  
   try {
-    parsed = JSON.parse(no);
+    result = JSON.parse(no);
   } catch {
-    // Info: (20241223 - Murky) 如果解析失敗，回傳空值
-    return {
-      note: '',
-      name: '',
-      taxId: '',
-      type: CounterpartyType.SUPPLIER,
-    };
+    // Info: (20241223 - Murky) 如果解析失敗，保持預設值
   }
 
-  return {
-    note: parsed.note || '',
-    name: parsed.name || '',
-    taxId: parsed.taxId || '',
-    type: Object.values(CounterpartyType).includes(parsed.type as CounterpartyType)
-      ? (parsed.type as CounterpartyType)
-      : CounterpartyType.SUPPLIER,
-  };
+  return result;
 }
