@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
@@ -33,6 +33,10 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
   const [inputNote, setInputNote] = useState<string>('');
   const [showHint, setShowHint] = useState(false);
+  const [isDropdownOpen, setDropdownOpen] = useState(false); // Info: (20241223 - Anna) 控制下拉選單顯示
+  const [suggestions, setSuggestions] = useState<ICompanyTaxIdAndName[]>([]); // Info: (20241223 - Anna) 建議選項的狀態
+  const [isOptionSelected, setIsOptionSelected] = useState(false); // Info: (20241223 - Anna) 選擇選項的狀態
+  const dropdownRef = useRef<HTMLDivElement>(null); // Info: (20241223 - Anna) Ref 追蹤下拉選單
 
   const {
     trigger: addCounterpartyTrigger,
@@ -46,32 +50,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID
   );
 
-  // Info: (20241212 - Anna) 透過公司名稱查詢統一編號
-  const fetchTaxIdByCompanyName = async (
-    companyName: string,
-    taxIdNumber?: string
-  ): Promise<void> => {
-    try {
-      const { data: companyData } = await fetchCompanyDataAPI({
-        query: {
-          name: companyName || undefined,
-          taxId: taxIdNumber || undefined,
-        },
-      });
-
-      if (companyData && companyData.name.includes(companyName)) {
-        setInputName(companyData.name || '');
-        setInputTaxId(companyData.taxId || '');
-      } else {
-        setInputTaxId(''); //  Info: (20241212 - Anna) 清空統一編號
-      }
-    } catch (fetchError) {
-      // Deprecate: (20241212 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('Error fetching company data:', fetchError);
-    }
-  };
-
   // Info: (20241212 - Anna) 透過統一編號查詢公司名稱
   const fetchCompanyNameByTaxId = async (taxIdNumber: string): Promise<void> => {
     try {
@@ -84,14 +62,11 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
       if (companyData) {
         setInputName(companyData.name || ''); // Info: (20241212 - Anna) 更新公司名稱
-      } else {
-        setInputName(''); // Info: (20241212 - Anna) 查無資料時清空名稱
       }
     } catch (fetchError) {
       // Deprecate: (20241212 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
       console.error('Error fetching company data by Tax ID:', fetchError);
-      setInputName(''); // Info: (20241212 - Anna) 查詢失敗時清空名稱
     }
   };
 
@@ -140,29 +115,99 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     </div>
   );
 
-  // Info: (20241212 - Anna) 等到按下 Enter 再發送 API
-  const nameKeyDownHandler = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      // Info: (20241212 - Anna) 檢查輸入是否包含有效漢字
-      if (/^[\u4e00-\u9fa5]+$/.test(inputName)) {
-        // Deprecate: (20241212 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        fetchTaxIdByCompanyName(inputName).catch(console.error);
-      } else {
-        // Deprecate: (20241212 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.warn('輸入無效或不包含漢字');
+  let currentRequestController: AbortController | null = null; // Info: (20241223 - Anna) 定義全域變數以追蹤當前請求
+  const requestCounterRef = useRef(0); // Info: (20241223 - Anna) 追蹤請求序號
+
+  const nameChangeHandler = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = event.target.value.trim();
+    // Deprecate: (20241223 - Anna) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log('Input value:', newName); // Info: (20241223 - Anna) 確認輸入框值是否為空
+    setInputName(newName);
+    setIsOptionSelected(false); // Info: (20241223 - Anna) 清空選擇狀態
+
+    if (newName === '') {
+      // Info: (20241223 - Anna) 當輸入框清空時，關閉下拉選單並清空建議的選項
+      setSuggestions([]);
+      setDropdownOpen(false);
+      if (currentRequestController) {
+        currentRequestController.abort(); // Info: (20241223 - Anna) 取消當前請求
+        currentRequestController = null; // Info: (20241223 - Anna) 清理控制器
       }
+      return; // Info: (20241223 - Anna) 提前結束函數，不調用 API
+    }
+
+    if (/^[\u4e00-\u9fa5]+$/.test(newName)) {
+      if (currentRequestController) {
+        currentRequestController.abort(); // Info: (20241223 - Anna) 取消之前的請求
+      }
+
+      const controller = new AbortController();
+      currentRequestController = controller;
+
+      requestCounterRef.current += 1; // Info: (20241223 - Anna) 使用 useRef 來持續增加計數器
+      const requestId = requestCounterRef.current; // Info: (20241223 - Anna) 獲取當前請求的 ID
+
+      // Deprecate: (20241223 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log(`Sending API request #${requestId} with name: ${newName}`);
+
+      // Info: (20241223 - Anna) 每輸入一個完整的中文字時觸發
+      try {
+        // eslint-disable-next-line no-console
+        console.log(`Sending API request with name: ${newName}`); // Info: (20241223 - Anna) 打印請求參數
+        const { data: companyData } = await fetchCompanyDataAPI({
+          query: { name: newName, taxId: undefined },
+          signal: controller.signal, // Info: (20241223 - Anna) 傳入控制器的信號
+        } as unknown as Record<string, unknown>);
+
+        // Info: (20241223 - Anna) 比較輸入值，確保回傳對應的是最後一次的輸入
+        if (requestId !== requestCounterRef.current) {
+          // Deprecate: (20241223 - Anna) remove eslint-disable
+          // eslint-disable-next-line no-console
+          console.log(`Discarding stale response for request #${requestId}`); // Info: (20241223 - Anna) 丟棄過期的請求結果
+          return;
+        }
+
+        // Deprecate: (20241223 - Anna) remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('API response:', companyData); // Info: (20241223 - Anna) 輸出 API 回傳的數據
+        setSuggestions(companyData ? [companyData] : []); // Info: (20241223 - Anna) 儲存 API 回傳的建議
+        setDropdownOpen(true);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          // Deprecate: (20241223 - Anna) remove eslint-disable
+          // eslint-disable-next-line no-console
+          console.log('Request aborted.'); // Info: (20241223 - Anna) 請求被中止時不需處理錯誤
+        } else {
+          // Deprecate: (20241223 - Anna) remove eslint-disable
+          // eslint-disable-next-line no-console
+          console.error('Error fetching suggestions:', err); // Info: (20241223 - Anna) 其他錯誤處理
+        }
+      } finally {
+        // Info: (20241223 - Anna) 清理控制器，避免干擾後續請求
+        if (currentRequestController === controller) {
+          currentRequestController = null;
+        }
+      }
+    } else {
+      setSuggestions([]);
+      setDropdownOpen(false); // Info: (20241223 - Anna) 如果輸入非中文字，關閉下拉選單
     }
   };
 
-  const nameChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = event.target.value.trim();
-    setInputName(newName);
+  const selectSuggestionHandler = (suggestion: ICompanyTaxIdAndName) => {
+    // Info: (20241223 - Anna) 當選擇建議時
+    setInputName(suggestion.name);
+    setInputTaxId(suggestion.taxId || '');
+    setDropdownOpen(false);
+  };
 
-    // Info: (20241212 - Anna) 當輸入為空時，直接清空結果不觸發 API
-    if (newName === '') {
-      setInputTaxId('');
+  const outsideClickHandler = (event: MouseEvent) => {
+    // Info: (20241223 - Anna) 監控點擊事件
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      setDropdownOpen(false); // Info: (20241223 - Anna) 點擊外部時關閉下拉選單
+      setIsOptionSelected(true); // Info: (20241223 - Anna) 標記用戶選擇了選項
     }
   };
 
@@ -175,8 +220,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       // Deprecate: (20241212 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
       fetchCompanyNameByTaxId(newTaxId).catch(console.error);
-    } else if (newTaxId === '') {
-      setInputName(''); // Info: (20241212 - Anna) 清空公司名稱
     }
   };
 
@@ -185,7 +228,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   };
 
   // Info: (20241113 - Anna) 檢查是否有未填寫的欄位
-  const disabled = !(inputName && inputTaxId && inputType);
+  const disabled = !(inputName && inputType);
 
   const addNewCounterPartyHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -194,7 +237,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       setShowHint(true);
     } else {
       const counterpartyData = {
-        name: inputName,
+        name: isOptionSelected ? inputName : '', // Info: (20241223 - Anna) 只有選擇了選項才帶入值
         taxId: inputTaxId,
         type: inputType as CounterpartyType,
         note: inputNote || '',
@@ -244,6 +287,34 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     }
   }, [isModalVisible]);
 
+  useEffect(() => {
+    document.addEventListener('mousedown', outsideClickHandler); // Info: (20241223 - Anna) 綁定事件
+    return () => document.removeEventListener('mousedown', outsideClickHandler); // Info: (20241223 - Anna) 清理事件
+  }, []);
+
+  const displayedDropdown =
+    isDropdownOpen && suggestions.length > 0 && inputName !== '' ? ( // Info: (20241223 - Anna) 渲染下拉選單
+      <div
+        ref={dropdownRef}
+        className="absolute top-75px z-30 w-full rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-5px shadow-dropmenu"
+      >
+        {suggestions.length > 0 ? (
+          suggestions.map((suggestion) => (
+            <button
+              key={suggestion.taxId}
+              type="button"
+              onClick={() => selectSuggestionHandler(suggestion)} // Info: (20241223 - Anna) 點擊選擇建議
+              className="block w-full px-4 py-2 text-left hover:bg-gray-200"
+            >
+              {suggestion.name}
+            </button>
+          ))
+        ) : (
+          <p className="px-4 py-2 text-sm text-gray-500">{t('common:NO_SUGGESTIONS')}</p>
+        )}
+      </div>
+    ) : null;
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-80 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-620px w-90vw max-w-480px flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 p-8">
@@ -277,10 +348,10 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
                   placeholder={t('certificate:COUNTERPARTY.ENTER_NAME')}
                   value={inputName}
                   onChange={nameChangeHandler}
-                  onKeyDown={nameKeyDownHandler} // Info: (20241212 - Anna) 監聽 Enter 鍵
                   required
                   className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none"
                 />
+                {displayedDropdown} {/*  Info: (20241223 - Anna) 顯示下拉選單 */}
               </div>
             </div>
 
@@ -289,7 +360,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
               <div id="counterparty-tax-id" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('certificate:COUNTERPARTY.TAX_NUMBER')}
-                <span className="text-text-state-error">*</span>
               </p>
               <div className="flex w-full items-center">
                 <input
@@ -298,7 +368,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
                   placeholder={t('certificate:COUNTERPARTY.ENTER_NUMBER')}
                   value={inputTaxId}
                   onChange={taxIdChangeHandler}
-                  required
                   className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none"
                 />
               </div>
