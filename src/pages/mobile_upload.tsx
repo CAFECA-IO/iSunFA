@@ -12,24 +12,22 @@ import { UploadType } from '@/constants/file';
 import { ProgressStatus } from '@/constants/account';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { Button } from '@/components/button/button';
-import { FiUpload } from 'react-icons/fi';
-import { ImFilePicture } from 'react-icons/im';
+import { FiTrash2, FiUpload } from 'react-icons/fi';
 import { FaPlus } from 'react-icons/fa6';
 import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
-import { RxCross2 } from 'react-icons/rx';
-import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-// Deprecated: (20241206 - tzuhan) For local testing
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { encryptFile, generateKeyPair } from '@/lib/utils/crypto';
 import { IV_LENGTH } from '@/constants/config';
 import { compressImageToTargetSize } from '@/lib/utils/image_compress';
+import { RxCross1 } from 'react-icons/rx';
 
 export interface IFileUIBetaWithFile extends IFileUIBeta {
   file: File;
+  width?: number;
+  height?: number;
 }
 
 const MobileUploadPage: React.FC = () => {
@@ -188,10 +186,6 @@ const MobileUploadPage: React.FC = () => {
   };
 
   const handleSelectFile = (file: IFileUIBetaWithFile) => {
-    if (selectedFile && selectedFile.name === file.name) {
-      setSelectedFile(null);
-      return;
-    }
     setSelectedFile(file);
   };
 
@@ -229,6 +223,52 @@ const MobileUploadPage: React.FC = () => {
         // eslint-disable-next-line tailwindcss/no-arbitrary-value
         className="full-height safe-area-adjustment grid h-screen grid-rows-[100px_1fr_105px] overflow-hidden"
       >
+        {selectedFile && (
+          <section className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+            <div className="relative flex max-h-90vh max-w-90vw flex-col gap-5 rounded-lg bg-surface-neutral-surface-lv2 px-6 py-5">
+              <button
+                type="button"
+                className="absolute right-6 top-5 text-checkbox-text-primary"
+                onClick={() => setSelectedFile(null)}
+              >
+                <RxCross1 size={24} />
+              </button>
+              <h2 className="flex flex-col items-center justify-center gap-2 text-xl font-semibold text-card-text-title">
+                <div className="text-xl font-semibold">
+                  {t('certificate:UPLOAD.INDEX', {
+                    index: selectedFiles.indexOf(selectedFile),
+                  })}
+                </div>
+                <div className="text-xs font-normal text-card-text-sub">
+                  {t('certificate:UPLOAD.PREVIEW')}
+                </div>
+              </h2>
+
+              <div className="hide-scrollbar relative flex max-h-70vh w-full flex-1 items-center justify-center overflow-scroll sm:max-h-60vh lg:max-h-75vh">
+                <div className="relative h-auto w-full">
+                  <Image
+                    src={selectedFile.url}
+                    alt={selectedFile.name}
+                    layout="responsive"
+                    width={400}
+                    height={600}
+                    objectFit="contain"
+                    className="rounded-md"
+                  />
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="tertiaryOutline"
+                className="px-4 py-2"
+                onClick={() => handleRemoveFile(selectedFile)}
+              >
+                <FiTrash2 size={22} />
+                <div>{t('certificate:UPLOAD.DELETE')}</div>
+              </Button>
+            </div>
+          </section>
+        )}
         <div className="flex h-100px shrink-0 items-center justify-between bg-surface-neutral-solid-dark p-2">
           <div className="ml-1 w-44px"></div>
           <div className="flex items-center justify-center gap-2">
@@ -248,98 +288,44 @@ const MobileUploadPage: React.FC = () => {
             <FiUpload size={20} className="leading-none text-button-text-secondary" />
           </Button>
         </div>
-
-        {selectedFile ? (
-          <div className="mx-auto h-full w-full">
-            <Image
-              src={selectedFile.url}
-              alt={selectedFile.name}
-              layout="fill"
-              objectFit="contain"
-            />
+        <div className="grid auto-rows-min-content grid-cols-3 gap-2.5 overflow-y-auto px-2.5 py-3 sm:grid-cols-dynamic-fill">
+          <div className="group">
+            <button
+              id="camera-upload-image-button"
+              type="button"
+              className="flex w-full items-center justify-center rounded-xs border border-dashed border-stroke-brand-primary text-white group-hover:border-stroke-brand-primary"
+              onClick={handleModeUpload}
+              style={{ aspectRatio: '1 / 1' }}
+            >
+              <FaPlus
+                className="text-stroke-brand-primary group-hover:text-stroke-brand-primary"
+                size={24}
+              />
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                ref={inputRef}
+                onChange={handleFilesSelect}
+              />
+            </button>
           </div>
-        ) : (
-          <div className="grid auto-rows-min-content grid-cols-3 gap-1 overflow-y-auto px-1 sm:grid-cols-dynamic-fill">
-            <div className="group">
-              <button
-                id="camera-upload-image-button"
-                type="button"
-                className="flex w-full items-center justify-center rounded-xs border border-dashed border-stroke-neutral-tertiary text-white group-hover:border-stroke-brand-primary"
-                onClick={handleModeUpload}
-                style={{ aspectRatio: '1 / 1' }}
-              >
-                <FaPlus
-                  className="text-stroke-neutral-tertiary group-hover:text-stroke-brand-primary"
-                  size={24}
-                />
-              </button>
-            </div>
-            {selectedFiles.map((file) => (
-              <div
-                key={file.name}
-                className="relative w-full"
-                style={{ aspectRatio: '1 / 1' }}
+          {selectedFiles.map((file) => (
+            <div key={file.name} className="relative w-full" style={{ aspectRatio: '1 / 1' }}>
+              <Image
+                src={file.url}
+                alt={file.name}
+                layout="fill"
+                objectFit="cover"
+                className="rounded-xs"
                 onClick={() => handleSelectFile(file)}
-              >
-                <Image
-                  src={file.url}
-                  alt={file.name}
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-xs"
-                />
-                <div className="absolute bottom-0 right-0 rounded-full bg-surface-neutral-solid-dark p-1 text-surface-neutral-solid-light opacity-50">
-                  <RiExpandDiagonalLine size={12} />
-                </div>
+              />
+              <div className="absolute bottom-1 right-1 rounded-full bg-surface-neutral-solid-dark p-1.5 text-surface-neutral-solid-light opacity-50">
+                <FiTrash2 size={22} onClick={() => handleRemoveFile(file)} />
               </div>
-            ))}
-          </div>
-        )}
-        <div className="z-10 flex h-105px shrink-0 items-center justify-between overflow-x-hidden rounded-t-lg bg-surface-neutral-solid-dark p-2">
-          <div className="flex h-full w-full items-center gap-2 overflow-x-auto">
-            {selectedFiles.map((file) => (
-              <div
-                key={file.name}
-                className="relative w-full"
-                style={{ aspectRatio: '1 / 1', width: '50px', minWidth: '50px' }}
-              >
-                <Image
-                  src={file.url}
-                  alt={file.name}
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-xs"
-                />
-                <div
-                  className={`absolute left-0 top-0 h-50px w-50px ${selectedFile && selectedFile.url === file.url ? 'bg-black/50' : 'bg-transparent'}`}
-                  onClick={() => handleSelectFile(file)}
-                ></div>
-                <button
-                  type="button"
-                  className="absolute -right-8px top-0 h-16px w-16px -translate-y-1/2 rounded-full border border-stroke-neutral-solid-dark bg-surface-neutral-surface-lv2 p-0 text-stroke-neutral-solid-dark"
-                  onClick={() => handleRemoveFile(file)}
-                >
-                  <RxCross2 size={10} className="mx-auto" />
-                </button>
-              </div>
-            ))}
-          </div>
-          <Button
-            type="button"
-            variant={null}
-            onClick={handleModeUpload}
-            className="ml-2 w-44px p-0 text-stroke-neutral-invert"
-          >
-            <ImFilePicture size={40} />
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              ref={inputRef}
-              onChange={handleFilesSelect}
-            />
-          </Button>
+            </div>
+          ))}
         </div>
         {isUploading && (
           <div className="full-height safe-area-adjustment absolute left-0 top-0 z-20 flex h-100vh w-100vw items-center justify-center bg-white">

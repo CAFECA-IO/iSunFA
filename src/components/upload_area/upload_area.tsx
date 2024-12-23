@@ -4,7 +4,6 @@ import Image from 'next/image';
 
 interface UploadAreaProps {
   isDisabled: boolean;
-  withScanner: boolean;
   toggleQRCode?: () => void;
   handleUpload: (file: File) => Promise<void>;
   multiple?: boolean;
@@ -12,7 +11,6 @@ interface UploadAreaProps {
 
 const UploadArea: React.FC<UploadAreaProps> = ({
   isDisabled,
-  withScanner,
   toggleQRCode,
   handleUpload,
   multiple = false,
@@ -110,7 +108,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({
         />
       </button>
 
-      {withScanner && toggleQRCode && (
+      {toggleQRCode && (
         <>
           <h3 className="px-4 text-xl font-bold text-text-neutral-tertiary">
             {t('common:COMMON.OR')}
