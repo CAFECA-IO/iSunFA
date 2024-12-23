@@ -23,7 +23,7 @@ const TechnicalCard: React.FC<ITechnicalCardProps> = ({
   imageAlt,
 }) => {
   return (
-    <div className="relative mx-auto flex flex-col items-center gap-12px rounded-lg border bg-cloudy-glass px-45px py-50px backdrop-blur-md md:w-450px">
+    <div className="relative mx-auto flex w-full flex-col items-center gap-12px rounded-lg border bg-cloudy-glass px-45px py-50px backdrop-blur-md md:w-450px lg:shadow-technical-card lg:last:col-span-2">
       {/* Info: (20241223 - Julian) Brilliant square */}
       <div className="absolute -top-50px h-85px w-130px rounded-sm border-b border-t border-landing-page-white bg-landing-btn shadow-landing-btn-hover"></div>
       {/* Info: (20241223 - Julian) Spotlight */}
@@ -116,7 +116,15 @@ const TechnicalFeatures: React.FC = () => {
       </LinearGradientText>
 
       {/* Info: (20241205 - Julian) Content */}
-      <div className="relative mt-120px grid grid-cols-1 gap-120px lg:mt-75px lg:flex lg:flex-wrap lg:justify-between">
+      <div
+        //  className="relative mt-120px grid grid-cols-1 gap-x-120px gap-y-120px lg:mt-75px lg:flex lg:flex-wrap lg:justify-between"
+        className="relative mt-120px grid grid-cols-1 gap-x-120px gap-y-120px lg:mt-75px lg:grid-cols-2 lg:justify-between"
+      >
+        {/* Info: (20241223 - Julian) Background */}
+        <div className="absolute hidden h-full w-full items-center justify-center lg:flex">
+          <div className="h-3/5 w-3/5 border"></div>
+        </div>
+        {/* Info: (20241223 - Julian) Cards */}
         {technicalData.map((data) => (
           <TechnicalCard
             key={data.imageAlt}
