@@ -90,9 +90,9 @@ const LandingI18n: React.FC = () => {
 
       {/* Info: (20241204 - Julian) Dropdown */}
       <div
-        className={`grid w-full overflow-hidden bg-landing-page-white/30 shadow-landing-nav backdrop-blur-md ${
+        className={`grid w-full overflow-hidden rounded-sm border-b bg-landing-page-white/30 shadow-landing-nav transition-all duration-300 ease-in-out lg:absolute lg:top-50px ${
           isOpen ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'
-        } rounded-sm border-b transition-all duration-300 ease-in-out lg:absolute lg:top-50px`}
+        }`}
       >
         <div className="flex flex-col items-start py-12px">{langOptions}</div>
       </div>

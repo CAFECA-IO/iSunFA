@@ -92,7 +92,7 @@ const LandingNavbar: React.FC = () => {
       {/* Info: (20241204 - Julian) Dropdown */}
       <div
         ref={dropdownRef}
-        className={`absolute right-0 flex flex-col bg-landing-page-white/30 shadow-landing-nav backdrop-blur-md ${isOpen ? 'visible top-80px opacity-100' : 'invisible top-50px opacity-0'} rounded-sm border-b px-20px py-12px font-bold transition-all duration-300 ease-in-out lg:hidden`}
+        className={`absolute right-0 flex flex-col rounded-sm border-b bg-landing-page-white/30 px-20px py-12px font-bold shadow-landing-nav transition-all duration-300 ease-in-out lg:hidden ${isOpen ? 'visible top-80px opacity-100' : 'invisible top-50px opacity-0'}`}
       >
         <LandingI18n />
         {navigationOptions}

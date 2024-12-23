@@ -23,8 +23,12 @@ const TechnicalCard: React.FC<ITechnicalCardProps> = ({
   imageAlt,
 }) => {
   return (
-    <div className="relative flex flex-col items-center gap-12px rounded-lg border bg-cloudy-glass px-45px py-50px backdrop-blur-md">
-      {/* Info: (20241223 - Julian) Decoration */}
+    <div className="relative mx-auto flex flex-col items-center gap-12px rounded-lg border bg-cloudy-glass px-45px py-50px backdrop-blur-md md:w-450px">
+      {/* Info: (20241223 - Julian) Brilliant square */}
+      <div className="absolute -top-50px h-85px w-130px rounded-sm border-b border-t border-landing-page-white bg-landing-btn shadow-landing-btn-hover"></div>
+      {/* Info: (20241223 - Julian) Spotlight */}
+      <div className="absolute top-70px h-50px w-5/10 bg-landing-page-orange/50 blur-2xl"></div>
+      {/* Info: (20241223 - Julian) Nails */}
       <Image
         src="/icons/round_nail.svg"
         width={40}
@@ -53,16 +57,26 @@ const TechnicalCard: React.FC<ITechnicalCardProps> = ({
         alt="nail_icon"
         className="absolute bottom-10px right-10px" // Info: (20241223 - Julian) 右下角
       />
-      {/* Info: (20241223 - Julian) Brilliant square */}
-      <div className="absolute -top-50px h-85px w-130px rounded-sm border-b border-t border-landing-page-white bg-landing-btn shadow-landing-btn-hover"></div>
+      {/* Info: (20241218 - Julian) Highlight */}
+      <div className="absolute left-0 top-0 h-full w-full overflow-hidden">
+        <Image
+          src="/elements/light.svg"
+          width={360}
+          height={13}
+          alt="light"
+          className="absolute -bottom-10px left-0 right-0 mx-auto"
+        />
+      </div>
 
       {/* Info: (20241223 - Julian) Card Content */}
-      <p className="text-xl font-medium leading-8">{title1}</p>
-      <Image src={imageSrc} alt={imageAlt} width={64} height={64} />
-      <LinearGradientText size={LinearTextSize.SM} align={TextAlign.CENTER}>
-        {title2}
-      </LinearGradientText>
-      <p className="w-full text-left">{content}</p>
+      <div className="z-10 flex flex-1 flex-col items-center gap-12px">
+        <p className="text-center text-xl font-medium leading-8">{title1}</p>
+        <Image src={imageSrc} alt={imageAlt} width={64} height={64} />
+        <LinearGradientText size={LinearTextSize.SM} align={TextAlign.CENTER}>
+          {title2}
+        </LinearGradientText>
+        <p className="w-full text-left">{content}</p>
+      </div>
     </div>
   );
 };
@@ -95,14 +109,14 @@ const TechnicalFeatures: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col py-120px lg:px-112px">
+    <div className="flex flex-col items-center px-16px py-120px md:px-80px lg:px-112px">
       {/* Info: (20241205 - Julian) Title */}
       <LinearGradientText size={LinearTextSize.LG} align={TextAlign.CENTER}>
-        Technical Features
+        {t('landing_page_v2:TECHNICAL_FEATURES.MAIN_TITLE')}
       </LinearGradientText>
 
       {/* Info: (20241205 - Julian) Content */}
-      <div className="mt-75px grid grid-cols-3 gap-24px">
+      <div className="relative mt-120px grid grid-cols-1 gap-120px lg:mt-75px lg:flex lg:flex-wrap lg:justify-between">
         {technicalData.map((data) => (
           <TechnicalCard
             key={data.imageAlt}
