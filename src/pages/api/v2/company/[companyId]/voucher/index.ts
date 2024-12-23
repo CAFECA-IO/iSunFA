@@ -68,91 +68,99 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
     type,
   });
   const { data: vouchersFromPrisma, where, ...pagination } = paginationVouchersFromPrisma;
-  const nowInSecond = getTimestampNow();
-  const voucherBetas: IGetManyVoucherBetaEntity[] = vouchersFromPrisma.map((voucherFromPrisma) => {
-    const voucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
-    const lineItemEntities = getUtils.initLineItemAndAccountEntities(voucherFromPrisma);
-    const counterPartyEntity = getUtils.initCounterPartyEntity(voucherFromPrisma);
-    const issuerEntity = getUtils.initIssuerAndFileEntity(voucherFromPrisma);
-    const readByUsers = getUtils.initUserVoucherEntities(voucherFromPrisma);
-    const sum = getUtils.getLineItemAmountSum(lineItemEntities);
-    const originalEventEntities = getUtils.initOriginalEventEntities(voucherFromPrisma);
-    const { payableInfo, receivingInfo } =
-      getUtils.getPayableReceivableInfoFromVoucher(originalEventEntities);
+  try {
+    const nowInSecond = getTimestampNow();
+    const voucherBetas: IGetManyVoucherBetaEntity[] = vouchersFromPrisma.map(
+      (voucherFromPrisma) => {
+        const voucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
+        const lineItemEntities = getUtils.initLineItemAndAccountEntities(voucherFromPrisma);
+        const counterPartyEntity = getUtils.initCounterPartyEntity(voucherFromPrisma);
+        const issuerEntity = getUtils.initIssuerAndFileEntity(voucherFromPrisma);
+        const readByUsers = getUtils.initUserVoucherEntities(voucherFromPrisma);
+        const sum = getUtils.getLineItemAmountSum(lineItemEntities);
+        const originalEventEntities = getUtils.initOriginalEventEntities(voucherFromPrisma);
+        const { payableInfo, receivingInfo } =
+          getUtils.getPayableReceivableInfoFromVoucher(originalEventEntities);
 
-    const voucherBeta: IGetManyVoucherBetaEntity = {
-      ...voucherEntity,
-      counterParty: counterPartyEntity,
-      issuer: issuerEntity,
-      readByUsers,
-      lineItems: lineItemEntities,
-      sum: {
-        debit: false, // Info: (20241104 - Murky) 這個其實永遠是false, 因為debit和credit相同, 然後總和放在credit
-        amount: sum,
+        const voucherBeta: IGetManyVoucherBetaEntity = {
+          ...voucherEntity,
+          counterParty: counterPartyEntity,
+          issuer: issuerEntity,
+          readByUsers,
+          lineItems: lineItemEntities,
+          sum: {
+            debit: false, // Info: (20241104 - Murky) 這個其實永遠是false, 因為debit和credit相同, 然後總和放在credit
+            amount: sum,
+          },
+          payableInfo,
+          receivingInfo,
+          originalEvents: originalEventEntities,
+        };
+
+        return voucherBeta;
+      }
+    );
+
+    // ToDo: (20241121 - Murky) Sort by total credit/total debit, payable amount, paid amount, remain amount
+    getUtils.sortVoucherBetaList(voucherBetas, {
+      sortOption,
+      tab,
+    });
+
+    // ToDo: (20241121 - Murky) Get upload and upcoming unread voucher count
+    const unreadUploadedVoucherCounts = await getUtils.getUnreadVoucherCount({
+      userId,
+      where,
+      tab: VoucherListTabV2.UPLOADED,
+    });
+
+    const unreadUpcomingEventCounts = await getUtils.getUnreadVoucherCount({
+      userId,
+      where,
+      tab: VoucherListTabV2.UPCOMING,
+    });
+
+    const unreadReceivedVoucherCounts = await getUtils.getUnreadVoucherCount({
+      userId,
+      where,
+      tab: VoucherListTabV2.RECEIVING,
+    });
+
+    const unreadPayableVoucherCounts = await getUtils.getUnreadVoucherCount({
+      userId,
+      where,
+      tab: VoucherListTabV2.PAYMENT,
+    });
+    // ToDo: (20241121 - Murky) Post Read info
+    getUtils.upsertUserReadVoucher({
+      userId,
+      voucherIdsBeenRead: voucherBetas.map((voucher) => voucher.id),
+      nowInSecond,
+    });
+
+    payload = {
+      page: pagination.page,
+      totalPages: pagination.totalPages,
+      totalCount: pagination.totalCount,
+      pageSize: pagination.pageSize,
+      hasNextPage: pagination.hasNextPage,
+      hasPreviousPage: pagination.hasPreviousPage,
+      sort: sortOption,
+      data: {
+        unRead: {
+          uploadedVoucher: unreadUploadedVoucherCounts,
+          upcomingEvents: unreadUpcomingEventCounts,
+          paymentVoucher: unreadPayableVoucherCounts,
+          receivingVoucher: unreadReceivedVoucherCounts,
+        },
+        vouchers: voucherBetas,
       },
-      payableInfo,
-      receivingInfo,
-      originalEvents: originalEventEntities,
     };
-
-    return voucherBeta;
-  });
-
-  // ToDo: (20241121 - Murky) Sort by total credit/total debit, payable amount, paid amount, remain amount
-  getUtils.sortVoucherBetaList(voucherBetas, {
-    sortOption,
-    tab,
-  });
-
-  // ToDo: (20241121 - Murky) Get upload and upcoming unread voucher count
-  const unreadUploadedVoucherCounts = await getUtils.getUnreadVoucherCount({
-    userId,
-    where,
-    tab: VoucherListTabV2.UPLOADED,
-  });
-
-  const unreadUpcomingEventCounts = await getUtils.getUnreadVoucherCount({
-    userId,
-    where,
-    tab: VoucherListTabV2.UPCOMING,
-  });
-
-  const unreadReceivedVoucherCounts = await getUtils.getUnreadVoucherCount({
-    userId,
-    where,
-    tab: VoucherListTabV2.RECEIVING,
-  });
-
-  const unreadPayableVoucherCounts = await getUtils.getUnreadVoucherCount({
-    userId,
-    where,
-    tab: VoucherListTabV2.PAYMENT,
-  });
-  // ToDo: (20241121 - Murky) Post Read info
-  getUtils.upsertUserReadVoucher({
-    userId,
-    voucherIdsBeenRead: voucherBetas.map((voucher) => voucher.id),
-    nowInSecond,
-  });
-
-  payload = {
-    page: pagination.page,
-    totalPages: pagination.totalPages,
-    totalCount: pagination.totalCount,
-    pageSize: pagination.pageSize,
-    hasNextPage: pagination.hasNextPage,
-    hasPreviousPage: pagination.hasPreviousPage,
-    sort: sortOption,
-    data: {
-      unRead: {
-        uploadedVoucher: unreadUploadedVoucherCounts,
-        upcomingEvents: unreadUpcomingEventCounts,
-        paymentVoucher: unreadPayableVoucherCounts,
-        receivingVoucher: unreadReceivedVoucherCounts,
-      },
-      vouchers: voucherBetas,
-    },
-  };
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+    loggerBack.error(error);
+  }
   return {
     statusMessage,
     payload,

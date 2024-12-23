@@ -368,14 +368,20 @@ const voucherPostBodyValidatorV2 = z.object({
    * ```
 
    */
-  reverseVouchers: z.array(
-    z.object({
-      voucherId: z.number().int(),
-      lineItemIdBeReversed: z.number().int(),
-      lineItemIdReverseOther: z.number().int(),
-      amount: z.number(),
-    })
-  ),
+  reverseVouchers: z
+    .array(
+      z.object({
+        voucherId: z.number().int(),
+        lineItemIdBeReversed: z.number().int(),
+        lineItemIdReverseOther: z.number().int(),
+        amount: z.number(),
+      })
+    )
+    .optional()
+    .transform((data) => {
+      if (!data) return [];
+      return data;
+    }),
 });
 
 const voucherPostOutputValidatorV2 = voucherEntityValidator.transform((data) => {
@@ -466,7 +472,12 @@ const voucherGetOneOutputValidatorV2 = z
       })
       .optional(),
   })
+  .nullable()
   .transform((data) => {
+    if (data === null) {
+      // 如果輸入為 null，直接返回 null
+      return null;
+    }
     const voucherDetail: IVoucherDetailForFrontend = {
       id: data.id,
       voucherDate: data.date,
@@ -805,7 +816,7 @@ export const voucherPutSchema = {
 export const voucherDeleteSchema = {
   input: {
     querySchema: voucherDeleteQueryValidatorV2,
-    bodySchema: voucherDeleteBodyValidatorV2,
+    bodySchema: voucherNullSchema,
   },
   outputSchema: z.union([z.number(), z.null()]),
   frontend: z.number(),

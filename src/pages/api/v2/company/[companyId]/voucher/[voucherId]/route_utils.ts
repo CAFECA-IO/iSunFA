@@ -39,6 +39,10 @@ import { parsePrismaAssociateVoucherToEntity } from '@/lib/utils/formatter/assoc
 import { IAssociateLineItemEntity } from '@/interfaces/associate_line_item';
 import { IAssociateVoucherEntity } from '@/interfaces/associate_voucher';
 import { IAccountEntity } from '@/interfaces/accounting_account';
+import { getImageUrlFromFileIdV1 } from '@/lib/utils/file';
+import { initInvoiceEntity } from '@/lib/utils/invoice';
+import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
+import { CurrencyType } from '@/constants/currency';
 
 export const voucherAPIGetOneUtils = {
   /**
@@ -336,7 +340,23 @@ export const voucherAPIGetOneUtils = {
     const fileDto = certificate.file;
     const userCertificatesDto = certificate.UserCertificate;
 
-    const invoice = parsePrismaInvoiceToInvoiceEntity(invoiceDto);
+    const invoice = invoiceDto
+      ? parsePrismaInvoiceToInvoiceEntity(invoiceDto)
+      : initInvoiceEntity({
+          certificateId: certificate.id,
+          counterPartyId: 0,
+          inputOrOutput: InvoiceTransactionDirection.INPUT,
+          date: 0,
+          no: '',
+          currencyAlias: CurrencyType.TWD,
+          taxType: InvoiceTaxType.TAXABLE,
+          taxRatio: 0,
+          priceBeforeTax: 0,
+          taxPrice: 0,
+          totalPrice: 0,
+          type: InvoiceType.ALL,
+          deductible: false,
+        });
     const file = parsePrismaFileToFileEntity(fileDto);
     const userCertificates = userCertificatesDto.map(
       parsePrismaUserCertificateToUserCertificateEntity
@@ -357,7 +377,10 @@ export const voucherAPIGetOneUtils = {
    */
   initCertificateEntities: (voucher: IGetOneVoucherResponse) => {
     const certificateEntities = voucher.voucherCertificates.map((voucherCertificate) => {
-      return voucherAPIGetOneUtils.initCertificate(voucherCertificate.certificate);
+      const fileURL = getImageUrlFromFileIdV1(voucherCertificate.certificate.file.id);
+      const { certificate } = voucherCertificate;
+      certificate.file.url = fileURL;
+      return voucherAPIGetOneUtils.initCertificate(certificate);
     });
     return certificateEntities;
   },
