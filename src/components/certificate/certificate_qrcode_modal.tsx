@@ -26,7 +26,7 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
 
   const displayedQRCode =
     success && room ? (
-      <div className="mx-20 my-10 flex flex-col items-center">
+      <div className="mx-24 my-5 flex flex-col items-center">
         <Canvas
           text={`${domain}/${ISUNFA_ROUTE.UPLOAD}?token=${room.id}`}
           options={{
@@ -61,7 +61,7 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="relative">
           <h1 className="flex flex-col items-center justify-center gap-2 p-2 text-xl font-semibold text-card-text-title">
-            <div className="text-xl font-semibold">{t('certificate:"UPLOAD".PHONE_SCANNER')}</div>
+            <div className="text-xl font-semibold">{t('certificate:UPLOAD.PHONE_SCANNER')}</div>
             <div className="text-xs font-normal text-card-text-sub">
               {t('certificate:UPLOAD.SCAN_WITH_PHONE')}
             </div>
@@ -71,7 +71,7 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
           </button>
         </section>
         {displayedQRCode}
-        <div className="flex justify-end gap-2 border-t border-stroke-neutral-quaternary px-4 py-3">
+        <div className="flex justify-end gap-2 px-4 py-3">
           <Button
             type="button"
             variant="tertiaryOutline"
