@@ -194,8 +194,10 @@ const voucherGetAllQueryValidatorV2 = z.object({
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
   type: z.preprocess((input) => {
-    if (typeof input === 'string' && input.toLowerCase() === 'all') return undefined;
-    return input;
+    const result = (typeof input === 'string' && input.toLowerCase() === 'all') ?
+      undefined :
+      input;
+    return result;
   }, z.nativeEnum(EventType).optional()),
   tab: z.nativeEnum(VoucherListTabV2),
   startDate: zodStringToNumberWithDefault(0),
@@ -379,8 +381,8 @@ const voucherPostBodyValidatorV2 = z.object({
     )
     .optional()
     .transform((data) => {
-      if (!data) return [];
-      return data;
+      const result = data || [];
+      return result;
     }),
 });
 
@@ -475,7 +477,7 @@ const voucherGetOneOutputValidatorV2 = z
   .nullable()
   .transform((data) => {
     if (data === null) {
-      // 如果輸入為 null，直接返回 null
+      // Info: (20241223 - Murky) 如果輸入為 null，直接返回 null
       return null;
     }
     const voucherDetail: IVoucherDetailForFrontend = {
