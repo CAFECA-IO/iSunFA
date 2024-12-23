@@ -96,7 +96,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
     trigger: updateVoucher,
     success: updateSuccess,
     isLoading: isUpdating,
-  } = APIHandler(APIName.VOUCHER_UPDATE);
+  } = APIHandler(APIName.VOUCHER_PUT_V2);
 
   // Info: (20241118 - Julian) 如果有改動到 Voucher line -> 先 DELETE 舊的再 POST 新的
   const {
@@ -108,7 +108,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
     trigger: createNewVoucher,
     success: createNewSuccess,
     isLoading: isCreating,
-  } = APIHandler(APIName.VOUCHER_CREATE);
+  } = APIHandler(APIName.VOUCHER_POST_V2);
 
   // Info: (20241118 - Julian) 將 API 回傳的資料轉換成 UI 顯示用的格式
   const {
@@ -588,7 +588,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
 
     const body = {
       actions,
-      certificateIds: resultCertificates,
+      certificateIds: resultCertificates.map((certificate) => certificate.id),
       voucherDate: resultDate,
       type: resultType,
       note: resultNote,
@@ -674,7 +674,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
   useEffect(() => {
     if (isUpdating === false) {
       if (updateSuccess) {
-        router.push(`/user/accounting/${voucherId}`);
+        router.push(`/users/accounting/${voucherId}`);
       } else {
         toastHandler({
           id: ToastId.UPDATE_VOUCHER_ERROR,
