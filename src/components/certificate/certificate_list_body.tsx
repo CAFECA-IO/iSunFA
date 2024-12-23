@@ -40,8 +40,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const params = { companyId: selectedCompany?.id };
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { trigger: updateCertificateAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
-  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.INVOICE_POST_V2);
+  const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
+  const { trigger: createInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_POST_V2);
   const { trigger: deleteCertificatesAPI } = APIHandler<number[]>(
     APIName.CERTIFICATE_DELETE_MULTIPLE_V2
   ); // Info: (20241128 - Murky) @tzuhan 這邊會回傳成功被刪掉的certificate
@@ -367,30 +367,14 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       try {
         const { invoice } = certificate;
 
-        const invoicePayload = {
-          certificateId: certificate.id,
-          counterPartyId: invoice.counterParty?.id,
-          inputOrOutput: invoice.inputOrOutput,
-          date: invoice.date,
-          no: invoice.no,
-          currencyAlias: invoice.currencyAlias || currency,
-          priceBeforeTax: invoice.priceBeforeTax,
-          taxType: invoice.taxType,
-          taxRatio: invoice.taxRatio,
-          taxPrice: invoice.taxPrice,
-          totalPrice: invoice.totalPrice,
-          type: invoice.type,
-          deductible: invoice.deductible,
-        };
-
         const postOrPutAPI = invoice.id
-          ? updateCertificateAPI({
-              params: { companyId, invoiceId: invoice.id },
+          ? updateInvoiceAPI({
+              params: { companyId, certificateId: certificate.id, invoiceId: invoice.id },
               body: invoice,
             })
-          : createCertificateAPI({
-              params: { companyId },
-              body: invoicePayload,
+          : createInvoiceAPI({
+              params: { companyId, certificateId: certificate.id },
+              body: invoice,
             });
 
         const { success, data: updatedCertificate } = await postOrPutAPI;

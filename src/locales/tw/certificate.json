@@ -4,8 +4,8 @@
     "EXPORT_CERTIFICATES": "匯出發票"
   },
   "TAB": {
-    "WITHOUT_VOUCHER": "無憑證的發票",
-    "WITH_VOUCHER": "有憑證的發票"
+    "WITHOUT_VOUCHER": "未入帳的憑證",
+    "WITH_VOUCHER": "已入帳的憑證"
   },
   "TABLE": {
     "DATE": "日期",
@@ -59,7 +59,7 @@
   "TITLE": {
     "UPLOAD": "上傳發票",
     "SELECT": "選擇一個或多個發票",
-    "LIST": "發票列表"
+    "LIST": "憑證列表"
   },
   "EDIT": {
     "HEADER": "發票資訊",
@@ -137,7 +137,8 @@
     "COMPLETED": "完成",
     "USE_YOUR_PHONE_AS": "使用您的手機作為",
     "SCANNER": "掃描器",
-    "SCAN_THE_QRCODE": "請掃描二維碼開始用手機掃描"
+    "SCAN_THE_QRCODE": "請掃描二維碼開始用手機掃描",
+    "FILE_SIZE_EXCEEDED": "檔案大小超過 4 MB 上限"
   },
   "CREATE": {
     "FAILED": "創建失敗"

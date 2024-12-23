@@ -180,7 +180,11 @@ const PendingTasksForAll = () => {
   );
 };
 
-const PendingTasks = () => {
+interface PendingTasksProps {
+  getTodoList: () => Promise<void>;
+}
+
+const PendingTasks = ({ getTodoList }: PendingTasksProps) => {
   // Info: (20241018 - Liz) 元件顯示邏輯
   // 沒有公司列表 : 顯示 PendingTaskNoData
   // 有公司列表 且 有選擇公司 : 顯示 PendingTasksForCompany
@@ -238,7 +242,7 @@ const PendingTasks = () => {
   if (isSelectedCompany) {
     return (
       <DashboardCardLayout>
-        <PendingTasksForCompany />
+        <PendingTasksForCompany getTodoList={getTodoList} />
       </DashboardCardLayout>
     );
   }
