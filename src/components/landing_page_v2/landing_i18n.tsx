@@ -72,7 +72,7 @@ const LandingI18n: React.FC = () => {
       <LandingButton
         type="button"
         onClick={toggleDropdown}
-        className="w-170px rounded-sm bg-landing-page-white/30 px-24px font-bold shadow-landing-nav"
+        className="w-170px rounded-sm bg-landing-nav px-24px font-bold shadow-landing-nav"
       >
         <div className="h-20px w-20px overflow-hidden rounded-full">
           <Image

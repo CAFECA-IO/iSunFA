@@ -726,7 +726,9 @@ module.exports = {
 
         // Info: (20241205 - Julian) Landing Page v2
         'landing-btn':
-          'linear-gradient(to bottom, transparent 60%, #FFFFFF80 100%), linear-gradient(to bottom, #FFA502 0%, #FFA502 100%)',
+          'radial-gradient(circle at 50% 120%, #FFFFFF80, #FFA502 60%), linear-gradient(to bottom, #FFA502 0%, #FFA502 100%)',
+        'landing-nav': 'radial-gradient(farthest-corner at 50% 200%, #FFFFFF, #FFFFFF4D 50%)',
+        'cloudy-glass': 'radial-gradient(circle at 50% 150%, #FFFFFF, #FFFFFF4D 40%)',
         cta: 'url("/elements/planet_edge.png")',
         digital: 'url("/elements/digital.svg")',
         sunrise: 'url("/elements/sunrise.png")',

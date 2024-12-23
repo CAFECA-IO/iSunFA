@@ -11,6 +11,7 @@ import EasyToUse from '@/components/landing_page_v2/easy_to_use';
 import GlobalMap from '@/components/landing_page_v2/global_map';
 import FinancialReport from '@/components/landing_page_v2/financial_report';
 import FlexibleFeatureSelection from '@/components/landing_page_v2/flexible_feature_selection';
+import TechnicalFeatures from '@/components/landing_page_v2/technical_features';
 
 const LandingPageBody: React.FC = () => {
   return (
@@ -39,22 +40,10 @@ const LandingPageBody: React.FC = () => {
         <FlexibleFeatureSelection />
 
         {/* Info: (20241223 - Julian) Sunrise */}
-        <div className="h-600px w-full bg-sunrise bg-cover bg-center bg-no-repeat md:h-700px lg:h-850px"></div>
+        <div className="h-600px w-full bg-sunrise bg-cover bg-top bg-no-repeat md:h-700px lg:h-850px"></div>
 
         {/* Info: (20241205 - Julian) Technical Features */}
-        <div className="flex flex-col">
-          {/* Info: (20241205 - Julian) Title */}
-          <LinearGradientText size={LinearTextSize.LG} align={TextAlign.CENTER}>
-            Technical Features
-          </LinearGradientText>
-
-          {/* Info: (20241205 - Julian) Content */}
-          <div className="">
-            <LinearGradientText size={LinearTextSize.SM} align={TextAlign.CENTER}>
-              Precise Decision-Making
-            </LinearGradientText>
-          </div>
-        </div>
+        <TechnicalFeatures />
 
         {/* Info: (20241205 - Julian) Carousel */}
         <div className="flex flex-col">

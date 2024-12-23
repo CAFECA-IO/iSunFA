@@ -32,7 +32,7 @@ const EasyIntroCard: React.FC<{
   return (
     <div
       onClick={onClick}
-      className={`${cardStyle} absolute top-0 flex h-300px w-250px origin-bottom flex-col items-center gap-12px overflow-hidden rounded-lg border-x border-b bg-landing-page-white/30 p-20px text-center backdrop-blur-md transition-all duration-500 ease-in-out md:h-500px md:w-400px md:p-40px`}
+      className={`${cardStyle} absolute top-0 flex h-300px w-250px origin-bottom flex-col items-center gap-12px overflow-hidden rounded-lg border-x border-b bg-cloudy-glass p-20px text-center backdrop-blur-md transition-all duration-500 ease-in-out md:h-500px md:w-400px md:p-40px`}
     >
       {/* Info: (20241218 - Julian) Nail Icon */}
       <Image
