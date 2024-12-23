@@ -38,6 +38,9 @@ const LandingPageBody: React.FC = () => {
         {/* Info: (20241205 - Julian) Flexible Feature Selection */}
         <FlexibleFeatureSelection />
 
+        {/* Info: (20241223 - Julian) Sunrise */}
+        <div className="h-600px w-full bg-sunrise bg-cover bg-center bg-no-repeat md:h-700px lg:h-850px"></div>
+
         {/* Info: (20241205 - Julian) Technical Features */}
         <div className="flex flex-col">
           {/* Info: (20241205 - Julian) Title */}

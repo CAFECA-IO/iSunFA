@@ -110,7 +110,7 @@ const LandingFooter: React.FC = () => {
   );
 
   return (
-    <footer className="flex flex-col gap-24px rounded-sm border-b bg-landing-page-white/30 px-16px py-48px shadow-landing-nav backdrop-blur-md md:px-80px">
+    <footer className="mx-16px flex flex-col gap-24px rounded-sm border-b bg-landing-page-white/30 px-16px py-48px shadow-landing-nav backdrop-blur-md md:mx-36px md:px-80px">
       <div className="flex flex-col gap-40px lg:flex-row">
         <div className="flex flex-col items-center justify-between gap-40px md:flex-row">
           {/* Info: (20241204 - Julian) Logo */}

@@ -724,11 +724,12 @@ module.exports = {
         bg_bookkeeper: 'url("/images/bg_bookkeeper.png")',
         bg_educational_trial_version: 'url("/images/bg_educational_trial_version.png")',
 
-        // Info: (20241205 - Julian) Landing Page
+        // Info: (20241205 - Julian) Landing Page v2
         'landing-btn':
           'linear-gradient(to bottom, transparent 60%, #FFFFFF80 100%), linear-gradient(to bottom, #FFA502 0%, #FFA502 100%)',
         cta: 'url("/elements/planet_edge.png")',
         digital: 'url("/elements/digital.svg")',
+        sunrise: 'url("/elements/sunrise.png")',
       },
       zIndex: {
         '-10': '-10',
