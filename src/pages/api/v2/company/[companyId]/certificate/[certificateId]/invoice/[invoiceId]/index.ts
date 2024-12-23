@@ -19,6 +19,7 @@ import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
+import { Invoice as PrismaInvoice } from '@prisma/client';
 
 const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | null> = async ({
   query,
@@ -54,19 +55,22 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
       });
     }
 
-    const isNeedToCreateNewCounterParty =
-      await putUtils.isNeedToCreateNewCounterParty(counterParty);
+    const originalInvoice: PrismaInvoice = await putUtils.getInvoiceFromPrisma(invoiceId);
+
+    const counterPartyEmbededNote = putUtils.embedCounterPartyIntoNote({
+      originalInvoice,
+      newNote: no,
+      counterPartyFromBody: counterParty,
+    });
 
     const certificateFromPrisma = await putUtils.putInvoiceInPrisma({
       companyId,
-      isNeedToCreateNewCounterParty,
       nowInSecond,
       invoiceId,
       certificateId,
-      counterParty,
       inputOrOutput,
       date,
-      no,
+      no: counterPartyEmbededNote,
       currencyAlias,
       priceBeforeTax,
       taxType,

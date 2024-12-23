@@ -34,3 +34,38 @@ export function initCounterPartyEntity(
 
   return counterPartyEntity;
 }
+
+export function parseCounterPartyFromNoInInvoice(no: string): {
+  note: string;
+  name: string;
+  taxId: string;
+  type: CounterpartyType;
+} {
+  let parsed: Partial<{
+    note: string;
+    name: string;
+    taxId: string;
+    type: string;
+  }> = {};
+
+  try {
+    parsed = JSON.parse(no);
+  } catch {
+    // Info: (20241223 - Murky) 如果解析失敗，回傳空值
+    return {
+      note: '',
+      name: '',
+      taxId: '',
+      type: CounterpartyType.SUPPLIER,
+    };
+  }
+
+  return {
+    note: parsed.note || '',
+    name: parsed.name || '',
+    taxId: parsed.taxId || '',
+    type: Object.values(CounterpartyType).includes(parsed.type as CounterpartyType)
+      ? (parsed.type as CounterpartyType)
+      : CounterpartyType.SUPPLIER,
+  };
+}

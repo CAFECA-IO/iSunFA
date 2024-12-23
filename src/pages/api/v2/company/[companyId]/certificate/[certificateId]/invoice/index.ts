@@ -61,20 +61,17 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
       });
     }
 
-    const isNeedToCreateNewCounterParty =
-      await postUtils.isNeedToCreateNewCounterParty(counterParty);
+    const noteEmbedCounterParty = postUtils.embedCounterPartyIntoNote(no, counterParty);
 
     const currencyAlias = await postUtils.getCurrencyFromSetting(userId);
 
     const certificateFromPrisma = await postUtils.postInvoiceInPrisma({
       companyId,
-      isNeedToCreateNewCounterParty,
       nowInSecond,
       certificateId,
-      counterParty,
       inputOrOutput,
       date,
-      no,
+      no: noteEmbedCounterParty,
       currencyAlias,
       priceBeforeTax,
       taxType: InvoiceTaxType.TAXABLE,
@@ -94,6 +91,11 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
     const invoiceEntity = certificateAPIPostUtils.initInvoiceEntity(certificateFromPrisma, {
       nowInSecond,
     });
+
+    // Info: (20241223 - Murky) Temperary Patch name and taxId of counterParty
+    invoiceEntity.counterParty.name = counterParty.name;
+    invoiceEntity.counterParty.taxId = counterParty.taxId;
+
     const certificateEntity = certificateAPIPostUtils.initCertificateEntity(certificateFromPrisma);
 
     const certificateReadyForTransfer: ICertificateEntity & {

@@ -261,7 +261,15 @@ const invoicePutV2BodySchema = z.object({
     .object({
       id: z.number().optional(),
       name: z.string(),
-      taxId: z.string(),
+      taxId: z
+        .string()
+        .optional()
+        .transform((data) => {
+          if (!data) {
+            return '';
+          }
+          return data;
+        }),
       note: z.string().optional(),
       type: z
         .nativeEnum(CounterpartyType)
@@ -304,7 +312,15 @@ export const invoicePostV2BodySchema = z.object({
   counterParty: z.object({
     id: z.number().optional(),
     name: z.string(),
-    taxId: z.string(),
+    taxId: z
+      .string()
+      .optional()
+      .transform((data) => {
+        if (!data) {
+          return '';
+        }
+        return data;
+      }),
     note: z.string().optional(),
     type: z
       .nativeEnum(CounterpartyType)

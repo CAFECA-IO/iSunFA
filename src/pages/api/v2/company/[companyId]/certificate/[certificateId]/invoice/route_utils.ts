@@ -60,6 +60,21 @@ export const invoicePostApiUtils = {
 
     return !isCounterPartyExistInDB;
   },
+  embedCounterPartyIntoNote: (
+    note: string,
+    counterPartyFromBody?: {
+      name: string;
+      taxId: string;
+      type: CounterpartyType;
+    }
+  ): string => {
+    const name = counterPartyFromBody?.name || '';
+    const taxId = counterPartyFromBody?.taxId || '';
+    const type = counterPartyFromBody?.type || CounterpartyType.SUPPLIER;
+
+    const counterPartyInfo = `{"name":"${name}","taxId":"${taxId}","type":"${type}","note":"${note}"}`;
+    return counterPartyInfo;
+  },
   getCurrencyFromSetting: async (companyId: number) => {
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
     const currencyKey =
@@ -69,14 +84,6 @@ export const invoicePostApiUtils = {
   },
   postInvoiceInPrisma: async (options: {
     companyId: number;
-    isNeedToCreateNewCounterParty: boolean;
-    counterParty: {
-      name: string;
-      taxId: string;
-      type: CounterpartyType;
-      id?: number | undefined;
-      note?: string | undefined;
-    };
     nowInSecond: number;
     certificateId: number;
     inputOrOutput: InvoiceTransactionDirection;
