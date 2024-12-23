@@ -430,6 +430,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.VOUCHER_UPDATE,
   }),
+  [APIName.VOUCHER_PUT_V2]: createConfig({
+    name: APIName.VOUCHER_PUT_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.VOUCHER_PUT_V2,
+  }),
   [APIName.JOURNAL_LIST]: createConfig({
     name: APIName.JOURNAL_LIST,
     method: HttpMethod.GET,

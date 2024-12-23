@@ -8,7 +8,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { invoicePutApiUtils as putUtils } from '@/pages/api/v2/company/[companyId]/invoice/[invoiceId]/route_utils';
+import { invoicePostApiUtils as postUtils } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/invoice/route_utils';
 import {
   certificateAPIGetListUtils,
   certificateAPIPostUtils,
@@ -19,8 +19,14 @@ import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
+import { InvoiceTaxType } from '@/constants/invoice';
 
-const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | null> = async ({
+/**
+ * Info: (20241127 - Murky)
+ * @note
+ * - taxable
+ */
+const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | null> = async ({
   query,
   body,
   session,
@@ -28,17 +34,16 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICertificate | null = null;
 
-  const { invoiceId } = query;
-  const { userId } = session;
+  const { userId, companyId } = session;
+  const { certificateId } = query;
   const {
-    certificateId,
-    counterPartyId,
+    counterParty,
     inputOrOutput,
     date,
     no,
-    currencyAlias,
+    // currencyAlias,
     priceBeforeTax,
-    taxType,
+    // taxType,
     taxRatio,
     taxPrice,
     totalPrice,
@@ -48,31 +53,28 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
   const nowInSecond = getTimestampNow();
 
   try {
-    if (certificateId && !putUtils.isCertificateExistInDB(certificateId)) {
-      putUtils.throwErrorAndLog(loggerBack, {
+    const isCertificateExistInDB = await postUtils.isCertificateExistInDB(certificateId);
+    if (!isCertificateExistInDB) {
+      postUtils.throwErrorAndLog(loggerBack, {
         errorMessage: 'Certificate not found',
         statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
       });
     }
 
-    if (counterPartyId && !putUtils.isCounterPartyExistInDB(counterPartyId)) {
-      putUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: 'CounterParty not found',
-        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
-      });
-    }
+    const noteEmbedCounterParty = postUtils.embedCounterPartyIntoNote(no, counterParty);
 
-    const certificateFromPrisma = await putUtils.putInvoiceInPrisma({
+    const currencyAlias = await postUtils.getCurrencyFromSetting(userId);
+
+    const certificateFromPrisma = await postUtils.postInvoiceInPrisma({
+      companyId,
       nowInSecond,
-      invoiceId,
       certificateId,
-      counterPartyId,
       inputOrOutput,
       date,
-      no,
+      no: noteEmbedCounterParty,
       currencyAlias,
       priceBeforeTax,
-      taxType,
+      taxType: InvoiceTaxType.TAXABLE,
       taxRatio,
       taxPrice,
       totalPrice,
@@ -89,6 +91,11 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
     const invoiceEntity = certificateAPIPostUtils.initInvoiceEntity(certificateFromPrisma, {
       nowInSecond,
     });
+
+    // Info: (20241223 - Murky) Temperary Patch name and taxId of counterParty
+    invoiceEntity.counterParty.name = counterParty.name;
+    invoiceEntity.counterParty.taxId = counterParty.taxId;
+
     const certificateEntity = certificateAPIPostUtils.initCertificateEntity(certificateFromPrisma);
 
     const certificateReadyForTransfer: ICertificateEntity & {
@@ -114,11 +121,12 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    loggerError({
+    const errorInfo = {
       userId,
       errorType: error.name,
       errorMessage: error.message,
-    });
+    };
+    loggerError(errorInfo);
   }
 
   return {
@@ -138,7 +146,7 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  PUT: (req, res) => withRequestValidation(APIName.INVOICE_PUT_V2, req, res, handlePutRequest),
+  POST: (req, res) => withRequestValidation(APIName.INVOICE_POST_V2, req, res, handlePostRequest),
 };
 
 export default async function handler(
@@ -158,12 +166,12 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    loggerError({
+    const errorInfo = {
       userId,
       errorType: error.name,
       errorMessage: error.message,
-    });
-    statusMessage = error.message;
+    };
+    loggerError(errorInfo);
   }
   const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);
   res.status(httpCode).json(result);

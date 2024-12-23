@@ -8,7 +8,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { invoicePostApiUtils as postUtils } from '@/pages/api/v2/company/[companyId]/invoice/route_utils';
+import { invoicePutApiUtils as putUtils } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/invoice/[invoiceId]/route_utils';
 import {
   certificateAPIGetListUtils,
   certificateAPIPostUtils,
@@ -19,30 +19,26 @@ import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
-import { InvoiceTaxType } from '@/constants/invoice';
+import { Invoice as PrismaInvoice } from '@prisma/client';
 
-/**
- * Info: (20241127 - Murky)
- * @note
- * - taxable
- */
-const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | null> = async ({
+const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | null> = async ({
+  query,
   body,
   session,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICertificate | null = null;
 
-  const { userId } = session;
+  const { invoiceId, certificateId } = query;
+  const { userId, companyId } = session;
   const {
-    certificateId,
-    counterPartyId,
+    counterParty,
     inputOrOutput,
     date,
     no,
-    // currencyAlias,
+    currencyAlias,
     priceBeforeTax,
-    // taxType,
+    taxType,
     taxRatio,
     taxPrice,
     totalPrice,
@@ -52,34 +48,32 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
   const nowInSecond = getTimestampNow();
 
   try {
-    const isCertificateExistInDB = await postUtils.isCertificateExistInDB(certificateId);
-    if (!isCertificateExistInDB) {
-      postUtils.throwErrorAndLog(loggerBack, {
+    if (certificateId && !putUtils.isCertificateExistInDB(certificateId)) {
+      putUtils.throwErrorAndLog(loggerBack, {
         errorMessage: 'Certificate not found',
         statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
       });
     }
 
-    const isCounterPartyExistInDB = await postUtils.isCounterPartyExistInDB(counterPartyId);
-    if (!isCounterPartyExistInDB) {
-      postUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: 'CounterParty not found',
-        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
-      });
-    }
+    const originalInvoice: PrismaInvoice = await putUtils.getInvoiceFromPrisma(invoiceId);
 
-    const currencyAlias = await postUtils.getCurrencyFromSetting(userId);
+    const counterPartyEmbededNote = putUtils.embedCounterPartyIntoNote({
+      originalInvoice,
+      newNote: no,
+      counterPartyFromBody: counterParty,
+    });
 
-    const certificateFromPrisma = await postUtils.postInvoiceInPrisma({
+    const certificateFromPrisma = await putUtils.putInvoiceInPrisma({
+      companyId,
       nowInSecond,
+      invoiceId,
       certificateId,
-      counterPartyId,
       inputOrOutput,
       date,
-      no,
+      no: counterPartyEmbededNote,
       currencyAlias,
       priceBeforeTax,
-      taxType: InvoiceTaxType.TAXABLE,
+      taxType,
       taxRatio,
       taxPrice,
       totalPrice,
@@ -121,12 +115,11 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    const errorInfo = {
+    loggerError({
       userId,
       errorType: error.name,
       errorMessage: error.message,
-    };
-    loggerError(errorInfo);
+    });
   }
 
   return {
@@ -146,7 +139,7 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  POST: (req, res) => withRequestValidation(APIName.INVOICE_POST_V2, req, res, handlePostRequest),
+  PUT: (req, res) => withRequestValidation(APIName.INVOICE_PUT_V2, req, res, handlePutRequest),
 };
 
 export default async function handler(
@@ -166,12 +159,12 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const errorInfo = {
+    loggerError({
       userId,
       errorType: error.name,
       errorMessage: error.message,
-    };
-    loggerError(errorInfo);
+    });
+    statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);
   res.status(httpCode).json(result);
