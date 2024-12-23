@@ -4,8 +4,8 @@
     "EXPORT_CERTIFICATES": "导出发票"
   },
   "TAB": {
-    "WITHOUT_VOUCHER": "无凭证的发票",
-    "WITH_VOUCHER": "有凭证的发票"
+    "WITHOUT_VOUCHER": "未入帐的凭证",
+    "WITH_VOUCHER": "已入帐的凭证"
   },
   "TABLE": {
     "DATE": "日期",
@@ -59,7 +59,7 @@
   "TITLE": {
     "UPLOAD": "上传发票",
     "SELECT": "选择一个或多个发票",
-    "LIST": "发票列表"
+    "LIST": "凭证列表"
   },
   "EDIT": {
     "HEADER": "发票信息",
@@ -137,7 +137,8 @@
     "COMPLETED": "完成",
     "USE_YOUR_PHONE_AS": "使用您的手机作为",
     "SCANNER": "扫描器",
-    "SCAN_THE_QRCODE": "请扫描二维码开始用手机扫描"
+    "SCAN_THE_QRCODE": "请扫描二维码开始用手机扫描",
+    "FILE_SIZE_EXCEEDED": "文件大小超过 4 MB 上限"
   },
   "CREATE": {
     "FAILED": "创建失败"
