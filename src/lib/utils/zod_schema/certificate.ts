@@ -84,12 +84,10 @@ const certificateListQueryValidator = z.object({
     .nativeEnum(InvoiceType)
     .optional()
     .transform((data) => {
-      if (data === undefined) {
-        return undefined;
-      } else if (data === InvoiceType.ALL) {
-        return undefined;
-      }
-      return data;
+      const result = data ?
+        (data === InvoiceType.ALL ? undefined : data) :
+        undefined;
+      return result;
     }), // Info: (20241107 - Murky) @tzuhan, type 使用 InvoiceType, 如果要選擇全部可以填 undefined
   startDate: zodStringToNumberWithDefault(0),
   endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
@@ -265,20 +263,16 @@ const invoicePutV2BodySchema = z.object({
         .string()
         .optional()
         .transform((data) => {
-          if (!data) {
-            return '';
-          }
-          return data;
+          const result = data || '';
+          return result;
         }),
       note: z.string().optional(),
       type: z
         .nativeEnum(CounterpartyType)
         .optional()
         .transform((type) => {
-          if (!type) {
-            return CounterpartyType.SUPPLIER;
-          }
-          return type;
+          const result = type || CounterpartyType.SUPPLIER;
+          return result;
         }),
     })
     .optional(),
@@ -316,20 +310,16 @@ export const invoicePostV2BodySchema = z.object({
       .string()
       .optional()
       .transform((data) => {
-        if (!data) {
-          return '';
-        }
-        return data;
+        const result = data || '';
+        return result;
       }),
     note: z.string().optional(),
     type: z
       .nativeEnum(CounterpartyType)
       .optional()
       .transform((type) => {
-        if (!type) {
-          return CounterpartyType.SUPPLIER;
-        }
-        return type;
+        const result = type || CounterpartyType.SUPPLIER;
+        return result;
       }),
   }),
   inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
