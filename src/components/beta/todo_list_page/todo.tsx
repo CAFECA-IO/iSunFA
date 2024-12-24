@@ -5,6 +5,16 @@ import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { ITodoCompany } from '@/interfaces/todo';
 import { Dispatch, SetStateAction } from 'react';
 
+const formatDateForGoogleCalendar = (date: number) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0'); // Info: (20241224 - Liz) months are 0-indexed
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${year}${month}${day}T${hours}${minutes}00`; // Info: (20241224 - Liz) Format: YYYYMMDDTHHMMSS
+};
+
 interface TodoProps {
   todo: ITodoCompany;
   setTodoToUpdate: Dispatch<SetStateAction<ITodoCompany | undefined>>;
@@ -13,6 +23,7 @@ interface TodoProps {
 
 const Todo = ({ todo, setTodoToUpdate, setTodoToDelete }: TodoProps) => {
   const { t } = useTranslation('dashboard');
+  const unixTimeStamp = Math.floor(todo.endTime / 1000); // Info: (20241218 - Liz) 月曆元件需要 unix timestamp 格式(秒級)
 
   const openUpdateTodoModal = () => {
     setTodoToUpdate(todo);
@@ -22,7 +33,19 @@ const Todo = ({ todo, setTodoToUpdate, setTodoToDelete }: TodoProps) => {
     setTodoToDelete(todo);
   };
 
-  const unixTimeStamp = Math.floor(todo.endTime / 1000); // Info: (20241218 - Liz) 月曆元件需要 unix timestamp 格式(秒級)
+  const shareToGoogleCalendar = () => {
+    const startTime = formatDateForGoogleCalendar(todo.startTime);
+    const endTime = formatDateForGoogleCalendar(todo.endTime);
+    const eventTitle = encodeURIComponent(todo.name);
+    const companyName = todo.company.id === 555 ? '' : todo.company.name + ':';
+    const eventDetails = encodeURIComponent(companyName + todo.note || '');
+    const timeZone = 'Asia/Taipei';
+
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&details=${eventDetails}&dates=${startTime}/${endTime}&ctz=${timeZone}`;
+
+    // Info: (20241224 - Liz) 在新視窗開啟 Google 日曆新增事件頁面
+    window.open(googleCalendarUrl, '_blank');
+  };
 
   return (
     <section className="flex divide-x-2 divide-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
@@ -56,7 +79,7 @@ const Todo = ({ todo, setTodoToUpdate, setTodoToDelete }: TodoProps) => {
           <FiEdit size={16} />
         </button>
         <button type="button">
-          <FiShare2 size={16} />
+          <FiShare2 size={16} onClick={shareToGoogleCalendar} />
         </button>
         <button type="button" onClick={openDeleteTodoModal}>
           <FiTrash2 size={16} />
