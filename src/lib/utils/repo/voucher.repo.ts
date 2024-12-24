@@ -481,6 +481,7 @@ export async function postVoucherV2({
   originalVoucher,
   issuer,
   eventControlPanel: { revertEvent },
+  certificateIds,
 }: {
   nowInSecond: number;
   company: ICompanyEntity;
@@ -491,6 +492,7 @@ export async function postVoucherV2({
     recurringEvent: IEventEntity | null;
     assetEvent: IEventEntity | null;
   };
+  certificateIds: number[];
 }) {
   // ToDo: (20241030 - Murky) Implement recurringEvent and assetEvent
   // const isRecurringEvent = !!recurringEvent;
@@ -520,6 +522,17 @@ export async function postVoucherV2({
           connect: {
             id: company.id,
           },
+        },
+        voucherCertificates: {
+          create: certificateIds.map((certificateId) => ({
+            certificate: {
+              connect: {
+                id: certificateId,
+              },
+            },
+            createdAt: nowInSecond,
+            updatedAt: nowInSecond,
+          })),
         },
         issuer: {
           connect: {
