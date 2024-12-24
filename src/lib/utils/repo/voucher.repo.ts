@@ -1990,3 +1990,23 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
   });
   return result;
 }
+
+export const findVouchersByVoucherIds = async (
+  voucherIds: number[]
+): Promise<{ id: number; date: number; no: string; type: string }[]> => {
+  try {
+    const vouchers = await prisma.voucher.findMany({
+      where: {
+        id: { in: voucherIds },
+      },
+    });
+    return vouchers;
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Find vouchers by voucher ids in findVouchersByVoucherIds failed',
+      errorMessage: error as Error,
+    });
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
+};
