@@ -1,11 +1,8 @@
-import { CurrencyType } from '@/constants/currency';
 import { LabelType } from '@/constants/ledger';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountBookLedgerJSON } from '@/interfaces/account_book_node';
 import { getAllLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
 import { ILedgerItem, ILedgerTotal } from '@/interfaces/ledger';
 import { getLedgerJSON } from '@/lib/utils/repo/account_book.repo';
-import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP } from '@/constants/account';
 import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
 
@@ -90,24 +87,35 @@ export const convertLedgerJsonToCsvData = (
   return csvData;
 };
 
-/**
- * 驗證分頁參數是否有效
- */
-export const validatePagination = (pageNumber: number): void => {
-  if (pageNumber < 1) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+export const convertLedgerItemToCsvData = (
+  ledgerItems: ILedgerItem[],
+  voucherMap: Map<
+    number,
+    {
+      id: number;
+      date: string;
+      no: string;
+      type: string;
+    }
+  >
+) => {
+  const csvData = ledgerItems.map((item) => {
+    return {
+      accountId: item.accountId,
+      no: item.no,
+      accountingTitle: item.accountingTitle,
+      voucherNumber: voucherMap.get(item.voucherId)?.no,
+      voucherDate: voucherMap.get(item.voucherId)?.date,
+      particulars: item.particulars,
+      debitAmount: item.debitAmount,
+      creditAmount: item.creditAmount,
+      balance: item.balance,
+    };
+  });
+  return csvData;
 };
 
-/**
- * 獲取會計幣別設定
- */
-export const fetchCurrencyAlias = async (companyId: number): Promise<CurrencyType> => {
-  const accountingSettingData = await getAccountingSettingByCompanyId(companyId);
-  return (accountingSettingData?.currency as CurrencyType) || CurrencyType.TWD;
-};
-
-/**
+/** Info: (20241224 - Shirley)
  * 獲取分錄明細
  */
 export const fetchLineItems = async (
@@ -119,7 +127,7 @@ export const fetchLineItems = async (
   return rs;
 };
 
-/**
+/** Info: (20241224 - Shirley)
  * 根據科目範圍過濾分錄
  */
 export const filterByAccountRange = (
@@ -142,7 +150,7 @@ export const filterByAccountRange = (
   });
 };
 
-/**
+/** Info: (20241224 - Shirley)
  * 根據標籤類型過濾分錄
  */
 export const filterByLabelType = (
@@ -162,7 +170,7 @@ export const filterByLabelType = (
   });
 };
 
-/**
+/** Info: (20241224 - Shirley)
  * 排序並計算餘額變化
  */
 export const sortAndCalculateBalances = (
@@ -208,7 +216,7 @@ export const sortAndCalculateBalances = (
     });
 };
 
-/**
+/** Info: (20241224 - Shirley)
  * 計算總額
  */
 export const calculateTotals = (processedLineItems: ILedgerItem[]): ILedgerTotal => {

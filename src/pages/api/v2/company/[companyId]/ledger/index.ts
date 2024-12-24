@@ -7,16 +7,16 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { formatPaginatedLedger } from '@/lib/utils/formatter/ledger.formatter';
+import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { LabelType } from '@/constants/ledger';
 import {
   calculateTotals,
   filterByAccountRange,
   fetchLineItems,
-  fetchCurrencyAlias,
   filterByLabelType,
   sortAndCalculateBalances,
-  validatePagination,
 } from '@/lib/utils/ledger';
+import { CurrencyType } from '@/constants/currency';
 
 interface IPayload extends ILedgerPayload {}
 
@@ -55,11 +55,17 @@ export const handleGetRequest: IHandleRequest<APIName.LEDGER_LIST, IPayload> = a
   const pageNumber = page;
 
   try {
-    validatePagination(pageNumber);
+    if (pageNumber < 1) {
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    }
 
-    const currencyAlias = await fetchCurrencyAlias(companyId);
+    let currencyAlias = CurrencyType.TWD;
+    const accountingSettingData = await getAccountingSettingByCompanyId(companyId);
+    if (accountingSettingData?.currency) {
+      currencyAlias = accountingSettingData.currency as CurrencyType;
+    }
+
     let lineItems = await fetchLineItems(companyId, startDate, endDate);
-
     lineItems = filterByAccountRange(lineItems, startAccountNo, endAccountNo);
     lineItems = filterByLabelType(lineItems, labelType as LabelType);
     const processedLineItems = sortAndCalculateBalances(lineItems);
