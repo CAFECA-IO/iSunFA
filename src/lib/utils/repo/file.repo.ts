@@ -37,7 +37,7 @@ export async function createFile({
   iv?: Buffer | Uint8Array;
 }) {
   // Info: (20240830 - Murky) iv has default "", so it can be not provided
-  const ivBuffer = iv ? Buffer.from(iv) : undefined;
+  const ivBuffer = iv ? Buffer.from(iv.toString()) : undefined;
 
   const nowInSecond = getTimestampNow();
 

@@ -3,7 +3,7 @@ import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFileBeta } from '@/interfaces/file';
-import { parseForm } from '@/lib/utils/parse_image_form';
+import { parseForm, readFile } from '@/lib/utils/parse_image_form';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
@@ -13,7 +13,12 @@ import formidable from 'formidable';
 import loggerBack from '@/lib/utils/logger_back';
 import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
 import { createFile } from '@/lib/utils/repo/file.repo';
-import { generateFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
+import {
+  decryptRoomFile,
+  generateFilePathWithBaseUrlPlaceholder,
+  parseFilePathWithBaseUrlPlaceholder,
+  writeBufferToFile,
+} from '@/lib/utils/file';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
@@ -21,6 +26,7 @@ import { roomManager } from '@/lib/utils/room';
 import { File } from '@prisma/client';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
+import { parseJsonWebKeyFromString } from '@/lib/utils/formatter/json_web_key.formatter';
 
 export const config = {
   api: {
@@ -34,7 +40,8 @@ async function handleFileUpload(
   targetId: string,
   isEncrypted: boolean,
   encryptedSymmetricKey: string,
-  iv: Uint8Array
+  iv: Uint8Array,
+  publicKey: JsonWebKey | null
 ) {
   const ivBuffer = uint8ArrayToBuffer(iv);
   const fileForSave = file[0];
@@ -46,12 +53,46 @@ async function handleFileUpload(
 
   switch (type) {
     case UploadType.KYC:
-    case UploadType.ROOM:
     case UploadType.INVOICE: {
       const localUrl = generateFilePathWithBaseUrlPlaceholder(
         fileName,
         UPLOAD_TYPE_TO_FOLDER_MAP[type]
       );
+      fileUrl = localUrl || '';
+      break;
+    }
+
+    case UploadType.ROOM: {
+      if (!publicKey) {
+        loggerBack.info(`Public key not found in handleFileUpload in image/[imageId]: ${targetId}`);
+        throw new Error(STATUS_MESSAGE.BAD_REQUEST);
+      }
+
+      const localUrl = generateFilePathWithBaseUrlPlaceholder(
+        fileName,
+        UPLOAD_TYPE_TO_FOLDER_MAP[type]
+      );
+
+      const filePath = parseFilePathWithBaseUrlPlaceholder(localUrl);
+
+      const fileBuffer = await readFile(filePath);
+      if (!fileBuffer) {
+        loggerBack.info(`Error in reading file from Room Post by publicKey: ${publicKey}`);
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+      }
+
+      const decryptedFileBuffer = await decryptRoomFile({
+        imageBuffer: fileBuffer,
+        publicKey,
+        encryptedSymmetricKey,
+        iv,
+      });
+
+      // Info: (20241224 - Murky) 直接覆蓋原本的檔案
+      await writeBufferToFile({
+        filePath,
+        buffer: decryptedFileBuffer,
+      });
       fileUrl = localUrl || '';
       break;
     }
@@ -127,7 +168,7 @@ async function handleFileUpload(
 }
 
 function extractKeyAndIvFromFields(fields: formidable.Fields) {
-  const { encryptedSymmetricKey, iv } = fields;
+  const { encryptedSymmetricKey, iv, publicKey } = fields;
   const keyStr =
     encryptedSymmetricKey && encryptedSymmetricKey.length ? encryptedSymmetricKey[0] : '';
   const ivStr = iv ? iv[0] : '';
@@ -136,10 +177,17 @@ function extractKeyAndIvFromFields(fields: formidable.Fields) {
 
   const isEncrypted = !!(keyStr && ivUnit8.length > 0);
 
+  // Info: (20241224 - Murky) PublicKey is for room searching
+  const publicKeyStr = publicKey ? publicKey[0] : '';
+  const jsonPublicKey: JsonWebKey | null = publicKeyStr
+    ? parseJsonWebKeyFromString(publicKeyStr)
+    : null;
+
   return {
     isEncrypted,
     encryptedSymmetricKey: keyStr,
     iv: ivUnit8,
+    publicKey: jsonPublicKey,
   };
 }
 
@@ -152,7 +200,7 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
   const parsedForm = await parseForm(req, UPLOAD_TYPE_TO_FOLDER_MAP[type]);
   const { files, fields } = parsedForm;
   const { file } = files;
-  const { isEncrypted, encryptedSymmetricKey, iv } = extractKeyAndIvFromFields(fields);
+  const { isEncrypted, encryptedSymmetricKey, iv, publicKey } = extractKeyAndIvFromFields(fields);
 
   if (!file) {
     statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
@@ -164,7 +212,8 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
       targetId,
       isEncrypted,
       encryptedSymmetricKey,
-      iv
+      iv,
+      publicKey
     );
     payload = returnFile;
     statusMessage = STATUS_MESSAGE.CREATED;

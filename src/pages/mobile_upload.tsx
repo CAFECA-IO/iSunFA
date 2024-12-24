@@ -139,6 +139,8 @@ const MobileUploadPage: React.FC = () => {
           const formData = new FormData();
           formData.append('file', encryptedFile);
           formData.append('encryptedSymmetricKey', encryptedSymmetricKey);
+
+          // Info: (20241224 - Murky) Public key 可以提供JsonWebKey格式嗎？
           formData.append('publicKey', JSON.stringify(keyPair.publicKey));
           formData.append('iv', Array.from(iv).join(','));
 

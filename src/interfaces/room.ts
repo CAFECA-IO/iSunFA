@@ -5,3 +5,8 @@ export interface IRoom {
   password: string;
   fileList: IFileBeta[];
 }
+
+export interface IRoomWithKeyChain extends IRoom {
+  publicKey: JsonWebKey;
+  privateKey: JsonWebKey;
+}

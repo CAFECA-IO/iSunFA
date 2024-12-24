@@ -15,12 +15,15 @@ import {
   bufferToUint8Array,
   decryptFile,
   getPrivateKeyByCompany,
+  importPrivateKey,
 } from '@/lib/utils/crypto';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IFileEntity } from '@/interfaces/file';
 import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
+import { roomManager } from '@/lib/utils/room';
+import { IRoomWithKeyChain } from '@/interfaces/room';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
@@ -112,6 +115,41 @@ export async function decryptImageFile({
   return decryptedBuffer;
 }
 
+export async function decryptRoomFile({
+  imageBuffer,
+  publicKey,
+  encryptedSymmetricKey,
+  iv,
+}: {
+  imageBuffer: Buffer;
+  publicKey: JsonWebKey;
+  encryptedSymmetricKey: string;
+  iv: Uint8Array;
+}): Promise<Buffer> {
+  let decryptedBuffer = imageBuffer;
+
+  const encryptedArrayBuffer: ArrayBuffer = bufferToArrayBuffer(imageBuffer);
+  const room: IRoomWithKeyChain | null = roomManager.getRoomWithKeyChainByPublicKey(publicKey);
+  if (!room) {
+    loggerBack.error(
+      `Room not found in decryptRoomFile in room/[roomId] by publicKye: ${publicKey}`
+    );
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+  const privateKey: CryptoKey = await importPrivateKey(room.privateKey);
+
+  const decryptedArrayBuffer = await decryptFile(
+    encryptedArrayBuffer,
+    encryptedSymmetricKey,
+    privateKey,
+    iv
+  );
+
+  decryptedBuffer = arrayBufferToBuffer(decryptedArrayBuffer);
+
+  return decryptedBuffer;
+}
+
 /**
  * Info: (20241023 - Murky)
  * @description create a new IFileEntity object from scratch
@@ -142,4 +180,20 @@ export function initFileEntity(
   };
 
   return fileEntity;
+}
+
+export async function writeBufferToFile({
+  buffer,
+  filePath,
+}: {
+  buffer: Buffer;
+  filePath: string;
+}): Promise<string | null> {
+  try {
+    await fs.writeFile(filePath, new Uint8Array(buffer.buffer));
+  } catch (error) {
+    loggerBack.error(error, `Error in writeBufferToFile in file.ts`);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+  }
+  return filePath;
 }
