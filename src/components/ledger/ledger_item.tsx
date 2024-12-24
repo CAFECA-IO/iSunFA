@@ -5,6 +5,7 @@ import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { checkboxStyle } from '@/constants/display';
 import { EventType, VoucherType } from '@/constants/account';
+import Link from 'next/link';
 
 // Info: (20241004 - Anna) temp interface
 export interface ILedgerBeta {
@@ -18,6 +19,7 @@ export interface ILedgerBeta {
   creditAmount: number;
   debitAmount: number;
   balance: number;
+  voucherId: number;
 }
 
 interface ILedgerItemProps {
@@ -25,7 +27,7 @@ interface ILedgerItemProps {
 }
 
 const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
-  const { voucherDate, voucherNumber, voucherType, particulars } = ledger;
+  const { voucherDate, voucherNumber, voucherType, particulars, voucherId } = ledger;
 
   const [isChecked, setIsChecked] = useState(false);
 
@@ -50,17 +52,32 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
     voucherType === VoucherType.RECEIVE ? (
       <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
         <FaDownload size={14} className="text-surface-state-error-dark" />
-        <p className="text-sm text-text-state-error-solid">{voucherNumber}</p>
+        <Link
+          href={`/users/accounting/${voucherId}`}
+          className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+        >
+          <p className="text-sm text-text-state-error-solid">{voucherNumber}</p>
+        </Link>
       </div>
     ) : voucherType === VoucherType.EXPENSE ? (
       <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
         <FaUpload size={14} className="text-surface-state-success-dark" />
-        <p className="text-sm text-text-state-success-solid">{voucherNumber}</p>
+        <Link
+          href={`/users/accounting/${voucherId}`}
+          className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+        >
+          <p className="text-sm text-text-state-success-solid">{voucherNumber}</p>
+        </Link>
       </div>
     ) : (
       <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
         <FiRepeat size={14} className="text-surface-brand-secondary" />
-        <p className="text-sm text-badge-text-secondary-solid">{voucherNumber}</p>
+        <Link
+          href={`/users/accounting/${voucherId}`}
+          className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+        >
+          <p className="text-sm text-badge-text-secondary-solid">{voucherNumber}</p>
+        </Link>
       </div>
     );
 

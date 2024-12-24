@@ -160,11 +160,24 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
 
   // Info: (20241118 - Anna) 渲染有效的憑證數據列表
   const displayedLedgerList = ledgerItemsData.map((ledger) => {
-    const { id = '', creditAmount = 0, debitAmount = 0, balance = 0 } = ledger || {};
+    const {
+      id = '',
+      creditAmount = 0,
+      debitAmount = 0,
+      balance = 0,
+      voucherId = '',
+    } = ledger || {};
     return (
       <LedgerItem
         key={id}
-        ledger={{ ...ledger, creditAmount, debitAmount, balance }} // Info: (20241118 - Anna) 確保每個欄位有預設值
+        ledger={{
+          ...ledger,
+          creditAmount,
+          debitAmount,
+          balance,
+          // Info: (20241224 - Anna) 將字串轉換為整數
+          voucherId: typeof voucherId === 'string' ? parseInt(voucherId, 10) : voucherId,
+        }} // Info: (20241118 - Anna) 確保每個欄位有預設值
       />
     );
   });
