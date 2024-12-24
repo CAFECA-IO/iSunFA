@@ -88,8 +88,6 @@ const LedgerPageBody = () => {
             pageSize: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
           },
         });
-        // eslint-disable-next-line no-console
-        console.log('APIName.LEDGER_LIST response data:', data);
         setLedgerData(data);
       };
 
