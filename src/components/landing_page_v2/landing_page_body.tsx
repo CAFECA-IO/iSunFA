@@ -1,11 +1,6 @@
 import React from 'react';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
 import LandingFooter from '@/components/landing_page_v2/landing_footer';
-import {
-  LinearGradientText,
-  LinearTextSize,
-  TextAlign,
-} from '@/components/landing_page_v2/linear_gradient_text';
 import CTA from '@/components/landing_page_v2/cta';
 import EasyToUse from '@/components/landing_page_v2/easy_to_use';
 import GlobalMap from '@/components/landing_page_v2/global_map';
@@ -13,6 +8,7 @@ import FinancialReport from '@/components/landing_page_v2/financial_report';
 import FlexibleFeatureSelection from '@/components/landing_page_v2/flexible_feature_selection';
 import TechnicalFeatures from '@/components/landing_page_v2/technical_features';
 import TechnicalCarousel from '@/components/landing_page_v2/technical_carousel';
+import HappyCustomer from '@/components/landing_page_v2/happy_customer';
 
 const LandingPageBody: React.FC = () => {
   return (
@@ -50,15 +46,7 @@ const LandingPageBody: React.FC = () => {
         <TechnicalCarousel />
 
         {/* Info: (20241205 - Julian) Trusted by Happy Customer */}
-        <div className="flex flex-col">
-          {/* Info: (20241205 - Julian) Title */}
-          <div className="flex flex-col items-center">
-            <p className="text-28px font-medium text-landing-page-white">iSunFA</p>
-            <LinearGradientText size={LinearTextSize.LG} align={TextAlign.CENTER}>
-              Trusted by Happy Customer
-            </LinearGradientText>
-          </div>
-        </div>
+        <HappyCustomer />
 
         {/* Info: (20241205 - Julian) Footer */}
         <LandingFooter />
