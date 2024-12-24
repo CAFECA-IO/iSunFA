@@ -60,7 +60,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         date: certificate.invoice.date,
         no: certificate.invoice.no,
         priceBeforeTax: certificate.invoice.priceBeforeTax,
-        taxRatio: certificate.invoice.taxRatio,
+        taxRatio: certificate.invoice.taxRatio ?? 0,
         taxPrice: certificate.invoice.taxPrice,
         totalPrice: certificate.invoice.totalPrice,
         counterParty: certificate.invoice.counterParty,
@@ -95,9 +95,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         | InvoiceType
         | boolean
     ) => {
-      // Deprecate: (20241220 - tzuhan) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('handleInputChange field:', field, 'value:', value);
       setFormState((prev) => ({ ...prev, [field]: value }));
     },
     []
