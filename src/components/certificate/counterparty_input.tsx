@@ -197,6 +197,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       addCounterPartyModalDataHandler({
         onSave: handleAddCounterparty,
         name,
+        saveName: !!name,
         taxId,
       });
 
@@ -265,6 +266,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       addCounterPartyModalDataHandler({
         onSave: handleAddCounterparty,
         name: company.name || '',
+        saveName: !!company.name,
         taxId: company.taxId || '',
       });
     };
