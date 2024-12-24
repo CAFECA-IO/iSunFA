@@ -16,9 +16,9 @@ import {
   filterLedgerJSONByLabelType,
   getLedgerFromAccountBook,
 } from '@/lib/utils/ledger';
-import { findVouchersByVoucherIds } from '@/lib/utils/repo/ledger.repo';
 import { DEFAULT_TIMEZONE } from '@/constants/common';
 import { ledgerAvailableFields, LedgerFieldsMap } from '@/constants/export_ledger';
+import { findVouchersByVoucherIds } from '@/lib/utils/repo/voucher.repo';
 
 const handlePostRequest = async (req: NextApiRequest, res: NextApiResponse) => {
   const { fileType, filters, options } = req.body;

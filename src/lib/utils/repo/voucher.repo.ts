@@ -481,6 +481,7 @@ export async function postVoucherV2({
   originalVoucher,
   issuer,
   eventControlPanel: { revertEvent },
+  certificateIds,
 }: {
   nowInSecond: number;
   company: ICompanyEntity;
@@ -491,6 +492,7 @@ export async function postVoucherV2({
     recurringEvent: IEventEntity | null;
     assetEvent: IEventEntity | null;
   };
+  certificateIds: number[];
 }) {
   // ToDo: (20241030 - Murky) Implement recurringEvent and assetEvent
   // const isRecurringEvent = !!recurringEvent;
@@ -520,6 +522,17 @@ export async function postVoucherV2({
           connect: {
             id: company.id,
           },
+        },
+        voucherCertificates: {
+          create: certificateIds.map((certificateId) => ({
+            certificate: {
+              connect: {
+                id: certificateId,
+              },
+            },
+            createdAt: nowInSecond,
+            updatedAt: nowInSecond,
+          })),
         },
         issuer: {
           connect: {
@@ -1990,3 +2003,23 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
   });
   return result;
 }
+
+export const findVouchersByVoucherIds = async (
+  voucherIds: number[]
+): Promise<{ id: number; date: number; no: string; type: string }[]> => {
+  try {
+    const vouchers = await prisma.voucher.findMany({
+      where: {
+        id: { in: voucherIds },
+      },
+    });
+    return vouchers;
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Find vouchers by voucher ids in findVouchersByVoucherIds failed',
+      errorMessage: error as Error,
+    });
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
+};
