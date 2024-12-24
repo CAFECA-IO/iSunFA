@@ -53,6 +53,8 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
     setIsAddCounterPartyModalVisible(!isAddCounterPartyModalVisible);
   };
   const addCounterPartyModalDataHandler = (data: IAddCounterPartyModalData) => {
+    // eslint-disable-next-line no-console
+    console.log(`addCounterPartyModalDataHandler: data`, data);
     setAddCounterPartyModalData(data);
   };
 
