@@ -69,13 +69,13 @@ const ItemSummary = ({
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="w-77px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+                <th className="w-77px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
+                <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   {!isSummaryCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
                       {formattedCurFromDate}至{formattedCurToDate}
@@ -86,7 +86,7 @@ const ItemSummary = ({
                   %
                 </th>
                 <th
-                  className="w-285px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                  className="w-285px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {financialReport && financialReport.company && (
