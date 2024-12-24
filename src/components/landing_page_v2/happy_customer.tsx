@@ -13,7 +13,7 @@ const MessageBubble: React.FC<{ index: number }> = ({ index }) => {
   return (
     <div className="flex items-center gap-14px overflow-hidden rounded-full border-x border-b bg-landing-nav px-40px py-12px shadow-landing-nav backdrop-blur-md">
       {/* Info: (20241224 - Julian) Avatar */}
-      <div className="relative h-40px w-40px overflow-hidden rounded-full">
+      <div className="relative h-40px w-40px shrink-0 overflow-hidden rounded-full">
         <Image src="/entities/happy.png" fill objectFit="cover" alt="avatar" />
       </div>
       {/* Info: (20241224 - Julian) Message */}

@@ -11,6 +11,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
+import { EventType } from '@/constants/account';
 
 interface IManualAccountOpeningModalProps {
   isModalVisible: boolean;
@@ -241,7 +242,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
     isLoading: isCreatingVoucher,
     success: createVoucherSuccess,
     error: createVoucherError,
-  } = APIHandler(APIName.VOUCHER_CREATE);
+  } = APIHandler(APIName.VOUCHER_POST_V2);
 
   const subcategoryList = accountList?.data ?? [];
   // Info: (20241114 - Julian) 如果有 focusIndex，則代表有展開的 subcategory menu
@@ -304,14 +305,18 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       createNewVoucher({
         params: { companyId },
         body: {
-          lineItems: [
-            {
-              accountId: manualAccountOpeningList[0].titleCode,
-              description: '',
-              debit: manualAccountOpeningList[0].isDebit,
-              amount: manualAccountOpeningList[0].beginningAmount,
-            },
-          ],
+          actions: [],
+          certificateIds: [],
+          type: EventType.TRANSFER,
+          note: 'Opening Account',
+          lineItems: manualAccountOpeningList.map((item) => ({
+            accountId: item.id, // Info: (20241224 - Julian) 這邊要用會計科目 id (subcategory)
+            description: '',
+            debit: item.isDebit,
+            amount: item.beginningAmount,
+          })),
+          assetIds: [],
+          voucherDate: new Date().getTime() / 1000, // Info: (20241224 - Julian) 取得 timestamp
         },
       });
     }
