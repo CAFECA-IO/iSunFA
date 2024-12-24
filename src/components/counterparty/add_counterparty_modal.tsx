@@ -237,6 +237,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     if (disabled) {
       setShowHint(true);
     } else {
+      // eslint-disable-next-line no-console
+      console.log('inputName:', inputName, 'saveName', saveName);
       const counterpartyData = {
         name: isOptionSelected || saveName ? inputName : '', // Info: (20241223 - Anna) 只有選擇了選項才帶入值
         taxId: inputTaxId,
