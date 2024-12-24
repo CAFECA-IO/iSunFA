@@ -16,7 +16,6 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { initVoucherEntity } from '@/lib/utils/voucher';
 import { JOURNAL_EVENT } from '@/constants/journal';
-import { postVoucherV2 } from '@/lib/utils/repo/voucher.repo';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { initCounterPartyEntity } from '@/lib/utils/counterparty';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
@@ -448,12 +447,13 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
     //   // Info: (20241030 - Murky) 將evertEvent放入eventControlPanel, Prisma Transaction時一起建立
     //   eventControlPanel.recurringEvent = recurringEventEntity;
     // }
-    const createdVoucher = await postVoucherV2({
+    const createdVoucher = await postUtils.saveVoucherToPrisma({
       nowInSecond,
       originalVoucher: voucher,
       eventControlPanel,
       company,
       issuer,
+      certificateIds,
     });
 
     // Info: (20241111 - Murky) Output formatter 只要回傳新的voucherId就可以了
