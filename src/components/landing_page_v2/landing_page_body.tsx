@@ -12,6 +12,7 @@ import GlobalMap from '@/components/landing_page_v2/global_map';
 import FinancialReport from '@/components/landing_page_v2/financial_report';
 import FlexibleFeatureSelection from '@/components/landing_page_v2/flexible_feature_selection';
 import TechnicalFeatures from '@/components/landing_page_v2/technical_features';
+import TechnicalCarousel from '@/components/landing_page_v2/technical_carousel';
 
 const LandingPageBody: React.FC = () => {
   return (
@@ -45,12 +46,8 @@ const LandingPageBody: React.FC = () => {
         {/* Info: (20241205 - Julian) Technical Features */}
         <TechnicalFeatures />
 
-        {/* Info: (20241205 - Julian) Carousel */}
-        <div className="flex flex-col">
-          <LinearGradientText size={LinearTextSize.MD} align={TextAlign.CENTER}>
-            Technical Patents
-          </LinearGradientText>
-        </div>
+        {/* Info: (20241205 - Julian) Technical Carousel */}
+        <TechnicalCarousel />
 
         {/* Info: (20241205 - Julian) Trusted by Happy Customer */}
         <div className="flex flex-col">
