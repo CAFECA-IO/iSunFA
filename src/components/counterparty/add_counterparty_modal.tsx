@@ -202,6 +202,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     setInputName(suggestion.name);
     setInputTaxId(suggestion.taxId || '');
     setDropdownOpen(false);
+    setIsOptionSelected(true); // Info: (20241224 - Anna) 標記用戶選擇了選項
   };
 
   const outsideClickHandler = (event: MouseEvent) => {
