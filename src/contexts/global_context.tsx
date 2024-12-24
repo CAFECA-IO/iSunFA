@@ -612,6 +612,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         onSave={addCounterPartyModalData.onSave}
         name={addCounterPartyModalData.name}
         taxId={addCounterPartyModalData.taxId}
+        nameIsNeeded={addCounterPartyModalData.nameIsNeeded}
       />
 
       <ConfirmModal
