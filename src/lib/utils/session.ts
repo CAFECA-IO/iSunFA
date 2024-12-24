@@ -1,6 +1,6 @@
 import { ISessionData } from '@/interfaces/session_data';
-// import nextSession from 'next-session';
-/*
+import nextSession from 'next-session';
+
 const options = {
   cookie: {
     httpOnly: true,
@@ -8,26 +8,8 @@ const options = {
     secure: true,
   },
 };
- */
 
-// export const getSession = nextSession<ISessionData>(options);
-import { NextApiRequest, NextApiResponse } from 'next';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getSession = (req: NextApiRequest, res: NextApiResponse) => {
-  const session = {
-    id: 'session',
-    userId: 10000006,
-    companyId: 10000007,
-    challenge: 'challenge',
-    roleId: 1003,
-    cookie: {
-      httpOnly: true,
-      path: '/',
-      secure: true,
-    },
-  };
-  return session;
-};
+export const getSession = nextSession<ISessionData>(options);
 
 export async function setSession(
   session: ISessionData,
