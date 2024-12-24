@@ -198,6 +198,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         onSave: handleAddCounterparty,
         name,
         taxId,
+        nameIsNeeded: false,
       });
 
       const filteredList = counterpartyList.filter((party) => {
