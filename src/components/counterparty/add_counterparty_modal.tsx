@@ -24,6 +24,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   modalVisibilityHandler,
   onSave,
   name,
+  nameIsNeeded, // Info: (20241224 - tzuhan) 從 certificate 編輯觸發新增 counterparty 希望有傳人名字可以儲存
   taxId,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
@@ -236,8 +237,10 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     if (disabled) {
       setShowHint(true);
     } else {
+      // eslint-disable-next-line no-console
+      console.log('inputName:', inputName, 'nameIsNeeded', nameIsNeeded);
       const counterpartyData = {
-        name: isOptionSelected ? inputName : '', // Info: (20241223 - Anna) 只有選擇了選項才帶入值
+        name: isOptionSelected || nameIsNeeded ? inputName : '', // Info: (20241223 - Anna) 只有選擇了選項才帶入值
         taxId: inputTaxId,
         type: inputType as CounterpartyType,
         note: inputNote || '',
