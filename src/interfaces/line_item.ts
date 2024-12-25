@@ -169,3 +169,17 @@ export type IGetLineItemByAccount = PrismaLineItem & {
     })[];
   };
 };
+
+export interface ILineItemSimpleAccountVoucher extends PrismaLineItem {
+  account: {
+    code: string;
+    name: string;
+    parentId: number;
+  };
+  voucher: {
+    id: number;
+    type: string;
+    no: string;
+    date: number;
+  };
+}

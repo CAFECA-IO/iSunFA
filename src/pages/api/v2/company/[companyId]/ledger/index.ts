@@ -2,15 +2,20 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ILedgerItem, ILedgerPayload, ILedgerTotal } from '@/interfaces/ledger';
+import { ILedgerPayload } from '@/interfaces/ledger';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { formatPaginatedLedger } from '@/lib/utils/formatter/ledger.formatter';
-import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType } from '@/constants/account';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
-import { getAllLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
 import { LabelType } from '@/constants/ledger';
+import {
+  calculateTotals,
+  filterByAccountRange,
+  fetchLineItems,
+  filterByLabelType,
+  sortAndCalculateBalances,
+} from '@/lib/utils/ledger';
 import { CurrencyType } from '@/constants/currency';
 
 interface IPayload extends ILedgerPayload {}
@@ -54,100 +59,17 @@ export const handleGetRequest: IHandleRequest<APIName.LEDGER_LIST, IPayload> = a
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
-    const accountingSettingData = await getAccountingSettingByCompanyId(companyId);
-
     let currencyAlias = CurrencyType.TWD;
-    if (accountingSettingData) {
+    const accountingSettingData = await getAccountingSettingByCompanyId(companyId);
+    if (accountingSettingData?.currency) {
       currencyAlias = accountingSettingData.currency as CurrencyType;
     }
 
-    const lineItems = await getAllLineItemsInPrisma(companyId, startDate, endDate, false);
-
-    // Info: (20241224 - Shirley) 篩選科目範圍
-    let filteredLineItems = lineItems;
-    if (startAccountNo || endAccountNo) {
-      filteredLineItems = lineItems.filter((item) => {
-        const no = item.account.code;
-        if (startAccountNo && endAccountNo) {
-          return no >= startAccountNo && no <= endAccountNo;
-        } else if (startAccountNo) {
-          return no >= startAccountNo;
-        } else if (endAccountNo) {
-          return no <= endAccountNo;
-        }
-        return true;
-      });
-    }
-
-    // Info: (20241224 - Shirley) 根據 labelType 篩選
-    if (labelType !== LabelType.ALL) {
-      filteredLineItems = filteredLineItems.filter((item) => {
-        if (labelType === LabelType.GENERAL) {
-          return !item.account.code.includes('-');
-        } else if (labelType === LabelType.DETAILED) {
-          return item.account.code.includes('-');
-        }
-        return true;
-      });
-    }
-
-    // Info: (20241224 - Shirley) 為每一個科目維護累加的balance
-    const accountBalances: { [key: string]: number } = {};
-    const processedLineItems: ILedgerItem[] = filteredLineItems
-      .sort((a, b) => {
-        // Info: (20241224 - Shirley) 先依照 account.code 排序
-        const codeCompare = a.account.code.localeCompare(b.account.code);
-        // Info: (20241224 - Shirley) 如果 account.code 相同，則依照 voucher date 排序
-        if (codeCompare === 0) {
-          return a.voucher.date - b.voucher.date;
-        }
-        return codeCompare;
-      })
-      .map((item) => {
-        const accountKey = item.account.code;
-        if (!accountBalances[accountKey]) {
-          accountBalances[accountKey] = 0;
-        }
-        const debit = item.debit ? item.amount : 0;
-        const credit = !item.debit ? item.amount : 0;
-        const balanceChange = item.debit ? item.amount : -item.amount;
-        accountBalances[accountKey] += balanceChange;
-
-        return {
-          id: item.id,
-          accountId: item.accountId,
-          voucherId: item.voucherId,
-          voucherDate: item.voucher.date,
-          no: item.account.code,
-          accountingTitle: item.account.name,
-          voucherNumber: item.voucher.no,
-          voucherType:
-            EVENT_TYPE_TO_VOUCHER_TYPE_MAP[item.voucher.type as EventType] || item.voucher.type,
-          particulars: item.description,
-          debitAmount: debit,
-          creditAmount: credit,
-          balance: accountBalances[accountKey],
-          createdAt: item.createdAt,
-          updatedAt: item.updatedAt,
-        };
-      });
-
-    // Info: (20241224 - Shirley) 計算總額
-    const sumUpData: ILedgerTotal = processedLineItems.reduce(
-      (acc: ILedgerTotal, item: ILedgerItem) => {
-        acc.totalDebitAmount += item.debitAmount;
-        acc.totalCreditAmount += item.creditAmount;
-        return acc;
-      },
-      {
-        totalDebitAmount: 0,
-        totalCreditAmount: 0,
-        createdAt: 0,
-        updatedAt: 0,
-      }
-    );
-
-    // Info: (20241224 - Shirley) 分頁處理
+    let lineItems = await fetchLineItems(companyId, startDate, endDate);
+    lineItems = filterByAccountRange(lineItems, startAccountNo, endAccountNo);
+    lineItems = filterByLabelType(lineItems, labelType as LabelType);
+    const processedLineItems = sortAndCalculateBalances(lineItems);
+    const sumUpData = calculateTotals(processedLineItems);
     const paginatedLedger = formatPaginatedLedger(processedLineItems, pageNumber, pageSize);
 
     payload = {
