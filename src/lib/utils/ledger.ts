@@ -101,7 +101,6 @@ export const convertLedgerItemToCsvData = (
 ) => {
   const csvData = ledgerItems.map((item) => {
     return {
-      accountId: item.accountId,
       no: item.no,
       accountingTitle: item.accountingTitle,
       voucherNumber: voucherMap.get(item.voucherId)?.no,
