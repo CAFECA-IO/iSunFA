@@ -8,6 +8,7 @@ import {
 } from '@/constants/crypto';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { IV_LENGTH } from '@/constants/config';
 
 /* Info: (20240822 - Shirley)
 - 實作混合加密 (hybrid encryption)，用對稱加密密鑰將檔案加密，用非對稱加密的 public key 加密對稱密鑰，用非對稱加密的 private key 解密對稱密鑰
@@ -331,3 +332,18 @@ export function arrayBufferToBuffer(arrayBuffer: ArrayBuffer): Buffer {
   }
   return buffer;
 }
+
+export const encryptFileWithPublicKey = async (file: File, publicKey: CryptoKey) => {
+  const arrayBuffer = await file.arrayBuffer();
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const { encryptedContent, encryptedSymmetricKey } = await encryptFile(arrayBuffer, publicKey, iv);
+  const encryptedFile = new File([encryptedContent], file.name, {
+    type: file.type,
+  });
+
+  return {
+    encryptedFile,
+    iv,
+    encryptedSymmetricKey,
+  };
+};
