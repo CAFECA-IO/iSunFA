@@ -34,9 +34,15 @@ const TodoListPageBody = () => {
   const [todoToUpdate, setTodoToUpdate] = useState<ITodoCompany | undefined>(undefined);
   const [todoToDelete, setTodoToDelete] = useState<ITodoCompany | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [searchKeyword, setSearchKeyword] = useState('');
   const userId = userAuth?.id;
-  const isNoData = todoList.length === 0;
+
+  // Info: (20241225 - Liz) 篩選出符合搜尋關鍵字的待辦事項
+  const filteredTodoList = todoList.filter((todo) =>
+    todo.name.toLowerCase().includes(searchKeyword.toLowerCase().trim())
+  );
+
+  const isNoData = filteredTodoList.length === 0;
   const toggleCreateTodoModal = () => setIsCreateTodoModalOpen((prev) => !prev);
 
   const closeDeleteModal = () => {
@@ -115,8 +121,10 @@ const TodoListPageBody = () => {
         <div className="flex flex-auto items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
           <input
             type="text"
-            placeholder="Search"
+            placeholder={t('dashboard:HEADER.SEARCH')}
             className="grow rounded-l-sm bg-transparent px-12px py-10px outline-none"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
           />
 
           <button type="button" className="px-12px py-10px">
@@ -143,7 +151,7 @@ const TodoListPageBody = () => {
         <NoData />
       ) : (
         <TodoList
-          todoList={todoList}
+          todoList={filteredTodoList}
           setTodoToUpdate={setTodoToUpdate}
           setTodoToDelete={setTodoToDelete}
         />
