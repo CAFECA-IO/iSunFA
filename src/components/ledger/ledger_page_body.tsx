@@ -10,6 +10,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ILedgerPayload } from '@/interfaces/ledger';
 import { useUserCtx } from '@/contexts/user_context';
+import { useRouter } from 'next/router';
 
 enum ReportType {
   General = 'general',
@@ -18,6 +19,8 @@ enum ReportType {
 }
 
 const LedgerPageBody = () => {
+  const router = useRouter();
+
   const { t } = useTranslation(['journal', 'date_picker', 'filter_section_type', 'reports']);
   const { selectedCompany } = useUserCtx();
   // const [financialReport, setFinancialReport] = useState<IPaginatedAccount | null>(null); // Info: (20241205 - Anna) 用來看回傳的會計科目 Add state to hold the financial report data for debugging output
@@ -47,6 +50,19 @@ const LedgerPageBody = () => {
   const { trigger: fetchLedgerDataAPI, isLoading } = APIHandler<ILedgerPayload>(
     APIName.LEDGER_LIST
   );
+
+  // Info: (20241225 - Anna) 初始時嘗試從 URL 中獲取篩選條件
+  useEffect(() => {
+    const { startDate, endDate, labelType } = router.query;
+
+    if (startDate && endDate && labelType) {
+      setSelectedDateRange({
+        startTimeStamp: Number(startDate),
+        endTimeStamp: Number(endDate),
+      });
+      setSelectedReportType(labelType as ReportType);
+    }
+  }, [router.query]);
 
   useEffect(() => {
     if (

@@ -53,7 +53,8 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
       <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
         <FaDownload size={14} className="text-surface-state-error-dark" />
         <Link
-          href={`/users/accounting/${voucherId}`}
+          // Info: (20241225 - Anna) from=ledger 為了返回時能回到分類帳頁面
+          href={`/users/accounting/${voucherId}?from=ledger`}
           className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
         >
           <p className="text-sm text-text-state-error-solid">{voucherNumber}</p>
@@ -63,7 +64,7 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
       <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
         <FaUpload size={14} className="text-surface-state-success-dark" />
         <Link
-          href={`/users/accounting/${voucherId}`}
+          href={`/users/accounting/${voucherId}?from=ledger`}
           className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
         >
           <p className="text-sm text-text-state-success-solid">{voucherNumber}</p>
@@ -73,7 +74,20 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
       <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
         <FiRepeat size={14} className="text-surface-brand-secondary" />
         <Link
-          href={`/users/accounting/${voucherId}`}
+          href={`/users/accounting/${voucherId}?from=ledger`}
+          // href={{
+          //   pathname: `/users/accounting/${voucherId}`, // 傳票詳細頁面路徑
+          //   query: {
+          //     from: 'ledger', // 指定來源是 ledger 頁面
+          //     startDate: selectedDateRange.startTimeStamp,
+          //     endDate: selectedDateRange.endTimeStamp,
+          //     startAccountNo,
+          //     endAccountNo,
+          //     labelType: selectedReportType,
+          //     // page: 1,
+          //     pageSize: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
+          //   },
+          // }}
           className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
         >
           <p className="text-sm text-badge-text-secondary-solid">{voucherNumber}</p>
