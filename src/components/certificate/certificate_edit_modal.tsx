@@ -117,9 +117,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       setTaxSetting(data.taxSettings);
       if (formState.taxRatio === undefined) {
         if (formState.inputOrOutput === InvoiceTransactionDirection.INPUT) {
-          handleInputChange('taxRatio', data.taxSettings.salesTax.rate);
+          handleInputChange('taxRatio', data.taxSettings.salesTax.rate * 100);
         } else if (formState.inputOrOutput === InvoiceTransactionDirection.OUTPUT) {
-          handleInputChange('taxRatio', data.taxSettings.purchaseTax.rate);
+          handleInputChange('taxRatio', data.taxSettings.purchaseTax.rate * 100);
         } else {
           handleInputChange('taxRatio', 0);
         }
@@ -177,9 +177,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     handleInputChange('inputOrOutput', value);
     if (taxSetting) {
       if (formState.inputOrOutput === InvoiceTransactionDirection.INPUT) {
-        handleInputChange('taxRatio', taxSetting.salesTax.rate);
+        handleInputChange('taxRatio', taxSetting.salesTax.rate * 100);
       } else if (formState.inputOrOutput === InvoiceTransactionDirection.OUTPUT) {
-        handleInputChange('taxRatio', taxSetting.purchaseTax.rate);
+        handleInputChange('taxRatio', taxSetting.purchaseTax.rate * 100);
       } else {
         handleInputChange('taxRatio', 0);
       }
@@ -204,17 +204,11 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   }, []);
 
   // Info: (20240924 - tzuhan) 處理保存
-  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (counterpartyInputRef.current) {
-      counterpartyInputRef.current.triggerSearch();
-    }
-  };
-
-  const onTriggerSave = async () => {
     // Deprecate: (20241218 - tzuhan) remove eslint-disable
     // eslint-disable-next-line no-console
-    console.log('onTriggerSave formStateRef.current:', formStateRef.current);
+    console.log('handleSave formStateRef.current:', formStateRef.current);
     const updatedData: ICertificate = {
       ...certificate,
       invoice: {
@@ -224,6 +218,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     };
     await onSave(updatedData);
     toggleModel();
+    if (counterpartyInputRef.current) {
+      counterpartyInputRef.current.triggerSearch();
+    }
   };
 
   return (
@@ -449,7 +446,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               ref={counterpartyInputRef}
               counterparty={formState.counterParty}
               onSelect={(cp: ICounterpartyOptional) => handleInputChange('counterParty', cp)}
-              onTriggerSave={onTriggerSave}
             />
 
             {/* Info: (20240924 - tzuhan) Invoice Type */}

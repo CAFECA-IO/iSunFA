@@ -27,7 +27,6 @@ interface ICounterpartyInputProps {
   onSelect: (counterparty: ICounterpartyOptional) => void;
   flagOfSubmit?: boolean;
   className?: string;
-  onTriggerSave?: () => Promise<void>;
 }
 
 export interface CounterpartyInputRef {
@@ -36,7 +35,7 @@ export interface CounterpartyInputRef {
 
 const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputProps>(
   (props, ref) => {
-    const { counterparty, onSelect, flagOfSubmit, className, onTriggerSave } = props;
+    const { counterparty, onSelect, flagOfSubmit, className } = props;
     const { t } = useTranslation(['certificate', 'common']);
 
     const { selectedCompany } = useUserCtx();
@@ -133,15 +132,12 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       setIsLoadingCounterparty(false);
     };
 
-    const onAddCounterparty = async (trigger: boolean) => {
+    const onAddCounterparty = async () => {
       addCounterPartyModalVisibilityHandler();
-      if (onTriggerSave && trigger) {
-        await onTriggerSave();
-      }
     };
     // Info: (20241209 - Julian) 變更 Counterparty 事件：顯示是否新增 Counterparty 的視窗
     const counterpartySearchHandler = useCallback(
-      async (trigger = true, showModal = true) => {
+      async (showModal = true) => {
         if (searchName || searchTaxId) {
           await searchCompany(searchName, searchTaxId);
           const isInCounterpartyList = counterpartyList.some(
@@ -157,11 +153,9 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
               backBtnStr: t('certificate:COUNTERPARTY.NO'),
               backBtnFunction: onCancelAddCounterparty,
               submitBtnStr: t('certificate:COUNTERPARTY.YES'),
-              submitBtnFunction: () => onAddCounterparty(trigger),
+              submitBtnFunction: () => onAddCounterparty(),
             });
             messageModalVisibilityHandler();
-          } else if (onTriggerSave && trigger) {
-            await onTriggerSave();
           }
         }
       },
@@ -345,7 +339,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
             <FiSearch
               size={20}
               className={`absolute right-3 top-3 cursor-pointer ${!searchName && !searchTaxId ? 'text-input-text-primary' : 'text-input-text-input-filled'}`}
-              onClick={() => counterpartySearchHandler(false, false)}
+              onClick={() => counterpartySearchHandler(false)}
             />
           </div>
           {displayedCounterpartyMenu}
