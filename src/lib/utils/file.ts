@@ -14,16 +14,16 @@ import {
   bufferToArrayBuffer,
   bufferToUint8Array,
   decryptFile,
+  encryptFile,
   getPrivateKeyByCompany,
-  importPrivateKey,
+  uint8ArrayToBuffer,
 } from '@/lib/utils/crypto';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IFileEntity } from '@/interfaces/file';
 import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
-import { roomManager } from '@/lib/utils/room';
-import { IRoomWithKeyChain } from '@/interfaces/room';
+import { IV_LENGTH } from '@/constants/config';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
@@ -97,17 +97,31 @@ export async function decryptImageFile({
     const encryptedArrayBuffer: ArrayBuffer = bufferToArrayBuffer(imageBuffer);
     const privateKey = await getPrivateKeyByCompany(companyId);
 
+    loggerBack.info(`Private key in decryptedArrayBuffer: ${privateKey}`);
+
     if (!privateKey) {
       loggerBack.error(`Private key not found in decryptImageFile in image/[imageId]: ${file.id}`);
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
     const ivUint8Array = bufferToUint8Array(iv);
-    const decryptedArrayBuffer = await decryptFile(
-      encryptedArrayBuffer,
-      encryptedSymmetricKey,
-      privateKey,
-      ivUint8Array
-    );
+
+    let decryptedArrayBuffer: ArrayBuffer | null;
+    try {
+      decryptedArrayBuffer = await decryptFile(
+        encryptedArrayBuffer,
+        encryptedSymmetricKey,
+        privateKey,
+        ivUint8Array
+      );
+    } catch (error) {
+      loggerBack.error(error, `Error in decryptImageFile in file.ts`);
+      throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+    }
+
+    if (!decryptedArrayBuffer) {
+      loggerBack.error(`Decrypted array buffer is null in decryptImageFile in file.ts`);
+      throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+    }
 
     decryptedBuffer = arrayBufferToBuffer(decryptedArrayBuffer);
   }
@@ -115,39 +129,31 @@ export async function decryptImageFile({
   return decryptedBuffer;
 }
 
-export async function decryptRoomFile({
+export async function encryptRoomFile({
   imageBuffer,
   publicKey,
-  encryptedSymmetricKey,
-  iv,
 }: {
   imageBuffer: Buffer;
-  publicKey: JsonWebKey;
+  publicKey: CryptoKey;
+}): Promise<{
   encryptedSymmetricKey: string;
-  iv: Uint8Array;
-}): Promise<Buffer> {
-  let decryptedBuffer = imageBuffer;
-
-  const encryptedArrayBuffer: ArrayBuffer = bufferToArrayBuffer(imageBuffer);
-  const room: IRoomWithKeyChain | null = roomManager.getRoomWithKeyChainByPublicKey(publicKey);
-  if (!room) {
-    loggerBack.error(
-      `Room not found in decryptRoomFile in room/[roomId] by publicKye: ${publicKey}`
-    );
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
-  const privateKey: CryptoKey = await importPrivateKey(room.privateKey);
-
-  const decryptedArrayBuffer = await decryptFile(
-    encryptedArrayBuffer,
-    encryptedSymmetricKey,
-    privateKey,
+  ivBuffer: Buffer;
+  encryptedImageBuffer: Buffer;
+}> {
+  const imageArrayBuffer: ArrayBuffer = bufferToArrayBuffer(imageBuffer);
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const { encryptedContent: encryptedImageArrayBuffer, encryptedSymmetricKey } = await encryptFile(
+    imageArrayBuffer,
+    publicKey,
     iv
   );
-
-  decryptedBuffer = arrayBufferToBuffer(decryptedArrayBuffer);
-
-  return decryptedBuffer;
+  const encryptedImageBuffer = arrayBufferToBuffer(encryptedImageArrayBuffer);
+  const ivBuffer = uint8ArrayToBuffer(iv);
+  return {
+    encryptedSymmetricKey,
+    ivBuffer,
+    encryptedImageBuffer,
+  };
 }
 
 /**

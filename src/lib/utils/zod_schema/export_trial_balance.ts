@@ -24,13 +24,14 @@ const sortSchema = z.object({
 
 // Info: (20241213 - Shirley) 匯出欄位驗證器
 export const exportTrialBalanceFieldsSchema = z.enum([
+  'no',
   'accountingTitle',
-  'beginningCreditAmount',
   'beginningDebitAmount',
-  'midtermCreditAmount',
+  'beginningCreditAmount',
   'midtermDebitAmount',
-  'endingCreditAmount',
+  'midtermCreditAmount',
   'endingDebitAmount',
+  'endingCreditAmount',
 ]);
 
 // Info: (20241213 - Shirley) 過濾條件驗證器

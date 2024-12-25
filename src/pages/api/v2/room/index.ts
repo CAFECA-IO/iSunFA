@@ -9,11 +9,13 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { roomManager } from '@/lib/utils/room';
 import loggerBack from '@/lib/utils/logger_back';
 
-const handlePostRequest: IHandleRequest<APIName.ROOM_ADD, IRoom> = async () => {
+const handlePostRequest: IHandleRequest<APIName.ROOM_ADD, IRoom> = async ({ session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IRoom | null = null;
 
-  const newRoom = roomManager.addRoom();
+  const { companyId } = session;
+
+  const newRoom = roomManager.addRoom(companyId);
   loggerBack.info(`Room List: ${JSON.stringify(roomManager.getRoomList(), null, 2)}`);
   statusMessage = STATUS_MESSAGE.CREATED;
   payload = newRoom;

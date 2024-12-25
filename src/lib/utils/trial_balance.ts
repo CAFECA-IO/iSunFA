@@ -356,14 +356,17 @@ export const convertTrialBalanceDataToCsvData = (trialBalanceData: ITrialBalance
 export function transformTrialBalanceData(
   items: TrialBalanceItem[]
 ): Record<string, string | number>[] {
-  const data = items.map((item) => ({
-    accountingTitle: item.accountingTitle,
-    beginningCreditAmount: item.beginningCreditAmount,
-    beginningDebitAmount: item.beginningDebitAmount,
-    midtermCreditAmount: item.midtermCreditAmount,
-    midtermDebitAmount: item.midtermDebitAmount,
-    endingCreditAmount: item.endingCreditAmount,
-    endingDebitAmount: item.endingDebitAmount,
-  }));
+  const data = items.map((item) => {
+    return {
+      no: item.no,
+      accountingTitle: item.accountingTitle,
+      beginningDebitAmount: item.beginningDebitAmount,
+      beginningCreditAmount: item.beginningCreditAmount,
+      midtermDebitAmount: item.midtermDebitAmount,
+      midtermCreditAmount: item.midtermCreditAmount,
+      endingDebitAmount: item.endingDebitAmount,
+      endingCreditAmount: item.endingCreditAmount,
+    };
+  });
   return data;
 }

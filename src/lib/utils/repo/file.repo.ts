@@ -34,11 +34,8 @@ export async function createFile({
   url: string;
   isEncrypted: boolean;
   encryptedSymmetricKey: string;
-  iv?: Buffer | Uint8Array;
+  iv?: Buffer;
 }) {
-  // Info: (20240830 - Murky) iv has default "", so it can be not provided
-  const ivBuffer = iv ? Buffer.from(iv.toString()) : undefined;
-
   const nowInSecond = getTimestampNow();
 
   const fileData: Prisma.FileCreateInput = {
@@ -49,7 +46,7 @@ export async function createFile({
     url,
     isEncrypted,
     encryptedSymmetricKey,
-    iv: ivBuffer,
+    iv,
     createdAt: nowInSecond,
     updatedAt: nowInSecond,
   };
