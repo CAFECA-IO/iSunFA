@@ -51,9 +51,8 @@ const LedgerItem = React.memo(
           <FaDownload size={14} className="text-surface-state-error-dark" />
           <Link
             // Info: (20241225 - Anna) from=ledger 為了返回時能回到分類帳頁面
-            // href={`/users/accounting/${voucherId}?from=ledger`}
             href={{
-              pathname: `/users/accounting/${voucherId}`, // 傳票詳細頁面路徑
+              pathname: `/users/accounting/${voucherId}`, // Info: (20241225 - Anna) 傳票詳細頁面路徑
               query: {
                 from: 'ledger',
                 startDate: selectedDateRange.startTimeStamp,
@@ -72,9 +71,8 @@ const LedgerItem = React.memo(
         <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
           <FaUpload size={14} className="text-surface-state-success-dark" />
           <Link
-            // href={`/users/accounting/${voucherId}?from=ledger`}
             href={{
-              pathname: `/users/accounting/${voucherId}`, // 傳票詳細頁面路徑
+              pathname: `/users/accounting/${voucherId}`,
               query: {
                 from: 'ledger',
                 startDate: selectedDateRange.startTimeStamp,
@@ -93,9 +91,8 @@ const LedgerItem = React.memo(
         <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
           <FiRepeat size={14} className="text-surface-brand-secondary" />
           <Link
-            // href={`/users/accounting/${voucherId}?from=ledger`}
             href={{
-              pathname: `/users/accounting/${voucherId}`, // 傳票詳細頁面路徑
+              pathname: `/users/accounting/${voucherId}`,
               query: {
                 from: 'ledger',
                 startDate: selectedDateRange.startTimeStamp,
