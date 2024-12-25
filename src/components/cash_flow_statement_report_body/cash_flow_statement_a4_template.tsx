@@ -123,13 +123,13 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
         {t('reports:REPORTS.ACCOUNTING_ITEMS')}
       </th>
       <th
-        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold print:whitespace-pre-line"
+        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold print:whitespace-pre-line"
         style={{ width: '120px' }}
       >
         {curDate}
       </th>
       <th
-        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold print:whitespace-pre-line"
+        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold print:whitespace-pre-line"
         style={{ width: '120px' }}
       >
         {preDate}
@@ -153,13 +153,13 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
         {t('reports:REPORTS.ACCOUNTING_ITEMS')}
       </th>
       <th
-        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold print:whitespace-pre-line"
+        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold print:whitespace-pre-line"
         style={{ width: '120px' }}
       >
         {curDate}
       </th>
       <th
-        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold print:whitespace-pre-line"
+        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold print:whitespace-pre-line"
         style={{ width: '120px' }}
       >
         {preDate}

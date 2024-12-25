@@ -535,6 +535,7 @@ describe('voucherAPIPostUtils', () => {
         company: fakeCompany,
         issuer: fakeIssuer,
         eventControlPanel: fakeEventControlPanel,
+        certificateIds: [],
       });
 
       expect(voucher).toBeDefined();
@@ -568,6 +569,7 @@ describe('voucherAPIPostUtils', () => {
         company: fakeCompany,
         issuer: fakeIssuer,
         eventControlPanel: fakeEventControlPanel,
+        certificateIds: [],
       });
 
       expect(voucher).toBeDefined();
@@ -619,6 +621,7 @@ describe('voucherAPIPostUtils', () => {
         company: fakeCompany,
         issuer: fakeIssuer,
         eventControlPanel: fakeEventControlPanel,
+        certificateIds: [],
       });
 
       expect(voucher).toBeDefined();
