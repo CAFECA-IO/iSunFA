@@ -51,7 +51,13 @@
     "LOGOUT": "登出",
     "LOGIN": "登录",
     "LANGUAGE": "语言",
-    "SWITCH_ROLE": "切换角色"
+    "SWITCH_ROLE": "切换角色",
+    "NO_NEW_NOTIFICATIONS": "没有新通知",
+    "MARK_AS_ALL_READ": "全部标记为已读",
+    "READ_MORE": "载入更多通知",
+    "YOU_HAVE_A_TEAM_INVITATION_FROM": "您有一个团队邀请来自",
+    "ACCEPT": "接受",
+    "DECLINE": "拒绝"
   },
 
   "ROLE": {
