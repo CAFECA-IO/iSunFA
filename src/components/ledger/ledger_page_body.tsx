@@ -10,6 +10,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ILedgerPayload } from '@/interfaces/ledger';
 import { useUserCtx } from '@/contexts/user_context';
+import { useRouter } from 'next/router';
 
 enum ReportType {
   General = 'general',
@@ -18,6 +19,8 @@ enum ReportType {
 }
 
 const LedgerPageBody = () => {
+  const router = useRouter();
+
   const { t } = useTranslation(['journal', 'date_picker', 'filter_section_type', 'reports']);
   const { selectedCompany } = useUserCtx();
   // const [financialReport, setFinancialReport] = useState<IPaginatedAccount | null>(null); // Info: (20241205 - Anna) 用來看回傳的會計科目 Add state to hold the financial report data for debugging output
@@ -34,7 +37,7 @@ const LedgerPageBody = () => {
   const [otherComprehensiveIncomeOptions, setOtherComprehensiveIncomeOptions] = useState<string[]>(
     []
   );
-  const [selectedReportType, setSelectedReportType] = useState<ReportType>(ReportType.General);
+  const [selectedReportType, setSelectedReportType] = useState<ReportType>(ReportType.All);
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
     startTimeStamp: 0,
     endTimeStamp: 0,
@@ -47,6 +50,27 @@ const LedgerPageBody = () => {
   const { trigger: fetchLedgerDataAPI, isLoading } = APIHandler<ILedgerPayload>(
     APIName.LEDGER_LIST
   );
+
+  // Info: (20241225 - Anna) 初始時嘗試從 URL 中獲取篩選條件
+  useEffect(() => {
+    const {
+      startDate = 0,
+      endDate = 0,
+      labelType = ReportType.All,
+      startAccountNo = '',
+      endAccountNo = '',
+    } = router.query;
+
+    if (startDate && endDate) {
+      setSelectedDateRange({
+        startTimeStamp: Number(startDate),
+        endTimeStamp: Number(endDate),
+      });
+      setSelectedReportType(labelType as ReportType);
+      setSelectedStartAccountNo(String(startAccountNo));
+      setSelectedEndAccountNo(String(endAccountNo));
+    }
+  }, [router.query]);
 
   useEffect(() => {
     if (
@@ -237,6 +261,20 @@ const LedgerPageBody = () => {
             </p>
             <div className="flex w-1/3 flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-baseline md:justify-between">
               <label
+                htmlFor="input-general-detailed"
+                className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
+              >
+                <input
+                  type="radio"
+                  id="input-general-detailed"
+                  name="ledger-type"
+                  className={radioButtonStyle}
+                  checked={selectedReportType === ReportType.All}
+                  onChange={() => handleReportTypeChange(ReportType.All)}
+                />
+                <p className="text-sm">{t('journal:LEDGER.GENERAL_DETAILED')}</p>
+              </label>
+              <label
                 htmlFor="input-general"
                 className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
               >
@@ -263,20 +301,6 @@ const LedgerPageBody = () => {
                   onChange={() => handleReportTypeChange(ReportType.Detailed)}
                 />
                 <p className="text-sm">{t('journal:LEDGER.DETAILED')}</p>
-              </label>
-              <label
-                htmlFor="input-general-detailed"
-                className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
-              >
-                <input
-                  type="radio"
-                  id="input-general-detailed"
-                  name="ledger-type"
-                  className={radioButtonStyle}
-                  checked={selectedReportType === ReportType.All}
-                  onChange={() => handleReportTypeChange(ReportType.All)}
-                />
-                <p className="text-sm">{t('journal:LEDGER.GENERAL_DETAILED')}</p>
               </label>
             </div>
 
@@ -306,6 +330,8 @@ const LedgerPageBody = () => {
             loading={!!isLoading} // Info: (20241118 - Anna) 使用 !! 確保 loading 是 boolean
             selectedDateRange={selectedDateRange} // Info: (20241218 - Anna) 傳遞日期範圍
             labelType={selectedReportType} // Info: (20241218 - Anna) 傳遞報表類型（general/detailed/all）
+            selectedStartAccountNo={selectedStartAccountNo}
+            selectedEndAccountNo={selectedEndAccountNo}
           />
         </div>
       </div>
