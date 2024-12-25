@@ -11,7 +11,6 @@ import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import formidable from 'formidable';
 import loggerBack from '@/lib/utils/logger_back';
-import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import { generateFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
 import { withRequestValidation } from '@/lib/utils/middleware';
@@ -21,6 +20,8 @@ import { roomManager } from '@/lib/utils/room';
 import { File } from '@prisma/client';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
+import { parseJsonWebKeyFromString } from '@/lib/utils/formatter/json_web_key.formatter';
+import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
 
 export const config = {
   api: {
@@ -36,7 +37,6 @@ async function handleFileUpload(
   encryptedSymmetricKey: string,
   iv: Uint8Array
 ) {
-  const ivBuffer = uint8ArrayToBuffer(iv);
   const fileForSave = file[0];
   const fileName = fileForSave.newFilename;
   const fileMimeType = fileForSave.mimetype || 'image/jpeg';
@@ -46,8 +46,8 @@ async function handleFileUpload(
 
   switch (type) {
     case UploadType.KYC:
-    case UploadType.ROOM:
-    case UploadType.INVOICE: {
+    case UploadType.INVOICE:
+    case UploadType.ROOM: {
       const localUrl = generateFilePathWithBaseUrlPlaceholder(
         fileName,
         UPLOAD_TYPE_TO_FOLDER_MAP[type]
@@ -65,6 +65,7 @@ async function handleFileUpload(
     default:
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
+  const ivBuffer = uint8ArrayToBuffer(iv);
 
   const fileInDB = await createFile({
     name: fileName,
@@ -127,7 +128,7 @@ async function handleFileUpload(
 }
 
 function extractKeyAndIvFromFields(fields: formidable.Fields) {
-  const { encryptedSymmetricKey, iv } = fields;
+  const { encryptedSymmetricKey, iv, publicKey } = fields;
   const keyStr =
     encryptedSymmetricKey && encryptedSymmetricKey.length ? encryptedSymmetricKey[0] : '';
   const ivStr = iv ? iv[0] : '';
@@ -136,10 +137,17 @@ function extractKeyAndIvFromFields(fields: formidable.Fields) {
 
   const isEncrypted = !!(keyStr && ivUnit8.length > 0);
 
+  // Info: (20241224 - Murky) PublicKey is for room searching
+  const publicKeyStr = publicKey ? publicKey[0] : '';
+  const jsonPublicKey: JsonWebKey | null = publicKeyStr
+    ? parseJsonWebKeyFromString(publicKeyStr)
+    : null;
+
   return {
     isEncrypted,
     encryptedSymmetricKey: keyStr,
     iv: ivUnit8,
+    publicKey: jsonPublicKey,
   };
 }
 

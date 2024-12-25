@@ -8,6 +8,7 @@ import {
 } from '@/constants/crypto';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { IV_LENGTH } from '@/constants/config';
 
 /* Info: (20240822 - Shirley)
 - 實作混合加密 (hybrid encryption)，用對稱加密密鑰將檔案加密，用非對稱加密的 public key 加密對稱密鑰，用非對稱加密的 private key 解密對稱密鑰
@@ -37,21 +38,23 @@ const sssSecret = new SSSSecret();
 /**
  * Info: (20240830 - Murky)
  * Postgres can only store bytea for "iv" so we need to convert it to Uint8Array
- * @param uint8Array - The Uint8Array to convert to Buffer
- * @returns Buffer - The Buffer converted from Uint8Array
- */
-export function uint8ArrayToBuffer(uint8Array: Uint8Array): Buffer {
-  return Buffer.from(uint8Array);
-}
-
-/**
- * Info: (20240830 - Murky)
- * Postgres can only store bytea for "iv" so we need to convert it to Uint8Array
  * @param buffer - The Buffer to convert to Uint8Array
  * @returns Uint8Array - The Uint8Array converted from Buffer
  */
 export function bufferToUint8Array(buffer: Buffer): Uint8Array {
   return new Uint8Array(buffer);
+}
+
+/**
+ * Info: (20240830 - Murky)
+ * Postgres can only store bytea for "iv" so we need to convert it to Uint8Array
+ * @param uint8Array - The Uint8Array to convert to Buffer
+ * @returns Buffer - The Buffer converted from Uint8Array
+ */
+export function uint8ArrayToBuffer(uint8Array: Uint8Array): Buffer {
+  const buffer = Buffer.from(uint8Array.buffer, uint8Array.byteOffset, uint8Array.byteLength);
+
+  return buffer;
 }
 
 /*
@@ -126,6 +129,7 @@ export async function decryptData(
   privateKey: CryptoKey
 ): Promise<string> {
   const decoder = new TextDecoder();
+
   const decryptedData = await crypto.subtle.decrypt(
     {
       name: ASYMMETRIC_CRYPTO_ALGORITHM,
@@ -179,21 +183,48 @@ export const decryptFile = async (
   privateKey: CryptoKey,
   iv: Uint8Array
 ): Promise<ArrayBuffer> => {
-  const decryptedSymmetricKeyJSON = await decrypt(encryptedSymmetricKey, privateKey);
-  const decryptedSymmetricKey = new Uint8Array(JSON.parse(decryptedSymmetricKeyJSON)).buffer;
-  const importedSymmetricKey = await crypto.subtle.importKey(
-    SYMMETRIC_KEY_FORMAT,
-    decryptedSymmetricKey,
-    { name: SYMMETRIC_CRYPTO_ALGORITHM, length: SYMMETRIC_KEY_LENGTH },
-    true,
-    [CryptoOperationMode.DECRYPT]
-  );
+  let decryptedSymmetricKeyJSON: string;
 
-  const decryptedContent = await crypto.subtle.decrypt(
-    { name: SYMMETRIC_CRYPTO_ALGORITHM, iv },
-    importedSymmetricKey,
-    encryptedContent
-  );
+  try {
+    decryptedSymmetricKeyJSON = await decrypt(encryptedSymmetricKey, privateKey);
+  } catch (error) {
+    // Deprecated: (20241225 - Murky) crypto.ts 前端也要用，所以不能用logger
+    // eslint-disable-next-line no-console
+    console.error(error);
+    throw new Error('Failed to decrypt symmetric key');
+  }
+  const decryptedSymmetricKey = new Uint8Array(JSON.parse(decryptedSymmetricKeyJSON)).buffer;
+
+  let importedSymmetricKey: CryptoKey;
+
+  try {
+    importedSymmetricKey = await crypto.subtle.importKey(
+      SYMMETRIC_KEY_FORMAT,
+      decryptedSymmetricKey,
+      { name: SYMMETRIC_CRYPTO_ALGORITHM, length: SYMMETRIC_KEY_LENGTH },
+      true,
+      [CryptoOperationMode.DECRYPT]
+    );
+  } catch (error) {
+    // Deprecated: (20241225 - Murky) crypto.ts 前端也要用，所以不能用logger
+    // eslint-disable-next-line no-console
+    console.error(error);
+    throw new Error('Failed to import symmetric key');
+  }
+
+  let decryptedContent: ArrayBuffer;
+  try {
+    decryptedContent = await crypto.subtle.decrypt(
+      { name: SYMMETRIC_CRYPTO_ALGORITHM, iv },
+      importedSymmetricKey,
+      encryptedContent
+    );
+  } catch (error) {
+    // Deprecated: (20241225 - Murky) crypto.ts 前端也要用，所以不能用logger
+    // eslint-disable-next-line no-console
+    console.error(error);
+    throw new Error('Failed to decrypt content');
+  }
 
   return decryptedContent;
 };
@@ -331,3 +362,18 @@ export function arrayBufferToBuffer(arrayBuffer: ArrayBuffer): Buffer {
   }
   return buffer;
 }
+
+export const encryptFileWithPublicKey = async (file: File, publicKey: CryptoKey) => {
+  const arrayBuffer = await file.arrayBuffer();
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const { encryptedContent, encryptedSymmetricKey } = await encryptFile(arrayBuffer, publicKey, iv);
+  const encryptedFile = new File([encryptedContent], file.name, {
+    type: file.type,
+  });
+
+  return {
+    encryptedFile,
+    iv,
+    encryptedSymmetricKey,
+  };
+};

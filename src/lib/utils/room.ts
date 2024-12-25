@@ -1,6 +1,7 @@
 import { IFileBeta } from '@/interfaces/file';
-import { IRoom } from '@/interfaces/room';
+import { IRoom, IRoomWithPrivateData } from '@/interfaces/room';
 import loggerBack from '@/lib/utils/logger_back';
+import { getPublicKeyByCompany } from './crypto';
 
 /** Info: (20241112 - Jacky)
  * Class representing a manager for handling rooms.
@@ -9,7 +10,7 @@ import loggerBack from '@/lib/utils/logger_back';
 class RoomManager {
   private static instance: RoomManager;
 
-  private roomList: IRoom[];
+  private roomList: IRoomWithPrivateData[];
 
   /** Info: (20241112 - Jacky)
    * Private constructor to prevent direct instantiation.
@@ -29,6 +30,11 @@ class RoomManager {
     return RoomManager.instance;
   }
 
+  public static removeCompanyIdFromRoom(room: IRoomWithPrivateData): IRoom {
+    const { companyId, ...roomWithoutCompanyId } = room;
+    return roomWithoutCompanyId;
+  }
+
   /** Info: (20241112 - Jacky)
    * Finds a room by its ID.
    * @param {string} roomId - The ID of the room to find.
@@ -39,14 +45,30 @@ class RoomManager {
     if (!room) {
       loggerBack.warn(`Room with id ${roomId} not found.`);
     }
+    return room ? RoomManager.removeCompanyIdFromRoom(room) : null;
+  }
+
+  private findRoomWithPrivateData(roomId: string): IRoomWithPrivateData | null {
+    const room = this.roomList.find((r) => r.id === roomId) || null;
+    if (!room) {
+      loggerBack.warn(`Room with id ${roomId} not found.`);
+    }
     return room;
   }
 
+  private async findCompanyPublicKeyWithRoomId(roomId: string): Promise<CryptoKey | null> {
+    const room = this.findRoomWithPrivateData(roomId);
+    if (!room) return null;
+
+    const publicKey = await getPublicKeyByCompany(room.companyId);
+    return publicKey;
+  }
+
   /** Info: (20241112 - Jacky)
-   * Adds a new room to the room list.
+   * Create a new room and return it first, than add it to the room list by calling addRoomWithKeyChain.
    * @returns {IRoom} The newly created room.
    */
-  public addRoom(): IRoom {
+  public addRoom(companyId: number): IRoom {
     const roomId = crypto.randomUUID().slice(0, 8);
     const password = crypto.randomUUID().slice(0, 8);
     const newRoom: IRoom = {
@@ -55,7 +77,8 @@ class RoomManager {
       fileList: [],
     };
 
-    this.roomList.push(newRoom);
+    this.roomList.push({ ...newRoom, companyId });
+
     loggerBack.info(`Room with id ${roomId} created successfully.`);
     return newRoom;
   }
@@ -101,6 +124,11 @@ class RoomManager {
    * @returns {IRoom[]} The list of all rooms.
    */
   public getRoomList(): IRoom[] {
+    const roomList = this.roomList.map(RoomManager.removeCompanyIdFromRoom);
+    return [...roomList];
+  }
+
+  public getRoomListWithPrivateData(): IRoomWithPrivateData[] {
     return [...this.roomList];
   }
 
@@ -111,6 +139,14 @@ class RoomManager {
    */
   public getRoomById(roomId: string): IRoom | null {
     return this.findRoomById(roomId);
+  }
+
+  public getRoomWithPrivateDataById(roomId: string): IRoomWithPrivateData | null {
+    return this.findRoomWithPrivateData(roomId);
+  }
+
+  public getCompanyPublicKeyByRoomId(roomId: string): Promise<CryptoKey | null> {
+    return this.findCompanyPublicKeyWithRoomId(roomId);
   }
 
   public addFileToRoom(roomId: string, file: IFileBeta): boolean {

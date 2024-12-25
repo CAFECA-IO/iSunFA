@@ -732,6 +732,7 @@ module.exports = {
         cta: 'url("/elements/planet_edge.png")',
         digital: 'url("/elements/digital.svg")',
         sunrise: 'url("/elements/sunrise.png")',
+        'magic-ball': "url('/elements/magic_ball.png')",
       },
       zIndex: {
         '-10': '-10',
@@ -1057,6 +1058,7 @@ module.exports = {
 
         '520px': '520px',
         '530px': '530px',
+        '536px': '536px',
         '540px': '540px',
         '546px': '546px',
         '549px': '549px',

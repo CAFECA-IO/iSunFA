@@ -1004,6 +1004,7 @@ export const voucherAPIPostUtils = {
       recurringEvent: IEventEntity | null;
       assetEvent: IEventEntity | null;
     };
+    certificateIds: number[];
   }) => {
     const newVoucher = await postVoucherV2(options);
 

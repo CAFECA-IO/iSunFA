@@ -60,7 +60,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         date: certificate.invoice.date,
         no: certificate.invoice.no,
         priceBeforeTax: certificate.invoice.priceBeforeTax,
-        taxRatio: certificate.invoice.taxRatio,
+        taxRatio: certificate.invoice.taxRatio ?? 0,
         taxPrice: certificate.invoice.taxPrice,
         totalPrice: certificate.invoice.totalPrice,
         counterParty: certificate.invoice.counterParty,
@@ -70,10 +70,10 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   );
 
   const isFormValid = useCallback(() => {
-    const { no, date: formDate, priceBeforeTax, totalPrice, counterParty } = formState;
+    const { date: formDate, priceBeforeTax, totalPrice, counterParty } = formState;
     return (
-      no &&
-      no.trim() !== '' &&
+      // no &&
+      // no.trim() !== '' &&
       formDate &&
       formDate > 0 &&
       priceBeforeTax &&
@@ -95,9 +95,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         | InvoiceType
         | boolean
     ) => {
-      // Deprecate: (20241220 - tzuhan) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('handleInputChange field:', field, 'value:', value);
       setFormState((prev) => ({ ...prev, [field]: value }));
     },
     []
@@ -268,7 +265,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               <div id="price" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('certificate:EDIT.INVOICE_NUMBER')}
-                <span className="text-text-state-error">*</span>
+                {/* <span className="text-text-state-error">*</span> */}
               </p>
               <div className="flex w-full items-center">
                 <input
