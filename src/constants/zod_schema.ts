@@ -90,7 +90,12 @@ import { roleListSchema } from '@/lib/utils/zod_schema/role';
 import { assetExportSchema } from '@/lib/utils/zod_schema/export_asset';
 import { nullAPISchema } from '@/lib/utils/zod_schema/common';
 import { ledgerListSchema } from '@/lib/utils/zod_schema/ledger';
-import { roomDeleteSchema, roomGetSchema, roomPostSchema } from '@/lib/utils/zod_schema/room';
+import {
+  roomDeleteSchema,
+  roomGetPublicKeySchema,
+  roomGetSchema,
+  roomPostSchema,
+} from '@/lib/utils/zod_schema/room';
 import {
   fileDeleteSchema,
   fileGetSchema,
@@ -185,6 +190,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.ROLE_LIST]: roleListSchema,
   [APIName.ROOM_ADD]: roomPostSchema,
   [APIName.ROOM_GET_BY_ID]: roomGetSchema,
+  [APIName.ROOM_GET_PUBLIC_KEY_BY_ID]: roomGetPublicKeySchema,
   [APIName.ROOM_DELETE]: roomDeleteSchema,
   [APIName.NEWS_LIST]: newsListSchema,
   [APIName.CREATE_NEWS]: newsPostSchema,

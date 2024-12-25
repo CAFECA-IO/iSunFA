@@ -62,6 +62,7 @@ export type IAPIName =
   | 'ROOM_ADD'
   | 'ROOM_GET_BY_ID'
   | 'ROOM_DELETE'
+  | 'ROOM_GET_PUBLIC_KEY_BY_ID'
   | 'STATUS_INFO_GET'
   | 'ACCOUNT_LIST'
   | 'FILE_UPLOAD'

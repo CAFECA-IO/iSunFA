@@ -51,3 +51,14 @@ export const roomDeleteSchema = {
   outputSchema: roomSchema.nullable(),
   frontend: nullSchema,
 };
+
+export const roomGetPublicKeySchema = {
+  input: {
+    querySchema: z.object({
+      roomId: z.string(),
+    }),
+    bodySchema: nullSchema,
+  },
+  outputSchema: z.any(),
+  frontend: nullSchema,
+};
