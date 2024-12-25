@@ -50,11 +50,11 @@ const CostRevRatio = ({
           <thead>
             <tr>
               <th
-                className={`w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold`}
+                className={`w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold`}
               >
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
@@ -62,7 +62,7 @@ const CostRevRatio = ({
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
@@ -72,7 +72,7 @@ const CostRevRatio = ({
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
                     {formattedPreFromDate} 至{formattedPreToDate}
                   </p>
                 )}
@@ -259,10 +259,10 @@ const CostRevRatio = ({
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+              <th className="w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
@@ -270,7 +270,7 @@ const CostRevRatio = ({
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
@@ -280,7 +280,7 @@ const CostRevRatio = ({
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
                 )}
