@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { numberWithCommas } from '@/lib/utils/common';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
-import { checkboxStyle } from '@/constants/display';
 import { EventType, VoucherType } from '@/constants/account';
 import Link from 'next/link';
 
@@ -39,19 +38,6 @@ const LedgerItem = React.memo(
     selectedReportType,
   }: ILedgerItemProps) => {
     const { voucherDate, voucherNumber, voucherType, particulars, voucherId } = ledger;
-
-    const [isChecked, setIsChecked] = useState(false);
-
-    const displayedCheckbox = (
-      <div className="relative top-20px px-8px print:hidden">
-        <input
-          type="checkbox"
-          className={checkboxStyle}
-          checked={isChecked}
-          onChange={() => setIsChecked(!isChecked)}
-        />
-      </div>
-    );
 
     const displayedDate = (
       <div className="flex h-full items-center justify-center py-4">
@@ -170,8 +156,6 @@ const LedgerItem = React.memo(
         // Info: (20241206 - Anna) 避免行內換頁
         style={{ pageBreakInside: 'avoid' }}
       >
-        {/* Info: (20240920 - Julian) Select */}
-        <div className={`table-cell text-center`}>{displayedCheckbox}</div>
         {/* Info: (20240920 - Julian) Issued Date */}
         <div className="table-cell text-center">{displayedDate}</div>
         {/* Info: (20241004 - Anna) Accounting */}
