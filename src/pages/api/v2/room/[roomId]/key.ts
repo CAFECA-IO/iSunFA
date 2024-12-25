@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IRoomWithKeyChain } from '@/interfaces/room';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -8,6 +7,7 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { roomManager } from '@/lib/utils/room';
 import loggerBack from '@/lib/utils/logger_back';
+import { exportPublicKey } from '@/lib/utils/crypto';
 
 /* Info: (20241112 - Jacky)
  * Handles a GET request to retrieve a room public key by its ID.
@@ -21,14 +21,28 @@ const handleGetRequest: IHandleRequest<APIName.ROOM_GET_PUBLIC_KEY_BY_ID, JsonWe
 
   const { roomId } = query;
 
-  const room: IRoomWithKeyChain | null = roomManager.getRoomWithKeyChainById(roomId);
+  try {
+    let roomPublicKey: CryptoKey | null = null;
 
-  loggerBack.info(`Room List: ${JSON.stringify(roomManager.getRoomList(), null, 2)}`);
-  if (!room) {
-    statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-  } else {
+    try {
+      roomPublicKey = await roomManager.getCompanyPublicKeyByRoomId(roomId);
+    } catch (error) {
+      loggerBack.error(`Failed to get room public key with id ${roomId}.`);
+      throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+    }
+
+    if (!roomPublicKey) {
+      loggerBack.error(`Failed to get room public key with id ${roomId}.`);
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
     statusMessage = STATUS_MESSAGE.SUCCESS;
-    payload = room.publicKey;
+    const roomJsonWebKey = await exportPublicKey(roomPublicKey);
+    payload = roomJsonWebKey;
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+    loggerBack.error(`Failed to get room public key with id ${roomId}.`);
   }
 
   return { statusMessage, payload };

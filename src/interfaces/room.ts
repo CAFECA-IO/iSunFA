@@ -6,7 +6,6 @@ export interface IRoom {
   fileList: IFileBeta[];
 }
 
-export interface IRoomWithKeyChain extends IRoom {
-  publicKey: JsonWebKey;
-  privateKey: JsonWebKey;
+export interface IRoomWithPrivateData extends IRoom {
+  companyId: number;
 }

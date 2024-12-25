@@ -1,7 +1,7 @@
 import { IFileBeta } from '@/interfaces/file';
-import { IRoom, IRoomWithKeyChain } from '@/interfaces/room';
+import { IRoom, IRoomWithPrivateData } from '@/interfaces/room';
 import loggerBack from '@/lib/utils/logger_back';
-import { exportPrivateKey, exportPublicKey, generateKeyPair } from './crypto';
+import { getPublicKeyByCompany } from './crypto';
 
 /** Info: (20241112 - Jacky)
  * Class representing a manager for handling rooms.
@@ -10,7 +10,7 @@ import { exportPrivateKey, exportPublicKey, generateKeyPair } from './crypto';
 class RoomManager {
   private static instance: RoomManager;
 
-  private roomList: IRoomWithKeyChain[];
+  private roomList: IRoomWithPrivateData[];
 
   /** Info: (20241112 - Jacky)
    * Private constructor to prevent direct instantiation.
@@ -30,9 +30,9 @@ class RoomManager {
     return RoomManager.instance;
   }
 
-  public static removeKeyChainFromRoom(room: IRoomWithKeyChain): IRoom {
-    const { publicKey, privateKey, ...roomWithoutKeyChain } = room;
-    return roomWithoutKeyChain;
+  public static removeCompanyIdFromRoom(room: IRoomWithPrivateData): IRoom {
+    const { companyId, ...roomWithoutCompanyId } = room;
+    return roomWithoutCompanyId;
   }
 
   /** Info: (20241112 - Jacky)
@@ -45,10 +45,10 @@ class RoomManager {
     if (!room) {
       loggerBack.warn(`Room with id ${roomId} not found.`);
     }
-    return room ? RoomManager.removeKeyChainFromRoom(room) : null;
+    return room ? RoomManager.removeCompanyIdFromRoom(room) : null;
   }
 
-  private findRoomWithKeyChainById(roomId: string): IRoomWithKeyChain | null {
+  private findRoomWithPrivateData(roomId: string): IRoomWithPrivateData | null {
     const room = this.roomList.find((r) => r.id === roomId) || null;
     if (!room) {
       loggerBack.warn(`Room with id ${roomId} not found.`);
@@ -56,36 +56,19 @@ class RoomManager {
     return room;
   }
 
-  private findRoomWithKeyChainByPublicKey(publicKey: JsonWebKey): IRoomWithKeyChain | null {
-    const publicKeyString = JSON.stringify(publicKey);
-    const room = this.roomList.find((r) => JSON.stringify(r.publicKey) === publicKeyString) || null;
-    return room;
-  }
+  private async findCompanyPublicKeyWithRoomId(roomId: string): Promise<CryptoKey | null> {
+    const room = this.findRoomWithPrivateData(roomId);
+    if (!room) return null;
 
-  /**
-   * Info: (20241224 - Murky)
-   * Adds a new room to the room list with key chain.
-   */
-  private async addRoomWithKeyChain(newRoom: IRoom): Promise<IRoomWithKeyChain> {
-    const companyKeyPair = await generateKeyPair();
-    const publicKey = await exportPublicKey(companyKeyPair.publicKey);
-    const privateKey = await exportPrivateKey(companyKeyPair.privateKey);
-    const roomWithKeyChain: IRoomWithKeyChain = {
-      ...newRoom,
-      publicKey,
-      privateKey,
-    };
-
-    this.roomList.push(roomWithKeyChain);
-    loggerBack.info(`Room with id ${newRoom.id} created successfully.`);
-    return roomWithKeyChain;
+    const publicKey = await getPublicKeyByCompany(room.companyId);
+    return publicKey;
   }
 
   /** Info: (20241112 - Jacky)
    * Create a new room and return it first, than add it to the room list by calling addRoomWithKeyChain.
    * @returns {IRoom} The newly created room.
    */
-  public addRoom(): IRoom {
+  public addRoom(companyId: number): IRoom {
     const roomId = crypto.randomUUID().slice(0, 8);
     const password = crypto.randomUUID().slice(0, 8);
     const newRoom: IRoom = {
@@ -94,7 +77,8 @@ class RoomManager {
       fileList: [],
     };
 
-    this.addRoomWithKeyChain(newRoom);
+    this.roomList.push({ ...newRoom, companyId });
+
     loggerBack.info(`Room with id ${roomId} created successfully.`);
     return newRoom;
   }
@@ -140,11 +124,11 @@ class RoomManager {
    * @returns {IRoom[]} The list of all rooms.
    */
   public getRoomList(): IRoom[] {
-    const roomList = this.roomList.map(RoomManager.removeKeyChainFromRoom);
+    const roomList = this.roomList.map(RoomManager.removeCompanyIdFromRoom);
     return [...roomList];
   }
 
-  public getRoomListWithKeyChain(): IRoomWithKeyChain[] {
+  public getRoomListWithPrivateData(): IRoomWithPrivateData[] {
     return [...this.roomList];
   }
 
@@ -157,12 +141,12 @@ class RoomManager {
     return this.findRoomById(roomId);
   }
 
-  public getRoomWithKeyChainById(roomId: string): IRoomWithKeyChain | null {
-    return this.findRoomWithKeyChainById(roomId);
+  public getRoomWithPrivateDataById(roomId: string): IRoomWithPrivateData | null {
+    return this.findRoomWithPrivateData(roomId);
   }
 
-  public getRoomWithKeyChainByPublicKey(publicKey: JsonWebKey): IRoomWithKeyChain | null {
-    return this.findRoomWithKeyChainByPublicKey(publicKey);
+  public getCompanyPublicKeyByRoomId(roomId: string): Promise<CryptoKey | null> {
+    return this.findCompanyPublicKeyWithRoomId(roomId);
   }
 
   public addFileToRoom(roomId: string, file: IFileBeta): boolean {
