@@ -18,6 +18,8 @@ interface LedgerListProps {
   loading: boolean; // Info: (20241118 - Anna) 接收父组件傳遞的loading狀態
   selectedDateRange: { startTimeStamp: number; endTimeStamp: number }; // Info: (20241218 - Anna) 從父組件傳來的日期範圍
   labelType: string; // Info: (20241218 - Anna) 從父組件傳來的 labelType
+  selectedStartAccountNo: string;
+  selectedEndAccountNo: string;
 }
 
 const LedgerList: React.FunctionComponent<LedgerListProps> = ({
@@ -25,6 +27,8 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
   loading,
   selectedDateRange,
   labelType,
+  selectedStartAccountNo,
+  selectedEndAccountNo,
 }) => {
   const { selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id;
@@ -177,7 +181,11 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
           balance,
           // Info: (20241224 - Anna) 將字串轉換為整數
           voucherId: typeof voucherId === 'string' ? parseInt(voucherId, 10) : voucherId,
-        }} // Info: (20241118 - Anna) 確保每個欄位有預設值
+        }}
+        selectedDateRange={selectedDateRange}
+        selectedStartAccountNo={selectedStartAccountNo}
+        selectedEndAccountNo={selectedEndAccountNo}
+        selectedReportType={labelType}
       />
     );
   });

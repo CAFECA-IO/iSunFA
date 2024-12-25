@@ -15,21 +15,25 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
 
   useEffect(() => {
     // Info: (20241225 - Anna) 從 router.query 中獲取篩選條件
-    const from = router.query.from || '';
-    // const startDate = router.query.startDate || null;
-    // const endDate = router.query.endDate || null;
-    // const startAccountNo = router.query.startAccountNo || null;
-    // const endAccountNo = router.query.endAccountNo || null;
-    // const labelType = router.query.labelType || null;
-    // const pageSize = router.query.pageSize || null;
+    const {
+      from = '',
+      startDate = '',
+      endDate = '',
+      labelType = '',
+      startAccountNo = '',
+      endAccountNo = '',
+    } = router.query;
 
     // Info: (20241225 - Anna) 檢查 URL 查詢參數是否包含from=ledger
     if (from === 'ledger') {
-      //  const ledgerUrl = {
-      //    pathname: ISUNFA_ROUTE.LEDGER,
-      //    query: { startDate, endDate, startAccountNo, endAccountNo, labelType, pageSize },
-      //  };
-      setGoBackUrl(ISUNFA_ROUTE.LEDGER);
+      const queryString = new URLSearchParams({
+        startDate: String(startDate),
+        endDate: String(endDate),
+        labelType: String(labelType),
+        startAccountNo: String(startAccountNo),
+        endAccountNo: String(endAccountNo),
+      }).toString();
+      setGoBackUrl(`${ISUNFA_ROUTE.LEDGER}?${queryString}`);
     }
   }, [router.query]);
 
