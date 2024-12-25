@@ -14,8 +14,10 @@ import {
   bufferToArrayBuffer,
   bufferToUint8Array,
   decryptFile,
+  encryptFile,
   getPrivateKeyByCompany,
   importPrivateKey,
+  uint8ArrayToBuffer,
 } from '@/lib/utils/crypto';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -24,6 +26,7 @@ import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
 import { roomManager } from '@/lib/utils/room';
 import { IRoomWithKeyChain } from '@/interfaces/room';
+import { IV_LENGTH } from '@/constants/config';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
@@ -148,6 +151,33 @@ export async function decryptRoomFile({
   decryptedBuffer = arrayBufferToBuffer(decryptedArrayBuffer);
 
   return decryptedBuffer;
+}
+
+export async function encryptRoomFile({
+  imageBuffer,
+  publicKey,
+}: {
+  imageBuffer: Buffer;
+  publicKey: CryptoKey;
+}): Promise<{
+  encryptedSymmetricKey: string;
+  ivBuffer: Buffer;
+  encryptedImageBuffer: Buffer;
+}> {
+  const imageArrayBuffer: ArrayBuffer = bufferToArrayBuffer(imageBuffer);
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const { encryptedContent: encryptedImageArrayBuffer, encryptedSymmetricKey } = await encryptFile(
+    imageArrayBuffer,
+    publicKey,
+    iv
+  );
+  const encryptedImageBuffer = arrayBufferToBuffer(encryptedImageArrayBuffer);
+  const ivBuffer = uint8ArrayToBuffer(iv);
+  return {
+    encryptedSymmetricKey,
+    ivBuffer,
+    encryptedImageBuffer,
+  };
 }
 
 /**

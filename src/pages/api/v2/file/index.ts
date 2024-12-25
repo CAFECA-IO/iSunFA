@@ -3,7 +3,7 @@ import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFileBeta } from '@/interfaces/file';
-import { parseForm, readFile } from '@/lib/utils/parse_image_form';
+import { parseForm } from '@/lib/utils/parse_image_form';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
@@ -11,14 +11,8 @@ import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import formidable from 'formidable';
 import loggerBack from '@/lib/utils/logger_back';
-import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
 import { createFile } from '@/lib/utils/repo/file.repo';
-import {
-  decryptRoomFile,
-  generateFilePathWithBaseUrlPlaceholder,
-  parseFilePathWithBaseUrlPlaceholder,
-  writeBufferToFile,
-} from '@/lib/utils/file';
+import { generateFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
@@ -40,10 +34,8 @@ async function handleFileUpload(
   targetId: string,
   isEncrypted: boolean,
   encryptedSymmetricKey: string,
-  iv: Uint8Array,
-  publicKey: JsonWebKey | null
+  iv: Uint8Array
 ) {
-  const ivBuffer = uint8ArrayToBuffer(iv);
   const fileForSave = file[0];
   const fileName = fileForSave.newFilename;
   const fileMimeType = fileForSave.mimetype || 'image/jpeg';
@@ -53,46 +45,12 @@ async function handleFileUpload(
 
   switch (type) {
     case UploadType.KYC:
-    case UploadType.INVOICE: {
-      const localUrl = generateFilePathWithBaseUrlPlaceholder(
-        fileName,
-        UPLOAD_TYPE_TO_FOLDER_MAP[type]
-      );
-      fileUrl = localUrl || '';
-      break;
-    }
-
+    case UploadType.INVOICE:
     case UploadType.ROOM: {
-      if (!publicKey) {
-        loggerBack.info(`Public key not found in handleFileUpload in image/[imageId]: ${targetId}`);
-        throw new Error(STATUS_MESSAGE.BAD_REQUEST);
-      }
-
       const localUrl = generateFilePathWithBaseUrlPlaceholder(
         fileName,
         UPLOAD_TYPE_TO_FOLDER_MAP[type]
       );
-
-      const filePath = parseFilePathWithBaseUrlPlaceholder(localUrl);
-
-      const fileBuffer = await readFile(filePath);
-      if (!fileBuffer) {
-        loggerBack.info(`Error in reading file from Room Post by publicKey: ${publicKey}`);
-        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
-      }
-
-      const decryptedFileBuffer = await decryptRoomFile({
-        imageBuffer: fileBuffer,
-        publicKey,
-        encryptedSymmetricKey,
-        iv,
-      });
-
-      // Info: (20241224 - Murky) 直接覆蓋原本的檔案
-      await writeBufferToFile({
-        filePath,
-        buffer: decryptedFileBuffer,
-      });
       fileUrl = localUrl || '';
       break;
     }
@@ -115,7 +73,7 @@ async function handleFileUpload(
     url: fileUrl,
     isEncrypted,
     encryptedSymmetricKey,
-    iv: ivBuffer,
+    iv,
   });
 
   if (!fileInDB) {
@@ -200,7 +158,7 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
   const parsedForm = await parseForm(req, UPLOAD_TYPE_TO_FOLDER_MAP[type]);
   const { files, fields } = parsedForm;
   const { file } = files;
-  const { isEncrypted, encryptedSymmetricKey, iv, publicKey } = extractKeyAndIvFromFields(fields);
+  const { isEncrypted, encryptedSymmetricKey, iv } = extractKeyAndIvFromFields(fields);
 
   if (!file) {
     statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
@@ -212,8 +170,7 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
       targetId,
       isEncrypted,
       encryptedSymmetricKey,
-      iv,
-      publicKey
+      iv
     );
     payload = returnFile;
     statusMessage = STATUS_MESSAGE.CREATED;
