@@ -96,6 +96,9 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
         file,
         key
       );
+      /* eslint-disable no-console */
+      console.log(iv);
+      /* eslint-enable no-console */
       const formData = new FormData();
       formData.append('file', encryptedFile);
       formData.append('encryptedSymmetricKey', encryptedSymmetricKey);

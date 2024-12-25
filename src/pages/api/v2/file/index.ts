@@ -21,6 +21,7 @@ import { File } from '@prisma/client';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
 import { parseJsonWebKeyFromString } from '@/lib/utils/formatter/json_web_key.formatter';
+import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
 
 export const config = {
   api: {
@@ -64,6 +65,7 @@ async function handleFileUpload(
     default:
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
+  const ivBuffer = uint8ArrayToBuffer(iv);
 
   const fileInDB = await createFile({
     name: fileName,
@@ -73,7 +75,7 @@ async function handleFileUpload(
     url: fileUrl,
     isEncrypted,
     encryptedSymmetricKey,
-    iv,
+    iv: ivBuffer,
   });
 
   if (!fileInDB) {
