@@ -41,12 +41,10 @@ const ledgerListResponseSchema = z.object({
           VoucherType.EXPENSE,
           VoucherType.RECEIVE,
           VoucherType.TRANSFER,
-          VoucherType.OPENING_ACCOUNT_BOOK,
 
           EventType.INCOME,
           EventType.PAYMENT,
           EventType.TRANSFER,
-          EventType.OPENING_ACCOUNT_BOOK,
         ]),
         particulars: z.string(),
         debitAmount: z.number(),
