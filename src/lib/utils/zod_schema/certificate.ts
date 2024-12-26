@@ -84,9 +84,7 @@ const certificateListQueryValidator = z.object({
     .nativeEnum(InvoiceType)
     .optional()
     .transform((data) => {
-      const result = data ?
-        (data === InvoiceType.ALL ? undefined : data) :
-        undefined;
+      const result = data ? (data === InvoiceType.ALL ? undefined : data) : undefined;
       return result;
     }), // Info: (20241107 - Murky) @tzuhan, type 使用 InvoiceType, 如果要選擇全部可以填 undefined
   startDate: zodStringToNumberWithDefault(0),
@@ -324,7 +322,10 @@ export const invoicePostV2BodySchema = z.object({
   }),
   inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
   date: z.number(),
-  no: z.string(),
+  no: z
+    .string()
+    .optional()
+    .transform((data) => data || ''),
   // currencyAlias: z.nativeEnum(CurrencyType),
   priceBeforeTax: z.number(),
   // taxType: z.nativeEnum(InvoiceTaxType),
