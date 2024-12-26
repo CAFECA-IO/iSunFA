@@ -5,3 +5,7 @@ export interface IRoom {
   password: string;
   fileList: IFileBeta[];
 }
+
+export interface IRoomWithPrivateData extends IRoom {
+  companyId: number;
+}

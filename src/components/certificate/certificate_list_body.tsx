@@ -552,6 +552,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       )}
       {isEditModalOpen && (
         <CertificateEditModal
+          companyId={companyId}
           isOpen={isEditModalOpen}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           currencyAlias={currency}

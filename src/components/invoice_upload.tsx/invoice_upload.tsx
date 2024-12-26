@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { useModalContext } from '@/contexts/modal_context';
 import APIHandler from '@/lib/utils/api_handler';
@@ -14,6 +14,7 @@ import { ToastId } from '@/constants/toast_id';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { compressImageToTargetSize } from '@/lib/utils/image_compress';
+import { encryptFileWithPublicKey, importPublicKey } from '@/lib/utils/crypto';
 
 interface InvoiceUploadProps {
   isDisabled: boolean;
@@ -32,8 +33,10 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   const { selectedCompany } = useUserCtx();
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
     useModalContext();
+  const [publicKey, setPublicKey] = useState<CryptoKey | null>(null);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
+  const { trigger: fetchPublicKey } = APIHandler<JsonWebKey>(APIName.PUBLIC_KEY_GET);
 
   const handleUploadCancelled = useCallback(() => {
     setFiles([]);
@@ -75,11 +78,39 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
     ]
   );
 
+  const encryptFileWithKey = async (file: File) => {
+    try {
+      let key = publicKey;
+      if (!key) {
+        const { success, data } = await fetchPublicKey({
+          params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+        });
+        if (!success || !data) {
+          throw new Error(t('certificate:UPLOAD.FAILED'));
+        }
+        const cryptokey = await importPublicKey(data);
+        setPublicKey(cryptokey);
+        key = cryptokey;
+      }
+      const { encryptedFile, iv, encryptedSymmetricKey } = await encryptFileWithPublicKey(
+        file,
+        key
+      );
+      const formData = new FormData();
+      formData.append('file', encryptedFile);
+      formData.append('encryptedSymmetricKey', encryptedSymmetricKey);
+      formData.append('publicKey', JSON.stringify(key));
+      formData.append('iv', Array.from(iv).join(','));
+      return formData;
+    } catch (error) {
+      throw new Error(t('certificate:ERROR.ENCRYPT_FILE'));
+    }
+  };
+
   const handleUpload = useCallback(
     async (file: File) => {
       try {
-        const formData = new FormData();
-        formData.append('file', file);
+        const formData = await encryptFileWithKey(file);
         const targetSize = 1 * 1024 * 1024; // Info: (20241206 - tzuhan) 1MB
         const maxSize = 4 * 1024 * 1024;
         if (file.size > maxSize) {

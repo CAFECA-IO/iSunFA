@@ -12,18 +12,21 @@ import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse, formatTimestampByTZ } from '@/lib/utils/common';
 import {
-  convertLedgerJsonToCsvData,
-  filterLedgerJSONByLabelType,
-  getLedgerFromAccountBook,
+  convertLedgerItemToCsvData,
+  fetchLineItems,
+  filterByAccountRange,
+  filterByLabelType,
+  sortAndCalculateBalances,
 } from '@/lib/utils/ledger';
 import { DEFAULT_TIMEZONE } from '@/constants/common';
 import { ledgerAvailableFields, LedgerFieldsMap } from '@/constants/export_ledger';
 import { findVouchersByVoucherIds } from '@/lib/utils/repo/voucher.repo';
+import { LabelType } from '@/constants/ledger';
 
 const handlePostRequest = async (req: NextApiRequest, res: NextApiResponse) => {
   const { fileType, filters, options } = req.body;
   const { companyId } = req.query;
-  const { startDate, endDate, labelType } = filters;
+  const { startDate, endDate, labelType, startAccountNo, endAccountNo } = filters;
 
   if (!companyId) {
     throw new Error(STATUS_MESSAGE.INVALID_COMPANY_ID);
@@ -37,29 +40,36 @@ const handlePostRequest = async (req: NextApiRequest, res: NextApiResponse) => {
     throw new Error(STATUS_MESSAGE.INVALID_FILE_TYPE);
   }
 
-  const rawLedgerJSON = await getLedgerFromAccountBook(+companyId, +startDate, +endDate);
-  const ledgerJSON = filterLedgerJSONByLabelType(rawLedgerJSON, labelType);
+  try {
+    let lineItems = await fetchLineItems(+companyId, +startDate, +endDate);
+    lineItems = filterByAccountRange(lineItems, startAccountNo, endAccountNo);
+    lineItems = filterByLabelType(lineItems, labelType as LabelType);
+    const processedLineItems = sortAndCalculateBalances(lineItems);
 
-  const voucherIds = ledgerJSON.map((ledger) => ledger.voucherId);
-  const vouchers = await findVouchersByVoucherIds(voucherIds);
-  const vouchersWithTz = vouchers.map((voucher) => ({
-    ...voucher,
-    date: formatTimestampByTZ(voucher.date, options?.timezone || DEFAULT_TIMEZONE, 'YYYY-MM-DD'),
-  }));
-  const vouchersMap = new Map(vouchersWithTz.map((voucher) => [voucher.id, voucher]));
+    const voucherIds = processedLineItems.map((ledger) => ledger.voucherId);
+    const vouchers = await findVouchersByVoucherIds(voucherIds);
+    const vouchersWithTz = vouchers.map((voucher) => ({
+      ...voucher,
+      date: formatTimestampByTZ(voucher.date, options?.timezone || DEFAULT_TIMEZONE, 'YYYY-MM-DD'),
+    }));
+    const vouchersMap = new Map(vouchersWithTz.map((voucher) => [voucher.id, voucher]));
 
-  const ledgerCsvData = convertLedgerJsonToCsvData(ledgerJSON, vouchersMap);
+    const ledgerCsvData = convertLedgerItemToCsvData(processedLineItems, vouchersMap);
 
-  const data = ledgerCsvData;
+    const data = ledgerCsvData;
 
-  // Info: (20241212 - Shirley) 處理欄位選擇
-  const fields = options?.fields || ledgerAvailableFields;
+    // Info: (20241212 - Shirley) 處理欄位選擇
+    const fields = options?.fields || ledgerAvailableFields;
 
-  const csv = convertToCSV(fields, data, LedgerFieldsMap);
+    const csv = convertToCSV(fields, data, LedgerFieldsMap);
 
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename=ledger_${Date.now()}.csv`);
-  res.send(csv);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=ledger_${Date.now()}.csv`);
+    res.send(csv);
+  } catch (error) {
+    const err = error as Error;
+    throw new Error(err.message);
+  }
 };
 
 const methodHandlers: {

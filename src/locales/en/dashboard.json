@@ -51,7 +51,13 @@
     "LOGOUT": "Logout",
     "LOGIN": "Login",
     "LANGUAGE": "Language",
-    "SWITCH_ROLE": "Switch Role"
+    "SWITCH_ROLE": "Switch Role",
+    "NO_NEW_NOTIFICATIONS": "No New Notifications",
+    "MARK_AS_ALL_READ": "Mark as all read",
+    "READ_MORE": "Read more",
+    "YOU_HAVE_A_TEAM_INVITATION_FROM": "You have a team invitation from",
+    "ACCEPT": "Accept",
+    "DECLINE": "Decline"
   },
 
   "ROLE": {

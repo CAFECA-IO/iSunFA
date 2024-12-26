@@ -3,7 +3,7 @@ interface ITaxRate {
   rate: number;
 }
 
-interface ITaxSetting {
+export interface ITaxSetting {
   salesTax: ITaxRate;
   purchaseTax: ITaxRate;
   returnPeriodicity: string;
