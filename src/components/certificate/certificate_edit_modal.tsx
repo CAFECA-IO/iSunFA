@@ -505,7 +505,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         </div>
         {/* Info: (20240924 - tzuhan) Save 按鈕 */}
         <div className="flex items-center">
-          {certificate.voucherNo && (
+          {!certificate.voucherNo && (
             <Button
               id="certificate-delete-btn"
               type="button"
