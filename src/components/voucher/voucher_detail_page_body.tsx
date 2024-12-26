@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
 import { MdOutlineFileDownload } from 'react-icons/md';
-import { generateRandomCertificates, ICertificateUI } from '@/interfaces/certificate';
+import { ICertificateUI } from '@/interfaces/certificate';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import CertificateSelection from '@/components/certificate/certificate_selection';
 import { Button } from '@/components/button/button';
@@ -33,6 +33,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
 
   const params = { companyId, voucherId };
 
+  const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
+
   // Info: (20241029 - Julian) Get voucher details from API
   const {
     trigger: getVoucherDetail,
@@ -58,7 +60,6 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     receivingInfo,
     reverseVoucherIds,
     assets,
-    certificates,
     lineItems,
   } = voucherData || defaultVoucherDetail;
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
@@ -96,27 +97,30 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     messageModalVisibilityHandler();
   };
 
-  // ToDo: (20241014 - Julian) dummy data
-  const selectedCertificates: ICertificateUI[] = generateRandomCertificates(
-    certificates.length
-  ).map((certificate) => {
-    const actions = [
-      CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-      CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-    ];
-    return {
-      ...certificate,
-      isSelected: false,
-      actions,
-    };
-  });
-
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail when companyId is ready
     if (companyId) {
       getVoucherDetail();
     }
   }, [companyId]);
+
+  useEffect(() => {
+    // Info: (20241121 - Julian) Get voucher detail when companyId is ready
+    if (voucherData?.certificates) {
+      const certificateUIList = voucherData.certificates.map((certificate) => {
+        return {
+          ...certificate,
+          isSelected: false,
+          actions: [
+            CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+            CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+          ],
+        };
+      });
+
+      setCertificates(certificateUIList);
+    }
+  }, [voucherData]);
 
   useEffect(() => {
     if (!isDeleting) {
@@ -362,11 +366,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         </Link>
       </div>
       {/* Info: (20240926 - tzuhan) CertificateSelection */}
-      <CertificateSelection
-        selectedCertificates={selectedCertificates}
-        isSelectable={false}
-        isDeletable
-      />
+      <CertificateSelection selectedCertificates={certificates} isSelectable={false} isDeletable />
 
       {/* Info: (20241008 - Julian) Voucher Detail */}
       <div className="flex flex-col items-stretch gap-24px font-semibold">
