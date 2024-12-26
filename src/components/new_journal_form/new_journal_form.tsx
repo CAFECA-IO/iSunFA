@@ -25,7 +25,6 @@ const eventTypeMap: { [key in EventType]: string } = {
   [EventType.PAYMENT]: 'journal:JOURNAL.PAYMENT',
   [EventType.INCOME]: 'project:PROJECT.INCOME',
   [EventType.TRANSFER]: 'common:COMMON.TRANSFER',
-  [EventType.OPENING_ACCOUNT_BOOK]: 'common:COMMON.OPENING_ACCOUNT_BOOK', // Info: (20241225 - Murky) @Anna 目前翻譯檔暫時沒有開帳的翻譯
 };
 const taxRateSelection: number[] = [0, 5, 20, 25];
 
