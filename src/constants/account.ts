@@ -18,7 +18,6 @@ export enum EventType {
   PAYMENT = 'payment',
   INCOME = 'income',
   TRANSFER = 'transfer',
-  OPENING_ACCOUNT_BOOK = 'openingAccountBook',
 }
 
 export enum AccountType {
@@ -53,7 +52,6 @@ export enum VoucherType {
   RECEIVE = 'receive',
   EXPENSE = 'expense',
   TRANSFER = 'transfer',
-  OPENING_ACCOUNT_BOOK = 'openingAccountBook',
 }
 
 export enum PaymentStatusType {
@@ -85,7 +83,6 @@ export const EVENT_TYPE_TO_VOUCHER_TYPE_MAP: {
   [EventType.INCOME]: VoucherType.RECEIVE,
   [EventType.PAYMENT]: VoucherType.EXPENSE,
   [EventType.TRANSFER]: VoucherType.TRANSFER,
-  [EventType.OPENING_ACCOUNT_BOOK]: VoucherType.OPENING_ACCOUNT_BOOK,
 };
 
 export const VOUCHER_TYPE_TO_EVENT_TYPE_MAP: {
@@ -94,7 +91,6 @@ export const VOUCHER_TYPE_TO_EVENT_TYPE_MAP: {
   [VoucherType.RECEIVE]: EventType.INCOME,
   [VoucherType.EXPENSE]: EventType.PAYMENT,
   [VoucherType.TRANSFER]: EventType.TRANSFER,
-  [VoucherType.OPENING_ACCOUNT_BOOK]: EventType.OPENING_ACCOUNT_BOOK,
 };
 
 export const MISSING_CODE_MARKERS = ['!', '@', '#', '$', '%'];
