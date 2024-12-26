@@ -53,14 +53,14 @@ const NumericInput = ({
     // Info: (20240723 - Liz) 整理輸入的值
     const sanitizedValue =
       inputValue
-        .replace(/^0+/, '') // 移除開頭的零
-        .replace(/[^0-9.]/g, '') // 移除非數字和小數點字符
-        .replace(/(\..*)\./g, '$1') || '0'; // 只允許一個小數點
+        .replace(/^0+/, '') // Info: (20240723 - Liz) 移除開頭的零
+        .replace(/[^0-9.]/g, '') // Info: (20240723 - Liz) 移除非數字和小數點字符
+        .replace(/(\..*)\./g, '$1') || '0'; // Info: (20240723 - Liz) 只允許一個小數點
 
     // Info: (20240723 - Liz) 轉換成數值 (整數或浮點數) 為了存入 DB
     const numericValue = isDecimal
-      ? parseFloat(sanitizedValue) // 如果解析失敗，會是 NaN
-      : parseInt(sanitizedValue, 10); // 如果解析失敗，會是 NaN
+      ? parseFloat(sanitizedValue) // Info: (20240723 - Liz) 如果解析失敗，會是 NaN
+      : parseInt(sanitizedValue, 10); // Info: (20240723 - Liz) 如果解析失敗，會是 NaN
 
     // Info: (20240723 - Liz) 處理 NaN 的情況
     const validNumericValue = Number.isNaN(numericValue) ? 0 : numericValue;
