@@ -391,15 +391,6 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled"
         />
         {/* Info: (20240927 - Julian) Debit */}
-        {/* <input
-          id={`debit-input-${id}`}
-          type="string"
-          value={debitInput}
-          onChange={debitInputChangeHandler}
-          placeholder="0"
-          disabled={isDebitDisabled}
-          className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
-        /> */}
         <NumericInput
           id="input-price-before-tax"
           name="input-price-before-tax"
@@ -412,15 +403,6 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           disabled={isDebitDisabled}
         />
         {/* Info: (20240927 - Julian) Credit */}
-        {/* <input
-          id={`credit-input-${id}`}
-          type="string"
-          value={creditInput}
-          onChange={creditInputChangeHandler}
-          placeholder="0"
-          disabled={isCreditDisabled}
-          className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
-        /> */}
         <NumericInput
           id="input-price-before-tax"
           name="input-price-before-tax"
