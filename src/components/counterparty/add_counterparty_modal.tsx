@@ -24,7 +24,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   modalVisibilityHandler,
   onSave,
   name,
-  nameIsNeeded, // Info: (20241224 - tzuhan) 從 certificate 編輯觸發新增 counterparty 希望有傳人名字可以儲存
   taxId,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
@@ -36,7 +35,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   const [showHint, setShowHint] = useState(false);
   const [isDropdownOpen, setDropdownOpen] = useState(false); // Info: (20241223 - Anna) 控制下拉選單顯示
   const [suggestions, setSuggestions] = useState<ICompanyTaxIdAndName[]>([]); // Info: (20241223 - Anna) 建議選項的狀態
-  const [isOptionSelected, setIsOptionSelected] = useState(false); // Info: (20241223 - Anna) 選擇選項的狀態
+  // Deprecate: (20241226 - Tzuhan) remove isOptionSelected
+  // const [isOptionSelected, setIsOptionSelected] = useState(false); // Info: (20241223 - Anna) 選擇選項的狀態
   const dropdownRef = useRef<HTMLDivElement>(null); // Info: (20241223 - Anna) Ref 追蹤下拉選單
 
   const {
@@ -125,7 +125,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     // eslint-disable-next-line no-console
     console.log('Input value:', newName); // Info: (20241223 - Anna) 確認輸入框值是否為空
     setInputName(newName);
-    setIsOptionSelected(false); // Info: (20241223 - Anna) 清空選擇狀態
+    // setIsOptionSelected(false); // Info: (20241223 - Anna) 清空選擇狀態
 
     if (newName === '') {
       // Info: (20241223 - Anna) 當輸入框清空時，關閉下拉選單並清空建議的選項
@@ -202,14 +202,14 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     setInputName(suggestion.name);
     setInputTaxId(suggestion.taxId || '');
     setDropdownOpen(false);
-    setIsOptionSelected(true); // Info: (20241224 - Anna) 標記用戶選擇了選項
+    // setIsOptionSelected(true); // Info: (20241224 - Anna) 標記用戶選擇了選項
   };
 
   const outsideClickHandler = (event: MouseEvent) => {
     // Info: (20241223 - Anna) 監控點擊事件
     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
       setDropdownOpen(false); // Info: (20241223 - Anna) 點擊外部時關閉下拉選單
-      setIsOptionSelected(true); // Info: (20241223 - Anna) 標記用戶選擇了選項
+      // setIsOptionSelected(true); // Info: (20241223 - Anna) 標記用戶選擇了選項
     }
   };
 
@@ -239,7 +239,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       setShowHint(true);
     } else {
       const counterpartyData = {
-        name: isOptionSelected || nameIsNeeded ? inputName : '', // Info: (20241223 - Anna) 只有選擇了選項才帶入值
+        name: inputName, // Info: (20241223 - Anna) 只有選擇了選項才帶入值
         taxId: inputTaxId,
         type: inputType as CounterpartyType,
         note: inputNote || '',

@@ -187,6 +187,118 @@ const PopulateDates = ({
 const SECONDS_TO_TOMORROW = 86400 - 1;
 const MILLISECONDS_IN_A_SECOND = 1000;
 
+type ViewMode = 'date' | 'month' | 'year';
+
+/* Info: (20241226 - Tzuhan) === 幾個切換畫面的區塊 === */
+interface IYearDropdownProps {
+  setSelectedYear: Dispatch<SetStateAction<number>>;
+  setViewMode: Dispatch<SetStateAction<ViewMode>>;
+  selectedYear: number;
+}
+// Info: (20241226 - Tzuhan) 1. 「選年份」畫面範例。你可以再做上下頁切換更多年。
+const YearDropdown = ({ setSelectedYear, setViewMode, selectedYear }: IYearDropdownProps) => {
+  // Info: (20241226 - Tzuhan) 簡單做個 12 年區間 (前後可自行調整)
+  const startYear = selectedYear - 5;
+  const endYear = selectedYear + 6;
+  const years = [];
+  // eslint-disable-next-line no-plusplus
+  for (let y = startYear; y <= endYear; y++) {
+    years.push(y);
+  }
+
+  return (
+    <div className="grid grid-cols-3 gap-4 text-center">
+      {years.map((y) => (
+        <button
+          key={y}
+          type="button"
+          onClick={() => {
+            setSelectedYear(y);
+            // Info: (20241226 - Tzuhan) 選完年份，進入「選月份」模式
+            setViewMode('month');
+          }}
+          className="rounded hover:bg-gray-200"
+        >
+          {y}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+interface IMonthDropdownProps {
+  setSelectedMonth: Dispatch<SetStateAction<number>>;
+  setViewMode: Dispatch<SetStateAction<ViewMode>>;
+}
+
+// Info: (20241226 - Tzuhan) 2.「選月份」畫面
+const MonthDropdown = ({ setSelectedMonth, setViewMode }: IMonthDropdownProps) => {
+  const { t }: { t: TranslateFunction } = useTranslation('date_picker');
+  return (
+    <div className="grid grid-cols-3 gap-4 text-center">
+      {MONTH_ABR_LIST.map((monthAbr, idx) => {
+        const mIndex = idx + 1; // Info: (20241226 - Tzuhan) 1~12
+        return (
+          <button
+            key={monthAbr}
+            type="button"
+            onClick={() => {
+              setSelectedMonth(mIndex);
+              // Info: (20241226 - Tzuhan) 選完月，回到「選日期」模式
+              setViewMode('date');
+            }}
+            className="rounded hover:bg-gray-200"
+          >
+            {t(monthAbr)}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+interface IDateDropdownProps {
+  daysInMonth: (year: number, month: number) => Dates[];
+  selectDateOne: (date: Dates | null) => void;
+  selectDateTwo: (date: Dates | null) => void;
+  selectedYear: number;
+  selectedMonth: number;
+  dateOne: Date | null;
+  dateTwo: Date | null;
+  setComponentVisible: Dispatch<SetStateAction<boolean>>;
+  type: DatePickerType;
+}
+
+// 3. Info: (20241226 - Tzuhan) 「選日期」畫面 (就是你原本的日期 grid)
+const DateDropdown = ({
+  daysInMonth,
+  selectDateOne,
+  selectDateTwo,
+  selectedYear,
+  selectedMonth,
+  dateOne,
+  dateTwo,
+  setComponentVisible,
+  type,
+}: IDateDropdownProps) => {
+  /* Info: (20241226 - Tzuhan) 跟原本一樣，把 PopulateDates 拿來這邊顯示 */
+  return (
+    <div>
+      <PopulateDates
+        daysInMonth={daysInMonth(selectedYear, selectedMonth)}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        selectTimeOne={dateOne?.getTime() ?? 0}
+        selectDateOne={selectDateOne}
+        selectTimeTwo={dateTwo?.getTime() ?? 0}
+        selectDateTwo={selectDateTwo}
+        setComponentVisible={setComponentVisible}
+        type={type}
+      />
+    </div>
+  );
+};
+
 const DatePicker = ({
   id,
   type,
@@ -205,8 +317,10 @@ const DatePicker = ({
   datePickerHandler,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('date_picker');
-
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
+
+  /* Info: (20241226 - Tzuhan) 新增 viewMode，預設為 'date' */
+  const [viewMode, setViewMode] = useState<ViewMode>('date');
 
   const today = new Date();
   const minTime = minDate ? minDate.getTime() : 0;
@@ -221,14 +335,9 @@ const DatePicker = ({
 
   const isDateSelected = dateOne && dateTwo && dateOne.getTime() !== 0 && dateTwo.getTime() !== 0;
 
-  const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1); // 0 (January) to 11 (December).
+  /* Info: (20241226 - Tzuhan) 保持目前所選的「月、年」 */
+  const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
-
-  // Info: (20240802 - Shirley)
-  // useEffect(() => {
-  //   setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
-  //   setDateTwo(new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND));
-  // }, [period]);
 
   useEffect(() => {
     // Info: (20240417 - Shirley) 如果已取得兩個日期，則將日期區間傳回父層
@@ -299,10 +408,12 @@ const DatePicker = ({
       };
       dates.push(date);
     }
+    // Info: (20241226 - Tzuhan) 前面空白的格子 (用 day 來算)
     dates = Array(...Array(day)).concat(dates);
     return dates;
   };
 
+  /* Info: (20241226 - Tzuhan) 點擊下一個月 */
   const goToNextMonth = useCallback(() => {
     let month = selectedMonth;
     let year = selectedYear;
@@ -315,6 +426,7 @@ const DatePicker = ({
     setSelectedYear(year);
   }, [selectedMonth, selectedYear]);
 
+  /* Info: (20241226 - Tzuhan) 點擊上一個月 */
   const goToPrevMonth = useCallback(() => {
     let month = selectedMonth;
     let year = selectedYear;
@@ -327,30 +439,36 @@ const DatePicker = ({
     setSelectedYear(year);
   }, [selectedMonth, selectedYear]);
 
+  /* Info: (20241226 - Tzuhan) 選取 DateOne */
   const selectDateOne = useCallback((el: Dates | null) => {
     if (!el) {
       setDateOne(null);
       return;
     }
     const newDate = new Date(el.time);
-    // Info: (20240417 - Shirley) 設定時間為當天的開始（00:00:00）
     newDate.setHours(0, 0, 0);
     setDateOne(newDate);
   }, []);
 
+  /* Info: (20241226 - Tzuhan) 選取 DateTwo */
   const selectDateTwo = useCallback((el: Dates | null) => {
     if (!el) {
       setDateTwo(null);
       return;
     }
     const newDate = new Date(el.time);
-    // Info: (20240417 - Shirley) 設定時間為當天的最後一秒（23:59:59）
     newDate.setHours(23, 59, 59);
     setDateTwo(newDate);
   }, []);
 
   // Info: (20240417 - Shirley) 選單開關
-  const openCalenderHandler = () => setComponentVisible(!componentVisible);
+  const openCalenderHandler = () => {
+    //  Info: (20241226 - Tzuhan) 如果下一步要「打開」，就先把 viewMode 重置為 'date'
+    if (!componentVisible) {
+      setViewMode('date');
+    }
+    setComponentVisible(!componentVisible);
+  };
   // Info: (20240417 - Shirley) 選擇今天
   const todayClickHandler = () => {
     const dateOfToday = new Date(
@@ -362,9 +480,13 @@ const DatePicker = ({
     setDateTwo(dateOfToday);
     setSelectedMonth(today.getMonth() + 1);
     setSelectedYear(today.getFullYear());
+
+    // Info: (20241226 - Tzuhan) 回到顯示日期模式
+    setViewMode('date');
     setComponentVisible(false);
   };
 
+  /* Info: (20241226 - Tzuhan) 顯示在按鈕上的文字 */
   const defaultPeriodText =
     type === DatePickerType.TEXT_DATE
       ? t('date_picker:DATE_PICKER.SELECT_DATE')
@@ -380,10 +502,10 @@ const DatePicker = ({
           )} ${timestampToString(period.endTimeStamp).date}`
       : defaultPeriodText;
 
-  // Info: (20240417 - Shirley) 顯示月份和年份
   const displayedYear = `${selectedYear}`;
   const displayedMonth = `${t(MONTH_ABR_LIST[selectedMonth - 1])}`;
 
+  /* Info: (20241226 - Tzuhan) 按鈕 */
   const displayedButtonContent =
     type === DatePickerType.ICON_PERIOD || type === DatePickerType.ICON_DATE ? (
       <Button
@@ -446,7 +568,9 @@ const DatePicker = ({
       <div ref={targetRef}>
         {displayedButtonContent}
 
-        {/* Info: (20240417 - Shirley) Calender part */}
+        {/** Info: (20241226 - Tzuhan)
+         * 主要的下拉容器，根據 viewMode 來決定顯示哪個子元件
+         */}
         <div
           className={cn(
             'invisible absolute top-16 z-20 grid w-300px grid-rows-0 items-center space-y-4 rounded-md bg-date-picker-surface-calendar-background p-5 text-date-picker-text-default opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
@@ -470,45 +594,102 @@ const DatePicker = ({
             {t('date_picker:DATE_PICKER.TODAY')}
           </Button>
 
+          {/** Info: (20241226 - Tzuhan)
+           * 這塊放「頭部區域」，可以把它做成三態：
+           * - 在 viewMode = 'date' 時顯示 年/月 + 前後按鈕
+           * - 在 viewMode = 'year' 時只顯示單純標題 + 前後按鈕(切更多年區間?)
+           * - 在 viewMode = 'month' 時顯示「2024」之類的 + 前後按鈕(如果要切整年度範圍?)
+           */}
           <div className="flex w-full items-center justify-between">
-            {/* Info: (20240417 - Shirley) Previous button  */}
             <Button
               id={`${id}-prev-btn`}
               type="button"
-              onClick={goToPrevMonth}
+              onClick={() => {
+                if (viewMode === 'year') {
+                  // Info: (20241226 - Tzuhan) 範例：往前一組 12 年
+                  setSelectedYear((prev) => prev - 12);
+                } else if (viewMode === 'month') {
+                  // Info: (20241226 - Tzuhan) 往前一年
+                  setSelectedYear((prev) => prev - 1);
+                } else {
+                  // Info: (20241226 - Tzuhan) 日期模式 → 上一個月
+                  goToPrevMonth();
+                }
+              }}
               variant="tertiaryOutline"
               size={'smallSquare'}
             >
               <AiOutlineLeft size={12} />
             </Button>
-            {/* Info: (20240417 - Shirley) Month and Year */}
-            <div className="flex space-x-4 text-date-picker-text-default">
-              <p>{displayedYear}</p>
-              <p>{displayedMonth}</p>
-            </div>
 
-            {/* Info: (20240417 - Shirley) Next button */}
+            {/* Info: (20241226 - Tzuhan) 顯示當前「年份 / 月份」文字，且可點擊切換 viewMode */}
+            {viewMode === 'date' && (
+              <div className="flex space-x-4 text-date-picker-text-default">
+                <p onClick={() => setViewMode('year')} className="cursor-pointer">
+                  {displayedYear}
+                </p>
+                <p onClick={() => setViewMode('month')} className="cursor-pointer">
+                  {displayedMonth}
+                </p>
+              </div>
+            )}
+
+            {viewMode === 'year' && (
+              <p className="text-date-picker-text-default">
+                {`${selectedYear - 5} ~ ${selectedYear + 6}`}
+              </p>
+            )}
+
+            {viewMode === 'month' && (
+              <p className="text-date-picker-text-default">{`${selectedYear}`}</p>
+            )}
+
             <Button
               id={`${id}-next-btn`}
               type="button"
-              onClick={goToNextMonth}
+              onClick={() => {
+                if (viewMode === 'year') {
+                  // Info: (20241226 - Tzuhan) 往後一組 12 年
+                  setSelectedYear((prev) => prev + 12);
+                } else if (viewMode === 'month') {
+                  // Info: (20241226 - Tzuhan) 往後一年
+                  setSelectedYear((prev) => prev + 1);
+                } else {
+                  // Info: (20241226 - Tzuhan) 日期模式 → 下一個月
+                  goToNextMonth();
+                }
+              }}
               variant="tertiaryOutline"
               size={'smallSquare'}
             >
               <AiOutlineRight size={12} />
             </Button>
           </div>
-          <PopulateDates
-            daysInMonth={daysInMonth(selectedYear, selectedMonth)}
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-            selectTimeOne={dateOne?.getTime() ?? 0}
-            selectDateOne={selectDateOne}
-            selectTimeTwo={dateTwo?.getTime() ?? 0}
-            selectDateTwo={selectDateTwo}
-            setComponentVisible={setComponentVisible}
-            type={type}
-          />
+
+          {/* 根據 viewMode 決定要渲染什麼畫面 */}
+          {viewMode === 'year' && (
+            <YearDropdown
+              selectedYear={selectedYear}
+              setSelectedYear={setSelectedYear}
+              setViewMode={setViewMode}
+            />
+          )}
+          {viewMode === 'month' && (
+            <MonthDropdown setSelectedMonth={setSelectedMonth} setViewMode={setViewMode} />
+          )}
+          {viewMode === 'date' && (
+            <DateDropdown
+              daysInMonth={daysInMonth}
+              selectDateOne={selectDateOne}
+              selectDateTwo={selectDateTwo}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+              dateOne={dateOne}
+              dateTwo={dateTwo}
+              setComponentVisible={setComponentVisible}
+              type={type}
+            />
+          )}
         </div>
       </div>
     </div>

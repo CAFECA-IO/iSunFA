@@ -9,6 +9,7 @@ import { FaPlus } from 'react-icons/fa6';
 import ReverseLineItem from '@/components/voucher/reverse_line_item';
 import { IAccount } from '@/interfaces/accounting_account';
 import AccountTitleDropmenu from '@/components/voucher/account_title_dropmenu';
+import NumericInput from '@/components/voucher/numeric_input';
 // import { useHotkeys } from 'react-hotkeys-hook';
 
 interface IVoucherLineItemProps {
@@ -197,8 +198,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
   // Info: (20241007 - Julian) input state
   const [particulars, setParticulars] = useState<string>('');
-  const [debitInput, setDebitInput] = useState<string>('');
-  const [creditInput, setCreditInput] = useState<string>('');
+  const [debitInput, setDebitInput] = useState<number | undefined>();
+  const [creditInput, setCreditInput] = useState<number | undefined>();
 
   // Info: (20241007 - Julian) input style
   const [amountStyle, setAmountStyle] = useState<string>(inputStyle.NORMAL);
@@ -208,8 +209,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
   // Info: (20241118 - Julian) 設定預設值
   useEffect(() => {
-    const defaultDebit = lineItemDebitAmount.toString();
-    const defaultCredit = lineItemCreditAmount.toString();
+    const defaultDebit = lineItemDebitAmount;
+    const defaultCredit = lineItemCreditAmount;
 
     setParticulars(lineItemDescription);
     setDebitInput(defaultDebit);
@@ -267,14 +268,14 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   useEffect(() => {
     // Info: (20241004 - Julian) Reset All State
     setParticulars('');
-    setDebitInput('');
-    setCreditInput('');
+    setDebitInput(undefined);
+    setCreditInput(undefined);
   }, [flagOfClear]);
 
   useEffect(() => {
     setAmountStyle(
       // Info: (20241007 - Julian) 檢查借貸金額是否為零
-      (amountIsZero && (debitInput === '' || creditInput === '')) ||
+      (amountIsZero && (debitInput === undefined || creditInput === undefined)) ||
         // Info: (20241007 - Julian) 檢查借貸金額是否相等
         amountNotEqual
         ? inputStyle.ERROR
@@ -288,8 +289,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   }, [debitInput, creditInput]);
 
   // Info: (20241118 - Julian) 若借方金額不為 0，則禁用貸方金額輸入；反之亦然
-  const isDebitDisabled = creditInput !== '0' && creditInput !== '';
-  const isCreditDisabled = debitInput !== '0' && debitInput !== '';
+  const isDebitDisabled = creditInput !== 0 && creditInput !== undefined;
+  const isCreditDisabled = debitInput !== 0 && debitInput !== undefined;
 
   const particularsInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setParticulars(e.target.value);
@@ -304,14 +305,13 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     });
   };
 
-  const debitInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭 0
-    const debitNum = parseInt(e.target.value, 10);
-    const debitValue = Number.isNaN(debitNum) ? 0 : debitNum;
+  const debitInputChangeHandler = (value: number) => {
+    // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭
+    const debitValue = value;
 
     // Info: (20241105 - Julian) 加入千分位逗號會造成輸入錯誤，暫時移除
     // setDebitInput(numberWithCommas(debitValue));
-    setDebitInput(debitValue.toString());
+    setDebitInput(debitValue);
     // Info: (20241001 - Julian) 設定 Debit
     setLineItems((prev) => {
       const duplicateList = [...prev];
@@ -323,14 +323,15 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     });
   };
 
-  const creditInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const creditInputChangeHandler = (value: number) => {
     // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭 0
-    const creditNum = parseInt(e.target.value, 10);
-    const creditValue = Number.isNaN(creditNum) ? 0 : creditNum;
+    // const creditNum = parseInt(e.target.value, 10);
+    // const creditValue = Number.isNaN(creditNum) ? 0 : creditNum;
+    const creditValue = value;
 
     // Info: (20241105 - Julian) 加入千分位逗號會造成輸入錯誤，暫時移除
     // setCreditInput(numberWithCommas(creditValue));
-    setCreditInput(creditValue.toString());
+    setCreditInput(creditValue);
     // Info: (20241001 - Julian) 設定 Credit
     setLineItems((prev) => {
       const duplicateList = [...prev];
@@ -390,24 +391,28 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled"
         />
         {/* Info: (20240927 - Julian) Debit */}
-        <input
-          id={`debit-input-${id}`}
-          type="string"
+        <NumericInput
+          id="input-price-before-tax"
+          name="input-price-before-tax"
           value={debitInput}
-          onChange={debitInputChangeHandler}
-          placeholder="0"
-          disabled={isDebitDisabled}
+          isDecimal
+          required
+          hasComma
           className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
+          triggerWhenChanged={debitInputChangeHandler}
+          disabled={isDebitDisabled}
         />
         {/* Info: (20240927 - Julian) Credit */}
-        <input
-          id={`credit-input-${id}`}
-          type="string"
+        <NumericInput
+          id="input-price-before-tax"
+          name="input-price-before-tax"
           value={creditInput}
-          onChange={creditInputChangeHandler}
-          placeholder="0"
-          disabled={isCreditDisabled}
+          isDecimal
+          required
+          hasComma
           className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
+          triggerWhenChanged={creditInputChangeHandler}
+          disabled={isCreditDisabled}
         />
         {/* Info: (20240927 - Julian) Delete button */}
         <div
