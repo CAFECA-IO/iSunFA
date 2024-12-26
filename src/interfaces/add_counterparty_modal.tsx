@@ -5,5 +5,4 @@ export interface IAddCounterPartyModalData {
   onSave: (counterpartyData: ICounterparty) => void;
   name?: string;
   taxId?: string;
-  nameIsNeeded?: boolean;
 }

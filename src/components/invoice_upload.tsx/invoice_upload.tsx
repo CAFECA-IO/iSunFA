@@ -64,7 +64,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
             id: ToastId.UPLOAD_FILE_ERROR,
             type: ToastType.ERROR,
             closeable: true,
-            content: t('certificate:TOAST.UPLOAD_FILE_ERROR'),
+            content: t('certificate:TOAST.UPLOAD_FILE_ERROR', { name: fileName }),
           });
         }
       }
