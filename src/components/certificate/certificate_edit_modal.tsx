@@ -22,9 +22,13 @@ import CounterpartyInput, {
 import EditableFilename from '@/components/certificate/edible_file_name';
 import Magnifier from '@/components/magnifier/magifier';
 import { IInvoiceBetaOptional } from '@/interfaces/invoice';
+import APIHandler from '@/lib/utils/api_handler';
+import { IAccountingSetting, ITaxSetting } from '@/interfaces/accounting_setting';
+import { APIName } from '@/constants/api_connection';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
+  companyId: number;
   toggleModel: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
   currencyAlias: CurrencyType;
   certificate?: ICertificateUI;
@@ -35,6 +39,7 @@ interface CertificateEditModalProps {
 
 const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   isOpen,
+  companyId,
   toggleModel,
   currencyAlias,
   certificate,
@@ -44,6 +49,10 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 }) => {
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
+  const [taxSetting, setTaxSetting] = useState<ITaxSetting>();
+  const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
+    APIName.ACCOUNTING_SETTING_GET
+  );
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
   const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
@@ -60,7 +69,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         date: certificate.invoice.date,
         no: certificate.invoice.no,
         priceBeforeTax: certificate.invoice.priceBeforeTax,
-        taxRatio: certificate.invoice.taxRatio ?? 0,
+        taxRatio: certificate.invoice.taxRatio,
         taxPrice: certificate.invoice.taxPrice,
         totalPrice: certificate.invoice.totalPrice,
         counterParty: certificate.invoice.counterParty,
@@ -70,10 +79,10 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   );
 
   const isFormValid = useCallback(() => {
-    const { no, date: formDate, priceBeforeTax, totalPrice, counterParty } = formState;
+    const { date: formDate, priceBeforeTax, totalPrice, counterParty } = formState;
     return (
-      no &&
-      no.trim() !== '' &&
+      // no &&
+      // no.trim() !== '' &&
       formDate &&
       formDate > 0 &&
       priceBeforeTax &&
@@ -99,6 +108,24 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     },
     []
   );
+
+  const getSettingTaxRatio = useCallback(async () => {
+    const { success, data } = await getAccountSetting({
+      params: { companyId },
+    });
+    if (success && data) {
+      setTaxSetting(data.taxSettings);
+      if (formState.taxRatio === undefined) {
+        if (formState.inputOrOutput === InvoiceTransactionDirection.INPUT) {
+          handleInputChange('taxRatio', data.taxSettings.salesTax.rate * 100);
+        } else if (formState.inputOrOutput === InvoiceTransactionDirection.OUTPUT) {
+          handleInputChange('taxRatio', data.taxSettings.purchaseTax.rate * 100);
+        } else {
+          handleInputChange('taxRatio', 0);
+        }
+      }
+    }
+  }, [companyId, formState.inputOrOutput, formState.taxRatio]);
 
   const {
     targetRef: taxRatioMenuRef,
@@ -146,6 +173,19 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     handleInputChange('taxPrice', updateTaxPrice);
   };
 
+  const handeInputOrOutputChange = (value: InvoiceTransactionDirection) => {
+    handleInputChange('inputOrOutput', value);
+    if (taxSetting) {
+      if (formState.inputOrOutput === InvoiceTransactionDirection.INPUT) {
+        handleInputChange('taxRatio', taxSetting.salesTax.rate * 100);
+      } else if (formState.inputOrOutput === InvoiceTransactionDirection.OUTPUT) {
+        handleInputChange('taxRatio', taxSetting.purchaseTax.rate * 100);
+      } else {
+        handleInputChange('taxRatio', 0);
+      }
+    }
+  };
+
   // Info: (20241206 - Julian) currency alias setting
   const currencyAliasImageSrc = `/currencies/${(certificate.invoice?.currencyAlias || currencyAlias).toLowerCase()}.svg`;
   const currencyAliasImageAlt = `currency-${(certificate.invoice?.currencyAlias || currencyAlias).toLowerCase()}-icon`;
@@ -159,18 +199,16 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     formStateRef.current = formState;
   }, [formState]);
 
-  // Info: (20240924 - tzuhan) 處理保存
-  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (counterpartyInputRef.current) {
-      counterpartyInputRef.current.triggerSearch();
-    }
-  };
+  useEffect(() => {
+    getSettingTaxRatio();
+  }, []);
 
-  const onTriggerSave = async () => {
+  // Info: (20240924 - tzuhan) 處理保存
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     // Deprecate: (20241218 - tzuhan) remove eslint-disable
     // eslint-disable-next-line no-console
-    console.log('onTriggerSave formStateRef.current:', formStateRef.current);
+    console.log('handleSave formStateRef.current:', formStateRef.current);
     const updatedData: ICertificate = {
       ...certificate,
       invoice: {
@@ -180,6 +218,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     };
     await onSave(updatedData);
     toggleModel();
+    if (counterpartyInputRef.current) {
+      counterpartyInputRef.current.triggerSearch();
+    }
   };
 
   return (
@@ -237,7 +278,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                       name="invoice-type"
                       className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
                       defaultChecked={formState.inputOrOutput === value}
-                      onClick={() => handleInputChange('inputOrOutput', value)}
+                      onClick={() => handeInputOrOutputChange(value)}
                     />
                     <p>{t(`certificate:EDIT.${value.toUpperCase()}`)}</p>
                   </label>
@@ -265,7 +306,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               <div id="price" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('certificate:EDIT.INVOICE_NUMBER')}
-                <span className="text-text-state-error">*</span>
+                {/* <span className="text-text-state-error">*</span> */}
               </p>
               <div className="flex w-full items-center">
                 <input
@@ -405,7 +446,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               ref={counterpartyInputRef}
               counterparty={formState.counterParty}
               onSelect={(cp: ICounterpartyOptional) => handleInputChange('counterParty', cp)}
-              onTriggerSave={onTriggerSave}
             />
 
             {/* Info: (20240924 - tzuhan) Invoice Type */}
@@ -421,11 +461,10 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     onClick={invoiceTypeMenuClickHandler}
                     className={`group relative flex h-46px w-full cursor-pointer ${isInvoiceTypeMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                   >
-                    {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
-                    {/* Deprecate: (20241218 - tzuhan) remove eslint-disable */}
-                    {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
-                    <p className="hide-scrollbar items-centerjustify-between flex h-46px min-w-300px items-center justify-between overflow-y-scroll">
-                      <span>{t(`filter_section_type:FILTER_SECTION_TYPE.${formState.type}`)}</span>
+                    <p className="flex h-46px min-w-300px items-center justify-between">
+                      <span className="h-24px w-280px overflow-hidden">
+                        {t(`filter_section_type:FILTER_SECTION_TYPE.${formState.type}`)}
+                      </span>
                       <div className="flex h-20px w-20px items-center justify-center">
                         <FaChevronDown
                           className={isInvoiceTypeMenuOpen ? 'rotate-180' : 'rotate-0'}

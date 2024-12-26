@@ -2,6 +2,7 @@ import prisma from '@/client';
 import { AccountType } from '@/constants/account';
 import { Prisma } from '@prisma/client';
 import { setTimestampToDayEnd, setTimestampToDayStart } from '@/lib/utils/common';
+import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
 
 export async function getLineItemsInPrisma(
   companyId: number,
@@ -52,7 +53,7 @@ export async function getAllLineItemsInPrisma(
   startDate: number,
   endDate: number,
   isDeleted?: boolean
-) {
+): Promise<ILineItemSimpleAccountVoucher[]> {
   const startDateInSecond = setTimestampToDayStart(startDate);
   const endDateInSecond = setTimestampToDayEnd(endDate);
   const deletedAt = isDeleted ? { not: null } : { equals: null };

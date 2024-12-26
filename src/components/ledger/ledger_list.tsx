@@ -2,9 +2,6 @@ import React, { useState, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import LedgerItem from '@/components/ledger/ledger_item';
 import Pagination from '@/components/pagination/pagination';
-import SortingButton from '@/components/voucher/sorting_button';
-import { checkboxStyle } from '@/constants/display';
-import { SortOrder } from '@/constants/sort';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import { ILedgerPayload } from '@/interfaces/ledger';
@@ -18,6 +15,8 @@ interface LedgerListProps {
   loading: boolean; // Info: (20241118 - Anna) 接收父组件傳遞的loading狀態
   selectedDateRange: { startTimeStamp: number; endTimeStamp: number }; // Info: (20241218 - Anna) 從父組件傳來的日期範圍
   labelType: string; // Info: (20241218 - Anna) 從父組件傳來的 labelType
+  selectedStartAccountNo: string;
+  selectedEndAccountNo: string;
 }
 
 const LedgerList: React.FunctionComponent<LedgerListProps> = ({
@@ -25,6 +24,8 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
   loading,
   selectedDateRange,
   labelType,
+  selectedStartAccountNo,
+  selectedEndAccountNo,
 }) => {
   const { selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id;
@@ -38,35 +39,9 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
   // Info: (20241118 - Anna) 確保 ledgerItemsData 是一個有效的陣列
   const ledgerItemsData = Array.isArray(ledgerData?.items?.data) ? ledgerData.items.data : [];
 
-  // Info: (20240920 - Julian) 排序狀態
-  const [dateSort, setDateSort] = useState<null | SortOrder>(null);
-  const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
-  const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
-
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'text-center align-middle';
   const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
-
-  // Info: (20240920 - Julian) 日期排序按鈕
-  const displayedDate = SortingButton({
-    string: t('journal:VOUCHER.VOUCHER_DATE'),
-    sortOrder: dateSort,
-    setSortOrder: setDateSort,
-  });
-
-  // Info: (20240920 - Julian) credit 排序按鈕
-  const displayedCredit = SortingButton({
-    string: t('journal:JOURNAL.CREDIT'),
-    sortOrder: creditSort,
-    setSortOrder: setCreditSort,
-  });
-
-  // Info: (20240920 - Julian) debit 排序按鈕
-  const displayedDebit = SortingButton({
-    string: t('journal:JOURNAL.DEBIT'),
-    sortOrder: debitSort,
-    setSortOrder: setDebitSort,
-  });
 
   const handlePrint = useReactToPrint({
     contentRef: printRef, // Info: (20241203 - Anna) 指定需要打印的內容 Ref
@@ -177,7 +152,11 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
           balance,
           // Info: (20241224 - Anna) 將字串轉換為整數
           voucherId: typeof voucherId === 'string' ? parseInt(voucherId, 10) : voucherId,
-        }} // Info: (20241118 - Anna) 確保每個欄位有預設值
+        }}
+        selectedDateRange={selectedDateRange}
+        selectedStartAccountNo={selectedStartAccountNo}
+        selectedEndAccountNo={selectedEndAccountNo}
+        selectedReportType={labelType}
       />
     );
   });
@@ -192,18 +171,9 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
             <div
-              className={`table-cell border-stroke-neutral-quaternary ${tableCellStyles} border-b`}
-            >
-              <div className="flex items-center justify-center print:hidden">
-                <div className="relative">
-                  <input type="checkbox" className={checkboxStyle} />
-                </div>
-              </div>
-            </div>
-            <div
               className={`table-cell ${tableCellStyles} ${sideBorderStyles} whitespace-nowrap print:bg-neutral-50`}
             >
-              {displayedDate}
+              {t('journal:VOUCHER.VOUCHER_DATE')}
             </div>
             <div
               className={`table-cell ${tableCellStyles} ${sideBorderStyles} whitespace-nowrap print:bg-neutral-50`}
@@ -228,13 +198,13 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
             <div
               className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
             >
-              {displayedDebit}
+              {t('journal:JOURNAL.DEBIT')}
             </div>
 
             <div
               className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
             >
-              {displayedCredit}
+              {t('journal:JOURNAL.CREDIT')}
             </div>
 
             <div

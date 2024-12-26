@@ -19,8 +19,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-import { encryptFile, generateKeyPair } from '@/lib/utils/crypto';
-import { IV_LENGTH } from '@/constants/config';
+import { encryptFileWithPublicKey, importPublicKey } from '@/lib/utils/crypto';
 import { compressImageToTargetSize } from '@/lib/utils/image_compress';
 import { RxCross1 } from 'react-icons/rx';
 
@@ -44,6 +43,8 @@ const MobileUploadPage: React.FC = () => {
   const { trigger: uploadFileAPI } = APIHandler<number>(APIName.FILE_UPLOAD);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
+  const [publicKey, setPublicKey] = useState<CryptoKey | null>(null);
+  const { trigger: fetchPublicKey } = APIHandler<JsonWebKey>(APIName.ROOM_GET_PUBLIC_KEY_BY_ID);
 
   const handleFilesSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -91,27 +92,31 @@ const MobileUploadPage: React.FC = () => {
     URL.revokeObjectURL(file.url);
   };
 
-  // Deprecated: (20241206 - tzuhan) For local testing
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const encryptFileWithPublicKey = async (file: File, publicKey: CryptoKey) => {
+  const encryptFileWithKey = async (file: File) => {
     if (!token) throw new Error(t('certificate:ERROR.TOKEN_NOT_PROVIDED'));
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-      const { encryptedContent, encryptedSymmetricKey } = await encryptFile(
-        arrayBuffer,
-        publicKey,
-        iv
+      let key = publicKey;
+      if (!key) {
+        const { success, data } = await fetchPublicKey({
+          params: { roomId: token },
+        });
+        if (!success || !data) {
+          throw new Error(t('certificate:UPLOAD.FAILED'));
+        }
+        const cryptokey = await importPublicKey(data);
+        setPublicKey(cryptokey);
+        key = cryptokey;
+      }
+      const { encryptedFile, iv, encryptedSymmetricKey } = await encryptFileWithPublicKey(
+        file,
+        key
       );
-      const encryptedFile = new File([encryptedContent], file.name, {
-        type: file.type,
-      });
-
-      return {
-        encryptedFile,
-        iv,
-        encryptedSymmetricKey,
-      };
+      const formData = new FormData();
+      formData.append('file', encryptedFile);
+      formData.append('encryptedSymmetricKey', encryptedSymmetricKey);
+      formData.append('publicKey', JSON.stringify(key));
+      formData.append('iv', Array.from(iv).join(','));
+      return formData;
     } catch (error) {
       throw new Error(t('certificate:ERROR.ENCRYPT_FILE'));
     }
@@ -129,19 +134,10 @@ const MobileUploadPage: React.FC = () => {
         });
         return;
       }
-      const keyPair = await generateKeyPair();
+
       await Promise.all(
         selectedFiles.map(async (fileUI) => {
-          const { encryptedFile, iv, encryptedSymmetricKey } = await encryptFileWithPublicKey(
-            fileUI.file,
-            keyPair.publicKey
-          );
-          const formData = new FormData();
-          formData.append('file', encryptedFile);
-          formData.append('encryptedSymmetricKey', encryptedSymmetricKey);
-          formData.append('publicKey', JSON.stringify(keyPair.publicKey));
-          formData.append('iv', Array.from(iv).join(','));
-
+          const formData = await encryptFileWithKey(fileUI.file);
           const { success, data: fileId } = await uploadFileAPI({
             query: {
               type: UploadType.ROOM,

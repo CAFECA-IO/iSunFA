@@ -12,6 +12,7 @@ export enum AuthFunctionsKeysNew {
 
 export const AUTH_WHITELIST = {
   [APIName.FILE_UPLOAD]: { query: { type: UploadType.ROOM } },
+  [APIName.ROOM_GET_PUBLIC_KEY_BY_ID]: { query: {} },
   [APIName.STATUS_INFO_GET]: { query: {} },
   [APIName.REPORT_GET_BY_ID]: { query: {} },
 };
@@ -71,6 +72,7 @@ export const AUTH_CHECK = {
   [APIName.FILE_EXPORT]: [AuthFunctionsKeysNew.user], // ToDo: (20241112 - Luphia) need to define the schema for file export
   [APIName.ROOM_ADD]: [AuthFunctionsKeysNew.user],
   [APIName.ROOM_GET_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.ROOM_GET_PUBLIC_KEY_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ROOM_DELETE]: [AuthFunctionsKeysNew.user],
 
   [APIName.AGREE_TO_TERMS]: [AuthFunctionsKeysNew.user],
