@@ -107,7 +107,7 @@ const UploadCompanyAvatarModal = ({
           </button>
         </section>
 
-        <UploadArea isDisabled={false} withScanner={false} handleUpload={handleUpload} />
+        <UploadArea isDisabled={false} handleUpload={handleUpload} />
       </div>
     </main>
   ) : null;

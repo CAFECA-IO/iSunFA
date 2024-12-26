@@ -6,7 +6,7 @@ import { ProgressStatus } from '@/constants/account';
 import UploadFileItem from '@/components/upload_certificate/upload_file_item';
 import { GoArrowLeft } from 'react-icons/go';
 import CircularProgressBar from '@/components/certificate/circular_progress_bar';
-import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
+import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { IFileUIBeta } from '@/interfaces/file';
 
 interface CertificateUploaderModalProps {
@@ -115,7 +115,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
           {t('certificate:UPLOAD.CONTENT')}
         </p>
         {/* Info: (20241213 - tzuhan) 上傳組件 */}
-        <InvoiceUpload withScanner isDisabled={false} setFiles={setFiles} showErrorMessage />
+        <CertificateFileUpload isDisabled={false} setFiles={setFiles} showErrorMessage />
         {/* Info: (20241213 - tzuhan) 文件列表 */}
         <div className="h-60 rounded-t-lg border border-file-uploading-stroke-outline p-4">
           <div className="h-full overflow-auto">{renderFileList()}</div>

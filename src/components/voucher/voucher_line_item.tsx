@@ -216,6 +216,18 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     setCreditInput(defaultCredit);
   }, [data]);
 
+  useEffect(() => {
+    // Info: (20241220 - Julian) 更新 isReverse 狀態
+    setLineItems((prev) => {
+      const duplicateList = [...prev];
+      const index = duplicateList.findIndex((item) => item.id === data.id);
+      if (index !== -1) {
+        duplicateList[index] = { ...duplicateList[index], isReverse: isShowReverse };
+      }
+      return duplicateList;
+    });
+  }, [isShowReverse]);
+
   // Info: (20241121 - Julian) 把預設的反轉分錄列表丟進 reverseList 裡，讓使用者可以編輯
   useEffect(() => {
     if (lineItemReverseList.length > 0) {

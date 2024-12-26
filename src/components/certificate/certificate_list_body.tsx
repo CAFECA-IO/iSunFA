@@ -29,6 +29,9 @@ import CertificateFileUpload from '@/components/certificate/certificate_file_upl
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CurrencyType } from '@/constants/currency';
+import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
+import { ProgressStatus } from '@/constants/account';
+import { IFileUIBeta } from '@/interfaces/file';
 
 interface CertificateListBodyProps {}
 
@@ -72,6 +75,38 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
+  const [files, setFiles] = useState<IFileUIBeta[]>([]);
+
+  // Info: (20241204 - tzuhan) 通用文件狀態更新函數
+  const updateFileStatus = (
+    fileId: number | null,
+    fileName: string,
+    status: ProgressStatus,
+    progress?: number,
+    certificateId?: number
+  ) => {
+    const update = (f: IFileUIBeta) => ({
+      ...f,
+      status,
+      progress: progress ?? f.progress,
+      certificateId,
+    });
+    setFiles((prev) =>
+      prev.map((f) => ((f.id && fileId && f.id === fileId) || f.name === fileName ? update(f) : f))
+    );
+  };
+
+  // Info: (20241204 - tzuhan) 暫停文件上傳
+  const pauseFileUpload = useCallback((fileId: number | null, fileName: string) => {
+    updateFileStatus(fileId, fileName, ProgressStatus.PAUSED);
+  }, []);
+
+  // Info: (20241204 - tzuhan) 刪除文件
+  const deleteFile = useCallback((fileId: number | null, fileName: string) => {
+    setFiles((prev) =>
+      prev.filter((f) => (f.id && fileId && f.id !== fileId) || f.name !== fileName)
+    );
+  }, []);
 
   const handleAddVoucher = useCallback(() => {
     router.push({
@@ -517,6 +552,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       )}
       {isEditModalOpen && (
         <CertificateEditModal
+          companyId={companyId}
           isOpen={isEditModalOpen}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           currencyAlias={currency}
@@ -532,7 +568,12 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
-        <CertificateFileUpload />
+        <CertificateFileUpload isDisabled={false} showErrorMessage={false} setFiles={setFiles} />
+        <FloatingUploadPopup
+          files={files}
+          pauseFileUpload={pauseFileUpload}
+          deleteFile={deleteFile}
+        />
         {/* Info: (20240919 - tzuhan) Tabs */}
         <Tabs
           tabs={Object.values(InvoiceTabs)}

@@ -96,6 +96,7 @@ export enum APIName {
   REPORT_GENERATE = 'REPORT_GENERATE',
   ROOM_ADD = 'ROOM_ADD',
   ROOM_GET_BY_ID = 'ROOM_GET_BY_ID',
+  ROOM_GET_PUBLIC_KEY_BY_ID = 'ROOM_GET_PUBLIC_KEY_BY_ID',
   ROOM_DELETE = 'ROOM_DELETE',
   STATUS_INFO_GET = 'STATUS_INFO_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
@@ -230,6 +231,7 @@ export enum APIPath {
   REPORT_GENERATE = `${apiPrefixV2}/company/:companyId/report/public`,
   ROOM_ADD = `${apiPrefixV2}/room`,
   ROOM_GET_BY_ID = `${apiPrefixV2}/room/:roomId`,
+  ROOM_GET_PUBLIC_KEY_BY_ID = `${apiPrefixV2}/room/:roomId/key`,
   ROOM_DELETE = `${apiPrefixV2}/room/:roomId`,
   STATUS_INFO_GET = `${apiPrefixV2}/status_info`,
   ACCOUNT_LIST = `${apiPrefixV2}/company/:companyId/account`,
@@ -430,6 +432,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.VOUCHER_UPDATE,
   }),
+  [APIName.VOUCHER_PUT_V2]: createConfig({
+    name: APIName.VOUCHER_PUT_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.VOUCHER_PUT_V2,
+  }),
   [APIName.JOURNAL_LIST]: createConfig({
     name: APIName.JOURNAL_LIST,
     method: HttpMethod.GET,
@@ -544,6 +551,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.ROOM_DELETE,
     method: HttpMethod.DELETE,
     path: APIPath.ROOM_DELETE,
+  }),
+  [APIName.ROOM_GET_PUBLIC_KEY_BY_ID]: createConfig({
+    name: APIName.ROOM_GET_PUBLIC_KEY_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.ROOM_GET_PUBLIC_KEY_BY_ID,
   }),
   [APIName.LABOR_COST_CHART]: createConfig({
     name: APIName.LABOR_COST_CHART,

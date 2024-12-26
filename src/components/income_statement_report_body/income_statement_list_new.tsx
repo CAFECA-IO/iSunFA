@@ -286,13 +286,13 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="w-77px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+                <th className="w-77px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
+                <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   {!isSummaryCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
                       {formattedCurFromDate}至{formattedCurToDate}
@@ -351,10 +351,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           <table className="w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th
@@ -403,10 +403,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
@@ -414,7 +414,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
@@ -424,7 +424,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
                     {formattedPreFromDate} 至{formattedPreToDate}
                   </p>
                 )}
@@ -553,10 +553,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
@@ -564,7 +564,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
@@ -574,7 +574,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
                 )}
@@ -621,7 +621,9 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(2)}%
+                    {revenueToRD.ratio.curRatio.toFixed(
+                      2
+                    )}%
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end">
                     {revenueToRD.ratio.preRatio.toFixed(2)}%

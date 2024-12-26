@@ -27,7 +27,6 @@ interface ICounterpartyInputProps {
   onSelect: (counterparty: ICounterpartyOptional) => void;
   flagOfSubmit?: boolean;
   className?: string;
-  onTriggerSave?: () => Promise<void>;
 }
 
 export interface CounterpartyInputRef {
@@ -36,7 +35,7 @@ export interface CounterpartyInputRef {
 
 const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputProps>(
   (props, ref) => {
-    const { counterparty, onSelect, flagOfSubmit, className, onTriggerSave } = props;
+    const { counterparty, onSelect, flagOfSubmit, className } = props;
     const { t } = useTranslation(['certificate', 'common']);
 
     const { selectedCompany } = useUserCtx();
@@ -91,6 +90,33 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       setSearchTaxId('');
     };
 
+    const searchCompany = async (name: string | undefined, taxId: string | undefined) => {
+      const { success, data } = await fetchCompanyDataAPI({
+        query: {
+          name,
+          taxId,
+        },
+      });
+      if (success && data) {
+        setSearchedCompany(data || undefined);
+      }
+    };
+
+    const handleAddCounterparty = (newCounterparty: ICounterparty) => {
+      if (!companyId) return;
+
+      setCounterpartyList((prev) => [...prev, newCounterparty]);
+      toastHandler({
+        id: ToastId.ADD_COUNTERPARTY_SUCCESS,
+        type: ToastType.SUCCESS,
+        content: t('certificate:COUNTERPARTY.SUCCESS'),
+        closeable: true,
+      });
+
+      // Info: (20241206 - Julian) 選中新增的交易夥伴
+      onSelect(newCounterparty);
+    };
+
     // Info: (20241209 - Julian) 編輯 Counterparty 事件：展開選單、取得 Counterparty 列表
     const counterpartyEditingHandler = async () => {
       setIsCounterpartyEditing(true);
@@ -106,60 +132,35 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       setIsLoadingCounterparty(false);
     };
 
-    const onAddCounterparty = async (trigger: boolean) => {
+    const onAddCounterparty = async () => {
       addCounterPartyModalVisibilityHandler();
-      if (onTriggerSave && trigger) {
-        await onTriggerSave();
-      }
     };
-
     // Info: (20241209 - Julian) 變更 Counterparty 事件：顯示是否新增 Counterparty 的視窗
     const counterpartySearchHandler = useCallback(
-      async (trigger = true) => {
-        if ((searchName || searchTaxId) && filteredCounterpartyList.length <= 0) {
-          messageModalDataHandler({
-            messageType: MessageType.INFO,
-            title: t('certificate:COUNTERPARTY.TITLE'),
-            content: t('certificate:COUNTERPARTY.CONTENT', {
-              counterparty: `${searchTaxId} ${searchName}`,
-            }),
-            backBtnStr: t('certificate:COUNTERPARTY.NO'),
-            backBtnFunction: onCancelAddCounterparty,
-            submitBtnStr: t('certificate:COUNTERPARTY.YES'),
-            submitBtnFunction: () => onAddCounterparty(trigger),
-          });
-          messageModalVisibilityHandler();
-        } else if (onTriggerSave && trigger) {
-          await onTriggerSave();
+      async (showModal = true) => {
+        if (searchName || searchTaxId) {
+          await searchCompany(searchName, searchTaxId);
+          const isInCounterpartyList = counterpartyList.some(
+            (party) => party.name === searchName && party.taxId === searchTaxId
+          );
+          if (showModal && !isInCounterpartyList) {
+            messageModalDataHandler({
+              messageType: MessageType.INFO,
+              title: t('certificate:COUNTERPARTY.TITLE'),
+              content: t('certificate:COUNTERPARTY.CONTENT', {
+                counterparty: `${searchTaxId} ${searchName}`,
+              }),
+              backBtnStr: t('certificate:COUNTERPARTY.NO'),
+              backBtnFunction: onCancelAddCounterparty,
+              submitBtnStr: t('certificate:COUNTERPARTY.YES'),
+              submitBtnFunction: () => onAddCounterparty(),
+            });
+            messageModalVisibilityHandler();
+          }
         }
       },
       [searchName, searchTaxId]
     );
-
-    useEffect(() => {
-      // Info: (20241206 - Julian) Add Counterparty Event
-      const handleAddCounterparty = (newCounterparty: ICounterparty) => {
-        if (!companyId) return;
-
-        filteredCounterpartyList.push(newCounterparty);
-        toastHandler({
-          id: ToastId.ADD_COUNTERPARTY_SUCCESS,
-          type: ToastType.SUCCESS,
-          content: t('certificate:COUNTERPARTY.SUCCESS'),
-          closeable: true,
-        });
-
-        // Info: (20241206 - Julian) 選中新增的交易夥伴
-        onSelect(newCounterparty);
-      };
-
-      // Info: (20241209 - Julian) 將資料傳入 AddCounterpartyModal
-      addCounterPartyModalDataHandler({
-        onSave: handleAddCounterparty,
-        name: searchName,
-        taxId: searchTaxId,
-      });
-    }, [companyId, filteredCounterpartyList, searchName, searchTaxId]);
 
     useEffect(() => {
       // Info: (20241209 - Julian) 如果 flagOfSubmit 改變，則顯示紅色提示
@@ -175,18 +176,25 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const counterpartyInputHandler = async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (isMessageModalVisible) return;
       setCounterpartyMenuOpen(true);
-      let taxId: string | undefined;
-      let name: string | undefined;
+      let taxId = searchTaxId;
+      let name = searchName;
       if (e.target.id === 'counterparty-tax-id') {
         taxId = e.target.value;
         setSearchTaxId(taxId);
-        onSelect({ taxId, name: searchName });
       }
       if (e.target.id === 'counterparty-name') {
         name = e.target.value;
         setSearchName(name);
-        onSelect({ name, taxId: searchTaxId });
       }
+      onSelect({ name, taxId });
+      // Info: (20241209 - Julian) 將資料傳入 AddCounterpartyModal
+      addCounterPartyModalDataHandler({
+        onSave: handleAddCounterparty,
+        name,
+        taxId,
+        nameIsNeeded: false,
+      });
+
       const filteredList = counterpartyList.filter((party) => {
         // Info: (20241209 - Julian) 編號(數字)搜尋: 字首符合
         if (e.target.value.match(/^\d+$/)) {
@@ -204,15 +212,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       });
       setFilteredCounterpartyList(filteredList);
       setIsLoadingCounterparty(true);
-      const { success, data } = await fetchCompanyDataAPI({
-        query: {
-          name,
-          taxId,
-        },
-      });
-      if (success) {
-        setSearchedCompany(data || undefined);
-      }
+      await searchCompany(name, taxId);
       setIsLoadingCounterparty(false);
     };
 
@@ -257,7 +257,14 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       // Info: (20241209 - Julian) 重置搜尋關鍵字
       setSearchName(company.name || '');
       setSearchTaxId(company.taxId || '');
+      addCounterPartyModalDataHandler({
+        onSave: handleAddCounterparty,
+        name: company.name || '',
+        nameIsNeeded: true,
+        taxId: company.taxId || '',
+      });
     };
+
     const counterpartyItems =
       filteredCounterpartyList.length > 0
         ? filteredCounterpartyList.map((partner) => {

@@ -52,6 +52,7 @@ import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_set
 import { readFile } from 'fs/promises';
 import { bufferToBlob } from '@/lib/utils/parse_image_form';
 import { ProgressStatus } from '@/constants/account';
+import { parseCounterPartyFromNoInInvoice } from '@/lib/utils/counterparty';
 
 export const certificateAPIPostUtils = {
   /**
@@ -180,6 +181,14 @@ export const certificateAPIPostUtils = {
       const counterPartyDto = invoiceDto.counterParty;
       const invoice = parsePrismaInvoiceToInvoiceEntity(invoiceDto);
       const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto);
+
+      // Info: (20241223 - Murky) Temporary Patch for counterParty from invoice no
+      const { note, type, taxId, name } = parseCounterPartyFromNoInInvoice(invoice.no);
+      invoice.no = note;
+      counterParty.name = name;
+      counterParty.taxId = taxId;
+      counterParty.type = type;
+
       invoiceEntity = {
         ...invoice,
         counterParty,

@@ -6,8 +6,7 @@ export enum ExportLedgerFileType {
 }
 
 export const LedgerFieldsMap: Record<ILedgerHeader, string> = {
-  accountId: '會計科目編號',
-  no: '會計科目代號',
+  no: '科目編號',
   accountingTitle: '會計科目',
   voucherNumber: '傳票編號',
   voucherDate: '傳票日期',

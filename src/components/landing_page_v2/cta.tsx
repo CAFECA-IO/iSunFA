@@ -6,8 +6,8 @@ import {
   LinearGradientText,
   LinearTextSize,
   TextAlign,
-} from '@/components/landing_page_neo/linear_gradient_text';
-import { LandingButton } from '@/components/landing_page_neo/landing_button';
+} from '@/components/landing_page_v2/linear_gradient_text';
+import { LandingButton } from '@/components/landing_page_v2/landing_button';
 
 const CTAIntroCard: React.FC<{
   imageSrc: string;
@@ -16,7 +16,7 @@ const CTAIntroCard: React.FC<{
   buttonText: string;
 }> = ({ imageSrc, imageAlt, description, buttonText }) => {
   return (
-    <div className="relative flex max-w-300px flex-col items-center gap-24px overflow-hidden rounded-lg border-x border-b bg-landing-page-white/30 px-40px py-20px text-center backdrop-blur-md">
+    <div className="relative flex max-w-300px flex-col items-center gap-24px overflow-hidden rounded-lg border-x border-b bg-cloudy-glass px-40px py-20px text-center backdrop-blur-md">
       {/* Info: (20241205 - Julian) Nail Icon */}
       <Image
         src="/icons/nail.svg"
