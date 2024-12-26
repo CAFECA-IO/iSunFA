@@ -462,7 +462,13 @@ const DatePicker = ({
   }, []);
 
   // Info: (20240417 - Shirley) 選單開關
-  const openCalenderHandler = () => setComponentVisible(!componentVisible);
+  const openCalenderHandler = () => {
+    //  Info: (20241226 - Tzuhan) 如果下一步要「打開」，就先把 viewMode 重置為 'date'
+    if (!componentVisible) {
+      setViewMode('date');
+    }
+    setComponentVisible(!componentVisible);
+  };
   // Info: (20240417 - Shirley) 選擇今天
   const todayClickHandler = () => {
     const dateOfToday = new Date(
@@ -619,10 +625,10 @@ const DatePicker = ({
             {/* Info: (20241226 - Tzuhan) 顯示當前「年份 / 月份」文字，且可點擊切換 viewMode */}
             {viewMode === 'date' && (
               <div className="flex space-x-4 text-date-picker-text-default">
-                <p onClick={() => setViewMode('year')} className="cursor-pointer hover:underline">
+                <p onClick={() => setViewMode('year')} className="cursor-pointer">
                   {displayedYear}
                 </p>
-                <p onClick={() => setViewMode('month')} className="cursor-pointer hover:underline">
+                <p onClick={() => setViewMode('month')} className="cursor-pointer">
                   {displayedMonth}
                 </p>
               </div>
