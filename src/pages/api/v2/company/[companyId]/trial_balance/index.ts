@@ -19,18 +19,23 @@ export const handleGetRequest: IHandleRequest<
 > = async ({ query }) => {
   /* Info: (20241227 - Luphia) 指定期間ˊ取得有變動的會計科目，分析期初、期中、期末的借方與貸方金額，並總計餘額。
    * 0.1. 撰寫 common function 取得當下 401 申報週期 (每兩個月為一期，例如當下時間點為 2024/11/01 ~ 2024/12/31)
+   * 0.2. 撰寫 Utils 工具，輸入會計分錄清單，將重複的分錄合併並加總其借貸金額，輸出合併後的會計分錄清單
+   * 0.3. 撰寫 Utils 工具，輸入會計分錄清單，若科目具有子科目，且該科目借方或貸方金額不為 0，則新增一個「其他」虛擬科目，將該科目借方或貸方金額加入「其他」虛擬科目，列為其子科目，並將自身的金額歸零，輸出整理後的會計分錄清單
+   *      e.g. 1101 庫存現金 借方 8,500 貸方 7,000 totalDebit 10,500 totalCredit 10,500、1101-1 庫存現金_行政部門 借方 2,000 貸方 3,500 totalDebit 2,000 totalCredit 3,500
+   *      處理後 1101 庫存現金 借方 0 貸方 0 totalDebit 10,500 totalCredit 10,500、1101-0 庫存現金（其他） 借方 8,500 貸方 7,000 totalDebit 8,500 totalCredit 7,000、1101-1 庫存現金_行政部門 借方 2,000 貸方 3,500 totalDebit 2,000 totalCredit 3,500
    * 1. 整理用戶輸入參數，取得指定期初時間點 periodBegin、期末時間點 periodEnd，若無指定則預設為當下 401 申報週期
    * 2. 獲取該公司所有會計科目，使用 account.repo
    * 3. 取得 periodEnd 時間點以前的所有會計傳票並整理傳票 id 清單 voucherIds，使用 voucher.repo
    * 4. 根據 voucherIds 取得所有會計傳票的所有會計分錄，使用 line_item.repo
    * 5. 依照 periodBegin 為區分點，將所有會計分錄分為期初到期中 begining、期中到期末 midterm 二個部分
-   * 5.1. 撰寫 Utils 工具，輸入會計分錄清單，將重複的分錄合併並加總其借貸金額，輸出合併後的會計分錄清單
    * 6. 使用 Utils 工具合併 begining 並計算其借方貸方金額，統計總額 totalDebit、totalCredit
    * 7. 使用 Utils 工具合併 midterm 並計算其借方貸方金額，統計總額 totalDebit、totalCredit
    * 8. 使用 Utils 工具將 begining 與 midterm 的科目合併加總為期末部份 ending，並計算其借方貸方金額，統計總額 totalDebit、totalCredit
-   * 9. 整理資料為 API 回傳格式
-   * 10. 整理可能發生的例外情形
-   * 11. 回傳 API 回應
+   * 9. 篩除借方與貸方金額皆為 0 的科目
+   * 10. 使用 Utils 0.3. 工具增列虛擬科目
+   * 11. 整理資料為 API 回傳格式
+   * 12. 整理可能發生的例外情形
+   * 13. 回傳 API 回應
    */
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
