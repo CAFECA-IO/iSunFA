@@ -4,6 +4,7 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface CertificateListIrops {
   activeSelection: boolean;
@@ -47,9 +48,9 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
     >
       {/* Info: (20240924 - tzuhan) CheckBox */}
       {activeSelection && (
-        <BorderCell isSelected={certificate.isSelected}>
+        <BorderCell isSelected={certificate.isSelected} className="max-w-32px px-8px">
           <div
-            className={`h-16px w-16px rounded border border-checkbox-stroke-unselected text-center ${certificate.isSelected ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
+            className={`h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${certificate.isSelected ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
             onClick={handleSelect.bind(null, [certificate.id], !certificate.isSelected)}
           >
             {certificate.isSelected && <HiCheck className="absolute text-neutral-white" />}
@@ -69,9 +70,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
           )}
           <div className="flex flex-col">
-            <div className="text-text-neutral-tertiary">
-              {certificate.name ?? ''}
-            </div>
+            <div className="text-text-neutral-tertiary">{certificate.name ?? ''}</div>
             <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
           </div>
         </div>
@@ -95,7 +94,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div className="text-center text-text-neutral-primary">
-          Taxable {certificate.invoice?.taxRatio ?? 0}%
+          Taxable {certificate.invoice?.taxRatio ?? '-'} %
         </div>
       </BorderCell>
       {/* Info: (20240924 - tzuhan) Price Information */}
@@ -144,9 +143,24 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       {/* Info: (20240924 - tzuhan) Voucher Information */}
       <BorderCell isSelected={certificate.isSelected} className="w-120px text-center">
         <div className="flex flex-col items-center space-y-2">
-          <div className="text-right text-link-text-primary">{certificate?.voucherNo ?? ''}</div>
+          {certificate?.voucherNo && (
+            <Link
+              href={`/users/accounting/${certificate.voucherNo}`}
+              className="text-right text-link-text-primary"
+            >
+              {certificate.voucherNo}
+            </Link>
+          )}
           <div className="flex items-center gap-2 text-right text-text-neutral-primary">
-            {certificate.uploader && (
+            {certificate?.uploaderUrl ? (
+              <Image
+                src={certificate.uploaderUrl}
+                alt="avatar"
+                width={14}
+                height={14}
+                className="rounded-full"
+              />
+            ) : (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">
                 {certificate.uploader.slice(0, 2).toUpperCase()}
               </span>
