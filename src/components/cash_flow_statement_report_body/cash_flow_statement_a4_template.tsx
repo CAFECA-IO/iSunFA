@@ -72,10 +72,12 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
     headers: React.ReactNode,
     isFirstPage: boolean
   ) => (
-    <table className="relative z-1 w-full border-collapse bg-white">
-      {isFirstPage && <thead className="text-neutral-400">{headers}</thead>}
-      <tbody className="text-neutral-400">{rows}</tbody>
-    </table>
+    <div className="px-14px">
+      <table className="relative z-1 w-full border-collapse bg-white">
+        {isFirstPage && <thead className="text-neutral-400">{headers}</thead>}
+        <tbody className="text-neutral-400">{rows}</tbody>
+      </table>
+    </div>
   );
   // Info: (20241120 - Anna) 處理 pages[1] 表格分頁
   const secondTableRows = flattenChildren((pages[1] as React.ReactElement)?.props?.children);
@@ -170,7 +172,7 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
   // Info: (20241112 - Anna) 將頁眉封裝成函數，並使用 `isFirstPage` 參數區分不同頁面
   const renderedHeader = (isFirstPage: boolean) => {
     return isFirstPage ? (
-      <header className="mb-12 flex justify-between pl-0 text-white">
+      <header className="mb-12 flex justify-between pl-14px text-white">
         <div className="w-3/10 bg-surface-brand-secondary pb-14px pl-10px pr-14px pt-40px font-bold">
           <div className="">
             {reportFinancial && reportFinancial.company && (
@@ -179,8 +181,8 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
                   {reportFinancial.company.code} <br />
                   {reportFinancial.company.name}
                 </h1>
-                <p className="whitespace-nowrap text-left text-xs font-bold leading-5">
-                  {curDate}
+                <p className="whitespace-pre-line text-left text-xs font-bold leading-5">
+                  {curDate?.replace(' ⾄ ', '\n⾄ ')}
                   <br />
                   財務報告 - 現金流量表
                 </p>
@@ -194,6 +196,13 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
             <span className="absolute -bottom-20px right-0 h-5px w-9/12 bg-surface-brand-secondary"></span>
           </h2>
         </div>
+        <Image
+          className="absolute right-0 top-0 z-0 mt-80px bg-transparent"
+          src="/logo/watermark_logo.svg"
+          alt="isunfa logo"
+          width={400}
+          height={300}
+        />
       </header>
     ) : (
       // Info: (20241112 - Anna) 渲染除第一頁以外的頁眉結構
@@ -242,6 +251,10 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
             className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
           >
             {renderedHeader(index === 0)}
+            <div className="relative z-10 mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
+              <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
+              <p>單位：新台幣元</p>
+            </div>
             {renderTableWithRows(rows, firstTableHeaders, index >= 0)}
             {renderedFooter(index + 1)}
           </div>
@@ -264,6 +277,10 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
             className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
           >
             {renderedHeader(false)}
+            <div className="mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
+              <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
+              <p>單位：新台幣元</p>
+            </div>
             {renderTableWithRows(rows, secondTableHeaders, index >= 0)}
             {renderedFooter(firstBlockSplitPages.length + index + 1)}
           </div>
@@ -288,7 +305,8 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
             className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
           >
             {renderedHeader(false)}
-            <div>{pageContent}</div> {/* Info: (20241130 - Anna) 渲染 pageContent */}
+            <div className="text-sm">{pageContent}</div>{' '}
+            {/* Info: (20241130 - Anna) 渲染 pageContent */}
             {renderedFooter(firstBlockSplitPages.length + secondBlockSplitPages.length + index + 1)}
           </div>
         </div>

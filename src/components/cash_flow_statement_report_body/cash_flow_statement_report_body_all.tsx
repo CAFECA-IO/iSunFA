@@ -687,7 +687,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {lineChartLabels?.map((label, index) => (
                     <th
                       key={`${label + index}`}
-                      className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold"
+                      className="w-170px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold"
                     >
                       {label}
                     </th>

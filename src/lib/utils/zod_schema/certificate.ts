@@ -322,7 +322,10 @@ export const invoicePostV2BodySchema = z.object({
   }),
   inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
   date: z.number(),
-  no: z.string(),
+  no: z
+    .string()
+    .optional()
+    .transform((data) => data || ''),
   // currencyAlias: z.nativeEnum(CurrencyType),
   priceBeforeTax: z.number(),
   // taxType: z.nativeEnum(InvoiceTaxType),

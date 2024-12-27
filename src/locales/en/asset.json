@@ -94,6 +94,7 @@
   },
   "CURRENCY_ALIAS": {
     "TWD": "TWD",
-    "EUR": "EUR"
+    "EUR": "EUR",
+    "USD": "USD"
   }
 }

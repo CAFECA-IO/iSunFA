@@ -252,7 +252,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                         : value.curPeriodAmount.toLocaleString() // Info:(20241021 - Anna) 正數，顯示千分位
                   }
                 </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
                   {value.prePeriodAmount === 0
                     ? '-'
                     : value.prePeriodAmount < 0
@@ -312,7 +312,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
               營業活動現金流入
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow < 0
@@ -321,7 +321,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                       currentYear
                     ]?.operatingCashFlow.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow < 0
@@ -335,14 +335,14 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
               不動產、廠房及設備
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe < 0
                   ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe).toLocaleString()})`
                   : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe < 0
@@ -354,7 +354,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
               無形資產支出
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset < 0
@@ -363,7 +363,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                       currentYear
                     ]?.intangibleAsset.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset < 0
@@ -377,14 +377,14 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
               自由現金流量
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash < 0
                   ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash).toLocaleString()})`
                   : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash < 0
@@ -402,11 +402,11 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr className="bg-surface-brand-primary-soft">
-              <th className="border border-stroke-brand-secondary-soft p-10px text-left text-xxs font-semibold leading-5 text-text-neutral-secondary"></th>
-              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
+              <th className="w-300px border border-stroke-brand-secondary-soft p-10px text-left text-xxs font-semibold leading-5 text-text-neutral-secondary"></th>
+              <th className="w-300px border border-stroke-brand-secondary-soft p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
                 {currentYear}年度
               </th>
-              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
+              <th className="w-300px border border-stroke-brand-secondary-soft p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
                 {previousYear}年度
               </th>
             </tr>
@@ -507,7 +507,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                   {lineChartLabels?.map((label) => (
                     <th
                       key={label}
-                      className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold"
+                      className="w-170px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold"
                     >
                       {label}
                     </th>
@@ -537,7 +537,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                   ).map(([year, value]) => (
                     <td
                       key={year}
-                      className="border border-stroke-brand-secondary-soft p-10px text-end"
+                      className="border border-stroke-brand-secondary-soft p-10px text-end text-sm"
                     >
                       {value === 0
                         ? '-'
@@ -555,7 +555,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                     (year) => (
                       <td
                         key={year}
-                        className="border border-stroke-brand-secondary-soft p-10px text-end"
+                        className="border border-stroke-brand-secondary-soft p-10px text-end text-sm"
                       >
                         {
                           reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
@@ -584,7 +584,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                     ([year, value]) => (
                       <td
                         key={year}
-                        className="border border-stroke-brand-secondary-soft p-10px text-end"
+                        className="border border-stroke-brand-secondary-soft p-10px text-end text-sm"
                       >
                         {value === 0
                           ? '-'
@@ -617,7 +617,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                   ).map(([year, value]) => (
                     <td
                       key={year}
-                      className="border border-stroke-brand-secondary-soft p-10px text-end"
+                      className="border border-stroke-brand-secondary-soft p-10px text-end text-sm"
                     >
                       {value === 0
                         ? '-'
@@ -646,7 +646,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                     ([year, value]) => (
                       <td
                         key={year}
-                        className="border border-stroke-brand-secondary-soft p-10px text-end"
+                        className="border border-stroke-brand-secondary-soft p-10px text-end text-sm"
                       >
                         {value.toFixed(2)}
                       </td>
