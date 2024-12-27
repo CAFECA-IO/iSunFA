@@ -84,17 +84,17 @@ describe('getTotalPendingTaskForUser', () => {
 
     expect(result).toEqual({
       userId,
-      totalMissingCertificate: 10,
-      totalMissingCertificatePercentage: 0.62,
+      totalMissingCertificate: 6,
+      totalMissingCertificatePercentage: 0.37,
       missingCertificateList: [
-        { companyId: 1, companyName: 'Company A', count: 5, companyLogoSrc: 'urlA' },
-        { companyId: 2, companyName: 'Company B', count: 5, companyLogoSrc: 'urlA' },
-      ],
-      totalUnpostedVoucher: 6,
-      totalUnpostedVoucherPercentage: 0.38,
-      unpostedVoucherList: [
         { companyId: 1, companyName: 'Company A', count: 3, companyLogoSrc: 'urlA' },
         { companyId: 2, companyName: 'Company B', count: 3, companyLogoSrc: 'urlA' },
+      ],
+      totalUnpostedVoucher: 10,
+      totalUnpostedVoucherPercentage: 0.63,
+      unpostedVoucherList: [
+        { companyId: 1, companyName: 'Company A', count: 5, companyLogoSrc: 'urlA' },
+        { companyId: 2, companyName: 'Company B', count: 5, companyLogoSrc: 'urlA' },
       ],
     });
   });
