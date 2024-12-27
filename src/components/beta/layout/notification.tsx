@@ -54,7 +54,7 @@ const Notification = ({
   const [notifications, setNotifications] = useState(FAKE_NOTIFICATIONS);
   // ToDo: (20241225 - Liz) 等 API 可以使用後就改用 notifications 來判斷
   // const isNoData = notifications.length === 0;
-  const isNoData = false;
+  const isNoData = true;
 
   // ToDo: (20241225 - Liz) 打開面板時打 API 取得通知 (搭配 useEffect)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
