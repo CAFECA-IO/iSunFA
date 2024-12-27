@@ -150,7 +150,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         />
       </div>
 
-      <header className="mb-85px flex justify-between text-white">
+      <header className="mb-50px flex justify-between text-white">
         <div className="w-30% bg-surface-brand-secondary pb-14px pl-10px pr-14px pt-40px font-bold">
           <div className="">
             {financialReport && financialReport.company && (
@@ -160,8 +160,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   {financialReport.company.name}
                 </h1>
                 <p className="text-left text-xs font-bold leading-5">
-                  {formattedCurFromDate}至{formattedCurToDate} <br />
-                  財務報告 - 綜合損益表
+                  <span>
+                    {formattedCurFromDate} <br />至{formattedCurToDate}
+                  </span>
+                  <br />
+                  <span className="mt-3 block">財務報告 - 綜合損益表</span>
                 </p>
               </>
             )}
@@ -184,7 +187,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p className="text-xs font-bold leading-5">
-            {' '}
             <span>單位：新台幣元</span>
             <span className="pl-5">每股盈餘單位：新台幣元</span>
           </p>
@@ -193,33 +195,35 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                   {!isSummaryCollapsed && financialReport && financialReport.company && (
-                    <p className="text-left font-barlow text-xs font-semibold leading-5">
-                      {formattedCurFromDate}至{formattedCurToDate}
+                    <p className="text-center font-barlow text-xs font-semibold leading-5">
+                      {formattedCurFromDate}
+                      <br />至{formattedCurToDate}
                     </p>
                   )}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                   %
                 </th>
                 <th
-                  className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                  className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {financialReport && financialReport.company && (
-                    <p className="text-left font-barlow text-xs font-semibold leading-5">
-                      {formattedPreFromDate}至{formattedPreToDate}
+                    <p className="text-center font-barlow text-xs font-semibold leading-5">
+                      {formattedPreFromDate}
+                      <br />至{formattedPreToDate}
                     </p>
                   )}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                   %
                 </th>
               </tr>
@@ -268,36 +272,36 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate} <br />至{formattedCurToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate} <br />至{formattedPreToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -345,36 +349,32 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
-                style={{ whiteSpace: 'nowrap' }}
-              >
+              <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {financialReport && financialReport.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate}
+                    <br />至{formattedCurToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
-                style={{ whiteSpace: 'nowrap' }}
-              >
+              <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {financialReport && financialReport.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate}
+                    <br />至{formattedPreToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -387,22 +387,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 .map((value, index) => (
                   <IncomeStatementReportTableRow {...value} key={`${'general' + index}`} />
                 ))}
-            <tr>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-xs">&nbsp;</td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-xs">&nbsp;</td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                &nbsp;
-              </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                &nbsp;
-              </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                &nbsp;
-              </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                &nbsp;
-              </td>
-            </tr>
           </tbody>
           <tbody>
             {financialReport &&
@@ -462,36 +446,38 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <table className="w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th
-                  className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                  className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {!isDetailCollapsed && financialReport && financialReport.company && (
-                    <p className="text-left font-barlow text-xs font-semibold leading-5">
-                      {formattedCurFromDate}至{formattedCurToDate}
+                    <p className="text-center font-barlow text-xs font-semibold leading-5">
+                      {formattedCurFromDate}
+                      <br />至{formattedCurToDate}
                     </p>
                   )}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                   %
                 </th>
                 <th
-                  className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                  className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {financialReport && financialReport.company && (
-                    <p className="text-left font-barlow text-xs font-semibold leading-5">
-                      {formattedPreFromDate}至{formattedPreToDate}
+                    <p className="text-center font-barlow text-xs font-semibold leading-5">
+                      {formattedPreFromDate}
+                      <br />至{formattedPreToDate}
                     </p>
                   )}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                   %
                 </th>
               </tr>
@@ -500,7 +486,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               {financialReport &&
                 financialReport.details &&
                 financialReport.details
-                  .slice(0, 15)
+                  .slice(0, 14)
                   .map((value, index) => (
                     <IncomeStatementReportTableRow {...value} key={`${'details' + index}`} />
                   ))}
@@ -542,36 +528,38 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate}
+                    <br />至{formattedCurToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate}
+                    <br />至{formattedPreToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -580,7 +568,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {financialReport &&
               financialReport.details &&
               financialReport.details
-                .slice(15, 28)
+                .slice(14, 28)
                 .map((value, index) => (
                   <IncomeStatementReportTableRow {...value} key={`${'details' + index}`} />
                 ))}
@@ -621,36 +609,38 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate}
+                    <br />至{formattedCurToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate}
+                    <br />至{formattedPreToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -700,36 +690,36 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate} <br />至{formattedCurToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate} <br />至{formattedPreToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -779,36 +769,38 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate}
+                    <br />至{formattedCurToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate}
+                    <br />至{formattedPreToDate}
                   </p>
                 )}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -827,22 +819,22 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               financialReport.details &&
               financialReport.details.slice(58, 62).map((value, index) => (
                 <tr key={`${value.code + index}`} className="h-40px">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {value.code}
                   </td>
-                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
+                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
                     {value.name}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-semibold">
-                    {value.curPeriodAmount}
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                    {value.curPeriodAmount === 0 ? '-' : value.curPeriodAmount}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     &nbsp;
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-semibold">
-                    {value.prePeriodAmount}
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                    {value.prePeriodAmount === 0 ? '-' : value.prePeriodAmount}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     &nbsp;
                   </td>
                 </tr>
@@ -889,29 +881,29 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate} <br />至{formattedCurToDate}
                   </p>
                 )}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate} <br />至{formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -1045,29 +1037,23 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
-                style={{ whiteSpace: 'nowrap' }}
-              >
+              <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate} <br />至{formattedCurToDate}
                   </p>
                 )}
               </th>
-              <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
-                style={{ whiteSpace: 'nowrap' }}
-              >
+              <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {financialReport && financialReport.company && (
-                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate} <br />至{formattedPreToDate}
                   </p>
                 )}
               </th>
