@@ -35,7 +35,6 @@ export const ISUNFA_ROUTE = {
   TRIAL_BALANCE: '/users/accounting/trial_balance',
   COUNTERPARTY: '/users/setting/counterparty',
 
-  DASHBOARD_V1: '/users/v1/dashboard',
   KYC: '/users/kyc',
   SALARY: '/users/salary',
   SALARY_BOOKKEEPING: '/users/salary/bookkeeping',
