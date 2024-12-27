@@ -226,9 +226,8 @@ export const handlePostRequest: IHandleRequest<
           userCertificates: userCertificateEntities,
         };
 
-        const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
-          certificateReadyForTransfer
-        );
+        const certificate: ICertificate & { uploaderUrl: string } =
+          postUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
         postUtils.triggerPusherNotification(certificate, {
           companyId,
         });
