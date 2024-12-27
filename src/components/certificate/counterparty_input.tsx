@@ -192,7 +192,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         onSave: handleAddCounterparty,
         name,
         taxId,
-        nameIsNeeded: false,
       });
 
       const filteredList = counterpartyList.filter((party) => {
@@ -260,7 +259,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       addCounterPartyModalDataHandler({
         onSave: handleAddCounterparty,
         name: company.name || '',
-        nameIsNeeded: true,
         taxId: company.taxId || '',
       });
     };
