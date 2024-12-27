@@ -942,6 +942,17 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
       include: {
         issuer: true,
         voucherCertificates: {
+          // Info: (20241227 - Murky) 如果被刪除的certificate不要拿出來
+          where: {
+            OR: [
+              {
+                deletedAt: null,
+              },
+              {
+                deletedAt: 0,
+              },
+            ],
+          },
           include: {
             certificate: {
               include: {
@@ -1817,6 +1828,16 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
       },
       data: {
         deletedAt: nowInSecond,
+        voucherCertificates: {
+          updateMany: {
+            where: {
+              voucherId: deleteVersionOriginVoucher.id,
+            },
+            data: {
+              deletedAt: nowInSecond,
+            },
+          },
+        },
       },
     });
 

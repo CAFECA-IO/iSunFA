@@ -378,7 +378,7 @@ export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, numb
     // const originalEvents: IEventEntity[] = getUtils.initOriginalEventEntities(voucherFromPrisma);
     // const resultEvents: IEventEntity[] = getUtils.initResultEventEntities(voucherFromPrisma);
     const asset: IAssetEntity[] = getUtils.initAssetEntities(voucherFromPrisma);
-    // const certificates = getUtils.initCertificateEntities(voucherFromPrisma);
+    const certificates = getUtils.initCertificateEntities(voucherFromPrisma);
 
     // Info: (20241119 - Murky) 需要多加reverse voucher嗎？
     // const isReverseEventNeeded = deleteUtils.isReverseEventNeeded(voucherFromPrisma);
@@ -400,6 +400,10 @@ export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, numb
 
     if (isAssetVoucherNeeded) {
       voucherDeleteOtherEntity.asset = asset;
+    }
+
+    if (certificates.length > 0) {
+      voucherDeleteOtherEntity.certificates = certificates;
     }
 
     const deleteVersionOriginVoucher = deleteUtils.deepCopyVoucherEntity(originVoucher);

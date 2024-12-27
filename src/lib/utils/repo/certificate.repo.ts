@@ -196,13 +196,33 @@ export async function getCertificatesV2(options: {
 
     switch (invoiceTab) {
       case InvoiceTabs.WITH_VOUCHER:
-        return {
-          some: {},
-        };
+        return [
+          {
+            voucherCertificates: {
+              some: {
+                deletedAt: null,
+              },
+            },
+          },
+        ];
       case InvoiceTabs.WITHOUT_VOUCHER:
-        return {
-          none: {},
-        };
+        return [
+          {
+            voucherCertificates: {
+              some: {
+                deletedAt: {
+                  not: null,
+                },
+              },
+            },
+          },
+          {
+            voucherCertificates: {
+              none: {},
+            },
+          },
+        ];
+
       default:
         return undefined;
     }
@@ -216,7 +236,7 @@ export async function getCertificatesV2(options: {
     },
     companyId,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
-    voucherCertificates: getVoucherCertificateRelation(tab),
+    OR: [...(getVoucherCertificateRelation(tab) || [])],
     AND: [
       {
         OR: [
@@ -310,6 +330,9 @@ export async function getCertificatesV2(options: {
       ...findManyArgs,
       include: {
         voucherCertificates: {
+          where: {
+            deletedAt: null,
+          },
           include: {
             voucher: true,
           },
