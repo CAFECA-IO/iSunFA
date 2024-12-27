@@ -190,59 +190,69 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     // Info: (20241209 - Julian) Counterparty 搜尋欄位事件
     const counterpartyInputHandler = async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (isMessageModalVisible) return;
+
       setCounterpartyMenuOpen(true);
-      let taxId = searchTaxId;
-      let name = searchName;
-      if (e.target.id === 'counterparty-tax-id') {
-        taxId = e.target.value;
-        setSearchTaxId(taxId);
-      }
-      if (e.target.id === 'counterparty-name') {
-        name = e.target.value;
-        setSearchName(name);
-      }
-      onSelect({ name, taxId });
-      // Info: (20241209 - Julian) 將資料傳入 AddCounterpartyModal
+
+      // Info: (20241204 - tzuhan) 更新搜尋條件
+      const { id, value } = e.target;
+      const updatedTaxId = id === 'counterparty-tax-id' ? value : searchTaxId;
+      const updatedName = id === 'counterparty-name' ? value : searchName;
+
+      setSearchTaxId(updatedTaxId);
+      setSearchName(updatedName);
+
+      // Info: (20241204 - tzuhan) 更新選擇內容
+      onSelect({ name: updatedName, taxId: updatedTaxId });
+
+      // Info: (20241204 - tzuhan) 更新模態框資料
       addCounterPartyModalDataHandler({
         onSave: handleAddCounterparty,
-        name,
-        taxId,
+        name: updatedName,
+        taxId: updatedTaxId,
       });
 
-      // 執行防抖搜尋
-      await debounceSearchCompany(name, taxId);
-      const filteredList = counterpartyList.filter((party) => {
-        // Info: (20241209 - Julian) 編號(數字)搜尋: 字首符合
-        if (taxId.match(/^\d+$/)) {
-          const codeMatch = party.taxId.toString().toLowerCase().startsWith(taxId.toLowerCase());
-          return codeMatch;
-        } else if (name !== '') {
-          // Info: (20241209 - Julian) 名稱搜尋: 部分符合
-          const nameMatch = party.name.toLowerCase().includes(name.toLowerCase());
-          return nameMatch;
-        }
-        return true;
-      });
-      const filteredCompany = e.target.value
-        ? searchedCompanies.filter((company) => {
-            // Info: (20241209 - Julian) 編號(數字)搜尋: 字首符合
-            if (taxId.match(/^\d+$/)) {
-              const codeMatch = company.taxId
-                .toString()
-                .toLowerCase()
-                .startsWith(taxId.toLowerCase());
-              return codeMatch;
-            } else if (name !== '') {
-              // Info: (20241209 - Julian) 名稱搜尋: 部分符合
-              const nameMatch = company.name.toLowerCase().includes(name.toLowerCase());
-              return nameMatch;
-            }
-            return true;
-          })
-        : [];
+      // Info: (20241204 - tzuhan) 執行防抖搜尋
+      debounceSearchCompany(updatedName, updatedTaxId);
+
+      // Info: (20241204 - tzuhan) 篩選函式抽取，減少重複代碼
+      const filterByCriteria = (list: ICounterpartyOptional[]) => {
+        return list.filter((item) => {
+          // Info: (20241204 - tzuhan) 稅號篩選，需匹配數字開頭
+          if (updatedTaxId.match(/^\d+$/)) {
+            return item.taxId
+              ? item.taxId.toString().toLowerCase().startsWith(updatedTaxId.toLowerCase())
+              : false;
+          }
+
+          // Info: (20241204 - tzuhan) 如果 name 存在，則進行模糊匹配
+          if (updatedName) {
+            const searchWords = updatedName
+              .toLowerCase()
+              .split(/[\s,]+/) // Info: (20241204 - tzuhan) 以空格或逗號分隔字串
+              .filter(Boolean); // Info: (20241204 - tzuhan) 避免空字串影響
+
+            // Info: (20241204 - tzuhan) 確認 item.name 是否包含任何一個搜尋字
+            const nameMatch = searchWords.some((word) => {
+              return item.name ? item.name.toLowerCase().includes(word) : false;
+            });
+
+            return nameMatch;
+          }
+          return true;
+        });
+      };
+
+      // Info: (20241204 - tzuhan) 同時篩選 counterparty 和 searchedCompanies
+      const filteredList = filterByCriteria(counterpartyList);
+      const filteredCompany = value ? filterByCriteria(searchedCompanies) : [];
+
       setFilteredCounterpartyList([...filteredList, ...filteredCompany]);
-      setIsLoadingCounterparty(true);
-      setIsLoadingCounterparty(false);
+
+      // 加載狀態切換（優化效能，避免多餘狀態更新）
+      if (!isLoadingCounterparty) {
+        setIsLoadingCounterparty(true);
+        setIsLoadingCounterparty(false);
+      }
     };
 
     const counterpartyInput =
