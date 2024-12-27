@@ -96,6 +96,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     // Info: (20241227 - Tzuhan) 手動實作防抖函數
     const debounceSearchCompany = async (name: string | undefined, taxId: string | undefined) => {
       // Info: (20241227 - Tzuhan) 清除前一次的計時器，避免頻繁觸發
+      let companies = [...searchedCompanies];
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
@@ -108,14 +109,15 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
               (company) => company.name === data.name && company.taxId === data.taxId
             );
             if (!exists && (!!data.name || !!data.taxId)) {
+              companies = [...companies, data];
               return [...prev, data];
             }
             return prev;
           });
         }
       }, 300); // Info: (20241227 - Tzuhan) 300ms 防抖時間
-
       setDebounceTimer(timer);
+      return companies;
     };
 
     const handleAddCounterparty = (newCounterparty: ICounterparty) => {
@@ -212,7 +214,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       });
 
       // Info: (20241204 - tzuhan) 執行防抖搜尋
-      debounceSearchCompany(updatedName, updatedTaxId);
+      const companies = await debounceSearchCompany(updatedName, updatedTaxId);
 
       // Info: (20241204 - tzuhan) 篩選函式抽取，減少重複代碼
       const filterByCriteria = (list: ICounterpartyOptional[]) => {
@@ -244,7 +246,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
 
       // Info: (20241204 - tzuhan) 同時篩選 counterparty 和 searchedCompanies
       const filteredList = filterByCriteria(counterpartyList);
-      const filteredCompany = value ? filterByCriteria(searchedCompanies) : [];
+      const filteredCompany = value ? filterByCriteria(companies) : [];
 
       setFilteredCounterpartyList([...filteredList, ...filteredCompany]);
 
