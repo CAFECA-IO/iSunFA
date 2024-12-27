@@ -5,9 +5,9 @@ import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { numberWithCommas } from '@/lib/utils/common';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
-import { checkboxStyle } from '@/constants/display';
 import { VoucherType } from '@/constants/account';
 import { IVoucherUI } from '@/interfaces/voucher';
+import { HiCheck } from 'react-icons/hi';
 
 interface IVoucherItemProps {
   voucher: IVoucherUI;

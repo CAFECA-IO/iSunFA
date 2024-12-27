@@ -263,11 +263,21 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
         });
       }
     }
+
     // Info: (20241025 - Murky) Early throw error if lineItems is empty and voucherInfo is empty
     if (!isLineItemsHasItems) {
       postUtils.throwErrorAndLog(loggerBack, {
         errorMessage: 'lineItems is required when post voucher',
         statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+      });
+    }
+
+    // Info: (20241226 - Murky) Check if lineItems credit and debit are equal
+    const isLineItemsBalanced = postUtils.isLineItemsBalanced(lineItems);
+    if (!isLineItemsBalanced) {
+      postUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: 'lineItems credit and debit should be equal',
+        statusMessage: STATUS_MESSAGE.UNBALANCED_DEBIT_CREDIT,
       });
     }
 
@@ -458,13 +468,13 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
 
     // Info: (20241111 - Murky) Output formatter 只要回傳新的voucherId就可以了
     payload = parsePrismaVoucherToVoucherEntity(createdVoucher);
+    statusMessage = STATUS_MESSAGE.CREATED;
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
     loggerBack.error(error);
   }
 
-  statusMessage = STATUS_MESSAGE.CREATED;
   return {
     statusMessage,
     payload,

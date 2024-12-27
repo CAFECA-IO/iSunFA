@@ -30,3 +30,13 @@ export enum VoucherListTabV2 {
   RECEIVING = 'receiving',
   UPCOMING = 'upcoming',
 }
+
+export enum VoucherTabs {
+  UPLOADED = 'uploaded',
+  UPCOMING = 'upcoming',
+}
+
+export enum PaymentAndReceivingTabs {
+  PAYMENT = 'payment',
+  RECEIVING = 'receiving',
+}

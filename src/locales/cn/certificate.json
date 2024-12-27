@@ -17,7 +17,7 @@
     "AMOUNT": "金额",
     "DEDUCTABLE": "可抵扣税额",
     "UPLOADER": "上传者",
-    "VOUCHER_NUMBER": "凭证编号"
+    "VOUCHER_NUMBER": "传票编号"
   },
   "PAUSE": {
     "TITLE": "您确定要取消上传吗？",

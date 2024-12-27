@@ -95,7 +95,7 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
     const certificateReadyForTransfer: ICertificateEntity & {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
-      uploader: IUserEntity;
+      uploader: IUserEntity & { imageFile: IFileEntity };
       userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     } = {
