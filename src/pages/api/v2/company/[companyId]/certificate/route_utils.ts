@@ -223,11 +223,11 @@ export const certificateAPIPostUtils = {
     certificateEntity: ICertificateEntity & {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
-      uploader: IUserEntity;
+      uploader: IUserEntity & { imageFile: IFileEntity };
       userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
-  ): ICertificate => {
+  ): ICertificate & { uploaderUrl: string } => {
     const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
     const file: IFileBeta = {
       id: certificateEntity.file.id,
@@ -272,7 +272,7 @@ export const certificateAPIPostUtils = {
         : false;
     const voucherNo = certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0].no : '';
 
-    const certificate: ICertificate = {
+    const certificate: ICertificate & { uploaderUrl: string } = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
@@ -284,6 +284,7 @@ export const certificateAPIPostUtils = {
       createdAt: certificateEntity.createdAt,
       updatedAt: certificateEntity.updatedAt,
       uploader: certificateEntity.uploader.name,
+      uploaderUrl: certificateEntity.uploader.imageFile.url,
     };
 
     return certificate;
