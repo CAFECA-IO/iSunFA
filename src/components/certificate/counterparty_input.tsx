@@ -210,30 +210,34 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       });
 
       // 執行防抖搜尋
-      debounceSearchCompany(name, taxId);
+      await debounceSearchCompany(name, taxId);
       const filteredList = counterpartyList.filter((party) => {
         // Info: (20241209 - Julian) 編號(數字)搜尋: 字首符合
-        if (e.target.value.match(/^\d+$/)) {
-          const codeMatch = party.taxId
-            .toString()
-            .toLowerCase()
-            .startsWith(e.target.value.toLowerCase());
+        if (taxId.match(/^\d+$/)) {
+          const codeMatch = party.taxId.toString().toLowerCase().startsWith(taxId.toLowerCase());
           return codeMatch;
-        } else if (e.target.value !== '') {
+        } else if (name !== '') {
           // Info: (20241209 - Julian) 名稱搜尋: 部分符合
-          const nameMatch = party.name.toLowerCase().includes(e.target.value.toLowerCase());
+          const nameMatch = party.name.toLowerCase().includes(name.toLowerCase());
           return nameMatch;
         }
         return true;
       });
       const filteredCompany = e.target.value
         ? searchedCompanies.filter((company) => {
-            const codeMatch = company.taxId
-              .toString()
-              .toLowerCase()
-              .startsWith(e.target.value.toLowerCase());
-            const nameMatch = company.name.toLowerCase().includes(e.target.value.toLowerCase());
-            return codeMatch || nameMatch;
+            // Info: (20241209 - Julian) 編號(數字)搜尋: 字首符合
+            if (taxId.match(/^\d+$/)) {
+              const codeMatch = company.taxId
+                .toString()
+                .toLowerCase()
+                .startsWith(taxId.toLowerCase());
+              return codeMatch;
+            } else if (name !== '') {
+              // Info: (20241209 - Julian) 名稱搜尋: 部分符合
+              const nameMatch = company.name.toLowerCase().includes(name.toLowerCase());
+              return nameMatch;
+            }
+            return true;
           })
         : [];
       setFilteredCounterpartyList([...filteredList, ...filteredCompany]);
@@ -242,7 +246,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     };
 
     const counterpartyInput =
-      isCounterpartyEditing || !!searchTaxId || !!searchName ? (
+      isCounterpartyEditing || (!counterparty?.taxId && !counterparty?.name) ? (
         <div className="flex w-full">
           <input
             id="counterparty-tax-id"
