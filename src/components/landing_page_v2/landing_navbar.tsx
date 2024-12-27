@@ -44,7 +44,7 @@ const LandingNavbar: React.FC = () => {
         </LandingButton>
       </Link>
       {/* ToDO: (20241204 - Julian) Button */}
-      <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+      <Link href={ISUNFA_ROUTE.DASHBOARD}>
         <LandingButton type="button" variant="primary" className="w-full">
           <BsFillRocketTakeoffFill size={20} />
           <p>{t('landing_page_v2:NAVBAR.TRY_IT_NOW')}</p>

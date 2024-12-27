@@ -110,7 +110,8 @@
     "PRICING": "收費模式",
     "FAITH": "GPT",
     "JOIN_US": "加入我們",
-    "PRIVACY_POLICY": "服務條款與隱私權政策",
+    "TERMS_OF_SERVICE": "服務條款",
+    "PRIVACY_POLICY": "隱私權政策",
     "CONTACT_US": "聯絡我們",
     "SERVICE_HOURS": "服務時間"
   }

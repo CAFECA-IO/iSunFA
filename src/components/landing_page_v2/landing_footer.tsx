@@ -48,7 +48,14 @@ const LandingFooter: React.FC = () => {
           <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.JOIN_US')}</Link>
         </li>
         <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.PRIVACY_POLICY')}</Link>
+          <Link href={ISUNFA_ROUTE.TERMS_OF_SERVICE}>
+            {t('landing_page_v2:FOOTER.TERMS_OF_SERVICE')}
+          </Link>
+        </li>
+        <li className="hover:cursor-pointer hover:text-landing-page-orange">
+          <Link href={ISUNFA_ROUTE.PRIVACY_POLICY}>
+            {t('landing_page_v2:FOOTER.PRIVACY_POLICY')}
+          </Link>
         </li>
       </ul>
     </>
