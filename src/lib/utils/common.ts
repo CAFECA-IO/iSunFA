@@ -20,6 +20,10 @@ import { FileFolder } from '@/constants/file';
 import { KYCFiles, UploadDocumentKeys } from '@/constants/kyc';
 import { ROCDate } from '@/interfaces/locale';
 
+export function isFloatsEqual(a: number, b: number, tolerance = Number.EPSILON): boolean {
+  return Math.abs(a - b) < tolerance;
+}
+
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
 };
