@@ -61,7 +61,7 @@ const CTAIntroCard: React.FC<{
       <Image src={imageSrc} width={64} height={64} alt={imageAlt} />
       <p className="flex-1">{description}</p>
       <LandingButton type="button" variant="primary" className="whitespace-nowrap font-bold">
-        {buttonText}
+        <Link href={ISUNFA_ROUTE.DASHBOARD}>{buttonText}</Link>
       </LandingButton>
     </div>
   );

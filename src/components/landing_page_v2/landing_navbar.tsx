@@ -109,22 +109,22 @@ const LandingNavbar: React.FC = () => {
   const navigationOptions = (
     <>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-        <LandingButton type="button" variant="default">
+        <LandingButton type="button" variant="default" disabled>
           {t('landing_page_v2:NAVBAR.USERS')}
         </LandingButton>
       </Link>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-        <LandingButton type="button" variant="default">
+        <LandingButton type="button" variant="default" disabled>
           {t('landing_page_v2:NAVBAR.PRICING')}
         </LandingButton>
       </Link>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-        <LandingButton type="button" variant="default">
+        <LandingButton type="button" variant="default" disabled>
           {t('landing_page_v2:NAVBAR.FAITH')}
         </LandingButton>
       </Link>
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-        <LandingButton type="button" variant="default">
+        <LandingButton type="button" variant="default" disabled>
           {t('landing_page_v2:NAVBAR.JOIN_US')}
         </LandingButton>
       </Link>
