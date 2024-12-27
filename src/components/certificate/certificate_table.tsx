@@ -12,6 +12,7 @@ interface CertificateTableProps {
   certificates: ICertificateUI[];
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態 // Info: (20240923 - tzuhan) 選中的項目 ID 列表
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - tzuhan) 當選擇變更時的回調函數
+  handleSelectAll: () => void;
   isSelectedAll: boolean;
   onEdit: (id: number) => void;
   dateSort: SortOrder | null;
@@ -27,6 +28,7 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
   activeSelection,
   certificates,
   handleSelect,
+  handleSelectAll,
   isSelectedAll,
   onEdit,
   dateSort,
@@ -64,9 +66,10 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
         <div className="table-header-group h-60px w-full max-w-920px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row w-full">
             {activeSelection && (
-              <div className="table-cell border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
+              <div className="table-cell w-32px max-w-32px border-b border-r border-stroke-neutral-quaternary px-8px text-center align-middle">
                 <div
-                  className={`relative h-16px w-16px rounded border border-checkbox-stroke-unselected text-center ${isSelectedAll ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
+                  className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${isSelectedAll ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
+                  onClick={handleSelectAll}
                 >
                   {isSelectedAll && <HiCheck className="absolute text-neutral-white" />}
                 </div>

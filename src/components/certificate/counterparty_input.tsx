@@ -50,11 +50,14 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
 
     const [isLoadingCounterparty, setIsLoadingCounterparty] = useState(false);
     const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
-    const [filteredCounterpartyList, setFilteredCounterpartyList] = useState<ICounterparty[]>([]);
-    const [searchedCompany, setSearchedCompany] = useState<ICompanyTaxIdAndName | undefined>();
+    const [filteredCounterpartyList, setFilteredCounterpartyList] = useState<
+      ICounterpartyOptional[]
+    >([]);
+    const [searchedCompanies, setSearchedCompanies] = useState<ICompanyTaxIdAndName[]>([]);
     const [searchName, setSearchName] = useState<string>('');
     const [searchTaxId, setSearchTaxId] = useState<string>('');
     const [isShowRedHint, setIsShowRedHint] = useState(false);
+    const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
     const {
       isMessageModalVisible,
@@ -90,16 +93,29 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       setSearchTaxId('');
     };
 
-    const searchCompany = async (name: string | undefined, taxId: string | undefined) => {
-      const { success, data } = await fetchCompanyDataAPI({
-        query: {
-          name,
-          taxId,
-        },
-      });
-      if (success && data) {
-        setSearchedCompany(data || undefined);
+    // Info: (20241227 - Tzuhan) 手動實作防抖函數
+    const debounceSearchCompany = async (name: string | undefined, taxId: string | undefined) => {
+      // Info: (20241227 - Tzuhan) 清除前一次的計時器，避免頻繁觸發
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
       }
+      const timer = setTimeout(async () => {
+        const { success, data } = await fetchCompanyDataAPI({ query: { name, taxId } });
+        if (success && data) {
+          setSearchedCompanies((prev) => {
+            // Info: (20241227 - Tzuhan) 檢查是否已存在於 searchedCompany 陣列
+            const exists = prev.some(
+              (company) => company.name === data.name && company.taxId === data.taxId
+            );
+            if (!exists && (!!data.name || !!data.taxId)) {
+              return [...prev, data];
+            }
+            return prev;
+          });
+        }
+      }, 300); // Info: (20241227 - Tzuhan) 300ms 防抖時間
+
+      setDebounceTimer(timer);
     };
 
     const handleAddCounterparty = (newCounterparty: ICounterparty) => {
@@ -139,7 +155,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const counterpartySearchHandler = useCallback(
       async (showModal = true) => {
         if (searchName || searchTaxId) {
-          await searchCompany(searchName, searchTaxId);
           const isInCounterpartyList = counterpartyList.some(
             (party) => party.name === searchName && party.taxId === searchTaxId
           );
@@ -175,48 +190,73 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     // Info: (20241209 - Julian) Counterparty 搜尋欄位事件
     const counterpartyInputHandler = async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (isMessageModalVisible) return;
+
       setCounterpartyMenuOpen(true);
-      let taxId = searchTaxId;
-      let name = searchName;
-      if (e.target.id === 'counterparty-tax-id') {
-        taxId = e.target.value;
-        setSearchTaxId(taxId);
-      }
-      if (e.target.id === 'counterparty-name') {
-        name = e.target.value;
-        setSearchName(name);
-      }
-      onSelect({ name, taxId });
-      // Info: (20241209 - Julian) 將資料傳入 AddCounterpartyModal
+
+      // Info: (20241204 - tzuhan) 更新搜尋條件
+      const { id, value } = e.target;
+      const updatedTaxId = id === 'counterparty-tax-id' ? value : searchTaxId;
+      const updatedName = id === 'counterparty-name' ? value : searchName;
+
+      setSearchTaxId(updatedTaxId);
+      setSearchName(updatedName);
+
+      // Info: (20241204 - tzuhan) 更新選擇內容
+      onSelect({ name: updatedName, taxId: updatedTaxId });
+
+      // Info: (20241204 - tzuhan) 更新模態框資料
       addCounterPartyModalDataHandler({
         onSave: handleAddCounterparty,
-        name,
-        taxId,
+        name: updatedName,
+        taxId: updatedTaxId,
       });
 
-      const filteredList = counterpartyList.filter((party) => {
-        // Info: (20241209 - Julian) 編號(數字)搜尋: 字首符合
-        if (e.target.value.match(/^\d+$/)) {
-          const codeMatch = party.taxId
-            .toString()
-            .toLowerCase()
-            .startsWith(e.target.value.toLowerCase());
-          return codeMatch;
-        } else if (e.target.value !== '') {
-          // Info: (20241209 - Julian) 名稱搜尋: 部分符合
-          const nameMatch = party.name.toLowerCase().includes(e.target.value.toLowerCase());
-          return nameMatch;
-        }
-        return true;
-      });
-      setFilteredCounterpartyList(filteredList);
-      setIsLoadingCounterparty(true);
-      await searchCompany(name, taxId);
-      setIsLoadingCounterparty(false);
+      // Info: (20241204 - tzuhan) 執行防抖搜尋
+      debounceSearchCompany(updatedName, updatedTaxId);
+
+      // Info: (20241204 - tzuhan) 篩選函式抽取，減少重複代碼
+      const filterByCriteria = (list: ICounterpartyOptional[]) => {
+        return list.filter((item) => {
+          // Info: (20241204 - tzuhan) 稅號篩選，需匹配數字開頭
+          if (updatedTaxId.match(/^\d+$/)) {
+            return item.taxId
+              ? item.taxId.toString().toLowerCase().startsWith(updatedTaxId.toLowerCase())
+              : false;
+          }
+
+          // Info: (20241204 - tzuhan) 如果 name 存在，則進行模糊匹配
+          if (updatedName) {
+            const searchWords = updatedName
+              .toLowerCase()
+              .split(/[\s,]+/) // Info: (20241204 - tzuhan) 以空格或逗號分隔字串
+              .filter(Boolean); // Info: (20241204 - tzuhan) 避免空字串影響
+
+            // Info: (20241204 - tzuhan) 確認 item.name 是否包含任何一個搜尋字
+            const nameMatch = searchWords.some((word) => {
+              return item.name ? item.name.toLowerCase().includes(word) : false;
+            });
+
+            return nameMatch;
+          }
+          return true;
+        });
+      };
+
+      // Info: (20241204 - tzuhan) 同時篩選 counterparty 和 searchedCompanies
+      const filteredList = filterByCriteria(counterpartyList);
+      const filteredCompany = value ? filterByCriteria(searchedCompanies) : [];
+
+      setFilteredCounterpartyList([...filteredList, ...filteredCompany]);
+
+      // 加載狀態切換（優化效能，避免多餘狀態更新）
+      if (!isLoadingCounterparty) {
+        setIsLoadingCounterparty(true);
+        setIsLoadingCounterparty(false);
+      }
     };
 
     const counterpartyInput =
-      isCounterpartyEditing || !!searchTaxId || !!searchName ? (
+      isCounterpartyEditing || (!counterparty?.taxId && !counterparty?.name) ? (
         <div className="flex w-full">
           <input
             id="counterparty-tax-id"
@@ -286,8 +326,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       <div
         ref={counterpartyMenuRef}
         className={`absolute left-0 top-50px z-30 grid w-full overflow-hidden ${
-          isCounterpartyMenuOpen &&
-          (filteredCounterpartyList.length > 0 || isLoadingCounterparty || searchedCompany)
+          isCounterpartyMenuOpen && (filteredCounterpartyList.length > 0 || isLoadingCounterparty)
             ? 'grid-rows-1'
             : 'grid-rows-0'
         } rounded-sm shadow-dropmenu transition-all duration-150 ease-in-out`}
@@ -297,20 +336,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         ) : (
           <div className="flex max-h-150px flex-col overflow-y-auto rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary py-8px">
             {counterpartyItems}
-            {searchedCompany && (
-              <button
-                type="button"
-                onClick={() => counterpartyClickHandler(searchedCompany as ICounterpartyOptional)}
-                className="flex w-full text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-              >
-                <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">
-                  {searchedCompany.taxId}
-                </p>
-                <p className="px-12px py-8px text-dropdown-text-secondary">
-                  {searchedCompany.name}
-                </p>
-              </button>
-            )}
           </div>
         )}
       </div>
@@ -337,7 +362,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
             <FiSearch
               size={20}
               className={`absolute right-3 top-3 cursor-pointer ${!searchName && !searchTaxId ? 'text-input-text-primary' : 'text-input-text-input-filled'}`}
-              onClick={() => counterpartySearchHandler(false)}
+              // onClick={() => counterpartySearchHandler(false)}
             />
           </div>
           {displayedCounterpartyMenu}

@@ -24,6 +24,7 @@ interface SelectionToolbarProps {
   selectedCount: number; // Info: (20240920 - tzuhan) 選中的項目數量
   totalCount: number; // Info: (20240920 - tzuhan) 總項目數量
   handleSelect: (ids: number[], isSelected: boolean) => void;
+  handleSelectAll: () => void; // Info: (20240920 - tzuhan) 全選
   onDelete?: () => void; // Info: (20240920 - tzuhan) 添加刪除的回調函數
   addOperations?: ISelectionToolBarOperation[];
   exportOperations?: ISelectionToolBarOperation[];
@@ -41,18 +42,12 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
   selectedCount,
   totalCount,
   handleSelect,
+  handleSelectAll,
   onDelete,
   addOperations,
   exportOperations,
 }) => {
   const { t } = useTranslation(['certificate']);
-  // Info: (20240920 - tzuhan) 全選操作
-  const handleSelectAll = () => {
-    handleSelect(
-      items.map((item) => item.id),
-      true
-    );
-  };
 
   // Info: (20240920 - tzuhan) 取消全選
   const handleUnselectAll = () => {

@@ -81,7 +81,11 @@ export async function postInvoiceV2(options: {
             },
             file: true,
             UserCertificate: true,
-            uploader: true,
+            uploader: {
+              include: {
+                imageFile: true,
+              },
+            },
           },
         },
       },
@@ -174,7 +178,11 @@ export async function putInvoiceV2(options: {
             },
             file: true,
             UserCertificate: true,
-            uploader: true,
+            uploader: {
+              include: {
+                imageFile: true,
+              },
+            },
           },
         },
       },

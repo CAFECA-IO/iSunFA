@@ -257,6 +257,12 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, activeTab, isSelectedAll]
   );
 
+  // Info: (20240920 - tzuhan) 全選操作
+  const handleSelectAll = () => {
+    const ids = Object.keys(certificates).map((id) => Number(id));
+    handleSelect(ids, !isSelectedAll);
+  };
+
   const deleteSelectedCertificates = useCallback(
     async (selectedIds: number[]) => {
       try {
@@ -623,6 +629,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               selectedCount={Object.values(selectedCertificates).length}
               totalCount={Object.values(certificates).length || 0}
               handleSelect={handleSelect}
+              handleSelectAll={handleSelectAll}
               addOperations={addOperations}
               exportOperations={exportOperations}
               onDelete={handleDeleteSelectedItems}
@@ -637,6 +644,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               viewType={viewType}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
+              handleSelectAll={handleSelectAll}
               isSelectedAll={isSelectedAll}
               onDownload={handleDownloadItem}
               onRemove={handleDeleteItem}
