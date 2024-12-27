@@ -14,7 +14,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
-// import IncomeStatementReportTableRow from '@/components/income_statement_report_body/income_statement_report_table_row'; // Deprecated: (20241204 - Liz)
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { useTranslation } from 'next-i18next';
