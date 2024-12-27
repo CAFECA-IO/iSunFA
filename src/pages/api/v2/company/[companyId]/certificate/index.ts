@@ -93,7 +93,7 @@ export const handleGetRequest: IHandleRequest<
       const certificateReadyForTransfer: ICertificateEntity & {
         invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
         file: IFileEntity;
-        uploader: IUserEntity;
+        uploader: IUserEntity & { imageFile: IFileEntity };
         userCertificates: IUserCertificateEntity[];
         vouchers: IVoucherEntity[];
       } = {

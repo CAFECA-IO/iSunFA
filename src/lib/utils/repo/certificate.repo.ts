@@ -107,7 +107,11 @@ export async function createCertificateWithEmptyInvoice(options: {
             counterParty: true,
           },
         },
-        uploader: true,
+        uploader: {
+          include: {
+            imageFile: true,
+          },
+        },
       },
     });
   } catch (error) {
@@ -144,7 +148,11 @@ export async function getOneCertificateById(
             counterParty: true,
           },
         },
-        uploader: true,
+        uploader: {
+          include: {
+            imageFile: true,
+          },
+        },
       },
     });
   } catch (error) {
@@ -344,7 +352,11 @@ export async function getCertificatesV2(options: {
             counterParty: true,
           },
         },
-        uploader: true,
+        uploader: {
+          include: {
+            imageFile: true,
+          },
+        },
       },
     });
   } catch (error) {
