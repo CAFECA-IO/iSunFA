@@ -194,9 +194,7 @@ const voucherGetAllQueryValidatorV2 = z.object({
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
   type: z.preprocess((input) => {
-    const result = (typeof input === 'string' && input.toLowerCase() === 'all') ?
-      undefined :
-      input;
+    const result = typeof input === 'string' && input.toLowerCase() === 'all' ? undefined : input;
     return result;
   }, z.nativeEnum(EventType).optional()),
   tab: z.nativeEnum(VoucherListTabV2),
@@ -386,7 +384,10 @@ const voucherPostBodyValidatorV2 = z.object({
     }),
 });
 
-const voucherPostOutputValidatorV2 = voucherEntityValidator.transform((data) => {
+const voucherPostOutputValidatorV2 = voucherEntityValidator.nullable().transform((data) => {
+  if (data === null) {
+    return null;
+  }
   return data.id;
 });
 const voucherPostFrontendValidatorV2 = z.number();
@@ -811,7 +812,15 @@ export const voucherPutSchema = {
     querySchema: voucherPutQueryValidatorV2,
     bodySchema: voucherPostBodyValidatorV2,
   },
-  outputSchema: z.number(),
+  outputSchema: z
+    .number()
+    .nullable()
+    .transform((data) => {
+      if (data === null) {
+        return null;
+      }
+      return data;
+    }),
   frontend: voucherNullSchema,
 };
 

@@ -190,6 +190,15 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
       });
     }
 
+    // Info: (20241226 - Murky) Check if lineItems credit and debit are equal
+    const isLineItemsBalanced = postUtils.isLineItemsBalanced(lineItems);
+    if (!isLineItemsBalanced) {
+      postUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: 'lineItems credit and debit should be equal',
+        statusMessage: STATUS_MESSAGE.UNBALANCED_DEBIT_CREDIT,
+      });
+    }
+
     if (!isVoucherInfoExist) {
       putUtils.throwErrorAndLog(loggerBack, {
         errorMessage: 'voucherInfo is required when post voucher',
