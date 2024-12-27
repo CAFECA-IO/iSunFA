@@ -6,7 +6,6 @@ import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import { BsFillRocketTakeoffFill } from 'react-icons/bs';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-// import LandingI18n from '@/components/landing_page_v2/landing_i18n';
 import version from '@/lib/version';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';

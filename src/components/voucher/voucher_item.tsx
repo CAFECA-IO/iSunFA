@@ -132,23 +132,8 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     </div>
   );
 
-  return (
-    <Link
-      href={`/users/accounting/${voucher.id}`}
-      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
-    >
-      {/* Info: (20240920 - Julian) Select */}
-      <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
-        <div className="relative top-20px px-8px">
-          <input
-            type="checkbox"
-            className={checkboxStyle}
-            checked={isSelected}
-            onClick={(e) => e.stopPropagation()} // Info: (20241220 - Julian) 防止點擊 checkbox 時觸發 Link
-            onChange={checkboxHandler}
-          />
-        </div>
-      </div>
+  const content = (
+    <>
       {/* Info: (20240920 - Julian) Issued Date */}
       <div className="table-cell text-center">{displayedDate}</div>
       {/* Info: (20240920 - Julian) Voucher No */}
@@ -165,6 +150,33 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       <div className="table-cell">{displayedCounterparty}</div>
       {/* Info: (20240920 - Julian) Issuer */}
       <div className="table-cell">{displayedIssuer}</div>
+    </>
+  );
+
+  return isCheckBoxOpen ? (
+    <div
+      onClick={checkboxHandler} // Info: (20241227 - Julian) 點擊整個 row 也能選取 checkbox
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+    >
+      {/* Info: (20240920 - Julian) Select */}
+      <div className="table-cell text-center">
+        <div className="relative top-20px px-8px">
+          <input
+            type="checkbox"
+            className={checkboxStyle}
+            checked={isSelected}
+            onChange={checkboxHandler}
+          />
+        </div>
+      </div>
+      {content}
+    </div>
+  ) : (
+    <Link
+      href={`/users/accounting/${voucher.id}`}
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+    >
+      {content}
     </Link>
   );
 };
