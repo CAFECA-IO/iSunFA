@@ -7,14 +7,18 @@ import CompanyBadge from '@/components/beta/layout/company_badge';
 import PageTitle from '@/components/beta/layout/page_title';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
+// ToDo: (20241226 - Liz) Beta 版沒有切換明暗模式功能
+const IS_MODE_SWITCH_AVAILABLE = false;
+
 interface HeaderProps {
   isDashboard: boolean;
   pageTitle?: string;
   goBackUrl?: string;
   notPrint?: boolean;
+  toggleOverlay: () => void;
 }
 
-const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint }: HeaderProps) => {
+const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint, toggleOverlay }: HeaderProps) => {
   const {
     targetRef: globalRef,
     componentVisible: isMenuVisible,
@@ -43,10 +47,14 @@ const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint }: HeaderProps) =>
     <header
       className={`flex items-center gap-24px px-20px pb-8px pt-32px screen1280:px-56px ${notPrint ? 'print:hidden' : ''}`}
     >
-      {isDashboard ? <Search /> : <PageTitle pageTitle={pageTitle} goBackUrl={goBackUrl} />}
+      {isDashboard ? (
+        <Search toggleOverlay={toggleOverlay} />
+      ) : (
+        <PageTitle pageTitle={pageTitle} goBackUrl={goBackUrl} />
+      )}
 
       <section className="flex flex-none items-center gap-16px">
-        <ModeSwitch />
+        {IS_MODE_SWITCH_AVAILABLE && <ModeSwitch />}
 
         <div ref={globalRef}>
           <I18n
