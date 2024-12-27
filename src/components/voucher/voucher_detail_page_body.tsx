@@ -5,7 +5,6 @@ import { useTranslation } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { ICertificateUI } from '@/interfaces/certificate';
-import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import CertificateSelection from '@/components/certificate/certificate_selection';
 import { Button } from '@/components/button/button';
 import { timestampToString, numberWithCommas } from '@/lib/utils/common';
@@ -111,10 +110,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         return {
           ...certificate,
           isSelected: false,
-          actions: [
-            CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-            CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-          ],
+          actions: [],
         };
       });
 
@@ -366,7 +362,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         </Link>
       </div>
       {/* Info: (20240926 - tzuhan) CertificateSelection */}
-      <CertificateSelection selectedCertificates={certificates} isSelectable={false} isDeletable />
+      <CertificateSelection
+        selectedCertificates={certificates}
+        isSelectable={false}
+        isDeletable={false}
+      />
 
       {/* Info: (20241008 - Julian) Voucher Detail */}
       <div className="flex flex-col items-stretch gap-24px font-semibold">
