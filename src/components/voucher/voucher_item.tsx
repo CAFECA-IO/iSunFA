@@ -161,12 +161,14 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       {/* Info: (20240920 - Julian) Select */}
       <div className="table-cell text-center">
         <div className="relative top-20px px-8px">
-          <input
-            type="checkbox"
-            className={checkboxStyle}
-            checked={isSelected}
-            onChange={checkboxHandler}
-          />
+          <span className="mx-auto table h-16px w-16px table-fixed">
+            <div
+              className={`h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${isSelected ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
+              onClick={checkboxHandler}
+            >
+              {isSelected && <HiCheck className="absolute text-neutral-white" />}
+            </div>
+          </span>
         </div>
       </div>
       {content}
