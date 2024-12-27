@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { BsFillRocketTakeoffFill } from 'react-icons/bs';
 import {
@@ -8,6 +9,7 @@ import {
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const CTAIntroCard: React.FC<{
   imageSrc: string;
@@ -59,7 +61,7 @@ const CTAIntroCard: React.FC<{
       <Image src={imageSrc} width={64} height={64} alt={imageAlt} />
       <p className="flex-1">{description}</p>
       <LandingButton type="button" variant="primary" className="whitespace-nowrap font-bold">
-        {buttonText}
+        <Link href={ISUNFA_ROUTE.DASHBOARD}>{buttonText}</Link>
       </LandingButton>
     </div>
   );
@@ -115,10 +117,12 @@ const CTA: React.FC = () => {
         </div>
 
         <div className="mt-20px md:mt-30px lg:mt-60px">
-          <LandingButton type="button" variant="primary">
-            <BsFillRocketTakeoffFill size={20} />
-            <p className="text-base font-bold">{t('landing_page_v2:CTA.FREE_TRIAL_BTN')}</p>
-          </LandingButton>
+          <Link href={ISUNFA_ROUTE.DASHBOARD}>
+            <LandingButton type="button" variant="primary">
+              <BsFillRocketTakeoffFill size={20} />
+              <p className="text-base font-bold">{t('landing_page_v2:CTA.FREE_TRIAL_BTN')}</p>
+            </LandingButton>
+          </Link>
         </div>
       </div>
 

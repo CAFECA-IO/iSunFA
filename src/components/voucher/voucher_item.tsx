@@ -75,7 +75,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const debit = lineItems.map((item) => (item.debit ? item.amount : 0));
 
   const displayedAccounting = (
-    <div className="flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
+    <div className="flex flex-col items-start gap-4px py-12px font-semibold text-text-neutral-tertiary">
       {accounting.map((account) => (
         <p key={account?.code}>
           {account?.code} - {account?.name}
@@ -132,30 +132,8 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     </div>
   );
 
-  return (
-    <Link
-      href={`/users/accounting/${voucher.id}`}
-      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
-      onClick={(e) => {
-        if (isCheckBoxOpen) {
-          e.preventDefault(); // Info: (20241227 - Tzuhan) 阻止跳轉
-          checkboxHandler(); // Info: (20241227 - Tzuhan) 執行選擇操作
-        }
-      }}
-    >
-      {/* Info: (20240920 - Julian) Select */}
-      <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
-        <div className="relative top-20px px-8px">
-          <span className="mx-auto table h-16px w-16px table-fixed">
-            <div
-              className={`h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${isSelected ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
-              onClick={checkboxHandler}
-            >
-              {isSelected && <HiCheck className="absolute text-neutral-white" />}
-            </div>
-          </span>
-        </div>
-      </div>
+  const content = (
+    <>
       {/* Info: (20240920 - Julian) Issued Date */}
       <div className="table-cell text-center">{displayedDate}</div>
       {/* Info: (20240920 - Julian) Voucher No */}
@@ -172,6 +150,35 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       <div className="table-cell">{displayedCounterparty}</div>
       {/* Info: (20240920 - Julian) Issuer */}
       <div className="table-cell">{displayedIssuer}</div>
+    </>
+  );
+
+  return isCheckBoxOpen ? (
+    <div
+      onClick={checkboxHandler} // Info: (20241227 - Julian) 點擊整個 row 也能選取 checkbox
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+    >
+      {/* Info: (20240920 - Julian) Select */}
+      <div className="table-cell text-center">
+        <div className="relative top-20px px-8px">
+          <span className="mx-auto table h-16px w-16px table-fixed">
+            <div
+              className={`h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${isSelected ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
+              onClick={checkboxHandler}
+            >
+              {isSelected && <HiCheck className="absolute text-neutral-white" />}
+            </div>
+          </span>
+        </div>
+      </div>
+      {content}
+    </div>
+  ) : (
+    <Link
+      href={`/users/accounting/${voucher.id}`}
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+    >
+      {content}
     </Link>
   );
 };

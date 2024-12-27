@@ -5,7 +5,6 @@ import { useTranslation } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { ICertificateUI } from '@/interfaces/certificate';
-import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import CertificateSelection from '@/components/certificate/certificate_selection';
 import { Button } from '@/components/button/button';
 import { timestampToString, numberWithCommas } from '@/lib/utils/common';
@@ -19,6 +18,7 @@ import Skeleton from '@/components/skeleton/skeleton';
 import { ToastType } from '@/interfaces/toastify';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { IVoucherDetailForFrontend, defaultVoucherDetail } from '@/interfaces/voucher';
+import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType } from '@/constants/account';
 
 interface IVoucherDetailPageBodyProps {
   voucherId: string;
@@ -71,6 +71,17 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   // Info: (20241118 - Julian) If note is empty, display '-'
   const noteText = note !== '' ? note : '-';
 
+  // Info: (20241227 - Julian) type 字串轉換
+  const translateType = (voucherType: string) => {
+    const typeStr = EVENT_TYPE_TO_VOUCHER_TYPE_MAP[voucherType as EventType];
+
+    if (typeStr) {
+      return t(`journal:ADD_NEW_VOUCHER.TYPE_${typeStr.toUpperCase()}`);
+    } else {
+      return t(`journal:ADD_NEW_VOUCHER.TYPE_${voucherType.toUpperCase()}`);
+    }
+  };
+
   // Info: (20241014 - Julian) Destructuring payableInfo or receivingInfo
   const {
     total: payableAmount,
@@ -98,23 +109,19 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   };
 
   useEffect(() => {
-    // Info: (20241121 - Julian) Get voucher detail when companyId is ready
-    if (companyId) {
+    // Info: (20241121 - Julian) Get voucher detail when companyId and voucherId are ready
+    if (companyId && voucherId) {
       getVoucherDetail();
     }
-  }, [companyId]);
+  }, [companyId, voucherId]);
 
   useEffect(() => {
-    // Info: (20241121 - Julian) Get voucher detail when companyId is ready
     if (voucherData?.certificates) {
       const certificateUIList = voucherData.certificates.map((certificate) => {
         return {
           ...certificate,
           isSelected: false,
-          actions: [
-            CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-            CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-          ],
+          actions: [],
         };
       });
 
@@ -206,7 +213,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   );
 
   const isDisplayType = !isLoading ? (
-    <p className="text-input-text-primary">{type}</p>
+    <p className="text-input-text-primary">{translateType(type)}</p>
   ) : (
     <Skeleton width={200} height={24} rounded />
   );
@@ -226,9 +233,13 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const isDisplayReverseVoucher = !isLoading ? (
     <div className="flex flex-col">
       {reverseVoucherIds.map((reverseVoucher) => (
-        <p key={reverseVoucher.id} className="text-link-text-primary">
+        <Link
+          key={reverseVoucher.id}
+          href={`/users/accounting/${reverseVoucher.id}`}
+          className="text-link-text-primary hover:underline"
+        >
           {reverseVoucher.voucherNo}
-        </p>
+        </Link>
       ))}
     </div>
   ) : (
@@ -238,7 +249,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const isDisplayPayableAmount = !isLoading ? (
     <p className="text-input-text-primary">
       {numberWithCommas(payableAmount ?? 0)}
-      <span className="ml-4px text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
+      <span className="ml-4px text-text-neutral-tertiary">{t('journal:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -247,7 +258,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const isDisplayPaidAmount = !isLoading ? (
     <p className="text-input-text-primary">
       {numberWithCommas(paidAmount ?? 0)}
-      <span className="ml-4px text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
+      <span className="ml-4px text-text-neutral-tertiary">{t('journal:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -256,7 +267,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const isDisplayRemainAmount = !isLoading ? (
     <p className="text-input-text-primary">
       {numberWithCommas(remainAmount ?? 0)}
-      <span className="ml-4px text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
+      <span className="ml-4px text-text-neutral-tertiary">{t('journal:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -266,9 +277,13 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const isDisplayAsset = !isLoading ? (
     <div className="flex flex-col">
       {assets.map((asset) => (
-        <p key={asset.id} className="text-link-text-primary">
+        <Link
+          key={asset.id}
+          href={`/users/asset/${asset.id}`}
+          className="text-link-text-primary hover:underline"
+        >
           {asset.id}
-        </p>
+        </Link>
       ))}
     </div>
   ) : (
@@ -366,7 +381,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         </Link>
       </div>
       {/* Info: (20240926 - tzuhan) CertificateSelection */}
-      <CertificateSelection selectedCertificates={certificates} isSelectable={false} isDeletable />
+      <CertificateSelection
+        selectedCertificates={certificates}
+        isSelectable={false}
+        isDeletable={false}
+      />
 
       {/* Info: (20241008 - Julian) Voucher Detail */}
       <div className="flex flex-col items-stretch gap-24px font-semibold">

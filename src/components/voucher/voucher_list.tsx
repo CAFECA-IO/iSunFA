@@ -272,7 +272,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       {/* Info: (20240920 - Julian) Table */}
       <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
-        <div className="table-header-group h-60px border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+        <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
             <div className={`${checkStyle} border-b border-stroke-neutral-quaternary`}>
               <span className="mx-auto table h-16px w-16px table-fixed">
@@ -284,18 +284,20 @@ const VoucherList: React.FC<IVoucherListProps> = ({
                 </div>
               </span>
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDate}</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles} h-60px w-74px`}>
+              {displayedDate}
+            </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.VOUCHER_NO')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-88px`}>
               {t('journal:VOUCHER.NOTE')}
             </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.ACCOUNTING')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDebit}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedCredit}</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-84px`}>{displayedDebit}</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-84px`}>{displayedCredit}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.COUNTRYPARTY')}
             </div>

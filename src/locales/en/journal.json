@@ -33,7 +33,6 @@
     "TRANSFER": "Transfer",
     "PAYMENT": "Payment",
     "RECEIVING": "Receiving",
-    "TWD": "TWD",
     "TAX": "Tax /",
     "NO_SLASH_TAX": "Tax",
     "TWD_FEE": " TWD fee",
@@ -315,5 +314,10 @@
   },
   "COMMON": {
     "STATUS": "Status"
+  },
+  "CURRENCY_ALIAS": {
+    "TWD": "TWD",
+    "EUR": "EUR",
+    "USD": "USD"
   }
 }

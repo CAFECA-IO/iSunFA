@@ -33,7 +33,6 @@
     "TRANSFER": "移轉",
     "PAYMENT": "支付",
     "RECEIVING": "收入",
-    "TWD": "新台幣",
     "TAX": "稅 /",
     "NO_SLASH_TAX": "稅",
     "TWD_FEE": "新台幣費用",
@@ -315,5 +314,10 @@
   },
   "COMMON": {
     "STATUS": "狀態"
+  },
+  "CURRENCY_ALIAS": {
+    "TWD": "新臺幣",
+    "EUR": "歐元",
+    "USD": "美元"
   }
 }

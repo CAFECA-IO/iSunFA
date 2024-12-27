@@ -132,23 +132,8 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
       </div>
     );
 
-  return (
-    <Link
-      href={`${ISUNFA_ROUTE.ASSET_LIST}/${assetId}`}
-      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
-    >
-      {/* Info: (20240920 - Julian) Select */}
-      <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
-        <div className="relative top-20px z-10 px-8px">
-          <input
-            type="checkbox"
-            className={checkboxStyle}
-            checked={isSelected}
-            onChange={checkboxHandler}
-            onClick={(e) => e.stopPropagation()} // Info: (20241127 - Julian) Prevent the event from bubbling up
-          />
-        </div>
-      </div>
+  const content = (
+    <>
       {/* Info: (20240925 - Julian) Issued Date */}
       <div className="table-cell py-10px align-middle">{displayedDate}</div>
       {/* Info: (20240925 - Julian) Asset Type */}
@@ -163,6 +148,34 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
       <div className="table-cell px-8px text-right align-middle">{displayedResidual}</div>
       {/* Info: (20240925 - Julian) Remaining Useful Life */}
       <div className="table-cell px-8px text-right align-middle">{displayedRemainingLife}</div>
+    </>
+  );
+
+  return isCheckBoxOpen ? (
+    <div
+      onClick={checkboxHandler} // Info: (20241227 - Julian) Select the row when clicking the row
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+    >
+      {/* Info: (20240920 - Julian) Select */}
+      <div className="table-cell text-center">
+        <div className="relative top-20px z-10 px-8px">
+          <input
+            type="checkbox"
+            className={checkboxStyle}
+            checked={isSelected}
+            onChange={checkboxHandler}
+            onClick={(e) => e.stopPropagation()} // Info: (20241127 - Julian) Prevent the event from bubbling up
+          />
+        </div>
+      </div>
+      {content}
+    </div>
+  ) : (
+    <Link
+      href={`${ISUNFA_ROUTE.ASSET_LIST}/${assetId}`}
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+    >
+      {content}
     </Link>
   );
 };
