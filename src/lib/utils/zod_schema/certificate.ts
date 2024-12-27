@@ -104,9 +104,9 @@ const paginatedCertificates = paginatedDataSchemaDataNotArray(
         withoutVoucher: z.number(),
       }),
       currency: z.nativeEnum(CurrencyType),
-      certificates: z.array(ICertificatePartialInvoiceValidator),
+      certificates: z.array(ICertificatePartialInvoiceValidator.passthrough()),
     })
-    .strict()
+    .strip()
 );
 
 const certificateListFrontendSchema = paginatedCertificates;

@@ -93,7 +93,7 @@ export const handleGetRequest: IHandleRequest<
       const certificateReadyForTransfer: ICertificateEntity & {
         invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
         file: IFileEntity;
-        uploader: IUserEntity;
+        uploader: IUserEntity & { imageFile: IFileEntity };
         userCertificates: IUserCertificateEntity[];
         vouchers: IVoucherEntity[];
       } = {
@@ -212,7 +212,7 @@ export const handlePostRequest: IHandleRequest<
         const certificateReadyForTransfer: ICertificateEntity & {
           invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
           file: IFileEntity;
-          uploader: IUserEntity;
+          uploader: IUserEntity & { imageFile: IFileEntity };
           userCertificates: IUserCertificateEntity[];
           vouchers: IVoucherEntity[];
         } = {
@@ -226,9 +226,8 @@ export const handlePostRequest: IHandleRequest<
           userCertificates: userCertificateEntities,
         };
 
-        const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
-          certificateReadyForTransfer
-        );
+        const certificate: ICertificate & { uploaderUrl: string } =
+          postUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
         postUtils.triggerPusherNotification(certificate, {
           companyId,
         });

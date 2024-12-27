@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
@@ -14,6 +15,8 @@ const LatestNews = () => {
   const { t } = useTranslation('dashboard');
   const [type, setType] = useState<NewsType>(NewsType.FINANCIAL);
   const [newsList, setNewsList] = useState<INews[]>([]);
+
+  const isNoData = newsList.length === 0;
 
   // Info: (20241126 - Liz) 打 API 取得最新消息列表
   const { trigger: getNewsListAPI } = APIHandler<INews[]>(APIName.NEWS_LIST);
@@ -60,7 +63,16 @@ const LatestNews = () => {
         {/* // Info: (20241126 - Liz) Tab */}
         <TabsForLatestNews activeTab={type} setActiveTab={setType} />
 
-        <NewsList newsList={newsList} />
+        {isNoData ? (
+          <div className="flex flex-col items-center">
+            <Image src={'/images/empty.svg'} alt="empty_image" width={120} height={134.787}></Image>
+            <p className="text-base font-medium text-text-neutral-mute">
+              {t('dashboard:DASHBOARD.NO_LATEST_NEWS')}
+            </p>
+          </div>
+        ) : (
+          <NewsList newsList={newsList} />
+        )}
       </section>
     </DashboardCardLayout>
   );
