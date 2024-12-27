@@ -50,11 +50,14 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
 
     const [isLoadingCounterparty, setIsLoadingCounterparty] = useState(false);
     const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
-    const [filteredCounterpartyList, setFilteredCounterpartyList] = useState<ICounterparty[]>([]);
-    const [searchedCompany, setSearchedCompany] = useState<ICompanyTaxIdAndName | undefined>();
+    const [filteredCounterpartyList, setFilteredCounterpartyList] = useState<
+      ICounterpartyOptional[]
+    >([]);
+    const [searchedCompanies, setSearchedCompanies] = useState<ICompanyTaxIdAndName[]>([]);
     const [searchName, setSearchName] = useState<string>('');
     const [searchTaxId, setSearchTaxId] = useState<string>('');
     const [isShowRedHint, setIsShowRedHint] = useState(false);
+    const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
     const {
       isMessageModalVisible,
@@ -90,16 +93,29 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       setSearchTaxId('');
     };
 
-    const searchCompany = async (name: string | undefined, taxId: string | undefined) => {
-      const { success, data } = await fetchCompanyDataAPI({
-        query: {
-          name,
-          taxId,
-        },
-      });
-      if (success && data) {
-        setSearchedCompany(data || undefined);
+    // Info: (20241227 - Tzuhan) 手動實作防抖函數
+    const debounceSearchCompany = async (name: string | undefined, taxId: string | undefined) => {
+      // Info: (20241227 - Tzuhan) 清除前一次的計時器，避免頻繁觸發
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
       }
+      const timer = setTimeout(async () => {
+        const { success, data } = await fetchCompanyDataAPI({ query: { name, taxId } });
+        if (success && data) {
+          setSearchedCompanies((prev) => {
+            // Info: (20241227 - Tzuhan) 檢查是否已存在於 searchedCompany 陣列
+            const exists = prev.some(
+              (company) => company.name === data.name && company.taxId === data.taxId
+            );
+            if (!exists && (!!data.name || !!data.taxId)) {
+              return [...prev, data];
+            }
+            return prev;
+          });
+        }
+      }, 300); // Info: (20241227 - Tzuhan) 300ms 防抖時間
+
+      setDebounceTimer(timer);
     };
 
     const handleAddCounterparty = (newCounterparty: ICounterparty) => {
@@ -139,7 +155,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const counterpartySearchHandler = useCallback(
       async (showModal = true) => {
         if (searchName || searchTaxId) {
-          await searchCompany(searchName, searchTaxId);
           const isInCounterpartyList = counterpartyList.some(
             (party) => party.name === searchName && party.taxId === searchTaxId
           );
@@ -194,6 +209,8 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         taxId,
       });
 
+      // 執行防抖搜尋
+      debounceSearchCompany(name, taxId);
       const filteredList = counterpartyList.filter((party) => {
         // Info: (20241209 - Julian) 編號(數字)搜尋: 字首符合
         if (e.target.value.match(/^\d+$/)) {
@@ -209,9 +226,18 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         }
         return true;
       });
-      setFilteredCounterpartyList(filteredList);
+      const filteredCompany = e.target.value
+        ? searchedCompanies.filter((company) => {
+            const codeMatch = company.taxId
+              .toString()
+              .toLowerCase()
+              .startsWith(e.target.value.toLowerCase());
+            const nameMatch = company.name.toLowerCase().includes(e.target.value.toLowerCase());
+            return codeMatch || nameMatch;
+          })
+        : [];
+      setFilteredCounterpartyList([...filteredList, ...filteredCompany]);
       setIsLoadingCounterparty(true);
-      await searchCompany(name, taxId);
       setIsLoadingCounterparty(false);
     };
 
@@ -286,8 +312,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       <div
         ref={counterpartyMenuRef}
         className={`absolute left-0 top-50px z-30 grid w-full overflow-hidden ${
-          isCounterpartyMenuOpen &&
-          (filteredCounterpartyList.length > 0 || isLoadingCounterparty || searchedCompany)
+          isCounterpartyMenuOpen && (filteredCounterpartyList.length > 0 || isLoadingCounterparty)
             ? 'grid-rows-1'
             : 'grid-rows-0'
         } rounded-sm shadow-dropmenu transition-all duration-150 ease-in-out`}
@@ -297,20 +322,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         ) : (
           <div className="flex max-h-150px flex-col overflow-y-auto rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary py-8px">
             {counterpartyItems}
-            {searchedCompany && (
-              <button
-                type="button"
-                onClick={() => counterpartyClickHandler(searchedCompany as ICounterpartyOptional)}
-                className="flex w-full text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-              >
-                <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">
-                  {searchedCompany.taxId}
-                </p>
-                <p className="px-12px py-8px text-dropdown-text-secondary">
-                  {searchedCompany.name}
-                </p>
-              </button>
-            )}
           </div>
         )}
       </div>
@@ -337,7 +348,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
             <FiSearch
               size={20}
               className={`absolute right-3 top-3 cursor-pointer ${!searchName && !searchTaxId ? 'text-input-text-primary' : 'text-input-text-input-filled'}`}
-              onClick={() => counterpartySearchHandler(false)}
+              // onClick={() => counterpartySearchHandler(false)}
             />
           </div>
           {displayedCounterpartyMenu}

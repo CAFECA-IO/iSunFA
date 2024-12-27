@@ -16,7 +16,7 @@ import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { VoucherListTabV2 } from '@/constants/voucher';
+import { VoucherTabs } from '@/constants/voucher';
 import { ToastType } from '@/interfaces/toastify';
 
 const VoucherListPageBody: React.FC = () => {
@@ -24,7 +24,7 @@ const VoucherListPageBody: React.FC = () => {
   const { selectedCompany } = useUserCtx();
   const { toastHandler } = useModalContext();
 
-  const [activeTab, setActiveTab] = useState<VoucherListTabV2>(VoucherListTabV2.UPLOADED);
+  const [activeTab, setActiveTab] = useState<VoucherTabs>(VoucherTabs.UPLOADED);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -48,13 +48,12 @@ const VoucherListPageBody: React.FC = () => {
     ]);
   }, [creditSort, debitSort]);
 
-  const voucherTabs = [VoucherListTabV2.UPLOADED, VoucherListTabV2.UPCOMING].map((value) =>
+  const voucherTabs = Object.values(VoucherTabs).map((value) =>
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
   );
   const voucherTypeList = ['All', ...Object.keys(EventType).map((key) => key.toLowerCase())];
 
   const params = { companyId: selectedCompany?.id ?? FREE_COMPANY_ID };
-  const tabQuery = activeTab === VoucherListTabV2.UPLOADED ? 'uploaded' : 'upcoming';
 
   const handleApiResponse = useCallback(
     (
@@ -92,7 +91,7 @@ const VoucherListPageBody: React.FC = () => {
     [activeTab]
   );
 
-  const tabClick = (tab: string) => setActiveTab(tab as VoucherListTabV2);
+  const tabClick = (tab: string) => setActiveTab(tab as VoucherTabs);
 
   const displayVoucherList =
     voucherList && voucherList.length > 0 ? (
@@ -126,7 +125,7 @@ const VoucherListPageBody: React.FC = () => {
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs
-          tabs={voucherTabs}
+          tabs={Object.values(VoucherTabs)}
           tabsString={voucherTabs}
           activeTab={activeTab}
           onTabClick={tabClick}
@@ -145,7 +144,7 @@ const VoucherListPageBody: React.FC = () => {
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
-          tab={tabQuery} // Info: (20241104 - Murky) @Julian, 後端用 VoucherListTabV2 這個 enum 來過濾, 在 src/constants/voucher.ts
+          tab={activeTab} // Info: (20241104 - Murky) @Julian, 後端用 VoucherListTabV2 這個 enum 來過濾, 在 src/constants/voucher.ts
           types={voucherTypeList} // Info: (20241104 - Murky) @Julian, 後端用 EventType 這個 enum 來過濾, 在 src/constants/account.ts
           dateSort={dateSort}
           otherSorts={otherSorts} // Info: (20241104 - Murky) 可以用哪些sort 請參考 VoucherListAllSortOptions, 在 src/lib/utils/zod_schema/voucher.ts

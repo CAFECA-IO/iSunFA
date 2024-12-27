@@ -5,7 +5,6 @@ import { FaRegTrashAlt } from 'react-icons/fa';
 import { Button } from '@/components/button/button';
 import VoucherItem from '@/components/voucher/voucher_item';
 import SortingButton from '@/components/voucher/sorting_button';
-import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useModalContext } from '@/contexts/modal_context';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -15,6 +14,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
+import { HiCheck } from 'react-icons/hi';
 
 interface IVoucherListProps {
   voucherList: IVoucherUI[];
@@ -66,19 +66,18 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const selectToggleHandler = () => setIsCheckBoxOpen((prev) => !prev);
 
   // Info: (20241105 - Julian) 勾選全部
-  const checkAllHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const isChecked = e.target.checked;
-    // Info: (20241022 - Julian) 切換全選狀態
-    setIsSelectedAll(!isSelectedAll);
+  const checkAllHandler = () => {
     // Info: (20241022 - Julian) 切換所有 voucher 的選取狀態
     setUiVoucherList((prev) => {
       return prev.map((voucher) => {
         return {
           ...voucher,
-          isSelected: isChecked,
+          isSelected: !isSelectedAll,
         };
       });
     });
+    // Info: (20241022 - Julian) 切換全選狀態
+    setIsSelectedAll(!isSelectedAll);
   };
 
   // Info: (20241105 - Julian) 選擇全部（文字按鈕）
@@ -276,12 +275,14 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         <div className="table-header-group h-60px border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
             <div className={`${checkStyle} border-b border-stroke-neutral-quaternary`}>
-              <input
-                type="checkbox"
-                className={checkboxStyle}
-                checked={isSelectedAll}
-                onChange={checkAllHandler}
-              />
+              <span className="mx-auto table h-16px w-16px table-fixed">
+                <div
+                  className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${isSelectedAll ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
+                  onClick={checkAllHandler}
+                >
+                  {isSelectedAll && <HiCheck className="absolute text-neutral-white" />}
+                </div>
+              </span>
             </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDate}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
