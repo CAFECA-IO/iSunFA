@@ -117,10 +117,22 @@ export const certificateAPIPostUtils = {
   initVoucherCertificateEntity: (voucherCertificateFromPrisma: PrismaVoucherCertificate) => {
     return parsePrismaVoucherCertificateToEntity(voucherCertificateFromPrisma);
   },
+  initFileEntityFromPrisma: (fileFromPrisma: PrismaFile) => {
+    return parsePrismaFileToFileEntity(fileFromPrisma, false);
+  },
 
-  initUploaderEntity: (certificateFromPrisma: PostCertificateResponse) => {
+  initUploaderEntity: (
+    certificateFromPrisma: PostCertificateResponse
+  ): IUserEntity & {
+    imageFile: IFileEntity;
+  } => {
     const { uploader } = certificateFromPrisma;
-    return parsePrismaUserToUserEntity(uploader);
+    const fileEntity = certificateAPIPostUtils.initFileEntityFromPrisma(uploader.imageFile);
+    const userEntity = parsePrismaUserToUserEntity(uploader);
+    return {
+      ...userEntity,
+      imageFile: fileEntity,
+    };
   },
 
   initVoucherCertificateEntities: (certificateFromPrisma: PostCertificateResponse) => {
@@ -211,11 +223,11 @@ export const certificateAPIPostUtils = {
     certificateEntity: ICertificateEntity & {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
-      uploader: IUserEntity;
+      uploader: IUserEntity & { imageFile: IFileEntity };
       userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
-  ): ICertificate => {
+  ): ICertificate & { uploaderUrl: string } => {
     const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
     const file: IFileBeta = {
       id: certificateEntity.file.id,
@@ -260,7 +272,7 @@ export const certificateAPIPostUtils = {
         : false;
     const voucherNo = certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0].no : '';
 
-    const certificate: ICertificate = {
+    const certificate: ICertificate & { uploaderUrl: string } = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
@@ -272,6 +284,7 @@ export const certificateAPIPostUtils = {
       createdAt: certificateEntity.createdAt,
       updatedAt: certificateEntity.updatedAt,
       uploader: certificateEntity.uploader.name,
+      uploaderUrl: certificateEntity.uploader.imageFile.url,
     };
 
     return certificate;
@@ -402,7 +415,7 @@ export const certificateAPIGetListUtils = {
     certificateEntity: ICertificateEntity & {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
-      uploader: IUserEntity;
+      uploader: IUserEntity & { imageFile: IFileEntity };
       userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
@@ -458,7 +471,7 @@ export const certificateAPIGetListUtils = {
         : false;
     const voucherNo = certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0].no : '';
 
-    const certificate: ICertificate = {
+    const certificate: ICertificate & { uploaderUrl: string } = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
@@ -470,6 +483,7 @@ export const certificateAPIGetListUtils = {
       createdAt: certificateEntity.createdAt,
       updatedAt: certificateEntity.updatedAt,
       uploader: certificateEntity.uploader.name,
+      uploaderUrl: certificateEntity.uploader.imageFile.url,
     };
 
     return certificate;

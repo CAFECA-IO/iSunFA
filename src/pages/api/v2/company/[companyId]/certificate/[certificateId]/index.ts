@@ -48,7 +48,7 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_GET_V2, ICerti
     const certificateReadyForTransfer: ICertificateEntity & {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
-      uploader: IUserEntity;
+      uploader: IUserEntity & { imageFile: IFileEntity };
       userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     } = {

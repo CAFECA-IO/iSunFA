@@ -218,5 +218,7 @@ export type PostCertificateResponse = PrismaCertificate & {
   invoices: (PrismaInvoice & {
     counterParty: PrismaCounterparty;
   })[];
-  uploader: PrismaUser;
+  uploader: PrismaUser & {
+    imageFile: PrismaFile;
+  };
 };
