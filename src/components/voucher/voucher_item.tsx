@@ -75,7 +75,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const debit = lineItems.map((item) => (item.debit ? item.amount : 0));
 
   const displayedAccounting = (
-    <div className="flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
+    <div className="flex flex-col items-start gap-4px py-12px font-semibold text-text-neutral-tertiary">
       {accounting.map((account) => (
         <p key={account?.code}>
           {account?.code} - {account?.name}
