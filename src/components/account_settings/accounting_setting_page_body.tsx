@@ -17,7 +17,6 @@ import { FREE_COMPANY_ID } from '@/constants/config';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { ToastType } from '@/interfaces/toastify';
-import { CurrencyType } from '@/constants/currency';
 import { ToastId } from '@/constants/toast_id';
 
 type ITaxTypeForFrontend =
@@ -45,7 +44,7 @@ const AccountingSettingPageBody: React.FC = () => {
   const { selectedCompany } = useUserCtx();
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
-  const currencyList = Object.values(CurrencyType);
+  const currencyList = ['TWD', 'USD'];
 
   // Info: (20241113 - Julian) 取得會計設定資料
   const { trigger: getAccountSetting, data: accountingSetting } = APIHandler<IAccountingSetting>(
@@ -112,7 +111,7 @@ const AccountingSettingPageBody: React.FC = () => {
   const [currentTaxPeriod, setCurrentTaxPeriod] = useState<ITaxPeriod>(
     initialTaxPeriod as ITaxPeriod
   );
-  const [currentCurrency, setCurrentCurrency] = useState<CurrencyType>(defaultCurrency);
+  const [currentCurrency, setCurrentCurrency] = useState<string>(defaultCurrency);
   const [fiscalPeriod, setFiscalPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [reportGenerateDay, setReportGenerateDay] = useState<number>(10);
 
@@ -379,7 +378,7 @@ const AccountingSettingPageBody: React.FC = () => {
   // Info: (20241113 - Julian) 貨幣的下拉選單內容
   const currencyDropdown = (
     <div
-      className={`absolute top-50px grid w-full rounded-sm ${
+      className={`absolute left-0 top-50px grid w-full rounded-sm ${
         currencyMenuVisible
           ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
           : 'grid-rows-0 border-transparent'
@@ -387,10 +386,7 @@ const AccountingSettingPageBody: React.FC = () => {
     >
       <div className="flex flex-col rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px">
         {currencyList.map((currency) => {
-          const countryClickHandler = () => {
-            setCurrentCurrency(currency);
-            setCurrencyMenuVisible(false);
-          };
+          const countryClickHandler = () => setCurrentCurrency(currency);
           return (
             <div
               key={currency}
@@ -505,13 +501,17 @@ const AccountingSettingPageBody: React.FC = () => {
           </div>
           <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
+
         <div className="grid grid-cols-2">
           {/* Info: (20241106 - Julian) ===== 貨幣下拉選單 ===== */}
           <div
-            onClick={toggleCurrencyMenu}
-            className="relative flex items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+            ref={currencyMenuRef}
+            className="relative flex w-full items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background"
           >
-            <div className="px-12px py-10px">
+            <div
+              onClick={toggleCurrencyMenu}
+              className="flex flex-1 items-center gap-24px px-12px py-10px hover:cursor-pointer"
+            >
               <Image
                 width={16}
                 height={16}
@@ -519,21 +519,16 @@ const AccountingSettingPageBody: React.FC = () => {
                 src={`/currencies/${currentCurrency.toLowerCase()}.svg`}
                 className="rounded-full"
               />
-            </div>
-            <div
-              ref={currencyMenuRef}
-              className="flex flex-1 items-center justify-between px-12px py-10px"
-            >
-              <p className="text-input-text-input-filled">
+              <div className="flex-1 text-input-text-input-filled">
                 {t(`setting:CURRENCY_ALIAS.${currentCurrency}`)}
-              </p>
+              </div>
               <div
                 className={`text-icon-surface-single-color-primary ${currencyMenuVisible ? 'rotate-180' : 'rotate-0'}`}
               >
                 <FaChevronDown />
               </div>
+              {currencyDropdown}
             </div>
-            {currencyDropdown}
           </div>
         </div>
       </div>
