@@ -8,8 +8,8 @@ const trialBalanceNullSchema = z.union([z.object({}), z.string()]);
 // Info: (20241022 - Shirley) Trial balance list validator
 const trialBalanceListQueryValidator = z.object({
   companyId: zodStringToNumber,
-  startDate: zodStringToNumber,
-  endDate: zodStringToNumber,
+  startDate: zodStringToNumber.optional(),
+  endDate: zodStringToNumber.optional(),
   // TODO: (20241118 - Shirley) 現在在 middleware 驗證用 z.string().optional()、進到 repo 再用 `parseSortOption` 去 parse 或給予預設 sort option；之後要改成用 zodFilterSectionSortingOptions 去 parse
   sortOption: z.string().optional(),
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),

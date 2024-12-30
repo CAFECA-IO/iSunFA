@@ -1,6 +1,8 @@
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IAccountBookNodeJSON } from '@/interfaces/account_book_node';
+import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
 import {
+  ILineItemInTrialBalanceItem,
   ITrialBalanceData,
   ITrialBalanceTotal,
   TrialBalanceItem,
@@ -369,4 +371,158 @@ export function transformTrialBalanceData(
     };
   });
   return data;
+}
+
+/** Info: (20241230 - Shirley)
+ * 取得當前401申報週期的期初和期末時間點
+ */
+export function getCurrent401Period(): { periodBegin: number; periodEnd: number } {
+  const currentDate = new Date();
+  const month = currentDate.getMonth() + 1; // 月份從0開始
+  const year = currentDate.getFullYear();
+
+  let periodStartMonth: number;
+  let periodEndMonth: number;
+
+  if (month <= 2) {
+    periodStartMonth = 1;
+    periodEndMonth = 2;
+  } else if (month <= 4) {
+    periodStartMonth = 3;
+    periodEndMonth = 4;
+  } else if (month <= 6) {
+    periodStartMonth = 5;
+    periodEndMonth = 6;
+  } else if (month <= 8) {
+    periodStartMonth = 7;
+    periodEndMonth = 8;
+  } else if (month <= 10) {
+    periodStartMonth = 9;
+    periodEndMonth = 10;
+  } else {
+    periodStartMonth = 11;
+    periodEndMonth = 12;
+  }
+
+  const periodBegin = new Date(year, periodStartMonth - 1, 1).getTime() / 1000;
+  const periodEndDate = new Date(year, periodEndMonth, 0); // 該月的最後一天
+  const periodEnd =
+    new Date(
+      periodEndDate.getFullYear(),
+      periodEndDate.getMonth(),
+      periodEndDate.getDate(),
+      23,
+      59,
+      59
+    ).getTime() / 1000;
+
+  return { periodBegin, periodEnd };
+}
+
+/**
+ * 合併會計分錄，將相同科目的借方和貸方金額加總
+ * @param lineItems 會計分錄列表
+ * @returns 合併後的試算表項目
+ */
+export function mergeLineItems(
+  lineItems: ILineItemSimpleAccountVoucher[]
+): ILineItemInTrialBalanceItem[] {
+  const map: { [key: number]: ILineItemInTrialBalanceItem } = {};
+
+  lineItems.forEach((item) => {
+    if (!map[item.accountId]) {
+      map[item.accountId] = {
+        ...item,
+        debitAmount: item.debit ? item.amount : 0,
+        creditAmount: !item.debit ? item.amount : 0,
+      };
+    } else {
+      map[item.accountId].debitAmount += item.debit ? item.amount : 0;
+      map[item.accountId].creditAmount += !item.debit ? item.amount : 0;
+    }
+  });
+
+  return Object.values(map);
+}
+
+// TODO: (20241230 - Shirley) 實作虛擬科目增列
+/**
+ * 增列虛擬科目「其他」對應子科目的借貸金額
+ * @param items 試算表項目
+ * @param accounts 會計科目列表
+ * @returns 虛擬科目增列後的試算表項目
+ */
+// export function addVirtualAccounts(
+//   items: ILineItemSimpleAccountVoucher[],
+//   accounts: Account[]
+// ): ILineItemInTrialBalanceItem[] {
+//   const accountMap: { [key: number]: Account } = {};
+//   accounts.forEach((account) => {
+//     accountMap[account.id] = account;
+//   });
+//   console.log('accountMap', accountMap);
+//   const resultMap: { [key: string]: ILineItemInTrialBalanceItem } = {};
+
+//   items.forEach((item) => {
+//     // 保留原科目
+//     if (!resultMap[item.accountId]) {
+//       resultMap[item.accountId] = {
+//         ...item,
+//         debitAmount: item.debit ? item.amount : 0,
+//         creditAmount: item.debit ? 0 : item.amount,
+//       };
+//     } else {
+//       resultMap[item.accountId].debitAmount += item.debit ? item.amount : 0;
+//       resultMap[item.accountId].creditAmount += !item.debit ? item.amount : 0;
+//     }
+//   });
+//   // 合併虛擬科目
+//   const finalItems = Object.values(resultMap);
+//   return finalItems;
+// }
+
+/**
+ * 將會計分錄根據 accountId 合併，並取得對應的帳戶資料，組合成 ILineItemInTrialBalanceItem 格式
+ * @param lineItems 所有線項目
+ * @returns 合併後的試算表項目
+ */
+export async function mergeLineItemsWithAccounts(
+  lineItems: ILineItemInTrialBalanceItem[]
+): Promise<ILineItemInTrialBalanceItem[]> {
+  const groupedItems: {
+    [accountId: number]: { debitAmount: number; creditAmount: number };
+  } = {};
+
+  lineItems.forEach((item) => {
+    if (!groupedItems[item.accountId]) {
+      groupedItems[item.accountId] = {
+        debitAmount: item.debit ? item.amount : 0,
+        creditAmount: !item.debit ? item.amount : 0,
+      };
+    } else {
+      groupedItems[item.accountId].debitAmount += item.debit ? item.amount : 0;
+      groupedItems[item.accountId].creditAmount += !item.debit ? item.amount : 0;
+    }
+  });
+
+  const accountIds = Object.keys(groupedItems).map((id) => parseInt(id, 10));
+
+  // Info: 將 groupedItems 轉換為 ILineItemInTrialBalanceItem[] 格式
+  const trialBalanceItems = accountIds.map((accountId) => {
+    const { debitAmount, creditAmount } = groupedItems[accountId];
+    const baseItem = lineItems.find((item) => item.accountId === accountId);
+
+    // TODO: (20241230 - Shirley) throw error
+    if (!baseItem) {
+      throw new Error(`找不到對應的科目資料：${accountId}`);
+    }
+
+    return {
+      ...baseItem,
+      debitAmount,
+      creditAmount,
+    };
+  });
+
+  return trialBalanceItems;
 }
