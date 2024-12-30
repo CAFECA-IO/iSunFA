@@ -94,7 +94,9 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div className="text-center text-text-neutral-primary">
-          Taxable {certificate.invoice?.taxRatio ?? '-'} %
+          {certificate.invoice?.taxRatio !== undefined
+            ? `Taxable ${certificate.invoice?.taxRatio} %`
+            : '-'}
         </div>
       </BorderCell>
       {/* Info: (20240924 - tzuhan) Price Information */}

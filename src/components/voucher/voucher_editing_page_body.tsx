@@ -132,7 +132,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
   const defaultCertificateUI: ICertificateUI[] = voucherCertificates.map((certificate) => {
     return {
       ...certificate,
-      isSelected: false,
+      isSelected: true,
       actions: [],
     };
   });
@@ -282,7 +282,6 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
       const selectedCerts = Object.values(updatedData).filter(
         (item) => item.isSelected
       ) as ICertificateUI[];
-
       setCertificates(updatedData);
       setSelectedCertificatesUI(selectedCerts);
 
@@ -298,19 +297,17 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
 
   const handleDelete = useCallback(
     (id: number) => {
-      const updatedData = {
-        ...certificates,
-      };
-      updatedData[id] = {
-        ...updatedData[id],
-        isSelected: false,
-      };
-
-      const selectedCerts = Object.values(updatedData).filter(
-        (item) => item.isSelected
-      ) as ICertificateUI[];
-
-      setCertificates(updatedData);
+      if (certificates[id].isSelected) {
+        const updatedData = {
+          ...certificates,
+        };
+        updatedData[id] = {
+          ...updatedData[id],
+          isSelected: false,
+        };
+        setCertificates(updatedData);
+      }
+      const selectedCerts = selectedCertificatesUI.filter((item) => item.id !== id);
       setSelectedCertificatesUI(selectedCerts);
     },
     [certificates]
@@ -356,16 +353,21 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
     ) => {
       const { data } = resData;
       const certificatesData = data.certificates.reduce(
-        (acc, item) => {
-          acc[item.id] = {
-            ...item,
-            isSelected: selectedCertificatesUI.some((selectedItem) => selectedItem.id === item.id),
+        (acc, certificate) => {
+          acc[certificate.id] = {
+            ...certificate,
+            isSelected: false,
             actions: [],
           };
           return acc;
         },
         {} as { [id: string]: ICertificateUI }
       );
+      defaultCertificateUI.forEach((certificate) => {
+        if (!selectedCertificatesUI.find((item) => item.id === certificate.id)) {
+          certificatesData[certificate.id] = { ...certificate, isSelected: false };
+        }
+      });
       setCertificates(certificatesData);
     },
     [selectedCertificatesUI]
@@ -765,11 +767,6 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
       pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
     };
   }, []);
-
-  useEffect(() => {
-    setSelectedCertificatesUI(Object.values(certificates).filter((item) => item.isSelected));
-    setSelectedIds(Object.keys(certificates).map(Number));
-  }, [certificates]);
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
