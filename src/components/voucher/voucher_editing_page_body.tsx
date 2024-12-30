@@ -129,14 +129,6 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
     return { ...lineItem, isReverse: false, reverseList: lineItem.reverseList };
   });
 
-  const defaultCertificateUI: ICertificateUI[] = voucherCertificates.map((certificate) => {
-    return {
-      ...certificate,
-      isSelected: false,
-      actions: [],
-    };
-  });
-
   const defaultAssetList: IAssetPostOutput[] = voucherAssets.map((asset) => ({
     ...asset,
     name: asset.assetName,
@@ -194,8 +186,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
 
   // Info: (20241118 - Julian) 選擇憑證相關 state
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
-  const [selectedCertificatesUI, setSelectedCertificatesUI] =
-    useState<ICertificateUI[]>(defaultCertificateUI);
+  const [selectedCertificatesUI, setSelectedCertificatesUI] = useState<ICertificateUI[]>([]);
 
   // Info: (20241108 - Julian) 取得 AI 分析結果
   const {
@@ -255,6 +246,20 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
       localStorage.removeItem('selectedCertificates');
     }
   }, []);
+
+  useEffect(() => {
+    // Info: (20241230 - Julian) 初始化 selectedCertificatesUI
+    const defaultCertificateUI: ICertificateUI[] = voucherCertificates.map((certificate) => {
+      return {
+        ...certificate,
+        isSelected: false,
+        actions: [],
+      };
+    });
+
+    setSelectedIds(defaultCertificateUI.map((item) => item.id));
+    setSelectedCertificatesUI(defaultCertificateUI);
+  }, [voucherCertificates]);
 
   // Info: (20241119 - Julian) 更新 asset 列表
   useEffect(() => {
@@ -614,7 +619,16 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
     e.preventDefault();
 
     // Info: (20241007 - Julian) 若任一條件不符，則中斷 function
-    if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
+    if (selectedIds.length === 0) {
+      // Info: (20241230 - Julian) 如果未選擇憑證，則顯示憑證提示，並定位最上方、吐司通知
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        closeable: true,
+      });
+      document.body.scrollTop = 0;
+    } else if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
       // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位、吐司通知
       setIsShowDateHint(true);
       toastHandler({
@@ -766,10 +780,10 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
     };
   }, []);
 
-  useEffect(() => {
-    setSelectedCertificatesUI(Object.values(certificates).filter((item) => item.isSelected));
-    setSelectedIds(Object.keys(certificates).map(Number));
-  }, [certificates]);
+  // useEffect(() => {
+  //   setSelectedCertificatesUI(Object.values(certificates).filter((item) => item.isSelected));
+  //   setSelectedIds(Object.keys(certificates).map(Number));
+  // }, [certificates]);
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
