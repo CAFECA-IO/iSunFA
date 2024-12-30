@@ -1045,6 +1045,124 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
   return voucher;
 }
 
+export async function getOneVoucherByVoucherNoV2(options: {
+  voucherNo: string;
+  companyId: number;
+}): Promise<IGetOneVoucherResponse | null> {
+  let voucher: IGetOneVoucherResponse | null = null;
+  const { voucherNo, companyId } = options;
+  try {
+    voucher = await prisma.voucher.findFirst({
+      where: {
+        no: voucherNo,
+        companyId,
+      },
+      include: {
+        issuer: true,
+        voucherCertificates: {
+          // Info: (20241227 - Murky) 如果被刪除的certificate不要拿出來
+          where: {
+            OR: [
+              {
+                deletedAt: null,
+              },
+              {
+                deletedAt: 0,
+              },
+            ],
+          },
+          include: {
+            certificate: {
+              include: {
+                invoices: true,
+                file: true,
+                UserCertificate: true,
+              },
+            },
+          },
+        },
+        counterparty: true,
+        originalVouchers: {
+          include: {
+            event: true,
+            resultVoucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        resultVouchers: {
+          include: {
+            event: true,
+            originalVoucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        assetVouchers: {
+          include: {
+            asset: true,
+          },
+        },
+        lineItems: {
+          include: {
+            account: true,
+            originalLineItem: {
+              // Info: (20241114 - Murky) 指的是這個lineItem是 original
+              include: {
+                resultLineItem: {
+                  include: {
+                    account: true,
+                  },
+                },
+                associateVoucher: {
+                  include: {
+                    event: true,
+                  },
+                },
+              },
+            },
+            resultLineItem: {
+              // Info: (20241114 - Murky) 指的是這個lineItem是 result
+              include: {
+                originalLineItem: {
+                  include: {
+                    account: true,
+                  },
+                },
+                associateVoucher: {
+                  include: {
+                    event: true,
+                    originalVoucher: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get accounting setting in getAccountingSetting failed',
+      errorMessage: (error as Error).message,
+    });
+  }
+  return voucher;
+}
+
 export async function getManyVoucherV2(options: {
   companyId: number;
   startDate: number;

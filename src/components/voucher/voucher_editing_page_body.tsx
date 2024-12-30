@@ -132,7 +132,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
   const defaultCertificateUI: ICertificateUI[] = voucherCertificates.map((certificate) => {
     return {
       ...certificate,
-      isSelected: false,
+      isSelected: true,
       actions: [],
     };
   });
@@ -194,6 +194,15 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
 
   // Info: (20241118 - Julian) 選擇憑證相關 state
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
+  const [bindedCertificateUI, setBindedCertificateUI] = useState<{ [id: string]: ICertificateUI }>(
+    defaultCertificateUI.reduce(
+      (acc, certificate) => {
+        acc[certificate.id] = { ...certificate };
+        return acc;
+      },
+      {} as { [id: string]: ICertificateUI }
+    )
+  );
   const [selectedCertificatesUI, setSelectedCertificatesUI] =
     useState<ICertificateUI[]>(defaultCertificateUI);
 
@@ -270,64 +279,98 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
   // Info: (20241018 - Tzuhan) 選擇憑證
   const handleSelect = useCallback(
     (ids: number[], isSelected: boolean) => {
-      const updatedData = {
-        ...certificates,
-      };
+      // Info: (20241230 - Tzuhan) 把所有 certificates 先歸零
+      const updatedCertificates = Object.values(certificates).reduce(
+        (acc, item) => {
+          acc[item.id] = { ...item, isSelected: false };
+          return acc;
+        },
+        {} as { [id: string]: ICertificateUI }
+      );
+
+      // Info: (20241230 - Tzuhan) 把所有 bindedCertificateUI 也先歸零
+      const updatedBinded = Object.values(bindedCertificateUI).reduce(
+        (acc, item) => {
+          acc[item.id] = { ...item, isSelected: false };
+          return acc;
+        },
+        {} as { [id: string]: ICertificateUI }
+      );
+
+      // Info: (20241230 - Tzuhan) 對於呼叫 handleSelect(ids, true) => 只勾選 ids 裡頭的這些
+      // Info: (20241230 - Tzuhan) 如果呼叫 handleSelect(ids, false) => 就等於全部 false
       ids.forEach((id) => {
-        updatedData[id] = {
-          ...updatedData[id],
-          isSelected,
-        };
+        if (updatedCertificates[id]) {
+          updatedCertificates[id].isSelected = isSelected;
+        }
+        if (updatedBinded[id]) {
+          updatedBinded[id].isSelected = isSelected;
+        }
       });
-      const selectedCerts = Object.values(updatedData).filter(
-        (item) => item.isSelected
-      ) as ICertificateUI[];
 
-      setCertificates(updatedData);
-      setSelectedCertificatesUI(selectedCerts);
+      // Info: (20241230 - Tzuhan) 更新狀態
+      setCertificates(updatedCertificates);
+      setBindedCertificateUI(updatedBinded);
 
-      const targetIds = selectedCerts.map((item) => item.file.id);
+      // Info: (20241230 - Tzuhan) 合併並篩選
+      const merged = { ...updatedBinded, ...updatedCertificates };
+      const selectedList = Object.values(merged).filter((i) => i.isSelected);
+      setSelectedCertificatesUI(selectedList);
+      setSelectedIds(selectedList.map((item) => item.id));
+
+      // Info: (20241230 - Tzuhan) 後續動作
+      const targetIds = selectedList.map((item) => item.file.id);
       setTargetIdList(targetIds);
 
       setAiState(AIState.WORKING);
-      // Info: (20241220 - Julian) 呼叫 ask AI
       askAIAnalysis(targetIds);
     },
-    [certificates]
+    [certificates, bindedCertificateUI, askAIAnalysis]
   );
 
   const handleDelete = useCallback(
     (id: number) => {
-      const updatedData = {
-        ...certificates,
-      };
-      updatedData[id] = {
-        ...updatedData[id],
-        isSelected: false,
-      };
-
-      const selectedCerts = Object.values(updatedData).filter(
+      if (certificates[id]) {
+        const updatedData = {
+          ...certificates,
+        };
+        updatedData[id] = {
+          ...updatedData[id],
+          isSelected: false,
+        };
+        setCertificates(updatedData);
+      }
+      if (bindedCertificateUI[id]) {
+        const updatedBindedData = {
+          ...bindedCertificateUI,
+        };
+        updatedBindedData[id] = {
+          ...updatedBindedData[id],
+          isSelected: false,
+        };
+        setBindedCertificateUI(updatedBindedData);
+      }
+      const selectedCerts = Object.values({ ...bindedCertificateUI, ...certificates }).filter(
         (item) => item.isSelected
       ) as ICertificateUI[];
 
-      setCertificates(updatedData);
       setSelectedCertificatesUI(selectedCerts);
     },
     [certificates]
   );
 
   useEffect(() => {
-    if (selectedCertificatesUI.length > 0 && selectedIds.length > 0) {
+    if (selectedCertificatesUI.length > 0) {
       // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
       setAiState(AIState.WORKING);
       // Info: (20241021 - Julian) 呼叫 ask AI
       askAI({
         params: { companyId },
         query: { reason: 'voucher' },
-        body: { certificateId: selectedIds[0] },
+        body: { certificateId: selectedCertificatesUI[0].id },
       });
     }
-  }, [selectedCertificatesUI, selectedIds]);
+  }, [selectedCertificatesUI]);
 
   // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
   const handleOpenSelectorModal = useCallback(() => {
@@ -356,17 +399,17 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
     ) => {
       const { data } = resData;
       const certificatesData = data.certificates.reduce(
-        (acc, item) => {
-          acc[item.id] = {
-            ...item,
-            isSelected: selectedCertificatesUI.some((selectedItem) => selectedItem.id === item.id),
+        (acc, certificate) => {
+          acc[certificate.id] = {
+            ...certificate,
+            isSelected: false,
             actions: [],
           };
           return acc;
         },
         {} as { [id: string]: ICertificateUI }
       );
-      setCertificates(certificatesData);
+      setCertificates({ ...bindedCertificateUI, ...certificatesData });
     },
     [selectedCertificatesUI]
   );
@@ -765,11 +808,6 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
       pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
     };
   }, []);
-
-  useEffect(() => {
-    setSelectedCertificatesUI(Object.values(certificates).filter((item) => item.isSelected));
-    setSelectedIds(Object.keys(certificates).map(Number));
-  }, [certificates]);
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">

@@ -11,7 +11,10 @@ import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_COMPANY_ID } from '@/constants/config';
 
-const VoucherEditingPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
+const VoucherEditingPage: React.FC<{ voucherId: string; isVoucherNo: boolean }> = ({
+  voucherId,
+  isVoucherNo,
+}) => {
   const { t } = useTranslation('common');
 
   const { selectedCompany } = useUserCtx();
@@ -21,7 +24,7 @@ const VoucherEditingPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
   // Info: (20241118 - Julian) 取得 Voucher 資料
   const { trigger: getVoucherData, data: voucherData } = APIHandler<IVoucherDetailForFrontend>(
     APIName.VOUCHER_GET_BY_ID_V2,
-    { params: { companyId, voucherId } }
+    { params: { companyId, voucherId }, query: { isVoucherNo } }
   );
 
   useEffect(() => {
@@ -53,7 +56,7 @@ const VoucherEditingPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async ({ params, locale }) => {
+export const getServerSideProps: GetServerSideProps = async ({ params, query, locale }) => {
   if (!params || !params.voucherId || typeof params.voucherId !== 'string') {
     return {
       notFound: true,
@@ -63,6 +66,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       voucherId: params.voucherId,
+      isVoucherNo: query?.isVoucherNo === 'true',
       ...(await serverSideTranslations(locale as string, [
         'layout',
         'common',

@@ -47,10 +47,10 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
       <div
         key={certificate.id}
         className={`flex flex-col items-center gap-2 rounded-sm px-4 py-3 ${isSelected || !isSelectable ? (isSelectable ? 'border border-stroke-brand-primary bg-surface-brand-primary-30' : 'hover:group hover:cursor-pointer') : ''}`}
-        onClick={handleSelect?.bind(null, certificate.id)}
+        onClick={handleSelect ? () => handleSelect(certificate.id) : () => {}}
       >
         <div
-          className={`relative flex h-136px w-85px items-center overflow-hidden ${!isSelected || !isSelectable ? 'group' : ''}`}
+          className={`relative flex h-136px w-85px items-center ${!isSelected || !isSelectable ? 'group' : ''}`}
         >
           <Image
             src={certificate.file.url}
@@ -60,10 +60,10 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
             className="w-full"
           />
           <div className="absolute left-0 top-0 hidden h-full w-full bg-black/50 group-hover:block">
-            {isDeletable && (
+            {isDeletable && onDelete && (
               <div
                 className="absolute -right-5px top-0 -translate-y-1/2 cursor-pointer rounded-full border border-stroke-neutral-quaternary bg-white p-1"
-                onClick={onDelete?.bind(null, certificate.id)}
+                onClick={() => onDelete(certificate.id)}
               >
                 <Image src="/elements/x-close.svg" alt="close" width={10} height={10} />
               </div>
