@@ -44,6 +44,7 @@ import { initInvoiceEntity } from '@/lib/utils/invoice';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 import { isFloatsEqual } from '@/lib/utils/common';
+import { EventType } from '@/constants/account';
 
 export const voucherAPIGetOneUtils = {
   /**
@@ -1037,7 +1038,7 @@ export const voucherAPIDeleteUtils = {
       editable: false,
       no: voucherBeenDeleted.no,
       date: nowInSecond,
-      type: voucherBeenDeleted.type,
+      type: EventType.TRANSFER,
       lineItems: deleteVersionLineItems,
     });
     return voucher;
