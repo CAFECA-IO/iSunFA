@@ -3,10 +3,8 @@ export enum SubscriptionPeriod {
   YEARLY = 365,
 }
 
-export enum SubscriptionPlan {
+export enum SubscriptionPlanV1 {
   TRIAL = 'trial',
   PRO = 'pro',
   ENTERPRISE = 'enterprise',
 }
-
-export const SUBSCRIPTION_PLAN = SubscriptionPlan;
