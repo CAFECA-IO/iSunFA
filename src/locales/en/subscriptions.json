@@ -1,0 +1,12 @@
+{
+  "SUBSCRIPTIONS_PAGE": {
+    "META_TITLE": "Subscription",
+    "SUBSCRIPTION_PLANS": "Subscription Plans",
+    "MY_SUBSCRIPTIONS": "My Subscriptions",
+    "ENABLE_AUTO_RENEWAL": "Enable Auto-Renewal",
+    "CHANGE_PLAN": "Change Plan",
+    "BILLING": "Billing",
+    "NEXT_RENEWAL": "Next Renewal",
+    "EXPIRED_DATE": "Expired Date"
+  }
+}

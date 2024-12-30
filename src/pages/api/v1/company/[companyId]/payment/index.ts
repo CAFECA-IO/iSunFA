@@ -10,13 +10,13 @@ import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { CurrencyType, OEN_CURRENCY } from '@/constants/currency';
-import { SubscriptionPeriod, SubscriptionPlan } from '@/constants/subscription';
+import { SubscriptionPeriod, SubscriptionPlanV1 } from '@/constants/subscription';
 import { isEnumValue } from '@/lib/utils/type_guard/common';
 
 function formatSubscriptionPlan(subscriptionPlan: unknown) {
-  let subPlan = SubscriptionPlan.TRIAL;
+  let subPlan = SubscriptionPlanV1.TRIAL;
 
-  if (isEnumValue(SubscriptionPlan, subscriptionPlan)) {
+  if (isEnumValue(SubscriptionPlanV1, subscriptionPlan)) {
     subPlan = subscriptionPlan;
   }
 
@@ -38,7 +38,7 @@ function formatSubscriptionPeriod(subscriptionPeriod: unknown) {
  * @param req - The NextApiRequest object containing the query parameters.
  * @returns {Object} An object containing the formatted query parameters.
  * @returns {number} returns.orderIdNum - The numeric ID of the order.
- * @returns {SubscriptionPlan} returns.subPlan - The formatted subscription plan.
+ * @returns {SubscriptionPlanV1} returns.subPlan - The formatted subscription plan.
  * @returns {SubscriptionPeriod} returns.subPeriod - The formatted subscription period.
  */
 function formatGetQuery(req: NextApiRequest) {
@@ -55,12 +55,12 @@ function formatGetQuery(req: NextApiRequest) {
  * @param customId - The custom ID to decrypt.
  * @returns An object containing the decrypted order ID, subscription plan, and subscription period.
  * @returns {number} returns.orderIdNum - The numeric ID of the order.
- * @returns {SubscriptionPlan} returns.subPlan - The formatted subscription plan.
+ * @returns {SubscriptionPlanV1} returns.subPlan - The formatted subscription plan.
  * @returns {SubscriptionPeriod} returns.subPeriod - The formatted subscription period.
  */
 function decryptCustomId(customId: unknown) {
   let orderId = 0;
-  let subPlan = SubscriptionPlan.TRIAL;
+  let subPlan = SubscriptionPlanV1.TRIAL;
   let subPeriod = SubscriptionPeriod.MONTHLY;
 
   if (typeof customId === 'string') {

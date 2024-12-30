@@ -1,0 +1,12 @@
+{
+  "SUBSCRIPTIONS_PAGE": {
+    "META_TITLE": "訂閱",
+    "SUBSCRIPTION_PLANS": "訂閱管理",
+    "MY_SUBSCRIPTIONS": "我的訂閱",
+    "ENABLE_AUTO_RENEWAL": "開啟自動續訂",
+    "CHANGE_PLAN": "變更方案",
+    "BILLING": "帳單",
+    "NEXT_RENEWAL": "下次續訂",
+    "EXPIRED_DATE": "到期日"
+  }
+}
