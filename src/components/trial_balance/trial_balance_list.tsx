@@ -132,12 +132,18 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     string: t('reports:REPORTS.CREDIT'),
     sortOrder: creditSort,
     setSortOrder: setCreditSort,
+    handleReset: () => {
+      setDebitSort(null);
+    },
   });
 
   const displayedDebit = SortingButton({
     string: t('reports:REPORTS.DEBIT'),
     sortOrder: debitSort,
     setSortOrder: setDebitSort,
+    handleReset: () => {
+      setCreditSort(null);
+    },
   });
 
   // Info: (20241218 - Anna) 匯出csv

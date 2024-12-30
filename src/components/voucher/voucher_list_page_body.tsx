@@ -42,11 +42,17 @@ const VoucherListPageBody: React.FC = () => {
   const [voucherList, setVoucherList] = useState<IVoucherUI[]>([]);
 
   useEffect(() => {
-    setOtherSorts([
-      ...(creditSort ? [{ sort: SortBy.CREDIT, sortOrder: creditSort }] : []),
-      ...(debitSort ? [{ sort: SortBy.DEBIT, sortOrder: debitSort }] : []),
-    ]);
-  }, [creditSort, debitSort]);
+    // Info: (20241230 - Julian) 如果有借貸排序，則清除日期排序
+    const newDateSort = !creditSort && !debitSort && dateSort ? dateSort : null;
+    setDateSort(newDateSort);
+
+    // Info: (20241230 - Julian) 如果有日期排序，則清除借貸排序
+    const newCreditSort =
+      !dateSort && creditSort ? [{ sort: SortBy.CREDIT, sortOrder: creditSort }] : [];
+    const newDebitSort =
+      !dateSort && debitSort ? [{ sort: SortBy.DEBIT, sortOrder: debitSort }] : [];
+    setOtherSorts([...newCreditSort, ...newDebitSort]);
+  }, [creditSort, debitSort, dateSort]);
 
   const voucherTabs = Object.values(VoucherTabs).map((value) =>
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)

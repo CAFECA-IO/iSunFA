@@ -187,6 +187,10 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     string: t('journal:VOUCHER.VOUCHER_DATE'),
     sortOrder: dateSort,
     setSortOrder: setDateSort,
+    handleReset: () => {
+      setCreditSort(null);
+      setDebitSort(null);
+    },
   });
 
   // Info: (20240920 - Julian) credit 排序按鈕
@@ -194,6 +198,10 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     string: t('journal:VOUCHER.CREDIT'),
     sortOrder: creditSort,
     setSortOrder: setCreditSort,
+    handleReset: () => {
+      setDateSort(null);
+      setDebitSort(null);
+    },
   });
 
   // Info: (20240920 - Julian) debit 排序按鈕
@@ -201,6 +209,10 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     string: t('journal:VOUCHER.DEBIT'),
     sortOrder: debitSort,
     setSortOrder: setDebitSort,
+    handleReset: () => {
+      setDateSort(null);
+      setCreditSort(null);
+    },
   });
 
   const displayedSelectArea = (

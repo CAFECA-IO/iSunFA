@@ -36,14 +36,26 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   const [voucherList, setVoucherList] = useState<IVoucherBeta[]>([]);
 
   useEffect(() => {
-    setOtherSorts([
-      ...(payReceiveSort ? [{ sort: SortBy.PAY_RECEIVE_TOTAL, sortOrder: payReceiveSort }] : []),
-      ...(payReceiveAlreadyHappenedSort
+    // Info: (20241230 - Julian) 如果有其他排序，則清除日期排序
+    const newDateSort =
+      !payReceiveSort && !payReceiveAlreadyHappenedSort && !remainSort && dateSort
+        ? dateSort
+        : null;
+    setDateSort(newDateSort);
+
+    // Info: (20241230 - Julian) 如果有日期排序，則清除其他排序
+    const newPayReceiveSort =
+      !dateSort && payReceiveSort
+        ? [{ sort: SortBy.PAY_RECEIVE_TOTAL, sortOrder: payReceiveSort }]
+        : [];
+    const newPayReceiveAlreadyHappenedSort =
+      !dateSort && payReceiveAlreadyHappenedSort
         ? [{ sort: SortBy.PAY_RECEIVE_ALREADY_HAPPENED, sortOrder: payReceiveAlreadyHappenedSort }]
-        : []),
-      ...(remainSort ? [{ sort: SortBy.PAY_RECEIVE_REMAIN, sortOrder: remainSort }] : []),
-    ]);
-  }, [payReceiveSort, payReceiveAlreadyHappenedSort, remainSort]);
+        : [];
+    const newRemainSort =
+      !dateSort && remainSort ? [{ sort: SortBy.PAY_RECEIVE_REMAIN, sortOrder: remainSort }] : [];
+    setOtherSorts([...newPayReceiveSort, ...newPayReceiveAlreadyHappenedSort, ...newRemainSort]);
+  }, [payReceiveSort, payReceiveAlreadyHappenedSort, remainSort, dateSort]);
 
   const voucherTabs = [VoucherListTabV2.RECEIVING, VoucherListTabV2.PAYMENT].map((value) =>
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
