@@ -418,6 +418,16 @@ export const voucherWasReadValidatorV2: IZodValidator<
 
 const voucherGetOneQueryValidatorV2 = z.object({
   voucherId: zodStringToNumber,
+  isVoucherNo: z
+    .string()
+    .optional()
+    .transform((data) => {
+      // Info: (20241230 - Murky) @Tzuhan false, undefined: voucherId, true: voucherNo
+      if (data === undefined) {
+        return false;
+      }
+      return data === 'true';
+    }),
 });
 
 const voucherGetOneBodyValidatorV2 = z.object({});
@@ -671,6 +681,16 @@ export const voucherGetOneValidatorV2: IZodValidator<
 // Info: (20240927 - Murky) PUT voucher v2 (body validator is same as Post)
 const voucherPutQueryValidatorV2 = z.object({
   voucherId: zodStringToNumber,
+  isVoucherNo: z
+    .string()
+    .optional()
+    .transform((data) => {
+      // Info: (20241230 - Murky) @Tzuhan false, undefined: voucherId, true: voucherNo
+      if (data === undefined) {
+        return false;
+      }
+      return data === 'true';
+    }),
 });
 
 export const voucherPutValidatorV2: IZodValidator<
@@ -684,6 +704,16 @@ export const voucherPutValidatorV2: IZodValidator<
 // Info: (20240927 - Murky) DELETE voucher v2
 const voucherDeleteQueryValidatorV2 = z.object({
   voucherId: zodStringToNumber,
+  isVoucherNo: z
+    .string()
+    .optional()
+    .transform((data) => {
+      // Info: (20241230 - Murky) @Tzuhan false, undefined: voucherId, true: voucherNo
+      if (data === undefined) {
+        return false;
+      }
+      return data === 'true';
+    }),
 });
 
 const voucherDeleteBodyValidatorV2 = z.object({});

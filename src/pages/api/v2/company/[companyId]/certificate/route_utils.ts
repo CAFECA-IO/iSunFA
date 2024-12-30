@@ -227,7 +227,10 @@ export const certificateAPIPostUtils = {
       userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
-  ): ICertificate & { uploaderUrl: string } => {
+  ): ICertificate & {
+    uploaderUrl: string;
+    voucherId: number | null;
+  } => {
     const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
     const file: IFileBeta = {
       id: certificateEntity.file.id,
@@ -270,9 +273,15 @@ export const certificateAPIPostUtils = {
       certificateEntity.userCertificates.length > 0
         ? certificateEntity.userCertificates.some((data) => data.isRead)
         : false;
-    const voucherNo = certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0].no : '';
+    const firstVoucher =
+      certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
+    const voucherNo = firstVoucher?.no || '';
+    const voucherId = firstVoucher?.id || null;
 
-    const certificate: ICertificate & { uploaderUrl: string } = {
+    const certificate: ICertificate & {
+      uploaderUrl: string;
+      voucherId: number | null;
+    } = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
@@ -280,6 +289,7 @@ export const certificateAPIPostUtils = {
       file,
       invoice,
       voucherNo,
+      voucherId,
       aiResultId: certificateEntity.aiResultId,
       createdAt: certificateEntity.createdAt,
       updatedAt: certificateEntity.updatedAt,
@@ -419,7 +429,10 @@ export const certificateAPIGetListUtils = {
       userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
-  ): ICertificate => {
+  ): ICertificate & {
+    uploaderUrl: string;
+    voucherId: number | null;
+  } => {
     const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
     const file: IFileBeta = {
       id: certificateEntity.file.id,
@@ -469,9 +482,16 @@ export const certificateAPIGetListUtils = {
       certificateEntity.userCertificates.length > 0
         ? certificateEntity.userCertificates.some((data) => data.isRead)
         : false;
-    const voucherNo = certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0].no : '';
 
-    const certificate: ICertificate & { uploaderUrl: string } = {
+    const firstVoucher =
+      certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
+    const voucherNo = firstVoucher?.no || '';
+    const voucherId = firstVoucher?.id || null;
+
+    const certificate: ICertificate & {
+      uploaderUrl: string;
+      voucherId: number | null;
+    } = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
@@ -479,6 +499,7 @@ export const certificateAPIGetListUtils = {
       file,
       invoice,
       voucherNo,
+      voucherId,
       aiResultId: certificateEntity.aiResultId,
       createdAt: certificateEntity.createdAt,
       updatedAt: certificateEntity.updatedAt,

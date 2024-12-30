@@ -128,11 +128,11 @@ const certificateGetOneQueryValidator = z.object({
 const certificateGetOneBodyValidator = z.object({});
 
 const certificateGetOneOutputSchema = z.union([
-  ICertificatePartialInvoiceValidator.strict(),
+  ICertificatePartialInvoiceValidator.passthrough(),
   z.null(),
 ]);
 
-const certificateGetOneFrontendSchema = ICertificatePartialInvoiceValidator.strict();
+const certificateGetOneFrontendSchema = ICertificatePartialInvoiceValidator.passthrough();
 
 export const certificateGetOneValidator: IZodValidator<
   (typeof certificateGetOneQueryValidator)['shape'],
@@ -154,9 +154,9 @@ const certificatePostBodyValidator = z.object({
   fileIds: z.array(z.number()),
 });
 
-const certificatePostOutputSchema = z.array(ICertificatePartialInvoiceValidator.strict());
+const certificatePostOutputSchema = z.array(ICertificatePartialInvoiceValidator.passthrough());
 
-const certificatePostFrontendSchema = z.array(ICertificatePartialInvoiceValidator.strict());
+const certificatePostFrontendSchema = z.array(ICertificatePartialInvoiceValidator.passthrough());
 
 export const certificatePostValidator: IZodValidator<
   (typeof certificatePostQueryValidator)['shape'],
@@ -292,7 +292,7 @@ export const invoicePutV2Schema = {
     querySchema: invoicePutV2QuerySchema,
     bodySchema: invoicePutV2BodySchema,
   },
-  outputSchema: ICertificateValidator.strict(),
+  outputSchema: ICertificateValidator.strip(),
   frontend: ICertificateValidator,
 };
 
@@ -344,6 +344,6 @@ export const invoicePostV2Schema = {
     querySchema: invoicePostV2QuerySchema,
     bodySchema: invoicePostV2BodySchema,
   },
-  outputSchema: ICertificateValidator.strict(),
+  outputSchema: ICertificateValidator.strip(),
   frontend: ICertificateValidator,
 };
