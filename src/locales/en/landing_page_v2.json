@@ -110,7 +110,8 @@
     "PRICING": "Pricing",
     "FAITH": "Faith",
     "JOIN_US": "Join Us",
-    "PRIVACY_POLICY": "Terms of Service & Privacy Policy",
+    "TERMS_OF_SERVICE": "Terms of Service",
+    "PRIVACY_POLICY": "Privacy Policy",
     "CONTACT_US": "Contact Us",
     "SERVICE_HOURS": "Service Hours"
   }

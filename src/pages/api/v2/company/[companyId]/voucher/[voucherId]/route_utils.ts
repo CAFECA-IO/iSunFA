@@ -43,6 +43,7 @@ import { getImageUrlFromFileIdV1 } from '@/lib/utils/file';
 import { initInvoiceEntity } from '@/lib/utils/invoice';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
+import { isFloatsEqual } from '@/lib/utils/common';
 
 export const voucherAPIGetOneUtils = {
   /**
@@ -416,6 +417,23 @@ export const voucherAPIGetOneUtils = {
   //   return undefined;
   // },
 
+  isLineItemsBalanced: (
+    lineItems: {
+      amount: number;
+      debit: boolean;
+    }[]
+  ) => {
+    let debit = 0;
+    let credit = 0;
+    lineItems.forEach((lineItem) => {
+      if (lineItem.debit) {
+        debit += lineItem.amount;
+      } else {
+        credit += lineItem.amount;
+      }
+    });
+    return isFloatsEqual(debit, credit);
+  },
   setLineItemIntoMap: (lineItems: ILineItemEntity, map: Map<string, ILineItemEntity>) => {
     if (!lineItems.account) return;
 

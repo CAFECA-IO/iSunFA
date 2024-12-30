@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FiTrash2, FiEdit } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
@@ -12,7 +13,7 @@ import { IAssetDetails, IAssetPostOutput, mockAssetDetails } from '@/interfaces/
 import { numberWithCommas, timestampToString, timestampToYMD } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { AssetStatus } from '@/constants/asset';
+import { AssetStatus, AssetDepreciationMethod } from '@/constants/asset';
 import { ToastType } from '@/interfaces/toastify';
 import { ASSET_DELETE_TERM } from '@/constants/common';
 import { AssetModalType } from '@/interfaces/asset_modal';
@@ -94,7 +95,15 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const remainingDays = timestampToYMD(remainingLife).days;
 
   // Info: (20241016 - Julian) 傳票列表
-  const voucherList = relatedVouchers.map((voucher) => <p key={voucher.id}>{voucher.number}</p>);
+  const voucherList = relatedVouchers.map((voucher) => (
+    <Link
+      key={voucher.id}
+      href={`/users/accounting/${voucher.id}`}
+      className="text-link-text-primary hover:underline"
+    >
+      {voucher.number}
+    </Link>
+  ));
 
   // ToDo: (20241016 - Julian) Call API to undo delete asset
   const undoDeleteAssetHandler = async () => {
@@ -125,17 +134,22 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     addAssetModalVisibilityHandler();
   };
 
+  const translateMethod = (method: AssetDepreciationMethod) => {
+    const key = method.toUpperCase().replace(/ /g, '_').replace(/-/g, '_');
+    return t(`asset:ADD_ASSET_MODAL.${key}`);
+  };
+
   // const statusSettingClickHandler = () => {
   //   assetStatusSettingModalDataHandler(assetId, assetStatus as AssetStatus);
   //   assetStatusSettingModalVisibilityHandler();
   // };
 
   useEffect(() => {
-    // Info: (20241121 - Julian) Get voucher detail when companyId is ready
-    if (companyId) {
+    // Info: (20241121 - Julian) Get voucher detail when companyId and assetId are ready
+    if (companyId && assetId) {
       getAssetDetail();
     }
-  }, [companyId]);
+  }, [companyId, assetId]);
 
   useEffect(() => {
     // Info: (20241210 - Julian) Redirect to 404 page if the asset is not connected to any voucher
@@ -258,7 +272,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     <Skeleton width={200} height={24} rounded />
   );
   const isDepreciationMethod = !isLoading ? (
-    <p>{depreciationMethod}</p>
+    <p>{translateMethod(depreciationMethod as AssetDepreciationMethod)}</p>
   ) : (
     <Skeleton width={200} height={24} rounded />
   );
@@ -273,7 +287,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isPurchasePrice = !isLoading ? (
     <p>
       {numberWithCommas(purchasePrice)}{' '}
-      <span className="text-text-neutral-tertiary">{t('asset:COMMON.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{t('asset:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -281,7 +295,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isAccumDep = !isLoading ? (
     <p>
       {numberWithCommas(accumulatedDepreciation)}{' '}
-      <span className="text-text-neutral-tertiary">{t('asset:COMMON.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{t('asset:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -289,7 +303,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isResidualValue = !isLoading ? (
     <p>
       {numberWithCommas(residualValue)}{' '}
-      <span className="text-text-neutral-tertiary">{t('asset:COMMON.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{t('asset:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -301,7 +315,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   );
   const isNote = !isLoading ? <p>{note}</p> : <Skeleton width={200} height={24} rounded />;
   const isVoucher = !isLoading ? (
-    <div className="flex flex-col text-link-text-primary">{voucherList}</div>
+    <div className="flex flex-col">{voucherList}</div>
   ) : (
     <Skeleton width={200} height={24} rounded />
   );

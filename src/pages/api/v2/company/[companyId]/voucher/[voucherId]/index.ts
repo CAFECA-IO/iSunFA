@@ -190,6 +190,15 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
       });
     }
 
+    // Info: (20241226 - Murky) Check if lineItems credit and debit are equal
+    const isLineItemsBalanced = postUtils.isLineItemsBalanced(lineItems);
+    if (!isLineItemsBalanced) {
+      postUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: 'lineItems credit and debit should be equal',
+        statusMessage: STATUS_MESSAGE.UNBALANCED_DEBIT_CREDIT,
+      });
+    }
+
     if (!isVoucherInfoExist) {
       putUtils.throwErrorAndLog(loggerBack, {
         errorMessage: 'voucherInfo is required when post voucher',
@@ -378,7 +387,7 @@ export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, numb
     // const originalEvents: IEventEntity[] = getUtils.initOriginalEventEntities(voucherFromPrisma);
     // const resultEvents: IEventEntity[] = getUtils.initResultEventEntities(voucherFromPrisma);
     const asset: IAssetEntity[] = getUtils.initAssetEntities(voucherFromPrisma);
-    // const certificates = getUtils.initCertificateEntities(voucherFromPrisma);
+    const certificates = getUtils.initCertificateEntities(voucherFromPrisma);
 
     // Info: (20241119 - Murky) 需要多加reverse voucher嗎？
     // const isReverseEventNeeded = deleteUtils.isReverseEventNeeded(voucherFromPrisma);
@@ -400,6 +409,10 @@ export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, numb
 
     if (isAssetVoucherNeeded) {
       voucherDeleteOtherEntity.asset = asset;
+    }
+
+    if (certificates.length > 0) {
+      voucherDeleteOtherEntity.certificates = certificates;
     }
 
     const deleteVersionOriginVoucher = deleteUtils.deepCopyVoucherEntity(originVoucher);

@@ -18,7 +18,8 @@ import {
   copyright,
 } from '@/constants/config';
 
-const SERVICE_HOURS = 'Mon to Fri, 09:00 AM - 06:00 PM.';
+const SERVICE_HOURS_EN = 'Mon to Fri, 09:00 AM - 06:00 PM.';
+const SERVICE_HOURS_TW = '週一至週五，09:00 AM - 06:00 PM.';
 
 const LandingFooter: React.FC = () => {
   const { t } = useTranslation('common');
@@ -26,6 +27,7 @@ const LandingFooter: React.FC = () => {
 
   // Info: (20241204 - Julian) 從語言判斷要顯示哪個地址
   const address = locale === 'en' ? iSunFAAddress : iSunFAAddressInChinese;
+  const serviceHours = locale === 'en' ? SERVICE_HOURS_EN : SERVICE_HOURS_TW;
 
   // ToDo: (20241219 - Julian) 補上正確的路徑
   const displayNavigation = (
@@ -35,20 +37,35 @@ const LandingFooter: React.FC = () => {
         <li className="hover:cursor-pointer hover:text-landing-page-orange">
           <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.HOME')}</Link>
         </li>
-        <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.USERS')}</Link>
+        <li className="text-landing-page-black2">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE} style={{ pointerEvents: 'none' }}>
+            {t('landing_page_v2:FOOTER.USERS')}
+          </Link>
+        </li>
+        <li className="text-landing-page-black2">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE} style={{ pointerEvents: 'none' }}>
+            {t('landing_page_v2:FOOTER.PRICING')}
+          </Link>
+        </li>
+        <li className="text-landing-page-black2">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE} style={{ pointerEvents: 'none' }}>
+            {t('landing_page_v2:FOOTER.FAITH')}
+          </Link>
+        </li>
+        <li className="text-landing-page-black2">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE} style={{ pointerEvents: 'none' }}>
+            {t('landing_page_v2:FOOTER.JOIN_US')}
+          </Link>
         </li>
         <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.PRICING')}</Link>
+          <Link href={ISUNFA_ROUTE.TERMS_OF_SERVICE}>
+            {t('landing_page_v2:FOOTER.TERMS_OF_SERVICE')}
+          </Link>
         </li>
         <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.FAITH')}</Link>
-        </li>
-        <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.JOIN_US')}</Link>
-        </li>
-        <li className="hover:cursor-pointer hover:text-landing-page-orange">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.PRIVACY_POLICY')}</Link>
+          <Link href={ISUNFA_ROUTE.PRIVACY_POLICY}>
+            {t('landing_page_v2:FOOTER.PRIVACY_POLICY')}
+          </Link>
         </li>
       </ul>
     </>
@@ -81,7 +98,7 @@ const LandingFooter: React.FC = () => {
           <Image src="/icons/alarm.svg" alt="alarm" width={16} height={16} />
           <p>
             {t('landing_page_v2:FOOTER.SERVICE_HOURS')}: <br />
-            {SERVICE_HOURS}
+            {serviceHours}
           </p>
         </li>
       </ul>

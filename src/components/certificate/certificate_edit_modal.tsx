@@ -47,6 +47,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   onSave,
   onDelete,
 }) => {
+  const selectableInvoiceType = Object.values(InvoiceType).filter(
+    (type) => type !== InvoiceType.ALL
+  );
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
   const [taxSetting, setTaxSetting] = useState<ITaxSetting>();
@@ -475,7 +478,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                       className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isInvoiceTypeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                     >
                       <ul className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px">
-                        {Object.values(InvoiceType).map((value) => (
+                        {Object.values(selectableInvoiceType).map((value) => (
                           <li
                             key={`taxable-${value}`}
                             value={value}

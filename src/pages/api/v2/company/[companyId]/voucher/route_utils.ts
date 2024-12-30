@@ -15,6 +15,7 @@ import { parsePrismaAssetToAssetEntity } from '@/lib/utils/formatter/asset.forma
 import {
   getDaysBetweenDates,
   getLastDatesOfMonthsBetweenDates,
+  isFloatsEqual,
   timestampInSeconds,
 } from '@/lib/utils/common';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
@@ -393,6 +394,23 @@ export const voucherAPIPostUtils = {
     return !!asset;
   },
 
+  isLineItemsBalanced: (
+    lineItems: {
+      amount: number;
+      debit: boolean;
+    }[]
+  ) => {
+    let debit = 0;
+    let credit = 0;
+    lineItems.forEach((lineItem) => {
+      if (lineItem.debit) {
+        debit += lineItem.amount;
+      } else {
+        credit += lineItem.amount;
+      }
+    });
+    return isFloatsEqual(debit, credit);
+  },
   /**
    * Info: (20241025 - Murky)
    * @describe convert voucherId to IVoucherEntity

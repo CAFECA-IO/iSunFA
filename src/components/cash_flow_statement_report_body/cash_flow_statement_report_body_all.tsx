@@ -157,17 +157,17 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <table className="relative w-full border-collapse bg-white">
         <thead>
           <tr>
-            <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+            <th className="w-55px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
               {t('reports:TAX_REPORT.CODE_NUMBER')}
             </th>
-            <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+            <th className="w-260px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
               {t('reports:REPORTS.ACCOUNTING_ITEMS')}
             </th>
-            <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
-              {curDate.from}至{curDate.to}
+            <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              {curDate.from} <br />至{curDate.to}
             </th>
-            <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
-              {preDate.from}至{preDate.to}
+            <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              {preDate.from} <br />至{preDate.to}
             </th>
           </tr>
         </thead>
@@ -222,8 +222,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const renderedPage10part1 = () => {
     return (
       <div className="mt-4 text-text-neutral-primary">
-        <h3 className="text-sm font-semibold leading-6">不動產、廠房、設備的收支項目：</h3>
-        <ol className="list-decimal pl-6 text-sm font-normal leading-5 text-text-neutral-primary">
+        <h3 className="text-xs font-semibold leading-6">不動產、廠房、設備的收支項目：</h3>
+        <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
           {firstThought?.split('\n').map((line, index) => (
             <li key={`${line + index}`} className="mb-2 ml-1">
               {line}
@@ -231,16 +231,16 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           ))}
         </ol>
 
-        <h3 className="mt-4 text-sm font-semibold leading-6">策略性投資項目：</h3>
-        <ol className="list-decimal pl-6 text-sm font-normal leading-5 text-text-neutral-primary">
+        <h3 className="mt-4 text-xs font-semibold leading-6">策略性投資項目：</h3>
+        <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
           {secondThought?.split('\n').map((line, index) => (
             <li key={`${line + index}`} className="mb-2 ml-1">
               {line}
             </li>
           ))}
         </ol>
-        <h3 className="mt-4 text-sm font-semibold leading-6">其他：</h3>
-        <ol className="list-decimal pl-6 pt-2 text-sm font-normal leading-5 text-text-neutral-primary">
+        <h3 className="mt-4 text-xs font-semibold leading-6">其他：</h3>
+        <ol className="list-decimal pl-6 pt-2 text-xs font-normal leading-5 text-text-neutral-primary">
           {thirdThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
               {line}
@@ -366,11 +366,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr className="bg-surface-brand-primary-soft">
-              <th className="border border-stroke-brand-secondary-soft p-10px text-left text-xxs font-semibold leading-5 text-text-neutral-secondary"></th>
-              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-xxs font-semibold leading-5 text-text-neutral-secondary">
+              <th className="border border-stroke-brand-secondary-soft p-10px text-left text-xs font-semibold leading-5 text-text-neutral-secondary"></th>
+              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold leading-5 text-text-neutral-secondary">
                 {currentYear}年度
               </th>
-              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-xxs font-semibold leading-5 text-text-neutral-secondary">
+              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold leading-5 text-text-neutral-secondary">
                 {previousYear}年度
               </th>
             </tr>
@@ -393,8 +393,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {financialReport.company.name}
                 </h1>
                 <p className="text-left text-xs font-bold leading-5">
-                  {curDate.from}至{curDate.to} <br />
-                  財務報告 - 現金流量表
+                  <span>
+                    {curDate.from} <br />至{curDate.to} <br />
+                  </span>
+                  <span className="mt-3 block">財務報告 - 現金流量表</span>
                 </p>
               </>
             )}
@@ -408,7 +410,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         </div>
       </header>
       <section className="relative mx-1 text-text-neutral-secondary">
-        <div className="mb-16px flex justify-between text-xs font-semibold text-surface-brand-secondary">
+        <div className="flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           </div>
@@ -665,7 +667,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 width={24}
                 height={24}
               />
-              <p className="my-auto items-center text-center text-sm font-semibold">A和B比例關係</p>
+              <p className="my-auto items-center text-center text-xs font-semibold">A和B比例關係</p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
             <div className="mb-16 flex">
@@ -673,8 +675,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 <LineChart data={lineChartData} labels={lineChartLabels} />
               </div>
               <div className="mt-18px w-2/5 pl-8 text-xs">
-                <p className="mb-1 text-sm">A. 稅前淨利(淨損)+折舊及攤銷費用-支付的所得稅</p>
-                <p className="text-sm">B. 營業活動的現金流入(流出)</p>
+                <p className="mb-1 text-xs">A. 稅前淨利(淨損)+折舊及攤銷費用-支付的所得稅</p>
+                <p className="text-xs">B. 營業活動的現金流入(流出)</p>
               </div>
             </div>
             <div className="mb-1 mt-2 flex justify-between text-xs font-semibold text-surface-brand-secondary">
@@ -682,12 +684,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             </div>
             <table className="relative w-full border-collapse bg-white">
               <thead>
-                <tr className="text-xxs">
-                  <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
+                <tr className="text-xs">
+                  <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold"></th>
                   {lineChartLabels?.map((label, index) => (
                     <th
                       key={`${label + index}`}
-                      className="w-170px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold"
+                      className="w-150px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold"
                     >
                       {label}
                     </th>
@@ -696,7 +698,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               </thead>
               <tbody className="text-xs">
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
                     A
                   </td>
                   {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
@@ -709,7 +711,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     稅前淨利（淨損）
                   </td>
                   {Object.entries(
@@ -730,7 +732,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   ))}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     折舊及攤銷費用
                   </td>
                   {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
@@ -759,7 +761,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     支付的所得稅
                   </td>
                   {Object.entries(financialReport.otherInfo.operatingStabilized.tax).map(
@@ -780,7 +782,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
                     B
                   </td>
                   {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
@@ -793,7 +795,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     營業活動的現金
                   </td>
                   {Object.entries(
@@ -824,7 +826,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     A和B比例關係
                   </td>
                   {Object.entries(financialReport.otherInfo.operatingStabilized.ratio).map(

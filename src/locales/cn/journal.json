@@ -33,7 +33,6 @@
     "TRANSFER": "移转",
     "PAYMENT": "支付",
     "RECEIVING": "收入",
-    "TWD": "新台币",
     "TAX": "税 /",
     "NO_SLASH_TAX": "税",
     "TWD_FEE": "新台币费用",
@@ -315,5 +314,10 @@
   },
   "COMMON": {
     "STATUS": "状态"
+  },
+  "CURRENCY_ALIAS": {
+    "TWD": "新台币",
+    "EUR": "欧元",
+    "USD": "美元"
   }
 }
