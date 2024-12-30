@@ -17,7 +17,7 @@ import {
   UserCertificate as PrismaUserCertificate,
 } from '@prisma/client';
 import { IAssetEntity } from '@/interfaces/asset';
-import { getOneVoucherV2 } from '@/lib/utils/repo/voucher.repo';
+import { getOneVoucherByVoucherNoV2, getOneVoucherV2 } from '@/lib/utils/repo/voucher.repo';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
@@ -74,8 +74,24 @@ export const voucherAPIGetOneUtils = {
    * @description call repo function and get voucher from prisma
    * @error throw Error if voucher not found (null)
    */
-  getVoucherFromPrisma: async (voucherId: number): Promise<IGetOneVoucherResponse> => {
-    const voucher: IGetOneVoucherResponse | null = await getOneVoucherV2(voucherId);
+  getVoucherFromPrisma: async (
+    voucherId: number,
+    options: {
+      isVoucherNo: boolean;
+      companyId: number;
+    }
+  ): Promise<IGetOneVoucherResponse> => {
+    const { isVoucherNo, companyId } = options;
+    let voucher: IGetOneVoucherResponse | null;
+    if (isVoucherNo) {
+      const voucherNo: string = voucherId.toString();
+      voucher = await getOneVoucherByVoucherNoV2({
+        voucherNo,
+        companyId,
+      });
+    } else {
+      voucher = await getOneVoucherV2(voucherId);
+    }
     if (!voucher) {
       voucherAPIGetOneUtils.throwErrorAndLog(loggerBack, {
         errorMessage: `voucherId: ${voucherId} not found`,

@@ -75,12 +75,17 @@ export const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: GetOneVoucherResponse | null = null;
 
-  const { userId } = session;
-  const accountSettingCompanyId = 1001;
+  const { userId, companyId } = session;
+  const accountSettingCompanyId = companyId;
   try {
-    const { voucherId } = query;
-    const voucherFromPrisma: IGetOneVoucherResponse =
-      await getUtils.getVoucherFromPrisma(voucherId);
+    const { voucherId, isVoucherNo } = query;
+    const voucherFromPrisma: IGetOneVoucherResponse = await getUtils.getVoucherFromPrisma(
+      voucherId,
+      {
+        isVoucherNo,
+        companyId,
+      }
+    );
 
     const voucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
     const lineItems = getUtils.initLineItemEntities(voucherFromPrisma);
@@ -139,9 +144,9 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
    */
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
-  const { userId } = session;
+  const { userId, companyId } = session;
 
-  const { voucherId } = query;
+  const { voucherId, isVoucherNo } = query;
   const {
     actions,
     certificateIds,
@@ -154,8 +159,13 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
   } = body;
 
   try {
-    const voucherFromPrisma: IGetOneVoucherResponse =
-      await getUtils.getVoucherFromPrisma(voucherId);
+    const voucherFromPrisma: IGetOneVoucherResponse = await getUtils.getVoucherFromPrisma(
+      voucherId,
+      {
+        isVoucherNo,
+        companyId,
+      }
+    );
 
     // Info: (20241113 - Murky) 變了不用新增reverse voucher，只要更新原本的voucher
     // const originVoucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
@@ -367,9 +377,14 @@ export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, numb
   const { userId, companyId } = session;
   try {
     const nowInSecond = getTimestampNow();
-    const { voucherId } = query;
-    const voucherFromPrisma: IGetOneVoucherResponse =
-      await getUtils.getVoucherFromPrisma(voucherId);
+    const { voucherId, isVoucherNo } = query;
+    const voucherFromPrisma: IGetOneVoucherResponse = await getUtils.getVoucherFromPrisma(
+      voucherId,
+      {
+        isVoucherNo,
+        companyId,
+      }
+    );
 
     const originVoucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
 

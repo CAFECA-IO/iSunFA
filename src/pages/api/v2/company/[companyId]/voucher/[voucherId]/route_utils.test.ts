@@ -656,7 +656,10 @@ describe('voucher/:voucherId', () => {
     describe('getVoucherFromPrisma', () => {
       it('should return voucher from prisma', () => {
         const voucherId = 1002;
-        const result = voucherAPIGetOneUtils.getVoucherFromPrisma(voucherId);
+        const result = voucherAPIGetOneUtils.getVoucherFromPrisma(voucherId, {
+          isVoucherNo: false,
+          companyId: 1000,
+        });
         expect(result).toBeDefined();
       });
     });
