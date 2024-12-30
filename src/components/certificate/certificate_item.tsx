@@ -147,7 +147,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
         <div className="flex flex-col items-center space-y-2">
           {certificate?.voucherNo && (
             <Link
-              href={`/users/accounting/${certificate.voucherNo}`}
+              href={`/users/accounting/${certificate.voucherNo}?isVoucherNo=true`}
               className="text-right text-link-text-primary"
             >
               {certificate.voucherNo}
