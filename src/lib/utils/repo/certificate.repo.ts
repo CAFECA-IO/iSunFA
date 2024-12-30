@@ -199,7 +199,7 @@ export async function getCertificatesV2(options: {
 
   function getVoucherCertificateRelation(invoiceTab: InvoiceTabs | undefined) {
     if (!invoiceTab) {
-      return undefined;
+      return [];
     }
 
     switch (invoiceTab) {
@@ -217,7 +217,7 @@ export async function getCertificatesV2(options: {
         return [
           {
             voucherCertificates: {
-              some: {
+              every: {
                 deletedAt: {
                   not: null,
                 },
@@ -232,7 +232,7 @@ export async function getCertificatesV2(options: {
         ];
 
       default:
-        return undefined;
+        return [];
     }
   }
 
@@ -244,8 +244,10 @@ export async function getCertificatesV2(options: {
     },
     companyId,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
-    OR: [...(getVoucherCertificateRelation(tab) || [])],
     AND: [
+      {
+        OR: getVoucherCertificateRelation(tab),
+      },
       {
         OR: [
           {

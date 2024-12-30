@@ -105,9 +105,10 @@ export const handleGetRequest: IHandleRequest<
         userCertificates: userCertificateEntities,
       };
 
-      const certificate: ICertificate = getListUtils.transformCertificateEntityToResponse(
-        certificateReadyForTransfer
-      );
+      const certificate: ICertificate & {
+        uploaderUrl: string;
+        voucherId: number | null;
+      } = getListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
       return certificate;
     });
 
@@ -189,7 +190,10 @@ export const handlePostRequest: IHandleRequest<
   try {
     const nowInSecond = getTimestampNow();
 
-    const certificates: ICertificate[] = await Promise.all(
+    const certificates: (ICertificate & {
+      uploaderUrl: string;
+      voucherId: number | null;
+    })[] = await Promise.all(
       fileIds.map(async (fileId) => {
         const certificateFromPrisma = await postUtils.createCertificateInPrisma({
           nowInSecond,
@@ -226,11 +230,15 @@ export const handlePostRequest: IHandleRequest<
           userCertificates: userCertificateEntities,
         };
 
-        const certificate: ICertificate & { uploaderUrl: string } =
-          postUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
+        const certificate: ICertificate & {
+          uploaderUrl: string;
+          voucherId: number | null;
+        } = postUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
+
         postUtils.triggerPusherNotification(certificate, {
           companyId,
         });
+
         return certificate;
       })
     );
