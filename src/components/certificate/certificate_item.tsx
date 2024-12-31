@@ -94,7 +94,9 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div className="text-center text-text-neutral-primary">
-          Taxable {certificate.invoice?.taxRatio ?? '-'} %
+          {certificate.invoice?.taxRatio !== undefined
+            ? `Taxable ${certificate.invoice?.taxRatio} %`
+            : '-'}
         </div>
       </BorderCell>
       {/* Info: (20240924 - tzuhan) Price Information */}
@@ -145,7 +147,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
         <div className="flex flex-col items-center space-y-2">
           {certificate?.voucherNo && (
             <Link
-              href={`/users/accounting/${certificate.voucherNo}`}
+              href={`/users/accounting/${certificate.voucherNo}?isVoucherNo=true`}
               className="text-right text-link-text-primary"
             >
               {certificate.voucherNo}
