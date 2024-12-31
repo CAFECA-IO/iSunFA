@@ -215,6 +215,12 @@ const AssetList: React.FC<IAssetListProps> = ({
     string: t('asset:ASSET.ACQUISITION_DATE'),
     sortOrder: dateSort,
     setSortOrder: setDateSort,
+    handleReset: () => {
+      setPriceSort(null);
+      setDepreciationSort(null);
+      setResidualSort(null);
+      setRemainingLifeSort(null);
+    },
   });
 
   // Info: (20240925 - Julian) 價格排序按鈕
@@ -222,6 +228,12 @@ const AssetList: React.FC<IAssetListProps> = ({
     string: t('asset:ASSET.PURCHASE_PRICE'),
     sortOrder: priceSort,
     setSortOrder: setPriceSort,
+    handleReset: () => {
+      setDateSort(null);
+      setDepreciationSort(null);
+      setResidualSort(null);
+      setRemainingLifeSort(null);
+    },
   });
 
   // Info: (20240925 - Julian) 累積折舊排序按鈕
@@ -229,6 +241,12 @@ const AssetList: React.FC<IAssetListProps> = ({
     string: t('asset:ASSET.ACCUM_DEP'),
     sortOrder: depreciationSort,
     setSortOrder: setDepreciationSort,
+    handleReset: () => {
+      setDateSort(null);
+      setPriceSort(null);
+      setResidualSort(null);
+      setRemainingLifeSort(null);
+    },
   });
 
   // Info: (20240925 - Julian) 殘值排序按鈕
@@ -236,6 +254,12 @@ const AssetList: React.FC<IAssetListProps> = ({
     string: t('asset:ASSET.RESIDUAL_VALUE'),
     sortOrder: residualSort,
     setSortOrder: setResidualSort,
+    handleReset: () => {
+      setDateSort(null);
+      setPriceSort(null);
+      setDepreciationSort(null);
+      setRemainingLifeSort(null);
+    },
   });
 
   // Info: (20240925 - Julian) 剩餘壽命排序按鈕
@@ -243,6 +267,12 @@ const AssetList: React.FC<IAssetListProps> = ({
     string: t('asset:ASSET.REMAINING_LIFE'),
     sortOrder: remainingLifeSort,
     setSortOrder: setRemainingLifeSort,
+    handleReset: () => {
+      setDateSort(null);
+      setPriceSort(null);
+      setDepreciationSort(null);
+      setResidualSort(null);
+    },
   });
 
   const displayedAssetList = uiAssetList.map((asset) => {

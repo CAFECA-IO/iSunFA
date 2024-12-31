@@ -42,6 +42,11 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
     string: t('journal:VOUCHER.VOUCHER_DATE'),
     sortOrder: dateSort,
     setSortOrder: setDateSort,
+    handleReset: () => {
+      setPayReceiveSort(null);
+      setPayReceiveAlreadyHappenedSort(null);
+      setRemainSort(null);
+    },
   });
 
   // Info: (20240924 - Julian) Receivable / Payable Amount 排序按鈕
@@ -52,6 +57,11 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
         : t('journal:VOUCHER.PAYABLE_AMOUNT'),
     sortOrder: payReceiveSort,
     setSortOrder: setPayReceiveSort,
+    handleReset: () => {
+      setDateSort(null);
+      setPayReceiveAlreadyHappenedSort(null);
+      setRemainSort(null);
+    },
   });
 
   // Info: (20240924 - Julian) Received / Paid Amount 排序按鈕
@@ -62,6 +72,11 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
         : t('journal:VOUCHER.PAID_AMOUNT'),
     sortOrder: payReceiveAlreadyHappenedSort,
     setSortOrder: setPayReceiveAlreadyHappenedSort,
+    handleReset: () => {
+      setDateSort(null);
+      setPayReceiveSort(null);
+      setRemainSort(null);
+    },
   });
 
   // Info: (20240924 - Julian) Remain Amount 排序按鈕
@@ -69,6 +84,11 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
     string: t('journal:VOUCHER.REMAIN_AMOUNT'),
     sortOrder: remainSort,
     setSortOrder: setRemainSort,
+    handleReset: () => {
+      setDateSort(null);
+      setPayReceiveSort(null);
+      setPayReceiveAlreadyHappenedSort(null);
+    },
   });
 
   const displayedList = voucherList.map((voucher) => (

@@ -8,11 +8,22 @@ interface ISortingButtonProps {
   string: string;
   sortOrder: null | SortOrder;
   setSortOrder: (sortOrder: null | SortOrder) => void;
+  handleReset?: () => void;
 }
 
-const SortingButton: React.FC<ISortingButtonProps> = ({ string, sortOrder, setSortOrder }) => {
-  // Info: (20240920 - Julian) 初始無排序 -> 點擊後變成 ASC -> 再點擊變成 DESC -> 再點擊變回無排序
+const SortingButton: React.FC<ISortingButtonProps> = ({
+  string,
+  sortOrder,
+  setSortOrder,
+  handleReset,
+}) => {
   const clickHandler = () => {
+    // Info: (20241230 - Julian) 如果有 handleReset，則執行，用於清除其他排序狀態
+    if (handleReset) {
+      handleReset();
+    }
+
+    // Info: (20240920 - Julian) 初始無排序 -> 點擊後變成 ASC -> 再點擊變成 DESC -> 再點擊變回無排序
     switch (sortOrder) {
       case null:
         setSortOrder(SortOrder.ASC);
