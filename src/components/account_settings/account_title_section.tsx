@@ -22,6 +22,7 @@ interface IAccountingTitleSettingModalProps {
   setFormType: React.Dispatch<React.SetStateAction<TitleFormType>>;
   setSelectedAccountTitle: React.Dispatch<React.SetStateAction<IAccount | null>>;
   isLoading: boolean;
+  setIsRecallApi: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 interface IAccountSecondLayerItemProps {
@@ -29,6 +30,7 @@ interface IAccountSecondLayerItemProps {
   setFormType: React.Dispatch<React.SetStateAction<TitleFormType>>;
   childList: IAccount[];
   setSelectedAccountTitle: React.Dispatch<React.SetStateAction<IAccount | null>>;
+  setIsRecallApi: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 interface IAccountThirdLayerItemProps {
@@ -94,6 +96,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
   setFormType,
   childList,
   setSelectedAccountTitle,
+  setIsRecallApi,
 }) => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
@@ -133,13 +136,14 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
   useEffect(() => {
     if (!isLoading) {
       if (success) {
-        // Info: (20241114 - Julian) 刪除成功時，顯示成功訊息
+        // Info: (20241114 - Julian) 刪除成功時，顯示成功訊息，並重新呼叫 API
         toastHandler({
           id: ToastId.ACCOUNTING_DELETE_SUCCESS,
           type: ToastType.SUCCESS,
           content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_DELETE_SUCCESS'),
           closeable: true,
         });
+        setIsRecallApi((prev) => !prev);
       } else if (error) {
         // Info: (20241114 - Julian) 刪除失敗時，顯示錯誤訊息
         toastHandler({
@@ -224,6 +228,7 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
   isLoading,
   setFormType,
   setSelectedAccountTitle,
+  setIsRecallApi,
 }) => {
   const { t } = useTranslation('common');
 
@@ -282,6 +287,7 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
               setFormType={setFormType}
               childList={thirdLayer}
               setSelectedAccountTitle={setSelectedAccountTitle}
+              setIsRecallApi={setIsRecallApi}
             />
           );
         });
