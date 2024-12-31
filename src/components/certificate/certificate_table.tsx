@@ -43,18 +43,30 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
     string: t('certificate:TABLE.DATE'),
     sortOrder: dateSort,
     setSortOrder: setDateSort,
+    handleReset: () => {
+      setAmountSort(null);
+      setVoucherSort(null);
+    },
   });
 
   const displayedAmount = SortingButton({
     string: t('certificate:TABLE.AMOUNT'),
     sortOrder: amountSort,
     setSortOrder: setAmountSort,
+    handleReset: () => {
+      setDateSort(null);
+      setVoucherSort(null);
+    },
   });
 
   const displayedVoucherNumber = SortingButton({
     string: t('certificate:TABLE.VOUCHER_NUMBER'),
     sortOrder: voucherSort,
     setSortOrder: setVoucherSort,
+    handleReset: () => {
+      setDateSort(null);
+      setAmountSort(null);
+    },
   });
 
   return (
