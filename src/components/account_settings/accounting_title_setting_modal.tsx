@@ -30,6 +30,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     forUser: true,
     sortBy: 'code', // Info: (20241108 - Julian) 依 code 排序
     sortOrder: 'asc',
+    isDeleted: false, // Info: (20241231 - Julian) 只取未刪除的
   };
 
   const {
@@ -68,6 +69,11 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   useEffect(() => {
     if (isModalVisible) {
       getAccountList({ params: { companyId } });
+    } else {
+      // Info: (20241108 - Julian) 關閉 Modal 時重置 state
+      setSearchWord('');
+      setFormType(TitleFormType.add);
+      setSelectedAccountTitle(null);
     }
   }, [isModalVisible]);
 
@@ -123,6 +129,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
             isLoading={isLoading ?? true}
             setFormType={setFormType}
             setSelectedAccountTitle={setSelectedAccountTitle}
+            setIsRecallApi={setIsRecallApi}
           />
           {/* Info: (20241108 - Julian) Right: Add New Title Section */}
           <AddNewTitleSection
