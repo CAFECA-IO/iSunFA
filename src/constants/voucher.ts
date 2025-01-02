@@ -36,7 +36,7 @@ export enum VoucherTabs {
   UPCOMING = 'upcoming',
 }
 
-export enum PaymentAndReceivingTabs {
+export enum PayableReceivableTabs {
   PAYMENT = 'payment',
   RECEIVING = 'receiving',
 }

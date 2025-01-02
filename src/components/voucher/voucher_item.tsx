@@ -175,7 +175,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     </div>
   ) : (
     <Link
-      href={`/users/accounting/${voucher.id}`}
+      href={`/users/accounting/${voucher.id}?voucherNo=${voucherNo}`}
       className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
     >
       {content}
