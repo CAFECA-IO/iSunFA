@@ -615,7 +615,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
     const resultDate = date.startTimeStamp;
     const resultType = VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType];
     const resultNote = note;
-    const resultCounterpartyId = counterparty?.companyId;
+    const resultCounterpartyId = counterparty?.id;
     const resultLineItems = lineItems.map((lineItem) => {
       return {
         accountId: lineItem.account?.id ?? '',

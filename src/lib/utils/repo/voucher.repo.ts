@@ -2049,7 +2049,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
                 },
                 resultLineItem: {
                   connect: {
-                    id: newVoucher.lineItems[key].id, // Info: (20241120 - Murky) [Warning!] DB新創的id 可能根原本的id順序不同?
+                    id: newVoucher.lineItems.sort((a, b) => b.id - a.id)[key].id, // Info: (20241120 - Murky) [Warning!] DB新創的id 可能根原本的id順序不同?
                   },
                 },
                 debit: lineItemPair.newDeleteReverseLineItem.debit,
