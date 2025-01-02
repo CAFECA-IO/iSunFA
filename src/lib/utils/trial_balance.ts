@@ -481,48 +481,224 @@ export function mergeLineItems(
 //   return finalItems;
 // }
 
-/**
- * 將會計分錄根據 accountId 合併，並取得對應的帳戶資料，組合成 ILineItemInTrialBalanceItem 格式
- * @param lineItems 所有線項目
- * @returns 合併後的試算表項目
- */
-export async function mergeLineItemsWithAccounts(
-  lineItems: ILineItemInTrialBalanceItem[]
-): Promise<ILineItemInTrialBalanceItem[]> {
-  const groupedItems: {
-    [accountId: number]: { debitAmount: number; creditAmount: number };
-  } = {};
+export function mergeLineItemsByAccount(
+  lineItems: ILineItemSimpleAccountVoucher[]
+): ILineItemInTrialBalanceItem[] {
+  // Info: (20250102 - Shirley) 使用 Map 來儲存每個 accountId 的合計金額
+  const accountSummary = new Map<
+    number,
+    {
+      accountId: number;
+      debitAmount: number;
+      creditAmount: number;
+      accountCode: string;
+      accountName: string;
+      debit: boolean;
+      amount: number;
+    }
+  >();
 
+  // Info: (20250102 - Shirley) 遍歷所有分錄並加總
   lineItems.forEach((item) => {
-    if (!groupedItems[item.accountId]) {
-      groupedItems[item.accountId] = {
+    const existingSummary = accountSummary.get(item.accountId);
+
+    if (existingSummary) {
+      // Info: (20250102 - Shirley) 如果該科目已存在，則加總金額
+      if (item.debit) {
+        existingSummary.debitAmount += item.amount;
+      } else {
+        existingSummary.creditAmount += item.amount;
+      }
+    } else {
+      // Info: (20250102 - Shirley) 如果該科目不存在，則建立新的紀錄
+      accountSummary.set(item.accountId, {
+        accountId: item.accountId,
         debitAmount: item.debit ? item.amount : 0,
         creditAmount: !item.debit ? item.amount : 0,
-      };
+        accountCode: item.account.code,
+        accountName: item.account.name,
+        debit: item.debit,
+        amount: item.amount,
+      });
+    }
+  });
+
+  // Info: (20250102 - Shirley) 將 Map 轉換為陣列並返回，移除對 amount 的修改
+  return Array.from(accountSummary.values()).map((summary) => ({
+    accountId: summary.accountId,
+    accountCode: summary.accountCode,
+    accountName: summary.accountName,
+    debitAmount: summary.debitAmount,
+    creditAmount: summary.creditAmount,
+    amount: summary.amount,
+    debit: summary.debit,
+    account: {
+      code: summary.accountCode,
+      name: summary.accountName,
+      parentId: 0,
+    },
+    voucher: {
+      id: 0,
+      date: 0,
+      type: '',
+      no: '',
+    },
+    id: 0,
+    createdAt: 0,
+    updatedAt: 0,
+    deletedAt: null,
+    description: '',
+    voucherId: 0,
+  }));
+}
+
+/** Info: (20250102 - Shirley)
+ * 將會計分錄依據時間區間分類並合併
+ * @param lineItems 會計分錄列表
+ * @param periodBegin 期初時間
+ * @param periodEnd 期末時間
+ * @returns 分類後的會計分錄
+ */
+export function categorizeAndMergeLineItems(
+  lineItems: ILineItemSimpleAccountVoucher[],
+  periodBegin: number,
+  periodEnd: number
+) {
+  // Info: (20250102 - Shirley) 分類會計分錄
+  const beginningItems: ILineItemSimpleAccountVoucher[] = [];
+  const midtermItems: ILineItemSimpleAccountVoucher[] = [];
+
+  lineItems.forEach((item) => {
+    if (item.voucher.date < periodBegin) {
+      beginningItems.push(item);
+    } else if (item.voucher.date <= periodEnd) {
+      midtermItems.push(item);
+    }
+  });
+
+  // Info: (20250102 - Shirley) 合併各時期的會計分錄
+  const beginningMerged = mergeLineItemsByAccount(beginningItems);
+  const midtermMerged = mergeLineItemsByAccount(midtermItems);
+
+  return {
+    beginning: beginningMerged,
+    midterm: midtermMerged,
+  };
+}
+
+/** Info: (20250102 - Shirley)
+ * 計算期末餘額
+ * @param beginning 期初餘額
+ * @param midterm 本期發生額
+ * @returns 期末餘額
+ */
+export function calculateEndingBalance(
+  beginning: ILineItemInTrialBalanceItem[],
+  midterm: ILineItemInTrialBalanceItem[]
+): ILineItemInTrialBalanceItem[] {
+  const endingMap = new Map<number, ILineItemInTrialBalanceItem>();
+
+  // Info: (20250102 - Shirley) 處理期初餘額
+  beginning.forEach((item) => {
+    endingMap.set(item.accountId, {
+      ...item,
+      debitAmount: item.debitAmount,
+      creditAmount: item.creditAmount,
+    });
+  });
+
+  // Info: (20250102 - Shirley) 加入本期發生額
+  midterm.forEach((item) => {
+    const existingItem = endingMap.get(item.accountId);
+    if (existingItem) {
+      existingItem.debitAmount += item.debitAmount;
+      existingItem.creditAmount += item.creditAmount;
+      existingItem.amount = Math.abs(existingItem.debitAmount - existingItem.creditAmount);
+      existingItem.debit = existingItem.debitAmount > existingItem.creditAmount;
     } else {
-      groupedItems[item.accountId].debitAmount += item.debit ? item.amount : 0;
-      groupedItems[item.accountId].creditAmount += !item.debit ? item.amount : 0;
+      endingMap.set(item.accountId, item);
     }
   });
 
-  const accountIds = Object.keys(groupedItems).map((id) => parseInt(id, 10));
+  return Array.from(endingMap.values());
+}
 
-  // Info: 將 groupedItems 轉換為 ILineItemInTrialBalanceItem[] 格式
-  const trialBalanceItems = accountIds.map((accountId) => {
-    const { debitAmount, creditAmount } = groupedItems[accountId];
-    const baseItem = lineItems.find((item) => item.accountId === accountId);
+/** Info: (20250102 - Shirley)
+ * 將會計分錄轉換為試算表格式
+ * @param lineItems 會計分錄列表
+ * @param periodBegin 期初時間
+ * @param periodEnd 期末時間
+ * @returns 試算表格式的資料
+ */
+export function convertToTrialBalanceFormat(
+  lineItems: ILineItemSimpleAccountVoucher[],
+  periodBegin: number,
+  periodEnd: number
+): {
+  beginning: ILineItemInTrialBalanceItem[];
+  midterm: ILineItemInTrialBalanceItem[];
+  ending: ILineItemInTrialBalanceItem[];
+} {
+  // Info: (20250102 - Shirley) 分類並合併會計分錄
+  const { beginning, midterm } = categorizeAndMergeLineItems(lineItems, periodBegin, periodEnd);
 
-    // TODO: (20241230 - Shirley) throw error
-    if (!baseItem) {
-      throw new Error(`找不到對應的科目資料：${accountId}`);
-    }
+  // Info: (20250102 - Shirley) 計算期末餘額
+  const ending = calculateEndingBalance(beginning, midterm);
 
-    return {
-      ...baseItem,
-      debitAmount,
-      creditAmount,
-    };
-  });
+  // Info: (20250102 - Shirley) 篩選掉借貸方金額都為 0 的科目
+  const filteredEnding = ending.filter((item) => item.debitAmount !== 0 || item.creditAmount !== 0);
 
-  return trialBalanceItems;
+  return {
+    beginning,
+    midterm,
+    ending: filteredEnding,
+  };
+}
+
+/** Info: (20250102 - Shirley)
+ * 將用來計算的試算表格式轉換為 API 格式
+ * @param lineItems 試算表格式資料
+ * @returns API 格式資料
+ */
+export function convertToTrialBalanceAPIFormat(lineItems: {
+  beginning: ILineItemInTrialBalanceItem[];
+  midterm: ILineItemInTrialBalanceItem[];
+  ending: ILineItemInTrialBalanceItem[];
+}): ITrialBalanceData {
+  // Info: (20250102 - Shirley) 計算總額
+  const total = {
+    beginningCreditAmount: lineItems.beginning.reduce((sum, item) => sum + item.creditAmount, 0),
+    beginningDebitAmount: lineItems.beginning.reduce((sum, item) => sum + item.debitAmount, 0),
+    midtermCreditAmount: lineItems.midterm.reduce((sum, item) => sum + item.creditAmount, 0),
+    midtermDebitAmount: lineItems.midterm.reduce((sum, item) => sum + item.debitAmount, 0),
+    endingCreditAmount: lineItems.ending.reduce((sum, item) => sum + item.creditAmount, 0),
+    endingDebitAmount: lineItems.ending.reduce((sum, item) => sum + item.debitAmount, 0),
+    createAt: Math.floor(Date.now() / 1000),
+    updateAt: Math.floor(Date.now() / 1000),
+  };
+
+  // Info: (20250102 - Shirley) 將 ILineItemInTrialBalanceItem[] 轉換為 TrialBalanceItem[]
+  const items: TrialBalanceItem[] = lineItems.ending.map((item) => ({
+    id: item.accountId,
+    no: item.account.code,
+    accountingTitle: item.account.name,
+    beginningCreditAmount:
+      lineItems.beginning.find((b) => b.accountId === item.accountId)?.creditAmount || 0,
+    beginningDebitAmount:
+      lineItems.beginning.find((b) => b.accountId === item.accountId)?.debitAmount || 0,
+    midtermCreditAmount:
+      lineItems.midterm.find((m) => m.accountId === item.accountId)?.creditAmount || 0,
+    midtermDebitAmount:
+      lineItems.midterm.find((m) => m.accountId === item.accountId)?.debitAmount || 0,
+    endingCreditAmount: item.creditAmount,
+    endingDebitAmount: item.debitAmount,
+    createAt: item.createdAt,
+    updateAt: item.updatedAt,
+    subAccounts: [], // TODO: (20250102 - Shirley) 額外處理子科目
+  }));
+
+  return {
+    items,
+    total,
+  };
 }

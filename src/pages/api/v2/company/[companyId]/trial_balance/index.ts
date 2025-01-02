@@ -7,11 +7,19 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { listTrialBalance } from '@/lib/utils/repo/trial_balance.repo';
-import { getCurrent401Period, mergeLineItemsWithAccounts } from '@/lib/utils/trial_balance';
+import {
+  convertToTrialBalanceAPIFormat,
+  convertToTrialBalanceFormat,
+  getCurrent401Period,
+} from '@/lib/utils/trial_balance';
 import { getAllLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
-import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
-import { SortOrder } from '@/constants/sort';
+import { CurrencyType } from '@/constants/currency';
+import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
+import { formatPaginatedTrialBalance } from '@/lib/utils/formatter/trial_balance.formatter';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { DEFAULT_SORT_OPTIONS } from '@/constants/trial_balance';
+import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
+import { parseSortOption } from '@/lib/utils/sort';
 
 export const handleGetRequest: IHandleRequest<
   APIName.TRIAL_BALANCE_LIST,
@@ -68,22 +76,17 @@ export const handleGetRequest: IHandleRequest<
       endDate: query.endDate || periodEnd,
     };
 
-    const lineItems = await getAllLineItemsInPrisma(
-      query.companyId,
-      updatedQuery.startDate,
-      updatedQuery.endDate
-    );
+    const { companyId, sortOption, page, pageSize } = updatedQuery;
 
-    // TODO: (20241230 - Shirley) 繼續重構 in dev, 用在新增虛擬科目
-    // Deprecated:
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const accounts = await findManyAccountsInPrisma({
-      companyId: query.companyId,
-      page: 1,
-      limit: 99999999,
-      sortBy: 'code',
-      sortOrder: SortOrder.ASC,
-    });
+    const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
+
+    let currencyAlias = CurrencyType.TWD;
+    const accountingSettingData = await getAccountingSettingByCompanyId(companyId);
+    if (accountingSettingData?.currency) {
+      currencyAlias = accountingSettingData.currency as CurrencyType;
+    }
+
+    const lineItems = await getAllLineItemsInPrisma(companyId, 0, updatedQuery.endDate);
 
     const lineItemsInTrialBalance = lineItems.map((item) => ({
       ...item,
@@ -92,17 +95,28 @@ export const handleGetRequest: IHandleRequest<
     }));
 
     // TODO: (20241230 - Shirley) 虛擬科目
-    // const lineItemsWithVirtualAccounts = addVirtualAccounts(lineItems, accounts.data);
-    // const mergedLineItems = mergeLineItemsWithAccounts(lineItemsWithVirtualAccounts);
 
-    // TODO: (20241230 - Shirley) 繼續重構 in dev
-    // Deprecated:
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const mergedLineItems = await mergeLineItemsWithAccounts(lineItemsInTrialBalance);
+    const threeStagesOfTrialBalance = convertToTrialBalanceFormat(
+      lineItemsInTrialBalance,
+      updatedQuery.startDate,
+      updatedQuery.endDate
+    );
 
-    const trialBalanceData = await listTrialBalance(updatedQuery);
-    if (trialBalanceData) {
-      payload = trialBalanceData;
+    const trialBalanceAPIFormat = convertToTrialBalanceAPIFormat(threeStagesOfTrialBalance);
+
+    if (trialBalanceAPIFormat) {
+      const paginatedTrialBalance = formatPaginatedTrialBalance(
+        trialBalanceAPIFormat.items,
+        parsedSortOption,
+        page ?? DEFAULT_PAGE_NUMBER,
+        pageSize ?? DEFAULT_PAGE_LIMIT
+      );
+
+      payload = {
+        currencyAlias,
+        items: paginatedTrialBalance,
+        total: trialBalanceAPIFormat.total,
+      };
       statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     }
   } catch (error) {
