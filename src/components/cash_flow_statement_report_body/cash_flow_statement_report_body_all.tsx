@@ -909,7 +909,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             </div>
           </div>
         </div>
-        <div className="mb-16px mt-4 font-semibold text-surface-brand-secondary"></div>
         <div className="relative bottom-20 right-0 -z-10">
           <Image
             className="absolute right-0 top-0"
