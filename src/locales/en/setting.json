@@ -139,17 +139,17 @@
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "Manual Account Opening",
+    "OPENING_DATE": "Opening Date",
     "SUBCATEGORY_TYPE": "Subcategory Type",
-    "TITLE_NAME": "Title Name",
-    "TITLE_CODE": "Title Code",
     "BEGINNING_DEBIT": "Beginning Debit",
     "BEGINNING_CREDIT": "Beginning Credit",
+    "ACTION": "Action",
     "DROPMENU_PLACEHOLDER": "Please select...",
     "NAME_PLACEHOLDER": "Enter name",
-    "ADD_LIST_BTN": "Add List",
     "CANCEL_BTN": "Cancel",
     "SUBMIT_BTN": "Submit",
-    "NO_ACCOUNTING_FOUND": "No Account Title Found."
+    "NO_ACCOUNTING_FOUND": "No Account Title Found.",
+    "ADD_NEW_ROW": "Please add new row."
   },
   "IP": {
     "INFO": "Login device & IP information",
