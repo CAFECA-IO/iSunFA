@@ -25,6 +25,7 @@ export interface ICertificate {
   file: IFileBeta; // Info: (20241108 - Tzuhan) !!! removed IFileBeta and update IFile
   invoice: IInvoiceBetaOptional;
   voucherNo: string | null;
+  voucherId?: number;
   aiResultId?: string;
   aiStatus?: string;
   createdAt: number;

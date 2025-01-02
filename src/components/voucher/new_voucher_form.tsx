@@ -616,7 +616,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       voucherDate: date.startTimeStamp,
       type: VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType],
       note,
-      counterPartyId: counterparty?.companyId,
+      counterPartyId: counterparty?.id,
       lineItems,
       assetIds,
       reverseVouchers,

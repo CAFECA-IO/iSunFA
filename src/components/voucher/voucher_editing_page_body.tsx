@@ -61,9 +61,10 @@ const dummyAIResult: IAIResultVoucher = {
   lineItems: [],
 };
 
-const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend }> = ({
-  voucherData,
-}) => {
+const VoucherEditingPageBody: React.FC<{
+  voucherData: IVoucherDetailForFrontend;
+  voucherNo: string | undefined;
+}> = ({ voucherData, voucherNo }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
@@ -615,7 +616,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
     const resultDate = date.startTimeStamp;
     const resultType = VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType];
     const resultNote = note;
-    const resultCounterpartyId = counterparty?.companyId;
+    const resultCounterpartyId = counterparty?.id;
     const resultLineItems = lineItems.map((lineItem) => {
       return {
         accountId: lineItem.account?.id ?? '',
@@ -726,7 +727,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
   useEffect(() => {
     if (isUpdating === false) {
       if (updateSuccess) {
-        router.push(`/users/accounting/${voucherId}`);
+        router.push(`/users/accounting/${voucherId}?voucherNo=${voucherNo}`);
       } else {
         toastHandler({
           id: ToastId.UPDATE_VOUCHER_ERROR,

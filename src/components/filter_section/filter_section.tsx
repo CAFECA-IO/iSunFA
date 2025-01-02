@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAPIName } from '@/interfaces/api_connection';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -14,7 +14,7 @@ import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { SortOrder, SortBy } from '@/constants/sort';
-import { useTranslation } from 'next-i18next';
+// import { useTranslation } from 'next-i18next';
 
 interface FilterSectionProps<T> {
   className?: string;
@@ -25,13 +25,13 @@ interface FilterSectionProps<T> {
   tab?: string;
   types?: string[];
   statuses?: string[];
-  sortingOptions?: SortBy[];
+  // sortingOptions?: SortBy[];
   enableSearch?: boolean;
   onApiResponse?: (resData: IPaginatedData<T>) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
   viewType?: DISPLAY_LIST_VIEW_TYPE;
   viewToggleHandler?: (viewType: DISPLAY_LIST_VIEW_TYPE) => void;
   dateSort?: SortOrder | null;
-  setDateSort?: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  // setDateSort?: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   otherSorts?: {
     sort: SortBy;
     sortOrder: SortOrder;
@@ -50,17 +50,17 @@ const FilterSection = <T,>({
   enableSearch = true,
   types = [],
   statuses = [],
-  sortingOptions = [],
+  // sortingOptions = [],
   onApiResponse,
   viewType,
   viewToggleHandler,
   dateSort,
-  setDateSort,
+  // setDateSort,
   otherSorts,
   disableDateSearch,
   displayTypeFilter,
 }: FilterSectionProps<T>) => {
-  const { t } = useTranslation(['common']);
+  // const { t } = useTranslation(['common']);
   const { toastHandler } = useModalContext();
   const [selectedType, setSelectedType] = useState<string | undefined>(
     types.length > 0 ? types[0] : undefined
@@ -73,9 +73,9 @@ const FilterSection = <T,>({
     endTimeStamp: 0,
   });
   const [searchQuery, setSearchQuery] = useState<string | undefined>();
-  const [selectedSorting, setSelectedSorting] = useState<string | undefined>(
-    sortingOptions.length > 0 ? sortingOptions[0] : undefined
-  );
+  // const [selectedSorting, setSelectedSorting] = useState<string | undefined>(
+  //   sortingOptions.length > 0 ? sortingOptions[0] : undefined
+  // );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedSortOptions, setSelectedSortOptions] = useState<{
     [key: string]: {
@@ -155,17 +155,17 @@ const FilterSection = <T,>({
     page,
   ]);
 
-  const handleSort = () => {
-    if (setDateSort) {
-      if (selectedSortOptions[SortBy.DATE]) {
-        setDateSort(
-          selectedSortOptions[SortBy.DATE].order === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC
-        );
-      } else {
-        setDateSort(SortOrder.DESC);
-      }
-    }
-  };
+  // const handleSort = () => {
+  //   if (setDateSort) {
+  //     if (selectedSortOptions[SortBy.DATE]) {
+  //       setDateSort(
+  //         selectedSortOptions[SortBy.DATE].order === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC
+  //       );
+  //     } else {
+  //       setDateSort(SortOrder.DESC);
+  //     }
+  //   }
+  // };
 
   useEffect(() => {
     if (dateSort) {
@@ -261,7 +261,7 @@ const FilterSection = <T,>({
       )}
 
       {/* Info: (20240919 - tzuhan) 排序選項 */}
-      {selectedSortOptions[SortBy.DATE] ? (
+      {/* {selectedSortOptions[SortBy.DATE] ? (
         <button type="button" className="flex items-center space-x-2 pb-2" onClick={handleSort}>
           <Image src="/elements/double_arrow_down.svg" alt="arrow_down" width={20} height={20} />
           <div className="leading-none">
@@ -279,7 +279,7 @@ const FilterSection = <T,>({
             onChange={setSelectedSorting}
           />
         )
-      )}
+      )} */}
     </div>
   );
 };

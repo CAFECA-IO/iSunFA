@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
@@ -10,21 +10,21 @@ import { IVoucherDetailForFrontend } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { useRouter } from 'next/router';
 
-const VoucherEditingPage: React.FC<{ voucherId: string; isVoucherNo: boolean }> = ({
-  voucherId,
-  isVoucherNo,
-}) => {
+const VoucherEditingPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
   const { t } = useTranslation('common');
 
   const { selectedCompany } = useUserCtx();
+  const router = useRouter();
+  const [voucherNo, setVoucherNo] = useState<string | undefined>();
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
 
   // Info: (20241118 - Julian) 取得 Voucher 資料
   const { trigger: getVoucherData, data: voucherData } = APIHandler<IVoucherDetailForFrontend>(
     APIName.VOUCHER_GET_BY_ID_V2,
-    { params: { companyId, voucherId }, query: { isVoucherNo } }
+    { params: { companyId, voucherId } }
   );
 
   useEffect(() => {
@@ -34,6 +34,12 @@ const VoucherEditingPage: React.FC<{ voucherId: string; isVoucherNo: boolean }> 
     }
   }, [companyId]);
 
+  useEffect(() => {
+    if (router.query.voucherNo) {
+      setVoucherNo(router.query.voucherNo as string);
+    }
+  }, [router.query]);
+
   return (
     <>
       <Head>
@@ -41,22 +47,26 @@ const VoucherEditingPage: React.FC<{ voucherId: string; isVoucherNo: boolean }> 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {t('journal:EDIT_VOUCHER.PAGE_TITLE')} {voucherId} - iSunFA
+          {t('journal:EDIT_VOUCHER.PAGE_TITLE')} {voucherNo ?? voucherId} - iSunFA
         </title>
       </Head>
 
       <Layout
         isDashboard={false}
         pageTitle={`${t('journal:EDIT_VOUCHER.PAGE_TITLE')} ${voucherId}`}
-        goBackUrl={`/users/accounting/${voucherId}`}
+        goBackUrl={`/users/accounting/${voucherId}?voucherNo=${voucherNo}`}
       >
-        {voucherData ? <VoucherEditingPageBody voucherData={voucherData} /> : <div>Loading...</div>}
+        {voucherData ? (
+          <VoucherEditingPageBody voucherData={voucherData} voucherNo={voucherNo} />
+        ) : (
+          <div>Loading...</div>
+        )}
       </Layout>
     </>
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async ({ params, query, locale }) => {
+export const getServerSideProps: GetServerSideProps = async ({ params, locale }) => {
   if (!params || !params.voucherId || typeof params.voucherId !== 'string') {
     return {
       notFound: true,
@@ -66,7 +76,6 @@ export const getServerSideProps: GetServerSideProps = async ({ params, query, lo
   return {
     props: {
       voucherId: params.voucherId,
-      isVoucherNo: query?.isVoucherNo === 'true',
       ...(await serverSideTranslations(locale as string, [
         'layout',
         'common',

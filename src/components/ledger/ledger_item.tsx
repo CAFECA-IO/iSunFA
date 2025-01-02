@@ -52,7 +52,7 @@ const LedgerItem = React.memo(
           <Link
             // Info: (20241225 - Anna) from=ledger 為了返回時能回到分類帳頁面
             href={{
-              pathname: `/users/accounting/${voucherId}`, // Info: (20241225 - Anna) 傳票詳細頁面路徑
+              pathname: `/users/accounting/${voucherId}}`, // Info: (20241225 - Anna) 傳票詳細頁面路徑
               query: {
                 from: 'ledger',
                 startDate: selectedDateRange.startTimeStamp,
@@ -60,6 +60,7 @@ const LedgerItem = React.memo(
                 startAccountNo: selectedStartAccountNo,
                 endAccountNo: selectedEndAccountNo,
                 labelType: selectedReportType,
+                voucherNo: voucherNumber,
               },
             }}
             className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
@@ -80,6 +81,7 @@ const LedgerItem = React.memo(
                 startAccountNo: selectedStartAccountNo,
                 endAccountNo: selectedEndAccountNo,
                 labelType: selectedReportType,
+                voucherNo: voucherNumber,
               },
             }}
             className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
@@ -100,6 +102,7 @@ const LedgerItem = React.memo(
                 startAccountNo: selectedStartAccountNo,
                 endAccountNo: selectedEndAccountNo,
                 labelType: selectedReportType,
+                voucherNo: voucherNumber,
               },
             }}
             className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
