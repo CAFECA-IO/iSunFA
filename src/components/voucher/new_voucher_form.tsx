@@ -88,6 +88,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const temporaryAssetListByUser = temporaryAssetList[companyId] ?? [];
 
+  const initialLineItems: ILineItemUI[] = [
+    initialVoucherLine,
+    {
+      ...initialVoucherLine,
+      id: 1,
+    },
+  ];
+
   // Info: (20241108 - Julian) POST ASK AI
   const { trigger: askAI, isLoading: isAskingAI } = APIHandler<{
     reason: string;
@@ -120,7 +128,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // const [recurringArray, setRecurringArray] = useState<number[]>([]);
 
   // Info: (20241004 - Julian) 傳票列
-  const [voucherLineItems, setLineItems] = useState<ILineItemUI[]>([initialVoucherLine]);
+  const [voucherLineItems, setLineItems] = useState<ILineItemUI[]>(initialLineItems);
 
   // Info: (20241004 - Julian) 傳票列驗證條件
   const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
@@ -520,7 +528,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     // setRecurringArray([]);
     clearTemporaryAssetHandler(companyId);
     clearReverseListHandler();
-    setLineItems([initialVoucherLine]);
+    setLineItems(initialLineItems);
     setFlagOfClear(!flagOfClear);
   };
 
