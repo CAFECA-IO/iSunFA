@@ -7,7 +7,11 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { createCounterparty, listCounterparty } from '@/lib/utils/repo/counterparty.repo';
+import {
+  createCounterparty,
+  getCounterpartyByName,
+  listCounterparty,
+} from '@/lib/utils/repo/counterparty.repo';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 
 const handleGetRequest: IHandleRequest<
@@ -40,10 +44,17 @@ const handlePostRequest: IHandleRequest<APIName.COUNTERPARTY_ADD, ICounterparty>
 
   const { companyId } = query;
   const { name, taxId, type, note } = body;
-  const newClient = await createCounterparty(companyId, name, taxId, type, note);
-  if (newClient) {
-    statusMessage = STATUS_MESSAGE.CREATED;
-    payload = parsePrismaCounterPartyToCounterPartyEntity(newClient);
+  const originClient = await getCounterpartyByName(name);
+
+  if (originClient) {
+    statusMessage = STATUS_MESSAGE.BAD_REQUEST;
+    payload = parsePrismaCounterPartyToCounterPartyEntity(originClient);
+  } else {
+    const newClient = await createCounterparty(companyId, name, taxId, type, note);
+    if (newClient) {
+      statusMessage = STATUS_MESSAGE.CREATED;
+      payload = parsePrismaCounterPartyToCounterPartyEntity(newClient);
+    }
   }
 
   return { statusMessage, payload };
