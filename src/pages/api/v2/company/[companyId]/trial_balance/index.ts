@@ -68,6 +68,7 @@ export const handleGetRequest: IHandleRequest<
     total: ITrialBalanceTotal;
   } | null = null;
   try {
+    // Info: (20250102 - Shirley) Step 1
     const { periodBegin, periodEnd } = getCurrent401Period();
 
     const updatedQuery = {
@@ -81,11 +82,13 @@ export const handleGetRequest: IHandleRequest<
     const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
 
     let currencyAlias = CurrencyType.TWD;
+    // Info: (20250102 - Shirley) Step 3
     const accountingSettingData = await getAccountingSettingByCompanyId(companyId);
     if (accountingSettingData?.currency) {
       currencyAlias = accountingSettingData.currency as CurrencyType;
     }
 
+    // Info: (20250102 - Shirley) Step 2
     const lineItems = await getAllLineItemsInPrisma(companyId, 0, updatedQuery.endDate);
 
     const lineItemsInTrialBalance = lineItems.map((item) => ({
@@ -94,14 +97,16 @@ export const handleGetRequest: IHandleRequest<
       creditAmount: !item.debit ? item.amount : 0,
     }));
 
-    // TODO: (20241230 - Shirley) 虛擬科目
+    // TODO: (20241230 - Shirley) Step 9 虛擬科目
 
+    // Info: (20250102 - Shirley) Step 5, 6, 7
     const threeStagesOfTrialBalance = convertToTrialBalanceFormat(
       lineItemsInTrialBalance,
       updatedQuery.startDate,
       updatedQuery.endDate
     );
 
+    // Info: (20250102 - Shirley) Step 10
     const trialBalanceAPIFormat = convertToTrialBalanceAPIFormat(threeStagesOfTrialBalance);
 
     if (trialBalanceAPIFormat) {
