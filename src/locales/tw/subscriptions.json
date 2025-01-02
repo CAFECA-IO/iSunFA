@@ -7,6 +7,13 @@
     "CHANGE_PLAN": "變更方案",
     "BILLING": "帳單",
     "NEXT_RENEWAL": "下次續訂",
-    "EXPIRED_DATE": "到期日"
+    "EXPIRED_DATE": "到期日",
+    "TURN_ON_AUTO_RENEWAL_TITLE": "開啟自動續訂",
+    "TURN_ON_AUTO_RENEWAL_MESSAGE": "您確定要開啟自動續訂嗎？",
+    "YES_TURN_ON_AUTO_RENEWAL": "是，開啟自動續訂",
+    "CANCEL": "取消",
+    "TURN_OFF_AUTO_RENEWAL_TITLE": "關閉自動續訂",
+    "TURN_OFF_AUTO_RENEWAL_MESSAGE": "您確定要關閉自動續訂嗎？",
+    "YES_TURN_OFF_AUTO_RENEWAL": "是，關閉自動續訂"
   }
 }

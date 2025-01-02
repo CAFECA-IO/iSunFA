@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { IoArrowForward } from 'react-icons/io5';
 import { IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
 import { SUBSCRIPTION_PLANS } from '@/constants/subscription';
@@ -16,11 +16,12 @@ const formatTimestamp = (timestamp: number) => {
 
 interface OwnedTeamProps {
   team: IUserOwnedTeam;
+  setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
+  setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
 }
 
-const OwnedTeam = ({ team }: OwnedTeamProps) => {
+const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: OwnedTeamProps) => {
   const { t } = useTranslation(['subscriptions']);
-  const [isOn, setIsOn] = useState(team.enableAutoRenewal);
 
   const isPlanBeginner = team.plan === TPlanType.BEGINNER;
   const isPlanProfessional = team.plan === TPlanType.PROFESSIONAL;
@@ -30,6 +31,15 @@ const OwnedTeam = ({ team }: OwnedTeamProps) => {
   const formatter = new Intl.NumberFormat('en-US');
   const formatPrice = teamUsingPlan ? `$ ${formatter.format(teamUsingPlan.price)} / Month` : null;
   const price = isPlanBeginner ? 'Free' : formatPrice;
+  const isAutoRenewalEnabled = team.enableAutoRenewal;
+
+  const openTurnOnAutoRenewalModal = () => {
+    setTeamForAutoRenewalOn(team);
+  };
+
+  const openTurnOffAutoRenewalModal = () => {
+    setTeamForAutoRenewalOff(team);
+  };
 
   return (
     <main className="flex">
@@ -72,7 +82,12 @@ const OwnedTeam = ({ team }: OwnedTeamProps) => {
               <span className="text-lg font-semibold text-text-neutral-primary">
                 {t('subscriptions:SUBSCRIPTIONS_PAGE.ENABLE_AUTO_RENEWAL')}
               </span>
-              <SimpleToggle isOn={isOn} setIsOn={setIsOn} />
+              <SimpleToggle
+                isOn={isAutoRenewalEnabled}
+                onClick={
+                  isAutoRenewalEnabled ? openTurnOffAutoRenewalModal : openTurnOnAutoRenewalModal
+                }
+              />
             </div>
           </section>
         )}
