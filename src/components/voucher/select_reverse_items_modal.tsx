@@ -117,7 +117,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 
   const params = {
     companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-    accountId: modalData.account?.code,
+    accountId: modalData.account?.id,
   };
 
   // Info: (20241104 - Julian) 取得會計科目以呼叫 API
