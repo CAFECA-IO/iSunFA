@@ -70,7 +70,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
           )}
           <div className="flex flex-col">
-            <div className="text-text-neutral-tertiary">{certificate.name ?? ''}</div>
+            <div className="text-text-neutral-tertiary">{certificate.file.name ?? ''}</div>
             <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
           </div>
         </div>
@@ -145,10 +145,11 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       {/* Info: (20240924 - tzuhan) Voucher Information */}
       <BorderCell isSelected={certificate.isSelected} className="w-120px text-center">
         <div className="flex flex-col items-center space-y-2">
-          {certificate?.voucherNo && (
+          {certificate?.voucherId && (
             <Link
-              href={`/users/accounting/${certificate.voucherNo}?isVoucherNo=true`}
+              href={`/users/accounting/${certificate.voucherId}?voucherNo=${certificate.voucherNo}`}
               className="text-right text-link-text-primary"
+              onClick={(e) => e.stopPropagation()}
             >
               {certificate.voucherNo}
             </Link>

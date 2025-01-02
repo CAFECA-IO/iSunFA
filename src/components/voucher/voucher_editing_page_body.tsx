@@ -61,9 +61,10 @@ const dummyAIResult: IAIResultVoucher = {
   lineItems: [],
 };
 
-const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend }> = ({
-  voucherData,
-}) => {
+const VoucherEditingPageBody: React.FC<{
+  voucherData: IVoucherDetailForFrontend;
+  voucherNo: string | undefined;
+}> = ({ voucherData, voucherNo }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
@@ -726,7 +727,7 @@ const VoucherEditingPageBody: React.FC<{ voucherData: IVoucherDetailForFrontend 
   useEffect(() => {
     if (isUpdating === false) {
       if (updateSuccess) {
-        router.push(`/users/accounting/${voucherId}`);
+        router.push(`/users/accounting/${voucherId}?voucherNo=${voucherNo}`);
       } else {
         toastHandler({
           id: ToastId.UPDATE_VOUCHER_ERROR,
