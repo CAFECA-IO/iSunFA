@@ -14,6 +14,8 @@
     "CANCEL": "取消",
     "TURN_OFF_AUTO_RENEWAL_TITLE": "關閉自動續訂",
     "TURN_OFF_AUTO_RENEWAL_MESSAGE": "您確定要關閉自動續訂嗎？",
-    "YES_TURN_OFF_AUTO_RENEWAL": "是，關閉自動續訂"
+    "YES_TURN_OFF_AUTO_RENEWAL": "是，關閉自動續訂",
+    "CHOOSE_THE_PLAN_THAT_FITS_YOUR_TEAM": "選擇適合您團隊的方案",
+    "PLAN_FOR": "管理方案 - "
   }
 }

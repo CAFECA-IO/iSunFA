@@ -10,7 +10,7 @@ import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 const FAKE_OWNED_TEAMS: IUserOwnedTeam[] = [
   {
     id: 1,
-    name: 'Team A',
+    name: 'Personal',
     plan: TPlanType.BEGINNER,
     nextRenewal: 0,
     expiredDate: 0,
@@ -18,7 +18,7 @@ const FAKE_OWNED_TEAMS: IUserOwnedTeam[] = [
   },
   {
     id: 2,
-    name: 'Team B',
+    name: 'Team A',
     plan: TPlanType.PROFESSIONAL,
     nextRenewal: 1630406400000,
     expiredDate: 0,
@@ -26,7 +26,7 @@ const FAKE_OWNED_TEAMS: IUserOwnedTeam[] = [
   },
   {
     id: 3,
-    name: 'Team C',
+    name: 'Team B',
     plan: TPlanType.ENTERPRISE,
     nextRenewal: 0,
     expiredDate: 1630406400000,
