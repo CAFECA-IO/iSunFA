@@ -548,7 +548,7 @@ const VoucherEditingPageBody: React.FC<{
     setCounterparty(undefined);
     clearTemporaryAssetHandler(companyId);
     clearReverseListHandler();
-    setLineItems([initialVoucherLine]);
+    setLineItems([initialVoucherLine, { ...initialVoucherLine, id: 1 }]);
     setFlagOfClear(!flagOfClear);
   };
 
