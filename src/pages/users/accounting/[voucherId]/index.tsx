@@ -12,6 +12,7 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
   const { t } = useTranslation('common');
   const router = useRouter(); // Info: (20241225 - Anna) 使用 router 獲取查詢參數
   const [goBackUrl, setGoBackUrl] = useState(ISUNFA_ROUTE.VOUCHER_LIST); // Info: (20241225 - Anna) 預設返回 URL 為傳票清單頁
+  const [voucherNo, setVoucherNo] = useState<string | undefined>();
 
   useEffect(() => {
     // Info: (20241225 - Anna) 從 router.query 中獲取篩選條件
@@ -23,6 +24,8 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
       startAccountNo = '',
       endAccountNo = '',
     } = router.query;
+
+    setVoucherNo(router.query.voucherNo as string);
 
     // Info: (20241225 - Anna) 檢查 URL 查詢參數是否包含from=ledger
     if (from === 'ledger') {
@@ -37,7 +40,7 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
     }
   }, [router.query]);
 
-  const pageTitle = `${t('journal:VOUCHER_DETAIL_PAGE.TITLE')} ${voucherId}`;
+  const pageTitle = `${t('journal:VOUCHER_DETAIL_PAGE.TITLE')} ${voucherNo ?? voucherId}`;
 
   return (
     <>
@@ -49,7 +52,7 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
       </Head>
 
       <Layout isDashboard={false} pageTitle={pageTitle} goBackUrl={goBackUrl}>
-        <VoucherDetailPageBody voucherId={voucherId} />
+        <VoucherDetailPageBody voucherId={voucherId} voucherNo={voucherNo} />
       </Layout>
     </>
   );

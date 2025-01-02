@@ -4,6 +4,7 @@ import React from 'react';
 import { ICertificateUI } from '@/interfaces/certificate';
 import { RxCross1 } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
+import { timestampToString } from '@/lib/utils/common';
 
 interface CertificatePreviewModalProps {
   isOpen: boolean;
@@ -35,8 +36,10 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
         </button>
         {/* Info: (20240924 - tzuhan) 模態框標題 */}
         <h2 className="flex flex-col items-center justify-center gap-2 border-b border-stroke-neutral-quaternary p-2 text-xl font-semibold text-card-text-title">
-          <div className="text-xl font-semibold">{certificate.name}</div>
-          <div className="text-xs font-normal text-card-text-sub">{certificate.invoice.date}</div>
+          <div className="text-xl font-semibold">{certificate.file.name}</div>
+          <div className="text-xs font-normal text-card-text-sub">
+            {certificate.invoice.date ? timestampToString(certificate.invoice.date).date : '-'}
+          </div>
         </h2>
         <div className="flex justify-end gap-2 border-b border-stroke-neutral-quaternary px-4 py-3">
           <Button type="button" variant="tertiary" className="p-2">

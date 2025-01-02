@@ -229,7 +229,7 @@ export const certificateAPIPostUtils = {
     }
   ): ICertificate & {
     uploaderUrl: string;
-    voucherId: number | null;
+    voucherId: number | undefined;
   } => {
     const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
     const file: IFileBeta = {
@@ -276,11 +276,11 @@ export const certificateAPIPostUtils = {
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
-    const voucherId = firstVoucher?.id || null;
+    const voucherId = firstVoucher?.id;
 
     const certificate: ICertificate & {
       uploaderUrl: string;
-      voucherId: number | null;
+      voucherId: number | undefined;
     } = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
@@ -431,7 +431,7 @@ export const certificateAPIGetListUtils = {
     }
   ): ICertificate & {
     uploaderUrl: string;
-    voucherId: number | null;
+    voucherId: number | undefined;
   } => {
     const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
     const file: IFileBeta = {
@@ -486,11 +486,11 @@ export const certificateAPIGetListUtils = {
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
-    const voucherId = firstVoucher?.id || null;
+    const voucherId = firstVoucher?.id;
 
     const certificate: ICertificate & {
       uploaderUrl: string;
-      voucherId: number | null;
+      voucherId: number | undefined;
     } = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,

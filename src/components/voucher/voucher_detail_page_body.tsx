@@ -22,9 +22,10 @@ import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType } from '@/constants/account';
 
 interface IVoucherDetailPageBodyProps {
   voucherId: string;
+  voucherNo: string | undefined;
 }
 
-const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherId }) => {
+const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherId, voucherNo }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
   const { selectedCompany } = useUserCtx();
@@ -235,7 +236,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
       {reverseVoucherIds.map((reverseVoucher) => (
         <Link
           key={reverseVoucher.id}
-          href={`/users/accounting/${reverseVoucher.id}`}
+          href={`/users/accounting/${reverseVoucher.id}?voucherNo=${voucherNo}`}
           className="text-link-text-primary hover:underline"
         >
           {reverseVoucher.voucherNo}
@@ -374,7 +375,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         >
           <FiTrash2 size={16} />
         </Button>
-        <Link href={`/users/accounting/${voucherId}/editing`}>
+        <Link href={`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`}>
           <Button id="edit-voucher-btn" type="button" variant="tertiary" size={'defaultSquare'}>
             <FiEdit size={16} />
           </Button>

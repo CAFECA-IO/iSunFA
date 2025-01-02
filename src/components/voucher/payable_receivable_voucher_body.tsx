@@ -10,13 +10,13 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { IVoucherBeta } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
-import { VoucherListTabV2 } from '@/constants/voucher';
+import { PayableReceivableTabs } from '@/constants/voucher';
 
 const PayableReceivableVoucherPageBody: React.FC = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
 
-  const [activeTab, setActiveTab] = useState(VoucherListTabV2.RECEIVING);
+  const [activeTab, setActiveTab] = useState(PayableReceivableTabs.PAYMENT);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -57,7 +57,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
     setOtherSorts([...newPayReceiveSort, ...newPayReceiveAlreadyHappenedSort, ...newRemainSort]);
   }, [payReceiveSort, payReceiveAlreadyHappenedSort, remainSort, dateSort]);
 
-  const voucherTabs = [VoucherListTabV2.RECEIVING, VoucherListTabV2.PAYMENT].map((value) =>
+  const voucherTabs = Object.values(PayableReceivableTabs).map((value) =>
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
   );
 
@@ -79,7 +79,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
     setVoucherList(data.data.vouchers);
   };
 
-  const tabsClick = (tab: string) => setActiveTab(tab as VoucherListTabV2);
+  const tabsClick = (tab: string) => setActiveTab(tab as PayableReceivableTabs);
 
   const displayVoucherList =
     voucherList && voucherList.length > 0 ? (
@@ -106,7 +106,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs
-          tabs={voucherTabs}
+          tabs={Object.values(PayableReceivableTabs)}
           tabsString={voucherTabs}
           activeTab={activeTab}
           onTabClick={tabsClick}
@@ -125,7 +125,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
-          tab={VoucherListTabV2.RECEIVING}
+          tab={activeTab}
           dateSort={dateSort}
           otherSorts={otherSorts}
         />
