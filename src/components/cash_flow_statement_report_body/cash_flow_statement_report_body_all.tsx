@@ -240,7 +240,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           ))}
         </ol>
         <h3 className="mt-4 text-xs font-semibold leading-6">其他：</h3>
-        <ol className="list-decimal pl-6 pt-2 text-xs font-normal leading-5 text-text-neutral-primary">
+        <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
           {thirdThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
               {line}
@@ -248,18 +248,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           ))}
         </ol>
       </div>
-    );
-  };
-
-  const renderedPage11part1 = () => {
-    return (
-      <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
-        {thirdThought?.split('\n').map((line, index) => (
-          <li key={`${line + index}`} className="mb-2 ml-1">
-            {line}
-          </li>
-        ))}
-      </ol>
     );
   };
 
@@ -815,7 +803,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   ))}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px"></td>
+                  <td className="border border-stroke-brand-secondary-soft p-16px"></td>
                   {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
@@ -892,7 +880,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
-            <BarChart data={curBarChartData} labels={curBarChartLabels} />
+            <BarChart data={curBarChartData} labels={['A', 'B', 'C']} />
+            <div className="ml-11 text-xs font-semibold">
+              <p>A: {curBarChartLabels[0]}</p>
+              <p>B: {curBarChartLabels[1]}</p>
+              <p>C: {curBarChartLabels[2]}</p>
+            </div>
           </div>
           <div className="w-1/2">
             <div className="relative mb-0 flex items-center pb-1">
@@ -908,16 +901,15 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
-            <BarChart data={preBarChartData} labels={preBarChartLabels} />
+            <BarChart data={preBarChartData} labels={['A', 'B', 'C']} />
+            <div className="ml-8 text-xs font-semibold">
+              <p>A: {preBarChartLabels[0]}</p>
+              <p>B: {preBarChartLabels[1]}</p>
+              <p>C: {preBarChartLabels[2]}</p>
+            </div>
           </div>
         </div>
-        <div className="mb-16px mt-4 font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-semibold">
-            {financialReport &&
-              financialReport.otherInfo &&
-              financialReport.otherInfo.fourPointOneTitle}
-          </p>
-        </div>
+        <div className="mb-16px mt-4 font-semibold text-surface-brand-secondary"></div>
         <div className="relative bottom-20 right-0 -z-10">
           <Image
             className="absolute right-0 top-0"
@@ -973,10 +965,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         </div>
       </header>
       <section className="relative mx-3 text-xs text-text-neutral-secondary">
-        <div className="mb-16px mt-32px text-xs font-semibold leading-5 text-surface-brand-secondary">
-          <h3 className="mt-8 text-base font-semibold leading-6 text-black">其他：</h3>
-          {renderedPage11part1()}
-        </div>
         <div className="mb-4 mt-32px text-center text-xs font-semibold leading-5 text-surface-brand-secondary">
           <p className="text-start text-xs font-semibold">
             五、年度產生的自由現金：公司可以靈活運用的現金
