@@ -54,6 +54,7 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
     forUser: true,
     sortBy: 'code', // Info: (20241018 - Julian) 依 code 排序
     sortOrder: 'asc',
+    isDeleted: false, // Info: (20250102 - Julian) 只取未刪除的
   };
 
   const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(

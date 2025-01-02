@@ -128,7 +128,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
   return (
     <div className="table-row bg-surface-neutral-surface-lv2 text-sm">
       {/* Info: (20241112 - Julian) Subcategory Type */}
-      <div className={`${cellStyle} border-r`}>
+      <div className={`${cellStyle} w-200px border-r`}>
         <div
           onClick={toggleEditing}
           className="relative flex w-200px items-center rounded-sm border border-input-stroke-input px-12px py-10px hover:cursor-pointer"
@@ -257,6 +257,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   };
 
   const submitHandler = async () => {
+    // Info: (20250102 - Julian) 將 manualAccountOpeningList 轉換成 lineItems
     const lineItems: {
       accountId: string | number;
       description: string;
@@ -275,7 +276,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       actions: [],
       certificateIds: [],
       voucherDate: openingDate.startTimeStamp,
-      type: '', // VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType],
+      type: 'opening', // ToDo: (20250102 - Julian) 須確認手動開帳用的 type
       note: '',
       lineItems,
       assetIds: [],
@@ -283,10 +284,6 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
     };
     // Info: (20250102 - Julian) POST API
     createNewVoucher({ params: { companyId }, body });
-
-    // ToDo: (20241114 - Julian) For debug
-    // eslint-disable-next-line no-console
-    console.log(body);
   };
 
   const submitDisabled =
@@ -329,6 +326,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       setTotalCredit(0);
       setTotalDebit(0);
       setFocusIndex(null);
+      setOpeningDate(default30DayPeriodInSec);
     }
   }, [isModalVisible]);
 
@@ -418,12 +416,13 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
           // Info: (20241114 - Julian) 根據 focusIndex 來決定要修改哪一筆資料
           if (focusIndex !== null) {
             // Info: (20241114 - Julian)  先複製一份資料
-            const duplicateList = { ...manualAccountOpeningList[focusIndex] };
+            const targetId = manualAccountOpeningList.findIndex((list) => list.id === focusIndex);
+            const duplicateList = { ...manualAccountOpeningList[targetId] };
             duplicateList.subcategory = title;
             // Info: (20241114 - Julian)  更新資料
             setManualAccountOpeningList(
               manualAccountOpeningList.map((list, index) => {
-                return index === focusIndex ? duplicateList : list;
+                return index === targetId ? duplicateList : list;
               })
             );
           }
@@ -447,7 +446,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
 
   const displaySubcategoryMenu = (
     <div
-      className={`absolute left-0 w-180px ${'top-10px'} z-10 grid w-1/5 rounded-sm ${isExpanded ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 w-200px ${'top-10px'} z-10 grid w-1/5 rounded-sm ${isExpanded ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
     >
       <div
         ref={dropmenuRef}
