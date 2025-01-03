@@ -785,12 +785,12 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
 
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary text-xs">
+        <div className="relative z-1 mb-16px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {!isSummaryCollapsed && (
           <table className="relative z-1 w-full border-collapse bg-white">
@@ -845,9 +845,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary text-xs">
+        <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -918,7 +918,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -975,7 +975,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1032,7 +1032,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1089,7 +1089,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1146,7 +1146,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1203,7 +1203,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1260,7 +1260,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1395,7 +1395,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
-          <p>四、資產分布圖</p>
+          <p>四、{t('reports:REPORTS.ASSET_DISTRIBUTION_CHART')}</p>
         </div>
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-5">
@@ -1513,8 +1513,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mt-30px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="mb-16px">五、應收帳款週轉天數</p>
-          <p>單位：天</p>
+          <p className="mb-16px">五、{t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS')}</p>
+          <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1530,15 +1530,15 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </thead>
           <tbody>
             {renderDataRow(
-              '應收帳款週轉天數',
+              t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS'),
               financialReport?.otherInfo?.dso.curDso,
               financialReport?.otherInfo?.dso.preDso
             )}
           </tbody>
         </table>
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
-          <p>六、存貨週轉天數</p>
-          <p>單位：天</p>
+          <p>六、{t('reports:REPORTS.INVENTORY_TURNOVER_DAYS')}</p>
+          <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1554,7 +1554,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </thead>
           <tbody>
             {renderDataRow(
-              '存貨週轉天數',
+              t('reports:REPORTS.INVENTORY_TURNOVER_DAYS'),
               financialReport?.otherInfo?.inventoryTurnoverDays.curInventoryTurnoverDays,
               financialReport?.otherInfo?.inventoryTurnoverDays.preInventoryTurnoverDays
             )}

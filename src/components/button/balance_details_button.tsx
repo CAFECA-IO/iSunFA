@@ -121,7 +121,6 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
 
   // Info: (20241003 - Anna) CSS 樣式
   const tableCellStyles = 'table-cell text-center align-middle';
-  const checkboxStyle = 'form-checkbox align-middle ml-4 border-navy-blue-400"';
 
   // Info: (20241003 - Anna) 日期排序按鈕
   const displayedDate = SortingButton({
@@ -145,7 +144,8 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
           <div className="relative w-1000px rounded-lg border border-stroke-neutral-quaternary bg-neutral-50 p-6">
             <div className="flex items-center justify-center">
               <h5 className="text-xl font-bold text-neutral-600">
-                {accountName} {/* Info: (20241107 - Anna) 使用從父層傳入的科目名稱 */}
+                {/* Info: (20241107 - Anna) 使用從父層傳入的科目名稱 */}
+                {t(`reports:ACCOUNTING_ACCOUNT.${accountName}`)}
               </h5>
               <button
                 type="button"
@@ -189,9 +189,6 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                     <div className="table-row">
                       <div className={`${tableCellStyles} border-r print:border-b`}>
                         <div className="flex w-160px items-center">
-                          <div className="ml-4 w-32px text-center align-middle print:hidden">
-                            <input type="checkbox" className={checkboxStyle} />
-                          </div>
                           {/* Info: (20241003 - Anna) 日期排序按鈕 */}
                           {displayedDate}
                         </div>
@@ -218,10 +215,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                     {displayedVoucherList.map((voucher) => (
                       <div className="table-row" key={voucher.id}>
                         <div className={tableCellStyles}>
-                          <div className="flex items-center justify-between print:justify-center">
-                            <div className="ml-4 text-center align-middle print:hidden">
-                              <input type="checkbox" className={checkboxStyle} />
-                            </div>
+                          <div className="flex items-center justify-center">
                             {/* Info: (20241203 - Anna) 在列印模式下使用 print-center */}
                             <div className="mb-2 mr-6 mt-4">
                               {/* Info: (20241003 - Anna) 使用 CalendarIcon 組件顯示日期 */}

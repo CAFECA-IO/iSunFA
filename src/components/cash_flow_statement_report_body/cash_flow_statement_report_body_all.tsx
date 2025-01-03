@@ -402,7 +402,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <div className="flex items-center">
             <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           </div>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {financialReport && financialReport.general && renderTable(financialReport.general, 0, 10)}
       </section>
@@ -426,7 +426,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {financialReport && financialReport.general && renderTable(financialReport.general, 10, 19)}
         <div className="relative -z-10">
@@ -469,7 +469,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {financialReport && financialReport.details && renderTable(financialReport.details, 0, 13)}
 
@@ -503,7 +503,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {financialReport && financialReport.details && renderTable(financialReport.details, 13, 26)}
 
@@ -537,7 +537,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {financialReport && financialReport.details && renderTable(financialReport.details, 26, 41)}
 
@@ -571,7 +571,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {financialReport && financialReport.details && renderTable(financialReport.details, 41, 55)}
 
@@ -605,7 +605,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {financialReport && financialReport.details && renderTable(financialReport.details, 55, 70)}
 

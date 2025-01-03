@@ -438,7 +438,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <p className="mb-0">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {!isSummaryCollapsed &&
           reportFinancial &&
@@ -456,7 +456,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <p className="mb-0">{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {!isDetailCollapsed &&
           reportFinancial &&

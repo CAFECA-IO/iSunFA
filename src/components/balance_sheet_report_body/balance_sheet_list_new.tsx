@@ -473,12 +473,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="justify-start">
                         <span>{child.code}</span>
-                        <span className="ml-2">{child.name}</span>
+                        <span className="ml-2">
+                          {t(`reports:ACCOUNTING_ACCOUNT.${child.name}`)}
+                        </span>
                       </div>
                       {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給
                     BalanceDetailsButton，用於顯示彈出視窗的標題 */}
-                      {/*  Info: (20241217 - Anna) 判斷 child.code 是否為 3353（本期損益（結轉來，沒有分錄）），若不是才顯示按鈕 */}
-                      {child.code !== '3353' && (
+                      {/*  Info: (20241217 - Anna) 判斷 child.code 是否為 3353（本期損益（結轉來，沒有分錄）） or 3351（累積盈虧（結轉來，沒有分錄）），若不是才顯示按鈕 */}
+                      {child.code !== '3353' && child.code !== '3351' && (
                         <BalanceDetailsButton
                           accountName={child.name}
                           accountId={child.accountId}
@@ -554,7 +556,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               buttonType="default"
             />
           </div>
-          <p>單位：新台幣元</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {!isSummaryCollapsed && (
           <table className="relative z-1 w-full border-collapse bg-white">
@@ -603,7 +605,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             </p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p className="font-bold leading-5">單位：新台幣元</p>
+          <p className="font-bold leading-5">{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {!isDetailCollapsed && (
           <table className="w-full border-collapse bg-white">
@@ -656,7 +658,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span className="w-200px">{label}</span>
+                    <span className="w-200px">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
                   </li>
                 ))}
               </ul>
@@ -672,7 +674,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span className="w-200px">{label}</span>
+                    <span className="w-200px">
+                      {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -696,7 +700,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     <div id="4" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 mb-6 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>資產分布圖</p>
+          <p>{t('reports:REPORTS.ASSET_DISTRIBUTION_CHART')}</p>
         </div>
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-5">
@@ -708,7 +712,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span className="text-sm">{label}</span>
+                    <span className="text-sm">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
                   </li>
                 ))}
               </ul>
@@ -749,7 +753,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span className="text-sm">{label}</span>
+                    <span className="text-sm">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
                   </li>
                 ))}
               </ul>
@@ -797,48 +801,48 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     <div id="5" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>應收帳款週轉天數</p>
-          <p>單位：天</p>
+          <p>{t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS')}</p>
+          <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
               <th className="w-300px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                {curYear}年度
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: curYear })}
               </th>
               <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                {preYear}年度
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: preYear })}
               </th>
             </tr>
           </thead>
           <tbody>
             {renderDataRow(
-              '應收帳款週轉天數',
+              t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS'),
               reportFinancial?.otherInfo?.dso.curDso,
               reportFinancial?.otherInfo?.dso.preDso
             )}
           </tbody>
         </table>
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>存貨週轉天數</p>
-          <p>單位：天</p>
+          <p>{t('reports:REPORTS.INVENTORY_TURNOVER_DAYS')}</p>
+          <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
               <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                {curYear}年度
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: curYear })}
               </th>
               <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                {preYear}年度
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: preYear })}
               </th>
             </tr>
           </thead>
           <tbody>
             {renderDataRow(
-              '存貨週轉天數',
+              t('reports:REPORTS.INVENTORY_TURNOVER_DAYS'),
               reportFinancial?.otherInfo?.inventoryTurnoverDays.curInventoryTurnoverDays,
               reportFinancial?.otherInfo?.inventoryTurnoverDays.preInventoryTurnoverDays
             )}
