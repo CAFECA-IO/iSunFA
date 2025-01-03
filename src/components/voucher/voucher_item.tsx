@@ -42,14 +42,14 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
 
   const displayedVoucherNo =
     voucherType === VoucherType.RECEIVE ? (
-      <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
-        <FaDownload size={14} className="text-surface-state-error-dark" />
-        <p className="text-sm text-text-state-error-solid">{voucherNo}</p>
+      <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
+        <FaDownload size={14} className="text-surface-state-success-dark" />
+        <p className="text-sm text-text-state-success-solid">{voucherNo}</p>
       </div>
     ) : voucherType === VoucherType.EXPENSE ? (
-      <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
-        <FaUpload size={14} className="text-surface-state-success-dark" />
-        <p className="text-sm text-text-state-success-solid">{voucherNo}</p>
+      <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
+        <FaUpload size={14} className="text-surface-state-error-dark" />
+        <p className="text-sm text-text-state-error-solid">{voucherNo}</p>
       </div>
     ) : (
       <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
