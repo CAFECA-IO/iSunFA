@@ -278,7 +278,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           </div>
           <p className="font-bold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-10">每股盈餘單位：新台幣元</span>
+            <span className="pl-10">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         {!isSummaryCollapsed && (
@@ -294,7 +294,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   {!isSummaryCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
-                      {formattedCurFromDate}至{formattedCurToDate}
+                      {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                     </p>
                   )}
                 </th>
@@ -307,7 +307,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 >
                   {financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
-                      {formattedPreFromDate}至{formattedPreToDate}
+                      {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                     </p>
                   )}
                 </th>
@@ -343,7 +343,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           <p className="font-bold leading-5">
             {' '}
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-5">每股盈餘單位：新台幣元</span>
+            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         {!isDetailCollapsed && (
@@ -362,7 +362,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 >
                   {!isDetailCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
-                      {formattedCurFromDate}至{formattedCurToDate}
+                      {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                     </p>
                   )}
                 </th>
@@ -375,7 +375,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 >
                   {financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
-                      {formattedPreFromDate}至{formattedPreToDate}
+                      {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                     </p>
                   )}
                 </th>
@@ -414,7 +414,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                    {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -424,7 +424,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
-                    {formattedPreFromDate} 至{formattedPreToDate}
+                    {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -535,13 +535,13 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
         </table>
         {financialReport && financialReport.company && (
           <p className="mt-4">
-            {formattedCurFromDate}至{formattedCurToDate}
+            {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
             營業收入，為投入費用和成本的{curRatio.toFixed(2)}倍
           </p>
         )}
         {financialReport && financialReport.company && (
           <p className="mt-4">
-            {formattedPreFromDate}至{formattedPreToDate}
+            {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
             營業收入，為投入費用和成本的{preRatio.toFixed(2)}倍
           </p>
         )}
@@ -564,7 +564,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                    {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -574,7 +574,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                    {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>

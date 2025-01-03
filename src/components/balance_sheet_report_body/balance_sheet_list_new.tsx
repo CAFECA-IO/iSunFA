@@ -207,12 +207,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
 
       setCurAssetLiabilityRatio(curALR);
       setPreAssetLiabilityRatio(preALR);
-      setCurAssetLiabilityRatioLabels(
-        curALRLabels.map((label) => t(`reports:ACCOUNTING_ACCOUNT.${label}`))
-      );
-      setPreAssetLiabilityRatioLabels(
-        preALRLabels.map((label) => t(`reports:ACCOUNTING_ACCOUNT.${label}`))
-      );
+      setCurAssetLiabilityRatioLabels(curALRLabels);
+      setPreAssetLiabilityRatioLabels(preALRLabels);
 
       setCurAssetMixRatio(curAMR);
       setPreAssetMixRatio(preAMR);
@@ -662,7 +658,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span className="w-200px">{label}</span>
+                    <span className="w-200px">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
                   </li>
                 ))}
               </ul>
@@ -678,7 +674,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span className="w-200px">{label}</span>
+                    <span className="w-200px">
+                      {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
+                    </span>
                   </li>
                 ))}
               </ul>

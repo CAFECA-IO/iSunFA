@@ -80,7 +80,7 @@ const PrintCostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                    {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -90,7 +90,7 @@ const PrintCostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                    {formattedPreFromDate} 至{formattedPreToDate}
+                    {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -203,13 +203,13 @@ const PrintCostRevRatio = ({
         </table>
         {financialReport && financialReport.company && (
           <p className="mt-4 text-xs">
-            {formattedCurFromDate}至{formattedCurToDate}
+            {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
             營業收入，為投入費用和成本的{curRatio.toFixed(2)}倍
           </p>
         )}
         {financialReport && financialReport.company && (
           <p className="mt-4 text-xs">
-            {formattedPreFromDate}至{formattedPreToDate}
+            {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
             營業收入，為投入費用和成本的{preRatio.toFixed(2)}倍
           </p>
         )}
@@ -234,7 +234,7 @@ const PrintCostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                    {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -244,7 +244,7 @@ const PrintCostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                    {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>

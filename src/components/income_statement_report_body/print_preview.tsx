@@ -12,6 +12,7 @@ interface FirstHeaderProps {
   financialReport: FinancialReport;
 }
 const FirstHeader = ({ financialReport }: FirstHeaderProps) => {
+  const { t } = useTranslation(['reports']);
   const curDateFrom = new Date(financialReport.curDate.from * 1000);
   const curDateTo = new Date(financialReport.curDate.to * 1000);
   const formattedCurFromDate = format(curDateFrom, 'yyyy-MM-dd');
@@ -26,7 +27,7 @@ const FirstHeader = ({ financialReport }: FirstHeaderProps) => {
               {financialReport.company.name}
             </h1>
             <p className="pb-14px text-xs font-bold leading-5 text-white">
-              {formattedCurFromDate} <br />至 {formattedCurToDate}
+              {formattedCurFromDate} <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
               <br />
               財務報告 - 損益表
             </p>
@@ -168,7 +169,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         className="text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
                         <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-                        <span className="pl-5">每股盈餘單位：新台幣元</span>
+                        <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>
@@ -183,7 +184,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
                         {financialReport && financialReport.company && (
                           <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedCurFromDate}至{formattedCurToDate}
+                            {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                           </p>
                         )}
                       </th>
@@ -196,7 +197,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                       >
                         {financialReport && financialReport.company && (
                           <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedPreFromDate}至{formattedPreToDate}
+                            {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                           </p>
                         )}
                       </th>
@@ -257,7 +258,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         className="text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
                         <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-                        <span className="pl-5">每股盈餘單位：新台幣元</span>
+                        <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>
@@ -272,7 +273,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
                         {financialReport && financialReport.company && (
                           <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedCurFromDate}至{formattedCurToDate}
+                            {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                           </p>
                         )}
                       </th>
@@ -285,7 +286,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                       >
                         {financialReport && financialReport.company && (
                           <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedPreFromDate}至{formattedPreToDate}
+                            {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                           </p>
                         )}
                       </th>
