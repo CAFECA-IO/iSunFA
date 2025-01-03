@@ -1,6 +1,6 @@
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useState } from 'react';
-import { FaChevronDown } from 'react-icons/fa6';
+import { FaChevronDown, FaAngleRight } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
 
 enum TaxOptions {
@@ -17,9 +17,7 @@ enum ZeroTaxRateOptions {
 
 const taxRates = {
   TAXABLE_5: 0.05,
-  NONE: 0,
-  THROUGH_CUSTOMS: 0,
-  NOT_THROUGH_CUSTOMS: 0,
+  ZERO_TAX_RATE: 0,
   TAX_FREE: null,
 };
 
@@ -50,27 +48,35 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
     setIsTaxRatioSubMenuOpen(false);
   };
 
-  const handleOptionClick = (option: TaxOptions) => {
+  const handleMainMenuClick = () => {
+    setIsTaxRatioMenuOpen(!isTaxRatioMenuOpen);
+    if (!isTaxRatioMenuOpen) {
+      setIsTaxRatioSubMenuOpen(false);
+    }
+  };
+
+  const handleOptionClick = (option: TaxOptions, event?: React.MouseEvent) => {
+    event?.stopPropagation();
+    setSelectedTax(option);
+    selectTaxHandler(taxRates[option]);
     if (option === TaxOptions.ZERO_TAX_RATE) {
       setIsTaxRatioSubMenuOpen(!isTaxRatioSubMenuOpen);
     } else {
       closeAllMenus();
-      setSelectedTax(option);
-      selectTaxHandler(taxRates[option]);
     }
   };
 
-  const handleZeroTaxRateOptionClick = (option: ZeroTaxRateOptions) => {
+  const handleZeroTaxRateOptionClick = (option: ZeroTaxRateOptions, event?: React.MouseEvent) => {
+    event?.stopPropagation();
     closeAllMenus();
     setSelectedTax(option);
-    selectTaxHandler(taxRates[option]);
   };
 
   return (
     <div
       id="tax-rate-menu"
       ref={taxRatioMenuRef}
-      onClick={() => setIsTaxRatioMenuOpen(!isTaxRatioMenuOpen)}
+      onClick={handleMainMenuClick}
       className={`group relative flex h-46px w-full cursor-pointer md:w-220px ${
         isTaxRatioMenuOpen
           ? 'border-input-stroke-selected text-dropdown-stroke-input-hover'
@@ -94,34 +100,34 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
           {Object.values(TaxOptions).map((value) => (
             <li
               key={value}
-              className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
-              onClick={() => handleOptionClick(value)}
+              className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
+              onClick={(e) => handleOptionClick(value, e)}
             >
-              {t(`certificate:"EDIT".${value}`)}
+              <span>{t(`certificate:EDIT.${value}`)}</span>
+              <span>{value === TaxOptions.ZERO_TAX_RATE && <FaAngleRight />}</span>
             </li>
           ))}
-
-          {/* 次級選單 */}
-          {isTaxRatioSubMenuOpen && (
-            <div
-              ref={taxRatioSubMenuRef}
-              className="border-dropdown-stroke-menu/10 absolute left-full top-0 grid w-full grid-cols-1 overflow-hidden rounded-sm border border-l-1px bg-dropdown-surface-menu-background-secondary shadow-dropmenu"
-            >
-              <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary p-8px">
-                {Object.values(ZeroTaxRateOptions).map((value) => (
-                  <li
-                    key={value}
-                    className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
-                    onClick={() => handleZeroTaxRateOptionClick(value)}
-                  >
-                    {t(`certificate:EDIT.${value}`)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </ul>
       </div>
+      {/* 次級選單 */}
+      {isTaxRatioSubMenuOpen && (
+        <div
+          ref={taxRatioSubMenuRef}
+          className="border-dropdown-stroke-menu/10 absolute left-full top-50px grid w-full translate-x-2 grid-cols-1 overflow-hidden rounded-sm border border-l-1px bg-dropdown-surface-menu-background-secondary shadow-dropmenu"
+        >
+          <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary p-8px">
+            {Object.values(ZeroTaxRateOptions).map((value) => (
+              <li
+                key={value}
+                className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
+                onClick={(e) => handleZeroTaxRateOptionClick(value, e)}
+              >
+                {t(`certificate:EDIT.${value}`)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
