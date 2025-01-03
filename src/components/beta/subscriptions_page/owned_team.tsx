@@ -1,26 +1,22 @@
-import { useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { IoArrowForward } from 'react-icons/io5';
 import { IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
 import { SUBSCRIPTION_PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { useTranslation } from 'next-i18next';
-
-const formatTimestamp = (timestamp: number) => {
-  const date = new Date(timestamp);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  // Info: (20241230 - Liz) 組合成 YYYY/MM/DD 格式
-  return `${year}/${month}/${day}`;
-};
+import { formatTimestamp } from '@/constants/time';
+import { useRouter } from 'next/router';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface OwnedTeamProps {
   team: IUserOwnedTeam;
+  setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
+  setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
 }
 
-const OwnedTeam = ({ team }: OwnedTeamProps) => {
+const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: OwnedTeamProps) => {
   const { t } = useTranslation(['subscriptions']);
-  const [isOn, setIsOn] = useState(team.enableAutoRenewal);
+  const router = useRouter();
 
   const isPlanBeginner = team.plan === TPlanType.BEGINNER;
   const isPlanProfessional = team.plan === TPlanType.PROFESSIONAL;
@@ -30,6 +26,19 @@ const OwnedTeam = ({ team }: OwnedTeamProps) => {
   const formatter = new Intl.NumberFormat('en-US');
   const formatPrice = teamUsingPlan ? `$ ${formatter.format(teamUsingPlan.price)} / Month` : null;
   const price = isPlanBeginner ? 'Free' : formatPrice;
+  const isAutoRenewalEnabled = team.enableAutoRenewal;
+
+  const openTurnOnAutoRenewalModal = () => {
+    setTeamForAutoRenewalOn(team);
+  };
+
+  const openTurnOffAutoRenewalModal = () => {
+    setTeamForAutoRenewalOff(team);
+  };
+
+  const goToChangePlanPage = () => {
+    router.push(`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}`);
+  };
 
   return (
     <main className="flex">
@@ -72,7 +81,12 @@ const OwnedTeam = ({ team }: OwnedTeamProps) => {
               <span className="text-lg font-semibold text-text-neutral-primary">
                 {t('subscriptions:SUBSCRIPTIONS_PAGE.ENABLE_AUTO_RENEWAL')}
               </span>
-              <SimpleToggle isOn={isOn} setIsOn={setIsOn} />
+              <SimpleToggle
+                isOn={isAutoRenewalEnabled}
+                onClick={
+                  isAutoRenewalEnabled ? openTurnOffAutoRenewalModal : openTurnOnAutoRenewalModal
+                }
+              />
             </div>
           </section>
         )}
@@ -81,6 +95,7 @@ const OwnedTeam = ({ team }: OwnedTeamProps) => {
           <button
             type="button"
             className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-24px py-10px text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+            onClick={goToChangePlanPage}
           >
             <span className="text-base font-medium">
               {t('subscriptions:SUBSCRIPTIONS_PAGE.CHANGE_PLAN')}
