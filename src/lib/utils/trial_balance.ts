@@ -1,3 +1,4 @@
+import { IAccountNodeWithDebitAndCredit } from '@/interfaces/accounting_account';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IAccountBookNodeJSON } from '@/interfaces/account_book_node';
 import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
@@ -109,7 +110,7 @@ export function combineAccountsToTrialBalance(
   collectAccounts(accountMap, midtermAccounts, 'midterm');
   collectAccounts(accountMap, endingAccounts, 'ending');
 
-  const convertToTrialBalanceItem = (data: {
+  const convertToTrialBalanceItemInFunction = (data: {
     beginning?: IAccountBookNodeJSON;
     midterm?: IAccountBookNodeJSON;
     ending?: IAccountBookNodeJSON;
@@ -155,7 +156,7 @@ export function combineAccountsToTrialBalance(
 
       // Info: (20241130 - Shirley) 遞迴轉換子科目
       childrenMap.forEach((childData) => {
-        subAccounts.push(convertToTrialBalanceItem(childData));
+        subAccounts.push(convertToTrialBalanceItemInFunction(childData));
       });
     }
 
@@ -178,7 +179,7 @@ export function combineAccountsToTrialBalance(
   // Info: (20241130 - Shirley) 轉換所有科目
   const result: TrialBalanceItem[] = [];
   accountMap.forEach((data) => {
-    result.push(convertToTrialBalanceItem(data));
+    result.push(convertToTrialBalanceItemInFunction(data));
   });
 
   return result;
@@ -376,7 +377,10 @@ export function transformTrialBalanceData(
 /** Info: (20241230 - Shirley)
  * 取得當前401申報週期的期初和期末時間點
  */
-export function getCurrent401Period(): { periodBegin: number; periodEnd: number } {
+export function getCurrent401Period(): {
+  periodBegin: number;
+  periodEnd: number;
+} {
   const currentDate = new Date();
   const month = currentDate.getMonth() + 1; // 月份從0開始
   const year = currentDate.getFullYear();
@@ -481,6 +485,11 @@ export function mergeLineItems(
 //   return finalItems;
 // }
 
+/** Info: (20250102 - Shirley)
+ * 將會計分錄依照會計科目合併跟加總
+ * @param lineItems 會計分錄列表
+ * @returns 合併後的會計分錄
+ */
 export function mergeLineItemsByAccount(
   lineItems: ILineItemSimpleAccountVoucher[]
 ): ILineItemInTrialBalanceItem[] {
@@ -523,7 +532,7 @@ export function mergeLineItemsByAccount(
     }
   });
 
-  // Info: (20250102 - Shirley) 將 Map 轉換為陣列並返回，移除對 amount 的修改
+  // Info: (20250102 - Shirley) 將 Map 轉換為陣列並返回
   return Array.from(accountSummary.values()).map((summary) => ({
     accountId: summary.accountId,
     accountCode: summary.accountCode,
@@ -630,7 +639,7 @@ export function calculateEndingBalance(
  * @param periodEnd 期末時間
  * @returns 試算表格式的資料
  */
-export function convertToTrialBalanceFormat(
+export function convertToTrialBalanceItem(
   lineItems: ILineItemSimpleAccountVoucher[],
   periodBegin: number,
   periodEnd: number
@@ -660,7 +669,7 @@ export function convertToTrialBalanceFormat(
  * @param lineItems 試算表格式資料
  * @returns API 格式資料
  */
-export function convertToTrialBalanceAPIFormat(lineItems: {
+export function convertLineItemsToTrialBalanceAPIFormat(lineItems: {
   beginning: ILineItemInTrialBalanceItem[];
   midterm: ILineItemInTrialBalanceItem[];
   ending: ILineItemInTrialBalanceItem[];
@@ -697,8 +706,248 @@ export function convertToTrialBalanceAPIFormat(lineItems: {
     subAccounts: [], // TODO: (20250102 - Shirley) 額外處理子科目
   }));
 
+  const rs = {
+    items,
+    total,
+  };
+
+  return rs;
+}
+
+// Info: (20250102 - Shirley) 根據 accountId 將金額累加到帳戶樹中
+export const aggregateAmounts = (
+  accountsWithDebitAndCredit: IAccountNodeWithDebitAndCredit[],
+  lineItemsForCal: ILineItemInTrialBalanceItem[]
+): IAccountNodeWithDebitAndCredit[] => {
+  const rs = accountsWithDebitAndCredit.map((account) => {
+    // 處理子科目
+    const updatedChildren = aggregateAmounts(account.children, lineItemsForCal);
+
+    // 計算當前帳戶的 debitAmount 和 creditAmount
+    // 如果有 children 的話，此科目的 debitAmount 跟 creditAmount 單純為 children 的 debitAmount 跟 creditAmount 加總
+    let currentDebit = 0;
+    let currentCredit = 0;
+    if (account.children.length > 0) {
+      currentDebit = updatedChildren.reduce((sum, child) => sum + child.debitAmount, 0);
+      currentCredit = updatedChildren.reduce((sum, child) => sum + child.creditAmount, 0);
+    } else {
+      const currentLineItems = lineItemsForCal.filter((item) => item.accountId === account.id);
+      currentDebit = currentLineItems.reduce((sum, item) => sum + item.debitAmount, 0);
+      currentCredit = currentLineItems.reduce((sum, item) => sum + item.creditAmount, 0);
+    }
+
+    return {
+      ...account,
+      debitAmount: currentDebit,
+      creditAmount: currentCredit,
+      children: updatedChildren,
+    };
+  });
+
+  return rs;
+};
+
+export function convertAccountForestToTrialBalance(accountsOfThree: {
+  beginning: IAccountNodeWithDebitAndCredit[];
+  midterm: IAccountNodeWithDebitAndCredit[];
+  ending: IAccountNodeWithDebitAndCredit[];
+}) {
+  const total = {
+    beginningCreditAmount: accountsOfThree.beginning.reduce(
+      (sum, item) => sum + item.creditAmount,
+      0
+    ),
+    beginningDebitAmount: accountsOfThree.beginning.reduce(
+      (sum, item) => sum + item.debitAmount,
+      0
+    ),
+    midtermCreditAmount: accountsOfThree.midterm.reduce((sum, item) => sum + item.creditAmount, 0),
+    midtermDebitAmount: accountsOfThree.midterm.reduce((sum, item) => sum + item.debitAmount, 0),
+    endingCreditAmount: accountsOfThree.ending.reduce((sum, item) => sum + item.creditAmount, 0),
+    endingDebitAmount: accountsOfThree.ending.reduce((sum, item) => sum + item.debitAmount, 0),
+    createAt: 0,
+    updateAt: 0,
+  };
+
+  /**
+   * 遞迴尋找特定 ID 的帳戶
+   * @param accounts 帳戶陣列
+   * @param id 要尋找的帳戶 ID
+   * @returns 找到的帳戶或 undefined
+   */
+  const findAccountById = (
+    accounts: IAccountNodeWithDebitAndCredit[],
+    id: number
+  ): IAccountNodeWithDebitAndCredit | undefined => {
+    return accounts.find((account) => {
+      if (account.id === id) {
+        // if (account.id === 10001469) {
+        //   console.log("findAccountById", account);
+        // }
+        return true;
+      }
+      if (account.children && account.children.length > 0) {
+        const found = findAccountById(account.children, id);
+        if (found) return true;
+      }
+      return false;
+    });
+  };
+
+  /**
+   * 遞迴處理單一帳戶及其子帳戶
+   * @param account 單一帳戶節點
+   * @returns 試算表項目
+   */
+  const processAccount = (account: IAccountNodeWithDebitAndCredit): TrialBalanceItem => {
+    // // 尋找對應的期初、期中、期末金額
+    // const beginningItem = accountsOfThree.beginning.find((b) => b.id === account.id);
+    // const midtermItem = accountsOfThree.midterm.find((m) => m.id === account.id);
+    // const endingItem = accountsOfThree.ending.find((e) => e.id === account.id);
+
+    // 使用遞迴函數尋找對應的期初、期中、期末金額
+    const beginningItem = findAccountById(accounts.beginning, account.id);
+    const midtermItem = findAccountById(accounts.midterm, account.id);
+    const endingItem = findAccountById(accounts.ending, account.id);
+
+    // 處理子科目遞迴，確保子科目資料基於其 ID
+    const subAccounts: TrialBalanceItem[] = account.children
+      .map((child) => {
+        const fullChild = findAccountById(accounts.ending, child.id);
+        if (!fullChild) return null;
+        return processAccount(fullChild);
+      })
+      .filter(
+        (sub): sub is TrialBalanceItem =>
+          sub !== null &&
+          (sub.beginningDebitAmount !== 0 ||
+            sub.beginningCreditAmount !== 0 ||
+            sub.midtermDebitAmount !== 0 ||
+            sub.midtermCreditAmount !== 0 ||
+            sub.endingDebitAmount !== 0 ||
+            sub.endingCreditAmount !== 0)
+      );
+
+    return {
+      id: account.id,
+      no: account.code,
+      accountingTitle: account.name,
+      beginningCreditAmount: beginningItem?.creditAmount || 0,
+      beginningDebitAmount: beginningItem?.debitAmount || 0,
+      midtermCreditAmount: midtermItem?.creditAmount || 0,
+      midtermDebitAmount: midtermItem?.debitAmount || 0,
+      endingCreditAmount: endingItem?.creditAmount || 0,
+      endingDebitAmount: endingItem?.debitAmount || 0,
+      createAt: account.createdAt,
+      updateAt: account.updatedAt,
+      subAccounts,
+    };
+
+    // // 處理子科目遞迴
+    // const subAccounts: TrialBalanceItem[] = account.children.map((child) => processAccount(child));
+    // // .filter(
+    // //   (sub) =>
+    // //     sub.beginningDebitAmount !== 0 ||
+    // //     sub.beginningCreditAmount !== 0 ||
+    // //     sub.midtermDebitAmount !== 0 ||
+    // //     sub.midtermCreditAmount !== 0 ||
+    // //     sub.endingDebitAmount !== 0 ||
+    // //     sub.endingCreditAmount !== 0
+    // // );
+
+    // return {
+    //   id: account.id,
+    //   no: account.code,
+    //   accountingTitle: account.name,
+
+    //   beginningDebitAmount: beginningItem?.debitAmount || 0,
+
+    //   beginningCreditAmount: beginningItem?.creditAmount || 0,
+    //   midtermDebitAmount: midtermItem?.debitAmount || 0,
+
+    //   midtermCreditAmount: midtermItem?.creditAmount || 0,
+    //   endingDebitAmount: endingItem?.debitAmount || 0,
+
+    //   endingCreditAmount: endingItem?.creditAmount || 0,
+    //   createAt: account.createdAt,
+    //   updateAt: account.updatedAt,
+    //   subAccounts,
+    // };
+  };
+
+  // 處理所有期末帳戶，假設期末帳戶包含所有必要的帳戶資訊
+  const items: TrialBalanceItem[] = accountsOfThree.ending
+    .map((account) => processAccount(account))
+    .filter(
+      (item) =>
+        item.beginningDebitAmount !== 0 ||
+        item.beginningCreditAmount !== 0 ||
+        item.midtermDebitAmount !== 0 ||
+        item.midtermCreditAmount !== 0 ||
+        item.endingDebitAmount !== 0 ||
+        item.endingCreditAmount !== 0
+    );
+
   return {
     items,
     total,
   };
 }
+
+export function mergeAccount(
+  account1: IAccountNodeWithDebitAndCredit,
+  account2: IAccountNodeWithDebitAndCredit
+) {
+  const newAccount = {
+    ...account1,
+    debitAmount: account1.debitAmount + account2.debitAmount,
+    creditAmount: account1.creditAmount + account2.creditAmount,
+  };
+
+  return newAccount;
+}
+
+// TODO: (20250102 - Shirley) 合併 IAccountNodeWithDebitAndCredit
+// export function mergeThreeAccountForest(
+//   beginning: IAccountNodeWithDebitAndCredit[],
+//   midterm: IAccountNodeWithDebitAndCredit[],
+//   ending: IAccountNodeWithDebitAndCredit[]
+// ) {
+//   /* eslint-disable */
+//   for (const account of beginning) {
+//     if (account.children) {
+//       for (const child of account.children) {
+//         const childInMidterm = midterm.find((m) => m.id === child.id) ?? [];
+//         const childInEnding = ending.find((e) => e.id === child.id) ?? [];
+//         const mergedChild = mergeAccount(child, childInMidterm);
+//       }
+//     }
+//   }
+
+//   const merged = mergeAccount(beginning, midterm);
+
+//   return merged;
+// }
+
+/** TODO: (20250102 - Shirley) 遞迴轉換資料格式
+ * 一次丟一個節點，檢查是否有 children，有則處理children跟處理自己，沒有則處理自己
+ */
+// export function transformAccountToTrialBalance(
+//   account: IAccountNodeWithDebitAndCredit
+// ): any {
+//   if (account.children && account.children.length > 0) {
+//     return transformAccountToTrialBalance(account);
+//   } else {
+//     return {
+//       id: account.id,
+//       no: account.code,
+//       accountingTitle: account.name,
+//       beginningCreditAmount: 0,
+//       beginningDebitAmount: 0,
+//       midtermCreditAmount: 0,
+//       midtermDebitAmount: 0,
+//       endingCreditAmount: 0,
+//       endingDebitAmount: 0,
+//     };
+//   }
+// }
