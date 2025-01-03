@@ -654,7 +654,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 {t('setting:ACCOUNTING.IMPORT_FILE')}
               </button>
             </div>
-            {/* Info: (20241106 - Julian) ===== 手動開戶 ===== */}
+            {/* Info: (20241106 - Julian) ===== 手動開帳 ===== */}
             <div className="flex w-full items-center gap-16px">
               <Image
                 src="/icons/account_opening.svg"

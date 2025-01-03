@@ -4,11 +4,11 @@ import SortingButton from '@/components/voucher/sorting_button';
 import PayableReceivableVoucherItem from '@/components/voucher/payable_receivable_voucher_item';
 import { SortOrder } from '@/constants/sort';
 import { IVoucherBeta } from '@/interfaces/voucher';
-import { VoucherListTabV2 } from '@/constants/voucher';
+import { PayableReceivableTabs } from '@/constants/voucher';
 
 interface IPayableReceivableVoucherListProps {
   voucherList: IVoucherBeta[];
-  activeTab: VoucherListTabV2;
+  activeTab: PayableReceivableTabs;
   dateSort: SortOrder | null;
   payReceiveSort: SortOrder | null;
   payReceiveAlreadyHappenedSort: SortOrder | null;
@@ -52,7 +52,7 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
   // Info: (20240924 - Julian) Receivable / Payable Amount 排序按鈕
   const displayedReceivableAmount = SortingButton({
     string:
-      activeTab === VoucherListTabV2.RECEIVING
+      activeTab === PayableReceivableTabs.RECEIVING
         ? t('journal:VOUCHER.RECEIVABLE_AMOUNT')
         : t('journal:VOUCHER.PAYABLE_AMOUNT'),
     sortOrder: payReceiveSort,
@@ -67,7 +67,7 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
   // Info: (20240924 - Julian) Received / Paid Amount 排序按鈕
   const displayedReceivedAmount = SortingButton({
     string:
-      activeTab === VoucherListTabV2.RECEIVING
+      activeTab === PayableReceivableTabs.RECEIVING
         ? t('journal:VOUCHER.RECEIVED_AMOUNT')
         : t('journal:VOUCHER.PAID_AMOUNT'),
     sortOrder: payReceiveAlreadyHappenedSort,

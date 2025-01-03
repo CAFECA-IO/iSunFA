@@ -107,7 +107,7 @@ export const handleGetRequest: IHandleRequest<
 
       const certificate: ICertificate & {
         uploaderUrl: string;
-        voucherId: number | null;
+        voucherId: number | undefined;
       } = getListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
       return certificate;
     });
@@ -192,7 +192,7 @@ export const handlePostRequest: IHandleRequest<
 
     const certificates: (ICertificate & {
       uploaderUrl: string;
-      voucherId: number | null;
+      voucherId: number | undefined;
     })[] = await Promise.all(
       fileIds.map(async (fileId) => {
         const certificateFromPrisma = await postUtils.createCertificateInPrisma({
@@ -232,7 +232,7 @@ export const handlePostRequest: IHandleRequest<
 
         const certificate: ICertificate & {
           uploaderUrl: string;
-          voucherId: number | null;
+          voucherId: number | undefined;
         } = postUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
 
         postUtils.triggerPusherNotification(certificate, {

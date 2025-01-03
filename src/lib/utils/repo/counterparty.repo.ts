@@ -10,6 +10,16 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 
+export async function getCounterpartyByName(name: string) {
+  const counterparty = await prisma.counterparty.findFirst({
+    where: {
+      name,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+  });
+
+  return counterparty;
+}
 // Info: (20241022 - Jacky) Create
 export async function createCounterparty(
   companyId: number,

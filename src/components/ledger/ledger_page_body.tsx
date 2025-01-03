@@ -137,6 +137,7 @@ const LedgerPageBody = () => {
           forUser: true,
           sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
           sortOrder: 'asc',
+          isDeleted: false, // Info: (20250102 - Julian) 只取未刪除的
         },
       });
 

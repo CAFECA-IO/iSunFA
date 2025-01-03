@@ -6,10 +6,10 @@ import { FaDownload, FaUpload } from 'react-icons/fa';
 import { VoucherType } from '@/constants/account';
 import { FiRepeat } from 'react-icons/fi';
 import { IVoucherBeta } from '@/interfaces/voucher';
-import { VoucherListTabV2 } from '@/constants/voucher';
+import { PayableReceivableTabs } from '@/constants/voucher';
 
 interface IPayableReceivableVoucherItemProps {
-  activeTab: VoucherListTabV2;
+  activeTab: PayableReceivableTabs;
   voucherData: IVoucherBeta;
 }
 
@@ -45,7 +45,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
     total: totalAmount,
     alreadyHappened: alreadyHappenedAmount,
     remain: remainAmount,
-  } = activeTab === VoucherListTabV2.RECEIVING ? receivingInfo : payableInfo;
+  } = activeTab === PayableReceivableTabs.RECEIVING ? receivingInfo : payableInfo;
 
   const displayedDate = (
     <div className="flex items-center justify-center">
@@ -115,7 +115,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
         // eslint-disable-next-line react/prop-types
         reverseVouchers.map((voucher) => (
           <Link
-            href={`/users/accounting/${voucher.id}`}
+            href={`/users/accounting/${voucher.id}?voucherNo=${voucherNo}`}
             className="text-center text-link-text-primary"
           >
             {/* eslint-disable-next-line react/prop-types */}
@@ -130,7 +130,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
 
   return (
     <Link
-      href={`/users/accounting/${voucherId}`}
+      href={`/users/accounting/${voucherId}?voucherNo=${voucherNo}`}
       className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
     >
       {/* Info: (20240924 - Julian) Issued Date */}

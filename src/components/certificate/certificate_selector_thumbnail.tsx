@@ -79,7 +79,7 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
           </div>
         </div>
         <div className="text-xs font-medium text-text-neutral-primary">
-          {simplifyFileName(certificate.name)}
+          {simplifyFileName(certificate.file.name)}
         </div>
       </div>
     </>

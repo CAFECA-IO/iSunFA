@@ -173,7 +173,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
           <div className="grid grid-cols-3 gap-lv-7">
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.NAME')}
+                {t('company:EDIT.COMPANY_NAME')}
               </p>
               <input
                 id="company-name-input"
