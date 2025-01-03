@@ -207,8 +207,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
 
       setCurAssetLiabilityRatio(curALR);
       setPreAssetLiabilityRatio(preALR);
-      // setCurAssetLiabilityRatioLabels(curALRLabels);
-      // setPreAssetLiabilityRatioLabels(preALRLabels);
       setCurAssetLiabilityRatioLabels(
         curALRLabels.map((label) => t(`reports:ACCOUNTING_ACCOUNT.${label}`))
       );
@@ -479,7 +477,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="justify-start">
                         <span>{child.code}</span>
-                        {/* <span className="ml-2">{child.name}</span> */}
                         <span className="ml-2">
                           {t(`reports:ACCOUNTING_ACCOUNT.${child.name}`)}
                         </span>
