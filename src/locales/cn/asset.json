@@ -74,7 +74,7 @@
     "RESIDUAL_VALUE": "残值",
     "REMAINING_LIFE": "剩余使用年限",
     "NOTE": "备注",
-    "VOUCHER": "凭证",
+    "VOUCHER": "传票",
     "NO_ASSET": "无资产"
   },
   "EDIT_ASSET_MODAL": {
@@ -91,6 +91,7 @@
     "D": "日",
     "TWD": "新台币",
     "SELECT_ALL": "全选",
+    "UNSELECT_ALL": "取消全选",
     "SELECT": "选择"
   },
   "CURRENCY_ALIAS": {

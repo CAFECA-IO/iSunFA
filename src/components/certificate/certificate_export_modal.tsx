@@ -40,7 +40,7 @@ const CertificateExportModal: React.FC<CertificateExportModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="relative flex h-340px w-600px flex-col rounded-sm bg-surface-neutral-surface-lv2 p-20px md:max-h-90vh">
         {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
         <button

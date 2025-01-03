@@ -131,7 +131,7 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
   };
 
   const isDisplayedExportVoucherModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
+    <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50 font-barlow">
       <div className="relative flex w-90vw flex-col items-center gap-24px rounded-md bg-card-surface-primary px-24px py-26px shadow-lg shadow-black/80 md:w-600px">
         {/* Info: (20240924 - Julian) Close button */}
         <button type="button" onClick={modalVisibilityHandler} className="absolute right-4 top-4">

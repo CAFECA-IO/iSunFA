@@ -15,7 +15,7 @@ const PreviewModal = ({ togglePreviewModal }: PreviewModalProps) => {
   const videoIds = ['video1', 'video2', 'video3', 'video4', 'video5'];
 
   return (
-    <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="flex w-700px flex-col gap-40px rounded-lg bg-white p-40px">
         <section className="flex items-center justify-between">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">

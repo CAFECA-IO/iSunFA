@@ -86,7 +86,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   }, [accountTitleList]);
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="relative mx-auto flex w-90vw flex-col items-stretch gap-y-24px rounded-lg bg-card-surface-primary p-40px shadow-lg shadow-black/80 lg:w-720px">
         {/* Info: (20241108 - Julian) Title */}
         <h1 className="text-center text-xl font-bold text-text-neutral-primary">
