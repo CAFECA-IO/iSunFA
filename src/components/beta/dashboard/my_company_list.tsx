@@ -49,7 +49,7 @@ const CompanyItem = ({
         alt={companyAndRole.company.name}
         width={60}
         height={60}
-        className="h-60px w-60px rounded-sm bg-white"
+        className="h-60px w-60px rounded-sm bg-surface-neutral-surface-lv2 object-contain"
       ></Image>
       <p className="w-full truncate">{companyAndRole.company.name}</p>
     </button>

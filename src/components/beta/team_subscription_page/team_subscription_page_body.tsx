@@ -1,6 +1,7 @@
 import { IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
 import { formatTimestamp } from '@/constants/time';
 import { useTranslation } from 'next-i18next';
+import SubscriptionFAQ from '@/components/beta/team_subscription_page/subscription_faq';
 
 interface TeamSubscriptionPageBodyProps {
   team: IUserOwnedTeam;
@@ -55,6 +56,8 @@ const TeamSubscriptionPageBody = ({ team }: TeamSubscriptionPageBodyProps) => {
           </div>
         </section>
       </section>
+
+      <SubscriptionFAQ />
     </main>
   );
 };
