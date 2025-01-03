@@ -122,7 +122,7 @@ const AssetStatusSettingModal: React.FC<IAssetStatusSettingModal> = ({
   });
 
   const isDisplayedAssetStatusSettingModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
+    <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50 font-barlow">
       <form
         onSubmit={updateAssetHandler}
         className="relative flex w-90vw flex-col items-center gap-24px rounded-md bg-card-surface-primary px-24px py-26px shadow-lg shadow-black/80 md:w-600px"

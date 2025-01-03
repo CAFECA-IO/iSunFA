@@ -44,7 +44,7 @@ const handlePostRequest: IHandleRequest<APIName.COUNTERPARTY_ADD, ICounterparty>
 
   const { companyId } = query;
   const { name, taxId, type, note } = body;
-  const originClient = await getCounterpartyByName(name);
+  const originClient = await getCounterpartyByName({ name, companyId });
 
   if (originClient) {
     statusMessage = STATUS_MESSAGE.BAD_REQUEST;

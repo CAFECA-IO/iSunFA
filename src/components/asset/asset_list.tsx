@@ -70,7 +70,7 @@ const AssetList: React.FC<IAssetListProps> = ({
   const [selectedAssetList, setSelectedAssetList] = useState<IAssetItemUI[]>([]);
 
   // Info: (20240925 - Julian) css string
-  const tableCellStyles = 'table-cell text-center align-middle';
+  const tableCellStyles = 'table-cell text-center align-middle h-60px';
   const sideBorderStyles = 'border-r border-stroke-neutral-quaternary border-b';
   const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
 
@@ -305,7 +305,7 @@ const AssetList: React.FC<IAssetListProps> = ({
           className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
           onClick={selectAllHandler}
         >
-          {t('asset:COMMON.SELECT_ALL')}
+          {isSelectedAll ? t('asset:COMMON.UNSELECT_ALL') : t('asset:COMMON.SELECT_ALL')}
         </button>
         {/* Info: (20241024 - Julian) Cancel selecting button */}
         <button

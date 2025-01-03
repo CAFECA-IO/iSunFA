@@ -57,7 +57,7 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
     );
 
   return (
-    <main className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+    <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="relative">
           <h1 className="flex flex-col items-center justify-center gap-2 p-2 text-xl font-semibold text-card-text-title">

@@ -78,8 +78,10 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
         const readByUsers = getUtils.initUserVoucherEntities(voucherFromPrisma);
         const sum = getUtils.getLineItemAmountSum(lineItemEntities);
         const originalEventEntities = getUtils.initOriginalEventEntities(voucherFromPrisma);
-        const { payableInfo, receivingInfo } =
-          getUtils.getPayableReceivableInfoFromVoucher(originalEventEntities);
+        const { payableInfo, receivingInfo } = getUtils.getPayableReceivableInfoFromVoucher(
+          originalEventEntities,
+          lineItemEntities
+        );
 
         const voucherBeta: IGetManyVoucherBetaEntity = {
           ...voucherEntity,
@@ -296,45 +298,40 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
     const newVoucherNo = ''; // Info: (20241025 - Murky) [Warning!] VoucherNo 需要在存入的transaction中取得
 
     // Info: (20241029 - Murky) 一開始都先用public counterParty, 進入Reverse邏輯後在使用前端傳進來的counterParty
-    const publicCounterPartyEntity: ICounterPartyEntity = initCounterPartyEntity({
-      id: PUBLIC_COUNTER_PARTY.id,
-      companyId: PUBLIC_COUNTER_PARTY.companyId,
-      name: PUBLIC_COUNTER_PARTY.name,
-      taxId: PUBLIC_COUNTER_PARTY.taxId,
-      type: PUBLIC_COUNTER_PARTY.type,
-      note: PUBLIC_COUNTER_PARTY.note,
-      createdAt: PUBLIC_COUNTER_PARTY.createdAt,
-      updatedAt: PUBLIC_COUNTER_PARTY.updatedAt,
-      deletedAt: PUBLIC_COUNTER_PARTY.deletedAt,
-    });
+    const counterPartyEntity: ICounterPartyEntity = isCounterPartyIdExist
+      ? await postUtils.initCounterPartyFromPrisma(counterPartyId!)
+      : initCounterPartyEntity({
+          id: PUBLIC_COUNTER_PARTY.id,
+          companyId: PUBLIC_COUNTER_PARTY.companyId,
+          name: PUBLIC_COUNTER_PARTY.name,
+          taxId: PUBLIC_COUNTER_PARTY.taxId,
+          type: PUBLIC_COUNTER_PARTY.type,
+          note: PUBLIC_COUNTER_PARTY.note,
+          createdAt: PUBLIC_COUNTER_PARTY.createdAt,
+          updatedAt: PUBLIC_COUNTER_PARTY.updatedAt,
+          deletedAt: PUBLIC_COUNTER_PARTY.deletedAt,
+        });
 
     const lineItemEntities = postUtils.initLineItemEntities(lineItems);
 
     const voucher = initVoucherEntity({
       issuerId: issuer.id,
-      counterPartyId: publicCounterPartyEntity.id,
+      counterPartyId: counterPartyEntity.id,
       companyId: company.id,
       type: voucherInfo.type,
       status: JOURNAL_EVENT.UPLOADED,
       editable: isVoucherEditable,
       no: newVoucherNo,
       date: voucherInfo.voucherDate,
+      note: voucherInfo.note,
     });
 
-    voucher.counterParty = publicCounterPartyEntity;
+    voucher.counterParty = counterPartyEntity;
     voucher.lineItems = lineItemEntities;
 
     // ToDo: (20241025 - Murky) Revert Logic, 也許可以拉到別的地方
     if (doRevert) {
       // Info: (20241029 - Murky) Revert Event need to use counterParty Provided by frontend
-      if (!isCounterPartyIdExist) {
-        postUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: 'counterPartyId is required when post revert voucher',
-          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-        });
-      }
-
-      const counterPartyEntity = await postUtils.initCounterPartyFromPrisma(counterPartyId!);
 
       if (!isReverseVouchersInfoHasItems) {
         postUtils.throwErrorAndLog(loggerBack, {
