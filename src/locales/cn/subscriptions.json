@@ -7,6 +7,15 @@
     "CHANGE_PLAN": "变更方案",
     "BILLING": "账单",
     "NEXT_RENEWAL": "下次续订",
-    "EXPIRED_DATE": "到期日"
+    "EXPIRED_DATE": "到期日",
+    "TURN_ON_AUTO_RENEWAL_TITLE": "开启自动续订",
+    "TURN_ON_AUTO_RENEWAL_MESSAGE": "您确定要开启自动续订吗？",
+    "YES_TURN_ON_AUTO_RENEWAL": "是，开启自动续订",
+    "CANCEL": "取消",
+    "TURN_OFF_AUTO_RENEWAL_TITLE": "关闭自动续订",
+    "TURN_OFF_AUTO_RENEWAL_MESSAGE": "您确定要关闭自动续订吗？",
+    "YES_TURN_OFF_AUTO_RENEWAL": "是，关闭自动续订",
+    "CHOOSE_THE_PLAN_THAT_FITS_YOUR_TEAM": "选择适合您团队的方案",
+    "PLAN_FOR": "管理方案 - "
   }
 }

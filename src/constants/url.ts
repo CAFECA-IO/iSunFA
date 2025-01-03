@@ -34,6 +34,7 @@ export const ISUNFA_ROUTE = {
   LEDGER: '/users/accounting/ledger',
   TRIAL_BALANCE: '/users/accounting/trial_balance',
   COUNTERPARTY: '/users/setting/counterparty',
+  SUBSCRIPTIONS: '/users/subscriptions',
 
   KYC: '/users/kyc',
   SALARY: '/users/salary',
