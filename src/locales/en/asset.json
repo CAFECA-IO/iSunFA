@@ -90,7 +90,8 @@
     "Y": "Y",
     "D": "D",
     "SELECT": "Select",
-    "SELECT_ALL": "Select All"
+    "SELECT_ALL": "Select All",
+    "UNSELECT_ALL": "Unselect All"
   },
   "CURRENCY_ALIAS": {
     "TWD": "TWD",

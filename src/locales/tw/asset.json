@@ -74,7 +74,7 @@
     "RESIDUAL_VALUE": "殘值",
     "REMAINING_LIFE": "剩餘使用年限",
     "NOTE": "備註",
-    "VOUCHER": "憑證",
+    "VOUCHER": "傳票",
     "NO_ASSET": "無資產"
   },
   "EDIT_ASSET_MODAL": {
@@ -91,6 +91,7 @@
     "D": "日",
     "TWD": "新台幣",
     "SELECT_ALL": "全選",
+    "UNSELECT_ALL": "取消全選",
     "SELECT": "選擇"
   },
   "CURRENCY_ALIAS": {

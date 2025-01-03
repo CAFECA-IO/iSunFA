@@ -119,7 +119,6 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   // Info: (20241015 - Julian) 提示訊息
   const [isShowTypeHint, setIsShowTypeHint] = useState<boolean>(false);
-  const [isShowResidualValueHint, setIsShowResidualValueHint] = useState<boolean>(false);
   const [isShowTotalHint, setIsShowTotalHint] = useState<boolean>(false);
   const [isShowAcquisitionDateHint, setIsShowAcquisitionDateHint] = useState<boolean>(false);
   const [isShowDepreciationStartDateHint, setIsShowDepreciationStartDateHint] =
@@ -146,7 +145,6 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       setInputNote('');
 
       setIsShowTypeHint(false);
-      setIsShowResidualValueHint(false);
       setIsShowTotalHint(false);
       setIsShowAcquisitionDateHint(false);
       setIsShowDepreciationStartDateHint(false);
@@ -172,12 +170,6 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       setIsShowTypeHint(false);
     }
   }, [accountTitle]);
-
-  useEffect(() => {
-    if (inputResidualValue > 0) {
-      setIsShowResidualValueHint(false);
-    }
-  }, [inputResidualValue]);
 
   useEffect(() => {
     if (inputTotal > 0) {
@@ -395,8 +387,6 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       accountRef.current?.scrollIntoView({ behavior: 'smooth' });
     } else if (inputTotal === 0) {
       setIsShowTotalHint(true);
-    } else if (inputResidualValue === 0) {
-      setIsShowResidualValueHint(true);
     } else if (acquisitionDate.startTimeStamp === 0) {
       setIsShowAcquisitionDateHint(true);
     } else if (depreciationStartDate.startTimeStamp === 0 && isLandCost === false) {
@@ -510,7 +500,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   ));
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="flex max-h-450px w-90vw max-w-600px flex-col overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 md:max-h-90vh">
         {/* Info: (20241015 - Julian) title */}
         <div className="relative flex flex-col items-center px-20px py-16px">
@@ -649,7 +639,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 <span className="text-text-state-error">*</span>
               </p>
               <div
-                className={`flex h-46px w-full items-center justify-between divide-x ${isShowResidualValueHint ? inputStyle.ERROR : inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
+                className={`flex h-46px w-full items-center justify-between divide-x ${inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
               >
                 <NumericInput
                   id="input-residual-value"
@@ -659,7 +649,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                   isDecimal
                   hasComma
                   required
-                  min={1}
+                  min={0}
                   className="flex-1 bg-transparent px-10px text-right outline-none"
                 />
                 <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
