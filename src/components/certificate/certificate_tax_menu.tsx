@@ -16,7 +16,7 @@ enum ZeroTaxRateOptions {
 }
 
 const taxRates = {
-  TAXABLE_5: 0.05,
+  TAXABLE_5: 5,
   ZERO_TAX_RATE: 0,
   TAX_FREE: null,
 };
@@ -57,19 +57,19 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
 
   const handleOptionClick = (option: TaxOptions, event?: React.MouseEvent) => {
     event?.stopPropagation();
-    setSelectedTax(option);
     selectTaxHandler(taxRates[option]);
     if (option === TaxOptions.ZERO_TAX_RATE) {
       setIsTaxRatioSubMenuOpen(!isTaxRatioSubMenuOpen);
     } else {
+      setSelectedTax(option);
       closeAllMenus();
     }
   };
 
   const handleZeroTaxRateOptionClick = (option: ZeroTaxRateOptions, event?: React.MouseEvent) => {
     event?.stopPropagation();
-    closeAllMenus();
     setSelectedTax(option);
+    closeAllMenus();
   };
 
   return (
@@ -77,7 +77,7 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
       id="tax-rate-menu"
       ref={taxRatioMenuRef}
       onClick={handleMainMenuClick}
-      className={`group relative flex h-46px w-full cursor-pointer md:w-220px ${
+      className={`group relative z-100 flex h-46px w-full cursor-pointer md:w-220px ${
         isTaxRatioMenuOpen
           ? 'border-input-stroke-selected text-dropdown-stroke-input-hover'
           : 'border-input-stroke-input text-input-text-input-filled'
