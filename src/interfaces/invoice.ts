@@ -29,7 +29,7 @@ export interface IInvoiceBeta {
   currencyAlias: CurrencyType;
   priceBeforeTax: number;
   taxType: InvoiceTaxType;
-  taxRatio: number;
+  taxRatio: number | null;
   taxPrice: number;
   totalPrice: number;
   type: InvoiceType;
