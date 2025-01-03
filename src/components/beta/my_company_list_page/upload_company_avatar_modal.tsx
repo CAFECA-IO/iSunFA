@@ -96,7 +96,7 @@ const UploadCompanyAvatarModal = ({
   );
 
   return isModalOpen ? (
-    <main className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
+    <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col gap-24px rounded-lg bg-surface-neutral-surface-lv2 p-40px">
         <section className="flex items-center">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">

@@ -145,7 +145,7 @@ const CreateTodoModal = ({
   }, [userAuth]);
 
   return (
-    <main className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
+    <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="overflow-hidden rounded-lg">
         <div className="flex max-h-80vh w-400px flex-col overflow-y-auto bg-surface-neutral-surface-lv2">
           <section className="flex items-center justify-between py-16px pl-40px pr-20px">

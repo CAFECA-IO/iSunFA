@@ -25,7 +25,7 @@ const CreateCompanyModal = ({ toggleModal }: CreateCompanyModalProps) => {
   };
 
   return (
-    <main className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+    <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">

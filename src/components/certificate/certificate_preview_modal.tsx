@@ -23,7 +23,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-70 flex items-center justify-center ${isOnTopOfModal ? '' : 'bg-black/50'}`}
+      className={`fixed inset-0 z-120 flex items-center justify-center ${isOnTopOfModal ? '' : 'bg-black/50'}`}
     >
       <div className="relative flex max-h-90vh flex-col rounded-sm bg-surface-neutral-surface-lv2 md:max-h-100vh">
         {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
