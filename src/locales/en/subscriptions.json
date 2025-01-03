@@ -7,6 +7,15 @@
     "CHANGE_PLAN": "Change Plan",
     "BILLING": "Billing",
     "NEXT_RENEWAL": "Next Renewal",
-    "EXPIRED_DATE": "Expired Date"
+    "EXPIRED_DATE": "Expired Date",
+    "TURN_ON_AUTO_RENEWAL_TITLE": "Turn On Auto-Renewal",
+    "TURN_ON_AUTO_RENEWAL_MESSAGE": "Are you sure you want to Turn On auto-renewal?",
+    "YES_TURN_ON_AUTO_RENEWAL": "Yes,Turn on auto-renewal",
+    "CANCEL": "Cancel",
+    "TURN_OFF_AUTO_RENEWAL_TITLE": "Turn off Auto-Renewal",
+    "TURN_OFF_AUTO_RENEWAL_MESSAGE": "Are you sure you want to Turn off auto-renewal?",
+    "YES_TURN_OFF_AUTO_RENEWAL": "Yes,Turn off auto-renewal",
+    "CHOOSE_THE_PLAN_THAT_FITS_YOUR_TEAM": "Choose the plan that fits your team",
+    "PLAN_FOR": "Plan for "
   }
 }
