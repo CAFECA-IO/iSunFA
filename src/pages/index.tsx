@@ -1,57 +1,27 @@
-import Head from 'next/head';
 import React from 'react';
+import Head from 'next/head';
+import LandingPageBody from '@/components/landing_page_v2/landing_page_body';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
-import { useTranslation } from 'next-i18next';
-import LandingNavBar from '@/components/landing_page/landing_nav_bar';
-import LandingPageBody from '@/components/landing_page/landing_page_body';
-import LandingFooter from '@/components/landing_page/landing_footer';
 
-interface ILandingPageProps {
-  locale: string;
-}
-
-function LandingPage({ locale }: ILandingPageProps) {
-  const { t } = useTranslation('landing_page');
+const LandingPage: React.FC = () => {
   return (
     <>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('landing_page:META.TITLE')}</title>
-        <meta name="description" content={t('landing_page:META.DESCRIPTION')} />
-        <meta name="author" content="CAFECA" />
-        <meta name="keywords" content={t('landing_page:META.KEYWORDS')} />
-
-        <meta property="og:title" content="iSunFA" />
-        <meta property="og:description" content={t('landing_page:META.DESCRIPTION')} />
-        {/* TODO: (20240807 - Shirley) [Beta] i18n for image */}
-        <meta property="og:image" content={`https://isunfa.com/meta/isunfa_preview.png`} />
-        <meta property="og:url" content={`https://isunfa.com/${locale}`} />
-        <meta property="og:type" content="website" />
+        <title>iSunFA</title>
       </Head>
 
-      {/* Info: (20230712 - Shirley) Navbar */}
-      <nav>
-        <LandingNavBar transparentInitially />
-      </nav>
-
-      <main className="w-screen overflow-hidden text-white">
-        <LandingPageBody />
-      </main>
-
-      {/* Info: (20240912 - Liz) Footer */}
-      <div>
-        <LandingFooter />
-      </div>
+      <LandingPageBody />
     </>
   );
-}
+};
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['landing_page'])),
+    ...(await serverSideTranslations(locale, ['landing_page_v2'])),
     locale,
   },
 });
