@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import { IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { useTranslation } from 'next-i18next';
 
 interface IFaq {
   id: number;
@@ -11,44 +12,44 @@ interface IFaq {
 const FAQS: IFaq[] = [
   {
     id: 1,
-    question: 'Who is responsible for team payments?',
-    answer:
-      'Any user can upgrade their own team to the Professional plan by entering payment information. After upgrading, only owner can manage future payments for the team.',
+    question: 'FAQ1_QUESTION',
+    answer: 'FAQ1_ANSWER',
   },
   {
     id: 2,
-    question: 'How do I cancel my paid plan?',
-    answer: '??? No answer provided. Please contact support for more information.',
+    question: 'FAQ2_QUESTION',
+    answer: '',
   },
   {
     id: 3,
-    question: 'What if more people are added to my team every month?',
-    answer: '??? No answer provided. Please contact support for more information.',
+    question: 'FAQ3_QUESTION',
+    answer: '',
   },
   {
     id: 4,
-    question: 'Can you send me an invoice?',
-    answer: '??? No answer provided. Please contact support for more information.',
+    question: 'FAQ4_QUESTION',
+    answer: '',
   },
   {
     id: 5,
-    question: 'What are the payment methods.',
-    answer: '??? No answer provided. Please contact support for more information.',
+    question: 'FAQ5_QUESTION',
+    answer: '',
   },
 ];
 
 const SubscriptionFaq = () => {
+  const { t } = useTranslation(['subscriptions']);
   const [isOpen, setIsOpen] = useState<number>();
   const openFaq = (id: number) => setIsOpen(id);
   const closeFaq = () => setIsOpen(undefined);
 
   return (
-    <main>
+    <main className="flex flex-col gap-40px">
       <h1 className="text-center text-36px font-bold text-surface-brand-secondary">
-        Subscription FAQ
+        {t('subscriptions:SUBSCRIPTIONS_PAGE.SUBSCRIPTION_FAQ')}
       </h1>
 
-      <section className="flex flex-col">
+      <section className="flex flex-col rounded-lg border border-accordion-surface-background-stroke-border bg-accordion-surface-background-primary">
         {FAQS.map((faq) => (
           <div key={faq.id}>
             <div
@@ -65,7 +66,7 @@ const SubscriptionFaq = () => {
               <h3
                 className={`flex-auto text-2xl font-semibold ${isOpen === faq.id ? 'text-accordion-surface-background-text-title-active' : 'text-accordion-surface-background-text-title'}`}
               >
-                {faq.question}
+                {t(`subscriptions:SUBSCRIPTIONS_PAGE.${faq.question}`)}
               </h3>
 
               {isOpen === faq.id ? <IoChevronUp /> : <IoChevronDown />}
@@ -73,7 +74,9 @@ const SubscriptionFaq = () => {
 
             {isOpen === faq.id && (
               <p className="px-40px pb-32px text-lg font-normal text-accordion-surface-background-text-paragraph">
-                {faq.answer}
+                {faq.answer
+                  ? t(`subscriptions:SUBSCRIPTIONS_PAGE.${faq.answer}`)
+                  : 'No answer provided. Please contact support for more information.'}
               </p>
             )}
           </div>

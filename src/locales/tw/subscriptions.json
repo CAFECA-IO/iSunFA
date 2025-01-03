@@ -16,6 +16,13 @@
     "TURN_OFF_AUTO_RENEWAL_MESSAGE": "您確定要關閉自動續訂嗎？",
     "YES_TURN_OFF_AUTO_RENEWAL": "是，關閉自動續訂",
     "CHOOSE_THE_PLAN_THAT_FITS_YOUR_TEAM": "選擇適合您團隊的方案",
-    "PLAN_FOR": "管理方案 - "
+    "PLAN_FOR": "管理方案 - ",
+    "SUBSCRIPTION_FAQ": "訂閱常見問題",
+    "FAQ1_QUESTION": "誰負責支付團隊的訂閱費用？",
+    "FAQ1_ANSWER": "任何使用者都可以透過輸入付款資訊將自己的團隊升級到專業計劃。升級後，只有所有者可以管理團隊未來的付款。",
+    "FAQ2_QUESTION": "如何取消我的付費方案？",
+    "FAQ3_QUESTION": "如果每個月都有更多人加入我的團隊怎麼辦？",
+    "FAQ4_QUESTION": "你能開發票給我嗎？",
+    "FAQ5_QUESTION": "有哪些付款方式？"
   }
 }
