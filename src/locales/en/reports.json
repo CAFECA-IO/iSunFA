@@ -24,7 +24,15 @@
     "ITEM_SUMMARY_FORMAT": "Item summary format",
     "DETAILED_CLASSIFICATION_FORMAT": "Detailed classification format",
     "ACCOUNTING_ITEMS": "Accounting items",
-    "ASSET_LIABILITY_RATIO": "Asset-liability ratio"
+    "ASSET_LIABILITY_RATIO": "Asset-liability ratio",
+    "UNIT_NEW_TAIWAN_DOLLARS": "Unit: New Taiwan Dollars (NTD)",
+    "EXPAND": "Expand",
+    "COLLAPSE": "Collapse",
+    "ASSET_DISTRIBUTION_CHART": "Asset Distribution Chart",
+    "ACCOUNTS_RECEIVABLE_TURNOVER_DAYS": "Accounts Receivable Turnover Days",
+    "YEAR_TEMPLATE": "Year {{year}}",
+    "INVENTORY_TURNOVER_DAYS": "Inventory Turnover Days",
+    "UNIT_DAYS": "Unit: Days"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "Latest",

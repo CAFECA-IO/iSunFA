@@ -61,7 +61,7 @@ const ItemSummary = ({
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p className="font-bold leading-5">
-            <span>單位：新台幣元</span>
+            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
             <span className="pl-5">每股盈餘單位：新台幣元</span>
           </p>
         </div>

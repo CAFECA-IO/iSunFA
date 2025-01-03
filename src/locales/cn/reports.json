@@ -24,7 +24,15 @@
     "ITEM_SUMMARY_FORMAT": "项目汇总格式",
     "DETAILED_CLASSIFICATION_FORMAT": "细项分类格式",
     "ACCOUNTING_ITEMS": "会计项目",
-    "ASSET_LIABILITY_RATIO": "资产负债比例表"
+    "ASSET_LIABILITY_RATIO": "资产负债比例表",
+    "UNIT_NEW_TAIWAN_DOLLARS": "单位：新台币元",
+    "EXPAND": "展开",
+    "COLLAPSE": "收合",
+    "ASSET_DISTRIBUTION_CHART": "资产分布图",
+    "ACCOUNTS_RECEIVABLE_TURNOVER_DAYS": "应收帐款周转天数",
+    "YEAR_TEMPLATE": "{{year}}年度",
+    "INVENTORY_TURNOVER_DAYS": "存货周转天数",
+    "UNIT_DAYS": "单位：天"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "最新的 TideBit ",

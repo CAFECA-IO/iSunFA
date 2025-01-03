@@ -167,7 +167,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         colSpan={4}
                         className="text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
-                        <span>單位：新台幣元</span>
+                        <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
                         <span className="pl-5">每股盈餘單位：新台幣元</span>
                       </th>
                     </tr>
@@ -256,7 +256,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         colSpan={4}
                         className="text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
-                        <span>單位：新台幣元</span>
+                        <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
                         <span className="pl-5">每股盈餘單位：新台幣元</span>
                       </th>
                     </tr>
