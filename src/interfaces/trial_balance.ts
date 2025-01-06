@@ -50,6 +50,10 @@ export interface ILineItemInTrialBalanceItem extends ILineItemSimpleAccountVouch
   creditAmount: number;
 }
 
+export interface ILineItemInTrialBalanceItemWithHierarchy extends ILineItemInTrialBalanceItem {
+  children: ILineItemInTrialBalanceItem[];
+}
+
 export interface ILineItemInTrialBalanceTotal {
   totalDebit: number;
   totalCredit: number;

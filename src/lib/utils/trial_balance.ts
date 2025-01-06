@@ -491,7 +491,7 @@ export function mergeLineItems(
  * @returns 合併後的會計分錄
  */
 export function mergeLineItemsByAccount(
-  lineItems: ILineItemSimpleAccountVoucher[]
+  lineItems: ILineItemInTrialBalanceItem[]
 ): ILineItemInTrialBalanceItem[] {
   // Info: (20250102 - Shirley) 使用 Map 來儲存每個 accountId 的合計金額
   const accountSummary = new Map<
@@ -504,6 +504,12 @@ export function mergeLineItemsByAccount(
       accountName: string;
       debit: boolean;
       amount: number;
+      account: {
+        id: number;
+        code: string;
+        name: string;
+        parentId: number;
+      };
     }
   >();
 
@@ -528,6 +534,7 @@ export function mergeLineItemsByAccount(
         accountName: item.account.name,
         debit: item.debit,
         amount: item.amount,
+        account: item.account,
       });
     }
   });
@@ -542,9 +549,10 @@ export function mergeLineItemsByAccount(
     amount: summary.amount,
     debit: summary.debit,
     account: {
+      id: summary.accountId,
       code: summary.accountCode,
       name: summary.accountName,
-      parentId: 0,
+      parentId: summary.account.parentId,
     },
     voucher: {
       id: 0,
@@ -569,13 +577,13 @@ export function mergeLineItemsByAccount(
  * @returns 分類後的會計分錄
  */
 export function categorizeAndMergeLineItems(
-  lineItems: ILineItemSimpleAccountVoucher[],
+  lineItems: ILineItemInTrialBalanceItem[],
   periodBegin: number,
   periodEnd: number
 ) {
   // Info: (20250102 - Shirley) 分類會計分錄
-  const beginningItems: ILineItemSimpleAccountVoucher[] = [];
-  const midtermItems: ILineItemSimpleAccountVoucher[] = [];
+  const beginningItems: ILineItemInTrialBalanceItem[] = [];
+  const midtermItems: ILineItemInTrialBalanceItem[] = [];
 
   lineItems.forEach((item) => {
     if (item.voucher.date < periodBegin) {
@@ -640,7 +648,7 @@ export function calculateEndingBalance(
  * @returns 試算表格式的資料
  */
 export function convertToTrialBalanceItem(
-  lineItems: ILineItemSimpleAccountVoucher[],
+  lineItems: ILineItemInTrialBalanceItem[],
   periodBegin: number,
   periodEnd: number
 ): {
