@@ -50,8 +50,13 @@ export interface ILineItemInTrialBalanceItem extends ILineItemSimpleAccountVouch
   creditAmount: number;
 }
 
-export interface ILineItemInTrialBalanceItemWithHierarchy extends ILineItemInTrialBalanceItem {
-  children: ILineItemInTrialBalanceItem[];
+export interface IMergedAccounts extends ILineItemInTrialBalanceItem {
+  accountCode: string;
+  accountName: string;
+}
+
+export interface ILineItemInTrialBalanceItemWithHierarchy extends IMergedAccounts {
+  children: ILineItemInTrialBalanceItemWithHierarchy[];
 }
 
 export interface ILineItemInTrialBalanceTotal {

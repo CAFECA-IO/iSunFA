@@ -5,7 +5,6 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import {
   ILineItemInTrialBalanceItem,
-  ILineItemInTrialBalanceItemWithHierarchy,
   ITrialBalanceTotal,
   TrialBalanceItem,
 } from '@/interfaces/trial_balance';
@@ -16,8 +15,10 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import {
   aggregateAmounts,
   convertLineItemsToTrialBalanceAPIFormat,
+  convertToAPIFormat,
   convertToTrialBalanceItem,
   getCurrent401Period,
+  processLineItems,
 } from '@/lib/utils/trial_balance';
 import { getAllLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
 import { CurrencyType } from '@/constants/currency';
@@ -141,30 +142,48 @@ export const handleGetRequest: IHandleRequest<
       updatedQuery.endDate
     );
 
-    const newThreeStagesOfTrialBalance = {
-      beginning: [] as ILineItemInTrialBalanceItemWithHierarchy[],
-      midterm: [] as ILineItemInTrialBalanceItemWithHierarchy[],
-      ending: [] as ILineItemInTrialBalanceItemWithHierarchy[],
+    const newNewThreeStagesOfTrialBalance = {
+      beginning: processLineItems(threeStagesOfTrialBalance.beginning).arrWithCopySelf,
+      midterm: processLineItems(threeStagesOfTrialBalance.midterm).arrWithCopySelf,
+      ending: processLineItems(threeStagesOfTrialBalance.ending).arrWithCopySelf,
     };
 
-    for (const [period, array] of Object.entries(threeStagesOfTrialBalance)) {
-      for (const targetItem of array) {
-        const { account, ...rest } = targetItem;
+    // const newTotal = combineThreeStagesToAPIFormat(newNewThreeStagesOfTrialBalance);
+    // fs.writeFileSync(`newTotal_${nowHrMin}.json`, JSON.stringify(newTotal, null, 2));
 
-        if (account.code.includes('-')) {
-          for (const item of array) {
-            if (account.parentId === item.account.id) {
-              newThreeStagesOfTrialBalance[
-                period as keyof typeof newThreeStagesOfTrialBalance
-              ].push({
-                ...item,
-                children: [targetItem],
-              });
-            }
-          }
-        }
-      }
-    }
+    const newAPIData = convertToAPIFormat(newNewThreeStagesOfTrialBalance);
+    fs.writeFileSync(
+      `addSubAccounts_newAPIData_${nowHrMin}.json`,
+      JSON.stringify(newAPIData, null, 2)
+    );
+
+    // ... rest of the code ...
+    // for (const [period, array] of Object.entries(threeStagesOfTrialBalance)) {
+    //   processLineItems(
+    //     array,
+    //     newThreeStagesOfTrialBalance,
+    //     period as 'beginning' | 'midterm' | 'ending'
+    //   );
+    // }
+
+    // for (const [period, array] of Object.entries(threeStagesOfTrialBalance)) {
+    //   for (const targetItem of array) {
+    //     const { account, ...rest } = targetItem;
+
+    //     if (account.code.includes('-')) {
+    //       for (const item of array) {
+    //         if (account.parentId === item.account.id) {
+    //           newThreeStagesOfTrialBalance[
+    //             period as keyof typeof newThreeStagesOfTrialBalance
+    //           ].push({
+    //             ...item,
+    //             children: [targetItem],
+    //           });
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
 
     // Info: 另一種將有line item的會計科目組成從屬關係的作法
     // threeStagesOfTrialBalance.beginning.forEach((targetItem) => {
@@ -227,12 +246,10 @@ export const handleGetRequest: IHandleRequest<
     //   }
     // });
 
-    // fs.writeFileSync(
-    //   `newThreeStagesOfTrialBalance_${nowHrMin}.json`,
-    //   JSON.stringify(newThreeStagesOfTrialBalance, null, 2)
-    // );
-
-    console.log('newThreeStagesOfTrialBalance', newThreeStagesOfTrialBalance.ending.length);
+    fs.writeFileSync(
+      `reassign_newNewThreeStagesOfTrialBalance_${nowHrMin}.json`,
+      JSON.stringify(newNewThreeStagesOfTrialBalance, null, 2)
+    );
 
     // const lineItemsWithHierarchy: ILineItemInTrialBalanceItemWithHierarchy[] = [];
 
@@ -342,21 +359,36 @@ export const handleGetRequest: IHandleRequest<
       JSON.stringify(trialBalanceAPIFormat, null, 2)
     );
 
-    if (trialBalanceAPIFormat) {
+    if (newAPIData) {
       const paginatedTrialBalance = formatPaginatedTrialBalance(
-        trialBalanceAPIFormat.items,
+        newAPIData.items,
         parsedSortOption,
         page ?? DEFAULT_PAGE_NUMBER,
         pageSize ?? DEFAULT_PAGE_LIMIT
       );
-
       payload = {
         currencyAlias,
         items: paginatedTrialBalance,
-        total: trialBalanceAPIFormat.total,
+        total: newAPIData.total,
       };
       statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     }
+
+    // if (trialBalanceAPIFormat) {
+    //   const paginatedTrialBalance = formatPaginatedTrialBalance(
+    //     trialBalanceAPIFormat.items,
+    //     parsedSortOption,
+    //     page ?? DEFAULT_PAGE_NUMBER,
+    //     pageSize ?? DEFAULT_PAGE_LIMIT
+    //   );
+
+    //   payload = {
+    //     currencyAlias,
+    //     items: paginatedTrialBalance,
+    //     total: trialBalanceAPIFormat.total,
+    //   };
+    //   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    // }
   } catch (error) {
     const err = error as Error;
     statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
