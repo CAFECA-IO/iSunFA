@@ -128,6 +128,7 @@ export const handleGetRequest: IHandleRequest<
       midterm: processLineItems(threeStagesOfLineItems.midterm, accounts.data).arrWithCopySelf,
       ending: processLineItems(threeStagesOfLineItems.ending, accounts.data).arrWithCopySelf,
     };
+    // Info: (20250106 - Shirley) Step 12
     const newAPIData = convertToAPIFormat(threeStagesOfTrialBalance, parsedSortOption);
 
     if (newAPIData) {
@@ -145,10 +146,12 @@ export const handleGetRequest: IHandleRequest<
       statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     }
   } catch (error) {
+    // Info: (20250106 - Shirley) Step 13
     const err = error as Error;
     statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
+  // Info: (20250106 - Shirley) Step 14
   return { statusMessage, payload };
 };
 
