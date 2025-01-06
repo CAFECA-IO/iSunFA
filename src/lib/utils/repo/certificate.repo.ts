@@ -12,9 +12,9 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { DefaultValue } from '@/constants/default_value';
 
 export async function countMissingCertificate(companyId: number) {
-  const missingCertificatesCount = await prisma.certificate.count({
+  const missingCertificatesCount = await prisma.voucher.count({
     where: {
-      companyId, // 指定公司 ID
+      companyId,
       NOT: {
         voucherCertificates: {
           some: {},

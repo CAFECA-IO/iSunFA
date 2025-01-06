@@ -18,8 +18,8 @@ export async function getTotalPendingTaskForUser(userId: number): Promise<IPendi
   const results = await Promise.all(
     listedCompany.map(async ({ company }) => {
       const [certificateWithoutVoucherCount, voucherWithNoCertificateCount] = await Promise.all([
-        countMissingCertificate(company.id),
         countUnpostedVoucher(company.id),
+        countMissingCertificate(company.id),
       ]);
 
       const imageUrl = company.imageFile.url;
