@@ -309,7 +309,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 datePickerHandler={(start: number) => handleInputChange('date', start)}
               />
               {errors.date && (
-                <p className="mt-1 text-right text-sm text-text-state-error">{errors.date}</p>
+                <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                  {errors.date}
+                </p>
               )}
             </div>
 
@@ -361,7 +363,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 </div>
               </div>
               {errors.priceBeforeTax && (
-                <p className="mt-1 text-right text-sm text-text-state-error">
+                <p className="-translate-y-1 self-end text-sm text-text-state-error">
                   {errors.priceBeforeTax}
                 </p>
               )}
@@ -398,7 +400,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 </div>
               </div>
               {errors.taxPrice && (
-                <p className="mt-1 text-right text-sm text-text-state-error">{errors.taxPrice}</p>
+                <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                  {errors.taxPrice}
+                </p>
               )}
             </div>
 
@@ -432,7 +436,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 </div>
               </div>
               {errors.totalPrice && (
-                <p className="mt-1 text-right text-sm text-text-state-error">{errors.totalPrice}</p>
+                <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                  {errors.totalPrice}
+                </p>
               )}
             </div>
 
@@ -443,7 +449,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               onSelect={(cp: ICounterpartyOptional) => handleInputChange('counterParty', cp)}
             />
             {errors.counterParty && (
-              <p className="mt-1 text-right text-sm text-text-state-error">{errors.counterParty}</p>
+              <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                {errors.counterParty}
+              </p>
             )}
 
             {/* Info: (20240924 - tzuhan) Invoice Type */}

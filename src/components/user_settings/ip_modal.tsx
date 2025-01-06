@@ -187,7 +187,7 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
                         </div>
                       ) : (
                         <div
-                          className={`px-lv-4 py-lv-3 text-link-text-primary`}
+                          className={`cursor-pointer px-lv-4 py-lv-3 text-link-text-primary`}
                           onClick={() => handleSessionDelete(userActionLog.sessionId)}
                         >
                           {t('setting:IP.LOGOUT')}
