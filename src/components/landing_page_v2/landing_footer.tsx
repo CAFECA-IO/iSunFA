@@ -34,35 +34,31 @@ const LandingFooter: React.FC = () => {
     <>
       <h3 className="text-lg font-bold">{t('landing_page_v2:FOOTER.QUICK_LINKS')}</h3>
       <ul className="flex list-inside list-arrow flex-col gap-4px">
-        <li className="hover:cursor-pointer hover:text-landing-page-orange">
+        <li className="whitespace-nowrap hover:cursor-pointer hover:text-landing-page-orange">
           <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.HOME')}</Link>
         </li>
-        <li className="text-landing-page-black2">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE} style={{ pointerEvents: 'none' }}>
-            {t('landing_page_v2:FOOTER.USERS')}
-          </Link>
+        {/* ToDo: (20250106 - Julian) To be opened later */}
+        <li className="hidden text-landing-page-black2">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.USERS')}</Link>
         </li>
-        <li className="text-landing-page-black2">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE} style={{ pointerEvents: 'none' }}>
-            {t('landing_page_v2:FOOTER.PRICING')}
-          </Link>
+        {/* ToDo: (20250106 - Julian) To be opened later */}
+        <li className="hidden text-landing-page-black2">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.PRICING')}</Link>
         </li>
-        <li className="text-landing-page-black2">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE} style={{ pointerEvents: 'none' }}>
-            {t('landing_page_v2:FOOTER.FAITH')}
-          </Link>
+        {/* ToDo: (20250106 - Julian) To be opened later */}
+        <li className="hidden text-landing-page-black2">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.FAITH')}</Link>
         </li>
-        <li className="text-landing-page-black2">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE} style={{ pointerEvents: 'none' }}>
-            {t('landing_page_v2:FOOTER.JOIN_US')}
-          </Link>
+        {/* ToDo: (20250106 - Julian) To be opened later */}
+        <li className="hidden text-landing-page-black2">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.JOIN_US')}</Link>
         </li>
-        <li className="hover:cursor-pointer hover:text-landing-page-orange">
+        <li className="whitespace-nowrap hover:cursor-pointer hover:text-landing-page-orange">
           <Link href={ISUNFA_ROUTE.TERMS_OF_SERVICE}>
             {t('landing_page_v2:FOOTER.TERMS_OF_SERVICE')}
           </Link>
         </li>
-        <li className="hover:cursor-pointer hover:text-landing-page-orange">
+        <li className="whitespace-nowrap hover:cursor-pointer hover:text-landing-page-orange">
           <Link href={ISUNFA_ROUTE.PRIVACY_POLICY}>
             {t('landing_page_v2:FOOTER.PRIVACY_POLICY')}
           </Link>
@@ -80,7 +76,7 @@ const LandingFooter: React.FC = () => {
           <Link
             href={iSunFAAddressOnMap ?? '/'}
             target="_blank"
-            className="flex-1 hover:cursor-pointer hover:text-landing-page-orange"
+            className="flex-1 whitespace-nowrap hover:cursor-pointer hover:text-landing-page-orange"
           >
             {address}
           </Link>
@@ -89,7 +85,7 @@ const LandingFooter: React.FC = () => {
           <Image src="/icons/phone.svg" alt="phone" width={16} height={16} />
           <Link
             href={`tel:${iSunFAPhone}`}
-            className="flex-1 hover:cursor-pointer hover:text-landing-page-orange"
+            className="flex-1 whitespace-nowrap hover:cursor-pointer hover:text-landing-page-orange"
           >
             {iSunFAPhone}
           </Link>
