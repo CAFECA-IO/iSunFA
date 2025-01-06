@@ -78,7 +78,13 @@
     "NAME": "名称",
     "INVOICE_TYPE": "发票类型",
     "DEDUCTIBLE": "可抵扣税额",
-    "SUCCESS": "您的发票信息已更新。"
+    "SUCCESS": "您的发票信息已更新。",
+    "TAXABLE_5": "应税金额（5%）",
+    "ZERO_TAX_RATE": "零税率",
+    "TAX_FREE": "免税",
+    "NONE": "无",
+    "THROUGH_CUSTOMS": "通过海关",
+    "NOT_THROUGH_CUSTOMS": "未通过海关"
   },
   "TYPE": {
     "TRIPLICATE": "三联",

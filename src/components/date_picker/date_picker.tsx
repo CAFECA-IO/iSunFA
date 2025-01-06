@@ -168,7 +168,7 @@ const PopulateDates = ({
         key={el?.date || `${Date.now()}-${index}`}
         type="button"
         disabled={el?.disable ?? true} // Info: (20241108 - Julian) 禁用範圍外和空白日期
-        className={`relative z-10 flex h-35px items-center justify-center whitespace-nowrap px-1 text-base transition-all duration-150 ease-in-out disabled:text-date-picker-text-disable md:h-35px ${isSelectedDateStyle} ${isSelectedPeriodStyle}`}
+        className={`relative z-10 flex h-35px items-center justify-center whitespace-nowrap px-1 text-base transition-all duration-150 ease-in-out disabled:text-date-picker-text-disable md:h-35px ${isSelectedDateStyle} ${isSelectedPeriodStyle} ${!el?.disable ? 'hover:bg-date-picker-surface-date-period' : ''} hover:rounded-full`}
         onClick={dateClickHandler}
       >
         {el?.date ?? ' '}
@@ -217,7 +217,7 @@ const YearDropdown = ({ setSelectedYear, setViewMode, selectedYear }: IYearDropd
             // Info: (20241226 - Tzuhan) 選完年份，進入「選月份」模式
             setViewMode('month');
           }}
-          className="rounded hover:bg-gray-200"
+          className="rounded px-16px py-8px hover:bg-date-picker-surface-date-period"
         >
           {y}
         </button>
@@ -247,7 +247,7 @@ const MonthDropdown = ({ setSelectedMonth, setViewMode }: IMonthDropdownProps) =
               // Info: (20241226 - Tzuhan) 選完月，回到「選日期」模式
               setViewMode('date');
             }}
-            className="rounded hover:bg-gray-200"
+            className="rounded px-16px py-8px hover:bg-date-picker-surface-date-period"
           >
             {t(monthAbr)}
           </button>
@@ -539,7 +539,7 @@ const DatePicker = ({
         size={'placeholderInput'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background p-3 text-input-text-input-placeholder hover:cursor-pointer group-hover:text-button-text-primary-hover',
+          'group flex w-full cursor-pointer items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background p-3 text-input-text-input-placeholder group-hover:text-button-text-primary-hover',
           btnClassName,
           {
             'border-button-stroke-primary-hover': componentVisible,
@@ -624,24 +624,28 @@ const DatePicker = ({
 
             {/* Info: (20241226 - Tzuhan) 顯示當前「年份 / 月份」文字，且可點擊切換 viewMode */}
             {viewMode === 'date' && (
-              <div className="flex space-x-4 text-date-picker-text-default">
-                <p onClick={() => setViewMode('year')} className="cursor-pointer">
-                  {displayedYear}
-                </p>
-                <p onClick={() => setViewMode('month')} className="cursor-pointer">
-                  {displayedMonth}
-                </p>
+              <div
+                className="flex cursor-pointer space-x-4 text-date-picker-text-default"
+                onClick={() => setViewMode('month')}
+              >
+                <p>{displayedYear}</p>
+                <p>{displayedMonth}</p>
               </div>
+            )}
+
+            {viewMode === 'month' && (
+              <p
+                className="cursor-pointer text-date-picker-text-default"
+                onClick={() => setViewMode('year')}
+              >
+                {`${selectedYear}`}
+              </p>
             )}
 
             {viewMode === 'year' && (
               <p className="text-date-picker-text-default">
                 {`${selectedYear - 5} ~ ${selectedYear + 6}`}
               </p>
-            )}
-
-            {viewMode === 'month' && (
-              <p className="text-date-picker-text-default">{`${selectedYear}`}</p>
             )}
 
             <Button
