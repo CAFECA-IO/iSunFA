@@ -194,7 +194,15 @@ const VoucherEditingPageBody: React.FC<{
   const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
 
   // Info: (20241118 - Julian) 選擇憑證相關 state
-  const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
+  const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>(
+    defaultCertificateUI.reduce(
+      (acc, certificate) => {
+        acc[certificate.id] = { ...certificate };
+        return acc;
+      },
+      {} as { [id: string]: ICertificateUI }
+    )
+  );
   const [bindedCertificateUI, setBindedCertificateUI] = useState<{ [id: string]: ICertificateUI }>(
     defaultCertificateUI.reduce(
       (acc, certificate) => {
@@ -658,7 +666,7 @@ const VoucherEditingPageBody: React.FC<{
     e.preventDefault();
 
     // Info: (20241007 - Julian) 若任一條件不符，則中斷 function
-    if (selectedIds.length === 0) {
+    if (Object.keys(certificates).length === 0) {
       // Info: (20241230 - Julian) 如果未選擇憑證，則顯示憑證提示，並定位最上方、吐司通知
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
