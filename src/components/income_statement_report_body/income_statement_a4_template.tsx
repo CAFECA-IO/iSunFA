@@ -2,6 +2,7 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { FinancialReport } from '@/interfaces/report';
+import { useTranslation } from 'next-i18next';
 
 interface IncomeStatementA4TemplateProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
   // preDateFrom,
   // preDateTo,
 }) => {
+  const { t } = useTranslation(['reports']);
   const [firstBlockSplitPages, setFirstBlockSplitPages] = useState<ReactNode[][]>([]);
   const [secondBlockSplitPages, setSecondBlockSplitPages] = useState<ReactNode[][]>([]);
 
@@ -121,7 +123,7 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
                   {financialReport.company.name}
                 </h1>
                 <p className="text-left text-xs font-bold leading-5">
-                  {curDateFrom} <br />至 {curDateTo}
+                  {curDateFrom} <br /> {t('reports:COMMON.TO')} {curDateTo}
                   <br />
                   財務報告 - 損益表
                 </p>

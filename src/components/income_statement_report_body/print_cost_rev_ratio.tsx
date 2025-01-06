@@ -61,7 +61,9 @@ const PrintCostRevRatio = ({
       <section className="relative px-20px text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">投入費用和成本，與收入的倍數關係</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+          </p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white text-xxs">
           <thead>
@@ -78,7 +80,7 @@ const PrintCostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                    {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -88,7 +90,7 @@ const PrintCostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                    {formattedPreFromDate} 至{formattedPreToDate}
+                    {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -201,19 +203,21 @@ const PrintCostRevRatio = ({
         </table>
         {financialReport && financialReport.company && (
           <p className="mt-4 text-xs">
-            {formattedCurFromDate}至{formattedCurToDate}
+            {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
             營業收入，為投入費用和成本的{curRatio.toFixed(2)}倍
           </p>
         )}
         {financialReport && financialReport.company && (
           <p className="mt-4 text-xs">
-            {formattedPreFromDate}至{formattedPreToDate}
+            {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
             營業收入，為投入費用和成本的{preRatio.toFixed(2)}倍
           </p>
         )}
         <div className="mb-4 mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">收入提撥至研發費用比例</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+          </p>
         </div>
         <table className="relative z-10 mb-75px w-full border-collapse bg-white text-xxs">
           <thead>
@@ -230,7 +234,7 @@ const PrintCostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                    {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -240,7 +244,7 @@ const PrintCostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                    {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>

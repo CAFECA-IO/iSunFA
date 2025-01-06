@@ -225,7 +225,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-70 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
+      className={`fixed inset-0 z-120 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
     >
       <form
         className={`relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 overflow-y-hidden rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-h-96vh md:max-w-800px`}

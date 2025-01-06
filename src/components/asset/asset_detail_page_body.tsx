@@ -19,6 +19,7 @@ import { ASSET_DELETE_TERM } from '@/constants/common';
 import { AssetModalType } from '@/interfaces/asset_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastId } from '@/constants/toast_id';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 
 const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const { t } = useTranslation('asset');
@@ -33,6 +34,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
+  const { accountList, getAccountListHandler } = useAccountingCtx();
 
   const companyId = selectedCompany?.id;
 
@@ -145,9 +147,10 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   // };
 
   useEffect(() => {
-    // Info: (20241121 - Julian) Get voucher detail when companyId and assetId are ready
+    // Info: (20241121 - Julian) Get voucher detail & account list when companyId & assetId are ready
     if (companyId && assetId) {
       getAssetDetail();
+      getAccountListHandler(companyId ?? -1);
     }
   }, [companyId, assetId]);
 
@@ -197,6 +200,9 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     }
   }, [isDeleting, deleteSuccess, deleteError]);
 
+  const accountTitleName = accountList.find((account) => account.code === assetType)?.name;
+  const noteStr = note === '' ? '-' : note;
+
   const remainingProcessBar = (
     <div className="relative h-5px w-120px overflow-hidden rounded-full bg-surface-neutral-depth">
       <span
@@ -221,7 +227,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   );
 
   const displayedRemainingLife =
-    assetStatus === AssetStatus.NORMAL && remainingLife > 0 ? (
+    assetStatus === AssetStatus.NORMAL ? (
       <div className="flex flex-col items-end">
         {/* Info: (20240925 - Julian) Remaining count */}
         <div className="flex items-center gap-4px">
@@ -260,7 +266,13 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     <Skeleton width={300} height={44} rounded />
   );
 
-  const isType = !isLoading ? <p>{assetType}</p> : <Skeleton width={200} height={24} rounded />;
+  const isType = !isLoading ? (
+    <p className="text-input-text-primary">
+      {assetType} <span className="text-text-neutral-tertiary">{accountTitleName}</span>
+    </p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
   const isAcquisitionDate = !isLoading ? (
     <p>{timestampToString(acquisitionDate).date}</p>
   ) : (
@@ -313,7 +325,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   ) : (
     <Skeleton width={200} height={24} rounded />
   );
-  const isNote = !isLoading ? <p>{note}</p> : <Skeleton width={200} height={24} rounded />;
+  const isNote = !isLoading ? <p>{noteStr}</p> : <Skeleton width={200} height={24} rounded />;
   const isVoucher = !isLoading ? (
     <div className="flex flex-col">{voucherList}</div>
   ) : (

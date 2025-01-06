@@ -44,17 +44,17 @@ const CostRevRatio = ({
       <section className="relative text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="font-bold leading-5">投入費用和成本，與收入的倍數關係</p>
-          <p className="font-bold leading-5">單位：新台幣元</p>
+          <p className="font-bold leading-5">{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
             <tr>
               <th
-                className={`w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold`}
+                className={`w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold whitespace-nowrap`}
               >
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+              <th className="w-530px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
@@ -63,7 +63,7 @@ const CostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                    {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -73,7 +73,7 @@ const CostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
-                    {formattedPreFromDate} 至{formattedPreToDate}
+                    {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -242,27 +242,27 @@ const CostRevRatio = ({
         </table>
         {financialReport && financialReport.company && (
           <p className={`${isPrint ? 'text-xs' : 'text-sm'} mt-4`}>
-            {formattedCurFromDate}至{formattedCurToDate}
+            {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
             營業收入，為投入費用和成本的{curRatio.toFixed(2)}倍
           </p>
         )}
         {financialReport && financialReport.company && (
           <p className={`${isPrint ? 'text-xs' : 'text-sm'} mt-4`}>
-            {formattedPreFromDate}至{formattedPreToDate}
+            {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
             營業收入，為投入費用和成本的{preRatio.toFixed(2)}倍
           </p>
         )}
         <div className="mb-4 mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="font-bold leading-5">收入提撥至研發費用比例</p>
-          <p className="font-bold leading-5">單位：新台幣元</p>
+          <p className="font-bold leading-5">{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+              <th className="w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold whitespace-nowrap">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+              <th className="w-530px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
@@ -271,7 +271,7 @@ const CostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                    {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -281,7 +281,7 @@ const CostRevRatio = ({
               >
                 {financialReport && financialReport.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-sm font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                    {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>

@@ -57,6 +57,8 @@ import { IFileEntity } from '@/interfaces/file';
 import { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import { IAccountEntity } from '@/interfaces/accounting_account';
 
+import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
+
 /**
  * Info: (20241121 - Murky)
  * @note 僅限於 GET /voucher 輸出時使用
@@ -250,15 +252,34 @@ export const voucherAPIGetUtils = {
     return originalEventEntities;
   },
 
-  getPayableReceivableInfoFromVoucher: (events: IEventEntity[]) => {
+  getPayableReceivableInfoFromVoucher: (
+    events: IEventEntity[],
+    lineItems: (ILineItemEntity & {
+      account: IAccountEntity;
+    })[]
+  ) => {
+    const payableTotal = lineItems.reduce((acc, lineItem) => {
+      if (!lineItem.debit && AccountCodesOfAP.includes(lineItem.account.code)) {
+        return acc + lineItem.amount;
+      }
+      return acc;
+    }, 0);
+
+    const receivingTotal = lineItems.reduce((acc, lineItem) => {
+      if (lineItem.debit && AccountCodesOfAR.includes(lineItem.account.code)) {
+        return acc + lineItem.amount;
+      }
+      return acc;
+    }, 0);
+
     const payableInfo = {
-      total: 0,
+      total: payableTotal,
       alreadyHappened: 0,
       remain: 0,
     };
 
     const receivingInfo = {
-      total: 0,
+      total: receivingTotal,
       alreadyHappened: 0,
       remain: 0,
     };
@@ -266,11 +287,9 @@ export const voucherAPIGetUtils = {
     events.forEach((event) => {
       const { payableInfo: newPayableInfo, receivingInfo: newReceivingInfo } =
         voucherAPIGetOneUtils.getPayableReceivableInfo(event);
-      payableInfo.total += newPayableInfo.total;
       payableInfo.alreadyHappened += newPayableInfo.alreadyHappened;
       payableInfo.remain += newPayableInfo.remain;
 
-      receivingInfo.total += newReceivingInfo.total;
       receivingInfo.alreadyHappened += newReceivingInfo.alreadyHappened;
       receivingInfo.remain += newReceivingInfo.remain;
     });

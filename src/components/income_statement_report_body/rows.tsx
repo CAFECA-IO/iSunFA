@@ -1,5 +1,6 @@
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
+import { useTranslation } from 'next-i18next';
 
 interface RowsProps {
   flattenAccounts: IAccountReadyForFrontend[];
@@ -7,6 +8,7 @@ interface RowsProps {
 }
 
 const Rows = ({ flattenAccounts, isPrint }: RowsProps) => {
+  const { t } = useTranslation(['reports']);
   return (
     <>
       {flattenAccounts.map((account) => {
@@ -45,7 +47,7 @@ const Rows = ({ flattenAccounts, isPrint }: RowsProps) => {
             <td
               className={`border border-stroke-brand-secondary-soft p-10px ${isPrint ? 'text-xs' : 'text-sm'}`}
             >
-              {name}
+              {t(`reports:ACCOUNTING_ACCOUNT.${name}`)}
             </td>
             <td
               className={`border border-stroke-brand-secondary-soft p-10px text-end ${isPrint ? 'text-xs' : 'text-sm'}`}

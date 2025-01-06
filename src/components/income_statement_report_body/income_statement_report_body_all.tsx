@@ -161,7 +161,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 </h1>
                 <p className="text-left text-xs font-bold leading-5">
                   <span>
-                    {formattedCurFromDate} <br />至{formattedCurToDate}
+                    {formattedCurFromDate} <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                   </span>
                   <br />
                   <span className="mt-3 block">財務報告 - 綜合損益表</span>
@@ -187,8 +187,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p className="text-xs font-bold leading-5">
-            <span>單位：新台幣元</span>
-            <span className="pl-5">每股盈餘單位：新台幣元</span>
+            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         {!isSummaryCollapsed && (
@@ -205,7 +205,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   {!isSummaryCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow text-xs font-semibold leading-5">
                       {formattedCurFromDate}
-                      <br />至{formattedCurToDate}
+                      <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                     </p>
                   )}
                 </th>
@@ -219,7 +219,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   {financialReport && financialReport.company && (
                     <p className="text-center font-barlow text-xs font-semibold leading-5">
                       {formattedPreFromDate}
-                      <br />至{formattedPreToDate}
+                      <br /> {t('reports:COMMON.TO')} {formattedPreToDate}
                     </p>
                   )}
                 </th>
@@ -265,8 +265,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p className="text-xs font-bold leading-5">
-            <span>單位：新台幣元</span>
-            <span className="pl-5">每股盈餘單位：新台幣元</span>
+            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -284,7 +284,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               >
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate} <br />至{formattedCurToDate}
+                    {formattedCurFromDate} <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -297,7 +297,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               >
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate} <br />至{formattedPreToDate}
+                    {formattedPreFromDate} <br /> {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -342,8 +342,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p className="text-xs font-bold leading-5">
-            <span>單位：新台幣元</span>
-            <span className="pl-5">每股盈餘單位：新台幣元</span>
+            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -359,7 +359,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}
-                    <br />至{formattedCurToDate}
+                    <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -370,7 +370,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}
-                    <br />至{formattedPreToDate}
+                    <br /> {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -438,8 +438,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p className="text-xs font-bold leading-5">
-            <span>單位：新台幣元</span>
-            <span className="pl-5">每股盈餘單位：新台幣元</span>
+            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         {!isDetailCollapsed && (
@@ -459,7 +459,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   {!isDetailCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow text-xs font-semibold leading-5">
                       {formattedCurFromDate}
-                      <br />至{formattedCurToDate}
+                      <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                     </p>
                   )}
                 </th>
@@ -473,7 +473,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   {financialReport && financialReport.company && (
                     <p className="text-center font-barlow text-xs font-semibold leading-5">
                       {formattedPreFromDate}
-                      <br />至{formattedPreToDate}
+                      <br /> {t('reports:COMMON.TO')} {formattedPreToDate}
                     </p>
                   )}
                 </th>
@@ -521,8 +521,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
           </p>
           <p className="text-xs font-bold leading-5">
-            <span>單位：新台幣元</span>
-            <span className="pl-5">每股盈餘單位：新台幣元</span>
+            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -541,7 +541,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}
-                    <br />至{formattedCurToDate}
+                    <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -555,7 +555,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}
-                    <br />至{formattedPreToDate}
+                    <br /> {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -602,8 +602,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
           </p>
           <p className="text-xs font-bold leading-5">
-            <span>單位：新台幣元</span>
-            <span className="pl-5">每股盈餘單位：新台幣元</span>
+            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -622,7 +622,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}
-                    <br />至{formattedCurToDate}
+                    <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -636,7 +636,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}
-                    <br />至{formattedPreToDate}
+                    <br /> {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -683,8 +683,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
           </p>
           <p className="text-xs font-bold leading-5">
-            <span>單位：新台幣元</span>
-            <span className="pl-5">每股盈餘單位：新台幣元</span>
+            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -702,7 +702,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               >
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate} <br />至{formattedCurToDate}
+                    {formattedCurFromDate} <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -715,7 +715,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               >
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate} <br />至{formattedPreToDate}
+                    {formattedPreFromDate} <br /> {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -762,8 +762,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
           </p>
           <p className="text-xs font-bold leading-5">
-            <span>單位：新台幣元</span>
-            <span className="pl-5">每股盈餘單位：新台幣元</span>
+            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
@@ -782,7 +782,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}
-                    <br />至{formattedCurToDate}
+                    <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -796,7 +796,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}
-                    <br />至{formattedPreToDate}
+                    <br /> {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -876,7 +876,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="relative text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">三、投入費用和成本，與收入的倍數關係</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+          </p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
@@ -893,7 +895,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               >
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate} <br />至{formattedCurToDate}
+                    {formattedCurFromDate} <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -903,7 +905,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               >
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate} <br />至{formattedPreToDate}
+                    {formattedPreFromDate} <br /> {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -1020,19 +1022,21 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         </table>
         {financialReport && financialReport.company && (
           <p className="mt-4 text-xs">
-            {formattedCurFromDate}至{formattedCurToDate}
+            {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
             營業收入，為投入費用和成本的{curRatio.toFixed(2)}倍
           </p>
         )}
         {financialReport && financialReport.company && (
           <p className="mt-4 text-xs">
-            {formattedPreFromDate}至{formattedPreToDate}
+            {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
             營業收入，為投入費用和成本的{preRatio.toFixed(2)}倍
           </p>
         )}
         <div className="mb-4 mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">四、收入提撥至研發費用比例</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+          </p>
         </div>
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
           <thead>
@@ -1046,14 +1050,14 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate} <br />至{formattedCurToDate}
+                    {formattedCurFromDate} <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
               <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate} <br />至{formattedPreToDate}
+                    {formattedPreFromDate} <br /> {t('reports:COMMON.TO')} {formattedPreToDate}
                   </p>
                 )}
               </th>

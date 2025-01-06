@@ -61,8 +61,8 @@ const ItemSummary = ({
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p className="font-bold leading-5">
-            <span>單位：新台幣元</span>
-            <span className="pl-5">每股盈餘單位：新台幣元</span>
+            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         {!isSummaryCollapsed && (
@@ -72,13 +72,13 @@ const ItemSummary = ({
                 <th className="w-77px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="w-530px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   {!isSummaryCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
-                      {formattedCurFromDate}至{formattedCurToDate}
+                      {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                     </p>
                   )}
                 </th>
@@ -91,7 +91,7 @@ const ItemSummary = ({
                 >
                   {financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
-                      {formattedPreFromDate}至{formattedPreToDate}
+                      {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
                     </p>
                   )}
                 </th>

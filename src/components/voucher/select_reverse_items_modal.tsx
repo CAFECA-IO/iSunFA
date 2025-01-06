@@ -246,8 +246,8 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
     );
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="relative flex h-500px w-90vw flex-col items-center gap-16px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 px-20px py-16px shadow-lg md:w-750px">
+    <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
+      <div className="relative flex h-500px w-90vw flex-col items-center gap-16px rounded-sm bg-surface-neutral-surface-lv2 px-20px py-16px shadow-lg md:w-750px">
         {/* Info: (20241104 - Julian) Close button */}
         <button type="button" onClick={modalVisibilityHandler} className="absolute right-4 top-4">
           <RxCross2 size={24} className="text-icon-surface-single-color-primary" />
@@ -284,7 +284,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
                 <span className="text-text-neutral-primary">
                   {numberWithCommas(totalReverseAmount)}
                 </span>{' '}
-                {t('journal:JOURNAL.TWD')}
+                {t('journal:CURRENCY_ALIAS.TWD')}
               </p>
             </div>
             <div className="flex flex-1 flex-col items-center px-16px py-8px text-sm">

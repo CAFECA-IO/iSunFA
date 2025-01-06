@@ -47,7 +47,7 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
   };
 
   return (
-    <main className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+    <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       {isEditModalOpen && selectedCompany && (
         <CompanyEditModal
           companyAndRole={selectedCompany}

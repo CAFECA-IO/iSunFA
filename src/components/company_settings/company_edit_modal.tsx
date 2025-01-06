@@ -140,7 +140,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
   }, []);
 
   return (
-    <main className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+    <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="ml-250px flex max-h-90vh flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
         <section className="flex items-center justify-between">
           <Button variant="secondaryBorderless" className="p-0" type="button" onClick={toggleModal}>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BsChevronDown, BsChevronUp } from 'react-icons/bs';
+import { useTranslation } from 'next-i18next';
 
 // Info: (20241001 - Anna) 定義 CollapseButton 的 props 類型
 interface CollapseButtonProps {
@@ -15,6 +16,7 @@ const CollapseButton: React.FC<CollapseButtonProps> = ({
   buttonType = 'default',
   className = '',
 }) => {
+  const { t } = useTranslation(['reports']);
   // Info: (20241003 - Anna) 根據 buttonType 決定樣式
   const buttonStyles =
     buttonType === 'orange'
@@ -40,11 +42,13 @@ const CollapseButton: React.FC<CollapseButtonProps> = ({
           <div className="whitespace-nowrap">
             {isCollapsed ? (
               <span className="flex items-center gap-1">
-                展開 <BsChevronDown style={{ color: 'var(--orange-900)' }} />
+                {t('reports:REPORTS.EXPAND')}
+                <BsChevronDown style={{ color: 'var(--orange-900)' }} />
               </span>
             ) : (
               <span className="flex items-center gap-1">
-                收合 <BsChevronUp style={{ color: 'var(--orange-900)' }} />
+                {t('reports:REPORTS.COLLAPSE')}
+                <BsChevronUp style={{ color: 'var(--orange-900)' }} />
               </span>
             )}
           </div>

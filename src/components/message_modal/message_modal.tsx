@@ -133,7 +133,7 @@ const MessageModal = ({
   ) : null;
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 font-barlow">
+    <div className="fixed inset-0 z-10000 flex items-center justify-center bg-black/50 font-barlow">
       <div
         className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-376px ${borderColor} bg-alert-surface-background px-32px py-16px`}
       >

@@ -103,7 +103,7 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
   const assetStatusString = t(`asset:ASSET.STATUS_${assetStatus.toUpperCase()}`);
 
   const displayedRemainingLife =
-    assetStatus === AssetStatus.NORMAL && remainingLife > 0 ? (
+    assetStatus === AssetStatus.NORMAL ? (
       <div className="flex flex-col items-end">
         {/* Info: (20240925 - Julian) Remaining count */}
         <div className="flex items-center gap-4px">
