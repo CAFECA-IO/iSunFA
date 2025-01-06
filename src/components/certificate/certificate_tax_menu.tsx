@@ -88,7 +88,7 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
         <FaChevronDown className={isTaxRatioMenuOpen ? 'rotate-180' : 'rotate-0'} />
       </div>
 
-      {/* 主選單 */}
+      {/* Info: (20250103 - tzuhan) 主選單 */}
       <div
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${
           isTaxRatioMenuOpen
@@ -109,7 +109,7 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
           ))}
         </ul>
       </div>
-      {/* 次級選單 */}
+      {/* Info: (20250103 - tzuhan) 次級選單 */}
       {isTaxRatioSubMenuOpen && (
         <div
           ref={taxRatioSubMenuRef}
