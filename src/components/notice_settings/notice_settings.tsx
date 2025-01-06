@@ -41,14 +41,7 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
         },
       });
 
-      if (success) {
-        toastHandler({
-          id: ToastId.USER_SETTING_UPDATE_SUCCESS,
-          type: ToastType.SUCCESS,
-          content: t('setting:USER.UPDATE_SUCCESS'),
-          closeable: true,
-        });
-      } else {
+      if (!success) {
         toastHandler({
           id: ToastId.USER_SETTING_UPDATE_ERROR,
           type: ToastType.ERROR,
