@@ -64,7 +64,7 @@ export default async function handler(
       isTimestamp(startDate as string) &&
       isTimestamp(endDate as string)
     ) {
-      const session = await getSession(req, res);
+      const session = await getSession(req);
       const { userId, companyId } = session;
       const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
       if (!isAuth) {

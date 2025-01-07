@@ -26,7 +26,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IUser | IUser[] | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.USER_LIST, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.USER_LIST, req, handleGetRequest),
 };
 
 export default async function handler(

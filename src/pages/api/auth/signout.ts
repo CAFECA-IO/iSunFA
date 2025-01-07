@@ -6,10 +6,9 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
 
 async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse
+  req: NextApiRequest
 ): Promise<{ statusMessage: string; payload: null }> {
-  await handleSignOutSession(req, res);
+  await handleSignOutSession(req);
   return { statusMessage: STATUS_MESSAGE.SUCCESS, payload: null };
 }
 

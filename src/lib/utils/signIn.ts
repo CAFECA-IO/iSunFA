@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest } from 'next';
 import { getSession, setSession } from '@/lib/utils/session';
 import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
 import { AdapterUser } from 'next-auth/adapters';
@@ -41,7 +41,6 @@ export const fetchImageInfo = async (
 
 export const handleSignInSession = async (
   req: NextApiRequest,
-  res: NextApiResponse,
   user: User | AdapterUser,
   account:
     | Account
@@ -51,7 +50,7 @@ export const handleSignInSession = async (
         type: string;
       }
 ) => {
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
   // let Dbuser;
   // const { invitation } = (account?.params || {}) as { invitation: string };

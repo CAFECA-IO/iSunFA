@@ -12,7 +12,7 @@ import { EventType } from '@/constants/account';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { AI_TYPE } from '@/constants/aich';
 import { fetchResultFromAICH, formatLineItemsFromAICH } from '@/lib/utils/aich';
-import { ISessionData } from '@/interfaces/session_data';
+import { ISessionData } from '@/interfaces/session';
 import { fuzzySearchCounterpartyByName } from '@/lib/utils/repo/counterparty.repo';
 import { CurrencyType } from '@/constants/currency';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
@@ -177,7 +177,7 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.ASK_AI_RESULT_V2, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.ASK_AI_RESULT_V2, req, handleGetRequest),
 };
 
 // Info: (20241004 - Murky) Main handler function for the API route

@@ -224,10 +224,9 @@ export const handleDeleteRequest: IHandleRequest<
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.ASSET_GET_BY_ID_V2, req, res, handleGetRequest),
-  PUT: (req, res) => withRequestValidation(APIName.UPDATE_ASSET_V2, req, res, handlePutRequest),
-  DELETE: (req, res) =>
-    withRequestValidation(APIName.DELETE_ASSET_V2, req, res, handleDeleteRequest),
+  GET: (req) => withRequestValidation(APIName.ASSET_GET_BY_ID_V2, req, handleGetRequest),
+  PUT: (req) => withRequestValidation(APIName.UPDATE_ASSET_V2, req, handlePutRequest),
+  DELETE: (req) => withRequestValidation(APIName.DELETE_ASSET_V2, req, handleDeleteRequest),
 };
 
 export default async function handler(

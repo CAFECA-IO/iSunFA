@@ -50,7 +50,7 @@ const methodHandlers: {
     } | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.TRIAL_BALANCE_LIST, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.TRIAL_BALANCE_LIST, req, handleGetRequest),
   // GET: handleGetRequest, // 直接使用 handleGetRequest
 };
 

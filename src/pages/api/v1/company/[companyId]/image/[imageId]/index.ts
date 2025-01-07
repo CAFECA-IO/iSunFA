@@ -46,12 +46,12 @@ async function getFileFromDB(imageId: string) {
   return file;
 }
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: Buffer | null = null;
 
   try {
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId, companyId } = session;
     const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
     if (!isAuth) {

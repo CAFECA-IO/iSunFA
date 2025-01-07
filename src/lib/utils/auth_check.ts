@@ -1,5 +1,5 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest } from 'next';
 import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import {
@@ -17,8 +17,8 @@ export async function checkUser(params: { userId: number }) {
   return !!user;
 }
 
-export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getSession(req, res);
+export async function checkAdmin(req: NextApiRequest) {
+  const session = await getSession(req);
   const { companyId, userId } = session;
   if (!userId) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);

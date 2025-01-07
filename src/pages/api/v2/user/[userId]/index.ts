@@ -71,9 +71,9 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IUser | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.USER_GET_BY_ID, req, res, handleGetRequest),
-  PUT: (req, res) => withRequestValidation(APIName.USER_UPDATE, req, res, handlePutRequest),
-  DELETE: (req, res) => withRequestValidation(APIName.USER_DELETE, req, res, handleDeleteRequest),
+  GET: (req) => withRequestValidation(APIName.USER_GET_BY_ID, req, handleGetRequest),
+  PUT: (req) => withRequestValidation(APIName.USER_UPDATE, req, handlePutRequest),
+  DELETE: (req) => withRequestValidation(APIName.USER_DELETE, req, handleDeleteRequest),
 };
 
 export default async function handler(

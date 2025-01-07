@@ -137,8 +137,8 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  GET: (req, res) =>
-    withRequestValidation(APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2, req, res, handleGetRequest),
+  GET: (req) =>
+    withRequestValidation(APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2, req, handleGetRequest),
 };
 
 export default async function handler(

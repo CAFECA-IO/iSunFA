@@ -51,14 +51,11 @@ function checkInput(
   );
 }
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ISalaryRecordWithProjects | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ISalaryRecordWithProjects | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
@@ -76,10 +73,7 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handlePutRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ISalaryRecordWithProjectsAndHours | null>>
-) {
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ISalaryRecordWithProjectsAndHours | null = null;
 
@@ -125,7 +119,7 @@ async function handlePutRequest(
   if (!isValid) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId, companyId } = session;
     if (!userId) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;

@@ -7,14 +7,11 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAsset[] | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAsset[] | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {
@@ -36,14 +33,11 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAsset | null>>
-) {
+async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAsset | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

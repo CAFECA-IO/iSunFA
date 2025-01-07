@@ -60,8 +60,8 @@ const methodHandlers: {
     payload: IPaginatedData<INews[]> | INews | INews[] | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.NEWS_LIST, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.CREATE_NEWS, req, res, handlePostRequest),
+  GET: (req) => withRequestValidation(APIName.NEWS_LIST, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.CREATE_NEWS, req, handlePostRequest),
 };
 
 export default async function handler(

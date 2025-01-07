@@ -10,15 +10,12 @@ import { formatCompany } from '@/lib/utils/formatter/company.formatter';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 
-async function handlePutRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompany | null>>
-) {
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICompany | null = null;
 
   const companyIdNum = convertStringToNumber(req.query.companyId);
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId } = session;
 
   if (!userId) {

@@ -194,8 +194,8 @@ export const handlePostRequest: IHandleRequest<
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.ASSET_LIST_V2, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.CREATE_ASSET_V2, req, res, handlePostRequest),
+  GET: (req) => withRequestValidation(APIName.ASSET_LIST_V2, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.CREATE_ASSET_V2, req, handlePostRequest),
 };
 
 // Info: (20241204 - Luphia) API main handler, will call the middleware to handle the request

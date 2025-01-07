@@ -27,7 +27,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IRole[] | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.ROLE_LIST, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.ROLE_LIST, req, handleGetRequest),
 };
 
 export default async function handler(

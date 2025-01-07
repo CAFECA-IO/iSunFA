@@ -38,8 +38,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IPaginatedData<IUserActionLog[]> | null }>;
 } = {
-  GET: (req, res) =>
-    withRequestValidation(APIName.USER_ACTION_LOG_LIST, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.USER_ACTION_LOG_LIST, req, handleGetRequest),
 };
 
 export default async function handler(

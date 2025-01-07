@@ -307,11 +307,10 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.CERTIFICATE_LIST_V2, req, res, handleGetRequest),
-  POST: (req, res) =>
-    withRequestValidation(APIName.CERTIFICATE_POST_V2, req, res, handlePostRequest),
-  DELETE: (req, res) =>
-    withRequestValidation(APIName.CERTIFICATE_DELETE_MULTIPLE_V2, req, res, handleDeleteRequest),
+  GET: (req) => withRequestValidation(APIName.CERTIFICATE_LIST_V2, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.CERTIFICATE_POST_V2, req, handlePostRequest),
+  DELETE: (req) =>
+    withRequestValidation(APIName.CERTIFICATE_DELETE_MULTIPLE_V2, req, handleDeleteRequest),
 };
 
 export default async function handler(

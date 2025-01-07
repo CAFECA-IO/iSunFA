@@ -25,13 +25,10 @@ async function checkInput(code: string, name: string, regional: string): Promise
   return !!code && !!name && !!regional;
 }
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<Array<{ company: ICompany; role: IRole }> | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: Array<{ company: ICompany; role: IRole }> | null = null;
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId } = session;
 
   if (!userId) {
@@ -51,10 +48,7 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<{ company: ICompany; role: IRole } | null>>
-) {
+async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: { company: ICompany; role: IRole } | null = null;
   const { code, name, regional } = req.body;
@@ -63,7 +57,7 @@ async function handlePostRequest(
   if (!isValid) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId } = session;
 
     if (!userId) {

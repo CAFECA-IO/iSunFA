@@ -1,3 +1,5 @@
+import { ONE_DAY_IN_MS } from '@/constants/time';
+
 // Info: (20241128 - Luphia) Default Value for Undefined Parameter
 export const DefaultValue = {
   CERTIFICATE_ID: {
@@ -20,5 +22,10 @@ export const DefaultValue = {
     GUEST: 1,
     SYSTEM: 2,
     UNKNOWN: 555,
+  },
+  SESSION_OPTION: {
+    GC_INTERVAL: ONE_DAY_IN_MS,
+    FILE_PATH: './session.store',
+    SECRET: 'SECRET',
   },
 };

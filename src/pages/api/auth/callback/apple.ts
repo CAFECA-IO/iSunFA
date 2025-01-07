@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Info: (20241129 - tzuhan) Step 1: Handle Apple OAuth
     const { user, account } = await handleAppleOAuth(code);
-    await handleSignInSession(req, res, user, account);
+    await handleSignInSession(req, user, account);
 
     // Info: (20241129 - tzuhan) Step 2: Redirect on Success
     res.redirect(`${ISUNFA_ROUTE.LOGIN}?signin=true`);

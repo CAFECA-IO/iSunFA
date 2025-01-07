@@ -1,13 +1,13 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest } from 'next';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
 import { output, validateOutputData, validateRequestData } from '@/lib/utils/validator';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { APIName, APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
-import { ISessionData } from '@/interfaces/session_data';
+import { ISessionData } from '@/interfaces/session';
 import { checkAuthorizationNew, isWhitelisted } from '@/lib/utils/auth_check_v2';
 import { DefaultValue } from '@/constants/default_value';
 
@@ -105,13 +105,12 @@ export async function logUserAction<T extends APIName>(
 export async function withRequestValidation<T extends APIName, U>(
   apiName: T,
   req: NextApiRequest,
-  res: NextApiResponse,
   handler: IHandleRequest<T, U>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: output<T> | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const isLogin = await checkSessionUser(session, apiName, req);
   if (!isLogin) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;

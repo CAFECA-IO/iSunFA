@@ -18,12 +18,12 @@ import {
 import { formatCompanyDetailAndRole } from '@/lib/utils/formatter/admin.formatter';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICompany | ICompanyAndRoleDetail | null = null;
 
   const companyIdNum = convertStringToNumber(req.query.companyId);
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId } = session;
   const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
   if (!userId) {
@@ -42,13 +42,13 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   return { statusMessage, payload };
 }
 
-async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICompany | null = null;
 
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const { code, name, regional } = req.body;
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId } = session;
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
@@ -73,12 +73,12 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handleDeleteRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICompany | null = null;
 
   const companyIdNum = convertStringToNumber(req.query.companyId);
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId } = session;
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;

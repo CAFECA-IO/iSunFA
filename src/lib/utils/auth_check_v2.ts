@@ -9,7 +9,7 @@ import {
 import { AuthFunctionsNew } from '@/interfaces/auth';
 import { AUTH_CHECK, AUTH_WHITELIST } from '@/constants/auth';
 import { getUserById } from '@/lib/utils/repo/user.repo';
-import { ISessionData } from '@/interfaces/session_data';
+import { ISessionData } from '@/interfaces/session';
 import { convertStringToNumber } from '@/lib/utils/common';
 import loggerBack from '@/lib/utils/logger_back';
 import { APIName } from '@/constants/api_connection';
