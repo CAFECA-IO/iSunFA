@@ -22,15 +22,15 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({
   // Info: (20241106 - Anna) 將 CounterPartyList 的狀態類型設為 ICounterPartyEntity[]
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1); // Info: (20241101 - Anna) 動態 totalPages 狀態
-  // Info: (20240920 - Julian) 排序狀態
-  const [dateSort, setDateSort] = useState<null | SortOrder>(null);
+  // Info: (20250106 - Julian) 排序狀態
+  const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const itemsPerPage = 10; // Info: (20241112 - Anna) 每頁顯示的項目數量
 
-  // Info: (20241106 - Anna) 排序按鈕
-  const displayedDate = SortingButton({
-    string: t('common:COMMON.PARTNER_S_NAME'),
-    sortOrder: dateSort,
-    setSortOrder: setDateSort,
+  // Info: (20250106 - Julian) 排序按鈕
+  const displayedType = SortingButton({
+    string: t('common:COMMON.TYPE'),
+    sortOrder: typeSort,
+    setSortOrder: setTypeSort,
   });
 
   // Info: (20241113 - Anna) 確認傳入的 `counterparties` 是否正確
@@ -73,19 +73,19 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
             <div
-              className={`table-cell border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
+              className={`table-cell w-140px border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
             >
-              {displayedDate}
+              {t('common:COMMON.PARTNER_S_NAME')}
             </div>
             <div
-              className={`table-cell border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
+              className={`table-cell w-100px border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
             >
               {t('common:COMMON.TAX_ID')}
             </div>
             <div
-              className={`table-cell border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
+              className={`table-cell w-140px border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
             >
-              {t('common:COMMON.TYPE')}
+              {displayedType}
             </div>
             <div
               className={`table-cell border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
@@ -93,7 +93,7 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({
               {t('certificate:COUNTERPARTY.NOTE')}
             </div>
             <div
-              className={`table-cell border-b border-stroke-neutral-quaternary text-center align-middle`}
+              className={`table-cell w-100px border-b border-stroke-neutral-quaternary text-center align-middle`}
             >
               {t('common:COMMON.OPERATIONS')}
             </div>
