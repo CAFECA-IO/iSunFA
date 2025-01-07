@@ -47,7 +47,9 @@ const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: 
       <section className="flex flex-auto gap-40px rounded-r-lg border border-stroke-brand-primary bg-surface-brand-primary-5 p-24px">
         <div className="flex flex-col gap-12px">
           <h2 className="text-xl font-semibold text-text-brand-secondary-lv1">{team.name}</h2>
-          <h1 className="w-200px text-36px font-bold text-text-brand-primary-lv1">{team.plan}</h1>
+          <h1 className="w-200px text-36px font-bold text-text-brand-primary-lv1">
+            {t(`subscriptions:SUBSCRIPTIONS_PAGE.${team.plan.toUpperCase()}`)}
+          </h1>
           <p className="text-lg font-medium text-text-neutral-tertiary">{price}</p>
         </div>
 

@@ -45,6 +45,7 @@
   },
   "NORMAL": {
     "TITLE": "常规设置",
+    "USER_SETTING": "用户设置",
     "NOTICE_SETTING": "通知设置",
     "SYSTEM_NOTIFICATION": "系统通知",
     "UPDATES_N_SUBSCRIPTION_NOTIFICATION": "更新与订阅通知",
@@ -157,6 +158,10 @@
     "TIME": "登录时间",
     "DEVICE": "登录设备",
     "ADDRESS": "登录地址",
+    "ACTION": "操作",
+    "LOGOUT": "登出",
+    "CURRENT": "当前",
+    "DELETE_SESSION_SUCCESS": "会话已成功删除。",
     "DETECT_DIFFERENT_IP_LOGIN": "检测到来自不同 IP 地址的登录。",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "请验证您的帐户安全性以防止数据外泄。"
   },

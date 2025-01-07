@@ -43,16 +43,18 @@ const CostRevRatio = ({
     <div id="3" className="relative overflow-hidden">
       <section className="relative text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="font-bold leading-5">投入費用和成本，與收入的倍數關係</p>
+          <p className="font-bold leading-5">
+            {t('reports:REPORTS.RELATIONSHIP_BETWEEN_EXPENSES_COSTS_REVENUE')}
+          </p>
           <p className="font-bold leading-5">{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
             <tr>
               <th
-                className={`w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold whitespace-nowrap`}
+                className={`w-77px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold`}
               >
-                {t('reports:TAX_REPORT.CODE_NUMBER')}
+                {t('reports:REPORTS.CODE_NUMBER')}
               </th>
               <th className="w-530px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
@@ -92,7 +94,9 @@ const CostRevRatio = ({
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px`}
                   >
-                    {otherInfo.revenueAndExpenseRatio.revenue.name}
+                    {t(
+                      `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.revenue.name}`
+                    )}
                   </td>
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px text-end`}
@@ -144,7 +148,9 @@ const CostRevRatio = ({
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px`}
                   >
-                    {otherInfo.revenueAndExpenseRatio.totalCost.name}
+                    {t(
+                      `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.totalCost.name}`
+                    )}
                   </td>
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px text-end`}
@@ -172,7 +178,9 @@ const CostRevRatio = ({
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px`}
                   >
-                    {otherInfo.revenueAndExpenseRatio.salesExpense.name}
+                    {t(
+                      `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.salesExpense.name}`
+                    )}
                   </td>
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px text-end`}
@@ -200,7 +208,9 @@ const CostRevRatio = ({
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px`}
                   >
-                    {otherInfo.revenueAndExpenseRatio.administrativeExpense.name}
+                    {t(
+                      `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.administrativeExpense.name}`
+                    )}
                   </td>
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px text-end`}
@@ -225,7 +235,7 @@ const CostRevRatio = ({
               <td
                 className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px text-start`}
               >
-                投入費用和成本合計
+                {t(`reports:REPORTS.TOTAL_EXPENSES_AND_COSTS`)}
               </td>
               <td
                 className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px text-end`}
@@ -242,25 +252,33 @@ const CostRevRatio = ({
         </table>
         {financialReport && financialReport.company && (
           <p className={`${isPrint ? 'text-xs' : 'text-sm'} mt-4`}>
-            {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
-            營業收入，為投入費用和成本的{curRatio.toFixed(2)}倍
+            <span>
+              {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
+            </span>
+            <span className="ml-2">
+              {t('reports:REPORTS.REVENUE_RATIO', { ratio: curRatio.toFixed(2) })}
+            </span>
           </p>
         )}
         {financialReport && financialReport.company && (
           <p className={`${isPrint ? 'text-xs' : 'text-sm'} mt-4`}>
-            {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
-            營業收入，為投入費用和成本的{preRatio.toFixed(2)}倍
+            <span>
+              {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
+            </span>
+            <span className="ml-2">
+              {t('reports:REPORTS.REVENUE_RATIO', { ratio: preRatio.toFixed(2) })}
+            </span>
           </p>
         )}
         <div className="mb-4 mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="font-bold leading-5">收入提撥至研發費用比例</p>
+          <p className="font-bold leading-5">{t('reports:REPORTS.REVENUE_TO_RD')}</p>
           <p className="font-bold leading-5">{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold whitespace-nowrap">
-                {t('reports:TAX_REPORT.CODE_NUMBER')}
+              <th className="w-77px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                {t('reports:REPORTS.CODE_NUMBER')}
               </th>
               <th className="w-530px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
@@ -299,7 +317,7 @@ const CostRevRatio = ({
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px`}
                   >
-                    {revenueToRD.revenue.name}
+                    {t(`reports:ACCOUNTING_ACCOUNT.${revenueToRD.revenue.name}`)}
                   </td>
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px text-end`}
@@ -321,7 +339,9 @@ const CostRevRatio = ({
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px`}
                   >
-                    {revenueToRD.researchAndDevelopmentExpense.name}
+                    {t(
+                      `reports:ACCOUNTING_ACCOUNT.${revenueToRD.researchAndDevelopmentExpense.name}`
+                    )}
                   </td>
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px text-end`}
@@ -343,13 +363,15 @@ const CostRevRatio = ({
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px text-start`}
                   >
-                    收入提撥至研發費用比例
+                    {t('reports:REPORTS.REVENUE_TO_RD')}
                   </td>
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px text-end`}
                   >
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(2)}%
+                    {revenueToRD.ratio.curRatio.toFixed(
+                      2
+                    )}%
                   </td>
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-brand-secondary-soft p-10px text-end`}

@@ -49,6 +49,15 @@ export type IAccountNode = Omit<Account, 'children' | 'parent' | 'root' | 'leaf'
   amount: number;
 };
 
+export type IAccountNodeWithDebitAndCredit = Omit<
+  Account,
+  'children' | 'parent' | 'root' | 'leaf'
+> & {
+  children: IAccountNodeWithDebitAndCredit[];
+  debitAmount: number;
+  creditAmount: number;
+};
+
 export interface IAccountForSheetDisplay {
   accountId: number;
   code: string;

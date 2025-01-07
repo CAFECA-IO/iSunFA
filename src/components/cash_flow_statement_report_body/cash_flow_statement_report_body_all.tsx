@@ -226,7 +226,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
           {firstThought?.split('\n').map((line, index) => (
             <li key={`${line + index}`} className="mb-2 ml-1">
-              {line}
+              {t(`reports:REPORTS.${line}`)}
             </li>
           ))}
         </ol>
@@ -235,7 +235,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
           {secondThought?.split('\n').map((line, index) => (
             <li key={`${line + index}`} className="mb-2 ml-1">
-              {line}
+              {t(`reports:REPORTS.${line}`)}
             </li>
           ))}
         </ol>
@@ -243,7 +243,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
           {thirdThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
-              {line}
+              {t(`reports:REPORTS.${line}`)}
             </li>
           ))}
         </ol>
