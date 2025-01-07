@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { VoucherType } from '@/constants/account';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import SortingButton from '@/components/voucher/sorting_button';
-import { SortOrder } from '@/constants/sort';
+import { SortBy, SortOrder } from '@/constants/sort';
 import { Button } from '@/components/button/button';
 import { IoIosClose } from 'react-icons/io';
 import { FaUpload, FaDownload } from 'react-icons/fa';
@@ -172,8 +172,11 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                     onApiResponse={handleApiResponse}
                     page={1}
                     pageSize={99999}
+                    /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
                     dateSort={dateSort}
                     otherSorts={[]}
+                    */
+                    sort={dateSort ? { by: SortBy.DATE, order: dateSort } : undefined}
                   />
                 </div>
               )}

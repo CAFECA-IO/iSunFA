@@ -71,7 +71,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
-  const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
+  const [selectedSort, setSelectedSort] = useState<
+    | {
+        by: SortBy;
+        order: SortOrder;
+      }
+    | undefined
+  >();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -566,11 +572,16 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   );
 
   useEffect(() => {
-    setOtherSorts([
-      ...(amountSort ? [{ sort: SortBy.AMOUNT, sortOrder: amountSort }] : []),
-      ...(voucherSort ? [{ sort: SortBy.VOUCHER_NUMBER, sortOrder: voucherSort }] : []),
-    ]);
-  }, [amountSort, voucherSort]);
+    if (dateSort) {
+      setSelectedSort({ by: SortBy.DATE, order: dateSort });
+    } else if (amountSort) {
+      setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
+    } else if (voucherSort) {
+      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
+    } else {
+      setSelectedSort(undefined);
+    }
+  }, [amountSort, voucherSort, dateSort]);
 
   useEffect(() => {
     const pusher = getPusherInstance(userAuth?.id);
@@ -650,8 +661,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           types={Object.values(InvoiceType)}
           viewType={viewType}
           viewToggleHandler={setViewType}
+          /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
           dateSort={dateSort}
           otherSorts={otherSorts}
+          */
+          sort={selectedSort}
         />
 
         {/* Info: (20240919 - tzuhan) Certificate Table */}

@@ -300,7 +300,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 period={date}
                 setFilteredPeriod={setDate}
                 type={DatePickerType.TEXT_DATE}
-                btnClassName=""
+                datePickerClassName="z-120"
                 datePickerHandler={(start: number) => handleInputChange('date', start)}
               />
               {errors.date && (

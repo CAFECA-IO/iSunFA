@@ -50,7 +50,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
             <Image src="/elements/downloader.svg" alt="⬇" width={16} height={16} />
           </Button>
         </div>
-        <div className="hide-scrollbar flex max-h-800px min-h-600px min-w-700px max-w-1200px items-center justify-center overflow-scroll p-40px">
+        <div className="hide-scrollbar flex max-h-800px min-h-600px min-w-700px max-w-1200px justify-center overflow-scroll p-40px">
           <Magnifier
             className="max-h-full max-w-full object-contain"
             imageUrl={certificate.file.url}
