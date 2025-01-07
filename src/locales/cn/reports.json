@@ -33,7 +33,13 @@
     "YEAR_TEMPLATE": "{{year}}年度",
     "INVENTORY_TURNOVER_DAYS": "存货周转天数",
     "UNIT_DAYS": "单位：天",
-    "EPS_UNIT": "每股盈余单位：新台币元"
+    "EPS_UNIT": "每股盈余单位：新台币元",
+    "CODE_NUMBER": "代号",
+    "AMOUNT": "金额",
+    "RELATIONSHIP_BETWEEN_EXPENSES_COSTS_REVENUE": "投入费用和成本，与收入的倍数关系",
+    "TOTAL_EXPENSES_AND_COSTS": "投入费用和成本合计",
+    "REVENUE_RATIO": "营业收入，为投入费用和成本的 {{ratio}} 倍",
+    "REVENUE_TO_RD": "收入提拨至研发费用比例"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "最新的 TideBit ",

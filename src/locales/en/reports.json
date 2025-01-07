@@ -33,7 +33,13 @@
     "YEAR_TEMPLATE": "Year {{year}}",
     "INVENTORY_TURNOVER_DAYS": "Inventory Turnover Days",
     "UNIT_DAYS": "Unit: Days",
-    "EPS_UNIT": "Earnings Per Share (EPS) Unit: New Taiwan Dollar (NTD)"
+    "EPS_UNIT": "Earnings Per Share (EPS) Unit: New Taiwan Dollar (NTD)",
+    "CODE_NUMBER": "Code Number",
+    "AMOUNT": "Amount",
+    "RELATIONSHIP_BETWEEN_EXPENSES_COSTS_REVENUE": "The Multiple Relationship Between Expenses, Costs, and Revenue",
+    "TOTAL_EXPENSES_AND_COSTS": "Total Expenses and Costs",
+    "REVENUE_RATIO": "Operating revenue amounts to {{ratio}} times the combined total of expenses and costs",
+    "REVENUE_TO_RD": "Proportion of Revenue Allocated to Research and Development Expenses"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "Latest",

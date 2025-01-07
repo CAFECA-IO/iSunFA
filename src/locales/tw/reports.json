@@ -33,7 +33,13 @@
     "YEAR_TEMPLATE": "{{year}}年度",
     "INVENTORY_TURNOVER_DAYS": "存貨週轉天數",
     "UNIT_DAYS": "單位：天",
-    "EPS_UNIT": "每股盈餘單位：新台幣元"
+    "EPS_UNIT": "每股盈餘單位：新台幣元",
+    "CODE_NUMBER": "代號",
+    "AMOUNT": "金額",
+    "RELATIONSHIP_BETWEEN_EXPENSES_COSTS_REVENUE": "投入費用和成本，與收入的倍數關係",
+    "TOTAL_EXPENSES_AND_COSTS": "投入費用和成本合計",
+    "REVENUE_RATIO": "營業收入，為投入費用和成本的 {{ratio}} 倍",
+    "REVENUE_TO_RD": "收入提撥至研發費用比例"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "最新的 TideBit ",
