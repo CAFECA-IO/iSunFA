@@ -726,6 +726,7 @@ export function processLineItems(
   array.forEach((targetItem) => {
     // Info: (20250106 - Shirley) 從下往上建立從屬關係分類
     if (targetItem.account.code.includes('-')) {
+      // Info: (20250107 - Shirley) 找到會計分錄裡是否有父科目，有的話就將子科目加進父科目的 children 裡
       const parentItem = array.find((item) => targetItem.account.parentId === item.account.id);
       if (parentItem) {
         const existingParent = arrWithChildren.find(
@@ -755,6 +756,7 @@ export function processLineItems(
           });
         }
       } else {
+        // Info: (20250107 - Shirley) 如果會計分錄裡沒有父科目作帳的紀錄，則從 accounts 找出父科目的資料，並依此創建父科目的資料後，將子科目加進父科目的 children 裡
         const parentAccount = accounts.find((item) => item.id === targetItem.account.parentId);
         if (parentAccount) {
           const parentAccountItem: ILineItemInTrialBalanceItemWithHierarchy = {
@@ -808,7 +810,7 @@ export function processLineItems(
   const newArrWithChildren = [...arrWithChildren];
 
   newArrWithChildren.forEach((item) => {
-    // Info: (20250106 - Shirley) 如果該科目有子科目，則新增一個「其他」虛擬科目，將該科目借方或貸方金額加入「其他」虛擬科目，列為其子科目，並將自身的金額歸零
+    // Info: (20250106 - Shirley) 如果該科目有子科目，則新增一個虛擬科目，將該科目借方或貸方金額加入虛擬科目，列為其子科目，並將自身的金額歸零
     if (item.children && item.children.length > 0) {
       const {
         account,

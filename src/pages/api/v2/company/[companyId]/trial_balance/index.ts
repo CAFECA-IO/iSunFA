@@ -129,11 +129,11 @@ export const handleGetRequest: IHandleRequest<
       ending: processLineItems(threeStagesOfLineItems.ending, accounts.data).arrWithCopySelf,
     };
     // Info: (20250106 - Shirley) Step 12
-    const newAPIData = convertToAPIFormat(threeStagesOfTrialBalance, parsedSortOption);
+    const APIData = convertToAPIFormat(threeStagesOfTrialBalance, parsedSortOption);
 
-    if (newAPIData) {
+    if (APIData) {
       const paginatedTrialBalance = formatPaginatedTrialBalance(
-        newAPIData.items,
+        APIData.items,
         parsedSortOption,
         page ?? DEFAULT_PAGE_NUMBER,
         pageSize ?? DEFAULT_PAGE_LIMIT
@@ -141,7 +141,7 @@ export const handleGetRequest: IHandleRequest<
       payload = {
         currencyAlias,
         items: paginatedTrialBalance,
-        total: newAPIData.total,
+        total: APIData.total,
       };
       statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     }
