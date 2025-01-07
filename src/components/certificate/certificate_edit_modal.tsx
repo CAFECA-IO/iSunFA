@@ -98,7 +98,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       newErrors.totalPrice = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_TOTAL');
     }
     if (!counterParty?.name) {
-      newErrors.counterParty = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
+      newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
     setErrors(newErrors);
@@ -309,7 +309,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 datePickerHandler={(start: number) => handleInputChange('date', start)}
               />
               {errors.date && (
-                <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                <p className="-translate-y-1 self-start text-sm text-text-state-error">
                   {errors.date}
                 </p>
               )}
