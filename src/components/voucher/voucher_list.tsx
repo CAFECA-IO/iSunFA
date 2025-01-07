@@ -15,6 +15,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
 import { HiCheck } from 'react-icons/hi';
+import Toggle from '@/components/toggle/toggle';
 
 interface IVoucherListProps {
   voucherList: IVoucherUI[];
@@ -49,6 +50,8 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   // Info: (20241022 - Julian) 被選中的 voucher
   const [selectedVoucherList, setSelectedVoucherList] = useState<IVoucherUI[]>([]);
+  // Info: (20250107 - Julian) 是否顯示沖銷傳票
+  const [isHideReversals, setIsHideReversals] = useState(true);
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
@@ -64,6 +67,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   } = APIHandler(APIName.VOUCHER_DELETE_V2);
 
   const selectToggleHandler = () => setIsCheckBoxOpen((prev) => !prev);
+  const hideReversalsToggleHandler = () => setIsHideReversals((prev) => !prev);
 
   // Info: (20241105 - Julian) 勾選全部
   const checkAllHandler = () => {
@@ -118,6 +122,9 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         });
       });
 
+      // Info: (20250107 - Julian) 刪除傳票後關閉選擇狀態
+      setIsSelectedAll(false);
+      setIsCheckBoxOpen(false);
       messageModalVisibilityHandler();
     }
   };
@@ -128,19 +135,31 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       // Info: (20241220 - Julian) 未選擇 voucher 警告
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: 'Warning',
-        content: 'Please select at least one voucher to delete',
+        title: t('journal:VOUCHER.WARNING_MODAL_TITLE'),
+        content: t('journal:VOUCHER.AT_LEAST_ONE_VOUCHER_CONTENT'),
         submitBtnStr: t('common:COMMON.OK'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
-    } else {
-      // Info: (20241220 - Julian) 顯示刪除確認視窗
+    } else if (selectedVoucherList.length > 1) {
+      // Info: (20250107 - Julian) 一次刪除多筆傳票
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: 'Warning',
-        content: 'Are you sure you want to delete the selected voucher?',
-        submitBtnStr: 'Delete',
+        title: t('journal:VOUCHER.DELETE_MULTIPLE_VOUCHER_TITLE'),
+        content: t('journal:VOUCHER.DELETE_MULTIPLE_VOUCHER_CONTENT'),
+        subMsg: `*${t('journal:VOUCHER.DELETE_MULTIPLE_VOUCHER_WARNING')}`,
+        submitBtnStr: 'Yes, delete these vouchers.',
+        submitBtnFunction: removeVoucher,
+      });
+      messageModalVisibilityHandler();
+    } else {
+      // Info: (20250107 - Julian) 刪除單筆傳票
+      messageModalDataHandler({
+        messageType: MessageType.WARNING,
+        title: t('journal:VOUCHER.DELETE_ONE_VOUCHER_TITLE'),
+        content: t('journal:VOUCHER.DELETE_ONE_VOUCHER_CONTENT'),
+        subMsg: `*${t('journal:VOUCHER.DELETE_ONE_VOUCHER_WARNING')}`,
+        submitBtnStr: t('journal:VOUCHER.DELETE_ONE_VOUCHER_SUBMIT_BTN'),
         submitBtnFunction: removeVoucher,
       });
       messageModalVisibilityHandler();
@@ -216,52 +235,67 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   });
 
   const displayedSelectArea = (
-    <div className="ml-auto flex h-50px items-center gap-24px">
-      {/* Info: (20240920 - Julian) Export Voucher button */}
-      <Button
-        type="button"
-        variant="tertiaryOutline"
-        className={isCheckBoxOpen ? 'hidden' : 'flex'}
-        onClick={exportVoucherModalVisibilityHandler}
-      >
-        <MdOutlineFileDownload />
-        <p>{t('journal:VOUCHER.EXPORT_VOUCHER')}</p>
-      </Button>
-      {/* Info: (20240920 - Julian) Delete button */}
-      <div className={isCheckBoxOpen ? 'block' : 'hidden'}>
+    <div className="flex items-center justify-between">
+      {/* Info: (20250107 - Julian) hidden delete voucher & reversals toggle */}
+      <div className="flex items-center gap-16px">
+        <Toggle
+          id="hide-reversals-toggle"
+          initialToggleState={isHideReversals}
+          getToggledState={hideReversalsToggleHandler}
+          toggleStateFromParent={isHideReversals}
+          lockedToOpen={false}
+        />
+        <p className="text-switch-text-primary">{t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}</p>
+      </div>
+
+      {/* Info: (20250107 - Julian) export & select button */}
+      <div className="flex h-50px items-center gap-24px">
+        {/* Info: (20240920 - Julian) Export Voucher button */}
         <Button
           type="button"
-          variant="tertiary"
-          size={'defaultSquare'}
-          onClick={removeVoucherHandler}
+          variant="tertiaryOutline"
+          className={isCheckBoxOpen ? 'hidden' : 'flex'}
+          onClick={exportVoucherModalVisibilityHandler}
         >
-          <FaRegTrashAlt />
+          <MdOutlineFileDownload />
+          <p>{t('journal:VOUCHER.EXPORT_VOUCHER')}</p>
         </Button>
+        {/* Info: (20240920 - Julian) Delete button */}
+        <div className={isCheckBoxOpen ? 'block' : 'hidden'}>
+          <Button
+            type="button"
+            variant="tertiary"
+            size={'defaultSquare'}
+            onClick={removeVoucherHandler}
+          >
+            <FaRegTrashAlt />
+          </Button>
+        </div>
+        {/* Info: (20240920 - Julian) Select All & Cancel button */}
+        <button
+          type="button"
+          className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+          onClick={selectAllHandler}
+        >
+          {isSelectedAll ? t('journal:VOUCHER.UNSELECT_ALL') : t('journal:VOUCHER.SELECT_ALL')}
+        </button>
+        {/* Info: (20240920 - Julian) Cancel selecting button */}
+        <button
+          type="button"
+          onClick={selectToggleHandler}
+          className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+        >
+          {t('common:COMMON.CANCEL')}
+        </button>
+        {/* Info: (20240920 - Julian) Select toggle button */}
+        <button
+          type="button"
+          onClick={selectToggleHandler}
+          className={`${isCheckBoxOpen ? 'hidden' : 'block'} font-semibold text-link-text-primary hover:opacity-70`}
+        >
+          {t('journal:VOUCHER.SELECT')}
+        </button>
       </div>
-      {/* Info: (20240920 - Julian) Select All & Cancel button */}
-      <button
-        type="button"
-        className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
-        onClick={selectAllHandler}
-      >
-        {t('journal:VOUCHER.SELECT_ALL')}
-      </button>
-      {/* Info: (20240920 - Julian) Cancel selecting button */}
-      <button
-        type="button"
-        onClick={selectToggleHandler}
-        className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
-      >
-        {t('common:COMMON.CANCEL')}
-      </button>
-      {/* Info: (20240920 - Julian) Select toggle button */}
-      <button
-        type="button"
-        onClick={selectToggleHandler}
-        className={`${isCheckBoxOpen ? 'hidden' : 'block'} font-semibold text-link-text-primary hover:opacity-70`}
-      >
-        {t('journal:VOUCHER.SELECT')}
-      </button>
     </div>
   );
 
@@ -278,7 +312,6 @@ const VoucherList: React.FC<IVoucherListProps> = ({
 
   return (
     <div className="flex flex-col gap-40px">
-      {/* Info: (20240920 - Julian) export & select button */}
       {displayedSelectArea}
 
       {/* Info: (20240920 - Julian) Table */}
@@ -296,13 +329,13 @@ const VoucherList: React.FC<IVoucherListProps> = ({
                 </div>
               </span>
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} h-60px w-74px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px`}>
               {displayedDate}
             </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.VOUCHER_NO')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-88px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-200px`}>
               {t('journal:VOUCHER.NOTE')}
             </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
@@ -310,9 +343,6 @@ const VoucherList: React.FC<IVoucherListProps> = ({
             </div>
             <div className={`${tableCellStyles} ${sideBorderStyles} w-84px`}>{displayedDebit}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles} w-84px`}>{displayedCredit}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
-              {t('journal:VOUCHER.COUNTRYPARTY')}
-            </div>
             <div className={`${tableCellStyles} border-b border-stroke-neutral-quaternary`}>
               {t('journal:VOUCHER.ISSUER')}
             </div>

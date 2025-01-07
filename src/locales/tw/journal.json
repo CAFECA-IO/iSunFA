@@ -211,7 +211,19 @@
     "RECEIVING_TAB": "應收傳票",
     "PAYMENT_TAB": "應付傳票",
     "SELECT": "選擇",
-    "SELECT_ALL": "全選"
+    "SELECT_ALL": "全選",
+    "UNSELECT_ALL": "取消全選",
+    "HIDE_VOUCHER_TOGGLE": "隱藏已刪除的傳票和其相關沖銷分錄",
+    "WARNING_MODAL_TITLE": "警告",
+    "AT_LEAST_ONE_VOUCHER_CONTENT": "請至少選擇一張傳票",
+    "DELETE_ONE_VOUCHER_TITLE": "您確定要刪除{{voucherId}}嗎？",
+    "DELETE_ONE_VOUCHER_CONTENT": "與此傳票相關的所有資產也將被刪除。",
+    "DELETE_ONE_VOUCHER_WARNING": "刪除後將自動生成一張沖銷分錄，原始傳票將保留以供參考。",
+    "DELETE_ONE_VOUCHER_SUBMIT_BTN": "是的，刪除此傳票",
+    "DELETE_MULTIPLE_VOUCHER_TITLE": "您確定要刪除這{{count}}張傳票嗎？",
+    "DELETE_MULTIPLE_VOUCHER_CONTENT": "與這些傳票相關的所有資產也將被刪除。",
+    "DELETE_MULTIPLE_VOUCHER_WARNING": "刪除後將自動生成沖銷分錄，原始傳票將保留以供參考。",
+    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "是的，刪除這些傳票"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增傳票",
