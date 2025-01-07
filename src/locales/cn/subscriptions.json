@@ -23,6 +23,9 @@
     "FAQ2_QUESTION": "如何取消我的付费方案？",
     "FAQ3_QUESTION": "如果每个月都有更多人加入我的团队怎么办？",
     "FAQ4_QUESTION": "你能给我发一张发票吗？",
-    "FAQ5_QUESTION": "有哪些付款方式？"
+    "FAQ5_QUESTION": "有哪些付款方式？",
+    "BEGINNER": "基础版",
+    "PROFESSIONAL": "专业版",
+    "ENTERPRISE": "企业版"
   }
 }
