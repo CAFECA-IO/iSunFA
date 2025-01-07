@@ -38,7 +38,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const checkboxHandler = () => selectHandler(voucher.id);
 
   const displayedDate = (
-    <div className="relative top-10px flex justify-center">
+    <div className="relative flex justify-center">
       <CalendarIcon timestamp={voucherDate} unRead={unRead} />
     </div>
   );
@@ -68,7 +68,9 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       </div>
     );
 
-  const displayedNote = <p className="relative top-20px">{note}</p>;
+  const displayedNote = (
+    <p className="text-xs text-text-neutral-primary">{note !== '' ? note : '-'}</p>
+  );
 
   // Info: (20241220 - Julian) 借方排在前面，貸方排在後面
   const lineItems = lineItemsInfo.lineItems.sort((a, b) => {
@@ -136,7 +138,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   // );
 
   const displayedIssuer = (
-    <div className="relative top-20px flex items-center justify-center gap-4px px-8px text-xs text-text-neutral-primary">
+    <div className="flex items-center justify-center gap-4px px-8px text-xs text-text-neutral-primary">
       <Image src={issuer.avatar} alt="avatar" width={14} height={14} className="rounded-full" />
       <p>{issuer.name}</p>
     </div>
@@ -154,7 +156,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
         </div>
       </div>
       {/* Info: (20240920 - Julian) Note */}
-      <div className="table-cell text-center">{displayedNote}</div>
+      <div className="table-cell text-center align-middle">{displayedNote}</div>
       {/* Info: (20240920 - Julian) Accounting */}
       <div className="table-cell">{displayedAccounting}</div>
       {/* Info: (20240920 - Julian) Debit */}
@@ -164,7 +166,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       {/* Info: (20240920 - Julian) Counterparty */}
       {/* <div className="table-cell">{displayedCounterparty}</div> */}
       {/* Info: (20240920 - Julian) Issuer */}
-      <div className="table-cell">{displayedIssuer}</div>
+      <div className="table-cell align-middle">{displayedIssuer}</div>
     </>
   );
 
