@@ -42,9 +42,9 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
       });
 
       if (success) {
-        // Info: (20250107 - Tzuhan) 設定成功，switch 從 disable 切換為目標狀態，不需提示訊息
+        // Info: (20250107 - Tzuhan) 設定成功，switch 切換為目標狀態，不需提示訊息
       } else {
-        // Info: (20250107 - Tzuhan) 設定失敗，switch 從 disable 還原，提示錯誤資訊
+        // Info: (20250107 - Tzuhan) 設定失敗，switch 還原回原本狀態，提示錯誤資訊
         toastHandler({
           id: ToastId.USER_SETTING_UPDATE_ERROR,
           type: ToastType.ERROR,
