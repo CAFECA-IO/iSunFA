@@ -217,7 +217,7 @@
     "HIDE_VOUCHER_TOGGLE": "隐藏已删除的传票和其相关冲销分录",
     "WARNING_MODAL_TITLE": "警告",
     "AT_LEAST_ONE_VOUCHER_CONTENT": "请至少选择一张传票",
-    "DELETE_ONE_VOUCHER_TITLE": "您确定要删除{{voucherId}}吗？",
+    "DELETE_ONE_VOUCHER_TITLE": "您确定要删除{{voucherNo}}吗？",
     "DELETE_ONE_VOUCHER_CONTENT": "与此传票相关的所有资产也将被删除。",
     "DELETE_ONE_VOUCHER_WARNING": "删除后将自动生成一张冲销分录，原始传票将保留以供参考。",
     "DELETE_ONE_VOUCHER_SUBMIT_BTN": "是的，删除此传票",

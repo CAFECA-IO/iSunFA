@@ -108,26 +108,26 @@ const LandingNavbar: React.FC = () => {
   // ToDo: (20241219 - Julian) 補上正確的路徑
   const navigationOptions = (
     <>
-      <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+      {/* <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
         <LandingButton type="button" variant="default" disabled>
           {t('landing_page_v2:NAVBAR.USERS')}
         </LandingButton>
-      </Link>
+      </Link> */}
       <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
         <LandingButton type="button" variant="default" disabled>
           {t('landing_page_v2:NAVBAR.PRICING')}
         </LandingButton>
       </Link>
-      <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+      {/* <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
         <LandingButton type="button" variant="default" disabled>
           {t('landing_page_v2:NAVBAR.FAITH')}
         </LandingButton>
-      </Link>
-      <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+      </Link> */}
+      {/* <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
         <LandingButton type="button" variant="default" disabled>
           {t('landing_page_v2:NAVBAR.JOIN_US')}
         </LandingButton>
-      </Link>
+      </Link> */}
       {/* ToDO: (20241204 - Julian) Button */}
       <Link href={ISUNFA_ROUTE.DASHBOARD}>
         <LandingButton type="button" variant="primary" className="w-full">
