@@ -155,4 +155,6 @@ export const AUTH_CHECK = {
   [APIName.TRIAL_BALANCE_EXPORT]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_ASSET_BULK]: [AuthFunctionsKeysNew.user],
   [APIName.LEDGER_EXPORT]: [AuthFunctionsKeysNew.user],
+
+  [APIName.SESSION_ID_DELETE]: [AuthFunctionsKeysNew.user],
 };

@@ -37,10 +37,34 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
   const { trigger: getUserActionLogAPI } = APIHandler<IPaginatedData<IUserActionLog[]>>(
     APIName.USER_ACTION_LOG_LIST
   );
+  const { trigger: deleteSessionId } = APIHandler<void>(APIName.SESSION_ID_DELETE);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [page, setPage] = useState(pageData?.page ?? 1);
   const [totalPages, setTotalPages] = useState(pageData?.totalPages ?? 1);
   const [userActionLogs, setUserActionLogs] = useState<IUserActionLog[]>(pageData?.data ?? []);
+
+  const handleSessionDelete = async (sessionId: string) => {
+    try {
+      const { success, code } = await deleteSessionId({ params: { sessionId } });
+      if (success) {
+        toastHandler({
+          id: ToastId.USER_SETTING_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: t('setting:IP.DELETE_SESSION_SUCCESS'),
+          closeable: true,
+        });
+      } else {
+        throw new Error(code);
+      }
+    } catch (error) {
+      toastHandler({
+        id: ToastId.USER_SETTING_ERROR,
+        type: ToastType.ERROR,
+        content: (error as Error).message,
+        closeable: true,
+      });
+    }
+  };
 
   const handleAbnormal = () => {
     const warningContent = (
@@ -115,7 +139,7 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
             </div>
             <hr className="flex-1 border-divider-stroke-lv-4" />
           </div>
-          <div className="max-h-400px w-440px overflow-y-auto rounded-sm bg-surface-neutral-surface-lv2 shadow-normal_setting_brand">
+          <div className="max-h-400px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 shadow-normal_setting_brand">
             <div className="table">
               <div className="table-header-group w-full rounded-sm text-xs leading-none text-text-neutral-tertiary">
                 <div className="table-row w-full">
@@ -125,15 +149,18 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
                   <div className="table-cell min-w-114px border-b border-r border-stroke-neutral-quaternary bg-ipGradient text-center align-middle">
                     <div className="px-lv-4 py-lv-3">{t('setting:IP.DEVICE')}</div>
                   </div>
-                  <div className="table-cell min-w-212px border-b border-stroke-neutral-quaternary bg-ipGradient text-center align-middle">
+                  <div className="table-cell min-w-212px border-b border-r border-stroke-neutral-quaternary bg-ipGradient text-center align-middle">
                     <div className="px-lv-4 py-lv-3">{t('setting:IP.ADDRESS')}</div>
+                  </div>
+                  <div className="table-cell min-w-80px border-b border-stroke-neutral-quaternary bg-ipGradient text-center align-middle">
+                    <div className="px-lv-4 py-lv-3">{t('setting:IP.ACTION')}</div>
                   </div>
                 </div>
               </div>
               <div className="table-row-group">
                 {userActionLogs.map((userActionLog, index) => (
                   <div
-                    className="group table-row text-center text-xs leading-none text-text-brand-secondary-lv2 hover:bg-surface-brand-primary-10"
+                    className="group table-row text-center text-xs leading-none text-text-brand-secondary-lv2"
                     key={`${userActionLog.userAgent}-${index + 1}`}
                   >
                     <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary align-middle">
@@ -146,12 +173,26 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
                         {extractLoginDevice(userActionLog.userAgent)}
                       </div>
                     </div>
-                    <div className="relative table-cell border-b border-stroke-neutral-quaternary">
+                    <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary">
                       <div
                         className={`px-lv-4 py-lv-3 ${userActionLog.normal === false ? 'text-text-state-error' : ''}`}
                       >
                         {userActionLog.ipAddress}
                       </div>
+                    </div>
+                    <div className="relative table-cell border-b border-stroke-neutral-quaternary">
+                      {userActionLog.isCurrent ? (
+                        <div className={`px-lv-4 py-lv-3 text-text-brand-secondary-lv2`}>
+                          {t('setting:IP.CURRENT')}
+                        </div>
+                      ) : (
+                        <div
+                          className={`cursor-pointer px-lv-4 py-lv-3 text-link-text-primary`}
+                          onClick={() => handleSessionDelete(userActionLog.sessionId)}
+                        >
+                          {t('setting:IP.LOGOUT')}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

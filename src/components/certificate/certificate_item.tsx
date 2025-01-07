@@ -75,7 +75,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
           </div>
         </div>
       </BorderCell>
-      <BorderCell isSelected={certificate.isSelected} className="w-100px">
+      <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
         <div className="flex flex-col items-center gap-2">
           <div className="text-text-neutral-tertiary">
             {certificate.invoice?.counterParty?.taxId ?? ''}
