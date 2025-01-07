@@ -13,7 +13,7 @@ const BusinessTaxPageBody = () => {
 
   // Info: (20241101 - Anna) 定義語言選擇狀態
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
-    ReportLanguagesKey.en
+    ReportLanguagesKey.tw
   );
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
 
@@ -59,16 +59,23 @@ const BusinessTaxPageBody = () => {
       </button>
       {isLanguageMenuOpen && (
         <ul className="absolute left-0 top-12 z-10 w-full rounded-md border bg-white shadow-md">
-          {Object.entries(ReportLanguagesMap).map(([id, { name, icon }]) => (
-            <li
-              key={id}
-              onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
-              className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-gray-100"
-            >
-              <Image src={icon} alt={name} width={20} height={20} />
-              <span>{name}</span>
-            </li>
-          ))}
+          {Object.entries(ReportLanguagesMap).map(([id, { name, icon }]) => {
+            const isDisabled = id === ReportLanguagesKey.en || id === ReportLanguagesKey.cn; // Info: (20250107 - Anna) 英文和簡體中文先disable
+            return (
+              <li
+                key={id}
+                onClick={
+                  !isDisabled
+                    ? () => languageMenuOptionClickHandler(id as ReportLanguagesKey)
+                    : undefined
+                }
+                className={`flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-gray-100 ${isDisabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
+              >
+                <Image src={icon} alt={name} width={20} height={20} />
+                <span>{name}</span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
