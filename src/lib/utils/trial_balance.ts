@@ -720,7 +720,9 @@ export function processLineItems(
   arrWithCopySelf: ILineItemInTrialBalanceItemWithHierarchy[];
 } {
   const array = [...data];
+  // Info: (20250107 - Shirley) 保留原始格式的會計科目
   const arrWithChildren: ILineItemInTrialBalanceItemWithHierarchy[] = [];
+  // Info: (20250107 - Shirley) 包含虛擬科目的會計科目
   const arrWithCopySelf: ILineItemInTrialBalanceItemWithHierarchy[] = [];
 
   array.forEach((targetItem) => {
@@ -842,16 +844,22 @@ export function processLineItems(
       };
 
       item.children.unshift(copy);
-      // Info: (20250107 - Luphia) 為避免後續維護混淆變數用途，同一 scope 下禁止 reassign 變數
-      item.debitAmount = item.children.reduce((sumItem, childItem) => sumItem + childItem.debitAmount, 0);
-      // Info: (20250107 - Luphia) 為避免後續維護混淆變數用途，同一 scope 下禁止 reassign 變數
-      item.creditAmount = item.children.reduce((sumItem, childItem) => sumItem + childItem.creditAmount, 0);
+      // Info: (20250107 - Shirley) 將科目複製為虛擬科目並重新計算 debitAmount 與 creditAmount
+      const virtualItem: ILineItemInTrialBalanceItemWithHierarchy = {
+        ...item,
+        debitAmount: item.children.reduce((sum, child) => sum + child.debitAmount, 0),
+        creditAmount: item.children.reduce((sum, child) => sum + child.creditAmount, 0),
+      };
+
+      // Info: (20250107 - Shirley) 確認此虛擬科目 id 是否存在於原始清單
       const existingItem = arrWithCopySelf.find((i) => i.account.id === item.account.id);
 
       if (existingItem) {
-        existingItem.children.push(item);
+        // Info: (20250107 - Shirley) 存在，將此虛擬科目歸屬為其子科目
+        existingItem.children.push(virtualItem);
       } else {
-        arrWithCopySelf.push(item);
+        // Info: (20250107 - Shirley) 不存在，不該發生這件事，這表示執行過程出錯了
+        // arrWithCopySelf.push(virtualItem);
       }
     } else {
       arrWithCopySelf.push(item);
