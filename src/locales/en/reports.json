@@ -39,7 +39,8 @@
     "RELATIONSHIP_BETWEEN_EXPENSES_COSTS_REVENUE": "The Multiple Relationship Between Expenses, Costs, and Revenue",
     "TOTAL_EXPENSES_AND_COSTS": "Total Expenses and Costs",
     "REVENUE_RATIO": "Operating revenue amounts to {{ratio}} times the combined total of expenses and costs",
-    "REVENUE_TO_RD": "Proportion of Revenue Allocated to Research and Development Expenses"
+    "REVENUE_TO_RD": "Proportion of Revenue Allocated to Research and Development Expenses",
+    "無分析意見": "No Analytical Commentary"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "Latest",
@@ -1691,6 +1692,11 @@
     "使⽤權資產": "Right-of-Use Asset",
     "投資性不動產淨額使⽤權資產": "Net Right-of-Use Assets – Investment Property",
     "避險之⾦融負債－流動": "Current Hedging Financial Liabilities",
-    "應付帳款－關係⼈": "Accounts payable to related parties"
+    "應付帳款－關係⼈": "Accounts payable to related parties",
+    "營運淨現金流入（流出）": "Net Cash Flow from Operating Activities (Inflow/Outflow)",
+    "資產負債表列示之現金及約當現金": "Cash and Cash Equivalents Presented in the Balance Sheet",
+    "預期信用減損損失（利益）數∕呆帳費用提列（轉列收入）數": "Expected Credit Loss (Gain)/Bad Debt Expense Recognized (Reversed as Income)",
+    "其他投資活動之現金流量": "Cash Flows from Other Investing Activities",
+    "非控制權益變動": "Changes in Non-Controlling Interests"
   }
 }
