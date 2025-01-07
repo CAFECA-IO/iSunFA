@@ -720,7 +720,7 @@ export function processLineItems(
   arrWithCopySelf: ILineItemInTrialBalanceItemWithHierarchy[];
 } {
   const array = [...data];
-  // Info: (20250107 - Shirley) 保留原始格式的會計科目清單
+  // Info: (20250107 - Shirley) 保留原始資料的會計科目清單
   const arrWithChildren: ILineItemInTrialBalanceItemWithHierarchy[] = [];
   // Info: (20250107 - Shirley) 包含虛擬科目的會計科目清單
   const arrWithCopySelf: ILineItemInTrialBalanceItemWithHierarchy[] = [];
@@ -832,6 +832,7 @@ export function processLineItems(
         parentId: account.id,
       };
 
+      // Info: (20250106 - Shirley) 複製自身科目成為虛擬科目
       const copy: ILineItemInTrialBalanceItemWithHierarchy = {
         accountId: copyAccountInfo.id,
         accountCode: copyAccountInfo.code,
@@ -843,28 +844,33 @@ export function processLineItems(
         ...rest,
       };
 
+      // Info: (20250106 - Shirley) 把虛擬科目加到自己的第一個子科目
       item.children.unshift(copy);
-      // Info: (20250107 - Shirley) 將科目複製為虛擬科目，移除其子科目重新計算 debitAmount 與 creditAmount
-      const virtualItem: ILineItemInTrialBalanceItemWithHierarchy = {
+
+      /* Info: (20250107 - Shirley) 將科目複製為虛擬科目，移除其子科目重新計算 debitAmount 與 creditAmount
+       * 原始的 debitAmount 與 creditAmount 並未累加 children 的金額，此處統一加總
+       * 此處需確保 processedItem 不存在 call by reference 的問題，用 deep clone 來處理會是較安全的方式
+       */
+      const processedItem: ILineItemInTrialBalanceItemWithHierarchy = {
         ...item,
         debitAmount: item.children.reduce((sum, child) => sum + child.debitAmount, 0),
         creditAmount: item.children.reduce((sum, child) => sum + child.creditAmount, 0),
       };
 
-      // Info: (20250107 - Shirley) 確認此虛擬科目 id 是否存在於原始清單
-      const existingItem = arrWithCopySelf.find((i) => i.account.id === virtualItem.account.id);
+      // Info: (20250107 - Shirley) 確認此科目 id 是否存在於包含虛擬科目的清單中
+      const existingItem = arrWithCopySelf.find((i) => i.account.id === processedItem.account.id);
       if (existingItem) {
         // Info: (20250107 - Shirley) 存在，表示已處理過這個科目，應該略過
-        // existingItem.children.push(virtualItem);
       } else {
         // Info: (20250107 - Shirley) 不存在，將虛擬科目加入清單中
-        arrWithCopySelf.push(virtualItem);
+        arrWithCopySelf.push(processedItem);
       }
     } else {
       arrWithCopySelf.push(item);
     }
   });
 
+  // Info: (20250107 - Shirley) arrWithChildren 為不包含虛擬科目的會計科目從屬架構，可用於驗算，實際上尚未使用
   return { arrWithChildren, arrWithCopySelf };
 }
 
