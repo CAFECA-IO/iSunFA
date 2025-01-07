@@ -304,4 +304,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.TRIAL_BALANCE_EXPORT]: nullAPISchema,
   [APIName.CREATE_ASSET_BULK]: assetBulkPostSchema,
   [APIName.LEDGER_EXPORT]: exportLedgerPostSchema,
+
+  [APIName.SESSION_ID_DELETE]: nullAPISchema,
 };

@@ -172,6 +172,7 @@ export type IGetLineItemByAccount = PrismaLineItem & {
 
 export interface ILineItemSimpleAccountVoucher extends PrismaLineItem {
   account: {
+    id: number;
     code: string;
     name: string;
     parentId: number;
