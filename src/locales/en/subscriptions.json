@@ -23,6 +23,9 @@
     "FAQ2_QUESTION": "How do I cancel my paid plan?",
     "FAQ3_QUESTION": "What if more people are added to my team every month?",
     "FAQ4_QUESTION": "Can you send me an invoice?",
-    "FAQ5_QUESTION": "What are the payment methods?"
+    "FAQ5_QUESTION": "What are the payment methods?",
+    "BEGINNER": "Beginner",
+    "PROFESSIONAL": "Professional",
+    "ENTERPRISE": "Enterprise"
   }
 }
