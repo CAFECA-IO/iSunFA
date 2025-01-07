@@ -1,13 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import CalendarIcon from '@/components/calendar_icon/calendar_icon';
-import { numberWithCommas } from '@/lib/utils/common';
+import { useTranslation } from 'next-i18next';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
+import { HiCheck } from 'react-icons/hi';
+import CalendarIcon from '@/components/calendar_icon/calendar_icon';
+import { numberWithCommas } from '@/lib/utils/common';
 import { VoucherType } from '@/constants/account';
 import { IVoucherUI } from '@/interfaces/voucher';
-import { HiCheck } from 'react-icons/hi';
 
 interface IVoucherItemProps {
   voucher: IVoucherUI;
@@ -16,6 +17,8 @@ interface IVoucherItemProps {
 }
 
 const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCheckBoxOpen }) => {
+  const { t } = useTranslation('common');
+
   const {
     voucherDate,
     voucherNo,
@@ -40,19 +43,26 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     </div>
   );
 
+  // ToDo: (20250107 - Julian) 標記為已刪除的條件 = ？
+  const isDisplayDeleteTag = false ? (
+    <div className="rounded-full bg-badge-surface-soft-primary px-8px py-4px text-xs text-badge-text-primary-solid">
+      {t('journal:VOUCHER.DELETED')}
+    </div>
+  ) : null;
+
   const displayedVoucherNo =
     voucherType === VoucherType.RECEIVE ? (
-      <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
+      <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
         <FaDownload size={14} className="text-surface-state-success-dark" />
         <p className="text-sm text-text-state-success-solid">{voucherNo}</p>
       </div>
     ) : voucherType === VoucherType.EXPENSE ? (
-      <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
+      <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
         <FaUpload size={14} className="text-surface-state-error-dark" />
         <p className="text-sm text-text-state-error-solid">{voucherNo}</p>
       </div>
     ) : (
-      <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
+      <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
         <FiRepeat size={14} className="text-surface-brand-secondary" />
         <p className="text-sm text-badge-text-secondary-solid">{voucherNo}</p>
       </div>
@@ -135,9 +145,14 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const content = (
     <>
       {/* Info: (20240920 - Julian) Issued Date */}
-      <div className="table-cell text-center">{displayedDate}</div>
+      <div className="table-cell text-center align-middle">{displayedDate}</div>
       {/* Info: (20240920 - Julian) Voucher No */}
-      <div className="table-cell text-center">{displayedVoucherNo}</div>
+      <div className="table-cell text-center align-middle">
+        <div className="flex flex-col items-start gap-10px px-8px">
+          {displayedVoucherNo}
+          {isDisplayDeleteTag}
+        </div>
+      </div>
       {/* Info: (20240920 - Julian) Note */}
       <div className="table-cell text-center">{displayedNote}</div>
       {/* Info: (20240920 - Julian) Accounting */}

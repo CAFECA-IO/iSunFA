@@ -39,6 +39,9 @@ const VoucherListPageBody: React.FC = () => {
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
   const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
   const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
+  // Info: (20250107 - Julian) 是否顯示沖銷傳票
+  // ToDo: (20250107 - Julian) API query
+  const [isHideReversals, setIsHideReversals] = useState(true);
   const [voucherList, setVoucherList] = useState<IVoucherUI[]>([]);
 
   useEffect(() => {
@@ -98,6 +101,7 @@ const VoucherListPageBody: React.FC = () => {
   );
 
   const tabClick = (tab: string) => setActiveTab(tab as VoucherTabs);
+  const hideReversalsToggleHandler = () => setIsHideReversals((prev) => !prev);
 
   const displayVoucherList =
     voucherList && voucherList.length > 0 ? (
@@ -109,6 +113,8 @@ const VoucherListPageBody: React.FC = () => {
         setDateSort={setDateSort}
         setCreditSort={setCreditSort}
         setDebitSort={setDebitSort}
+        isHideReversals={isHideReversals}
+        hideReversalsToggleHandler={hideReversalsToggleHandler}
       />
     ) : (
       <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">

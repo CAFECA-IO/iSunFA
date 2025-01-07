@@ -194,6 +194,7 @@
     "PAID_AMOUNT": "已付金额",
     "REMAIN_AMOUNT": "剩余金额",
     "REVERSE": "冲销",
+    "DELETED": "已删除",
     "EXPORT_VOUCHER_MODAL_TITLE": "汇出传票",
     "EXPORT_VOUCHER_MODAL_SUBTITLE": "请选择您要汇出的传票",
     "TOAST_EXPORT_SUCCESS": "传票已成功汇出。",

@@ -194,6 +194,7 @@
     "PAID_AMOUNT": "Paid Amount",
     "REMAIN_AMOUNT": "Remain Amount",
     "REVERSE": "Reverse",
+    "DELETED": "Deleted",
     "EXPORT_VOUCHER_MODAL_TITLE": "Export Voucher",
     "EXPORT_VOUCHER_MODAL_SUBTITLE": "Please select the vouchers you want to export",
     "TOAST_EXPORT_SUCCESS": "Voucher exported successfully.",

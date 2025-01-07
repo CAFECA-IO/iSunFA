@@ -25,6 +25,8 @@ interface IVoucherListProps {
   setDebitSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
   dateSort: null | SortOrder;
   setDateSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
+  isHideReversals: boolean;
+  hideReversalsToggleHandler: () => void;
 }
 
 const VoucherList: React.FC<IVoucherListProps> = ({
@@ -35,6 +37,8 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   setDebitSort,
   dateSort,
   setDateSort,
+  isHideReversals,
+  hideReversalsToggleHandler,
 }) => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
@@ -50,8 +54,6 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   // Info: (20241022 - Julian) 被選中的 voucher
   const [selectedVoucherList, setSelectedVoucherList] = useState<IVoucherUI[]>([]);
-  // Info: (20250107 - Julian) 是否顯示沖銷傳票
-  const [isHideReversals, setIsHideReversals] = useState(true);
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
@@ -67,7 +69,6 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   } = APIHandler(APIName.VOUCHER_DELETE_V2);
 
   const selectToggleHandler = () => setIsCheckBoxOpen((prev) => !prev);
-  const hideReversalsToggleHandler = () => setIsHideReversals((prev) => !prev);
 
   // Info: (20241105 - Julian) 勾選全部
   const checkAllHandler = () => {
@@ -145,10 +146,13 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       // Info: (20250107 - Julian) 一次刪除多筆傳票
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: t('journal:VOUCHER.DELETE_MULTIPLE_VOUCHER_TITLE'),
+        title: t('journal:VOUCHER.DELETE_MULTIPLE_VOUCHER_TITLE').replace(
+          `{{count}}`,
+          `${selectedVoucherList.length}`
+        ),
         content: t('journal:VOUCHER.DELETE_MULTIPLE_VOUCHER_CONTENT'),
         subMsg: `*${t('journal:VOUCHER.DELETE_MULTIPLE_VOUCHER_WARNING')}`,
-        submitBtnStr: 'Yes, delete these vouchers.',
+        submitBtnStr: t('journal:VOUCHER.DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN'),
         submitBtnFunction: removeVoucher,
       });
       messageModalVisibilityHandler();
@@ -156,7 +160,10 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       // Info: (20250107 - Julian) 刪除單筆傳票
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: t('journal:VOUCHER.DELETE_ONE_VOUCHER_TITLE'),
+        title: t('journal:VOUCHER.DELETE_ONE_VOUCHER_TITLE').replace(
+          `{{voucherNo}}`,
+          `${selectedVoucherList[0].voucherNo}`
+        ),
         content: t('journal:VOUCHER.DELETE_ONE_VOUCHER_CONTENT'),
         subMsg: `*${t('journal:VOUCHER.DELETE_ONE_VOUCHER_WARNING')}`,
         submitBtnStr: t('journal:VOUCHER.DELETE_ONE_VOUCHER_SUBMIT_BTN'),
