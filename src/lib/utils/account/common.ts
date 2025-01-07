@@ -3,6 +3,7 @@ import {
   IAccountForSheetDisplay,
   IAccountNode,
   IAccountEntity,
+  IAccountNodeWithDebitAndCredit,
 } from '@/interfaces/accounting_account';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { AccountType } from '@/constants/account';
@@ -103,10 +104,10 @@ export function buildAccountForest(accounts: PrismaAccount[]): IAccountNode[] {
 }
 
 function transformAccountsToMapAndCodeSet(accounts: PrismaAccount[]): {
-  accountMap: Map<string, IAccountNode>;
+  accountMap: Map<string, IAccountNodeWithDebitAndCredit>;
   accountCode: Set<string>;
 } {
-  const accountMap = new Map<string, IAccountNode>();
+  const accountMap = new Map<string, IAccountNodeWithDebitAndCredit>();
   const accountCode = new Set<string>();
 
   accounts.forEach((account) => {
@@ -114,16 +115,24 @@ function transformAccountsToMapAndCodeSet(accounts: PrismaAccount[]): {
     accountMap.set(account.code, {
       ...account,
       children: [],
-      amount: 0,
+      debitAmount: 0,
+      creditAmount: 0,
     });
   });
 
   return { accountMap, accountCode };
 }
 
-export function buildAccountForestForUser(accounts: PrismaAccount[]): IAccountNode[] {
+/** Info: (20250102 - Shirley)
+ * 將 forUser = true 的會計科目列表轉換成樹狀結構
+ * @param accounts 放入 forUser = true 的會計科目列表
+ * @returns 樹狀結構
+ */
+export function buildAccountForestForUser(
+  accounts: PrismaAccount[]
+): IAccountNodeWithDebitAndCredit[] {
   const { accountMap, accountCode } = transformAccountsToMapAndCodeSet(accounts);
-  const rootAccounts: IAccountNode[] = [];
+  const rootAccounts: IAccountNodeWithDebitAndCredit[] = [];
 
   accountMap.forEach((account) => {
     // Info: (20241111 - Shirley) 如果 parentCode 不在 forUserCodeSet 中，則為 rootAccount
@@ -193,24 +202,28 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
 // Info: (20241114 - Shirley) 用於Trial Balance，跟 `updateAccountAmountsByDFS` 的差別在於保留公司自訂會計科目
 function updateAccountAmountByDFSForTrialBalance(
   account: IAccountNode,
-  lineItemsMap: Map<number, number>
+  lineItemsMap: Map<number, { debitAmount: number; creditAmount: number }>
 ) {
-  let newAmount = lineItemsMap.get(account.id) || 0;
+  const newAmount = lineItemsMap.get(account.id) || { debitAmount: 0, creditAmount: 0 };
 
   const updatedChildren = account.children.map((child) => {
     const childAccount = updateAccountAmountByDFSForTrialBalance(child, lineItemsMap);
 
     // Info: (20240702 - Murky) 如果parent和child的debit方向不同，則child的amount要取負值
     // 例如：Parent 是 機具設備淨額，Child 是 機具設備成本 and 累計折舊－機具設備，則機具設備淨額 = 機具設備成本 - 累計折舊
-    newAmount += account.debit === child.debit ? childAccount.amount : -childAccount.amount;
+    newAmount.debitAmount +=
+      account.debit === child.debit ? childAccount.debitAmount : -childAccount.debitAmount;
+    newAmount.creditAmount +=
+      account.debit === child.debit ? childAccount.creditAmount : -childAccount.creditAmount;
 
     return childAccount;
   });
 
   // Info: (20240702 - Murky) Copy child to prevent call by reference
-  const updatedAccount: IAccountNode = {
+  const updatedAccount: IAccountNodeWithDebitAndCredit = {
     id: account.id,
-    amount: newAmount,
+    debitAmount: newAmount.debitAmount,
+    creditAmount: newAmount.creditAmount,
     companyId: account.companyId,
     system: account.system,
     type: account.type,
@@ -252,7 +265,7 @@ export function updateAccountAmountsInSingleTree(
 // Info: (20241114 - Shirley) 用於Trial Balance，跟 `updateAccountAmountsInSingleTree` 的差別在於保留公司自訂會計科目
 export function updateAccountAmountsInSingleTreeForTrialBalance(
   accounts: IAccountNode,
-  lineItemsMap: Map<number, number>
+  lineItemsMap: Map<number, { debitAmount: number; creditAmount: number }>
 ) {
   return updateAccountAmountByDFSForTrialBalance(accounts, lineItemsMap);
 }
@@ -268,7 +281,7 @@ export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<n
 // Info: (20241114 - Shirley) 用於Trial Balance，跟 `updateAccountAmounts` 的差別在於保留公司自訂會計科目
 export function updateAccountAmountsForTrialBalance(
   forest: IAccountNode[],
-  lineItemsMap: Map<number, number>
+  lineItemsMap: Map<number, { debitAmount: number; creditAmount: number }>
 ) {
   const updatedForest = forest.map((account) => {
     return updateAccountAmountsInSingleTreeForTrialBalance(account, lineItemsMap);
