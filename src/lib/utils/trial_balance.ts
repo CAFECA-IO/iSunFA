@@ -87,7 +87,7 @@ const collectAccounts = (
   });
 };
 
-/** Info: (20241130 - Shirley)
+/* Info: (20241130 - Shirley)
  * 將三個時期的帳目組合成試算表項目格式
  * @param beginningAccounts 期初帳目
  * @param midtermAccounts 期中帳目
@@ -119,7 +119,7 @@ export function combineAccountsToTrialBalance(
     ending?: IAccountBookNodeJSON;
   }): TrialBalanceItem => {
     const { beginning, midterm, ending } = data;
-    const account = beginning || midterm || ending; // 使用任一個存在的帳目來獲取基本資訊
+    const account = beginning || midterm || ending; // Info: (20250107 - Shirley) 使用任一個存在的帳目來獲取基本資訊
 
     const beginSummary = beginning?.summary || { debit: 0, credit: 0 };
     const midtermSummary = midterm?.summary || { debit: 0, credit: 0 };
@@ -306,7 +306,7 @@ const filterZeroAmounts = (items: TrialBalanceItem[]): TrialBalanceItem[] => {
   return result;
 };
 
-/** Info: (20241130 - Shirley)
+/* Info: (20241130 - Shirley)
  * 將排序後的試算表項目轉換為 ITrialBalanceData 格式
  * @param sortedItems 排序後的試算表項目
  * @returns ITrialBalanceData 格式的資料
@@ -377,7 +377,7 @@ export function transformTrialBalanceData(
   return data;
 }
 
-/** Info: (20241230 - Shirley)
+/* Info: (20241230 - Shirley)
  * 取得當前401申報週期的期初和期末時間點
  */
 export function getCurrent401Period(): {
@@ -385,7 +385,7 @@ export function getCurrent401Period(): {
   periodEnd: number;
 } {
   const currentDate = new Date();
-  const month = currentDate.getMonth() + 1; // 月份從0開始
+  const month = currentDate.getMonth() + 1; // Info: (20250107 - Shirley) 月份從0開始
   const year = currentDate.getFullYear();
 
   let periodStartMonth: number;
@@ -412,7 +412,7 @@ export function getCurrent401Period(): {
   }
 
   const periodBegin = new Date(year, periodStartMonth - 1, 1).getTime() / 1000;
-  const periodEndDate = new Date(year, periodEndMonth, 0); // 該月的最後一天
+  const periodEndDate = new Date(year, periodEndMonth, 0); // Info: (20250107 - Shirley) 該月的最後一天
   const periodEnd =
     new Date(
       periodEndDate.getFullYear(),
@@ -426,7 +426,7 @@ export function getCurrent401Period(): {
   return { periodBegin, periodEnd };
 }
 
-/**
+/* Info: (20250107 - Shirley)
  * 合併會計分錄，將相同科目的借方和貸方金額加總
  * @param lineItems 會計分錄列表
  * @returns 合併後的試算表項目
@@ -452,7 +452,7 @@ export function mergeLineItems(
   return Object.values(map);
 }
 
-/** Info: (20250102 - Shirley)
+/* Info: (20250102 - Shirley)
  * 將會計分錄依照會計科目合併跟加總
  * @param lineItems 會計分錄列表
  * @returns 合併後的會計分錄
@@ -520,7 +520,7 @@ export function mergeLineItemsByAccount(
   }));
 }
 
-/** Info: (20250102 - Shirley)
+/* Info: (20250102 - Shirley)
  * 將會計分錄依據時間區間分類並合併
  * @param lineItems 會計分錄列表
  * @param periodBegin 期初時間
@@ -554,7 +554,7 @@ export function categorizeAndMergeLineItems(
   };
 }
 
-/** Info: (20250102 - Shirley)
+/* Info: (20250102 - Shirley)
  * 計算期末餘額
  * @param beginning 期初餘額
  * @param midterm 本期發生額
@@ -591,7 +591,7 @@ export function calculateEndingBalance(
   return Array.from(endingMap.values());
 }
 
-/** Info: (20250102 - Shirley)
+/* Info: (20250102 - Shirley)
  * 將會計分錄轉換為試算表格式
  * @param lineItems 會計分錄列表
  * @param periodBegin 期初時間
@@ -623,7 +623,7 @@ export function convertToTrialBalanceItem(
   };
 }
 
-/** Info: (20250102 - Shirley)
+/* Info: (20250102 - Shirley)
  * 將用來計算的試算表格式轉換為 API 格式
  * @param lineItems 試算表格式資料
  * @returns API 格式資料
@@ -662,7 +662,7 @@ export function convertLineItemsToTrialBalanceAPIFormat(lineItems: {
     endingDebitAmount: item.debitAmount,
     createAt: item.createdAt,
     updateAt: item.updatedAt,
-    subAccounts: [], // TODO: (20250102 - Shirley) 額外處理子科目
+    subAccounts: [],
   }));
 
   const rs = {
@@ -706,7 +706,7 @@ export const aggregateAmounts = (
   return rs;
 };
 
-/** Info: (20250102 - Shirley)
+/* Info: (20250102 - Shirley)
  * 將會計分錄依據從屬關係分類
  * @param array 會計分錄列表
  * @param period 期間類型
@@ -842,12 +842,10 @@ export function processLineItems(
       };
 
       item.children.unshift(copy);
-      // Info: (20250106 - Shirley) 使用新的 array ，所以 reassign 沒有副作用
-      // eslint-disable-next-line no-param-reassign
-      item.debitAmount = item.children.reduce((sum, child) => sum + child.debitAmount, 0);
-      // Info: (20250106 - Shirley) 使用新的 array ，所以 reassign 沒有副作用
-      // eslint-disable-next-line no-param-reassign
-      item.creditAmount = item.children.reduce((sum, child) => sum + child.creditAmount, 0);
+      // Info: (20250107 - Luphia) 為避免後續維護混淆變數用途，同一 scope 下禁止 reassign 變數
+      item.debitAmount = item.children.reduce((sumItem, childItem) => sumItem + childItem.debitAmount, 0);
+      // Info: (20250107 - Luphia) 為避免後續維護混淆變數用途，同一 scope 下禁止 reassign 變數
+      item.creditAmount = item.children.reduce((sumItem, childItem) => sumItem + childItem.creditAmount, 0);
       const existingItem = arrWithCopySelf.find((i) => i.account.id === item.account.id);
 
       if (existingItem) {
