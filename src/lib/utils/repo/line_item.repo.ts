@@ -80,6 +80,7 @@ export async function getAllLineItemsInPrisma(
       },
       account: {
         select: {
+          id: true,
           code: true,
           name: true,
           parentId: true,

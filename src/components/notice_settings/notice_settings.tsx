@@ -41,7 +41,10 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
         },
       });
 
-      if (!success) {
+      if (success) {
+        // Info: (20250107 - Tzuhan) 設定成功，switch 切換為目標狀態，不需提示訊息
+      } else {
+        // Info: (20250107 - Tzuhan) 設定失敗，switch 還原回原本狀態，提示錯誤資訊
         toastHandler({
           id: ToastId.USER_SETTING_UPDATE_ERROR,
           type: ToastType.ERROR,
@@ -56,7 +59,7 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
   const handleToggle = (key: keyof typeof notificationSettings) => {
     setNotificationSettings((prev) => {
       const updatedSettings = { ...prev, [key]: !prev[key] };
-      updateUseSetting(updatedSettings); // 使用最新值更新 API
+      updateUseSetting(updatedSettings); // Info: (20250107 - Tzuhan) 使用最新值更新 API
       return updatedSettings;
     });
   };

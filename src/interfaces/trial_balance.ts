@@ -1,3 +1,4 @@
+import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
 import { IPaginatedData } from '@/interfaces/pagination';
 
 // Info: (20241118 - Shirley) 在計算試算表過程會用到的資料結構
@@ -42,6 +43,25 @@ export interface AccountForResult {
   updateAt: number;
 
   parentCode: string;
+}
+
+export interface ILineItemInTrialBalanceItem extends ILineItemSimpleAccountVoucher {
+  debitAmount: number;
+  creditAmount: number;
+}
+
+export interface IMergedAccounts extends ILineItemInTrialBalanceItem {
+  accountCode: string;
+  accountName: string;
+}
+
+export interface ILineItemInTrialBalanceItemWithHierarchy extends IMergedAccounts {
+  children: ILineItemInTrialBalanceItemWithHierarchy[];
+}
+
+export interface ILineItemInTrialBalanceTotal {
+  totalDebit: number;
+  totalCredit: number;
 }
 
 export interface TrialBalanceItem {

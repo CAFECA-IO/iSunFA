@@ -23,6 +23,9 @@
     "FAQ2_QUESTION": "如何取消我的付費方案？",
     "FAQ3_QUESTION": "如果每個月都有更多人加入我的團隊怎麼辦？",
     "FAQ4_QUESTION": "你能開發票給我嗎？",
-    "FAQ5_QUESTION": "有哪些付款方式？"
+    "FAQ5_QUESTION": "有哪些付款方式？",
+    "BEGINNER": "基礎版",
+    "PROFESSIONAL": "專業版",
+    "ENTERPRISE": "企業版"
   }
 }

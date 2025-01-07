@@ -207,7 +207,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                         className={`${tableCellStyles} w-236px border-r font-normal print:border-b`}
                         colSpan={2}
                       >
-                        {t('reports:TAX_REPORT.AMOUNT')}
+                        {t('reports:REPORTS.AMOUNT')}
                       </th>
                       <div className={`${tableCellStyles} w-236px print:border-b`}>
                         {t('reports:REPORTS.VOUCHER_NO')} & {t('reports:REPORTS.ISSUER')}

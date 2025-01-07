@@ -60,7 +60,7 @@ const ItemDetail = ({
             <thead>
               <tr>
                 <th className="w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold whitespace-nowrap">
-                  {t('reports:TAX_REPORT.CODE_NUMBER')}
+                  {t('reports:REPORTS.CODE_NUMBER')}
                 </th>
                 <th className="w-530px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
