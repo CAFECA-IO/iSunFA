@@ -25,6 +25,7 @@ import { IInvoiceBetaOptional } from '@/interfaces/invoice';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting, ITaxSetting } from '@/interfaces/accounting_setting';
 import { APIName } from '@/constants/api_connection';
+import TaxMenu from '@/components/certificate/certificate_tax_menu';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
@@ -106,6 +107,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         | ICounterpartyOptional
         | InvoiceType
         | boolean
+        | null
     ) => {
       setFormState((prev) => ({ ...prev, [field]: value }));
     },
@@ -131,12 +133,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   }, [companyId, formState.inputOrOutput, formState.taxRatio]);
 
   const {
-    targetRef: taxRatioMenuRef,
-    componentVisible: isTaxRatioMenuOpen,
-    setComponentVisible: setIsTaxRatioMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  const {
     targetRef: invoiceTypeMenuRef,
     componentVisible: isInvoiceTypeMenuOpen,
     setComponentVisible: setIsInvoiceTypeMenuOpen,
@@ -158,13 +154,14 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     handleInputChange('totalPrice', value + updateTaxPrice);
   };
 
-  const selectTaxHandler = (value: number) => {
+  const selectTaxHandler = (value: number | null) => {
+    // Deprecated: (20250103 - tzuhan) Debug purpose
+    // eslint-disable-next-line no-console
+    console.log(`selectTaxHandler value:`, value);
     handleInputChange('taxRatio', value);
-    const updateTaxPrice = Math.round(((formState.priceBeforeTax ?? 0) * value) / 100);
+    const updateTaxPrice = Math.round(((formState.priceBeforeTax ?? 0) * (value ?? 0)) / 100);
     handleInputChange('taxPrice', updateTaxPrice);
     handleInputChange('totalPrice', (formState.priceBeforeTax ?? 0) + updateTaxPrice);
-
-    setIsTaxRatioMenuOpen(false);
   };
 
   const totalPriceChangeHandler = (value: number) => {
@@ -360,35 +357,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 <span className="text-text-state-error">*</span>
               </p>
               <div className="flex w-full items-center gap-2">
-                <div
-                  id="tax-rate-menu"
-                  ref={taxRatioMenuRef}
-                  onClick={() => setIsTaxRatioMenuOpen(!isTaxRatioMenuOpen)}
-                  className={`group relative flex h-46px w-full cursor-pointer md:w-220px ${isTaxRatioMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
-                >
-                  <p className="text-input-text-input-filled">
-                    {t('certificate:EDIT.TAXABLE')} {formState.taxRatio}%
-                  </p>
-                  <div className="flex h-20px w-20px items-center justify-center">
-                    <FaChevronDown className={isTaxRatioMenuOpen ? 'rotate-180' : 'rotate-0'} />
-                  </div>
-                  <div
-                    className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxRatioMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
-                  >
-                    <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary p-8px">
-                      {[0, 5, 10, 15].map((value) => (
-                        <li
-                          key={`taxable-${value}`}
-                          value={value}
-                          className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
-                          onClick={() => selectTaxHandler(value)}
-                        >
-                          {t('certificate:EDIT.TAXABLE')} {value}%
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                <TaxMenu selectTaxHandler={selectTaxHandler} />
                 <div className="flex w-full items-center">
                   <NumericInput
                     id="input-tax"

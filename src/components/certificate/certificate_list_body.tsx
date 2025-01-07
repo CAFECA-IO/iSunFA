@@ -51,6 +51,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
+  const [filterCertificates, setFilterCertificates] = useState<ICertificateUI[]>([]);
   const [selectedCertificates, setSelectedCertificates] = useState<{
     [id: string]: ICertificateUI;
   }>({});
@@ -214,6 +215,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           {} as { [id: number]: ICertificateUI }
         );
         setCertificates(certificateData);
+        setFilterCertificates(
+          Object.values(certificateData).filter((certificate) => {
+            return activeTab === InvoiceTabs.WITHOUT_VOUCHER
+              ? !certificate.voucherNo
+              : certificate.voucherNo;
+          })
+        );
       } catch (error) {
         toastHandler({
           id: ToastId.LIST_CERTIFICATE_ERROR,
@@ -252,6 +260,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       });
       localStorage.setItem('selectedCertificates', JSON.stringify(selectedData));
       setCertificates(updatedData);
+      setFilterCertificates(
+        Object.values(updatedData).filter((certificate) => {
+          return activeTab === InvoiceTabs.WITHOUT_VOUCHER
+            ? !certificate.voucherNo
+            : certificate.voucherNo;
+        })
+      );
       setSelectedCertificates(selectedData);
     },
     [certificates, activeTab, isSelectedAll]
@@ -259,7 +274,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   // Info: (20240920 - tzuhan) 全選操作
   const handleSelectAll = () => {
-    const ids = Object.keys(certificates).map((id) => Number(id));
+    const ids = filterCertificates.map((id) => Number(id));
     handleSelect(ids, !isSelectedAll);
   };
 
@@ -271,13 +286,21 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           body: { certificateIds: selectedIds }, // Info: (20241128 - Murky) @tzuhan 這邊用multiple delete，然後把要delete的東西放在array裡
         });
         if (success && deletedIds) {
+          let updatedData: { [id: string]: ICertificateUI } = {};
           setCertificates((prev) => {
-            const updatedData = { ...prev };
+            updatedData = { ...prev };
             deletedIds.forEach((id) => {
               delete updatedData[id];
             });
             return updatedData;
           });
+          setFilterCertificates(
+            Object.values(updatedData).filter((certificate) => {
+              return activeTab === InvoiceTabs.WITHOUT_VOUCHER
+                ? !certificate.voucherNo
+                : certificate.voucherNo;
+            })
+          );
           toastHandler({
             id: ToastId.DELETE_CERTIFICATE_SUCCESS,
             type: ToastType.SUCCESS,
@@ -317,7 +340,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleDeleteSelectedItems = useCallback(() => {
     // Info: (20241025 - tzuhan) 找出所有選中的項目 ID
-    const selectedIds = Object.values(certificates)
+    const selectedIds = filterCertificates
       .filter((certificate) => certificate.isSelected)
       .map((certificate) => certificate.id);
 
@@ -342,7 +365,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       messageModalVisibilityHandler();
     }
   }, [
-    certificates,
+    filterCertificates,
     activeTab,
     t,
     messageModalDataHandler,
@@ -379,11 +402,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const onUpdateFilename = useCallback(
     (id: number, filename: string) => {
-      // Deprecate: (20241218 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log('onUpdateFilename', id, filename);
+      let updatedData: { [id: string]: ICertificateUI } = {};
       setCertificates((prev) => {
-        const updatedData = {
+        updatedData = {
           ...prev,
           [id]: {
             ...prev[id],
@@ -399,6 +420,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         console.log('updatedData[id]', updatedData[id]);
         return updatedData;
       });
+      setFilterCertificates(
+        Object.values(updatedData).filter((certificate) => {
+          return activeTab === InvoiceTabs.WITHOUT_VOUCHER
+            ? !certificate.voucherNo
+            : certificate.voucherNo;
+        })
+      );
     },
     [certificates]
   );
@@ -424,8 +452,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           // Deprecate: (20241218 - tzuhan) Debugging purpose
           // eslint-disable-next-line no-console
           console.log('updatedCertificate', updatedCertificate);
+          let updatedData: { [id: string]: ICertificateUI } = {};
           setCertificates((prevCertificates) => {
-            const updatedData = {
+            updatedData = {
               ...prevCertificates,
               [certificate.id]: {
                 ...updatedCertificate,
@@ -444,7 +473,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             );
             return updatedData;
           });
-
+          setFilterCertificates(
+            Object.values(updatedData).filter((data) => {
+              return activeTab === InvoiceTabs.WITHOUT_VOUCHER ? !data.voucherNo : data.voucherNo;
+            })
+          );
           toastHandler({
             id: ToastId.UPDATE_CERTIFICATE_SUCCESS,
             type: ToastType.SUCCESS,
@@ -473,11 +506,12 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleNewCertificateComing = useCallback(
     async (newCertificate: ICertificate) => {
+      let newCertificatesUI: { [id: string]: ICertificateUI } = {};
       setCertificates((prev) => {
         // Deprecated: (20241122 - tzuhan) Debugging purpose
         // eslint-disable-next-line no-console
         console.log(`CertificateListBody handleNewCertificateComing: prev`, prev);
-        const newCertificatesUI: { [id: string]: ICertificateUI } = {
+        newCertificatesUI = {
           [newCertificate.id]: {
             ...newCertificate,
             isSelected: false,
@@ -502,6 +536,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         );
         return newCertificatesUI;
       });
+      setFilterCertificates(
+        Object.values(newCertificatesUI).filter((certificate) => {
+          return activeTab === InvoiceTabs.WITHOUT_VOUCHER
+            ? !certificate.voucherNo
+            : certificate.voucherNo;
+        })
+      );
     },
     [certificates]
   );
@@ -571,7 +612,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       {/* Info: (20240919 - tzuhan) Main Content */}
       <div
         // Info: (20241210 - tzuhan) 隱藏 scrollbar
-        className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
+        className={`flex grow flex-col gap-4 ${filterCertificates && filterCertificates.length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
         <CertificateFileUpload isDisabled={false} showErrorMessage={false} setFiles={setFiles} />
@@ -615,19 +656,19 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
 
         {/* Info: (20240919 - tzuhan) Certificate Table */}
-        {certificates && Object.values(certificates).length > 0 ? (
+        {filterCertificates && filterCertificates.length > 0 ? (
           <>
             <SelectionToolbar
               className="mt-6"
               active={activeSelection}
               isSelectable={activeTab === InvoiceTabs.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
-              items={Object.values(certificates)}
+              items={filterCertificates}
               subtitle={`${t('certificate:LIST.INVOICE_TOTAL_PRICE')}:`}
               totalPrice={totalInvoicePrice}
               currency={currency}
               selectedCount={Object.values(selectedCertificates).length}
-              totalCount={Object.values(certificates).length || 0}
+              totalCount={filterCertificates.length || 0}
               handleSelect={handleSelect}
               handleSelectAll={handleSelectAll}
               addOperations={addOperations}
@@ -640,7 +681,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               setPage={setPage}
               totalPages={totalPages}
               totalCount={totalCount}
-              certificates={Object.values(certificates)}
+              certificates={filterCertificates}
               viewType={viewType}
               activeSelection={activeSelection}
               handleSelect={handleSelect}

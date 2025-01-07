@@ -78,7 +78,13 @@
     "NAME": "Name",
     "INVOICE_TYPE": "Invoice Type",
     "DEDUCTIBLE": "Deductible",
-    "SUCCESS": "Your certificate information has been updated."
+    "SUCCESS": "Your certificate information has been updated.",
+    "TAXABLE_5": "Taxable 5%",
+    "ZERO_TAX_RATE": "Zero Tax Rate",
+    "TAX_FREE": "Tax Free",
+    "NONE": "None",
+    "THROUGH_CUSTOMS": "Through Customs",
+    "NOT_THROUGH_CUSTOMS": "Not Through Customs"
   },
   "TYPE": {
     "TRIPLICATE": "Triplicate",
