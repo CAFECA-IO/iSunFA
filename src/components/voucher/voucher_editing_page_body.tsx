@@ -191,7 +191,9 @@ const VoucherEditingPageBody: React.FC<{
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
   const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
-  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>(
+    defaultCertificateUI.map((certificate) => certificate.id)
+  );
 
   // Info: (20241118 - Julian) 選擇憑證相關 state
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
@@ -612,7 +614,6 @@ const VoucherEditingPageBody: React.FC<{
     if (isAssetRequired) actions.push(VoucherV2Action.ADD_ASSET);
     if (isReverseRequired) actions.push(VoucherV2Action.REVERT);
 
-    const resultCertificates = Object.values(certificates);
     const resultDate = date.startTimeStamp;
     const resultType = VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType];
     const resultNote = note;
@@ -632,7 +633,7 @@ const VoucherEditingPageBody: React.FC<{
 
     const body = {
       actions,
-      certificateIds: resultCertificates.map((certificate) => certificate.id),
+      certificateIds: selectedIds,
       voucherDate: resultDate,
       type: resultType,
       note: resultNote,
