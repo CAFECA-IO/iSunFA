@@ -193,7 +193,7 @@ export const getVouchersByAssetId = async (assetId: number) => {
     },
   });
   const vouchers = voucher.map((v) => {
-    return { id: v.id, number: v.voucher.no };
+    return { id: v.voucher.id, number: v.voucher.no };
   });
   return vouchers;
 };
