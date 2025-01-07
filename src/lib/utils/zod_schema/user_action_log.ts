@@ -33,6 +33,7 @@ const userActionLogOutputSchema = z
     requestPayload: z.union([z.record(z.string(), z.string()), z.string()]),
     httpStatusCode: z.number().int(),
     statusMessage: z.string(),
+    isCurrent: z.boolean(),
   })
   .transform((data) => {
     const requestPayload =
@@ -44,6 +45,7 @@ const userActionLogOutputSchema = z
       ...data,
       normal: true,
       requestPayload,
+      isCurrent: false,
     };
   });
 

@@ -41,40 +41,44 @@ const FlexibleFeatureIcon: React.FC<{ feature: string; size?: number; halo?: boo
 const FlexibleFeatureSelection: React.FC = () => {
   const { t } = useTranslation('common');
 
-  // Info: (20241219 - Julian) 第一分類
+  // Info: (20241219 - Julian) 第一分類：主要功能
   const featuresOfFirstPart = [
     'Dashboard',
-    'AI Assistant',
+    //  'AI Assistant', // ToDo: (20250106 - Julian) AI 助手先隱藏
     'Accounting System',
     'Asset Management',
-    'CRM',
+    // 'CRM', // ToDo: (20250106 - Julian) 客戶關係管理先隱藏
     'Calendar',
     'Reports System',
-    'Outsourcing Matching',
-    'Technical Support',
+    // 'Outsourcing Matching', // ToDo: (20250106 - Julian) 平台媒合先隱藏
+    // 'Technical Support', // ToDo: (20250106 - Julian) 技術支援先隱藏
   ];
 
-  // Info: (20241219 - Julian) 第二分類
-  const featuresOfSecondPart = ['Financial Health Check', 'Financial Auditing', 'Audit System'];
+  // Info: (20241219 - Julian) 第二分類：金融相關功能
+  // ToDo: (20250106 - Julian) 金融相關功能先隱藏
+  // const featuresOfSecondPart = ['Financial Health Check', 'Financial Auditing', 'Audit System'];
 
-  // Info: (20241219 - Julian) 第三分類
-  const featuresOfThirdPart = [
-    'HR Management',
-    'Access Control',
-    'Time and Attendance',
-    'Leave Management',
-    'Online Communication',
-    'Project Management',
-    'Contract Management',
-    'Procurement Management',
-    'Inventory Management',
-  ];
+  // Info: (20241219 - Julian) 第三分類：人事相關功能
+  // ToDo: (20250106 - Julian) 人事相關功能先隱藏
+  // const featuresOfThirdPart = [
+  //   'HR Management',
+  //   'Access Control',
+  //   'Time and Attendance',
+  //   'Leave Management',
+  //   'Online Communication',
+  //   'Project Management',
+  //   'Contract Management',
+  //   'Procurement Management',
+  //   'Inventory Management',
+  // ];
 
-  // Info: (20241219 - Julian) 第四分類
-  const featuresOfFourthPart = ['Sales Management', 'POS', 'Online Store'];
+  // Info: (20241219 - Julian) 第四分類：銷售相關功能
+  // ToDo: (20250106 - Julian) 銷售相關功能先隱藏
+  // const featuresOfFourthPart = ['Sales Management', 'POS', 'Online Store'];
 
-  // Info: (20241219 - Julian) 第五分類
-  const featuresOfFifthPart = ['Manufacturing Management', 'Supply Chain Management'];
+  // Info: (20241219 - Julian) 第五分類：製造相關功能
+  // ToDo: (20250106 - Julian) 製造相關功能先隱藏
+  // const featuresOfFifthPart = ['Manufacturing Management', 'Supply Chain Management'];
 
   return (
     <div className="flex flex-col gap-120px px-16px py-120px md:px-80px lg:px-112px">
@@ -91,32 +95,32 @@ const FlexibleFeatureSelection: React.FC = () => {
       </div>
 
       {/* Info: (20241219 - Julian) Features of Second Part */}
-      <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
+      {/* <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
         {featuresOfSecondPart.map((feature) => (
           <FlexibleFeatureIcon key={feature} feature={feature} size={160} halo />
         ))}
-      </div>
+      </div> */}
 
       {/* Info: (20241219 - Julian) Features of Third Part */}
-      <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
+      {/* <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
         {featuresOfThirdPart.map((feature) => (
           <FlexibleFeatureIcon key={feature} feature={feature} />
         ))}
-      </div>
+      </div> */}
 
       {/* Info: (20241219 - Julian) Features of Fourth Part */}
-      <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
+      {/* <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
         {featuresOfFourthPart.map((feature) => (
           <FlexibleFeatureIcon key={feature} feature={feature} />
         ))}
-      </div>
+      </div> */}
 
       {/* Info: (20241219 - Julian) Features of Fifth Part */}
-      <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
+      {/* <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
         {featuresOfFifthPart.map((feature) => (
           <FlexibleFeatureIcon key={feature} feature={feature} />
         ))}
-      </div>
+      </div> */}
 
       {/* Info: (20241219 - Julian) Make a Wish Link */}
       {/* Info: (20241219 - Julian) 先隱藏 */}

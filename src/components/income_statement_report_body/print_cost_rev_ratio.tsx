@@ -60,7 +60,9 @@ const PrintCostRevRatio = ({
       <NormalHeader />
       <section className="relative px-20px text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-bold leading-5">投入費用和成本，與收入的倍數關係</p>
+          <p className="text-xs font-bold leading-5">
+            {t('reports:REPORTS.RELATIONSHIP_BETWEEN_EXPENSES_COSTS_REVENUE')}
+          </p>
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
           </p>
@@ -105,7 +107,9 @@ const PrintCostRevRatio = ({
                     {otherInfo.revenueAndExpenseRatio.revenue.code}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {otherInfo.revenueAndExpenseRatio.revenue.name}
+                    {t(
+                      `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.revenue.name}`
+                    )}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.curPeriodAmountString}
@@ -133,7 +137,9 @@ const PrintCostRevRatio = ({
                     {otherInfo.revenueAndExpenseRatio.totalCost.code}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {otherInfo.revenueAndExpenseRatio.totalCost.name}
+                    {t(
+                      `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.totalCost.name}`
+                    )}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.curPeriodAmountString}
@@ -153,7 +159,9 @@ const PrintCostRevRatio = ({
                     {otherInfo.revenueAndExpenseRatio.salesExpense.code}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {otherInfo.revenueAndExpenseRatio.salesExpense.name}
+                    {t(
+                      `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.salesExpense.name}`
+                    )}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.curPeriodAmountString}
@@ -173,7 +181,9 @@ const PrintCostRevRatio = ({
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.code}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {otherInfo.revenueAndExpenseRatio.administrativeExpense.name}
+                    {t(
+                      `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.administrativeExpense.name}`
+                    )}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.curPeriodAmountString}
@@ -190,7 +200,7 @@ const PrintCostRevRatio = ({
                 &nbsp;
               </td>
               <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs">
-                投入費用和成本合計
+                {t(`reports:REPORTS.TOTAL_EXPENSES_AND_COSTS`)}
               </td>
               <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                 {curPeriodTotal}
@@ -203,18 +213,26 @@ const PrintCostRevRatio = ({
         </table>
         {financialReport && financialReport.company && (
           <p className="mt-4 text-xs">
-            {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
-            營業收入，為投入費用和成本的{curRatio.toFixed(2)}倍
+            <span>
+              {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
+            </span>
+            <span className="ml-2">
+              {t('reports:REPORTS.REVENUE_RATIO', { ratio: curRatio.toFixed(2) })}
+            </span>
           </p>
         )}
         {financialReport && financialReport.company && (
           <p className="mt-4 text-xs">
-            {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
-            營業收入，為投入費用和成本的{preRatio.toFixed(2)}倍
+            <span>
+              {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
+            </span>
+            <span className="ml-2">
+              {t('reports:REPORTS.REVENUE_RATIO', { ratio: preRatio.toFixed(2) })}
+            </span>
           </p>
         )}
         <div className="mb-4 mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-bold leading-5">收入提撥至研發費用比例</p>
+          <p className="text-xs font-bold leading-5">{t('reports:REPORTS.REVENUE_TO_RD')}</p>
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
           </p>
@@ -258,7 +276,7 @@ const PrintCostRevRatio = ({
                     {revenueToRD.revenue.code}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {revenueToRD.revenue.name}
+                    {t(`reports:ACCOUNTING_ACCOUNT.${revenueToRD.revenue.name}`)}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {revenueToRD.revenue.curPeriodAmountString}
@@ -272,7 +290,9 @@ const PrintCostRevRatio = ({
                     {revenueToRD.researchAndDevelopmentExpense.code}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {revenueToRD.researchAndDevelopmentExpense.name}
+                    {t(
+                      `reports:ACCOUNTING_ACCOUNT.${revenueToRD.researchAndDevelopmentExpense.name}`
+                    )}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.curPeriodAmountString}
@@ -286,7 +306,7 @@ const PrintCostRevRatio = ({
                     &nbsp;
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs">
-                    收入提撥至研發費用比例
+                    {t('reports:REPORTS.REVENUE_TO_RD')}
                   </td>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}

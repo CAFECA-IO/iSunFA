@@ -45,6 +45,7 @@
   },
   "NORMAL": {
     "TITLE": "一般設定",
+    "USER_SETTING": "使用者設定",
     "NOTICE_SETTING": "通知設定",
     "SYSTEM_NOTIFICATION": "系統通知",
     "UPDATES_N_SUBSCRIPTION_NOTIFICATION": "更新與訂閱通知",
@@ -157,6 +158,10 @@
     "TIME": "登入時間",
     "DEVICE": "登入裝置",
     "ADDRESS": "登入地址",
+    "ACTION": "操作",
+    "LOGOUT": "登出",
+    "CURRENT": "目前",
+    "DELETE_SESSION_SUCCESS" : "會話已成功刪除。",
     "DETECT_DIFFERENT_IP_LOGIN": "偵測到來自不同 IP 位址的登入。",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "請驗證您的帳戶安全性以防止資料外洩。"
   },
