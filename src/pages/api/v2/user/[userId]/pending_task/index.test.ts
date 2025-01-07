@@ -71,8 +71,8 @@ describe('getTotalPendingTaskForUser', () => {
       },
     ];
 
-    const mockMissingCertificateCount = 5;
-    const mockUnpostedVoucherCount = 3;
+    const mockMissingCertificateCount = 3;
+    const mockUnpostedVoucherCount = 5;
 
     jest.spyOn(adminRepo, 'listCompanyByUserId').mockResolvedValue(mockListedCompany);
     jest
@@ -81,7 +81,6 @@ describe('getTotalPendingTaskForUser', () => {
     jest.spyOn(voucherRepo, 'countUnpostedVoucher').mockResolvedValue(mockUnpostedVoucherCount);
 
     const result = await getTotalPendingTaskForUser(userId);
-
     expect(result).toEqual({
       userId,
       totalMissingCertificate: 6,
