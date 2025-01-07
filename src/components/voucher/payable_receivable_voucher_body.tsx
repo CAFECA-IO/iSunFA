@@ -60,6 +60,9 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
       if (payReceiveAlreadyHappenedSort) {
         sort = { by: SortBy.PAY_RECEIVE_ALREADY_HAPPENED, order: payReceiveAlreadyHappenedSort };
       }
+      if (remainSort) {
+        sort = { by: SortBy.PAY_RECEIVE_REMAIN, order: remainSort };
+      }
     }
     setSelectedSort(sort);
   }, [payReceiveSort, payReceiveAlreadyHappenedSort, remainSort, dateSort]);

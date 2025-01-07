@@ -51,7 +51,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
-  const [filterCertificates, setFilterCertificates] = useState<ICertificateUI[]>([]);
   const [selectedCertificates, setSelectedCertificates] = useState<{
     [id: string]: ICertificateUI;
   }>({});
@@ -221,13 +220,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           {} as { [id: number]: ICertificateUI }
         );
         setCertificates(certificateData);
-        setFilterCertificates(
-          Object.values(certificateData).filter((certificate) => {
-            return activeTab === InvoiceTabs.WITHOUT_VOUCHER
-              ? !certificate.voucherNo
-              : certificate.voucherNo;
-          })
-        );
       } catch (error) {
         toastHandler({
           id: ToastId.LIST_CERTIFICATE_ERROR,
@@ -266,23 +258,22 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       });
       localStorage.setItem('selectedCertificates', JSON.stringify(selectedData));
       setCertificates(updatedData);
-      setFilterCertificates(
-        Object.values(updatedData).filter((certificate) => {
-          return activeTab === InvoiceTabs.WITHOUT_VOUCHER
-            ? !certificate.voucherNo
-            : certificate.voucherNo;
-        })
-      );
       setSelectedCertificates(selectedData);
     },
     [certificates, activeTab, isSelectedAll]
   );
 
   // Info: (20240920 - tzuhan) 全選操作
-  const handleSelectAll = () => {
-    const ids = filterCertificates.map((id) => Number(id));
+  const handleSelectAll = useCallback(() => {
+    const ids = Object.values(certificates)
+      .filter((certificate) => {
+        return activeTab === InvoiceTabs.WITHOUT_VOUCHER
+          ? !certificate.voucherNo
+          : certificate.voucherNo;
+      })
+      .map((certificate) => certificate.id);
     handleSelect(ids, !isSelectedAll);
-  };
+  }, [certificates, activeTab, isSelectedAll]);
 
   const deleteSelectedCertificates = useCallback(
     async (selectedIds: number[]) => {
@@ -300,13 +291,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             });
             return updatedData;
           });
-          setFilterCertificates(
-            Object.values(updatedData).filter((certificate) => {
-              return activeTab === InvoiceTabs.WITHOUT_VOUCHER
-                ? !certificate.voucherNo
-                : certificate.voucherNo;
-            })
-          );
           toastHandler({
             id: ToastId.DELETE_CERTIFICATE_SUCCESS,
             type: ToastType.SUCCESS,
@@ -345,9 +329,16 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   );
 
   const handleDeleteSelectedItems = useCallback(() => {
+    setActiveSelection(false);
     // Info: (20241025 - tzuhan) 找出所有選中的項目 ID
-    const selectedIds = filterCertificates
-      .filter((certificate) => certificate.isSelected)
+    const selectedIds = Object.values(certificates)
+      .filter((certificate) => {
+        return (
+          (activeTab === InvoiceTabs.WITHOUT_VOUCHER
+            ? !certificate.voucherNo
+            : certificate.voucherNo) && certificate.isSelected
+        );
+      })
       .map((certificate) => certificate.id);
 
     // Info: (20241025 - tzuhan) 如果有選中的項目，顯示刪除確認模態框
@@ -371,7 +362,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       messageModalVisibilityHandler();
     }
   }, [
-    filterCertificates,
+    certificates,
     activeTab,
     t,
     messageModalDataHandler,
@@ -426,13 +417,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         console.log('updatedData[id]', updatedData[id]);
         return updatedData;
       });
-      setFilterCertificates(
-        Object.values(updatedData).filter((certificate) => {
-          return activeTab === InvoiceTabs.WITHOUT_VOUCHER
-            ? !certificate.voucherNo
-            : certificate.voucherNo;
-        })
-      );
     },
     [certificates]
   );
@@ -479,11 +463,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             );
             return updatedData;
           });
-          setFilterCertificates(
-            Object.values(updatedData).filter((data) => {
-              return activeTab === InvoiceTabs.WITHOUT_VOUCHER ? !data.voucherNo : data.voucherNo;
-            })
-          );
           toastHandler({
             id: ToastId.UPDATE_CERTIFICATE_SUCCESS,
             type: ToastType.SUCCESS,
@@ -542,13 +521,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         );
         return newCertificatesUI;
       });
-      setFilterCertificates(
-        Object.values(newCertificatesUI).filter((certificate) => {
-          return activeTab === InvoiceTabs.WITHOUT_VOUCHER
-            ? !certificate.voucherNo
-            : certificate.voucherNo;
-        })
-      );
     },
     [certificates]
   );
@@ -596,6 +568,12 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
     };
   }, []);
+
+  const filterCertificates = Object.values(certificates).filter((certificate) => {
+    return activeTab === InvoiceTabs.WITHOUT_VOUCHER
+      ? !certificate.voucherNo
+      : certificate.voucherNo;
+  });
 
   return (
     <>
