@@ -182,10 +182,13 @@ describe('createManyAssets (multiple assets)', () => {
     expect(assets).toHaveLength(amount);
 
     // Info: (20241213 - Shirley) 檢查前兩個資產的價格應該是平均值
-    assets.slice(0, -1).forEach(async (item) => {
-      const asset = await getLegitAssetById(item.id, testCompanyId);
-      expect(asset?.purchasePrice).toBe(expectedPricePerAsset);
-    });
+    // Info: (20250107 - Shirley) 使用 Promise.all 跟 map 等待所有檢查完成，forEach 不會等待 async 完成，會導致測試在異步操作完成前結束，導致得到 undefined 的結果讓測試失敗
+    await Promise.all(
+      assets.slice(0, -1).map(async (item) => {
+        const asset = await getLegitAssetById(item.id, testCompanyId);
+        expect(asset?.purchasePrice).toBe(expectedPricePerAsset);
+      })
+    );
 
     // Info: (20241213 - Shirley) 檢查最後一個資產的價格應該是平均值加上餘數
     const lastAsset = await getLegitAssetById(assets[amount - 1].id, testCompanyId);
@@ -219,10 +222,13 @@ describe('createManyAssets (multiple assets)', () => {
     expect(assets).toHaveLength(amount);
 
     // Info: (20241213 - Shirley) 檢查前兩個資產的殘值應該是平均值
-    assets.slice(0, -1).forEach(async (item) => {
-      const asset = await getLegitAssetById(item.id, testCompanyId);
-      expect(asset?.residualValue).toBe(expectedResidualValuePerAsset);
-    });
+    // Info: (20250107 - Shirley) 使用 Promise.all 跟 map 等待所有檢查完成，forEach 不會等待 async 完成，會導致測試在異步操作完成前結束，導致得到 undefined 的結果讓測試失敗
+    await Promise.all(
+      assets.slice(0, -1).map(async (item) => {
+        const asset = await getLegitAssetById(item.id, testCompanyId);
+        expect(asset?.residualValue).toBe(expectedResidualValuePerAsset);
+      })
+    );
 
     // Info: (20241213 - Shirley) 檢查最後一個資產的殘值應該是平均值加上餘數
     const lastAsset = await getLegitAssetById(assets[amount - 1].id, testCompanyId);
