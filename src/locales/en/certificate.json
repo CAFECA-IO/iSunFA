@@ -47,7 +47,8 @@
     "UPDATE_CERTIFICATE": "Failed to update certificate, {{reason}}",
     "ENCRYPT_FILE": "Failed to encrypt file",
     "COMPRESS_IMAGE": "Failed to compress image",
-    "UPDATE_FILENAME": "Failed to update file name"
+    "UPDATE_FILENAME": "Failed to update file name",
+    "PLEASE_FILL_UP_THIS_FORM": "Please fill up this form"
   },
   "WARNING": {
     "UPLOAD_FAILED": "Uploading fail",

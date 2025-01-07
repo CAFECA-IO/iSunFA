@@ -135,7 +135,8 @@ export type IAPIName =
   | 'PUSHER_AUTH'
   | 'TRIAL_BALANCE_EXPORT'
   | 'CREATE_ASSET_BULK'
-  | 'LEDGER_EXPORT';
+  | 'LEDGER_EXPORT'
+  | 'SESSION_ID_DELETE';
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {

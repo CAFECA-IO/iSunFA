@@ -15,4 +15,5 @@ export interface IUserActionLog {
   httpStatusCode: number;
   statusMessage: string;
   normal: boolean;
+  isCurrent: boolean;
 }

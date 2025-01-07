@@ -14,7 +14,7 @@ import { UserActionLog } from '@prisma/client';
 const handleGetRequest: IHandleRequest<
   APIName.USER_ACTION_LOG_LIST,
   IPaginatedData<UserActionLog[]>
-> = async ({ query }) => {
+> = async ({ query, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<UserActionLog[]> | null = null;
 
@@ -28,6 +28,11 @@ const handleGetRequest: IHandleRequest<
     endDateInSecond
   );
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  const data = listedUserActionLog.data.map((log) => ({
+    ...log,
+    isCurrent: session.sessionId === log.sessionId,
+  }));
+  listedUserActionLog.data = data;
   payload = listedUserActionLog;
   return { statusMessage, payload };
 };
