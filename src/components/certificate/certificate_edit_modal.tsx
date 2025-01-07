@@ -259,12 +259,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
           {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
-          <Magnifier
-            imageUrl={certificate.file.url}
-            width={210}
-            height={310}
-            className="w-210px min-w-210px"
-          />
+          <Magnifier imageUrl={certificate.file.url} className="w-210px min-w-210px" />
           {/* Info: (20240924 - tzuhan) 編輯表單 */}
 
           {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
