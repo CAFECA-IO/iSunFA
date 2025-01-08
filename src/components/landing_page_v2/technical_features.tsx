@@ -116,10 +116,7 @@ const TechnicalFeatures: React.FC = () => {
       </LinearGradientText>
 
       {/* Info: (20241205 - Julian) Content */}
-      <div
-        //  className="relative mt-120px grid grid-cols-1 gap-x-120px gap-y-120px lg:mt-75px lg:flex lg:flex-wrap lg:justify-between"
-        className="relative mt-120px grid grid-cols-1 gap-x-120px gap-y-120px lg:mt-75px lg:grid-cols-2 lg:justify-between"
-      >
+      <div className="relative mt-120px grid grid-cols-1 gap-x-120px gap-y-120px lg:mt-75px lg:grid-cols-2 lg:justify-between">
         {/* Info: (20241223 - Julian) Background */}
         <div className="absolute hidden h-full w-full items-center justify-center lg:flex">
           <div className="h-3/5 w-3/5 border"></div>
