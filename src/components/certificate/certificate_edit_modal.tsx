@@ -98,7 +98,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       newErrors.totalPrice = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_TOTAL');
     }
     if (!counterParty?.name) {
-      newErrors.counterParty = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
+      newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
     setErrors(newErrors);
@@ -259,12 +259,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
           {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
-          <Magnifier
-            imageUrl={certificate.file.url}
-            width={210}
-            height={310}
-            className="w-210px min-w-210px"
-          />
+          <Magnifier imageUrl={certificate.file.url} className="w-210px min-w-210px" />
           {/* Info: (20240924 - tzuhan) 編輯表單 */}
 
           {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
@@ -305,11 +300,13 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 period={date}
                 setFilteredPeriod={setDate}
                 type={DatePickerType.TEXT_DATE}
-                btnClassName=""
+                datePickerClassName="z-120"
                 datePickerHandler={(start: number) => handleInputChange('date', start)}
               />
               {errors.date && (
-                <p className="mt-1 text-right text-sm text-text-state-error">{errors.date}</p>
+                <p className="-translate-y-1 self-start text-sm text-text-state-error">
+                  {errors.date}
+                </p>
               )}
             </div>
 
@@ -361,7 +358,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 </div>
               </div>
               {errors.priceBeforeTax && (
-                <p className="mt-1 text-right text-sm text-text-state-error">
+                <p className="-translate-y-1 self-end text-sm text-text-state-error">
                   {errors.priceBeforeTax}
                 </p>
               )}
@@ -398,7 +395,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 </div>
               </div>
               {errors.taxPrice && (
-                <p className="mt-1 text-right text-sm text-text-state-error">{errors.taxPrice}</p>
+                <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                  {errors.taxPrice}
+                </p>
               )}
             </div>
 
@@ -432,7 +431,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 </div>
               </div>
               {errors.totalPrice && (
-                <p className="mt-1 text-right text-sm text-text-state-error">{errors.totalPrice}</p>
+                <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                  {errors.totalPrice}
+                </p>
               )}
             </div>
 
@@ -443,7 +444,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               onSelect={(cp: ICounterpartyOptional) => handleInputChange('counterParty', cp)}
             />
             {errors.counterParty && (
-              <p className="mt-1 text-right text-sm text-text-state-error">{errors.counterParty}</p>
+              <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                {errors.counterParty}
+              </p>
             )}
 
             {/* Info: (20240924 - tzuhan) Invoice Type */}

@@ -48,7 +48,8 @@
     "ENCRYPT_FILE": "加密文件失敗",
     "COMPRESS_IMAGE": "壓縮圖片失敗",
     "UPDATE_FILENAME": "更新文件名失敗",
-    "PLEASE_FILL_UP_THIS_FORM": "請填寫此表格"
+    "PLEASE_FILL_UP_THIS_FORM": "請填寫此表格",
+    "REQUIRED_COUNTERPARTY_NAME": "交易對象名稱是必填的"
   },
   "WARNING": {
     "UPLOAD_FAILED": "上傳失敗",
