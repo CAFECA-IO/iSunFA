@@ -549,21 +549,21 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       <section className="mx-1 text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
+            <p className="font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton
               onClick={toggleSummaryTable}
               isCollapsed={isSummaryCollapsed}
               buttonType="default"
             />
           </div>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p className="font-bold leading-5">{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {!isSummaryCollapsed && (
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
               <tr className="print:hidden">
                 <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  {t('reports:TAX_REPORT.CODE_NUMBER')}
+                  {t('reports:REPORTS.CODE_NUMBER')}
                 </th>
                 <th
                   className={`w-800px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold`}
@@ -612,7 +612,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             <thead>
               <tr className="print:hidden">
                 <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  {t('reports:TAX_REPORT.CODE_NUMBER')}
+                  {t('reports:REPORTS.CODE_NUMBER')}
                 </th>
                 <th className="w-800px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
@@ -674,9 +674,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span className="w-200px">
-                      {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
-                    </span>
+                    <span className="w-200px">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
                   </li>
                 ))}
               </ul>

@@ -112,7 +112,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
     setInputNote(event.target.value);
   };
 
-  const disabled = !inputName || !inputTaxId || !inputType;
+  const disabled = !inputName || !inputType;
 
   const {
     trigger: editCounterpartyTrigger,
@@ -281,7 +281,6 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
               <div id="counterpart-taxid" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('certificate:COUNTERPARTY.TAX_NUMBER')}
-                <span className="text-text-state-error">*</span>
               </p>
               <div className="flex w-full items-center">
                 <input
@@ -290,7 +289,6 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
                   placeholder={t('certificate:COUNTERPARTY.ENTER_NUMBER')}
                   value={inputTaxId}
                   onChange={taxIdChangeHandler}
-                  required
                   className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none"
                 />
               </div>

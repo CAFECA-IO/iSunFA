@@ -82,20 +82,28 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       }) as IInvoiceBetaOptional
   );
 
-  const isFormValid = useCallback(() => {
-    const { date: formDate, priceBeforeTax, totalPrice, counterParty } = formState;
-    return (
-      // no &&
-      // no.trim() !== '' &&
-      formDate &&
-      formDate > 0 &&
-      priceBeforeTax &&
-      priceBeforeTax > 0 &&
-      totalPrice &&
-      totalPrice > 0 &&
-      counterParty !== undefined
-    );
-  }, [formState]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    const { date: selectedDate, priceBeforeTax, totalPrice, counterParty } = formState;
+
+    if (!selectedDate || selectedDate <= 0) {
+      newErrors.date = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_DATE');
+    }
+    if (!priceBeforeTax || priceBeforeTax <= 0) {
+      newErrors.priceBeforeTax = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_PRICE');
+    }
+    if (!totalPrice || totalPrice <= 0) {
+      newErrors.totalPrice = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_TOTAL');
+    }
+    if (!counterParty?.name) {
+      newErrors.counterParty = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleInputChange = useCallback(
     (
@@ -206,6 +214,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   // Info: (20240924 - tzuhan) 處理保存
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!validateForm()) return;
     // Deprecate: (20241218 - tzuhan) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('handleSave formStateRef.current:', formStateRef.current);
@@ -299,6 +308,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 btnClassName=""
                 datePickerHandler={(start: number) => handleInputChange('date', start)}
               />
+              {errors.date && (
+                <p className="mt-1 text-right text-sm text-text-state-error">{errors.date}</p>
+              )}
             </div>
 
             {/* Info: (20240924 - tzuhan) Invoice Number */}
@@ -334,7 +346,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   isDecimal
                   required
                   hasComma
-                  className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                  className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
                   triggerWhenChanged={priceBeforeTaxChangeHandler}
                 />
                 <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
@@ -348,6 +360,11 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   <p>{currencyAliasStr}</p>
                 </div>
               </div>
+              {errors.priceBeforeTax && (
+                <p className="mt-1 text-right text-sm text-text-state-error">
+                  {errors.priceBeforeTax}
+                </p>
+              )}
             </div>
 
             {/* Info: (20240924 - tzuhan) Tax */}
@@ -366,7 +383,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     isDecimal
                     required
                     hasComma
-                    className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                    className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
                   />
                   <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                     <Image
@@ -380,6 +397,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   </div>
                 </div>
               </div>
+              {errors.taxPrice && (
+                <p className="mt-1 text-right text-sm text-text-state-error">{errors.taxPrice}</p>
+              )}
             </div>
 
             {/* Info: (20240924 - tzuhan) Total Price */}
@@ -397,7 +417,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   isDecimal
                   required
                   hasComma
-                  className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                  className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
                   triggerWhenChanged={totalPriceChangeHandler}
                 />
                 <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
@@ -411,6 +431,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   <p>{currencyAliasStr}</p>
                 </div>
               </div>
+              {errors.totalPrice && (
+                <p className="mt-1 text-right text-sm text-text-state-error">{errors.totalPrice}</p>
+              )}
             </div>
 
             {/* Info: (20240924 - tzuhan) CounterParty */}
@@ -419,6 +442,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               counterparty={formState.counterParty}
               onSelect={(cp: ICounterpartyOptional) => handleInputChange('counterParty', cp)}
             />
+            {errors.counterParty && (
+              <p className="mt-1 text-right text-sm text-text-state-error">{errors.counterParty}</p>
+            )}
 
             {/* Info: (20240924 - tzuhan) Invoice Type */}
             <div className="flex flex-col items-start gap-2">
@@ -504,7 +530,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               type="submit"
               variant="tertiary"
               className="px-16px py-8px"
-              disabled={!isFormValid()}
             >
               <p>{t('common:COMMON.SAVE')}</p>
               <BiSave size={20} />
