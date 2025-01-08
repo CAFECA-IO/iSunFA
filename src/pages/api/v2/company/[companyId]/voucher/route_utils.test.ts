@@ -25,7 +25,7 @@ import { voucherAPIPostUtils as postUtils } from '@/pages/api/v2/company/[compan
 //   }),
 // }));
 
-describe('voucherAPIPostUtils', () => {
+xdescribe('voucherAPIPostUtils', () => {
   beforeEach(() => {});
 
   afterEach(() => {

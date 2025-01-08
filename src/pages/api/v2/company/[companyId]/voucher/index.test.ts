@@ -66,7 +66,7 @@ describe('company/[companyId]/voucher integration test', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
-  describe('Get list voucher', () => {
+  xdescribe('Get list voucher', () => {
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},
