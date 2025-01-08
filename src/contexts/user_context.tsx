@@ -88,7 +88,6 @@ export const UserContext = createContext<UserContextType>({
   username: null,
   isSignIn: false,
   isAgreeTermsOfService: false,
-  // isAgreePrivacyPolicy: false, // Deprecated: (20241206 - Liz)
   isSignInError: false,
   createRole: async () => null,
   selectRole: async () => null,
@@ -133,7 +132,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
-  // const [, setIsAgreePrivacyPolicy, isAgreePrivacyPolicyRef] = useStateRef(false); // Deprecated: (20241206 - Liz)
 
   const isRouteChanging = useRef(false);
 
@@ -176,27 +174,31 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignInError(false);
     setSelectedRole(null);
     setSelectedCompany(null);
-    localStorage.removeItem('userId');
-    localStorage.removeItem('expired_at');
-    localStorage.removeItem('redirectPath'); // Info: (20241129 - Liz) 移除 localStorage 中的 redirectPath
     clearAllItems(); // Info: (20240822 - Shirley) 清空 IndexedDB 中的數據
   };
 
-  // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
-  const redirectToLoginPage = () => {
+  const clearLocalStorage = () => {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('expired_at');
+    localStorage.removeItem('redirectPath');
+  };
+
+  // Info: (20250108 - Liz) 前往登入頁面
+  const goToLoginPage = () => {
     // Deprecated: (20241001 - Liz)
     // eslint-disable-next-line no-console
-    console.log('呼叫 redirectToLoginPage (尚未導向)');
+    console.log('呼叫 goToLoginPage (尚未導向)');
 
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       // Deprecated: (20241008 - Liz)
       // eslint-disable-next-line no-console
-      console.log('呼叫 redirectToLoginPage 並且重新導向到登入頁面');
+      console.log('呼叫 goToLoginPage 並且重新導向到登入頁面');
 
       router.push(ISUNFA_ROUTE.LOGIN);
     }
   };
 
+  // Info: (20250108 - Liz) 前往選擇角色頁面
   const goToSelectRolePage = () => {
     // Deprecated: (20241008 - Liz)
     // eslint-disable-next-line no-console
@@ -205,7 +207,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     router.push(ISUNFA_ROUTE.SELECT_ROLE);
   };
 
-  // Info: (20241111 - Liz) 如果沒有選擇公司，重新導向到可以選擇公司的儀表板
+  // Info: (20241111 - Liz) 前往儀表板
   const goToDashboard = () => {
     router.push(ISUNFA_ROUTE.DASHBOARD);
 
@@ -276,14 +278,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     // eslint-disable-next-line no-console
     console.log('call signOut 登出並且清除 user context 所有狀態 以及 localStorage');
 
-    // Info: (20241127 - Liz)  清除 localStorage 中的資料
-    localStorage.removeItem('userId');
-    localStorage.removeItem('expired_at');
-    localStorage.removeItem('redirectPath');
-
     await signoutAPI(); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
     clearStates(); // Info: (20241004 - Liz) 清除 context 中的狀態
-    redirectToLoginPage(); // Info: (20241004 - Liz) 重新導向到登入頁面
+    clearLocalStorage(); // Info: (20241004 - Liz) 清除 localStorage 中的資料
+    goToLoginPage(); // Info: (20241004 - Liz) 重新導向到登入頁面
   };
 
   const isProfileFetchNeeded = () => {
@@ -357,7 +355,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (!processedUser) {
       clearStates();
-      redirectToLoginPage();
+      clearLocalStorage();
+      goToLoginPage();
       return;
     }
 
@@ -425,7 +424,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       handleProcessData(statusInfo);
     } else {
       clearStates();
-      redirectToLoginPage();
+      clearLocalStorage();
+      goToLoginPage();
       setIsSignInError(true);
       setErrorCode(getStatusInfoCode ?? '');
     }
@@ -733,19 +733,35 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [handleVisibilityChange, handleRouteChangeStart, handleRouteChangeComplete, router.events]);
 
   useEffect(() => {
-    // Deprecated: (20241004 - Liz)
+    // Deprecated: (20250108 - Liz)
     // eslint-disable-next-line no-console
     console.log('觸發 useEffect (監聽 UNAUTHORIZED_ACCESS)');
 
-    const handleUnauthorizedAccess = () => {
-      // Deprecated: (20241004 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('觸發 useEffect 並且呼叫 signOut 函數');
+    let isSigningOut = false;
 
-      signOut();
+    const handleUnauthorizedAccess = async () => {
+      if (isSigningOut) {
+        // Deprecated: (20250108 - Liz)
+        // eslint-disable-next-line no-console
+        console.warn('正在執行 signOut 所以跳過此次觸發');
+        return;
+      }
+      isSigningOut = true;
+
+      try {
+        // Deprecated: (20250108 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('觸發 useEffect 並且呼叫 signOut 函數');
+        await signOut();
+      } catch (error) {
+        // Deprecated: (20250108 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('Sign out failed:', error);
+
+        isSigningOut = false; // Info: (20250108 - Liz) 失敗後重置狀態，允許再次嘗試
+      }
     };
 
-    // Info: (20240822-Tzuhan) 確保只有一個監聽器
     eventManager.off(STATUS_MESSAGE.UNAUTHORIZED_ACCESS, handleUnauthorizedAccess);
     eventManager.on(STATUS_MESSAGE.UNAUTHORIZED_ACCESS, handleUnauthorizedAccess);
 
@@ -763,7 +779,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       username: usernameRef.current,
       isSignIn: isSignInRef.current,
       isAgreeTermsOfService: isAgreeTermsOfServiceRef.current,
-      // isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current, // Deprecated: (20241206 - Liz)
       isSignInError: isSignInErrorRef.current,
       createRole,
       selectRole,

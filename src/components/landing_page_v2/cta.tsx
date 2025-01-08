@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
@@ -70,6 +70,18 @@ const CTAIntroCard: React.FC<{
 const CTA: React.FC = () => {
   const { t } = useTranslation('common');
 
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const [isCtaRefVisible, setIsCtaRefVisible] = useState(false);
+
+  useEffect(() => {
+    const waitForCTA = setTimeout(() => {
+      setIsCtaRefVisible(true);
+    }, 500);
+    return () => {
+      clearTimeout(waitForCTA);
+    };
+  }, []);
+
   // Info: (20241218 - Julian) 卡片內容
   const introCards = [
     {
@@ -103,22 +115,37 @@ const CTA: React.FC = () => {
   ));
 
   return (
-    <div className="flex flex-col items-center py-14px md:px-50px md:py-20px lg:py-70px">
+    <div
+      ref={ctaRef}
+      className="flex flex-col items-center py-14px md:px-50px md:py-20px lg:py-70px"
+    >
       {/* Info: (20241211 - Julian) CTA Main */}
       <div className="flex flex-col items-center">
         {/* Info: (20241205 - Julian) CTA Main */}
         <div className="flex flex-col items-center gap-12px lg:gap-24px">
-          <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
+          <LinearGradientText
+            size={LinearTextSize.XL}
+            align={TextAlign.CENTER}
+            className={`${
+              isCtaRefVisible ? 'translate-y-0 opacity-100' : '-translate-y-200px opacity-0'
+            } transition-all duration-500`}
+          >
             {t('landing_page_v2:CTA.MAIN_TITLE')}
           </LinearGradientText>
-          <p className="text-center text-xs font-medium md:text-lg lg:text-xl">
+          <p
+            className={` ${isCtaRefVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'} text-center text-xs font-medium transition-all duration-500 md:text-lg lg:text-xl`}
+          >
             {t('landing_page_v2:CTA.MAIN_DESCRIPTION')}
           </p>
         </div>
 
         <div className="mt-20px md:mt-30px lg:mt-60px">
           <Link href={ISUNFA_ROUTE.DASHBOARD}>
-            <LandingButton type="button" variant="primary">
+            <LandingButton
+              type="button"
+              variant="primary"
+              className={` ${isCtaRefVisible ? 'opacity-100' : 'opacity-0'} transition-all duration-500`}
+            >
               <BsFillRocketTakeoffFill size={20} />
               <p className="text-base font-bold">{t('landing_page_v2:CTA.FREE_TRIAL_BTN')}</p>
             </LandingButton>
@@ -127,7 +154,11 @@ const CTA: React.FC = () => {
       </div>
 
       {/* Info: (20241211 - Julian) CTA Intro Card */}
-      <div className="mt-140px grid grid-cols-1 gap-36px md:mt-80px lg:mt-120px lg:grid-cols-3">
+      <div
+        className={` ${
+          isCtaRefVisible ? 'translate-y-0 opacity-100' : 'translate-y-200px opacity-0'
+        } mt-140px grid grid-cols-1 gap-36px transition-all duration-500 md:mt-80px lg:mt-120px lg:grid-cols-3`}
+      >
         {displayIntroCards}
       </div>
     </div>

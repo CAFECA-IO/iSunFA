@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa6';
@@ -11,6 +11,8 @@ import { LandingButton } from '@/components/landing_page_v2/landing_button';
 
 const TechnicalCarousel: React.FC = () => {
   const { t } = useTranslation('common');
+
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   const carouselData = [
     {
@@ -39,11 +41,30 @@ const TechnicalCarousel: React.FC = () => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isCarouselRefVisible, setIsCarouselRefVisible] = useState(false);
 
   // Info: (20241224 - Julian) 往後翻，如果是第一項則跳到最後一項
   const handleLeftClick = () => setCurrentIndex((prev) => (prev === 0 ? lastIdx : prev - 1));
   // Info: (20241224 - Julian) 往前翻，如果是最後一項則跳到第一項
   const handleRightClick = () => setCurrentIndex((prev) => (prev === lastIdx ? 0 : prev + 1));
+  // Info: (20250108 - Julian) 滾動事件綁定動畫
+  const scrollHandler = () => {
+    if (carouselRef.current) {
+      const rect = (carouselRef.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsCarouselRefVisible(rectTop < windowHeight);
+    }
+  };
+
+  // Info: (20250108 - Julian) 播放動畫
+  useEffect(() => {
+    window.addEventListener('scroll', scrollHandler, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', scrollHandler);
+    };
+  }, []);
 
   useEffect(() => {
     if (isPaused) return undefined;
@@ -57,14 +78,25 @@ const TechnicalCarousel: React.FC = () => {
   }, [isPaused]);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-40px px-16px py-120px md:gap-80px md:px-80px lg:flex-row">
+    <div
+      ref={carouselRef}
+      className="flex flex-col items-center justify-center gap-40px px-16px py-120px md:gap-80px md:px-80px lg:flex-row"
+    >
       {/* Info: (20241224 - Julian) Image */}
-      <div className="relative h-300px w-300px md:h-536px md:w-536px">
+      <div
+        className={`${
+          isCarouselRefVisible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
+        } relative h-300px w-300px transition-all duration-500 md:h-536px md:w-536px`}
+      >
         <Image src="/elements/golden_medal.png" alt="medal_icon" fill objectFit="contain" />
       </div>
 
       {/* Info: (20241224 - Julian) Text */}
-      <div className="flex flex-col">
+      <div
+        className={`${
+          isCarouselRefVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+        }flex flex-col transition-all duration-500`}
+      >
         <LinearGradientText size={LinearTextSize.MD} align={TextAlign.CENTER}>
           {t('landing_page_v2:TECHNICAL_FEATURES.TECHNICAL_PATENTS')}
         </LinearGradientText>
