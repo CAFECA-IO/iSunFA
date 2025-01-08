@@ -82,7 +82,10 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({
             )}
             <div className="flex grow flex-col">
               <p className="text-sm font-medium">{file.name}</p>
-              <p className="text-xs text-gray-400"> {sizeFormatter(file.size)}</p>
+              <p className="text-xs text-text-neutral-mute"> {sizeFormatter(file.size)}</p>
+              {file.status === ProgressStatus.FAILED && file.error && (
+                <p className="text-xs text-text-state-error">{file.error}</p>
+              )}
             </div>
           </div>
           {displayedStatus}

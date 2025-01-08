@@ -25,6 +25,7 @@ export interface IFileUIBeta {
   url: string;
   progress: number; // Info: (20240919 - tzuhan) 上傳進度（0-100）
   status: ProgressStatus; // Info: (20240919 - tzuhan) 是否暫停
+  error?: string;
 }
 
 /**

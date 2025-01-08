@@ -260,8 +260,8 @@ const MyCompanyList = () => {
 
         {isCreateCompanyModalOpen && (
           <CreateCompanyModal
-            isModalOpen={isCreateCompanyModalOpen}
-            toggleModal={toggleCreateCompanyModal}
+            isModalVisible={isCreateCompanyModalOpen}
+            modalVisibilityHandler={toggleCreateCompanyModal}
             getCompanyList={getCompanyList}
           />
         )}

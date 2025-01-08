@@ -49,7 +49,7 @@
     "COMPRESS_IMAGE": "压缩图片失败",
     "UPDATE_FILENAME": "更新文件名失败",
     "PLEASE_FILL_UP_THIS_FORM": "请填写此表格",
-    "REQUIRED_COUNTERPARTY_NAME": "交易对象名称是必填的",
+    "REQUIRED_COUNTERPARTY_NAME": "交易对象名称是必填的"
   },
   "WARNING": {
     "UPLOAD_FAILED": "上传失败",
@@ -146,7 +146,7 @@
     "USE_YOUR_PHONE_AS": "使用您的手机作为",
     "SCANNER": "扫描器",
     "SCAN_THE_QRCODE": "请扫描二维码开始用手机扫描",
-    "FILE_SIZE_EXCEEDED": "文件大小超过 4 MB 上限",
+    "FILE_SIZE_EXCEEDED": "文件上传失败：文件超过大小限制。请上传较小的文件",
     "INDEX": "No.{{index}}",
     "PREVIEW": "预览"
   },

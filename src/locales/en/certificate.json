@@ -146,7 +146,7 @@
     "USE_YOUR_PHONE_AS": "Use Your Phone as ",
     "SCANNER": "Scanner",
     "SCAN_THE_QRCODE": "Please scan the QRcode to start scanning with your phone",
-    "FILE_SIZE_EXCEEDED": "File size exceeded 4 MB limit",
+    "FILE_SIZE_EXCEEDED": "File upload failed: The file exceeds the size limit. Please upload a smaller file.",
     "INDEX": "No.{{index}}",
     "PREVIEW": "Preview"
   },
