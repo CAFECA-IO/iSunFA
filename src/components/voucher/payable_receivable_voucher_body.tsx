@@ -32,29 +32,39 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
     useState<null | SortOrder>(null);
   // Info: (20241122 - Julian) 未收/未付金額
   const [remainSort, setRemainSort] = useState<null | SortOrder>(null);
-  const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
+  // const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
   const [voucherList, setVoucherList] = useState<IVoucherBeta[]>([]);
+  const [selectedSort, setSelectedSort] = useState<
+    | {
+        by: SortBy;
+        order: SortOrder;
+      }
+    | undefined
+  >();
 
   useEffect(() => {
+    let sort: { by: SortBy; order: SortOrder } | undefined;
     // Info: (20241230 - Julian) 如果有其他排序，則清除日期排序
     const newDateSort =
       !payReceiveSort && !payReceiveAlreadyHappenedSort && !remainSort && dateSort
         ? dateSort
         : null;
     setDateSort(newDateSort);
-
-    // Info: (20241230 - Julian) 如果有日期排序，則清除其他排序
-    const newPayReceiveSort =
-      !dateSort && payReceiveSort
-        ? [{ sort: SortBy.PAY_RECEIVE_TOTAL, sortOrder: payReceiveSort }]
-        : [];
-    const newPayReceiveAlreadyHappenedSort =
-      !dateSort && payReceiveAlreadyHappenedSort
-        ? [{ sort: SortBy.PAY_RECEIVE_ALREADY_HAPPENED, sortOrder: payReceiveAlreadyHappenedSort }]
-        : [];
-    const newRemainSort =
-      !dateSort && remainSort ? [{ sort: SortBy.PAY_RECEIVE_REMAIN, sortOrder: remainSort }] : [];
-    setOtherSorts([...newPayReceiveSort, ...newPayReceiveAlreadyHappenedSort, ...newRemainSort]);
+    if (newDateSort) {
+      sort = { by: SortBy.DATE, order: newDateSort };
+    } else {
+      // Info: (20241230 - Julian) 如果有日期排序，則清除其他排序
+      if (payReceiveSort) {
+        sort = { by: SortBy.PAY_RECEIVE_TOTAL, order: payReceiveSort };
+      }
+      if (payReceiveAlreadyHappenedSort) {
+        sort = { by: SortBy.PAY_RECEIVE_ALREADY_HAPPENED, order: payReceiveAlreadyHappenedSort };
+      }
+      if (remainSort) {
+        sort = { by: SortBy.PAY_RECEIVE_REMAIN, order: remainSort };
+      }
+    }
+    setSelectedSort(sort);
   }, [payReceiveSort, payReceiveAlreadyHappenedSort, remainSort, dateSort]);
 
   const voucherTabs = Object.values(PayableReceivableTabs).map((value) =>
@@ -126,8 +136,11 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
+          /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
           dateSort={dateSort}
           otherSorts={otherSorts}
+          */
+          sort={selectedSort}
         />
         {/* Info: (20240924 - Julian) List */}
         {displayVoucherList}
