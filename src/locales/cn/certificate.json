@@ -1,6 +1,6 @@
 {
   "LIST": {
-    "INVOICE_TOTAL_PRICE": "发票总价",
+    "INVOICE_TOTAL_PRICE": "凭证总价",
     "EXPORT_CERTIFICATES": "导出发票"
   },
   "TAB": {
@@ -9,10 +9,10 @@
   },
   "TABLE": {
     "DATE": "日期",
-    "INVOICE_NAME": "发票名称",
-    "INVOICE_NUMBER": "发票编号",
+    "INVOICE_NAME": "凭证名称",
+    "INVOICE_NUMBER": "凭证编号",
     "COUNTERPARTY": "交易对象",
-    "INVOICE_TYPE": "发票类型",
+    "INVOICE_TYPE": "凭证类型",
     "TAX": "税额",
     "AMOUNT": "金额",
     "DEDUCTABLE": "可抵扣税额",
@@ -59,7 +59,7 @@
   },
   "TITLE": {
     "UPLOAD": "上传发票",
-    "SELECT": "选择一个或多个发票",
+    "SELECT": "上传凭证",
     "LIST": "凭证列表"
   },
   "EDIT": {
@@ -68,8 +68,8 @@
     "DATE": "发票日期",
     "INPUT": "进项",
     "OUTPUT": "销项",
-    "INVOICE_NAME": "发票名称",
-    "INVOICE_NUMBER": "发票编号",
+    "INVOICE_NAME": "凭证名称",
+    "INVOICE_NUMBER": "凭证编号",
     "PRICE_BEFORE_TAX": "税前价格",
     "TAX": "税额",
     "TAXABLE": "应税金额",
@@ -77,7 +77,7 @@
     "COUNTERPARTY": "交易对象（客户/供应商）",
     "ID_NUMBER": "统一编号",
     "NAME": "名称",
-    "INVOICE_TYPE": "发票类型",
+    "INVOICE_TYPE": "凭证类型",
     "DEDUCTIBLE": "可抵扣税额",
     "SUCCESS": "您的发票信息已更新。",
     "TAXABLE_5": "应税金额（5%）",
@@ -147,7 +147,8 @@
     "SCAN_THE_QRCODE": "请扫描二维码开始用手机扫描",
     "FILE_SIZE_EXCEEDED": "文件大小超过 4 MB 上限",
     "INDEX": "No.{{index}}",
-    "PREVIEW": "预览"
+    "PREVIEW": "预览",
+    "DELETE": "删除"
   },
   "CREATE": {
     "FAILED": "创建失败"
