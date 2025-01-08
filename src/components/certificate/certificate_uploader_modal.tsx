@@ -29,9 +29,10 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
 
   const handleUploadCancelled = useCallback(() => {
     setFiles([]);
+    setProgress(0);
     messageModalVisibilityHandler();
     onClose();
-  }, [setFiles, messageModalVisibilityHandler]);
+  }, [messageModalVisibilityHandler]);
 
   const handleClose = () => {
     if (files.length > 0 && files.some((file) => file.status === ProgressStatus.FAILED)) {
@@ -45,7 +46,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
       });
       messageModalVisibilityHandler();
     } else {
-      onClose();
+      handleUploadCancelled();
     }
   };
 
@@ -73,9 +74,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
 
   // Info: (20241213 - tzuhan) 工具函數：確認操作
   const onConfirm = () => {
-    setFiles([]);
-    setProgress(0);
-    onBack();
+    handleClose();
   };
 
   // Info: (20241213 - tzuhan) 計算進度條進度
@@ -99,18 +98,24 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
   // Info: (20241213 - tzuhan) 渲染文件列表
   const renderFileList = () => {
     if (inProgressFiles.length === 0) {
-      return <div className="text-center text-gray-500">{t('certificate:UPLOAD.NO_FILE')}</div>;
+      return (
+        <div className="text-center text-text-neutral-mute">{t('certificate:UPLOAD.NO_FILE')}</div>
+      );
     }
-    return inProgressFiles.map((file, index) => (
-      <UploadFileItem
-        key={`uploading-${index + 1}`}
-        file={file}
-        onPauseToggle={() => updateFileStatus(index)}
-        onDelete={() => deleteFile(index)}
-        withoutImage
-        withoutBorder
-      />
-    ));
+    return (
+      files
+        // .filter((file) => file.status !== ProgressStatus.SUCCESS)
+        .map((file, index) => (
+          <UploadFileItem
+            key={`uploading-${index + 1}`}
+            file={file}
+            onPauseToggle={() => updateFileStatus(index)}
+            onDelete={() => deleteFile(index)}
+            withoutImage
+            withoutBorder
+          />
+        ))
+    );
   };
 
   return (
@@ -170,7 +175,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
             type="button"
             variant="secondaryOutline"
             className="gap-x-4px px-4 py-2"
-            onClick={onClose}
+            onClick={handleClose}
           >
             {t('common:COMMON.CANCEL')}
           </Button>
