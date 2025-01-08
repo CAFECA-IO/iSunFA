@@ -3,8 +3,6 @@ import { useUserCtx } from '@/contexts/user_context';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-// import 'bootstrap/dist/css/bootstrap.min.css';
-// import 'bootstrap-icons/font/bootstrap-icons.css';
 import LineChart from '@/components/cash_flow_statement_report_body/line_chart';
 import BarChart from '@/components/cash_flow_statement_report_body/bar_chart';
 import Image from 'next/image';
@@ -34,7 +32,8 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
 }) => {
-  const { t } = useTranslation('reports');
+  const { t, i18n } = useTranslation('reports'); // Info: (20250108 - Anna) 使用 i18n 來獲取當前語言
+  const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -270,7 +269,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   const renderedInvestmentRatio = () => {
     return (
       <div className="mt-4 text-text-neutral-primary">
-        <h3 className="text-sm font-semibold leading-6">不動產、廠房、設備的收支項目：</h3>
+        <h3 className="text-sm font-semibold leading-6">{t('reports:REPORTS.PPE')}</h3>
         <ol className="list-decimal pl-6 pt-2 text-sm font-normal leading-5 text-text-neutral-primary">
           {firstThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
@@ -279,7 +278,9 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
           ))}
         </ol>
 
-        <h3 className="mt-4 text-sm font-semibold leading-6">策略性投資項目：</h3>
+        <h3 className="mt-4 text-sm font-semibold leading-6">
+          {t('reports:REPORTS.STRATEGIC_INVESTMENTS')}
+        </h3>
         <ol className="list-decimal pl-6 pt-2 text-sm font-normal leading-5 text-text-neutral-primary">
           {secondThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
@@ -287,7 +288,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             </li>
           ))}
         </ol>
-        <h3 className="mt-4 text-sm font-semibold leading-6">其他：</h3>
+        <h3 className="mt-4 text-sm font-semibold leading-6">{t('reports:REPORTS.OTHERS')}</h3>
         <ol className="list-decimal pl-6 pt-2 text-sm font-normal leading-5 text-text-neutral-primary">
           {thirdThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
@@ -310,7 +311,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         <tbody>
           <tr>
             <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
-              營業活動現金流入
+              {t('reports:REPORTS.CASH_INFLOWS_FROM_OPERATING')}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow === 0
@@ -333,7 +334,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
           </tr>
           <tr>
             <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
-              不動產、廠房及設備
+              {t('reports:REPORTS.PROPERTY_PLANT_EQUIPMENT')}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe === 0
@@ -352,7 +353,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
           </tr>
           <tr>
             <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
-              無形資產支出
+              {t('reports:REPORTS.EXPENDITURES_ON_INTANGIBLE_ASSETS')}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset === 0
@@ -375,7 +376,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
           </tr>
           <tr>
             <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
-              自由現金流量
+              {t('reports:REPORTS.AVAILABLE_CASH_FLOW')}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash === 0
@@ -404,10 +405,10 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <tr className="bg-surface-brand-primary-soft">
               <th className="w-300px border border-stroke-brand-secondary-soft p-10px text-left text-xxs font-semibold leading-5 text-text-neutral-secondary"></th>
               <th className="w-300px border border-stroke-brand-secondary-soft p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
-                {currentYear}年度
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: currentYear })}
               </th>
               <th className="w-300px border border-stroke-brand-secondary-soft p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
-                {previousYear}年度
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: previousYear })}
               </th>
             </tr>
           </thead>
@@ -424,7 +425,8 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
         <div className="ml-auto flex items-center gap-24px">
           <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
-          <PrintButton onClick={printFn} disabled={false} />
+          {/* Info: (20241021 - Anna) 列印按鈕：只有中文可用 */}
+          <PrintButton onClick={printFn} disabled={!isChinese} />
         </div>
       </div>
     );
@@ -487,7 +489,9 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                 width={24}
                 height={24}
               />
-              <p className="my-auto items-center text-center text-sm font-semibold">A和B比例關係</p>
+              <p className="my-auto items-center text-center text-sm font-semibold">
+                {t('reports:REPORTS.RATIO_A_B')}
+              </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
             <div className="mb-16 flex">
@@ -495,12 +499,18 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                 <LineChart data={lineChartData} labels={lineChartLabels} />
               </div>
               <div className="mt-18px w-2/5 pl-8">
-                <p className="mb-1 text-sm">A. 稅前淨利(淨損)+折舊及攤銷費用-支付的所得稅</p>
-                <p className="text-sm">B. 營業活動的現金流入(流出)</p>
+                <p className="mb-1 text-sm">
+                  <span className="mr-1">A.</span>
+                  <span>{t('reports:REPORTS.PBT_DA_TAXES_PAID')}</span>
+                </p>
+                <p className="text-sm">
+                  <span className="mr-1">B.</span>
+                  <span>{t('reports:REPORTS.OPERATION_CASH_FLOW')}</span>
+                </p>
               </div>
             </div>
             <div className="mb-1 mt-2 flex justify-between font-semibold text-surface-brand-secondary">
-              <p>圖表金額來源彙總：</p>
+              <p>{t('reports:REPORTS.CHART_SOURCE')}</p>
             </div>
             <table className="relative w-full border-collapse bg-white">
               <thead>
@@ -532,7 +542,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
-                    稅前淨利（淨損）
+                    {t('reports:REPORTS.PBT')}
                   </td>
                   {Object.entries(
                     reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax
@@ -551,7 +561,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
-                    折舊及攤銷費用
+                    {t('reports:REPORTS.DA')}
                   </td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
@@ -580,7 +590,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
-                    支付的所得稅
+                    {t('reports:REPORTS.INCOME_TAXES_PAID')}
                   </td>
                   {Object.entries(reportFinancial.otherInfo.operatingStabilized.tax).map(
                     ([year, value]) => (
@@ -612,7 +622,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
-                    營業活動的現金
+                    {t('reports:REPORTS.CASH_FROM_OPERATING')}
                   </td>
                   {Object.entries(
                     reportFinancial.otherInfo.operatingStabilized.operatingIncomeCashFlow
@@ -642,7 +652,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
-                    A和B比例關係
+                    {t('reports:REPORTS.RATIO_A_B')}
                   </td>
                   {Object.entries(reportFinancial.otherInfo.operatingStabilized.ratio).map(
                     ([year, value]) => (
@@ -683,11 +693,14 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                 height={24}
               />
               <p className="my-auto items-end font-semibold text-text-neutral-secondary">
-                {curYear}年度投資活動項目佔比
+                {t('reports:REPORTS.INVESTMENT_PROPORTION', { year: curYear })}
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
-            <BarChart data={curBarChartData} labels={curBarChartLabels} />
+            <BarChart
+              data={curBarChartData}
+              labels={curBarChartLabels.map((label) => t(`reports:REPORTS.${label}`))}
+            />
           </div>
           <div className="w-1/2">
             <div className="relative mb-0 flex items-center pb-1">
@@ -699,15 +712,18 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                 height={24}
               />
               <p className="my-auto items-end font-semibold text-text-neutral-secondary">
-                {preYear}年度投資活動項目佔比
+                {t('reports:REPORTS.INVESTMENT_PROPORTION', { year: preYear })}
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
-            <BarChart data={preBarChartData} labels={preBarChartLabels} />
+            <BarChart
+              data={preBarChartData}
+              labels={preBarChartLabels.map((label) => t(`reports:REPORTS.${label}`))}
+            />
           </div>
         </div>
         <div className="mb-16px mt-4 font-semibold text-surface-brand-secondary">
-          <p className="font-semibold">{curYear}年度上圖組成項目之細項及iSunFa認為：</p>
+          <p className="font-semibold">{t('reports:REPORTS.ISUNFA_INSIGHTS', { year: curYear })}</p>
         </div>
         <div id="5" className="relative overflow-hidden">
           <section className="relative mx-3 text-text-neutral-secondary">
@@ -721,7 +737,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     <div id="6" className="relative overflow-hidden">
       <section className="relative mx-3 text-text-neutral-secondary">
         <div className="mb-4 mt-32px text-center font-semibold leading-5 text-surface-brand-secondary">
-          <p className="text-start font-semibold">年度產生的自由現金：公司可以靈活運用的現金</p>
+          <p className="text-start font-semibold">{t('reports:REPORTS.FREE_CASH_FLOW')}</p>
           {renderedFreeCashFlow(curYear, preYear)}
         </div>
       </section>
