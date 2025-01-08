@@ -222,7 +222,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const renderedPage10part1 = () => {
     return (
       <div className="mt-4 text-text-neutral-primary">
-        <h3 className="text-xs font-semibold leading-6">不動產、廠房、設備的收支項目：</h3>
+        <h3 className="text-xs font-semibold leading-6">{t('reports:REPORTS.PPE')}</h3>
         <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
           {firstThought?.split('\n').map((line, index) => (
             <li key={`${line + index}`} className="mb-2 ml-1">
@@ -231,7 +231,9 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           ))}
         </ol>
 
-        <h3 className="mt-4 text-xs font-semibold leading-6">策略性投資項目：</h3>
+        <h3 className="mt-4 text-xs font-semibold leading-6">
+          {t('reports:REPORTS.STRATEGIC_INVESTMENTS')}
+        </h3>
         <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
           {secondThought?.split('\n').map((line, index) => (
             <li key={`${line + index}`} className="mb-2 ml-1">
@@ -239,7 +241,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             </li>
           ))}
         </ol>
-        <h3 className="mt-4 text-xs font-semibold leading-6">其他：</h3>
+        <h3 className="mt-4 text-xs font-semibold leading-6">{t('reports:REPORTS.OTHERS')}</h3>
         <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
           {thirdThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
@@ -356,10 +358,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             <tr className="bg-surface-brand-primary-soft">
               <th className="border border-stroke-brand-secondary-soft p-10px text-left text-xs font-semibold leading-5 text-text-neutral-secondary"></th>
               <th className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold leading-5 text-text-neutral-secondary">
-                {currentYear}年度
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: currentYear })}
               </th>
               <th className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold leading-5 text-text-neutral-secondary">
-                {previousYear}年度
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: previousYear })}
               </th>
             </tr>
           </thead>
@@ -655,7 +657,9 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 width={24}
                 height={24}
               />
-              <p className="my-auto items-center text-center text-xs font-semibold">A和B比例關係</p>
+              <p className="my-auto items-center text-center text-xs font-semibold">
+                {t('reports:REPORTS.RATIO_A_B')}
+              </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
             <div className="mb-16 flex">
@@ -663,12 +667,18 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 <LineChart data={lineChartData} labels={lineChartLabels} />
               </div>
               <div className="mt-18px w-2/5 pl-8 text-xs">
-                <p className="mb-1 text-xs">A. 稅前淨利(淨損)+折舊及攤銷費用-支付的所得稅</p>
-                <p className="text-xs">B. 營業活動的現金流入(流出)</p>
+                <p className="mb-1 text-xs">
+                  <span className="mr-1">A.</span>
+                  <span>{t('reports:REPORTS.PBT_DA_TAXES_PAID')}</span>
+                </p>
+                <p className="text-xs">
+                  <span className="mr-1">B.</span>
+                  <span>{t('reports:REPORTS.OPERATION_CASH_FLOW')}</span>
+                </p>
               </div>
             </div>
             <div className="mb-1 mt-2 flex justify-between text-xs font-semibold text-surface-brand-secondary">
-              <p>圖表金額來源彙總：</p>
+              <p>{t('reports:REPORTS.CHART_SOURCE')}</p>
             </div>
             <table className="relative w-full border-collapse bg-white">
               <thead>
@@ -700,7 +710,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    稅前淨利（淨損）
+                    {t('reports:REPORTS.PBT')}
                   </td>
                   {Object.entries(
                     financialReport.otherInfo.operatingStabilized.beforeIncomeTax
@@ -721,7 +731,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    折舊及攤銷費用
+                    {t('reports:REPORTS.DA')}
                   </td>
                   {Object.keys(financialReport.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
@@ -750,7 +760,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    支付的所得稅
+                    {t('reports:REPORTS.INCOME_TAXES_PAID')}
                   </td>
                   {Object.entries(financialReport.otherInfo.operatingStabilized.tax).map(
                     ([year, value]) => (
@@ -784,7 +794,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    營業活動的現金
+                    {t('reports:REPORTS.CASH_FROM_OPERATING')}
                   </td>
                   {Object.entries(
                     financialReport.otherInfo.operatingStabilized.operatingIncomeCashFlow
@@ -815,7 +825,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 </tr>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    A和B比例關係
+                    {t('reports:REPORTS.RATIO_A_B')}
                   </td>
                   {Object.entries(financialReport.otherInfo.operatingStabilized.ratio).map(
                     ([year, value]) => (
@@ -876,7 +886,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 height={24}
               />
               <p className="my-auto items-end text-xs font-semibold text-text-neutral-secondary">
-                {curYear}年度投資活動項目佔比
+                {t('reports:REPORTS.INVESTMENT_PROPORTION', { year: curYear })}
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
@@ -897,7 +907,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 height={24}
               />
               <p className="my-auto items-end text-xs font-semibold text-text-neutral-secondary">
-                {preYear}年度投資活動項目佔比
+                {t('reports:REPORTS.INVESTMENT_PROPORTION', { year: preYear })}
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
@@ -966,7 +976,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-3 text-xs text-text-neutral-secondary">
         <div className="mb-4 mt-32px text-center text-xs font-semibold leading-5 text-surface-brand-secondary">
           <p className="text-start text-xs font-semibold">
-            五、年度產生的自由現金：公司可以靈活運用的現金
+            五、{t('reports:REPORTS.FREE_CASH_FLOW')}
           </p>
           {renderedPage11part2(curYear, preYear)}
           <div className="relative -z-10">
