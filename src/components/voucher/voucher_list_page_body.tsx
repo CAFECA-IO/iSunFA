@@ -38,7 +38,6 @@ const VoucherListPageBody: React.FC = () => {
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
   const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
-  const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
   // Info: (20250107 - Julian) 是否顯示沖銷傳票
   // ToDo: (20250107 - Julian) API query
   const [isHideReversals, setIsHideReversals] = useState(true);
