@@ -6,7 +6,6 @@
     "dev": "next dev",
     "build": "npm run generate && next build",
     "generate": "prisma generate",
-    "database": "ts-node  -r tsconfig-paths/register --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
     "start": "next start",
     "lint": "next lint && eslint --fix --ext .js,.jsx,.ts,.tsx .",
     "test": "jest",
