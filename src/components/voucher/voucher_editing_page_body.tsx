@@ -664,7 +664,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: certificate`,
         closeable: true,
       });
       document.body.scrollTop = 0;
@@ -674,7 +674,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: date`,
         closeable: true,
       });
       if (dateRef.current) dateRef.current.scrollIntoView();
@@ -690,7 +690,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: line items`,
         closeable: true,
       });
     } else if (isAssetRequired && assetList.length === 0) {
@@ -699,7 +699,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: asset`,
         closeable: true,
       });
       if (assetRef.current) assetRef.current.scrollIntoView();
@@ -709,7 +709,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: reverse`,
         closeable: true,
       });
     } else {

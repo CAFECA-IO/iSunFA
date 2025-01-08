@@ -194,6 +194,7 @@
     "PAID_AMOUNT": "已付金额",
     "REMAIN_AMOUNT": "剩余金额",
     "REVERSE": "冲销",
+    "DELETED": "已删除",
     "EXPORT_VOUCHER_MODAL_TITLE": "汇出传票",
     "EXPORT_VOUCHER_MODAL_SUBTITLE": "请选择您要汇出的传票",
     "TOAST_EXPORT_SUCCESS": "传票已成功汇出。",
@@ -211,7 +212,19 @@
     "RECEIVING_TAB": "应收传票",
     "PAYMENT_TAB": "应付传票",
     "SELECT": "选择",
-    "SELECT_ALL": "全选"
+    "SELECT_ALL": "全选",
+    "UNSELECT_ALL": "取消全选",
+    "HIDE_VOUCHER_TOGGLE": "隐藏已删除的传票和其相关冲销分录",
+    "WARNING_MODAL_TITLE": "警告",
+    "AT_LEAST_ONE_VOUCHER_CONTENT": "请至少选择一张传票",
+    "DELETE_ONE_VOUCHER_TITLE": "您确定要删除{{voucherNo}}吗？",
+    "DELETE_ONE_VOUCHER_CONTENT": "与此传票相关的所有资产也将被删除。",
+    "DELETE_ONE_VOUCHER_WARNING": "删除后将自动生成一张冲销分录，原始传票将保留以供参考。",
+    "DELETE_ONE_VOUCHER_SUBMIT_BTN": "是的，删除此传票",
+    "DELETE_MULTIPLE_VOUCHER_TITLE": "您确定要删除这{{count}}张传票吗？",
+    "DELETE_MULTIPLE_VOUCHER_CONTENT": "与这些传票相关的所有资产也将被删除。",
+    "DELETE_MULTIPLE_VOUCHER_WARNING": "删除后将自动生成冲销分录，原始传票将保留以供参考。",
+    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "是的，删除这些传票"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增传票",

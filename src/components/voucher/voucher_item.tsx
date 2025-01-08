@@ -1,13 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import CalendarIcon from '@/components/calendar_icon/calendar_icon';
-import { numberWithCommas } from '@/lib/utils/common';
+import { useTranslation } from 'next-i18next';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
+import { HiCheck } from 'react-icons/hi';
+import CalendarIcon from '@/components/calendar_icon/calendar_icon';
+import { numberWithCommas } from '@/lib/utils/common';
 import { VoucherType } from '@/constants/account';
 import { IVoucherUI } from '@/interfaces/voucher';
-import { HiCheck } from 'react-icons/hi';
 
 interface IVoucherItemProps {
   voucher: IVoucherUI;
@@ -16,12 +17,14 @@ interface IVoucherItemProps {
 }
 
 const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCheckBoxOpen }) => {
+  const { t } = useTranslation('common');
+
   const {
     voucherDate,
     voucherNo,
     voucherType,
     note,
-    counterParty,
+    // counterParty,
     issuer,
     unRead,
     lineItemsInfo,
@@ -35,30 +38,39 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const checkboxHandler = () => selectHandler(voucher.id);
 
   const displayedDate = (
-    <div className="relative top-10px flex justify-center">
+    <div className="relative flex justify-center">
       <CalendarIcon timestamp={voucherDate} unRead={unRead} />
     </div>
   );
 
+  // ToDo: (20250107 - Julian) 標記為已刪除的條件 = ？
+  const isDisplayDeleteTag = false ? (
+    <div className="rounded-full bg-badge-surface-soft-primary px-8px py-4px text-xs text-badge-text-primary-solid">
+      {t('journal:VOUCHER.DELETED')}
+    </div>
+  ) : null;
+
   const displayedVoucherNo =
     voucherType === VoucherType.RECEIVE ? (
-      <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
+      <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
         <FaDownload size={14} className="text-surface-state-success-dark" />
         <p className="text-sm text-text-state-success-solid">{voucherNo}</p>
       </div>
     ) : voucherType === VoucherType.EXPENSE ? (
-      <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
+      <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
         <FaUpload size={14} className="text-surface-state-error-dark" />
         <p className="text-sm text-text-state-error-solid">{voucherNo}</p>
       </div>
     ) : (
-      <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
+      <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
         <FiRepeat size={14} className="text-surface-brand-secondary" />
         <p className="text-sm text-badge-text-secondary-solid">{voucherNo}</p>
       </div>
     );
 
-  const displayedNote = <p className="relative top-20px">{note}</p>;
+  const displayedNote = (
+    <p className="text-xs text-text-neutral-primary">{note !== '' ? note : '-'}</p>
+  );
 
   // Info: (20241220 - Julian) 借方排在前面，貸方排在後面
   const lineItems = lineItemsInfo.lineItems.sort((a, b) => {
@@ -75,7 +87,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const debit = lineItems.map((item) => (item.debit ? item.amount : 0));
 
   const displayedAccounting = (
-    <div className="flex flex-col items-start gap-4px py-12px font-semibold text-text-neutral-tertiary">
+    <div className="flex flex-col items-start gap-4px py-24px text-xs font-semibold text-text-neutral-tertiary">
       {accounting.map((account) => (
         <p key={account?.code}>
           {account?.code} - {account?.name}
@@ -86,7 +98,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
 
   const displayedDebit = (
     <>
-      <div className="flex flex-col text-right">
+      <div className="flex flex-col text-right text-xs">
         {debit.map((de) => (
           <p
             key={de}
@@ -102,7 +114,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
 
   const displayedCredit = (
     <>
-      <div className="flex flex-col text-right">
+      <div className="flex flex-col text-right text-xs">
         {credit.map((cre) => (
           <p
             key={cre}
@@ -114,19 +126,19 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       </div>
       <hr className="my-10px border-divider-stroke-lv-1" />
       {/* Info: (20240920 - Julian) Total */}
-      <p className="text-right text-text-neutral-primary">{numberWithCommas(total)}</p>
+      <p className="text-right text-xs text-text-neutral-primary">{numberWithCommas(total)}</p>
     </>
   );
 
-  const displayedCounterparty = (
-    <div className="relative top-20px flex flex-col items-center gap-4px">
-      <p className="text-text-neutral-tertiary">{counterParty.companyId}</p>
-      <p className="text-text-neutral-primary">{counterParty.name}</p>
-    </div>
-  );
+  // const displayedCounterparty = (
+  //   <div className="relative top-20px flex flex-col items-center gap-4px">
+  //     <p className="text-text-neutral-tertiary">{counterParty.companyId}</p>
+  //     <p className="text-text-neutral-primary">{counterParty.name}</p>
+  //   </div>
+  // );
 
   const displayedIssuer = (
-    <div className="relative top-20px flex items-center justify-center gap-4px text-text-neutral-primary">
+    <div className="flex items-center justify-center gap-4px px-8px text-xs text-text-neutral-primary">
       <Image src={issuer.avatar} alt="avatar" width={14} height={14} className="rounded-full" />
       <p>{issuer.name}</p>
     </div>
@@ -135,11 +147,16 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const content = (
     <>
       {/* Info: (20240920 - Julian) Issued Date */}
-      <div className="table-cell text-center">{displayedDate}</div>
+      <div className="table-cell text-center align-middle">{displayedDate}</div>
       {/* Info: (20240920 - Julian) Voucher No */}
-      <div className="table-cell text-center">{displayedVoucherNo}</div>
+      <div className="table-cell text-center align-middle">
+        <div className="flex flex-col items-start gap-10px px-8px">
+          {displayedVoucherNo}
+          {isDisplayDeleteTag}
+        </div>
+      </div>
       {/* Info: (20240920 - Julian) Note */}
-      <div className="table-cell text-center">{displayedNote}</div>
+      <div className="table-cell text-center align-middle">{displayedNote}</div>
       {/* Info: (20240920 - Julian) Accounting */}
       <div className="table-cell">{displayedAccounting}</div>
       {/* Info: (20240920 - Julian) Debit */}
@@ -147,9 +164,9 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       {/* Info: (20240920 - Julian) Credit */}
       <div className="table-cell">{displayedCredit}</div>
       {/* Info: (20240920 - Julian) Counterparty */}
-      <div className="table-cell">{displayedCounterparty}</div>
+      {/* <div className="table-cell">{displayedCounterparty}</div> */}
       {/* Info: (20240920 - Julian) Issuer */}
-      <div className="table-cell">{displayedIssuer}</div>
+      <div className="table-cell align-middle">{displayedIssuer}</div>
     </>
   );
 
