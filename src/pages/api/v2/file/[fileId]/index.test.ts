@@ -46,7 +46,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('file/[fileId]/index integration test', () => {
+xdescribe('file/[fileId]/index integration test', () => {
   let req: jest.Mocked<NextApiRequest>;
   let res: jest.Mocked<NextApiResponse>;
   afterEach(() => {

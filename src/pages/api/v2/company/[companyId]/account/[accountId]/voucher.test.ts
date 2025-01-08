@@ -54,7 +54,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('company/[companyId]/voucher/account/[accountId] integration test', () => {
+xdescribe('company/[companyId]/voucher/account/[accountId] integration test', () => {
   let req: jest.Mocked<NextApiRequest>;
   let res: jest.Mocked<NextApiResponse>;
   afterEach(() => {

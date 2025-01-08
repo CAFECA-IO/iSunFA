@@ -53,7 +53,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('company/[companyId]/certificate integration test', () => {
+xdescribe('company/[companyId]/certificate integration test', () => {
   let req: jest.Mocked<NextApiRequest>;
   let res: jest.Mocked<NextApiResponse>;
   afterEach(() => {

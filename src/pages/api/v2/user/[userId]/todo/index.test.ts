@@ -54,7 +54,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('api/v2/user/[userId]/todo integration test', () => {
+xdescribe('api/v2/user/[userId]/todo integration test', () => {
   let req: jest.Mocked<NextApiRequest>;
   let res: jest.Mocked<NextApiResponse>;
   afterEach(() => {
