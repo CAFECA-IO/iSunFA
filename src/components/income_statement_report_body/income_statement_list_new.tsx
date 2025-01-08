@@ -29,14 +29,15 @@ export interface FinancialReportItemWithChildren extends FinancialReportItem {
 
 interface FilterBarProps {
   printFn: () => void;
+  isChinese: boolean; // Info: (20250108 - Anna) 添加 isChinese 屬性
 }
-const FilterBar = ({ printFn }: FilterBarProps) => {
+const FilterBar = ({ printFn, isChinese }: FilterBarProps) => {
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   return (
     <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
       <div className="ml-auto flex items-center gap-24px">
         <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
-        <PrintButton onClick={printFn} disabled={false} />
+        <PrintButton onClick={printFn} disabled={!isChinese} />
       </div>
     </div>
   );
@@ -76,7 +77,8 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   printRef,
   printFn,
 }) => {
-  const { t } = useTranslation('reports');
+  const { t, i18n } = useTranslation('reports');
+  const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
   // Deprecated: (20241205 - Liz)
   // eslint-disable-next-line no-console
   console.log('isPrinting:', isPrinting);
@@ -666,7 +668,8 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
 
   return (
     <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
-      <FilterBar printFn={printFn} />
+      {/* Info: (20250108 - Anna) 傳遞 isChinese */}
+      <FilterBar printFn={printFn} isChinese={isChinese} />
       {/* Info: (20241202 - Anna)  渲染打印模板，通過 CSS 隱藏 */}
       <div ref={printRef} className="hidden border-2 border-rose-500 print:block">
         <IncomeStatementA4Template
