@@ -194,6 +194,7 @@
     "PAID_AMOUNT": "Paid Amount",
     "REMAIN_AMOUNT": "Remain Amount",
     "REVERSE": "Reverse",
+    "DELETED": "Deleted",
     "EXPORT_VOUCHER_MODAL_TITLE": "Export Voucher",
     "EXPORT_VOUCHER_MODAL_SUBTITLE": "Please select the vouchers you want to export",
     "TOAST_EXPORT_SUCCESS": "Voucher exported successfully.",
@@ -211,7 +212,19 @@
     "RECEIVING_TAB": "Receiving",
     "PAYMENT_TAB": "Payment",
     "SELECT": "Select",
-    "SELECT_ALL": "Select All"
+    "SELECT_ALL": "Select All",
+    "UNSELECT_ALL": "Unselect All",
+    "HIDE_VOUCHER_TOGGLE": "Hide deleted vouchers and their reversals.",
+    "WARNING_MODAL_TITLE": "Warning",
+    "AT_LEAST_ONE_VOUCHER_CONTENT": "Please select at least one voucher to delete",
+    "DELETE_ONE_VOUCHER_TITLE": "Do you really want to delete {{voucherNo}}?",
+    "DELETE_ONE_VOUCHER_CONTENT": "All the assets that are connected to this voucher will be deleted too.",
+    "DELETE_ONE_VOUCHER_WARNING": "A reversal voucher will be created to offset the deleted voucher. The original voucher will remain visible for reference.",
+    "DELETE_ONE_VOUCHER_SUBMIT_BTN": "Yes, delete the voucher.",
+    "DELETE_MULTIPLE_VOUCHER_TITLE": "Do you really want to delete {{count}} vouchers?",
+    "DELETE_MULTIPLE_VOUCHER_CONTENT": "All the assets that are connected to these vouchers will be deleted too.",
+    "DELETE_MULTIPLE_VOUCHER_WARNING": "Reversal vouchers will be created to offset the deleted vouchers. The original vouchers will remain visible for reference.",
+    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "Yes, delete these vouchers."
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "Add New Voucher",
