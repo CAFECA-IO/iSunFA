@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import {
   LinearGradientText,
@@ -13,6 +13,7 @@ interface ITechnicalCardProps {
   content: string;
   imageSrc: string;
   imageAlt: string;
+  isShowAnimation: boolean;
 }
 
 const TechnicalCard: React.FC<ITechnicalCardProps> = ({
@@ -21,9 +22,17 @@ const TechnicalCard: React.FC<ITechnicalCardProps> = ({
   content,
   imageSrc,
   imageAlt,
+  isShowAnimation,
 }) => {
+  // Info: (20250108 - Julian) 第一張卡片(first)由右邊滑入，第二張卡片(even)由下方滑入，第三張卡片(last)由左邊滑入
+  const cardAnim = isShowAnimation
+    ? 'first:translate-x-0 even:translate-y-0 last:translate-x-0 opacity-100'
+    : 'first:translate-x-full even:translate-y-full last:-translate-x-full opacity-0';
+
   return (
-    <div className="relative mx-auto flex w-full flex-col items-center gap-12px rounded-lg border bg-cloudy-glass px-45px py-50px backdrop-blur-md md:w-450px lg:shadow-technical-card lg:last:col-span-2">
+    <div
+      className={`${cardAnim} relative mx-auto flex w-full flex-col items-center gap-12px rounded-lg border bg-cloudy-glass px-45px py-50px backdrop-blur-md transition-all duration-500 md:w-450px lg:shadow-technical-card lg:last:col-span-2`}
+    >
       {/* Info: (20241223 - Julian) Brilliant square */}
       <div className="absolute -top-50px h-85px w-130px rounded-sm border-b border-t border-landing-page-white bg-landing-btn shadow-landing-btn-hover"></div>
       {/* Info: (20241223 - Julian) Spotlight */}
@@ -83,6 +92,25 @@ const TechnicalCard: React.FC<ITechnicalCardProps> = ({
 
 const TechnicalFeatures: React.FC = () => {
   const { t } = useTranslation('common');
+  const technicalRef = useRef<HTMLDivElement>(null);
+  const [isTechnicalRefVisible, setIsTechnicalRefVisible] = useState(false);
+
+  const scrollHandler = () => {
+    if (technicalRef.current) {
+      const rect = (technicalRef.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsTechnicalRefVisible(rectTop < windowHeight);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', scrollHandler, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', scrollHandler);
+    };
+  }, []);
 
   const technicalData = [
     {
@@ -111,30 +139,36 @@ const TechnicalFeatures: React.FC = () => {
   return (
     <div className="flex flex-col items-center px-16px py-120px md:px-80px lg:px-112px">
       {/* Info: (20241205 - Julian) Title */}
-      <LinearGradientText size={LinearTextSize.LG} align={TextAlign.CENTER}>
+      <LinearGradientText
+        size={LinearTextSize.LG}
+        align={TextAlign.CENTER}
+        className={`${
+          isTechnicalRefVisible ? 'translate-y-0 opacity-100' : '-translate-y-200px opacity-0'
+        } transition-all duration-500`}
+      >
         {t('landing_page_v2:TECHNICAL_FEATURES.MAIN_TITLE')}
       </LinearGradientText>
 
       {/* Info: (20241205 - Julian) Content */}
-      <div
-        //  className="relative mt-120px grid grid-cols-1 gap-x-120px gap-y-120px lg:mt-75px lg:flex lg:flex-wrap lg:justify-between"
-        className="relative mt-120px grid grid-cols-1 gap-x-120px gap-y-120px lg:mt-75px lg:grid-cols-2 lg:justify-between"
-      >
+      <div ref={technicalRef} className="relative mt-120px lg:mt-75px">
         {/* Info: (20241223 - Julian) Background */}
         <div className="absolute hidden h-full w-full items-center justify-center lg:flex">
           <div className="h-3/5 w-3/5 border"></div>
         </div>
         {/* Info: (20241223 - Julian) Cards */}
-        {technicalData.map((data) => (
-          <TechnicalCard
-            key={data.imageAlt}
-            title1={data.title1}
-            title2={data.title2}
-            content={data.content}
-            imageSrc={data.imageSrc}
-            imageAlt={data.imageAlt}
-          />
-        ))}
+        <div className="grid w-full grid-cols-1 gap-x-120px gap-y-120px lg:mt-75px lg:grid-cols-2 lg:justify-between">
+          {technicalData.map((data) => (
+            <TechnicalCard
+              key={data.imageAlt}
+              title1={data.title1}
+              title2={data.title2}
+              content={data.content}
+              imageSrc={data.imageSrc}
+              imageAlt={data.imageAlt}
+              isShowAnimation={isTechnicalRefVisible}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import {
@@ -110,8 +110,29 @@ const EasyToUse: React.FC = () => {
     },
   ];
 
+  const easyRef = useRef<HTMLDivElement>(null);
+
   // Info: (20241218 - Julian) 卡片順序
   const [currentOrder, setCurrentOrder] = useState<number[]>([0, 1, 2]);
+  // Info: (20250108 - Julian) 播放動畫
+  const [isEasyRefVisible, setIsEasyRefVisible] = useState(false);
+
+  const scrollHandler = () => {
+    if (easyRef.current) {
+      const rect = (easyRef.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsEasyRefVisible(rectTop < windowHeight);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', scrollHandler, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', scrollHandler);
+    };
+  }, []);
 
   const toLeft = () => {
     // Info: (20241218 - Julian) 左移:將最後一個元素移到第一個
@@ -147,14 +168,22 @@ const EasyToUse: React.FC = () => {
   });
 
   return (
-    <div className="flex flex-col py-120px">
+    <div ref={easyRef} className="flex flex-col py-120px">
       {/* Info: (20241218 - Julian) Title */}
-      <LinearGradientText size={LinearTextSize.LG} align={TextAlign.CENTER}>
+      <LinearGradientText
+        size={LinearTextSize.LG}
+        align={TextAlign.CENTER}
+        className={`${
+          isEasyRefVisible ? 'translate-y-0 opacity-100' : '-translate-y-200px opacity-0'
+        } transition-all duration-500`}
+      >
         {t('landing_page_v2:EASY_TO_USE.MAIN_TITLE')}
       </LinearGradientText>
 
       {/* Info: (20241218 - Julian) Carousel */}
-      <div className="relative mx-auto mt-80px h-300px w-full overflow-hidden bg-digital bg-cover bg-bottom bg-no-repeat md:h-550px lg:px-120px">
+      <div
+        className={`${isEasyRefVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'} relative mx-auto mt-80px h-300px w-full overflow-hidden bg-digital bg-cover bg-bottom bg-no-repeat transition-all duration-500 md:h-550px lg:px-120px`}
+      >
         <div className="relative flex transform-gpu items-center justify-center">
           {displayedCards}
         </div>
