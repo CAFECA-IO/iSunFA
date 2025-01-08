@@ -277,8 +277,8 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
               {financialReport?.content.basicInfo.currentYear ?? 'N/A'}
               {/* Info: (20240814 - Anna) 年 */}
               {t('reports:TAX_REPORT.Y')}
-              {financialReport?.content.basicInfo.startMonth ??
-                'N/A'}-{financialReport?.content.basicInfo.endMonth ?? 'N/A'}
+              {financialReport?.content.basicInfo.startMonth ?? 'N/A'}-
+              {financialReport?.content.basicInfo.endMonth ?? 'N/A'}
               {/* Info: (20240814 - Anna) 月 */}
               {t('reports:TAX_REPORT.M')}
             </p>
@@ -733,9 +733,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
             <td className="border border-black px-1 py-0">14</td>
             <td className="flex items-center text-nowrap border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 本期(月)應退稅額 */}
-              {t(
-                'reports:TAX_REPORT.REFUNDABLE_TAX'
-              )}({/* 如 */}
+              {t('reports:TAX_REPORT.REFUNDABLE_TAX')}({/* 如 */}
               {t('reports:TAX_REPORT.IF')}
               <div>
                 <span>12&gt;13</span>
@@ -1106,9 +1104,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
               {/* Info: (20240814 - Anna) 載有稅額之其他憑證 */}
               {t('reports:TAX_REPORT.OTHER_VOUCHERS')}
               <br />({/* Info: (20240814 - Anna) 包括二聯式收銀機發票 */}
-              {t(
-                'reports:TAX_REPORT.INCLUDING_CASH_REGISTER'
-              )})
+              {t('reports:TAX_REPORT.INCLUDING_CASH_REGISTER')})
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 進貨及費用 */}
