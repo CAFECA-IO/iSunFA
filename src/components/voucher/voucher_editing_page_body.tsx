@@ -191,7 +191,9 @@ const VoucherEditingPageBody: React.FC<{
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
   const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
-  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>(
+    defaultCertificateUI.map((certificate) => certificate.id)
+  );
 
   // Info: (20241118 - Julian) 選擇憑證相關 state
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
@@ -612,7 +614,6 @@ const VoucherEditingPageBody: React.FC<{
     if (isAssetRequired) actions.push(VoucherV2Action.ADD_ASSET);
     if (isReverseRequired) actions.push(VoucherV2Action.REVERT);
 
-    const resultCertificates = Object.values(certificates);
     const resultDate = date.startTimeStamp;
     const resultType = VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType];
     const resultNote = note;
@@ -632,7 +633,7 @@ const VoucherEditingPageBody: React.FC<{
 
     const body = {
       actions,
-      certificateIds: resultCertificates.map((certificate) => certificate.id),
+      certificateIds: selectedIds,
       voucherDate: resultDate,
       type: resultType,
       note: resultNote,
@@ -663,7 +664,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: certificate`,
         closeable: true,
       });
       document.body.scrollTop = 0;
@@ -673,7 +674,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: date`,
         closeable: true,
       });
       if (dateRef.current) dateRef.current.scrollIntoView();
@@ -689,7 +690,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: line items`,
         closeable: true,
       });
     } else if (isAssetRequired && assetList.length === 0) {
@@ -698,7 +699,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: asset`,
         closeable: true,
       });
       if (assetRef.current) assetRef.current.scrollIntoView();
@@ -708,7 +709,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: reverse`,
         closeable: true,
       });
     } else {

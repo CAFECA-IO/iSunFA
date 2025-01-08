@@ -208,16 +208,16 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         <thead>
           <tr className="print:hidden">
             <th className="w-125px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-              {t('reports:TAX_REPORT.CODE_NUMBER')}
+              {t('reports:REPORTS.CODE_NUMBER')}
             </th>
             <th className="w-540px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
               {t('reports:REPORTS.ACCOUNTING_ITEMS')}
             </th>
             <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
-              {curDate.from}至{curDate.to}
+              {curDate.from} {t('reports:COMMON.TO')} {curDate.to}
             </th>
             <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
-              {preDate.from}至{preDate.to}
+              {preDate.from} {t('reports:COMMON.TO')} {preDate.to}
             </th>
           </tr>
         </thead>
@@ -241,7 +241,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                   {value.code}
                 </td>
                 <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
-                  {value.name}
+                  {t(`reports:ACCOUNTING_ACCOUNT.${value.name}`)}
                 </td>
                 <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
                   {
@@ -274,7 +274,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         <ol className="list-decimal pl-6 pt-2 text-sm font-normal leading-5 text-text-neutral-primary">
           {firstThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
-              {line}
+              {t(`reports:REPORTS.${line}`)}
             </li>
           ))}
         </ol>
@@ -283,7 +283,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         <ol className="list-decimal pl-6 pt-2 text-sm font-normal leading-5 text-text-neutral-primary">
           {secondThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
-              {line}
+              {t(`reports:REPORTS.${line}`)}
             </li>
           ))}
         </ol>
@@ -291,7 +291,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         <ol className="list-decimal pl-6 pt-2 text-sm font-normal leading-5 text-text-neutral-primary">
           {thirdThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
-              {line}
+              {t(`reports:REPORTS.${line}`)}
             </li>
           ))}
         </ol>
@@ -470,7 +470,9 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       <section className="relative mx-3 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>
-            {reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.thirdTitle}
+            {t(
+              `reports:REPORTS.${reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.thirdTitle}`
+            )}
           </p>
         </div>
         {reportFinancial &&
@@ -665,7 +667,9 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px font-semibold text-surface-brand-secondary">
           <p className="break-words font-semibold leading-tight">
-            {reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.fourthTitle}
+            {t(
+              `reports:REPORTS.${reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.fourthTitle}`
+            )}
           </p>
         </div>
         <div className="mx-1 mt-8 flex items-end justify-between">

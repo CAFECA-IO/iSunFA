@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { VoucherType } from '@/constants/account';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import SortingButton from '@/components/voucher/sorting_button';
-import { SortOrder } from '@/constants/sort';
+import { SortBy, SortOrder } from '@/constants/sort';
 import { Button } from '@/components/button/button';
 import { IoIosClose } from 'react-icons/io';
 import { FaUpload, FaDownload } from 'react-icons/fa';
@@ -18,6 +18,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import { useReactToPrint } from 'react-to-print';
+import Link from 'next/link';
 
 // Info: (20241107 - Anna) 接收父層傳入的科目名稱作為 prop
 interface BalanceDetailsButtonProps {
@@ -171,8 +172,11 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                     onApiResponse={handleApiResponse}
                     page={1}
                     pageSize={99999}
+                    /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
                     dateSort={dateSort}
                     otherSorts={[]}
+                    */
+                    sort={dateSort ? { by: SortBy.DATE, order: dateSort } : undefined}
                   />
                 </div>
               )}
@@ -203,7 +207,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                         className={`${tableCellStyles} w-236px border-r font-normal print:border-b`}
                         colSpan={2}
                       >
-                        {t('reports:TAX_REPORT.AMOUNT')}
+                        {t('reports:REPORTS.AMOUNT')}
                       </th>
                       <div className={`${tableCellStyles} w-236px print:border-b`}>
                         {t('reports:REPORTS.VOUCHER_NO')} & {t('reports:REPORTS.ISSUER')}
@@ -256,10 +260,13 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                         <div
                           className={`table-cell flex-col justify-end gap-4 text-end align-middle`}
                         >
-                          <div className="mr-6 font-semibold text-support-baby-600">
-                            {' '}
+                          <Link
+                            href={`/users/accounting/${voucher.id}?voucherNo=${voucher.voucherNo}`}
+                            className="mr-6 font-semibold text-support-baby-600"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             {voucher.voucherNo}
-                          </div>
+                          </Link>
                           <div className="relative mr-6 flex items-center justify-end gap-4px text-text-neutral-primary">
                             <Image
                               src={voucher.issuer.avatar}

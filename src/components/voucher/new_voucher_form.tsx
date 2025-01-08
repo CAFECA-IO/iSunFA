@@ -636,7 +636,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: certificate`,
         closeable: true,
       });
       document.body.scrollTop = 0;
@@ -646,7 +646,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: date`,
         closeable: true,
       });
       if (dateRef.current) dateRef.current.scrollIntoView();
@@ -674,7 +674,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: line item`,
         closeable: true,
       });
     } else if (isAssetRequired && temporaryAssetListByUser.length === 0) {
@@ -683,7 +683,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: asset`,
         closeable: true,
       });
       if (assetRef.current) assetRef.current.scrollIntoView();
@@ -693,7 +693,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM'),
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: reverse`,
         closeable: true,
       });
     } else {

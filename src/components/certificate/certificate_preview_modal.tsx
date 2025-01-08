@@ -5,6 +5,7 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import { RxCross1 } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
 import { timestampToString } from '@/lib/utils/common';
+import Magnifier from '@/components/magnifier/magifier';
 
 interface CertificatePreviewModalProps {
   isOpen: boolean;
@@ -49,9 +50,13 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
             <Image src="/elements/downloader.svg" alt="⬇" width={16} height={16} />
           </Button>
         </div>
-        <div className="hide-scrollbar max-h-800px min-h-200px min-w-300px max-w-1200px overflow-scroll p-40px">
-          {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
-          <Image src={certificate.file.url} alt="certificate" priority />
+        <div className="hide-scrollbar flex max-h-800px min-h-600px min-w-700px max-w-1200px justify-center overflow-scroll p-40px">
+          <Magnifier
+            className="max-h-full max-w-full object-contain"
+            imageUrl={certificate.file.url}
+            zoomLevelX={2}
+            useNaturalSize
+          />
         </div>
         <div className="flex justify-end gap-2 border-t border-stroke-neutral-quaternary px-4 py-3">
           <Button

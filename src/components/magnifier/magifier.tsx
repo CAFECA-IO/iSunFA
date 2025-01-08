@@ -3,8 +3,7 @@ import React, { useRef, useState } from 'react';
 
 type MagnifierProps = {
   imageUrl: string;
-  width: number; // Info: (20241218 - tzuhan) 圖片的顯示寬度
-  height: number; // Info: (20241218 - tzuhan) 圖片的顯示高度
+  useNaturalSize?: boolean; // Info: (20250107 - tzuhan) 是否使用原始尺寸
   magnifierSize?: number; // Info: (20241218 - tzuhan) 放大鏡的大小
   zoomLevelX?: number; // Info: (20241218 - tzuhan) X方向的放大倍數
   className?: string; // Info: (20241218 - tzuhan) 自訂樣式
@@ -12,8 +11,7 @@ type MagnifierProps = {
 
 const Magnifier: React.FC<MagnifierProps> = ({
   imageUrl,
-  width: imageWidth,
-  height: imageHeight,
+  useNaturalSize = false,
   magnifierSize = 150,
   zoomLevelX = 3,
   className = '',
@@ -30,25 +28,17 @@ const Magnifier: React.FC<MagnifierProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!imgRef.current) return;
-    if (imgRef.current) {
-      const rect = imgRef.current.getBoundingClientRect();
-      // Deprecate: (20241218 - tzuhan) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Image Rect:', rect);
-      window.imgRef = imgRef.current;
-    }
 
     const rect = imgRef.current.getBoundingClientRect();
     const { left, top, width, height } = rect;
     const zoomLevelY = (height / width) * zoomLevelX;
 
+    // Info: (20250107 - tzuhan) 取得圖片的原始尺寸
+    const { naturalWidth, naturalHeight } = imgRef.current;
+
     // Info: (20241218 - tzuhan) 滑鼠相對於圖片的位置
     const offsetX = e.clientX - left;
     const offsetY = e.clientY - top;
-
-    // Deprecate: (20241218 - tzuhan) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('Mouse Position (clientX, clientY):', e.clientX, e.clientY);
 
     // Info: (20241218 - tzuhan) 限制滑鼠在圖片範圍內
     if (offsetX < 0 || offsetY < 0 || offsetX > width || offsetY > height) return;
@@ -57,9 +47,9 @@ const Magnifier: React.FC<MagnifierProps> = ({
     const xPercent = (offsetX / width) * 100;
     const yPercent = (offsetY / height) * 100;
 
-    // Info: (20241218 - tzuhan) 根據 zoomLevelX 和 zoomLevelY 計算背景的放大尺寸
-    const backgroundSizeX = zoomLevelX * 100;
-    const backgroundSizeY = zoomLevelY * 100;
+    // Info: (20250107 - tzuhan) 使用原始尺寸計算放大後的背景尺寸
+    const backgroundSizeX = (useNaturalSize ? naturalWidth : 200) * zoomLevelX;
+    const backgroundSizeY = (useNaturalSize ? naturalHeight : 200) * zoomLevelY;
 
     const magnifierOffset = magnifierSize / 3;
     // Info: (20241218 - tzuhan) 更新放大鏡的樣式
@@ -87,9 +77,8 @@ const Magnifier: React.FC<MagnifierProps> = ({
         ref={imgRef}
         src={imageUrl}
         alt="Zoomable"
-        className="h-auto w-full select-none"
-        width={imageWidth}
-        height={imageHeight}
+        className="h-auto max-h-full w-full max-w-full select-none object-contain"
+        priority
       />
 
       {/* Info: (20241217 - tzuhan) 放大鏡 */}

@@ -32,22 +32,42 @@ const AssetListPageBody: React.FC = () => {
   const [residualValueSort, setResidualValueSort] = useState<null | SortOrder>(null);
   const [remainingLifeSort, setRemainingLifeSort] = useState<null | SortOrder>(null);
 
-  const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
+  const [selectedSort, setSelectedSort] = useState<
+    | {
+        by: SortBy;
+        order: SortOrder;
+      }
+    | undefined
+  >();
 
   useEffect(() => {
     getAccountListHandler(companyId);
   }, [companyId]);
 
   useEffect(() => {
-    setOtherSorts([
-      ...(purchasePriceSort ? [{ sort: SortBy.PURCHASE_PRICE, sortOrder: purchasePriceSort }] : []),
-      ...(accumulatedDepreciationSort
-        ? [{ sort: SortBy.ACCUMULATED_DEPRECIATION, sortOrder: accumulatedDepreciationSort }]
-        : []),
-      ...(residualValueSort ? [{ sort: SortBy.RESIDUAL_VALUE, sortOrder: residualValueSort }] : []),
-      ...(remainingLifeSort ? [{ sort: SortBy.REMAINING_LIFE, sortOrder: remainingLifeSort }] : []),
-    ]);
-  }, [purchasePriceSort, accumulatedDepreciationSort, residualValueSort, remainingLifeSort]);
+    let sort: { by: SortBy; order: SortOrder } | undefined;
+    if (dateSort) {
+      sort = { by: SortBy.DATE, order: dateSort };
+    } else if (purchasePriceSort) {
+      sort = { by: SortBy.PURCHASE_PRICE, order: purchasePriceSort };
+    } else if (accumulatedDepreciationSort) {
+      sort = {
+        by: SortBy.ACCUMULATED_DEPRECIATION,
+        order: accumulatedDepreciationSort,
+      };
+    } else if (residualValueSort) {
+      sort = { by: SortBy.RESIDUAL_VALUE, order: residualValueSort };
+    } else if (remainingLifeSort) {
+      sort = { by: SortBy.REMAINING_LIFE, order: remainingLifeSort };
+    }
+    setSelectedSort(sort);
+  }, [
+    dateSort,
+    purchasePriceSort,
+    accumulatedDepreciationSort,
+    residualValueSort,
+    remainingLifeSort,
+  ]);
 
   // Info: (20241024 - Julian) 資產類別列表
   const assetTypeList = accountList
@@ -76,8 +96,11 @@ const AssetListPageBody: React.FC = () => {
           statuses={[AssetStatus.ALL, ...assetStatusList]}
           page={currentPage}
           pageSize={DEFAULT_PAGE_LIMIT}
+          /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
           dateSort={dateSort}
           otherSorts={otherSorts}
+          */
+          sort={selectedSort}
         />
         {/* Info: (20240925 - Julian) Asset List */}
         {assetList && assetList.length > 0 ? (
