@@ -1,21 +1,24 @@
-import { SessionData } from 'node_modules/next-session/lib/types';
-
 export interface ISessionOption {
   sid?: string;
   cookie?: {
-    httpOnly: boolean;
-    path: string;
-    secure: boolean;
+    sid?: string;
+    httpOnly?: boolean;
+    path?: string;
+    secure?: boolean;
+    sameSite?: 'string';
   };
 }
 
 export interface ISessionHandlerOption {
+  sessionExpires: number;
   gcInterval: number;
   filePath: string;
   secret: string;
 }
 
-export interface ISessionData extends SessionData {
+export interface ISessionData {
+  sid: string;
+  expires: number;
   userId: number;
   companyId: number;
   roleId: number;

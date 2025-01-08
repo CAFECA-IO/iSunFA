@@ -205,7 +205,7 @@ export const getAuthOptions = (req: NextApiRequest): NextAuthOptions => ({
           await setSession(session, { userId: getUser.user.id });
         }
         await createUserActionLog({
-          sessionId: session.id,
+          sessionId: session.sid,
           userId: session.userId || -1,
           actionType: UserActionLogActionType.LOGIN,
           actionDescription: UserActionLogActionType.LOGIN,

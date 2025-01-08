@@ -30,7 +30,7 @@ const handleGetRequest: IHandleRequest<
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
   const data = listedUserActionLog.data.map((log) => ({
     ...log,
-    isCurrent: session.sessionId === log.sessionId,
+    isCurrent: session.sid === log.sessionId,
   }));
   listedUserActionLog.data = data;
   payload = listedUserActionLog;

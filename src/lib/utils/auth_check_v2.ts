@@ -123,7 +123,7 @@ export function isWhitelisted(apiName: APIName, req: NextApiRequest): boolean {
     if (!queryMatches) return false;
   }
 
-  loggerBack.info(
+  loggerBack.debug(
     `Auth check passed for whitelisted API: ${apiName} and query: ${JSON.stringify(req.query)}`
   );
 

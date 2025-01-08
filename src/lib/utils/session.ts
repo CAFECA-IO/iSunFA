@@ -1,5 +1,5 @@
-import { SESSION_GUEST } from '@/constants/session';
-import { ONE_DAY_IN_MS } from '@/constants/time';
+import fs from 'fs';
+import { ONE_DAY_IN_MS, ONE_HOUR_IN_MS } from '@/constants/time';
 import {
   ISessionData,
   ISessionHandlerOption,
@@ -8,17 +8,29 @@ import {
 } from '@/interfaces/session';
 import { NextApiRequest } from 'next';
 import path from 'path';
-import loggerBack from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 
 const parseSessionId = (options: ISessionOption) => {
   const sessionId = options?.sid
     ? options?.sid
-    : options?.cookie?.path
-      ? options.cookie.path
-      : 'GUEST';
-  loggerBack.warn(`Session ID: ${sessionId}`);
+    : options?.cookie?.sid
+      ? options.cookie.sid
+      : DefaultValue.SESSION_ID;
   return sessionId;
+};
+
+// ToDo: (20250108 - Luphia) encrypt string
+// Deprecated: (20250108 - Luphia) remove eslint-disable
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const encryptString = (data: string, secret: string) => {
+  return data;
+};
+
+// ToDo: (20250108 - Luphia) decrypt string
+// Deprecated: (20250108 - Luphia) remove eslint-disable
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const decryptString = (data: string, secret: string) => {
+  return data;
 };
 
 class SessionHandler {
@@ -36,11 +48,16 @@ class SessionHandler {
 
   gcInterval: number;
 
+  sessionExpires: number;
+
   filePath: string;
 
   secret: string;
 
   constructor(option: ISessionHandlerOption) {
+    this.sessionExpires = option.sessionExpires
+      ? option.sessionExpires
+      : DefaultValue.SESSION_OPTION.SESSION_EXPIRE;
     this.gcInterval = option.gcInterval
       ? option.gcInterval
       : DefaultValue.SESSION_OPTION.GC_INTERVAL;
@@ -48,17 +65,60 @@ class SessionHandler {
     this.secret = option.secret ? option.secret : DefaultValue.SESSION_OPTION.SECRET;
   }
 
+  async backup() {
+    // Info: (20250108 - Luphia) convert session data to JSON string
+    const rawString = JSON.stringify(this.data);
+    const encryptedString = encryptString(rawString, this.secret);
+    // Info: (20250108 - Luphia) convert rawString to base64 string
+    const data = Buffer.from(encryptedString).toString('base64');
+    // Info: (20250108 - Luphia) save session data to file
+    const { filePath } = this;
+    fs.promises.writeFile(filePath, data);
+    return true;
+  }
+
+  async restore() {
+    // Info: (20250108 - Luphia) read session data from file
+    const { filePath } = this;
+    const data = await fs.promises.readFile(filePath, 'utf-8');
+    const rawString = Buffer.from(data, 'base64').toString('utf-8');
+    const decryptedString = decryptString(rawString, this.secret);
+    // Info: (20250108 - Luphia) convert JSON string to session data
+    this.data = new Map(JSON.parse(decryptedString));
+    return true;
+  }
+
+  renewSession(options: ISessionOption) {
+    const sessionId = parseSessionId(options);
+    const session = this.data.get(sessionId);
+    if (session) {
+      session.expires = Date.now() + this.sessionExpires;
+      this.data.set(sessionId, session);
+      this.backup();
+    }
+    return session;
+  }
+
   async read(options: ISessionOption) {
     const sessionId = parseSessionId(options);
-    const result = this.data.get(sessionId);
+    const data = this.data.get(sessionId);
+    const expires = data?.expires || 0;
+    let result = { sid: sessionId } as ISessionData;
+    if (expires > Date.now()) {
+      // Info: (20250107 - Luphia) update session expire time
+      result = this.renewSession(options) as ISessionData;
+    }
     return result;
   }
 
   async update(options: ISessionOption, data: ISessionUpdateData) {
     const sessionId = parseSessionId(options);
-    const session = this.data.get(sessionId) || SESSION_GUEST;
-    const newSession = { ...session, ...data };
+    const session = this.data.get(sessionId);
+    const expires = Date.now() + this.sessionExpires;
+    const newSession = { ...session, ...data, sid: sessionId, expires } as ISessionData;
     this.data.set(sessionId, newSession);
+
+    return newSession;
   }
 
   async destroy(options: ISessionOption) {
@@ -68,9 +128,9 @@ class SessionHandler {
 
   async garbageCollection() {
     // Info: (20250107 - Luphia) remove expired session
-    const now = new Date();
+    const now = new Date().getTime();
     this.data.forEach((session, key) => {
-      if (session.cookie.expires && session.cookie.expires < now) {
+      if (session.expires && session.expires < now) {
         this.data.delete(key);
       }
     });
@@ -79,9 +139,10 @@ class SessionHandler {
 
 const sessionFolder = process.env.BASE_STORAGE_PATH || './';
 const sessionHandlerOption: ISessionHandlerOption = {
+  sessionExpires: ONE_HOUR_IN_MS,
   gcInterval: ONE_DAY_IN_MS,
   filePath: path.resolve(sessionFolder, 'session.store'),
-  secret: process.env.NEXTAUTH_SECRET || DEFAULT_SESSION_OPTION.SECRET,
+  secret: process.env.NEXTAUTH_SECRET || DefaultValue.SESSION_OPTION.SECRET,
 };
 const sessionHandler = SessionHandler.getInstance(sessionHandlerOption);
 
@@ -96,10 +157,12 @@ export function setSession(
   session: ISessionData,
   data: { userId?: number; companyId?: number; challenge?: string; roleId?: number }
 ) {
-  const options: ISessionOption = session.cookie as unknown as ISessionOption;
-  sessionHandler.update(options, data);
+  const options: ISessionOption = session as unknown as ISessionOption;
+  const newSession = sessionHandler.update(options, data);
+  return newSession;
 }
 
 export function destroySession(session: ISessionData) {
-  session.destroy();
+  const options: ISessionOption = session as unknown as ISessionOption;
+  sessionHandler.destroy(options);
 }

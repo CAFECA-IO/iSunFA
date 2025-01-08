@@ -23,14 +23,10 @@ export async function checkSessionUser(
   }
 
   // Info: (20241128 - Luphia) If there is no user_id, it will be considered as a guest
-  if (!session.userId) {
+  if (!session.userId || session.userId === DefaultValue.USER_ID.GUEST) {
     isLogin = false;
-    loggerError({
-      userId: DefaultValue.USER_ID.GUEST,
-      errorType: 'Unauthorized Access',
-      errorMessage: 'User ID is missing in session',
-    });
   }
+
   return isLogin;
 }
 
@@ -78,10 +74,19 @@ export async function logUserAction<T extends APIName>(
   req: NextApiRequest,
   statusMessage: string
 ) {
+  const userId = session.userId || DefaultValue.USER_ID.GUEST;
+  const sessionId = session.sid;
+
+  // Info: (20250108 - Luphia) Sometimes the user action log is not necessary
+  if (userId === DefaultValue.USER_ID.GUEST && apiName !== APIName.SIGN_IN) {
+    // Info: (20250108 - Luphia) Skip logging user action for guest user
+    return;
+  }
+
   try {
     const userActionLog = {
-      sessionId: session.id || '',
-      userId: session.userId || DefaultValue.USER_ID.GUEST,
+      sessionId,
+      userId,
       actionType: UserActionLogActionType.API,
       actionDescription: apiName,
       ipAddress: (req.headers['x-forwarded-for'] as string) || '',
@@ -94,7 +99,7 @@ export async function logUserAction<T extends APIName>(
     await createUserActionLog(userActionLog);
   } catch (error) {
     loggerError({
-      userId: session.userId || DefaultValue.USER_ID.GUEST,
+      userId,
       errorType: `Failed to log user action for ${apiName} in middleware.ts`,
       errorMessage: error as Error,
     });

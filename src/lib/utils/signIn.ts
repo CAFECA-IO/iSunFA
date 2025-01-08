@@ -10,6 +10,7 @@ import { APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { DefaultValue } from '@/constants/default_value';
 
 export const fetchImageInfo = async (
   imageUrl: string
@@ -50,7 +51,7 @@ export const handleSignInSession = async (
         type: string;
       }
 ) => {
-  const session = await getSession(req);
+  let session = await getSession(req);
   // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
   // let Dbuser;
   // const { invitation } = (account?.params || {}) as { invitation: string };
@@ -90,7 +91,7 @@ export const handleSignInSession = async (
       imageId: file?.id ?? PUBLIC_IMAGE_ID,
     });
 
-    await setSession(session, { userId: createdUser.user.id });
+    session = await setSession(session, { userId: createdUser.user.id });
 
     // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
     // Dbuser = createdUser;
@@ -98,11 +99,11 @@ export const handleSignInSession = async (
     // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
     // Dbuser = getUser;
     // ToDo: (20241121 - Jacky) Delete User from DB if deletedAt + 7 days is less than current date
-    await setSession(session, { userId: existingUser.user.id });
+    session = await setSession(session, { userId: existingUser.user.id });
   }
-  await createUserActionLog({
-    sessionId: session.id,
-    userId: session.userId || -1,
+  const log = {
+    sessionId: session.sid,
+    userId: session.userId || DefaultValue.USER_ID.UNKNOWN,
     actionType: UserActionLogActionType.LOGIN,
     actionDescription: UserActionLogActionType.LOGIN,
     ipAddress: req.headers['x-forwarded-for'] as string,
@@ -111,7 +112,8 @@ export const handleSignInSession = async (
     httpMethod: req.method || '',
     requestPayload: req.body,
     statusMessage: STATUS_MESSAGE.SUCCESS,
-  });
+  };
+  await createUserActionLog(log);
   /* Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
   if (invitationCode) {
     const getInvitation = await getInvitationByCode(invitationCode);

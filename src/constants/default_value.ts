@@ -1,4 +1,4 @@
-import { ONE_DAY_IN_MS } from '@/constants/time';
+import { ONE_DAY_IN_MS, ONE_HOUR_IN_MS } from '@/constants/time';
 
 // Info: (20241128 - Luphia) Default Value for Undefined Parameter
 export const DefaultValue = {
@@ -7,6 +7,7 @@ export const DefaultValue = {
     UNKNOWN: 555,
   },
   COMPANY_ID: {
+    PROCESSING: 0,
     UNKNOWN: 555,
   },
   COUNTER_PARTY_ID: {
@@ -23,8 +24,10 @@ export const DefaultValue = {
     SYSTEM: 2,
     UNKNOWN: 555,
   },
+  SESSION_ID: 'GUEST',
   SESSION_OPTION: {
     GC_INTERVAL: ONE_DAY_IN_MS,
+    SESSION_EXPIRE: ONE_HOUR_IN_MS,
     FILE_PATH: './session.store',
     SECRET: 'SECRET',
   },
