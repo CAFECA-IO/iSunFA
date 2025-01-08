@@ -412,7 +412,6 @@ export const certificateAPIGetListUtils = {
 
   isInvoiceComplete: (invoice: IInvoiceEntity) => {
     const isComplete = !!(
-      invoice.no &&
       invoice.date &&
       invoice.priceBeforeTax &&
       invoice.totalPrice &&

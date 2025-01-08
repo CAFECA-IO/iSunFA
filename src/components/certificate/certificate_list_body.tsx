@@ -604,7 +604,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         className={`flex grow flex-col gap-4 ${filterCertificates && filterCertificates.length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
-        <CertificateFileUpload isDisabled={false} showErrorMessage={false} setFiles={setFiles} />
+        <CertificateFileUpload isDisabled={false} setFiles={setFiles} />
         <FloatingUploadPopup
           files={files}
           pauseFileUpload={pauseFileUpload}

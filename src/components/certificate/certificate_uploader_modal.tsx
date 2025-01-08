@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
 import { RxCross1 } from 'react-icons/rx';
@@ -8,6 +8,8 @@ import { GoArrowLeft } from 'react-icons/go';
 import CircularProgressBar from '@/components/certificate/circular_progress_bar';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { IFileUIBeta } from '@/interfaces/file';
+import { useModalContext } from '@/contexts/modal_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface CertificateUploaderModalProps {
   isOpen: boolean;
@@ -21,8 +23,31 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
   onBack,
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
   const [progress, setProgress] = useState<number>(0);
+
+  const handleUploadCancelled = useCallback(() => {
+    setFiles([]);
+    messageModalVisibilityHandler();
+    onClose();
+  }, [setFiles, messageModalVisibilityHandler]);
+
+  const handleClose = () => {
+    if (files.length > 0 && files.some((file) => file.status === ProgressStatus.FAILED)) {
+      messageModalDataHandler({
+        title: t('certificate:WARNING.UPLOAD_FAILED'),
+        content: t('certificate:WARNING.UPLOAD_FAILED_NOTIFY'),
+        messageType: MessageType.WARNING,
+        submitBtnStr: t('certificate:WARNING.UPLOAD_CANCEL'),
+        backBtnStr: t('certificate:WARNING.UPLOAD_CONTINUE'),
+        submitBtnFunction: handleUploadCancelled,
+      });
+      messageModalVisibilityHandler();
+    } else {
+      onClose();
+    }
+  };
 
   // Info: (20241213 - tzuhan) 工具函數：更新文件狀態
   const updateFileStatus = (index: number) => {
@@ -95,7 +120,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
         <button
           type="button"
           className="absolute right-4 top-4 text-checkbox-text-primary"
-          onClick={onClose}
+          onClick={handleClose}
         >
           <RxCross1 size={28} />
         </button>
@@ -115,7 +140,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
           {t('certificate:UPLOAD.CONTENT')}
         </p>
         {/* Info: (20241213 - tzuhan) 上傳組件 */}
-        <CertificateFileUpload isDisabled={false} setFiles={setFiles} showErrorMessage />
+        <CertificateFileUpload isDisabled={false} setFiles={setFiles} />
         {/* Info: (20241213 - tzuhan) 文件列表 */}
         <div className="h-60 rounded-t-lg border border-file-uploading-stroke-outline p-4">
           <div className="h-full overflow-auto">{renderFileList()}</div>
