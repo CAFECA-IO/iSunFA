@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -41,6 +41,37 @@ const FlexibleFeatureIcon: React.FC<{ feature: string; size?: number; halo?: boo
 const FlexibleFeatureSelection: React.FC = () => {
   const { t } = useTranslation('common');
 
+  const featureHeadRef = useRef<HTMLDivElement>(null);
+  const featureFirstRef = useRef<HTMLDivElement>(null);
+
+  const [isFeatureHeadRefVisible, setIsFeatureHeadRefVisible] = useState(false);
+  const [isFeatureFirstRefVisible, setIsFeatureFirstRefVisible] = useState(false);
+
+  const scrollHandler = () => {
+    if (featureHeadRef.current) {
+      const rect = (featureHeadRef.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsFeatureHeadRefVisible(rectTop < windowHeight);
+    }
+
+    if (featureFirstRef.current) {
+      const rect = (featureFirstRef.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsFeatureFirstRefVisible(rectTop < windowHeight);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', scrollHandler, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', scrollHandler);
+    };
+  }, []);
+
   // Info: (20241219 - Julian) 第一分類：主要功能
   const featuresOfFirstPart = [
     'Dashboard',
@@ -81,14 +112,28 @@ const FlexibleFeatureSelection: React.FC = () => {
   // const featuresOfFifthPart = ['Manufacturing Management', 'Supply Chain Management'];
 
   return (
-    <div className="flex flex-col gap-120px px-16px py-120px md:px-80px lg:px-112px">
+    <div
+      ref={featureHeadRef}
+      className="flex flex-col gap-120px px-16px py-120px md:px-80px lg:px-112px"
+    >
       {/* Info: (20241219 - Julian) Title */}
-      <LinearGradientText size={LinearTextSize.LG} align={TextAlign.CENTER}>
+      <LinearGradientText
+        size={LinearTextSize.LG}
+        align={TextAlign.CENTER}
+        className={`${
+          isFeatureHeadRefVisible ? 'translate-y-0 opacity-100' : '-translate-y-200px opacity-0'
+        } transition-all duration-500`}
+      >
         {t('landing_page_v2:FLEXIBLE_FEATURE_SELECTION.MAIN_TITLE')}
       </LinearGradientText>
 
       {/* Info: (20241219 - Julian) Features of First Part */}
-      <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">
+      <div
+        ref={featureFirstRef}
+        className={`${
+          isFeatureFirstRefVisible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
+        } grid grid-cols-2 gap-34px transition-all duration-500 md:grid-cols-3 lg:grid-cols-5`}
+      >
         {featuresOfFirstPart.map((feature) => (
           <FlexibleFeatureIcon key={feature} feature={feature} />
         ))}
