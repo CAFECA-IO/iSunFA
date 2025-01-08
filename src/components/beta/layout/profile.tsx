@@ -51,15 +51,13 @@ const Profile = () => {
           </Link>
 
           {/* // Info: (20241014 - Liz) ===== 訂閱與帳單 ===== */}
-          {/* // ToDo: (20241014 - Liz) 連結到訂閱與帳單的頁面 */}
-          <button
-            type="button"
-            disabled
+          <Link
+            href={ISUNFA_ROUTE.SUBSCRIPTIONS}
             className="flex items-center gap-12px rounded-xs px-12px py-8px hover:bg-dropdown-surface-item-hover"
           >
             <Image src={'/icons/bell.svg'} alt="subscription_icon" width={16} height={16}></Image>
             <p>{t('dashboard:HEADER.SUBSCRIPTION_AND_BILLS')}</p>
-          </button>
+          </Link>
 
           {/* // Info: (20241209 - Liz) ===== 切換角色 ===== */}
           <button

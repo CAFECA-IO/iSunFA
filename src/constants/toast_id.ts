@@ -37,6 +37,7 @@ export enum ToastId {
   USER_DELETE_WARNING = 'toast-user-delete-warning',
   USER_DELETE_ERROR = 'toast-user-delete-error',
   USER_SETTING_ERROR = 'toast-user-setting-error',
+  USER_SETTING_SUCCESS = 'toast-user-setting-success',
   USER_DELETE_CANCEL = 'toast-user-delete-cancel',
   UPDATE_FILENAME_SUCCESS = 'toast-update-filename-success',
   UPDATE_FILENAME_ERROR = 'toast-update-filename-error',

@@ -30,12 +30,18 @@ interface FilterSectionProps<T> {
   onApiResponse?: (resData: IPaginatedData<T>) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
   viewType?: DISPLAY_LIST_VIEW_TYPE;
   viewToggleHandler?: (viewType: DISPLAY_LIST_VIEW_TYPE) => void;
-  dateSort?: SortOrder | null;
   // setDateSort?: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
+  dateSort?: SortOrder | null;
   otherSorts?: {
     sort: SortBy;
     sortOrder: SortOrder;
   }[];
+  */
+  sort?: {
+    by: SortBy;
+    order: SortOrder;
+  };
   disableDateSearch?: boolean;
   displayTypeFilter?: boolean;
 }
@@ -54,9 +60,12 @@ const FilterSection = <T,>({
   onApiResponse,
   viewType,
   viewToggleHandler,
-  dateSort,
   // setDateSort,
+  /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
+  dateSort,
   otherSorts,
+  */
+  sort,
   disableDateSearch,
   displayTypeFilter,
 }: FilterSectionProps<T>) => {
@@ -73,16 +82,14 @@ const FilterSection = <T,>({
     endTimeStamp: 0,
   });
   const [searchQuery, setSearchQuery] = useState<string | undefined>();
-  // const [selectedSorting, setSelectedSorting] = useState<string | undefined>(
-  //   sortingOptions.length > 0 ? sortingOptions[0] : undefined
-  // );
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedSortOptions, setSelectedSortOptions] = useState<{
-    [key: string]: {
-      by: string;
-      order: SortOrder;
-    };
-  }>({});
+  const [selectedSortOption, setSelectedSortOption] = useState<
+    | {
+        by: string;
+        order: SortOrder;
+      }
+    | undefined
+  >(sort ? { by: sort.by, order: sort.order } : undefined);
 
   // Info: (20241022 - tzuhan) @Murky, <...> 裡面是 CERTIFICATE_LIST_V2 API 需要的回傳資料格式
   const { trigger } = APIHandler<IPaginatedData<T>>(apiName);
@@ -98,9 +105,7 @@ const FilterSection = <T,>({
       setIsLoading(true);
       // Info: (20241022 - tzuhan) @Murky, 這裡是前端呼叫 CERTIFICATE_LIST_V2 API 的地方，以及query參數的組合
 
-      // Deprecated: (20241127 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('selectedType:', selectedType);
+      const effectiveSort = selectedSortOption || { by: SortBy.DATE, order: SortOrder.DESC };
 
       const { success, code, data } = await trigger({
         params,
@@ -108,14 +113,10 @@ const FilterSection = <T,>({
           // Info: (20241025 - tzuhan) @Shirley, @Murky 這裡是共同處理 List all assets / get all certificate / get all voucher / list news / list reports 的地方，需要協助確認query格式，特別幫我注意一下sortOption，需要修改可以提
           page,
           pageSize,
-          tab, // Info: (20241022 - tzuhan) @Murky, 這個不夠泛用，需要修改成 tab（for voucherList or certificateList)
+          tab,
           type: selectedType,
           status: selectedStatus, // Info: (20241022 - tzuhan) 這個如果是用在<CertificateListBody> 或是 <CertificateSelectorModal>, 會是 undefined，所以不會被加入 query 參數
-          // Info: (20241105 - Murky) @tzuhan, @Julian, @Shirley, 這邊改用 `sortOption=by:order-by:order` 的方式來傳遞排序條件
-          // sortOption: JSON.stringify(selectedSortOptions),
-          sortOption: Object.values(selectedSortOptions)
-            .map((option) => `${option.by}:${option.order}`)
-            .join('-'),
+          sortOption: `${effectiveSort.by}:${effectiveSort.order}`,
           startDate: !selectedDateRange.startTimeStamp
             ? undefined
             : selectedDateRange.startTimeStamp,
@@ -151,7 +152,7 @@ const FilterSection = <T,>({
     selectedStatus,
     selectedDateRange,
     searchQuery,
-    selectedSortOptions,
+    selectedSortOption,
     page,
   ]);
 
@@ -168,34 +169,10 @@ const FilterSection = <T,>({
   // };
 
   useEffect(() => {
-    if (dateSort) {
-      setSelectedSortOptions((prev) => ({
-        ...prev,
-        [SortBy.DATE]: {
-          by: SortBy.DATE,
-          order: dateSort,
-        },
-      }));
-    } else {
-      setSelectedSortOptions((prev) => {
-        const rest = { ...prev };
-        delete rest[SortBy.DATE];
-        return rest;
-      });
+    if (sort && (sort.by !== selectedSortOption?.by || sort.order !== selectedSortOption?.order)) {
+      setSelectedSortOption(sort);
     }
-    if (otherSorts) {
-      otherSorts.forEach(({ sort, sortOrder }) => {
-        if (sort === SortBy.DATE) return;
-        setSelectedSortOptions((prev) => ({
-          ...prev,
-          [sort]: {
-            by: sort,
-            order: sortOrder,
-          },
-        }));
-      });
-    }
-  }, [dateSort, otherSorts]);
+  }, [sort]);
 
   // Info: (20240919 - tzuhan) 每次狀態變更時，組合查詢條件並發送 API 請求
   useEffect(() => {
@@ -210,7 +187,7 @@ const FilterSection = <T,>({
     selectedStatus,
     selectedDateRange,
     searchQuery,
-    selectedSortOptions,
+    selectedSortOption,
   ]);
 
   return (

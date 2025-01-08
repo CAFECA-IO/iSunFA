@@ -42,19 +42,32 @@ const VoucherListPageBody: React.FC = () => {
   // Info: (20250107 - Julian) 是否顯示沖銷傳票
   // ToDo: (20250107 - Julian) API query
   const [isHideReversals, setIsHideReversals] = useState(true);
+  const [selectedSort, setSelectedSort] = useState<
+    | {
+        by: SortBy;
+        order: SortOrder;
+      }
+    | undefined
+  >();
   const [voucherList, setVoucherList] = useState<IVoucherUI[]>([]);
 
   useEffect(() => {
+    let sort: { by: SortBy; order: SortOrder } | undefined;
     // Info: (20241230 - Julian) 如果有借貸排序，則清除日期排序
     const newDateSort = !creditSort && !debitSort && dateSort ? dateSort : null;
     setDateSort(newDateSort);
-
-    // Info: (20241230 - Julian) 如果有日期排序，則清除借貸排序
-    const newCreditSort =
-      !dateSort && creditSort ? [{ sort: SortBy.CREDIT, sortOrder: creditSort }] : [];
-    const newDebitSort =
-      !dateSort && debitSort ? [{ sort: SortBy.DEBIT, sortOrder: debitSort }] : [];
-    setOtherSorts([...newCreditSort, ...newDebitSort]);
+    if (newDateSort) {
+      sort = { by: SortBy.DATE, order: newDateSort };
+    } else {
+      // Info: (20241230 - Julian) 如果有日期排序，則清除借貸排序
+      if (creditSort) {
+        sort = { by: SortBy.CREDIT, order: creditSort };
+      }
+      if (debitSort) {
+        sort = { by: SortBy.DEBIT, order: debitSort };
+      }
+    }
+    setSelectedSort(sort);
   }, [creditSort, debitSort, dateSort]);
 
   const voucherTabs = Object.values(VoucherTabs).map((value) =>
@@ -158,8 +171,11 @@ const VoucherListPageBody: React.FC = () => {
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab} // Info: (20241104 - Murky) @Julian, 後端用 VoucherListTabV2 這個 enum 來過濾, 在 src/constants/voucher.ts
           types={voucherTypeList} // Info: (20241104 - Murky) @Julian, 後端用 EventType 這個 enum 來過濾, 在 src/constants/account.ts
+          /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
           dateSort={dateSort}
           otherSorts={otherSorts} // Info: (20241104 - Murky) 可以用哪些sort 請參考 VoucherListAllSortOptions, 在 src/lib/utils/zod_schema/voucher.ts
+          */
+          sort={selectedSort}
         />
         {/* Info: (20240920 - Julian) Voucher List */}
         {displayVoucherList}
