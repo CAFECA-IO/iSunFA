@@ -46,12 +46,11 @@ import associateVouchers from '@/seed_json/associate_voucher.json';
 import event from '@/seed_json/event.json';
 
 const prisma = new PrismaClient();
-
 async function createFile() {
   const files = file.map((f) => {
     return {
       ...f,
-      iv: Buffer.from('1'),
+      iv: Buffer.from(f.iv, 'base64'),
     };
   });
   await prisma.file.createMany({
@@ -410,8 +409,7 @@ main()
   .then(async () => {
     await prisma.$disconnect();
   })
-  .catch(async () => {
+  .finally(async () => {
     // Info (20240316 - Murky) - disconnect prisma
     await prisma.$disconnect();
-    process.exit(1);
   });
