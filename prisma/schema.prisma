@@ -8,25 +8,24 @@ datasource db {
 }
 
 model Account {
-  id             Int     @id @default(autoincrement())
-  companyId      Int     @default(0) @map("company_id")
-  system         String // Info: (20240625 - Murky) ex "IFRS" 
-  type           String // Info: (20240625 - Murky) ex "Asset"
-  debit          Boolean // Info: (20240625 - Murky) true: debit, false: credit
-  liquidity      Boolean
-  code           String
-  name           String // Info: (20240625 - Murky) empty if is not sub account
-  forUserVoucher Boolean @default(true) @map("for_user_voucher") // Info: (20240625 - Murky) is account the last layer of account tree
-  forUserLedger  Boolean @default(true) @map("for_user_ledger") // Info: (20241218 - Shirley) is account able to show on ledger and trial balance
-  parentCode     String  @map("parent_code")
-  rootCode       String  @map("root_code")
-  parentId       Int     @map("parent_id")
-  rootId         Int     @map("root_id")
-  createdAt      Int     @map("created_at")
-  updatedAt      Int     @map("updated_at")
-  level          Int     @default(0)
-  deletedAt      Int?    @map("deleted_at")
-  note           String? @map("note")
+  id         Int     @id @default(autoincrement())
+  companyId  Int     @default(0) @map("company_id")
+  system     String // Info: (20240625 - Murky) ex "IFRS" 
+  type       String // Info: (20240625 - Murky) ex "Asset"
+  debit      Boolean // Info: (20240625 - Murky) true: debit, false: credit
+  liquidity  Boolean
+  code       String
+  name       String // Info: (20240625 - Murky) empty if is not sub account
+  forUser    Boolean @map("for_user") // Info: (20240625 - Murky) is account the last layer of account tree
+  parentCode String  @map("parent_code")
+  rootCode   String  @map("root_code")
+  parentId   Int     @map("parent_id")
+  rootId     Int     @map("root_id")
+  createdAt  Int     @map("created_at")
+  updatedAt  Int     @map("updated_at")
+  level      Int     @default(0)
+  deletedAt  Int?    @map("deleted_at")
+  note       String? @map("note")
 
   company  Company    @relation(fields: [companyId], references: [id])
   parent   Account    @relation("Parent", fields: [parentId], references: [id])
@@ -215,6 +214,9 @@ model Country {
   currencyCode String @map("currency_code")
   currencyName String @map("currency_name")
   phoneExample String @map("phone_example")
+  createdAt    Int    @map("created_at")
+  updatedAt    Int    @map("updated_at")
+  deletedAt    Int?   @map("deleted_at")
 
   UserSetting UserSetting[]
 
@@ -933,8 +935,9 @@ model User {
   userVouchers      UserVoucher[]
   Voucher           Voucher[]
 
-  imageFile File    @relation("user_image_file", fields: [imageFileId], references: [id])
-  Asset     Asset[]
+  imageFile   File          @relation("user_image_file", fields: [imageFileId], references: [id])
+  Asset       Asset[]
+  UserSetting UserSetting[]
 
   @@map("user")
 }
@@ -1005,6 +1008,7 @@ model UserSetting {
   updatedAt                         Int     @map("updated_at")
   deletedAt                         Int?    @map("deleted_at")
 
+  user    User    @relation(fields: [userId], references: [id])
   country Country @relation(fields: [countryId], references: [id])
 
   @@map("user_setting")

@@ -23,7 +23,7 @@ ALTER COLUMN "user_id" SET NOT NULL;
 -- 1-4. 添加外鍵約束，確保 user_id 參照 User 表的 id
 ALTER TABLE "asset" ADD CONSTRAINT "asset_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- 1-5. 刪掉 asset table 的 accumulated_depreciation, remaining_life, residual_value 欄位
+-- 1-5. 刪掉 asset table 的 accumulated_depreciation, remaining_life 欄位
 ALTER TABLE "asset" DROP COLUMN "accumulated_depreciation",
 DROP COLUMN "remaining_life";
 
@@ -135,6 +135,10 @@ ADD CONSTRAINT "user_setting_country_id_fkey" FOREIGN KEY ("country_id") REFEREN
 ALTER TABLE "user_setting"
 DROP COLUMN "country";
 
+-- 5-6. 將 user_setting 表中的 user_id 關聯到 user 表的 id
+ALTER TABLE "user_setting"
+ADD CONSTRAINT "user_setting_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
 /* Info: (20241219 - Shirley)
 第二批 db migration
 */
@@ -150,7 +154,7 @@ Step 1. country table
 1-4. 將 code 和 phone_example 設定為 required
 
 
-
+Info: (20250108 - Shirley) 後來虛擬科目是在 list trial balance 即時生成，所以不需要更改 DB
 Step 2. account table
 2-1. 新增 for_user_ledger 欄位為 optional
 2-2. 新增 for_user_voucher 欄位
@@ -169,55 +173,66 @@ Step 2. account table
 -- 1-1. 新增 code 欄位為 optional
 -- 1-2. 新增 phone_example 欄位為 optional
 ALTER TABLE "country" ADD COLUMN     "code" TEXT,
-ADD COLUMN     "phone_example" TEXT;
+ADD COLUMN     "phone_example" TEXT, 
+ADD COLUMN     "created_at" INTEGER,
+ADD COLUMN     "updated_at" INTEGER,
+ADD COLUMN     "deleted_at" INTEGER;
 
 -- 1-3. 將現有 data 的 code 和 phone_example 設定為對應的值
 UPDATE "country"
 SET "code" = 'tw',
-    "phone_example" = '0912345678'
+    "phone_example" = '0912345678',
+    "created_at" = 0,
+    "updated_at" = 0
 WHERE "locale_key" = 'tw';
 
 -- 1-4. 將 code 和 phone_example 設定為 required
 ALTER TABLE "country" ALTER COLUMN "code" SET NOT NULL,
-ALTER COLUMN "phone_example" SET NOT NULL;
+ALTER COLUMN "phone_example" SET NOT NULL,
+ALTER COLUMN "created_at" SET NOT NULL,
+ALTER COLUMN "updated_at" SET NOT NULL;
 
+-- Info: (20250108 - Shirley) 後來虛擬科目是在 list trial balance 即時生成，所以不需要更改 DB
+-- -- Step 2. account table ✅
+-- -- 2-1. 新增 for_user_ledger 欄位為 optional
+-- ALTER TABLE "account" ADD COLUMN "for_user_ledger" BOOLEAN;
 
--- Step 2. account table ✅
--- 2-1. 新增 for_user_ledger 欄位為 optional
-ALTER TABLE "account" ADD COLUMN "for_user_ledger" BOOLEAN;
+-- -- 2-2. 新增 for_user_voucher 欄位
+-- ALTER TABLE "account" ADD COLUMN "for_user_voucher" BOOLEAN;
 
--- 2-2. 新增 for_user_voucher 欄位
-ALTER TABLE "account" ADD COLUMN "for_user_voucher" BOOLEAN;
+-- -- 2-3. 將 for_user 欄位的值複製到 for_user_voucher
+-- UPDATE "account"
+-- SET "for_user_voucher" = "for_user"
+-- WHERE "for_user_voucher" IS NULL;
 
--- 2-3. 將 for_user 欄位的值複製到 for_user_voucher
-UPDATE "account"
-SET "for_user_voucher" = "for_user"
-WHERE "for_user_voucher" IS NULL;
+-- -- 2-4. 將現有 data 的 for_user_ledger 欄位的值，從 for_user 欄位複製過來
+-- UPDATE "account"
+-- SET "for_user_ledger" = "for_user"
+-- WHERE "for_user_ledger" IS NULL;
 
--- 2-4. 將現有 data 的 for_user_ledger 欄位的值，從 for_user 欄位複製過來
-UPDATE "account"
-SET "for_user_ledger" = "for_user"
-WHERE "for_user_ledger" IS NULL;
+-- -- 2-5. 在 for_user 為 true 的值，複製一份並將其設為複製對象的 children
+-- INSERT INTO "account" ("id","name","root_code","root_id","for_user", "code", "for_user_voucher", "for_user_ledger", "level", "parent_id", "parent_code", "system", "company_id", "type", "debit", "liquidity", "note", "created_at", "updated_at", "deleted_at")
+-- SELECT "id" * 10, "name","root_code","root_id", "for_user", "code" || '-0', true, true, "level" + 1, "id", "code", "system", "company_id", "type", "debit", "liquidity", "note", "created_at", "updated_at", "deleted_at"
+-- FROM "account"
+-- WHERE "for_user" = true;
 
--- 2-5. 在 for_user 為 true 的值，複製一份並將其設為複製對象的 children
-INSERT INTO "account" ("id","name","root_code","root_id","for_user", "code", "for_user_voucher", "for_user_ledger", "level", "parent_id", "parent_code", "system", "company_id", "type", "debit", "liquidity", "note", "created_at", "updated_at", "deleted_at")
-SELECT "id" * 10, "name","root_code","root_id", "for_user", "code" || '-0', true, true, "level" + 1, "id", "code", "system", "company_id", "type", "debit", "liquidity", "note", "created_at", "updated_at", "deleted_at"
-FROM "account"
-WHERE "for_user" = true;
+-- -- 2-6. 將 for_user_ledger 設定為 required
+-- ALTER TABLE "account" ALTER COLUMN "for_user_ledger" SET NOT NULL;
+-- -- 2-7. 將 for_user_voucher 設定為 required
+-- ALTER TABLE "account" ALTER COLUMN "for_user_voucher" SET NOT NULL;
 
--- 2-6. 將 for_user_ledger 設定為 required
-ALTER TABLE "account" ALTER COLUMN "for_user_ledger" SET NOT NULL;
--- 2-7. 將 for_user_voucher 設定為 required
-ALTER TABLE "account" ALTER COLUMN "for_user_voucher" SET NOT NULL;
+-- -- 2-8. 刪除 for_user 欄位
+-- ALTER TABLE "account" DROP COLUMN "for_user";
 
--- 2-8. 刪除 for_user 欄位
-ALTER TABLE "account" DROP COLUMN "for_user";
+-- -- 2-9. 將預設會計科目的 for_user_voucher 改為 false，將自訂會計科目的 for_user_voucher 保留原本的值
+-- UPDATE "account"
+-- SET "for_user_voucher" = false
+-- WHERE "company_id" = 1002;
 
--- 2-9. 將預設會計科目的 for_user_voucher 改為 false，將自訂會計科目的 for_user_voucher 保留原本的值
-UPDATE "account"
-SET "for_user_voucher" = false
-WHERE "company_id" = 1002;
+-- -- 2-10. 在新增的欄位 "for_user_ledger", "for_user_voucher" 加上 default 值，讓以後沒有給值也能正常運作
+-- ALTER TABLE "account" ALTER COLUMN "for_user_ledger" SET DEFAULT true,
+-- ALTER COLUMN "for_user_voucher" SET DEFAULT true;
 
--- 2-10. 在新增的欄位 "for_user_ledger", "for_user_voucher" 加上 default 值，讓以後沒有給值也能正常運作
-ALTER TABLE "account" ALTER COLUMN "for_user_ledger" SET DEFAULT true,
-ALTER COLUMN "for_user_voucher" SET DEFAULT true;
+/* Info: (20250108 - Shirley)
+第三批 db migration
+*/
