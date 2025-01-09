@@ -69,11 +69,11 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({
 
   return (
     <div className="flex flex-col">
-      <div className="mb-4 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
+      <div className="mb-4 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS">
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
             <div
-              className={`table-cell w-140px border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
+              className={`table-cell w-225px border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
             >
               {t('common:COMMON.PARTNER_S_NAME')}
             </div>

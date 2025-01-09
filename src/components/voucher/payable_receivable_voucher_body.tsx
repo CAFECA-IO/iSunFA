@@ -11,6 +11,7 @@ import { IVoucherBeta } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { PayableReceivableTabs } from '@/constants/voucher';
+import Toggle from '@/components/toggle/toggle';
 
 const PayableReceivableVoucherPageBody: React.FC = () => {
   const { t } = useTranslation('common');
@@ -41,6 +42,9 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
       }
     | undefined
   >();
+  // Info: (20250109 - Julian) 是否顯示沖銷傳票
+  // ToDo: (20250109 - Julian) API query
+  const [isHideReversals, setIsHideReversals] = useState(true);
 
   useEffect(() => {
     let sort: { by: SortBy; order: SortOrder } | undefined;
@@ -90,6 +94,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   };
 
   const tabsClick = (tab: string) => setActiveTab(tab as PayableReceivableTabs);
+  const hideReversalsToggleHandler = () => setIsHideReversals((prev) => !prev);
 
   const displayVoucherList =
     voucherList && voucherList.length > 0 ? (
@@ -142,6 +147,22 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           */
           sort={selectedSort}
         />
+        {/* Info: (20250109 - Julian) hidden delete voucher & reversals toggle */}
+        <div className="flex items-center gap-16px">
+          <Toggle
+            id="hide-reversals-toggle"
+            initialToggleState={isHideReversals}
+            getToggledState={hideReversalsToggleHandler}
+            toggleStateFromParent={isHideReversals}
+            lockedToOpen={false}
+          />
+          <div
+            onClick={hideReversalsToggleHandler}
+            className="text-switch-text-primary hover:cursor-pointer"
+          >
+            {t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
+          </div>
+        </div>
         {/* Info: (20240924 - Julian) List */}
         {displayVoucherList}
         {/* Info: (20241122 - Julian) Pagination */}

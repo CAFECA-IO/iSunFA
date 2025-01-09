@@ -56,7 +56,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const [selectedVoucherList, setSelectedVoucherList] = useState<IVoucherUI[]>([]);
 
   // Info: (20240920 - Julian) css string
-  const tableCellStyles = 'table-cell text-center align-middle';
+  const tableCellStyles = 'table-cell text-xs text-center align-middle';
   const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
   const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
 
@@ -252,7 +252,12 @@ const VoucherList: React.FC<IVoucherListProps> = ({
           toggleStateFromParent={isHideReversals}
           lockedToOpen={false}
         />
-        <p className="text-switch-text-primary">{t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}</p>
+        <div
+          onClick={hideReversalsToggleHandler}
+          className="text-switch-text-primary hover:cursor-pointer"
+        >
+          {t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
+        </div>
       </div>
 
       {/* Info: (20250107 - Julian) export & select button */}
@@ -322,11 +327,11 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       {displayedSelectArea}
 
       {/* Info: (20240920 - Julian) Table */}
-      <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
+      <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv1">
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
-            <div className={`${checkStyle} border-b border-stroke-neutral-quaternary`}>
+            <div className={`${checkStyle} w-20px border-b border-stroke-neutral-quaternary`}>
               <span className="mx-auto table h-16px w-16px table-fixed">
                 <div
                   className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${isSelectedAll ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
@@ -339,18 +344,18 @@ const VoucherList: React.FC<IVoucherListProps> = ({
             <div className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px`}>
               {displayedDate}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-90px`}>
               {t('journal:VOUCHER.VOUCHER_NO')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-200px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.NOTE')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-180px`}>
               {t('journal:VOUCHER.ACCOUNTING')}
             </div>
             <div className={`${tableCellStyles} ${sideBorderStyles} w-84px`}>{displayedDebit}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles} w-84px`}>{displayedCredit}</div>
-            <div className={`${tableCellStyles} border-b border-stroke-neutral-quaternary`}>
+            <div className={`${tableCellStyles} w-120px border-b border-stroke-neutral-quaternary`}>
               {t('journal:VOUCHER.ISSUER')}
             </div>
           </div>
