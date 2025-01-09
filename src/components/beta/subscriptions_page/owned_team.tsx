@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction } from 'react';
 import { IoArrowForward } from 'react-icons/io5';
 import { IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
-import { SUBSCRIPTION_PLANS } from '@/constants/subscription';
+import { PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { useTranslation } from 'next-i18next';
 import { formatTimestamp } from '@/constants/time';
@@ -21,7 +21,7 @@ const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: 
   const isPlanBeginner = team.plan === TPlanType.BEGINNER;
   const isPlanProfessional = team.plan === TPlanType.PROFESSIONAL;
   const isPlanEnterprise = team.plan === TPlanType.ENTERPRISE;
-  const teamUsingPlan = SUBSCRIPTION_PLANS.find((plan) => plan.id === team.plan);
+  const teamUsingPlan = PLANS.find((plan) => plan.id === team.plan);
 
   const formatter = new Intl.NumberFormat('en-US');
   const formatPrice = teamUsingPlan ? `$ ${formatter.format(teamUsingPlan.price)} / Month` : null;

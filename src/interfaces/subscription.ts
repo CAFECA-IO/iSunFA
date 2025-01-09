@@ -18,10 +18,17 @@ export enum TPlanType {
   ENTERPRISE = 'enterprise',
 }
 
-export interface ISubscriptionPlan {
-  id: TPlanType;
+interface IPlanFeature {
+  id: string;
   name: string;
+  value: string | string[];
+}
+
+export interface IPlan {
+  id: string;
+  planName: string;
   price: number;
+  features: IPlanFeature[];
 }
 
 export interface IUserOwnedTeam {
