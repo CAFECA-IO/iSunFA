@@ -66,25 +66,33 @@ class SessionHandler {
   }
 
   async backup() {
-    // Info: (20250108 - Luphia) convert session data to JSON string
-    const rawString = JSON.stringify(this.data);
-    const encryptedString = encryptString(rawString, this.secret);
-    // Info: (20250108 - Luphia) convert rawString to base64 string
-    const data = Buffer.from(encryptedString).toString('base64');
-    // Info: (20250108 - Luphia) save session data to file
-    const { filePath } = this;
-    fs.promises.writeFile(filePath, data);
+    try {
+      // Info: (20250108 - Luphia) convert session data to JSON string
+      const rawString = JSON.stringify(this.data);
+      const encryptedString = encryptString(rawString, this.secret);
+      // Info: (20250108 - Luphia) convert rawString to base64 string
+      const data = Buffer.from(encryptedString).toString('base64');
+      // Info: (20250108 - Luphia) save session data to file
+      const { filePath } = this;
+      fs.promises.writeFile(filePath, data);
+    } catch (error) {
+      // Info: (20250108 - Luphia) log error message and nothing to do
+    }
     return true;
   }
 
   async restore() {
-    // Info: (20250108 - Luphia) read session data from file
-    const { filePath } = this;
-    const data = await fs.promises.readFile(filePath, 'utf-8');
-    const rawString = Buffer.from(data, 'base64').toString('utf-8');
-    const decryptedString = decryptString(rawString, this.secret);
-    // Info: (20250108 - Luphia) convert JSON string to session data
-    this.data = new Map(JSON.parse(decryptedString));
+    try {
+      // Info: (20250108 - Luphia) read session data from file
+      const { filePath } = this;
+      const data = await fs.promises.readFile(filePath, 'utf-8');
+      const rawString = Buffer.from(data, 'base64').toString('utf-8');
+      const decryptedString = decryptString(rawString, this.secret);
+      // Info: (20250108 - Luphia) convert JSON string to session data
+      this.data = new Map(JSON.parse(decryptedString));
+    } catch (error) {
+      // Info: (20250108 - Luphia) log error message and nothing to do
+    }
     return true;
   }
 
