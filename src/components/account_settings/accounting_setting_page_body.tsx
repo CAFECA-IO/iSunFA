@@ -139,6 +139,14 @@ const AccountingSettingPageBody: React.FC = () => {
     setComponentVisible: setCurrencyMenuVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
+  // Info: (20250109 - Julian) 判斷保存紐是否禁用: 1. 更新中 2. 用戶沒有修改項目
+  const saveDisabled =
+    isUpdating ||
+    (currentSalesTax === defaultSalesTax &&
+      currentPurchaseTax === defaultPurchaseTax &&
+      currentTaxPeriod === initialTaxPeriod &&
+      currentCurrency === initialCurrency);
+
   const toggleSalesTaxMenu = () => setSalesTaxVisible(!salesTaxVisible);
   const togglePurchaseTaxMenu = () => setPurchaseTaxVisible(!purchaseTaxVisible);
   const togglePeriodMenu = () => setPeriodVisible(!periodVisible);
@@ -167,7 +175,7 @@ const AccountingSettingPageBody: React.FC = () => {
     const salesTaxRate = typeof currentSalesTax === 'number' ? currentSalesTax : 0;
     const purchaseTaxRate = typeof currentPurchaseTax === 'number' ? currentPurchaseTax : 0;
 
-    const body: IAccountingSetting = {
+    const body = {
       id: accountingSetting?.id ?? 0,
       companyId,
       currency: currentCurrency,
@@ -182,13 +190,10 @@ const AccountingSettingPageBody: React.FC = () => {
         },
         returnPeriodicity: currentTaxPeriod,
       },
-      shortcutList: [],
+      shortcutList: [], // ToDo: (20250109 - Julian) 自訂快捷鍵功能未實作
     };
 
-    updateSetting({
-      params: { companyId },
-      query: { body },
-    });
+    updateSetting({ params: { companyId }, body });
   };
 
   useEffect(() => {
@@ -676,7 +681,7 @@ const AccountingSettingPageBody: React.FC = () => {
 
       {/* Info: (20241106 - Julian) ===== 儲存按鈕 ===== */}
       <div className="ml-auto flex items-center">
-        <Button type="button" variant="tertiary" onClick={saveClickHandler}>
+        <Button type="button" variant="tertiary" disabled={saveDisabled} onClick={saveClickHandler}>
           {t('setting:ACCOUNTING.SAVE_BTN')}
         </Button>
       </div>
