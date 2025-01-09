@@ -498,8 +498,8 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.VOUCHER_LIST_V2, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.VOUCHER_POST_V2, req, res, handlePostRequest),
+  GET: (req) => withRequestValidation(APIName.VOUCHER_LIST_V2, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.VOUCHER_POST_V2, req, handlePostRequest),
 };
 
 export default async function handler(

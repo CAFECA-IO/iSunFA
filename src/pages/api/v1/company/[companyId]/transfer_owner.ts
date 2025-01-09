@@ -9,16 +9,13 @@ import { getSession } from '@/lib/utils/session';
 import { transferOwnership } from '@/lib/utils/repo/transaction/admin_role.tx';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function handlePutRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAdmin[] | null>>
-) {
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAdmin[] | null = null;
 
   const { newOwnerId } = req.body;
   const newOwnerIdNum = convertStringToNumber(newOwnerId);
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

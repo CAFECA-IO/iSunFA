@@ -53,7 +53,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: Buffer | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.IMAGE_GET_BY_ID, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.IMAGE_GET_BY_ID, req, handleGetRequest),
 };
 
 export default async function handler(

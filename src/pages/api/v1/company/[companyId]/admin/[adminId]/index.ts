@@ -9,16 +9,13 @@ import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getSession } from '@/lib/utils/session';
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAdmin | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAdmin | null = null;
 
   const { adminId } = req.query;
   const adminIdNum = convertStringToNumber(adminId);
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {
@@ -46,10 +43,7 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handlePutRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAdmin | null>>
-) {
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAdmin | null = null;
 
@@ -60,7 +54,7 @@ async function handlePutRequest(
   if (typeof status !== 'boolean' && !roleName) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId, companyId } = session;
 
     if (!userId) {
@@ -85,16 +79,13 @@ async function handlePutRequest(
   return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAdmin | null>>
-) {
+async function handleDeleteRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAdmin | null = null;
 
   const { adminId } = req.query;
   const adminIdNum = convertStringToNumber(adminId);
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

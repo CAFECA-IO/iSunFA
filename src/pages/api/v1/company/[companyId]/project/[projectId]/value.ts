@@ -16,10 +16,7 @@ async function checkInput(projectId: string) {
   return isValid;
 }
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IValue | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IValue | null = null;
 
@@ -28,7 +25,7 @@ async function handleGetRequest(
   if (!isValidInput) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId, companyId } = session;
     const projectIdNum = convertStringToNumber(projectId);
     const isAuth = await checkAuthorization(

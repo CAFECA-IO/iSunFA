@@ -91,8 +91,8 @@ const methodHandlers: {
     payload: ITodoCompany | ITodoCompany[] | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.TODO_LIST, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.CREATE_TODO, req, res, handlePostRequest),
+  GET: (req) => withRequestValidation(APIName.TODO_LIST, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.CREATE_TODO, req, handlePostRequest),
 };
 
 export default async function handler(

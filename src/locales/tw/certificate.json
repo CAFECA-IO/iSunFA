@@ -1,6 +1,6 @@
 {
   "LIST": {
-    "INVOICE_TOTAL_PRICE": "發票總價",
+    "INVOICE_TOTAL_PRICE": "憑證總價",
     "EXPORT_CERTIFICATES": "匯出發票"
   },
   "TAB": {
@@ -9,10 +9,10 @@
   },
   "TABLE": {
     "DATE": "日期",
-    "INVOICE_NAME": "發票名稱",
-    "INVOICE_NUMBER": "發票編號",
+    "INVOICE_NAME": "憑證名稱",
+    "INVOICE_NUMBER": "憑證編號",
     "COUNTERPARTY": "交易對象",
-    "INVOICE_TYPE": "發票類型",
+    "INVOICE_TYPE": "憑證類型",
     "TAX": "稅額",
     "AMOUNT": "金額",
     "DEDUCTABLE": "可扣抵稅額",
@@ -60,7 +60,7 @@
   },
   "TITLE": {
     "UPLOAD": "上傳發票",
-    "SELECT": "選擇一個或多個發票",
+    "SELECT": "上傳憑證",
     "LIST": "憑證列表"
   },
   "EDIT": {
@@ -69,8 +69,8 @@
     "DATE": "發票日期",
     "INPUT": "進項",
     "OUTPUT": "銷項",
-    "INVOICE_NAME": "發票名稱",
-    "INVOICE_NUMBER": "發票編號",
+    "INVOICE_NAME": "憑證名稱",
+    "INVOICE_NUMBER": "憑證編號",
     "PRICE_BEFORE_TAX": "稅前價格",
     "TAX": "稅額",
     "TAXABLE": "應稅金額",
@@ -78,7 +78,7 @@
     "COUNTERPARTY": "交易對象（客戶/供應商）",
     "ID_NUMBER": "統一編號",
     "NAME": "名稱",
-    "INVOICE_TYPE": "發票類型",
+    "INVOICE_TYPE": "憑證類型",
     "DEDUCTIBLE": "可扣抵稅額",
     "SUCCESS": "您的發票資訊已更新。",
     "TAXABLE_5": "應稅金額（5%）",
@@ -148,7 +148,8 @@
     "SCAN_THE_QRCODE": "請掃描二維碼開始用手機掃描",
     "FILE_SIZE_EXCEEDED": "檔案大小超過 4 MB 上限",
     "INDEX": "No.{{index}}",
-    "PREVIEW": "預覽"
+    "PREVIEW": "預覽",
+    "DELETE": "刪除"
   },
   "CREATE": {
     "FAILED": "創建失敗"

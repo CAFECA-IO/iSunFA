@@ -126,9 +126,8 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.ACCOUNT_LIST, req, res, handleGetRequest),
-  POST: (req, res) =>
-    withRequestValidation(APIName.CREATE_NEW_SUB_ACCOUNT, req, res, handlePostRequest),
+  GET: (req) => withRequestValidation(APIName.ACCOUNT_LIST, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.CREATE_NEW_SUB_ACCOUNT, req, handlePostRequest),
 };
 
 export default async function handler(

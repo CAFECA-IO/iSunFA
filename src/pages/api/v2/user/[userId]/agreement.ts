@@ -30,7 +30,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: string | null }>;
 } = {
-  POST: (req, res) => withRequestValidation(APIName.AGREE_TO_TERMS, req, res, handlePostRequest),
+  POST: (req) => withRequestValidation(APIName.AGREE_TO_TERMS, req, handlePostRequest),
 };
 
 export default async function handler(

@@ -14,14 +14,11 @@ import {
   getInvoiceVoucherJournalByJournalId,
 } from '@/lib/utils/repo/beta_transition.repo';
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IJournal | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IJournal | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {
@@ -52,14 +49,11 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IJournal | null>>
-) {
+async function handleDeleteRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IJournal | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

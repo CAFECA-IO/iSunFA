@@ -10,14 +10,11 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { deleteFileById, findFileById, findFileInDBByName } from '@/lib/utils/repo/file.repo';
 import { File } from '@prisma/client';
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFile | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFile | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {
@@ -59,14 +56,11 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFile | null>>
-) {
+async function handleDeleteRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFile | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

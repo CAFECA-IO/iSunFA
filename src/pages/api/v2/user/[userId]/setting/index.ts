@@ -67,8 +67,8 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IUserSetting | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.USER_SETTING_GET, req, res, handleGetRequest),
-  PUT: (req, res) => withRequestValidation(APIName.USER_SETTING_UPDATE, req, res, handlePutRequest),
+  GET: (req) => withRequestValidation(APIName.USER_SETTING_GET, req, handleGetRequest),
+  PUT: (req) => withRequestValidation(APIName.USER_SETTING_UPDATE, req, handlePutRequest),
 };
 
 export default async function handler(

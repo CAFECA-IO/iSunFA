@@ -14,14 +14,11 @@ async function checkInput(userId: string, name: string, email: string): Promise<
   return isValid;
 }
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IUser | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUser | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId } = session;
 
   if (!userId) {
@@ -47,10 +44,7 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handlePutRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IUser | null>>
-) {
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUser | null = null;
 
@@ -61,7 +55,7 @@ async function handlePutRequest(
   if (!isValid) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId } = session;
 
     if (!userId) {

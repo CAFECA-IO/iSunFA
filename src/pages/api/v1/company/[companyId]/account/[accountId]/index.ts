@@ -29,8 +29,8 @@ function formatParams(companyId: unknown, accountId: string | string[] | undefin
   };
 }
 
-async function getCompanyIdAccountId(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getSession(req, res);
+async function getCompanyIdAccountId(req: NextApiRequest) {
+  const session = await getSession(req);
   const { userId, companyId } = session;
   if (!userId) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
@@ -47,14 +47,11 @@ async function getCompanyIdAccountId(req: NextApiRequest, res: NextApiResponse) 
   };
 }
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccount | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccount | null = null;
 
-  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req, res);
+  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req);
   const accountFromDb = await findFirstAccountInPrisma(accountIdNumber, companyIdNumber);
   const account = accountFromDb ? formatAccount(accountFromDb) : ({} as IAccount);
   statusMessage = STATUS_MESSAGE.SUCCESS;
@@ -63,14 +60,11 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handlePutRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccount | null>>
-) {
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccount | null = null;
 
-  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req, res);
+  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req);
   const { name } = req.body;
   const updatedAccount = await updateAccountInPrisma(accountIdNumber, companyIdNumber, name);
   const account = updatedAccount ? formatAccount(updatedAccount) : ({} as IAccount);
@@ -80,14 +74,11 @@ async function handlePutRequest(
   return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccount | null>>
-) {
+async function handleDeleteRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccount | null = null;
 
-  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req, res);
+  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req);
   const deletedAccount = await softDeleteAccountInPrisma(accountIdNumber, companyIdNumber);
   const account = deletedAccount ? formatAccount(deletedAccount) : ({} as IAccount);
   statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;

@@ -146,7 +146,7 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  POST: (req, res) => withRequestValidation(APIName.INVOICE_POST_V2, req, res, handlePostRequest),
+  POST: (req) => withRequestValidation(APIName.INVOICE_POST_V2, req, handlePostRequest),
 };
 
 export default async function handler(

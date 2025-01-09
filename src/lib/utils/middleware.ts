@@ -1,13 +1,13 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest } from 'next';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
 import { output, validateOutputData, validateRequestData } from '@/lib/utils/validator';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { APIName, APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
-import { ISessionData } from '@/interfaces/session_data';
+import { ISessionData } from '@/interfaces/session';
 import { checkAuthorizationNew, isWhitelisted } from '@/lib/utils/auth_check_v2';
 import { DefaultValue } from '@/constants/default_value';
 
@@ -23,14 +23,10 @@ export async function checkSessionUser(
   }
 
   // Info: (20241128 - Luphia) If there is no user_id, it will be considered as a guest
-  if (!session.userId) {
+  if (!session.userId || session.userId === DefaultValue.USER_ID.GUEST) {
     isLogin = false;
-    loggerError({
-      userId: DefaultValue.USER_ID.GUEST,
-      errorType: 'Unauthorized Access',
-      errorMessage: 'User ID is missing in session',
-    });
   }
+
   return isLogin;
 }
 
@@ -78,10 +74,19 @@ export async function logUserAction<T extends APIName>(
   req: NextApiRequest,
   statusMessage: string
 ) {
+  const userId = session.userId || DefaultValue.USER_ID.GUEST;
+  const sessionId = session.sid;
+
+  // Info: (20250108 - Luphia) Sometimes the user action log is not necessary
+  if (userId === DefaultValue.USER_ID.GUEST && apiName !== APIName.SIGN_IN) {
+    // Info: (20250108 - Luphia) Skip logging user action for guest user
+    return;
+  }
+
   try {
     const userActionLog = {
-      sessionId: session.id || '',
-      userId: session.userId || DefaultValue.USER_ID.GUEST,
+      sessionId,
+      userId,
       actionType: UserActionLogActionType.API,
       actionDescription: apiName,
       ipAddress: (req.headers['x-forwarded-for'] as string) || '',
@@ -94,7 +99,7 @@ export async function logUserAction<T extends APIName>(
     await createUserActionLog(userActionLog);
   } catch (error) {
     loggerError({
-      userId: session.userId || DefaultValue.USER_ID.GUEST,
+      userId,
       errorType: `Failed to log user action for ${apiName} in middleware.ts`,
       errorMessage: error as Error,
     });
@@ -105,13 +110,12 @@ export async function logUserAction<T extends APIName>(
 export async function withRequestValidation<T extends APIName, U>(
   apiName: T,
   req: NextApiRequest,
-  res: NextApiResponse,
   handler: IHandleRequest<T, U>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: output<T> | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const isLogin = await checkSessionUser(session, apiName, req);
   if (!isLogin) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
