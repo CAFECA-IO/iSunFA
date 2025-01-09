@@ -20,14 +20,13 @@ import { SortBy, SortOrder } from '@/constants/sort';
 export function initAssetEntity(
   dto: Partial<PrismaAsset> & {
     companyId: number;
+    userId: number;
     name: string;
     type: AssetEntityType;
     number: string;
     acquisitionDate: number;
     purchasePrice: number;
-    accumulatedDepreciation: number;
     residualValue: number;
-    remainingLife: number;
     status: AssetStatus;
     depreciationStart: number;
     depreciationMethod: AssetDepreciationMethod;
@@ -42,14 +41,13 @@ export function initAssetEntity(
   const assetEntity: IAssetEntity = {
     id: dto.id ?? 0,
     companyId: dto.companyId,
+    userId: dto.userId,
     name: dto.name,
     type: dto.type,
     number: dto.number,
     acquisitionDate: dto.acquisitionDate,
     purchasePrice: dto.purchasePrice,
-    accumulatedDepreciation: dto.accumulatedDepreciation,
     residualValue: dto.residualValue,
-    remainingLife: dto.remainingLife,
     status: dto.status,
     depreciationStart: dto.depreciationStart,
     depreciationMethod: dto.depreciationMethod,
@@ -109,7 +107,8 @@ export const calculateAssetStraightLineDepreciate: calculateAssetEntityDepreciat
       accumulatedDepreciation,
       remainingValue: asset.purchasePrice - accumulatedDepreciation - currentPeriodDepreciation,
       residualValue: asset.residualValue,
-      remainingLife: asset.remainingLife,
+      // TODO: (20250109 - Shirley) 即時計算剩餘年限
+      remainingLife: asset.usefulLife,
     };
   }
 
@@ -122,7 +121,8 @@ export const calculateAssetStraightLineDepreciate: calculateAssetEntityDepreciat
     accumulatedDepreciation,
     remainingValue: asset.residualValue,
     residualValue: asset.residualValue,
-    remainingLife: asset.remainingLife,
+    // TODO: (20250109 - Shirley) 即時計算剩餘年限
+    remainingLife: asset.usefulLife,
   };
 };
 
@@ -214,15 +214,17 @@ export function createAssetOrderBy(sortOptions: { sortBy: SortBy; sortOrder: Sor
       case SortBy.PURCHASE_PRICE:
         orderBy.push({ purchasePrice: sortOrder });
         break;
-      case SortBy.ACCUMULATED_DEPRECIATION:
-        orderBy.push({ accumulatedDepreciation: sortOrder });
-        break;
+      // TODO: (20250109 - Shirley) 折舊金額排序
+      // case SortBy.ACCUMULATED_DEPRECIATION:
+      //   orderBy.push({ accumulatedDepreciation: sortOrder });
+      //   break;
       case SortBy.RESIDUAL_VALUE:
         orderBy.push({ residualValue: sortOrder });
         break;
-      case SortBy.REMAINING_LIFE:
-        orderBy.push({ remainingLife: sortOrder });
-        break;
+      // TODO: (20250109 - Shirley) 折舊金額排序
+      // case SortBy.REMAINING_LIFE:
+      //   orderBy.push({ remainingLife: sortOrder });
+      //   break;
       default:
         orderBy.push({ acquisitionDate: SortOrder.DESC });
         break;

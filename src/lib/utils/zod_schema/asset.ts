@@ -54,14 +54,13 @@ export const IAssetDetailsValidator = IAssetItemValidator.extend({
 export const assetEntityValidator = z.object({
   id: z.number(),
   companyId: z.number(),
+  userId: z.number(),
   name: z.string(),
   type: z.nativeEnum(AssetEntityType),
   number: z.string(),
   acquisitionDate: z.number(),
   purchasePrice: z.number(),
-  accumulatedDepreciation: z.number(),
   residualValue: z.number(),
-  remainingLife: z.number(),
   status: z.nativeEnum(AssetStatus),
   depreciationStart: z.number(),
   depreciationMethod: z.nativeEnum(AssetDepreciationMethod),
@@ -87,6 +86,7 @@ export type IAssetListSortOptions = z.infer<typeof assetListSortOptions>;
 // Info: (20241206 - Shirley) query for create single or bulk assets
 const IAssetPostInputQueryValidator = z.object({
   companyId: zodStringToNumber,
+  userId: zodStringToNumber,
 });
 
 // Info: (20241206 - Shirley) query for get asset by id

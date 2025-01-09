@@ -29,13 +29,12 @@ import lineItems from '@/seed_json/line_item.json';
 import salaryRecords from '@/seed_json/salary_record.json';
 import voucherSalaryRecordFolder from '@/seed_json/voucher_salary_record_folder.json';
 import file from '@/seed_json/file.json';
-import assets from '@/seed_json/asset.json';
 import assetVouchers from '@/seed_json/asset_voucher.json';
 import counterpartys from '@/seed_json/counterparty.json';
 import certificates from '@/seed_json/certificate.json';
 import voucherCertificates from '@/seed_json/voucher_certificate.json';
 import accountingSettings from '@/seed_json/accounting_setting.json';
-import userSettings from '@/seed_json/user_setting.json';
+// import userSettings from '@/seed_json/user_setting.json';
 import companySettings from '@/seed_json/company_setting.json';
 import userActionLogs from '@/seed_json/user_action_log.json';
 import invoice from '@/seed_json/invoice.json';
@@ -285,12 +284,6 @@ async function createEvent() {
   });
 }
 
-async function createAsset() {
-  await prisma.asset.createMany({
-    data: assets,
-  });
-}
-
 async function createAssetVoucher() {
   await prisma.assetVoucher.createMany({
     data: assetVouchers,
@@ -306,12 +299,6 @@ async function createCounterparty() {
 async function createAccountingSetting() {
   await prisma.accountingSetting.createMany({
     data: accountingSettings,
-  });
-}
-
-async function createUserSetting() {
-  await prisma.userSetting.createMany({
-    data: userSettings,
   });
 }
 
@@ -347,7 +334,6 @@ async function main() {
   await createUserActionLog();
   await createAccountingSetting();
   await createCompanySetting();
-  await createUserSetting();
   await createRole();
   await createCompanyKYC();
   await createAccount();
@@ -390,7 +376,6 @@ async function main() {
   await createCertificate();
   await createVoucher();
   await createVoucherCertificate();
-  await createAsset();
 
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);

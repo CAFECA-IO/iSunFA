@@ -44,6 +44,7 @@ export async function createAssetWithVouchers(
 
   // Info: (20241204 - Luphia) Create the Asset
   const newAsset = {
+    userId: assetData.userId,
     companyId: assetData.companyId,
     name: assetData.name,
     type: assetData.type,
@@ -101,16 +102,17 @@ export async function createManyAssets(
 
   for (let i = 0; i < amount; i += 1) {
     const newAsset = {
+      userId: assetData.userId,
       companyId: assetData.companyId,
       name: assetData.name,
       type: assetData.type,
       number: assetNumbers[i],
       acquisitionDate: assetData.acquisitionDate,
       purchasePrice: i === amount - 1 ? pricePerAsset + remainder : pricePerAsset,
-      accumulatedDepreciation: assetData.accumulatedDepreciation,
+      // accumulatedDepreciation: assetData.accumulatedDepreciation,
       residualValue:
         i === amount - 1 ? residualValuePerAsset + remainderResidualValue : residualValuePerAsset,
-      remainingLife: assetData.usefulLife || 0,
+      // remainingLife: assetData.usefulLife || 0,
       status: AssetStatus.NORMAL,
       depreciationStart: assetData.depreciationStart || assetData.acquisitionDate,
       depreciationMethod: assetData.depreciationMethod || AssetDepreciationMethod.NONE,

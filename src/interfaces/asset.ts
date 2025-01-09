@@ -164,6 +164,8 @@ export interface IAssetEntity {
    */
   companyId: number;
 
+  userId: number;
+
   name: string;
 
   /**
@@ -195,24 +197,9 @@ export interface IAssetEntity {
   /**
    * Info: (20241024 - Murky)
    * @Float
-   * @description Sum of depreciation expense from the acquisition date to the current date
-   */
-  accumulatedDepreciation: number;
-
-  /**
-   * Info: (20241024 - Murky)
-   * @Float
    * @description The remaining value of the asset after depreciated through the useful life
    */
   residualValue: number;
-
-  /**
-   * Info: (20241024 - Murky)
-   * @description The remaining useful life of the asset,
-   * decrease when time pass
-   * @note need to be in seconds
-   */
-  remainingLife: number;
 
   /**
    * Info: (20241024 - Murky)
@@ -343,6 +330,7 @@ export interface AssetHeaderWithStringDate extends Omit<AssetHeader, 'acquisitio
 
 // ToDo: (20241204 - Luphia) move to interface folder
 export interface ICreateAssetWithVouchersRepoInput {
+  userId: number;
   companyId: number;
   name: string;
   type: string;
