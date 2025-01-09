@@ -1010,7 +1010,8 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-xdescribe('company/[companyId]/report', () => {
+describe('company/[companyId]/report', () => {
+  // Info: (20250108 - Luphia) need to redesign the test case
   describe('GET Report List', () => {
     it('should match patter', async () => {
       req.query = {
