@@ -1,37 +1,5 @@
 [
   {
-    "id": 0,
-    "name": "PROCESSING",
-    "email": "PROCESSING@ISUNFA.COM",
-    "imageFileId": 0,
-    "createdAt": 0,
-    "updatedAt": 0
-  },
-  {
-    "id": 1,
-    "name": "GUEST",
-    "email": "GUEST@ISUNFA.COM",
-    "imageFileId": 1,
-    "createdAt": 0,
-    "updatedAt": 0
-  },
-  {
-    "id": 2,
-    "name": "SYSTEM",
-    "email": "SYSTEM@ISUNFA.COM",
-    "imageFileId": 2,
-    "createdAt": 0,
-    "updatedAt": 0
-  },
-  {
-    "id": 555,
-    "name": "UNKNOWN",
-    "email": "UNKNOWN@ISUNFA.COM",
-    "imageFileId": 555,
-    "createdAt": 0,
-    "updatedAt": 0
-  },
-  {
     "id": 1000,
     "name": "Test_User_1",
     "email": "test1@gmail.com",

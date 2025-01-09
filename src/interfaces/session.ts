@@ -5,7 +5,7 @@ export interface ISessionOption {
     httpOnly?: boolean;
     path?: string;
     secure?: boolean;
-    sameSite?: 'string';
+    sameSite?: 'Strict' | 'Lax' | 'None';
   };
 }
 
