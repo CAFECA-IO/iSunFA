@@ -101,7 +101,7 @@ const methodHandlers: {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage = STATUS_MESSAGE.BAD_REQUEST;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   try {
     const isLogin = await checkSessionUser(session, APIName.ASSET_LIST_EXPORT, req);
     if (!isLogin) {

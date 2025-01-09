@@ -14,10 +14,7 @@ async function checkInput(agreementHash: string): Promise<boolean> {
   return !!agreementHash;
 }
 
-async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IUser | null>>
-) {
+async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUser | null = null;
   const { agreementHash } = req.body;
@@ -25,7 +22,7 @@ async function handlePostRequest(
   if (!isValid) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId } = session;
     if (!userId) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;

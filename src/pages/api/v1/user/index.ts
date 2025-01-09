@@ -9,10 +9,10 @@ import { formatUserList } from '@/lib/utils/formatter/user.formatter';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUser | IUser[] | null = null;
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;

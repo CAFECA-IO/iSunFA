@@ -171,14 +171,11 @@ function extractKeyAndIvFromFields(fields: formidable.Fields) {
   };
 }
 
-async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFile | null>>
-) {
+async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFile | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

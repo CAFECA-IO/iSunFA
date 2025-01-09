@@ -7,11 +7,11 @@ import { listProjectProgress } from '@/lib/utils/repo/progress.repo';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getSession } from '@/lib/utils/session';
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<number>>) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number = 0;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

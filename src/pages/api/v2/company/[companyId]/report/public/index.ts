@@ -62,7 +62,7 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  POST: (req, res) => withRequestValidation(APIName.REPORT_GENERATE, req, res, handlePostRequest),
+  POST: (req) => withRequestValidation(APIName.REPORT_GENERATE, req, handlePostRequest),
 };
 
 export default async function handler(

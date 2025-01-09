@@ -93,14 +93,11 @@ function formatDateQuery(req: NextApiRequest) {
   return { date: null };
 }
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ILaborCostChartData>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ILaborCostChartData | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

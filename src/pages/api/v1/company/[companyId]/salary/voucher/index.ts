@@ -65,10 +65,7 @@ async function createLineItems(
   );
 }
 
-async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFolder | null>>
-) {
+async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFolder | null = null;
 
@@ -77,7 +74,7 @@ async function handlePostRequest(
   if (!isValid) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId, companyId } = session;
     const isAuth = await checkAuth(userId, companyId);
     if (!isAuth) {

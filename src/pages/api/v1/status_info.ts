@@ -10,17 +10,14 @@ import { getUserById } from '@/lib/utils/repo/user.repo';
 import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<{ user: IUser; company: ICompany }>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   const payload: { user: IUser; company: ICompany } = {
     user: {} as IUser,
     company: {} as ICompany,
   };
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session || {};
 
   if (userId) {

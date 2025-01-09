@@ -139,7 +139,7 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  PUT: (req, res) => withRequestValidation(APIName.INVOICE_PUT_V2, req, res, handlePutRequest),
+  PUT: (req) => withRequestValidation(APIName.INVOICE_PUT_V2, req, handlePutRequest),
 };
 
 export default async function handler(

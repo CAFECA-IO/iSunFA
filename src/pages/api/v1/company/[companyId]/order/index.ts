@@ -8,14 +8,11 @@ import { createOrder, listOrder } from '@/lib/utils/repo/order.repo';
 import { IOrder } from '@/interfaces/order';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IOrder[]>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IOrder[] | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {
@@ -38,11 +35,11 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handlePostRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IOrder>>) {
+async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IOrder | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

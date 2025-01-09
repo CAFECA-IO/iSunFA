@@ -60,7 +60,7 @@ const methodHandlers: {
     payload: IStatusInfo | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.STATUS_INFO_GET, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.STATUS_INFO_GET, req, handleGetRequest),
 };
 
 export default async function handler(

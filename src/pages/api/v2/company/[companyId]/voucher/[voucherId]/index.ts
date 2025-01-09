@@ -475,11 +475,9 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  GET: (req, res) =>
-    withRequestValidation(APIName.VOUCHER_GET_BY_ID_V2, req, res, handleGetRequest),
-  PUT: (req, res) => withRequestValidation(APIName.VOUCHER_PUT_V2, req, res, handlePutRequest),
-  DELETE: (req, res) =>
-    withRequestValidation(APIName.VOUCHER_DELETE_V2, req, res, handleDeleteRequest),
+  GET: (req) => withRequestValidation(APIName.VOUCHER_GET_BY_ID_V2, req, handleGetRequest),
+  PUT: (req) => withRequestValidation(APIName.VOUCHER_PUT_V2, req, handlePutRequest),
+  DELETE: (req) => withRequestValidation(APIName.VOUCHER_DELETE_V2, req, handleDeleteRequest),
 };
 
 export default async function handler(

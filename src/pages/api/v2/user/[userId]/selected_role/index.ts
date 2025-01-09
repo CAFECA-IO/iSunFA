@@ -39,7 +39,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IUserRole | null }>;
 } = {
-  PUT: (req, res) => withRequestValidation(APIName.USER_SELECT_ROLE, req, res, handlePutRequest),
+  PUT: (req) => withRequestValidation(APIName.USER_SELECT_ROLE, req, handlePutRequest),
 };
 
 export default async function handler(
