@@ -99,8 +99,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IPendingTaskTotal | null }>;
 } = {
-  GET: (req, res) =>
-    withRequestValidation(APIName.USER_PENDING_TASK_GET, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.USER_PENDING_TASK_GET, req, handleGetRequest),
 };
 
 export default async function handler(

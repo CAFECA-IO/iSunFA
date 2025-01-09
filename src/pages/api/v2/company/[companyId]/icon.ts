@@ -44,7 +44,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: ICompany | null }>;
 } = {
-  PUT: (req, res) => withRequestValidation(APIName.COMPANY_PUT_ICON, req, res, handlePutRequest),
+  PUT: (req) => withRequestValidation(APIName.COMPANY_PUT_ICON, req, handlePutRequest),
 };
 
 export default async function handler(

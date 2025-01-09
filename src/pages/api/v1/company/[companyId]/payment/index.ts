@@ -73,7 +73,7 @@ function decryptCustomId(customId: unknown) {
   return { orderId, subPlan, subPeriod };
 }
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handleGetRequest(req: NextApiRequest) {
   /* Info: (20240823 - Murky) 流程： 1. 前端呼叫Get payment 傳入資訊，後端可以用 "customId" 來讓資料與第三方之間做傳遞
    * 2. 後端呼叫第三方 API，取得 token(CHECKOUT_TOKEN)
    * 3. 第三方webhook Post payment, 後端從customId 取得get的資訊, 並使用TOKEN_TRANSACTION付款
@@ -83,7 +83,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   let payload = '';
   const oenToken = process.env.PAYMENT_TOKEN;
   const oenMerchantId = process.env.PAYMENT_ID ?? '';
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;

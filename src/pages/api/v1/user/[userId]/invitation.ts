@@ -10,14 +10,13 @@ import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export async function handlePutRequest(
-  req: NextApiRequest,
-  res: NextApiResponse
+  req: NextApiRequest
 ): Promise<{ statusMessage: string; payload: IAdmin | null }> {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAdmin | null = null;
 
   try {
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId } = session;
     if (!userId) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;

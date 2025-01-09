@@ -67,6 +67,7 @@ describe('company/[companyId]/voucher integration test', () => {
     jest.clearAllMocks();
   });
   describe('Get list voucher', () => {
+    // Info: (20250108 - Luphia) need to redesign the test case
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},

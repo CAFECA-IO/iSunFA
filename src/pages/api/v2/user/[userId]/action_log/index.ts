@@ -30,7 +30,7 @@ const handleGetRequest: IHandleRequest<
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
   const data = listedUserActionLog.data.map((log) => ({
     ...log,
-    isCurrent: session.sessionId === log.sessionId,
+    isCurrent: session.sid === log.sessionId,
   }));
   listedUserActionLog.data = data;
   payload = listedUserActionLog;
@@ -43,8 +43,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IPaginatedData<IUserActionLog[]> | null }>;
 } = {
-  GET: (req, res) =>
-    withRequestValidation(APIName.USER_ACTION_LOG_LIST, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.USER_ACTION_LOG_LIST, req, handleGetRequest),
 };
 
 export default async function handler(

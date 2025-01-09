@@ -82,9 +82,9 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IFileBeta | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.FILE_GET, req, res, handleGetRequest),
-  DELETE: (req, res) => withRequestValidation(APIName.FILE_DELETE, req, res, handleDeleteRequest),
-  PUT: (req, res) => withRequestValidation(APIName.FILE_PUT_V2, req, res, handlePutRequest),
+  GET: (req) => withRequestValidation(APIName.FILE_GET, req, handleGetRequest),
+  DELETE: (req) => withRequestValidation(APIName.FILE_DELETE, req, handleDeleteRequest),
+  PUT: (req) => withRequestValidation(APIName.FILE_PUT_V2, req, handlePutRequest),
 };
 
 export default async function handler(

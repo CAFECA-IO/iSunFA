@@ -89,7 +89,7 @@ export const handleGetRequest: IHandleRequest<APIName.LEDGER_LIST, IPayload> = a
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.LEDGER_LIST, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.LEDGER_LIST, req, handleGetRequest),
 };
 
 export default async function handler(

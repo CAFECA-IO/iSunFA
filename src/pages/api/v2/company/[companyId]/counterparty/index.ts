@@ -69,8 +69,8 @@ const methodHandlers: {
     payload: ICounterparty | IPaginatedData<ICounterparty[]> | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.COUNTERPARTY_LIST, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.COUNTERPARTY_ADD, req, res, handlePostRequest),
+  GET: (req) => withRequestValidation(APIName.COUNTERPARTY_LIST, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.COUNTERPARTY_ADD, req, handlePostRequest),
 };
 
 export default async function handler(
