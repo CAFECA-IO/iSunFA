@@ -66,7 +66,8 @@ describe('company/[companyId]/voucher integration test', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
-  xdescribe('Get list voucher', () => {
+  describe('Get list voucher', () => {
+    // Info: (20250108 - Luphia) need to redesign the test case
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},
