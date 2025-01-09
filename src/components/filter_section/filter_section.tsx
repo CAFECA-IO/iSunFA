@@ -202,7 +202,7 @@ const FilterSection = <T,>({
           options={types}
           selectedValue={selectedType}
           onChange={setSelectedType}
-          className="flex-1"
+          containerClassName="flex-1"
         />
       )}
 
@@ -213,7 +213,7 @@ const FilterSection = <T,>({
           options={statuses}
           selectedValue={selectedStatus}
           onChange={setSelectedStatus}
-          className="flex-1"
+          containerClassName="flex-1"
         />
       )}
 

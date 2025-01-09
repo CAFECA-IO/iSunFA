@@ -46,12 +46,11 @@ import associateVouchers from '@/seed_json/associate_voucher.json';
 import event from '@/seed_json/event.json';
 
 const prisma = new PrismaClient();
-
 async function createFile() {
   const files = file.map((f) => {
     return {
       ...f,
-      iv: Buffer.from('1'),
+      iv: Buffer.from(f.iv, 'base64'),
     };
   });
   await prisma.file.createMany({
@@ -76,7 +75,7 @@ async function createMilestones() {
   });
 }
 
-// Info (2024722 - Murky) - Uncomment this line to seed generated reports
+// Info (20240722 - Murky) - Uncomment this line to seed generated reports
 // async function createGeneratedReports() {
 //   await prisma.report.createMany({
 //     data: generatedReports,
@@ -334,84 +333,80 @@ async function createInvoice() {
 }
 
 async function main() {
-  await createFile();
-  await createCompany();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
-  await createUser();
-  await createCounterparty();
-  await createUserActionLog();
-  await createAccountingSetting();
-  await createCompanySetting();
-  await createUserSetting();
-  await createRole();
-  await createCompanyKYC();
-  await createAccount();
-  await createAdmin();
-  await createDepartment();
-  await createEmployee();
-  await createProjects();
-  await createSale();
-  await createValue();
-  await createEmployeeProject();
-  await createWorkRate();
-  await createPlan();
-  await createOrder();
-  await createPaymentRecord();
-  await createSubscription();
-  await createInvitation();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 5000);
-  });
-  await createIncomeExpenses();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
-  await createMilestones();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
+  try {
+    await createFile();
+    await createCompany();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    await createUser();
+    await createCounterparty();
+    await createUserActionLog();
+    await createAccountingSetting();
+    await createCompanySetting();
+    await createUserSetting();
+    await createRole();
+    await createCompanyKYC();
+    await createAccount();
+    await createAdmin();
+    await createDepartment();
+    await createEmployee();
+    await createProjects();
+    await createSale();
+    await createValue();
+    await createEmployeeProject();
+    await createWorkRate();
+    await createPlan();
+    await createOrder();
+    await createPaymentRecord();
+    await createSubscription();
+    await createInvitation();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 5000);
+    });
+    await createIncomeExpenses();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    await createMilestones();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
 
-  // Info (20240316 - Murky) - Uncomment this line to seed generated reports
-  // await createGeneratedReports();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
-  await createPendingReports();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
+    // Info (20240316 - Murky) - Uncomment this line to seed generated reports
+    // await createGeneratedReports();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    await createPendingReports();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
 
-  await createJournal();
-  await createCertificate();
-  await createVoucher();
-  await createVoucherCertificate();
-  await createAsset();
+    await createJournal();
+    await createCertificate();
+    await createVoucher();
+    await createVoucherCertificate();
+    await createAsset();
 
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
-  await createLineItems();
-  await createSalaryRecord();
-  await createVoucherSalaryRecordFolder();
-  await createAssetVoucher();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    await createLineItems();
+    await createSalaryRecord();
+    await createVoucherSalaryRecordFolder();
+    await createAssetVoucher();
 
-  await createEvent();
-  await createAssociateVoucher();
-  await createAssociateLineItem();
-  await createInvoice();
+    await createEvent();
+    await createAssociateVoucher();
+    await createAssociateLineItem();
+    await createInvoice();
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async () => {
-    // Info (20240316 - Murky) - disconnect prisma
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+main();

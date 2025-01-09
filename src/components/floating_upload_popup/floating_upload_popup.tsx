@@ -25,7 +25,10 @@ const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({
     useModalContext();
   const [expanded, setExpanded] = useState(false);
   const uploadingFileCount = files.filter(
-    (file) => file.progress < 100 && file.status === ProgressStatus.IN_PROGRESS
+    (file) =>
+      (file.progress < 100 && file.status === ProgressStatus.IN_PROGRESS) ||
+      file.status === ProgressStatus.PAUSED ||
+      file.status === ProgressStatus.FAILED
   ).length;
 
   // Info: (20240919 - tzuhan) 暫停或繼續上傳
@@ -117,7 +120,9 @@ const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({
                 />
               ))
             ) : (
-              <div className="text-center text-gray-500">{t('certificate:UPLOAD.NO_FILE')}</div>
+              <div className="text-center text-text-neutral-primary">
+                {t('certificate:UPLOAD.NO_FILE')}
+              </div>
             )}
           </div>
         )}

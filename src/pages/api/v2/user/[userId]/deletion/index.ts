@@ -35,8 +35,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IUser | null }>;
 } = {
-  PUT: (req, res) =>
-    withRequestValidation(APIName.USER_DELETION_UPDATE, req, res, handlePutRequest),
+  PUT: (req) => withRequestValidation(APIName.USER_DELETION_UPDATE, req, handlePutRequest),
 };
 
 export default async function handler(

@@ -62,14 +62,11 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
   return json.payload as IAccountResultStatus;
 }
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IInvoice | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {
@@ -98,16 +95,11 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handlePutRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<
-    IResponseData<{ journalId: number; resultStatus: IAccountResultStatus } | null>
-  >
-) {
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: { journalId: number; resultStatus: IAccountResultStatus } | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

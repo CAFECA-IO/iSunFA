@@ -126,9 +126,8 @@ const methodHandlers: {
     payload: ICompanyAndRole | ICompanyAndRole[] | IPaginatedData<ICompanyAndRole[]> | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.LIST_USER_COMPANY, req, res, handleGetRequest),
-  POST: (req, res) =>
-    withRequestValidation(APIName.CREATE_USER_COMPANY, req, res, handlePostRequest),
+  GET: (req) => withRequestValidation(APIName.LIST_USER_COMPANY, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.CREATE_USER_COMPANY, req, handlePostRequest),
 };
 
 export default async function handler(

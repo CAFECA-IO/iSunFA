@@ -5,6 +5,7 @@ import { lineItemGetByAccountAPIUtils } from '@/pages/api/v2/company/[companyId]
 import { LineItem as PrismaLineItem, Account as PrismaAccount } from '@prisma/client';
 
 describe('lineItemGetByAccountAPIUtils', () => {
+  // Info: (20250108 - Luphia) need to redesign the test case
   let fakeReverseLineItems: PrismaLineItem & {
     account: PrismaAccount;
   };

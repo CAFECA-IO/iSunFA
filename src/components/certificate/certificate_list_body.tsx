@@ -40,7 +40,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const router = useRouter();
   const { userAuth, selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
-  const params = { companyId: selectedCompany?.id };
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
@@ -575,7 +574,18 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       : certificate.voucherNo;
   });
 
-  return (
+  return !companyId ? (
+    <div className="flex flex-col items-center gap-2">
+      <Image
+        src="/elements/uploading.gif"
+        className="rounded-xs"
+        width={150}
+        height={150}
+        alt={t('certificate:UPLOAD.LOADING')}
+      />
+      <div>{t('certificate:UPLOAD.LOADING')}</div>
+    </div>
+  ) : (
     <>
       {isExportModalOpen && (
         <CertificateExportModal
@@ -604,7 +614,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         className={`flex grow flex-col gap-4 ${filterCertificates && filterCertificates.length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
-        <CertificateFileUpload isDisabled={false} showErrorMessage={false} setFiles={setFiles} />
+        <CertificateFileUpload isDisabled={false} setFiles={setFiles} />
         <FloatingUploadPopup
           files={files}
           pauseFileUpload={pauseFileUpload}
@@ -630,7 +640,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           certificates: ICertificate[];
         }>
           className="mt-2"
-          params={params}
+          params={{ companyId }}
           apiName={APIName.CERTIFICATE_LIST_V2}
           onApiResponse={handleApiResponse}
           page={page}

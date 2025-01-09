@@ -381,12 +381,6 @@ const VoucherEditingPageBody: React.FC<{
     setOpenSelectorModal(true);
   }, [selectedCertificatesUI]);
 
-  // Info: (20241018 - Tzuhan) 選擇憑證返回上一步
-  const handleBack = useCallback(() => {
-    handleOpenSelectorModal();
-    setOpenUploaderModal(false);
-  }, []);
-
   // Info: (20241018 - Tzuhan) 處理選擇憑證 API 回傳
   const handleCertificateApiResponse = useCallback(
     (
@@ -814,6 +808,7 @@ const VoucherEditingPageBody: React.FC<{
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
       <CertificateSelectorModal
+        companyId={companyId}
         isOpen={openSelectorModal}
         onClose={() => setOpenSelectorModal(false)}
         openUploaderModal={() => setOpenUploaderModal(true)}
@@ -826,7 +821,6 @@ const VoucherEditingPageBody: React.FC<{
       <CertificateUploaderModal
         isOpen={openUploaderModal}
         onClose={() => setOpenUploaderModal(false)}
-        onBack={handleBack}
       />
       {/* Info: (20240926 - Julian) AI analyze */}
       <AIWorkingArea

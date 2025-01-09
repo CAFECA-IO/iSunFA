@@ -1,5 +1,5 @@
 import { AuthFunctionsKeysNew } from '@/constants/auth';
-import { ISessionData } from '@/interfaces/session_data';
+import { ISessionData } from '@/interfaces/session';
 import { NextApiRequest } from 'next';
 
 export enum AuthFunctionsKeys {

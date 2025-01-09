@@ -105,9 +105,9 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: ITodoCompany | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.TODO_GET_BY_ID, req, res, handleGetRequest),
-  PUT: (req, res) => withRequestValidation(APIName.UPDATE_TODO, req, res, handlePutRequest),
-  DELETE: (req, res) => withRequestValidation(APIName.DELETE_TODO, req, res, handleDeleteRequest),
+  GET: (req) => withRequestValidation(APIName.TODO_GET_BY_ID, req, handleGetRequest),
+  PUT: (req) => withRequestValidation(APIName.UPDATE_TODO, req, handlePutRequest),
+  DELETE: (req) => withRequestValidation(APIName.DELETE_TODO, req, handleDeleteRequest),
 };
 
 export default async function handler(

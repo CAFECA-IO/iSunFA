@@ -57,8 +57,7 @@ const methodHandlers: {
     payload: JsonWebKey | null;
   }>;
 } = {
-  GET: (req, res) =>
-    withRequestValidation(APIName.ROOM_GET_PUBLIC_KEY_BY_ID, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.ROOM_GET_PUBLIC_KEY_BY_ID, req, handleGetRequest),
 };
 
 export default async function handler(

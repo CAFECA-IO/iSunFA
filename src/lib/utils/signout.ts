@@ -1,16 +1,22 @@
 import { destroySession, getSession } from '@/lib/utils/session';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest } from 'next';
 
 import { APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { DefaultValue } from '@/constants/default_value';
 
-export const handleSignOutSession = async (req: NextApiRequest, res: NextApiResponse) => {
-  const session = await getSession(req, res);
+export const handleSignOutSession = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+
+  // Info: (20250108 - Luphia) If there is no user_id, it will be considered as a guest and no need to log out
+  if (!session.userId || session.userId === DefaultValue.USER_ID.GUEST) {
+    return;
+  }
 
   await createUserActionLog({
-    sessionId: session.id,
+    sessionId: session.sid,
     userId: session.userId,
     actionType: UserActionLogActionType.LOGOUT,
     actionDescription: UserActionLogActionType.LOGOUT,

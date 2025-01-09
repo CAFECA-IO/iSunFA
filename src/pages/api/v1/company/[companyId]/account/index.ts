@@ -180,11 +180,8 @@ export function formatGetQuery(companyId: number, req: NextApiRequest): IAccount
   };
 }
 
-export async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPaginatedAccount | null>>
-) {
-  const { companyId, userId } = await getSession(req, res);
+export async function handleGetRequest(req: NextApiRequest) {
+  const { companyId, userId } = await getSession(req);
   const formattedQuery = formatGetQuery(companyId, req);
   const accountRetriever = AccountRetrieverFactory.createRetriever(formattedQuery);
   let paginatedAccount: IPaginatedAccount | null = null;
@@ -215,11 +212,8 @@ function setNewCode(parentAccount: Account, latestSubAccount: Account | null) {
   return newCode;
 }
 
-export async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccount>>
-) {
-  const session = await getSession(req, res);
+export async function handlePostRequest(req: NextApiRequest) {
+  const session = await getSession(req);
   const { userId, companyId } = session;
   const { accountId, name } = req.body;
   if (!userId) {
@@ -281,11 +275,11 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'GET':
-        payload = await handleGetRequest(req, res);
+        payload = await handleGetRequest(req);
         statusMessage = STATUS_MESSAGE.SUCCESS;
         break;
       case 'POST':
-        payload = await handlePostRequest(req, res);
+        payload = await handlePostRequest(req);
         statusMessage = STATUS_MESSAGE.CREATED;
         break;
       default:

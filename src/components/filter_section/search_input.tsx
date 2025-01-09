@@ -10,7 +10,7 @@ interface SearchInputProps {
 const SearchInput: React.FC<SearchInputProps> = ({ searchQuery, onSearchChange }) => {
   const { t } = useTranslation(['search']);
   return (
-    <div className="flex min-w-200px flex-1 flex-col">
+    <div className="flex min-w-250px flex-1.5 flex-col">
       <div className="relative flex-1 text-sm font-medium">
         <input
           type="text"

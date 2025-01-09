@@ -74,10 +74,7 @@ async function processInvitations(
   return formattedInvitationList;
 }
 
-async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvitation[]>>
-) {
+async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IInvitation[] = [];
 
@@ -86,7 +83,7 @@ async function handlePostRequest(
   if (!isValidInput) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId, companyId } = session;
     const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], { userId, companyId });
 

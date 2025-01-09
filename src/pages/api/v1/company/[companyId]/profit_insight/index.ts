@@ -91,7 +91,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IProfitInsight | null>>
 ) {
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
 

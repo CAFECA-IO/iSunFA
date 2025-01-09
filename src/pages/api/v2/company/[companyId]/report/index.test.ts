@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest } from 'next';
 import {
   balanceSheetHandler,
   cashFlowHandler,
@@ -15,7 +15,6 @@ import { timestampInSeconds } from '@/lib/utils/common';
 import { BalanceSheetReport, FinancialReport, IncomeStatementReport } from '@/interfaces/report';
 
 let req: jest.Mocked<NextApiRequest>;
-let res: jest.Mocked<NextApiResponse>;
 
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
@@ -969,11 +968,6 @@ beforeEach(() => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
-  res = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-  } as unknown as jest.Mocked<NextApiResponse>;
-
   jest.spyOn(prisma.company, 'findUnique').mockResolvedValue(mockCompany);
 
   /**
@@ -1017,6 +1011,7 @@ afterEach(() => {
 });
 
 describe('company/[companyId]/report', () => {
+  // Info: (20250108 - Luphia) need to redesign the test case
   describe('GET Report List', () => {
     it('should match patter', async () => {
       req.query = {
@@ -1026,7 +1021,7 @@ describe('company/[companyId]/report', () => {
         reportType: FinancialReportTypesKey.balance_sheet,
       };
       req.body = {};
-      const { payload, statusMessage } = await handleGetRequest(req, res);
+      const { payload, statusMessage } = await handleGetRequest(req);
 
       expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_GET);
       expect(payload).toBeDefined();

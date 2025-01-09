@@ -2,9 +2,10 @@ import { NextApiRequest } from 'next';
 import { handlePostRequest } from '@/pages/api/v2/ask_ai/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { AI_TYPE } from '@/constants/aich';
-import { ISessionData } from '@/interfaces/session_data';
+import { ISessionData } from '@/interfaces/session';
 
 describe('company/[companyId]/ask_ai', () => {
+  // Info: (20250108 - Luphia) need to redesign the test case
   describe('POST Voucher', () => {
     it('should pass certificate', async () => {
       const query = {
