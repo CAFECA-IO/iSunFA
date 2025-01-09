@@ -47,7 +47,8 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-xdescribe('company/[companyId]/account integration test', () => {
+describe('company/[companyId]/account integration test', () => {
+  // Info: (20250108 - Luphia) need to redesign the test case
   let req: jest.Mocked<NextApiRequest>;
   let res: jest.Mocked<NextApiResponse>;
   afterEach(() => {
