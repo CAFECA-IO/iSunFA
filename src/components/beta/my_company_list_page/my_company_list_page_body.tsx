@@ -133,8 +133,8 @@ const MyCompanyListPageBody = () => {
 
       {/* // Info: (20241108 - Liz) Modals */}
       <CreateCompanyModal
-        isModalOpen={isCreateCompanyModalOpen}
-        toggleModal={toggleCreateCompanyModal}
+        isModalVisible={isCreateCompanyModalOpen}
+        modalVisibilityHandler={toggleCreateCompanyModal}
         setRefreshKey={setRefreshKey}
       />
 

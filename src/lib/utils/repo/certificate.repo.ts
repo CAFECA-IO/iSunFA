@@ -250,18 +250,30 @@ export async function getCertificatesV2(options: {
       },
       {
         OR: [
-          {
-            invoices: {
-              some: {
-                type, // Info: (20241129 - Murky) 如果有符合的 `type`
-              },
-            },
-          },
-          {
-            invoices: {
-              none: {}, // Info: (20241129 - Murky) 沒有任何關聯的 `invoices`
-            },
-          },
+          // Info: (20250109 - tzuhan) 當 type 有具體值時，僅匹配 type 且排除 invoice 為空
+          ...(type && type !== InvoiceType.ALL
+            ? [
+                {
+                  invoices: {
+                    some: {
+                      type,
+                    },
+                  },
+                },
+              ]
+            : [
+                // Info: (20250109 - tzuhan) 否則，匹配所有相關聯或無關聯的 certificates
+                {
+                  invoices: {
+                    some: {}, // Info: (20250109 - tzuhan) 有任何關聯的 invoices
+                  },
+                },
+                {
+                  invoices: {
+                    none: {}, // Info: (20241129 - Murky) 沒有任何關聯的 `invoices`
+                  },
+                },
+              ]),
         ],
       },
       {

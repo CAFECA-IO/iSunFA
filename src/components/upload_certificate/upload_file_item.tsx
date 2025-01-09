@@ -55,25 +55,19 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({
     <div
       className={`mb-2 flex items-start justify-between rounded-md ${withoutBorder ? '' : 'border'} p-2 ${file.status === ProgressStatus.FAILED ? 'border-stroke-state-error' : 'border-file-uploading-stroke-outline'}`}
     >
-      {file.status === ProgressStatus.FAILED ? (
-        <div className="m-2 w-24px"></div>
-      ) : (
-        <Image
-          className="m-2"
-          src="/elements/cloud_upload.svg"
-          width={24}
-          height={24}
-          alt="clock"
-        />
-      )}
       <div className="flex grow flex-col">
         <div className="mb-3 flex grow">
-          <div
-            className={`flex grow ${file.status === ProgressStatus.FAILED ? '-translate-x-40px' : ''}`}
-          >
+          <div className={`flex grow`}>
+            <Image
+              className="mx-1 my-2"
+              src="/elements/cloud_upload.svg"
+              width={24}
+              height={24}
+              alt="clock"
+            />
             {!withoutImage && (
               <Image
-                className="m-2"
+                className="mx-1 my-2"
                 src="/elements/file_pdf.svg"
                 width={32}
                 height={32}
@@ -82,7 +76,10 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({
             )}
             <div className="flex grow flex-col">
               <p className="text-sm font-medium">{file.name}</p>
-              <p className="text-xs text-gray-400"> {sizeFormatter(file.size)}</p>
+              <p className="text-xs text-text-neutral-mute"> {sizeFormatter(file.size)}</p>
+              {file.status === ProgressStatus.FAILED && file.error && (
+                <p className="text-xs text-text-state-error">{file.error}</p>
+              )}
             </div>
           </div>
           {displayedStatus}
