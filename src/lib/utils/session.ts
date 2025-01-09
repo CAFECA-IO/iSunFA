@@ -117,7 +117,7 @@ class SessionHandler {
     const expires = Date.now() + this.sessionExpires;
     const newSession = { ...session, ...data, sid: sessionId, expires } as ISessionData;
     this.data.set(sessionId, newSession);
-
+    this.backup();
     return newSession;
   }
 
@@ -135,6 +135,7 @@ class SessionHandler {
         this.data.delete(key);
       }
     });
+    this.backup();
   }
 }
 
