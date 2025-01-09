@@ -18,7 +18,7 @@ import Image from 'next/image';
 import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data';
 
 interface CompanyListProps {
-  list: IMissingCertificate[];
+  list: IMissingCertificate[]; // Info: (20250109 - Liz) IMissingCertificate 與 IUnpostedVoucher 相同
 }
 
 const CompanyList = ({ list }: CompanyListProps) => {
@@ -33,6 +33,9 @@ const CompanyList = ({ list }: CompanyListProps) => {
       </div>
     );
   }
+
+  // Info: (20250109 - Liz) 依照 list.count 由大到小排序(降冪)
+  list.sort((a, b) => b.count - a.count);
 
   return (
     <section className="flex flex-col gap-8px">
