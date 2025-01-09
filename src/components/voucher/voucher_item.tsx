@@ -87,9 +87,9 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const debit = lineItems.map((item) => (item.debit ? item.amount : 0));
 
   const displayedAccounting = (
-    <div className="flex flex-col items-start gap-4px py-24px text-xs font-semibold text-text-neutral-tertiary">
+    <div className="flex flex-col items-start gap-4px px-8px py-24px text-xs font-semibold text-text-neutral-tertiary">
       {accounting.map((account) => (
-        <p key={account?.code}>
+        <p key={account?.code} className="w-160px truncate">
           {account?.code} - {account?.name}
         </p>
       ))}
@@ -156,7 +156,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
         </div>
       </div>
       {/* Info: (20240920 - Julian) Note */}
-      <div className="table-cell text-center align-middle">{displayedNote}</div>
+      <div className="table-cell text-left align-middle">{displayedNote}</div>
       {/* Info: (20240920 - Julian) Accounting */}
       <div className="table-cell">{displayedAccounting}</div>
       {/* Info: (20240920 - Julian) Debit */}
@@ -173,7 +173,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   return isCheckBoxOpen ? (
     <div
       onClick={checkboxHandler} // Info: (20241227 - Julian) 點擊整個 row 也能選取 checkbox
-      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+      className="table-row font-medium odd:bg-surface-neutral-surface-lv2 even:bg-surface-neutral-surface-lv1 hover:cursor-pointer hover:bg-surface-brand-primary-10"
     >
       {/* Info: (20240920 - Julian) Select */}
       <div className="table-cell text-center">
@@ -193,7 +193,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   ) : (
     <Link
       href={`/users/accounting/${voucher.id}?voucherNo=${voucherNo}`}
-      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+      className="table-row font-medium odd:bg-surface-neutral-surface-lv2 even:bg-surface-neutral-surface-lv1 hover:cursor-pointer hover:bg-surface-brand-primary-10"
     >
       {content}
     </Link>

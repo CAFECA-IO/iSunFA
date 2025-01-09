@@ -16,7 +16,7 @@ import {
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
 import { ToastPosition, ToastType } from '@/interfaces/toastify';
-import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
+import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';

@@ -7,15 +7,15 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 
 interface CreateCompanyModalProps {
-  isModalOpen: boolean;
-  toggleModal: () => void;
+  isModalVisible: boolean;
+  modalVisibilityHandler: () => void;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
   getCompanyList?: () => void;
 }
 
 const CreateCompanyModal = ({
-  isModalOpen,
-  toggleModal,
+  isModalVisible,
+  modalVisibilityHandler,
   setRefreshKey,
   getCompanyList,
 }: CreateCompanyModalProps) => {
@@ -48,7 +48,7 @@ const CreateCompanyModal = ({
         setCompanyName('');
         setTaxId('');
         setTag(COMPANY_TAG.ALL);
-        toggleModal();
+        modalVisibilityHandler();
 
         if (getCompanyList) getCompanyList(); // Info: (20241209 - Liz) 重新取得公司列表
 
@@ -77,14 +77,14 @@ const CreateCompanyModal = ({
     }
   };
 
-  return isModalOpen ? (
+  return isModalVisible ? (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             {t('dashboard:CREATE_COMPANY_MODAL.CREATE_NEW_COMPANY')}
           </h1>
-          <button type="button" onClick={toggleModal}>
+          <button type="button" onClick={modalVisibilityHandler}>
             <IoCloseOutline size={24} />
           </button>
         </section>
@@ -160,7 +160,7 @@ const CreateCompanyModal = ({
         <section className="flex justify-end gap-12px px-20px py-16px">
           <button
             type="button"
-            onClick={toggleModal}
+            onClick={modalVisibilityHandler}
             className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
           >
             {t('dashboard:CREATE_COMPANY_MODAL.CANCEL')}

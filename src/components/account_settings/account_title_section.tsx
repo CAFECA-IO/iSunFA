@@ -273,24 +273,24 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
   });
 
   const nestedAccountTitleMenu = nestedAccountTitleList.map((nestedAccount) => {
-    const mainTitle = nestedAccount.firstLayer.title;
-    const { secondLayer } = nestedAccount.firstLayer;
+    const { title: mainTitle, secondLayer } = nestedAccount.firstLayer;
 
-    const secondLayerMenu = isLoading
-      ? skeletonList
-      : secondLayer.map((second) => {
-          const { thirdLayer } = second;
-          return (
-            <AccountSecondLayerItem
-              key={second.title.id}
-              titleAccount={second.title}
-              setFormType={setFormType}
-              childList={thirdLayer}
-              setSelectedAccountTitle={setSelectedAccountTitle}
-              setIsRecallApi={setIsRecallApi}
-            />
-          );
-        });
+    const secondLayerMenu =
+      isLoading || accountTitleList.length === 0
+        ? skeletonList
+        : secondLayer.map((second) => {
+            const { thirdLayer } = second;
+            return (
+              <AccountSecondLayerItem
+                key={second.title.id}
+                titleAccount={second.title}
+                setFormType={setFormType}
+                childList={thirdLayer}
+                setSelectedAccountTitle={setSelectedAccountTitle}
+                setIsRecallApi={setIsRecallApi}
+              />
+            );
+          });
 
     return (
       <div key={mainTitle} className="flex flex-col">

@@ -47,14 +47,14 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
   const displayedAssetType = (
     <p className="text-text-neutral-primary">
       {assetType}
-      <span className="text-text-neutral-tertiary"> {assetTypeName}</span>
+      <span className="w-120px truncate text-text-neutral-tertiary"> {assetTypeName}</span>
     </p>
   );
 
   const displayedAssetNumberAndName = (
     <div className="flex flex-col">
-      <p className="text-text-neutral-tertiary">{assetNumber}</p>
-      <p className="text-text-neutral-primary">{assetName}</p>
+      <p className="w-100px truncate text-text-neutral-tertiary">{assetNumber}</p>
+      <p className="w-100px truncate text-text-neutral-primary">{assetName}</p>
     </div>
   );
 
@@ -137,15 +137,21 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
       {/* Info: (20240925 - Julian) Issued Date */}
       <div className="table-cell py-10px align-middle">{displayedDate}</div>
       {/* Info: (20240925 - Julian) Asset Type */}
-      <div className="table-cell text-center align-middle">{displayedAssetType}</div>
+      <div className="table-cell text-center align-middle text-xs">{displayedAssetType}</div>
       {/* Info: (20240925 - Julian) Asset Number and Name */}
-      <div className="table-cell px-8px text-left align-middle">{displayedAssetNumberAndName}</div>
+      <div className="table-cell px-8px text-left align-middle text-xs">
+        {displayedAssetNumberAndName}
+      </div>
       {/* Info: (20240925 - Julian) Purchase Price */}
-      <div className="table-cell px-8px text-right align-middle">{displayedPurchasePrice}</div>
+      <div className="table-cell px-8px text-right align-middle text-xs">
+        {displayedPurchasePrice}
+      </div>
       {/* Info: (20240925 - Julian) Accumulated Depreciation */}
-      <div className="table-cell px-8px text-right align-middle">{displayedDepreciation}</div>
+      <div className="table-cell px-8px text-right align-middle text-xs">
+        {displayedDepreciation}
+      </div>
       {/* Info: (20240925 - Julian) Residual Value */}
-      <div className="table-cell px-8px text-right align-middle">{displayedResidual}</div>
+      <div className="table-cell px-8px text-right align-middle text-xs">{displayedResidual}</div>
       {/* Info: (20240925 - Julian) Remaining Useful Life */}
       <div className="table-cell px-8px text-right align-middle">{displayedRemainingLife}</div>
     </>

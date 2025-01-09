@@ -15,15 +15,10 @@ import { IRoom } from '@/interfaces/room';
 
 interface CertificateFileUploadProps {
   isDisabled: boolean;
-  showErrorMessage: boolean;
   setFiles: React.Dispatch<React.SetStateAction<IFileUIBeta[]>>;
 }
 
-const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({
-  isDisabled,
-  showErrorMessage,
-  setFiles,
-}) => {
+const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisabled, setFiles }) => {
   const { userAuth, selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
   const [room, setRoom] = useState<IRoom | null>(null);
@@ -160,12 +155,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({
           toggleQRCode={toggleQRCodeModal}
         />
       )}
-      <InvoiceUpload
-        isDisabled={isDisabled}
-        toggleQRCode={toggleQRCodeModal}
-        setFiles={setFiles}
-        showErrorMessage={showErrorMessage}
-      />
+      <InvoiceUpload isDisabled={isDisabled} toggleQRCode={toggleQRCodeModal} setFiles={setFiles} />
     </>
   );
 };

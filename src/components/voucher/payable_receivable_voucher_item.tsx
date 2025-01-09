@@ -72,7 +72,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
     );
 
   const displayedCounterparty = (
-    <div className="flex flex-col items-center gap-4px">
+    <div className="flex flex-col items-start gap-4px px-16px">
       {/* eslint-disable-next-line react/prop-types */}
       <p className="text-text-neutral-tertiary">{counterParty.companyId}</p>
       {/* eslint-disable-next-line react/prop-types */}
@@ -81,7 +81,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
   );
 
   const displayedIssuer = (
-    <div className="flex items-center justify-center gap-4px text-text-neutral-primary">
+    <div className="flex items-center justify-center gap-4px px-16px text-text-neutral-primary">
       {/* eslint-disable-next-line react/prop-types */}
       <Image src={issuer.avatar} alt="avatar" width={14} height={14} className="rounded-full" />
       {/* eslint-disable-next-line react/prop-types */}
@@ -90,33 +90,33 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
   );
 
   const displayedTotalAmount = (
-    <div className="whitespace-nowrap text-right">
+    <div className="whitespace-nowrap px-8px text-right">
       {numberWithCommas(totalAmount)} <span className="text-text-neutral-tertiary">TWD</span>
     </div>
   );
 
   const displayedAlreadyHappenedAmount = (
-    <div className="whitespace-nowrap text-right">
+    <div className="whitespace-nowrap px-8px text-right">
       {numberWithCommas(alreadyHappenedAmount)}{' '}
       <span className="text-text-neutral-tertiary">TWD</span>
     </div>
   );
 
   const displayedRemainAmount = (
-    <div className="whitespace-nowrap text-right">
+    <div className="whitespace-nowrap px-8px text-right">
       {numberWithCommas(remainAmount)} <span className="text-text-neutral-tertiary">TWD</span>
     </div>
   );
 
   const displayedReverse = (
-    <div className="flex flex-col">
+    <div className="flex flex-col px-16px text-sm">
       {/* eslint-disable-next-line react/prop-types */}
       {reverseVouchers && reverseVouchers.length > 0 ? (
         // eslint-disable-next-line react/prop-types
         reverseVouchers.map((voucher) => (
           <Link
             href={`/users/accounting/${voucher.id}?voucherNo=${voucherNo}`}
-            className="text-center text-link-text-primary"
+            className="text-center text-link-text-primary hover:underline"
           >
             {/* eslint-disable-next-line react/prop-types */}
             {voucher.voucherNo}
@@ -131,12 +131,12 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
   return (
     <Link
       href={`/users/accounting/${voucherId}?voucherNo=${voucherNo}`}
-      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+      className="table-row text-xs font-medium odd:bg-surface-neutral-surface-lv2 even:bg-surface-neutral-surface-lv1 hover:cursor-pointer hover:bg-surface-brand-primary-10"
     >
       {/* Info: (20240924 - Julian) Issued Date */}
       <div className="table-cell py-10px text-center align-middle">{displayedDate}</div>
       {/* Info: (20240924 - Julian) Voucher No */}
-      <div className="table-cell text-center align-middle">{displayedVoucherNo}</div>
+      <div className="table-cell px-8px text-center align-middle">{displayedVoucherNo}</div>
       {/* Info: (20240924 - Julian) Counterparty */}
       <div className="table-cell align-middle">{displayedCounterparty}</div>
       {/* Info: (20240924 - Julian) Issuer */}
