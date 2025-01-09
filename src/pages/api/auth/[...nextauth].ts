@@ -104,7 +104,7 @@ async function fetchImageInfo(imageUrl: string): Promise<{
 }
 */
 
-export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextAuthOptions => ({
+export const getAuthOptions = (req: NextApiRequest): NextAuthOptions => ({
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -146,15 +146,15 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
   secret: process.env.NEXTAUTH_SECRET,
   events: {
     signOut: async () => {
-      await handleSignOutSession(req, res);
+      await handleSignOutSession(req);
     },
   },
   callbacks: {
     async signIn({ user, account }) {
-      const session = await getSession(req, res);
+      const session = await getSession(req);
       try {
         if (!account) throw Error('Account not found');
-        await handleSignInSession(req, res, user, account);
+        await handleSignInSession(req, user, account);
         /* /* Info: (20241128 - tzuhan) @Anna, @Murky move to @/lib/utils/signIn
         // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
         // let Dbuser;
@@ -205,7 +205,7 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
           await setSession(session, { userId: getUser.user.id });
         }
         await createUserActionLog({
-          sessionId: session.id,
+          sessionId: session.sid,
           userId: session.userId || -1,
           actionType: UserActionLogActionType.LOGIN,
           actionDescription: UserActionLogActionType.LOGIN,
@@ -251,6 +251,6 @@ export const getAuthOptions = (req: NextApiRequest, res: NextApiResponse): NextA
 });
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  const authOptions = getAuthOptions(req, res);
+  const authOptions = getAuthOptions(req);
   return NextAuth(req, res, authOptions);
 }

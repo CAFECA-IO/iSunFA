@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IProjectProgressChartData } from '@/interfaces/project_progress_chart';
-import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, changeDateToTimeStampOfDayEnd } from '@/lib/utils/common';
 import { checkAuthorization } from '@/lib/utils/auth_check';
@@ -23,14 +22,11 @@ async function checkEmpty(
   return statusNumber.every((status) => status._count.id === 0);
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IProjectProgressChartData>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { date } = req.query;
   try {
     if (date && isDateFormatYYYYMMDD(date as string)) {
-      const session = await getSession(req, res);
+      const session = await getSession(req);
       const { userId, companyId } = session;
       const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
       if (!isAuth) {

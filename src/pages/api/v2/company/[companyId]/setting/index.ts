@@ -73,9 +73,8 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: ICompanySetting | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.COMPANY_SETTING_GET, req, res, handleGetRequest),
-  PUT: (req, res) =>
-    withRequestValidation(APIName.COMPANY_SETTING_UPDATE, req, res, handlePutRequest),
+  GET: (req) => withRequestValidation(APIName.COMPANY_SETTING_GET, req, handleGetRequest),
+  PUT: (req) => withRequestValidation(APIName.COMPANY_SETTING_UPDATE, req, handlePutRequest),
 };
 
 export default async function handler(

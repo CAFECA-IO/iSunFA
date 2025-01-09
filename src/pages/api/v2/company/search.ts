@@ -75,8 +75,8 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: ICompanyTaxIdAndName | null }>;
 } = {
-  GET: (req, res) =>
-    withRequestValidation(APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID, req, res, handleGetRequest),
+  GET: (req) =>
+    withRequestValidation(APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID, req, handleGetRequest),
 };
 
 export default async function handler(

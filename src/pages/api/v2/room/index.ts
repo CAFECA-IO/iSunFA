@@ -32,7 +32,7 @@ const methodHandlers: {
     payload: IRoom | IRoom[] | null;
   }>;
 } = {
-  POST: (req, res) => withRequestValidation(APIName.ROOM_ADD, req, res, handlePostRequest),
+  POST: (req) => withRequestValidation(APIName.ROOM_ADD, req, handlePostRequest),
 };
 
 export default async function handler(

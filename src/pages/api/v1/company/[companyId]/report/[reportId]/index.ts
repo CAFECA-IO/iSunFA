@@ -203,14 +203,13 @@ function formatPayloadFromIReport(report: IReport, company: Company): FinancialR
 }
 
 async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse
+  req: NextApiRequest
 ): Promise<{ statusMessage: string; payload: FinancialReport | null | IReport }> {
   const { reportIdNumber } = formatGetRequestQueryParams(req);
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });

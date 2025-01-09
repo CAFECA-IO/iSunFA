@@ -53,8 +53,8 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IUserRole | IUserRole[] | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.USER_ROLE_LIST, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.USER_CREATE_ROLE, req, res, handlePostRequest),
+  GET: (req) => withRequestValidation(APIName.USER_ROLE_LIST, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.USER_CREATE_ROLE, req, handlePostRequest),
 };
 
 export default async function handler(

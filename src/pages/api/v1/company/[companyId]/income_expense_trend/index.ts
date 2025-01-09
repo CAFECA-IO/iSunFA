@@ -152,7 +152,7 @@ export default async function handler(
     if (req.method !== 'GET') {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId, companyId } = session;
     const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     if (!isAuth) {

@@ -90,8 +90,8 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  GET: (req, res) =>
-    withRequestValidation(APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2, req, res, handleGetRequest),
+  GET: (req) =>
+    withRequestValidation(APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2, req, handleGetRequest),
 };
 
 export default async function handler(

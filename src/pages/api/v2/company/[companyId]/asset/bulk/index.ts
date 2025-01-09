@@ -77,7 +77,7 @@ export const handlePostRequest: IHandleRequest<
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
 } = {
-  POST: (req, res) => withRequestValidation(APIName.CREATE_ASSET_BULK, req, res, handlePostRequest),
+  POST: (req) => withRequestValidation(APIName.CREATE_ASSET_BULK, req, handlePostRequest),
 };
 
 export default async function handler(

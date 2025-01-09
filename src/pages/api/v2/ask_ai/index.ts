@@ -139,7 +139,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IAskResult | null }>;
 } = {
-  POST: (req, res) => withRequestValidation(APIName.ASK_AI_V2, req, res, handlePostRequest),
+  POST: (req) => withRequestValidation(APIName.ASK_AI_V2, req, handlePostRequest),
 };
 
 export default async function handler(

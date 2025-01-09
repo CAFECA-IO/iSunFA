@@ -354,11 +354,11 @@ const reportHandlers: ReportHandlers = {
   [FinancialReportTypesKey.report_401]: report401Handler,
 };
 
-export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<APIResponse>) {
+export async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: object | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   // ToDo: (20240924 - Murky) We need to check auth

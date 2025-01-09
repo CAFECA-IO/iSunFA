@@ -24,9 +24,10 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({ isO
 
   const handleUploadCancelled = useCallback(() => {
     setFiles([]);
+    messageModalVisibilityHandler();
     setProgress(0);
     onClose();
-  }, [messageModalVisibilityHandler]);
+  }, [setFiles, messageModalVisibilityHandler]);
 
   const handleConfirm = () => {
     handleUploadCancelled();

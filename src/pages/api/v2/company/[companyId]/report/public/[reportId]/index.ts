@@ -55,7 +55,7 @@ const methodHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.REPORT_GET_BY_ID, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.REPORT_GET_BY_ID, req, handleGetRequest),
 };
 
 export default async function handler(

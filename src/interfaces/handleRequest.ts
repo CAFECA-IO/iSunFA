@@ -1,5 +1,5 @@
 import { APIName } from '@/constants/api_connection';
-import { ISessionData } from '@/interfaces/session_data';
+import { ISessionData } from '@/interfaces/session';
 import { body, query } from '@/lib/utils/validator';
 import { NextApiRequest } from 'next';
 

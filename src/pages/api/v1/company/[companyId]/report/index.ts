@@ -315,13 +315,12 @@ export async function generateReportIfNotExist(
 }
 
 export async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse
+  req: NextApiRequest
 ): Promise<{ statusMessage: string; payload: IPaginatedReport | null }> {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedReport | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAuth) {
@@ -356,10 +355,10 @@ export async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+export async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;

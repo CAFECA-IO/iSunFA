@@ -29,7 +29,7 @@ const methodHandlers: {
     payload: INews | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.NEWS_GET_BY_ID, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.NEWS_GET_BY_ID, req, handleGetRequest),
 };
 
 export default async function handler(

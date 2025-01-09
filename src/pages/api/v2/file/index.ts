@@ -187,7 +187,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IFileBeta | null }>;
 } = {
-  POST: (req, res) => withRequestValidation(APIName.FILE_UPLOAD, req, res, handlePostRequest),
+  POST: (req) => withRequestValidation(APIName.FILE_UPLOAD, req, handlePostRequest),
 };
 
 export default async function handler(
