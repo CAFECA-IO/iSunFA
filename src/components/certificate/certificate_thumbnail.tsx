@@ -54,7 +54,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
         {/* Info: (20240924 - Tzuhan) 發票號碼和日期 */}
         <div className="mt-2 text-center">
           <div className="text-sm font-medium">{data.invoice.no}</div>
-          <div className="mt-1 text-xs text-gray-500">
+          <div className="mt-1 text-xs text-text-neutral-tertiary">
             {data.invoice.date ? timestampToString(data.invoice.date).date : data.invoice.date}
           </div>
         </div>
