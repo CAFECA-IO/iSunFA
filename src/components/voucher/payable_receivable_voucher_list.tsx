@@ -96,26 +96,32 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
   ));
 
   return (
-    <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
+    <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv1">
       {/* Info: (20240924 - Julian) ---------------- Table Header ---------------- */}
       <div className="table-header-group h-60px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
         <div className="table-row">
-          <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDate}</div>
-          <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+          <div className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px`}>
+            {displayedDate}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-90px`}>
             {t('journal:VOUCHER.VOUCHER_NO')}
           </div>
           <div className={`${tableCellStyles} ${sideBorderStyles}`}>
             {t('journal:VOUCHER.COUNTRYPARTY')}
           </div>
-          <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-120px`}>
             {t('journal:VOUCHER.ISSUER')}
           </div>
-          <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-84px`}>
             {displayedReceivableAmount}
           </div>
-          <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedReceivedAmount}</div>
-          <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedRemainAmount}</div>
-          <div className={`${tableCellStyles} border-b border-stroke-neutral-quaternary`}>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-84px`}>
+            {displayedReceivedAmount}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-84px`}>
+            {displayedRemainAmount}
+          </div>
+          <div className={`${tableCellStyles} w-100px border-b border-stroke-neutral-quaternary`}>
             {t('journal:VOUCHER.REVERSE')}
           </div>
         </div>

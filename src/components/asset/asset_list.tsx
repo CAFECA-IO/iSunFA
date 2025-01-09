@@ -328,9 +328,9 @@ const AssetList: React.FC<IAssetListProps> = ({
       {/* Info: (20241024 - Julian) Asset Table */}
       <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         {/* Info: (20240925 - Julian) ---------------- Table Header ---------------- */}
-        <div className="table-header-group h-60px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+        <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
-            <div className={`${checkStyle} border-b border-stroke-neutral-quaternary`}>
+            <div className={`${checkStyle} w-20px border-b border-stroke-neutral-quaternary`}>
               <input
                 type="checkbox"
                 className={checkboxStyle}
@@ -338,14 +338,22 @@ const AssetList: React.FC<IAssetListProps> = ({
                 onChange={checkAllHandler}
               />
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedIssuedDate}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{t('asset:ASSET.TYPE')}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>
+              {displayedIssuedDate}
+            </div>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-140px`}>
+              {t('asset:ASSET.TYPE')}
+            </div>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-120px`}>
               {t('asset:ASSET.ASSET_NAME')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedPrice}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDepreciation}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedResidual}</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>{displayedPrice}</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>
+              {displayedDepreciation}
+            </div>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>
+              {displayedResidual}
+            </div>
             <div className={`${tableCellStyles} border-b border-stroke-neutral-quaternary`}>
               {displayedRemainingLife}
             </div>
