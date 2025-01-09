@@ -25,7 +25,8 @@ import { voucherAPIPostUtils as postUtils } from '@/pages/api/v2/company/[compan
 //   }),
 // }));
 
-xdescribe('voucherAPIPostUtils', () => {
+describe('voucherAPIPostUtils', () => {
+  // Info: (20250108 - Luphia) need to redesign the test case
   beforeEach(() => {});
 
   afterEach(() => {
