@@ -7,8 +7,6 @@ import { APIName } from '@/constants/api_connection';
 import UploadArea from '@/components/upload_area/upload_area';
 import { ProgressStatus } from '@/constants/account';
 import { ICertificate } from '@/interfaces/certificate';
-import { ToastType } from '@/interfaces/toastify';
-import { ToastId } from '@/constants/toast_id';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { compressImageToTargetSize } from '@/lib/utils/image_compress';
@@ -41,15 +39,8 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
             : f;
         })
       );
-
-      toastHandler({
-        id: ToastId.UPLOAD_FILE_ERROR,
-        type: ToastType.ERROR,
-        closeable: true,
-        content: errorMessage || t('certificate:TOAST.UPLOAD_FILE_ERROR', { name: fileName }),
-      });
     },
-    [setFiles, t, toastHandler, messageModalDataHandler, messageModalVisibilityHandler]
+    [setFiles, t]
   );
 
   const encryptFileWithKey = async (file: File) => {
@@ -85,26 +76,6 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
     async (file: File) => {
       try {
         // Info: (20250108 - tzuhan) 預先將檔案加入檔案列表，進行初始化
-        const formData = await encryptFileWithKey(file);
-        const targetSize = 1 * 1024 * 1024; // Info: (20241206 - tzuhan) 1MB
-        const maxSize = 4 * 1024 * 1024;
-        if (file.size > maxSize) {
-          handleUploadFailed(file.name, t('certificate:UPLOAD.FILE_SIZE_EXCEEDED'));
-          return;
-        }
-        const compressedFile = await compressImageToTargetSize(file, targetSize);
-
-        setFiles((prevFiles) => [
-          ...prevFiles,
-          {
-            id: null,
-            name: file.name,
-            size: file.size,
-            url: URL.createObjectURL(file),
-            progress: 0,
-            status: ProgressStatus.IN_PROGRESS,
-          },
-        ]);
         const formData = await encryptFileWithKey(file);
         const targetSize = 1 * 1024 * 1024; // Info: (20241206 - tzuhan) 1MB
         const maxSize = 4 * 1024 * 1024;
