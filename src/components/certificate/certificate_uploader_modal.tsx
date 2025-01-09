@@ -90,37 +90,58 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
 
   if (!isOpen) return null;
 
-  const inProgressFiles = files.filter(
-    (file) => file.progress < 100 && file.status === ProgressStatus.IN_PROGRESS
+  const filterFiles = files.reduce(
+    (acc, file) => {
+      if (file.progress < 100 && file.status === ProgressStatus.IN_PROGRESS) {
+        acc.inProgressFiles.push(file);
+      }
+      if (file.status === ProgressStatus.FAILED) {
+        acc.failedFiles.push(file);
+      }
+      if (file.status === ProgressStatus.PAUSED) {
+        acc.pausedFiles.push(file);
+      }
+      if (file.progress === 100 && file.status === ProgressStatus.SUCCESS) {
+        acc.completedFiles.push(file);
+      }
+      return acc;
+    },
+    { inProgressFiles: [], failedFiles: [], pausedFiles: [], completedFiles: [] } as {
+      inProgressFiles: IFileUIBeta[];
+      failedFiles: IFileUIBeta[];
+      pausedFiles: IFileUIBeta[];
+      completedFiles: IFileUIBeta[];
+    }
   );
-  const failedFiles = files.filter((file) => file.status === ProgressStatus.FAILED);
 
   // Info: (20241213 - tzuhan) 渲染文件列表
   const renderFileList = () => {
-    if (inProgressFiles.length === 0) {
+    if (
+      filterFiles.inProgressFiles.length === 0 &&
+      filterFiles.failedFiles.length === 0 &&
+      filterFiles.pausedFiles.length === 0
+    ) {
       return (
         <div className="text-center text-text-neutral-mute">{t('certificate:UPLOAD.NO_FILE')}</div>
       );
     }
-    return (
-      files
-        // .filter((file) => file.status !== ProgressStatus.SUCCESS)
-        .map((file, index) => (
-          <UploadFileItem
-            key={`uploading-${index + 1}`}
-            file={file}
-            onPauseToggle={() => updateFileStatus(index)}
-            onDelete={() => deleteFile(index)}
-            withoutImage
-            withoutBorder
-          />
-        ))
-    );
+    return files
+      .filter((file) => file.status !== ProgressStatus.SUCCESS)
+      .map((file, index) => (
+        <UploadFileItem
+          key={`uploading-${index + 1}`}
+          file={file}
+          onPauseToggle={() => updateFileStatus(index)}
+          onDelete={() => deleteFile(index)}
+          withoutImage
+          withoutBorder
+        />
+      ));
   };
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/0">
-      <div className="relative ml-250px flex max-h-450px w-90vw max-w-800px flex-col gap-2 rounded-sm bg-surface-neutral-surface-lv2 p-20px md:max-h-90vh">
+      <div className="relative flex max-h-450px w-90vw max-w-800px flex-col gap-2 rounded-sm bg-surface-neutral-surface-lv2 p-20px md:max-h-90vh">
         {/* Info: (20241213 - tzuhan) 關閉按鈕 */}
         <button
           type="button"
@@ -159,11 +180,11 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
             remainingText={
               progress < 100
                 ? t('certificate:UPLOAD.REMAIN', {
-                    count: inProgressFiles.length,
+                    count: filterFiles.inProgressFiles.length,
                   })
                 : t('certificate:UPLOAD.COMPLETE', {
-                    success: files.length - failedFiles.length,
-                    failed: failedFiles.length,
+                    success: filterFiles.completedFiles.length,
+                    failed: filterFiles.failedFiles.length,
                   })
             }
           />
@@ -185,7 +206,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
             variant="tertiary"
             className="gap-x-4px px-4 py-2"
             onClick={onConfirm}
-            disabled={inProgressFiles.length > 0}
+            disabled={filterFiles.inProgressFiles.length > 0}
           >
             {t('common:COMMON.CONFIRM')}
           </Button>
