@@ -5,6 +5,7 @@ import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
 import Link from 'next/link';
+import { simplifyFileName } from '@/lib/utils/common';
 
 interface CertificateListIrops {
   activeSelection: boolean;
@@ -70,7 +71,9 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
           )}
           <div className="flex flex-col">
-            <div className="text-text-neutral-tertiary">{certificate.file.name ?? ''}</div>
+            <div className="text-text-neutral-tertiary">
+              {simplifyFileName(certificate.file.name ?? '')}
+            </div>
             <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
           </div>
         </div>

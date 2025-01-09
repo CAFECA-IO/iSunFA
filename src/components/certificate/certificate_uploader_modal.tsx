@@ -14,14 +14,9 @@ import { MessageType } from '@/interfaces/message_modal';
 interface CertificateUploaderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onBack: () => void;
 }
 
-const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
-  isOpen,
-  onClose,
-  onBack,
-}) => {
+const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation(['certificate', 'common']);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
@@ -30,9 +25,13 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
   const handleUploadCancelled = useCallback(() => {
     setFiles([]);
     setProgress(0);
-    messageModalVisibilityHandler();
     onClose();
   }, [messageModalVisibilityHandler]);
+
+  const handleConfirm = () => {
+    handleUploadCancelled();
+    messageModalVisibilityHandler();
+  };
 
   const handleClose = () => {
     if (files.length > 0 && files.some((file) => file.status === ProgressStatus.FAILED)) {
@@ -42,7 +41,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:WARNING.UPLOAD_CANCEL'),
         backBtnStr: t('certificate:WARNING.UPLOAD_CONTINUE'),
-        submitBtnFunction: handleUploadCancelled,
+        submitBtnFunction: handleConfirm,
       });
       messageModalVisibilityHandler();
     } else {
@@ -70,11 +69,6 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
   // Info: (20241213 - tzuhan) 工具函數：刪除文件
   const deleteFile = (index: number) => {
     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
-  };
-
-  // Info: (20241213 - tzuhan) 工具函數：確認操作
-  const onConfirm = () => {
-    handleClose();
   };
 
   // Info: (20241213 - tzuhan) 計算進度條進度
@@ -125,18 +119,16 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
         <div className="text-center text-text-neutral-mute">{t('certificate:UPLOAD.NO_FILE')}</div>
       );
     }
-    return files
-      .filter((file) => file.status !== ProgressStatus.SUCCESS)
-      .map((file, index) => (
-        <UploadFileItem
-          key={`uploading-${index + 1}`}
-          file={file}
-          onPauseToggle={() => updateFileStatus(index)}
-          onDelete={() => deleteFile(index)}
-          withoutImage
-          withoutBorder
-        />
-      ));
+    return files.map((file, index) => (
+      <UploadFileItem
+        key={`uploading-${index + 1}`}
+        file={file}
+        onPauseToggle={() => updateFileStatus(index)}
+        onDelete={() => deleteFile(index)}
+        withoutImage
+        withoutBorder
+      />
+    ));
   };
 
   return (
@@ -154,7 +146,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
         <button
           type="button"
           className="absolute left-4 top-4 text-checkbox-text-primary"
-          onClick={onBack}
+          onClick={handleClose}
         >
           <GoArrowLeft size={28} />
         </button>
@@ -205,8 +197,8 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
             type="button"
             variant="tertiary"
             className="gap-x-4px px-4 py-2"
-            onClick={onConfirm}
-            disabled={filterFiles.inProgressFiles.length > 0}
+            onClick={handleClose}
+            disabled={filterFiles.completedFiles.length <= 0}
           >
             {t('common:COMMON.CONFIRM')}
           </Button>

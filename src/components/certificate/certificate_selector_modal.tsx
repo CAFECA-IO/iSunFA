@@ -15,6 +15,7 @@ import { InvoiceType } from '@/constants/invoice';
 
 interface CertificateSelectorModalProps {
   isOpen: boolean;
+  companyId: number;
   selectedIds: number[];
   setSelectedIds: React.Dispatch<React.SetStateAction<number[]>>;
   onClose: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
@@ -37,6 +38,7 @@ interface CertificateSelectorModalProps {
 
 const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
   isOpen,
+  companyId,
   onClose,
   handleSelect,
   handleApiResponse,
@@ -87,6 +89,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
         </p>
         <FilterSection
           apiName={APIName.CERTIFICATE_LIST_V2}
+          params={{ companyId }}
           page={1}
           pageSize={DEFAULT_MAX_PAGE_LIMIT} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
           tab={InvoiceTabs.WITHOUT_VOUCHER}
