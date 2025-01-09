@@ -25,7 +25,7 @@ const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterparty
   const openEditModal = () => setIsEditModalOpen(true);
   const closeEditModal = () => setIsEditModalOpen(false);
 
-  const displayedName = <p className="h-full px-12px font-normal text-neutral-600">{name}</p>;
+  const displayedName = <p className="h-full px-12px font-semibold text-neutral-600">{name}</p>;
 
   const displayedTaxID = (
     <p className="h-full px-16px font-normal text-text-neutral-tertiary">{taxId}</p>
@@ -34,26 +34,26 @@ const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterparty
   const displayedType =
     // Info: (20241106 - Anna) 使用 CounterpartyType 來判斷
     type === CounterpartyType.CLIENT ? (
-      <div className="relative mx-auto flex w-120px items-center justify-center gap-4px rounded-full bg-navy-blue-500 px-8px py-4px">
+      <div className="relative mx-auto flex w-120px items-center justify-center gap-4px rounded-full bg-badge-surface-strong-secondary px-8px py-6px">
         <Image src="/icons/client.png" alt="client" width={16} height={16} />
-        <p className="text-sm text-neutral-25">{t(`certificate:COUNTERPARTY.${type}`)}</p>
+        <p className="text-sm text-badge-text-invert">{t(`certificate:COUNTERPARTY.${type}`)}</p>
       </div>
     ) : type === CounterpartyType.SUPPLIER ? (
-      <div className="relative mx-auto flex w-120px items-center justify-center gap-4px rounded-full bg-orange-500 px-8px py-4px">
+      <div className="relative mx-auto flex w-120px items-center justify-center gap-4px rounded-full bg-badge-surface-strong-primary px-8px py-6px">
         <Image src="/icons/supplier.png" alt="supplier" width={16} height={16} />
-        <p className="text-sm text-neutral-25">{t(`certificate:COUNTERPARTY.${type}`)}</p>
+        <p className="text-sm text-badge-text-invert">{t(`certificate:COUNTERPARTY.${type}`)}</p>
       </div>
     ) : (
-      <div className="relative mx-auto flex w-120px items-center justify-center gap-4px rounded-full bg-navy-blue-100 px-8px py-4px">
+      <div className="relative mx-auto flex w-120px items-center justify-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-6px">
         <Image src="/icons/both.png" alt="both" width={16} height={16} />
-        <p className="whitespace-nowrap text-sm text-navy-blue-600">
+        <p className="whitespace-nowrap text-sm text-badge-text-secondary-solid">
           {t(`certificate:COUNTERPARTY.${type}`)}
         </p>
       </div>
     );
 
   const displayedNote = (
-    <p className="flex h-full items-center justify-center px-1 font-normal text-neutral-600">
+    <p className="flex h-full items-center justify-center px-8px font-normal text-text-neutral-primary">
       {note !== '' ? note : '-'}
     </p>
   );
@@ -74,8 +74,8 @@ const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterparty
 
       {/* Info: (20241106 - Anna) Action */}
       <div className="table-cell text-center align-middle">
-        <div className="flex items-center justify-center">
-          <FiEdit size={20} onClick={openEditModal} className="cursor-pointer" />
+        <div className="flex items-center justify-center p-20px text-icon-surface-single-color-primary hover:cursor-pointer hover:text-icon-surface-accent">
+          <FiEdit size={20} onClick={openEditModal} />
         </div>
       </div>
 
