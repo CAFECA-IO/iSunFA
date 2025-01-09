@@ -16,17 +16,19 @@ import Loading from '@/components/income_statement_report_body/loading';
 import ItemSummary from '@/components/income_statement_report_body/item_summary';
 import ItemDetail from '@/components/income_statement_report_body/item_detail';
 import CostRevRatio from '@/components/income_statement_report_body/cost_rev_ratio';
+import { useTranslation } from 'next-i18next';
 
 interface FilterBarProps {
   printFn: () => void;
+  isChinese: boolean; // Info: (20250108 - Anna) 添加 isChinese 屬性
 }
-const FilterBar = ({ printFn }: FilterBarProps) => {
+const FilterBar = ({ printFn, isChinese }: FilterBarProps) => {
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   return (
     <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
       <div className="ml-auto flex items-center gap-24px">
         <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
-        <PrintButton onClick={() => printFn()} disabled={false} />
+        <PrintButton onClick={() => printFn()} disabled={!isChinese} />
       </div>
     </div>
   );
@@ -45,6 +47,10 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   const [reportAPICode, setReportAPICode] = useState<string>('');
   const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
   const { trigger: getReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_V2);
+
+  // Info: (20250108 - Anna) 判斷當前語言是否為繁體或簡體中文
+  const { i18n } = useTranslation('reports');
+  const isChinese = i18n.language === 'tw' || i18n.language === 'cn';
 
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -130,7 +136,8 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
 
   return (
     <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
-      <FilterBar printFn={printFn} />
+      {/* Info: (20250108 - Anna) 傳遞 isChinese 給 FilterBar */}
+      <FilterBar printFn={printFn} isChinese={isChinese} />
       <div>
         <ItemSummary
           financialReport={financialReport}
@@ -154,7 +161,6 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
           formattedPreToDate={formattedPreToDate}
         />
       </div>
-
       <div className="hidden">
         <PrintPreview
           ref={printRef}

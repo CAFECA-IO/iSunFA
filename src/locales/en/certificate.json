@@ -60,7 +60,7 @@
   },
   "TITLE": {
     "UPLOAD": "Upload Certificate",
-    "SELECT": "Select 1 or more certificates",
+    "SELECT": "Upload Certificate",
     "LIST": "Certificate List"
   },
   "EDIT": {
@@ -148,7 +148,8 @@
     "SCAN_THE_QRCODE": "Please scan the QRcode to start scanning with your phone",
     "FILE_SIZE_EXCEEDED": "File upload failed: The file exceeds the size limit. Please upload a smaller file.",
     "INDEX": "No.{{index}}",
-    "PREVIEW": "Preview"
+    "PREVIEW": "Preview",
+    "DELETE": "Delete"
   },
   "CREATE": {
     "FAILED": "Failed to create certificate"

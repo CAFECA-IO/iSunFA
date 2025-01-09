@@ -53,8 +53,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   printFn, // Info: (20241122 - Anna) 使用打印函數
   // selectedReportLanguage, // Todo: (20241206 - Anna)接收語言選擇 下個PR繼續處理
 }) => {
-  const { t } = useTranslation(['reports']);
-  // const { t } = useTranslation(['reports'], { keyPrefix: selectedReportLanguage }); // Todo: (20241206 - Anna) 根據 selectedReportLanguage 來設置語言 下個PR繼續處理
+  const { t, i18n } = useTranslation(['reports']);
+  const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
+
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
@@ -527,7 +528,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         </div>
         <div className="ml-auto flex items-center gap-24px">
           <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
-          <PrintButton onClick={printFn} disabled={false} />
+          <PrintButton onClick={printFn} disabled={!isChinese} />
         </div>
       </div>
     );

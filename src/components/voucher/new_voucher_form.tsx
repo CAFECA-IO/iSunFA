@@ -631,16 +631,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     e.preventDefault();
 
     // Info: (20241007 - Julian) 若任一條件不符，則中斷 function
-    if (selectedIds.length === 0) {
-      // Info: (20241230 - Julian) 如果未選擇憑證，則顯示憑證提示，並定位最上方、吐司通知
-      toastHandler({
-        id: ToastId.FILL_UP_VOUCHER_FORM,
-        type: ToastType.ERROR,
-        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: certificate`,
-        closeable: true,
-      });
-      document.body.scrollTop = 0;
-    } else if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
+    if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
       // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位、吐司通知
       setIsShowDateHint(true);
       toastHandler({
