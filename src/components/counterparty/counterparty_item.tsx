@@ -59,7 +59,7 @@ const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterparty
   );
 
   return (
-    <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
+    <div className="table-row font-medium">
       {/* Info: (20241106 - Anna) Partner’s Name */}
       <div className="table-cell text-left align-middle">{displayedName}</div>
 
@@ -74,8 +74,11 @@ const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterparty
 
       {/* Info: (20241106 - Anna) Action */}
       <div className="table-cell text-center align-middle">
-        <div className="flex items-center justify-center p-20px text-icon-surface-single-color-primary hover:cursor-pointer hover:text-icon-surface-accent">
-          <FiEdit size={20} onClick={openEditModal} />
+        <div
+          onClick={openEditModal}
+          className="flex items-center justify-center p-20px text-icon-surface-single-color-primary hover:cursor-pointer hover:text-icon-surface-accent"
+        >
+          <FiEdit size={20} />
         </div>
       </div>
 
