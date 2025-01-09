@@ -124,6 +124,7 @@ class SessionHandler {
   async destroy(options: ISessionOption) {
     const sessionId = parseSessionId(options);
     this.data.delete(sessionId);
+    this.backup();
   }
 
   async garbageCollection() {
@@ -147,9 +148,9 @@ const sessionHandlerOption: ISessionHandlerOption = {
 const sessionHandler = SessionHandler.getInstance(sessionHandlerOption);
 
 export const getSession = async (req: NextApiRequest) => {
-  // Info: (20250107 - Luphia) 根據 header 取得用戶 session，未登入則回傳 undefined
-  const options = req.cookies as unknown as ISessionOption;
-  const session = sessionHandler.read(options) as unknown as ISessionData;
+  // Info: (20250107 - Luphia) 根據 header 取得用戶 session，未登入則回傳 { sid: sessionId }
+  const options = req.headers as ISessionOption;
+  const session = sessionHandler.read(options);
   return session;
 };
 
@@ -157,12 +158,13 @@ export function setSession(
   session: ISessionData,
   data: { userId?: number; companyId?: number; challenge?: string; roleId?: number }
 ) {
-  const options: ISessionOption = session as unknown as ISessionOption;
+  const options: ISessionOption = session;
   const newSession = sessionHandler.update(options, data);
   return newSession;
 }
 
+// ToDo: (20250109 - Luphia) require periodical garbage collection
 export function destroySession(session: ISessionData) {
-  const options: ISessionOption = session as unknown as ISessionOption;
+  const options: ISessionOption = session;
   sessionHandler.destroy(options);
 }
