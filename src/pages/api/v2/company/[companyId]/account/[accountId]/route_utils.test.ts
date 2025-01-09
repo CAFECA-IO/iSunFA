@@ -4,7 +4,8 @@ import { IGetLineItemByAccount } from '@/interfaces/line_item';
 import { lineItemGetByAccountAPIUtils } from '@/pages/api/v2/company/[companyId]/account/[accountId]/route_utils';
 import { LineItem as PrismaLineItem, Account as PrismaAccount } from '@prisma/client';
 
-xdescribe('lineItemGetByAccountAPIUtils', () => {
+describe('lineItemGetByAccountAPIUtils', () => {
+  // Info: (20250108 - Luphia) need to redesign the test case
   let fakeReverseLineItems: PrismaLineItem & {
     account: PrismaAccount;
   };
