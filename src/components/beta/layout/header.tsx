@@ -45,7 +45,7 @@ const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint, toggleOverlay }: 
 
   return (
     <header
-      className={`flex items-center gap-24px px-20px pb-8px pt-32px screen1280:px-56px ${notPrint ? 'print:hidden' : ''}`}
+      className={`flex items-center gap-24px px-lv-7 pt-lv-6 screen1280:px-56px ${notPrint ? 'print:hidden' : ''}`}
     >
       {isDashboard ? (
         <Search toggleOverlay={toggleOverlay} />
