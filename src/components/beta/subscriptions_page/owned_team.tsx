@@ -1,10 +1,11 @@
 import { Dispatch, SetStateAction } from 'react';
+import Link from 'next/link';
 import { IoArrowForward } from 'react-icons/io5';
-import { IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
+import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
 import { PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { useTranslation } from 'next-i18next';
-import { formatTimestamp } from '@/constants/time';
+import { formatTimestamp, ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
@@ -40,6 +41,19 @@ const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: 
     router.push(`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}`);
   };
 
+  // Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
+  const calculateDaysLeft = (timestamp: number) => {
+    const now = Date.now();
+    const diff = timestamp - now;
+    return Math.ceil(diff / ONE_DAY_IN_MS);
+  };
+
+  // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
+  const remainingDays = calculateDaysLeft(team.nextRenewal + THREE_DAYS_IN_MS);
+
+  // Info: (20250110 - Liz) 檢查是否即將降級
+  const isReturningToBeginnerSoon = remainingDays > 0 && remainingDays <= 3;
+
   return (
     <main className="flex">
       <div className="w-24px flex-none rounded-l-lg border border-stroke-brand-primary bg-surface-brand-primary"></div>
@@ -60,22 +74,49 @@ const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: 
         {!isPlanBeginner && (
           <section className="flex flex-auto flex-col justify-center gap-24px">
             <div>
-              {isPlanProfessional && (
-                <h3 className="text-2xl font-semibold text-text-neutral-tertiary">
-                  {`${t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}: `}
-                  <span className="text-text-neutral-primary">
-                    {team.nextRenewal ? formatTimestamp(team.nextRenewal) : ''}
-                  </span>
-                </h3>
-              )}
+              {isPlanProfessional &&
+                team.nextRenewal &&
+                team.paymentStatus === TPaymentStatus.PAID && (
+                  <div className="text-2xl font-semibold text-text-neutral-tertiary">
+                    {`${t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}: `}
+                    <span className="text-text-neutral-primary">
+                      {formatTimestamp(team.nextRenewal)}
+                    </span>
+                  </div>
+                )}
+
+              {isPlanProfessional &&
+                team.nextRenewal &&
+                team.paymentStatus === TPaymentStatus.UNPAID && (
+                  <div>
+                    <div className="flex items-center gap-8px">
+                      <p className="text-2xl font-semibold text-text-state-error">
+                        {t('subscriptions:SUBSCRIPTIONS_PAGE.PAYMENT_FAILED')}
+                      </p>
+                      <Link
+                        href={`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/payment`}
+                        className="text-sm font-semibold text-link-text-primary"
+                      >
+                        {t('subscriptions:SUBSCRIPTIONS_PAGE.UPDATE_PAYMENT')}
+                      </Link>
+                    </div>
+                    {isReturningToBeginnerSoon && (
+                      <p className="text-base font-semibold text-text-neutral-tertiary">
+                        {t('subscriptions:SUBSCRIPTIONS_PAGE.RETURNING_TO_BEGINNER_IN')}
+                        <span className="text-text-state-error">{remainingDays}</span>
+                        {t('subscriptions:SUBSCRIPTIONS_PAGE.DAYS')}
+                      </p>
+                    )}
+                  </div>
+                )}
 
               {isPlanEnterprise && (
-                <h3 className="text-2xl font-semibold text-text-neutral-tertiary">
+                <div className="text-2xl font-semibold text-text-neutral-tertiary">
                   {`${t('subscriptions:SUBSCRIPTIONS_PAGE.EXPIRED_DATE')}: `}
                   <span className="text-text-neutral-primary">
                     {team.expiredDate ? formatTimestamp(team.expiredDate) : ''}
                   </span>
-                </h3>
+                </div>
               )}
             </div>
 

@@ -31,11 +31,18 @@ export interface IPlan {
   features: IPlanFeature[];
 }
 
+export enum TPaymentStatus {
+  PAID = 'paid', // Info: (20250110 - Liz) 已付款
+  UNPAID = 'unpaid', // Info: (20250110 - Liz) 未付款
+  FREE = 'free', // Info: (20250110 - Liz) 免費所以不用付款
+}
+
 export interface IUserOwnedTeam {
   id: number;
-  name: string;
-  plan: TPlanType;
-  nextRenewal: number;
-  expiredDate: number;
-  enableAutoRenewal: boolean;
+  name: string; // Info: (20250110 - Liz) 團隊名稱
+  plan: TPlanType; // Info: (20250110 - Liz) 訂閱方案
+  enableAutoRenewal: boolean; // Info: (20250110 - Liz) 是否開啟自動續約
+  nextRenewal: number; // Info: (20250110 - Liz) 下次續約日期
+  expiredDate: number; // Info: (20250110 - Liz) 過期日期
+  paymentStatus: TPaymentStatus; // Info: (20250110 - Liz) 付款狀態
 }
