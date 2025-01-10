@@ -492,9 +492,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     async (newCertificate: ICertificate) => {
       let newCertificatesUI: { [id: string]: ICertificateUI } = {};
       setCertificates((prev) => {
-        // Deprecated: (20241122 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`CertificateListBody handleNewCertificateComing: prev`, prev);
         newCertificatesUI = {
           [newCertificate.id]: {
             ...newCertificate,
@@ -512,12 +509,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             ...certificate,
           };
         });
-        // Deprecated: (20241122 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(
-          `CertificateListBody handleNewCertificateComing: newCertificatesUI`,
-          newCertificatesUI
-        );
         return newCertificatesUI;
       });
     },
@@ -527,17 +518,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const parseCertificateCreateEventMessage = useCallback(
     (data: { message: string }) => {
       const newCertificate: ICertificate = JSON.parse(data.message);
-      // Deprecated: (20241122 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(`CertificateListBody handleNewCertificateComing: newCertificate`, newCertificate);
       handleNewCertificateComing(newCertificate);
-
-      // Info: (20241206 - Murky) @tzuhan 我在這邊設定上傳成功之後會把unRead + 1
-      const newUnread = {
-        withVoucher: unRead.withVoucher,
-        withoutVoucher: unRead.withoutVoucher + 1,
-      };
-      setUnRead(newUnread);
+      setUnRead((prev) => ({
+        ...prev,
+        withoutVoucher: prev.withoutVoucher + 1,
+      }));
     },
     [companyId, certificates, activeTab]
   );
