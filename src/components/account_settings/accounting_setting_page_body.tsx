@@ -670,6 +670,7 @@ const AccountingSettingPageBody: React.FC = () => {
               <button
                 type="button"
                 onClick={manualAccountOpeningModalVisibilityHandler}
+                disabled
                 className="flex items-center gap-4px text-sm text-link-text-primary disabled:text-text-neutral-mute"
               >
                 {t('setting:ACCOUNTING.MANUAL_ACCOUNT_OPENING')}
