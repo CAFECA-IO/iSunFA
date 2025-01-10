@@ -398,7 +398,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       {displayedSelectArea}
       <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm font-medium">
-          <div className="table-row h-60px">
+          <div className="table-row h-60px print:text-xs">
             <div
               className={`hidden border-b border-stroke-neutral-quaternary text-center align-middle print:hidden`}
             >
