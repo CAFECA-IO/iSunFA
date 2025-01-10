@@ -45,114 +45,74 @@ const LedgerItem = React.memo(
       </div>
     );
 
+    const linkHref = {
+      pathname: `/users/accounting/${voucherId}}`, // Info: (20241225 - Anna) 傳票詳細頁面路徑
+      query: {
+        from: 'ledger', // Info: (20241225 - Anna) from=ledger 為了返回時能回到分類帳頁面
+        startDate: selectedDateRange.startTimeStamp,
+        endDate: selectedDateRange.endTimeStamp,
+        startAccountNo: selectedStartAccountNo,
+        endAccountNo: selectedEndAccountNo,
+        labelType: selectedReportType,
+        voucherNo: voucherNumber,
+      },
+    };
+
     const displayedVoucherNo =
       voucherType === VoucherType.RECEIVE ? (
-        <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
+        <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px print:origin-left print:scale-75">
           <FaDownload size={14} className="text-surface-state-error-dark" />
-          <Link
-            // Info: (20241225 - Anna) from=ledger 為了返回時能回到分類帳頁面
-            href={{
-              pathname: `/users/accounting/${voucherId}}`, // Info: (20241225 - Anna) 傳票詳細頁面路徑
-              query: {
-                from: 'ledger',
-                startDate: selectedDateRange.startTimeStamp,
-                endDate: selectedDateRange.endTimeStamp,
-                startAccountNo: selectedStartAccountNo,
-                endAccountNo: selectedEndAccountNo,
-                labelType: selectedReportType,
-                voucherNo: voucherNumber,
-              },
-            }}
-            className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
-          >
-            <p className="text-sm text-text-state-error-solid">{voucherNumber}</p>
-          </Link>
+          <p className="text-text-state-error-solid">{voucherNumber}</p>
         </div>
       ) : voucherType === VoucherType.EXPENSE ? (
-        <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
+        <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px print:origin-left print:scale-75">
           <FaUpload size={14} className="text-surface-state-success-dark" />
-          <Link
-            href={{
-              pathname: `/users/accounting/${voucherId}`,
-              query: {
-                from: 'ledger',
-                startDate: selectedDateRange.startTimeStamp,
-                endDate: selectedDateRange.endTimeStamp,
-                startAccountNo: selectedStartAccountNo,
-                endAccountNo: selectedEndAccountNo,
-                labelType: selectedReportType,
-                voucherNo: voucherNumber,
-              },
-            }}
-            className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
-          >
-            <p className="text-sm text-text-state-success-solid">{voucherNumber}</p>
-          </Link>
+          <p className="text-text-state-success-solid">{voucherNumber}</p>
         </div>
       ) : (
-        <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
+        <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px print:origin-left print:scale-75">
           <FiRepeat size={14} className="text-surface-brand-secondary" />
-          <Link
-            href={{
-              pathname: `/users/accounting/${voucherId}`,
-              query: {
-                from: 'ledger',
-                startDate: selectedDateRange.startTimeStamp,
-                endDate: selectedDateRange.endTimeStamp,
-                startAccountNo: selectedStartAccountNo,
-                endAccountNo: selectedEndAccountNo,
-                labelType: selectedReportType,
-                voucherNo: voucherNumber,
-              },
-            }}
-            className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
-          >
-            <p className="text-sm text-badge-text-secondary-solid">{voucherNumber}</p>
-          </Link>
+          <p className="text-badge-text-secondary-solid">{voucherNumber}</p>
         </div>
       );
 
     const displayedNote = (
       <p className="flex h-full items-center justify-start px-1 font-normal text-text-neutral-tertiary">
-        {particulars}
+        {particulars === '' ? '-' : particulars}
       </p>
     );
 
     const displayedAccountingCode = (
-      <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-        <p className="m-0 flex items-center">{ledger.no}</p>
-      </div>
+      <p className="font-medium text-text-neutral-primary">{ledger.no}</p>
     );
+
     const displayedAccountingName = (
-      <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-        <p className="m-0 flex items-center">{ledger.accountingTitle}</p>
-      </div>
+      <p className="w-full truncate font-medium text-text-neutral-primary">
+        {ledger.accountingTitle}
+      </p>
     );
 
     // Info: (20241118 - Anna) 使用傳入的 creditAmount、debitAmount、balance，而非 ledgerItemsData 的遍歷
     const displayedCredit = (
-      <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-        <p className="m-0 flex items-center text-text-neutral-primary">
-          {numberWithCommas(ledger.creditAmount)}
-        </p>
-      </div>
+      <p className="font-semibold text-text-neutral-primary">
+        {numberWithCommas(ledger.creditAmount)}
+      </p>
     );
 
     const displayedDebit = (
-      <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-        <p className="text-text-neutral-primary">{numberWithCommas(ledger.debitAmount)}</p>
-      </div>
+      <p className="font-semibold text-text-neutral-primary">
+        {numberWithCommas(ledger.debitAmount)}
+      </p>
     );
 
     const displayedBalance = (
-      <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-        <p className="align-middle text-text-neutral-primary">{numberWithCommas(ledger.balance)}</p>
-      </div>
+      <p className="font-semibold text-text-neutral-primary">{numberWithCommas(ledger.balance)}</p>
     );
 
     return (
-      <div
-        className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+      <Link
+        href={linkHref}
+        className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10 print:text-xs"
         // Info: (20241206 - Anna) 避免行內換頁
         style={{ pageBreakInside: 'avoid' }}
       >
@@ -164,16 +124,18 @@ const LedgerItem = React.memo(
           {displayedAccountingName}
         </div>
         {/* Info: (20240920 - Julian) Voucher No */}
-        <div className="table-cell py-8px text-right align-middle">{displayedVoucherNo}</div>
+        <div className="table-cell p-8px text-center align-middle print:p-0">
+          {displayedVoucherNo}
+        </div>
         {/* Info: (20240920 - Julian) Note */}
-        <div className="table-cell py-8px text-right align-middle">{displayedNote}</div>
+        <div className="table-cell p-8px text-left align-middle print:p-2px">{displayedNote}</div>
         {/* Info: (202401101 - Anna) Debit */}
-        <div className="table-cell py-8px pr-2 text-right align-middle">{displayedDebit}</div>
+        <div className="table-cell p-8px text-right align-middle">{displayedDebit}</div>
         {/* Info: (202401101 - Anna) Credit */}
-        <div className="table-cell py-8px pr-2 text-right align-middle">{displayedCredit}</div>
+        <div className="table-cell p-8px text-right align-middle">{displayedCredit}</div>
         {/* Info: (20241004 - Anna) Balance */}
-        <div className="table-cell py-8px pr-2 text-right align-middle">{displayedBalance}</div>
-      </div>
+        <div className="table-cell p-8px text-right align-middle">{displayedBalance}</div>
+      </Link>
     );
   }
 );
