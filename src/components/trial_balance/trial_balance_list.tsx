@@ -49,8 +49,6 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   const [midtermCreditSort, setMidtermCreditSort] = useState<null | SortOrder>(null);
   const [endingDebitSort, setEndingDebitSort] = useState<null | SortOrder>(null);
   const [endingCreditSort, setEndingCreditSort] = useState<null | SortOrder>(null);
-  // Info: (20250110 - Julian) 全選狀態
-  const [isSelectedAll, setIsSelectedAll] = useState(false);
 
   // Info: (20241204 - Anna) 使用 trigger 方法替代直接調用 APIHandler
   const { trigger: fetchTrialBalance } = APIHandler<ITrialBalancePayload>(
@@ -118,21 +116,6 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       endingCreditSort,
     ]
   );
-
-  // Info: (20250110 - Julian) 勾選全部
-  const checkAllHandler = () => {
-    // Info: (20250110 - Julian) 切換所有項目的選取狀態
-    // setUiVoucherList((prev) => {
-    //   return prev.map((voucher) => {
-    //     return {
-    //       ...voucher,
-    //       isSelected: !isSelectedAll,
-    //     };
-    //   });
-    // });
-    // Info: (20250110 - Julian) 切換全選狀態
-    setIsSelectedAll(!isSelectedAll);
-  };
 
   useEffect(() => {
     if (
@@ -419,16 +402,14 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm font-medium">
           <div className="table-row h-60px">
             <div
-              className={`table-cell border-b border-stroke-neutral-quaternary text-center align-middle print:hidden`}
+              className={`hidden border-b border-stroke-neutral-quaternary text-center align-middle print:hidden`}
             >
               <div className="flex items-center justify-center">
-                <div className="relative">
-                  <input type="checkbox" className={checkboxStyle} onClick={checkAllHandler} />
-                </div>
+                <input type="checkbox" className={checkboxStyle} />
               </div>
             </div>
             <div
-              className={`table-cell w-70px whitespace-nowrap border-b border-l border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:bg-neutral-50`}
+              className={`table-cell w-70px whitespace-nowrap border-b border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:bg-neutral-50`}
             >
               {t('reports:REPORTS.CODE')}
             </div>
@@ -439,37 +420,37 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
             </div>
 
             <div
-              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedBeginningCredit}
             </div>
 
             <div
-              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedBeginningDebit}
             </div>
 
             <div
-              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedMidtermDebit}
             </div>
 
             <div
-              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedMidtermCredit}
             </div>
 
             <div
-              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedEndingDebit}
             </div>
 
             <div
-              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedEndingCredit}
             </div>
@@ -482,7 +463,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       {/* Info: (20241018 - Anna) Total開始 */}
       <div className="mb-10 mt-4 table w-full overflow-hidden rounded-b-lg">
         <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
-          <div className="table-row h-60px">
+          <div className="table-row h-60px print:text-xs">
             <div
               className={`col-span-3 table-cell h-full w-472px border-stroke-neutral-quaternary text-center align-middle font-medium print:bg-neutral-50`}
             >
@@ -490,37 +471,37 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.beginningDebitAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-green py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-100px border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.beginningCreditAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.midtermDebitAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-baby py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-100px border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.midtermCreditAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.endingDebitAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-pink py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-100px border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.endingCreditAmount ?? 0)}
             </div>
