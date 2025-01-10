@@ -215,9 +215,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!validateForm()) return;
-    // Deprecate: (20241218 - tzuhan) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('handleSave formStateRef.current:', formStateRef.current);
     const updatedData: ICertificate = {
       ...certificate,
       invoice: {
@@ -346,7 +343,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
                   triggerWhenChanged={priceBeforeTaxChangeHandler}
                 />
-                <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                   <Image
                     src={currencyAliasImageSrc}
                     width={16}
@@ -382,7 +379,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     hasComma
                     className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
                   />
-                  <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                  <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                     <Image
                       src={currencyAliasImageSrc}
                       width={16}
@@ -419,7 +416,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
                   triggerWhenChanged={totalPriceChangeHandler}
                 />
-                <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                   <Image
                     src={currencyAliasImageSrc}
                     width={16}

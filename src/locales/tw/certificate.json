@@ -82,7 +82,7 @@
     "DEDUCTIBLE": "可扣抵稅額",
     "SUCCESS": "您的發票資訊已更新。",
     "TAXABLE_5": "應稅金額（5%）",
-    "ZERO_TAX_RATE": "零稅率",
+    "ZERO_TAX_RATE": "零稅率（0%）",
     "TAX_FREE": "免稅",
     "NONE": "無",
     "THROUGH_CUSTOMS": "通過海關",

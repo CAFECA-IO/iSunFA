@@ -109,7 +109,7 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
             <div className="table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {displayedAmount}
             </div>
-            <div className="table-cell w-80px min-w-80px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div className="table-cell w-90px min-w-90px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.DEDUCTABLE')}
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">

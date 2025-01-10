@@ -83,7 +83,9 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
           : 'border-input-stroke-input text-input-text-input-filled'
       } items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
     >
-      <p className="text-input-text-input-filled">{t(`certificate:EDIT.${selectedTax}`)}</p>
+      <p className="min-w-110px text-input-text-input-filled">
+        {t(`certificate:EDIT.${selectedTax}`)}
+      </p>
       <div className="flex h-20px w-20px items-center justify-center">
         <FaChevronDown className={isTaxRatioMenuOpen ? 'rotate-180' : 'rotate-0'} />
       </div>
@@ -96,7 +98,7 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
             : 'grid-rows-0 border-transparent'
         } overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
-        <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary p-8px">
+        <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary">
           {Object.values(TaxOptions).map((value) => (
             <li
               key={value}
@@ -115,7 +117,7 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
           ref={taxRatioSubMenuRef}
           className="border-dropdown-stroke-menu/10 absolute left-full top-50px grid w-full translate-x-2 grid-cols-1 overflow-hidden rounded-sm border border-l-1px bg-dropdown-surface-menu-background-secondary shadow-dropmenu"
         >
-          <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary p-8px">
+          <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary">
             {Object.values(ZeroTaxRateOptions).map((value) => (
               <li
                 key={value}
