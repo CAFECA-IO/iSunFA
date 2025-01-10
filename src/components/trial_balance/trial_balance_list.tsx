@@ -58,7 +58,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   // Info: (20241204 - Anna) 更新 fetchTrialBalanceData 函數為使用 trigger 方法
   const fetchTrialBalanceData = useCallback(
     async (
-      sortOption?: ISortOption[] // Info: (20250110 - Julian) 新增排序選項
+      sort?: ISortOption // Info: (20250110 - Julian) 新增排序選項
     ) => {
       if (
         !selectedDateRange ||
@@ -66,7 +66,8 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         (prevSelectedDateRange.current &&
           prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
           prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
-          hasFetchedOnce)
+          hasFetchedOnce &&
+          !sort) // Info: (20250110 - Julian) 若「已經請求過一次」且「沒有排序選項」則略過請求
       ) {
         return;
       }
@@ -81,7 +82,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
             endDate: selectedDateRange.endTimeStamp,
             page: 1,
             pageSize: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
-            sortOption, // Info: (20250110 - Julian) 起始/期中/結束的借貸方金額排序
+            sortOption: sort ? `${sort?.sortBy}:${sort?.sortOrder}` : undefined, // Info: (20250110 - Julian) 起始/期中/結束的借貸方金額排序
           },
         });
 
@@ -136,39 +137,36 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
 
   useEffect(() => {
     // Info: (20250110 - Julian) 排序狀態變更時重新請求資料
-    const sort = [
+    const sort: ISortOption[] = [
       beginningCreditSort && {
-        by: SortBy.BEGINNING_CREDIT_AMOUNT,
-        order: beginningCreditSort,
+        sortBy: SortBy.BEGINNING_CREDIT_AMOUNT,
+        sortOrder: beginningCreditSort,
       },
       beginningDebitSort && {
-        by: SortBy.BEGINNING_DEBIT_AMOUNT,
-        order: beginningDebitSort,
+        sortBy: SortBy.BEGINNING_DEBIT_AMOUNT,
+        sortOrder: beginningDebitSort,
       },
       midtermDebitSort && {
-        by: SortBy.MIDTERM_DEBIT_AMOUNT,
-        order: midtermDebitSort,
+        sortBy: SortBy.MIDTERM_DEBIT_AMOUNT,
+        sortOrder: midtermDebitSort,
       },
       midtermCreditSort && {
-        by: SortBy.MIDTERM_CREDIT_AMOUNT,
-        order: midtermCreditSort,
+        sortBy: SortBy.MIDTERM_CREDIT_AMOUNT,
+        sortOrder: midtermCreditSort,
       },
       endingDebitSort && {
-        by: SortBy.ENDING_DEBIT_AMOUNT,
-        order: endingDebitSort,
+        sortBy: SortBy.ENDING_DEBIT_AMOUNT,
+        sortOrder: endingDebitSort,
       },
       endingCreditSort && {
-        by: SortBy.ENDING_CREDIT_AMOUNT,
-        order: endingCreditSort,
+        sortBy: SortBy.ENDING_CREDIT_AMOUNT,
+        sortOrder: endingCreditSort,
       },
     ]
       .filter(Boolean) // Info: (20250110 - Julian) 移除 null
       .map((s) => s as unknown as ISortOption); // Info: (20250110 - Julian) 轉換類型
 
-    // eslint-disable-next-line no-console
-    console.log('sort refetch', sort);
-
-    fetchTrialBalanceData(sort);
+    fetchTrialBalanceData(sort[0]);
   }, [
     beginningCreditSort,
     beginningDebitSort,
