@@ -46,56 +46,48 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
     </div>
   );
   const displayedAccountingName = (
-    <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-      <div>
-        <p className="m-0 flex items-center">{account.accountingTitle}</p>
-      </div>
+    <div className="flex h-full items-center justify-center font-medium text-text-neutral-primary">
+      {account.accountingTitle}
     </div>
   );
 
   const displayedBeginningDebitAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="m-0 flex items-center text-neutral-600">
-        {numberWithCommas(account.beginningDebitAmount)}
-      </p>
+    <div className="flex h-full items-center justify-end">
+      {numberWithCommas(account.beginningDebitAmount)}
     </div>
   );
 
   const displayedBeginningCreditAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="text-neutral-600">{numberWithCommas(account.beginningCreditAmount)}</p>
+    <div className="flex h-full items-center justify-end">
+      {numberWithCommas(account.beginningCreditAmount)}
     </div>
   );
   const displayedMidtermDebitAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="m-0 flex items-center text-neutral-600">
-        {numberWithCommas(account.midtermDebitAmount)}
-      </p>
+    <div className="flex h-full items-center justify-end">
+      {numberWithCommas(account.midtermDebitAmount)}
     </div>
   );
 
   const displayedMidtermCreditAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="text-neutral-600">{numberWithCommas(account.midtermCreditAmount)}</p>
+    <div className="flex h-full items-center justify-end">
+      {numberWithCommas(account.midtermCreditAmount)}
     </div>
   );
   const displayedEndingDebitAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="m-0 flex items-center text-neutral-600">
-        {numberWithCommas(account.endingDebitAmount)}
-      </p>
+    <div className="flex h-full items-center justify-end">
+      {numberWithCommas(account.endingDebitAmount)}
     </div>
   );
 
   const displayedEndingCreditAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="text-neutral-600">{numberWithCommas(account.endingCreditAmount)}</p>
+    <div className="flex h-full items-center justify-end">
+      {numberWithCommas(account.endingCreditAmount)}
     </div>
   );
 
   return (
     <>
-      <div className="table-row h-20px font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
+      <div className="table-row h-20px font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10 print:text-xs">
         {/* Info: (20240920 - Julian) Select */}
         <div className={`table-cell w-32px text-center print:hidden`}>{displayedCheckbox}</div>
         {/* Info: (20241004 - Anna) Accounting */}
@@ -107,37 +99,37 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
         </div>
         {/* Info: (20241009 - Anna) Beginning Debit */}
         <div
-          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600`}
+          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-green py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
         >
           {displayedBeginningDebitAmount}
         </div>
         {/* Info: (20241009 - Anna) Beginning Credit */}
         <div
-          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600`}
+          className={`table-cell h-full w-77px border-l border-stroke-neutral-quaternary bg-surface-support-soft-green py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
         >
           {displayedBeginningCreditAmount}
         </div>
         {/* Info: (20241009 - Anna) Midterm Debit */}
         <div
-          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600`}
+          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-baby py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
         >
           {displayedMidtermDebitAmount}
         </div>
         {/* Info: (20241009 - Anna) Midterm Credit */}
         <div
-          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600`}
+          className={`table-cell h-full w-77px border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
         >
           {displayedMidtermCreditAmount}
         </div>
         {/* Info: (20241009 - Anna) Ending Debit */}
         <div
-          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600`}
+          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-pink py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
         >
           {displayedEndingDebitAmount}
         </div>
         {/* Info: (20241009 - Anna) Ending Credit */}
         <div
-          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600`}
+          className={`table-cell h-full w-77px border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
         >
           {displayedEndingCreditAmount}
         </div>
@@ -145,34 +137,35 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
       {/* Info: (20241025 - Anna) 如果展開，新增子科目表格 */}
       {localIsExpanded &&
         account.subAccounts.map((subAccount) => (
-          <div key={subAccount.id} className="table-row h-20px font-normal">
+          <div
+            key={subAccount.id}
+            className="table-row h-20px font-medium text-text-neutral-primary"
+          >
             <div className="table-cell w-32px text-center print:hidden">{displayedCheckbox}</div>
             <div className="table-cell w-50px text-center align-middle print:bg-neutral-50">
-              <span className="ml-6 text-neutral-400">{subAccount.no}</span>
+              <span className="ml-6">{subAccount.no}</span>
             </div>
             <div className="table-cell w-370px text-center align-middle print:bg-neutral-50">
-              <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-                <span className="ml-12 flex items-center text-neutral-400">
-                  {subAccount.accountingTitle}
-                </span>
+              <div className="flex h-full items-center justify-center font-medium">
+                <span className="ml-12 flex items-center">{subAccount.accountingTitle}</span>
               </div>
             </div>
-            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600">
+            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-green py-8px pr-2 text-right align-middle font-semibold">
               {numberWithCommas(subAccount.beginningDebitAmount)}
             </div>
-            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600">
+            <div className="table-cell h-full w-77px border-l border-stroke-neutral-quaternary bg-surface-support-soft-green py-8px pr-2 text-right align-middle font-semibold">
               {numberWithCommas(subAccount.beginningCreditAmount)}
             </div>
-            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600">
+            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-baby py-8px pr-2 text-right align-middle font-semibold">
               {numberWithCommas(subAccount.midtermDebitAmount)}
             </div>
-            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600">
+            <div className="table-cell h-full w-77px border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby py-8px pr-2 text-right align-middle font-semibold">
               {numberWithCommas(subAccount.midtermCreditAmount)}
             </div>
-            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600">
+            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-pink py-8px pr-2 text-right align-middle font-semibold">
               {numberWithCommas(subAccount.endingDebitAmount)}
             </div>
-            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600">
+            <div className="table-cell h-full w-77px border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink py-8px pr-2 text-right align-middle font-semibold">
               {numberWithCommas(subAccount.endingCreditAmount)}
             </div>
           </div>

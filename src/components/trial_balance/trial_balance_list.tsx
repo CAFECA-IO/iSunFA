@@ -4,7 +4,7 @@ import TrialBalanceItemRow from '@/components/trial_balance/trial_balance_item';
 import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
-import { SortOrder } from '@/constants/sort';
+import { SortOrder, SortBy } from '@/constants/sort';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import {
@@ -21,6 +21,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { useReactToPrint } from 'react-to-print';
+import { ISortOption } from '@/interfaces/sort';
 
 interface TrialBalanceListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241105 - Anna) 接收來自上層的日期範圍
@@ -41,55 +42,97 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   const [isLoading, setIsLoading] = useState(false); // Info: (20241105 - Anna) 追蹤 API 請求的加載狀態
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null); // Info: (20241105 - Anna) 追蹤之前的日期範圍
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [beginningCreditSort, setBeginningCreditSort] = useState<null | SortOrder>(null);
+  const [beginningDebitSort, setBeginningDebitSort] = useState<null | SortOrder>(null);
+  const [midtermDebitSort, setMidtermDebitSort] = useState<null | SortOrder>(null);
+  const [midtermCreditSort, setMidtermCreditSort] = useState<null | SortOrder>(null);
+  const [endingDebitSort, setEndingDebitSort] = useState<null | SortOrder>(null);
+  const [endingCreditSort, setEndingCreditSort] = useState<null | SortOrder>(null);
+  // Info: (20250110 - Julian) 全選狀態
+  const [isSelectedAll, setIsSelectedAll] = useState(false);
+
   // Info: (20241204 - Anna) 使用 trigger 方法替代直接調用 APIHandler
   const { trigger: fetchTrialBalance } = APIHandler<ITrialBalancePayload>(
     APIName.TRIAL_BALANCE_LIST
   );
 
   // Info: (20241204 - Anna) 更新 fetchTrialBalanceData 函數為使用 trigger 方法
-  const fetchTrialBalanceData = useCallback(async () => {
-    if (
-      !selectedDateRange ||
-      selectedDateRange.endTimeStamp === 0 ||
-      (prevSelectedDateRange.current &&
-        prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
-        prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
-        hasFetchedOnce)
-    ) {
-      return;
-    }
+  const fetchTrialBalanceData = useCallback(
+    async (
+      sortOption?: ISortOption[] // Info: (20250110 - Julian) 新增排序選項
+    ) => {
+      if (
+        !selectedDateRange ||
+        selectedDateRange.endTimeStamp === 0 ||
+        (prevSelectedDateRange.current &&
+          prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
+          prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
+          hasFetchedOnce)
+      ) {
+        return;
+      }
 
-    setIsLoading(true);
-    try {
-      // Info: (20241204 - Anna) 使用 trigger 手動觸發 APIHandler
-      const response = await fetchTrialBalance({
-        params: { companyId },
-        query: {
-          startDate: selectedDateRange.startTimeStamp,
-          endDate: selectedDateRange.endTimeStamp,
-          page: 1,
-          pageSize: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
-        },
-      });
+      setIsLoading(true);
+      try {
+        // Info: (20241204 - Anna) 使用 trigger 手動觸發 APIHandler
+        const response = await fetchTrialBalance({
+          params: { companyId },
+          query: {
+            startDate: selectedDateRange.startTimeStamp,
+            endDate: selectedDateRange.endTimeStamp,
+            page: 1,
+            pageSize: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
+            sortOption, // Info: (20250110 - Julian) 起始/期中/結束的借貸方金額排序
+          },
+        });
 
-      if (response.success && response.data) {
-        setAccountList(response.data.items.data); // Info: (20241204 - Anna) 更新帳戶列表
-        setTotalData(response.data.total); // Info: (20241205 - Anna) 更新總計資料
-        setHasFetchedOnce(true); // Info: (20241204 - Anna) 標記為已成功請求
-        prevSelectedDateRange.current = selectedDateRange; // Info: (20241204 - Anna) 更新前一个日期範圍
-      } else {
+        if (response.success && response.data) {
+          setAccountList(response.data.items.data); // Info: (20241204 - Anna) 更新帳戶列表
+          setTotalData(response.data.total); // Info: (20241205 - Anna) 更新總計資料
+          setHasFetchedOnce(true); // Info: (20241204 - Anna) 標記為已成功請求
+          prevSelectedDateRange.current = selectedDateRange; // Info: (20241204 - Anna) 更新前一个日期範圍
+        } else {
+          // Deprecate: (20241205 - Anna) remove eslint-disable
+          // eslint-disable-next-line no-console
+          // console.error('API response error: ', response);
+        }
+      } catch (error) {
         // Deprecate: (20241205 - Anna) remove eslint-disable
         // eslint-disable-next-line no-console
-        // console.error('API response error: ', response);
+        // console.error('Error fetching trial balance data:', error);
+      } finally {
+        setIsLoading(false); // Info: (20241204 - Anna) 請求結束，設置加載狀態為 false
       }
-    } catch (error) {
-      // Deprecate: (20241205 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      // console.error('Error fetching trial balance data:', error);
-    } finally {
-      setIsLoading(false); // Info: (20241204 - Anna) 請求結束，設置加載狀態為 false
-    }
-  }, [fetchTrialBalance, selectedDateRange, hasFetchedOnce]);
+    },
+    [
+      fetchTrialBalance,
+      selectedDateRange,
+      hasFetchedOnce,
+      beginningCreditSort,
+      beginningCreditSort,
+      beginningDebitSort,
+      midtermDebitSort,
+      midtermCreditSort,
+      endingDebitSort,
+      endingCreditSort,
+    ]
+  );
+
+  // Info: (20250110 - Julian) 勾選全部
+  const checkAllHandler = () => {
+    // Info: (20250110 - Julian) 切換所有項目的選取狀態
+    // setUiVoucherList((prev) => {
+    //   return prev.map((voucher) => {
+    //     return {
+    //       ...voucher,
+    //       isSelected: !isSelectedAll,
+    //     };
+    //   });
+    // });
+    // Info: (20250110 - Julian) 切換全選狀態
+    setIsSelectedAll(!isSelectedAll);
+  };
 
   useEffect(() => {
     if (
@@ -108,6 +151,50 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     }
   }, [fetchTrialBalanceData]);
 
+  useEffect(() => {
+    // Info: (20250110 - Julian) 排序狀態變更時重新請求資料
+    const sort = [
+      beginningCreditSort && {
+        by: SortBy.BEGINNING_CREDIT_AMOUNT,
+        order: beginningCreditSort,
+      },
+      beginningDebitSort && {
+        by: SortBy.BEGINNING_DEBIT_AMOUNT,
+        order: beginningDebitSort,
+      },
+      midtermDebitSort && {
+        by: SortBy.MIDTERM_DEBIT_AMOUNT,
+        order: midtermDebitSort,
+      },
+      midtermCreditSort && {
+        by: SortBy.MIDTERM_CREDIT_AMOUNT,
+        order: midtermCreditSort,
+      },
+      endingDebitSort && {
+        by: SortBy.ENDING_DEBIT_AMOUNT,
+        order: endingDebitSort,
+      },
+      endingCreditSort && {
+        by: SortBy.ENDING_CREDIT_AMOUNT,
+        order: endingCreditSort,
+      },
+    ]
+      .filter(Boolean) // Info: (20250110 - Julian) 移除 null
+      .map((s) => s as unknown as ISortOption); // Info: (20250110 - Julian) 轉換類型
+
+    // eslint-disable-next-line no-console
+    console.log('sort refetch', sort);
+
+    fetchTrialBalanceData(sort);
+  }, [
+    beginningCreditSort,
+    beginningDebitSort,
+    midtermDebitSort,
+    midtermCreditSort,
+    endingDebitSort,
+    endingCreditSort,
+  ]);
+
   // Info: (20241028 - Anna) 處理 toggle 開關
 
   const handlePrint = useReactToPrint({
@@ -123,14 +210,6 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   const subAccountsToggleHandler: () => void = () => {
     setSubAccountsToggle((prevState) => !prevState);
   };
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [beginningCreditSort, setBeginningCreditSort] = useState<null | SortOrder>(null);
-  const [beginningDebitSort, setBeginningDebitSort] = useState<null | SortOrder>(null);
-  const [midtermDebitSort, setMidtermDebitSort] = useState<null | SortOrder>(null);
-  const [midtermCreditSort, setMidtermCreditSort] = useState<null | SortOrder>(null);
-  const [endingDebitSort, setEndingDebitSort] = useState<null | SortOrder>(null);
-  const [endingCreditSort, setEndingCreditSort] = useState<null | SortOrder>(null);
 
   const displayedBeginningCredit = SortingButton({
     string: t('reports:REPORTS.BEGINNING_CREDIT'),
@@ -277,7 +356,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   const displayedSelectArea = (
     <div className="flex items-center justify-between px-px max-md:flex-wrap print:hidden">
       {/* Info: (20241101 - Anna) 幣別 */}
-      <div className="mr-42px flex w-fit items-center gap-5px rounded-full border border-badge-stroke-primary bg-white px-10px py-6px text-sm font-medium text-badge-text-primary">
+      <div className="mr-42px flex w-fit items-center gap-5px rounded-full border border-badge-stroke-primary bg-badge-surface-base-soft px-10px py-6px text-sm font-medium text-badge-text-primary">
         <RiCoinsLine />
         <p className="whitespace-nowrap">
           {t(`reports:REPORTS.${TrialBalanceData.currencyAlias}`)}
@@ -337,60 +416,60 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     <div className="flex flex-col" ref={printRef}>
       {displayedSelectArea}
       <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
-        <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm">
+        <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm font-medium">
           <div className="table-row h-60px">
             <div
-              className={`table-cell border-stroke-neutral-quaternary text-center align-middle print:hidden`}
+              className={`table-cell border-b border-stroke-neutral-quaternary text-center align-middle print:hidden`}
             >
               <div className="flex items-center justify-center">
                 <div className="relative">
-                  <input type="checkbox" className={checkboxStyle} />
+                  <input type="checkbox" className={checkboxStyle} onClick={checkAllHandler} />
                 </div>
               </div>
             </div>
             <div
-              className={`table-cell w-70px whitespace-nowrap border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:bg-neutral-50`}
+              className={`table-cell w-70px whitespace-nowrap border-b border-l border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:bg-neutral-50`}
             >
               {t('reports:REPORTS.CODE')}
             </div>
             <div
-              className={`table-cell w-350px border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:bg-neutral-50`}
+              className={`table-cell w-350px border-b border-l border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:bg-neutral-50`}
             >
               {t('reports:REPORT.ACCOUNTING')}
             </div>
 
             <div
-              className={`table-cell w-77px border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedBeginningCredit}
             </div>
 
             <div
-              className={`table-cell w-77px border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedBeginningDebit}
             </div>
 
             <div
-              className={`table-cell w-77px border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedMidtermDebit}
             </div>
 
             <div
-              className={`table-cell w-77px border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedMidtermCredit}
             </div>
 
             <div
-              className={`table-cell w-77px border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedEndingDebit}
             </div>
 
             <div
-              className={`table-cell w-77px border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-77px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark`}
             >
               {displayedEndingCredit}
             </div>
@@ -405,43 +484,43 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
             <div
-              className={`col-span-3 table-cell h-full w-472px border-stroke-neutral-quaternary text-center align-middle print:bg-neutral-50`}
+              className={`col-span-3 table-cell h-full w-472px border-stroke-neutral-quaternary text-center align-middle font-medium print:bg-neutral-50`}
             >
               {t('reports:TAX_REPORT.TOTAL')}
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-green py-8px pr-2 text-right align-middle text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.beginningDebitAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-green py-8px pr-2 text-right align-middle text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-green py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.beginningCreditAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-baby py-8px pr-2 text-right align-middle text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.midtermDebitAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-baby py-8px pr-2 text-right align-middle text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-baby py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.midtermCreditAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-pink py-8px pr-2 text-right align-middle text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.endingDebitAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-pink py-8px pr-2 text-right align-middle text-text-neutral-solid-dark`}
+              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-surface-support-soft-pink py-8px pr-2 text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.endingCreditAmount ?? 0)}
             </div>
