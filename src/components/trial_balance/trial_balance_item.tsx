@@ -107,7 +107,7 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
         </div>
         {/* Info: (20241009 - Anna) Beginning Debit */}
         <div
-          className={`table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600`}
+          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600`}
         >
           {displayedBeginningDebitAmount}
         </div>
@@ -119,7 +119,7 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
         </div>
         {/* Info: (20241009 - Anna) Midterm Debit */}
         <div
-          className={`table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600`}
+          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600`}
         >
           {displayedMidtermDebitAmount}
         </div>
@@ -131,7 +131,7 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
         </div>
         {/* Info: (20241009 - Anna) Ending Debit */}
         <div
-          className={`table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600`}
+          className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600`}
         >
           {displayedEndingDebitAmount}
         </div>
@@ -157,19 +157,19 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
                 </span>
               </div>
             </div>
-            <div className="table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600">
+            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600">
               {numberWithCommas(subAccount.beginningDebitAmount)}
             </div>
             <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600">
               {numberWithCommas(subAccount.beginningCreditAmount)}
             </div>
-            <div className="table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600">
+            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600">
               {numberWithCommas(subAccount.midtermDebitAmount)}
             </div>
             <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600">
               {numberWithCommas(subAccount.midtermCreditAmount)}
             </div>
-            <div className="table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600">
+            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600">
               {numberWithCommas(subAccount.endingDebitAmount)}
             </div>
             <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600">
