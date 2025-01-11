@@ -1,6 +1,8 @@
 export interface ISessionOption {
   sid?: string;
+  jwt?: string;
   cookie?: {
+    jwt?: string;
     sid?: string;
     httpOnly?: boolean;
     path?: string;

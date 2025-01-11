@@ -9,15 +9,7 @@ import {
 import { NextApiRequest } from 'next';
 import path from 'path';
 import { DefaultValue } from '@/constants/default_value';
-
-const parseSessionId = (options: ISessionOption) => {
-  const sessionId = options?.sid
-    ? options?.sid
-    : options?.cookie?.sid
-      ? options.cookie.sid
-      : DefaultValue.SESSION_ID;
-  return sessionId;
-};
+import { parseSessionId } from '@/lib/utils/parser/session';
 
 // ToDo: (20250108 - Luphia) encrypt string
 // Deprecated: (20250108 - Luphia) remove eslint-disable
@@ -108,8 +100,7 @@ class SessionHandler {
   }
 
   // Info: (20250111 - Luphia) 更新 session 時效
-  renewSession(options: ISessionOption) {
-    const sessionId = parseSessionId(options);
+  renewSession(sessionId: string) {
     const session = this.data.get(sessionId);
     if (session) {
       session.expires = Date.now() + this.sessionExpires;
@@ -120,8 +111,9 @@ class SessionHandler {
   }
 
   // Info: (20250111 - Luphia) 列出用戶其他裝置登入的 session 資料
-  listSession(options: ISessionData) {
-    const { userId } = options;
+  listSession(sessionId: string) {
+    const currentSession: ISessionData = this.data.get(sessionId) as ISessionData;
+    const { userId } = currentSession;
     const data: ISessionData[] = [];
     if (userId) {
       this.data.forEach((session) => {
@@ -134,8 +126,7 @@ class SessionHandler {
   }
 
   // Info: (20250111 - Luphia) 初始化／更新用戶的 session 資料
-  async update(options: ISessionOption, data: ISessionUpdateData) {
-    const sessionId = parseSessionId(options);
+  async update(sessionId: string, data: ISessionUpdateData) {
     const session = this.data.get(sessionId);
     const expires = Date.now() + this.sessionExpires;
     // Info: (20250111 - Luphia) 複寫 sid 以及 expires，避免其被不當修改
@@ -146,21 +137,19 @@ class SessionHandler {
   }
 
   // Info: (20250111 - Luphia) 讀取用戶的 session 資料
-  async read(options: ISessionOption) {
-    const sessionId = parseSessionId(options);
+  async read(sessionId: string) {
     const data = this.data.get(sessionId);
     const expires = data?.expires || 0;
     let result = { sid: sessionId } as ISessionData;
     if (expires > Date.now()) {
       // Info: (20250107 - Luphia) update session expire time
-      result = this.renewSession(options) as ISessionData;
+      result = this.renewSession(sessionId) as ISessionData;
     }
     return result;
   }
 
   // Info: (20250111 - Luphia) 刪除用戶的 session 資料
-  async destroy(options: ISessionOption) {
-    const sessionId = parseSessionId(options);
+  async destroy(sessionId: string) {
     this.data.delete(sessionId);
     this.backup();
   }
@@ -190,7 +179,8 @@ const sessionHandler = SessionHandler.getInstance(sessionHandlerOption);
 // Info: (20250107 - Luphia) 根據 header 取得用戶 session，未登入則回傳 { sid: sessionId }
 export const getSession = async (req: NextApiRequest) => {
   const options = req.headers as ISessionOption;
-  const session = sessionHandler.read(options);
+  const sessionId = parseSessionId(options);
+  const session = sessionHandler.read(sessionId);
   return session;
 };
 
@@ -199,33 +189,32 @@ export function setSession(
   session: ISessionData,
   data: { userId?: number; companyId?: number; challenge?: string; roleId?: number }
 ) {
-  const options: ISessionOption = session;
-  const newSession = sessionHandler.update(options, data);
+  const sessionId = parseSessionId(session);
+  const newSession = sessionHandler.update(sessionId, data);
   return newSession;
 }
 
 // ToDo: (20250109 - Luphia) require periodical garbage collection
 export function destroySession(session: ISessionData) {
-  const options: ISessionOption = session;
-  sessionHandler.destroy(options);
+  const sessionId = parseSessionId(session);
+  sessionHandler.destroy(sessionId);
 }
 
 export function listSession(session: ISessionData) {
-  const data: ISessionData[] = sessionHandler.listSession(session);
+  const sessionId = parseSessionId(session);
+  const data: ISessionData[] = sessionHandler.listSession(sessionId);
   return data;
 }
 
+// Info: (20250109 - Luphia) kick out the session by sessionId, the operator and target session should have same userId
 export async function kickSession(session: ISessionData, targetSessionId: string) {
-  // Info: (20250109 - Luphia) kick out the session by sessionId, the operator and target session should have same userId
   // Info: (20250111 - Luphia) the operator session, it might be destroyed
-  const targetOptions: ISessionOption = { sid: targetSessionId };
-  const targetSession = await sessionHandler.read(targetOptions);
+  const targetSession = await sessionHandler.read(targetSessionId);
   // Info: (20250111 - Luphia) the operator session, its userId should be the same as the target session
-  const operatorSession: ISessionData = await sessionHandler.read(session);
-  const operatorUserId = operatorSession.userId;
+  const operatorUserId = session.userId;
   let result = false;
   if (operatorUserId === targetSession.userId) {
-    sessionHandler.destroy(targetOptions);
+    sessionHandler.destroy(targetSessionId);
     result = true;
   }
   return result;
