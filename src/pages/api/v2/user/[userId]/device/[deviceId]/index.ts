@@ -1,7 +1,7 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getSession, kickSession } from '@/lib/utils/session';
+import { getSession, kickDevice } from '@/lib/utils/session';
 import { IResponseData } from '@/interfaces/response_data';
 
 /* Info: (20250111 - Luphia) 踢除指定登入裝置
@@ -11,10 +11,10 @@ import { IResponseData } from '@/interfaces/response_data';
  * 4. 回傳操作結果
  */
 const handleDeleteRequest = async (req: NextApiRequest) => {
-  const targetSessionId = req.query.deviceId as string;
+  const targetDeviceId = req.query.deviceId as string;
   const statusMessage = STATUS_MESSAGE.SUCCESS;
   const session = await getSession(req);
-  await kickSession(session, targetSessionId);
+  await kickDevice(session, targetDeviceId);
   const payload: unknown[] = [];
   const result = { statusMessage, payload };
   return result;

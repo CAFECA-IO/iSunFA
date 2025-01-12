@@ -1,9 +1,10 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getSession, listSession } from '@/lib/utils/session';
-import { ISessionData } from '@/interfaces/session';
+import { getSession, listDevice } from '@/lib/utils/session';
+import { ILoginDevice } from '@/interfaces/login_device';
 import { IResponseData } from '@/interfaces/response_data';
+import loggerBack from '@/lib/utils/logger_back';
 
 /* Info: (20250111 - Luphia) 列出用戶所有登入裝置
  * 1. 取得 Session 資訊
@@ -14,18 +15,20 @@ import { IResponseData } from '@/interfaces/response_data';
 const handleGetRequest = async (req: NextApiRequest) => {
   const statusMessage = STATUS_MESSAGE.SUCCESS;
   const session = await getSession(req);
-  const payload = listSession(session);
+  loggerBack.warn(session);
+  const payload: ILoginDevice[] = await listDevice(session);
+  loggerBack.warn(payload);
   const result = { statusMessage, payload };
   return result;
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ISessionData[]>>
+  res: NextApiResponse<IResponseData<ILoginDevice[]>>
 ) {
   const method = req.method || 'GET';
   let statusMessage;
-  let payload: ISessionData[] = [];
+  let payload: ILoginDevice[] = [];
 
   try {
     switch (method) {

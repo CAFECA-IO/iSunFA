@@ -1,6 +1,8 @@
 export interface ISessionOption {
   sid?: string;
   jwt?: string;
+  'x-forwarded-for'?: string;
+  'user-agent'?: string;
   cookie?: {
     jwt?: string;
     sid?: string;
@@ -20,14 +22,19 @@ export interface ISessionHandlerOption {
 
 export interface ISessionData {
   sid: string;
-  expires: number;
+  deviceId: string;
+  ipAddress: string;
+  userAgent: string;
   userId: number;
   companyId: number;
   roleId: number;
+  actionTime: number;
+  expires: number;
 }
 
 export interface ISessionUpdateData {
   userId?: number;
   companyId?: number;
   roleId?: number;
+  actionTime?: number;
 }
