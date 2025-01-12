@@ -139,7 +139,7 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
             </div>
             <hr className="flex-1 border-divider-stroke-lv-4" />
           </div>
-          <div className="max-h-400px overflow-hidden rounded-sm border-l border-r border-t border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
+          <div className="hide-scrollbar max-h-400px overflow-x-hidden overflow-y-scroll rounded-sm border-l border-r border-t border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
             <div className="table">
               <div className="table-header-group w-full rounded-sm text-xs leading-none text-text-neutral-tertiary">
                 <div className="table-row w-full">

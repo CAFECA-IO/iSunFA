@@ -92,10 +92,10 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     receivingInfo || { payableAmount: undefined, paidAmount: undefined, remainAmount: undefined };
 
   // ToDo: (20241016 - Julian) Call API to undo delete voucher
-  const undoDeleteVoucher = async () => {
-    // eslint-disable-next-line no-console
-    console.log('Voucher restored');
-  };
+  // const undoDeleteVoucher = async () => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('Voucher restored');
+  // };
 
   const deleteClickHandler = () => {
     messageModalDataHandler({
@@ -135,25 +135,25 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
       if (deleteSuccess) {
         // Info: (20241029 - Julian) 刪除成功後，跳轉至列表頁，並顯示成功 toast
         router.push(ISUNFA_ROUTE.VOUCHER_LIST);
-        toastHandler({
-          id: 'delete-voucher-toast',
-          type: ToastType.SUCCESS,
-          content: (
-            <div className="flex items-center justify-between">
-              <p className="text-text-neutral-primary">
-                {t('journal:VOUCHER_DETAIL_PAGE.DELETE_SUCCESS_TOAST')}
-              </p>
-              <button
-                type="button"
-                onClick={undoDeleteVoucher}
-                className="font-semibold text-link-text-success"
-              >
-                {t('journal:VOUCHER_DETAIL_PAGE.UNDO')}
-              </button>
-            </div>
-          ),
-          closeable: true,
-        });
+        // toastHandler({
+        //   id: 'delete-voucher-toast',
+        //   type: ToastType.SUCCESS,
+        //   content: (
+        //     <div className="flex items-center justify-between">
+        //       <p className="text-text-neutral-primary">
+        //         {t('journal:VOUCHER_DETAIL_PAGE.DELETE_SUCCESS_TOAST')}
+        //       </p>
+        //       <button
+        //         type="button"
+        //         onClick={undoDeleteVoucher}
+        //         className="font-semibold text-link-text-success"
+        //       >
+        //         {t('journal:VOUCHER_DETAIL_PAGE.UNDO')}
+        //       </button>
+        //     </div>
+        //   ),
+        //   closeable: true,
+        // });
       } else if (deleteError) {
         toastHandler({
           id: 'delete-voucher-toast',

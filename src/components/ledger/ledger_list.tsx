@@ -1,7 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import LedgerItem from '@/components/ledger/ledger_item';
-import Pagination from '@/components/pagination/pagination';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import { ILedgerPayload } from '@/interfaces/ledger';
@@ -33,8 +32,6 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 
   const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages] = useState(1);
 
   // Info: (20241118 - Anna) 確保 ledgerItemsData 是一個有效的陣列
   const ledgerItemsData = Array.isArray(ledgerData?.items?.data) ? ledgerData.items.data : [];
@@ -166,7 +163,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
       {/* Info: (20240920 - Julian) export & select button */}
       {displayedSelectArea}
 
-      <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 print:mt-0 print:bg-neutral-50">
+      <div className="mb-4 mt-10 table w-full table-fixed overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 print:mt-0 print:bg-neutral-50">
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
@@ -219,37 +216,28 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
         <div className="table-row-group">{displayedLedgerList}</div>
       </div>
 
-      <div className="h-px w-full bg-neutral-100"></div>
+      <div className="h-px w-full bg-divider-stroke-lv-4"></div>
 
       {/* Info: (20241009 - Anna) 加總數字的表格 */}
       <div
-        className="mb-10 mt-4 grid h-70px grid-cols-9 overflow-hidden rounded-b-lg border-b border-t-0 bg-surface-neutral-surface-lv2 text-sm text-text-neutral-tertiary print:bg-neutral-50"
+        className="mb-10 mt-4 grid h-70px grid-cols-9 overflow-hidden rounded-b-lg bg-surface-neutral-surface-lv2 text-text-neutral-tertiary print:bg-neutral-50"
         // Info: (20241206 - Anna) 避免行內換頁
         style={{ pageBreakInside: 'avoid' }}
       >
         {/* Info: (20241009 - Anna) 表格內容 */}
         <div className="col-span-1"></div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
           {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
         </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
           {formatNumber(ledgerData?.total?.totalDebitAmount || 0)}
         </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
           {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
         </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
           {formatNumber(ledgerData?.total?.totalCreditAmount || 0)}
         </div>
-      </div>
-
-      {/* Info: (20240920 - Julian) Pagination */}
-      <div className="mx-auto print:hidden">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          setCurrentPage={setCurrentPage}
-        />
       </div>
     </div>
   );
