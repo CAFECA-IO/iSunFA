@@ -12,9 +12,8 @@ import path from 'path';
 import { DefaultValue } from '@/constants/default_value';
 import { parseSessionId } from '@/lib/utils/parser/session';
 import { getCurrentTimestamp } from '@/lib/utils/common';
-import loggerBack from './logger_back';
-import { sessionDataToLoginDevice } from './formatter/login_device';
-import { sessionOptionToSession } from './formatter/session';
+import { sessionDataToLoginDevice } from '@/lib/utils/formatter/login_device';
+import { sessionOptionToSession } from '@/lib/utils/formatter/session';
 
 // ToDo: (20250108 - Luphia) encrypt string
 // Deprecated: (20250108 - Luphia) remove eslint-disable
@@ -60,6 +59,10 @@ class SessionHandler {
 
   secret: string;
 
+  /* Info: (20250112 - Luphia) constructor
+   * 1. 設定參數
+   * 2. 還原 session 資料
+   */
   constructor(option: ISessionHandlerOption) {
     this.sessionExpires = option.sessionExpires
       ? option.sessionExpires
@@ -69,13 +72,15 @@ class SessionHandler {
       : DefaultValue.SESSION_OPTION.GC_INTERVAL;
     this.filePath = option.filePath ? option.filePath : DefaultValue.SESSION_OPTION.FILE_PATH;
     this.secret = option.secret ? option.secret : DefaultValue.SESSION_OPTION.SECRET;
+    this.restore();
   }
 
   // Info: (20250111 - Luphia) 備份 session 資料到檔案
   async backup() {
     try {
       // Info: (20250108 - Luphia) convert session data to JSON string
-      const rawString = JSON.stringify(this.data);
+      const dataObject = Object.fromEntries(this.data);
+      const rawString = JSON.stringify(dataObject);
       const encryptedString = encryptString(rawString, this.secret);
       // Info: (20250108 - Luphia) convert rawString to base64 string
       const data = Buffer.from(encryptedString).toString('base64');
@@ -97,22 +102,15 @@ class SessionHandler {
       const rawString = Buffer.from(data, 'base64').toString('utf-8');
       const decryptedString = decryptString(rawString, this.secret);
       // Info: (20250108 - Luphia) convert JSON string to session data
-      this.data = new Map(JSON.parse(decryptedString));
+      const dataObject = JSON.parse(decryptedString);
+      // Info: (20250112 - Luphia) restore session data to map
+      Object.keys(dataObject).forEach((key) => {
+        this.data.set(key, dataObject[key]);
+      });
     } catch (error) {
       // Info: (20250108 - Luphia) log error message and nothing to do
     }
     return true;
-  }
-
-  // Info: (20250111 - Luphia) 更新 session 時效
-  renewSession(sessionId: string) {
-    const session = this.data.get(sessionId);
-    if (session) {
-      session.expires = Date.now() + this.sessionExpires;
-      this.data.set(sessionId, session);
-      this.backup();
-    }
-    return session;
   }
 
   // Info: (20250111 - Luphia) 列出用戶其他裝置登入的 session 資料
@@ -152,7 +150,6 @@ class SessionHandler {
     const session = this.data.get(sessionId);
     const actionTime = getCurrentTimestamp();
     const expires = actionTime + this.sessionExpires;
-    loggerBack.warn(session);
     // Info: (20250111 - Luphia) 複寫 sid 以及 expires，避免其被不當修改
     const newSession = { ...session, ...data, sid: sessionId, actionTime, expires } as ISessionData;
     this.data.set(sessionId, newSession);
@@ -167,7 +164,7 @@ class SessionHandler {
     let result: ISessionData | undefined;
     if (expires > getCurrentTimestamp()) {
       // Info: (20250107 - Luphia) update session expire time
-      result = this.renewSession(sessionId) as ISessionData;
+      result = data;
     }
     return result;
   }
@@ -208,7 +205,6 @@ const sessionHandler = SessionHandler.getInstance(sessionHandlerOption);
  * 5. 回傳 session 資料
  */
 export const getSession = async (req: NextApiRequest) => {
-  loggerBack.warn('GET SESSION');
   const options = req.headers as unknown as ISessionOption;
   const defaultSession = sessionOptionToSession(options);
   const sessionId = parseSessionId(options);
@@ -229,21 +225,15 @@ export const setSession = async (
   data: { userId?: number; companyId?: number; challenge?: string; roleId?: number }
 ) => {
   const sessionId = parseSessionId(sessoin);
-  loggerBack.warn(`SET SESSION: ${sessionId}`);
   const oldSession = await sessionHandler.read(sessionId);
-  loggerBack.warn('OLD SESSION');
-  loggerBack.warn(oldSession);
   const newSession = { ...oldSession, ...data };
   const resultSession = await sessionHandler.update(sessionId, newSession);
-  loggerBack.warn('NEW SESSION');
-  loggerBack.warn(resultSession);
   return resultSession;
 };
 
 // ToDo: (20250109 - Luphia) require periodical garbage collection
 export const destroySession = async (sessoin: ISessionData) => {
   const sessionId = parseSessionId(sessoin);
-  loggerBack.warn(`DESTROY SESSION: ${sessionId}`);
   await sessionHandler.destroy(sessionId);
 };
 
