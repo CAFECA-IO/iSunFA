@@ -157,7 +157,8 @@ export enum APIName {
   TRIAL_BALANCE_EXPORT = 'TRIAL_BALANCE_EXPORT',
   CREATE_ASSET_BULK = 'CREATE_ASSET_BULK',
   LEDGER_EXPORT = 'LEDGER_EXPORT',
-  SESSION_ID_DELETE = 'SESSION_ID_DELETE',
+  LIST_LOGIN_DEVICE = 'LIST_LOGIN_DEVICE',
+  REMOVE_LOGIN_DEVICE = 'REMOVE_LOGIN_DEVICE',
 }
 
 export enum APIPath {
@@ -293,7 +294,8 @@ export enum APIPath {
   TRIAL_BALANCE_EXPORT = `${apiPrefixV2}/company/:companyId/trial_balance/export`,
   CREATE_ASSET_BULK = `${apiPrefixV2}/company/:companyId/asset/bulk`,
   LEDGER_EXPORT = `${apiPrefixV2}/company/:companyId/ledger/export`,
-  SESSION_ID_DELETE = `${apiPrefixV2}/user/:userId/session/sessionId`,
+  LIST_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device`,
+  REMOVE_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device/deviceId`,
 }
 const createConfig = ({
   name,
@@ -976,9 +978,14 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.POST,
     path: APIPath.LEDGER_EXPORT,
   }),
-  [APIName.SESSION_ID_DELETE]: createConfig({
-    name: APIName.SESSION_ID_DELETE,
+  [APIName.LIST_LOGIN_DEVICE]: createConfig({
+    name: APIName.LIST_LOGIN_DEVICE,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_LOGIN_DEVICE,
+  }),
+  [APIName.REMOVE_LOGIN_DEVICE]: createConfig({
+    name: APIName.REMOVE_LOGIN_DEVICE,
     method: HttpMethod.DELETE,
-    path: APIPath.SESSION_ID_DELETE,
+    path: APIPath.REMOVE_LOGIN_DEVICE,
   }),
 };

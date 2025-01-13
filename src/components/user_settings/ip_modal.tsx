@@ -37,20 +37,20 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
   const { trigger: getUserActionLogAPI } = APIHandler<IPaginatedData<IUserActionLog[]>>(
     APIName.USER_ACTION_LOG_LIST
   );
-  const { trigger: deleteSessionId } = APIHandler<void>(APIName.SESSION_ID_DELETE);
+  const { trigger: removeLoginDevice } = APIHandler<void>(APIName.REMOVE_LOGIN_DEVICE);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [page, setPage] = useState(pageData?.page ?? 1);
   const [totalPages, setTotalPages] = useState(pageData?.totalPages ?? 1);
   const [userActionLogs, setUserActionLogs] = useState<IUserActionLog[]>(pageData?.data ?? []);
 
-  const handleSessionDelete = async (sessionId: string) => {
+  const handleRemoveLoginDevice = async (sessionId: string) => {
     try {
-      const { success, code } = await deleteSessionId({ params: { sessionId } });
+      const { success, code } = await removeLoginDevice({ params: { sessionId } });
       if (success) {
         toastHandler({
           id: ToastId.USER_SETTING_SUCCESS,
           type: ToastType.SUCCESS,
-          content: t('setting:IP.DELETE_SESSION_SUCCESS'),
+          content: t('setting:IP.REMOVE_DEVICE_SUCCESS'),
           closeable: true,
         });
       } else {
@@ -188,7 +188,7 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
                       ) : (
                         <div
                           className={`cursor-pointer px-lv-4 py-lv-3 text-link-text-primary`}
-                          onClick={() => handleSessionDelete(userActionLog.sessionId)}
+                          onClick={() => handleRemoveLoginDevice(userActionLog.sessionId)}
                         >
                           {t('setting:IP.LOGOUT')}
                         </div>

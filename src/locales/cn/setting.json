@@ -161,7 +161,7 @@
     "ACTION": "操作",
     "LOGOUT": "登出",
     "CURRENT": "当前",
-    "DELETE_SESSION_SUCCESS": "会话已成功删除。",
+    "REMOVE_DEVICE_SUCCESS": "设备已成功移除。",
     "DETECT_DIFFERENT_IP_LOGIN": "检测到来自不同 IP 地址的登录。",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "请验证您的帐户安全性以防止数据外泄。"
   },

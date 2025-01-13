@@ -161,7 +161,7 @@
     "ACTION": "Action",
     "LOGOUT": "Logout",
     "CURRENT": "Current",
-    "DELETE_SESSION_SUCCESS": "Session has been successfully deleted.",
+    "REMOVE_DEVICE_SUCCESS": "Device removed successfully.",
     "DETECT_DIFFERENT_IP_LOGIN": "Login detected from a different IP address.",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "Please verify your account security to prevent data leakage."
   },
