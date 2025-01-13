@@ -4,7 +4,7 @@ import { ILoginDevice } from '@/interfaces/login_device';
 export const checkAbnormalDevice = async (devices: ILoginDevice[]) => {
   // Info: (20250113 - Luphia) 不知道怎麼判斷，先全部回傳正常
   const result = devices.map((d) => {
-    const device = { ...d, abnormal: true };
+    const device = { ...d, normal: true };
     return device;
   });
   return result;
