@@ -204,6 +204,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       setEndingDebitSort(null);
       setEndingCreditSort(null);
     },
+    className: 'px-8px',
   });
 
   const displayedBeginningDebit = SortingButton({
@@ -218,6 +219,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       setEndingDebitSort(null);
       setEndingCreditSort(null);
     },
+    className: 'px-8px',
   });
 
   const displayedMidtermCredit = SortingButton({
@@ -232,6 +234,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       setEndingDebitSort(null);
       setEndingCreditSort(null);
     },
+    className: 'px-8px',
   });
 
   const displayedMidtermDebit = SortingButton({
@@ -260,6 +263,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       setMidtermCreditSort(null);
       setEndingCreditSort(null);
     },
+    className: 'px-8px',
   });
 
   const displayedEndingCredit = SortingButton({
@@ -274,6 +278,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       setMidtermCreditSort(null);
       setEndingDebitSort(null);
     },
+    className: 'px-8px',
   });
 
   // Info: (20241218 - Anna) 匯出csv
@@ -356,7 +361,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         </span>
       </div>
       {/* Info: (20241028 - Anna) Display Sub-Accounts 結束  */}
-      <div className="ml-auto flex items-center gap-24px">
+      <div className="ml-auto flex items-center gap-16px">
         <DownloadButton onClick={handleDownload} />
         <PrintButton onClick={handlePrint} disabled={false} />
       </div>
@@ -463,43 +468,43 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px print:text-xs">
             <div
-              className={`col-span-3 table-cell h-full border-stroke-neutral-quaternary text-center align-middle font-medium print:bg-neutral-50`}
+              className={`col-span-3 table-cell border-stroke-neutral-quaternary text-center align-middle font-medium print:bg-neutral-50`}
             >
               {t('reports:TAX_REPORT.TOTAL')}
             </div>
 
             <div
-              className={`table-cell h-full w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.beginningDebitAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-100px border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.beginningCreditAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.midtermDebitAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-100px border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.midtermCreditAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.endingDebitAmount ?? 0)}
             </div>
 
             <div
-              className={`table-cell h-full w-100px border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
             >
               {formatNumber(totalData?.endingCreditAmount ?? 0)}
             </div>

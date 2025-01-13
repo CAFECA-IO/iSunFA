@@ -9,6 +9,7 @@ interface ISortingButtonProps {
   sortOrder: null | SortOrder;
   setSortOrder: (sortOrder: null | SortOrder) => void;
   handleReset?: () => void;
+  className?: string;
 }
 
 const SortingButton: React.FC<ISortingButtonProps> = ({
@@ -16,6 +17,7 @@ const SortingButton: React.FC<ISortingButtonProps> = ({
   sortOrder,
   setSortOrder,
   handleReset,
+  className,
 }) => {
   const clickHandler = () => {
     // Info: (20241230 - Julian) 如果有 handleReset，則執行，用於清除其他排序狀態
@@ -45,7 +47,7 @@ const SortingButton: React.FC<ISortingButtonProps> = ({
       id={`sorting-button-${string}`}
       type="button"
       onClick={clickHandler}
-      className="flex w-full items-center justify-center gap-4px"
+      className={`flex w-full cursor-pointer items-center justify-center gap-4px ${className}`}
     >
       {/* Info: (20240920 - Julian) 如果有選擇排序，則文字變成橙色 */}
       <p className={sortOrder === null ? '' : 'text-text-brand-primary-lv1'}>{string}</p>
