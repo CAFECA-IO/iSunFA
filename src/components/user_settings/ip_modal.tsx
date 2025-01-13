@@ -164,7 +164,7 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
                   >
                     <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary align-middle">
                       <div className="px-lv-4 py-lv-3">
-                        {timestampToString(loginDevice.actionTime).date}
+                        {timestampToString(Math.floor(loginDevice.actionTime / 1000)).date}
                       </div>
                     </div>
                     <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary align-middle">
@@ -172,14 +172,14 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
                         {extractLoginDevice(loginDevice.userAgent)}
                       </div>
                     </div>
-                    <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary">
+                    <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary align-middle">
                       <div
                         className={`px-lv-4 py-lv-3 ${loginDevice.normal === false ? 'text-text-state-error' : ''}`}
                       >
                         {loginDevice.ipAddress}
                       </div>
                     </div>
-                    <div className="relative table-cell border-b border-stroke-neutral-quaternary">
+                    <div className="relative table-cell border-b border-stroke-neutral-quaternary align-middle">
                       {loginDevice.isCurrent ? (
                         <div className={`px-lv-4 py-lv-3 text-text-brand-secondary-lv2`}>
                           {t('setting:IP.CURRENT')}
