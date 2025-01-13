@@ -53,16 +53,16 @@ const SortingButton: React.FC<ISortingButtonProps> = ({
         {/* Info: (20240920 - Julian) 向上箭頭：如果為升冪排序，則變成橙色 */}
         <BsFillTriangleFill
           size={8}
-          className={
+          className={`${
             sortOrder === SortOrder.ASC
               ? 'text-text-brand-primary-lv1'
               : 'text-surface-neutral-mute'
-          }
+          } print:hidden`}
         />
         {/* Info: (20240920 - Julian) 向下箭頭：如果為降冪排序，則變成橙色 */}
         <BsFillTriangleFill
           size={8}
-          className={`rotate-180 ${sortOrder === SortOrder.DESC ? 'text-text-brand-primary-lv1' : 'text-surface-neutral-mute'}`}
+          className={`rotate-180 print:hidden ${sortOrder === SortOrder.DESC ? 'text-text-brand-primary-lv1' : 'text-surface-neutral-mute'}`}
         />
       </div>
     </button>

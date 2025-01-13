@@ -108,10 +108,10 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   ));
 
   // ToDo: (20241016 - Julian) Call API to undo delete asset
-  const undoDeleteAssetHandler = async () => {
-    // eslint-disable-next-line no-console
-    console.log('Asset restored');
-  };
+  // const undoDeleteAssetHandler = async () => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('Asset restored');
+  // };
 
   const deleteClickHandler = () => {
     messageModalDataHandler({
@@ -170,25 +170,25 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
       if (deleteSuccess) {
         // Info: (20241029 - Julian) 刪除成功後，跳轉至列表頁，並顯示成功 toast
         router.push(ISUNFA_ROUTE.ASSET_LIST);
-        toastHandler({
-          id: ToastId.ASSET_DELETE_SUCCESS,
-          type: ToastType.SUCCESS,
-          content: (
-            <div className="flex min-w-120px items-center justify-between gap-20px">
-              <p className="text-text-neutral-primary">
-                {t('asset:ASSET_DETAIL_PAGE.DELETE_SUCCESS_TOAST')}
-              </p>
-              <button
-                type="button"
-                onClick={undoDeleteAssetHandler}
-                className="font-semibold text-link-text-success"
-              >
-                {t('asset:ASSET_DETAIL_PAGE.UNDO')}
-              </button>
-            </div>
-          ),
-          closeable: true,
-        });
+        // toastHandler({
+        //   id: ToastId.ASSET_DELETE_SUCCESS,
+        //   type: ToastType.SUCCESS,
+        //   content: (
+        //     <div className="flex min-w-120px items-center justify-between gap-20px">
+        //       <p className="text-text-neutral-primary">
+        //         {t('asset:ASSET_DETAIL_PAGE.DELETE_SUCCESS_TOAST')}
+        //       </p>
+        //       <button
+        //         type="button"
+        //         onClick={undoDeleteAssetHandler}
+        //         className="font-semibold text-link-text-success"
+        //       >
+        //         {t('asset:ASSET_DETAIL_PAGE.UNDO')}
+        //       </button>
+        //     </div>
+        //   ),
+        //   closeable: true,
+        // });
       } else if (deleteError) {
         toastHandler({
           id: ToastId.ASSET_DELETE_ERROR,

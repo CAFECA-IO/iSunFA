@@ -71,7 +71,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
           )}
           <div className="flex flex-col">
-            <div className="text-text-neutral-tertiary">
+            <div className="w-full text-left text-text-neutral-tertiary">
               {simplifyFileName(certificate.file.name ?? '')}
             </div>
             <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
@@ -80,23 +80,23 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
         <div className="flex flex-col items-center gap-2">
-          <div className="text-text-neutral-tertiary">
+          <div className="w-full text-left text-text-neutral-tertiary">
             {certificate.invoice?.counterParty?.taxId ?? ''}
           </div>
-          <div className="text-text-neutral-primary">
+          <div className="w-full text-left text-text-neutral-primary">
             {certificate.invoice?.counterParty?.name ?? ''}
           </div>
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="hide-scrollbar max-h-72px overflow-y-auto text-center text-text-neutral-primary">
+        <div className="hide-scrollbar max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
           {certificate.invoice?.type
             ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.invoice?.type}`)
             : ''}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
-        <div className="text-center text-text-neutral-primary">
+        <div className="w-full text-left text-text-neutral-primary">
           {certificate.invoice?.taxRatio !== undefined
             ? `Taxable ${certificate.invoice?.taxRatio} %`
             : '-'}
@@ -114,7 +114,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             </div>
             <div className="text-text-neutral-primary">
               {certificate.invoice?.priceBeforeTax ?? 0}
-              <span className="ml-1 text-text-neutral-tertiary">
+              <span className="ml-1 w-full text-left text-text-neutral-tertiary">
                 {certificate.invoice?.currencyAlias ?? ''}
               </span>
             </div>
@@ -128,7 +128,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             </div>
             <div className="text-text-neutral-primary">
               {certificate.invoice?.totalPrice ?? 0}
-              <span className="ml-1 text-text-neutral-tertiary">
+              <span className="ml-1 w-full text-left text-text-neutral-tertiary">
                 {certificate.invoice?.currencyAlias ?? ''}
               </span>
             </div>
