@@ -37,4 +37,7 @@ export const DefaultValue = {
     FILE_PATH: './session.store',
     SECRET: 'SECRET',
   },
+  PAGE: 1,
+  TOTAL_PAGES: 1,
+  PAGE_SIZE: 10,
 };
