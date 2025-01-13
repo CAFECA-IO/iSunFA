@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
-import { MdOutlineFileDownload } from 'react-icons/md';
+// import { MdOutlineFileDownload } from 'react-icons/md';
 import { FaRegTrashAlt } from 'react-icons/fa';
 import { Button } from '@/components/button/button';
 import VoucherItem from '@/components/voucher/voucher_item';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { useModalContext } from '@/contexts/modal_context';
-import { useGlobalCtx } from '@/contexts/global_context';
+// import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { IVoucherUI } from '@/interfaces/voucher';
 import { MessageType } from '@/interfaces/message_modal';
@@ -46,7 +46,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const { selectedCompany } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+  // const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241022 - Julian) checkbox 是否開啟
   const [isCheckBoxOpen, setIsCheckBoxOpen] = useState(false);
@@ -244,7 +244,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   });
 
   const displayedSelectArea = (
-    <div className="flex items-center justify-between">
+    <div className="ml-auto flex items-center justify-between">
       {/* Info: (20250107 - Julian) hidden delete voucher & reversals toggle */}
       {/* <div className="flex items-center gap-16px">
         <Toggle
@@ -265,7 +265,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       {/* Info: (20250107 - Julian) export & select button */}
       <div className="flex h-50px items-center gap-24px">
         {/* Info: (20240920 - Julian) Export Voucher button */}
-        <Button
+        {/* <Button
           type="button"
           variant="tertiaryOutline"
           className={isCheckBoxOpen ? 'hidden' : 'flex'}
@@ -273,7 +273,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         >
           <MdOutlineFileDownload />
           <p>{t('journal:VOUCHER.EXPORT_VOUCHER')}</p>
-        </Button>
+        </Button> */}
         {/* Info: (20240920 - Julian) Delete button */}
         <div className={isCheckBoxOpen ? 'block' : 'hidden'}>
           <Button
