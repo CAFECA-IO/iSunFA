@@ -9,14 +9,13 @@ import { IoCloseOutline } from 'react-icons/io5';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
-import { IUserActionLog } from '@/interfaces/user_action_log';
 import { timestampToString } from '@/lib/utils/common';
-import { UserActionLogActionType } from '@/constants/user_action_log';
+import { ILoginDevice } from '@/interfaces/login_device';
 
 interface IPModalProps {
   userId: number;
   toggleModal: () => void;
-  pageData: IPaginatedData<IUserActionLog[]> | null;
+  pageData: IPaginatedData<ILoginDevice[]> | null;
 }
 
 export const extractLoginDevice = (userAgent: string): string => {
@@ -34,18 +33,18 @@ export const extractLoginDevice = (userAgent: string): string => {
 const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
   const { t } = useTranslation(['setting', 'common']);
   const { toastHandler } = useModalContext();
-  const { trigger: getUserActionLogAPI } = APIHandler<IPaginatedData<IUserActionLog[]>>(
-    APIName.USER_ACTION_LOG_LIST
+  const { trigger: listLoginDeviceAPI } = APIHandler<IPaginatedData<ILoginDevice[]>>(
+    APIName.LIST_LOGIN_DEVICE
   );
   const { trigger: removeLoginDevice } = APIHandler<void>(APIName.REMOVE_LOGIN_DEVICE);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [page, setPage] = useState(pageData?.page ?? 1);
   const [totalPages, setTotalPages] = useState(pageData?.totalPages ?? 1);
-  const [userActionLogs, setUserActionLogs] = useState<IUserActionLog[]>(pageData?.data ?? []);
+  const [loginDevices, setLoginDevices] = useState<ILoginDevice[]>(pageData?.data ?? []);
 
-  const handleRemoveLoginDevice = async (sessionId: string) => {
+  const handleRemoveLoginDevice = async (deviceId: string) => {
     try {
-      const { success, code } = await removeLoginDevice({ params: { sessionId } });
+      const { success, code } = await removeLoginDevice({ params: { deviceId } });
       if (success) {
         toastHandler({
           id: ToastId.USER_SETTING_SUCCESS,
@@ -86,14 +85,14 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
     if (isLoading) return;
     try {
       setIsLoading(true);
-      const { success, data, code } = await getUserActionLogAPI({
+      const { success, data, code } = await listLoginDeviceAPI({
         params: { userId },
-        query: { page, actionType: UserActionLogActionType.LOGIN, pageSize: 6 },
+        query: { page, pageSize: 6 },
       });
       if (success && data) {
         setPage(data.page);
         setTotalPages(data.totalPages);
-        setUserActionLogs(data.data);
+        setLoginDevices(data.data);
         const abnormal = data.data.some((d) => d.normal === false);
         if (abnormal) {
           handleAbnormal();
@@ -158,37 +157,37 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
                 </div>
               </div>
               <div className="table-row-group">
-                {userActionLogs.map((userActionLog, index) => (
+                {loginDevices.map((loginDevice, index) => (
                   <div
                     className="group table-row text-center text-xs leading-none text-text-brand-secondary-lv2"
-                    key={`${userActionLog.userAgent}-${index + 1}`}
+                    key={`${loginDevice.userAgent}-${index + 1}`}
                   >
                     <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary align-middle">
                       <div className="px-lv-4 py-lv-3">
-                        {timestampToString(userActionLog.actionTime).date}
+                        {timestampToString(loginDevice.actionTime).date}
                       </div>
                     </div>
                     <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary align-middle">
                       <div className="px-lv-4 py-lv-3">
-                        {extractLoginDevice(userActionLog.userAgent)}
+                        {extractLoginDevice(loginDevice.userAgent)}
                       </div>
                     </div>
                     <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary">
                       <div
-                        className={`px-lv-4 py-lv-3 ${userActionLog.normal === false ? 'text-text-state-error' : ''}`}
+                        className={`px-lv-4 py-lv-3 ${loginDevice.normal === false ? 'text-text-state-error' : ''}`}
                       >
-                        {userActionLog.ipAddress}
+                        {loginDevice.ipAddress}
                       </div>
                     </div>
                     <div className="relative table-cell border-b border-stroke-neutral-quaternary">
-                      {userActionLog.isCurrent ? (
+                      {loginDevice.isCurrent ? (
                         <div className={`px-lv-4 py-lv-3 text-text-brand-secondary-lv2`}>
                           {t('setting:IP.CURRENT')}
                         </div>
                       ) : (
                         <div
                           className={`cursor-pointer px-lv-4 py-lv-3 text-link-text-primary`}
-                          onClick={() => handleRemoveLoginDevice(userActionLog.sessionId)}
+                          onClick={() => handleRemoveLoginDevice(loginDevice.id)}
                         >
                           {t('setting:IP.LOGOUT')}
                         </div>

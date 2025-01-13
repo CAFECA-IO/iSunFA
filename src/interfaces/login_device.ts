@@ -5,4 +5,5 @@ export interface ILoginDevice {
   ipAddress: string;
   userAgent: string;
   isCurrent: boolean;
+  normal: boolean;
 }
