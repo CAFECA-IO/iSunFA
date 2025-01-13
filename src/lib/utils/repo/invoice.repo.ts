@@ -7,6 +7,7 @@ import { CurrencyType } from '@/constants/currency';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 import { PostCertificateResponse } from '@/interfaces/certificate';
 import { DefaultValue } from '@/constants/default_value';
+import { parseCounterPartyFromNoInInvoice } from '@/lib/utils/counterparty';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 
 export async function postInvoiceV2(options: {
@@ -51,11 +52,11 @@ export async function postInvoiceV2(options: {
             id: certificateId,
           },
         },
-        counterParty: {
-          connect: {
-            id: PUBLIC_COUNTER_PARTY.id,
-          },
-        },
+        // counterParty: {
+        //   connect: {
+        //     id: PUBLIC_COUNTER_PARTY.id,
+        //   },
+        // },
         inputOrOutput,
         date,
         no,
@@ -71,7 +72,7 @@ export async function postInvoiceV2(options: {
         createdAt: nowInSecond,
       },
       include: {
-        counterParty: true,
+        // counterParty: true,
         certificate: {
           include: {
             voucherCertificates: {
@@ -96,7 +97,7 @@ export async function postInvoiceV2(options: {
       invoices: [
         {
           ...invoiceFromPrisma,
-          counterParty: invoiceFromPrisma.counterParty,
+          // counterParty: invoiceFromPrisma.counterParty,
         },
       ],
     };
@@ -168,7 +169,7 @@ export async function putInvoiceV2(options: {
         updatedAt: nowInSecond,
       },
       include: {
-        counterParty: true,
+        // counterParty: true,
         certificate: {
           include: {
             voucherCertificates: {
@@ -193,7 +194,7 @@ export async function putInvoiceV2(options: {
       invoices: [
         {
           ...invoiceFromPrisma,
-          counterParty: invoiceFromPrisma.counterParty,
+          // counterParty: invoiceFromPrisma.counterParty,
         },
       ],
     };
@@ -224,16 +225,26 @@ export async function getInvoiceByIdV2(id: number): Promise<
     | null = null;
 
   try {
-    invoice = await prisma.invoice.findUnique({
+    const invoiceFromPrisma = await prisma.invoice.findUnique({
       where: {
         id,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
         certificate: true,
-        counterParty: true,
+        // counterParty: true,
       },
     });
+
+    if (invoiceFromPrisma) {
+      const partialInfo = parseCounterPartyFromNoInInvoice(
+        invoiceFromPrisma.counterPartyInfo ?? ''
+      );
+      invoice = {
+        ...invoiceFromPrisma,
+        counterParty: { ...partialInfo, ...PUBLIC_COUNTER_PARTY },
+      };
+    }
   } catch (_error) {
     const error = _error as Error;
     const errorInfo = {
@@ -250,7 +261,8 @@ export async function getInvoiceByIdV2(id: number): Promise<
 // Info: (20241107 - Jacky) Create a new Invoice
 export async function createInvoice(
   certificateId: number,
-  counterPartyId: number,
+  counterPartyInfo: string,
+  // counterPartyId: number,
   name: string,
   inputOrOutput: string,
   date: number,
@@ -269,7 +281,8 @@ export async function createInvoice(
   const newInvoice = await prisma.invoice.create({
     data: {
       certificateId,
-      counterPartyId,
+      counterPartyInfo,
+      // counterPartyId,
       name,
       inputOrOutput,
       date,
@@ -287,7 +300,7 @@ export async function createInvoice(
     },
     include: {
       certificate: true,
-      counterParty: true,
+      // counterParty: true,
     },
   });
   return newInvoice;
@@ -311,7 +324,7 @@ export async function getInvoiceById(id: number) {
       },
       include: {
         certificate: true,
-        counterParty: true,
+        // counterParty: true,
       },
     });
   }
@@ -322,7 +335,8 @@ export async function getInvoiceById(id: number) {
 export async function updateInvoice(
   id: number,
   certificateId: number,
-  counterPartyId: number,
+  counterPartyInfo: string,
+  // counterPartyId: number,
   name: string,
   inputOrOutput: string,
   date: number,
@@ -344,7 +358,8 @@ export async function updateInvoice(
     },
     data: {
       certificateId,
-      counterPartyId,
+      counterPartyInfo,
+      // counterPartyId,
       name,
       inputOrOutput,
       date,
@@ -361,7 +376,7 @@ export async function updateInvoice(
     },
     include: {
       certificate: true,
-      counterParty: true,
+      // counterParty: true,
     },
   });
   return updatedInvoice;
@@ -381,7 +396,7 @@ export async function deleteInvoice(id: number) {
     },
     include: {
       certificate: true,
-      counterParty: true,
+      // counterParty: true,
     },
   });
   return deletedInvoice;

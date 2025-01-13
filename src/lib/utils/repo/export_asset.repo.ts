@@ -47,14 +47,20 @@ export async function exportAssets(body: IAssetExportRequestBody, companyId: num
       acquisitionDate: true,
       name: true,
       purchasePrice: true,
-      accumulatedDepreciation: true,
       residualValue: true,
-      remainingLife: true,
       type: true,
       status: true,
       number: true,
     },
   });
 
-  return assets;
+  const processedAssets = assets.map((asset) => {
+    return {
+      ...asset,
+      accumulatedDepreciation: 0,
+      remainingLife: 0,
+    };
+  });
+
+  return processedAssets;
 }

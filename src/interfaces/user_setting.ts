@@ -1,4 +1,5 @@
 import { LocaleKey } from '@/constants/normal_setting';
+import { UserSetting } from '@prisma/client';
 
 export interface IUserSetting {
   id: number;
@@ -22,3 +23,7 @@ interface IUserPersonalInfo {
   // countryCode: string; // Info: (20241211 - tzuhan) @Murky 這裡可以幫提供 countryCode 使用 LocaleKey 嗎？
   phone: string;
 }
+
+export type IUserSettingOutputGet = Omit<UserSetting, 'countryId'> & {
+  country: LocaleKey;
+};

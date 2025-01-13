@@ -5,6 +5,7 @@ import {
   AssetStatus,
   DEFAULT_SORT_OPTIONS,
 } from '@/constants/asset';
+import { DefaultValue } from '@/constants/default_value';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
@@ -44,15 +45,14 @@ export async function createAssetWithVouchers(
 
   // Info: (20241204 - Luphia) Create the Asset
   const newAsset = {
+    createdUserId: DefaultValue.USER_ID.SYSTEM, // TODO: (20250113 - Shirley) 在 asset db schema 更改之後，需要紀錄建立資產的 user id
     companyId: assetData.companyId,
     name: assetData.name,
     type: assetData.type,
     number: assetNumber,
     acquisitionDate: assetData.acquisitionDate,
     purchasePrice: assetData.purchasePrice,
-    accumulatedDepreciation: assetData.accumulatedDepreciation,
     residualValue: assetData.residualValue || assetData.purchasePrice,
-    remainingLife: assetData.usefulLife || 0,
     status: AssetStatus.NORMAL,
     depreciationStart: assetData.depreciationStart || assetData.acquisitionDate,
     depreciationMethod: assetData.depreciationMethod || AssetDepreciationMethod.NONE,
@@ -65,10 +65,13 @@ export async function createAssetWithVouchers(
     data: newAsset,
   });
 
+  const { createdUserId, ...rest } = result;
+  const asset = rest;
+
   // ToDo: (20241204 - Luphia) Create the future Vouchers and Asset mapping
   // lib/utils/asset.ts
 
-  return result;
+  return asset;
 }
 
 /**
@@ -101,16 +104,15 @@ export async function createManyAssets(
 
   for (let i = 0; i < amount; i += 1) {
     const newAsset = {
+      createdUserId: DefaultValue.USER_ID.SYSTEM, // TODO: (20250113 - Shirley) 在 asset db schema 更改之後，需要紀錄建立資產的 user id
       companyId: assetData.companyId,
       name: assetData.name,
       type: assetData.type,
       number: assetNumbers[i],
       acquisitionDate: assetData.acquisitionDate,
       purchasePrice: i === amount - 1 ? pricePerAsset + remainder : pricePerAsset,
-      accumulatedDepreciation: assetData.accumulatedDepreciation,
       residualValue:
         i === amount - 1 ? residualValuePerAsset + remainderResidualValue : residualValuePerAsset,
-      remainingLife: assetData.usefulLife || 0,
       status: AssetStatus.NORMAL,
       depreciationStart: assetData.depreciationStart || assetData.acquisitionDate,
       depreciationMethod: assetData.depreciationMethod || AssetDepreciationMethod.NONE,

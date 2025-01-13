@@ -190,7 +190,9 @@ export const certificateAPIPostUtils = {
       };
     } else {
       const invoiceDto = invoices[0];
-      const counterPartyDto = invoiceDto.counterParty;
+      // TODO: (20250113 - Shirley) 在 invoice db schema 更改之後，counterParty 的 fkey 被拿掉，invoice跟counter party的資料需要修改
+      // const counterPartyDto = invoiceDto.counterParty;
+      const counterPartyDto = PUBLIC_COUNTER_PARTY;
       const invoice = parsePrismaInvoiceToInvoiceEntity(invoiceDto);
       const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto);
 
