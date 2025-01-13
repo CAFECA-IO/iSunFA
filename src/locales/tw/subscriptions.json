@@ -31,5 +31,16 @@
     "UPDATE_PAYMENT": "重新設定付款資訊",
     "RETURNING_TO_BEGINNER_IN": "",
     "DAYS": " 天後恢復為基礎版方案"
+  },
+
+  "BILLING_PAGE": {
+    "META_TITLE": "帳單",
+    "PAGE_TITLE_PREFIX": "",
+    "PAGE_TITLE_SUFFIX": "的帳單"
+  },
+
+  "INVOICE_PAGE": {
+    "META_TITLE": "發票",
+    "PAGE_TITLE": "發票"
   }
 }

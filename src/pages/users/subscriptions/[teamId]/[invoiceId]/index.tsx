@@ -5,38 +5,43 @@ import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
-import TeamSubscriptionPageBody from '@/components/beta/team_subscription_page/team_subscription_page_body';
+import InvoicePageBody from '@/components/beta/invoice_page/invoice_page_body';
 import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const FAKE_TEAM_DATA: IUserOwnedTeam = {
-  id: 1,
-  name: 'Personal',
-  plan: TPlanType.BEGINNER,
-  nextRenewalTimestamp: 1640995200000,
-  //   nextRenewalTimestamp: 0,
-  //   expiredTimestamp: 1640995200000,
-  expiredTimestamp: 0,
-  enableAutoRenewal: true,
-  paymentStatus: TPaymentStatus.FREE,
+  id: 3,
+  name: 'Team B',
+  plan: TPlanType.ENTERPRISE,
+  enableAutoRenewal: false,
+  nextRenewalTimestamp: 0,
+  expiredTimestamp: 1630406400000,
+  paymentStatus: TPaymentStatus.PAID,
 };
 
-const TeamSubscriptionPage = () => {
+// ToDo: (20250113 - Liz) 定義 invoice 假資料
+
+const InvoicePage = () => {
   const { t } = useTranslation(['subscriptions']);
   const router = useRouter();
-  const { teamId } = router.query;
+  const { teamId, invoiceId } = router.query;
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
-  // Deprecated: (20250102 - Liz)
+  const invoiceIdString = invoiceId ? (Array.isArray(invoiceId) ? invoiceId[0] : invoiceId) : '';
+
+  // Deprecated: (20250113 - Liz)
   // eslint-disable-next-line no-console
-  console.log('teamIdString:', teamIdString);
+  console.log('teamIdString:', teamIdString, 'invoiceIdString:', invoiceIdString);
 
+  // ToDo: (20250113 - Liz) 先暫時使用假資料
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [team, setTeam] = useState<IUserOwnedTeam>();
+  const [team, setTeam] = useState<IUserOwnedTeam>(FAKE_TEAM_DATA);
 
-  // ToDo: (20250102 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
+  // ToDo: (20250113 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
   // setTeam(teamData);
 
-  // ToDo: (20250102 - Liz) 如果 team 資料不存在，顯示錯誤頁面
+  // Info: (20250113 - Liz) 呼叫 API 利用 invoiceIdString 取得 invoice 的資料，並且設定到 invoice state
+
+  // ToDo: (20250113 - Liz) 如果 team 資料不存在，顯示錯誤頁面
   // 參考:
   //   if (!teamIdString) {
   //     return (
@@ -46,13 +51,15 @@ const TeamSubscriptionPage = () => {
   //     );
   //   }
 
+  // ToDo: (20250113 - Liz) 如果 invoiceIdString 資料不存在，顯示錯誤頁面
+
   return (
     <>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('subscriptions:SUBSCRIPTIONS_PAGE.META_TITLE')}</title>
+        <title>{t('subscriptions:INVOICE_PAGE.META_TITLE')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -69,10 +76,10 @@ const TeamSubscriptionPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('subscriptions:SUBSCRIPTIONS_PAGE.PLAN_FOR') + FAKE_TEAM_DATA.name}
+        pageTitle={`${t('subscriptions:INVOICE_PAGE.PAGE_TITLE')} # ${invoiceIdString}`}
         goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
       >
-        <TeamSubscriptionPageBody team={FAKE_TEAM_DATA} />
+        <InvoicePageBody team={FAKE_TEAM_DATA} />
       </Layout>
     </>
   );
@@ -86,4 +93,4 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   };
 };
 
-export default TeamSubscriptionPage;
+export default InvoicePage;

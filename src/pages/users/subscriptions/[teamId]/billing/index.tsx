@@ -14,8 +14,8 @@ const FAKE_TEAM_DATA: IUserOwnedTeam = {
   name: 'Team B',
   plan: TPlanType.ENTERPRISE,
   enableAutoRenewal: false,
-  nextRenewal: 0,
-  expiredDate: 1630406400000,
+  nextRenewalTimestamp: 0,
+  expiredTimestamp: 1630406400000,
   paymentStatus: TPaymentStatus.PAID,
 };
 
@@ -68,7 +68,7 @@ const BillingPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={`Billing of ${team.name}`}
+        pageTitle={`${t('subscriptions:BILLING_PAGE.PAGE_TITLE_PREFIX')} ${team.name} ${t('subscriptions:BILLING_PAGE.PAGE_TITLE_SUFFIX')}`}
         goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
       >
         <BillingPageBody team={FAKE_TEAM_DATA} />

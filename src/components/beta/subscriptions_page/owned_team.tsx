@@ -49,7 +49,7 @@ const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: 
   };
 
   // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
-  const remainingDays = calculateDaysLeft(team.nextRenewal + THREE_DAYS_IN_MS);
+  const remainingDays = calculateDaysLeft(team.nextRenewalTimestamp + THREE_DAYS_IN_MS);
 
   // Info: (20250110 - Liz) 檢查是否即將降級
   const isReturningToBeginnerSoon = remainingDays > 0 && remainingDays <= 3;
@@ -75,18 +75,18 @@ const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: 
           <section className="flex flex-auto flex-col justify-center gap-24px">
             <div>
               {isPlanProfessional &&
-                team.nextRenewal &&
+                team.nextRenewalTimestamp &&
                 team.paymentStatus === TPaymentStatus.PAID && (
                   <div className="text-2xl font-semibold text-text-neutral-tertiary">
                     {`${t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}: `}
                     <span className="text-text-neutral-primary">
-                      {formatTimestamp(team.nextRenewal)}
+                      {formatTimestamp(team.nextRenewalTimestamp)}
                     </span>
                   </div>
                 )}
 
               {isPlanProfessional &&
-                team.nextRenewal &&
+                team.nextRenewalTimestamp &&
                 team.paymentStatus === TPaymentStatus.UNPAID && (
                   <div>
                     <div className="flex items-center gap-8px">
@@ -114,7 +114,7 @@ const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: 
                 <div className="text-2xl font-semibold text-text-neutral-tertiary">
                   {`${t('subscriptions:SUBSCRIPTIONS_PAGE.EXPIRED_DATE')}: `}
                   <span className="text-text-neutral-primary">
-                    {team.expiredDate ? formatTimestamp(team.expiredDate) : ''}
+                    {team.expiredTimestamp ? formatTimestamp(team.expiredTimestamp) : ''}
                   </span>
                 </div>
               )}

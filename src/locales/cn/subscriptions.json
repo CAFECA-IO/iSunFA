@@ -31,5 +31,9 @@
     "UPDATE_PAYMENT": "重新设定付款信息",
     "RETURNING_TO_BEGINNER_IN": "",
     "DAYS": " 天后恢复为基础版方案"
+  },
+
+  "INVOICE_PAGE": {
+    "META_TITLE": "所有发票"
   }
 }
