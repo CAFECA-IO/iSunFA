@@ -412,7 +412,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
               {t('reports:REPORTS.CODE')}
             </div>
             <div
-              className={`table-cell w-350px border-b border-l border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:bg-neutral-50`}
+              className={`table-cell border-b border-l border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:bg-neutral-50`}
             >
               {t('reports:REPORT.ACCOUNTING')}
             </div>
@@ -463,7 +463,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px print:text-xs">
             <div
-              className={`col-span-3 table-cell h-full w-472px border-stroke-neutral-quaternary text-center align-middle font-medium print:bg-neutral-50`}
+              className={`col-span-3 table-cell h-full border-stroke-neutral-quaternary text-center align-middle font-medium print:bg-neutral-50`}
             >
               {t('reports:TAX_REPORT.TOTAL')}
             </div>
