@@ -9,9 +9,21 @@ interface RowsProps {
 
 const Rows = ({ flattenAccounts, isPrint }: RowsProps) => {
   const { t } = useTranslation(['reports']);
+
+  // Info: (20250113 - Anna) 過濾掉重複的資料
+  const uniqueAccounts = Array.from(
+    new Map(
+      flattenAccounts.map((account) => [
+        `${account.accountId}_${account.code}_${account.name}`,
+        account,
+      ])
+    ).values()
+  );
+
   return (
     <>
-      {flattenAccounts.map((account) => {
+      {/* Info: (20250113 - Anna) 渲染唯一的會計科目行，過濾掉重複的 */}
+      {uniqueAccounts.map((account) => {
         const {
           code,
           curPeriodAmount,

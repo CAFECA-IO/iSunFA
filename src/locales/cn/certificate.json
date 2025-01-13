@@ -61,7 +61,7 @@
   "TITLE": {
     "UPLOAD": "上传发票",
     "SELECT": "上传凭证",
-    "LIST": "凭证列表"
+    "LIST": "凭证管理"
   },
   "EDIT": {
     "HEADER": "发票信息",

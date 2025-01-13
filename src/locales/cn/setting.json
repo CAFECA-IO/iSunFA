@@ -69,7 +69,7 @@
     "ENTER_NUMBER": "输入号码",
     "PHONE_NUMBER": "电话号码",
     "COST": "成本",
-    "CLIENT_SUPPLIER_SETTING": "交易伙伴设定",
+    "CLIENT_SUPPLIER_SETTING": "客户/供应商",
     "ADD_NEW_CLIENT_SUPPLIER": "新增客户/供应商"
   },
   "ACCOUNTING": {
@@ -94,7 +94,7 @@
     "DOWNLOAD_REPORT": "下载报告",
     "ACCOUNTING_TITLE_SETTINGS_SUBTITLE": "会计科目设定",
     "VIEW_ALL_ACCOUNTING": "查看所有会计科目",
-    "ACCOUNTING_IMPORT_SUBTITLE": "导入会计科目",
+    "ACCOUNTING_IMPORT_SUBTITLE": "开帐设置",
     "IMPORT_FILE": "上传档案",
     "MANUAL_ACCOUNT_OPENING": "手动开帐",
     "TOAST_UPDATE_SUCCESS": "会计设定更新成功！",
