@@ -11,3 +11,15 @@ export interface IPaginatedData<T> {
     sortOrder: string; // Info: (20240716 - Jacky) 排序欄位的值
   }[];
 }
+
+export interface IPaginatedOptions<T> {
+  data: T;
+  page?: number;
+  totalPages?: number;
+  totalCount?: number;
+  pageSize?: number;
+  sort?: {
+    sortBy: string;
+    sortOrder: string;
+  }[];
+}
