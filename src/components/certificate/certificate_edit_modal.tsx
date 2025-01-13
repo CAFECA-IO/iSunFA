@@ -7,7 +7,7 @@ import NumericInput from '@/components/numeric_input/numeric_input';
 import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
 import { InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
-import { ICounterpartyOptional } from '@/interfaces/counterparty';
+import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -26,6 +26,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting, ITaxSetting } from '@/interfaces/accounting_setting';
 import { APIName } from '@/constants/api_connection';
 import TaxMenu from '@/components/certificate/certificate_tax_menu';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
@@ -57,6 +58,10 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET
   );
+  const { trigger: getCounterpartyList } = APIHandler<IPaginatedData<ICounterparty[]>>(
+    APIName.COUNTERPARTY_LIST
+  );
+  const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
   const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
@@ -140,6 +145,15 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     }
   }, [companyId, formState.inputOrOutput, formState.taxRatio]);
 
+  const listCounterparty = useCallback(async () => {
+    const { success, data } = await getCounterpartyList({
+      params: { companyId },
+    });
+    if (success) {
+      setCounterpartyList(data?.data ?? []);
+    }
+  }, [companyId]);
+
   const {
     targetRef: invoiceTypeMenuRef,
     componentVisible: isInvoiceTypeMenuOpen,
@@ -209,6 +223,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 
   useEffect(() => {
     getSettingTaxRatio();
+    listCounterparty();
   }, []);
 
   // Info: (20240924 - tzuhan) 處理保存
@@ -438,6 +453,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
             <CounterpartyInput
               ref={counterpartyInputRef}
               counterparty={formState.counterParty}
+              counterpartyList={counterpartyList}
               onSelect={(cp: ICounterpartyOptional) => handleInputChange('counterParty', cp)}
             />
             {errors.counterParty && (
