@@ -9,6 +9,7 @@ export const sessionDataToLoginDevice = (sessionData: ISessionData): ILoginDevic
     actionTime: sessionData.actionTime,
     ipAddress: sessionData.ipAddress,
     userAgent: sessionData.userAgent,
+    normal: true,
     isCurrent: false,
     normal: true,
   };
