@@ -295,7 +295,7 @@ export enum APIPath {
   CREATE_ASSET_BULK = `${apiPrefixV2}/company/:companyId/asset/bulk`,
   LEDGER_EXPORT = `${apiPrefixV2}/company/:companyId/ledger/export`,
   LIST_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device`,
-  REMOVE_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device/deviceId`,
+  REMOVE_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device/:deviceId`,
 }
 const createConfig = ({
   name,
