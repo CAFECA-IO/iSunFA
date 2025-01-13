@@ -5,6 +5,7 @@ import { assetEntityValidator } from '@/lib/utils/zod_schema/asset';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { ISortOption } from '@/interfaces/sort';
 import { pageToOffset } from '@/lib/utils/common';
+import { DefaultValue } from '@/constants/default_value';
 
 /**
  * Info: (20241025 - Murky)
@@ -29,6 +30,7 @@ export function parsePrismaAssetToAssetEntity(dto: PrismaAsset): IAssetEntity {
 
   const assetEntity: IAssetEntity = {
     ...data,
+    createdUserId: DefaultValue.USER_ID.SYSTEM, // TODO: (20250113 - Shirley) 在 asset db schema 更改之後，需要紀錄建立資產的 user id
     assetVouchers: data.assetVouchers ?? [],
   };
 

@@ -164,7 +164,7 @@ export interface IAssetEntity {
    */
   companyId: number;
 
-  userId: number;
+  createdUserId: number;
 
   name: string;
 
@@ -328,9 +328,8 @@ export interface AssetHeaderWithStringDate extends Omit<AssetHeader, 'acquisitio
   acquisitionDate: string;
 }
 
-// ToDo: (20241204 - Luphia) move to interface folder
 export interface ICreateAssetWithVouchersRepoInput {
-  userId: number;
+  createdUserId: number;
   companyId: number;
   name: string;
   type: string;

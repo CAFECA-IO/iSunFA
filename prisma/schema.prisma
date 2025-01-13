@@ -40,7 +40,7 @@ model Account {
 model Asset {
   id                 Int    @id @default(autoincrement())
   companyId          Int    @map("company_id")
-  userId             Int    @map("user_id")
+  createdUserId      Int    @map("created_user_id")
   name               String
   type               String
   number             String
@@ -59,7 +59,7 @@ model Asset {
   assetVouchers AssetVoucher[]
 
   company Company @relation(fields: [companyId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  user    User    @relation(fields: [createdUserId], references: [id])
 
   @@map("asset")
 }
@@ -469,27 +469,24 @@ model File {
 }
 
 model Invoice {
-  id                Int     @id @default(autoincrement())
-  certificateId     Int     @map("certificate_id")
-  name              String  @default("Invoice 001")
-  counterPartyTaxId String? @map("counter_party_tax_id")
-  counterPartyName  String? @map("counter_party_name")
-  counterPartyType  String? @map("counter_party_type")
-  counterPartyNote  String? @map("counter_party_note")
-  inputOrOutput     String  @map("input_or_output")
-  date              Int
-  no                String
-  currencyAlias     String  @map("currency_alias")
-  priceBeforeTax    Int     @map("price_before_tax")
-  taxType           String  @map("tax_type")
-  taxRatio          Int     @map("tax_ratio")
-  taxPrice          Int     @map("tax_price")
-  totalPrice        Int     @map("total_price")
-  type              String
-  deductible        Boolean
-  createdAt         Int     @map("created_at")
-  updatedAt         Int     @map("updated_at")
-  deletedAt         Int?    @map("deleted_at")
+  id               Int     @id @default(autoincrement())
+  certificateId    Int     @map("certificate_id")
+  name             String  @default("Invoice 001")
+  counterPartyInfo String? @map("counter_party_info")
+  inputOrOutput    String  @map("input_or_output")
+  date             Int
+  no               String
+  currencyAlias    String  @map("currency_alias")
+  priceBeforeTax   Int     @map("price_before_tax")
+  taxType          String  @map("tax_type")
+  taxRatio         Int     @map("tax_ratio")
+  taxPrice         Int     @map("tax_price")
+  totalPrice       Int     @map("total_price")
+  type             String
+  deductible       Boolean
+  createdAt        Int     @map("created_at")
+  updatedAt        Int     @map("updated_at")
+  deletedAt        Int?    @map("deleted_at")
 
   invoiceVoucherJournals InvoiceVoucherJournal[]
 
@@ -584,7 +581,7 @@ model KYCRole {
   email               String
   phone               String
   qualification       Boolean
-  startDateOfPractice String  @map("start_date_of_practice")
+  startDateOfPractice Int     @map("start_date_of_practice")
   certificationNumber String  @map("certification_number")
   association         String  @map("association")
   membershipNumber    String  @map("membership_number")
@@ -902,8 +899,8 @@ model Todo {
   deadline  Int
   note      String?
   status    Boolean
-  startDate Int     @map("start_date")
-  endDate   Int     @map("end_date")
+  startDate Int     @default(0) @map("start_date")
+  endDate   Int     @default(0) @map("end_date")
   createdAt Int     @map("created_at")
   updatedAt Int     @map("updated_at")
   deletedAt Int?    @map("deleted_at")

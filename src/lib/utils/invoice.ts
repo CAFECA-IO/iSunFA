@@ -1,7 +1,6 @@
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { Invoice as PrismaInvoice } from '@prisma/client';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
-import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { CurrencyType } from '@/constants/currency';
 import { getTimestampNow } from '@/lib/utils/common';
 
@@ -22,7 +21,7 @@ export function calculateTotalAmountAfterTax(amount: number, taxRate: number): n
 export function initInvoiceEntity(
   dto: Partial<PrismaInvoice> & {
     certificateId: number;
-    counterPartyId: number;
+    // counterPartyId: number;
     inputOrOutput: InvoiceTransactionDirection;
     date: number;
     no: string;
@@ -34,7 +33,8 @@ export function initInvoiceEntity(
     totalPrice: number;
     type: InvoiceType;
     deductible: boolean;
-    counterParty?: ICounterPartyEntity;
+    counterPartyInfo?: string;
+    // counterParty?: ICounterPartyEntity;
   }
 ): IInvoiceEntity {
   const nowInSecond = getTimestampNow();
@@ -42,7 +42,7 @@ export function initInvoiceEntity(
   const invoiceEntity: IInvoiceEntity = {
     id: dto.id ?? 0,
     certificateId: dto.certificateId,
-    counterPartyId: dto.counterPartyId,
+    // counterPartyId: dto.counterPartyId,
     inputOrOutput: dto.inputOrOutput,
     date: dto.date,
     no: dto.no,
@@ -57,7 +57,8 @@ export function initInvoiceEntity(
     createdAt: dto?.createdAt || nowInSecond,
     updatedAt: dto?.updatedAt || nowInSecond,
     deletedAt: dto?.deletedAt || null,
-    counterParty: dto.counterParty,
+    counterPartyInfo: dto?.counterPartyInfo || '',
+    // counterParty: dto.counterParty,
   };
 
   return invoiceEntity;

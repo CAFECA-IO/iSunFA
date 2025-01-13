@@ -17,6 +17,7 @@ import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_set
 import { DEFAULT_SORT_OPTIONS } from '@/constants/asset';
 import { Prisma } from '@prisma/client';
 import { parseSortOption } from '@/lib/utils/sort';
+import { DefaultValue } from '@/constants/default_value';
 
 /* Info: (20241204 - Luphia) API develop SOP 以 POST ASSET API 為例
  * 1. 前置作業
@@ -166,6 +167,7 @@ export const handlePostRequest: IHandleRequest<
 
   // Info: (20241204 - Luphia) collect the new asset data with db schema
   const newAsset: ICreateAssetWithVouchersRepoInput = {
+    createdUserId: DefaultValue.USER_ID.SYSTEM,
     companyId,
     name: assetName,
     type: assetType,

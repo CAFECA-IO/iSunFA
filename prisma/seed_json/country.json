@@ -1,0 +1,14 @@
+[
+  {
+    "id": 10000000,
+    "name": "Taiwan",
+    "code": "tw",
+    "localeKey": "tw",
+    "phoneCode": "+886",
+    "phoneExample": "0912345678",
+    "currencyCode": "TWD",
+    "currencyName": "New Taiwan Dollar",
+    "createdAt": 0,
+    "updatedAt": 0
+  }
+]

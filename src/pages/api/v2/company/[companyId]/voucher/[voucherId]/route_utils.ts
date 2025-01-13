@@ -362,7 +362,7 @@ export const voucherAPIGetOneUtils = {
       ? parsePrismaInvoiceToInvoiceEntity(invoiceDto)
       : initInvoiceEntity({
           certificateId: certificate.id,
-          counterPartyId: 0,
+          counterPartyInfo: '',
           inputOrOutput: InvoiceTransactionDirection.INPUT,
           date: 0,
           no: '',

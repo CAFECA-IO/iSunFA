@@ -520,9 +520,11 @@ const voucherGetOneOutputValidatorV2 = z
         assetNumber: asset.number,
         assetName: asset.name,
         purchasePrice: asset.purchasePrice,
-        accumulatedDepreciation: asset.accumulatedDepreciation,
+        accumulatedDepreciation: 0, // TODO: (20250113 - Shirley) 需要即時計算 accumulatedDepreciation
+        // accumulatedDepreciation: asset.accumulatedDepreciation,
         residualValue: asset.residualValue,
-        remainingLife: asset.remainingLife,
+        remainingLife: 0, // TODO: (20250113 - Shirley) 需要即時計算 remainingLife
+        // remainingLife: asset.remainingLife,
         assetStatus: asset.status,
         createdAt: asset.createdAt,
         updatedAt: asset.updatedAt,

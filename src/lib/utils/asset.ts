@@ -20,7 +20,7 @@ import { SortBy, SortOrder } from '@/constants/sort';
 export function initAssetEntity(
   dto: Partial<PrismaAsset> & {
     companyId: number;
-    userId: number;
+    createdUserId: number;
     name: string;
     type: AssetEntityType;
     number: string;
@@ -41,7 +41,7 @@ export function initAssetEntity(
   const assetEntity: IAssetEntity = {
     id: dto.id ?? 0,
     companyId: dto.companyId,
-    userId: dto.userId,
+    createdUserId: dto.createdUserId,
     name: dto.name,
     type: dto.type,
     number: dto.number,

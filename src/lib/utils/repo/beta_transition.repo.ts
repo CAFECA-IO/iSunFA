@@ -219,7 +219,7 @@ export async function createInvoice(
       formattedInvoice.payment.price * (formattedInvoice.payment.taxPercentage / 100),
     taxType: 'taxable',
     deductible: true,
-    counterParty: { connect: { id: 555 } },
+    // counterParty: { connect: { id: 555 } }, // TODO: (20250113 - Shirley) 在 invoice db schema 更改之後，counterParty 的 fkey 被拿掉
     taxRatio: formattedInvoice.payment.taxPercentage,
     taxPrice: formattedInvoice.payment.price * (formattedInvoice.payment.taxPercentage / 100),
     totalPrice: formattedInvoice.payment.price,

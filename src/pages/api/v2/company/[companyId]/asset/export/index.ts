@@ -3,7 +3,7 @@ import { AssetFieldsMap } from '@/constants/export_asset';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAssetExportRequestBody } from '@/interfaces/export_asset';
 import { formatApiResponse, formatTimestampByTZ, getTimestampNow } from '@/lib/utils/common';
-import { convertToCSV, selectFields } from '@/lib/utils/export_file';
+import { convertToCSV } from '@/lib/utils/export_file';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { AssetHeader, AssetHeaderWithStringDate } from '@/interfaces/asset';
 import {
@@ -42,29 +42,32 @@ async function handleAssetExport(
       parsedCompanyId
     );
 
-    let processedAssets = assets;
+    // TODO: (20250113 - Shirley) 在 asset db schema 更改之後，需要即時計算 accumulatedDepreciation 和 remainingLife
+    const processedAssets = assets;
+    // let processedAssets = assets;
     const ASSET_FIELDS = Object.keys(AssetFieldsMap) as (keyof AssetHeader)[];
 
-    if (options?.fields) {
-      processedAssets = selectFields(
-        processedAssets,
-        options.fields as (keyof AssetHeader)[]
-      ) as typeof assets;
-    }
+    // if (options?.fields) {
+    //   processedAssets = selectFields(
+    //     processedAssets,
+    //     options.fields as (keyof AssetHeader)[]
+    //   ) as typeof assets;
+    // }
 
-    const newData = processedAssets.map((asset) => {
-      const formattedDate = formatTimestampByTZ(
-        asset.acquisitionDate,
-        options?.timezone || DEFAULT_TIMEZONE,
-        'YYYY-MM-DD'
-      );
-
-      return {
-        ...asset,
-        acquisitionDate: formattedDate,
-        number: asset.number,
-      };
-    });
+    const newData = processedAssets.map(
+      (asset) =>
+        ({
+          ...asset,
+          acquisitionDate: formatTimestampByTZ(
+            asset.acquisitionDate,
+            options?.timezone || DEFAULT_TIMEZONE,
+            'YYYY-MM-DD'
+          ),
+          number: asset.number,
+          accumulatedDepreciation: 0,
+          remainingLife: 0,
+        }) as AssetHeaderWithStringDate
+    );
 
     const fields: (keyof AssetHeader)[] =
       (options?.fields as (keyof AssetHeader)[]) || ASSET_FIELDS;

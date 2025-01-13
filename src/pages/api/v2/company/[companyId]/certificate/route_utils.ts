@@ -41,7 +41,8 @@ import { IInvoiceEntity, IInvoiceBetaOptional } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
-import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
+// TODO: (20250113 - Shirley) 在 invoice db schema 更改之後，counterParty 的 fkey 被拿掉，invoice跟counter party的資料需要修改
+// import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
@@ -161,12 +162,14 @@ export const certificateAPIPostUtils = {
   ) => {
     const { invoices } = certificateFromPrisma;
     const { nowInSecond } = options;
+    // TODO: (20250113 - Shirley) 在 invoice db schema 更改之後，counterParty 的 fkey 被拿掉，invoice跟counter party的資料需要修改
     let invoiceEntity: IInvoiceEntity & {
       counterParty: ICounterPartyEntity;
     };
     if (invoices.length === 0) {
       const newInvoice = initInvoiceEntity({
-        counterPartyId: PUBLIC_COUNTER_PARTY.id,
+        // counterPartyId: PUBLIC_COUNTER_PARTY.id,
+        counterPartyInfo: '',
         name: '',
         inputOrOutput: InvoiceTransactionDirection.INPUT,
         date: nowInSecond,
@@ -190,16 +193,21 @@ export const certificateAPIPostUtils = {
       };
     } else {
       const invoiceDto = invoices[0];
-      const counterPartyDto = invoiceDto.counterParty;
+      // const counterPartyDto = invoiceDto.counterParty;
       const invoice = parsePrismaInvoiceToInvoiceEntity(invoiceDto);
-      const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto);
+      // const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto);
 
       // Info: (20241223 - Murky) Temporary Patch for counterParty from invoice no
-      const { note, type, taxId, name } = parseCounterPartyFromNoInInvoice(invoice.no);
+      const { note, type, taxId, name } = parseCounterPartyFromNoInInvoice(
+        invoice.counterPartyInfo ?? ''
+      );
       invoice.no = note;
-      counterParty.name = name;
-      counterParty.taxId = taxId;
-      counterParty.type = type;
+      const counterParty = {
+        ...PUBLIC_COUNTER_PARTY,
+        name,
+        taxId,
+        type,
+      };
 
       invoiceEntity = {
         ...invoice,
@@ -416,7 +424,7 @@ export const certificateAPIGetListUtils = {
       invoice.date &&
       invoice.priceBeforeTax &&
       invoice.totalPrice &&
-      invoice.counterPartyId
+      invoice.counterPartyInfo
     );
     return isComplete;
   },

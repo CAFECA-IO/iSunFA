@@ -4,11 +4,11 @@
 -- Step 1. asset table ✅
 -- 1-1. 新增 user_id 欄位為可選
 ALTER TABLE "asset"
-ADD COLUMN "user_id" INT;
+ADD COLUMN "created_user_id" INT;
 
 -- 1-2. 更新現有 asset data 的 user_id 為對應公司的擁有者的 user_id，如果沒有對應的 admin，則設為 1000
 UPDATE "asset" AS a
-SET "user_id" = COALESCE(
+SET "created_user_id" = COALESCE(
   (SELECT admin."user_id" 
    FROM "admin" AS admin 
    WHERE a."company_id" = admin."company_id" 
@@ -18,10 +18,10 @@ SET "user_id" = COALESCE(
 
 -- 1-3. 將 asset table 的 user_id 欄位設為必填
 ALTER TABLE "asset"
-ALTER COLUMN "user_id" SET NOT NULL;
+ALTER COLUMN "created_user_id" SET NOT NULL;
 
 -- 1-4. 添加外鍵約束，確保 user_id 參照 User 表的 id
-ALTER TABLE "asset" ADD CONSTRAINT "asset_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "asset" ADD CONSTRAINT "asset_created_user_id_fkey" FOREIGN KEY ("created_user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- 1-5. 刪掉 asset table 的 accumulated_depreciation, remaining_life 欄位
 ALTER TABLE "asset" DROP COLUMN "accumulated_depreciation",
@@ -29,15 +29,15 @@ DROP COLUMN "remaining_life";
 
 -- Step 2. todo table ✅
 -- 2-1. 新增 end_date 和 start_date 選填(optional)欄位
-ALTER TABLE "todo" ADD COLUMN     "end_date" INTEGER,
-ADD COLUMN     "start_date" INTEGER;
+ALTER TABLE "todo" ADD COLUMN     "end_date" INTEGER DEFAULT 0,
+ADD COLUMN     "start_date" INTEGER DEFAULT 0;
 
 -- 將現有的 todo data 的 start_date 和 end_date 設定為 created_at
-UPDATE "todo"
-SET 
-    "start_date" = "created_at",
-    "end_date" = "created_at"
-WHERE "start_date" IS NULL OR "end_date" IS NULL;
+-- UPDATE "todo"
+-- SET 
+--     "start_date" = "created_at",
+--     "end_date" = "created_at"
+-- WHERE "start_date" IS NULL OR "end_date" IS NULL;
 
 -- 2-2. 將 start_date 和 end_date 設為必填(required)
 ALTER TABLE "todo"
@@ -56,7 +56,7 @@ ADD COLUMN "role_id" INTEGER NOT NULL;
 
 -- 3-3. 新增 start_date_of_practice 欄位
 ALTER TABLE "kyc_role"
-ADD COLUMN "start_date_of_practice" TEXT NOT NULL;
+ADD COLUMN "start_date_of_practice" INTEGER NOT NULL;
 
 -- 3-4. 新增 association 欄位
 ALTER TABLE "kyc_role"
@@ -251,28 +251,39 @@ Step 3. 更新現有 invoice data
 ALTER TABLE "invoice" DROP CONSTRAINT "invoice_counter_party_id_fkey";
 ALTER TABLE "invoice" DROP COLUMN "counter_party_id";
 
--- Step 2. 新增 counter_party_name, counter_party_tax_id, counter_party_note, counter_party_type 欄位 ✅
--- AlterTable
-ALTER TABLE "invoice" 
-  ADD COLUMN     "counter_party_name" TEXT,
-  ADD COLUMN     "counter_party_tax_id" TEXT,
-  ADD COLUMN     "counter_party_note" TEXT,
-  ADD COLUMN     "counter_party_type" TEXT;
+-- 
+ALTER TABLE "invoice" ADD COLUMN "counter_party_info" TEXT;
+-- UPDATE "invoice" SET "counter_party_info" = "no";
+UPDATE "invoice" SET "counter_party_info" = "no"
+WHERE "no" ~ '^\{.*\}$';
+-- 
 
--- Step 3. 更新現有 invoice data ✅
--- 3-1. 將現有 invoice data 的 counter_party_name, counter_party_tax_id, counter_party_note, counter_party_type 都設定為空字串
-UPDATE "invoice"
-SET 
-    "counter_party_name" = '',
-    "counter_party_tax_id" = '',
-    "counter_party_note" = '',
-    "counter_party_type" = '';
 
--- 3-2. 將現有 invoice data 的 counter_party_name, counter_party_tax_id, counter_party_note, counter_party_type 設定為對應的值
-UPDATE "invoice"
-SET 
-    "counter_party_name" = "no"::jsonb->>'name',
-    "counter_party_tax_id" = "no"::jsonb->>'taxId',
-    "counter_party_note" = "no"::jsonb->>'note',
-    "counter_party_type" = "no"::jsonb->>'type'
-WHERE "no" ~ '^\{.*\}$'::text;
+-- -- Step 2. 新增 counter_party_name, counter_party_tax_id, counter_party_note, counter_party_type 欄位 ✅
+-- -- AlterTable
+-- ALTER TABLE "invoice" 
+--   ADD COLUMN     "counter_party_name" TEXT,
+--   ADD COLUMN     "counter_party_tax_id" TEXT,
+--   ADD COLUMN     "counter_party_note" TEXT,
+--   ADD COLUMN     "counter_party_type" TEXT;
+
+-- -- Step 3. 更新現有 invoice data ✅
+-- -- 3-1. 將現有 invoice data 的 counter_party_name, counter_party_tax_id, counter_party_note, counter_party_type 都設定為空字串
+-- UPDATE "invoice"
+-- SET 
+--     "counter_party_name" = '',
+--     "counter_party_tax_id" = '',
+--     "counter_party_note" = '',
+--     "counter_party_type" = '';
+
+-- -- 3-2. 將現有 invoice data 的 counter_party_name, counter_party_tax_id, counter_party_note, counter_party_type 設定為對應的值
+-- UPDATE "invoice"
+-- SET 
+--     "counter_party_name" = "no"::jsonb->>'name',
+--     "counter_party_tax_id" = "no"::jsonb->>'taxId',
+--     "counter_party_note" = "no"::jsonb->>'note',
+--     "counter_party_type" = "no"::jsonb->>'type'
+-- WHERE "no" ~ '^\{.*\}$'::text;
+
+
+

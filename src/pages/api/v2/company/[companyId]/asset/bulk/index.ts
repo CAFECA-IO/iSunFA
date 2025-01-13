@@ -49,7 +49,7 @@ export const handlePostRequest: IHandleRequest<
 
   // Info: (20241204 - Luphia) collect the new asset data with db schema
   const newAsset: ICreateAssetWithVouchersRepoInput = {
-    userId,
+    createdUserId: userId,
     companyId,
     name: assetName,
     type: assetType,

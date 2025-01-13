@@ -29,7 +29,6 @@ import lineItems from '@/seed_json/line_item.json';
 import salaryRecords from '@/seed_json/salary_record.json';
 import voucherSalaryRecordFolder from '@/seed_json/voucher_salary_record_folder.json';
 import file from '@/seed_json/file.json';
-import assetVouchers from '@/seed_json/asset_voucher.json';
 import counterpartys from '@/seed_json/counterparty.json';
 import certificates from '@/seed_json/certificate.json';
 import voucherCertificates from '@/seed_json/voucher_certificate.json';
@@ -44,7 +43,15 @@ import associateLineItems from '@/seed_json/associate_line_item.json';
 import associateVouchers from '@/seed_json/associate_voucher.json';
 import event from '@/seed_json/event.json';
 
+import country from '@/seed_json/country.json';
+
 const prisma = new PrismaClient();
+
+async function createCountry() {
+  await prisma.country.createMany({
+    data: country,
+  });
+}
 
 async function createFile() {
   const files = file.map((f) => {
@@ -284,12 +291,6 @@ async function createEvent() {
   });
 }
 
-async function createAssetVoucher() {
-  await prisma.assetVoucher.createMany({
-    data: assetVouchers,
-  });
-}
-
 async function createCounterparty() {
   await prisma.counterparty.createMany({
     data: counterpartys,
@@ -321,6 +322,7 @@ async function createInvoice() {
 }
 
 async function main() {
+  await createCountry();
   await createFile();
   await createCompany();
   await new Promise((resolve) => {
@@ -383,7 +385,6 @@ async function main() {
   await createLineItems();
   await createSalaryRecord();
   await createVoucherSalaryRecordFolder();
-  await createAssetVoucher();
 
   await createEvent();
   await createAssociateVoucher();
@@ -395,7 +396,8 @@ main()
   .then(async () => {
     await prisma.$disconnect();
   })
-  .catch(async () => {
+  .catch(async (err) => {
+    console.error(err);
     // Info (20240316 - Murky) - disconnect prisma
     await prisma.$disconnect();
     process.exit(1);

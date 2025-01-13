@@ -1,6 +1,6 @@
 import { IPayment } from '@/interfaces/payment';
 import { EventType } from '@/constants/account';
-import { ICounterPartyEntity, ICounterpartyOptional } from '@/interfaces/counterparty';
+import { ICounterpartyOptional } from '@/interfaces/counterparty';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 
@@ -63,7 +63,7 @@ export interface IInvoiceEntity {
    * Info: (20241024 - Murky)
    * @description counterPartyId of counterParty that this invoice is coming from or going to (base on inputOrOutput)
    */
-  counterPartyId: number;
+  // counterPartyId: number;
 
   /**
    * Info: (20241024 - Murky)
@@ -152,7 +152,8 @@ export interface IInvoiceEntity {
    */
   deletedAt: number | null;
 
-  counterParty?: ICounterPartyEntity;
+  // counterParty?: ICounterPartyEntity;
+  counterPartyInfo?: string;
   // ToDo: (20241024 - Murky) Certificate
 }
 
