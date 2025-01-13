@@ -204,7 +204,7 @@
     "FROM_PLACEHOLDER": "从",
     "TO_PLACEHOLDER": "到",
     "BALANCE": "余额",
-    "LEDGER": "分类帐",
+    "LEDGER": "总帐/分类帐",
     "TRIAL_BALANCE": "试算表",
     "NO_VOUCHER": "无传票资料",
     "UPLOADED_TAB": "已过账传票",

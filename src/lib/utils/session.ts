@@ -111,7 +111,13 @@ class SessionHandler {
     const sessionId = parseSessionId(options);
     const data = this.data.get(sessionId);
     const expires = data?.expires || 0;
-    let result = { sid: sessionId } as ISessionData;
+    let result = {
+      sid: sessionId,
+      userId: 10000006, // Info: (20241112 - Anna)
+      companyId: 10001226, // Info: (20241112 - Anna)
+      challenge: 'dummy',
+      roleId: 1006,
+    } as unknown as ISessionData;
     if (expires > Date.now()) {
       // Info: (20250107 - Luphia) update session expire time
       result = this.renewSession(options) as ISessionData;
