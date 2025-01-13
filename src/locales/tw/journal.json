@@ -232,7 +232,7 @@
     "VOUCHER_TYPE": "傳票類型",
     "TYPE_RECEIVE": "收入",
     "TYPE_EXPENSE": "支付",
-    "TYPE_TRANSFER": "轉帳",
+    "TYPE_TRANSFER": "移轉",
     "NOTE": "備註",
     "COUNTERPARTY": "交易對象",
     "RECURRING_ENTRY": "週期性分錄",

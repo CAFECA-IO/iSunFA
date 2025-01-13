@@ -232,7 +232,7 @@
     "VOUCHER_TYPE": "传票类型",
     "TYPE_RECEIVE": "收入",
     "TYPE_EXPENSE": "支付",
-    "TYPE_TRANSFER": "转帐",
+    "TYPE_TRANSFER": "移转",
     "NOTE": "备注",
     "COUNTERPARTY": "交易对象",
     "RECURRING_ENTRY": "周期性分录",
