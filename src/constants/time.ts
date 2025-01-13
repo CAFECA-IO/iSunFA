@@ -12,6 +12,7 @@ export const ONE_YEAR_IN_S = 365 * ONE_DAY_IN_S;
 export const ONE_HOUR_IN_S = 60 * 60;
 export const ONE_MINUTE_IN_S = 60;
 export const ONE_SECOND_IN_S = 1;
+export const THREE_DAYS_IN_MS = 3 * ONE_DAY_IN_MS;
 
 export const formatTimestamp = (timestamp: number) => {
   const date = new Date(timestamp);

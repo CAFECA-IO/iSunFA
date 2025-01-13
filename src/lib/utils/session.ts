@@ -14,6 +14,8 @@ import { parseSessionId } from '@/lib/utils/parser/session';
 import { getCurrentTimestamp } from '@/lib/utils/common';
 import { sessionDataToLoginDevice } from '@/lib/utils/formatter/login_device';
 import { sessionOptionToSession } from '@/lib/utils/formatter/session';
+import { ALWAYS_LOGIN, SESSION_DEVELOPER } from '@/constants/session';
+import { checkAbnormalDevice } from '@/lib/utils/analyzer/security';
 
 // ToDo: (20250108 - Luphia) encrypt string
 // Deprecated: (20250108 - Luphia) remove eslint-disable
@@ -216,6 +218,11 @@ export const getSession = async (req: NextApiRequest) => {
   } else {
     await sessionHandler.update(sessionId, defaultSession);
   }
+
+  // Info: (20250113 - Luphia) 開發者模式，固定使用開發者 session
+  const devSession = { ...SESSION_DEVELOPER, ...defaultSession };
+  resultSession = ALWAYS_LOGIN ? devSession : resultSession;
+
   return resultSession;
 };
 
@@ -225,7 +232,7 @@ export const setSession = async (
   data: { userId?: number; companyId?: number; challenge?: string; roleId?: number }
 ) => {
   const sessionId = parseSessionId(sessoin);
-  const oldSession = await sessionHandler.read(sessionId);
+  const oldSession = (await sessionHandler.read(sessionId)) || ({} as ISessionData);
   const newSession = { ...oldSession, ...data };
   const resultSession = await sessionHandler.update(sessionId, newSession);
   return resultSession;
@@ -239,7 +246,8 @@ export const destroySession = async (sessoin: ISessionData) => {
 
 export const listDevice = async (session: ISessionData) => {
   const sessionId = parseSessionId(session);
-  const data: ILoginDevice[] = await sessionHandler.listDevice(sessionId);
+  const rawList: ILoginDevice[] = await sessionHandler.listDevice(sessionId);
+  const data = checkAbnormalDevice(rawList);
   return data;
 };
 
