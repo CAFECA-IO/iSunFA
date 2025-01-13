@@ -5,7 +5,7 @@ import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
-import TeamSubscriptionPageBody from '@/components/beta/team_subscription_page/team_subscription_page_body';
+import PaymentPageBody from '@/components/beta/payment_page/payment_page_body';
 import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
@@ -21,7 +21,7 @@ const FAKE_TEAM_DATA: IUserOwnedTeam = {
   paymentStatus: TPaymentStatus.FREE,
 };
 
-const TeamSubscriptionPage = () => {
+const PaymentPage = () => {
   const { t } = useTranslation(['subscriptions']);
   const router = useRouter();
   const { teamId } = router.query;
@@ -69,10 +69,10 @@ const TeamSubscriptionPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('subscriptions:SUBSCRIPTIONS_PAGE.PLAN_FOR') + FAKE_TEAM_DATA.name}
-        goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
+        pageTitle={'Payment'}
+        goBackUrl={`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${teamIdString}`}
       >
-        <TeamSubscriptionPageBody team={FAKE_TEAM_DATA} />
+        <PaymentPageBody team={FAKE_TEAM_DATA} />
       </Layout>
     </>
   );
@@ -86,4 +86,4 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   };
 };
 
-export default TeamSubscriptionPage;
+export default PaymentPage;

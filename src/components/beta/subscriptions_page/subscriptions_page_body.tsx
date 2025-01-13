@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import OwnedTeams from '@/components/beta/subscriptions_page/owned_teams';
 import { useTranslation } from 'next-i18next';
-import { TPlanType, IUserOwnedTeam } from '@/interfaces/subscription';
+import { TPlanType, IUserOwnedTeam, TPaymentStatus } from '@/interfaces/subscription';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 
@@ -12,25 +12,28 @@ const FAKE_OWNED_TEAMS: IUserOwnedTeam[] = [
     id: 1,
     name: 'Personal',
     plan: TPlanType.BEGINNER,
+    enableAutoRenewal: false,
     nextRenewal: 0,
     expiredDate: 0,
-    enableAutoRenewal: true,
+    paymentStatus: TPaymentStatus.FREE,
   },
   {
     id: 2,
     name: 'Team A',
     plan: TPlanType.PROFESSIONAL,
-    nextRenewal: 1630406400000,
-    expiredDate: 0,
     enableAutoRenewal: true,
+    nextRenewal: 1736501802970,
+    expiredDate: 0,
+    paymentStatus: TPaymentStatus.UNPAID,
   },
   {
     id: 3,
     name: 'Team B',
     plan: TPlanType.ENTERPRISE,
+    enableAutoRenewal: false,
     nextRenewal: 0,
     expiredDate: 1630406400000,
-    enableAutoRenewal: false,
+    paymentStatus: TPaymentStatus.PAID,
   },
 ];
 

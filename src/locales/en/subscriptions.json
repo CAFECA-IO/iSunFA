@@ -26,6 +26,10 @@
     "FAQ5_QUESTION": "What are the payment methods?",
     "BEGINNER": "Beginner",
     "PROFESSIONAL": "Professional",
-    "ENTERPRISE": "Enterprise"
+    "ENTERPRISE": "Enterprise",
+    "UPDATE_PAYMENT": "Update Payment",
+    "PAYMENT_FAILED": "Payment Failed",
+    "RETURNING_TO_BEGINNER_IN": "Returning to Beginner in ",
+    "DAYS": " Days"
   }
 }

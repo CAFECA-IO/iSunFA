@@ -26,6 +26,10 @@
     "FAQ5_QUESTION": "有哪些付款方式？",
     "BEGINNER": "基礎版",
     "PROFESSIONAL": "專業版",
-    "ENTERPRISE": "企業版"
+    "ENTERPRISE": "企業版",
+    "PAYMENT_FAILED": "付款失敗",
+    "UPDATE_PAYMENT": "重新設定付款資訊",
+    "RETURNING_TO_BEGINNER_IN": "",
+    "DAYS": " 天後恢復為基礎版方案"
   }
 }
