@@ -217,15 +217,18 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       const filteredList = filterByCriteria(counterpartyList);
       const filteredCompany = value ? filterByCriteria(newSearchedList) : [];
       const mergedList = [...filteredList, ...filteredCompany];
+      // Deprecate: (20250113 - Tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('mergedList', mergedList);
+      // Deprecate: (20250113 - Tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('counterpartyList', counterpartyList);
+      // Deprecate: (20250113 - Tzuhan) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('newSearchedList', newSearchedList);
       setFilteredCounterpartyList(mergedList);
 
-      // 加載狀態切換（優化效能，避免多餘狀態更新）
+      // Info: (20250113 - Tzuhan) 加載狀態切換（優化效能，避免多餘狀態更新）
       if (!isLoadingCounterparty) {
         setIsLoadingCounterparty(true);
         setIsLoadingCounterparty(false);
