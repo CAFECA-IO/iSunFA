@@ -3,8 +3,12 @@ import { ISessionData } from '@/interfaces/session';
 
 export const SESSION_GUEST: ISessionData = {
   sid: DefaultValue.SESSION_ID,
-  expires: 0,
+  deviceId: DefaultValue.DEVICE_ID,
+  userAgent: DefaultValue.USER_AGENT,
+  ipAddress: DefaultValue.IP,
   userId: DefaultValue.USER_ID.GUEST,
-  companyId: 0,
-  roleId: 0,
+  companyId: DefaultValue.COMPANY_ID.UNKNOWN,
+  roleId: DefaultValue.ROLE_ID.UNKNOWN,
+  actionTime: 0,
+  expires: 0,
 };

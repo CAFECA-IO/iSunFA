@@ -2,6 +2,9 @@ import { ONE_DAY_IN_MS, ONE_HOUR_IN_MS } from '@/constants/time';
 
 // Info: (20241128 - Luphia) Default Value for Undefined Parameter
 export const DefaultValue = {
+  IP: 'UNKNOWN_IP',
+  DEVICE_ID: 'UNKNOWN_DEVICE',
+  USER_AGENT: 'UNKNOWN_AGENT',
   CERTIFICATE_ID: {
     PROCESSING: 0,
     UNKNOWN: 555,
@@ -22,6 +25,9 @@ export const DefaultValue = {
     PROCESSING: 0,
     GUEST: 1,
     SYSTEM: 2,
+    UNKNOWN: 555,
+  },
+  ROLE_ID: {
     UNKNOWN: 555,
   },
   SESSION_ID: 'GUEST',

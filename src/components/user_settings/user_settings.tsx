@@ -40,28 +40,30 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs
 
   return (
     <>
-      <div id="notice-setting-section" className="mb-lv-7 flex items-center gap-4">
+      <div id="user-setting-section" className="flex items-center gap-4">
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
-          <Image src="/icons/user-identifier-card.svg" width={16} height={16} alt="notice_icon" />
-          <p>{t('setting:NORMAL.NOTICE_SETTING')}</p>
+          <Image src="/icons/user-identifier-card.svg" width={16} height={16} alt="info_icon" />
+          <p>{t('setting:NORMAL.USER_SETTING')}</p>
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>
-      <UserInfo
-        userId={userAuth?.id ?? 1}
-        username={name}
-        email={userAuth?.email ?? ''}
-        loginDevice={loginDevice}
-        loginIP={loginIP}
-        imageId={userAuth?.imageId ?? ''}
-        userActionLogs={userActionLogs}
-      />
-      <UserInfoForm
-        name={name}
-        userSetting={userSetting}
-        handleUsernameUpdate={handleUsernameUpdate}
-      />
+      <div className="mx-auto flex max-w-726px flex-col gap-lv-7">
+        <UserInfo
+          userId={userAuth?.id ?? 1}
+          username={name}
+          email={userAuth?.email ?? ''}
+          loginDevice={loginDevice}
+          loginIP={loginIP}
+          imageId={userAuth?.imageId ?? ''}
+          userActionLogs={userActionLogs}
+        />
+        <UserInfoForm
+          name={name}
+          userSetting={userSetting}
+          handleUsernameUpdate={handleUsernameUpdate}
+        />
+      </div>
     </>
   );
 };

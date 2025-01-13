@@ -276,6 +276,11 @@ export const firstCharToUpperCase = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
+export const getCurrentTimestamp = (): number => {
+  const currentTimestamp = new Date().getTime();
+  return currentTimestamp;
+};
+
 /** Info: (20240521 - Shirley)
  * Convert timestamp in milliseconds to timestamp in seconds
  * @param timestamp in milliseconds
