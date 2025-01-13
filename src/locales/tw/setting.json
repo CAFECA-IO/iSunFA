@@ -69,7 +69,7 @@
     "ENTER_NUMBER": "輸入號碼",
     "PHONE_NUMBER": "電話號碼",
     "COST": "成本",
-    "CLIENT_SUPPLIER_SETTING": "交易夥伴設定",
+    "CLIENT_SUPPLIER_SETTING": "客戶/供應商",
     "ADD_NEW_CLIENT_SUPPLIER": "新增客戶/供應商"
   },
   "ACCOUNTING": {
@@ -94,7 +94,7 @@
     "DOWNLOAD_REPORT": "下載報告",
     "ACCOUNTING_TITLE_SETTINGS_SUBTITLE": "會計科目設定",
     "VIEW_ALL_ACCOUNTING": "查看所有會計科目",
-    "ACCOUNTING_IMPORT_SUBTITLE": "導入會計科目",
+    "ACCOUNTING_IMPORT_SUBTITLE": "開帳設置",
     "IMPORT_FILE": "上傳檔案",
     "MANUAL_ACCOUNT_OPENING": "手動開帳",
     "TOAST_UPDATE_SUCCESS": "會計設定更新成功！",

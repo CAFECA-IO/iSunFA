@@ -38,7 +38,7 @@ const ItemSummary = ({
   };
 
   const flattenGeneralAccounts = financialReport?.general
-    ? flattenAccounts(financialReport.general.slice(0, 10))
+    ? flattenAccounts(financialReport.general)
     : [];
 
   return (

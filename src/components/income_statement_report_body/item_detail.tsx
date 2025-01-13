@@ -37,7 +37,8 @@ const ItemDetail = ({
   };
 
   const flattenDetailsAccounts = financialReport?.details
-    ? flattenAccounts(financialReport.details.slice(0, 15))
+    ? // Info: (20250113 - Anna) 把原本限制只顯示 15 筆的資料改為全部顯示
+      flattenAccounts(financialReport.details)
     : [];
 
   return (
@@ -59,7 +60,7 @@ const ItemDetail = ({
           <table className="w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="w-77px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold whitespace-nowrap">
+                <th className="w-77px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.CODE_NUMBER')}
                 </th>
                 <th className="w-530px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
