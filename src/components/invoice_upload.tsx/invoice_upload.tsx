@@ -76,6 +76,17 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
     async (file: File) => {
       try {
         // Info: (20250108 - tzuhan) 預先將檔案加入檔案列表，進行初始化
+        setFiles((prevFiles) => [
+          ...prevFiles,
+          {
+            id: null,
+            name: file.name,
+            size: file.size,
+            url: URL.createObjectURL(file),
+            progress: 0,
+            status: ProgressStatus.IN_PROGRESS,
+          },
+        ]);
         const formData = await encryptFileWithKey(file);
         const targetSize = 1 * 1024 * 1024; // Info: (20241206 - tzuhan) 1MB
         const maxSize = 4 * 1024 * 1024;

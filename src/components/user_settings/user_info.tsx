@@ -6,7 +6,7 @@ import { TbUserCircle } from 'react-icons/tb';
 import { Button } from '@/components/button/button';
 import IPModal, { extractLoginDevice } from '@/components/user_settings/ip_modal';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { IUserActionLog } from '@/interfaces/user_action_log';
+import { ILoginDevice } from '@/interfaces/login_device';
 
 interface UserInfoProps {
   userId: number;
@@ -15,7 +15,7 @@ interface UserInfoProps {
   loginDevice: string;
   loginIP: string;
   imageId: string;
-  userActionLogs: IPaginatedData<IUserActionLog[]> | null;
+  loginDevices: IPaginatedData<ILoginDevice[]> | null;
 }
 
 const UserInfo: React.FC<UserInfoProps> = ({
@@ -25,7 +25,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
   loginDevice,
   loginIP,
   imageId,
-  userActionLogs,
+  loginDevices,
 }) => {
   const { t } = useTranslation(['setting', 'common']);
   const [isIPModalOpen, setIsIPModalOpen] = useState(false);
@@ -37,7 +37,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
   return (
     <div className="bg-brand-gradient flex items-center gap-lv-7 rounded-md p-4 shadow-normal_setting_brand">
       {isIPModalOpen && (
-        <IPModal userId={userId} toggleModal={toggleIPModal} pageData={userActionLogs} />
+        <IPModal userId={userId} toggleModal={toggleIPModal} pageData={loginDevices} />
       )}
       <Image
         alt="avatar"
