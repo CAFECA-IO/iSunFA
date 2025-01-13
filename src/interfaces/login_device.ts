@@ -6,5 +6,4 @@ export interface ILoginDevice {
   userAgent: string;
   normal: boolean;
   isCurrent: boolean;
-  normal: boolean;
 }

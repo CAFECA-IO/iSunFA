@@ -87,6 +87,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
+      const list: ICompanyTaxIdAndName[] = [...searchedCompanies];
       const timer = setTimeout(async () => {
         const { success, data } = await fetchCompanyDataAPI({ query: { name, taxId } });
         if (success && data) {
@@ -96,14 +97,16 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
               (company) => company.name === data.name && company.taxId === data.taxId
             );
             if (!exists && (!!data.name || !!data.taxId)) {
-              return [...prev, data];
+              list.push(data);
+              return list;
             }
-            return prev;
+            return list;
           });
         }
       }, 300); // Info: (20241227 - Tzuhan) 300ms 防抖時間
 
       setDebounceTimer(timer);
+      return list;
     };
 
     const handleAddCounterparty = (newCounterparty: ICounterparty) => {
@@ -182,7 +185,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       });
 
       // Info: (20241204 - tzuhan) 執行防抖搜尋
-      debounceSearchCompany(updatedName, updatedTaxId);
+      const newSearchedList = await debounceSearchCompany(updatedName, updatedTaxId);
 
       // Info: (20241204 - tzuhan) 篩選函式抽取，減少重複代碼
       const filterByCriteria = (list: ICounterpartyOptional[]) => {
@@ -212,14 +215,14 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
 
       // Info: (20241204 - tzuhan) 同時篩選 counterparty 和 searchedCompanies
       const filteredList = filterByCriteria(counterpartyList);
-      const filteredCompany = value ? filterByCriteria(searchedCompanies) : [];
+      const filteredCompany = value ? filterByCriteria(newSearchedList) : [];
       const mergedList = [...filteredList, ...filteredCompany];
       // eslint-disable-next-line no-console
       console.log('mergedList', mergedList);
       // eslint-disable-next-line no-console
       console.log('counterpartyList', counterpartyList);
       // eslint-disable-next-line no-console
-      console.log('searchedCompanies', searchedCompanies);
+      console.log('newSearchedList', newSearchedList);
       setFilteredCounterpartyList(mergedList);
 
       // 加載狀態切換（優化效能，避免多餘狀態更新）
