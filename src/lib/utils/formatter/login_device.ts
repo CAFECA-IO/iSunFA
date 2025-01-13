@@ -11,7 +11,6 @@ export const sessionDataToLoginDevice = (sessionData: ISessionData): ILoginDevic
     userAgent: sessionData.userAgent,
     normal: true,
     isCurrent: false,
-    normal: true,
   };
   return loginDevice;
 };
