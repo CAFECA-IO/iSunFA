@@ -99,15 +99,17 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       if (response.success && response.data) {
         setReportId(String(response.data)); // Info: (20241204 - Anna) 保存報告 ID
       } else {
+        // Deprecate: (20241205 - Anna) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.error('Failed to generate report. Response:', response);
+        // console.error('Failed to generate report. Response:', response);
       }
 
       // Info: (20241204 - Anna) 設定 isReportGenerated 為 true
       setIsReportGenerated(true);
     } catch (error) {
+      // Deprecate: (20241205 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
-       console.error('Error generating report:', error);
+      // console.error('Error generating report:', error);
     }
   };
 

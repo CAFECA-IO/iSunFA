@@ -73,10 +73,7 @@ const VoucherListPageBody: React.FC = () => {
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
   );
 
-  const voucherTypeList = [
-    'All',
-    ...Object.keys(EventType).map((key) => `${key.toLowerCase()}`),
-  ];
+  const voucherTypeList = ['All', ...Object.keys(EventType).map((key) => key.toLowerCase())];
 
   const params = { companyId: selectedCompany?.id ?? FREE_COMPANY_ID };
 
