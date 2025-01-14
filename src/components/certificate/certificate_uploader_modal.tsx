@@ -24,7 +24,6 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({ isO
 
   const handleUploadCancelled = useCallback(() => {
     setFiles([]);
-    messageModalVisibilityHandler();
     setProgress(0);
     onClose();
   }, [setFiles, messageModalVisibilityHandler]);
@@ -111,11 +110,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({ isO
 
   // Info: (20241213 - tzuhan) 渲染文件列表
   const renderFileList = () => {
-    if (
-      filterFiles.inProgressFiles.length === 0 &&
-      filterFiles.failedFiles.length === 0 &&
-      filterFiles.pausedFiles.length === 0
-    ) {
+    if (files.length === 0) {
       return (
         <div className="text-center text-text-neutral-mute">{t('certificate:UPLOAD.NO_FILE')}</div>
       );

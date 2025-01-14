@@ -13,6 +13,7 @@ const PrintButton: React.FC<PrintButtonProps> = ({ onClick, disabled }) => {
       disabled={disabled}
       onClick={onClick}
       variant={'tertiary'}
+      size={'defaultSquare'}
       className="group flex h-9 w-9 flex-col items-center justify-center rounded-xs border border-navy-blue-500 bg-transparent p-2.5"
     >
       <div className="flex items-center justify-center">

@@ -12,25 +12,22 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IUserSetting } from '@/interfaces/user_setting';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import { IUserActionLog } from '@/interfaces/user_action_log';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-import { UserActionLogActionType } from '@/constants/user_action_log';
+import { ILoginDevice } from '@/interfaces/login_device';
 
 const GeneralSettingsPage: React.FC = () => {
   const { t } = useTranslation(['setting', 'common']);
   const { toastHandler } = useModalContext();
   const { userAuth } = useUserCtx();
   const [userSetting, setUserSetting] = useState<IUserSetting | null>(null);
-  const [userActionLogs, setUserActionLogs] = useState<IPaginatedData<IUserActionLog[]> | null>(
-    null
-  );
+  const [loginDevices, setLoginDevices] = useState<IPaginatedData<ILoginDevice[]> | null>(null);
 
   const { trigger: getUserSettingAPI } = APIHandler<IUserSetting>(APIName.USER_SETTING_GET);
-  const { trigger: getUserActionLogAPI } = APIHandler<IPaginatedData<IUserActionLog[]>>(
-    APIName.USER_ACTION_LOG_LIST
+  const { trigger: listLoginDeviceAPI } = APIHandler<IPaginatedData<ILoginDevice[]>>(
+    APIName.LIST_LOGIN_DEVICE
   );
 
   const getUserSetting = async () => {
@@ -51,12 +48,11 @@ const GeneralSettingsPage: React.FC = () => {
 
   const getUserActions = async () => {
     try {
-      const { success, data } = await getUserActionLogAPI({
+      const { success, data } = await listLoginDeviceAPI({
         params: { userId: userAuth?.id },
-        query: { actionType: UserActionLogActionType.LOGIN },
       });
       if (success && data) {
-        setUserActionLogs(data);
+        setLoginDevices(data);
       }
     } catch (error) {
       toastHandler({
@@ -85,7 +81,7 @@ const GeneralSettingsPage: React.FC = () => {
 
       <Layout isDashboard={false} pageTitle={t('setting:NORMAL.TITLE')}>
         <div className="mx-auto flex w-full flex-col gap-lv-7">
-          <UserSettings userSetting={userSetting} userActionLogs={userActionLogs} />
+          <UserSettings userSetting={userSetting} loginDevices={loginDevices} />
           <NoticeSettings userSetting={userSetting} />
           <CompanySettings />
           <AccountSettings />
