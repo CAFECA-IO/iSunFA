@@ -11,8 +11,8 @@ interface TeamSubscriptionPageBodyProps {
 const TeamSubscriptionPageBody = ({ team }: TeamSubscriptionPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
   const isPlanBeginner = team.plan === TPlanType.BEGINNER;
-  const hasNextRenewal = team.nextRenewal > 0;
-  const hasExpiredDate = team.expiredDate > 0;
+  const hasNextRenewal = team.nextRenewalTimestamp > 0;
+  const hasExpiredDate = team.expiredTimestamp > 0;
 
   return (
     <main className="flex flex-col gap-40px">
@@ -39,7 +39,7 @@ const TeamSubscriptionPageBody = ({ team }: TeamSubscriptionPageBodyProps) => {
                   {t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}:{' '}
                 </span>
                 <span className="text-text-neutral-primary">
-                  {formatTimestamp(team.nextRenewal)}
+                  {formatTimestamp(team.nextRenewalTimestamp)}
                 </span>
               </p>
             )}
@@ -50,7 +50,7 @@ const TeamSubscriptionPageBody = ({ team }: TeamSubscriptionPageBodyProps) => {
                   {t('subscriptions:SUBSCRIPTIONS_PAGE.EXPIRED_DATE')}:{' '}
                 </span>
                 <span className="text-text-neutral-primary">
-                  {formatTimestamp(team.expiredDate)}
+                  {formatTimestamp(team.expiredTimestamp)}
                 </span>
               </p>
             )}

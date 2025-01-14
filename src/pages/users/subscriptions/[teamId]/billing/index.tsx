@@ -5,38 +5,37 @@ import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
-import TeamSubscriptionPageBody from '@/components/beta/team_subscription_page/team_subscription_page_body';
+import BillingPageBody from '@/components/beta/billing_page/billing_page_body';
 import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const FAKE_TEAM_DATA: IUserOwnedTeam = {
-  id: 1,
-  name: 'Personal',
-  plan: TPlanType.BEGINNER,
-  nextRenewalTimestamp: 1640995200000,
-  //   nextRenewalTimestamp: 0,
-  //   expiredTimestamp: 1640995200000,
-  expiredTimestamp: 0,
-  enableAutoRenewal: true,
-  paymentStatus: TPaymentStatus.FREE,
+  id: 3,
+  name: 'Team B',
+  plan: TPlanType.ENTERPRISE,
+  enableAutoRenewal: false,
+  nextRenewalTimestamp: 0,
+  expiredTimestamp: 1630406400000,
+  paymentStatus: TPaymentStatus.PAID,
 };
 
-const TeamSubscriptionPage = () => {
+const BillingPage = () => {
   const { t } = useTranslation(['subscriptions']);
   const router = useRouter();
   const { teamId } = router.query;
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
-  // Deprecated: (20250102 - Liz)
+  // Deprecated: (20250113 - Liz)
   // eslint-disable-next-line no-console
   console.log('teamIdString:', teamIdString);
 
+  // ToDo: (20250113 - Liz) 先暫時使用假資料
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [team, setTeam] = useState<IUserOwnedTeam>();
+  const [team, setTeam] = useState<IUserOwnedTeam>(FAKE_TEAM_DATA);
 
-  // ToDo: (20250102 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
+  // ToDo: (20250113 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
   // setTeam(teamData);
 
-  // ToDo: (20250102 - Liz) 如果 team 資料不存在，顯示錯誤頁面
+  // ToDo: (20250113 - Liz) 如果 team 資料不存在，顯示錯誤頁面
   // 參考:
   //   if (!teamIdString) {
   //     return (
@@ -69,10 +68,10 @@ const TeamSubscriptionPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('subscriptions:SUBSCRIPTIONS_PAGE.PLAN_FOR') + FAKE_TEAM_DATA.name}
+        pageTitle={`${t('subscriptions:BILLING_PAGE.PAGE_TITLE_PREFIX')} ${team.name} ${t('subscriptions:BILLING_PAGE.PAGE_TITLE_SUFFIX')}`}
         goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
       >
-        <TeamSubscriptionPageBody team={FAKE_TEAM_DATA} />
+        <BillingPageBody team={FAKE_TEAM_DATA} />
       </Layout>
     </>
   );
@@ -86,4 +85,4 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   };
 };
 
-export default TeamSubscriptionPage;
+export default BillingPage;
