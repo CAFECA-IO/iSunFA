@@ -1,13 +1,13 @@
-import { IUserOwnedTeam } from '@/interfaces/subscription';
+import { ITeamInvoice } from '@/interfaces/subscription';
 
 interface InvoicePageBodyProps {
-  team: IUserOwnedTeam;
+  invoice: ITeamInvoice;
 }
 
-const InvoicePageBody = ({ team }: InvoicePageBodyProps) => {
+const InvoicePageBody = ({ invoice }: InvoicePageBodyProps) => {
   // Deprecated: (20250113 - Liz)
   // eslint-disable-next-line no-console
-  console.log('team:', team);
+  console.log('invoice:', invoice);
 
   return <main></main>;
 };

@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
 import InvoicePageBody from '@/components/beta/invoice_page/invoice_page_body';
-import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
+import { IUserOwnedTeam, TPlanType, TPaymentStatus, ITeamInvoice } from '@/interfaces/subscription';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const FAKE_TEAM_DATA: IUserOwnedTeam = {
@@ -19,7 +19,37 @@ const FAKE_TEAM_DATA: IUserOwnedTeam = {
   paymentStatus: TPaymentStatus.PAID,
 };
 
-// ToDo: (20250113 - Liz) 定義 invoice 假資料
+// ToDo: (20250113 - Liz) 定義 invoice 假資料 使用 ITeamInvoice
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const FAKE_INVOICE_DATA: ITeamInvoice = {
+  id: 1,
+  teamId: 3,
+  status: true,
+  issuedTimestamp: 1630406400000,
+  dueTimestamp: 1630406400000,
+  planId: 1,
+  planStartTimestamp: 1630406400000,
+  planEndTimestamp: 1630406400000,
+  planQuantity: 1,
+  planUnitPrice: 1000,
+  planAmount: 1000,
+  payer: {
+    name: 'John Doe',
+    address: '1234 Main St',
+    phone: '123-456-7890',
+    taxId: '123456789',
+  },
+  payee: {
+    name: 'Jane Doe',
+    address: '5678 Elm St',
+    phone: '098-765-4321',
+    taxId: '987654321',
+  },
+  subtotal: 0,
+  tax: 0,
+  total: 0,
+  amountDue: 0,
+};
 
 const InvoicePage = () => {
   const { t } = useTranslation(['subscriptions']);
@@ -35,6 +65,8 @@ const InvoicePage = () => {
   // ToDo: (20250113 - Liz) 先暫時使用假資料
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [team, setTeam] = useState<IUserOwnedTeam>(FAKE_TEAM_DATA);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [invoice, setInvoice] = useState<ITeamInvoice>(FAKE_INVOICE_DATA);
 
   // ToDo: (20250113 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
   // setTeam(teamData);
@@ -45,13 +77,21 @@ const InvoicePage = () => {
   // 參考:
   //   if (!teamIdString) {
   //     return (
-  //       <Layout isDashboard={false} pageTitle={'Plan for Personal'}>
-  //         <h1 className="text-red-500">{t('subscriptions:ERROR.TEAM_ID_NOT_FOUND')}</h1>
+  //       <Layout isDashboard={false} pageTitle={`${t('subscriptions:INVOICE_PAGE.PAGE_TITLE')} # ${invoiceIdString}`}>
+  //         <h1 className="text-red-500">Team ID not found</h1>
   //       </Layout>
   //     );
   //   }
 
   // ToDo: (20250113 - Liz) 如果 invoiceIdString 資料不存在，顯示錯誤頁面
+  // 參考:
+  //   if (!invoiceIdString) {
+  //     return (
+  //       <Layout isDashboard={false} pageTitle={`${t('subscriptions:INVOICE_PAGE.PAGE_TITLE')} # ${invoiceIdString}`}>
+  //         < className="text-red-500">Invoice ID not found</h1>
+  //       </Layout>
+  //     );
+  //   }
 
   return (
     <>
@@ -79,7 +119,7 @@ const InvoicePage = () => {
         pageTitle={`${t('subscriptions:INVOICE_PAGE.PAGE_TITLE')} # ${invoiceIdString}`}
         goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
       >
-        <InvoicePageBody team={FAKE_TEAM_DATA} />
+        <InvoicePageBody invoice={invoice} />
       </Layout>
     </>
   );
