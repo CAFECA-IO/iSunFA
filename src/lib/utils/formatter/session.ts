@@ -5,12 +5,12 @@ import { parseSessionId } from '@/lib/utils/parser/session';
 
 // Info: (20250112 - Luphia) 初始化用戶的 session 資料
 export const sessionOptionToSession = (options: ISessionOption) => {
-  const sid = parseSessionId(options);
-  const deviceId = crypto.createHash('md5').update(sid).digest('hex');
+  const isunfa = parseSessionId(options);
+  const deviceId = crypto.createHash('md5').update(isunfa).digest('hex');
   const ipAddress = options['x-forwarded-for'] || DefaultValue.IP;
   const userAgent = options['user-agent'] || DefaultValue.USER_AGENT;
   const session = {
-    sid,
+    isunfa,
     deviceId,
     ipAddress,
     userAgent,

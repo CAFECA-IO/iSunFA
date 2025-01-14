@@ -2,7 +2,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSession, kickDevice } from '@/lib/utils/session';
-import { IResponseData } from '@/interfaces/response_data';
+import { HTTP_STATUS } from '@/constants/http';
 
 /* Info: (20250111 - Luphia) 列出用戶所有登入裝置
  * 1. 取得 Session 資訊
@@ -20,30 +20,31 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   await kickDevice(session, targetDeviceId);
   const payload: unknown[] = [];
-  const result = { statusMessage, payload };
+  const result = formatApiResponse(statusMessage, payload);
   return result;
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<unknown[]>>
-) {
+/* Info: (20250113 - Luphia) API Route Handler 根據 Method 呼叫對應的流程
+ * 補充說明： API Router 不應該決定 Response 格式與商業邏輯，只負責呼叫對應的流程
+ */
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const method = req.method || 'GET';
-  let statusMessage;
-  let payload: unknown[] = [];
+  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  let result;
 
   try {
     switch (method) {
       case 'DELETE':
-        ({ statusMessage, payload } = await handleDeleteRequest(req));
+        ({ httpCode, result } = await handleDeleteRequest(req));
         break;
       default:
-        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        // Info: (20250113 - Luphia) unsupported method
+        httpCode = HTTP_STATUS.METHOD_NOT_ALLOWED;
+        result = formatApiResponse(STATUS_MESSAGE.METHOD_NOT_ALLOWED, []);
     }
   } catch (error) {
-    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    // Info: (20250113 - Luphia) unexpected exception, pass to global handler
   }
 
-  const { httpCode, result } = formatApiResponse(statusMessage, payload);
   res.status(httpCode).json(result);
 }
