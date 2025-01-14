@@ -75,7 +75,7 @@ export async function logUserAction<T extends APIName>(
   statusMessage: string
 ) {
   const userId = session.userId || DefaultValue.USER_ID.GUEST;
-  const sessionId = session.sid;
+  const sessionId = session.isunfa;
 
   // Info: (20250108 - Luphia) Sometimes the user action log is not necessary
   if (userId === DefaultValue.USER_ID.GUEST && apiName !== APIName.SIGN_IN) {

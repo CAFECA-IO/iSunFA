@@ -4,6 +4,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
 import { DefaultValue } from '@/constants/default_value';
+import { getSession } from '@/lib/utils/session';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -19,6 +20,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    // Info: (20250114 - Luphia) Step 0: generate session id in cookie.isunfa
+    const session = await getSession(req);
+    res.setHeader(
+      'Set-Cookie',
+      `isunfa=${session.isunfa}; Path=/; HttpOnly; SameSite=Strict; Secure`
+    );
+
     // Info: (20241129 - tzuhan) Step 1: Handle Apple OAuth
     const { user, account } = await handleAppleOAuth(code);
     await handleSignInSession(req, user, account);

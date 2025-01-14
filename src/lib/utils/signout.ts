@@ -16,7 +16,7 @@ export const handleSignOutSession = async (req: NextApiRequest) => {
   }
 
   await createUserActionLog({
-    sessionId: session.sid,
+    sessionId: session.isunfa,
     userId: session.userId,
     actionType: UserActionLogActionType.LOGOUT,
     actionDescription: UserActionLogActionType.LOGOUT,

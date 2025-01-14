@@ -205,7 +205,7 @@ export const getAuthOptions = (req: NextApiRequest): NextAuthOptions => ({
           await setSession(session, { userId: getUser.user.id });
         }
         await createUserActionLog({
-          sessionId: session.sid,
+          sessionId: session.isunfa,
           userId: session.userId || -1,
           actionType: UserActionLogActionType.LOGIN,
           actionDescription: UserActionLogActionType.LOGIN,
@@ -250,7 +250,15 @@ export const getAuthOptions = (req: NextApiRequest): NextAuthOptions => ({
   debug: false,
 });
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const authOptions = getAuthOptions(req);
-  return NextAuth(req, res, authOptions);
+
+  // Info: (20250114 - Luphia) 將 session id 寫入 cookie 內的 isunfa 參數
+  const session = await getSession(req);
+  res.setHeader(
+    'Set-Cookie',
+    `isunfa=${session.isunfa}; Path=/; HttpOnly; SameSite=Strict; Secure`
+  );
+
+  NextAuth(req, res, authOptions);
 }
