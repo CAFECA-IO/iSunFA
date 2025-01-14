@@ -32,13 +32,6 @@ DROP COLUMN "remaining_life";
 ALTER TABLE "todo" ADD COLUMN     "end_date" INTEGER DEFAULT 0,
 ADD COLUMN     "start_date" INTEGER DEFAULT 0;
 
--- 將現有的 todo data 的 start_date 和 end_date 設定為 created_at
--- UPDATE "todo"
--- SET 
---     "start_date" = "created_at",
---     "end_date" = "created_at"
--- WHERE "start_date" IS NULL OR "end_date" IS NULL;
-
 -- 2-2. 將 start_date 和 end_date 設為必填(required)
 ALTER TABLE "todo"
 ALTER COLUMN "start_date" SET NOT NULL,
@@ -155,7 +148,7 @@ Step 1. country table
 
 
 Info: (20250108 - Shirley) 後來虛擬科目是在 list trial balance 即時生成，所以不需要更改 DB
-Step 2. account table
+Step 2. account table ⏭️
 2-1. 新增 for_user_ledger 欄位為 optional
 2-2. 新增 for_user_voucher 欄位
 2-3. 將 for_user 欄位的值複製到 for_user_voucher
@@ -192,46 +185,6 @@ ALTER COLUMN "phone_example" SET NOT NULL,
 ALTER COLUMN "created_at" SET NOT NULL,
 ALTER COLUMN "updated_at" SET NOT NULL;
 
--- Info: (20250108 - Shirley) 後來虛擬科目是在 list trial balance 即時生成，所以不需要更改 DB
--- -- Step 2. account table ✅
--- -- 2-1. 新增 for_user_ledger 欄位為 optional
--- ALTER TABLE "account" ADD COLUMN "for_user_ledger" BOOLEAN;
-
--- -- 2-2. 新增 for_user_voucher 欄位
--- ALTER TABLE "account" ADD COLUMN "for_user_voucher" BOOLEAN;
-
--- -- 2-3. 將 for_user 欄位的值複製到 for_user_voucher
--- UPDATE "account"
--- SET "for_user_voucher" = "for_user"
--- WHERE "for_user_voucher" IS NULL;
-
--- -- 2-4. 將現有 data 的 for_user_ledger 欄位的值，從 for_user 欄位複製過來
--- UPDATE "account"
--- SET "for_user_ledger" = "for_user"
--- WHERE "for_user_ledger" IS NULL;
-
--- -- 2-5. 在 for_user 為 true 的值，複製一份並將其設為複製對象的 children
--- INSERT INTO "account" ("id","name","root_code","root_id","for_user", "code", "for_user_voucher", "for_user_ledger", "level", "parent_id", "parent_code", "system", "company_id", "type", "debit", "liquidity", "note", "created_at", "updated_at", "deleted_at")
--- SELECT "id" * 10, "name","root_code","root_id", "for_user", "code" || '-0', true, true, "level" + 1, "id", "code", "system", "company_id", "type", "debit", "liquidity", "note", "created_at", "updated_at", "deleted_at"
--- FROM "account"
--- WHERE "for_user" = true;
-
--- -- 2-6. 將 for_user_ledger 設定為 required
--- ALTER TABLE "account" ALTER COLUMN "for_user_ledger" SET NOT NULL;
--- -- 2-7. 將 for_user_voucher 設定為 required
--- ALTER TABLE "account" ALTER COLUMN "for_user_voucher" SET NOT NULL;
-
--- -- 2-8. 刪除 for_user 欄位
--- ALTER TABLE "account" DROP COLUMN "for_user";
-
--- -- 2-9. 將預設會計科目的 for_user_voucher 改為 false，將自訂會計科目的 for_user_voucher 保留原本的值
--- UPDATE "account"
--- SET "for_user_voucher" = false
--- WHERE "company_id" = 1002;
-
--- -- 2-10. 在新增的欄位 "for_user_ledger", "for_user_voucher" 加上 default 值，讓以後沒有給值也能正常運作
--- ALTER TABLE "account" ALTER COLUMN "for_user_ledger" SET DEFAULT true,
--- ALTER COLUMN "for_user_voucher" SET DEFAULT true;
 
 /* Info: (20250108 - Shirley)
 第三批 db migration
@@ -240,10 +193,10 @@ ALTER COLUMN "updated_at" SET NOT NULL;
 /*
 Step 1. 在 invoice table 拿掉 counter_party_id 的 fk，刪掉 counter_party_id 欄位
 
-Step 2. 新增 counter_party_name, counter_party_tax_id, counter_party_note, counter_party_type 欄位
+Step 2. 新增 counter_party_info 欄位
 
 Step 3. 更新現有 invoice data
-讀取現有 invoice data 的 no 欄位，將 counter_party_name, counter_party_tax_id, counter_party_note, counter_party_type 設定為對應的值，如果沒有的話則留空
+讀取現有 invoice data 的 no 欄位，將 counter_party_info 設定為對應的值，如果沒有的話則留空
 */
 
 -- Step 1. 刪除 invoice schema 的 counter_party_id 的 fk，刪掉 counter_party_id 欄位 ✅
@@ -251,39 +204,10 @@ Step 3. 更新現有 invoice data
 ALTER TABLE "invoice" DROP CONSTRAINT "invoice_counter_party_id_fkey";
 ALTER TABLE "invoice" DROP COLUMN "counter_party_id";
 
--- 
 ALTER TABLE "invoice" ADD COLUMN "counter_party_info" TEXT;
--- UPDATE "invoice" SET "counter_party_info" = "no";
 UPDATE "invoice" SET "counter_party_info" = "no"
 WHERE "no" ~ '^\{.*\}$';
--- 
 
-
--- -- Step 2. 新增 counter_party_name, counter_party_tax_id, counter_party_note, counter_party_type 欄位 ✅
--- -- AlterTable
--- ALTER TABLE "invoice" 
---   ADD COLUMN     "counter_party_name" TEXT,
---   ADD COLUMN     "counter_party_tax_id" TEXT,
---   ADD COLUMN     "counter_party_note" TEXT,
---   ADD COLUMN     "counter_party_type" TEXT;
-
--- -- Step 3. 更新現有 invoice data ✅
--- -- 3-1. 將現有 invoice data 的 counter_party_name, counter_party_tax_id, counter_party_note, counter_party_type 都設定為空字串
--- UPDATE "invoice"
--- SET 
---     "counter_party_name" = '',
---     "counter_party_tax_id" = '',
---     "counter_party_note" = '',
---     "counter_party_type" = '';
-
--- -- 3-2. 將現有 invoice data 的 counter_party_name, counter_party_tax_id, counter_party_note, counter_party_type 設定為對應的值
--- UPDATE "invoice"
--- SET 
---     "counter_party_name" = "no"::jsonb->>'name',
---     "counter_party_tax_id" = "no"::jsonb->>'taxId',
---     "counter_party_note" = "no"::jsonb->>'note',
---     "counter_party_type" = "no"::jsonb->>'type'
--- WHERE "no" ~ '^\{.*\}$'::text;
 
 
 
