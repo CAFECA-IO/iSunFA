@@ -137,7 +137,10 @@ export type IAPIName =
   | 'CREATE_ASSET_BULK'
   | 'LEDGER_EXPORT'
   | 'LIST_LOGIN_DEVICE'
-  | 'REMOVE_LOGIN_DEVICE';
+  | 'REMOVE_LOGIN_DEVICE'
+  | 'LIST_TEAM'
+  | 'GET_TEAM_BY_ID'
+  | 'UPDATE_SUBSCRIPTION';
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {

@@ -122,6 +122,7 @@ import {
   assetPutSchema,
 } from '@/lib/utils/zod_schema/asset';
 import { exportLedgerPostSchema } from '@/lib/utils/zod_schema/export_ledger';
+import { subscriptionSchemas } from '@/lib/utils/zod_schema/subscription';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -304,7 +305,10 @@ export const ZOD_SCHEMA_API = {
   [APIName.TRIAL_BALANCE_EXPORT]: nullAPISchema,
   [APIName.CREATE_ASSET_BULK]: assetBulkPostSchema,
   [APIName.LEDGER_EXPORT]: exportLedgerPostSchema,
-
   [APIName.LIST_LOGIN_DEVICE]: nullAPISchema,
   [APIName.REMOVE_LOGIN_DEVICE]: nullAPISchema,
+
+  [APIName.LIST_TEAM]: subscriptionSchemas.list,
+  [APIName.GET_TEAM_BY_ID]: subscriptionSchemas.get,
+  [APIName.UPDATE_SUBSCRIPTION]: subscriptionSchemas.update,
 };
