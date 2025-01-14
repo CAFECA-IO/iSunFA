@@ -33,6 +33,8 @@ export interface CounterpartyInputRef {
   triggerSearch: () => void;
 }
 
+let debounceTimer: NodeJS.Timeout | null = null;
+
 const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputProps>(
   (props, ref) => {
     const { counterparty, counterpartyList, onSelect, flagOfSubmit, className } = props;
@@ -53,8 +55,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const [searchName, setSearchName] = useState<string>(counterparty?.name || '');
     const [searchTaxId, setSearchTaxId] = useState<string>(counterparty?.taxId || '');
     const [isShowRedHint, setIsShowRedHint] = useState(false);
-    const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
-
     const {
       isMessageModalVisible,
       messageModalDataHandler,
@@ -82,31 +82,26 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     };
 
     // Info: (20241227 - Tzuhan) 手動實作防抖函數
-    const debounceSearchCompany = async (name: string | undefined, taxId: string | undefined) => {
-      // Info: (20241227 - Tzuhan) 清除前一次的計時器，避免頻繁觸發
+    const debounceSearchCompany = (name: string | undefined, taxId: string | undefined) => {
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
-      const list: ICompanyTaxIdAndName[] = [...searchedCompanies];
-      const timer = setTimeout(async () => {
+
+      debounceTimer = setTimeout(async () => {
         const { success, data } = await fetchCompanyDataAPI({ query: { name, taxId } });
+
         if (success && data) {
           setSearchedCompanies((prev) => {
-            // Info: (20241227 - Tzuhan) 檢查是否已存在於 searchedCompany 陣列
             const exists = prev.some(
               (company) => company.name === data.name && company.taxId === data.taxId
             );
             if (!exists && (!!data.name || !!data.taxId)) {
-              list.push(data);
-              return list;
+              return [...prev, data];
             }
-            return list;
+            return prev;
           });
         }
-      }, 300); // Info: (20241227 - Tzuhan) 300ms 防抖時間
-
-      setDebounceTimer(timer);
-      return list;
+      }, 300);
     };
 
     const handleAddCounterparty = (newCounterparty: ICounterparty) => {
@@ -162,6 +157,35 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       setIsShowRedHint(false);
     }, [counterparty]);
 
+    // Info: (20241204 - tzuhan) 篩選函式抽取，減少重複代碼
+    const filterByCriteria = (list: ICounterpartyOptional[], taxId?: string, name?: string) => {
+      const updatedTaxId = taxId ?? searchTaxId;
+      const updatedName = name ?? searchName;
+
+      return list.filter((item) => {
+        // Info: (20241204 - tzuhan) 稅號篩選，需匹配數字開頭
+        if (updatedTaxId && updatedTaxId.match(/^\d+$/)) {
+          if (!item.taxId || !item.taxId.toLowerCase().startsWith(updatedTaxId.toLowerCase())) {
+            return false;
+          }
+        }
+
+        // Info: (20241204 - tzuhan) 如果 name 存在，則進行模糊匹配
+        if (updatedName) {
+          const searchWords = updatedName
+            .toLowerCase()
+            .split(/[\s,]+/)
+            .filter(Boolean);
+          const nameMatch = searchWords.some((word) => item.name?.toLowerCase().includes(word));
+          if (!nameMatch) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+    };
+
     // Info: (20241209 - Julian) Counterparty 搜尋欄位事件
     const counterpartyInputHandler = async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (isMessageModalVisible) return;
@@ -185,48 +209,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       });
 
       // Info: (20241204 - tzuhan) 執行防抖搜尋
-      const newSearchedList = await debounceSearchCompany(updatedName, updatedTaxId);
-
-      // Info: (20241204 - tzuhan) 篩選函式抽取，減少重複代碼
-      const filterByCriteria = (list: ICounterpartyOptional[]) => {
-        return list.filter((item) => {
-          // Info: (20241204 - tzuhan) 稅號篩選，需匹配數字開頭
-          if (updatedTaxId && updatedTaxId.match(/^\d+$/)) {
-            if (!item.taxId || !item.taxId.toLowerCase().startsWith(updatedTaxId.toLowerCase())) {
-              return false;
-            }
-          }
-
-          // Info: (20241204 - tzuhan) 如果 name 存在，則進行模糊匹配
-          if (updatedName) {
-            const searchWords = updatedName
-              .toLowerCase()
-              .split(/[\s,]+/)
-              .filter(Boolean);
-            const nameMatch = searchWords.some((word) => item.name?.toLowerCase().includes(word));
-            if (!nameMatch) {
-              return false;
-            }
-          }
-
-          return true;
-        });
-      };
-
-      // Info: (20241204 - tzuhan) 同時篩選 counterparty 和 searchedCompanies
-      const filteredList = filterByCriteria(counterpartyList);
-      const filteredCompany = value ? filterByCriteria(newSearchedList) : [];
-      const mergedList = [...filteredList, ...filteredCompany];
-      // Deprecate: (20250113 - Tzuhan) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('mergedList', mergedList);
-      // Deprecate: (20250113 - Tzuhan) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('counterpartyList', counterpartyList);
-      // Deprecate: (20250113 - Tzuhan) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('newSearchedList', newSearchedList);
-      setFilteredCounterpartyList(mergedList);
+      debounceSearchCompany(updatedName, updatedTaxId);
 
       // Info: (20250113 - Tzuhan) 加載狀態切換（優化效能，避免多餘狀態更新）
       if (!isLoadingCounterparty) {
@@ -234,6 +217,15 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         setIsLoadingCounterparty(false);
       }
     };
+
+    useEffect(() => {
+      // Info: (20241204 - tzuhan) 同時篩選 counterparty 和 searchedCompanies
+      const filteredList = filterByCriteria(counterpartyList);
+      const filteredCompany = filterByCriteria(searchedCompanies);
+      const mergedList = [...filteredList, ...filteredCompany];
+
+      setFilteredCounterpartyList(mergedList);
+    }, [searchTaxId, searchName, counterpartyList, searchedCompanies]);
 
     const counterpartyInput = (
       // isCounterpartyEditing || (!counterparty?.taxId && !counterparty?.name) ?
