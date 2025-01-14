@@ -126,7 +126,7 @@ class SessionHandler {
         if (session.userId === userId) {
           const device: ILoginDevice = sessionDataToLoginDevice(session);
           // Info: (20250112 - Luphia) 若 session 為當前 session 則標記為 true
-          if (session.sid === sessionId) {
+          if (session.isunfa === sessionId) {
             device.isCurrent = true;
           }
           data.push(device);
@@ -141,7 +141,7 @@ class SessionHandler {
     let sessionId = '';
     this.data.forEach((session) => {
       if (session.deviceId === deviceId) {
-        sessionId = session.sid;
+        sessionId = session.isunfa;
       }
     });
     return sessionId;
@@ -152,8 +152,14 @@ class SessionHandler {
     const session = this.data.get(sessionId);
     const actionTime = getCurrentTimestamp();
     const expires = actionTime + this.sessionExpires;
-    // Info: (20250111 - Luphia) 複寫 sid 以及 expires，避免其被不當修改
-    const newSession = { ...session, ...data, sid: sessionId, actionTime, expires } as ISessionData;
+    // Info: (20250111 - Luphia) 複寫 isunfa, actionTime, expires，避免其被不當修改
+    const newSession = {
+      ...session,
+      ...data,
+      isunfa: sessionId,
+      actionTime,
+      expires,
+    } as ISessionData;
     this.data.set(sessionId, newSession);
     this.backup();
     return newSession;
