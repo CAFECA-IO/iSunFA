@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import LedgerSelectFilter from '@/components/filter_section/ledger_select_filter';
 import SelectFilter from '@/components/filter_section/select_filter';
 import { useTranslation } from 'next-i18next';
 
@@ -97,7 +98,7 @@ const AccountRangeFilter: React.FC<AccountRangeFilterProps> = ({
       {/* Info: (20241015 - Anna) From 篩選 */}
       <div className="flex w-1/2 items-center">
         <span className="mr-2 mt-2 text-sm text-neutral-600">{t('common:COMMON.FROM')}</span>
-        <SelectFilter
+        <LedgerSelectFilter
           label="NONE"
           options={[
             'Asset',
@@ -137,7 +138,7 @@ const AccountRangeFilter: React.FC<AccountRangeFilterProps> = ({
       {/* Info: (20241015 - Anna) To 篩選 */}
       <div className="flex w-1/2 items-center">
         <span className="mr-2 mt-2 text-sm text-neutral-600">{t('common:COMMON.TO')}</span>
-        <SelectFilter
+        <LedgerSelectFilter
           label="NONE"
           options={[
             'Asset',
