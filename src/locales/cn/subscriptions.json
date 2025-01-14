@@ -34,6 +34,7 @@
   },
 
   "INVOICE_PAGE": {
-    "META_TITLE": "所有发票"
+    "META_TITLE": "所有发票",
+    "PAGE_TITLE": "所有发票"
   }
 }
