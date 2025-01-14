@@ -152,7 +152,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
       {/* Info: (20241003 - Anna) 判斷是否顯示 Modal */}
       {isModalVisible && (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50">
-          <div className="max-h-90vh overflow-hidden rounded-lg">
+          <div className="max-h-90vh rounded-lg overflow-hidden">
             <div className="relative max-h-90vh w-1000px overflow-y-auto rounded-lg border border-stroke-neutral-quaternary bg-neutral-50 p-6">
               <div className="flex items-center justify-center">
                 <h5 className="text-xl font-bold text-neutral-600">
