@@ -6,7 +6,6 @@ import { PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { useTranslation } from 'next-i18next';
 import { formatTimestamp, ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
-import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface OwnedTeamProps {
@@ -17,7 +16,9 @@ interface OwnedTeamProps {
 
 const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: OwnedTeamProps) => {
   const { t } = useTranslation(['subscriptions']);
-  const router = useRouter();
+  const TEAM_SUBSCRIPTION_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}`;
+  const BILLING_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/billing`;
+  const PAYMENT_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/payment`;
 
   const isPlanBeginner = team.plan === TPlanType.BEGINNER;
   const isPlanProfessional = team.plan === TPlanType.PROFESSIONAL;
@@ -35,10 +36,6 @@ const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: 
 
   const openTurnOffAutoRenewalModal = () => {
     setTeamForAutoRenewalOff(team);
-  };
-
-  const goToChangePlanPage = () => {
-    router.push(`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}`);
   };
 
   // Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
@@ -94,7 +91,7 @@ const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: 
                         {t('subscriptions:SUBSCRIPTIONS_PAGE.PAYMENT_FAILED')}
                       </p>
                       <Link
-                        href={`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/payment`}
+                        href={PAYMENT_PAGE}
                         className="text-sm font-semibold text-link-text-primary"
                       >
                         {t('subscriptions:SUBSCRIPTIONS_PAGE.UPDATE_PAYMENT')}
@@ -135,26 +132,25 @@ const OwnedTeam = ({ team, setTeamForAutoRenewalOn, setTeamForAutoRenewalOff }: 
         )}
 
         <section className="flex flex-none flex-col justify-center gap-16px">
-          <button
-            type="button"
+          <Link
+            href={TEAM_SUBSCRIPTION_PAGE}
             className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-24px py-10px text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-            onClick={goToChangePlanPage}
           >
             <span className="text-base font-medium">
               {t('subscriptions:SUBSCRIPTIONS_PAGE.CHANGE_PLAN')}
             </span>
             <IoArrowForward size={20} />
-          </button>
+          </Link>
 
           {!isPlanBeginner && (
-            <button
-              type="button"
+            <Link
+              href={BILLING_PAGE}
               className="flex items-center justify-center gap-8px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-24px py-10px text-button-text-primary-solid hover:border-button-stroke-primary-hover hover:bg-button-surface-soft-primary-hover disabled:border-button-stroke-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
               <span className="text-base font-medium">
                 {t('subscriptions:SUBSCRIPTIONS_PAGE.BILLING')}
               </span>
-            </button>
+            </Link>
           )}
         </section>
       </section>
