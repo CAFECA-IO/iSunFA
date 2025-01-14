@@ -42,7 +42,7 @@
   {
     "id": 1002,
     "certificateId": 1002,
-    "counterPartyId": 1000,
+    "counterPartyInfo": "",
     "date": 1,
     "inputOrOutput": "output",
     "no": "1",
