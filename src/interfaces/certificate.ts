@@ -14,7 +14,7 @@ import {
   File as PrismaFile,
   Invoice as PrismaInvoice,
   User as PrismaUser,
-  Counterparty as PrismaCounterparty,
+  // Counterparty as PrismaCounterparty,
 } from '@prisma/client';
 
 export interface ICertificate {
@@ -131,9 +131,10 @@ export type PostCertificateResponse = PrismaCertificate & {
   voucherCertificates: (PrismaVoucherCertificate & {
     voucher: PrismaVoucher;
   })[];
-  invoices: (PrismaInvoice & {
-    counterParty: PrismaCounterparty;
-  })[];
+  invoices: PrismaInvoice[];
+  // invoices: (PrismaInvoice & {
+  //   counterParty: PrismaCounterparty;
+  // })[];
   uploader: PrismaUser & {
     imageFile: PrismaFile;
   };

@@ -214,15 +214,17 @@ export function createAssetOrderBy(sortOptions: { sortBy: SortBy; sortOrder: Sor
       case SortBy.PURCHASE_PRICE:
         orderBy.push({ purchasePrice: sortOrder });
         break;
-      case SortBy.ACCUMULATED_DEPRECIATION:
-        orderBy.push({ accumulatedDepreciation: sortOrder });
-        break;
+      // TODO: (20250113 - Shirley) 折舊金額排序需即時計算
+      // case SortBy.ACCUMULATED_DEPRECIATION:
+      //   orderBy.push({ accumulatedDepreciation: sortOrder });
+      //   break;
       case SortBy.RESIDUAL_VALUE:
         orderBy.push({ residualValue: sortOrder });
         break;
-      case SortBy.REMAINING_LIFE:
-        orderBy.push({ remainingLife: sortOrder });
-        break;
+      // TODO: (20250113 - Shirley) 折舊金額排序需即時計算
+      // case SortBy.REMAINING_LIFE:
+      //   orderBy.push({ remainingLife: sortOrder });
+      //   break;
       default:
         orderBy.push({ acquisitionDate: SortOrder.DESC });
         break;

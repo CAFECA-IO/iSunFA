@@ -102,11 +102,12 @@ export async function createCertificateWithEmptyInvoice(options: {
         },
         file: true,
         UserCertificate: true,
-        invoices: {
-          include: {
-            counterParty: true,
-          },
-        },
+        // invoices: {
+        //   include: {
+        //     counterParty: true,
+        //   },
+        // },
+        invoices: true, // TODO: (20250113 - Shirley) 在 invoice db schema 更改之後，counterParty 的 fkey 被拿掉
         uploader: {
           include: {
             imageFile: true,
@@ -143,11 +144,12 @@ export async function getOneCertificateById(
         },
         file: true,
         UserCertificate: true,
-        invoices: {
-          include: {
-            counterParty: true,
-          },
-        },
+        // invoices: {
+        //   include: {
+        //     counterParty: true,
+        //   },
+        // },
+        invoices: true, // TODO: (20250113 - Shirley) 在 invoice db schema 更改之後，counterParty 的 fkey 被拿掉
         uploader: {
           include: {
             imageFile: true,
@@ -361,11 +363,12 @@ export async function getCertificatesV2(options: {
         },
         file: true,
         UserCertificate: true,
-        invoices: {
-          include: {
-            counterParty: true,
-          },
-        },
+        // invoices: {
+        //   include: {
+        //     counterParty: true,
+        //   },
+        // },
+        invoices: true, // TODO: (20250113 - Shirley) 在 invoice db schema 更改之後，counterParty 的 fkey 被拿掉
         uploader: {
           include: {
             imageFile: true,

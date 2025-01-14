@@ -38,28 +38,28 @@ model Account {
 }
 
 model Asset {
-  id                      Int    @id @default(autoincrement())
-  companyId               Int    @map("company_id")
-  name                    String
-  type                    String
-  number                  String
-  acquisitionDate         Int    @map("acquisition_date")
-  purchasePrice           Float  @map("purchase_price")
-  accumulatedDepreciation Float  @map("accumulated_depreciation")
-  residualValue           Float  @map("residual_value")
-  remainingLife           Int    @map("remaining_life")
-  status                  String
-  depreciationStart       Int    @map("depreciation_start")
-  depreciationMethod      String @map("depreciation_method")
-  usefulLife              Int    @map("useful_life")
-  note                    String
-  createdAt               Int    @map("created_at")
-  updatedAt               Int    @map("updated_at")
-  deletedAt               Int?   @map("deleted_at")
+  id                 Int    @id @default(autoincrement())
+  companyId          Int    @map("company_id")
+  createdUserId      Int    @map("created_user_id")
+  name               String
+  type               String
+  number             String
+  acquisitionDate    Int    @map("acquisition_date")
+  purchasePrice      Float  @map("purchase_price")
+  residualValue      Float  @map("residual_value")
+  status             String
+  depreciationStart  Int    @map("depreciation_start")
+  depreciationMethod String @map("depreciation_method")
+  usefulLife         Int    @map("useful_life")
+  note               String
+  createdAt          Int    @map("created_at")
+  updatedAt          Int    @map("updated_at")
+  deletedAt          Int?   @map("deleted_at")
 
   assetVouchers AssetVoucher[]
 
   company Company @relation(fields: [companyId], references: [id])
+  user    User    @relation(fields: [createdUserId], references: [id])
 
   @@map("asset")
 }
@@ -197,12 +197,29 @@ model Counterparty {
   updatedAt Int    @map("updated_at")
   deletedAt Int?   @map("deleted_at")
 
-  invoices Invoice[]
-  voucher  Voucher[]
+  voucher Voucher[]
 
   company Company @relation(fields: [companyId], references: [id])
 
   @@map("counterparty")
+}
+
+model Country {
+  id           Int    @id @default(autoincrement())
+  code         String @map("code")
+  name         String
+  localeKey    String @map("locale_key")
+  phoneCode    String @map("phone_code")
+  currencyCode String @map("currency_code")
+  currencyName String @map("currency_name")
+  phoneExample String @map("phone_example")
+  createdAt    Int    @map("created_at")
+  updatedAt    Int    @map("updated_at")
+  deletedAt    Int?   @map("deleted_at")
+
+  UserSetting UserSetting[]
+
+  @@map("country")
 }
 
 model Company {
@@ -438,43 +455,42 @@ model File {
 
   certificate                 Certificate?
   news                        News[]
-  companyImageFile            Company?       @relation("company_image_file")
-  kycPersonalIdFile           KYCBookkeeper? @relation("kyc_personal_id_file")
-  kycCertificationFile        KYCBookkeeper? @relation("kyc_certification_file")
-  ocrImageFile                Ocr?           @relation("ocr_image_file")
-  projectImageFile            Project?       @relation("project_image_file")
-  registrationCertificateFile CompanyKYC?    @relation("registration_certificate_file")
-  representativeIdCardFile    CompanyKYC?    @relation("representative_id_card_file")
-  taxCertificateFile          CompanyKYC?    @relation("tax_certificate_file")
-  userImageFile               User?          @relation("user_image_file")
+  companyImageFile            Company?     @relation("company_image_file")
+  kycPersonalIdFile           KYCRole?     @relation("kyc_personal_id_file")
+  kycCertificationFile        KYCRole?     @relation("kyc_certification_file")
+  ocrImageFile                Ocr?         @relation("ocr_image_file")
+  projectImageFile            Project?     @relation("project_image_file")
+  registrationCertificateFile CompanyKYC?  @relation("registration_certificate_file")
+  representativeIdCardFile    CompanyKYC?  @relation("representative_id_card_file")
+  taxCertificateFile          CompanyKYC?  @relation("tax_certificate_file")
+  userImageFile               User?        @relation("user_image_file")
 
   @@map("file")
 }
 
 model Invoice {
-  id             Int     @id @default(autoincrement())
-  certificateId  Int     @map("certificate_id")
-  counterPartyId Int     @map("counter_party_id")
-  name           String  @default("Invoice 001")
-  inputOrOutput  String  @map("input_or_output")
-  date           Int
-  no             String
-  currencyAlias  String  @map("currency_alias")
-  priceBeforeTax Int     @map("price_before_tax")
-  taxType        String  @map("tax_type")
-  taxRatio       Int     @map("tax_ratio")
-  taxPrice       Int     @map("tax_price")
-  totalPrice     Int     @map("total_price")
-  type           String
-  deductible     Boolean
-  createdAt      Int     @map("created_at")
-  updatedAt      Int     @map("updated_at")
-  deletedAt      Int?    @map("deleted_at")
+  id               Int     @id @default(autoincrement())
+  certificateId    Int     @map("certificate_id")
+  name             String  @default("Invoice 001")
+  counterPartyInfo String? @map("counter_party_info")
+  inputOrOutput    String  @map("input_or_output")
+  date             Int
+  no               String
+  currencyAlias    String  @map("currency_alias")
+  priceBeforeTax   Int     @map("price_before_tax")
+  taxType          String  @map("tax_type")
+  taxRatio         Int     @map("tax_ratio")
+  taxPrice         Int     @map("tax_price")
+  totalPrice       Int     @map("total_price")
+  type             String
+  deductible       Boolean
+  createdAt        Int     @map("created_at")
+  updatedAt        Int     @map("updated_at")
+  deletedAt        Int?    @map("deleted_at")
 
   invoiceVoucherJournals InvoiceVoucherJournal[]
 
-  certificate  Certificate  @relation(fields: [certificateId], references: [id])
-  counterParty Counterparty @relation(fields: [counterPartyId], references: [id])
+  certificate Certificate @relation(fields: [certificateId], references: [id])
 
   @@map("invoice")
 }
@@ -556,15 +572,19 @@ model Journal {
   @@map("journal")
 }
 
-model KYCBookkeeper {
+model KYCRole {
   id                  Int     @id @default(autoincrement())
   userId              Int     @map("user_id")
+  roleId              Int     @map("role_id")
   name                String
   birthDate           String  @map("birth_date")
   email               String
   phone               String
   qualification       Boolean
+  startDateOfPractice Int     @map("start_date_of_practice")
   certificationNumber String  @map("certification_number")
+  association         String  @map("association")
+  membershipNumber    String  @map("membership_number")
   personalIdType      String  @map("personal_id_type")
   personalIdFileId    Int     @unique @map("personal_id_file_id")
   certificationFileId Int     @unique @map("certification_file_id")
@@ -575,8 +595,9 @@ model KYCBookkeeper {
   user              User @relation(fields: [userId], references: [id])
   personalIdFile    File @relation("kyc_personal_id_file", fields: [personalIdFileId], references: [id])
   certificationFile File @relation("kyc_certification_file", fields: [certificationFileId], references: [id])
+  role              Role @relation(fields: [roleId], references: [id])
 
-  @@map("kyc_bookkeeper")
+  @@map("kyc_role")
 }
 
 model LineItem {
@@ -758,6 +779,7 @@ model Role {
   admins      Admin[]
   invitations Invitation[]
   userRoles   UserRole[]
+  KYCRole     KYCRole[]
 
   @@map("role")
 }
@@ -877,6 +899,8 @@ model Todo {
   deadline  Int
   note      String?
   status    Boolean
+  startDate Int     @default(0) @map("start_date")
+  endDate   Int     @default(0) @map("end_date")
   createdAt Int     @map("created_at")
   updatedAt Int     @map("updated_at")
   deletedAt Int?    @map("deleted_at")
@@ -899,7 +923,7 @@ model User {
   authentications   Authentication[]
   certificates      Certificate[]
   invitations       Invitation[]
-  kycBookkeepers    KYCBookkeeper[]
+  kycRoles          KYCRole[]
   userAgreements    UserAgreement[]
   userActionLogs    UserActionLog[]
   userCertificates  UserCertificate[]
@@ -909,7 +933,9 @@ model User {
   userVouchers      UserVoucher[]
   Voucher           Voucher[]
 
-  imageFile File @relation("user_image_file", fields: [imageFileId], references: [id])
+  imageFile   File          @relation("user_image_file", fields: [imageFileId], references: [id])
+  Asset       Asset[]
+  UserSetting UserSetting[]
 
   @@map("user")
 }
@@ -970,7 +996,7 @@ model UserSetting {
   userId                            Int     @map("user_id")
   firstName                         String? @map("first_name")
   lastName                          String? @map("last_name")
-  country                           String?
+  countryId                         Int     @map("country_id")
   language                          String
   phone                             String?
   systemNotification                Boolean @map("system_notification")
@@ -979,6 +1005,9 @@ model UserSetting {
   createdAt                         Int     @map("created_at")
   updatedAt                         Int     @map("updated_at")
   deletedAt                         Int?    @map("deleted_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  country Country @relation(fields: [countryId], references: [id])
 
   @@map("user_setting")
 }

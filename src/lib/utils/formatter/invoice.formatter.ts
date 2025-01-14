@@ -16,6 +16,7 @@ import {
 } from '@prisma/client';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
 import { invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
+import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 
 // ToDo: (20241009 - Jacky) This is a temporary function to format the invoice data from the database
 // so that it can be used in the front-end. This function will be removed after the beta frontend is completed.
@@ -62,7 +63,11 @@ export function formatIInvoice(
  * @note counterParty is not parsed in this function
  */
 export function parsePrismaInvoiceToInvoiceEntity(dto: PrismaInvoice): IInvoiceEntity {
-  const { data, success, error } = invoiceEntityValidator.safeParse(dto);
+  const { data, success, error } = invoiceEntityValidator.safeParse({
+    ...dto,
+    counterPartyId: PUBLIC_COUNTER_PARTY.id, // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
+    counterPartyInfo: '', // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
+  });
 
   if (!success) {
     throw new FormatterError('parsePrismaInvoiceToInvoiceEntity', {
