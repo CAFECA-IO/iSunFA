@@ -166,7 +166,8 @@ export const certificateAPIPostUtils = {
     };
     if (invoices.length === 0) {
       const newInvoice = initInvoiceEntity({
-        counterPartyId: PUBLIC_COUNTER_PARTY.id,
+        counterPartyId: PUBLIC_COUNTER_PARTY.id, // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
+        counterPartyInfo: '', // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
         name: '',
         inputOrOutput: InvoiceTransactionDirection.INPUT,
         date: nowInSecond,
@@ -190,12 +191,15 @@ export const certificateAPIPostUtils = {
       };
     } else {
       const invoiceDto = invoices[0];
-      const counterPartyDto = invoiceDto.counterParty;
+      // TODO: (20250113 - Shirley) 在 invoice db schema 更改之後，counterParty 的 fkey 被拿掉，invoice跟counter party的資料需要修改
+      // const counterPartyDto = invoiceDto.counterParty;
+      const counterPartyDto = PUBLIC_COUNTER_PARTY;
       const invoice = parsePrismaInvoiceToInvoiceEntity(invoiceDto);
       const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto);
 
       // Info: (20241223 - Murky) Temporary Patch for counterParty from invoice no
       const { note, type, taxId, name } = parseCounterPartyFromNoInInvoice(invoice.no);
+
       invoice.no = note;
       counterParty.name = name;
       counterParty.taxId = taxId;

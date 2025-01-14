@@ -87,6 +87,7 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
     const uploaderEntity = certificateAPIPostUtils.initUploaderEntity(certificateFromPrisma);
     const voucherCertificateEntity =
       certificateAPIPostUtils.initVoucherCertificateEntities(certificateFromPrisma);
+    // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
     const invoiceEntity = certificateAPIPostUtils.initInvoiceEntity(certificateFromPrisma, {
       nowInSecond,
     });

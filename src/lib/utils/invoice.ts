@@ -22,7 +22,8 @@ export function calculateTotalAmountAfterTax(amount: number, taxRate: number): n
 export function initInvoiceEntity(
   dto: Partial<PrismaInvoice> & {
     certificateId: number;
-    counterPartyId: number;
+    counterPartyId: number; // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
+    counterPartyInfo: string; // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
     inputOrOutput: InvoiceTransactionDirection;
     date: number;
     no: string;
@@ -42,7 +43,8 @@ export function initInvoiceEntity(
   const invoiceEntity: IInvoiceEntity = {
     id: dto.id ?? 0,
     certificateId: dto.certificateId,
-    counterPartyId: dto.counterPartyId,
+    counterPartyId: dto.counterPartyId, // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
+    counterPartyInfo: dto.counterPartyInfo, // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
     inputOrOutput: dto.inputOrOutput,
     date: dto.date,
     no: dto.no,
