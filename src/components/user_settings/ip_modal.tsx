@@ -42,29 +42,6 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
   const [totalPages, setTotalPages] = useState(pageData?.totalPages ?? 1);
   const [loginDevices, setLoginDevices] = useState<ILoginDevice[]>(pageData?.data ?? []);
 
-  const handleRemoveLoginDevice = async (deviceId: string) => {
-    try {
-      const { success, code } = await removeLoginDevice({ params: { deviceId } });
-      if (success) {
-        toastHandler({
-          id: ToastId.USER_SETTING_SUCCESS,
-          type: ToastType.SUCCESS,
-          content: t('setting:IP.REMOVE_DEVICE_SUCCESS'),
-          closeable: true,
-        });
-      } else {
-        throw new Error(code);
-      }
-    } catch (error) {
-      toastHandler({
-        id: ToastId.USER_SETTING_ERROR,
-        type: ToastType.ERROR,
-        content: (error as Error).message,
-        closeable: true,
-      });
-    }
-  };
-
   const handleAbnormal = () => {
     const warningContent = (
       <div className="flex flex-col items-start gap-2">
@@ -109,6 +86,30 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRemoveLoginDevice = async (deviceId: string) => {
+    try {
+      const { success, code } = await removeLoginDevice({ params: { deviceId } });
+      if (success) {
+        toastHandler({
+          id: ToastId.USER_SETTING_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: t('setting:IP.REMOVE_DEVICE_SUCCESS'),
+          closeable: true,
+        });
+        await getUserActions();
+      } else {
+        throw new Error(code);
+      }
+    } catch (error) {
+      toastHandler({
+        id: ToastId.USER_SETTING_ERROR,
+        type: ToastType.ERROR,
+        content: (error as Error).message,
+        closeable: true,
+      });
     }
   };
 

@@ -68,6 +68,7 @@ enum SuccessMessage {
   CREATED = 'Created successfully',
   CREATED_INVITATION = 'Created invitation successfully',
   CREATED_WITH_INVALID_INVITATION = 'Created successfully with invalid invitation',
+  REDIRECT = 'Redirect',
 }
 
 enum ErrorMessage {

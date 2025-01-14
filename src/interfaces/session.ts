@@ -5,7 +5,7 @@ export interface ISessionOption {
   'user-agent'?: string;
   cookie?: {
     jwt?: string;
-    sid?: string;
+    isunfa?: string;
     httpOnly?: boolean;
     path?: string;
     secure?: boolean;
@@ -21,7 +21,7 @@ export interface ISessionHandlerOption {
 }
 
 export interface ISessionData {
-  sid: string;
+  isunfa: string;
   deviceId: string;
   ipAddress: string;
   userAgent: string;
