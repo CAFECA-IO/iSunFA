@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
+import { PAYMENT } from '@/constants/service';
+import { getSession } from '@/lib/utils/session';
 
 /* Info: (20250111 - Luphia) 導向綁定信用卡頁面
  * 1. 取得 Session 資訊
@@ -12,7 +13,7 @@ import { HTTP_STATUS } from '@/constants/http';
  * 7. 格式化 API 回傳資料
  * 8. 回傳操作結果
  */
-const handleGetRequest = async (req: NextApiRequest) => {
+export const oenPaymentHandler = async (req: NextApiRequest) => {
   // Info: (20250113 - Luphia) step 1
   const session = await getSession(req);
   const { userId } = session;
@@ -63,12 +64,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const method = req.method || 'GET';
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
+  let paymentHandler;
+  const paymentService = process.env.PAYMENT_SERVICE;
 
   try {
+    switch (paymentService) {
+      case PAYMENT.OEN:
+      default:
+        paymentHandler = oenPaymentHandler;
+    }
+
     switch (method) {
       case 'GET':
       default:
-        ({ httpCode, result } = await handleGetRequest(req));
+        ({ httpCode, result } = await paymentHandler(req));
     }
   } catch (error) {
     // Info: (20250113 - Luphia) unexpected exception, pass to global handler
