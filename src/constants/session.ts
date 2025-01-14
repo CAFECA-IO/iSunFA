@@ -5,7 +5,7 @@ const DEV_NO_LOGIN: boolean = true;
 export const ALWAYS_LOGIN: boolean = process.env.NODE_ENV === 'development' && DEV_NO_LOGIN;
 
 export const SESSION_DEVELOPER: ISessionData = {
-  sid: DefaultValue.SESSION_ID,
+  isunfa: DefaultValue.SESSION_ID,
   deviceId: DefaultValue.DEVICE_ID,
   userAgent: DefaultValue.USER_AGENT,
   ipAddress: DefaultValue.IP,

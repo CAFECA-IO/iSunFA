@@ -96,40 +96,51 @@ class SessionHandler {
     return true;
   }
 
-  renewSession(options: ISessionOption) {
-    const sessionId = parseSessionId(options);
-    const session = this.data.get(sessionId);
-    if (session) {
-      session.expires = Date.now() + this.sessionExpires;
-      this.data.set(sessionId, session);
-      this.backup();
+  // Info: (20250111 - Luphia) 列出用戶其他裝置登入的 session 資料
+  listDevice(sessionId: string) {
+    const currentSession: ISessionData = this.data.get(sessionId) as ISessionData;
+    const { userId } = currentSession;
+    const data: ILoginDevice[] = [];
+    if (userId) {
+      this.data.forEach((session) => {
+        // Info: (20250112 - Luphia) 若 userId 相同表示為該用戶其他登入裝置，列入清單
+        if (session.userId === userId) {
+          const device: ILoginDevice = sessionDataToLoginDevice(session);
+          // Info: (20250112 - Luphia) 若 session 為當前 session 則標記為 true
+          if (session.isunfa === sessionId) {
+            device.isCurrent = true;
+          }
+          data.push(device);
+        }
+      });
     }
-    return session;
+    return data;
   }
 
-  async read(options: ISessionOption) {
-    const sessionId = parseSessionId(options);
-    const data = this.data.get(sessionId);
-    const expires = data?.expires || 0;
-    let result = {
-      sid: sessionId,
-      userId: 10000006, // Info: (20241112 - Anna)
-      companyId: 10001226, // Info: (20241112 - Anna)
-      challenge: 'dummy',
-      roleId: 1006,
-    } as unknown as ISessionData;
-    if (expires > Date.now()) {
-      // Info: (20250107 - Luphia) update session expire time
-      result = this.renewSession(options) as ISessionData;
-    }
-    return result;
+  // Info: (20250112 - Luphia) 根據 deviceId 取得 session id
+  findDevice(deviceId: string) {
+    let sessionId = '';
+    this.data.forEach((session) => {
+      if (session.deviceId === deviceId) {
+        sessionId = session.isunfa;
+      }
+    });
+    return sessionId;
   }
 
   async update(options: ISessionOption, data: ISessionUpdateData) {
     const sessionId = parseSessionId(options);
     const session = this.data.get(sessionId);
-    const expires = Date.now() + this.sessionExpires;
-    const newSession = { ...session, ...data, sid: sessionId, expires } as ISessionData;
+    const actionTime = getCurrentTimestamp();
+    const expires = actionTime + this.sessionExpires;
+    // Info: (20250111 - Luphia) 複寫 isunfa, actionTime, expires，避免其被不當修改
+    const newSession = {
+      ...session,
+      ...data,
+      isunfa: sessionId,
+      actionTime,
+      expires,
+    } as ISessionData;
     this.data.set(sessionId, newSession);
     this.backup();
     return newSession;
