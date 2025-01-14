@@ -3,17 +3,17 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { IUserSetting } from '@/interfaces/user_setting';
-import { IUserActionLog } from '@/interfaces/user_action_log';
 import UserInfo from '@/components/user_settings/user_info';
 import UserInfoForm from '@/components/user_settings/user_info_form';
 import Image from 'next/image';
+import { ILoginDevice } from '@/interfaces/login_device';
 
 interface UserSettingsProps {
   userSetting: IUserSetting | null;
-  userActionLogs: IPaginatedData<IUserActionLog[]> | null;
+  loginDevices: IPaginatedData<ILoginDevice[]> | null;
 }
 
-const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs }) => {
+const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, loginDevices }) => {
   const { userAuth } = useUserCtx();
   const { t } = useTranslation(['setting', 'common']);
 
@@ -27,8 +27,8 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs
 
   const [name, setName] = useState<string>(getUserName);
 
-  const loginDevice = userActionLogs?.data[0]?.userAgent ?? '';
-  const loginIP = userActionLogs?.data[0]?.ipAddress ?? '';
+  const loginDevice = loginDevices?.data[0]?.userAgent ?? '';
+  const loginIP = loginDevices?.data[0]?.ipAddress ?? '';
 
   const handleUsernameUpdate = (newName: string) => {
     setName(newName);
@@ -56,7 +56,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs
           loginDevice={loginDevice}
           loginIP={loginIP}
           imageId={userAuth?.imageId ?? ''}
-          userActionLogs={userActionLogs}
+          loginDevices={loginDevices}
         />
         <UserInfoForm
           name={name}

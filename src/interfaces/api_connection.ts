@@ -136,7 +136,8 @@ export type IAPIName =
   | 'TRIAL_BALANCE_EXPORT'
   | 'CREATE_ASSET_BULK'
   | 'LEDGER_EXPORT'
-  | 'SESSION_ID_DELETE';
+  | 'LIST_LOGIN_DEVICE'
+  | 'REMOVE_LOGIN_DEVICE';
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {

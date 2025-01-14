@@ -289,7 +289,7 @@ const AssetList: React.FC<IAssetListProps> = ({
   return (
     <div className="flex flex-col gap-16px">
       {/* Info: (20240925 - Julian) Export Asset button */}
-      <div className="ml-auto flex items-center gap-24px">
+      <div className="ml-auto hidden items-center gap-24px">
         <Button
           type="button"
           variant="tertiaryOutline"

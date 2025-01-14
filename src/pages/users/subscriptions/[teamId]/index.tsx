@@ -6,18 +6,19 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
 import TeamSubscriptionPageBody from '@/components/beta/team_subscription_page/team_subscription_page_body';
-import { IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
+import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const FAKE_TEAM_DATA: IUserOwnedTeam = {
   id: 1,
   name: 'Personal',
-  plan: TPlanType.BEGINNER,
-  nextRenewal: 1640995200000,
-  //   nextRenewal: 0,
-  //   expiredDate: 1640995200000,
-  expiredDate: 0,
+  plan: TPlanType.PROFESSIONAL,
+  nextRenewalTimestamp: 1640995200000,
+  //   nextRenewalTimestamp: 0,
+  //   expiredTimestamp: 1640995200000,
+  expiredTimestamp: 0,
   enableAutoRenewal: true,
+  paymentStatus: TPaymentStatus.FREE,
 };
 
 const TeamSubscriptionPage = () => {
@@ -32,7 +33,7 @@ const TeamSubscriptionPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [team, setTeam] = useState<IUserOwnedTeam>();
 
-  // ToDo: (20250102 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料
+  // ToDo: (20250102 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
   // setTeam(teamData);
 
   // ToDo: (20250102 - Liz) 如果 team 資料不存在，顯示錯誤頁面

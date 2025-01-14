@@ -26,6 +26,15 @@
     "FAQ5_QUESTION": "有哪些付款方式？",
     "BEGINNER": "基础版",
     "PROFESSIONAL": "专业版",
-    "ENTERPRISE": "企业版"
+    "ENTERPRISE": "企业版",
+    "PAYMENT_FAILED": "付款失败",
+    "UPDATE_PAYMENT": "重新设定付款信息",
+    "RETURNING_TO_BEGINNER_IN": "",
+    "DAYS": " 天后恢复为基础版方案"
+  },
+
+  "INVOICE_PAGE": {
+    "META_TITLE": "所有发票",
+    "PAGE_TITLE": "所有发票"
   }
 }

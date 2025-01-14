@@ -102,7 +102,7 @@ export const handleSignInSession = async (
     session = await setSession(session, { userId: existingUser.user.id });
   }
   const log = {
-    sessionId: session.sid,
+    sessionId: session.isunfa,
     userId: session.userId || DefaultValue.USER_ID.UNKNOWN,
     actionType: UserActionLogActionType.LOGIN,
     actionDescription: UserActionLogActionType.LOGIN,

@@ -299,7 +299,15 @@
     "GENERAL_DETAILED": "General & Detailed",
     "SPECIFIC_ACCOUNTING_TITLE": "Specific accounting title",
     "TOTAL_DEBIT_AMOUNT": "Total Debit amount",
-    "TOTAL_CREDIT_AMOUNT": "Total Credit amount"
+    "TOTAL_CREDIT_AMOUNT": "Total Credit amount",
+    "INCOME": "Non-operating Income and Expenses",
+    "ASSET": "Asset",
+    "LIABILITY": "Liability",
+    "EQUITY": "Equity",
+    "COST": "Cost",
+    "EXPENSE": "Expense",
+    "REVENUE": "Revenue",
+    "OTHERCOMPREHENSIVEINCOME": "Other Comprehensive Income"
   },
   "AI_WORKING_AREA": {
     "RESTING_CONTENT": "Please select the certificates for AI to generate the voucher for you",
