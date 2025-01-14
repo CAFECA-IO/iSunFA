@@ -751,8 +751,8 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       <div ref={printRef} className="hidden print:block">
         <CashFlowA4Template
           reportFinancial={reportFinancial}
-          curDate={`${curDate.from}\n至${curDate.to}`} // Info: (20241202- Anna) 格式化為字符串
-          preDate={`${preDate.from}\n至${preDate.to}`} // Info: (20241202- Anna) 格式化為字符串
+          curDate={`${curDate.from}\n${t('reports:COMMON.TO')}${curDate.to}`} // Info: (20241202- Anna) 格式化為字符串
+          preDate={`${preDate.from}\n${t('reports:COMMON.TO')}${preDate.to}`} // Info: (20241202- Anna) 格式化為字符串
         >
           {ItemSummary}
           {ItemDetail}

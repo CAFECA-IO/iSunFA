@@ -13,8 +13,8 @@ const FAKE_OWNED_TEAMS: IUserOwnedTeam[] = [
     name: 'Personal',
     plan: TPlanType.BEGINNER,
     enableAutoRenewal: false,
-    nextRenewal: 0,
-    expiredDate: 0,
+    nextRenewalTimestamp: 0,
+    expiredTimestamp: 0,
     paymentStatus: TPaymentStatus.FREE,
   },
   {
@@ -22,8 +22,8 @@ const FAKE_OWNED_TEAMS: IUserOwnedTeam[] = [
     name: 'Team A',
     plan: TPlanType.PROFESSIONAL,
     enableAutoRenewal: true,
-    nextRenewal: 1736501802970,
-    expiredDate: 0,
+    nextRenewalTimestamp: 1736501802970,
+    expiredTimestamp: 0,
     paymentStatus: TPaymentStatus.UNPAID,
   },
   {
@@ -31,8 +31,8 @@ const FAKE_OWNED_TEAMS: IUserOwnedTeam[] = [
     name: 'Team B',
     plan: TPlanType.ENTERPRISE,
     enableAutoRenewal: false,
-    nextRenewal: 0,
-    expiredDate: 1630406400000,
+    nextRenewalTimestamp: 0,
+    expiredTimestamp: 1630406400000,
     paymentStatus: TPaymentStatus.PAID,
   },
 ];
