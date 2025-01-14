@@ -31,5 +31,16 @@
     "PAYMENT_FAILED": "Payment Failed",
     "RETURNING_TO_BEGINNER_IN": "Returning to Beginner in ",
     "DAYS": " Days"
+  },
+
+  "BILLING_PAGE": {
+    "META_TITLE": "Billing",
+    "PAGE_TITLE_PREFIX": "Billing of",
+    "PAGE_TITLE_SUFFIX": ""
+  },
+
+  "INVOICE_PAGE": {
+    "META_TITLE": "Invoice",
+    "PAGE_TITLE": "Invoice"
   }
 }
