@@ -102,13 +102,13 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
     };
 
     const flattenGeneralAccounts = financialReport?.general
-      ? flattenAccounts(financialReport.general.slice(0, 10))
+      ? flattenAccounts(financialReport.general)
       : [];
     const flattenDetailsAccounts = financialReport?.details
-      ? flattenAccounts(financialReport.details.slice(0, 15))
+      ? flattenAccounts(financialReport.details)
       : [];
 
-    const groupSize = 14;
+    const groupSize = 12;
 
     const groupedGeneral: IAccountReadyForFrontend[][] = [];
     flattenGeneralAccounts.forEach((account, index) => {
@@ -166,10 +166,12 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                       </th>
                       <th
                         colSpan={4}
-                        className="text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
+                        className="whitespace-nowrap text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
                         <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-                        <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
+                        <span className="pl-5">
+                          {t('reports:REPORTS.EPS_UNIT')}
+                        </span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>
@@ -181,10 +183,12 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
                         {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                       </th>
-                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
+                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-3px text-end font-semibold">
                         {financialReport && financialReport.company && (
                           <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
+                            {formattedCurFromDate}
+                            <br />
+                            {t('reports:COMMON.TO')} {formattedCurToDate}
                           </p>
                         )}
                       </th>
@@ -192,12 +196,14 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         %
                       </th>
                       <th
-                        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-3px text-end font-semibold"
                         style={{ whiteSpace: 'nowrap' }}
                       >
                         {financialReport && financialReport.company && (
                           <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
+                            {formattedPreFromDate}
+                            <br />
+                            {t('reports:COMMON.TO')} {formattedPreToDate}
                           </p>
                         )}
                       </th>
@@ -255,10 +261,12 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                       </th>
                       <th
                         colSpan={4}
-                        className="text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
+                        className="whitespace-nowrap text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
                         <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-                        <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
+                        <span className="pl-5">
+                          {t('reports:REPORTS.EPS_UNIT')}
+                        </span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>
@@ -270,10 +278,12 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                       <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
                         {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                       </th>
-                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold">
+                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-3px text-end font-semibold">
                         {financialReport && financialReport.company && (
                           <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
+                            {formattedCurFromDate}
+                            <br />
+                            {t('reports:COMMON.TO')} {formattedCurToDate}
                           </p>
                         )}
                       </th>
@@ -281,12 +291,14 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         %
                       </th>
                       <th
-                        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-3px text-end font-semibold"
                         style={{ whiteSpace: 'nowrap' }}
                       >
                         {financialReport && financialReport.company && (
                           <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
+                            {formattedPreFromDate}
+                            <br />
+                            {t('reports:COMMON.TO')} {formattedPreToDate}
                           </p>
                         )}
                       </th>
