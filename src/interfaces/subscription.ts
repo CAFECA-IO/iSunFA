@@ -84,3 +84,7 @@ export interface ITeamInvoice {
   total: number;
   amountDue: number;
 }
+
+export interface ICreditCardInfo {
+  lastFourDigits: string;
+}
