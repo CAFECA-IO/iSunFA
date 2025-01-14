@@ -134,7 +134,6 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
   const displayedDate = SortingButton({
     string: t('reports:REPORTS.VOUCHER_DATE'),
     sortOrder: dateSort,
-    // setSortOrder: setDateSort,
     setSortOrder: (newSortOrder) => {
       setDateSort(newSortOrder); // Info: (20250114 - Anna) 更新排序狀態
       setShouldFetch(true); // Info: (20250114 - Anna) 啟動 API 請求
