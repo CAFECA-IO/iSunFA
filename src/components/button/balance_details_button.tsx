@@ -78,7 +78,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
     // Info: (20241107 - Anna) 處理 API 回應
     setDisplayedVoucherList(resData.data);
     // Info: (20241107 - Anna) 請求完成後關閉 shouldFetch
-    setShouldFetch(false);
+    setShouldFetch(false); // Info: (20250113 - Anna) 請求完成後關閉 shouldFetch
   };
 
   // Info: (20241003 - Anna) 使用 useEffect 在打開 Modal 時記錄 API 請求參數
@@ -90,6 +90,13 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
       setShouldFetch(false); // 避免多次觸發 API 請求
     }
   }, [isModalVisible, shouldFetch, params]);
+
+  // Info: (20250114 - Anna) 當 dateSort 變化時重新觸發 API 請求
+  useEffect(() => {
+    if (isModalVisible && shouldFetch) {
+      setShouldFetch(false); // Info: (20250114 - Anna) 避免多次觸發 API 請求
+    }
+  }, [isModalVisible, shouldFetch, params, dateSort]);
 
   const handlePrint = useReactToPrint({
     contentRef: modalRef, // Info: (20241203 - Anna) 指定需要打印的內容 Ref
@@ -127,7 +134,11 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
   const displayedDate = SortingButton({
     string: t('reports:REPORTS.VOUCHER_DATE'),
     sortOrder: dateSort,
-    setSortOrder: setDateSort,
+    // setSortOrder: setDateSort,
+    setSortOrder: (newSortOrder) => {
+      setDateSort(newSortOrder); // Info: (20250114 - Anna) 更新排序狀態
+      setShouldFetch(true); // Info: (20250114 - Anna) 啟動 API 請求
+    },
   });
 
   return (
@@ -176,7 +187,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                     dateSort={dateSort}
                     otherSorts={[]}
                     */
-                    sort={dateSort ? { by: SortBy.DATE, order: dateSort } : undefined}
+                    sort={dateSort ? { by: SortBy.DATE, order: dateSort } : undefined} // Info: (20250113 - Anna) 傳遞日期排序參數
                   />
                 </div>
               )}
