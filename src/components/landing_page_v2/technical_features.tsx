@@ -29,6 +29,21 @@ const TechnicalCard: React.FC<ITechnicalCardProps> = ({
     ? 'first:translate-x-0 even:translate-y-0 last:translate-x-0 opacity-100'
     : 'first:translate-x-full even:translate-y-full last:-translate-x-full opacity-0';
 
+  // Info: (20250115 - Julian) 手動換行
+  const title1Str = title1.split('\n').map((line) => (
+    <>
+      {line}
+      <br />
+    </>
+  ));
+
+  const title2Str = title2.split('\n').map((line) => (
+    <>
+      {line}
+      <br />
+    </>
+  ));
+
   return (
     <div
       className={`${cardAnim} relative mx-auto flex w-full flex-col items-center gap-12px rounded-lg border bg-cloudy-glass px-45px py-50px backdrop-blur-md transition-all duration-500 md:w-450px lg:shadow-technical-card lg:last:col-span-2`}
@@ -79,10 +94,10 @@ const TechnicalCard: React.FC<ITechnicalCardProps> = ({
 
       {/* Info: (20241223 - Julian) Card Content */}
       <div className="z-10 flex flex-1 flex-col items-center gap-12px">
-        <p className="text-center text-xl font-medium leading-8">{title1}</p>
+        <p className="text-center text-xl font-medium leading-8">{title1Str}</p>
         <Image src={imageSrc} alt={imageAlt} width={64} height={64} />
-        <LinearGradientText size={LinearTextSize.SM} align={TextAlign.CENTER}>
-          {title2}
+        <LinearGradientText size={LinearTextSize.SM} align={TextAlign.LEFT}>
+          {title2Str}
         </LinearGradientText>
         <p className="w-full text-left">{content}</p>
       </div>
@@ -117,21 +132,21 @@ const TechnicalFeatures: React.FC = () => {
       title1: t('landing_page_v2:TECHNICAL_FEATURES.FINANCIAL_1'),
       title2: t('landing_page_v2:TECHNICAL_FEATURES.FINANCIAL_2'),
       content: t('landing_page_v2:TECHNICAL_FEATURES.FINANCIAL_3'),
-      imageSrc: '/icons/dollar.svg',
+      imageSrc: '/elements/dollar.png',
       imageAlt: 'dollar_icon',
     },
     {
       title1: t('landing_page_v2:TECHNICAL_FEATURES.ZERO_KNOWLEDGE_1'),
       title2: t('landing_page_v2:TECHNICAL_FEATURES.ZERO_KNOWLEDGE_2'),
       content: t('landing_page_v2:TECHNICAL_FEATURES.ZERO_KNOWLEDGE_3'),
-      imageSrc: '/icons/lock.svg',
+      imageSrc: '/elements/lock.png',
       imageAlt: 'lock_icon',
     },
     {
       title1: t('landing_page_v2:TECHNICAL_FEATURES.TW_GAAP_1'),
       title2: t('landing_page_v2:TECHNICAL_FEATURES.TW_GAAP_2'),
       content: t('landing_page_v2:TECHNICAL_FEATURES.TW_GAAP_3'),
-      imageSrc: '/icons/cyborg.svg',
+      imageSrc: '/elements/cyborg.png',
       imageAlt: 'cyborg_icon',
     },
   ];

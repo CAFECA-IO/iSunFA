@@ -29,6 +29,20 @@ const EasyIntroCard: React.FC<{
   // Info: (20241218 - Julian) 根據 order 決定點擊事件
   const onClick = order === 0 ? onRightClick : order === 2 ? onLeftClick : undefined;
 
+  // Info: (20250115 - Julian) 手動換行
+  const titleStr = title.split('\n').map((line) => (
+    <>
+      {line}
+      <br />
+    </>
+  ));
+  const descriptionStr = description.split('\n').map((line) => (
+    <>
+      {line}
+      <br />
+    </>
+  ));
+
   return (
     <div
       onClick={onClick}
@@ -74,10 +88,10 @@ const EasyIntroCard: React.FC<{
 
       {/* Info: (20241218 - Julian) Title */}
       <LinearGradientText size={LinearTextSize.SM} align={TextAlign.LEFT}>
-        {title}
+        {titleStr}
       </LinearGradientText>
       {/* Info: (20241218 - Julian) Description */}
-      <p className="w-full flex-1 text-left text-xs font-normal md:text-lg">{description}</p>
+      <p className="w-full flex-1 text-left text-xs font-normal md:text-lg">{descriptionStr}</p>
       {/* Info: (20241218 - Julian) Image */}
       <div className="relative h-300px w-full">
         <Image src={imageSrc} alt={imageAlt} fill objectFit="contain" objectPosition="bottom" />
@@ -93,19 +107,19 @@ const EasyToUse: React.FC = () => {
     {
       title: t('landing_page_v2:EASY_TO_USE.AUTOMATED_TITLE'),
       description: t('landing_page_v2:EASY_TO_USE.AUTOMATED_DESCRIPTION'),
-      imageSrc: '/elements/glass_financial.svg',
+      imageSrc: '/elements/glass_financial.png',
       imageAlt: 'financial_icon',
     },
     {
       title: t('landing_page_v2:EASY_TO_USE.SIMPLY_TITLE'),
       description: t('landing_page_v2:EASY_TO_USE.SIMPLY_DESCRIPTION'),
-      imageSrc: '/elements/glass_phone.svg',
+      imageSrc: '/elements/glass_phone.png',
       imageAlt: 'phone_icon',
     },
     {
       title: t('landing_page_v2:EASY_TO_USE.AI_TITLE'),
       description: t('landing_page_v2:EASY_TO_USE.AI_DESCRIPTION'),
-      imageSrc: '/elements/glass_AI.svg',
+      imageSrc: '/elements/glass_AI.png',
       imageAlt: 'AI_icon',
     },
   ];

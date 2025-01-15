@@ -30,6 +30,16 @@ const FinancialReport: React.FC = () => {
     };
   }, []);
 
+  // Info: (20250115 - Julian) 手動換行
+  const titleStr = t('landing_page_v2:REAL_TIME_REPORT.MAIN_TITLE')
+    .split('\n')
+    .map((line) => (
+      <>
+        {line}
+        <br />
+      </>
+    ));
+
   return (
     <div
       ref={reportRef}
@@ -44,7 +54,7 @@ const FinancialReport: React.FC = () => {
             isReportRefVisible ? 'translate-y-0 opacity-100' : '-translate-y-200px opacity-0'
           } transition-all duration-500`}
         >
-          {t('landing_page_v2:REAL_TIME_REPORT.MAIN_TITLE')}
+          {titleStr}
         </LinearGradientText>
 
         {/* Info: (20241218 - Julian) Reports */}

@@ -26,9 +26,9 @@ const textVariants = cva(
         [LinearTextSize.SM]: 'text-lg font-bold md:text-2xl',
       },
       align: {
-        [TextAlign.LEFT]: 'text-left',
-        [TextAlign.CENTER]: 'text-center',
-        [TextAlign.RIGHT]: 'text-right',
+        [TextAlign.LEFT]: 'text-left mr-auto',
+        [TextAlign.CENTER]: 'text-center mx-auto',
+        [TextAlign.RIGHT]: 'text-right ml-auto',
       },
     },
     defaultVariants: {

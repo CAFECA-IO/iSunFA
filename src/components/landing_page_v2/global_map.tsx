@@ -30,6 +30,16 @@ const GlobalMap: React.FC = () => {
     };
   }, []);
 
+  // Info: (20250115 - Julian) 手動換行
+  const titleStr = t('landing_page_v2:GLOBAL_MAP.MAIN_TITLE')
+    .split('\n')
+    .map((line) => (
+      <>
+        {line}
+        <br />
+      </>
+    ));
+
   return (
     <div ref={mapRef} className="flex flex-col px-16px py-120px md:px-80px lg:px-100px">
       <div className="flex flex-col gap-16px">
@@ -40,7 +50,7 @@ const GlobalMap: React.FC = () => {
             isMapRefVisible ? 'translate-y-0 opacity-100' : '-translate-y-200px opacity-0'
           } transition-all duration-500`}
         >
-          {t('landing_page_v2:GLOBAL_MAP.MAIN_TITLE')}
+          {titleStr}
         </LinearGradientText>
         <p
           className={`${
