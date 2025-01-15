@@ -21,6 +21,7 @@ export const oenPaymentHandler = async (req: NextApiRequest) => {
   // Info: (20250113 - Luphia) step 4
   const paymentToken = process.env.PAYMENT_TOKEN as string;
   const paymentId = process.env.PAYMENT_ID as string;
+  /* ToDo: (20250115 - Luphia) 需區分測試環境與正式環境
   const oenGetIdApi =
     process.env.NODE_ENV === 'development'
       ? 'https://payment-api.testing.oen.tw/checkout-token'
@@ -29,6 +30,9 @@ export const oenPaymentHandler = async (req: NextApiRequest) => {
     process.env.NODE_ENV === 'development'
       ? `https://${paymentId}.testing.oen.tw/checkout/subscription/create/`
       : `https://${paymentId}.oen.tw/checkout/subscription/create/`;
+   */
+  const oenGetIdApi = 'https://payment-api.testing.oen.tw/checkout-token';
+  const oenPaymentUrl = `https://${paymentId}.testing.oen.tw/checkout/subscription/create/`;
   const successUrl =
     new URL('/api/payment/callback/oen', process.env.NEXTAUTH_URL) + '?success=true';
   const failureUrl = new URL('/api/payment/callback/oen', process.env.NEXTAUTH_URL) + '?failure';
