@@ -104,9 +104,10 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
     const flattenGeneralAccounts = financialReport?.general
       ? flattenAccounts(financialReport.general)
       : [];
-    const flattenDetailsAccounts = financialReport?.details
-      ? flattenAccounts(financialReport.details)
-      : [];
+    // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
+    // const flattenDetailsAccounts = financialReport?.details
+    //   ? flattenAccounts(financialReport.details)
+    //   : [];
 
     const groupSize = 12;
 
@@ -124,20 +125,22 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
 
     const totalPagesForSummary = groupedGeneral.length;
 
-    const groupedDetails: IAccountReadyForFrontend[][] = [];
-    flattenDetailsAccounts.forEach((account, index) => {
-      if (index < 10) {
-        if (groupedDetails.length === 0) groupedDetails.push([]);
-        groupedDetails[0].push(account);
-      } else {
-        const groupIndex = Math.floor((index - 10) / groupSize) + 1;
-        if (!groupedDetails[groupIndex]) groupedDetails[groupIndex] = [];
-        groupedDetails[groupIndex].push(account);
-      }
-    });
+    // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
+    // const groupedDetails: IAccountReadyForFrontend[][] = [];
+    // flattenDetailsAccounts.forEach((account, index) => {
+    //   if (index < 10) {
+    //     if (groupedDetails.length === 0) groupedDetails.push([]);
+    //     groupedDetails[0].push(account);
+    //   } else {
+    //     const groupIndex = Math.floor((index - 10) / groupSize) + 1;
+    //     if (!groupedDetails[groupIndex]) groupedDetails[groupIndex] = [];
+    //     groupedDetails[groupIndex].push(account);
+    //   }
+    // });
 
+    // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const totalPagesForDetails = groupedDetails.length;
+    // const totalPagesForDetails = groupedDetails.length;
 
     return (
       <div ref={ref} className="">
@@ -169,9 +172,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         className="whitespace-nowrap text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
                         <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-                        <span className="pl-5">
-                          {t('reports:REPORTS.EPS_UNIT')}
-                        </span>
+                        <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>
@@ -236,8 +237,8 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
             </div>
           ))
         }
-
-        {
+        {/* Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail */}
+        {/* {
           // Print ItemDetail
           groupedDetails.map((group, index) => (
             <div
@@ -329,15 +330,16 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
               </footer>
             </div>
           ))
-        }
-
+        } */}
         <PrintCostRevRatio
           financialReport={financialReport}
           formattedCurFromDate={formattedCurFromDate}
           formattedCurToDate={formattedCurToDate}
           formattedPreFromDate={formattedPreFromDate}
           formattedPreToDate={formattedPreToDate}
-          defaultPageNumber={totalPagesForSummary + totalPagesForDetails}
+          // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
+          // defaultPageNumber={totalPagesForSummary + totalPagesForDetails}
+          defaultPageNumber={totalPagesForSummary}
         />
       </div>
     );
