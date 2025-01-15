@@ -5,7 +5,6 @@ import {
   AssetStatus,
   DEFAULT_SORT_OPTIONS,
 } from '@/constants/asset';
-import { DefaultValue } from '@/constants/default_value';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
@@ -15,7 +14,7 @@ import {
   IAssetPostOutput,
   IAssetPutRepoInput,
 } from '@/interfaces/asset';
-import { createAssetOrderBy, generateAssetNumbers } from '@/lib/utils/asset';
+import { createPrismaAssetOrderBy, generateAssetNumbers } from '@/lib/utils/asset';
 import { getTimestampNow } from '@/lib/utils/common';
 import { Prisma } from '@prisma/client';
 
@@ -30,7 +29,8 @@ export async function getOneAssetByIdWithoutInclude(assetId: number) {
 }
 
 export async function createAssetWithVouchers(
-  assetData: ICreateAssetWithVouchersRepoInput
+  assetData: ICreateAssetWithVouchersRepoInput,
+  userId: number
 ): Promise<IAssetPostOutput> {
   const timestampNow = getTimestampNow();
   const assetNumber = generateAssetNumbers(assetData.number, 1)[0];
@@ -45,7 +45,7 @@ export async function createAssetWithVouchers(
 
   // Info: (20241204 - Luphia) Create the Asset
   const newAsset = {
-    createdUserId: DefaultValue.USER_ID.SYSTEM, // TODO: (20250113 - Shirley) 在 asset db schema 更改之後，需要紀錄建立資產的 user id
+    createdUserId: userId,
     companyId: assetData.companyId,
     name: assetData.name,
     type: assetData.type,
@@ -84,7 +84,8 @@ export async function createAssetWithVouchers(
 // TODO: (20241206 - Shirley) 建立 voucher，綁定 voucher 跟 asset
 export async function createManyAssets(
   assetData: IAssetBulkPostRepoInput,
-  amount: number
+  amount: number,
+  userId: number
 ): Promise<IAssetBulkPostRepoOutput> {
   const timestampNow = getTimestampNow();
   const assets = [];
@@ -104,7 +105,7 @@ export async function createManyAssets(
 
   for (let i = 0; i < amount; i += 1) {
     const newAsset = {
-      createdUserId: DefaultValue.USER_ID.SYSTEM, // TODO: (20250113 - Shirley) 在 asset db schema 更改之後，需要紀錄建立資產的 user id
+      createdUserId: userId,
       companyId: assetData.companyId,
       name: assetData.name,
       type: assetData.type,
@@ -284,7 +285,7 @@ export async function listAssetsByCompanyId(
   };
 
   // Info: (20241211 - Shirley) 根據 sortOption 公版的格式，整理出 prisma 的 asset table orderBy 條件
-  const orderBy = createAssetOrderBy(sortOption || DEFAULT_SORT_OPTIONS);
+  const orderBy = createPrismaAssetOrderBy(sortOption || DEFAULT_SORT_OPTIONS);
 
   const assets = await prisma.asset.findMany({
     where,
@@ -299,6 +300,15 @@ export async function listAssetsByCompanyId(
       acquisitionDate: true,
       createdAt: true,
       updatedAt: true,
+      usefulLife: true,
+      residualValue: true,
+      depreciationStart: true,
+      depreciationMethod: true,
+      note: true,
+      deletedAt: true,
+      companyId: true,
+      createdUserId: true,
+      assetVouchers: true,
       _count: {
         select: {
           assetVouchers: true, // Info: (20241206 - Shirley) 獲取關聯的 voucher 數量
