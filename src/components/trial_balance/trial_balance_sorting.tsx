@@ -3,9 +3,10 @@
 import React from 'react';
 import { SortOrder } from '@/constants/sort';
 import { BsFillTriangleFill } from 'react-icons/bs';
+import { ReactNode } from 'react';
 
 interface ISortingButtonProps {
-  string: string;
+  string: ReactNode; // 改為 ReactNode，支持 JSX 元素
   sortOrder: null | SortOrder;
   setSortOrder: (sortOrder: null | SortOrder) => void;
   handleReset?: () => void;

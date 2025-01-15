@@ -269,7 +269,8 @@
   "REPORT": {
     "NO_DATA_AVAILABLE": "无可用数据",
     "PLEASE_SELECT_PERIOD": "请选择期间",
-    "ACCOUNTING": "会计科目"
+    "ACCOUNTING": "会计",
+    "SUBJECT": "科目"
   },
   "COMMON": {
     "ANALYSIS_REPORTS": "分析报告",

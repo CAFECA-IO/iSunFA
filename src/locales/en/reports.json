@@ -269,7 +269,8 @@
   "REPORT": {
     "NO_DATA_AVAILABLE": "No data available.",
     "PLEASE_SELECT_PERIOD": "Please Select Period.",
-    "ACCOUNTING": "Accounting"
+    "ACCOUNTING": "Accounting",
+    "SUBJECT": ""
   },
   "COMMON": {
     "ANALYSIS_REPORTS": "Analysis Reports",

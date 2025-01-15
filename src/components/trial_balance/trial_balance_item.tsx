@@ -46,7 +46,7 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
     </div>
   );
   const displayedAccountingName = (
-    <div className="flex items-center justify-center p-8px font-medium text-text-neutral-primary">
+    <div className="flex items-center justify-center p-8px font-medium text-text-neutral-primary print:hidden">
       {account.accountingTitle}
     </div>
   );

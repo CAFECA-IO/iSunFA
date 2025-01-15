@@ -269,7 +269,8 @@
   "REPORT": {
     "NO_DATA_AVAILABLE": "無可用數據",
     "PLEASE_SELECT_PERIOD": "請選擇期間",
-    "ACCOUNTING": "會計科目"
+    "ACCOUNTING": "會計",
+    "SUBJECT": "科目"
   },
   "COMMON": {
     "ANALYSIS_REPORTS": "分析報告",
