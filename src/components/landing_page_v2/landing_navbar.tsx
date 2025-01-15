@@ -152,10 +152,10 @@ const LandingNavbar: React.FC = () => {
               v {version}
             </p>
           </div>
-        </div>
 
-        {/* Info: (20241204 - Julian) Language Button */}
-        <div className="hidden lg:block">{langBtn}</div>
+          {/* Info: (20241204 - Julian) Language Button */}
+          <div className="hidden lg:block">{langBtn}</div>
+        </div>
 
         {/* Info: (20241204 - Julian) Hamburger Button */}
         <button
@@ -195,7 +195,7 @@ const LandingNavbar: React.FC = () => {
 
       {/* Info: (20241227 - Julian) Language Dropdown */}
       <div
-        className={`absolute left-1/3 top-70px hidden w-170px rounded-sm border-b bg-landing-page-white/30 shadow-landing-nav transition-all duration-300 ease-in-out lg:grid ${
+        className={`absolute left-410px top-70px hidden w-170px rounded-sm border-b bg-landing-page-white/30 shadow-landing-nav transition-all duration-300 ease-in-out lg:grid ${
           isLangOpen ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'
         } overflow-hidden backdrop-blur-md`}
       >

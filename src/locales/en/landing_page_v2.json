@@ -7,32 +7,32 @@
     "TRY_IT_NOW": "Try it now"
   },
   "CTA": {
-    "MAIN_TITLE": "Your Gateway to the Future of Accounting",
-    "MAIN_DESCRIPTION": "A comprehensive accounting service platform that addresses all financial matters.",
+    "MAIN_TITLE": "Your Gateway to the\nFuture of Accounting",
+    "MAIN_DESCRIPTION": "A comprehensive accounting service platform that\naddresses all financial matters.",
     "FREE_TRIAL_BTN": "Start Your Free Trial Now",
-    "BUSINESS_DESCRIPTION": "Helping companies with bookkeeping and tax operations",
+    "BUSINESS_DESCRIPTION": "Helping companies with\nbookkeeping and tax operations",
     "BUSINESS_BTN": "Apply Business Account",
-    "FIRM_DESCRIPTION": "Providing clients with financial statements and audit reports",
+    "FIRM_DESCRIPTION": "Providing clients with financial\nstatements and audit reports",
     "FIRM_BTN": "Apply Firm Account",
-    "PERSONAL_DESCRIPTION": "Outsourcing financial work through the platform",
+    "PERSONAL_DESCRIPTION": "Outsourcing financial work through\nthe platform",
     "PERSONAL_BTN": "Apply Personal Account"
   },
   "EASY_TO_USE": {
     "MAIN_TITLE": "Easy to Use Without Accounting Expertise",
-    "AUTOMATED_TITLE": "Automated input & real-time analysis",
-    "AUTOMATED_DESCRIPTION": "Generates financial statements every 24 hours",
-    "SIMPLY_TITLE": "Simply take a photo to record transactions",
+    "AUTOMATED_TITLE": "Automated input &\nreal-time analysis",
+    "AUTOMATED_DESCRIPTION": "Generates financial statements\nevery 24 hours",
+    "SIMPLY_TITLE": "Simply take a photo to\nrecord transactions",
     "SIMPLY_DESCRIPTION": "Saves 85% of daily workflows",
     "AI_TITLE": "AI-assistant",
-    "AI_DESCRIPTION": "Increases audit efficiency by 150 times"
+    "AI_DESCRIPTION": "Increases audit efficiency by 150\ntimes"
   },
   "GLOBAL_MAP": {
-    "MAIN_TITLE": "Suitable for Local Businesses to Multinational Corporations",
+    "MAIN_TITLE": "Suitable for Local Businesses to\nMultinational Corporations",
     "MAIN_DESCRIPTION": "Countries/Regions Providing iSunFA Accounting Platform Services",
     "COMING_SOON": "COMING SOON"
   },
   "REAL_TIME_REPORT": {
-    "MAIN_TITLE": "Real-Time Financial Report",
+    "MAIN_TITLE": "Real-Time\nFinancial Report",
     "BS": "Balance Sheet",
     "CFS": "Cash Flow Statement",
     "CIS": "Comprehensive Income Statement",
@@ -70,13 +70,13 @@
   },
   "TECHNICAL_FEATURES": {
     "MAIN_TITLE": "Technical Features",
-    "FINANCIAL_1": "Financial analysis & reasoning model",
+    "FINANCIAL_1": "Financial analysis & reasoning\nmodel",
     "FINANCIAL_2": "Precise Decision-Making",
-    "FINANCIAL_3": "Trained on over 800 million financial data points",
-    "ZERO_KNOWLEDGE_1": "Zero-knowledge proof and homomorphic encryption",
+    "FINANCIAL_3": "Trained on over 800 million financial data\npoints",
+    "ZERO_KNOWLEDGE_1": "Zero-knowledge proof and\nhomomorphic encryption",
     "ZERO_KNOWLEDGE_2": "Secure and Trust",
-    "ZERO_KNOWLEDGE_3": "Meets privacy needs, building consensus and trust",
-    "TW_GAAP_1": "TW-GAAP standard with visual reasoning support",
+    "ZERO_KNOWLEDGE_3": "Meets privacy needs, building consensus\nand trust",
+    "TW_GAAP_1": "TW-GAAP standard with visual\nreasoning support",
     "TW_GAAP_2": "Intelligent Evaluation",
     "TW_GAAP_3": "Integrates advanced GPT technology",
     "TECHNICAL_PATENTS": "Technical Patents",
