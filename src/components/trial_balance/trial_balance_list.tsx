@@ -283,7 +283,35 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
 
   // Info: (20241218 - Anna) 匯出csv
   const handleDownload = async () => {
-    const url = `/api/v2/company/${companyId}/trial_balance/export`; // Info: (20241218 - Anna) API 路徑
+    const sort: ISortOption[] = [
+      beginningCreditSort && {
+        sortBy: SortBy.BEGINNING_CREDIT_AMOUNT,
+        sortOrder: beginningCreditSort,
+      },
+      beginningDebitSort && {
+        sortBy: SortBy.BEGINNING_DEBIT_AMOUNT,
+        sortOrder: beginningDebitSort,
+      },
+      midtermDebitSort && {
+        sortBy: SortBy.MIDTERM_DEBIT_AMOUNT,
+        sortOrder: midtermDebitSort,
+      },
+      midtermCreditSort && {
+        sortBy: SortBy.MIDTERM_CREDIT_AMOUNT,
+        sortOrder: midtermCreditSort,
+      },
+      endingDebitSort && {
+        sortBy: SortBy.ENDING_DEBIT_AMOUNT,
+        sortOrder: endingDebitSort,
+      },
+      endingCreditSort && {
+        sortBy: SortBy.ENDING_CREDIT_AMOUNT,
+        sortOrder: endingCreditSort,
+      },
+    ]
+      .filter(Boolean) // Info: (20250110 - Julian) 移除 null
+      .map((s) => s as unknown as ISortOption); // Info: (20250110 - Julian) 轉換類型
+    const url = `/api/v2/company/${companyId}/trial_balance/export?sortOption=${JSON.stringify(sort)}`; // Info: (20241218 - Anna) API 路徑
     const body = {
       fileType: 'csv',
       filters: {
