@@ -4,22 +4,8 @@ import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 // Info: (20241213 - Shirley) 查詢參數驗證器
 const IExportTrialBalancePostQueryValidator = z.object({
   companyId: zodStringToNumber,
-});
-
-// Info: (20241213 - Shirley) 排序欄位驗證器
-const sortFieldSchema = z.enum([
-  'beginningCreditAmount',
-  'beginningDebitAmount',
-  'midtermCreditAmount',
-  'midtermDebitAmount',
-  'endingCreditAmount',
-  'endingDebitAmount',
-]);
-
-// Info: (20241213 - Shirley) 排序物件驗證器
-const sortSchema = z.object({
-  by: sortFieldSchema,
-  order: z.enum(['asc', 'desc']),
+  // TODO: (20250115 - Shirley) 現在在 middleware 驗證用 z.string().optional()、進到 API 再用 `parseSortOption` 去 parse 或給予預設 sort option；之後要改成用 zodFilterSectionSortingOptions 去 parse
+  sortOption: z.string().optional(),
 });
 
 // Info: (20241213 - Shirley) 匯出欄位驗證器
@@ -51,7 +37,6 @@ const exportTrialBalanceOptionsSchema = z.object({
 const IExportTrialBalancePostBodySchema = z.object({
   fileType: z.literal('csv'),
   filters: exportTrialBalanceFiltersSchema,
-  sort: z.array(sortSchema).optional(),
   options: exportTrialBalanceOptionsSchema.optional(),
 });
 
