@@ -14,6 +14,8 @@ import {
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { AssetDepreciationMethod } from '@/constants/asset';
+import { calculateRemainingLife } from '@/lib/utils/asset';
+import { parsePrismaAssetToAssetEntity } from '@/lib/utils/formatter/asset.formatter';
 
 interface IHandlerResult {
   statusMessage: string;
@@ -55,13 +57,16 @@ export const handleGetRequest: IHandleRequest<
   } else {
     const vouchers = await getVouchersByAssetId(assetId);
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
-    const now = getTimestampNow();
     const { usefulLife, depreciationMethod } = asset;
+    const initAsset = parsePrismaAssetToAssetEntity(asset);
+    const convertedUsefulLife =
+      depreciationMethod === AssetDepreciationMethod.NONE ? Number.POSITIVE_INFINITY : usefulLife;
     // Info: (20241209 - Shirley) 計算剩餘年限
-    const calRemainingLife =
-      depreciationMethod === AssetDepreciationMethod.NONE
-        ? usefulLife
-        : usefulLife - (now - asset.acquisitionDate);
+    const calRemainingLife = calculateRemainingLife(
+      initAsset,
+      usefulLife,
+      initAsset.depreciationMethod
+    );
     const remainingLife = calRemainingLife < 0 ? 0 : calRemainingLife;
 
     const sortedAsset: IAssetDetails = {
@@ -81,7 +86,7 @@ export const handleGetRequest: IHandleRequest<
       deletedAt: asset.deletedAt,
       depreciationStart: asset.depreciationStart,
       depreciationMethod: asset.depreciationMethod,
-      usefulLife: asset.usefulLife,
+      usefulLife: convertedUsefulLife,
       relatedVouchers: vouchers,
       note: asset.note,
     };
