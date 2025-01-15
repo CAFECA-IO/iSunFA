@@ -1,7 +1,7 @@
 import { RiCheckboxMultipleLine, RiCoinsFill } from 'react-icons/ri';
 import { LuFileCheck } from 'react-icons/lu';
 import { COMPANY_TAG } from '@/constants/company';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 interface WorkTagProps {
   tag: COMPANY_TAG;

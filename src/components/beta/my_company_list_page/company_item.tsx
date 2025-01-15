@@ -6,7 +6,7 @@ import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
 import CompanyTag from '@/components/beta/my_company_list_page/company_tag';
 import { CANCEL_COMPANY_ID } from '@/constants/company';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
