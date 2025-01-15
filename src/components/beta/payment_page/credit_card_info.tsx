@@ -86,7 +86,6 @@ const CreditCardInfo = ({
 
       <button
         type="button"
-        onClick={() => window.open('/api/payment')} // Info: (20250115 - Julian) 連接到第三方金流頁面
         className="rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-semibold text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
       >
         Subscribe
