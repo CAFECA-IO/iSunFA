@@ -25,7 +25,7 @@ interface IPlanFeature {
 }
 
 export interface IPlan {
-  id: string;
+  id: TPlanType;
   planName: string;
   price: number;
   features: IPlanFeature[];
@@ -42,7 +42,7 @@ export interface IUserOwnedTeam {
   name: string; // Info: (20250110 - Liz) 團隊名稱
   plan: TPlanType; // Info: (20250110 - Liz) 訂閱方案
   enableAutoRenewal: boolean; // Info: (20250110 - Liz) 是否開啟自動續約
-  nextRenewalTimestamp: number; // Info: (20250110 - Liz) 下次續約日期
+  nextRenewalTimestamp: number; // Info: (20250110 - Liz) 下次續約日期 (與 expiredTimestamp 一樣，所以可以刪除)
   expiredTimestamp: number; // Info: (20250110 - Liz) 過期日期
   paymentStatus: TPaymentStatus; // Info: (20250110 - Liz) 付款狀態
 }
@@ -55,7 +55,7 @@ export interface ITeamInvoice {
   dueTimestamp: number; // Info: (20250113 - Liz) 收款到期日(目前設計是:收款到期日是服務開始日的第一天)
 
   // Info: (20250113 - Liz) 發票品項
-  planId: number; // Info: (20250113 - Liz) 訂閱方案 ID
+  planId: TPlanType; // Info: (20250113 - Liz) 訂閱方案 ID
   planStartTimestamp: number; // Info: (20250113 - Liz) 訂閱方案開始時間
   planEndTimestamp: number; // Info: (20250113 - Liz) 訂閱方案結束時間
   planQuantity: number; // Info: (20250113 - Liz) 數量

@@ -2,42 +2,15 @@ import { useState } from 'react';
 import Image from 'next/image';
 import OwnedTeams from '@/components/beta/subscriptions_page/owned_teams';
 import { useTranslation } from 'next-i18next';
-import { TPlanType, IUserOwnedTeam, TPaymentStatus } from '@/interfaces/subscription';
+import { IUserOwnedTeam } from '@/interfaces/subscription';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 
-// ToDo: (20250102 - Liz) 這邊的資料是假的，之後要改成從 API 拿 userOwnedTeams: IUserOwnedTeam[];
-const FAKE_OWNED_TEAMS: IUserOwnedTeam[] = [
-  {
-    id: 1,
-    name: 'Personal',
-    plan: TPlanType.BEGINNER,
-    enableAutoRenewal: false,
-    nextRenewalTimestamp: 0,
-    expiredTimestamp: 0,
-    paymentStatus: TPaymentStatus.FREE,
-  },
-  {
-    id: 2,
-    name: 'Team A',
-    plan: TPlanType.PROFESSIONAL,
-    enableAutoRenewal: true,
-    nextRenewalTimestamp: 1736501802970,
-    expiredTimestamp: 0,
-    paymentStatus: TPaymentStatus.UNPAID,
-  },
-  {
-    id: 3,
-    name: 'Team B',
-    plan: TPlanType.ENTERPRISE,
-    enableAutoRenewal: false,
-    nextRenewalTimestamp: 0,
-    expiredTimestamp: 1630406400000,
-    paymentStatus: TPaymentStatus.PAID,
-  },
-];
+interface SubscriptionsPageBodyProps {
+  userOwnedTeams: IUserOwnedTeam[];
+}
 
-const SubscriptionsPageBody = () => {
+const SubscriptionsPageBody = ({ userOwnedTeams }: SubscriptionsPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
@@ -86,7 +59,7 @@ const SubscriptionsPageBody = () => {
       </div>
 
       <OwnedTeams
-        userOwnedTeams={FAKE_OWNED_TEAMS}
+        userOwnedTeams={userOwnedTeams}
         setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
         setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
       />

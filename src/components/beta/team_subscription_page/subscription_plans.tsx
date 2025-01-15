@@ -23,7 +23,7 @@ const SubscriptionPlan = ({ team, plan }: SubscriptionPlanProps) => {
 
   return (
     <section
-      className={`relative flex w-300px flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px ${isSelected ? 'border border-stroke-brand-primary' : ''}`}
+      className={`relative flex w-290px flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px ${isSelected ? 'border border-stroke-brand-primary' : ''}`}
     >
       {isSelected && (
         <Image

@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { ICompanyAndRole } from '@/interfaces/company';
 import { COMPANY_TAG } from '@/constants/company';

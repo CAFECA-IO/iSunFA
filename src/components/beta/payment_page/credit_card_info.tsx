@@ -36,7 +36,7 @@ const CreditCardInfo = ({
   // ToDo: (20250114 - Liz) 打 API 取得信用卡資料 ICreditCardInfo (使用 teamId)，並且設定到 creditCardInfo state
 
   // ToDo: (20250114 - Liz) 打 API 編輯信用卡資料
-  const editCreditCard = () => {};
+  const editCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
 
   // ToDo: (20250114 - Liz) 打 API 變更團隊的訂閱方案(使用 teamId, planId)，並且重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
   // Deprecated: (20250114 - Liz)

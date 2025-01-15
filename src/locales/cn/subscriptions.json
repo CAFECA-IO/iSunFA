@@ -33,8 +33,22 @@
     "DAYS": " 天后恢复为基础版方案"
   },
 
+  "ERROR": {
+    "ERROR": "错误",
+    "DATA_NOT_FOUND": "找不到数据",
+    "TEAM_DATA_NOT_FOUND": "找不到团队数据",
+    "INVOICE_DATA_NOT_FOUND": "找不到发票数据",
+    "USER_OWNED_TEAMS_NOT_FOUND": "找不到用户拥有的团队"
+  },
+
+  "BILLING_PAGE": {
+    "META_TITLE": "账单",
+    "PAGE_TITLE_PREFIX": "",
+    "PAGE_TITLE_SUFFIX": "的账单"
+  },
+
   "INVOICE_PAGE": {
-    "META_TITLE": "所有发票",
-    "PAGE_TITLE": "所有发票"
+    "META_TITLE": "发票",
+    "PAGE_TITLE": "发票"
   }
 }

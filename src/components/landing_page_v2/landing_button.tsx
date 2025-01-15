@@ -6,7 +6,7 @@ const buttonVariants = cva('gap-8px flex items-center transition-all duration-15
   variants: {
     variant: {
       primary:
-        'enabled:shadow-landing-btn enabled:bg-landing-btn enabled:hover:text-landing-page-black2 enabled:hover:shadow-landing-btn-hover text-landing-page-black disabled:bg-landing-page-black3 disabled:text-landing-page-black2 rounded-sm border-b border-t border-landing-page-white disabled:border-transparent',
+        'enabled:shadow-landing-btn enabled:bg-landing-btn enabled:hover:text-landing-page-black2 enabled:hover:shadow-landing-btn-hover text-landing-page-black disabled:bg-landing-page-mute disabled:text-landing-page-black2 rounded-sm border-b border-t border-landing-page-white disabled:border-transparent',
       default:
         'disabled:text-landing-page-black2 text-landing-page-white enabled:hover:text-surface-brand-primary-moderate disabled:hover:pointer-not-allowed',
     },

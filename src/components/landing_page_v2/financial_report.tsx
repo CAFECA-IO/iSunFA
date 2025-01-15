@@ -30,10 +30,20 @@ const FinancialReport: React.FC = () => {
     };
   }, []);
 
+  // Info: (20250115 - Julian) 手動換行
+  const titleStr = t('landing_page_v2:REAL_TIME_REPORT.MAIN_TITLE')
+    .split('\n')
+    .map((line) => (
+      <>
+        {line}
+        <br />
+      </>
+    ));
+
   return (
     <div
       ref={reportRef}
-      className="flex flex-col items-start justify-between bg-landing-page-black3 px-16px py-120px md:px-80px lg:flex-row lg:items-center lg:px-112px"
+      className="flex flex-col items-start justify-between bg-landing-page-mute px-16px py-120px md:px-80px lg:flex-row lg:items-center lg:px-112px"
     >
       <div className="order-2 flex flex-col gap-16px lg:order-1 lg:w-1/2">
         {/* Info: (20241218 - Julian) Title */}
@@ -44,7 +54,7 @@ const FinancialReport: React.FC = () => {
             isReportRefVisible ? 'translate-y-0 opacity-100' : '-translate-y-200px opacity-0'
           } transition-all duration-500`}
         >
-          {t('landing_page_v2:REAL_TIME_REPORT.MAIN_TITLE')}
+          {titleStr}
         </LinearGradientText>
 
         {/* Info: (20241218 - Julian) Reports */}

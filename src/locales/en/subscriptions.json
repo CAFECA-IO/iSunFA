@@ -33,6 +33,14 @@
     "DAYS": " Days"
   },
 
+  "ERROR": {
+    "ERROR": "Error",
+    "DATA_NOT_FOUND": "Data not found",
+    "TEAM_DATA_NOT_FOUND": "Team data not found",
+    "INVOICE_DATA_NOT_FOUND": "Invoice data not found",
+    "USER_OWNED_TEAMS_NOT_FOUND": "User owned teams not found"
+  },
+
   "BILLING_PAGE": {
     "META_TITLE": "Billing",
     "PAGE_TITLE_PREFIX": "Billing of",

@@ -31,8 +31,9 @@ interface IHandlerResponse extends IHandlerResult {
 export const handlePostRequest: IHandleRequest<
   APIName.CREATE_ASSET_BULK,
   IAssetBulkPostRepoOutput
-> = async ({ query, body }) => {
+> = async ({ query, body, session }) => {
   const { companyId } = query;
+  const { userId } = session;
   const {
     assetName,
     assetType,
@@ -64,7 +65,7 @@ export const handlePostRequest: IHandleRequest<
   };
 
   // Info: (20241204 - Luphia) Insert the new asset and vouchers to the database and get the new asset id
-  const rs = await createManyAssets(newAsset, amount);
+  const rs = await createManyAssets(newAsset, amount, userId);
 
   const statusMessage = STATUS_MESSAGE.CREATED;
 

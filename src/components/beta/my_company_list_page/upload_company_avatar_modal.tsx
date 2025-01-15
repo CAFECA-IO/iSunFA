@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { IoCloseOutline } from 'react-icons/io5';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { IFileUIBeta } from '@/interfaces/file';
 import { UploadType } from '@/constants/file';
