@@ -2,7 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { RoleName } from '@/constants/role';
 import { IRole } from '@/interfaces/role';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 interface RoleCardsProps {
   roleList: IRole[];

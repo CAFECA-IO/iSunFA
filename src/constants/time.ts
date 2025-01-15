@@ -22,3 +22,12 @@ export const formatTimestamp = (timestamp: number) => {
   // Info: (20241230 - Liz) 組合成 YYYY/MM/DD 格式
   return `${year}/${month}/${day}`;
 };
+
+export const formatTimestampWithHyphen = (timestamp: number) => {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  // Info: (20250115 - Liz) 組合成 YYYY-MM-DD 格式
+  return `${year}-${month}-${day}`;
+};

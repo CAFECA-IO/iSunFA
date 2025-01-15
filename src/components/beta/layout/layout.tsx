@@ -5,7 +5,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 

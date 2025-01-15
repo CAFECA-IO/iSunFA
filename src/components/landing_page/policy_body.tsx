@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { IoHomeOutline } from 'react-icons/io5';

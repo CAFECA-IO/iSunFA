@@ -14,9 +14,9 @@ const FAKE_TEAM_DATA: IUserOwnedTeam = {
   name: 'Team B',
   plan: TPlanType.ENTERPRISE,
   enableAutoRenewal: false,
-  nextRenewalTimestamp: 0,
-  expiredTimestamp: 1630406400000,
-  paymentStatus: TPaymentStatus.PAID,
+  nextRenewalTimestamp: 1736936488530,
+  expiredTimestamp: 1736936488530,
+  paymentStatus: TPaymentStatus.UNPAID,
 };
 
 const BillingPage = () => {
@@ -28,22 +28,26 @@ const BillingPage = () => {
   // eslint-disable-next-line no-console
   console.log('teamIdString:', teamIdString);
 
-  // ToDo: (20250113 - Liz) 先暫時使用假資料
+  // ToDo: (20250113 - Liz) 先暫時使用假資料 FAKE_TEAM_DATA
+  // Deprecate: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [team, setTeam] = useState<IUserOwnedTeam>(FAKE_TEAM_DATA);
+  const [team, setTeam] = useState<IUserOwnedTeam | null>(FAKE_TEAM_DATA);
 
   // ToDo: (20250113 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
   // setTeam(teamData);
 
   // ToDo: (20250113 - Liz) 如果 team 資料不存在，顯示錯誤頁面
-  // 參考:
-  //   if (!teamIdString) {
-  //     return (
-  //       <Layout isDashboard={false} pageTitle={'Plan for Personal'}>
-  //         <h1 className="text-red-500">{t('subscriptions:ERROR.TEAM_ID_NOT_FOUND')}</h1>
-  //       </Layout>
-  //     );
-  //   }
+  if (!team) {
+    return (
+      <Layout
+        isDashboard={false}
+        pageTitle={t('subscriptions:ERROR.TEAM_DATA_NOT_FOUND')}
+        goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
+      >
+        <h1 className="text-red-500">{t('subscriptions:ERROR.TEAM_DATA_NOT_FOUND')}</h1>
+      </Layout>
+    );
+  }
 
   return (
     <>
@@ -71,7 +75,7 @@ const BillingPage = () => {
         pageTitle={`${t('subscriptions:BILLING_PAGE.PAGE_TITLE_PREFIX')} ${team.name} ${t('subscriptions:BILLING_PAGE.PAGE_TITLE_SUFFIX')}`}
         goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
       >
-        <BillingPageBody team={FAKE_TEAM_DATA} />
+        <BillingPageBody team={team} />
       </Layout>
     </>
   );

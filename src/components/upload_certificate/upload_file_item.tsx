@@ -4,7 +4,7 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { FiPauseCircle, FiPlay, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { IFileUIBeta } from '@/interfaces/file';
 
 interface UploadFileItemProps {
