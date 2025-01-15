@@ -180,8 +180,8 @@ export const calculateAssetDepreciationSerial = (
  * @returns 生成的資產編號陣列
  */
 export function generateAssetNumbers(prefix: string, amount: number): string[] {
-  const uuid = uuidv4();
-  const ASSET_PAD_NUMBER = 6;
+  const uuid = uuidv4().slice(0, 4); // Info: (20250115 - Shirley) 取 uuid 的前 4 個字元
+  const ASSET_PAD_NUMBER = 6; // Info: (20250115 - Shirley) 資產編號的格式，預設是 6 位數，e.g. 000001
 
   const assetNumbers: string[] = [];
   for (let i = 0; i < amount; i += 1) {
@@ -197,8 +197,9 @@ export function generateAssetNumbers(prefix: string, amount: number): string[] {
  * @param sortOptions - 排序選項
  * @returns 排序條件
  */
-export function createAssetOrderBy(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
+export function createPrismaAssetOrderBy(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
   const orderBy: Prisma.AssetOrderByWithRelationInput[] = [];
+
   sortOptions.forEach((sort) => {
     const { sortBy, sortOrder } = sort;
     const isValidSortOption = assetListSortOptions.safeParse(sortBy);
@@ -214,21 +215,25 @@ export function createAssetOrderBy(sortOptions: { sortBy: SortBy; sortOrder: Sor
       case SortBy.PURCHASE_PRICE:
         orderBy.push({ purchasePrice: sortOrder });
         break;
-      // TODO: (20250113 - Shirley) 折舊金額排序需即時計算
-      // case SortBy.ACCUMULATED_DEPRECIATION:
-      //   orderBy.push({ accumulatedDepreciation: sortOrder });
-      //   break;
-      case SortBy.RESIDUAL_VALUE:
-        orderBy.push({ residualValue: sortOrder });
-        break;
-      // TODO: (20250113 - Shirley) 折舊金額排序需即時計算
-      // case SortBy.REMAINING_LIFE:
-      //   orderBy.push({ remainingLife: sortOrder });
-      //   break;
       default:
         orderBy.push({ acquisitionDate: SortOrder.DESC });
         break;
     }
   });
   return orderBy;
+}
+
+export function calculateRemainingLife(
+  asset: IAssetEntity,
+  usefulMonths: number,
+  depreciationMethod: AssetDepreciationMethod
+) {
+  // Info: (20250115 - Shirley) DB 的 useful_life 是 month 為單位，將 usefulMonths 轉為 timestamp in seconds，再去計算 remaining life
+  const usefulLifeInSeconds = usefulMonths * 30 * 24 * 60 * 60;
+  const nowInSeconds = getTimestampNow();
+  const remainingLife =
+    depreciationMethod === AssetDepreciationMethod.NONE
+      ? Number.POSITIVE_INFINITY
+      : usefulLifeInSeconds - (nowInSeconds - asset.acquisitionDate);
+  return remainingLife;
 }
