@@ -11,7 +11,6 @@ import { getSession } from '@/lib/utils/session';
 import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse } from '@/lib/utils/common';
-import { initTrialBalanceData } from '@/lib/utils/repo/trial_balance.repo';
 import {
   processLineItems,
   convertToTrialBalanceItem,
@@ -30,9 +29,8 @@ import { DEFAULT_SORT_OPTIONS } from '@/constants/trial_balance';
 import { parseSortOption } from '@/lib/utils/sort';
 
 export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
-  const { fileType, filters, sort, options } = req.body;
-  // sortOption
-  const { companyId } = req.query;
+  const { fileType, filters, options } = req.body;
+  const { companyId, sortOption } = req.query;
   const { startDate, endDate } = filters;
 
   if (!companyId) {
@@ -47,9 +45,7 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     throw new Error(STATUS_MESSAGE.INVALID_FILE_TYPE);
   }
 
-  // const { periodBegin, periodEnd } = getCurrent401Period();
-
-  const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sort);
+  const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption as string);
 
   const lineItems = await getAllLineItemsInPrisma(+companyId, 0, +endDate);
 
@@ -82,15 +78,10 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
   };
 
   const trialBalance = convertToAPIFormat(threeStagesOfTrialBalance, parsedSortOption);
-
-  // const trialBalance = await initTrialBalanceData(+companyId, +startDate, +endDate, sort);
   const trialBalanceData = transformTrialBalanceData(trialBalance.items);
 
-  // TODO: (20241213 - Shirley) 刪掉 API wiki 裡的時區切換
-  // TODO: (20241213 - Shirley) 將 sort 去重構成公版的樣子 (refer to FilterSection.tsx)
   const data = trialBalanceData;
 
-  // TODO: (20241203 - Shirley) 處理欄位選擇
   const fields = options?.fields || trialBalanceAvailableFields;
 
   const csv = convertToCSV(fields, data, TrialBalanceFieldsMap);
@@ -112,16 +103,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const session = await getSession(req);
   try {
     const isLogin = await checkSessionUser(session, APIName.TRIAL_BALANCE_EXPORT, req);
-    // TODO: (20241213 - Shirley) after the dev is done, remove the following code
-    // const isLogin = true;
     if (!isLogin) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
       throw new Error(statusMessage);
     }
 
     const isAuth = await checkUserAuthorization(APIName.TRIAL_BALANCE_EXPORT, req, session);
-    // TODO: (20241213 - Shirley) after the dev is done, remove the following code
-    // const isAuth = true;
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     }
