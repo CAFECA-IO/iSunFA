@@ -30,21 +30,25 @@ const TeamSubscriptionPage = () => {
   // eslint-disable-next-line no-console
   console.log('teamIdString:', teamIdString);
 
+  // ToDo: (20250113 - Liz) 先暫時使用假資料 FAKE_TEAM_DATA
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [team, setTeam] = useState<IUserOwnedTeam>();
+  const [team, setTeam] = useState<IUserOwnedTeam | null>(FAKE_TEAM_DATA);
 
   // ToDo: (20250102 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
   // setTeam(teamData);
 
   // ToDo: (20250102 - Liz) 如果 team 資料不存在，顯示錯誤頁面
-  // 參考:
-  //   if (!teamIdString) {
-  //     return (
-  //       <Layout isDashboard={false} pageTitle={'Plan for Personal'}>
-  //         <h1 className="text-red-500">{t('subscriptions:ERROR.TEAM_ID_NOT_FOUND')}</h1>
-  //       </Layout>
-  //     );
-  //   }
+  if (!team) {
+    return (
+      <Layout
+        isDashboard={false}
+        pageTitle={t('subscriptions:ERROR.TEAM_DATA_NOT_FOUND')}
+        goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
+      >
+        <h1 className="text-red-500">{t('subscriptions:ERROR.TEAM_DATA_NOT_FOUND')}</h1>
+      </Layout>
+    );
+  }
 
   return (
     <>
@@ -69,10 +73,10 @@ const TeamSubscriptionPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('subscriptions:SUBSCRIPTIONS_PAGE.PLAN_FOR') + FAKE_TEAM_DATA.name}
+        pageTitle={t('subscriptions:SUBSCRIPTIONS_PAGE.PLAN_FOR') + team.name}
         goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
       >
-        <TeamSubscriptionPageBody team={FAKE_TEAM_DATA} />
+        <TeamSubscriptionPageBody team={team} />
       </Layout>
     </>
   );

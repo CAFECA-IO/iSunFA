@@ -19,8 +19,6 @@ const FAKE_TEAM_DATA: IUserOwnedTeam = {
   paymentStatus: TPaymentStatus.PAID,
 };
 
-// ToDo: (20250113 - Liz) 定義 invoice 假資料 使用 ITeamInvoice
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FAKE_INVOICE_DATA: ITeamInvoice = {
   id: 1,
   teamId: 3,
@@ -62,36 +60,43 @@ const InvoicePage = () => {
   // eslint-disable-next-line no-console
   console.log('teamIdString:', teamIdString, 'invoiceIdString:', invoiceIdString);
 
-  // ToDo: (20250113 - Liz) 先暫時使用假資料
+  // ToDo: (20250113 - Liz) 先暫時使用假資料 FAKE_TEAM_DATA 和 FAKE_INVOICE_DATA
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [team, setTeam] = useState<IUserOwnedTeam>(FAKE_TEAM_DATA);
+  const [team, setTeam] = useState<IUserOwnedTeam | null>(FAKE_TEAM_DATA);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [invoice, setInvoice] = useState<ITeamInvoice>(FAKE_INVOICE_DATA);
+  const [invoice, setInvoice] = useState<ITeamInvoice | null>(FAKE_INVOICE_DATA);
 
   // ToDo: (20250113 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
   // setTeam(teamData);
 
-  // Info: (20250113 - Liz) 呼叫 API 利用 invoiceIdString 取得 invoice 的資料，並且設定到 invoice state
+  // ToDo: (20250113 - Liz) 呼叫 API 利用 invoiceIdString 取得 invoice 的資料，並且設定到 invoice state
+  // setInvoice(invoiceData);
 
   // ToDo: (20250113 - Liz) 如果 team 資料不存在，顯示錯誤頁面
-  // 參考:
-  //   if (!teamIdString) {
-  //     return (
-  //       <Layout isDashboard={false} pageTitle={`${t('subscriptions:INVOICE_PAGE.PAGE_TITLE')} # ${invoiceIdString}`}>
-  //         <h1 className="text-red-500">Team ID not found</h1>
-  //       </Layout>
-  //     );
-  //   }
+  if (!team) {
+    return (
+      <Layout
+        isDashboard={false}
+        pageTitle={t('subscriptions:ERROR.TEAM_DATA_NOT_FOUND')}
+        goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
+      >
+        <h1 className="text-red-500">{t('subscriptions:ERROR.TEAM_DATA_NOT_FOUND')}</h1>
+      </Layout>
+    );
+  }
 
-  // ToDo: (20250113 - Liz) 如果 invoiceIdString 資料不存在，顯示錯誤頁面
-  // 參考:
-  //   if (!invoiceIdString) {
-  //     return (
-  //       <Layout isDashboard={false} pageTitle={`${t('subscriptions:INVOICE_PAGE.PAGE_TITLE')} # ${invoiceIdString}`}>
-  //         < className="text-red-500">Invoice ID not found</h1>
-  //       </Layout>
-  //     );
-  //   }
+  // ToDo: (20250113 - Liz) 如果 invoice 資料不存在，顯示錯誤頁面
+  if (!invoice) {
+    return (
+      <Layout
+        isDashboard={false}
+        pageTitle={t('subscriptions:ERROR.INVOICE_DATA_NOT_FOUND')}
+        goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
+      >
+        <h1 className="text-red-500">{t('subscriptions:ERROR.INVOICE_DATA_NOT_FOUND')}</h1>
+      </Layout>
+    );
+  }
 
   return (
     <>
