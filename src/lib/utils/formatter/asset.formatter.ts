@@ -14,6 +14,8 @@ import { pageToOffset } from '@/lib/utils/common';
 export function parsePrismaAssetToAssetEntity(dto: PrismaAsset): IAssetEntity {
   const newDto = {
     assetVouchers: [],
+    accumulatedDepreciation: 0, // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，開發相關功能的時候需要檢查或重構
+    remainingLife: 0, // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，開發相關功能的時候需要檢查或重構
     ...dto,
   };
 

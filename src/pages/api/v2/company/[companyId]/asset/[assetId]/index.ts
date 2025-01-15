@@ -72,7 +72,7 @@ export const handleGetRequest: IHandleRequest<
       assetNumber: asset.number,
       assetName: asset.name,
       purchasePrice: asset.purchasePrice,
-      accumulatedDepreciation: asset.accumulatedDepreciation, // TODO: (20241209 - Shirley) 計算累計折舊
+      accumulatedDepreciation: 0, // TODO: (20241209 - Shirley) 計算累計折舊
       residualValue: asset.residualValue, // TODO: (20241209 - Shirley) 計算 purchasePrice-accumulatedDepreciation
       remainingLife, // Info: (20241209 - Shirley) 即時計算剩餘年限
       assetStatus: asset.status,
@@ -148,7 +148,7 @@ export const handlePutRequest: IHandleRequest<
       assetNumber: updatedAsset.number,
       assetName: updatedAsset.name,
       purchasePrice: updatedAsset.purchasePrice,
-      accumulatedDepreciation: updatedAsset.accumulatedDepreciation, // TODO: (20241209 - Shirley) 計算累計折舊
+      accumulatedDepreciation: 0, // TODO: (20241209 - Shirley) 計算累計折舊
       residualValue: updatedAsset.residualValue, // TODO: (20241209 - Shirley) 計算 purchasePrice-accumulatedDepreciation
       remainingLife, // Info: (20241209 - Shirley) 即時計算剩餘年限
       assetStatus: updatedAsset.status,

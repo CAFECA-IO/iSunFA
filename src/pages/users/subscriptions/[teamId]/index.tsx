@@ -12,11 +12,11 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 const FAKE_TEAM_DATA: IUserOwnedTeam = {
   id: 1,
   name: 'Personal',
-  plan: TPlanType.BEGINNER,
-  nextRenewal: 1640995200000,
-  //   nextRenewal: 0,
-  //   expiredDate: 1640995200000,
-  expiredDate: 0,
+  plan: TPlanType.PROFESSIONAL,
+  nextRenewalTimestamp: 1640995200000,
+  //   nextRenewalTimestamp: 0,
+  //   expiredTimestamp: 1640995200000,
+  expiredTimestamp: 0,
   enableAutoRenewal: true,
   paymentStatus: TPaymentStatus.FREE,
 };

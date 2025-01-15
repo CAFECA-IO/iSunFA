@@ -13,6 +13,7 @@ export async function createUserSetting(userId: number) {
     userSetting = await prisma.userSetting.create({
       data: {
         userId,
+        countryId: 10000000, // TODO: (20250113 - Shirley) 需要將 country 改為 countryId
         language: DEFAULT_USER_SETTING.LANGUAGE,
         systemNotification: DEFAULT_USER_SETTING.SYSTEM_NOTIFICATION,
         updateAndSubscriptionNotification:
@@ -61,7 +62,8 @@ export async function updateUserSettingById(id: number, data: IUserSetting) {
       data: {
         firstName: data.personalInfo.firstName,
         lastName: data.personalInfo.lastName,
-        country: data.personalInfo.country,
+        countryId: 10000000, // TODO: (20250113 - Shirley) 需要將 country 改為 countryId
+        // country: data.personalInfo.country,
         language: data.personalInfo.language,
         phone: data.personalInfo.phone,
         systemNotification: data.notificationSetting.systemNotification,

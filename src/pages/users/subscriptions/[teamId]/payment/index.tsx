@@ -8,15 +8,16 @@ import Layout from '@/components/beta/layout/layout';
 import PaymentPageBody from '@/components/beta/payment_page/payment_page_body';
 import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { PLANS } from '@/constants/subscription';
 
 const FAKE_TEAM_DATA: IUserOwnedTeam = {
   id: 1,
   name: 'Personal',
-  plan: TPlanType.BEGINNER,
-  nextRenewal: 1640995200000,
-  //   nextRenewal: 0,
-  //   expiredDate: 1640995200000,
-  expiredDate: 0,
+  plan: TPlanType.PROFESSIONAL,
+  nextRenewalTimestamp: 1640995200000,
+  //   nextRenewalTimestamp: 0,
+  //   expiredTimestamp: 1640995200000,
+  expiredTimestamp: 0,
   enableAutoRenewal: true,
   paymentStatus: TPaymentStatus.FREE,
 };
@@ -24,11 +25,15 @@ const FAKE_TEAM_DATA: IUserOwnedTeam = {
 const PaymentPage = () => {
   const { t } = useTranslation(['subscriptions']);
   const router = useRouter();
-  const { teamId } = router.query;
+  const { teamId, sp } = router.query;
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
+  const spString = sp ? (Array.isArray(sp) ? sp[0] : sp) : '';
   // Deprecated: (20250102 - Liz)
   // eslint-disable-next-line no-console
-  console.log('teamIdString:', teamIdString);
+  console.log('teamIdString:', teamIdString, 'spString:', spString);
+
+  // Info: (20250114 - Liz) 找出 spString 所對應的 plan 資料
+  const planFromUrl = PLANS.find((p) => p.id === spString);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [team, setTeam] = useState<IUserOwnedTeam>();
@@ -72,7 +77,7 @@ const PaymentPage = () => {
         pageTitle={'Payment'}
         goBackUrl={`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${teamIdString}`}
       >
-        <PaymentPageBody team={FAKE_TEAM_DATA} />
+        <PaymentPageBody team={FAKE_TEAM_DATA} subscriptionPlan={planFromUrl} />
       </Layout>
     </>
   );

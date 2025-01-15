@@ -127,7 +127,8 @@ export const invoiceRequestValidators: {
 export const invoiceEntityValidator = z.object({
   id: z.number(),
   certificateId: z.number(),
-  counterPartyId: z.number(),
+  counterPartyId: z.number(), // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，開發相關功能的時候需要檢查或重構
+  counterPartyInfo: z.string(), // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，開發相關功能的時候需要檢查或重構
   inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
   date: z.number(),
   no: z.string(),
