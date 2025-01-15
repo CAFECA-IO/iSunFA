@@ -159,6 +159,9 @@ export enum APIName {
   LEDGER_EXPORT = 'LEDGER_EXPORT',
   LIST_LOGIN_DEVICE = 'LIST_LOGIN_DEVICE',
   REMOVE_LOGIN_DEVICE = 'REMOVE_LOGIN_DEVICE',
+  LIST_TEAM = 'LIST_TEAM',
+  GET_TEAM_BY_ID = 'GET_TEAM_BY_ID',
+  UPDATE_SUBSCRIPTION = 'UPDATE_SUBSCRIPTION',
 }
 
 export enum APIPath {
@@ -296,6 +299,9 @@ export enum APIPath {
   LEDGER_EXPORT = `${apiPrefixV2}/company/:companyId/ledger/export`,
   LIST_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device`,
   REMOVE_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device/:deviceId`,
+  LIST_TEAM = `${apiPrefixV2}/team`,
+  GET_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
+  UPDATE_SUBSCRIPTION = `${apiPrefixV2}/team/:teamId/subscription`,
 }
 const createConfig = ({
   name,
@@ -987,5 +993,20 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.REMOVE_LOGIN_DEVICE,
     method: HttpMethod.DELETE,
     path: APIPath.REMOVE_LOGIN_DEVICE,
+  }),
+  [APIName.LIST_TEAM]: createConfig({
+    name: APIName.LIST_TEAM,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_TEAM,
+  }),
+  [APIName.GET_TEAM_BY_ID]: createConfig({
+    name: APIName.GET_TEAM_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_TEAM_BY_ID,
+  }),
+  [APIName.UPDATE_SUBSCRIPTION]: createConfig({
+    name: APIName.UPDATE_SUBSCRIPTION,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_SUBSCRIPTION,
   }),
 };
