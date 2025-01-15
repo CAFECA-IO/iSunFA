@@ -12,11 +12,16 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { createAssetWithVouchers, listAssetsByCompanyId } from '@/lib/utils/repo/asset.repo';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { formatPaginatedAsset } from '@/lib/utils/formatter/asset.formatter';
+import {
+  formatPaginatedAsset,
+  parsePrismaAssetToAssetEntity,
+} from '@/lib/utils/formatter/asset.formatter';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { DEFAULT_SORT_OPTIONS } from '@/constants/asset';
 import { Prisma } from '@prisma/client';
 import { parseSortOption } from '@/lib/utils/sort';
+import { calculateRemainingLife } from '@/lib/utils/asset';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 /* Info: (20241204 - Luphia) API develop SOP 以 POST ASSET API 為例
  * 1. 前置作業
@@ -119,6 +124,13 @@ export const handleGetRequest: IHandleRequest<
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
     // Info: (20241210 - Shirley) sort assets into fit the `IAssetItem`
     const sortedAssets = assets.map((item) => {
+      const initAsset = parsePrismaAssetToAssetEntity(item);
+
+      const remainingLife = calculateRemainingLife(
+        initAsset,
+        item.usefulLife,
+        initAsset.depreciationMethod
+      );
       return {
         id: item.id,
         currencyAlias: accountingSetting?.currency || 'TWD',
@@ -128,14 +140,44 @@ export const handleGetRequest: IHandleRequest<
         assetNumber: item.number,
         purchasePrice: item.purchasePrice,
         accumulatedDepreciation: 0,
-        residualValue: 0,
-        remainingLife: 0,
+        residualValue: item.purchasePrice,
+        remainingLife,
         assetStatus: item.status,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
         deletedAt: null,
       };
     });
+
+    /** Info: (20250115 - Shirley) 對即時計算的數值進行排序，這邊的 residualValue 指的是購買價格-累計折舊，不是 db 存的 residualValue
+     * 排序需要一起排，所以在對即時計算的欄位進行排序，代表直接從 DB 拿出來的值也要再排一次
+     */
+    sortedAssets.sort((a, b) =>
+      parsedSortOption.reduce((acc, sort) => {
+        if (acc !== 0) return acc;
+        let comparison = 0;
+        switch (sort.sortBy) {
+          case SortBy.RESIDUAL_VALUE:
+            comparison = a.residualValue - b.residualValue;
+            break;
+          case SortBy.ACCUMULATED_DEPRECIATION:
+            comparison = a.accumulatedDepreciation - b.accumulatedDepreciation;
+            break;
+          case SortBy.REMAINING_LIFE:
+            comparison = a.remainingLife - b.remainingLife;
+            break;
+          case SortBy.PURCHASE_PRICE:
+            comparison = a.purchasePrice - b.purchasePrice;
+            break;
+          case SortBy.ACQUISITION_DATE:
+            comparison = a.acquisitionDate - b.acquisitionDate;
+            break;
+          default:
+            break;
+        }
+        return sort.sortOrder === SortOrder.ASC ? comparison : -comparison;
+      }, 0)
+    );
 
     const paginatedAssets = formatPaginatedAsset(sortedAssets, parsedSortOption, page, pageSize);
     payload = paginatedAssets;
@@ -149,8 +191,9 @@ export const handleGetRequest: IHandleRequest<
 export const handlePostRequest: IHandleRequest<
   APIName.CREATE_ASSET_V2,
   IPostResult['payload']
-> = async ({ query, body }) => {
+> = async ({ query, body, session }) => {
   const { companyId } = query;
+  const { userId } = session;
   const {
     assetName,
     assetType,
@@ -163,6 +206,16 @@ export const handlePostRequest: IHandleRequest<
     usefulLife,
     note = '',
   } = body as ICreateAssetInput;
+
+  // Info: (20241215 - Shirley) 檢查折舊開始日期是否大於購入日期
+  if (depreciationStart && depreciationStart > acquisitionDate) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  // Info: (20241215 - Shirley) 檢查殘值是否大於購入價格
+  if (residualValue && residualValue > purchasePrice) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
 
   // Info: (20241204 - Luphia) collect the new asset data with db schema
   const newAsset: ICreateAssetWithVouchersRepoInput = {
@@ -181,7 +234,7 @@ export const handlePostRequest: IHandleRequest<
   };
 
   // Info: (20241204 - Luphia) Insert the new asset and vouchers to the database and get the new asset id
-  const rs = await createAssetWithVouchers(newAsset);
+  const rs = await createAssetWithVouchers(newAsset, userId);
 
   const statusMessage = STATUS_MESSAGE.CREATED;
 

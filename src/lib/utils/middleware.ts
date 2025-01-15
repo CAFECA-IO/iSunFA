@@ -144,7 +144,12 @@ export async function withRequestValidation<T extends APIName, U>(
             payload = outputData;
           }
         } catch (handlerError) {
-          statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+          // Info: (20250115 - Shirley) 如果 API handler function 拋出錯誤，則將錯誤訊息設置為錯誤訊息，否則設置為內部服務錯誤
+          if (handlerError instanceof Error) {
+            statusMessage = handlerError.message;
+          } else {
+            statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+          }
           loggerError({
             userId: session.userId ?? DefaultValue.USER_ID.GUEST,
             errorType: `Handler Request Error for ${apiName} in middleware.ts`,
