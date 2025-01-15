@@ -14,7 +14,7 @@ const FAKE_TEAM_DATA: IUserOwnedTeam = {
   name: 'Team B',
   plan: TPlanType.ENTERPRISE,
   enableAutoRenewal: false,
-  nextRenewalTimestamp: 0,
+  nextRenewalTimestamp: 1736936488530,
   expiredTimestamp: 1630406400000,
   paymentStatus: TPaymentStatus.PAID,
 };
@@ -25,7 +25,7 @@ const FAKE_INVOICE_DATA: ITeamInvoice = {
   status: true,
   issuedTimestamp: 1630406400000,
   dueTimestamp: 1630406400000,
-  planId: 1,
+  planId: TPlanType.PROFESSIONAL,
   planStartTimestamp: 1630406400000,
   planEndTimestamp: 1630406400000,
   planQuantity: 1,

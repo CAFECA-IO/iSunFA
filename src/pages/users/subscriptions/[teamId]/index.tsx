@@ -13,10 +13,8 @@ const FAKE_TEAM_DATA: IUserOwnedTeam = {
   id: 1,
   name: 'Personal',
   plan: TPlanType.PROFESSIONAL,
-  nextRenewalTimestamp: 1640995200000,
-  //   nextRenewalTimestamp: 0,
-  //   expiredTimestamp: 1640995200000,
-  expiredTimestamp: 0,
+  nextRenewalTimestamp: 1736936488530,
+  expiredTimestamp: 1736936488530,
   enableAutoRenewal: true,
   paymentStatus: TPaymentStatus.FREE,
 };

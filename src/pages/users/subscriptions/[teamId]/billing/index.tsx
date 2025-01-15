@@ -14,9 +14,9 @@ const FAKE_TEAM_DATA: IUserOwnedTeam = {
   name: 'Team B',
   plan: TPlanType.ENTERPRISE,
   enableAutoRenewal: false,
-  nextRenewalTimestamp: 0,
-  expiredTimestamp: 1630406400000,
-  paymentStatus: TPaymentStatus.PAID,
+  nextRenewalTimestamp: 1736936488530,
+  expiredTimestamp: 1736936488530,
+  paymentStatus: TPaymentStatus.UNPAID,
 };
 
 const BillingPage = () => {
