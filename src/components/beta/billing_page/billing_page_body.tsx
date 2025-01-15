@@ -191,6 +191,7 @@ interface BillingPageBodyProps {
 const BillingPageBody = ({ team }: BillingPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
 
+  // Deprecate: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [invoiceList, setInvoiceList] = useState<ITeamInvoice[]>(FAKE_INVOICE_LIST);
 
@@ -233,14 +234,19 @@ const BillingPageBody = ({ team }: BillingPageBodyProps) => {
   };
 
   // Info: (20250115 - Liz) InvoiceList filter 的條件:
+  // Deprecate: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [invoiceId, setInvoiceId] = useState<number>();
+  // Deprecate: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [status, setStatus] = useState<boolean>();
+  // Deprecate: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [issuedTimestamp, setIssuedTimestamp] = useState<number>();
+  // Deprecate: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [planId, setPlanId] = useState<string>();
+  // Deprecate: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [amountDue, setAmountDue] = useState<number>();
 
