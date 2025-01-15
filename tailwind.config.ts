@@ -687,9 +687,10 @@ module.exports = {
 
         // Info: (20241204 - Julian) New iSunFA Landing Page
         'landing-page': {
-          black: '#120C00',
+          black: '#000A12',
           black2: '#585142',
-          black3: '#2B2415',
+
+          mute: '#1C2229',
 
           orange: '#FFB632',
 
@@ -734,7 +735,7 @@ module.exports = {
         'landing-nav': 'radial-gradient(farthest-corner at 50% 200%, #FFFFFF, #FFFFFF4D 50%)',
         'cloudy-glass': 'radial-gradient(circle at 50% 150%, #FFFFFF, #FFFFFF4D 40%)',
         cta: 'url("/elements/planet_edge.png")',
-        digital: 'url("/elements/digital.svg")',
+        digital: 'url("/elements/digital.png")',
         sunrise: 'url("/elements/sunrise.png")',
         'magic-ball': "url('/elements/magic_ball.png')",
       },

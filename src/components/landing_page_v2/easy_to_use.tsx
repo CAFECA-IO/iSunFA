@@ -182,7 +182,10 @@ const EasyToUse: React.FC = () => {
   });
 
   return (
-    <div ref={easyRef} className="flex flex-col py-120px">
+    <div
+      ref={easyRef}
+      className="flex flex-col bg-digital bg-cover bg-bottom bg-no-repeat py-120px"
+    >
       {/* Info: (20241218 - Julian) Title */}
       <LinearGradientText
         size={LinearTextSize.LG}
@@ -196,7 +199,7 @@ const EasyToUse: React.FC = () => {
 
       {/* Info: (20241218 - Julian) Carousel */}
       <div
-        className={`${isEasyRefVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'} relative mx-auto mt-80px h-300px w-full overflow-hidden bg-digital bg-cover bg-bottom bg-no-repeat transition-all duration-500 md:h-550px lg:px-120px`}
+        className={`${isEasyRefVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'} relative mx-auto mt-80px h-300px w-full overflow-hidden transition-all duration-500 md:h-550px lg:px-120px`}
       >
         <div className="relative flex transform-gpu items-center justify-center">
           {displayedCards}
