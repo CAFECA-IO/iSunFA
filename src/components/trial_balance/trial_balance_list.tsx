@@ -283,19 +283,45 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
 
   // Info: (20241218 - Anna) 匯出csv
   const handleDownload = async () => {
-    const url = `/api/v2/company/${companyId}/trial_balance/export`; // Info: (20241218 - Anna) API 路徑
+    // Info: (20250115 - Shirley) 匯出 csv 的排序，跟 fetchTrialBalanceData 一樣用 query 參數 sortOption
+    const sort: ISortOption[] = [
+      beginningCreditSort && {
+        sortBy: SortBy.BEGINNING_CREDIT_AMOUNT,
+        sortOrder: beginningCreditSort,
+      },
+      beginningDebitSort && {
+        sortBy: SortBy.BEGINNING_DEBIT_AMOUNT,
+        sortOrder: beginningDebitSort,
+      },
+      midtermDebitSort && {
+        sortBy: SortBy.MIDTERM_DEBIT_AMOUNT,
+        sortOrder: midtermDebitSort,
+      },
+      midtermCreditSort && {
+        sortBy: SortBy.MIDTERM_CREDIT_AMOUNT,
+        sortOrder: midtermCreditSort,
+      },
+      endingDebitSort && {
+        sortBy: SortBy.ENDING_DEBIT_AMOUNT,
+        sortOrder: endingDebitSort,
+      },
+      endingCreditSort && {
+        sortBy: SortBy.ENDING_CREDIT_AMOUNT,
+        sortOrder: endingCreditSort,
+      },
+    ]
+      .filter(Boolean)
+      .map((s) => s as unknown as ISortOption);
+    const sortString =
+      sort.length > 0 ? sort.map((s) => `${s.sortBy}:${s.sortOrder}`).join('-') : undefined;
+
+    const url = `/api/v2/company/${companyId}/trial_balance/export?sortOption=${sortString}`; // Info: (20241218 - Anna) API 路徑
     const body = {
       fileType: 'csv',
       filters: {
         startDate: selectedDateRange?.startTimeStamp || 0,
         endDate: selectedDateRange?.endTimeStamp || 0,
       },
-      sort: [
-        {
-          by: 'beginningCreditAmount',
-          order: 'desc',
-        },
-      ],
       options: {
         language: 'zh-TW',
         timezone: '+0800',

@@ -1,43 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { TPlanType, IUserOwnedTeam, TPaymentStatus } from '@/interfaces/subscription';
+import { IUserOwnedTeam } from '@/interfaces/subscription';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
-
-const FAKE_OWNED_TEAMS: IUserOwnedTeam[] = [
-  {
-    id: 1,
-    name: 'Personal',
-    plan: TPlanType.BEGINNER,
-    enableAutoRenewal: false,
-    nextRenewalTimestamp: 0,
-    expiredTimestamp: 0,
-    paymentStatus: TPaymentStatus.FREE,
-  },
-  {
-    id: 2,
-    name: 'Team A',
-    plan: TPlanType.PROFESSIONAL,
-    enableAutoRenewal: true,
-    nextRenewalTimestamp: 1736936488530,
-    expiredTimestamp: 1736936488530,
-    paymentStatus: TPaymentStatus.UNPAID,
-  },
-  {
-    id: 3,
-    name: 'Team B',
-    plan: TPlanType.ENTERPRISE,
-    enableAutoRenewal: false,
-    nextRenewalTimestamp: 1736936488530,
-    expiredTimestamp: 1736936488530,
-    paymentStatus: TPaymentStatus.PAID,
-  },
-];
+import { FAKE_OWNED_TEAMS } from '@/lib/services/subscription_service';
 
 const handleGetRequest: IHandleRequest<
   APIName.LIST_TEAM,

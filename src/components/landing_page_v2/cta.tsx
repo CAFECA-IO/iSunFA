@@ -17,8 +17,16 @@ const CTAIntroCard: React.FC<{
   description: string;
   buttonText: string;
 }> = ({ imageSrc, imageAlt, description, buttonText }) => {
+  // Info: (20250115 - Julian) 手動換行
+  const descriptionStr = description.split('\n').map((line) => (
+    <>
+      {line}
+      <br />
+    </>
+  ));
+
   return (
-    <div className="relative flex max-w-300px flex-col items-center gap-24px overflow-hidden rounded-lg border-x border-b bg-cloudy-glass px-40px py-20px text-center backdrop-blur-md">
+    <div className="relative flex w-full flex-col items-center gap-24px justify-self-center overflow-hidden rounded-lg border-x border-b bg-cloudy-glass px-40px py-20px text-center backdrop-blur-md">
       {/* Info: (20241205 - Julian) Nail Icon */}
       <Image
         src="/icons/nail.svg"
@@ -59,7 +67,7 @@ const CTAIntroCard: React.FC<{
 
       {/* Info: (20241205 - Julian) Content */}
       <Image src={imageSrc} width={64} height={64} alt={imageAlt} />
-      <p className="flex-1">{description}</p>
+      <p className="flex-1">{descriptionStr}</p>
       <LandingButton type="button" variant="primary" className="whitespace-nowrap font-bold">
         <Link href={ISUNFA_ROUTE.DASHBOARD}>{buttonText}</Link>
       </LandingButton>
@@ -82,22 +90,41 @@ const CTA: React.FC = () => {
     };
   }, []);
 
+  // Info: (20250115 - Julian) 手動換行
+  const titleStr = t('landing_page_v2:CTA.MAIN_TITLE')
+    .split('\n')
+    .map((line) => (
+      <>
+        {line}
+        <br />
+      </>
+    ));
+
+  const subtitleStr = t('landing_page_v2:CTA.MAIN_DESCRIPTION')
+    .split('\n')
+    .map((line) => (
+      <>
+        {line}
+        <br />
+      </>
+    ));
+
   // Info: (20241218 - Julian) 卡片內容
   const introCards = [
     {
-      imageSrc: '/icons/calculation.svg',
+      imageSrc: '/elements/accounting.png',
       imageAlt: 'calculation_icon',
       description: t('landing_page_v2:CTA.BUSINESS_DESCRIPTION'),
       buttonText: t('landing_page_v2:CTA.BUSINESS_BTN'),
     },
     {
-      imageSrc: '/icons/pie_chart.svg',
+      imageSrc: '/elements/pie_chart.png',
       imageAlt: 'pie_chart_icon',
       description: t('landing_page_v2:CTA.FIRM_DESCRIPTION'),
       buttonText: t('landing_page_v2:CTA.FIRM_BTN'),
     },
     {
-      imageSrc: '/icons/case.svg',
+      imageSrc: '/elements/case.png',
       imageAlt: 'case_icon',
       description: t('landing_page_v2:CTA.PERSONAL_DESCRIPTION'),
       buttonText: t('landing_page_v2:CTA.PERSONAL_BTN'),
@@ -130,12 +157,12 @@ const CTA: React.FC = () => {
               isCtaRefVisible ? 'translate-y-0 opacity-100' : '-translate-y-200px opacity-0'
             } transition-all duration-500`}
           >
-            {t('landing_page_v2:CTA.MAIN_TITLE')}
+            {titleStr}
           </LinearGradientText>
           <p
             className={` ${isCtaRefVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'} text-center text-xs font-medium transition-all duration-500 md:text-lg lg:text-xl`}
           >
-            {t('landing_page_v2:CTA.MAIN_DESCRIPTION')}
+            {subtitleStr}
           </p>
         </div>
 
@@ -155,7 +182,7 @@ const CTA: React.FC = () => {
 
       {/* Info: (20241211 - Julian) CTA Intro Card */}
       <div
-        className={` ${
+        className={`w-full px-60px ${
           isCtaRefVisible ? 'translate-y-0 opacity-100' : 'translate-y-200px opacity-0'
         } mt-140px grid grid-cols-1 gap-36px transition-all duration-500 md:mt-80px lg:mt-120px lg:grid-cols-3`}
       >
