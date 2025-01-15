@@ -155,7 +155,10 @@ export const AUTH_CHECK = {
   [APIName.TRIAL_BALANCE_EXPORT]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_ASSET_BULK]: [AuthFunctionsKeysNew.user],
   [APIName.LEDGER_EXPORT]: [AuthFunctionsKeysNew.user],
-
   [APIName.LIST_LOGIN_DEVICE]: [AuthFunctionsKeysNew.user],
   [APIName.REMOVE_LOGIN_DEVICE]: [AuthFunctionsKeysNew.user],
+
+  [APIName.LIST_TEAM]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_TEAM_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.UPDATE_SUBSCRIPTION]: [AuthFunctionsKeysNew.user],
 };
