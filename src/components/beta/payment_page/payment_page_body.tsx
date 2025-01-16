@@ -79,13 +79,13 @@ const PaymentPageBody = ({ team, subscriptionPlan, getUserOwnedTeam }: PaymentPa
   };
 
   const messageModalDataForLeavePage: IMessageModal = {
-    title: 'Subscription is not done yet',
-    content: 'Your subscription is not done yet, are you sure you want to leave this page?',
-    submitBtnStr: 'Leave',
+    title: t('subscriptions:MODAL.SUBSCRIPTION_IS_NOT_DONE_YET'),
+    content: t('subscriptions:MODAL.SUBSCRIPTION_IS_NOT_DONE_YET_MESSAGE'),
+    submitBtnStr: t('subscriptions:MODAL.LEAVE'),
     submitBtnFunction: handleLeave,
     messageType: MessageType.WARNING,
     backBtnFunction: handleCancel,
-    backBtnStr: 'Keep finishing my subscription',
+    backBtnStr: t('subscriptions:MODAL.KEEP_FINISHING_MY_SUBSCRIPTION'),
   };
 
   useEffect(() => {

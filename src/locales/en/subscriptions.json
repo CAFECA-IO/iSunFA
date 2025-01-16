@@ -33,20 +33,40 @@
     "DAYS": " Days"
   },
 
+  "SUBSCRIPTION_PLAN_CONTENT": {
+    "NTD_SLASH_MONTH": "NTD/Month",
+    "PER_EXTRA_TEAM_MEMBER_PREFIX": "",
+    "PER_EXTRA_TEAM_MEMBER_SUFFIX": " per extra team member"
+  },
+
   "ERROR": {
     "ERROR": "Error",
     "DATA_NOT_FOUND": "Data not found",
     "TEAM_DATA_NOT_FOUND": "Team data not found",
     "INVOICE_DATA_NOT_FOUND": "Invoice data not found",
-    "USER_OWNED_TEAMS_NOT_FOUND": "User owned teams not found"
+    "USER_OWNED_TEAMS_NOT_FOUND": "User owned teams not found",
+    "PLAN_NOT_FOUND": "Plan not found"
+  },
+
+  "MODAL": {
+    "SUBSCRIPTION_IS_NOT_DONE_YET": "Subscription is not done yet",
+    "SUBSCRIPTION_IS_NOT_DONE_YET_MESSAGE": "Your subscription is not done yet, are you sure you want to leave this page?",
+    "KEEP_FINISHING_MY_SUBSCRIPTION": "Keep finishing my subscription",
+    "LEAVE": "Leave"
   },
 
   "PAYMENT_PAGE": {
+    "PAGE_TITLE": "Payment",
     "PAYMENT": "Payment",
     "ADD_CREDIT_CARD": "Add Credit Card",
     "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "You can cancel your subscription anytime.",
     "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
-    "SUBSCRIBE": "Subscribe"
+    "SUBSCRIBE": "Subscribe",
+    "TOAST_SUBSCRIPTION_SUCCESS": "You have successfully completed your subscription.",
+    "MONTHLY_SUBSCRIPTION": "Monthly Subscription",
+    "SUBTOTAL": "Subtotal",
+    "TAX": "Tax",
+    "TOTAL_PRICE": "Total Price"
   },
 
   "BILLING_PAGE": {
