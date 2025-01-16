@@ -11,9 +11,10 @@ import { useTranslation } from 'next-i18next';
 interface PaymentPageBodyProps {
   team: IUserOwnedTeam;
   subscriptionPlan?: IPlan;
+  getUserOwnedTeam: () => void;
 }
 
-const PaymentPageBody = ({ team, subscriptionPlan }: PaymentPageBodyProps) => {
+const PaymentPageBody = ({ team, subscriptionPlan, getUserOwnedTeam }: PaymentPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
 
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
@@ -69,6 +70,7 @@ const PaymentPageBody = ({ team, subscriptionPlan }: PaymentPageBodyProps) => {
           plan={plan}
           setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
           setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
+          getUserOwnedTeam={getUserOwnedTeam}
         />
       </section>
 
