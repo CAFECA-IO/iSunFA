@@ -45,4 +45,5 @@ export enum ToastId {
   CREATE_VOUCHER_ERROR = 'toast-create-voucher-error',
   UPDATE_VOUCHER_ERROR = 'toast-update-voucher-error',
   DELETE_VOUCHER_ERROR = 'toast-delete-voucher-error',
+  SUBSCRIPTION_UPDATE_SUCCESS = 'toast-subscription-update-success',
 }
