@@ -5,6 +5,7 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react'; // Info: (20250116 - Anna)
 import APIHandler from '@/lib/utils/api_handler'; // Info: (20250116 - Anna)
 import { APIName } from '@/constants/api_connection'; // Info: (20250116 - Anna)
+import { useRouter } from 'next/router'; // Info: (20250116 - Anna)
 
 interface InvoiceListProps {
   invoiceList: ITeamInvoice[];
@@ -12,7 +13,10 @@ interface InvoiceListProps {
 
 const InvoiceList = ({ invoiceList }: InvoiceListProps) => {
   const { t } = useTranslation(['subscriptions']);
+  const router = useRouter(); // Info: (20250116 - Anna)
+  const { teamId } = router.query; // Info: (20250116 - Anna)
   const [invoices, setInvoices] = useState<ITeamInvoice[]>([]); // Info: (20250116 - Anna) state 來儲存發票列表
+  const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : ''; // Info: (20250116 - Anna) teamId
 
   // Info: (20250116 - Anna) 初始化 APIHandler
   const { trigger: getInvoiceList } = APIHandler<{ data: ITeamInvoice[] }>(
@@ -24,7 +28,9 @@ const InvoiceList = ({ invoiceList }: InvoiceListProps) => {
     try {
       const response = await getInvoiceList({
         params: {
-          teamId: 3, // Todo: (20250116 - Anna) 替換為實際 teamId
+          teamId: teamIdString,
+        },
+        query: {
           page: 1,
           pageSize: 10,
           // plan: 'professional',
@@ -35,7 +41,7 @@ const InvoiceList = ({ invoiceList }: InvoiceListProps) => {
         },
       });
 
-      if (response.data) {
+      if (response.success && response.data) {
         const newInvoices = response.data.data ?? [];
         setInvoices(newInvoices);
         // eslint-disable-next-line no-console
