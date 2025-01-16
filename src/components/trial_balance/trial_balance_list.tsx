@@ -539,13 +539,13 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
             <div
               className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
-              {displayedBeginningCredit}
+              {displayedBeginningDebit}
             </div>
             {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
             <div
               className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
-              {displayedBeginningDebit}
+              {displayedBeginningCredit}
             </div>
             {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
             <div
