@@ -69,6 +69,14 @@
     "TOTAL_PRICE": "Total Price"
   },
 
+  "PAYMENT_PAGE": {
+    "PAYMENT": "Payment",
+    "ADD_CREDIT_CARD": "Add Credit Card",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "You can cancel your subscription anytime.",
+    "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
+    "SUBSCRIBE": "Subscribe"
+  },
+
   "BILLING_PAGE": {
     "META_TITLE": "Billing",
     "PAGE_TITLE_PREFIX": "Billing of",
@@ -77,6 +85,22 @@
 
   "INVOICE_PAGE": {
     "META_TITLE": "Invoice",
-    "PAGE_TITLE": "Invoice"
+    "PAGE_TITLE": "Invoice",
+    "INVOICE_TITLE": "Invoice",
+    "ISSUED": "Issued",
+    "DUE": "Due",
+    "BILLED_TO": "Billed To",
+    "TAX_ID": "Tax ID",
+    "FROM": "From",
+    "DESCRIPTION": "Description",
+    "QTY": "Qty",
+    "UNIT_PRICE": "Unit Price",
+    "AMOUNT": "Amount",
+    "SUBTOTAL": "Subtotal",
+    "TAX": "Tax",
+    "TOTAL": "Total",
+    "AMOUNT_DUE": "Amount Due",
+    "FOOTNOTE_DUE": "due",
+    "FOOTNOTE_PAGE": "Page 1 of 1"
   }
 }

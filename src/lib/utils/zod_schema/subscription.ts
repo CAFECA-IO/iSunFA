@@ -19,24 +19,6 @@ export const ISubscriptionItemValidator = z.object({
 
 /**
  * Info: (20250114 - Tzuhan)
- * @description Schema to validate the detailed subscription response
- */
-export const ISubscriptionDetailsValidator = ISubscriptionItemValidator.extend({
-  relatedInvoices: z
-    .array(
-      z.object({
-        invoiceId: z.number(),
-        amount: z.number(),
-        date: z.number(),
-        status: z.enum([TPaymentStatus.PAID, TPaymentStatus.UNPAID]),
-      })
-    )
-    .optional(),
-  note: z.string().optional(),
-});
-
-/**
- * Info: (20250114 - Tzuhan)
  * @description Schema to validate PUT (update) subscription request
  */
 export const ISubscriptionPutQueryValidator = z.object({
@@ -53,6 +35,38 @@ export const ISubscriptionPutBodyValidator = z.object({
  * @description Paginated response schema for subscription list
  */
 export const ISubscriptionListOutputValidator = paginatedDataSchema(ISubscriptionItemValidator);
+
+export const IInvoiceDetailValidator = z.object({
+  id: z.number(),
+  teamId: z.number(),
+  status: z.boolean(),
+  issuedTimestamp: z.number(),
+  dueTimestamp: z.number(),
+  planId: z.enum([TPlanType.BEGINNER, TPlanType.PROFESSIONAL, TPlanType.ENTERPRISE]),
+  planStartTimestamp: z.number(),
+  planEndTimestamp: z.number(),
+  planQuantity: z.number(),
+  planUnitPrice: z.number(),
+  planAmount: z.number(),
+  payer: z.object({
+    name: z.string(),
+    address: z.string(),
+    phone: z.string(),
+    taxId: z.string(),
+  }),
+  payee: z.object({
+    name: z.string(),
+    address: z.string(),
+    phone: z.string(),
+    taxId: z.string(),
+  }),
+  subtotal: z.number(),
+  tax: z.number(),
+  total: z.number(),
+  amountDue: z.number(),
+});
+
+export const IInvoiceListValidator = paginatedDataSchema(IInvoiceDetailValidator);
 
 /**
  * Info: (20250114 - Tzuhan)
@@ -72,7 +86,7 @@ export const subscriptionSchemas = {
       querySchema: ISubscriptionPutQueryValidator,
       bodySchema: nullSchema,
     },
-    outputSchema: ISubscriptionDetailsValidator,
+    outputSchema: ISubscriptionItemValidator,
     frontend: nullSchema,
   },
   update: {
@@ -80,7 +94,32 @@ export const subscriptionSchemas = {
       querySchema: ISubscriptionPutQueryValidator,
       bodySchema: ISubscriptionPutBodyValidator,
     },
-    outputSchema: z.null(), // ISubscriptionDetailsValidator,
+    outputSchema: ISubscriptionItemValidator,
     frontend: nullSchema,
+  },
+  listInvoiceList: {
+    input: {
+      querySchema: z.object({
+        teamId: zodStringToNumber,
+        page: zodStringToNumber.optional(),
+        pageSize: zodStringToNumber.optional(),
+        plan: z.enum([TPlanType.BEGINNER, TPlanType.PROFESSIONAL, TPlanType.ENTERPRISE]).optional(),
+        status: z.boolean().optional(),
+        startDate: z.number().optional(),
+        endDate: z.number().optional(),
+        searchQuery: z.string().optional(),
+      }),
+      bodySchema: nullSchema,
+    },
+    outputSchema: IInvoiceListValidator,
+  },
+  getInvoice: {
+    input: {
+      querySchema: z.object({
+        invoiceId: zodStringToNumber,
+      }),
+      bodySchema: nullSchema,
+    },
+    outputSchema: IInvoiceDetailValidator,
   },
 };

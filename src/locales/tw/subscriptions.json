@@ -69,6 +69,15 @@
     "TOTAL_PRICE": "總金額"
   },
 
+  "PAYMENT_PAGE": {
+    "PAYMENT": "付款",
+    "ADD_CREDIT_CARD": "新增信用卡",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "您可以隨時取消訂閱",
+    "NOTE": "您的目前方案將持續有效至下一次續訂日期，本次計費週期不會提供退款。",
+    "SUBSCRIBE": "訂閱",
+    "TOAST_SUBSCRIPTION_SUCCESS": "您已成功訂閱"
+  },
+
   "BILLING_PAGE": {
     "META_TITLE": "帳單",
     "PAGE_TITLE_PREFIX": "",
@@ -77,6 +86,22 @@
 
   "INVOICE_PAGE": {
     "META_TITLE": "發票",
-    "PAGE_TITLE": "發票"
+    "PAGE_TITLE": "發票",
+    "INVOICE_TITLE": "發票",
+    "ISSUED": "開立日",
+    "DUE": "到期日",
+    "BILLED_TO": "收款人",
+    "TAX_ID": "統一編號",
+    "FROM": "付款失敗",
+    "DESCRIPTION": "描述",
+    "QTY": "數量",
+    "UNIT_PRICE": "單價",
+    "AMOUNT": "金額",
+    "SUBTOTAL": "小計",
+    "TAX": "稅",
+    "TOTAL": "總計",
+    "AMOUNT_DUE": "應付金額",
+    "FOOTNOTE_DUE": "，到期日為",
+    "FOOTNOTE_PAGE": "第 1 頁，共 1 頁"
   }
 }

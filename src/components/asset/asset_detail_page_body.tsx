@@ -299,7 +299,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isPurchasePrice = !isLoading ? (
     <p>
       {numberWithCommas(purchasePrice)}{' '}
-      <span className="text-text-neutral-tertiary">{t('asset:CURRENCY_ALIAS.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -307,7 +307,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isAccumDep = !isLoading ? (
     <p>
       {numberWithCommas(accumulatedDepreciation)}{' '}
-      <span className="text-text-neutral-tertiary">{t('asset:CURRENCY_ALIAS.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -315,7 +315,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isResidualValue = !isLoading ? (
     <p>
       {numberWithCommas(residualValue)}{' '}
-      <span className="text-text-neutral-tertiary">{t('asset:CURRENCY_ALIAS.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />

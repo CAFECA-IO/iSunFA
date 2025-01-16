@@ -125,17 +125,16 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>
-      <button
+      <Link
         id="setting-subscribe"
-        type="button"
+        href={ISUNFA_ROUTE.SUBSCRIPTIONS}
         className="group mb-lv-7 inline-flex items-center justify-start whitespace-nowrap rounded-xs border-none font-medium text-text-neutral-link hover:text-button-text-primary-hover focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:text-button-text-disable disabled:opacity-100"
-        disabled
       >
         <p className="flex gap-2">
           <Image src="/icons/currency-dollar-circle.svg" width={16} height={16} alt="notice_icon" />
           <span>{t('setting:NORMAL.SUBSCRIPTION_MANAGEMENT')}</span>
         </p>
-      </button>
+      </Link>
       {user?.deletedAt ? (
         <button
           id="setting-cancel-remove-account"

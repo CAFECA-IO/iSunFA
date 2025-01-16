@@ -335,10 +335,5 @@
   },
   "COMMON": {
     "STATUS": "Status"
-  },
-  "CURRENCY_ALIAS": {
-    "TWD": "TWD",
-    "EUR": "EUR",
-    "USD": "USD"
   }
 }
