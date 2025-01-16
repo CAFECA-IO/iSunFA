@@ -73,6 +73,15 @@
     "TOTAL_PRICE": "總金額"
   },
 
+  "PAYMENT_PAGE": {
+    "PAYMENT": "付款",
+    "ADD_CREDIT_CARD": "新增信用卡",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "您可以隨時取消訂閱",
+    "NOTE": "您的目前方案將持續有效至下一次續訂日期，本次計費週期不會提供退款。",
+    "SUBSCRIBE": "訂閱",
+    "TOAST_SUBSCRIPTION_SUCCESS": "您已成功訂閱"
+  },
+
   "BILLING_PAGE": {
     "META_TITLE": "帳單",
     "PAGE_TITLE_PREFIX": "",

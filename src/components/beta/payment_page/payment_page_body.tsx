@@ -93,6 +93,7 @@ const PaymentPageBody = ({ team, subscriptionPlan, getUserOwnedTeam }: PaymentPa
       if (isDirty) {
         setIsConfirmLeaveModalOpen(true);
         setNextRoute(url); // Info: (20250116 - Liz) 儲存下一個路由
+        // Deprecated: (20250116 - Liz) remove eslint-disable
         // eslint-disable-next-line @typescript-eslint/no-throw-literal
         throw 'Route change blocked because of unfinished subscription.'; // Info: (20250116 - Liz)
         // throw new Error('Route change blocked because of unfinished subscription.'); // Info: (20250116 - Liz) 阻止路由變化 (dev 環境會顯示錯誤訊息是正常的) (prod 環境不會顯示錯誤訊息) 如果想刪除上面的 eslint-disable-next-line，就要改成使用這行

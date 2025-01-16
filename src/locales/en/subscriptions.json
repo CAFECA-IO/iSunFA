@@ -73,6 +73,14 @@
     "TOTAL_PRICE": "Total Price"
   },
 
+  "PAYMENT_PAGE": {
+    "PAYMENT": "Payment",
+    "ADD_CREDIT_CARD": "Add Credit Card",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "You can cancel your subscription anytime.",
+    "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
+    "SUBSCRIBE": "Subscribe"
+  },
+
   "BILLING_PAGE": {
     "META_TITLE": "Billing",
     "PAGE_TITLE_PREFIX": "Billing of",
