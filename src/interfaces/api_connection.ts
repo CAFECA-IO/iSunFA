@@ -140,7 +140,10 @@ export type IAPIName =
   | 'REMOVE_LOGIN_DEVICE'
   | 'LIST_TEAM'
   | 'GET_TEAM_BY_ID'
-  | 'UPDATE_SUBSCRIPTION';
+  | 'UPDATE_SUBSCRIPTION'
+  | 'LIST_TEAM_INVOICE'
+  | 'GET_TEAM_INVOICE_BY_ID';
+
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
