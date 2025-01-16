@@ -3,7 +3,7 @@ import { IAccountBookLedgerJSON } from '@/interfaces/account_book_node';
 import { getAllLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
 import { ILedgerItem, ILedgerTotal } from '@/interfaces/ledger';
 import { getLedgerJSON } from '@/lib/utils/repo/account_book.repo';
-import { EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP } from '@/constants/account';
+import { EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP, VoucherType } from '@/constants/account';
 import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
 
 export const getLedgerFromAccountBook = async (
@@ -177,7 +177,7 @@ export const sortAndCalculateBalances = (
 ): ILedgerItem[] => {
   const accountBalances: { [key: string]: number } = {};
 
-  return lineItems
+  const output = lineItems
     .sort((a, b) => {
       const codeCompare = a.account.code.localeCompare(b.account.code);
       if (codeCompare === 0) {
@@ -195,6 +195,14 @@ export const sortAndCalculateBalances = (
       const balanceChange = item.debit ? item.amount : -item.amount;
       accountBalances[accountKey] += balanceChange;
 
+      /* Info: (20250115 - Luphia) convert item.vaucher.type to VoucherType
+       * 1. itee.voucher.type might be EventType
+       * 2. item.voucher.type might be VoucherType
+       * 3. item.voucher.type might be string or undefined
+       */
+      const voucherType = (EVENT_TYPE_TO_VOUCHER_TYPE_MAP[item.voucher.type as EventType] ||
+        item.voucher.type) as VoucherType;
+
       return {
         id: item.id,
         accountId: item.accountId,
@@ -203,8 +211,7 @@ export const sortAndCalculateBalances = (
         no: item.account.code,
         accountingTitle: item.account.name,
         voucherNumber: item.voucher.no,
-        voucherType:
-          EVENT_TYPE_TO_VOUCHER_TYPE_MAP[item.voucher.type as EventType] || item.voucher.type,
+        voucherType,
         particulars: item.description,
         debitAmount: debit,
         creditAmount: credit,
@@ -213,6 +220,7 @@ export const sortAndCalculateBalances = (
         updatedAt: item.updatedAt,
       };
     });
+  return output;
 };
 
 /** Info: (20241224 - Shirley)

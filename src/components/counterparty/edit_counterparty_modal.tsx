@@ -331,10 +331,10 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
           </div>
           {/* Info: (20241111 - Anna) 绑定删除操作 */}
           <div
-            className="flex cursor-pointer items-center justify-start gap-2 py-6"
+            className="flex cursor-pointer items-center justify-start gap-1 py-6"
             onClick={deleteCounterpartyHandler}
           >
-            <RiDeleteBinLine className="text-neutral-500" />
+            <RiDeleteBinLine className="text-red-600" />
             <p className="text-red-600">{t('certificate:COUNTERPARTY.REMOVE_THIS')}</p>
           </div>
           <div className="flex items-center justify-end gap-12px">
