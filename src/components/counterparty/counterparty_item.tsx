@@ -59,7 +59,7 @@ const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterparty
   );
 
   return (
-    <div className="table-row font-medium">
+    <div className="table-row font-medium h-72px">
       {/* Info: (20241106 - Anna) Partner’s Name */}
       <div className="table-cell text-left align-middle">{displayedName}</div>
 
