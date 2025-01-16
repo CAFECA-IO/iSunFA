@@ -311,4 +311,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_TEAM]: subscriptionSchemas.list,
   [APIName.GET_TEAM_BY_ID]: subscriptionSchemas.get,
   [APIName.UPDATE_SUBSCRIPTION]: subscriptionSchemas.update,
+  [APIName.LIST_TEAM_INVOICE]: subscriptionSchemas.listInvoiceList,
+  [APIName.GET_TEAM_INVOICE_BY_ID]: subscriptionSchemas.getInvoice,
 };
