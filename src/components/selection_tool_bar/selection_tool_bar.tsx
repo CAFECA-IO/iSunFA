@@ -1,7 +1,7 @@
 import React from 'react';
 import { ICertificateUI } from '@/interfaces/certificate';
 import { FaPlus } from 'react-icons/fa6';
-import { FiDownload, FiTrash2 } from 'react-icons/fi';
+import { /* FiDownload, */ FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
 import { IVoucherBeta } from '@/interfaces/voucher';
@@ -27,6 +27,8 @@ interface SelectionToolbarProps {
   handleSelectAll: () => void; // Info: (20240920 - tzuhan) 全選
   onDelete?: () => void; // Info: (20240920 - tzuhan) 添加刪除的回調函數
   addOperations?: ISelectionToolBarOperation[];
+  // Deprecated: (20250116 - Julian) remove eslint-disable
+  // eslint-disable-next-line react/no-unused-prop-types
   exportOperations?: ISelectionToolBarOperation[];
 }
 
@@ -45,7 +47,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
   handleSelectAll,
   onDelete,
   addOperations,
-  exportOperations,
+  // exportOperations,
 }) => {
   const { t } = useTranslation(['certificate']);
 
@@ -117,7 +119,8 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
             </div>
           )}
           <div className="flex h-42px items-center justify-end space-x-4 text-link-text-primary">
-            {exportOperations &&
+            {/* ToDo: (20250116 - Julian) 先隱藏按鈕 */}
+            {/* {exportOperations &&
               exportOperations.map((operation) => (
                 <Button
                   type="button"
@@ -128,7 +131,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
                   <FiDownload />
                   <div>{t(operation.buttonStr)}</div>
                 </Button>
-              ))}
+              ))} */}
             {isSelectable && (
               <button
                 type="button"

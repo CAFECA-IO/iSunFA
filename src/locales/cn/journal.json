@@ -335,10 +335,5 @@
   },
   "COMMON": {
     "STATUS": "状态"
-  },
-  "CURRENCY_ALIAS": {
-    "TWD": "新台币",
-    "EUR": "欧元",
-    "USD": "美元"
   }
 }

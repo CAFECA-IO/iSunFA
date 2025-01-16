@@ -170,8 +170,5 @@
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤"
-  },
-  "CURRENCY_ALIAS": {
-    "TWD": "新臺幣"
   }
 }
