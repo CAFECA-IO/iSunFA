@@ -1,13 +1,18 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
 import BillingPageBody from '@/components/beta/billing_page/billing_page_body';
 import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
+import { ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
 
 const FAKE_TEAM_DATA: IUserOwnedTeam = {
   id: 3,
@@ -21,6 +26,7 @@ const FAKE_TEAM_DATA: IUserOwnedTeam = {
 
 const BillingPage = () => {
   const { t } = useTranslation(['subscriptions']);
+  const { toastHandler } = useModalContext();
   const router = useRouter();
   const { teamId } = router.query;
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
@@ -35,6 +41,49 @@ const BillingPage = () => {
 
   // ToDo: (20250113 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
   // setTeam(teamData);
+
+  // Info: (20250116 - Liz) team.paymentStatus 為 UNPAID 時，顯示付款失敗的 Toast
+  useEffect(() => {
+    if (!team) return;
+
+    const PAYMENT_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/payment`;
+
+    // Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
+    const getRemainingDays = (timestamp: number) => {
+      const now = Date.now();
+      const diff = timestamp - now;
+      return Math.ceil(diff / ONE_DAY_IN_MS);
+    };
+
+    // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
+    const remainingDays = getRemainingDays(team.expiredTimestamp + THREE_DAYS_IN_MS);
+
+    if (team.paymentStatus === TPaymentStatus.UNPAID) {
+      toastHandler({
+        id: ToastId.SUBSCRIPTION_PAYMENT_STATUS_UNPAID,
+        type: ToastType.ERROR,
+        content: (
+          <div className="flex items-center gap-32px">
+            <p className="text-sm text-text-neutral-primary">
+              <span className="font-semibold">
+                {t('subscriptions:ERROR.TOAST_PAYMENT_FAILED_TITLE')}
+              </span>
+
+              <span className="font-normal">
+                {t('subscriptions:ERROR.TOAST_PAYMENT_FAILED_MESSAGE_PREFIX') +
+                  remainingDays +
+                  t('subscriptions:ERROR.TOAST_PAYMENT_FAILED_MESSAGE_SUFFIX')}
+              </span>
+            </p>
+            <Link href={PAYMENT_PAGE} className="text-base font-semibold text-link-text-error">
+              {t('subscriptions:ERROR.UPDATE_PAYMENT')}
+            </Link>
+          </div>
+        ),
+        closeable: true,
+      });
+    }
+  }, [t, team, toastHandler]);
 
   // ToDo: (20250113 - Liz) 如果 team 資料不存在，顯示錯誤頁面
   if (!team) {
