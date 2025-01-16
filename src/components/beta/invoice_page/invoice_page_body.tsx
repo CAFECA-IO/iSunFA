@@ -40,12 +40,14 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
 
   // ToDo: (20250115 - Julian) 下載發票
   const downloadClickHandler = () => {
+    // Deprecate: (20250116 - Julian) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('Download invoice ', invoiceId);
   };
 
   // ToDo: (20250115 - Julian) 列印發票
   const printClickHandler = () => {
+    // Deprecate: (20250116 - Julian) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('Print invoice ', invoiceId);
   };
