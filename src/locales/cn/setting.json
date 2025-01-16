@@ -181,10 +181,5 @@
   },
   "ERROR": {
     "FETCH_DATA": "获取数据时出错，请稍后重试。"
-  },
-  "CURRENCY_ALIAS": {
-    "TWD": "新台币",
-    "EUR": "欧元",
-    "USD": "美元"
   }
 }

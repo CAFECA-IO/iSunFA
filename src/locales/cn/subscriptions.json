@@ -57,6 +57,22 @@
 
   "INVOICE_PAGE": {
     "META_TITLE": "发票",
-    "PAGE_TITLE": "发票"
+    "PAGE_TITLE": "发票",
+    "INVOICE_TITLE": "发票",
+    "ISSUED": "开立日",
+    "DUE": "到期日",
+    "BILLED_TO": "收款人",
+    "TAX_ID": "统一编号",
+    "FROM": "付款失败",
+    "DESCRIPTION": "描述",
+    "QTY": "数量",
+    "UNIT_PRICE": "单价",
+    "AMOUNT": "金额",
+    "SUBTOTAL": "小计",
+    "TAX": "税",
+    "TOTAL": "总计",
+    "AMOUNT_DUE": "应付金额",
+    "FOOTNOTE_DUE": "，到期日为",
+    "FOOTNOTE_PAGE": "第 1 页，共 1 页"
   }
 }
