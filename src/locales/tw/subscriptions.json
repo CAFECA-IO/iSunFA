@@ -33,12 +33,40 @@
     "DAYS": " 天後恢復為基礎版方案"
   },
 
+  "SUBSCRIPTION_PLAN_CONTENT": {
+    "NTD_SLASH_MONTH": "新台幣/月",
+    "PER_EXTRA_TEAM_MEMBER_PREFIX": "每增加一名團隊成員 ",
+    "PER_EXTRA_TEAM_MEMBER_SUFFIX": ""
+  },
+
   "ERROR": {
     "ERROR": "錯誤",
     "DATA_NOT_FOUND": "找不到資料",
     "TEAM_DATA_NOT_FOUND": "找不到團隊資料",
     "INVOICE_DATA_NOT_FOUND": "找不到發票資料",
-    "USER_OWNED_TEAMS_NOT_FOUND": "找不到使用者擁有的團隊"
+    "USER_OWNED_TEAMS_NOT_FOUND": "找不到使用者擁有的團隊",
+    "PLAN_NOT_FOUND": "找不到訂閱方案"
+  },
+
+  "MODAL": {
+    "SUBSCRIPTION_IS_NOT_DONE_YET": "尚未完成訂閱",
+    "SUBSCRIPTION_IS_NOT_DONE_YET_MESSAGE": "您尚未完成訂閱，確定要離開此頁面嗎？",
+    "KEEP_FINISHING_MY_SUBSCRIPTION": "繼續完成我的訂閱",
+    "LEAVE": "離開"
+  },
+
+  "PAYMENT_PAGE": {
+    "PAGE_TITLE": "付款頁面",
+    "PAYMENT": "付款",
+    "ADD_CREDIT_CARD": "新增信用卡",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "您可以隨時取消訂閱",
+    "NOTE": "您的目前方案將持續有效至下一次續訂日期，本次計費週期不會提供退款。",
+    "SUBSCRIBE": "訂閱",
+    "TOAST_SUBSCRIPTION_SUCCESS": "您已成功訂閱",
+    "MONTHLY_SUBSCRIPTION": "每月訂閱",
+    "SUBTOTAL": "小計",
+    "TAX": "稅金",
+    "TOTAL_PRICE": "總金額"
   },
 
   "PAYMENT_PAGE": {

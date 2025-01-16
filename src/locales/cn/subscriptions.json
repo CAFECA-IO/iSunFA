@@ -33,12 +33,40 @@
     "DAYS": " 天后恢复为基础版方案"
   },
 
+  "SUBSCRIPTION_PLAN_CONTENT": {
+    "NTD_SLASH_MONTH": "新台币/月",
+    "PER_EXTRA_TEAM_MEMBER_PREFIX": "每增加一名团队成员 ",
+    "PER_EXTRA_TEAM_MEMBER_SUFFIX": ""
+  },
+
   "ERROR": {
     "ERROR": "错误",
     "DATA_NOT_FOUND": "找不到数据",
     "TEAM_DATA_NOT_FOUND": "找不到团队数据",
     "INVOICE_DATA_NOT_FOUND": "找不到发票数据",
-    "USER_OWNED_TEAMS_NOT_FOUND": "找不到用户拥有的团队"
+    "USER_OWNED_TEAMS_NOT_FOUND": "找不到用户拥有的团队",
+    "PLAN_NOT_FOUND": "找不到订阅方案"
+  },
+
+  "MODAL": {
+    "SUBSCRIPTION_IS_NOT_DONE_YET": "尚未完成订阅",
+    "SUBSCRIPTION_IS_NOT_DONE_YET_MESSAGE": "您尚未完成订阅，确定要离开此页面吗？",
+    "KEEP_FINISHING_MY_SUBSCRIPTION": "继续完成我的订阅",
+    "LEAVE": "离开"
+  },
+
+  "PAYMENT_PAGE": {
+    "PAGE_TITLE": "付款页面",
+    "PAYMENT": "付款",
+    "ADD_CREDIT_CARD": "新增信用卡",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "您可以随时取消订阅",
+    "NOTE": "您的当前方案将持续有效至下一次续订日期，本次计费周期不会提供退款。",
+    "SUBSCRIBE": "订阅",
+    "TOAST_SUBSCRIPTION_SUCCESS": "您已成功订阅",
+    "MONTHLY_SUBSCRIPTION": "每月订阅",
+    "SUBTOTAL": "小计",
+    "TAX": "税金",
+    "TOTAL_PRICE": "总金额"
   },
 
   "PAYMENT_PAGE": {

@@ -73,7 +73,7 @@ const PaymentPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={'Payment'}
+        pageTitle={t('subscriptions:PAYMENT_PAGE.PAGE_TITLE')}
         goBackUrl={`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${teamIdString}`}
       >
         <PaymentPageBody
