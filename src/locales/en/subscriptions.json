@@ -49,6 +49,22 @@
 
   "INVOICE_PAGE": {
     "META_TITLE": "Invoice",
-    "PAGE_TITLE": "Invoice"
+    "PAGE_TITLE": "Invoice",
+    "INVOICE_TITLE": "Invoice",
+    "ISSUED": "Issued",
+    "DUE": "Due",
+    "BILLED_TO": "Billed To",
+    "TAX_ID": "Tax ID",
+    "FROM": "From",
+    "DESCRIPTION": "Description",
+    "QTY": "Qty",
+    "UNIT_PRICE": "Unit Price",
+    "AMOUNT": "Amount",
+    "SUBTOTAL": "Subtotal",
+    "TAX": "Tax",
+    "TOTAL": "Total",
+    "AMOUNT_DUE": "Amount Due",
+    "FOOTNOTE_DUE": "due",
+    "FOOTNOTE_PAGE": "Page 1 of 1"
   }
 }

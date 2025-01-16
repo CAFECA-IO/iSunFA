@@ -59,5 +59,10 @@
     "DROP_YOUR_FILES_HERE_OR": "Drop your files here or ",
     "BROWSE": "Browse",
     "MAXIMUM_SIZE": "Maximum size: 4MB"
+  },
+  "CURRENCY_ALIAS": {
+    "TWD": "TWD",
+    "EUR": "EUR",
+    "USD": "USD"
   }
 }
