@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import TrialBalanceItemRow from '@/components/trial_balance/trial_balance_item';
 import Pagination from '@/components/pagination/pagination';
-import SortingButton from '@/components/voucher/sorting_button';
+import TrialBalanceSorting from '@/components/trial_balance/trial_balance_sorting';
 import { checkboxStyle, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { SortOrder, SortBy } from '@/constants/sort';
 import PrintButton from '@/components/button/print_button';
@@ -192,8 +192,20 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     setSubAccountsToggle((prevState) => !prevState);
   };
 
-  const displayedBeginningCredit = SortingButton({
-    string: t('reports:REPORTS.BEGINNING_CREDIT'),
+  const displayedBeginningCredit = TrialBalanceSorting({
+    string: (
+      <>
+        <span className="print:hidden">
+          {t('reports:REPORTS.BEGINNING')}
+          {t('reports:REPORTS.CREDIT')}
+        </span>
+        <span className="hidden print:inline">
+          {t('reports:REPORTS.BEGINNING')}
+          <br />
+          {t('reports:REPORTS.CREDIT')}
+        </span>
+      </>
+    ),
     sortOrder: beginningCreditSort,
     setSortOrder: setBeginningCreditSort,
     handleReset: () => {
@@ -207,8 +219,20 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     className: 'px-8px',
   });
 
-  const displayedBeginningDebit = SortingButton({
-    string: t('reports:REPORTS.BEGINNING_DEBIT'),
+  const displayedBeginningDebit = TrialBalanceSorting({
+    string: (
+      <>
+        <span className="print:hidden">
+          {t('reports:REPORTS.BEGINNING')}
+          {t('reports:REPORTS.DEBIT')}
+        </span>
+        <span className="hidden print:inline">
+          {t('reports:REPORTS.BEGINNING')}
+          <br />
+          {t('reports:REPORTS.DEBIT')}
+        </span>
+      </>
+    ),
     sortOrder: beginningDebitSort,
     setSortOrder: setBeginningDebitSort,
     handleReset: () => {
@@ -222,8 +246,20 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     className: 'px-8px',
   });
 
-  const displayedMidtermCredit = SortingButton({
-    string: t('reports:REPORTS.MIDTERM_CREDIT'),
+  const displayedMidtermCredit = TrialBalanceSorting({
+    string: (
+      <>
+        <span className="print:hidden">
+          {t('reports:REPORTS.MIDTERM')}
+          {t('reports:REPORTS.CREDIT')}
+        </span>
+        <span className="hidden print:inline">
+          {t('reports:REPORTS.MIDTERM')}
+          <br />
+          {t('reports:REPORTS.CREDIT')}
+        </span>
+      </>
+    ),
     sortOrder: midtermCreditSort,
     setSortOrder: setMidtermCreditSort,
     handleReset: () => {
@@ -237,8 +273,20 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     className: 'px-8px',
   });
 
-  const displayedMidtermDebit = SortingButton({
-    string: t('reports:REPORTS.MIDTERM_DEBIT'),
+  const displayedMidtermDebit = TrialBalanceSorting({
+    string: (
+      <>
+        <span className="print:hidden">
+          {t('reports:REPORTS.MIDTERM')}
+          {t('reports:REPORTS.DEBIT')}
+        </span>
+        <span className="hidden print:inline">
+          {t('reports:REPORTS.MIDTERM')}
+          <br />
+          {t('reports:REPORTS.DEBIT')}
+        </span>
+      </>
+    ),
     sortOrder: midtermDebitSort,
     setSortOrder: setMidtermDebitSort,
     handleReset: () => {
@@ -251,8 +299,20 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     },
   });
 
-  const displayedEndingDebit = SortingButton({
-    string: t('reports:REPORTS.ENDING_DEBIT'),
+  const displayedEndingDebit = TrialBalanceSorting({
+    string: (
+      <>
+        <span className="print:hidden">
+          {t('reports:REPORTS.ENDING')}
+          {t('reports:REPORTS.DEBIT')}
+        </span>
+        <span className="hidden print:inline">
+          {t('reports:REPORTS.ENDING')}
+          <br />
+          {t('reports:REPORTS.DEBIT')}
+        </span>
+      </>
+    ),
     sortOrder: endingDebitSort,
     setSortOrder: setEndingDebitSort,
     handleReset: () => {
@@ -266,8 +326,20 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     className: 'px-8px',
   });
 
-  const displayedEndingCredit = SortingButton({
-    string: t('reports:REPORTS.ENDING_CREDIT'),
+  const displayedEndingCredit = TrialBalanceSorting({
+    string: (
+      <>
+        <span className="print:hidden">
+          {t('reports:REPORTS.ENDING')}
+          {t('reports:REPORTS.CREDIT')}
+        </span>
+        <span className="hidden print:inline">
+          {t('reports:REPORTS.ENDING')}
+          <br />
+          {t('reports:REPORTS.CREDIT')}
+        </span>
+      </>
+    ),
     sortOrder: endingCreditSort,
     setSortOrder: setEndingCreditSort,
     handleReset: () => {
@@ -427,9 +499,10 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   return (
     <div className="flex flex-col" ref={printRef}>
       {displayedSelectArea}
-      <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
+      {/* Info: (20250116 - Anna) print:max-w-a4-width */}
+      <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 print:max-w-a4-width">
         <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm font-medium">
-          <div className="table-row h-60px print:text-xs">
+          <div className="table-row h-60px print:text-xxs">
             <div
               className={`hidden border-b border-stroke-neutral-quaternary text-center align-middle print:hidden`}
             >
@@ -437,49 +510,64 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
                 <input type="checkbox" className={checkboxStyle} />
               </div>
             </div>
+            {/* Info: (20250116 - Anna) print:max-w-55px */}
             <div
-              className={`table-cell w-70px whitespace-nowrap border-b border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:bg-neutral-50`}
+              className={`table-cell w-70px whitespace-nowrap border-b border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:max-w-55px print:bg-neutral-50`}
             >
-              {t('reports:REPORTS.CODE')}
+              <span className="print:hidden">{t('reports:REPORTS.CODE')}</span>
+              <span className="hidden print:inline">
+                {t('reports:REPORTS.SUBJECT')}
+                <br />
+                {t('reports:REPORTS.NUMBER')}
+              </span>
             </div>
+            {/* Info: (20250116 - Anna) print:max-w-150px */}
             <div
-              className={`table-cell border-b border-l border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:bg-neutral-50`}
+              className={`table-cell border-b border-l border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:max-w-150px print:bg-neutral-50`}
             >
-              {t('reports:REPORT.ACCOUNTING')}
+              <span className="print:hidden">
+                {t('reports:REPORT.ACCOUNTING')}
+                {t('reports:REPORT.SUBJECT')}
+              </span>
+              <span className="hidden print:inline">
+                {t('reports:REPORT.ACCOUNTING')}
+                <br />
+                {t('reports:REPORT.SUBJECT')}
+              </span>
             </div>
-
+            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
             <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark`}
-            >
-              {displayedBeginningCredit}
-            </div>
-
-            <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
               {displayedBeginningDebit}
             </div>
-
+            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
             <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+            >
+              {displayedBeginningCredit}
+            </div>
+            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+            <div
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
               {displayedMidtermDebit}
             </div>
-
+            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
             <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
               {displayedMidtermCredit}
             </div>
-
+            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
             <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
               {displayedEndingDebit}
             </div>
-
+            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
             <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
               {displayedEndingCredit}
             </div>
@@ -491,46 +579,46 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       <div className="h-px w-full bg-divider-stroke-lv-4"></div>
       {/* Info: (20241018 - Anna) Total開始 */}
       <div className="mb-10 mt-4 table w-full overflow-hidden rounded-b-lg">
-        <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
-          <div className="table-row h-60px print:text-xs">
+        <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary print:max-w-a4-width">
+          <div className="table-row h-60px print:text-xxs">
             <div
               className={`col-span-3 table-cell border-stroke-neutral-quaternary text-center align-middle font-medium print:bg-neutral-50`}
             >
               {t('reports:TAX_REPORT.TOTAL')}
             </div>
-
+            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
             <div
-              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
               {formatNumber(totalData?.beginningDebitAmount ?? 0)}
             </div>
-
+            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
             <div
-              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
               {formatNumber(totalData?.beginningCreditAmount ?? 0)}
             </div>
-
+            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
             <div
-              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
               {formatNumber(totalData?.midtermDebitAmount ?? 0)}
             </div>
-
+            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
             <div
-              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
               {formatNumber(totalData?.midtermCreditAmount ?? 0)}
             </div>
-
+            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
             <div
-              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
               {formatNumber(totalData?.endingDebitAmount ?? 0)}
             </div>
-
+            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
             <div
-              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark`}
+              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
             >
               {formatNumber(totalData?.endingCreditAmount ?? 0)}
             </div>

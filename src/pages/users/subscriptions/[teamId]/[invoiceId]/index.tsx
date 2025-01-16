@@ -61,10 +61,10 @@ const InvoicePage = () => {
   console.log('teamIdString:', teamIdString, 'invoiceIdString:', invoiceIdString);
 
   // ToDo: (20250113 - Liz) 先暫時使用假資料 FAKE_TEAM_DATA 和 FAKE_INVOICE_DATA
-  // Deprecate: (20250115 - Liz) remove eslint-disable
+  // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [team, setTeam] = useState<IUserOwnedTeam | null>(FAKE_TEAM_DATA);
-  // Deprecate: (20250115 - Liz) remove eslint-disable
+  // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [invoice, setInvoice] = useState<ITeamInvoice | null>(FAKE_INVOICE_DATA);
 
