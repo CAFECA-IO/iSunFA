@@ -10,12 +10,11 @@
     "M": "月",
     "DAY": "日",
     "CODE": "科目編號",
-    "BEGINNING_CREDIT": "起始日借方",
-    "BEGINNING_DEBIT": "起始日貸方",
-    "MIDTERM_CREDIT": "期中借方",
-    "MIDTERM_DEBIT": "期中貸方",
-    "ENDING_CREDIT": "結束日借方",
-    "ENDING_DEBIT": "結束日貸方",
+    "BEGINNING": "起始日",
+    "MIDTERM": "期中",
+    "ENDING": "結束日",
+    "SUBJECT": "科目",
+    "NUMBER": "編號",
     "TWD": "新台幣",
     "VOUCHER_DATE": "傳票日期",
     "NOTE": "備註",
@@ -270,7 +269,8 @@
   "REPORT": {
     "NO_DATA_AVAILABLE": "無可用數據",
     "PLEASE_SELECT_PERIOD": "請選擇期間",
-    "ACCOUNTING": "會計科目"
+    "ACCOUNTING": "會計",
+    "SUBJECT": "科目"
   },
   "COMMON": {
     "ANALYSIS_REPORTS": "分析報告",

@@ -25,6 +25,7 @@ const eventTypeMap: { [key in EventType]: string } = {
   [EventType.PAYMENT]: 'journal:JOURNAL.PAYMENT',
   [EventType.INCOME]: 'project:PROJECT.INCOME',
   [EventType.TRANSFER]: 'common:COMMON.TRANSFER',
+  [EventType.OPENING]: 'journal:JOURNAL.OPENING',
 };
 const taxRateSelection: number[] = [0, 5, 20, 25];
 
