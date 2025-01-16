@@ -38,6 +38,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   // Deprecate: (20241226 - Tzuhan) remove isOptionSelected
   // const [isOptionSelected, setIsOptionSelected] = useState(false); // Info: (20241223 - Anna) 選擇選項的狀態
   const dropdownRef = useRef<HTMLDivElement>(null); // Info: (20241223 - Anna) Ref 追蹤下拉選單
+  const [isNameDuplicate, setIsNameDuplicate] = useState(false); // Info: (20250116 - Anna) 新增追蹤名稱是否重複的狀態
 
   const {
     trigger: addCounterpartyTrigger,
@@ -250,23 +251,60 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
         type: counterpartyData.type.toString(),
       };
 
-      await addCounterpartyTrigger({ params: { companyId: selectedCompany?.id }, body: apiData });
+      try {
+        await addCounterpartyTrigger({ params: { companyId: selectedCompany?.id }, body: apiData });
+        setIsNameDuplicate(false); // Info: (20250116 - Anna) 重置名稱重複狀態
+      } catch (responseError) {
+        // Info: (20250116 - Anna) 定義類型守衛
+        const isApiError = (err: unknown): err is { payload: { name: string } } => {
+          return (
+            typeof err === 'object' &&
+            err !== null &&
+            'payload' in err &&
+            typeof (err as { payload: { name?: unknown } }).payload?.name === 'string'
+          );
+        };
+
+        // Info: (20250116 - Anna) 使用類型守衛
+        if (isApiError(responseError) && responseError.payload.name === inputName) {
+          setIsNameDuplicate(true); // 如果名稱重複，設定狀態為 true
+        } else {
+          setIsNameDuplicate(false);
+        }
+      }
     }
   };
 
   useEffect(() => {
+    // Info: (20250116 - Anna) 定義類型守衛
+    const isApiError = (err: unknown): err is { payload: { name: string } } => {
+      return (
+        typeof err === 'object' &&
+        err !== null &&
+        'payload' in err &&
+        typeof (err as { payload: { name?: unknown } }).payload?.name === 'string'
+      );
+    };
+
     if (success && data) {
       // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.log('Counterparty created successfully.');
+      setIsNameDuplicate(false); // Info: (20250116 - Anna) 重置名稱重複的狀態
       onSave(data);
       modalVisibilityHandler();
     } else if (error) {
       // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.error('Failed to create counterparty:', error);
+      // Info: (20250116 - Anna) 使用類型守衛檢查錯誤結構
+      if (isApiError(error) && error.payload.name === inputName) {
+        setIsNameDuplicate(true); // Info: (20250116 - Anna) 如果名稱重複，設定狀態為 true
+      } else {
+        setIsNameDuplicate(false);
+      }
     }
-  }, [success, error, data]);
+  }, [success, error, data, inputName]); // Info: (20250116 - Anna) 添加 inputName 作為依賴
 
   useEffect(() => {
     // Info: (20241206 - Julian) 若有預設值，則填入輸入欄位
@@ -351,7 +389,9 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
                   value={inputName}
                   onChange={nameChangeHandler}
                   required
-                  className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none"
+                  className={`h-46px flex-1 rounded-sm border bg-input-surface-input-background p-10px text-input-text-input-filled outline-none ${
+                    isNameDuplicate ? 'border-red-500' : 'border-input-stroke-input'
+                  }`}
                 />
                 {displayedDropdown} {/*  Info: (20241223 - Anna) 顯示下拉選單 */}
               </div>
