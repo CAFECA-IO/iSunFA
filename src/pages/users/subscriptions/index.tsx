@@ -42,7 +42,7 @@ const SubscriptionsPage = () => {
   const { t } = useTranslation(['subscriptions']);
 
   // ToDo: (20250115 - Liz) 先暫時使用假資料 FAKE_TEAM_DATA
-  // Deprecate: (20250115 - Liz) remove eslint-disable
+  // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [userOwnedTeams, setUserOwnedTeams] = useState<IUserOwnedTeam[] | null>(FAKE_OWNED_TEAMS);
 

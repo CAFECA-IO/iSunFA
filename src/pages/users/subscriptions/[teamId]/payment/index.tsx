@@ -38,6 +38,7 @@ const PaymentPage = () => {
 
   // ToDo: (20250102 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
   // setTeam(teamData);
+  const getUserOwnedTeam = async () => {};
 
   // ToDo: (20250102 - Liz) 如果 team 資料不存在，顯示錯誤頁面
   // 參考:
@@ -75,7 +76,11 @@ const PaymentPage = () => {
         pageTitle={'Payment'}
         goBackUrl={`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${teamIdString}`}
       >
-        <PaymentPageBody team={FAKE_TEAM_DATA} subscriptionPlan={planFromUrl} />
+        <PaymentPageBody
+          team={FAKE_TEAM_DATA}
+          subscriptionPlan={planFromUrl}
+          getUserOwnedTeam={getUserOwnedTeam}
+        />
       </Layout>
     </>
   );
