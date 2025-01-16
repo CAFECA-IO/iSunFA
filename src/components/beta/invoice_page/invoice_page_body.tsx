@@ -32,9 +32,11 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
 
   const taxAmount = (subtotal * tax) / 100;
 
+  const unit = t('common:CURRENCY_ALIAS.TWD');
+
   const planName = t(`subscriptions:SUBSCRIPTIONS_PAGE.${planId.toUpperCase()}`);
 
-  const footnote = `#${invoiceId} - $ ${numberWithCommas(amountDue)} ${t('common:CURRENCY_ALIAS.TWD')} ${t('subscriptions:INVOICE_PAGE.FOOTNOTE_DUE')} ${timestampToString(dueTimestamp / 1000).date}`;
+  const footnote = `#${invoiceId} - $ ${numberWithCommas(amountDue)} ${unit} ${t('subscriptions:INVOICE_PAGE.FOOTNOTE_DUE')} ${timestampToString(dueTimestamp / 1000).date}`;
 
   // ToDo: (20250115 - Julian) 下載發票
   const downloadClickHandler = () => {
@@ -123,10 +125,10 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
         </div>
         <p className="w-80px text-center">{planQuantity}</p>
         <p className="w-80px whitespace-nowrap text-center">
-          $ {numberWithCommas(planUnitPrice)} {t('common:CURRENCY_ALIAS.TWD')}
+          $ {numberWithCommas(planUnitPrice)} {unit}
         </p>
         <p className="w-80px whitespace-nowrap text-right">
-          $ {numberWithCommas(planAmount)} {t('common:CURRENCY_ALIAS.TWD')}
+          $ {numberWithCommas(planAmount)} {unit}
         </p>
       </div>
     </div>
@@ -140,7 +142,7 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
           {t('subscriptions:INVOICE_PAGE.SUBTOTAL')}
         </p>
         <p className="text-right font-medium text-text-neutral-tertiary">
-          $ {numberWithCommas(subtotal)} {t('common:CURRENCY_ALIAS.TWD')}
+          $ {numberWithCommas(subtotal)} {unit}
         </p>
       </div>
       {/* Info: (20250115 - Julian) Tax */}
@@ -149,7 +151,7 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
           {t('subscriptions:INVOICE_PAGE.TAX')} ({tax}%)
         </p>
         <p className="text-right font-medium text-text-neutral-tertiary">
-          $ {numberWithCommas(taxAmount)} {t('common:CURRENCY_ALIAS.TWD')}
+          $ {numberWithCommas(taxAmount)} {unit}
         </p>
       </div>
       {/* Info: (20250115 - Julian) Total */}
@@ -158,7 +160,7 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
           {t('subscriptions:INVOICE_PAGE.TOTAL')}
         </p>
         <p className="text-right font-medium text-text-neutral-primary">
-          $ {numberWithCommas(total)} {t('common:CURRENCY_ALIAS.TWD')}
+          $ {numberWithCommas(total)} {unit}
         </p>
       </div>
       {/* Info: (20250116 - Julian) Amount due */}
@@ -167,7 +169,7 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
           {t('subscriptions:INVOICE_PAGE.AMOUNT_DUE')}
         </p>
         <p className="text-right font-medium text-text-brand-primary-lv1">
-          $ {numberWithCommas(amountDue)} {t('common:CURRENCY_ALIAS.TWD')}
+          $ {numberWithCommas(amountDue)} {unit}
         </p>
       </div>
     </div>
