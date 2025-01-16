@@ -162,6 +162,8 @@ export enum APIName {
   LIST_TEAM = 'LIST_TEAM',
   GET_TEAM_BY_ID = 'GET_TEAM_BY_ID',
   UPDATE_SUBSCRIPTION = 'UPDATE_SUBSCRIPTION',
+  LIST_TEAM_INVOICE = 'LIST_TEAM_INVOICE',
+  GET_TEAM_INVOICE_BY_ID = 'GET_TEAM_INVOICE_BY_ID',
 }
 
 export enum APIPath {
@@ -302,6 +304,8 @@ export enum APIPath {
   LIST_TEAM = `${apiPrefixV2}/team`,
   GET_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
   UPDATE_SUBSCRIPTION = `${apiPrefixV2}/team/:teamId/subscription`,
+  LIST_TEAM_INVOICE = `${apiPrefixV2}/team/:teamId/invoice`,
+  GET_TEAM_INVOICE_BY_ID = `${apiPrefixV2}/team/:teamId/invoice/:invoiceId`,
 }
 const createConfig = ({
   name,
@@ -1008,5 +1012,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.UPDATE_SUBSCRIPTION,
     method: HttpMethod.PUT,
     path: APIPath.UPDATE_SUBSCRIPTION,
+  }),
+  [APIName.LIST_TEAM_INVOICE]: createConfig({
+    name: APIName.LIST_TEAM_INVOICE,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_TEAM_INVOICE,
+  }),
+  [APIName.GET_TEAM_INVOICE_BY_ID]: createConfig({
+    name: APIName.GET_TEAM_INVOICE_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_TEAM_INVOICE_BY_ID,
   }),
 };
