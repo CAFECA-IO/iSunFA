@@ -1653,6 +1653,12 @@
     "1423-6 進項稅額-彙總登錄每張稅額五百元以下之進項三聯式、電子計算機統一發票": "1423-6 Input Tax - Consolidated Registration of Triplicate Uniform Invoices and Computerized Uniform Invoices, Each with Tax Amount Below 500 NTD",
     "1423-7 進項稅額-彙總登錄每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證": "1423-7 Input Tax - Consolidated Registration of Cash Register Duplicate Uniform Invoices and Other Certificates Bearing Tax Amounts, Each with Tax Amount Below 500 NTD",
     "1423-8 進項稅額-進項海關代徵營業稅繳納證": "1423-8 Input Tax - Business Tax Payment Certificates Collected by Customs",
-    "1423-9 進項稅額-進項海關退還溢繳營業稅申報單": "1423-9 Input Tax - Application Forms for Overpaid Business Tax Refunds by Customs"
+    "1423-9 進項稅額-進項海關退還溢繳營業稅申報單": "1423-9 Input Tax - Application Forms for Overpaid Business Tax Refunds by Customs",
+    "BEGINNER": "Beginner",
+    "PROFESSIONAL": "Professional",
+    "ENTERPRISE": "Enterprise",
+    "PAID": "Paid",
+    "FAILED": "Failed",
+    "PLAN": "Plan"
   }
 }

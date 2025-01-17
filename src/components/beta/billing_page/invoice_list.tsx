@@ -2,11 +2,6 @@ import { ITeamInvoice } from '@/interfaces/subscription';
 import { formatTimestampWithHyphen } from '@/constants/time';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react'; // Info: (20250116 - Anna)
-import APIHandler from '@/lib/utils/api_handler'; // Info: (20250116 - Anna)
-import { APIName } from '@/constants/api_connection'; // Info: (20250116 - Anna)
-import { useRouter } from 'next/router'; // Info: (20250116 - Anna)
-import { IPaginatedData } from '@/interfaces/pagination';
 
 interface InvoiceListProps {
   invoiceList: ITeamInvoice[];
@@ -14,61 +9,6 @@ interface InvoiceListProps {
 
 const InvoiceList = ({ invoiceList }: InvoiceListProps) => {
   const { t } = useTranslation(['subscriptions']);
-  const router = useRouter(); // Info: (20250116 - Anna)
-  const { teamId } = router.query; // Info: (20250116 - Anna)
-  const [invoices, setInvoices] = useState<ITeamInvoice[]>([]); // Info: (20250116 - Anna) state 來儲存發票列表
-  const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : ''; // Info: (20250116 - Anna) teamId
-
-  // Info: (20250116 - Anna) 初始化 APIHandler
-  const { trigger: getInvoiceList } = APIHandler<IPaginatedData<ITeamInvoice[]>>(
-    APIName.LIST_TEAM_INVOICE
-  );
-
-  // Info: (20250116 - Anna) fetchInvoiceData 函數
-  const fetchInvoiceData = async () => {
-    try {
-      const response = await getInvoiceList({
-        params: {
-          teamId: teamIdString,
-        },
-        query: {
-          page: 1,
-          pageSize: 10,
-          // plan: 'professional',
-          // status: true,
-          // startDate: 1672531200,
-          // endDate: 1704067200,
-          // searchQuery: 'John',
-        },
-      });
-
-      if (response.success && response.data) {
-        const newInvoices = response.data.data ?? [];
-        setInvoices(newInvoices);
-        // eslint-disable-next-line no-console
-        console.log('成功取得發票列表:', newInvoices);
-      } else {
-        // eslint-disable-next-line no-console
-        console.error('取得發票列表失敗:', response.error || `API 錯誤碼: ${response.code}`);
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('發票 API 呼叫發生錯誤:', error);
-    }
-  };
-
-  // Info: (20250116 - Anna) 使用 useEffect 呼叫 fetchInvoiceData
-  useEffect(() => {
-    if (teamIdString) {
-      fetchInvoiceData();
-    }
-  }, [teamIdString]);
-
-  // Todo: (20250116 - Anna) 暫時在這使用invoices以防報錯
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('invoices state:', invoices);
-  }, [invoices]);
 
   return (
     <section className="flex flex-col gap-12px">
