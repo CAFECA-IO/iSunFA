@@ -157,6 +157,7 @@ export const voucherAPIGetUtils = {
 
   initVoucherEntity: (voucher: IGetManyVoucherResponseButOne) => {
     const voucherEntity = parsePrismaVoucherToVoucherEntity(voucher);
+    voucherEntity.isReverseRelated = voucherAPIGetUtils.isVoucherReverseRelated(voucher);
     return voucherEntity;
   },
 
@@ -346,6 +347,16 @@ export const voucherAPIGetUtils = {
         (a, b) => sortFunction(a, b, tab) * (option.sortOrder === SortOrder.ASC ? 1 : -1)
       );
     });
+  },
+
+  isVoucherReverseRelated: (voucher: IGetManyVoucherResponseButOne) => {
+    // Info: (20250117 - Shirley) 檢查是否被刪除
+    const isDeleted = !!voucher.deletedAt;
+
+    // Info: (20250117 - Shirley) 檢查是否有關聯的反轉傳票
+    const hasOriginalVouchers = voucher.originalVouchers.length > 0;
+
+    return isDeleted || hasOriginalVouchers;
   },
 };
 
