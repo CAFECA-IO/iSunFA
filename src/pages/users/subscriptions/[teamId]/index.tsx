@@ -22,10 +22,7 @@ const TeamSubscriptionPage = () => {
   console.log('teamIdString:', teamIdString);
 
   const [team, setTeam] = useState<IUserOwnedTeam | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  // Deprecated: (20250117 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('isLoading:', isLoading);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Info: (20250117 - Liz) 取得團隊資料 API
   const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
