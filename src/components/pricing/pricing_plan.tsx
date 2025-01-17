@@ -216,7 +216,7 @@ const PricingPlan: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col items-center px-6 py-12 md:px-12 lg:px-24">
+    <div className="flex flex-col items-center gap-80px px-112px py-120px md:px-12 lg:px-24">
       <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
         {t('pricing:MAIN.TITLE')}
       </LinearGradientText>
