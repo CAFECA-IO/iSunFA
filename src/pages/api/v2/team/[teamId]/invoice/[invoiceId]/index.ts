@@ -9,28 +9,23 @@ import { APIName } from '@/constants/api_connection';
 import { FAKE_INVOICE_LIST } from '@/lib/services/subscription_service';
 
 const handleGetRequest = async (req: NextApiRequest) => {
-  let statusMessage = STATUS_MESSAGE.BAD_REQUEST;
-
   const session = await getSession(req);
 
   const isLogin = await checkSessionUser(session, APIName.GET_TEAM_INVOICE_BY_ID, req);
   if (!isLogin) {
-    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-    throw new Error(statusMessage);
+    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
   }
   const isAuth = await checkUserAuthorization(APIName.GET_TEAM_INVOICE_BY_ID, req, session);
   if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
-    throw new Error(statusMessage);
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
-  const { query, body } = checkRequestData(APIName.GET_TEAM_INVOICE_BY_ID, req, session);
-  if (query === null || body === null) {
-    statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
-    throw new Error(statusMessage);
+  const { query } = checkRequestData(APIName.GET_TEAM_INVOICE_BY_ID, req, session);
+  if (query === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
   const payload: ITeamInvoice | null =
     FAKE_INVOICE_LIST.find((invoice) => invoice.id === query.invoiceId) || null;
-  const result = formatApiResponse(statusMessage, payload);
+  const result = formatApiResponse(STATUS_MESSAGE.SUCCESS, payload);
   return result;
 };
 

@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react'; // Info: (20250116 - Anna)
 import APIHandler from '@/lib/utils/api_handler'; // Info: (20250116 - Anna)
 import { APIName } from '@/constants/api_connection'; // Info: (20250116 - Anna)
 import { useRouter } from 'next/router'; // Info: (20250116 - Anna)
+import { IPaginatedData } from '@/interfaces/pagination';
 
 interface InvoiceListProps {
   invoiceList: ITeamInvoice[];
@@ -19,7 +20,7 @@ const InvoiceList = ({ invoiceList }: InvoiceListProps) => {
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : ''; // Info: (20250116 - Anna) teamId
 
   // Info: (20250116 - Anna) 初始化 APIHandler
-  const { trigger: getInvoiceList } = APIHandler<{ data: ITeamInvoice[] }>(
+  const { trigger: getInvoiceList } = APIHandler<IPaginatedData<ITeamInvoice[]>>(
     APIName.LIST_TEAM_INVOICE
   );
 
