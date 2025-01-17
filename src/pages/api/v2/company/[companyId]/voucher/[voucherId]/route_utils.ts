@@ -412,7 +412,6 @@ export const voucherAPIGetOneUtils = {
   initVoucherEntity: (voucher: IGetOneVoucherResponse) => {
     const voucherEntity = parsePrismaVoucherToVoucherEntity(voucher);
     voucherEntity.isReverseRelated = voucherAPIGetOneUtils.isVoucherReverseRelated(voucher);
-    // console.log('voucherEntity in GetOneVoucher', voucherEntity);
 
     return voucherEntity;
   },
