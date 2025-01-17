@@ -7,22 +7,15 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
 import BillingPageBody from '@/components/beta/billing_page/billing_page_body';
-import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
+import { IUserOwnedTeam, TPaymentStatus } from '@/interfaces/subscription';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 import { ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
-
-const FAKE_TEAM_DATA: IUserOwnedTeam = {
-  id: 3,
-  name: 'Team B',
-  plan: TPlanType.ENTERPRISE,
-  enableAutoRenewal: false,
-  nextRenewalTimestamp: 1737268546000,
-  expiredTimestamp: 1737268546000,
-  paymentStatus: TPaymentStatus.UNPAID,
-};
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { SkeletonList } from '@/components/skeleton/skeleton';
 
 const BillingPage = () => {
   const { t } = useTranslation(['subscriptions']);
@@ -30,17 +23,41 @@ const BillingPage = () => {
   const router = useRouter();
   const { teamId } = router.query;
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
-  // Deprecated: (20250113 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('teamIdString:', teamIdString);
+  const [team, setTeam] = useState<IUserOwnedTeam | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // ToDo: (20250113 - Liz) 先暫時使用假資料 FAKE_TEAM_DATA
-  // Deprecated: (20250115 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [team, setTeam] = useState<IUserOwnedTeam | null>(FAKE_TEAM_DATA);
+  // Info: (20250117 - Liz) 取得團隊資料 API
+  const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
 
-  // ToDo: (20250113 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
-  // setTeam(teamData);
+  useEffect(() => {
+    // Info: (20250117 - Liz) 打 API 取得團隊資料
+    const getTeamData = async () => {
+      if (!teamIdString) return;
+      setIsLoading(true);
+
+      try {
+        const { data: teamData, success } = await getTeamDataAPI({
+          params: { teamId: teamIdString },
+        });
+
+        // Deprecated: (20250117 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('teamData:', teamData);
+
+        if (success && teamData) {
+          setTeam(teamData);
+        }
+      } catch (error) {
+        // Deprecated: (20250117 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('取得團隊資料失敗');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getTeamData();
+  }, [teamIdString]);
 
   // Info: (20250116 - Liz) team.paymentStatus 為 UNPAID 時，顯示付款失敗的 Toast
   useEffect(() => {
@@ -116,7 +133,18 @@ const BillingPage = () => {
     }
   }, [t, team, toastHandler]);
 
-  // ToDo: (20250113 - Liz) 如果 team 資料不存在，顯示錯誤頁面
+  // Info: (20250117 - Liz) 如果打 API 還在載入中，顯示載入中頁面
+  if (isLoading) {
+    return (
+      <Layout isDashboard={false} goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}>
+        <div className="flex items-center justify-center">
+          <SkeletonList count={6} />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Info: (20250113 - Liz) 如果 team 資料不存在，顯示錯誤頁面
   if (!team) {
     return (
       <Layout
