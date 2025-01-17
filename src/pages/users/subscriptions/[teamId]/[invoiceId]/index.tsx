@@ -19,9 +19,12 @@ const InvoicePage = () => {
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
   const invoiceIdString = invoiceId ? (Array.isArray(invoiceId) ? invoiceId[0] : invoiceId) : '';
 
-  const { trigger: getTeamById, data: teamData } = APIHandler<IUserOwnedTeam>(
-    APIName.GET_TEAM_BY_ID
-  );
+  const {
+    trigger: getTeamById,
+    data: teamData,
+    error: teamError,
+    isLoading: isTeamLoading,
+  } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
 
   const {
     trigger: getInvoiceById,
@@ -51,7 +54,7 @@ const InvoicePage = () => {
   }, [invoiceData]);
 
   // ToDo: (20250113 - Liz) 如果 team 資料不存在，顯示錯誤頁面
-  if (!team) {
+  if (!team && teamError) {
     return (
       <Layout
         isDashboard={false}
@@ -65,7 +68,7 @@ const InvoicePage = () => {
 
   // Info: (20250117 - Julian) 顯示頁面內容
   const isShowPageBody =
-    !isInvoiceLoading && invoice ? (
+    !isTeamLoading && !isInvoiceLoading && invoice ? (
       <InvoicePageBody invoice={invoice} />
     ) : (
       <SkeletonList count={5} />
