@@ -164,7 +164,12 @@ const BillingPage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['layout', 'dashboard', 'subscriptions'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'layout',
+        'dashboard',
+        'subscriptions',
+      ])),
     },
   };
 };
