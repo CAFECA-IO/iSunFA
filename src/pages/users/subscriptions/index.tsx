@@ -1,55 +1,66 @@
 import Head from 'next/head';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Layout from '@/components/beta/layout/layout';
 import SubscriptionsPageBody from '@/components/beta/subscriptions_page/subscriptions_page_body';
-import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
-
-// ToDo: (20250102 - Liz) 這邊的資料是假的，之後要改成從 API 拿 userOwnedTeams: IUserOwnedTeam[];
-const FAKE_OWNED_TEAMS: IUserOwnedTeam[] = [
-  {
-    id: 1,
-    name: 'Personal',
-    plan: TPlanType.BEGINNER,
-    enableAutoRenewal: false,
-    nextRenewalTimestamp: 1736936488530,
-    expiredTimestamp: 1736936488530,
-    paymentStatus: TPaymentStatus.FREE,
-  },
-  {
-    id: 2,
-    name: 'Team A',
-    plan: TPlanType.PROFESSIONAL,
-    enableAutoRenewal: true,
-    nextRenewalTimestamp: 1736936488530,
-    expiredTimestamp: 1736936488530,
-    paymentStatus: TPaymentStatus.UNPAID,
-  },
-  {
-    id: 3,
-    name: 'Team B',
-    plan: TPlanType.ENTERPRISE,
-    enableAutoRenewal: false,
-    nextRenewalTimestamp: 1736936488530,
-    expiredTimestamp: 1736936488530,
-    paymentStatus: TPaymentStatus.PAID,
-  },
-];
+import { IUserOwnedTeam } from '@/interfaces/subscription';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+// import { FAKE_OWNED_TEAMS } from '@/lib/services/subscription_service'; // Deprecated: (20250117 - Liz) 測試可以使用:假資料 FAKE_OWNED_TEAMS
 
 const SubscriptionsPage = () => {
   const { t } = useTranslation(['subscriptions']);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userOwnedTeams, setUserOwnedTeams] = useState<IUserOwnedTeam[] | null>(null);
+  // Deprecated: (20250117 - Liz) 測試可以使用:假資料 FAKE_OWNED_TEAMS
 
-  // ToDo: (20250115 - Liz) 先暫時使用假資料 FAKE_TEAM_DATA
-  // Deprecated: (20250115 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [userOwnedTeams, setUserOwnedTeams] = useState<IUserOwnedTeam[] | null>(FAKE_OWNED_TEAMS);
+  // Info: (20250117 - Liz) 取得使用者擁有的所有團隊 API
+  const { trigger: getUserOwnedTeamsAPI } = APIHandler<IPaginatedData<IUserOwnedTeam[]>>(
+    APIName.LIST_TEAM
+  );
 
-  // ToDo: (20250115 - Liz) 呼叫 API 取得 userOwnedTeams 的資料，並且設定到 userOwnedTeams state
-  // setUserOwnedTeams(ownedTeams);
+  useEffect(() => {
+    const getUserOwnedTeams = async () => {
+      setIsLoading(true);
 
-  // ToDo: (20250115 - Liz) 如果 userOwnedTeams 資料不存在，顯示錯誤頁面
+      try {
+        const { data: ownedTeams, success } = await getUserOwnedTeamsAPI();
+
+        if (success && ownedTeams && ownedTeams.data) {
+          setUserOwnedTeams(ownedTeams.data);
+        }
+      } catch (error) {
+        // Deprecated: (20250117 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('取得使用者擁有的團隊失敗');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Info: (20250117 - Liz) 打 API 取得使用者擁有的團隊
+    getUserOwnedTeams();
+  }, []);
+
+  // Info: (20250117 - Liz) 如果正在載入，顯示骨架載入
+  if (isLoading) {
+    return (
+      <Layout
+        isDashboard={false}
+        pageTitle={t('subscriptions:SUBSCRIPTIONS_PAGE.SUBSCRIPTION_PLANS')}
+      >
+        <div className="flex items-center justify-center">
+          <SkeletonList count={6} />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Info: (20250117 - Liz) 如果 userOwnedTeams 資料不存在，顯示錯誤頁面
   if (!userOwnedTeams) {
     return (
       <Layout isDashboard={false} pageTitle={t('subscriptions:ERROR.USER_OWNED_TEAMS_NOT_FOUND')}>
@@ -92,7 +103,12 @@ const SubscriptionsPage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['layout', 'dashboard', 'subscriptions'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'layout',
+        'dashboard',
+        'subscriptions',
+      ])),
     },
   };
 };
