@@ -1293,10 +1293,13 @@ input[type='checkbox']:checked::before {
     url('/elements/bg_pricing_bottom.png');
   background-position:
     top center,
-    center center,
-    bottom center;
+    30% center,
+    bottom center; /* 中間背景移動到較高位置 */
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size:
+    100% auto,
+    100% 60%,
+    120% auto; /* 中間背景縮小為80%寬度 */
 }
 
 .toast-container {
