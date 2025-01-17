@@ -2,10 +2,15 @@ import React from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
+import {
+  LinearGradientText,
+  LinearTextSize,
+  TextAlign,
+} from '@/components/landing_page_v2/linear_gradient_text';
 
 const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="relative flex w-full flex-col items-center gap-24px justify-self-center overflow-hidden rounded-lg border-x border-b bg-cloudy-glass px-40px py-20px text-center backdrop-blur-md">
+    <div className="relative w-full overflow-hidden rounded-lg border-x border-b bg-cloudy-glass px-lv-6 py-lv-8 text-left backdrop-blur-md">
       <Image
         src="/icons/nail.svg"
         width={24}
@@ -39,7 +44,7 @@ const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         width={162}
         height={9}
         alt="light"
-        className="absolute -top-4px left-0"
+        className="absolute -top-4px left-1/4"
       />
       {children}
     </div>
@@ -48,7 +53,7 @@ const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 interface PlanProps {
   title: string;
-  price: string;
+  price: { value: string; unit: string; additional: string };
   description: string;
   features: { icon: string; description: string }[];
   buttonText: string;
@@ -65,13 +70,19 @@ const PlanCard: React.FC<PlanProps> = ({
 }) => {
   return (
     <Card>
-      <h3 className="text-xl font-bold text-yellow-400">{title}</h3>
-      <p className="mt-2 text-sm text-gray-300">{description}</p>
-      <p className="mt-4 text-3xl font-extrabold text-white">{price}</p>
+      <h3 className="text-xl font-bold text-text-brand-primary-lv3">{title}</h3>
+      <p className="mt-2 text-sm text-white">{description}</p>
+      <div className="mt-4 h-74px">
+        <LinearGradientText size={LinearTextSize.MD} align={TextAlign.LEFT}>
+          {price.value}
+          <span className="pl-2 text-sm font-medium leading-loose text-gray-300">{price.unit}</span>
+        </LinearGradientText>
+        <p className="text-sm text-gray-300">{price.additional}</p>
+      </div>
       <LandingButton
         type="button"
         variant="primary"
-        className="whitespace-nowrap font-bold"
+        className="my-lv-5 w-full justify-center whitespace-nowrap font-bold"
         onClick={onClick}
       >
         {buttonText}
@@ -79,7 +90,13 @@ const PlanCard: React.FC<PlanProps> = ({
       <ul className="mt-6 space-y-2 text-left text-gray-300">
         {features.map((feature, index) => (
           <li key={`feature-${index + 1}`} className="flex items-center gap-2">
-            <Image src={feature.icon} alt="check" width={20} height={20} className="inline-block" />
+            <Image
+              src={feature.icon}
+              alt="check"
+              width={16}
+              height={16}
+              className="inline-block min-w-16px"
+            />
             {feature.description}
           </li>
         ))}
@@ -94,12 +111,16 @@ const PricingPlan: React.FC = () => {
   const plans = [
     {
       title: t('pricing:BEGINNER.TITLE'),
-      price: t('pricing:BEGINNER.PRICE'),
+      price: {
+        value: t('pricing:BEGINNER.PRICE'),
+        unit: t('pricing:BEGINNER.PRICE_UNIT'),
+        additional: t('pricing:BEGINNER.PRICE_ADDITIONAL'),
+      },
       description: t('pricing:BEGINNER.DESCRIPTION'),
       features: [
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AI_UPLOADS') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AUTO_SUGGESTIONS') },
-        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.STORAGE') },
+        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.LIMIT_STORAGE') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.MANAGE_LEDGER') },
         {
           icon: '/icons/check.svg',
@@ -116,7 +137,11 @@ const PricingPlan: React.FC = () => {
     },
     {
       title: t('pricing:PROFESSIONAL.TITLE'),
-      price: t('pricing:PROFESSIONAL.PRICE'),
+      price: {
+        value: t('pricing:PROFESSIONAL.PRICE'),
+        unit: t('pricing:PROFESSIONAL.PRICE_UNIT'),
+        additional: t('pricing:PROFESSIONAL.PRICE_ADDITIONAL'),
+      },
       description: t('pricing:PROFESSIONAL.DESCRIPTION'),
       features: [
         {
@@ -150,7 +175,11 @@ const PricingPlan: React.FC = () => {
     },
     {
       title: t('pricing:ENTERPRISE.TITLE'),
-      price: t('pricing:ENTERPRISE.PRICE'),
+      price: {
+        value: t('pricing:ENTERPRISE.PRICE'),
+        unit: t('pricing:ENTERPRISE.PRICE_UNIT'),
+        additional: t('pricing:ENTERPRISE.PRICE_ADDITIONAL'),
+      },
       description: t('pricing:ENTERPRISE.DESCRIPTION'),
       features: [
         {
@@ -188,8 +217,12 @@ const PricingPlan: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center px-6 py-12 md:px-12 lg:px-24">
-      <h2 className="text-4xl font-extrabold text-white">{t('pricing:MAIN.TITLE')}</h2>
-      <p className="mt-4 text-lg text-gray-400">{t('pricing:MAIN.SUBTITLE')}</p>
+      <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
+        {t('pricing:MAIN.TITLE')}
+      </LinearGradientText>
+      <p className="text-center text-xs font-medium transition-all duration-500 md:text-lg lg:text-xl">
+        {t('pricing:MAIN.SUBTITLE')}
+      </p>
       <div className="mt-10 grid w-full max-w-7xl grid-cols-1 gap-8 md:grid-cols-3">
         {plans.map((plan, index) => (
           <PlanCard key={`plan-${index + 1}`} {...plan} />

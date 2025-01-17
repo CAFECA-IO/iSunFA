@@ -1,59 +1,124 @@
 {
-    "MAIN": {
-      "TITLE": "Pricing",
-      "SUBTITLE": "Choose the plan that fits you more"
+  "MAIN": {
+    "TITLE": "Pricing",
+    "SUBTITLE": "Choose the plan that fits you more"
+  },
+  "FEATURES": {
+    "PRICE": "Price",
+    "BEST_FOR": "Best For",
+    "STORAGE": "Storage",
+    "LEDGER": "Ledger",
+    "CERTIFICATE": "Certificate",
+    "FINANCIAL_REPORTS": "Financial Reports",
+    "MATCHING_PLATFORM": "Matching Platform",
+    "TEAM_COLLABORATION": "Team Collaboration",
+    "API_INTEGRATION": "API Integration",
+    "AUDITING": "Auditing",
+    "CUSTOMER_SUPPORT": "Customer Support",
+    "EXTRAS": "Extras",
+    "AI_FEATURES": "AI Features"
+  },
+  "BEGINNER": {
+    "TITLE": "Beginner",
+    "PRICE": "Free",
+    "PRICE_UNIT": "",
+    "PRICE_ADDITIONAL": "",
+    "DESCRIPTION": "Perfect for individuals or small startups, even with no accounting experience.",
+    "FEATURES": {
+      "AI_UPLOADS": "AI-powered certificate uploads for quick conversion.",
+      "AUTO_SUGGESTIONS": "Auto-suggestions for assets, receivables, and payables.",
+      "LIMIT_STORAGE": "10GB of cloud storage.",
+      "MANAGE_LEDGER": "Manage 1 ledger.",
+      "GENERATE_STATEMENTS": "Generate essential financial statements.",
+      "CREATE_TEAMS": "Create up to 3 teams to share data and ledger.",
+      "AUTO_FILL_TAX": "Auto-filling 401 tax form.",
+      "ACCEPT_TASKS": "Accept tasks from businesses or accountants on the platform.",
+      "SUPPORT_USER": "Supports 1 user for each team.",
+      "CUSTOMER_SUPPORT": "Online customer support included.",
+      "PRICE": "$0 / month",
+      "BEST_FOR": "Exploring basic features for daily needs",
+      "STORAGE": "10GB",
+      "LEDGER": "Limited to 1",
+      "CERTIFICATE": "Limited AI processing",
+      "FINANCIAL_REPORTS": "Unlimited generation",
+      "MATCHING_PLATFORM": "Accepting tasks only",
+      "TEAM_COLLABORATION": "Up to 3 teams, 1 user",
+      "API_INTEGRATION": "X",
+      "AUDITING": "Manual report downloads",
+      "EXTRAS": "X",
+      "AI_FEATURES": "All AI chats are public"
     },
-    "BEGINNER": {
-      "TITLE": "Beginner",
-      "PRICE": "Free",
-      "DESCRIPTION": "Perfect for individuals or small startups, even with no accounting experience.",
-      "FEATURES": {
-        "AI_UPLOADS": "AI-powered certificate uploads for quick conversion.",
-        "AUTO_SUGGESTIONS": "Auto-suggestions for assets, receivables, and payables.",
-        "STORAGE": "10GB of cloud storage.",
-        "MANAGE_LEDGER": "Manage 1 ledger.",
-        "GENERATE_STATEMENTS": "Generate essential financial statements.",
-        "CREATE_TEAMS": "Create up to 3 teams to share data and ledger.",
-        "AUTO_FILL_TAX": "Auto-filling 401 tax form.",
-        "ACCEPT_TASKS": "Accept tasks from businesses or accountants on the platform.",
-        "SUPPORT_USER": "Supports 1 user for each team.",
-        "CUSTOMER_SUPPORT": "Online customer support included."
-      },
-      "BUTTON_TEXT": "Get Started"
+    "BUTTON_TEXT": "Get Started"
+  },
+  "PROFESSIONAL": {
+    "TITLE": "Professional",
+    "PRICE": "$29.9",
+    "PRICE_UNIT": "USD/Month",
+    "PRICE_ADDITIONAL": "每增加一位團隊成員 +$2.9",
+    "DESCRIPTION": "Great for SMBs, accountants, or bookkeeping firms needing advanced tools.",
+    "FEATURES": {
+      "EVERYTHING_IN_BEGINNER": "Everything in Beginner, plus:",
+      "UNLIMITED_AI_UPLOADS": "Certificate uploads with faster and unlimited AI processing.",
+      "LARGE_STORAGE": "1TB cloud storage.",
+      "UNLIMITED_LEDGER": "Manage unlimited ledger.",
+      "POST_REQUESTS": "Post requests on the matching platform.",
+      "AUTO_GENERATE_STATEMENTS": "Auto-generate financial statements regularly.",
+      "ASSET_TAGS": "Free 10 asset tags for easier tracking.",
+      "SUPPORT_USERS": "Supports up to 10 users for each team with expansion options.",
+      "TECHNICAL_ASSISTANCE": "24 hours/month of 1-on-1 technical assistance (max 4 hours/session).",
+      "PRICE": "$29.9 / month (10 users) + $2.9/user",
+      "BEST_FOR": "Boosting team efficiency, ideal for SMBs",
+      "STORAGE": "1TB",
+      "LEDGER": "Unlimited",
+      "CERTIFICATE": "Unlimited",
+      "FINANCIAL_REPORTS": "Unlimited generation",
+      "MATCHING_PLATFORM": "Accept and assign tasks",
+      "TEAM_COLLABORATION": "Up to 3 teams, 10 users (expandable)",
+      "API_INTEGRATION": "X",
+      "AUDITING": "Automated report updates",
+      "CUSTOMER_SUPPORT": "Chat + up to 24 hours of tech support/month",
+      "EXTRAS": "Includes 10 asset tags",
+      "AI_FEATURES": "Option to hide AI chats and anonymize"
     },
-    "PROFESSIONAL": {
-      "TITLE": "Professional",
-      "PRICE": "$899 NTD/Month",
-      "DESCRIPTION": "Great for SMBs, accountants, or bookkeeping firms needing advanced tools.",
-      "FEATURES": {
-        "EVERYTHING_IN_BEGINNER": "Everything in Beginner, plus:",
-        "UNLIMITED_AI_UPLOADS": "Certificate uploads with faster and unlimited AI processing.",
-        "LARGE_STORAGE": "1TB cloud storage.",
-        "UNLIMITED_LEDGER": "Manage unlimited ledger.",
-        "POST_REQUESTS": "Post requests on the matching platform.",
-        "AUTO_GENERATE_STATEMENTS": "Auto-generate financial statements regularly.",
-        "ASSET_TAGS": "Free 10 asset tags for easier tracking.",
-        "SUPPORT_USERS": "Supports up to 10 users for each team with expansion options.",
-        "TECHNICAL_ASSISTANCE": "24 hours/month of 1-on-1 technical assistance (max 4 hours/session)."
-      },
-      "BUTTON_TEXT": "Upgrade Now"
+    "BUTTON_TEXT": "Upgrade Now"
+  },
+  "ENTERPRISE": {
+    "TITLE": "Enterprise",
+    "PRICE": "$299.9",
+    "PRICE_UNIT": "USD/Month",
+    "PRICE_ADDITIONAL": "",
+    "DESCRIPTION": "Built for large companies or accounting firms focused on security and efficiency.",
+    "FEATURES": {
+      "EVERYTHING_IN_PROFESSIONAL": "Everything in Professional, plus:",
+      "COLLABORATION_TOOLS": "Real-time collaboration and review tools.",
+      "CUSTOM_WORKFLOWS": "Custom workflows and report formats.",
+      "UNLIMITED_STORAGE": "Unlimited cloud storage.",
+      "ASSET_TAGS": "Free 100 asset tags for easier tracking.",
+      "SERVER_INTEGRATION": "Support for server integrations.",
+      "UNLIMITED_USERS": "Unlimited users for each team.",
+      "API_INTEGRATION": "API integration with internal systems.",
+      "TECHNICAL_ASSISTANCE": "48 hours/month of 1-on-1 technical assistance (max 4 hours/session).",
+      "PRICE": "$299.9 / month",
+      "BEST_FOR": "Comprehensive solutions for large enterprises",
+      "STORAGE": "Unlimited",
+      "LEDGER": "Unlimited",
+      "CERTIFICATE": "Unlimited",
+      "FINANCIAL_REPORTS": "Advanced reports, multi-company consolidation, and custom needs",
+      "MATCHING_PLATFORM": "Unlimited, with priority listing, top ads, and advanced promotion",
+      "TEAM_COLLABORATION": "Up to 3 teams, Unlimited user",
+      "AUDITING": "Automated updates",
+      "CUSTOMER_SUPPORT": "Chat + up to 48 hours of tech support/month",
+      "EXTRAS": "Includes 100 asset tags, offline deployment, and hardware integration",
+      "AI_FEATURES": "Customizable AI connected to company reports"
     },
-    "ENTERPRISE": {
-      "TITLE": "Enterprise",
-      "PRICE": "$8990 NTD/Month",
-      "DESCRIPTION": "Built for large companies or accounting firms focused on security and efficiency.",
-      "FEATURES": {
-        "EVERYTHING_IN_PROFESSIONAL": "Everything in Professional, plus:",
-        "COLLABORATION_TOOLS": "Real-time collaboration and review tools.",
-        "CUSTOM_WORKFLOWS": "Custom workflows and report formats.",
-        "UNLIMITED_STORAGE": "Unlimited cloud storage.",
-        "ASSET_TAGS": "Free 100 asset tags for easier tracking.",
-        "SERVER_INTEGRATION": "Support for server integrations.",
-        "UNLIMITED_USERS": "Unlimited users for each team.",
-        "API_INTEGRATION": "API integration with internal systems.",
-        "TECHNICAL_ASSISTANCE": "48 hours/month of 1-on-1 technical assistance (max 4 hours/session)."
-      },
-      "BUTTON_TEXT": "Contact Sales"
-    }
+    "BUTTON_TEXT": "Contact Sales"
+  },
+  "COMPARISON": {
+    "TITLE": "Plan Comparison",
+    "FEATURES": "Features"
+  },
+  "CONTACT": {
+    "TITLE": "For more information",
+    "SUBTITLE": "Customer Support Hours: Weekdays, 9:00 AM - 6:00 PM"
   }
-  
+}

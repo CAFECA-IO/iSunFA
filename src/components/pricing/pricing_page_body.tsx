@@ -9,7 +9,7 @@ const PricingPageBody: React.FC = () => {
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
       {/* Info: (20240116 - Tzuhan) Background */}
-      <div className="absolute inset-x-0 top-0 h-546px w-full bg-pricing_top bg-cover bg-top bg-no-repeat md:h-670px lg:h-1024px"></div>
+      <div className="absolute inset-x-0 top-100px h-546px w-full bg-pricing_top bg-cover bg-center bg-no-repeat md:h-670px lg:h-1024px"></div>
 
       {/* Info: (20240116 - Tzuhan) Header */}
       <LandingNavbar />
@@ -18,9 +18,11 @@ const PricingPageBody: React.FC = () => {
       <main className="z-10 overflow-y-auto overflow-x-hidden pt-70px lg:pt-100px">
         {/* Info: (20240116 - Tzuhan) PricingCard */}
         <PricingPlan />
+        <div className="absolute inset-0 top-1280px -z-1 h-2000px w-full bg-pricing_middle bg-cover bg-center bg-no-repeat mix-blend-overlay backdrop-blur-lg md:h-700px lg:h-850px"></div>
         <PlanComparison />
 
         {/* Info: (20240116 - Tzuhan) Footer */}
+        <div className="absolute bottom-150px -z-1 h-600px w-full bg-pricing_bottom bg-cover bg-center bg-no-repeat md:h-700px lg:h-850px"></div>
         <LandingFooter />
         <ScrollToTopButton />
       </main>

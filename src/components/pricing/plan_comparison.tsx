@@ -1,5 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'next-i18next';
+import {
+  LinearGradientText,
+  LinearTextSize,
+  TextAlign,
+} from '@/components/landing_page_v2/linear_gradient_text';
 
 const PlanComparison: React.FC = () => {
   const { t } = useTranslation('pricing');
@@ -23,16 +28,22 @@ const PlanComparison: React.FC = () => {
   const plans = ['BEGINNER', 'PROFESSIONAL', 'ENTERPRISE'];
 
   return (
-    <div className="flex flex-col items-center px-6 py-12 md:px-12 lg:px-24">
-      <h2 className="text-4xl font-extrabold text-white">{t('COMPARISON.TITLE')}</h2>
-      <p className="mt-4 text-lg text-gray-400">{t('COMPARISON.SUBTITLE')}</p>
-      <div className="mt-10 overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-700 text-left text-white">
+    <div className="flex flex-col items-center gap-80px px-112px py-120px md:px-12 lg:px-24">
+      <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
+        {t('COMPARISON.TITLE')}
+      </LinearGradientText>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse border border-white text-left text-white">
           <thead>
             <tr>
-              <th className="border border-gray-700 px-4 py-2">{t('COMPARISON.FEATURES')}</th>
+              <th className="pricing-header h-80px border border-white px-4 py-2 backdrop-blur-pricing">
+                {t('COMPARISON.FEATURES')}
+              </th>
               {plans.map((plan) => (
-                <th key={plan} className="border border-gray-700 px-4 py-2 text-center">
+                <th
+                  key={plan}
+                  className="pricing-header border border-white px-4 py-2 text-center backdrop-blur-pricing"
+                >
                   {t(`${plan}.TITLE`)}
                 </th>
               ))}
@@ -41,11 +52,13 @@ const PlanComparison: React.FC = () => {
           <tbody>
             {features.map((feature) => (
               <tr key={feature}>
-                <td className="border border-gray-700 px-4 py-2">{t(`FEATURES.${feature}`)}</td>
+                <td className="pricing-subtitle h-80px border border-white px-4 py-2 backdrop-blur-pricing">
+                  {t(`FEATURES.${feature}`)}
+                </td>
                 {plans.map((plan) => (
                   <td
                     key={`${plan}-${feature}`}
-                    className="border border-gray-700 px-4 py-2 text-center"
+                    className="pricing-cell h-80px border border-white px-4 py-2 backdrop-blur-pricing"
                   >
                     {t(`${plan}.FEATURES.${feature}`)}
                   </td>
@@ -54,6 +67,12 @@ const PlanComparison: React.FC = () => {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="w-full text-left">
+        <LinearGradientText size={LinearTextSize.SM} align={TextAlign.LEFT}>
+          <p>{t('pricing:CONTACT.TITLE')}</p>
+        </LinearGradientText>
+        <p>{t('pricing:CONTACT.SUBTITLE')}</p>
       </div>
     </div>
   );
