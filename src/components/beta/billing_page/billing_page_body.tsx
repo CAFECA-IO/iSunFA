@@ -191,7 +191,7 @@ interface BillingPageBodyProps {
 const BillingPageBody = ({ team }: BillingPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
 
-  // Deprecate: (20250115 - Liz) remove eslint-disable
+  // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [invoiceList, setInvoiceList] = useState<ITeamInvoice[]>(FAKE_INVOICE_LIST);
 
@@ -233,25 +233,26 @@ const BillingPageBody = ({ team }: BillingPageBodyProps) => {
     backBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL'),
   };
 
-  // Info: (20250115 - Liz) InvoiceList filter 的條件:
-  // Deprecate: (20250115 - Liz) remove eslint-disable
+  // Info: (20250115 - Liz) InvoiceList filter 的條件: ========================
+  // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [invoiceId, setInvoiceId] = useState<number>();
-  // Deprecate: (20250115 - Liz) remove eslint-disable
+  // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [status, setStatus] = useState<boolean>();
-  // Deprecate: (20250115 - Liz) remove eslint-disable
+  // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [issuedTimestamp, setIssuedTimestamp] = useState<number>();
-  // Deprecate: (20250115 - Liz) remove eslint-disable
+  // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [planId, setPlanId] = useState<string>();
-  // Deprecate: (20250115 - Liz) remove eslint-disable
+  // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [amountDue, setAmountDue] = useState<number>();
 
-  // ToDo: (20250115 - Liz) 呼叫 API 取得 InvoiceList
+  // ToDo: (20250115 - Liz) 呼叫 API 取得 InvoiceList 並且設定到 invoiceList state
   // setInvoiceList(invoiceListData);
+  // const getInvoiceList = () => {};
 
   return (
     <main className="flex min-h-full flex-col gap-40px">

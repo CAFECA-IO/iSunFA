@@ -93,10 +93,5 @@
     "SELECT_ALL": "全選",
     "UNSELECT_ALL": "取消全選",
     "SELECT": "選擇"
-  },
-  "CURRENCY_ALIAS": {
-    "TWD": "新臺幣",
-    "EUR": "歐元",
-    "USD": "美元"
   }
 }
