@@ -19,42 +19,85 @@ const InvoicePage = () => {
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
   const invoiceIdString = invoiceId ? (Array.isArray(invoiceId) ? invoiceId[0] : invoiceId) : '';
 
-  const {
-    trigger: getTeamById,
-    data: teamData,
-    error: teamError,
-    isLoading: isTeamLoading,
-  } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+  const [team, setTeam] = useState<IUserOwnedTeam | null>(null);
+  const [invoice, setInvoice] = useState<ITeamInvoice | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const {
-    trigger: getInvoiceById,
-    data: invoiceData,
-    isLoading: isInvoiceLoading,
-  } = APIHandler<ITeamInvoice>(APIName.GET_TEAM_INVOICE_BY_ID);
+  // Info: (20250117 - Liz) 取得團隊資料 API
+  const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+  // Info: (20250117 - Julian) 取得發票資料 API
+  const { trigger: getInvoiceDataAPI } = APIHandler<ITeamInvoice>(APIName.GET_TEAM_INVOICE_BY_ID);
 
-  const [team, setTeam] = useState<IUserOwnedTeam | null>();
-  const [invoice, setInvoice] = useState<ITeamInvoice | null>();
-
-  // Info: (20250117 - Julian) 取得 team 和 invoice 的資料
   useEffect(() => {
-    if (teamIdString && invoiceIdString) {
-      getTeamById({ params: { teamId: teamIdString } });
-      getInvoiceById({ params: { teamId: teamIdString, invoiceId: invoiceIdString } });
-    }
+    // Info: (20250117 - Liz) 打 API 取得團隊資料
+    const getTeamData = async () => {
+      if (!teamIdString) return;
+      setIsLoading(true);
+
+      try {
+        const { data: teamData, success } = await getTeamDataAPI({
+          params: { teamId: teamIdString },
+        });
+
+        // Deprecated: (20250117 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('teamData:', teamData);
+
+        if (success && teamData) {
+          setTeam(teamData);
+        }
+      } catch (error) {
+        // Deprecated: (20250117 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('取得團隊資料失敗');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Info: (20250117 - Julian) 打 API 取得發票資料
+    const getInvoiceData = async () => {
+      if (!invoiceIdString) return;
+      setIsLoading(true);
+
+      try {
+        const { data: invoiceData, success } = await getInvoiceDataAPI({
+          params: { teamId: teamIdString, invoiceId: invoiceIdString },
+        });
+
+        // Deprecated: (20250117 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('invoiceData:', invoiceData);
+
+        if (success && invoiceData) {
+          setInvoice(invoiceData);
+        }
+      } catch (error) {
+        // Deprecated: (20250117 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('取得發票資料失敗');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getTeamData();
+    getInvoiceData();
   }, [teamIdString, invoiceIdString]);
 
-  // Info: (20250117 - Julian) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
-  useEffect(() => {
-    if (teamData) setTeam(teamData);
-  }, [teamData]);
+  // Info: (20250117 - Liz) 如果打 API 還在載入中，顯示載入中頁面
+  if (isLoading) {
+    return (
+      <Layout isDashboard={false} goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}>
+        <div className="flex items-center justify-center">
+          <SkeletonList count={6} />
+        </div>
+      </Layout>
+    );
+  }
 
-  // Info: (20250117 - Julian) 呼叫 API 利用 invoiceIdString 取得 invoice 的資料，並且設定到 invoice state
-  useEffect(() => {
-    if (invoiceData) setInvoice(invoiceData);
-  }, [invoiceData]);
-
-  // ToDo: (20250113 - Liz) 如果 team 資料不存在，顯示錯誤頁面
-  if (!team && teamError) {
+  // Info: (20250117 - Liz) 如果 team 資料不存在，顯示錯誤頁面
+  if (!team) {
     return (
       <Layout
         isDashboard={false}
@@ -66,13 +109,18 @@ const InvoicePage = () => {
     );
   }
 
-  // Info: (20250117 - Julian) 顯示頁面內容
-  const isShowPageBody =
-    !isTeamLoading && !isInvoiceLoading && invoice ? (
-      <InvoicePageBody invoice={invoice} />
-    ) : (
-      <SkeletonList count={5} />
+  // Info: (20250113 - Liz) 如果 invoice 資料不存在，顯示錯誤頁面
+  if (!invoice) {
+    return (
+      <Layout
+        isDashboard={false}
+        pageTitle={t('subscriptions:ERROR.INVOICE_DATA_NOT_FOUND')}
+        goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
+      >
+        <h1 className="text-red-500">{t('subscriptions:ERROR.INVOICE_DATA_NOT_FOUND')}</h1>
+      </Layout>
     );
+  }
 
   return (
     <>
@@ -100,7 +148,7 @@ const InvoicePage = () => {
         pageTitle={`${t('subscriptions:INVOICE_PAGE.PAGE_TITLE')} # ${invoiceIdString}`}
         goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
       >
-        {isShowPageBody}
+        <InvoicePageBody invoice={invoice} />
       </Layout>
     </>
   );

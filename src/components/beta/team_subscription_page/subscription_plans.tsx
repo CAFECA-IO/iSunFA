@@ -4,6 +4,10 @@ import { FiArrowRight } from 'react-icons/fi';
 import { PLANS } from '@/constants/subscription';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useTranslation } from 'next-i18next';
+import MessageModal from '@/components/message_modal/message_modal';
+import { IMessageModal, MessageType } from '@/interfaces/message_modal';
+import { useState } from 'react';
 
 interface SubscriptionPlanProps {
   team: IUserOwnedTeam;
@@ -11,14 +15,52 @@ interface SubscriptionPlanProps {
 }
 
 const SubscriptionPlan = ({ team, plan }: SubscriptionPlanProps) => {
+  const { t } = useTranslation(['subscriptions']);
   const isSelected = team.plan === plan.id;
   const isBeginner = plan.id === TPlanType.BEGINNER;
   const router = useRouter();
+  const [isDowngradeMessageModalOpen, setIsDowngradeMessageModalOpen] = useState(false);
 
   const goToPaymentPage = () => {
     // Info: (20250114 - Liz) 這裡帶入 plan.id 作為 query string，用來表示使用者想要選擇的方案
     const PAYMENT_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/payment?sp=${plan.id}`;
     router.push(PAYMENT_PAGE);
+  };
+
+  const selectSubscriptionPlan = () => {
+    if (isBeginner) {
+      setIsDowngradeMessageModalOpen(true);
+    } else {
+      goToPaymentPage();
+    }
+  };
+
+  const closeDowngradeMessageModal = () => {
+    setIsDowngradeMessageModalOpen(false);
+  };
+
+  // ToDo: (20250117 - Liz) 打 API 來變更使用者的訂閱方案為 Beginner (基礎版 Free)
+  const downgradeSubscription = () => {};
+
+  const downgradeMessageModal: IMessageModal = {
+    title: t('subscriptions:MODAL.DOWNGRADE_MESSAGE_MODAL_TITLE'),
+    content: (
+      <div className="text-sm font-normal text-alert-surface-surface-info">
+        <p>
+          {t('subscriptions:MODAL.DOWNGRADE_MESSAGE_MODAL_CONTENT_PREFIX')}
+          <span className="font-semibold">{t('subscriptions:PLAN_NAME.BEGINNER')}</span>
+          {t('subscriptions:MODAL.DOWNGRADE_MESSAGE_MODAL_CONTENT_SUFFIX')}
+        </p>
+        <p className="text-text-state-error">
+          {t('subscriptions:MODAL.DOWNGRADE_MESSAGE_MODAL_SECONDARY_CONTENT')}
+        </p>
+      </div>
+    ),
+    submitBtnStr: t('subscriptions:MODAL.DOWNGRADE_MESSAGE_MODAL_SUBMIT'),
+    submitBtnFunction: downgradeSubscription,
+    messageType: MessageType.WARNING,
+    backBtnFunction: closeDowngradeMessageModal,
+    backBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL'),
   };
 
   return (
@@ -36,7 +78,9 @@ const SubscriptionPlan = ({ team, plan }: SubscriptionPlanProps) => {
       )}
 
       <div className="flex flex-col gap-24px text-center">
-        <h2 className="text-xl font-bold text-text-brand-primary-lv1">{plan.planName}</h2>
+        <h2 className="text-xl font-bold text-text-brand-primary-lv1">
+          {t(`subscriptions:PLAN_NAME.${plan.id.toUpperCase()}`)}
+        </h2>
         {plan.price > 0 ? (
           <div>
             <p>
@@ -45,7 +89,7 @@ const SubscriptionPlan = ({ team, plan }: SubscriptionPlanProps) => {
               </span>
               <span className="text-base font-semibold text-text-neutral-tertiary">
                 {' '}
-                NTD / Month
+                {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.NTD_SLASH_MONTH')}
               </span>
             </p>
 
@@ -64,7 +108,7 @@ const SubscriptionPlan = ({ team, plan }: SubscriptionPlanProps) => {
       <button
         type="button"
         className={`flex items-center justify-center gap-8px rounded-xs px-32px py-14px ${isSelected ? 'border border-stroke-brand-primary text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable' : 'bg-button-surface-strong-primary text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable'}`}
-        onClick={goToPaymentPage}
+        onClick={selectSubscriptionPlan}
       >
         <span className="text-lg font-medium">{isSelected ? 'Selected' : 'Select this plan'}</span>
         {!isSelected && <FiArrowRight size={24} />}
@@ -115,6 +159,14 @@ const SubscriptionPlan = ({ team, plan }: SubscriptionPlanProps) => {
             be issued for the current billing period.
           </span>
         </p>
+      )}
+
+      {isDowngradeMessageModalOpen && (
+        <MessageModal
+          messageModalData={downgradeMessageModal}
+          isModalVisible={isDowngradeMessageModalOpen}
+          modalVisibilityHandler={closeDowngradeMessageModal}
+        />
       )}
     </section>
   );

@@ -17,20 +17,26 @@
     "YES_TURN_OFF_AUTO_RENEWAL": "是，关闭自动续订",
     "CHOOSE_THE_PLAN_THAT_FITS_YOUR_TEAM": "选择适合您团队的方案",
     "PLAN_FOR": "管理方案 - ",
+    "PAYMENT_FAILED": "付款失败",
+    "UPDATE_PAYMENT": "重新设定付款信息",
+    "RETURNING_TO_BEGINNER_IN": "",
+    "DAYS": " 天后恢复为基础版方案"
+  },
+
+  "PLAN_NAME": {
+    "BEGINNER": "基础版",
+    "PROFESSIONAL": "专业版",
+    "ENTERPRISE": "企业版"
+  },
+
+  "SUBSCRIPTION_FAQ": {
     "SUBSCRIPTION_FAQ": "订阅常见问题",
     "FAQ1_QUESTION": "谁负责支付团队的订阅费用？",
     "FAQ1_ANSWER": "任何用户都可以通过输入付款信息将自己的团队升级到专业计划。升级后，只有所有者可以管理团队未来的付款。",
     "FAQ2_QUESTION": "如何取消我的付费方案？",
     "FAQ3_QUESTION": "如果每个月都有更多人加入我的团队怎么办？",
     "FAQ4_QUESTION": "你能给我发一张发票吗？",
-    "FAQ5_QUESTION": "有哪些付款方式？",
-    "BEGINNER": "基础版",
-    "PROFESSIONAL": "专业版",
-    "ENTERPRISE": "企业版",
-    "PAYMENT_FAILED": "付款失败",
-    "UPDATE_PAYMENT": "重新设定付款信息",
-    "RETURNING_TO_BEGINNER_IN": "",
-    "DAYS": " 天后恢复为基础版方案"
+    "FAQ5_QUESTION": "有哪些付款方式？"
   },
 
   "SUBSCRIPTION_PLAN_CONTENT": {
@@ -45,14 +51,27 @@
     "TEAM_DATA_NOT_FOUND": "找不到团队数据",
     "INVOICE_DATA_NOT_FOUND": "找不到发票数据",
     "USER_OWNED_TEAMS_NOT_FOUND": "找不到用户拥有的团队",
-    "PLAN_NOT_FOUND": "找不到订阅方案"
+    "PLAN_NOT_FOUND": "找不到订阅方案",
+    "TOAST_PAYMENT_FAILED_TITLE": "付款失败 ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_PREFIX": "- 您的方案最后一次付款失败。请尽快更新您的付款信息，否则将在 ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_SUFFIX": " 天后恢复为基础版方案",
+    "UPDATE_PAYMENT": "重新设定付款信息",
+    "TOAST_EXPIRED_REMINDER_TITLE": "您的方案已到期",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_PREFIX": "您的订阅方案将在 ",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX": " 天后到期，请续订以保留该服务，否则方案将会降级。",
+    "RENEW_PAYMENT": "续订付款"
   },
 
   "MODAL": {
     "SUBSCRIPTION_IS_NOT_DONE_YET": "尚未完成订阅",
     "SUBSCRIPTION_IS_NOT_DONE_YET_MESSAGE": "您尚未完成订阅，确定要离开此页面吗？",
     "KEEP_FINISHING_MY_SUBSCRIPTION": "继续完成我的订阅",
-    "LEAVE": "离开"
+    "LEAVE": "离开",
+    "DOWNGRADE_MESSAGE_MODAL_TITLE": "降级订阅方案",
+    "DOWNGRADE_MESSAGE_MODAL_CONTENT_PREFIX": "您确定要将您的方案降级为",
+    "DOWNGRADE_MESSAGE_MODAL_CONTENT_SUFFIX": "吗？",
+    "DOWNGRADE_MESSAGE_MODAL_SECONDARY_CONTENT": "您的当前方案将持续有效至下一次续订日期，本次计费周期不会提供退款。",
+    "DOWNGRADE_MESSAGE_MODAL_SUBMIT": "对，我要降级"
   },
 
   "PAYMENT_PAGE": {
@@ -67,14 +86,6 @@
     "SUBTOTAL": "小计",
     "TAX": "税金",
     "TOTAL_PRICE": "总金额"
-  },
-
-  "PAYMENT_PAGE": {
-    "PAYMENT": "付款",
-    "ADD_CREDIT_CARD": "新增信用卡",
-    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "您可以随时取消订阅",
-    "NOTE": "您的当前方案将持续有效至下一次续订日期，本次计费周期不会提供退款。",
-    "SUBSCRIBE": "订阅"
   },
 
   "BILLING_PAGE": {

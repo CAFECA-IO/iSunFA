@@ -21,7 +21,7 @@ const PaymentInfo = ({ plan }: PaymentInfoProps) => {
     <section className="flex flex-col gap-16px rounded-md bg-surface-neutral-surface-lv2 px-32px py-24px shadow-Dropshadow_XS">
       <p className="flex justify-between">
         <span className="text-lg font-semibold text-text-neutral-tertiary">
-          {`iSunFA ${t(`subscriptions:SUBSCRIPTIONS_PAGE.${plan.planName.toUpperCase()}`)} ${t('subscriptions:PAYMENT_PAGE.MONTHLY_SUBSCRIPTION')}`}
+          {`iSunFA ${t(`subscriptions:PLAN_NAME.${plan.id.toUpperCase()}`)} ${t('subscriptions:PAYMENT_PAGE.MONTHLY_SUBSCRIPTION')}`}
         </span>
         <span className="text-xl font-bold leading-8 text-text-neutral-secondary">{`$ ${plan.price} NTD`}</span>
       </p>

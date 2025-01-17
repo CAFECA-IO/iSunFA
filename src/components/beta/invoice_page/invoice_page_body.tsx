@@ -35,7 +35,8 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
   const taxPercent = amountDue === 0 ? 0 : ((tax / amountDue) * 100).toFixed(0);
 
   const unit = t('common:CURRENCY_ALIAS.TWD');
-  const planName = t(`subscriptions:SUBSCRIPTIONS_PAGE.${planId.toUpperCase()}`);
+
+  const planName = t(`subscriptions:PLAN_NAME.${planId.toUpperCase()}`);
 
   const footnote = `#${invoiceId} - $ ${numberWithCommas(amountDue)} ${unit} ${t('subscriptions:INVOICE_PAGE.FOOTNOTE_DUE')} ${timestampToString(dueTimestamp / 1000).date}`;
 
@@ -225,7 +226,7 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
         </div>
 
         {/* Info: (20250115 - Julian) Divider */}
-        <hr className="border-px my-10px bg-divider-stroke-lv-4" />
+        <hr className="my-10px border bg-divider-stroke-lv-4" />
 
         {/* Info: (20250115 - Julian) basic info */}
         <div className="grid w-full grid-cols-3 gap-12px">
