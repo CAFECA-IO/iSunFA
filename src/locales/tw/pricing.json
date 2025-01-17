@@ -1,0 +1,59 @@
+{
+    "MAIN": {
+      "TITLE": "定價",
+      "SUBTITLE": "選擇最適合您的方案"
+    },
+    "BEGINNER": {
+      "TITLE": "初學者",
+      "PRICE": "免費",
+      "DESCRIPTION": "適合個人或小型新創公司，即使沒有會計經驗。",
+      "FEATURES": {
+        "AI_UPLOADS": "AI 驅動的快速憑證上傳。",
+        "AUTO_SUGGESTIONS": "自動建議資產、應收款和應付款。",
+        "STORAGE": "10GB 雲端儲存空間。",
+        "MANAGE_LEDGER": "管理 1 個帳本。",
+        "GENERATE_STATEMENTS": "生成基本財務報表。",
+        "CREATE_TEAMS": "最多可建立 3 個團隊共享數據和帳本。",
+        "AUTO_FILL_TAX": "自動填寫 401 稅表。",
+        "ACCEPT_TASKS": "接受來自企業或會計師的任務。",
+        "SUPPORT_USER": "每個團隊支援 1 位使用者。",
+        "CUSTOMER_SUPPORT": "包含線上客戶支援。"
+      },
+      "BUTTON_TEXT": "立即開始"
+    },
+    "PROFESSIONAL": {
+      "TITLE": "專業版",
+      "PRICE": "NT$899/月",
+      "DESCRIPTION": "適合中小企業、會計師或需要進階工具的記帳公司。",
+      "FEATURES": {
+        "EVERYTHING_IN_BEGINNER": "包含初學者方案的所有功能，額外提供：",
+        "UNLIMITED_AI_UPLOADS": "更快且無限制的 AI 上傳處理。",
+        "LARGE_STORAGE": "1TB 雲端儲存空間。",
+        "UNLIMITED_LEDGER": "管理無限的帳本。",
+        "POST_REQUESTS": "在配對平台發布需求。",
+        "AUTO_GENERATE_STATEMENTS": "定期自動生成財務報表。",
+        "ASSET_TAGS": "免費 10 個資產標籤以便追蹤。",
+        "SUPPORT_USERS": "每個團隊支援最多 10 名使用者並可擴充。",
+        "TECHNICAL_ASSISTANCE": "每月 24 小時一對一技術支援（每次最多 4 小時）。"
+      },
+      "BUTTON_TEXT": "立即升級"
+    },
+    "ENTERPRISE": {
+      "TITLE": "企業版",
+      "PRICE": "NT$8990/月",
+      "DESCRIPTION": "專為注重安全性和效率的大型企業或會計事務所設計。",
+      "FEATURES": {
+        "EVERYTHING_IN_PROFESSIONAL": "包含專業版的所有功能，額外提供：",
+        "COLLABORATION_TOOLS": "即時協作和審查工具。",
+        "CUSTOM_WORKFLOWS": "自訂工作流程和報表格式。",
+        "UNLIMITED_STORAGE": "無限制雲端儲存空間。",
+        "ASSET_TAGS": "免費 100 個資產標籤以便追蹤。",
+        "SERVER_INTEGRATION": "支援伺服器整合。",
+        "UNLIMITED_USERS": "每個團隊支援無限制的使用者。",
+        "API_INTEGRATION": "與內部系統進行 API 整合。",
+        "TECHNICAL_ASSISTANCE": "每月 48 小時一對一技術支援（每次最多 4 小時）。"
+      },
+      "BUTTON_TEXT": "聯絡銷售"
+    }
+  }
+  

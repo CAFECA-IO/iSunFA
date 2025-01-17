@@ -1,0 +1,59 @@
+{
+    "MAIN": {
+      "TITLE": "定价",
+      "SUBTITLE": "选择最适合您的计划"
+    },
+    "BEGINNER": {
+      "TITLE": "初学者",
+      "PRICE": "免费",
+      "DESCRIPTION": "适合个人或小型初创公司，即使没有会计经验。",
+      "FEATURES": {
+        "AI_UPLOADS": "支持AI的快速转换证书上传。",
+        "AUTO_SUGGESTIONS": "资产、应收账款和应付款的自动建议。",
+        "STORAGE": "10GB云存储。",
+        "MANAGE_LEDGER": "管理1个账本。",
+        "GENERATE_STATEMENTS": "生成基本财务报表。",
+        "CREATE_TEAMS": "最多创建3个团队以共享数据和账本。",
+        "AUTO_FILL_TAX": "自动填写401税表。",
+        "ACCEPT_TASKS": "接受来自企业或会计师的任务。",
+        "SUPPORT_USER": "每个团队支持1名用户。",
+        "CUSTOMER_SUPPORT": "包括在线客户支持。"
+      },
+      "BUTTON_TEXT": "开始使用"
+    },
+    "PROFESSIONAL": {
+      "TITLE": "专业版",
+      "PRICE": "¥899/月",
+      "DESCRIPTION": "适合中小企业、会计师或需要高级工具的簿记公司。",
+      "FEATURES": {
+        "EVERYTHING_IN_BEGINNER": "包含初学者版的所有功能，外加：",
+        "UNLIMITED_AI_UPLOADS": "更快和无限的AI上传处理。",
+        "LARGE_STORAGE": "1TB云存储。",
+        "UNLIMITED_LEDGER": "管理无限账本。",
+        "POST_REQUESTS": "在匹配平台上发布请求。",
+        "AUTO_GENERATE_STATEMENTS": "定期自动生成财务报表。",
+        "ASSET_TAGS": "免费提供10个资产标签以便追踪。",
+        "SUPPORT_USERS": "支持每个团队最多10名用户并可扩展。",
+        "TECHNICAL_ASSISTANCE": "每月24小时一对一技术支持（每次最多4小时）。"
+      },
+      "BUTTON_TEXT": "立即升级"
+    },
+    "ENTERPRISE": {
+      "TITLE": "企业版",
+      "PRICE": "¥8990/月",
+      "DESCRIPTION": "专为注重安全和效率的大公司或会计事务所打造。",
+      "FEATURES": {
+        "EVERYTHING_IN_PROFESSIONAL": "包含专业版的所有功能，外加：",
+        "COLLABORATION_TOOLS": "实时协作和审查工具。",
+        "CUSTOM_WORKFLOWS": "自定义工作流和报表格式。",
+        "UNLIMITED_STORAGE": "无限云存储。",
+        "ASSET_TAGS": "免费提供100个资产标签以便追踪。",
+        "SERVER_INTEGRATION": "支持服务器集成。",
+        "UNLIMITED_USERS": "每个团队无限用户。",
+        "API_INTEGRATION": "与内部系统的API集成。",
+        "TECHNICAL_ASSISTANCE": "每月48小时一对一技术支持（每次最多4小时）。"
+      },
+      "BUTTON_TEXT": "联系销售"
+    }
+  }
+  

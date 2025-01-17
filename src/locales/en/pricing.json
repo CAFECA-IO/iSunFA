@@ -1,0 +1,59 @@
+{
+    "MAIN": {
+      "TITLE": "Pricing",
+      "SUBTITLE": "Choose the plan that fits you more"
+    },
+    "BEGINNER": {
+      "TITLE": "Beginner",
+      "PRICE": "Free",
+      "DESCRIPTION": "Perfect for individuals or small startups, even with no accounting experience.",
+      "FEATURES": {
+        "AI_UPLOADS": "AI-powered certificate uploads for quick conversion.",
+        "AUTO_SUGGESTIONS": "Auto-suggestions for assets, receivables, and payables.",
+        "STORAGE": "10GB of cloud storage.",
+        "MANAGE_LEDGER": "Manage 1 ledger.",
+        "GENERATE_STATEMENTS": "Generate essential financial statements.",
+        "CREATE_TEAMS": "Create up to 3 teams to share data and ledger.",
+        "AUTO_FILL_TAX": "Auto-filling 401 tax form.",
+        "ACCEPT_TASKS": "Accept tasks from businesses or accountants on the platform.",
+        "SUPPORT_USER": "Supports 1 user for each team.",
+        "CUSTOMER_SUPPORT": "Online customer support included."
+      },
+      "BUTTON_TEXT": "Get Started"
+    },
+    "PROFESSIONAL": {
+      "TITLE": "Professional",
+      "PRICE": "$899 NTD/Month",
+      "DESCRIPTION": "Great for SMBs, accountants, or bookkeeping firms needing advanced tools.",
+      "FEATURES": {
+        "EVERYTHING_IN_BEGINNER": "Everything in Beginner, plus:",
+        "UNLIMITED_AI_UPLOADS": "Certificate uploads with faster and unlimited AI processing.",
+        "LARGE_STORAGE": "1TB cloud storage.",
+        "UNLIMITED_LEDGER": "Manage unlimited ledger.",
+        "POST_REQUESTS": "Post requests on the matching platform.",
+        "AUTO_GENERATE_STATEMENTS": "Auto-generate financial statements regularly.",
+        "ASSET_TAGS": "Free 10 asset tags for easier tracking.",
+        "SUPPORT_USERS": "Supports up to 10 users for each team with expansion options.",
+        "TECHNICAL_ASSISTANCE": "24 hours/month of 1-on-1 technical assistance (max 4 hours/session)."
+      },
+      "BUTTON_TEXT": "Upgrade Now"
+    },
+    "ENTERPRISE": {
+      "TITLE": "Enterprise",
+      "PRICE": "$8990 NTD/Month",
+      "DESCRIPTION": "Built for large companies or accounting firms focused on security and efficiency.",
+      "FEATURES": {
+        "EVERYTHING_IN_PROFESSIONAL": "Everything in Professional, plus:",
+        "COLLABORATION_TOOLS": "Real-time collaboration and review tools.",
+        "CUSTOM_WORKFLOWS": "Custom workflows and report formats.",
+        "UNLIMITED_STORAGE": "Unlimited cloud storage.",
+        "ASSET_TAGS": "Free 100 asset tags for easier tracking.",
+        "SERVER_INTEGRATION": "Support for server integrations.",
+        "UNLIMITED_USERS": "Unlimited users for each team.",
+        "API_INTEGRATION": "API integration with internal systems.",
+        "TECHNICAL_ASSISTANCE": "48 hours/month of 1-on-1 technical assistance (max 4 hours/session)."
+      },
+      "BUTTON_TEXT": "Contact Sales"
+    }
+  }
+  

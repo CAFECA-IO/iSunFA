@@ -113,8 +113,8 @@ const LandingNavbar: React.FC = () => {
           {t('landing_page_v2:NAVBAR.USERS')}
         </LandingButton>
       </Link> */}
-      <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-        <LandingButton type="button" variant="default" disabled>
+      <Link href={ISUNFA_ROUTE.PRICING}>
+        <LandingButton type="button" variant="default">
           {t('landing_page_v2:NAVBAR.PRICING')}
         </LandingButton>
       </Link>
