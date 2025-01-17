@@ -63,7 +63,7 @@ const OwnedTeam = ({
         <div className="flex flex-col gap-12px">
           <h2 className="text-xl font-semibold text-text-brand-secondary-lv1">{team.name}</h2>
           <h1 className="w-200px text-36px font-bold text-text-brand-primary-lv1">
-            {t(`subscriptions:SUBSCRIPTIONS_PAGE.${team.plan.toUpperCase()}`)}
+            {t(`subscriptions:PLAN_NAME.${team.plan.toUpperCase()}`)}
           </h1>
           <p className="text-lg font-medium text-text-neutral-tertiary">{price}</p>
         </div>

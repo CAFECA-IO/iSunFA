@@ -113,8 +113,8 @@ const LandingNavbar: React.FC = () => {
           {t('landing_page_v2:NAVBAR.USERS')}
         </LandingButton>
       </Link> */}
-      <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-        <LandingButton type="button" variant="default" disabled>
+      <Link href={ISUNFA_ROUTE.PRICING}>
+        <LandingButton type="button" variant="default">
           {t('landing_page_v2:NAVBAR.PRICING')}
         </LandingButton>
       </Link>
@@ -139,7 +139,7 @@ const LandingNavbar: React.FC = () => {
   );
 
   return (
-    <nav className="fixed z-50 w-full">
+    <nav className="z-50 w-full">
       <div className="z-50 flex items-center justify-between rounded-sm border-b bg-landing-nav px-16px py-12px shadow-landing-nav backdrop-blur-md md:inset-x-36px md:mx-36px md:px-40px lg:px-112px">
         <div className="flex items-center gap-16px">
           {/* Info: (20241204 - Julian) Logo */}

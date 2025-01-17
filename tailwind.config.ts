@@ -702,6 +702,9 @@ module.exports = {
           taupe2: '#C1B192',
         },
       },
+      backdropBlur: {
+        pricing: '6px',
+      },
       backgroundImage: {
         login_bg: "url('/images/login_bg.png')",
         customGradient: 'linear-gradient(180deg, rgba(0, 24, 64, 0) 10%, rgb(0, 24, 64) 85.5%)',
@@ -735,6 +738,9 @@ module.exports = {
         'landing-nav': 'radial-gradient(farthest-corner at 50% 200%, #FFFFFF, #FFFFFF4D 50%)',
         'cloudy-glass': 'radial-gradient(circle at 50% 150%, #FFFFFF, #FFFFFF4D 40%)',
         cta: 'url("/elements/planet_edge.png")',
+        pricing_top: 'url("/elements/bg_pricing_top.png")',
+        pricing_middle: 'url("/elements/bg_pricing_middle.png")',
+        pricing_bottom: 'url("/elements/bg_pricing_bottom.png")',
         digital: 'url("/elements/digital.png")',
         sunrise: 'url("/elements/sunrise.png")',
         'magic-ball': "url('/elements/magic_ball.png')",
@@ -802,6 +808,7 @@ module.exports = {
         '40px': '40px',
         '36px': '36px',
         '32px': '32px',
+        'extra-loose': '3',
       },
       screens: {
         /* Info: (20240315 - Shirley) 等同於 @media (min-width: ...px) */
@@ -1058,6 +1065,7 @@ module.exports = {
         '475px': '475px',
         '479px': '479px',
         '480px': '480px',
+        '489px': '489px',
         '500px': '500px',
         '505px': '505px',
         '510px': '510px',
@@ -1097,6 +1105,7 @@ module.exports = {
         '920px': '920px',
         '950px': '950px',
         '960px': '960px',
+        '978px': '978px',
         '1000px': '1000px',
         '1024px': '1024px',
         '1100px': '1100px',
@@ -1113,6 +1122,7 @@ module.exports = {
         '1900px': '1900px',
         '1920px': '1920px',
         '2000px': '2000px',
+        '2560px': '2560px',
         '0.1rem': '0.1rem',
         '0.2rem': '0.2rem',
         '1.3rem': '1.3rem',

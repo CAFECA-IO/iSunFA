@@ -48,4 +48,5 @@ export enum ToastId {
   SUBSCRIPTION_UPDATE_SUCCESS = 'toast-subscription-update-success',
   SUBSCRIPTION_PAYMENT_STATUS_UNPAID = 'toast-subscription-payment-status-unpaid',
   NEED_TO_SELECT_COMPANY = 'toast-need-to-select-company',
+  PLAN_EXPIRED_REMINDER = 'toast-plan-expired-reminder',
 }
