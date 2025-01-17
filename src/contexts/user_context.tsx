@@ -402,35 +402,45 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     setIsAuthLoading(true);
 
-    // Info: (20241008 - Liz) 將當前路徑存入 localStorage，以便登入後可以重新導向回原本的路徑
-    const currentPath = router.asPath;
-    localStorage.setItem('redirectPath', currentPath);
+    try {
+      // Info: (20241008 - Liz) 將當前路徑存入 localStorage，以便登入後可以重新導向回原本的路徑
+      const currentPath = router.asPath;
+      localStorage.setItem('redirectPath', currentPath);
 
-    // Deprecated: (20241008 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('執行 getStatusInfo() 並且儲存現在路由 currentPath:', currentPath);
+      // Deprecated: (20241008 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('執行 getStatusInfo() 並且儲存現在路由 currentPath:', currentPath);
 
-    const {
-      data: statusInfo,
-      success: getStatusInfoSuccess,
-      code: getStatusInfoCode,
-    } = await getStatusInfoAPI();
+      const {
+        data: statusInfo,
+        success: getStatusInfoSuccess,
+        code: getStatusInfoCode,
+      } = await getStatusInfoAPI();
 
-    // Deprecated: (20241001 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('getStatusInfo data:', statusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
+      // Deprecated: (20241001 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('getStatusInfo data:', statusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
 
-    if (getStatusInfoSuccess && statusInfo) {
-      handleProcessData(statusInfo);
-    } else {
+      if (getStatusInfoSuccess && statusInfo) {
+        handleProcessData(statusInfo);
+      } else {
+        clearStates();
+        clearLocalStorage();
+        goToLoginPage();
+        setIsSignInError(true);
+        setErrorCode(getStatusInfoCode ?? '');
+      }
+    } catch (error) {
+      // Deprecated: (20250117 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('getStatusInfo 發生錯誤:', error);
       clearStates();
       clearLocalStorage();
       goToLoginPage();
       setIsSignInError(true);
-      setErrorCode(getStatusInfoCode ?? '');
+    } finally {
+      setIsAuthLoading(false);
     }
-
-    setIsAuthLoading(false);
   }, [router.pathname]);
   // ===============================================================================
 
