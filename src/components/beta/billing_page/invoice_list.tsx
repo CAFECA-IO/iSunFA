@@ -58,8 +58,10 @@ const InvoiceList = ({ invoiceList }: InvoiceListProps) => {
 
   // Info: (20250116 - Anna) 使用 useEffect 呼叫 fetchInvoiceData
   useEffect(() => {
-    fetchInvoiceData();
-  }, []);
+    if (teamIdString) {
+      fetchInvoiceData();
+    }
+  }, [teamIdString]);
 
   // Todo: (20250116 - Anna) 暫時在這使用invoices以防報錯
   useEffect(() => {
