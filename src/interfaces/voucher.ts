@@ -148,6 +148,7 @@ export interface IVoucherDetailForFrontend {
   lineItems: (ILineItemBeta & {
     reverseList: IReverseItem[];
   })[];
+  isReverseRelated?: boolean;
 }
 
 export const defaultVoucherDetail: IVoucherDetailForFrontend = {
@@ -466,6 +467,12 @@ export interface IVoucherEntity {
    * @description Who read this voucher
    */
   readByUsers: IUserVoucherEntity[];
+
+  /**
+   * Info: (20250117 - Shirley)
+   * @description is this voucher deleted or reverse voucher
+   */
+  isReverseRelated?: boolean;
 }
 
 export type IGetOneVoucherResponse = PrismaVoucher & {
