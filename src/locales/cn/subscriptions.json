@@ -51,7 +51,11 @@
     "TEAM_DATA_NOT_FOUND": "找不到团队数据",
     "INVOICE_DATA_NOT_FOUND": "找不到发票数据",
     "USER_OWNED_TEAMS_NOT_FOUND": "找不到用户拥有的团队",
-    "PLAN_NOT_FOUND": "找不到订阅方案"
+    "PLAN_NOT_FOUND": "找不到订阅方案",
+    "TOAST_PAYMENT_FAILED_TITLE": "付款失败 ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_PREFIX": "- 您的方案最后一次付款失败。请尽快更新您的付款信息，否则将在 ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_SUFFIX": " 天后恢复为基础版方案",
+    "UPDATE_PAYMENT": "重新设定付款信息"
   },
 
   "MODAL": {

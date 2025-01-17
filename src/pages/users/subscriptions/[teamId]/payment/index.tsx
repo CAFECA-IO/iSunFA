@@ -34,21 +34,24 @@ const PaymentPage = () => {
   const planFromUrl = PLANS.find((p) => p.id === spString);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [team, setTeam] = useState<IUserOwnedTeam>();
+  const [team, setTeam] = useState<IUserOwnedTeam | null>(FAKE_TEAM_DATA);
 
   // ToDo: (20250102 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
   // setTeam(teamData);
   const getUserOwnedTeam = async () => {};
 
   // ToDo: (20250102 - Liz) 如果 team 資料不存在，顯示錯誤頁面
-  // 參考:
-  //   if (!teamIdString) {
-  //     return (
-  //       <Layout isDashboard={false} pageTitle={'Plan for Personal'}>
-  //         <h1 className="text-red-500">{t('subscriptions:ERROR.TEAM_ID_NOT_FOUND')}</h1>
-  //       </Layout>
-  //     );
-  //   }
+  if (!team) {
+    return (
+      <Layout
+        isDashboard={false}
+        pageTitle={t('subscriptions:ERROR.TEAM_DATA_NOT_FOUND')}
+        goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
+      >
+        <h1 className="text-red-500">{t('subscriptions:ERROR.TEAM_DATA_NOT_FOUND')}</h1>
+      </Layout>
+    );
+  }
 
   return (
     <>
