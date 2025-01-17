@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { LuDownload } from 'react-icons/lu';
@@ -6,6 +6,7 @@ import { BiPrinter } from 'react-icons/bi';
 import { Button } from '@/components/button/button';
 import { ITeamInvoice } from '@/interfaces/subscription';
 import { numberWithCommas, timestampToString } from '@/lib/utils/common';
+import { useReactToPrint } from 'react-to-print';
 
 interface InvoicePageBodyProps {
   invoice: ITeamInvoice;
@@ -13,6 +14,7 @@ interface InvoicePageBodyProps {
 
 const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
   const { t } = useTranslation(['subscriptions', 'common']);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const {
     id: invoiceId,
@@ -33,7 +35,6 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
   const taxAmount = (subtotal * tax) / 100;
 
   const unit = t('common:CURRENCY_ALIAS.TWD');
-
   const planName = t(`subscriptions:SUBSCRIPTIONS_PAGE.${planId.toUpperCase()}`);
 
   const footnote = `#${invoiceId} - $ ${numberWithCommas(amountDue)} ${unit} ${t('subscriptions:INVOICE_PAGE.FOOTNOTE_DUE')} ${timestampToString(dueTimestamp / 1000).date}`;
@@ -45,15 +46,22 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
     console.log('Download invoice ', invoiceId);
   };
 
-  // ToDo: (20250115 - Julian) 列印發票
-  const printClickHandler = () => {
-    // Deprecated: (20250116 - Julian) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('Print invoice ', invoiceId);
-  };
+  // Info: (20250115 - Julian) 列印發票
+  const handlePrint = useReactToPrint({
+    contentRef: printRef, // Info: (20250117 - Julian) 指定需要打印的內容 Ref
+    documentTitle: `${t('subscriptions:INVOICE_PAGE.INVOICE_TITLE')} ${invoiceId}`,
+    onBeforePrint: async () => {
+      return Promise.resolve(); // Info: (20250117 - Julian) 確保回傳一個 Promise
+    },
+    onAfterPrint: async () => {
+      return Promise.resolve(); // Info: (20250117 - Julian) 確保回傳一個 Promise
+    },
+  });
+
+  const printClickHandler = () => handlePrint();
 
   const issueAndDueCard = (
-    <div className="flex h-150px flex-col gap-16px rounded-md bg-surface-brand-primary-10 px-40px py-12px font-semibold">
+    <div className="flex h-150px flex-col gap-16px rounded-md bg-surface-brand-primary-10 px-40px py-12px font-semibold print:h-auto">
       {/* Info: (20250115 - Julian) Issued Date */}
       <div className="flex flex-col items-start gap-6px">
         <p className="text-text-brand-primary-lv1">{t('subscriptions:INVOICE_PAGE.ISSUED')}</p>
@@ -72,7 +80,7 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
   );
 
   const billedToCard = (
-    <div className="flex h-150px flex-col gap-6px rounded-md bg-surface-brand-primary-10 px-40px py-12px">
+    <div className="flex h-150px flex-col gap-6px rounded-md bg-surface-brand-primary-10 px-40px py-12px print:h-auto">
       <p className="font-semibold text-text-brand-primary-lv1">
         {t('subscriptions:INVOICE_PAGE.BILLED_TO')}
       </p>
@@ -90,7 +98,7 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
   );
 
   const fromCard = (
-    <div className="flex h-150px flex-col gap-6px rounded-md bg-surface-brand-primary-10 px-40px py-12px">
+    <div className="flex h-150px flex-col gap-6px rounded-md bg-surface-brand-primary-10 px-40px py-12px print:h-auto">
       <p className="font-semibold text-text-brand-primary-lv1">
         {t('subscriptions:INVOICE_PAGE.FROM')}
       </p>
@@ -200,7 +208,10 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
       </div>
 
       {/* Info: (20250115 - Julian) Invoice Detail */}
-      <div className="flex flex-col gap-24px bg-surface-neutral-surface-lv2 px-40px py-24px">
+      <div
+        ref={printRef}
+        className="flex flex-col gap-24px bg-surface-neutral-surface-lv2 px-40px py-24px print:h-a4-height print:w-a4-width"
+      >
         {/* Info: (20250115 - Julian) Invoice Title */}
         <div className="flex items-center justify-between">
           {/* Info: (20250115 - Julian) Invoice Id */}
@@ -233,7 +244,7 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
         {conclusion}
 
         {/* Info: (20250116 - Julian) Footer */}
-        <div className="flex items-center justify-between border-t border-stroke-neutral-quaternary py-12px text-sm text-text-neutral-secondary">
+        <div className="flex items-center justify-between border-t border-stroke-neutral-quaternary py-12px text-sm text-text-neutral-secondary print:mt-auto">
           <p className="font-semibold">{footnote}</p>
           <p>{t('subscriptions:INVOICE_PAGE.FOOTNOTE_PAGE')}</p>
         </div>

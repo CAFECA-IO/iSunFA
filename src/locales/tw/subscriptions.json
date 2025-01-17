@@ -92,7 +92,7 @@
     "DUE": "到期日",
     "BILLED_TO": "收款人",
     "TAX_ID": "統一編號",
-    "FROM": "付款失敗",
+    "FROM": "付款人",
     "DESCRIPTION": "描述",
     "QTY": "數量",
     "UNIT_PRICE": "單價",
