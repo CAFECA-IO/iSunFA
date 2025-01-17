@@ -45,7 +45,11 @@
     "TEAM_DATA_NOT_FOUND": "Team data not found",
     "INVOICE_DATA_NOT_FOUND": "Invoice data not found",
     "USER_OWNED_TEAMS_NOT_FOUND": "User owned teams not found",
-    "PLAN_NOT_FOUND": "Plan not found"
+    "PLAN_NOT_FOUND": "Plan not found",
+    "TOAST_PAYMENT_FAILED_TITLE": "Payment Failed ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_PREFIX": "- The last payment of your plan is failed. Please update your payment as soon as possible, or it will be downgraded to Beginner after ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_SUFFIX": " days",
+    "UPDATE_PAYMENT": "Update Payment"
   },
 
   "MODAL": {

@@ -43,14 +43,14 @@ const OwnedTeam = ({
   };
 
   // Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
-  const calculateDaysLeft = (timestamp: number) => {
+  const getRemainingDays = (timestamp: number) => {
     const now = Date.now();
     const diff = timestamp - now;
     return Math.ceil(diff / ONE_DAY_IN_MS);
   };
 
   // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
-  const remainingDays = calculateDaysLeft(team.expiredTimestamp + THREE_DAYS_IN_MS);
+  const remainingDays = getRemainingDays(team.expiredTimestamp + THREE_DAYS_IN_MS);
 
   // Info: (20250110 - Liz) 檢查是否即將降級
   const isReturningToBeginnerSoon = remainingDays > 0 && remainingDays <= 3;

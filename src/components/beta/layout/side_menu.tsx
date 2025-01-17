@@ -7,6 +7,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
@@ -273,7 +274,7 @@ const SubMenuOption = ({
 
   const showCompanyNeededToast = () => {
     toastHandler({
-      id: 'company-needed',
+      id: ToastId.NEED_TO_SELECT_COMPANY,
       type: ToastType.INFO,
       content: (
         <div className="flex items-center gap-32px">
