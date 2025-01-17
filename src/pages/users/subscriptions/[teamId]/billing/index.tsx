@@ -19,8 +19,8 @@ const FAKE_TEAM_DATA: IUserOwnedTeam = {
   name: 'Team B',
   plan: TPlanType.ENTERPRISE,
   enableAutoRenewal: false,
-  nextRenewalTimestamp: 1736936488530,
-  expiredTimestamp: 1736936488530,
+  nextRenewalTimestamp: 1737268546000,
+  expiredTimestamp: 1737268546000,
   paymentStatus: TPaymentStatus.UNPAID,
 };
 
@@ -51,14 +51,15 @@ const BillingPage = () => {
     // Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
     const getRemainingDays = (timestamp: number) => {
       const now = Date.now();
-      const diff = timestamp - now;
+      const diff = timestamp - now > 0 ? timestamp - now : 0;
       return Math.ceil(diff / ONE_DAY_IN_MS);
     };
 
     // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
     const remainingDays = getRemainingDays(team.expiredTimestamp + THREE_DAYS_IN_MS);
 
-    if (team.paymentStatus === TPaymentStatus.UNPAID) {
+    // Info: (20250117 - Liz) 付款失敗三天後提醒即將降級為 Beginner 方案
+    if (team.paymentStatus === TPaymentStatus.UNPAID && remainingDays <= 3) {
       toastHandler({
         id: ToastId.SUBSCRIPTION_PAYMENT_STATUS_UNPAID,
         type: ToastType.ERROR,
@@ -73,6 +74,36 @@ const BillingPage = () => {
                 {t('subscriptions:ERROR.TOAST_PAYMENT_FAILED_MESSAGE_PREFIX') +
                   remainingDays +
                   t('subscriptions:ERROR.TOAST_PAYMENT_FAILED_MESSAGE_SUFFIX')}
+              </span>
+            </p>
+            <Link href={PAYMENT_PAGE} className="text-base font-semibold text-link-text-error">
+              {t('subscriptions:ERROR.UPDATE_PAYMENT')}
+            </Link>
+          </div>
+        ),
+        closeable: true,
+      });
+    }
+
+    // Info: (20250117 - Liz) 到期日前三天
+    const threeDaysBeforeExpiration = getRemainingDays(team.expiredTimestamp);
+
+    // Info: (20250117 - Liz) 到期日前三天提醒
+    if (team.paymentStatus === TPaymentStatus.UNPAID && threeDaysBeforeExpiration <= 3) {
+      toastHandler({
+        id: ToastId.PLAN_EXPIRED_REMINDER,
+        type: ToastType.WARNING,
+        content: (
+          <div className="flex items-center gap-32px">
+            <p className="text-sm text-text-neutral-primary">
+              <span className="font-semibold">
+                {t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_TITLE')}
+              </span>
+
+              <span className="font-normal">
+                {t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_MESSAGE_PREFIX') +
+                  threeDaysBeforeExpiration +
+                  t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX')}
               </span>
             </p>
             <Link href={PAYMENT_PAGE} className="text-base font-semibold text-link-text-error">

@@ -55,7 +55,11 @@
     "TOAST_PAYMENT_FAILED_TITLE": "付款失敗 ",
     "TOAST_PAYMENT_FAILED_MESSAGE_PREFIX": "- 您的方案最後一次付款失敗。請盡快更新您的付款資訊，否則將在 ",
     "TOAST_PAYMENT_FAILED_MESSAGE_SUFFIX": " 天後恢復為基礎版方案",
-    "UPDATE_PAYMENT": "重新設定付款資訊"
+    "UPDATE_PAYMENT": "重新設定付款資訊",
+    "TOAST_EXPIRED_REMINDER_TITLE": "您的方案已到期",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_PREFIX": "您的訂閱方案將在 ",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX": " 天後到期，請續訂以保留該服務，否則方案將會降級。",
+    "RENEW_PAYMENT": "續訂付款"
   },
 
   "MODAL": {
