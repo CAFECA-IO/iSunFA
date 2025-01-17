@@ -62,6 +62,7 @@ const InvoicePage = () => {
   useEffect(() => {
     // Info: (20250117 - Liz) 打 API 取得團隊資料
     const getTeamData = async () => {
+      if (!teamIdString) return;
       setIsLoading(true);
 
       try {

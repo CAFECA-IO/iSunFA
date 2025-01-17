@@ -17,10 +17,6 @@ const TeamSubscriptionPage = () => {
   const router = useRouter();
   const { teamId } = router.query;
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
-  // Deprecated: (20250102 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('teamIdString:', teamIdString);
-
   const [team, setTeam] = useState<IUserOwnedTeam | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -30,6 +26,7 @@ const TeamSubscriptionPage = () => {
   useEffect(() => {
     // Info: (20250117 - Liz) 打 API 取得團隊資料
     const getTeamData = async () => {
+      if (!teamIdString) return;
       setIsLoading(true);
 
       try {
