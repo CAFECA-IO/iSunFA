@@ -24,6 +24,7 @@ const SubscriptionsPage = () => {
   );
 
   useEffect(() => {
+    // Info: (20250117 - Liz) 打 API 取得使用者擁有的所有團隊
     const getUserOwnedTeams = async () => {
       setIsLoading(true);
 
@@ -36,23 +37,19 @@ const SubscriptionsPage = () => {
       } catch (error) {
         // Deprecated: (20250117 - Liz)
         // eslint-disable-next-line no-console
-        console.log('取得使用者擁有的團隊失敗');
+        console.log('取得使用者擁有的所有團隊失敗');
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Info: (20250117 - Liz) 打 API 取得使用者擁有的團隊
     getUserOwnedTeams();
   }, []);
 
-  // Info: (20250117 - Liz) 如果正在載入，顯示骨架載入
+  // Info: (20250117 - Liz) 如果打 API 還在載入中，顯示載入中頁面
   if (isLoading) {
     return (
-      <Layout
-        isDashboard={false}
-        pageTitle={t('subscriptions:SUBSCRIPTIONS_PAGE.SUBSCRIPTION_PLANS')}
-      >
+      <Layout isDashboard={false}>
         <div className="flex items-center justify-center">
           <SkeletonList count={6} />
         </div>
