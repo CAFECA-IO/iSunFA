@@ -3,10 +3,10 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { LuDownload } from 'react-icons/lu';
 import { BiPrinter } from 'react-icons/bi';
+import { useReactToPrint } from 'react-to-print';
 import { Button } from '@/components/button/button';
 import { ITeamInvoice } from '@/interfaces/subscription';
 import { numberWithCommas, timestampToString } from '@/lib/utils/common';
-import { useReactToPrint } from 'react-to-print';
 
 interface InvoicePageBodyProps {
   invoice: ITeamInvoice;
@@ -32,7 +32,7 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
     amountDue,
   } = invoice;
 
-  const taxAmount = (subtotal * tax) / 100;
+  const taxPercent = amountDue === 0 ? 0 : ((tax / amountDue) * 100).toFixed(0);
 
   const unit = t('common:CURRENCY_ALIAS.TWD');
   const planName = t(`subscriptions:SUBSCRIPTIONS_PAGE.${planId.toUpperCase()}`);
@@ -145,7 +145,7 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
   );
 
   const conclusion = (
-    <div className="ml-auto flex w-200px flex-col items-end">
+    <div className="ml-auto flex w-200px flex-col items-end text-sm">
       {/* Info: (20250115 - Julian) Subtotal */}
       <div className="flex w-full items-center justify-between border-y border-stroke-neutral-quaternary py-10px">
         <p className="font-semibold text-text-neutral-primary">
@@ -158,10 +158,10 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
       {/* Info: (20250115 - Julian) Tax */}
       <div className="flex w-full items-center justify-between py-10px">
         <p className="font-semibold text-text-neutral-primary">
-          {t('subscriptions:INVOICE_PAGE.TAX')} ({tax}%)
+          {t('subscriptions:INVOICE_PAGE.TAX')} ({taxPercent}%)
         </p>
         <p className="text-right font-medium text-text-neutral-tertiary">
-          $ {numberWithCommas(taxAmount)} {unit}
+          $ {numberWithCommas(tax)} {unit}
         </p>
       </div>
       {/* Info: (20250115 - Julian) Total */}
