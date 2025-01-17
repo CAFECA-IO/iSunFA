@@ -8,6 +8,7 @@ export const ISUNFA_API = {
 
 export const ISUNFA_ROUTE = {
   LANDING_PAGE: '/',
+  PRICING: '/pricing',
   ABOUT: '/#about',
   FEATURES: '/#features',
   REPORTS: '/reports',
