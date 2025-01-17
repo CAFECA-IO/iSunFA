@@ -1289,6 +1289,7 @@ input[type='checkbox']:checked::before {
 }
 
 .bg-pricing {
+  backdrop-filter: blur(6px);
   background-image: url('/elements/bg_pricing_top.png'), url('/elements/bg_pricing_middle.png'),
     url('/elements/bg_pricing_bottom.png');
   background-position:
