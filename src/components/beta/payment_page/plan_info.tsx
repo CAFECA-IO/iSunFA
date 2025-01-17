@@ -32,7 +32,7 @@ const PlanInfo = ({ team, plan }: PlanInfoProps) => {
       >
         <div className="flex flex-col gap-24px text-center">
           <h2 className="text-xl font-bold text-text-brand-primary-lv1">
-            {t(`subscriptions:SUBSCRIPTIONS_PAGE.${plan.planName.toUpperCase()}`)}
+            {t(`subscriptions:PLAN_NAME.${plan.id.toUpperCase()}`)}
           </h2>
           {plan.price > 0 ? (
             <div>

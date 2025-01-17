@@ -17,20 +17,26 @@
     "YES_TURN_OFF_AUTO_RENEWAL": "Yes,Turn off auto-renewal",
     "CHOOSE_THE_PLAN_THAT_FITS_YOUR_TEAM": "Choose the plan that fits your team",
     "PLAN_FOR": "Plan for ",
+    "PAYMENT_FAILED": "Payment Failed",
+    "UPDATE_PAYMENT": "Update Payment",
+    "RETURNING_TO_BEGINNER_IN": "Returning to Beginner in ",
+    "DAYS": " Days"
+  },
+
+  "PLAN_NAME": {
+    "BEGINNER": "Beginner",
+    "PROFESSIONAL": "Professional",
+    "ENTERPRISE": "Enterprise"
+  },
+
+  "SUBSCRIPTION_FAQ": {
     "SUBSCRIPTION_FAQ": "Subscription FAQ",
     "FAQ1_QUESTION": "Who is responsible for team payments?",
     "FAQ1_ANSWER": "Any user can upgrade their own team to the Professional plan by entering payment information. After upgrading, only owner can manage future payments for the team.",
     "FAQ2_QUESTION": "How do I cancel my paid plan?",
     "FAQ3_QUESTION": "What if more people are added to my team every month?",
     "FAQ4_QUESTION": "Can you send me an invoice?",
-    "FAQ5_QUESTION": "What are the payment methods?",
-    "BEGINNER": "Beginner",
-    "PROFESSIONAL": "Professional",
-    "ENTERPRISE": "Enterprise",
-    "UPDATE_PAYMENT": "Update Payment",
-    "PAYMENT_FAILED": "Payment Failed",
-    "RETURNING_TO_BEGINNER_IN": "Returning to Beginner in ",
-    "DAYS": " Days"
+    "FAQ5_QUESTION": "What are the payment methods?"
   },
 
   "SUBSCRIPTION_PLAN_CONTENT": {
@@ -52,7 +58,12 @@
     "SUBSCRIPTION_IS_NOT_DONE_YET": "Subscription is not done yet",
     "SUBSCRIPTION_IS_NOT_DONE_YET_MESSAGE": "Your subscription is not done yet, are you sure you want to leave this page?",
     "KEEP_FINISHING_MY_SUBSCRIPTION": "Keep finishing my subscription",
-    "LEAVE": "Leave"
+    "LEAVE": "Leave",
+    "DOWNGRADE_MESSAGE_MODAL_TITLE": "Downgrade the plan",
+    "DOWNGRADE_MESSAGE_MODAL_CONTENT_PREFIX": "Are you sure you want to downgrade your plan to",
+    "DOWNGRADE_MESSAGE_MODAL_CONTENT_SUFFIX": "?",
+    "DOWNGRADE_MESSAGE_MODAL_SECONDARY_CONTENT": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
+    "DOWNGRADE_MESSAGE_MODAL_SUBMIT": "Yes. Downgrade my plan"
   },
 
   "PAYMENT_PAGE": {
@@ -67,14 +78,6 @@
     "SUBTOTAL": "Subtotal",
     "TAX": "Tax",
     "TOTAL_PRICE": "Total Price"
-  },
-
-  "PAYMENT_PAGE": {
-    "PAYMENT": "Payment",
-    "ADD_CREDIT_CARD": "Add Credit Card",
-    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "You can cancel your subscription anytime.",
-    "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
-    "SUBSCRIBE": "Subscribe"
   },
 
   "BILLING_PAGE": {

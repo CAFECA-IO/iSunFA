@@ -50,7 +50,7 @@ const Dashboard = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['layout', 'dashboard'])),
+      ...(await serverSideTranslations(locale as string, ['layout', 'dashboard', 'common'])),
     },
   };
 };
