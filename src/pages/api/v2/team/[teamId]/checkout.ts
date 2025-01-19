@@ -4,6 +4,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import { FAKE_INVOICE_LIST } from '@/lib/services/subscription_service';
+import { HttpMethod } from '@/constants/api_connection';
 
 /* Info: (20250111 - Luphia) 列出用戶所有登入裝置
  * 1. 取得 Session 資訊
@@ -35,13 +36,13 @@ const handlePostRequest = async (req: NextApiRequest) => {
  * 補充說明： API Router 不應該決定 Response 格式與商業邏輯，只負責呼叫對應的流程
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
 
   try {
     switch (method) {
-      case 'POST':
+      case HttpMethod.POST:
         ({ httpCode, result } = await handlePostRequest(req));
         break;
       default:

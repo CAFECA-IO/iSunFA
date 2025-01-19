@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { HTTP_STATUS } from '@/constants/http';
+import { HttpMethod } from '@/constants/api_connection';
 
 /* Info: (20250111 - Luphia) 應援科技回傳綁定結果，原則上必定成功
  * 1. 取得 Session 資訊
@@ -31,13 +32,13 @@ const handleGetRequest = async (req: NextApiRequest) => {
  * 補充說明： API Router 不應該決定 Response 格式與商業邏輯，只負責呼叫對應的流程
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
 
   try {
     switch (method) {
-      case 'GET':
+      case HttpMethod.GET:
       default:
         ({ httpCode, result } = await handleGetRequest(req));
     }
