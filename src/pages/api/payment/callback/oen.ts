@@ -16,10 +16,12 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   // Info: (20250113 - Luphia) step 4
   const { query } = req;
+  // Deprecated: (20250119 - Luphia) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const success = !!query.success;
 
   // Info: (20250114 - Luphia) 設定成功時與失敗時需要導向的前端網址
-  const redirectUrl = success ? '/users/setting/general' : '/users/dashboard';
+  const redirectUrl = '/payment/callback';
 
   const result = { httpCode: 302, result: redirectUrl };
   return result;
