@@ -411,6 +411,8 @@ export const voucherAPIGetOneUtils = {
    */
   initVoucherEntity: (voucher: IGetOneVoucherResponse) => {
     const voucherEntity = parsePrismaVoucherToVoucherEntity(voucher);
+    voucherEntity.isReverseRelated = voucherAPIGetOneUtils.isVoucherReverseRelated(voucher);
+
     return voucherEntity;
   },
 
@@ -602,6 +604,17 @@ export const voucherAPIGetOneUtils = {
       payableInfo: payableInfo.total === 0 ? undefined : payableInfo,
       receivingInfo: receivingInfo.total === 0 ? undefined : receivingInfo,
     };
+  },
+
+  isVoucherReverseRelated: (voucher: IGetOneVoucherResponse) => {
+    // Info: (20250117 - Shirley) 檢查是否被刪除
+    const isDeleted = !!voucher.deletedAt;
+
+    // Info: (20250117 - Shirley) 檢查是否有關聯的迴轉傳票
+    const hasOriginalVouchers = voucher.originalVouchers.length > 0;
+    const hasResultVouchers = voucher.resultVouchers.length > 0;
+
+    return isDeleted || hasOriginalVouchers || hasResultVouchers;
   },
 };
 
