@@ -7,6 +7,7 @@ import { useTranslation } from 'next-i18next';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
@@ -16,6 +17,7 @@ interface CreditCardInfoProps {
   getUserOwnedTeam: () => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FAKE_CREDIT_CARD_INFO: ICreditCardInfo = {
   lastFourDigits: '4002',
 };
@@ -36,9 +38,7 @@ const CreditCardInfo = ({
 
   // ToDo: (20250116 - Liz) 這邊的 creditCardInfo state 是用來存信用卡資料(末四碼)，目前是用假資料，之後要串接 API 取得真實資料
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [creditCardInfo, setCreditCardInfo] = useState<ICreditCardInfo | null>(
-    FAKE_CREDIT_CARD_INFO
-  );
+  const [creditCardInfo, setCreditCardInfo] = useState<ICreditCardInfo | null>();
 
   const isAutoRenewalEnabled = team.enableAutoRenewal;
 
@@ -54,24 +54,46 @@ const CreditCardInfo = ({
 
   // ToDo: (20250114 - Liz) 打 API 綁定信用卡資料
   const bindCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
+
   // ToDo: (20250116 - Liz) 打 window.open('/api/payment') 會回傳使用者綁定信用卡的資訊嗎？像是綁定成功或失敗、信用卡末四碼？還是這個 API 會直接處理變更團隊的訂閱方案，並且回傳變更成功或失敗的訊息？
 
   // ToDo: (20250114 - Liz) 打 API 變更團隊的訂閱方案(使用 teamId, planId)，並且重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
   const subscribe = async () => {
     // ToDo: (20250116 - Liz) 打 API 變更團隊的訂閱方案成功的話就顯示成功訊息，失敗的話就顯示失敗訊息
 
-    const success = true;
+    getUserOwnedTeam(); // Info: (20250116 - Liz) 重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
 
-    if (success) {
+    // Info: (20250120 - Julian) POST /api/v2/team/:teamId/checkout
+    const url = `/api/v2/team/${team.id}/checkout`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(plan),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to subscribe');
+      }
+
+      // Info: (20250120 - Julian) 導引到訂閱管理首頁 /users/subscriptions
+      window.location.href = ISUNFA_ROUTE.SUBSCRIPTIONS;
+
+      // Info: (20250120 - Julian) 顯示成功訊息
       toastHandler({
         id: ToastId.SUBSCRIPTION_UPDATE_SUCCESS,
         type: ToastType.SUCCESS,
         content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_SUCCESS'),
         closeable: true,
       });
+    } catch (error) {
+      // Info: (20250120 - Julian) 錯誤處理
+      // eslint-disable-next-line no-console
+      console.error(error);
     }
-
-    getUserOwnedTeam(); // Info: (20250116 - Liz) 重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
   };
 
   return (
