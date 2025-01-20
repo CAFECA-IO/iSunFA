@@ -1400,6 +1400,20 @@ export async function getManyVoucherV2(options: {
             },
           },
         },
+        resultVouchers: {
+          include: {
+            event: true,
+            originalVoucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -1676,6 +1690,20 @@ export async function getManyVoucherByAccountV2(options: {
           include: {
             event: true,
             resultVoucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        resultVouchers: {
+          include: {
+            event: true,
+            originalVoucher: {
               include: {
                 lineItems: {
                   include: {
