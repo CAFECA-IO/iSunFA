@@ -71,7 +71,7 @@ const PlanCard: React.FC<PlanProps> = ({
   return (
     <Card>
       <h3 className="text-28px font-bold text-text-brand-primary-lv3">{title}</h3>
-      <p className="mt-2 text-sm text-white">{description}</p>
+      <p className="mt-2 h-40px text-sm text-white">{description}</p>
       <div className="mt-4 md:h-74px">
         <LinearGradientText size={LinearTextSize.MD} align={TextAlign.LEFT}>
           {price.value}

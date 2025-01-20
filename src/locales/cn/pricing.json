@@ -52,9 +52,9 @@
   },
   "PROFESSIONAL": {
     "TITLE": "专业版",
-    "PRICE": "¥199.9",
-    "PRICE_UNIT": "RMB/Month",
-    "PRICE_ADDITIONAL": "每增加一位团队成员 +¥19.9",
+    "PRICE": "$899",
+    "PRICE_UNIT": "NTD/Month",
+    "PRICE_ADDITIONAL": "每增加一位团队成员 +$89",
     "DESCRIPTION": "适合中小企业、会计师或需要进阶工具的记账公司。",
     "FEATURES": {
       "EVERYTHING_IN_BEGINNER": "包含初学者方案的所有功能，额外提供：",
@@ -66,7 +66,7 @@
       "ASSET_TAGS": "免费提供 10 个资产标签以便追踪。",
       "SUPPORT_USERS": "支持每个团队最多 10 名用户并可扩展。",
       "TECHNICAL_ASSISTANCE": "每月 24 小时一对一技术支持（每次最多 4 小时）。",
-      "PRICE": "¥199.9 / 月（10 名用户）+ 每名 ¥19.9",
+      "PRICE": "$899 / 月（10 名用户）+ 每名 $89",
       "BEST_FOR": "提升团队效率，理想适合中小型企业",
       "STORAGE": "1TB",
       "LEDGER": "无限制",
@@ -84,8 +84,8 @@
   },
   "ENTERPRISE": {
     "TITLE": "企业版",
-    "PRICE": "¥1998",
-    "PRICE_UNIT": "RMB/Month",
+    "PRICE": "$8990",
+    "PRICE_UNIT": "NTD/Month",
     "PRICE_ADDITIONAL": "",
     "DESCRIPTION": "专为注重安全性和效率的大型企业或会计事务所设计。",
     "FEATURES": {
@@ -98,7 +98,7 @@
       "UNLIMITED_USERS": "每个团队支持无限制的用户。",
       "API_INTEGRATION": "与内部系统整合，自动化流程。",
       "TECHNICAL_ASSISTANCE": "每月 48 小时一对一技术支持（每次最多 4 小时）。",
-      "PRICE": "¥1998 / 月",
+      "PRICE": "$8990 / 月",
       "BEST_FOR": "全面解决大型企业的需求",
       "STORAGE": "无限制",
       "LEDGER": "无限制",

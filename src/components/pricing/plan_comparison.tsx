@@ -33,7 +33,7 @@ const PlanComparison: React.FC = () => {
         {t('COMPARISON.TITLE')}
       </LinearGradientText>
       <div className="hide-scrollbar w-full overflow-x-auto">
-        <table className="w-full border-collapse border border-white text-left text-white">
+        <table className="mb-120px w-full border-collapse border border-white text-left text-white">
           <thead>
             <tr>
               <th className="pricing-header h-80px border border-white px-4 py-2 text-xl backdrop-blur-pricing">
@@ -68,7 +68,7 @@ const PlanComparison: React.FC = () => {
           </tbody>
         </table>
       </div>
-      <div className="w-full text-left">
+      <div className="hidden w-full text-left">
         <LinearGradientText size={LinearTextSize.SM} align={TextAlign.LEFT}>
           <p>{t('pricing:CONTACT.TITLE')}</p>
         </LinearGradientText>

@@ -52,9 +52,9 @@
   },
   "PROFESSIONAL": {
     "TITLE": "專業版",
-    "PRICE": "NT$899",
+    "PRICE": "$899",
     "PRICE_UNIT": "NTD/Month",
-    "PRICE_ADDITIONAL": "每增加一位團隊成員 +NT$89",
+    "PRICE_ADDITIONAL": "每增加一位團隊成員 +$89",
     "DESCRIPTION": "適合中小企業、會計師或需要進階工具的記帳公司。",
     "FEATURES": {
       "EVERYTHING_IN_BEGINNER": "包含初學者方案的所有功能，額外提供：",
@@ -66,7 +66,7 @@
       "ASSET_TAGS": "免費提供 10 個資產標籤以便追蹤。",
       "SUPPORT_USERS": "支援每個團隊最多 10 名使用者並可擴展。",
       "TECHNICAL_ASSISTANCE": "每月 24 小時一對一技術支援（每次最多 4 小時）。",
-      "PRICE": "NT$899 / 月（10 名使用者）+ 每名 NT$89",
+      "PRICE": "$899 / 月（10 名使用者）+ 每名 $89",
       "BEST_FOR": "提升團隊效率，理想適合中小型企業",
       "STORAGE": "1TB",
       "LEDGER": "無限制",
@@ -84,7 +84,7 @@
   },
   "ENTERPRISE": {
     "TITLE": "企業版",
-    "PRICE": "NT$8990",
+    "PRICE": "$8990",
     "PRICE_UNIT": "NTD/Month",
     "PRICE_ADDITIONAL": "",
     "DESCRIPTION": "專為注重安全性和效率的大型企業或會計事務所設計。",
@@ -98,7 +98,7 @@
       "UNLIMITED_USERS": "每個團隊支援無限制的使用者。",
       "API_INTEGRATION": "與內部系統整合，自動化流程。",
       "TECHNICAL_ASSISTANCE": "每月 48 小時一對一技術支援（每次最多 4 小時）。",
-      "PRICE": "NT$8990 / 月",
+      "PRICE": "$8990 / 月",
       "BEST_FOR": "全面解決大型企業的需求",
       "STORAGE": "無限制",
       "LEDGER": "無限制",
