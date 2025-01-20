@@ -75,8 +75,8 @@
   "ACCOUNTING": {
     "TITLE": "会计设定",
     "TAX_SETTING_TITLE": "税务设定",
-    "TAX_SALES": "税（销售）",
-    "TAX_PURCHASE": "税（消费）",
+    "TAX_SALES": "税（销项）",
+    "TAX_PURCHASE": "税（进项）",
     "TAX_OPTION_TAXABLE": "应税",
     "TAX_OPTION_ZERO_TAX_RATE": "零税率",
     "TAX_OPTION_TAX_FREE": "免税",
