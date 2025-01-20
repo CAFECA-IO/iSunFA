@@ -255,10 +255,8 @@ export const voucherAPIGetUtils = {
   },
 
   /**
-   * Info: (20250120 - Shirley) 在 list voucher 時，用來標記「被刪除傳票」的迴轉分錄
-   * @param events
-   * @param lineItems
-   * @returns
+   * Info: (20250120 - Shirley)
+   * @description 在 list voucher 時，用來檢查該傳票是否為「被刪除傳票」的迴轉傳票的標準
    */
   initResultEventEntities: (voucher: IGetManyVoucherResponseButOne) => {
     const resultVoucher = parsePrismaVoucherToVoucherEntity(voucher);

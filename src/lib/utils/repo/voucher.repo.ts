@@ -1020,21 +1020,6 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
                 originalLineItem: {
                   include: {
                     account: true,
-                    // originalLineItem: {
-                    //   // Info: (20241114 - Murky) 指的是這個lineItem是 original
-                    //   include: {
-                    //     resultLineItem: {
-                    //       include: {
-                    //         account: true,
-                    //       },
-                    //     },
-                    //     associateVoucher: {
-                    //       include: {
-                    //         event: true,
-                    //       },
-                    //     },
-                    //   },
-                    // },
                   },
                 },
                 associateVoucher: {
@@ -1153,21 +1138,6 @@ export async function getOneVoucherByVoucherNoV2(options: {
                 originalLineItem: {
                   include: {
                     account: true,
-                    // originalLineItem: {
-                    //   // Info: (20241114 - Murky) 指的是這個lineItem是 original
-                    //   include: {
-                    //     resultLineItem: {
-                    //       include: {
-                    //         account: true,
-                    //       },
-                    //     },
-                    //     associateVoucher: {
-                    //       include: {
-                    //         event: true,
-                    //       },
-                    //     },
-                    //   },
-                    // },
                   },
                 },
                 associateVoucher: {
