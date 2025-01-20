@@ -83,6 +83,7 @@ export type IGetManyVoucherBetaEntity = IVoucherEntity & {
     remain: number;
   };
   originalEvents: IEventEntity[];
+  resultEvents: IEventEntity[];
 };
 
 /**
@@ -253,6 +254,35 @@ export const voucherAPIGetUtils = {
     return originalEventEntities;
   },
 
+  /**
+   * Info: (20250120 - Shirley)
+   * @description 在 list voucher 時，用來檢查該傳票是否為「被刪除傳票」的迴轉傳票的標準
+   */
+  initResultEventEntities: (voucher: IGetManyVoucherResponseButOne) => {
+    const resultVoucher = parsePrismaVoucherToVoucherEntity(voucher);
+    // Info: (20250120 - Shirley) lineItems 都有 accountEntity
+    const resultLineItems = voucherAPIGetUtils.initLineItemAndAccountEntities(voucher);
+    resultVoucher.lineItems = resultLineItems;
+
+    const resultEventEntities: IEventEntity[] = voucher.resultVouchers.map((resultEventVoucher) => {
+      const event = parsePrismaEventToEventEntity(resultEventVoucher.event);
+      const originalVoucher = parsePrismaVoucherToVoucherEntity(resultEventVoucher.originalVoucher);
+      // Info: (20250120 - Shirley) lineItems 都有 accountEntity
+      const originalLineItems = resultEventVoucher.originalVoucher.lineItems.map(
+        voucherAPIGetUtils.initLineItemAndAccountEntity
+      );
+      originalVoucher.lineItems = originalLineItems;
+
+      event.associateVouchers = [
+        {
+          originalVoucher,
+          resultVoucher,
+        },
+      ];
+      return event;
+    });
+    return resultEventEntities;
+  },
   getPayableReceivableInfoFromVoucher: (
     events: IEventEntity[],
     lineItems: (ILineItemEntity & {
@@ -355,8 +385,9 @@ export const voucherAPIGetUtils = {
 
     // Info: (20250117 - Shirley) 檢查是否有關聯的反轉傳票
     const hasOriginalVouchers = voucher.originalVouchers.length > 0;
+    const hasResultVouchers = voucher.resultVouchers.length > 0;
 
-    return isDeleted || hasOriginalVouchers;
+    return isDeleted || hasOriginalVouchers || hasResultVouchers;
   },
 };
 

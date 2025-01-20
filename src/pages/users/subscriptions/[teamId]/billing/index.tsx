@@ -199,10 +199,13 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
       ...(await serverSideTranslations(locale as string, [
-        'common',
         'layout',
         'dashboard',
         'subscriptions',
+        'filter_section_type',
+        'date_picker',
+        'common',
+        'search',
       ])),
     },
   };
