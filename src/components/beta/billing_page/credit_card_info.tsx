@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import { ICreditCardInfo } from '@/interfaces/subscription';
 
 const FAKE_CREDIT_CARD_INFO: ICreditCardInfo = {
   lastFourDigits: '4002',
 };
 
-const CreditCardInfo = () => {
+const CreditCardInfo: React.FC = () => {
+  const { t } = useTranslation(['subscriptions']);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [creditCardInfo, setCreditCardInfo] = useState<ICreditCardInfo | null>(
     FAKE_CREDIT_CARD_INFO
@@ -41,7 +43,7 @@ const CreditCardInfo = () => {
           className="ml-auto rounded-xs border border-button-stroke-primary px-24px py-10px text-base font-medium text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable"
           onClick={editCreditCard}
         >
-          Change
+          {t('subscriptions:SUBSCRIPTIONS_PAGE.CHANGE_CARD')}
         </button>
       </section>
     </main>
