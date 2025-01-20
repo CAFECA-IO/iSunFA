@@ -13,7 +13,7 @@ interface CreditCardInfoProps {
   plan: IPlan | undefined;
   setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
-  getUserOwnedTeam: () => void;
+  getTeamData: () => Promise<void>;
 }
 
 const FAKE_CREDIT_CARD_INFO: ICreditCardInfo = {
@@ -25,7 +25,7 @@ const CreditCardInfo = ({
   team,
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
-  getUserOwnedTeam,
+  getTeamData,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
   // Deprecated: (20250116 - Liz)
@@ -71,7 +71,7 @@ const CreditCardInfo = ({
       });
     }
 
-    getUserOwnedTeam(); // Info: (20250116 - Liz) 重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
+    getTeamData(); // Info: (20250116 - Liz) 重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
   };
 
   return (

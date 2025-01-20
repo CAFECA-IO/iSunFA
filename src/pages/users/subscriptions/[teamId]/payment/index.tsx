@@ -105,11 +105,7 @@ const PaymentPage = () => {
         pageTitle={t('subscriptions:PAYMENT_PAGE.PAGE_TITLE')}
         goBackUrl={`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${teamIdString}`}
       >
-        <PaymentPageBody
-          team={team}
-          subscriptionPlan={planFromUrl}
-          getUserOwnedTeam={getTeamData}
-        />
+        <PaymentPageBody team={team} subscriptionPlan={planFromUrl} getTeamData={getTeamData} />
       </Layout>
     </>
   );
