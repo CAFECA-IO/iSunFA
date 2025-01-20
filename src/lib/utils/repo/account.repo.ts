@@ -174,7 +174,8 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
 export async function updateAccountInPrisma(
   accountIdNumber: number,
   companyIdNumber: number,
-  name: string
+  name: string,
+  note?: string
 ) {
   let account: Account | null = null;
   try {
@@ -185,6 +186,7 @@ export async function updateAccountInPrisma(
       },
       data: {
         name,
+        note: note ?? '',
       },
     });
   } catch (error) {

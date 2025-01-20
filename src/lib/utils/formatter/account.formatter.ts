@@ -14,6 +14,7 @@ export function formatAccount(account: PrismaAccount): IAccount {
     debit: account.debit,
     code: account.code,
     name: account.name,
+    note: account.note ?? '',
     createdAt: account.createdAt,
     updatedAt: account.updatedAt,
     deletedAt: account.deletedAt,

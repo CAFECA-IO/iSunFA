@@ -30,6 +30,7 @@ export interface IAccount {
   liquidity: boolean;
   code: string;
   name: string;
+  note: string | null;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;

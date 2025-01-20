@@ -185,7 +185,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       setTitleCode(formType === TitleFormType.add ? '-' : selectedAccountTitle.code);
       // Info: (20241113 - Julian) 如果是新增，則備註為空；如果是編輯，則備註為原本的備註
       // ToDo: (20241113 - Julian) IAcount 的 note 欄位還沒有實作
-      //  setTitleNote(selectedAccountTitle.note);
+      setTitleNote(selectedAccountTitle.note ?? ''); // Info: (20250120 - Shirley) @Julian 已串上後端實作的 note 功能
     }
   }, [selectedAccountTitle]);
 
@@ -313,6 +313,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         body: {
           accountId: selectSubcategory.id,
           name: titleName,
+          note: titleNote, // Info: (20250120 - Shirley) @Julian 已串上後端實作的 note 功能
         },
       });
     }
@@ -325,6 +326,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         body: {
           code: selectSubcategory.code,
           name: titleName,
+          note: titleNote, // Info: (20250120 - Shirley) @Julian 已串上後端實作的 note 功能
         },
       });
     }

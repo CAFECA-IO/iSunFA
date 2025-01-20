@@ -29,6 +29,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     unRead,
     lineItemsInfo,
     isSelected,
+    isReverseRelated,
   } = voucher;
 
   // Info: (20240920 - Julian) 借貸總和
@@ -44,7 +45,8 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   );
 
   // ToDo: (20250107 - Julian) 標記為已刪除的條件 = ？
-  const isDisplayDeleteTag = false ? (
+  // Info: (20250120 - Shirley) @Julian isReverseRelated===true 代表該傳票被刪除或反轉
+  const isDisplayDeleteTag = isReverseRelated ? (
     <div className="rounded-full bg-badge-surface-soft-primary px-8px py-4px text-xs text-badge-text-primary-solid">
       {t('journal:VOUCHER.DELETED')}
     </div>
