@@ -6,14 +6,15 @@ import OwnedTeam from '@/components/beta/subscriptions_page/owned_team';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
-import APIHandler from '@/lib/utils/api_handler'; // Info: (20250116 - Anna)
-import { APIName } from '@/constants/api_connection'; // Info: (20250116 - Anna)
-import { IPaginatedData } from '@/interfaces/pagination'; // Info: (20250116 - Anna)
-import { useRouter } from 'next/router'; // Info: (20250116 - Anna)
-import SelectFilter from '@/components/filter_section/select_filter'; // Info: (20250116 - Anna)
-import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker'; // Info: (20250116 - Anna)
-import { IDatePeriod } from '@/interfaces/date_period'; // Info: (20250116 - Anna)
-import SearchInput from '@/components/filter_section/search_input';// Info: (20250116 - Anna)
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { useRouter } from 'next/router';
+import SelectFilter from '@/components/filter_section/select_filter';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { IDatePeriod } from '@/interfaces/date_period';
+import SearchInput from '@/components/filter_section/search_input';
+import { SortOrder } from '@/constants/sort';
 
 // Todo: (20250116 - Anna) dummy data 後續不需要再刪除
 // const FAKE_INVOICE_LIST: ITeamInvoice[] = [
@@ -204,31 +205,66 @@ const BillingPageBody = ({ team }: BillingPageBodyProps) => {
     'date_picker',
     'common',
     'search',
-  ]); // Info: (20250116 - Anna)
-  const router = useRouter(); // Info: (20250116 - Anna)
-  const { teamId } = router.query; // Info: (20250116 - Anna) teamId
-  const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : ''; // Info: (20250116 - Anna)
+  ]);
+  // Info: (20250116 - Anna) teamId
+  const router = useRouter();
+  const { teamId } = router.query;
+  const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
 
   // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [invoiceList, setInvoiceList] = useState<ITeamInvoice[]>([]); // Info: (20250116 - Anna) state 來儲存發票列表
-  const ALL_PLANS = 'All'; // Info: (20250116 - Anna) 定義為常量
-  const [planType, setPlanType] = useState<string | undefined>(ALL_PLANS); // Info: (20250116 - Anna)
+  const [invoiceList, setInvoiceList] = useState<ITeamInvoice[]>([]);
+
+  // Info: (20250116 - Anna) 方案
+  const ALL_PLANS = 'All';
+  const [planType, setPlanType] = useState<string | undefined>(ALL_PLANS);
+
+  // Info: (20250116 - Anna) 付款狀態
   const statuses = [
     { value: 'All', label: 'All Status' },
     { value: 'paid', label: 'Paid' },
     { value: 'failed', label: 'Failed' },
   ];
 
-  const [selectedStatus, setSelectedStatus] = useState<string>('All'); // Info: (20250116 - Anna) 預設為 All
+  const [selectedStatus, setSelectedStatus] = useState<string>('All');
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
     startTimeStamp: 0,
     endTimeStamp: 0,
   });
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Info: (20241106 - Anna) 定義搜尋關鍵字狀態
+
+  // Info: (20241106 - Anna) 搜尋關鍵字
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Info: (20250120 - Anna) 排序
+  const [invoiceIDSort, setInvoiceIDSort] = useState<null | SortOrder>(null);
+  const [billingDateSort, setBillingDateSort] = useState<null | SortOrder>(null);
+  const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
 
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
+
+  // Info: (20250120 - Anna) 排序
+  const sortInvoices = (invoices: ITeamInvoice[]) => {
+    const sortedInvoices = [...invoices];
+
+    if (billingDateSort) {
+      sortedInvoices.sort((a, b) => {
+        return billingDateSort === SortOrder.ASC
+          ? a.issuedTimestamp - b.issuedTimestamp
+          : b.issuedTimestamp - a.issuedTimestamp;
+      });
+    } else if (invoiceIDSort) {
+      sortedInvoices.sort((a, b) => {
+        return invoiceIDSort === SortOrder.ASC ? a.id - b.id : b.id - a.id;
+      });
+    } else if (amountSort) {
+      sortedInvoices.sort((a, b) => {
+        return amountSort === SortOrder.ASC ? a.amountDue - b.amountDue : b.amountDue - a.amountDue;
+      });
+    }
+
+    return sortedInvoices;
+  };
 
   // Info: (20250116 - Anna) 初始化 APIHandler
   const { trigger: getInvoiceList } = APIHandler<IPaginatedData<ITeamInvoice[]>>(
@@ -281,6 +317,13 @@ const BillingPageBody = ({ team }: BillingPageBodyProps) => {
       fetchInvoiceData();
     }
   }, [teamIdString, planType, selectedStatus, selectedDateRange, searchQuery]);
+
+  // Info: (20250120 - Anna) 使用 useEffect，在 invoiceList 或排序條件改變時觸發重新排序
+  useEffect(() => {
+    // Info: (20250120 - Anna) 確保 invoiceList 是排序後的資料
+    const sortedInvoices = sortInvoices(invoiceList);
+    setInvoiceList(sortedInvoices);
+  }, [billingDateSort, invoiceIDSort, amountSort]);
 
   const closeAutoRenewalModal = () => {
     setTeamForAutoRenewalOn(undefined);
@@ -351,15 +394,15 @@ const BillingPageBody = ({ team }: BillingPageBodyProps) => {
         <CreditCardInfo />
       </section>
 
-      {/* // ToDo: (20250117 - Anna) FilterSection */}
+      {/* (20250117 - Anna) FilterSection */}
       <section className="flex gap-4">
-        {/* Info: (20250116 - Anna) Plan 篩選框 */}
+        {/* Info: (20250116 - Anna) Plan（方案）篩選框 */}
         {Object.values(TPlanType).length > 0 && (
           <SelectFilter
             label="Plan"
             options={[
-              ALL_PLANS, // 包含 "All" 選項
-              ...Object.values(TPlanType), // 將 TPlanType 的值展開
+              ALL_PLANS, // Info: (20250116 - Anna) 包含 "All" 選項
+              ...Object.values(TPlanType), // Info: (20250116 - Anna) 將 TPlanType 的值展開
             ]}
             selectedValue={planType}
             onChange={setPlanType}
@@ -370,7 +413,7 @@ const BillingPageBody = ({ team }: BillingPageBodyProps) => {
         {statuses.length > 0 && (
           <SelectFilter
             label="Status"
-            options={statuses.map((Status) => Status.value)} // 只傳 value 陣列
+            options={statuses.map((Status) => Status.value)} // Info: (20250116 - Anna) 只傳 value 陣列
             selectedValue={selectedStatus}
             onChange={setSelectedStatus}
             containerClassName="flex-1"
@@ -393,7 +436,15 @@ const BillingPageBody = ({ team }: BillingPageBodyProps) => {
         </div>
       </section>
 
-      <InvoiceList invoiceList={invoiceList} />
+      <InvoiceList
+        invoiceList={invoiceList}
+        billingDateSort={billingDateSort}
+        setBillingDateSort={setBillingDateSort}
+        invoiceIDSort={invoiceIDSort}
+        setInvoiceIDSort={setInvoiceIDSort}
+        amountSort={amountSort}
+        setAmountSort={setAmountSort}
+      />
 
       {/* // ToDo: (20250113 - Liz) PaymentFailedToast */}
       <section></section>
