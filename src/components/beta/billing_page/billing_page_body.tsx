@@ -6,6 +6,8 @@ import OwnedTeam from '@/components/beta/subscriptions_page/owned_team';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 const FAKE_INVOICE_LIST: ITeamInvoice[] = [
   {
@@ -186,15 +188,17 @@ const FAKE_INVOICE_LIST: ITeamInvoice[] = [
 
 interface BillingPageBodyProps {
   team: IUserOwnedTeam;
+  getTeamData: () => Promise<void>;
 }
 
-const BillingPageBody = ({ team }: BillingPageBodyProps) => {
+const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
 
   // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [invoiceList, setInvoiceList] = useState<ITeamInvoice[]>(FAKE_INVOICE_LIST);
 
+  // Info: (20250116 - Liz) 開啟或關閉自動續約的 Modal 狀態
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
@@ -203,14 +207,39 @@ const BillingPageBody = ({ team }: BillingPageBodyProps) => {
     setTeamForAutoRenewalOff(undefined);
   };
 
-  // ToDo: (20250115 - Liz) 串接 API 來開啟或關閉自動續約
-  const turnOnAutoRenewal = () => {
-    // ToDo: (20250115 - Liz) 打 API 開啟自動續約
-    // ToDo: (20250115 - Liz) 打完開啟自動續約的 API 成功後，要關閉 Modal，並且重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
+  // Info: (20250120 - Liz) 開啟自動續約、關閉自動續約 API
+  const { trigger: updateSubscriptionAPI } = APIHandler(APIName.UPDATE_SUBSCRIPTION);
+
+  // Info: (20250120 - Liz) 打 API 開啟自動續約
+  const turnOnAutoRenewal = async () => {
+    if (!teamForAutoRenewalOn) return;
+    const teamId = teamForAutoRenewalOn.id;
+    const planId = teamForAutoRenewalOn.plan;
+    const { success } = await updateSubscriptionAPI({
+      params: { teamId },
+      body: { plan: planId, autoRenewal: true },
+    });
+    // Info: (20250120 - Liz) 打完開啟自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
+    if (success) {
+      closeAutoRenewalModal();
+      getTeamData();
+    }
   };
-  const turnOffAutoRenewal = () => {
-    // ToDo: (20250115 - Liz) 打 API 關閉自動續約
-    // ToDo: (20250115 - Liz) 打完關閉自動續約的 API 成功後，要關閉 Modal，並且重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
+
+  // Info: (20250120 - Liz) 打 API 關閉自動續約
+  const turnOffAutoRenewal = async () => {
+    if (!teamForAutoRenewalOff) return;
+    const teamId = teamForAutoRenewalOff.id;
+    const planId = teamForAutoRenewalOff.plan;
+    const { success } = await updateSubscriptionAPI({
+      params: { teamId },
+      body: { plan: planId, autoRenewal: false },
+    });
+    // Info: (20250120 - Liz) 打完關閉自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
+    if (success) {
+      closeAutoRenewalModal();
+      getTeamData();
+    }
   };
 
   const messageModalDataForTurnOnRenewal: IMessageModal = {
@@ -271,12 +300,6 @@ const BillingPageBody = ({ team }: BillingPageBodyProps) => {
       <section></section>
 
       <InvoiceList invoiceList={invoiceList} />
-
-      {/* // ToDo: (20250113 - Liz) PaymentFailedToast */}
-      <section></section>
-
-      {/* // ToDo: (20250113 - Liz) PlanExpiredToast */}
-      <section></section>
 
       {/* // Info: (20250115 - Liz) Modals */}
       {teamForAutoRenewalOn && (
