@@ -70,6 +70,7 @@ const lineItemGetByAccountOutputValidatorV2 = z
             liquidity: lineItem.account.liquidity,
             code: lineItem.account.code,
             name: lineItem.account.name,
+            note: lineItem.account.note ?? null,
             createdAt: lineItem.account.createdAt,
             updatedAt: lineItem.account.updatedAt,
             deletedAt: lineItem.account.deletedAt,
