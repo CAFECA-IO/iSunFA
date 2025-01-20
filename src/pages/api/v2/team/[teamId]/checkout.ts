@@ -1,10 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { IPaymentMethod } from '@/interfaces/payment';
-import { PAYMENT_METHOD_TYPE } from '@/constants/payment';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
+import { FAKE_INVOICE_LIST } from '@/lib/services/subscription_service';
 import { HttpMethod } from '@/constants/api_connection';
 
 /* Info: (20250111 - Luphia) 列出用戶所有登入裝置
@@ -17,24 +16,19 @@ import { HttpMethod } from '@/constants/api_connection';
  * 7. 格式化 API 回傳資料
  * 8. 回傳操作結果
  */
-const handleGetRequest = async (req: NextApiRequest) => {
+const handlePostRequest = async (req: NextApiRequest) => {
+  /* Info: (20250117 - Luphia) checkout data format
+     { paymentMethodId: 10000001, amount: 1000, currency: 'TWD', planId: 1, additionalInfo: {} }
+   */
+
   const statusMessage = STATUS_MESSAGE.SUCCESS;
   // Deprecated: (20250117 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const session = await getSession(req);
 
-  // Info: (20250117 - Luphia) mock data
-  const payload: IPaymentMethod[] = [
-    {
-      id: 10000001,
-      type: PAYMENT_METHOD_TYPE.VISA,
-      number: '**** **** **** 1234',
-      expirationDate: '12/25',
-      cvv: '123',
-      default: true,
-    },
-  ];
-  const result = formatApiResponse(statusMessage, payload);
+  // Info: (20250117 - Luphia) return fake invoice data
+  const invoice = FAKE_INVOICE_LIST[0];
+  const result = formatApiResponse(statusMessage, [invoice]);
   return result;
 };
 
@@ -48,9 +42,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     switch (method) {
-      case HttpMethod.GET:
+      case HttpMethod.POST:
+        ({ httpCode, result } = await handlePostRequest(req));
+        break;
       default:
-        ({ httpCode, result } = await handleGetRequest(req));
+        // Info: (20250113 - Luphia) unsupported method
+        httpCode = HTTP_STATUS.METHOD_NOT_ALLOWED;
+        result = formatApiResponse(STATUS_MESSAGE.METHOD_NOT_ALLOWED, []);
     }
   } catch (error) {
     // Info: (20250113 - Luphia) unexpected exception, pass to global handler

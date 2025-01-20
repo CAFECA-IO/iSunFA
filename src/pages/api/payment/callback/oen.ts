@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { HTTP_STATUS } from '@/constants/http';
+import { HttpMethod } from '@/constants/api_connection';
 
 /* Info: (20250111 - Luphia) 應援科技回傳綁定結果，原則上必定成功
  * 1. 取得 Session 資訊
@@ -16,10 +17,12 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   // Info: (20250113 - Luphia) step 4
   const { query } = req;
+  // Deprecated: (20250119 - Luphia) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const success = !!query.success;
 
   // Info: (20250114 - Luphia) 設定成功時與失敗時需要導向的前端網址
-  const redirectUrl = success ? '/users/setting/general' : '/users/dashboard';
+  const redirectUrl = '/payment/callback';
 
   const result = { httpCode: 302, result: redirectUrl };
   return result;
@@ -29,13 +32,13 @@ const handleGetRequest = async (req: NextApiRequest) => {
  * 補充說明： API Router 不應該決定 Response 格式與商業邏輯，只負責呼叫對應的流程
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
 
   try {
     switch (method) {
-      case 'GET':
+      case HttpMethod.GET:
       default:
         ({ httpCode, result } = await handleGetRequest(req));
     }

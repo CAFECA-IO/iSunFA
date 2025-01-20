@@ -119,6 +119,7 @@ export const voucherEntityValidator = z.object({
   issuer: z.any().optional(),
   readByUsers: z.array(z.any()),
   asset: z.array(z.any()),
+  isReverseRelated: z.boolean().optional(),
 });
 
 /**
@@ -239,6 +240,7 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
           remain: z.number(),
         }),
         originalEvents: z.array(eventEntityValidator),
+        isReverseRelated: z.boolean().optional(),
       })
     ),
     unRead: z.object({
@@ -295,6 +297,7 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
       },
       [] as { id: number; voucherNo: string }[]
     ),
+    isReverseRelated: voucher.isReverseRelated,
   }));
 
   const parsedData: IPaginatedData<{
@@ -484,6 +487,7 @@ const voucherGetOneOutputValidatorV2 = z
         remain: z.number(),
       })
       .optional(),
+    isReverseRelated: z.boolean().optional(),
   })
   .nullable()
   .transform((data) => {
@@ -610,6 +614,7 @@ const voucherGetOneOutputValidatorV2 = z
           lineItemBeReversedId: resultLineItem.originalLineItemId,
         })),
       })),
+      isReverseRelated: data.isReverseRelated,
     };
 
     return voucherDetail;
@@ -666,6 +671,7 @@ const IVoucherDetailForFrontendValidator = z.object({
       reverseList: z.array(IReverseItemValidator),
     })
   ),
+  isReverseRelated: z.boolean().optional(),
 });
 
 export const voucherGetOneFrontendValidatorV2 = IVoucherDetailForFrontendValidator;
