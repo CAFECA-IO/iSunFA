@@ -71,7 +71,7 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
       {/* Info: (20241104 - Julian) Amount */}
       <div className="col-start-9 col-end-11">
         {numberWithCommas(amount)}
-        <span className="text-text-neutral-tertiary"> {t('common:COMMON.TWD')}</span>
+        <span className="text-text-neutral-tertiary"> {t('journal:CURRENCY_ALIAS.TWD')}</span>
       </div>
       {/* Info: (20241104 - Julian) Reverse Amount */}
       <div className="col-start-11 col-end-15 text-right">
@@ -98,7 +98,7 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
               alt="tw_icon"
               className="rounded-full"
             />
-            <p className="text-input-text-input-placeholder">{t('common:COMMON.TWD')}</p>
+            <p className="text-input-text-input-placeholder">{t('journal:CURRENCY_ALIAS.TWD')}</p>
           </div>
         </div>
       </div>

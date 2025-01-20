@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
@@ -23,28 +23,28 @@ const SubscriptionsPage = () => {
     APIName.LIST_TEAM
   );
 
-  useEffect(() => {
-    // Info: (20250117 - Liz) 打 API 取得使用者擁有的所有團隊
-    const getUserOwnedTeams = async () => {
-      setIsLoading(true);
+  // Info: (20250117 - Liz) 打 API 取得使用者擁有的所有團隊
+  const getUserOwnedTeams = useCallback(async () => {
+    setIsLoading(true);
 
-      try {
-        const { data: ownedTeams, success } = await getUserOwnedTeamsAPI();
+    try {
+      const { data: ownedTeams, success } = await getUserOwnedTeamsAPI();
 
-        if (success && ownedTeams && ownedTeams.data) {
-          setUserOwnedTeams(ownedTeams.data);
-        }
-      } catch (error) {
-        // Deprecated: (20250117 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得使用者擁有的所有團隊失敗');
-      } finally {
-        setIsLoading(false);
+      if (success && ownedTeams && ownedTeams.data) {
+        setUserOwnedTeams(ownedTeams.data);
       }
-    };
-
-    getUserOwnedTeams();
+    } catch (error) {
+      // Deprecated: (20250117 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('取得使用者擁有的所有團隊失敗');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    getUserOwnedTeams();
+  }, [getUserOwnedTeams]);
 
   // Info: (20250117 - Liz) 如果打 API 還在載入中，顯示載入中頁面
   if (isLoading) {
@@ -91,7 +91,10 @@ const SubscriptionsPage = () => {
         isDashboard={false}
         pageTitle={t('subscriptions:SUBSCRIPTIONS_PAGE.SUBSCRIPTION_PLANS')}
       >
-        <SubscriptionsPageBody userOwnedTeams={userOwnedTeams} />
+        <SubscriptionsPageBody
+          userOwnedTeams={userOwnedTeams}
+          getUserOwnedTeams={getUserOwnedTeams}
+        />
       </Layout>
     </>
   );

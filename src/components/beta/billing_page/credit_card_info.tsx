@@ -1,41 +1,65 @@
-import React, { useState } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
-import { ICreditCardInfo } from '@/interfaces/subscription';
+import Image from 'next/image';
+import { IUserOwnedTeam } from '@/interfaces/subscription';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IPaymentMethod } from '@/interfaces/payment';
 
-const FAKE_CREDIT_CARD_INFO: ICreditCardInfo = {
-  lastFourDigits: '4002',
-};
+interface CreditCardInfoProps {
+  team: IUserOwnedTeam;
+}
 
-const CreditCardInfo: React.FC = () => {
+const CreditCardInfo = ({ team }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [creditCardInfo, setCreditCardInfo] = useState<ICreditCardInfo | null>(
-    FAKE_CREDIT_CARD_INFO
+  const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
+
+  // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
+  const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
+
+  // Info: (20250120 - Liz) 取得信用卡 number 和 type
+  const creditCardNumber = hasCreditCardInfo ? paymentMethod[0].number : '';
+  const creditCardType = hasCreditCardInfo ? paymentMethod[0].type : '';
+
+  // Info: (20250120 - Liz) 取得信用卡資訊 API
+  const { trigger: getCreditCardInfoAPI } = APIHandler<IPaymentMethod[]>(
+    APIName.GET_CREDIT_CARD_INFO
   );
 
-  // ToDo: (20250115 - Liz) 呼叫 API 取得信用卡資訊
-  // setCreditCardInfo(creditCardInfoData);
+  // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state
+  useEffect(() => {
+    const getCreditCardInfo = async () => {
+      const { success, data } = await getCreditCardInfoAPI({
+        params: { teamId: team.id },
+      });
+
+      if (success) {
+        setPaymentMethod(data);
+      }
+    };
+
+    getCreditCardInfo();
+    window.getCreditCardInfo = getCreditCardInfo; // Info: (20250120 - Liz) 後端需求，將 getCreditCardInfo 掛載到全域的 window 物件上
+  }, []);
+
+  // Info: (20250115 - Liz) 編輯信用卡資訊
+  const editCreditCard = () => window.open('/api/payment'); // Info: (20250116 - Julian) 連接到第三方金流頁面
 
   // Info: (20250115 - Liz) 如果信用卡資訊不存在，不顯示信用卡資訊
-  if (!creditCardInfo) {
+  if (!paymentMethod) {
     return null;
   }
-
-  // ToDo: (20250115 - Liz) 編輯信用卡資訊
-  const editCreditCard = () => window.open('/api/payment'); // Info: (20250116 - Julian) 連接到第三方金流頁面
 
   return (
     <main className="flex overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2">
       <div className="w-24px bg-surface-brand-primary"></div>
 
       <section className="flex flex-auto items-center gap-24px bg-surface-brand-primary-5 p-24px">
+        {/* // ToDo: (20250120 - Liz) 根據 creditCardType 顯示該類型的卡片發行商 logo */}
         <Image src="/images/master_card.svg" alt="master_card" width={71} height={47} />
         <div className="text-lg font-medium">
-          <p className="text-text-neutral-primary">Master Card</p>
-          <p className="text-text-neutral-tertiary">
-            {`**** **** **** ${creditCardInfo.lastFourDigits}`}
-          </p>
+          <p className="text-text-neutral-primary">{creditCardType}</p>
+          <p className="text-text-neutral-tertiary">{creditCardNumber}</p>
         </div>
 
         <button

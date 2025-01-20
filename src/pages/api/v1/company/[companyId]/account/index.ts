@@ -249,7 +249,7 @@ export async function handlePostRequest(req: NextApiRequest) {
     level: parentAccount.level + 1,
     parentId: parentAccount.id,
     rootId: parentAccount.rootId,
-    note: null,
+    note: '',
   };
   let savedNewOwnAccount: IAccount | null = null;
   try {

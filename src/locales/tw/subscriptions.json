@@ -60,6 +60,7 @@
     "TOAST_EXPIRED_REMINDER_TITLE": "您的方案已到期",
     "TOAST_EXPIRED_REMINDER_MESSAGE_PREFIX": "您的訂閱方案將在 ",
     "TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX": " 天後到期，請續訂以保留該服務，否則方案將會降級。",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_FOR_TODAY": "您的訂閱方案將在今天到期，請續訂以保留該服務，否則方案將會降級。",
     "RENEW_PAYMENT": "續訂付款"
   },
 

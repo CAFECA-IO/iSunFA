@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { nullSchema, zodStringToBoolean, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { TPaymentStatus, TPlanType } from '@/interfaces/subscription';
 
@@ -104,9 +104,9 @@ export const subscriptionSchemas = {
         page: zodStringToNumber.optional(),
         pageSize: zodStringToNumber.optional(),
         plan: z.enum([TPlanType.BEGINNER, TPlanType.PROFESSIONAL, TPlanType.ENTERPRISE]).optional(),
-        status: z.boolean().optional(),
-        startDate: z.number().optional(),
-        endDate: z.number().optional(),
+        status: zodStringToBoolean.optional(),
+        startDate: zodStringToNumber.optional(),
+        endDate: zodStringToNumber.optional(),
         searchQuery: z.string().optional(),
       }),
       bodySchema: nullSchema,
@@ -121,5 +121,19 @@ export const subscriptionSchemas = {
       bodySchema: nullSchema,
     },
     outputSchema: IInvoiceDetailValidator,
+  },
+  getCreditCard: {
+    input: {
+      querySchema: ISubscriptionPutQueryValidator,
+      bodySchema: nullSchema,
+    },
+    outputSchema: z.object({
+      id: z.number(),
+      type: z.string(),
+      number: z.string(),
+      expirationDate: z.string(),
+      cvv: z.string(),
+      default: z.boolean(),
+    }),
   },
 };

@@ -60,6 +60,7 @@
     "TOAST_EXPIRED_REMINDER_TITLE": "Plan Expired ",
     "TOAST_EXPIRED_REMINDER_MESSAGE_PREFIX": "- Your plan is going to expired in ",
     "TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX": " days, please renew your payment to keep the service, or it will be downgraded after.",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_FOR_TODAY": "- Your plan is going to expired today, please renew your payment to keep the service, or it will be downgraded after.",
     "RENEW_PAYMENT": "Renew Payment"
   },
 

@@ -142,7 +142,8 @@ export type IAPIName =
   | 'GET_TEAM_BY_ID'
   | 'UPDATE_SUBSCRIPTION'
   | 'LIST_TEAM_INVOICE'
-  | 'GET_TEAM_INVOICE_BY_ID';
+  | 'GET_TEAM_INVOICE_BY_ID'
+  | 'GET_CREDIT_CARD_INFO';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

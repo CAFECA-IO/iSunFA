@@ -313,4 +313,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.UPDATE_SUBSCRIPTION]: subscriptionSchemas.update,
   [APIName.LIST_TEAM_INVOICE]: subscriptionSchemas.listInvoiceList,
   [APIName.GET_TEAM_INVOICE_BY_ID]: subscriptionSchemas.getInvoice,
+  [APIName.GET_CREDIT_CARD_INFO]: subscriptionSchemas.getCreditCard,
 };

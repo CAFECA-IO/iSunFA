@@ -5,13 +5,20 @@ import { useTranslation } from 'next-i18next';
 import { IUserOwnedTeam } from '@/interfaces/subscription';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 interface SubscriptionsPageBodyProps {
   userOwnedTeams: IUserOwnedTeam[];
+  getUserOwnedTeams: () => Promise<void>;
 }
 
-const SubscriptionsPageBody = ({ userOwnedTeams }: SubscriptionsPageBodyProps) => {
+const SubscriptionsPageBody = ({
+  userOwnedTeams,
+  getUserOwnedTeams,
+}: SubscriptionsPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
+  // Info: (20250116 - Liz) 開啟或關閉自動續約的 Modal 狀態
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
@@ -20,14 +27,41 @@ const SubscriptionsPageBody = ({ userOwnedTeams }: SubscriptionsPageBodyProps) =
     setTeamForAutoRenewalOff(undefined);
   };
 
-  // ToDo: (20250102 - Liz) 串接 API 來開啟或關閉自動續約
-  const turnOnAutoRenewal = () => {
-    // ToDo: (20250102 - Liz) 打 API 開啟自動續約
-    // ToDo: (20250102 - Liz) 打完開啟自動續約的 API 成功後，要關閉 Modal，並且重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
+  // Info: (20250120 - Liz) 開啟自動續約、關閉自動續約 API
+  const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
+    APIName.UPDATE_SUBSCRIPTION
+  );
+
+  // Info: (20250120 - Liz) 打 API 開啟自動續約
+  const turnOnAutoRenewal = async () => {
+    if (!teamForAutoRenewalOn) return;
+    const teamId = teamForAutoRenewalOn.id;
+    const planId = teamForAutoRenewalOn.plan;
+    const { success } = await updateSubscriptionAPI({
+      params: { teamId },
+      body: { plan: planId, autoRenewal: true },
+    });
+    // Info: (20250120 - Liz) 打完開啟自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
+    if (success) {
+      closeAutoRenewalModal();
+      getUserOwnedTeams();
+    }
   };
-  const turnOffAutoRenewal = () => {
-    // ToDo: (20250102 - Liz) 打 API 關閉自動續約
-    // ToDo: (20250102 - Liz) 打完關閉自動續約的 API 成功後，要關閉 Modal，並且重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
+
+  // Info: (20250120 - Liz) 打 API 關閉自動續約
+  const turnOffAutoRenewal = async () => {
+    if (!teamForAutoRenewalOff) return;
+    const teamId = teamForAutoRenewalOff.id;
+    const planId = teamForAutoRenewalOff.plan;
+    const { success } = await updateSubscriptionAPI({
+      params: { teamId },
+      body: { plan: planId, autoRenewal: false },
+    });
+    // Info: (20250120 - Liz) 打完關閉自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
+    if (success) {
+      closeAutoRenewalModal();
+      getUserOwnedTeams();
+    }
   };
 
   const messageModalDataForTurnOnRenewal: IMessageModal = {
