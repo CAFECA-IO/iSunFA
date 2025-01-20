@@ -223,6 +223,11 @@ export interface IVoucherBeta {
     id: number;
     voucherNo: string;
   }[];
+  /**
+   * Info: (20250120 - Shirley)
+   * @Julian 該傳票是否被刪除或反轉
+   */
+  isReverseRelated: boolean;
 }
 
 export interface IVoucherUI extends IVoucherBeta {
@@ -535,6 +540,14 @@ export type IGetManyVoucherResponseButOne = PrismaVoucher & {
   originalVouchers: (PrismaAssociateVoucher & {
     event: PrismaEvent;
     resultVoucher: PrismaVoucher & {
+      lineItems: (PrismaLineItem & {
+        account: PrismaAccount;
+      })[];
+    };
+  })[];
+  resultVouchers: (PrismaAssociateVoucher & {
+    event: PrismaEvent;
+    originalVoucher: PrismaVoucher & {
       lineItems: (PrismaLineItem & {
         account: PrismaAccount;
       })[];
