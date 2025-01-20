@@ -18,10 +18,9 @@ const InvoicePage = () => {
   const { teamId, invoiceId } = router.query;
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
   const invoiceIdString = invoiceId ? (Array.isArray(invoiceId) ? invoiceId[0] : invoiceId) : '';
-
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [team, setTeam] = useState<IUserOwnedTeam | null>(null);
   const [invoice, setInvoice] = useState<ITeamInvoice | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Info: (20250117 - Liz) 取得團隊資料 API
   const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);

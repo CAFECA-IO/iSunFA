@@ -242,7 +242,10 @@
     "EVERY": "每",
     "TOAST_FAILED_TO_CREATE": "建立傳票失敗，請稍後再試。",
     "TOAST_FILL_UP_FORM": "請完整填寫表格",
-    "TOAST_FAILED_TO_UPDATE": "更新傳票失敗，請稍後再試"
+    "TOAST_FAILED_TO_UPDATE": "更新傳票失敗，請稍後再試",
+    "LINE_ITEM_1": "請檢查借貸方是否平衡",
+    "LINE_ITEM_2": "請檢查會計科目是否皆已填寫",
+    "LINE_ITEM_3": "請檢查是否新增至少 1 筆會計分錄"
   },
   "ACCOUNT_TYPE": {
     "ASSET": "資產",

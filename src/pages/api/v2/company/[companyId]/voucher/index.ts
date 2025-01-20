@@ -78,8 +78,9 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
         const readByUsers = getUtils.initUserVoucherEntities(voucherFromPrisma);
         const sum = getUtils.getLineItemAmountSum(lineItemEntities);
         const originalEventEntities = getUtils.initOriginalEventEntities(voucherFromPrisma);
+        const resultEventEntities = getUtils.initResultEventEntities(voucherFromPrisma);
         const { payableInfo, receivingInfo } = getUtils.getPayableReceivableInfoFromVoucher(
-          originalEventEntities,
+          [...originalEventEntities, ...resultEventEntities],
           lineItemEntities
         );
 
@@ -96,6 +97,7 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
           payableInfo,
           receivingInfo,
           originalEvents: originalEventEntities,
+          resultEvents: resultEventEntities,
         };
 
         return voucherBeta;

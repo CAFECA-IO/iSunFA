@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
 import BillingPageBody from '@/components/beta/billing_page/billing_page_body';
@@ -29,35 +29,35 @@ const BillingPage = () => {
   // Info: (20250117 - Liz) 取得團隊資料 API
   const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
 
-  useEffect(() => {
-    // Info: (20250117 - Liz) 打 API 取得團隊資料
-    const getTeamData = async () => {
-      if (!teamIdString) return;
-      setIsLoading(true);
+  // Info: (20250117 - Liz) 打 API 取得團隊資料
+  const getTeamData = useCallback(async () => {
+    if (!teamIdString) return;
+    setIsLoading(true);
 
-      try {
-        const { data: teamData, success } = await getTeamDataAPI({
-          params: { teamId: teamIdString },
-        });
+    try {
+      const { data: teamData, success } = await getTeamDataAPI({
+        params: { teamId: teamIdString },
+      });
 
-        // Deprecated: (20250117 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('teamData:', teamData);
+      // Deprecated: (20250117 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('teamData:', teamData);
 
-        if (success && teamData) {
-          setTeam(teamData);
-        }
-      } catch (error) {
-        // Deprecated: (20250117 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得團隊資料失敗');
-      } finally {
-        setIsLoading(false);
+      if (success && teamData) {
+        setTeam(teamData);
       }
-    };
-
-    getTeamData();
+    } catch (error) {
+      // Deprecated: (20250117 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('取得團隊資料失敗');
+    } finally {
+      setIsLoading(false);
+    }
   }, [teamIdString]);
+
+  useEffect(() => {
+    getTeamData();
+  }, [getTeamData]);
 
   // Info: (20250116 - Liz) team.paymentStatus 為 UNPAID 時，顯示付款失敗的 Toast
   useEffect(() => {
@@ -117,11 +117,17 @@ const BillingPage = () => {
                 {t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_TITLE')}
               </span>
 
-              <span className="font-normal">
-                {t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_MESSAGE_PREFIX') +
-                  threeDaysBeforeExpiration +
-                  t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX')}
-              </span>
+              {threeDaysBeforeExpiration === 0 ? (
+                <span className="font-normal">
+                  {t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_MESSAGE_FOR_TODAY')}
+                </span>
+              ) : (
+                <span className="font-normal">
+                  {t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_MESSAGE_PREFIX') +
+                    threeDaysBeforeExpiration +
+                    t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX')}
+                </span>
+              )}
             </p>
             <Link href={PAYMENT_PAGE} className="text-base font-semibold text-link-text-error">
               {t('subscriptions:ERROR.UPDATE_PAYMENT')}
@@ -183,7 +189,7 @@ const BillingPage = () => {
         pageTitle={`${t('subscriptions:BILLING_PAGE.PAGE_TITLE_PREFIX')} ${team.name} ${t('subscriptions:BILLING_PAGE.PAGE_TITLE_SUFFIX')}`}
         goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
       >
-        <BillingPageBody team={team} />
+        <BillingPageBody team={team} getTeamData={getTeamData} />
       </Layout>
     </>
   );
@@ -193,10 +199,13 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
       ...(await serverSideTranslations(locale as string, [
-        'common',
         'layout',
         'dashboard',
         'subscriptions',
+        'filter_section_type',
+        'date_picker',
+        'common',
+        'search',
       ])),
     },
   };

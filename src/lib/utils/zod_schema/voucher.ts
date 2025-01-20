@@ -298,7 +298,7 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
       },
       [] as { id: number; voucherNo: string }[]
     ),
-    isReverseRelated: voucher.isReverseRelated,
+    isReverseRelated: !!voucher.isReverseRelated,
   }));
 
   const parsedData: IPaginatedData<{
