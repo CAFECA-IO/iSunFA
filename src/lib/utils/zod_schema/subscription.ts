@@ -122,4 +122,18 @@ export const subscriptionSchemas = {
     },
     outputSchema: IInvoiceDetailValidator,
   },
+  getCreditCard: {
+    input: {
+      querySchema: ISubscriptionPutQueryValidator,
+      bodySchema: nullSchema,
+    },
+    outputSchema: z.object({
+      id: z.number(),
+      type: z.string(),
+      number: z.string(),
+      expirationDate: z.string(),
+      cvv: z.string(),
+      default: z.boolean(),
+    }),
+  },
 };
