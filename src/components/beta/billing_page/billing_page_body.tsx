@@ -353,7 +353,7 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
           isBillingButtonHidden
         />
 
-        <CreditCardInfo />
+        <CreditCardInfo team={team} />
       </section>
 
       {/* // Info: (20250117 - Anna) FilterSection */}

@@ -1,12 +1,15 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Image from 'next/image';
-import { IPlan, IUserOwnedTeam, ICreditCardInfo } from '@/interfaces/subscription';
+import { IPlan, IUserOwnedTeam } from '@/interfaces/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { FiPlusCircle } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IPaymentMethod } from '@/interfaces/payment';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
@@ -15,10 +18,6 @@ interface CreditCardInfoProps {
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   getTeamData: () => Promise<void>;
 }
-
-const FAKE_CREDIT_CARD_INFO: ICreditCardInfo = {
-  lastFourDigits: '4002',
-};
 
 const CreditCardInfo = ({
   plan,
@@ -34,11 +33,32 @@ const CreditCardInfo = ({
 
   const { toastHandler } = useModalContext();
 
-  // ToDo: (20250116 - Liz) 這邊的 creditCardInfo state 是用來存信用卡資料(末四碼)，目前是用假資料，之後要串接 API 取得真實資料
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [creditCardInfo, setCreditCardInfo] = useState<ICreditCardInfo | null>(
-    FAKE_CREDIT_CARD_INFO
-  );
+  const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[]>();
+
+  // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
+  const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
+
+  // Info: (20250120 - Liz) 取得信用卡 number
+  const creditCardNumber = hasCreditCardInfo ? paymentMethod[0].number : '';
+
+  // Info: (20250120 - Liz) 取得信用卡資訊 API
+  const { trigger: getCreditCardInfoAPI } = APIHandler(APIName.GET_CREDIT_CARD_INFO);
+
+  // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state
+  useEffect(() => {
+    const getCreditCardInfo = async () => {
+      const { success, data } = await getCreditCardInfoAPI({
+        params: { teamId: team.id },
+      });
+
+      if (success) {
+        setPaymentMethod(data as IPaymentMethod[]); // Info: (20250120 - Liz) 因爲目前 API 回傳的資料已經不再先預設 interface，所以這裡使用類型斷言來強制轉型
+      }
+    };
+
+    getCreditCardInfo();
+    window.getCreditCardInfo = getCreditCardInfo; // Info: (20250120 - Liz) 後端需求，將 getCreditCardInfo 掛載到全域的 window 物件上
+  }, []);
 
   const isAutoRenewalEnabled = team.enableAutoRenewal;
 
@@ -50,13 +70,11 @@ const CreditCardInfo = ({
     setTeamForAutoRenewalOff(team);
   };
 
-  // ToDo: (20250114 - Liz) 打 API 取得信用卡末四碼資料 ICreditCardInfo (使用 teamId)，並且設定到 creditCardInfo state
-
-  // ToDo: (20250114 - Liz) 打 API 綁定信用卡資料
+  // Info: (20250120 - Liz) 綁定信用卡資料
   const bindCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
-  // ToDo: (20250116 - Liz) 打 window.open('/api/payment') 會回傳使用者綁定信用卡的資訊嗎？像是綁定成功或失敗、信用卡末四碼？還是這個 API 會直接處理變更團隊的訂閱方案，並且回傳變更成功或失敗的訊息？
 
   // ToDo: (20250114 - Liz) 打 API 變更團隊的訂閱方案(使用 teamId, planId)，並且重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
+
   const subscribe = async () => {
     // ToDo: (20250116 - Liz) 打 API 變更團隊的訂閱方案成功的話就顯示成功訊息，失敗的話就顯示失敗訊息
 
@@ -81,11 +99,11 @@ const CreditCardInfo = ({
           {t('subscriptions:PAYMENT_PAGE.PAYMENT')}
         </span>
 
-        {creditCardInfo ? (
+        {hasCreditCardInfo ? (
           <div className="flex items-center gap-8px">
             <Image src="/icons/credit_card.svg" alt="credit card" width={24} height={24} />
             <span className="text-lg font-semibold text-text-neutral-primary">
-              **** **** **** {creditCardInfo.lastFourDigits}
+              {creditCardNumber}
             </span>
 
             <button type="button" className="pl-8px" onClick={bindCreditCard}>
