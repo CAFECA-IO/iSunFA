@@ -70,19 +70,21 @@ const PlanCard: React.FC<PlanProps> = ({
 }) => {
   return (
     <Card>
-      <h3 className="text-xl font-bold text-text-brand-primary-lv3">{title}</h3>
+      <h3 className="text-28px font-bold text-text-brand-primary-lv3">{title}</h3>
       <p className="mt-2 text-sm text-white">{description}</p>
-      <div className="mt-4 h-74px">
+      <div className="mt-4 md:h-74px">
         <LinearGradientText size={LinearTextSize.MD} align={TextAlign.LEFT}>
           {price.value}
-          <span className="pl-2 text-sm font-medium leading-loose text-gray-300">{price.unit}</span>
+          <span className="pl-2 text-base font-medium leading-loose text-neutral-150">
+            {price.unit}
+          </span>
         </LinearGradientText>
-        <p className="text-sm text-gray-300">{price.additional}</p>
+        <p className="text-base text-white">{price.additional}</p>
       </div>
       <LandingButton
         type="button"
         variant="primary"
-        className="my-lv-5 w-full justify-center whitespace-nowrap font-bold"
+        className="my-lv-5 w-full justify-center whitespace-nowrap text-base font-bold"
         onClick={onClick}
       >
         {buttonText}
@@ -97,7 +99,7 @@ const PlanCard: React.FC<PlanProps> = ({
               height={16}
               className="inline-block min-w-16px"
             />
-            {feature.description}
+            <p className="text-xs">{feature.description}</p>
           </li>
         ))}
       </ul>
@@ -216,14 +218,16 @@ const PricingPlan: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col items-center gap-80px px-112px py-120px md:px-12 lg:px-24">
-      <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
-        {t('pricing:MAIN.TITLE')}
-      </LinearGradientText>
-      <p className="text-center text-xs font-medium transition-all duration-500 md:text-lg lg:text-xl">
-        {t('pricing:MAIN.SUBTITLE')}
-      </p>
-      <div className="mt-10 grid w-full max-w-7xl grid-cols-1 gap-8 md:grid-cols-3">
+    <div className="flex flex-col items-center gap-80px px-4 py-120px md:px-12 lg:px-24">
+      <div>
+        <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
+          {t('pricing:MAIN.TITLE')}
+        </LinearGradientText>
+        <p className="mt-lv-3 text-center text-xl font-medium transition-all duration-500 md:text-lg lg:text-xl">
+          {t('pricing:MAIN.SUBTITLE')}
+        </p>
+      </div>
+      <div className="grid w-full max-w-7xl grid-cols-1 gap-8 md:grid-cols-3">
         {plans.map((plan, index) => (
           <PlanCard key={`plan-${index + 1}`} {...plan} />
         ))}
