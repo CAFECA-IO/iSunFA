@@ -242,7 +242,10 @@
     "EVERY": "每",
     "TOAST_FAILED_TO_CREATE": "建立传票失败，请稍后再试。",
     "TOAST_FILL_UP_FORM": "请完整填写表格",
-    "TOAST_FAILED_TO_UPDATE": "更新传票失败，请稍后再试"
+    "TOAST_FAILED_TO_UPDATE": "更新传票失败，请稍后再试",
+    "LINE_ITEM_1": "请检查借贷方是否平衡",
+    "LINE_ITEM_2": "请检查会计科目是否皆已填写",
+    "LINE_ITEM_3": "请检查是否新增至少 1 笔会计分录"
   },
   "ACCOUNT_TYPE": {
     "ASSET": "资产",
