@@ -25,6 +25,7 @@
     "PRICE_ADDITIONAL": "",
     "DESCRIPTION": "Perfect for individuals or small startups, even with no accounting experience.",
     "FEATURES": {
+      "ESSENTIAL": "Essential features for daily accounting:",
       "AI_UPLOADS": "AI-powered certificate uploads for quick conversion.",
       "AUTO_SUGGESTIONS": "Auto-suggestions for assets, receivables, and payables.",
       "LIMIT_STORAGE": "10GB of cloud storage.",

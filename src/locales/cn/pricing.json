@@ -25,6 +25,7 @@
     "PRICE_ADDITIONAL": "",
     "DESCRIPTION": "适合个人或小型初创公司，即使没有会计经验。",
     "FEATURES": {
+      "ESSENTIAL": "Essential features for daily accounting:",
       "AI_UPLOADS": "AI 驱动的快速凭证上传。",
       "AUTO_SUGGESTIONS": "自动建议资产、应收款和应付款。",
       "LIMIT_STORAGE": "10GB 云端存储空间。",

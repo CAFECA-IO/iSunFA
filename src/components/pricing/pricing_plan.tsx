@@ -55,7 +55,7 @@ interface PlanProps {
   title: string;
   price: { value: string; unit: string; additional: string };
   description: string;
-  features: { icon: string; description: string }[];
+  features: { icon: string | null; description: string }[];
   buttonText: string;
   onClick: () => void;
 }
@@ -92,13 +92,15 @@ const PlanCard: React.FC<PlanProps> = ({
       <ul className="mt-6 space-y-2 text-left text-gray-300">
         {features.map((feature, index) => (
           <li key={`feature-${index + 1}`} className="flex items-center gap-2">
-            <Image
-              src={feature.icon}
-              alt="check"
-              width={16}
-              height={16}
-              className="inline-block min-w-16px"
-            />
+            {feature.icon && (
+              <Image
+                src={feature.icon}
+                alt="check"
+                width={16}
+                height={16}
+                className="inline-block min-w-16px"
+              />
+            )}
             <p className="text-xs">{feature.description}</p>
           </li>
         ))}
@@ -120,6 +122,7 @@ const PricingPlan: React.FC = () => {
       },
       description: t('pricing:BEGINNER.DESCRIPTION'),
       features: [
+        { icon: null, description: t('pricing:BEGINNER.FEATURES.ESSENTIAL') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AI_UPLOADS') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AUTO_SUGGESTIONS') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.LIMIT_STORAGE') },

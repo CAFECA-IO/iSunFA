@@ -25,6 +25,7 @@
     "PRICE_ADDITIONAL": "",
     "DESCRIPTION": "適合個人或微型新創團隊，即使沒有會計經驗。",
     "FEATURES": {
+      "ESSENTIAL": "Essential features for daily accounting:",
       "AI_UPLOADS": "憑證上傳，AI 辨識輕鬆轉換。",
       "AUTO_SUGGESTIONS": "自動建議資產、應收款和應付款項目。",
       "LIMIT_STORAGE": "10GB 雲端儲存空間。",
@@ -56,7 +57,7 @@
     "PRICE": "$899",
     "PRICE_UNIT": "新台幣／月",
     "PRICE_ADDITIONAL": "每多一位團隊成員 +$89",
-    "DESCRIPTION": "適合中小企業、會計師或需要進階工具的記帳公司。",
+    "DESCRIPTION": "適合中小型公司或會計師、記帳士事務所，解鎖進階功能 。",
     "FEATURES": {
       "EVERYTHING_IN_BEGINNER": "包含基礎版的所有功能，額外提供：",
       "UNLIMITED_AI_UPLOADS": "更快且無限次數的 AI 處理。",
@@ -88,7 +89,7 @@
     "PRICE": "$8990",
     "PRICE_UNIT": "新台幣／月",
     "PRICE_ADDITIONAL": "",
-    "DESCRIPTION": "專為注重安全性和效率的大型企業或會計事務所設計。",
+    "DESCRIPTION": "專為大型企業或聯合會計事務所設計，提升資安及協作效率。",
     "FEATURES": {
       "EVERYTHING_IN_PROFESSIONAL": "包含專業版的所有功能，額外提供：",
       "COLLABORATION_TOOLS": "即時協作和審查工具。",
