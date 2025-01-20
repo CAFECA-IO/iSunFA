@@ -75,6 +75,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
   const params = { companyId, accountId }; // Info: (20241107 - Anna) 設定 API 請求的 params
 
   const handleApiResponse = (resData: IPaginatedData<IVoucherForSingleAccount[]>) => {
+    // Deprecated: (20250120 - Anna) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('API Response resData:', resData);
     // Info: (20241107 - Anna) 處理 API 回應
