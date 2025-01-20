@@ -28,7 +28,9 @@ const SubscriptionsPageBody = ({
   };
 
   // Info: (20250120 - Liz) 開啟自動續約、關閉自動續約 API
-  const { trigger: updateSubscriptionAPI } = APIHandler(APIName.UPDATE_SUBSCRIPTION);
+  const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
+    APIName.UPDATE_SUBSCRIPTION
+  );
 
   // Info: (20250120 - Liz) 打 API 開啟自動續約
   const turnOnAutoRenewal = async () => {

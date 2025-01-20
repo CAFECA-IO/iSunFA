@@ -27,13 +27,8 @@ const CreditCardInfo = ({
   getTeamData,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
-  // Deprecated: (20250116 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('plan:', plan);
-
   const { toastHandler } = useModalContext();
-
-  const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[]>();
+  const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
   const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
@@ -42,7 +37,9 @@ const CreditCardInfo = ({
   const creditCardNumber = hasCreditCardInfo ? paymentMethod[0].number : '';
 
   // Info: (20250120 - Liz) 取得信用卡資訊 API
-  const { trigger: getCreditCardInfoAPI } = APIHandler(APIName.GET_CREDIT_CARD_INFO);
+  const { trigger: getCreditCardInfoAPI } = APIHandler<IPaymentMethod[]>(
+    APIName.GET_CREDIT_CARD_INFO
+  );
 
   // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state
   useEffect(() => {
@@ -52,7 +49,7 @@ const CreditCardInfo = ({
       });
 
       if (success) {
-        setPaymentMethod(data as IPaymentMethod[]); // Info: (20250120 - Liz) 因爲目前 API 回傳的資料已經不再先預設 interface，所以這裡使用類型斷言來強制轉型
+        setPaymentMethod(data);
       }
     };
 
@@ -73,12 +70,19 @@ const CreditCardInfo = ({
   // Info: (20250120 - Liz) 綁定信用卡資料
   const bindCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
 
-  // ToDo: (20250114 - Liz) 打 API 變更團隊的訂閱方案(使用 teamId, planId)，並且重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
+  // Info: (20250120 - Liz) 變更訂閱方案 API
+  const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
+    APIName.UPDATE_SUBSCRIPTION
+  );
 
-  const subscribe = async () => {
-    // ToDo: (20250116 - Liz) 打 API 變更團隊的訂閱方案成功的話就顯示成功訊息，失敗的話就顯示失敗訊息
+  // Info: (20250120 - Liz) 打 API 變更團隊的訂閱方案(使用 teamId, planId)，並且顯示成功訊息、重新取得最新的 userOwnedTeam
+  const updateSubscription = async () => {
+    if (!team || !plan) return;
 
-    const success = true;
+    const { success } = await updateSubscriptionAPI({
+      params: { teamId: team.id },
+      body: { plan: plan.id },
+    });
 
     if (success) {
       toastHandler({
@@ -87,9 +91,8 @@ const CreditCardInfo = ({
         content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_SUCCESS'),
         closeable: true,
       });
+      getTeamData(); // Info: (20250120 - Liz) 重新打 API 取得最新的 userOwnedTeam
     }
-
-    getTeamData(); // Info: (20250116 - Liz) 重新打 API 取得最新的 userOwnedTeams: IUserOwnedTeam[];
   };
 
   return (
@@ -144,7 +147,7 @@ const CreditCardInfo = ({
       <button
         type="button"
         className="rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-semibold text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-        onClick={subscribe}
+        onClick={updateSubscription}
       >
         {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
       </button>

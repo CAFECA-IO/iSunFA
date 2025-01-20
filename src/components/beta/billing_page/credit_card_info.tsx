@@ -10,7 +10,7 @@ interface CreditCardInfoProps {
 }
 
 const CreditCardInfo = ({ team }: CreditCardInfoProps) => {
-  const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[]>();
+  const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
   const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
@@ -20,7 +20,9 @@ const CreditCardInfo = ({ team }: CreditCardInfoProps) => {
   const creditCardType = hasCreditCardInfo ? paymentMethod[0].type : '';
 
   // Info: (20250120 - Liz) 取得信用卡資訊 API
-  const { trigger: getCreditCardInfoAPI } = APIHandler(APIName.GET_CREDIT_CARD_INFO);
+  const { trigger: getCreditCardInfoAPI } = APIHandler<IPaymentMethod[]>(
+    APIName.GET_CREDIT_CARD_INFO
+  );
 
   // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state
   useEffect(() => {
@@ -30,7 +32,7 @@ const CreditCardInfo = ({ team }: CreditCardInfoProps) => {
       });
 
       if (success) {
-        setPaymentMethod(data as IPaymentMethod[]); // Info: (20250120 - Liz) 因爲目前 API 回傳的資料已經不再先預設 interface，所以這裡使用類型斷言來強制轉型
+        setPaymentMethod(data);
       }
     };
 
