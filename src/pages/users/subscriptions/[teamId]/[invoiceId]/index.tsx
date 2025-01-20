@@ -1,46 +1,16 @@
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
 import InvoicePageBody from '@/components/beta/invoice_page/invoice_page_body';
-import { IUserOwnedTeam, TPlanType, ITeamInvoice } from '@/interfaces/subscription';
+import { IUserOwnedTeam, ITeamInvoice } from '@/interfaces/subscription';
+import { ILocale } from '@/interfaces/locale';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { SkeletonList } from '@/components/skeleton/skeleton';
-
-const FAKE_INVOICE_DATA: ITeamInvoice = {
-  id: 1,
-  teamId: 3,
-  status: true,
-  issuedTimestamp: 1630406400000,
-  dueTimestamp: 1630406400000,
-  planId: TPlanType.PROFESSIONAL,
-  planStartTimestamp: 1630406400000,
-  planEndTimestamp: 1630406400000,
-  planQuantity: 1,
-  planUnitPrice: 1000,
-  planAmount: 1000,
-  payer: {
-    name: 'John Doe',
-    address: '1234 Main St',
-    phone: '123-456-7890',
-    taxId: '123456789',
-  },
-  payee: {
-    name: 'Jane Doe',
-    address: '5678 Elm St',
-    phone: '098-765-4321',
-    taxId: '987654321',
-  },
-  subtotal: 0,
-  tax: 0,
-  total: 0,
-  amountDue: 0,
-};
 
 const InvoicePage = () => {
   const { t } = useTranslation(['subscriptions']);
@@ -49,15 +19,14 @@ const InvoicePage = () => {
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
   const invoiceIdString = invoiceId ? (Array.isArray(invoiceId) ? invoiceId[0] : invoiceId) : '';
 
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [team, setTeam] = useState<IUserOwnedTeam | null>(null);
-
-  // Deprecated: (20250115 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [invoice, setInvoice] = useState<ITeamInvoice | null>(FAKE_INVOICE_DATA);
+  const [invoice, setInvoice] = useState<ITeamInvoice | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Info: (20250117 - Liz) 取得團隊資料 API
   const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+  // Info: (20250117 - Julian) 取得發票資料 API
+  const { trigger: getInvoiceDataAPI } = APIHandler<ITeamInvoice>(APIName.GET_TEAM_INVOICE_BY_ID);
 
   useEffect(() => {
     // Info: (20250117 - Liz) 打 API 取得團隊資料
@@ -86,11 +55,35 @@ const InvoicePage = () => {
       }
     };
 
-    getTeamData();
-  }, [teamIdString]);
+    // Info: (20250117 - Julian) 打 API 取得發票資料
+    const getInvoiceData = async () => {
+      if (!invoiceIdString) return;
+      setIsLoading(true);
 
-  // ToDo: (20250113 - Liz) 呼叫 API 利用 invoiceIdString 取得 invoice 的資料，並且設定到 invoice state
-  // setInvoice(invoiceData);
+      try {
+        const { data: invoiceData, success } = await getInvoiceDataAPI({
+          params: { teamId: teamIdString, invoiceId: invoiceIdString },
+        });
+
+        // Deprecated: (20250117 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('invoiceData:', invoiceData);
+
+        if (success && invoiceData) {
+          setInvoice(invoiceData);
+        }
+      } catch (error) {
+        // Deprecated: (20250117 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('取得發票資料失敗');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getTeamData();
+    getInvoiceData();
+  }, [teamIdString, invoiceIdString]);
 
   // Info: (20250117 - Liz) 如果打 API 還在載入中，顯示載入中頁面
   if (isLoading) {
