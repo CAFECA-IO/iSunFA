@@ -35,7 +35,7 @@
       "AUTO_FILL_TAX": "自动填写 401 税表。",
       "ACCEPT_TASKS": "接受来自企业或会计师的任务。",
       "SUPPORT_USER": "每个团队支持 1 名用户。",
-      "CUSTOMER_SUPPORT": "包含在线客户支持。",
+      "TECHNICAL_ASSISTANCE": "包含在线客户支持。",
       "PRICE": "¥0 / 月",
       "BEST_FOR": "探索日常需求的基本功能",
       "STORAGE": "10GB",
@@ -46,6 +46,7 @@
       "TEAM_COLLABORATION": "最多 3 个团队，1 名用户",
       "API_INTEGRATION": "不支持",
       "AUDITING": "手动下载报表",
+      "CUSTOMER_SUPPORT": "包含在线客户支持。",
       "EXTRAS": "无",
       "AI_FEATURES": "所有 AI 聊天为公开"
     },
