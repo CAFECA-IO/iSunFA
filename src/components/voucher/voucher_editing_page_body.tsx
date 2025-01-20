@@ -147,6 +147,9 @@ const VoucherEditingPageBody: React.FC<{
     companyId: companyId ?? 0,
   }));
 
+  // Info: (20250116 - Julian) 不顯示 Opening
+  const typeList = Object.values(VoucherType).filter((type) => type !== VoucherType.OPENING);
+
   // Info: (20241118 - Julian) State
   const [date, setDate] = useState<IDatePeriod>(defaultDate);
   const [type, setType] = useState<string>(defaultType);
@@ -743,7 +746,7 @@ const VoucherEditingPageBody: React.FC<{
 
   const typeDropdownMenu = typeVisible ? (
     <div className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu">
-      {Object.values(VoucherType).map((v) => {
+      {typeList.map((v) => {
         const typeClickHandler = () => {
           setType(v);
           setTypeVisible(false);

@@ -92,10 +92,5 @@
     "SELECT": "Select",
     "SELECT_ALL": "Select All",
     "UNSELECT_ALL": "Unselect All"
-  },
-  "CURRENCY_ALIAS": {
-    "TWD": "TWD",
-    "EUR": "EUR",
-    "USD": "USD"
   }
 }

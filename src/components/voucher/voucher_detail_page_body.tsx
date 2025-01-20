@@ -250,7 +250,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const isDisplayPayableAmount = !isLoading ? (
     <p className="text-input-text-primary">
       {numberWithCommas(payableAmount ?? 0)}
-      <span className="ml-4px text-text-neutral-tertiary">{t('journal:CURRENCY_ALIAS.TWD')}</span>
+      <span className="ml-4px text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -259,7 +259,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const isDisplayPaidAmount = !isLoading ? (
     <p className="text-input-text-primary">
       {numberWithCommas(paidAmount ?? 0)}
-      <span className="ml-4px text-text-neutral-tertiary">{t('journal:CURRENCY_ALIAS.TWD')}</span>
+      <span className="ml-4px text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -268,7 +268,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const isDisplayRemainAmount = !isLoading ? (
     <p className="text-input-text-primary">
       {numberWithCommas(remainAmount ?? 0)}
-      <span className="ml-4px text-text-neutral-tertiary">{t('journal:CURRENCY_ALIAS.TWD')}</span>
+      <span className="ml-4px text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />

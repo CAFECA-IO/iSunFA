@@ -181,10 +181,5 @@
   },
   "ERROR": {
     "FETCH_DATA": "There was an error fetching the data, please try again later."
-  },
-  "CURRENCY_ALIAS": {
-    "TWD": "TWD",
-    "EUR": "EUR",
-    "USD": "USD"
   }
 }

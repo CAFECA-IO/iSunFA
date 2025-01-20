@@ -161,7 +161,7 @@
     "ACTION": "操作",
     "LOGOUT": "登出",
     "CURRENT": "目前",
-    "REMOVE_DEVICE_SUCCESS" : "裝置已成功移除。",
+    "REMOVE_DEVICE_SUCCESS": "裝置已成功移除。",
     "DETECT_DIFFERENT_IP_LOGIN": "偵測到來自不同 IP 位址的登入。",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "請驗證您的帳戶安全性以防止資料外洩。"
   },
@@ -181,10 +181,5 @@
   },
   "ERROR": {
     "FETCH_DATA": "取得資料時發生錯誤，請稍後再試。"
-  },
-  "CURRENCY_ALIAS": {
-    "TWD": "新臺幣",
-    "EUR": "歐元",
-    "USD": "美元"
   }
 }

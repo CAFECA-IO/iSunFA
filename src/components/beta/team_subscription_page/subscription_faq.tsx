@@ -46,7 +46,7 @@ const SubscriptionFaq = () => {
   return (
     <main className="flex flex-col gap-40px">
       <h1 className="text-center text-36px font-bold text-surface-brand-secondary">
-        {t('subscriptions:SUBSCRIPTIONS_PAGE.SUBSCRIPTION_FAQ')}
+        {t('subscriptions:SUBSCRIPTION_FAQ.SUBSCRIPTION_FAQ')}
       </h1>
 
       <section className="flex flex-col rounded-lg border border-accordion-surface-background-stroke-border bg-accordion-surface-background-primary">
@@ -66,7 +66,7 @@ const SubscriptionFaq = () => {
               <h3
                 className={`flex-auto text-2xl font-semibold ${isOpen === faq.id ? 'text-accordion-surface-background-text-title-active' : 'text-accordion-surface-background-text-title'}`}
               >
-                {t(`subscriptions:SUBSCRIPTIONS_PAGE.${faq.question}`)}
+                {t(`subscriptions:SUBSCRIPTION_FAQ.${faq.question}`)}
               </h3>
 
               {isOpen === faq.id ? <IoChevronUp /> : <IoChevronDown />}
@@ -75,7 +75,7 @@ const SubscriptionFaq = () => {
             {isOpen === faq.id && (
               <p className="px-40px pb-32px text-lg font-normal text-accordion-surface-background-text-paragraph">
                 {faq.answer
-                  ? t(`subscriptions:SUBSCRIPTIONS_PAGE.${faq.answer}`)
+                  ? t(`subscriptions:SUBSCRIPTION_FAQ.${faq.answer}`)
                   : 'No answer provided. Please contact support for more information.'}
               </p>
             )}

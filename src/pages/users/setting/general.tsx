@@ -101,6 +101,7 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
         'company',
         'filter_section_type',
         'search',
+        'dashboard',
       ])),
     },
   };

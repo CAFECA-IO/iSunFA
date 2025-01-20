@@ -43,14 +43,14 @@ const OwnedTeam = ({
   };
 
   // Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
-  const calculateDaysLeft = (timestamp: number) => {
+  const getRemainingDays = (timestamp: number) => {
     const now = Date.now();
     const diff = timestamp - now;
     return Math.ceil(diff / ONE_DAY_IN_MS);
   };
 
   // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
-  const remainingDays = calculateDaysLeft(team.expiredTimestamp + THREE_DAYS_IN_MS);
+  const remainingDays = getRemainingDays(team.expiredTimestamp + THREE_DAYS_IN_MS);
 
   // Info: (20250110 - Liz) 檢查是否即將降級
   const isReturningToBeginnerSoon = remainingDays > 0 && remainingDays <= 3;
@@ -63,7 +63,7 @@ const OwnedTeam = ({
         <div className="flex flex-col gap-12px">
           <h2 className="text-xl font-semibold text-text-brand-secondary-lv1">{team.name}</h2>
           <h1 className="w-200px text-36px font-bold text-text-brand-primary-lv1">
-            {t(`subscriptions:SUBSCRIPTIONS_PAGE.${team.plan.toUpperCase()}`)}
+            {t(`subscriptions:PLAN_NAME.${team.plan.toUpperCase()}`)}
           </h1>
           <p className="text-lg font-medium text-text-neutral-tertiary">{price}</p>
         </div>

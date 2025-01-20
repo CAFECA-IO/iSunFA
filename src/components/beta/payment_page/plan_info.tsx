@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { IPlan, IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
+import { useTranslation } from 'next-i18next';
 
 interface PlanInfoProps {
   team: IUserOwnedTeam;
@@ -7,10 +8,11 @@ interface PlanInfoProps {
 }
 
 const PlanInfo = ({ team, plan }: PlanInfoProps) => {
+  const { t } = useTranslation(['subscriptions']);
   if (!plan) {
     return (
       <div>
-        <h1>Data not found</h1>
+        <h1>{t('subscriptions:SUBSCRIPTIONS_PAGE.PLAN_NOT_FOUND')}</h1>
       </div>
     );
   }
@@ -29,7 +31,9 @@ const PlanInfo = ({ team, plan }: PlanInfoProps) => {
         className="flex w-300px flex-auto flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px"
       >
         <div className="flex flex-col gap-24px text-center">
-          <h2 className="text-xl font-bold text-text-brand-primary-lv1">{plan.planName}</h2>
+          <h2 className="text-xl font-bold text-text-brand-primary-lv1">
+            {t(`subscriptions:PLAN_NAME.${plan.id.toUpperCase()}`)}
+          </h2>
           {plan.price > 0 ? (
             <div>
               <p>
@@ -38,12 +42,14 @@ const PlanInfo = ({ team, plan }: PlanInfoProps) => {
                 </span>
                 <span className="text-base font-semibold text-text-neutral-tertiary">
                   {' '}
-                  NTD / Month
+                  {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.NTD_SLASH_MONTH')}
                 </span>
               </p>
 
               <p className="h-30px text-base font-semibold text-text-brand-primary-lv1">
-                {plan.id === TPlanType.PROFESSIONAL ? '+ $89 per extra team member' : ''}
+                {plan.id === TPlanType.PROFESSIONAL
+                  ? `${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_PREFIX')}+ $${plan.extraMemberPrice}${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_SUFFIX')}`
+                  : ''}
               </p>
             </div>
           ) : (

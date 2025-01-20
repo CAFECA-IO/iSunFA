@@ -284,7 +284,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
                 <span className="text-text-neutral-primary">
                   {numberWithCommas(totalReverseAmount)}
                 </span>{' '}
-                {t('journal:CURRENCY_ALIAS.TWD')}
+                {t('common:CURRENCY_ALIAS.TWD')}
               </p>
             </div>
             <div className="flex flex-1 flex-col items-center px-16px py-8px text-sm">

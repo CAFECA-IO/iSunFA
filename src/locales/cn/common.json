@@ -58,5 +58,10 @@
     "DROP_YOUR_FILES_HERE_OR": "将您的文件拖放到此处或",
     "BROWSE": "浏览",
     "MAXIMUM_SIZE": "最大档案大小：4MB"
+  },
+  "CURRENCY_ALIAS": {
+    "TWD": "新台币",
+    "EUR": "欧元",
+    "USD": "美元"
   }
 }

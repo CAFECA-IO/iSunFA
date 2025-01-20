@@ -65,6 +65,7 @@ export const PLANS: IPlan[] = [
     id: TPlanType.PROFESSIONAL,
     planName: 'Professional',
     price: 899,
+    extraMemberPrice: 89,
     features: [
       {
         id: 'storage',

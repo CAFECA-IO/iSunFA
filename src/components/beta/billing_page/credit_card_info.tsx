@@ -21,7 +21,7 @@ const CreditCardInfo = () => {
   }
 
   // ToDo: (20250115 - Liz) 編輯信用卡資訊
-  const editCreditCard = () => {};
+  const editCreditCard = () => window.open('/api/payment'); // Info: (20250116 - Julian) 連接到第三方金流頁面
 
   return (
     <main className="flex overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2">

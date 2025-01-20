@@ -1266,6 +1266,43 @@ input[type='checkbox']:checked::before {
 
 /* // Info: (20240725 - Liz) 使用自定義樣式調整 toast container */
 
+.pricing-header {
+  background: radial-gradient(
+      49.58% 61.81% at 50% 100%,
+      rgba(255, 255, 255, 0.24) 0%,
+      rgba(255, 255, 255, 0.12) 43%,
+      rgba(255, 255, 255, 0.02) 82.5%,
+      rgba(255, 255, 255, 0) 100%
+    ),
+    rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(6px);
+}
+
+.pricing-subtitle {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+}
+
+.pricing-cell {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+}
+
+.bg-pricing {
+  backdrop-filter: blur(6px);
+  background-image: url('/elements/bg_pricing_top.png'), url('/elements/bg_pricing_middle.png'),
+    url('/elements/bg_pricing_bottom.png');
+  background-position:
+    top center,
+    30% center,
+    bottom center; /* 中間背景移動到較高位置 */
+  background-repeat: no-repeat;
+  background-size:
+    100% auto,
+    100% 60%,
+    120% auto; /* 中間背景縮小為80%寬度 */
+}
+
 .toast-container {
   width: max-content;
   margin-top: 80px;
