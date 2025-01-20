@@ -22,7 +22,7 @@ const textVariants = cva(
       size: {
         [LinearTextSize.XL]: 'text-2xl font-black md:text-48px lg:text-80px',
         [LinearTextSize.LG]: 'text-2xl font-bold md:text-48px lg:text-60px',
-        [LinearTextSize.MD]: 'text-36px font-bold md:text-44px',
+        [LinearTextSize.MD]: 'text-xl font-bold md:text-44px lg:text-42px',
         [LinearTextSize.SM]: 'text-lg font-bold md:text-2xl',
       },
       align: {

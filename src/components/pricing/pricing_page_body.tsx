@@ -15,7 +15,7 @@ const PricingPageBody: React.FC = () => {
       <LandingNavbar />
 
       {/* Info: (20240116 - Tzuhan) Navbar */}
-      <main className="z-10 overflow-y-auto overflow-x-hidden pt-70px lg:pt-100px">
+      <main className="z-10 overflow-y-auto overflow-x-hidden">
         {/* Info: (20240116 - Tzuhan) Pricing */}
         <PricingPlan />
         <PlanComparison />

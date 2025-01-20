@@ -70,7 +70,7 @@ export const handlePostRequest: IHandleRequest<
   IAccount | null
 > = async ({ body, session }) => {
   const { companyId, userId } = session;
-  const { accountId, name } = body;
+  const { accountId, name, note } = body;
   let payload: IAccount | null = null;
   const nowInSecond = getTimestampNow();
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -97,6 +97,7 @@ export const handlePostRequest: IHandleRequest<
       companyId,
       newCode,
       newName,
+      note: note ?? '',
     });
 
     payload = newSubAccount;

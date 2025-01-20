@@ -274,6 +274,7 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
         amount: lineItem.amount,
         account: {
           ...lineItem.account,
+          note: lineItem.account.note ?? null,
         },
       })),
       sum: {
@@ -592,24 +593,18 @@ const voucherGetOneOutputValidatorV2 = z
         debit: lineItem.debit,
         amount: lineItem.amount,
         account: {
-          id: lineItem.account.id,
-          companyId: lineItem.account.companyId,
-          system: lineItem.account.system,
-          debit: lineItem.account.debit,
-          liquidity: lineItem.account.liquidity,
-          name: lineItem.account.name,
-          code: lineItem.account.code,
-          type: lineItem.account.type,
-          createdAt: lineItem.account.createdAt,
-          updatedAt: lineItem.account.updatedAt,
-          deletedAt: lineItem.account.deletedAt,
+          ...lineItem.account,
+          note: lineItem.account.note ?? null,
         },
         reverseList: lineItem.resultLineItems.map((resultLineItem) => ({
           voucherId: resultLineItem.associateVoucher.originalVoucherId,
           amount: resultLineItem.amount,
           description: resultLineItem.originalLineItem.description,
           debit: resultLineItem.debit,
-          account: resultLineItem.originalLineItem.account,
+          account: {
+            ...resultLineItem.originalLineItem.account,
+            note: resultLineItem.originalLineItem.account.note ?? null,
+          },
           voucherNo: resultLineItem.associateVoucher.originalVoucher.no,
           lineItemBeReversedId: resultLineItem.originalLineItemId,
         })),

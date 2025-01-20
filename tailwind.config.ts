@@ -69,6 +69,7 @@ module.exports = {
         },
         neutral: {
           100: 'var(--neutral-100)',
+          150: 'var(--neutral-150)',
           200: 'var(--neutral-200)',
           25: 'var(--neutral-25)',
           300: 'var(--neutral-300)',

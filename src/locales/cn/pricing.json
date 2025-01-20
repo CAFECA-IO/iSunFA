@@ -25,6 +25,7 @@
     "PRICE_ADDITIONAL": "",
     "DESCRIPTION": "适合个人或小型初创公司，即使没有会计经验。",
     "FEATURES": {
+      "ESSENTIAL": "Essential features for daily accounting:",
       "AI_UPLOADS": "AI 驱动的快速凭证上传。",
       "AUTO_SUGGESTIONS": "自动建议资产、应收款和应付款。",
       "LIMIT_STORAGE": "10GB 云端存储空间。",
@@ -34,7 +35,7 @@
       "AUTO_FILL_TAX": "自动填写 401 税表。",
       "ACCEPT_TASKS": "接受来自企业或会计师的任务。",
       "SUPPORT_USER": "每个团队支持 1 名用户。",
-      "CUSTOMER_SUPPORT": "包含在线客户支持。",
+      "TECHNICAL_ASSISTANCE": "包含在线客户支持。",
       "PRICE": "¥0 / 月",
       "BEST_FOR": "探索日常需求的基本功能",
       "STORAGE": "10GB",
@@ -45,6 +46,7 @@
       "TEAM_COLLABORATION": "最多 3 个团队，1 名用户",
       "API_INTEGRATION": "不支持",
       "AUDITING": "手动下载报表",
+      "CUSTOMER_SUPPORT": "包含在线客户支持。",
       "EXTRAS": "无",
       "AI_FEATURES": "所有 AI 聊天为公开"
     },
@@ -52,9 +54,9 @@
   },
   "PROFESSIONAL": {
     "TITLE": "专业版",
-    "PRICE": "¥199.9",
-    "PRICE_UNIT": "RMB/Month",
-    "PRICE_ADDITIONAL": "每增加一位团队成员 +¥19.9",
+    "PRICE": "$899",
+    "PRICE_UNIT": "NTD/Month",
+    "PRICE_ADDITIONAL": "每增加一位团队成员 +$89",
     "DESCRIPTION": "适合中小企业、会计师或需要进阶工具的记账公司。",
     "FEATURES": {
       "EVERYTHING_IN_BEGINNER": "包含初学者方案的所有功能，额外提供：",
@@ -66,7 +68,7 @@
       "ASSET_TAGS": "免费提供 10 个资产标签以便追踪。",
       "SUPPORT_USERS": "支持每个团队最多 10 名用户并可扩展。",
       "TECHNICAL_ASSISTANCE": "每月 24 小时一对一技术支持（每次最多 4 小时）。",
-      "PRICE": "¥199.9 / 月（10 名用户）+ 每名 ¥19.9",
+      "PRICE": "$899 / 月（10 名用户）+ 每名 $89",
       "BEST_FOR": "提升团队效率，理想适合中小型企业",
       "STORAGE": "1TB",
       "LEDGER": "无限制",
@@ -84,8 +86,8 @@
   },
   "ENTERPRISE": {
     "TITLE": "企业版",
-    "PRICE": "¥1998",
-    "PRICE_UNIT": "RMB/Month",
+    "PRICE": "$8990",
+    "PRICE_UNIT": "NTD/Month",
     "PRICE_ADDITIONAL": "",
     "DESCRIPTION": "专为注重安全性和效率的大型企业或会计事务所设计。",
     "FEATURES": {
@@ -98,7 +100,7 @@
       "UNLIMITED_USERS": "每个团队支持无限制的用户。",
       "API_INTEGRATION": "与内部系统整合，自动化流程。",
       "TECHNICAL_ASSISTANCE": "每月 48 小时一对一技术支持（每次最多 4 小时）。",
-      "PRICE": "¥1998 / 月",
+      "PRICE": "$8990 / 月",
       "BEST_FOR": "全面解决大型企业的需求",
       "STORAGE": "无限制",
       "LEDGER": "无限制",

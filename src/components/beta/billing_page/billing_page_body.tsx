@@ -191,8 +191,8 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
   // Info: (20250120 - Liz) 打 API 開啟自動續約
   const turnOnAutoRenewal = async () => {
     if (!teamForAutoRenewalOn) return;
-    const teamId = teamForAutoRenewalOn.id;
     const planId = teamForAutoRenewalOn.plan;
+    const teamId = teamForAutoRenewalOn.id;
     const { success } = await updateSubscriptionAPI({
       params: { teamId },
       body: { plan: planId, autoRenewal: true },
@@ -207,8 +207,8 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
   // Info: (20250120 - Liz) 打 API 關閉自動續約
   const turnOffAutoRenewal = async () => {
     if (!teamForAutoRenewalOff) return;
-    const teamId = teamForAutoRenewalOff.id;
     const planId = teamForAutoRenewalOff.plan;
+    const teamId = teamForAutoRenewalOff.id;
     const { success } = await updateSubscriptionAPI({
       params: { teamId },
       body: { plan: planId, autoRenewal: false },

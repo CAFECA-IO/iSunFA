@@ -22,6 +22,7 @@ const basicAccountEntityValidator = z.object({
   liquidity: z.boolean(),
   code: z.string(),
   name: z.string(),
+  note: z.string().nullable(),
   forUser: z.boolean(),
   level: z.number(),
   parentCode: z.string(),
@@ -60,6 +61,7 @@ export const IAccountValidator = z.object({
   liquidity: z.boolean(),
   code: z.string(),
   name: z.string(),
+  note: z.string().nullable(),
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
@@ -92,6 +94,7 @@ export const accountGetV2Schema = {
 const accountPostBodyV2Schema = z.object({
   accountId: z.number(),
   name: z.string(),
+  note: z.string().nullable(),
 });
 
 export const accountPostV2Schema = {
