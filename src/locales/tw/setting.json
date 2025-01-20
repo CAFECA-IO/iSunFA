@@ -75,8 +75,8 @@
   "ACCOUNTING": {
     "TITLE": "會計設定",
     "TAX_SETTING_TITLE": "稅務設定",
-    "TAX_SALES": "稅（銷售）",
-    "TAX_PURCHASE": "稅（消費）",
+    "TAX_SALES": "稅（銷項）",
+    "TAX_PURCHASE": "稅（進項）",
     "TAX_OPTION_TAXABLE": "應稅",
     "TAX_OPTION_ZERO_TAX_RATE": "零稅率",
     "TAX_OPTION_TAX_FREE": "免稅",
