@@ -74,8 +74,9 @@ export const accountAPIPostUtils = {
     companyId: number;
     newCode: string;
     newName: string;
+    note: string;
   }) => {
-    const { companyId, parentAccount, nowInSecond, newCode, newName } = options;
+    const { companyId, parentAccount, nowInSecond, newCode, newName, note } = options;
     const newOwnAccount = {
       nowInSecond,
       companyId,
@@ -93,7 +94,7 @@ export const accountAPIPostUtils = {
       level: parentAccount.level + 1,
       parentId: parentAccount.id,
       rootId: parentAccount.rootId,
-      note: '',
+      note: note ?? '',
     };
 
     const newSubAccount = await createAccountInPrisma(newOwnAccount);

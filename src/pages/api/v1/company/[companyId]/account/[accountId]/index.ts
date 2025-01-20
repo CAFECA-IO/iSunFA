@@ -65,8 +65,8 @@ async function handlePutRequest(req: NextApiRequest) {
   let payload: IAccount | null = null;
 
   const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req);
-  const { name } = req.body;
-  const updatedAccount = await updateAccountInPrisma(accountIdNumber, companyIdNumber, name);
+  const { name, note } = req.body;
+  const updatedAccount = await updateAccountInPrisma(accountIdNumber, companyIdNumber, name, note);
   const account = updatedAccount ? formatAccount(updatedAccount) : ({} as IAccount);
   statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   payload = account;
