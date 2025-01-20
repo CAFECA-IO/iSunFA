@@ -242,7 +242,10 @@
     "EVERY": "Every",
     "TOAST_FAILED_TO_CREATE": "Failed to create voucher, please try again later.",
     "TOAST_FILL_UP_FORM": "Please fill up the form.",
-    "TOAST_FAILED_TO_UPDATE": "Failed to update voucher, please try again later."
+    "TOAST_FAILED_TO_UPDATE": "Failed to update voucher, please try again later.",
+    "LINE_ITEM_1": "Please verify whether the debit and credit sides are balanced.",
+    "LINE_ITEM_2": "Please ensure that all accounting subjects have been filled in.",
+    "LINE_ITEM_3": "Please confirm that at least one accounting entry has been added."
   },
   "ACCOUNT_TYPE": {
     "ASSET": "Assets",

@@ -662,7 +662,15 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: line item`,
+        content: (
+          <>
+            {t('journal:ADD_NEW_VOUCHER.LINE_ITEM_1')}
+            <br />
+            {t('journal:ADD_NEW_VOUCHER.LINE_ITEM_2')}
+            <br />
+            {t('journal:ADD_NEW_VOUCHER.LINE_ITEM_3')}
+          </>
+        ),
         closeable: true,
       });
     } else if (isAssetRequired && temporaryAssetListByUser.length === 0) {

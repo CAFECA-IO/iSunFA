@@ -44,7 +44,7 @@ const InvoiceList = ({ invoiceList }: InvoiceListProps) => {
 
             <div className="flex w-180px items-center justify-center px-8px">
               <p className="text-xs font-medium text-text-neutral-primary">
-                {t(`subscriptions:SUBSCRIPTIONS_PAGE.${invoice.planId.toUpperCase()}`)}
+                {t(`subscriptions:PLAN_NAME.${invoice.planId.toUpperCase()}`)}
               </p>
             </div>
 
