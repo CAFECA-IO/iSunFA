@@ -6,191 +6,14 @@ import OwnedTeam from '@/components/beta/subscriptions_page/owned_team';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
-import APIHandler from '@/lib/utils/api_handler'; // Info: (20250116 - Anna)
-import { APIName } from '@/constants/api_connection'; // Info: (20250116 - Anna)
-import { IPaginatedData } from '@/interfaces/pagination'; // Info: (20250116 - Anna)
-import SelectFilter from '@/components/filter_section/select_filter'; // Info: (20250116 - Anna)
-import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker'; // Info: (20250116 - Anna)
-import { IDatePeriod } from '@/interfaces/date_period'; // Info: (20250116 - Anna)
-import SearchInput from '@/components/filter_section/search_input'; // Info: (20250116 - Anna)
-
-// Todo: (20250116 - Anna) dummy data 後續不需要再刪除
-// const FAKE_INVOICE_LIST: ITeamInvoice[] = [
-//   {
-//     id: 100000,
-//     teamId: 3,
-//     status: false,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-//   {
-//     id: 100001,
-//     teamId: 3,
-//     status: true,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-//   {
-//     id: 100002,
-//     teamId: 3,
-//     status: true,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-//   {
-//     id: 100003,
-//     teamId: 3,
-//     status: true,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-//   {
-//     id: 100004,
-//     teamId: 3,
-//     status: true,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-//   {
-//     id: 100005,
-//     teamId: 3,
-//     status: true,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-// ];
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IPaginatedData } from '@/interfaces/pagination';
+import SelectFilter from '@/components/filter_section/select_filter';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { IDatePeriod } from '@/interfaces/date_period';
+import SearchInput from '@/components/filter_section/search_input';
+import { SortOrder } from '@/constants/sort';
 
 interface BillingPageBodyProps {
   team: IUserOwnedTeam;
@@ -206,9 +29,15 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     'search',
   ]);
 
-  const [invoiceList, setInvoiceList] = useState<ITeamInvoice[]>([]); // Info: (20250116 - Anna) state 來儲存發票列表
+  // Deprecated: (20250115 - Liz) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [invoiceList, setInvoiceList] = useState<ITeamInvoice[]>([]);
+
+  // Info: (20250116 - Anna) 方案
   const ALL_PLANS = 'All';
   const [planType, setPlanType] = useState<string | undefined>(ALL_PLANS);
+
+  // Info: (20250116 - Anna) 付款狀態
   const statuses = [
     { value: 'All', label: 'All Status' },
     { value: 'paid', label: 'Paid' },
@@ -220,11 +49,70 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     startTimeStamp: 0,
     endTimeStamp: 0,
   });
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Info: (20241106 - Anna) 定義搜尋關鍵字狀態
+
+  // Info: (20241106 - Anna) 搜尋關鍵字
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Info: (20250120 - Anna) 排序
+  const [invoiceIDSort, setInvoiceIDSort] = useState<null | SortOrder>(null);
+  const [billingDateSort, setBillingDateSort] = useState<null | SortOrder>(null);
+  const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
 
   // Info: (20250116 - Liz) 開啟或關閉自動續約的 Modal 狀態
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
+
+  // Info: (20250120 - Anna) 排序、Reset all sorting states before applying a new one
+  const resetSortOrders = () => {
+    setInvoiceIDSort(null);
+    setBillingDateSort(null);
+    setAmountSort(null);
+  };
+
+  const updateBillingDateSort = (sortOrder: SortOrder | null) => {
+    resetSortOrders();
+    setBillingDateSort(sortOrder);
+  };
+
+  const updateInvoiceIDSort = (sortOrder: SortOrder | null) => {
+    resetSortOrders();
+    setInvoiceIDSort(sortOrder);
+  };
+
+  const updateAmountSort = (sortOrder: SortOrder | null) => {
+    resetSortOrders();
+    setAmountSort(sortOrder);
+  };
+
+  // Info: (20250120 - Anna) 排序
+  const sortInvoices = (invoices: ITeamInvoice[]) => {
+    const sortedInvoices = [...invoices];
+
+    sortedInvoices.sort((a, b) => {
+      if (billingDateSort) {
+        const dateComparison =
+          billingDateSort === SortOrder.ASC
+            ? a.issuedTimestamp - b.issuedTimestamp
+            : b.issuedTimestamp - a.issuedTimestamp;
+        if (dateComparison !== 0) return dateComparison;
+      }
+
+      if (invoiceIDSort) {
+        const idComparison = invoiceIDSort === SortOrder.ASC ? a.id - b.id : b.id - a.id;
+        if (idComparison !== 0) return idComparison;
+      }
+
+      if (amountSort) {
+        const amountComparison =
+          amountSort === SortOrder.ASC ? a.amountDue - b.amountDue : b.amountDue - a.amountDue;
+        if (amountComparison !== 0) return amountComparison;
+      }
+
+      return 0;
+    });
+
+    return sortedInvoices;
+  };
 
   // Info: (20250116 - Anna) 初始化 APIHandler
   const { trigger: getInvoiceList } = APIHandler<IPaginatedData<ITeamInvoice[]>>(
@@ -282,6 +170,13 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     if (!team) return;
     fetchInvoiceData();
   }, []);
+
+  // Info: (20250120 - Anna) 使用 useEffect，在 invoiceList 或排序條件改變時觸發重新排序
+  useEffect(() => {
+    // Info: (20250120 - Anna) 確保 invoiceList 是排序後的資料
+    const sortedInvoices = sortInvoices(invoiceList);
+    setInvoiceList(sortedInvoices);
+  }, [billingDateSort, invoiceIDSort, amountSort]);
 
   const closeAutoRenewalModal = () => {
     setTeamForAutoRenewalOn(undefined);
@@ -360,13 +255,13 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
 
       {/* // Info: (20250117 - Anna) FilterSection */}
       <section className="flex gap-4">
-        {/* Info: (20250116 - Anna) Plan 篩選框 */}
+        {/* Info: (20250116 - Anna) Plan（方案）篩選框 */}
         {Object.values(TPlanType).length > 0 && (
           <SelectFilter
             label="Plan"
             options={[
-              ALL_PLANS, // 包含 "All" 選項
-              ...Object.values(TPlanType), // 將 TPlanType 的值展開
+              ALL_PLANS, // Info: (20250116 - Anna) 包含 "All" 選項
+              ...Object.values(TPlanType), // Info: (20250116 - Anna) 將 TPlanType 的值展開
             ]}
             selectedValue={planType}
             onChange={setPlanType}
@@ -377,7 +272,7 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
         {statuses.length > 0 && (
           <SelectFilter
             label="Status"
-            options={statuses.map((Status) => Status.value)} // 只傳 value 陣列
+            options={statuses.map((Status) => Status.value)} // Info: (20250116 - Anna) 只傳 value 陣列
             selectedValue={selectedStatus}
             onChange={setSelectedStatus}
             containerClassName="flex-1"
@@ -400,7 +295,21 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
         </div>
       </section>
 
-      <InvoiceList invoiceList={invoiceList} />
+      <InvoiceList
+        invoiceList={invoiceList}
+        billingDateSort={billingDateSort}
+        setBillingDateSort={updateBillingDateSort}
+        invoiceIDSort={invoiceIDSort}
+        setInvoiceIDSort={updateInvoiceIDSort}
+        amountSort={amountSort}
+        setAmountSort={updateAmountSort}
+      />
+
+      {/* // ToDo: (20250113 - Liz) PaymentFailedToast */}
+      <section></section>
+
+      {/* // ToDo: (20250113 - Liz) PlanExpiredToast */}
+      <section></section>
 
       {/* // Info: (20250115 - Liz) Modals */}
       {teamForAutoRenewalOn && (
