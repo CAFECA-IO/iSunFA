@@ -243,25 +243,54 @@ const BillingPageBody = ({ team }: BillingPageBodyProps) => {
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
+  // Info: (20250120 - Anna) 排序、Reset all sorting states before applying a new one
+  const resetSortOrders = () => {
+    setInvoiceIDSort(null);
+    setBillingDateSort(null);
+    setAmountSort(null);
+  };
+
+  const updateBillingDateSort = (sortOrder: SortOrder | null) => {
+    resetSortOrders();
+    setBillingDateSort(sortOrder);
+  };
+
+  const updateInvoiceIDSort = (sortOrder: SortOrder | null) => {
+    resetSortOrders();
+    setInvoiceIDSort(sortOrder);
+  };
+
+  const updateAmountSort = (sortOrder: SortOrder | null) => {
+    resetSortOrders();
+    setAmountSort(sortOrder);
+  };
+
   // Info: (20250120 - Anna) 排序
   const sortInvoices = (invoices: ITeamInvoice[]) => {
     const sortedInvoices = [...invoices];
 
-    if (billingDateSort) {
-      sortedInvoices.sort((a, b) => {
-        return billingDateSort === SortOrder.ASC
-          ? a.issuedTimestamp - b.issuedTimestamp
-          : b.issuedTimestamp - a.issuedTimestamp;
-      });
-    } else if (invoiceIDSort) {
-      sortedInvoices.sort((a, b) => {
-        return invoiceIDSort === SortOrder.ASC ? a.id - b.id : b.id - a.id;
-      });
-    } else if (amountSort) {
-      sortedInvoices.sort((a, b) => {
-        return amountSort === SortOrder.ASC ? a.amountDue - b.amountDue : b.amountDue - a.amountDue;
-      });
-    }
+    sortedInvoices.sort((a, b) => {
+      if (billingDateSort) {
+        const dateComparison =
+          billingDateSort === SortOrder.ASC
+            ? a.issuedTimestamp - b.issuedTimestamp
+            : b.issuedTimestamp - a.issuedTimestamp;
+        if (dateComparison !== 0) return dateComparison;
+      }
+
+      if (invoiceIDSort) {
+        const idComparison = invoiceIDSort === SortOrder.ASC ? a.id - b.id : b.id - a.id;
+        if (idComparison !== 0) return idComparison;
+      }
+
+      if (amountSort) {
+        const amountComparison =
+          amountSort === SortOrder.ASC ? a.amountDue - b.amountDue : b.amountDue - a.amountDue;
+        if (amountComparison !== 0) return amountComparison;
+      }
+
+      return 0;
+    });
 
     return sortedInvoices;
   };
@@ -439,11 +468,11 @@ const BillingPageBody = ({ team }: BillingPageBodyProps) => {
       <InvoiceList
         invoiceList={invoiceList}
         billingDateSort={billingDateSort}
-        setBillingDateSort={setBillingDateSort}
+        setBillingDateSort={updateBillingDateSort}
         invoiceIDSort={invoiceIDSort}
-        setInvoiceIDSort={setInvoiceIDSort}
+        setInvoiceIDSort={updateInvoiceIDSort}
         amountSort={amountSort}
-        setAmountSort={setAmountSort}
+        setAmountSort={updateAmountSort}
       />
 
       {/* // ToDo: (20250113 - Liz) PaymentFailedToast */}
