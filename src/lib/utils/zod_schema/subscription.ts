@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { nullSchema, zodStringToBoolean, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { TPaymentStatus, TPlanType } from '@/interfaces/subscription';
 
@@ -103,6 +103,11 @@ export const subscriptionSchemas = {
         teamId: zodStringToNumber,
         page: zodStringToNumber.optional(),
         pageSize: zodStringToNumber.optional(),
+        plan: z.enum([TPlanType.BEGINNER, TPlanType.PROFESSIONAL, TPlanType.ENTERPRISE]).optional(),
+        status: zodStringToBoolean.optional(),
+        startDate: zodStringToNumber.optional(),
+        endDate: zodStringToNumber.optional(),
+        searchQuery: z.string().optional(),
       }),
       bodySchema: nullSchema,
     },

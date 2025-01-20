@@ -17,6 +17,7 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { EVENT_TYPE } from '@/constants/account';
 
 interface IManualAccountOpeningModalProps {
   isModalVisible: boolean;
@@ -276,7 +277,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       actions: [],
       certificateIds: [],
       voucherDate: openingDate.startTimeStamp,
-      type: 'opening', // ToDo: (20250102 - Julian) 須確認手動開帳用的 type
+      type: EVENT_TYPE.OPENING,
       note: '',
       lineItems,
       assetIds: [],

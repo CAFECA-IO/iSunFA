@@ -17,20 +17,32 @@
     "YES_TURN_OFF_AUTO_RENEWAL": "Yes,Turn off auto-renewal",
     "CHOOSE_THE_PLAN_THAT_FITS_YOUR_TEAM": "Choose the plan that fits your team",
     "PLAN_FOR": "Plan for ",
+    "PAYMENT_FAILED": "Payment Failed",
+    "UPDATE_PAYMENT": "Update Payment",
+    "RETURNING_TO_BEGINNER_IN": "Returning to Beginner in ",
+    "DAYS": " Days"
+  },
+
+  "PLAN_NAME": {
+    "BEGINNER": "Beginner",
+    "PROFESSIONAL": "Professional",
+    "ENTERPRISE": "Enterprise"
+  },
+
+  "SUBSCRIPTION_FAQ": {
     "SUBSCRIPTION_FAQ": "Subscription FAQ",
     "FAQ1_QUESTION": "Who is responsible for team payments?",
     "FAQ1_ANSWER": "Any user can upgrade their own team to the Professional plan by entering payment information. After upgrading, only owner can manage future payments for the team.",
     "FAQ2_QUESTION": "How do I cancel my paid plan?",
     "FAQ3_QUESTION": "What if more people are added to my team every month?",
     "FAQ4_QUESTION": "Can you send me an invoice?",
-    "FAQ5_QUESTION": "What are the payment methods?",
-    "BEGINNER": "Beginner",
-    "PROFESSIONAL": "Professional",
-    "ENTERPRISE": "Enterprise",
-    "UPDATE_PAYMENT": "Update Payment",
-    "PAYMENT_FAILED": "Payment Failed",
-    "RETURNING_TO_BEGINNER_IN": "Returning to Beginner in ",
-    "DAYS": " Days"
+    "FAQ5_QUESTION": "What are the payment methods?"
+  },
+
+  "SUBSCRIPTION_PLAN_CONTENT": {
+    "NTD_SLASH_MONTH": "NTD/Month",
+    "PER_EXTRA_TEAM_MEMBER_PREFIX": "",
+    "PER_EXTRA_TEAM_MEMBER_SUFFIX": " per extra team member"
   },
 
   "ERROR": {
@@ -38,15 +50,42 @@
     "DATA_NOT_FOUND": "Data not found",
     "TEAM_DATA_NOT_FOUND": "Team data not found",
     "INVOICE_DATA_NOT_FOUND": "Invoice data not found",
-    "USER_OWNED_TEAMS_NOT_FOUND": "User owned teams not found"
+    "USER_OWNED_TEAMS_NOT_FOUND": "User owned teams not found",
+    "PLAN_NOT_FOUND": "Plan not found",
+    "TOAST_PAYMENT_FAILED_TITLE": "Payment Failed ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_PREFIX": "- The last payment of your plan is failed. Please update your payment as soon as possible, or it will be downgraded to Beginner after ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_SUFFIX": " days",
+    "UPDATE_PAYMENT": "Update Payment",
+    "TOAST_EXPIRED_REMINDER_TITLE": "Plan Expired ",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_PREFIX": "- Your plan is going to expired in ",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX": " days, please renew your payment to keep the service, or it will be downgraded after.",
+    "RENEW_PAYMENT": "Renew Payment"
+  },
+
+  "MODAL": {
+    "SUBSCRIPTION_IS_NOT_DONE_YET": "Subscription is not done yet",
+    "SUBSCRIPTION_IS_NOT_DONE_YET_MESSAGE": "Your subscription is not done yet, are you sure you want to leave this page?",
+    "KEEP_FINISHING_MY_SUBSCRIPTION": "Keep finishing my subscription",
+    "LEAVE": "Leave",
+    "DOWNGRADE_MESSAGE_MODAL_TITLE": "Downgrade the plan",
+    "DOWNGRADE_MESSAGE_MODAL_CONTENT_PREFIX": "Are you sure you want to downgrade your plan to",
+    "DOWNGRADE_MESSAGE_MODAL_CONTENT_SUFFIX": "?",
+    "DOWNGRADE_MESSAGE_MODAL_SECONDARY_CONTENT": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
+    "DOWNGRADE_MESSAGE_MODAL_SUBMIT": "Yes. Downgrade my plan"
   },
 
   "PAYMENT_PAGE": {
+    "PAGE_TITLE": "Payment",
     "PAYMENT": "Payment",
     "ADD_CREDIT_CARD": "Add Credit Card",
     "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "You can cancel your subscription anytime.",
     "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
-    "SUBSCRIBE": "Subscribe"
+    "SUBSCRIBE": "Subscribe",
+    "TOAST_SUBSCRIPTION_SUCCESS": "You have successfully completed your subscription.",
+    "MONTHLY_SUBSCRIPTION": "Monthly Subscription",
+    "SUBTOTAL": "Subtotal",
+    "TAX": "Tax",
+    "TOTAL_PRICE": "Total Price"
   },
 
   "BILLING_PAGE": {
@@ -57,6 +96,22 @@
 
   "INVOICE_PAGE": {
     "META_TITLE": "Invoice",
-    "PAGE_TITLE": "Invoice"
+    "PAGE_TITLE": "Invoice",
+    "INVOICE_TITLE": "Invoice",
+    "ISSUED": "Issued",
+    "DUE": "Due",
+    "BILLED_TO": "Billed To",
+    "TAX_ID": "Tax ID",
+    "FROM": "From",
+    "DESCRIPTION": "Description",
+    "QTY": "Qty",
+    "UNIT_PRICE": "Unit Price",
+    "AMOUNT": "Amount",
+    "SUBTOTAL": "Subtotal",
+    "TAX": "Tax",
+    "TOTAL": "Total",
+    "AMOUNT_DUE": "Amount Due",
+    "FOOTNOTE_DUE": "due",
+    "FOOTNOTE_PAGE": "Page 1 of 1"
   }
 }

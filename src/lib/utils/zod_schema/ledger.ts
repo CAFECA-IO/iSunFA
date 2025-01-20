@@ -4,7 +4,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { LabelType } from '@/constants/ledger';
 import { SortOrder } from '@/constants/sort';
-import { EventType, VoucherType } from '@/constants/account';
+import { VoucherType } from '@/constants/account';
 
 const ledgerNullSchema = z.union([z.object({}), z.string()]);
 
@@ -36,16 +36,7 @@ const ledgerListResponseSchema = z.object({
         no: z.string(),
         accountingTitle: z.string(),
         voucherNumber: z.string(),
-        voucherType: z.enum([
-          // TODO: (20241112 - Shirley) Voucher type 要改成 Event type ？
-          VoucherType.EXPENSE,
-          VoucherType.RECEIVE,
-          VoucherType.TRANSFER,
-
-          EventType.INCOME,
-          EventType.PAYMENT,
-          EventType.TRANSFER,
-        ]),
+        voucherType: z.nativeEnum(VoucherType),
         particulars: z.string(),
         debitAmount: z.number(),
         creditAmount: z.number(),

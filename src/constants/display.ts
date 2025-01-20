@@ -149,7 +149,7 @@ export enum SortOptions {
   oldest = 'common:COMMON.OLDEST',
 }
 
-export const DEFAULT_AVATAR_URL = '/elements/avatar.png';
+export const DEFAULT_AVATAR_URL = '/elements/avatar_default.svg';
 export const DEFAULT_COMPANY_IMAGE_URL = '/elements/example_company_image.png';
 
 export enum DatePickerAlign {

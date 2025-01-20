@@ -9,6 +9,7 @@ import FlexibleFeatureSelection from '@/components/landing_page_v2/flexible_feat
 import TechnicalFeatures from '@/components/landing_page_v2/technical_features';
 import TechnicalCarousel from '@/components/landing_page_v2/technical_carousel';
 import HappyCustomer from '@/components/landing_page_v2/happy_customer';
+import ScrollToTopButton from '@/components/landing_page_v2/scroll_to_top';
 
 const LandingPageBody: React.FC = () => {
   return (
@@ -50,6 +51,7 @@ const LandingPageBody: React.FC = () => {
 
         {/* Info: (20241205 - Julian) Footer */}
         <LandingFooter />
+        <ScrollToTopButton />
       </main>
     </div>
   );

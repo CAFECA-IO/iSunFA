@@ -2,23 +2,16 @@ import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
 import PaymentPageBody from '@/components/beta/payment_page/payment_page_body';
-import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
+import { IUserOwnedTeam } from '@/interfaces/subscription';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { PLANS } from '@/constants/subscription';
-
-const FAKE_TEAM_DATA: IUserOwnedTeam = {
-  id: 1,
-  name: 'Personal',
-  plan: TPlanType.PROFESSIONAL,
-  nextRenewalTimestamp: 1736936488530,
-  expiredTimestamp: 1736936488530,
-  enableAutoRenewal: true,
-  paymentStatus: TPaymentStatus.FREE,
-};
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { SkeletonList } from '@/components/skeleton/skeleton';
 
 const PaymentPage = () => {
   const { t } = useTranslation(['subscriptions']);
@@ -26,29 +19,65 @@ const PaymentPage = () => {
   const { teamId, sp } = router.query;
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
   const spString = sp ? (Array.isArray(sp) ? sp[0] : sp) : '';
-  // Deprecated: (20250102 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('teamIdString:', teamIdString, 'spString:', spString);
 
   // Info: (20250114 - Liz) 找出 spString 所對應的 plan 資料
   const planFromUrl = PLANS.find((p) => p.id === spString);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [team, setTeam] = useState<IUserOwnedTeam>();
+  const [team, setTeam] = useState<IUserOwnedTeam | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // ToDo: (20250102 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
-  // setTeam(teamData);
-  const getUserOwnedTeam = async () => {};
+  // Info: (20250117 - Liz) 取得團隊資料 API
+  const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
 
-  // ToDo: (20250102 - Liz) 如果 team 資料不存在，顯示錯誤頁面
-  // 參考:
-  //   if (!teamIdString) {
-  //     return (
-  //       <Layout isDashboard={false} pageTitle={'Plan for Personal'}>
-  //         <h1 className="text-red-500">{t('subscriptions:ERROR.TEAM_ID_NOT_FOUND')}</h1>
-  //       </Layout>
-  //     );
-  //   }
+  // Info: (20250117 - Liz) 打 API 取得團隊資料
+  const getTeamData = useCallback(async () => {
+    if (!teamIdString) return;
+    setIsLoading(true);
+
+    try {
+      const { data: teamData, success } = await getTeamDataAPI({
+        params: { teamId: teamIdString },
+      });
+
+      // Deprecated: (20250117 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('teamData:', teamData);
+
+      if (success && teamData) {
+        setTeam(teamData);
+      }
+    } catch (error) {
+      // Deprecated: (20250117 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('取得團隊資料失敗');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [teamIdString]);
+
+  useEffect(() => {
+    getTeamData();
+  }, [getTeamData]);
+
+  // Info: (20250117 - Liz) 如果打 API 還在載入中，顯示載入中頁面
+  if (isLoading) {
+    return (
+      <Layout isDashboard={false} goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}>
+        <div className="flex items-center justify-center">
+          <SkeletonList count={6} />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Info: (20250117 - Liz) 如果 team 資料不存在，顯示錯誤頁面
+  if (!team) {
+    return (
+      <Layout isDashboard={false} goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}>
+        <h1 className="text-red-500">{t('subscriptions:ERROR.TEAM_DATA_NOT_FOUND')}</h1>
+      </Layout>
+    );
+  }
 
   return (
     <>
@@ -73,13 +102,13 @@ const PaymentPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={'Payment'}
+        pageTitle={t('subscriptions:PAYMENT_PAGE.PAGE_TITLE')}
         goBackUrl={`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${teamIdString}`}
       >
         <PaymentPageBody
-          team={FAKE_TEAM_DATA}
+          team={team}
           subscriptionPlan={planFromUrl}
-          getUserOwnedTeam={getUserOwnedTeam}
+          getUserOwnedTeam={getTeamData}
         />
       </Layout>
     </>
@@ -89,7 +118,12 @@ const PaymentPage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['layout', 'dashboard', 'subscriptions'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'layout',
+        'dashboard',
+        'subscriptions',
+      ])),
     },
   };
 };

@@ -28,6 +28,7 @@ export interface IPlan {
   id: TPlanType;
   planName: string;
   price: number;
+  extraMemberPrice?: number;
   features: IPlanFeature[];
 }
 

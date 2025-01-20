@@ -96,6 +96,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     },
   ];
 
+  // Info: (20250116 - Julian) 不顯示 Opening
+  const typeList = Object.values(VoucherType).filter((type) => type !== VoucherType.OPENING);
+
   // Info: (20241108 - Julian) POST ASK AI
   const { trigger: askAI, isLoading: isAskingAI } = APIHandler<{
     reason: string;
@@ -715,7 +718,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const typeDropdownMenu = typeVisible ? (
     <div className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu">
-      {Object.values(VoucherType).map((voucherType) => {
+      {typeList.map((voucherType) => {
         const typeClickHandler = () => {
           setType(voucherType);
           setTypeVisible(false);

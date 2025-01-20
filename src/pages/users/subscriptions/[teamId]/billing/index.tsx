@@ -1,42 +1,150 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
 import BillingPageBody from '@/components/beta/billing_page/billing_page_body';
-import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
+import { IUserOwnedTeam, TPaymentStatus } from '@/interfaces/subscription';
 import { ISUNFA_ROUTE } from '@/constants/url';
-
-const FAKE_TEAM_DATA: IUserOwnedTeam = {
-  id: 3,
-  name: 'Team B',
-  plan: TPlanType.ENTERPRISE,
-  enableAutoRenewal: false,
-  nextRenewalTimestamp: 1736936488530,
-  expiredTimestamp: 1736936488530,
-  paymentStatus: TPaymentStatus.UNPAID,
-};
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
+import { ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { SkeletonList } from '@/components/skeleton/skeleton';
 
 const BillingPage = () => {
   const { t } = useTranslation(['subscriptions']);
+  const { toastHandler } = useModalContext();
   const router = useRouter();
   const { teamId } = router.query;
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
-  // Deprecated: (20250113 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('teamIdString:', teamIdString);
+  const [team, setTeam] = useState<IUserOwnedTeam | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // ToDo: (20250113 - Liz) 先暫時使用假資料 FAKE_TEAM_DATA
-  // Deprecated: (20250115 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [team, setTeam] = useState<IUserOwnedTeam | null>(FAKE_TEAM_DATA);
+  // Info: (20250117 - Liz) 取得團隊資料 API
+  const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
 
-  // ToDo: (20250113 - Liz) 呼叫 API 利用 teamIdString 取得 team 的資料，並且設定到 team state
-  // setTeam(teamData);
+  useEffect(() => {
+    // Info: (20250117 - Liz) 打 API 取得團隊資料
+    const getTeamData = async () => {
+      if (!teamIdString) return;
+      setIsLoading(true);
 
-  // ToDo: (20250113 - Liz) 如果 team 資料不存在，顯示錯誤頁面
+      try {
+        const { data: teamData, success } = await getTeamDataAPI({
+          params: { teamId: teamIdString },
+        });
+
+        // Deprecated: (20250117 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('teamData:', teamData);
+
+        if (success && teamData) {
+          setTeam(teamData);
+        }
+      } catch (error) {
+        // Deprecated: (20250117 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('取得團隊資料失敗');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getTeamData();
+  }, [teamIdString]);
+
+  // Info: (20250116 - Liz) team.paymentStatus 為 UNPAID 時，顯示付款失敗的 Toast
+  useEffect(() => {
+    if (!team) return;
+
+    const PAYMENT_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/payment`;
+
+    // Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
+    const getRemainingDays = (timestamp: number) => {
+      const now = Date.now();
+      const diff = timestamp - now > 0 ? timestamp - now : 0;
+      return Math.ceil(diff / ONE_DAY_IN_MS);
+    };
+
+    // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
+    const remainingDays = getRemainingDays(team.expiredTimestamp + THREE_DAYS_IN_MS);
+
+    // Info: (20250117 - Liz) 付款失敗三天後提醒即將降級為 Beginner 方案
+    if (team.paymentStatus === TPaymentStatus.UNPAID && remainingDays <= 3) {
+      toastHandler({
+        id: ToastId.SUBSCRIPTION_PAYMENT_STATUS_UNPAID,
+        type: ToastType.ERROR,
+        content: (
+          <div className="flex items-center gap-32px">
+            <p className="text-sm text-text-neutral-primary">
+              <span className="font-semibold">
+                {t('subscriptions:ERROR.TOAST_PAYMENT_FAILED_TITLE')}
+              </span>
+
+              <span className="font-normal">
+                {t('subscriptions:ERROR.TOAST_PAYMENT_FAILED_MESSAGE_PREFIX') +
+                  remainingDays +
+                  t('subscriptions:ERROR.TOAST_PAYMENT_FAILED_MESSAGE_SUFFIX')}
+              </span>
+            </p>
+            <Link href={PAYMENT_PAGE} className="text-base font-semibold text-link-text-error">
+              {t('subscriptions:ERROR.UPDATE_PAYMENT')}
+            </Link>
+          </div>
+        ),
+        closeable: true,
+      });
+    }
+
+    // Info: (20250117 - Liz) 到期日前三天
+    const threeDaysBeforeExpiration = getRemainingDays(team.expiredTimestamp);
+
+    // Info: (20250117 - Liz) 到期日前三天提醒
+    if (team.paymentStatus === TPaymentStatus.UNPAID && threeDaysBeforeExpiration <= 3) {
+      toastHandler({
+        id: ToastId.PLAN_EXPIRED_REMINDER,
+        type: ToastType.WARNING,
+        content: (
+          <div className="flex items-center gap-32px">
+            <p className="text-sm text-text-neutral-primary">
+              <span className="font-semibold">
+                {t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_TITLE')}
+              </span>
+
+              <span className="font-normal">
+                {t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_MESSAGE_PREFIX') +
+                  threeDaysBeforeExpiration +
+                  t('subscriptions:ERROR.TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX')}
+              </span>
+            </p>
+            <Link href={PAYMENT_PAGE} className="text-base font-semibold text-link-text-error">
+              {t('subscriptions:ERROR.UPDATE_PAYMENT')}
+            </Link>
+          </div>
+        ),
+        closeable: true,
+      });
+    }
+  }, [t, team, toastHandler]);
+
+  // Info: (20250117 - Liz) 如果打 API 還在載入中，顯示載入中頁面
+  if (isLoading) {
+    return (
+      <Layout isDashboard={false} goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}>
+        <div className="flex items-center justify-center">
+          <SkeletonList count={6} />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Info: (20250113 - Liz) 如果 team 資料不存在，顯示錯誤頁面
   if (!team) {
     return (
       <Layout

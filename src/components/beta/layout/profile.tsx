@@ -10,7 +10,7 @@ const Profile = () => {
   const { t } = useTranslation('dashboard');
   const { signOut, userAuth, switchRole } = useUserCtx();
 
-  const userAvatarSrc = userAuth?.imageId || '/images/fake_user_avatar.png';
+  const userAvatarSrc = userAuth?.imageId || '/elements/avatar_default.svg';
 
   const {
     targetRef: profileRef,
