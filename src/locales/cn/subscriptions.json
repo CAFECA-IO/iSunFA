@@ -102,7 +102,7 @@
     "DUE": "到期日",
     "BILLED_TO": "收款人",
     "TAX_ID": "统一编号",
-    "FROM": "付款失败",
+    "FROM": "付款人",
     "DESCRIPTION": "描述",
     "QTY": "数量",
     "UNIT_PRICE": "单价",

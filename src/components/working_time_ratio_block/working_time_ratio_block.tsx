@@ -5,31 +5,31 @@ import { useTranslation } from 'next-i18next';
 const dummyEmployeeData = [
   {
     name: 'Emily',
-    imageId: '/elements/anonymous_avatar.svg',
+    imageId: '/elements/avatar_default.svg',
     workingTimeRatio: 27.5,
     workingHours: 20,
   },
   {
     name: 'Gibbs',
-    imageId: '/elements/anonymous_avatar.svg',
+    imageId: '/elements/avatar_default.svg',
     workingTimeRatio: 11.2,
     workingHours: 20,
   },
   {
     name: 'Jacky Fang',
-    imageId: '/elements/anonymous_avatar.svg',
+    imageId: '/elements/avatar_default.svg',
     workingTimeRatio: 9.4,
     workingHours: 18,
   },
   {
     name: 'Julian Hsu',
-    imageId: '/elements/anonymous_avatar.svg',
+    imageId: '/elements/avatar_default.svg',
     workingTimeRatio: 8,
     workingHours: 16,
   },
   {
     name: 'Liz',
-    imageId: '/elements/anonymous_avatar.svg',
+    imageId: '/elements/avatar_default.svg',
     workingTimeRatio: 7.9,
     workingHours: 15,
   },

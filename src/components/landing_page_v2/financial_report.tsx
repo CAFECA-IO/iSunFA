@@ -58,16 +58,14 @@ const FinancialReport: React.FC = () => {
         </LinearGradientText>
 
         {/* Info: (20241218 - Julian) Reports */}
-        <ul
+        <div
           className={`${
             isReportRefVisible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
-          } list-none text-xs transition-all duration-500 md:text-lg lg:text-xl`}
+          } flex flex-col gap-20px text-xs transition-all duration-500 md:text-lg lg:text-xl`}
         >
-          <li>{t('landing_page_v2:REAL_TIME_REPORT.BS')}</li>
-          <li>{t('landing_page_v2:REAL_TIME_REPORT.CFS')}</li>
-          <li>{t('landing_page_v2:REAL_TIME_REPORT.CIS')}</li>
-          <li>{t('landing_page_v2:REAL_TIME_REPORT.401')}</li>
-        </ul>
+          <p>{t('landing_page_v2:REAL_TIME_REPORT.DESCRIPTION_1')}</p>
+          <p>{t('landing_page_v2:REAL_TIME_REPORT.DESCRIPTION_2')}</p>
+        </div>
       </div>
 
       {/* Info: (20241218 - Julian) Image */}
