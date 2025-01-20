@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import { IUserOwnedTeam } from '@/interfaces/subscription';
 import APIHandler from '@/lib/utils/api_handler';
@@ -10,6 +11,7 @@ interface CreditCardInfoProps {
 }
 
 const CreditCardInfo = ({ team }: CreditCardInfoProps) => {
+  const { t } = useTranslation(['subscriptions']);
   const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
@@ -65,7 +67,7 @@ const CreditCardInfo = ({ team }: CreditCardInfoProps) => {
           className="ml-auto rounded-xs border border-button-stroke-primary px-24px py-10px text-base font-medium text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable"
           onClick={editCreditCard}
         >
-          Change
+          {t('subscriptions:SUBSCRIPTIONS_PAGE.CHANGE_CARD')}
         </button>
       </section>
     </main>

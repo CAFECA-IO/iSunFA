@@ -7,6 +7,7 @@ import { useTranslation } from 'next-i18next';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaymentMethod } from '@/interfaces/payment';
@@ -70,27 +71,51 @@ const CreditCardInfo = ({
   // Info: (20250120 - Liz) 綁定信用卡資料
   const bindCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
 
-  // Info: (20250120 - Liz) 變更訂閱方案 API
+  /* Info: (20250120 - Liz) 變更訂閱方案 API，此頁面不需要使用
   const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
     APIName.UPDATE_SUBSCRIPTION
   );
+   */
 
   // Info: (20250120 - Liz) 打 API 變更團隊的訂閱方案(使用 teamId, planId)，並且顯示成功訊息、重新取得最新的 userOwnedTeam
   const updateSubscription = async () => {
     if (!team || !plan) return;
 
+    /* Info: (20250120 - Luphia) 調整為呼叫 checkout 結帳，不需要此功能了
     const { success } = await updateSubscriptionAPI({
       params: { teamId: team.id },
       body: { plan: plan.id },
     });
+     */
 
-    if (success) {
+    // Info: (20250120 - Julian) POST /api/v2/team/:teamId/checkout
+    const url = `/api/v2/team/${team.id}/checkout`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(plan),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to subscribe');
+      }
+
+      // Info: (20250120 - Julian) 導引到訂閱管理首頁 /users/subscriptions
+      window.location.href = ISUNFA_ROUTE.SUBSCRIPTIONS;
+
+      // Info: (20250120 - Julian) 顯示成功訊息
       toastHandler({
         id: ToastId.SUBSCRIPTION_UPDATE_SUCCESS,
         type: ToastType.SUCCESS,
         content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_SUCCESS'),
         closeable: true,
       });
+    } catch (error) {
+      // Info: (20250120 - Julian) 錯誤處理
       getTeamData(); // Info: (20250120 - Liz) 重新打 API 取得最新的 userOwnedTeam
     }
   };
