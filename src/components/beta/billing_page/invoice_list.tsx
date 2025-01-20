@@ -55,22 +55,16 @@ const InvoiceList = ({
     <section className="flex flex-col gap-12px">
       <section className="flex divide-x divide-stroke-neutral-quaternary border-b border-stroke-neutral-quaternary bg-surface-neutral-surface-lv1 py-8px">
         <div className="flex w-180px items-center justify-center px-16px">
-          <p className="text-xs font-semibold text-text-neutral-tertiary">
-            {displayedInvoiceID}
-          </p>
+          <p className="text-xs font-semibold text-text-neutral-tertiary">{displayedInvoiceID}</p>
         </div>
         <div className="flex w-180px items-center justify-center px-16px">
-          <p className="text-xs font-semibold text-text-neutral-tertiary">
-            {displayedDate}
-          </p>
+          <p className="text-xs font-semibold text-text-neutral-tertiary">{displayedDate}</p>
         </div>
         <div className="flex w-180px items-center justify-center px-16px">
           <p className="text-xs font-semibold text-text-neutral-tertiary">Plan</p>
         </div>
         <div className="flex w-180px items-center justify-center px-16px">
-          <p className="text-xs font-semibold text-text-neutral-tertiary">
-            {displayedAmount}
-          </p>
+          <p className="text-xs font-semibold text-text-neutral-tertiary">{displayedAmount}</p>
         </div>
         <div className="flex flex-auto items-center justify-center">
           <p className="text-xs font-semibold text-text-neutral-tertiary">Status</p>

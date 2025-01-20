@@ -9,190 +9,11 @@ import { useTranslation } from 'next-i18next';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { useRouter } from 'next/router';
 import SelectFilter from '@/components/filter_section/select_filter';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 import SearchInput from '@/components/filter_section/search_input';
 import { SortOrder } from '@/constants/sort';
-
-// Todo: (20250116 - Anna) dummy data 後續不需要再刪除
-// const FAKE_INVOICE_LIST: ITeamInvoice[] = [
-//   {
-//     id: 100000,
-//     teamId: 3,
-//     status: false,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-//   {
-//     id: 100001,
-//     teamId: 3,
-//     status: true,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-//   {
-//     id: 100002,
-//     teamId: 3,
-//     status: true,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-//   {
-//     id: 100003,
-//     teamId: 3,
-//     status: true,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-//   {
-//     id: 100004,
-//     teamId: 3,
-//     status: true,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-//   {
-//     id: 100005,
-//     teamId: 3,
-//     status: true,
-//     issuedTimestamp: 1630406400000,
-//     dueTimestamp: 1630406400000,
-//     planId: TPlanType.PROFESSIONAL,
-//     planStartTimestamp: 1630406400000,
-//     planEndTimestamp: 1630406400000,
-//     planQuantity: 1,
-//     planUnitPrice: 1000,
-//     planAmount: 1000,
-//     payer: {
-//       name: 'John Doe',
-//       address: '1234 Main St',
-//       phone: '123-456-7890',
-//       taxId: '123456789',
-//     },
-//     payee: {
-//       name: 'Jane Doe',
-//       address: '5678 Elm St',
-//       phone: '098-765-4321',
-//       taxId: '987654321',
-//     },
-//     subtotal: 899,
-//     tax: 0,
-//     total: 899,
-//     amountDue: 899,
-//   },
-// ];
 
 interface BillingPageBodyProps {
   team: IUserOwnedTeam;
@@ -207,10 +28,6 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     'common',
     'search',
   ]);
-  // Info: (20250116 - Anna) teamId
-  const router = useRouter();
-  const { teamId } = router.query;
-  const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
 
   // Deprecated: (20250115 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -227,7 +44,7 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     { value: 'failed', label: 'Failed' },
   ];
 
-  const [selectedStatus, setSelectedStatus] = useState<string>('All');
+  const [selectedStatus, setSelectedStatus] = useState<string>(ALL_PLANS);
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
     startTimeStamp: 0,
     endTimeStamp: 0,
@@ -305,8 +122,10 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
   // Info: (20250116 - Anna) fetchInvoiceData 函數
   const fetchInvoiceData = async () => {
     try {
+      // Deprecated: (20250120 - Anna)
       // eslint-disable-next-line no-console
       console.log('Fetching invoices with planType:', planType);
+
       const query = {
         page: 1,
         pageSize: 10,
@@ -316,11 +135,14 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
         endDate: selectedDateRange.endTimeStamp || undefined, // Info: (20250116 - Anna) 如果 endTimeStamp 為 0，則設為 undefined
         searchQuery: searchQuery || undefined, // Info: (20250116 - Anna) 如果 searchQuery 是空字串，則設為 undefined
       };
+
+      // Deprecated: (20250120 - Anna)
       // eslint-disable-next-line no-console
       console.log('Sending query to API:', query);
+
       const response = await getInvoiceList({
         params: {
-          teamId: teamIdString,
+          teamId: team.id,
         },
         query,
       });
@@ -328,13 +150,16 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
       if (response.success && response.data) {
         const newInvoices = response.data.data ?? [];
         setInvoiceList(newInvoices);
+        // Deprecated: (20250120 - Anna)
         // eslint-disable-next-line no-console
         console.log('成功取得發票列表:', newInvoices);
       } else {
+        // Deprecated: (20250120 - Anna)
         // eslint-disable-next-line no-console
         console.error('取得發票列表失敗:', response.error || `API 錯誤碼: ${response.code}`);
       }
     } catch (error) {
+      // Deprecated: (20250120 - Anna)
       // eslint-disable-next-line no-console
       console.error('發票 API 呼叫發生錯誤:', error);
     }
@@ -342,12 +167,9 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
 
   // Info: (20250116 - Anna) 使用 useEffect 呼叫 fetchInvoiceData
   useEffect(() => {
-    if (teamIdString) {
-      // eslint-disable-next-line no-console
-      console.log('Plan type changed:', planType);
-      fetchInvoiceData();
-    }
-  }, [teamIdString, planType, selectedStatus, selectedDateRange, searchQuery]);
+    if (!team) return;
+    fetchInvoiceData();
+  }, []);
 
   // Info: (20250120 - Anna) 使用 useEffect，在 invoiceList 或排序條件改變時觸發重新排序
   useEffect(() => {
@@ -362,12 +184,15 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
   };
 
   // Info: (20250120 - Liz) 開啟自動續約、關閉自動續約 API
-  const { trigger: updateSubscriptionAPI } = APIHandler(APIName.UPDATE_SUBSCRIPTION);
+  const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
+    APIName.UPDATE_SUBSCRIPTION
+  );
 
   // Info: (20250120 - Liz) 打 API 開啟自動續約
   const turnOnAutoRenewal = async () => {
     if (!teamForAutoRenewalOn) return;
     const planId = teamForAutoRenewalOn.plan;
+    const teamId = teamForAutoRenewalOn.id;
     const { success } = await updateSubscriptionAPI({
       params: { teamId },
       body: { plan: planId, autoRenewal: true },
@@ -383,6 +208,7 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
   const turnOffAutoRenewal = async () => {
     if (!teamForAutoRenewalOff) return;
     const planId = teamForAutoRenewalOff.plan;
+    const teamId = teamForAutoRenewalOff.id;
     const { success } = await updateSubscriptionAPI({
       params: { teamId },
       body: { plan: planId, autoRenewal: false },
@@ -414,27 +240,6 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     backBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL'),
   };
 
-  // Info: (20250115 - Liz) InvoiceList filter 的條件: ========================
-  // Deprecated: (20250115 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [invoiceId, setInvoiceId] = useState<number>();
-  // Deprecated: (20250115 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [status, setStatus] = useState<boolean>();
-  // Deprecated: (20250115 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [issuedTimestamp, setIssuedTimestamp] = useState<number>();
-  // Deprecated: (20250115 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [planId, setPlanId] = useState<string>();
-  // Deprecated: (20250115 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [amountDue, setAmountDue] = useState<number>();
-
-  // ToDo: (20250115 - Liz) 呼叫 API 取得 InvoiceList 並且設定到 invoiceList state
-  // setInvoiceList(invoiceListData);
-  // const getInvoiceList = () => {};
-
   return (
     <main className="flex min-h-full flex-col gap-40px">
       <section className="flex flex-col gap-12px">
@@ -445,10 +250,10 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
           isBillingButtonHidden
         />
 
-        <CreditCardInfo />
+        <CreditCardInfo team={team} />
       </section>
 
-      {/* (20250117 - Anna) FilterSection */}
+      {/* // Info: (20250117 - Anna) FilterSection */}
       <section className="flex gap-4">
         {/* Info: (20250116 - Anna) Plan（方案）篩選框 */}
         {Object.values(TPlanType).length > 0 && (
@@ -499,6 +304,12 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
         amountSort={amountSort}
         setAmountSort={updateAmountSort}
       />
+
+      {/* // ToDo: (20250113 - Liz) PaymentFailedToast */}
+      <section></section>
+
+      {/* // ToDo: (20250113 - Liz) PlanExpiredToast */}
+      <section></section>
 
       {/* // Info: (20250115 - Liz) Modals */}
       {teamForAutoRenewalOn && (
