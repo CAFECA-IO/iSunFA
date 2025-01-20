@@ -55,7 +55,7 @@ interface PlanProps {
   title: string;
   price: { value: string; unit: string; additional: string };
   description: string;
-  features: { icon: string; description: string }[];
+  features: { icon: string | null; description: string }[];
   buttonText: string;
   onClick: () => void;
 }
@@ -70,19 +70,21 @@ const PlanCard: React.FC<PlanProps> = ({
 }) => {
   return (
     <Card>
-      <h3 className="text-xl font-bold text-text-brand-primary-lv3">{title}</h3>
-      <p className="mt-2 text-sm text-white">{description}</p>
-      <div className="mt-4 h-74px">
+      <h3 className="text-28px font-bold text-text-brand-primary-lv3">{title}</h3>
+      <p className="mt-2 h-40px text-sm text-white">{description}</p>
+      <div className="mt-4 md:h-74px">
         <LinearGradientText size={LinearTextSize.MD} align={TextAlign.LEFT}>
           {price.value}
-          <span className="pl-2 text-sm font-medium leading-loose text-gray-300">{price.unit}</span>
+          <span className="pl-2 text-base font-medium leading-loose text-neutral-150">
+            {price.unit}
+          </span>
         </LinearGradientText>
-        <p className="text-sm text-gray-300">{price.additional}</p>
+        <p className="text-base text-white">{price.additional}</p>
       </div>
       <LandingButton
         type="button"
         variant="primary"
-        className="my-lv-5 w-full justify-center whitespace-nowrap font-bold"
+        className="my-lv-5 w-full justify-center whitespace-nowrap text-base font-bold"
         onClick={onClick}
       >
         {buttonText}
@@ -90,14 +92,16 @@ const PlanCard: React.FC<PlanProps> = ({
       <ul className="mt-6 space-y-2 text-left text-gray-300">
         {features.map((feature, index) => (
           <li key={`feature-${index + 1}`} className="flex items-center gap-2">
-            <Image
-              src={feature.icon}
-              alt="check"
-              width={16}
-              height={16}
-              className="inline-block min-w-16px"
-            />
-            {feature.description}
+            {feature.icon && (
+              <Image
+                src={feature.icon}
+                alt="check"
+                width={16}
+                height={16}
+                className="inline-block min-w-16px"
+              />
+            )}
+            <p className="text-xs">{feature.description}</p>
           </li>
         ))}
       </ul>
@@ -118,6 +122,7 @@ const PricingPlan: React.FC = () => {
       },
       description: t('pricing:BEGINNER.DESCRIPTION'),
       features: [
+        { icon: null, description: t('pricing:BEGINNER.FEATURES.ESSENTIAL') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AI_UPLOADS') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AUTO_SUGGESTIONS') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.LIMIT_STORAGE') },
@@ -130,7 +135,10 @@ const PricingPlan: React.FC = () => {
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AUTO_FILL_TAX') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.ACCEPT_TASKS') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.SUPPORT_USER') },
-        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.CUSTOMER_SUPPORT') },
+        {
+          icon: '/icons/check.svg',
+          description: t('pricing:BEGINNER.FEATURES.TECHNICAL_ASSISTANCE'),
+        },
       ],
       buttonText: t('pricing:BEGINNER.BUTTON_TEXT'),
       onClick: () => {},
@@ -216,14 +224,16 @@ const PricingPlan: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col items-center gap-80px px-112px py-120px md:px-12 lg:px-24">
-      <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
-        {t('pricing:MAIN.TITLE')}
-      </LinearGradientText>
-      <p className="text-center text-xs font-medium transition-all duration-500 md:text-lg lg:text-xl">
-        {t('pricing:MAIN.SUBTITLE')}
-      </p>
-      <div className="mt-10 grid w-full max-w-7xl grid-cols-1 gap-8 md:grid-cols-3">
+    <div className="flex flex-col items-center gap-80px px-4 py-120px md:px-12 lg:px-24">
+      <div>
+        <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
+          {t('pricing:MAIN.TITLE')}
+        </LinearGradientText>
+        <p className="mt-lv-3 text-center text-xl font-medium transition-all duration-500 md:text-lg lg:text-xl">
+          {t('pricing:MAIN.SUBTITLE')}
+        </p>
+      </div>
+      <div className="grid w-full max-w-7xl grid-cols-1 gap-8 md:grid-cols-3">
         {plans.map((plan, index) => (
           <PlanCard key={`plan-${index + 1}`} {...plan} />
         ))}
