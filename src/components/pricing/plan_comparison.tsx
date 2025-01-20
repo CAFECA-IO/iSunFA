@@ -22,7 +22,7 @@ const PlanComparison: React.FC = () => {
     'AUDITING',
     'CUSTOMER_SUPPORT',
     'EXTRAS',
-    'AI_FEATURES',
+    // 'AI_FEATURES',
   ];
 
   const plans = ['BEGINNER', 'PROFESSIONAL', 'ENTERPRISE'];

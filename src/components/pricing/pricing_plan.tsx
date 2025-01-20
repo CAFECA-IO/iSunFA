@@ -132,7 +132,10 @@ const PricingPlan: React.FC = () => {
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AUTO_FILL_TAX') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.ACCEPT_TASKS') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.SUPPORT_USER') },
-        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.CUSTOMER_SUPPORT') },
+        {
+          icon: '/icons/check.svg',
+          description: t('pricing:BEGINNER.FEATURES.TECHNICAL_ASSISTANCE'),
+        },
       ],
       buttonText: t('pricing:BEGINNER.BUTTON_TEXT'),
       onClick: () => {},
