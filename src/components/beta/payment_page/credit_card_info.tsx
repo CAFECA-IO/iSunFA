@@ -116,8 +116,6 @@ const CreditCardInfo = ({
       });
     } catch (error) {
       // Info: (20250120 - Julian) 錯誤處理
-      // eslint-disable-next-line no-console
-      console.error(error);
       getTeamData(); // Info: (20250120 - Liz) 重新打 API 取得最新的 userOwnedTeam
     }
   };
