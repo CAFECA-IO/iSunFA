@@ -135,7 +135,7 @@ const MessageModal = ({
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-10000 flex items-center justify-center bg-black/50 font-barlow">
       <div
-        className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-fit ${borderColor} bg-alert-surface-background px-32px py-16px`}
+        className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-fit md:min-w-376px ${borderColor} bg-alert-surface-background px-32px py-16px`}
       >
         {isDisplayCross}
         <div className="mt-20px flex flex-col items-center gap-16px text-center md:max-w-376px">

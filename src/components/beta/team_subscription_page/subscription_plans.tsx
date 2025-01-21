@@ -8,17 +8,22 @@ import { useTranslation } from 'next-i18next';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { useState } from 'react';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface SubscriptionPlanProps {
   team: IUserOwnedTeam;
   plan: IPlan;
+  getTeamData: () => Promise<void>;
 }
 
-const SubscriptionPlan = ({ team, plan }: SubscriptionPlanProps) => {
+const SubscriptionPlan = ({ team, plan, getTeamData }: SubscriptionPlanProps) => {
   const { t } = useTranslation(['subscriptions']);
+  const { toastHandler } = useModalContext();
+  const router = useRouter();
   const isSelected = team.plan === plan.id;
   const isBeginner = plan.id === TPlanType.BEGINNER;
-  const router = useRouter();
   const [isDowngradeMessageModalOpen, setIsDowngradeMessageModalOpen] = useState(false);
 
   const goToPaymentPage = () => {
@@ -39,8 +44,39 @@ const SubscriptionPlan = ({ team, plan }: SubscriptionPlanProps) => {
     setIsDowngradeMessageModalOpen(false);
   };
 
-  // ToDo: (20250117 - Liz) 打 API 來變更使用者的訂閱方案為 Beginner (基礎版 Free)
-  const downgradeSubscription = () => {};
+  // Info: (20250121 - Liz) 打 API 來變更使用者的訂閱方案為 Beginner (基礎版 Free)
+  const downgradeSubscription = async () => {
+    if (!isBeginner) return;
+
+    const url = `/api/v2/team/${team.id}/checkout`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(plan),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to subscribe');
+      }
+
+      // Info: (20250120 - Julian) 顯示成功訊息
+      toastHandler({
+        id: ToastId.DOWNGRADE_TO_BEGINNER_PLAN,
+        type: ToastType.SUCCESS,
+        content: t('subscriptions:PAYMENT_PAGE.DOWNGRADED_TO_BEGINNER_PLAN'),
+        closeable: true,
+      });
+    } catch (error) {
+      // console.log('Failed to downgrade, error:', error);
+    } finally {
+      closeDowngradeMessageModal();
+      getTeamData(); // Info: (20250120 - Liz) 重新打 API 取得最新的 userOwnedTeam
+    }
+  };
 
   const downgradeMessageModal: IMessageModal = {
     title: t('subscriptions:MODAL.DOWNGRADE_MESSAGE_MODAL_TITLE'),
@@ -107,7 +143,7 @@ const SubscriptionPlan = ({ team, plan }: SubscriptionPlanProps) => {
 
       <button
         type="button"
-        className={`flex items-center justify-center gap-8px rounded-xs px-32px py-14px ${isSelected ? 'border border-stroke-brand-primary text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable' : 'bg-button-surface-strong-primary text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable'}`}
+        className={`flex items-center justify-center gap-8px rounded-xs px-32px py-14px ${isSelected ? 'pointer-events-none border border-stroke-brand-primary text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable' : 'bg-button-surface-strong-primary text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable'}`}
         onClick={selectSubscriptionPlan}
       >
         <span className="text-lg font-medium">{isSelected ? 'Selected' : 'Select this plan'}</span>
@@ -174,13 +210,14 @@ const SubscriptionPlan = ({ team, plan }: SubscriptionPlanProps) => {
 
 interface SubscriptionPlansProps {
   team: IUserOwnedTeam;
+  getTeamData: () => Promise<void>;
 }
 
-const SubscriptionPlans = ({ team }: SubscriptionPlansProps) => {
+const SubscriptionPlans = ({ team, getTeamData }: SubscriptionPlansProps) => {
   return (
     <main className="flex justify-center gap-10px">
       {PLANS.map((plan) => (
-        <SubscriptionPlan key={plan.id} team={team} plan={plan} />
+        <SubscriptionPlan key={plan.id} team={team} plan={plan} getTeamData={getTeamData} />
       ))}
     </main>
   );

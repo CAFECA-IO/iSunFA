@@ -84,6 +84,7 @@
     "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
     "SUBSCRIBE": "Subscribe",
     "TOAST_SUBSCRIPTION_SUCCESS": "You have successfully completed your subscription.",
+    "DOWNGRADED_TO_BEGINNER_PLAN": "Downgraded to Beginner plan",
     "MONTHLY_SUBSCRIPTION": "Monthly Subscription",
     "SUBTOTAL": "Subtotal",
     "TAX": "Tax",
