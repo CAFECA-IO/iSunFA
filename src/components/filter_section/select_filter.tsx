@@ -10,6 +10,7 @@ interface SelectFilterProps {
   onChange: (value: string) => void; // Info: (20240920 - tzuhan) 當選項改變時觸發的函數
   containerClassName?: string; // Info: (20241015 - Anna) 父容器的 className
   className?: string; // Info: (20241015 - Anna) 因為ledger頁面需要改樣式，因此增加className屬性
+  width?: string; // Info: (20250121 - Liz) 設定寬度
 }
 
 // Info: (20241015 - Anna) 預設 className 為空
@@ -20,6 +21,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
   onChange,
   containerClassName = '',
   className = '',
+  width = '',
 }) => {
   const { t } = useTranslation(['filter_section_type']);
   const {
@@ -34,7 +36,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
 
   return (
     // Info: (20241015 - Anna) 在這裡使用containerClassName屬性
-    <div className={`flex w-full flex-col gap-8px lg:w-200px ${containerClassName}`}>
+    <div className={`flex flex-col gap-8px ${width || 'w-full lg:w-200px'} ${containerClassName}`}>
       <p className="text-sm font-semibold text-input-text-primary">
         {t(`filter_section_type:FILTER_SECTION_TYPE.${label.toUpperCase()}`)}
       </p>
