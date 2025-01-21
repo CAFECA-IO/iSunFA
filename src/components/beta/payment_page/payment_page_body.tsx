@@ -166,7 +166,7 @@ const PaymentPageBody = ({ team, subscriptionPlan, getTeamData }: PaymentPageBod
           plan={plan}
           setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
           setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
-          getTeamData={getTeamData}
+          setIsDirty={setIsDirty}
         />
       </section>
 

@@ -84,6 +84,7 @@
     "NOTE": "您的目前方案將持續有效至下一次續訂日期，本次計費週期不會提供退款。",
     "SUBSCRIBE": "訂閱",
     "TOAST_SUBSCRIPTION_SUCCESS": "您已成功訂閱",
+    "DOWNGRADED_TO_BEGINNER_PLAN": "已降級為基礎版方案",
     "MONTHLY_SUBSCRIPTION": "每月訂閱",
     "SUBTOTAL": "小計",
     "TAX": "稅金",
