@@ -38,10 +38,6 @@ const InvoicePage = () => {
           params: { teamId: teamIdString },
         });
 
-        // Deprecated: (20250117 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('teamData:', teamData);
-
         if (success && teamData) {
           setTeam(teamData);
         }

@@ -91,7 +91,7 @@ const InvoiceList = ({
 
             <div className="flex w-180px items-center justify-center px-8px">
               <p className="text-xs font-semibold text-text-neutral-primary">
-                {`$ ${invoice.amountDue} `}
+                {`$ ${invoice.amountDue.toLocaleString('zh-TW')} `}
                 <span className="text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
               </p>
             </div>

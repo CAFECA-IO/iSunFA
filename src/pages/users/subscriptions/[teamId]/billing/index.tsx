@@ -39,10 +39,6 @@ const BillingPage = () => {
         params: { teamId: teamIdString },
       });
 
-      // Deprecated: (20250117 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('teamData:', teamData);
-
       if (success && teamData) {
         setTeam(teamData);
       }
@@ -68,15 +64,15 @@ const BillingPage = () => {
     // Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
     const getRemainingDays = (timestamp: number) => {
       const now = Date.now();
-      const diff = timestamp - now > 0 ? timestamp - now : 0;
+      const diff = timestamp - now;
       return Math.ceil(diff / ONE_DAY_IN_MS);
     };
 
-    // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
+    // Info: (20250110 - Liz) 距離付款失敗三天後的剩餘天數
     const remainingDays = getRemainingDays(team.expiredTimestamp + THREE_DAYS_IN_MS);
 
-    // Info: (20250117 - Liz) 付款失敗三天後提醒即將降級為 Beginner 方案
-    if (team.paymentStatus === TPaymentStatus.UNPAID && remainingDays <= 3) {
+    // Info: (20250117 - Liz) 付款失敗後提醒三天後會降級為 Beginner 方案
+    if (team.paymentStatus === TPaymentStatus.UNPAID && remainingDays <= 3 && remainingDays >= 0) {
       toastHandler({
         id: ToastId.SUBSCRIPTION_PAYMENT_STATUS_UNPAID,
         type: ToastType.ERROR,
@@ -106,7 +102,11 @@ const BillingPage = () => {
     const threeDaysBeforeExpiration = getRemainingDays(team.expiredTimestamp);
 
     // Info: (20250117 - Liz) 到期日前三天提醒
-    if (team.paymentStatus === TPaymentStatus.UNPAID && threeDaysBeforeExpiration <= 3) {
+    if (
+      team.paymentStatus === TPaymentStatus.UNPAID &&
+      threeDaysBeforeExpiration <= 3 &&
+      threeDaysBeforeExpiration >= 0
+    ) {
       toastHandler({
         id: ToastId.PLAN_EXPIRED_REMINDER,
         type: ToastType.WARNING,

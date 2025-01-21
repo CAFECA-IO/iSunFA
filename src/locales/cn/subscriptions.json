@@ -42,8 +42,53 @@
 
   "SUBSCRIPTION_PLAN_CONTENT": {
     "NTD_SLASH_MONTH": "新台币/月",
+    "MONTH": "月",
     "PER_EXTRA_TEAM_MEMBER_PREFIX": "每增加一名团队成员 ",
-    "PER_EXTRA_TEAM_MEMBER_SUFFIX": ""
+    "PER_EXTRA_TEAM_MEMBER_SUFFIX": "",
+    "SELECTED": "已选择",
+    "SELECT_THIS_PLAN": "选择此方案",
+    "EVERYTHING_IN_BEGINNER_PLUS": "包含基础版所有功能，再加上：",
+    "EVERYTHING_IN_PROFESSIONAL_PLUS": "包含专业版所有功能，再加上：",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "您可以随时取消订阅",
+    "NOTE": "您的目前方案将持续有效至下一次续订日期，本次计费周期不会提供退款。",
+    "FREE": "免费"
+  },
+
+  "PLANS_FEATURES_NAME": {
+    "CLOUD_STORAGE": "云端存储空间",
+    "AI_ASSISTANT": "AI 小助手",
+    "REPORT_GENERATION": "生成报告",
+    "FINANCIAL_STATEMENTS": "财务报表",
+    "MATCHMAKING_PLATFORM": "匹配平台",
+    "TEAM_MEMBERS": "团队成员",
+    "API_INTEGRATION": "API 集成",
+    "CUSTOMER_SUPPORT": "客服支持",
+    "TECHNICAL_SUPPORT": "技术支持",
+    "ADDITIONAL_PERKS": "额外提供"
+  },
+
+  "PLANS_FEATURES_VALUE": {
+    "10GB": "10GB",
+    "LIMITED_CAPACITY": "限制次数",
+    "UNLIMITED": "无限制",
+    "MANUAL_DOWNLOAD": "手动下载",
+    "TASK_ACCEPTANCE_ONLY": "仅可接受任务",
+    "LIMITED_TO_1_PERSON": "限 1 人",
+    "LIVE_CHAT_SUPPORT": "提供线上文字服务",
+    "1TB": "1TB",
+    "UNLIMITED_CAPACITY": "无限次数",
+    "POST_TASK_REQUIREMENTS": "可发布需求",
+    "UP_TO_10_PEOPLE": "限 10 人",
+    "AUTO_UPDATED": "自动更新",
+    "UP_TO_24_HOURS_IN_TOTAL_4_HOURS_PER_SESSION": "每次 4 小时，最多 24 小时",
+    "10_ASSET_TAGGING_STICKERS": "10 张资产标记贴纸",
+    "CUSTOMIZABLE_REPORTS": "可定制化报告",
+    "PRIORITY_VISIBILITY": "优先曝光",
+    "SYSTEM_SUPPORT": "系统支持",
+    "UP_TO_48_HOURS_IN_TOTAL_4_HOURS_PER_SESSION": "每次 4 小时，最多 48 小时",
+    "100_ASSET_TAGGING_STICKERS": "100 张资产标记贴纸",
+    "ONLINE_AND_OFFLINE_INTEGRATION": "可申请实体服务器",
+    "HARDWARE_SUPPORT": "离线版部署与硬件集成"
   },
 
   "ERROR": {

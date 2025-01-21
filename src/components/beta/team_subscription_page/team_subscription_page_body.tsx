@@ -30,7 +30,7 @@ const TeamSubscriptionPageBody = ({ team, getTeamData }: TeamSubscriptionPageBod
 
           <div className="flex flex-auto flex-col items-end">
             <p className="text-xl font-semibold capitalize leading-32px text-text-brand-secondary-lv1">
-              {team.plan}
+              {t(`subscriptions:PLAN_NAME.${team.plan.toUpperCase()}`)}
             </p>
 
             {!isPlanBeginner && isAutoRenewal && (
