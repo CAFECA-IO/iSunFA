@@ -164,6 +164,7 @@ const CreditCardInfo = ({
         type="button"
         className="rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-semibold text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
         onClick={updateSubscription}
+        disabled={!hasCreditCardInfo}
       >
         {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
       </button>
