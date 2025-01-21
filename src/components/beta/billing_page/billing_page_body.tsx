@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { IUserOwnedTeam, ITeamInvoice, TPlanType } from '@/interfaces/subscription';
 import CreditCardInfo from '@/components/beta/billing_page/credit_card_info';
 import InvoiceList from '@/components/beta/billing_page/invoice_list';
@@ -29,8 +29,6 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     'search',
   ]);
 
-  // Deprecated: (20250115 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [invoiceList, setInvoiceList] = useState<ITeamInvoice[]>([]);
 
   // Info: (20250116 - Anna) 方案
@@ -44,7 +42,7 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     { value: 'failed', label: 'Failed' },
   ];
 
-  const [selectedStatus, setSelectedStatus] = useState<string>(ALL_PLANS);
+  const [selectedStatus, setSelectedStatus] = useState<string>('All');
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
     startTimeStamp: 0,
     endTimeStamp: 0,
@@ -84,99 +82,102 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     setAmountSort(sortOrder);
   };
 
-  // Info: (20250120 - Anna) 排序
-  const sortInvoices = (invoices: ITeamInvoice[]) => {
-    const sortedInvoices = [...invoices];
-
-    sortedInvoices.sort((a, b) => {
-      if (billingDateSort) {
-        const dateComparison =
-          billingDateSort === SortOrder.ASC
-            ? a.issuedTimestamp - b.issuedTimestamp
-            : b.issuedTimestamp - a.issuedTimestamp;
-        if (dateComparison !== 0) return dateComparison;
-      }
-
-      if (invoiceIDSort) {
-        const idComparison = invoiceIDSort === SortOrder.ASC ? a.id - b.id : b.id - a.id;
-        if (idComparison !== 0) return idComparison;
-      }
-
-      if (amountSort) {
-        const amountComparison =
-          amountSort === SortOrder.ASC ? a.amountDue - b.amountDue : b.amountDue - a.amountDue;
-        if (amountComparison !== 0) return amountComparison;
-      }
-
-      return 0;
-    });
-
-    return sortedInvoices;
-  };
-
   // Info: (20250116 - Anna) 初始化 APIHandler
   const { trigger: getInvoiceList } = APIHandler<IPaginatedData<ITeamInvoice[]>>(
     APIName.LIST_TEAM_INVOICE
   );
 
-  // Info: (20250116 - Anna) fetchInvoiceData 函數
-  const fetchInvoiceData = async () => {
-    try {
-      // Deprecated: (20250120 - Anna)
-      // eslint-disable-next-line no-console
-      console.log('Fetching invoices with planType:', planType);
+  // Info: (20250120 - Anna) 排序函數
+  const sortInvoices = useCallback(
+    (invoices: ITeamInvoice[]) => {
+      const sortedInvoices = [...invoices];
 
-      const query = {
-        page: 1,
-        pageSize: 10,
-        plan: planType === ALL_PLANS ? undefined : planType, // Info: (20250116 - Anna) 將 'All' 轉換為 undefined
-        status: selectedStatus === 'paid' ? true : selectedStatus === 'failed' ? false : undefined,
-        startDate: selectedDateRange.startTimeStamp || undefined, // Info: (20250116 - Anna) 如果 startTimeStamp 為 0，則設為 undefined
-        endDate: selectedDateRange.endTimeStamp || undefined, // Info: (20250116 - Anna) 如果 endTimeStamp 為 0，則設為 undefined
-        searchQuery: searchQuery || undefined, // Info: (20250116 - Anna) 如果 searchQuery 是空字串，則設為 undefined
-      };
+      sortedInvoices.sort((a, b) => {
+        if (billingDateSort) {
+          const dateComparison =
+            billingDateSort === SortOrder.ASC
+              ? a.issuedTimestamp - b.issuedTimestamp
+              : b.issuedTimestamp - a.issuedTimestamp;
+          if (dateComparison !== 0) return dateComparison;
+        }
 
-      // Deprecated: (20250120 - Anna)
-      // eslint-disable-next-line no-console
-      console.log('Sending query to API:', query);
+        if (invoiceIDSort) {
+          const idComparison = invoiceIDSort === SortOrder.ASC ? a.id - b.id : b.id - a.id;
+          if (idComparison !== 0) return idComparison;
+        }
 
-      const response = await getInvoiceList({
-        params: {
-          teamId: team.id,
-        },
-        query,
+        if (amountSort) {
+          const amountComparison =
+            amountSort === SortOrder.ASC ? a.amountDue - b.amountDue : b.amountDue - a.amountDue;
+          if (amountComparison !== 0) return amountComparison;
+        }
+
+        return 0;
       });
 
-      if (response.success && response.data) {
-        const newInvoices = response.data.data ?? [];
-        setInvoiceList(newInvoices);
-        // Deprecated: (20250120 - Anna)
-        // eslint-disable-next-line no-console
-        console.log('成功取得發票列表:', newInvoices);
-      } else {
-        // Deprecated: (20250120 - Anna)
-        // eslint-disable-next-line no-console
-        console.error('取得發票列表失敗:', response.error || `API 錯誤碼: ${response.code}`);
-      }
-    } catch (error) {
-      // Deprecated: (20250120 - Anna)
-      // eslint-disable-next-line no-console
-      console.error('發票 API 呼叫發生錯誤:', error);
-    }
-  };
+      return sortedInvoices;
+    },
+    [amountSort, billingDateSort, invoiceIDSort]
+  );
 
   // Info: (20250116 - Anna) 使用 useEffect 呼叫 fetchInvoiceData
   useEffect(() => {
     if (!team) return;
-    fetchInvoiceData();
-  }, []);
 
-  // Info: (20250120 - Anna) 使用 useEffect，在 invoiceList 或排序條件改變時觸發重新排序
+    const fetchInvoiceData = async () => {
+      try {
+        // Info: (20250121 - Liz) // 組裝查詢參數
+        const query = {
+          page: 1,
+          pageSize: 10,
+          plan: planType === ALL_PLANS ? undefined : planType, // Info: (20250116 - Anna) 將 'All' 轉換為 undefined
+          status:
+            selectedStatus === 'paid' ? true : selectedStatus === 'failed' ? false : undefined,
+          startDate: selectedDateRange.startTimeStamp || undefined, // Info: (20250116 - Anna) 如果 startTimeStamp 為 0，則設為 undefined
+          endDate: selectedDateRange.endTimeStamp || undefined, // Info: (20250116 - Anna) 如果 endTimeStamp 為 0，則設為 undefined
+          searchQuery: searchQuery || undefined, // Info: (20250116 - Anna) 如果 searchQuery 是空字串，則設為 undefined
+        };
+
+        // Info: (20250121 - Liz) 打 API 取得發票列表(根據查詢參數)
+        const response = await getInvoiceList({
+          params: {
+            teamId: team.id,
+          },
+          query,
+        });
+
+        if (response.success && response.data) {
+          const newInvoices = response.data.data ?? [];
+          // Info: (20250121 - Liz) 排序資料 (初次資料獲取後立即排序)
+          const sortedInvoices = sortInvoices(newInvoices);
+          setInvoiceList(sortedInvoices);
+        } else {
+          // Deprecated: (20250120 - Anna)
+          // eslint-disable-next-line no-console
+          console.error('取得發票列表失敗:', response.error || `API 錯誤碼: ${response.code}`);
+        }
+      } catch (error) {
+        // Deprecated: (20250120 - Anna)
+        // eslint-disable-next-line no-console
+        console.error('發票 API 呼叫發生錯誤:', error);
+      }
+    };
+
+    fetchInvoiceData();
+  }, [
+    planType,
+    searchQuery,
+    selectedDateRange.endTimeStamp,
+    selectedDateRange.startTimeStamp,
+    selectedStatus,
+    sortInvoices,
+    team,
+  ]);
+
+  // Info: (20250121 - Liz) 排序資料 (當排序狀態改變時)
   useEffect(() => {
-    // Info: (20250120 - Anna) 確保 invoiceList 是排序後的資料
-    const sortedInvoices = sortInvoices(invoiceList);
-    setInvoiceList(sortedInvoices);
-  }, [billingDateSort, invoiceIDSort, amountSort]);
+    setInvoiceList((prevInvoices) => sortInvoices(prevInvoices));
+  }, [sortInvoices]);
 
   const closeAutoRenewalModal = () => {
     setTeamForAutoRenewalOn(undefined);
@@ -254,7 +255,7 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
       </section>
 
       {/* // Info: (20250117 - Anna) FilterSection */}
-      <section className="flex gap-4">
+      <section className="flex items-end gap-4">
         {/* Info: (20250116 - Anna) Plan（方案）篩選框 */}
         {Object.values(TPlanType).length > 0 && (
           <SelectFilter
@@ -265,7 +266,7 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
             ]}
             selectedValue={planType}
             onChange={setPlanType}
-            containerClassName="flex-1"
+            width="w-150px"
           />
         )}
         {/* Info: (20250116 - Anna) 狀態篩選 */}
@@ -275,11 +276,11 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
             options={statuses.map((Status) => Status.value)} // Info: (20250116 - Anna) 只傳 value 陣列
             selectedValue={selectedStatus}
             onChange={setSelectedStatus}
-            containerClassName="flex-1"
+            width="w-180px"
           />
         )}
         {/* Info: (20250116 - Anna) 時間區間篩選 */}
-        <div className="flex min-w-250px flex-1 flex-col">
+        <div className="flex min-w-240px flex-1 flex-col">
           <label htmlFor="date-picker" className="mb-2 text-sm font-medium text-neutral-300">
             {t('common:COMMON.PERIOD')}
           </label>
@@ -290,7 +291,7 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
             btnClassName="h-44px"
           />
         </div>
-        <div className="flex place-items-end">
+        <div className="flex flex-auto place-items-end">
           <SearchInput searchQuery={searchQuery} onSearchChange={setSearchQuery} />
         </div>
       </section>
@@ -304,12 +305,6 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
         amountSort={amountSort}
         setAmountSort={updateAmountSort}
       />
-
-      {/* // ToDo: (20250113 - Liz) PaymentFailedToast */}
-      <section></section>
-
-      {/* // ToDo: (20250113 - Liz) PlanExpiredToast */}
-      <section></section>
 
       {/* // Info: (20250115 - Liz) Modals */}
       {teamForAutoRenewalOn && (
