@@ -662,7 +662,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: date`,
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}:${t('journal:ADD_NEW_VOUCHER.VOUCHER_DATE')}`,
         closeable: true,
       });
       if (dateRef.current) dateRef.current.scrollIntoView();
@@ -695,7 +695,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: asset`,
+        content: `${t('journal:ASSET_SECTION.EMPTY_HINT')}`,
         closeable: true,
       });
       if (assetRef.current) assetRef.current.scrollIntoView();
@@ -705,7 +705,7 @@ const VoucherEditingPageBody: React.FC<{
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
         type: ToastType.ERROR,
-        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}: reverse`,
+        content: `${t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}`,
         closeable: true,
       });
     } else {
