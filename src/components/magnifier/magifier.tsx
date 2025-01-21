@@ -77,7 +77,7 @@ const Magnifier: React.FC<MagnifierProps> = ({
         ref={imgRef}
         src={imageUrl}
         alt="Zoomable"
-        className="h-auto max-h-full w-full max-w-full select-none object-contain"
+        className="mx-auto h-auto max-h-full max-w-full select-none object-contain"
         priority
       />
 

@@ -212,7 +212,10 @@ const PricingPlan: React.FC = () => {
           description: t('pricing:ENTERPRISE.FEATURES.SERVER_INTEGRATION'),
         },
         { icon: '/icons/check.svg', description: t('pricing:ENTERPRISE.FEATURES.UNLIMITED_USERS') },
-        { icon: '/icons/check.svg', description: t('pricing:ENTERPRISE.FEATURES.API_INTEGRATION') },
+        {
+          icon: '/icons/check.svg',
+          description: t('pricing:ENTERPRISE.FEATURES.API_WITH_SYSTEMS'),
+        },
         {
           icon: '/icons/check.svg',
           description: t('pricing:ENTERPRISE.FEATURES.TECHNICAL_ASSISTANCE'),
