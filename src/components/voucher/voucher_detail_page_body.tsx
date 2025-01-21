@@ -56,12 +56,12 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     type,
     note,
     counterParty,
-    // recurringInfo,
     payableInfo,
     receivingInfo,
     reverseVoucherIds,
     assets,
     lineItems,
+    isReverseRelated,
   } = voucherData || defaultVoucherDetail;
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
@@ -372,11 +372,18 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           variant="tertiary"
           size={'defaultSquare'}
           onClick={deleteClickHandler}
+          disabled={isReverseRelated} // Info: (20250120 - Julian) 被刪除或反轉的傳票不能再次刪除
         >
           <FiTrash2 size={16} />
         </Button>
         <Link href={`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`}>
-          <Button id="edit-voucher-btn" type="button" variant="tertiary" size={'defaultSquare'}>
+          <Button
+            id="edit-voucher-btn"
+            type="button"
+            variant="tertiary"
+            size={'defaultSquare'}
+            disabled={isReverseRelated} // Info: (20250120 - Julian) 被刪除或反轉的傳票不能編輯
+          >
             <FiEdit size={16} />
           </Button>
         </Link>
