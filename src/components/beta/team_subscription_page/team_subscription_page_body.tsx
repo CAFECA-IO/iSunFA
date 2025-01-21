@@ -6,9 +6,10 @@ import SubscriptionPlans from '@/components/beta/team_subscription_page/subscrip
 
 interface TeamSubscriptionPageBodyProps {
   team: IUserOwnedTeam;
+  getTeamData: () => Promise<void>;
 }
 
-const TeamSubscriptionPageBody = ({ team }: TeamSubscriptionPageBodyProps) => {
+const TeamSubscriptionPageBody = ({ team, getTeamData }: TeamSubscriptionPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
   const isPlanBeginner = team.plan === TPlanType.BEGINNER;
   const isAutoRenewal = team.enableAutoRenewal;
@@ -46,7 +47,7 @@ const TeamSubscriptionPageBody = ({ team }: TeamSubscriptionPageBodyProps) => {
         </section>
       </section>
 
-      <SubscriptionPlans team={team} />
+      <SubscriptionPlans team={team} getTeamData={getTeamData} />
 
       <SubscriptionFAQ />
     </main>

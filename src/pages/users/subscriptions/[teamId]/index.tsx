@@ -2,7 +2,7 @@ import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
 import TeamSubscriptionPageBody from '@/components/beta/team_subscription_page/team_subscription_page_body';
@@ -23,35 +23,35 @@ const TeamSubscriptionPage = () => {
   // Info: (20250117 - Liz) 取得團隊資料 API
   const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
 
-  useEffect(() => {
-    // Info: (20250117 - Liz) 打 API 取得團隊資料
-    const getTeamData = async () => {
-      if (!teamIdString) return;
-      setIsLoading(true);
+  // Info: (20250117 - Liz) 打 API 取得團隊資料
+  const getTeamData = useCallback(async () => {
+    if (!teamIdString) return;
+    setIsLoading(true);
 
-      try {
-        const { data: teamData, success } = await getTeamDataAPI({
-          params: { teamId: teamIdString },
-        });
+    try {
+      const { data: teamData, success } = await getTeamDataAPI({
+        params: { teamId: teamIdString },
+      });
 
-        // Deprecated: (20250117 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('teamData:', teamData);
+      // Deprecated: (20250117 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('teamData:', teamData);
 
-        if (success && teamData) {
-          setTeam(teamData);
-        }
-      } catch (error) {
-        // Deprecated: (20250117 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得團隊資料失敗');
-      } finally {
-        setIsLoading(false);
+      if (success && teamData) {
+        setTeam(teamData);
       }
-    };
-
-    getTeamData();
+    } catch (error) {
+      // Deprecated: (20250117 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('取得團隊資料失敗');
+    } finally {
+      setIsLoading(false);
+    }
   }, [teamIdString]);
+
+  useEffect(() => {
+    getTeamData();
+  }, [getTeamData]);
 
   // Info: (20250117 - Liz) 如果打 API 還在載入中，顯示載入中頁面
   if (isLoading) {
@@ -103,7 +103,7 @@ const TeamSubscriptionPage = () => {
         pageTitle={t('subscriptions:SUBSCRIPTIONS_PAGE.PLAN_FOR') + team.name}
         goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
       >
-        <TeamSubscriptionPageBody team={team} />
+        <TeamSubscriptionPageBody team={team} getTeamData={getTeamData} />
       </Layout>
     </>
   );

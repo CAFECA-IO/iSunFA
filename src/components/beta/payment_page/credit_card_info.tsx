@@ -11,13 +11,14 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaymentMethod } from '@/interfaces/payment';
+import { useRouter } from 'next/router';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
   plan: IPlan | undefined;
   setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
-  getTeamData: () => Promise<void>;
+  setIsDirty: Dispatch<SetStateAction<boolean>>;
 }
 
 const CreditCardInfo = ({
@@ -25,10 +26,11 @@ const CreditCardInfo = ({
   team,
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
-  getTeamData,
+  setIsDirty,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
   const { toastHandler } = useModalContext();
+  const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
@@ -71,22 +73,10 @@ const CreditCardInfo = ({
   // Info: (20250120 - Liz) 綁定信用卡資料
   const bindCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
 
-  /* Info: (20250120 - Liz) 變更訂閱方案 API，此頁面不需要使用
-  const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
-    APIName.UPDATE_SUBSCRIPTION
-  );
-   */
-
-  // Info: (20250120 - Liz) 打 API 變更團隊的訂閱方案(使用 teamId, planId)，並且顯示成功訊息、重新取得最新的 userOwnedTeam
+  // Info: (20250120 - Liz) 打 API 變更團隊的訂閱方案
   const updateSubscription = async () => {
     if (!team || !plan) return;
-
-    /* Info: (20250120 - Luphia) 調整為呼叫 checkout 結帳，不需要此功能了
-    const { success } = await updateSubscriptionAPI({
-      params: { teamId: team.id },
-      body: { plan: plan.id },
-    });
-     */
+    setIsDirty(false); // Info: (20250121 - Liz) 取消阻止離開頁面
 
     // Info: (20250120 - Julian) POST /api/v2/team/:teamId/checkout
     const url = `/api/v2/team/${team.id}/checkout`;
@@ -105,7 +95,7 @@ const CreditCardInfo = ({
       }
 
       // Info: (20250120 - Julian) 導引到訂閱管理首頁 /users/subscriptions
-      window.location.href = ISUNFA_ROUTE.SUBSCRIPTIONS;
+      router.push(ISUNFA_ROUTE.SUBSCRIPTIONS);
 
       // Info: (20250120 - Julian) 顯示成功訊息
       toastHandler({
@@ -115,8 +105,9 @@ const CreditCardInfo = ({
         closeable: true,
       });
     } catch (error) {
-      // Info: (20250120 - Julian) 錯誤處理
-      getTeamData(); // Info: (20250120 - Liz) 重新打 API 取得最新的 userOwnedTeam
+      // console.log('Failed to subscribe! error:', error);
+    } finally {
+      setIsDirty(true);
     }
   };
 
@@ -173,6 +164,7 @@ const CreditCardInfo = ({
         type="button"
         className="rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-semibold text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
         onClick={updateSubscription}
+        disabled={!hasCreditCardInfo}
       >
         {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
       </button>
