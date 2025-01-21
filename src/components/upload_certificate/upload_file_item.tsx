@@ -31,12 +31,30 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({
   const displayedStatus =
     file.status === ProgressStatus.FAILED ? (
       <div className="flex items-center gap-4 px-2 py-1">
-        <Image src="/icons/refresh-ccw-01.svg" width={20} height={20} alt="refresh" />
-        <Image src="/icons/red_warning.svg" width={20} height={20} alt="error_icon" />
+        <Image
+          src="/icons/refresh-ccw-01.svg"
+          width={20}
+          height={20}
+          alt="refresh"
+          className="min-w-20px"
+        />
+        <Image
+          src="/icons/red_warning.svg"
+          width={20}
+          height={20}
+          alt="error_icon"
+          className="min-w-20px"
+        />
       </div>
     ) : file.progress === 100 ? (
       <div className="flex items-center px-2 py-1">
-        <Image src="/icons/success_icon.svg" width={20} height={20} alt="success_icon" />
+        <Image
+          src="/icons/success_icon.svg"
+          width={20}
+          height={20}
+          alt="success_icon"
+          className="min-w-20px"
+        />
       </div>
     ) : (
       <Button
@@ -59,7 +77,7 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({
         <div className="mb-3 flex grow">
           <div className={`flex grow`}>
             <Image
-              className="mx-1 my-2"
+              className="mx-1 my-2 min-w-24px"
               src="/elements/cloud_upload.svg"
               width={24}
               height={24}
@@ -67,7 +85,7 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({
             />
             {!withoutImage && (
               <Image
-                className="mx-1 my-2"
+                className="mx-1 my-2 min-w-32px"
                 src="/elements/file_pdf.svg"
                 width={32}
                 height={32}
@@ -94,7 +112,7 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({
                 setIsDeleting(true);
               }}
             >
-              <FiTrash2 size={20} />
+              <FiTrash2 size={20} className="min-w-20px" />
             </Button>
           )}
         </div>

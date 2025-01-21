@@ -133,6 +133,8 @@
     "REMOVE": "删除"
   },
   "UPLOAD": {
+    "FILE": "上传文件",
+    "UPLOADING": "上传中",
     "TITLE": "上传发票",
     "CONTENT": "上传您想要传票关联的发票",
     "NO_FILE": "没有上传中的文件",
