@@ -37,6 +37,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   const [suggestions, setSuggestions] = useState<ICompanyTaxIdAndName[]>([]); // Info: (20241223 - Anna) 建議選項的狀態
   // Deprecate: (20241226 - Tzuhan) remove isOptionSelected
   // const [isOptionSelected, setIsOptionSelected] = useState(false); // Info: (20241223 - Anna) 選擇選項的狀態
+  const [nameInputStyle, setNameInputStyle] = useState<string>(inputStyle.NORMAL); // Info: (20250121 - Anna) 控制名稱輸入框樣式
+  const [nameErrorMessage, setNameErrorMessage] = useState<string | null>(null); // Info: (20250121 - Anna) 錯誤訊息狀態
   const dropdownRef = useRef<HTMLDivElement>(null); // Info: (20241223 - Anna) Ref 追蹤下拉選單
 
   const {
@@ -126,6 +128,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     console.log('Input value:', newName); // Info: (20241223 - Anna) 確認輸入框值是否為空
     setInputName(newName);
     // setIsOptionSelected(false); // Info: (20241223 - Anna) 清空選擇狀態
+    setNameInputStyle(inputStyle.NORMAL); // Info: (20250121 - Anna) 用戶修改名稱時，恢復正常樣式
+    setNameErrorMessage(null); // Info: (20250121 - Anna) 用戶修改名稱時，清空錯誤訊息
 
     if (newName === '') {
       // Info: (20241223 - Anna) 當輸入框清空時，關閉下拉選單並清空建議的選項
@@ -256,15 +260,27 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
   useEffect(() => {
     if (success && data) {
-      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.log('Counterparty created successfully.');
       onSave(data);
       modalVisibilityHandler();
     } else if (error) {
-      // Deprecate: (20241118 - Anna) debug
+      // Info: (20250121 - Anna) 確認 error 的實際結構
       // eslint-disable-next-line no-console
-      console.error('Failed to create counterparty:', error);
+      console.log('Error content:', error);
+      // Info: (20250121 - Anna) 檢查是否有內嵌的錯誤信息
+      const apiErrorMessage = (error as { message?: string })?.message || '';
+      // Info: (20250121 - Anna) 定義名稱重複的錯誤訊息
+      const errorNameMessageContent = t('certificate:COUNTERPARTY.NAME_ALREADY_EXISTS');
+      if (apiErrorMessage.includes('Bad request')) {
+        // Info: (20250121 - Anna) 修改輸入框樣式
+        setNameInputStyle(`${inputStyle.ERROR}`);
+        // Info: (20250121 - Anna) 顯示名稱錯誤訊息
+        setNameErrorMessage(errorNameMessageContent);
+      } else {
+        // eslint-disable-next-line no-console
+        console.error('Unexpected error:', error);
+      }
     }
   }, [success, error, data]);
 
@@ -286,6 +302,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       setInputType(null);
       setInputNote('');
       setShowHint(false);
+      setNameInputStyle(inputStyle.NORMAL); // Info: (20250121 - Anna) 關閉 Modal 時重置名稱輸入框樣式
+      setNameErrorMessage(null); // Info: (20250121 - Anna) 關閉 Modal 時清空錯誤訊息
     }
   }, [isModalVisible]);
 
@@ -351,9 +369,26 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
                   value={inputName}
                   onChange={nameChangeHandler}
                   required
-                  className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none"
+                  style={{
+                    boxShadow: '0 0 0px 1000px #FCFDFF inset', // Info: (20250121 - Anna) 移除 autofill 背景影響
+                    WebkitTextFillColor: nameErrorMessage
+                      ? '#C84949' // Info: (20250121 - Anna) 錯誤情況
+                      : inputName
+                        ? '#27354E' // Info: (20250121 - Anna) 已經輸入文字
+                        : '#7F8A9D', // Info: (20250121 - Anna) 初始情況
+                  }}
+                  className={`h-46px flex-1 rounded-sm border ${
+                    nameErrorMessage
+                      ? 'border-red-500 placeholder:text-red-600'
+                      : 'border-input-stroke-input'
+                  } bg-neutral-25 p-10px outline-none ${nameInputStyle}`}
                 />
                 {displayedDropdown} {/*  Info: (20241223 - Anna) 顯示下拉選單 */}
+              </div>
+              <div className="w-full text-right">
+                {nameErrorMessage && ( // Info: (20250121 - Anna) 顯示名稱錯誤訊息
+                  <p className="text-sm text-text-state-error">{nameErrorMessage}</p>
+                )}
               </div>
             </div>
 
@@ -370,6 +405,9 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
                   placeholder={t('certificate:COUNTERPARTY.ENTER_NUMBER')}
                   value={inputTaxId}
                   onChange={taxIdChangeHandler}
+                  style={{
+                    boxShadow: '0 0 0px 1000px #FCFDFF inset', // Info: (20250121 - Anna) 移除 autofill 背景影響
+                  }}
                   className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none"
                 />
               </div>
@@ -387,7 +425,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
                   showHint && !inputType ? inputStyle.ERROR : inputStyle.NORMAL
                 } bg-input-surface-input-background px-10px py-12px hover:cursor-pointer`}
               >
-                <p className="text-input-text-input-filled">
+                <p className={`${inputType ? 'text-input-text-input-filled' : 'text-neutral-300'}`}>
                   {inputType
                     ? t(`certificate:COUNTERPARTY.${inputType.toUpperCase()}`)
                     : t('certificate:COUNTERPARTY.SELECT_TYPE')}
