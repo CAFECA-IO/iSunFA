@@ -23,7 +23,7 @@ const PaymentInfo = ({ plan }: PaymentInfoProps) => {
         <span className="text-lg font-semibold text-text-neutral-tertiary">
           {`iSunFA ${t(`subscriptions:PLAN_NAME.${plan.id.toUpperCase()}`)} ${t('subscriptions:PAYMENT_PAGE.MONTHLY_SUBSCRIPTION')}`}
         </span>
-        <span className="text-xl font-bold leading-8 text-text-neutral-secondary">{`$ ${plan.price} NTD`}</span>
+        <span className="text-xl font-bold leading-8 text-text-neutral-secondary">{`$ ${plan.price.toLocaleString('zh-TW')} NTD`}</span>
       </p>
 
       <div className="h-1px bg-divider-stroke-lv-4"></div>
@@ -32,14 +32,14 @@ const PaymentInfo = ({ plan }: PaymentInfoProps) => {
         <span className="text-lg font-semibold text-text-neutral-tertiary">
           {t('subscriptions:PAYMENT_PAGE.SUBTOTAL')}
         </span>
-        <span className="text-xl font-bold leading-8 text-text-neutral-secondary">{`$ ${plan.price} NTD`}</span>
+        <span className="text-xl font-bold leading-8 text-text-neutral-secondary">{`$ ${plan.price.toLocaleString('zh-TW')} NTD`}</span>
       </p>
 
       <p className="flex justify-between">
         <span className="text-lg font-semibold text-text-neutral-tertiary">
           {t('subscriptions:PAYMENT_PAGE.TAX')}
         </span>
-        <span className="text-xl font-bold leading-8 text-text-neutral-tertiary">{`$ ${tax} NTD`}</span>
+        <span className="text-xl font-bold leading-8 text-text-neutral-tertiary">{`$ ${tax.toLocaleString('zh-TW')} NTD`}</span>
       </p>
 
       <div className="h-1px bg-divider-stroke-lv-4"></div>
@@ -48,7 +48,7 @@ const PaymentInfo = ({ plan }: PaymentInfoProps) => {
         <span className="text-lg font-semibold text-text-neutral-tertiary">
           {t('subscriptions:PAYMENT_PAGE.TOTAL_PRICE')}
         </span>
-        <span className="text-xl font-bold leading-8 text-text-neutral-primary">{`$ ${totalPrice} NTD`}</span>
+        <span className="text-xl font-bold leading-8 text-text-neutral-primary">{`$ ${totalPrice.toLocaleString('zh-TW')} NTD`}</span>
       </p>
     </section>
   );

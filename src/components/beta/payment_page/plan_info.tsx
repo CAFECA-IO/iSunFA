@@ -38,7 +38,7 @@ const PlanInfo = ({ team, plan }: PlanInfoProps) => {
             <div>
               <p>
                 <span className="text-44px font-bold text-text-brand-secondary-lv2">
-                  $ {plan.price}
+                  $ {plan.price.toLocaleString('zh-TW')}
                 </span>
                 <span className="text-base font-semibold text-text-neutral-tertiary">
                   {' '}
@@ -54,7 +54,9 @@ const PlanInfo = ({ team, plan }: PlanInfoProps) => {
             </div>
           ) : (
             <div>
-              <p className="text-44px font-bold text-text-brand-secondary-lv2">{`Free`}</p>
+              <p className="text-44px font-bold text-text-brand-secondary-lv2">
+                {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE')}
+              </p>
               <div className="invisible h-30px"></div>
             </div>
           )}
@@ -66,33 +68,51 @@ const PlanInfo = ({ team, plan }: PlanInfoProps) => {
           {plan.id === TPlanType.PROFESSIONAL && (
             <li className="flex items-start gap-4px">
               <Image src="/icons/yellow_star.svg" alt="yellow_star" width={16} height={16} />
-              <p className="font-semibold">Everything in Beginner, plus:</p>
+              <p className="font-semibold">
+                {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.EVERYTHING_IN_BEGINNER_PLUS')}
+              </p>
             </li>
           )}
 
           {plan.id === TPlanType.ENTERPRISE && (
             <li className="flex items-start gap-4px">
               <Image src="/icons/yellow_star.svg" alt="yellow_star" width={16} height={16} />
-              <p className="font-semibold">Everything in Professional, plus:</p>
+              <p className="font-semibold">
+                {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.EVERYTHING_IN_PROFESSIONAL_PLUS')}
+              </p>
             </li>
           )}
 
           {plan.features.map((feature) => (
             <li key={feature.id} className="flex items-start gap-4px">
-              <Image src="/icons/green_check.svg" alt="green_check" width={16} height={16} />
+              <Image
+                src="/icons/green_check.svg"
+                alt="green_check"
+                width={16}
+                height={16}
+                className="flex-none"
+              />
 
-              <p className="font-semibold">{feature.name}</p>
-              <span>:</span>
+              <div className="flex flex-auto flex-wrap gap-4px">
+                <p className="font-semibold">
+                  {t(`subscriptions:PLANS_FEATURES_NAME.${feature.name.toUpperCase()}`)}
+                </p>
+                <span>:</span>
 
-              {Array.isArray(feature.value) ? (
-                <ul className="font-semibold text-text-support-baby">
-                  {feature.value.map((value) => (
-                    <li key={value}>{value}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="font-semibold text-text-support-baby">{feature.value}</p>
-              )}
+                {Array.isArray(feature.value) ? (
+                  <ul className="font-semibold text-text-support-baby">
+                    {feature.value.map((value) => (
+                      <li key={value}>
+                        {t(`subscriptions:PLANS_FEATURES_VALUE.${value.toUpperCase()}`)}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="font-semibold text-text-support-baby">
+                    {t(`subscriptions:PLANS_FEATURES_VALUE.${feature.value.toUpperCase()}`)}
+                  </p>
+                )}
+              </div>
             </li>
           ))}
         </ul>

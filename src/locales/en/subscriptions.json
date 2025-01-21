@@ -42,8 +42,53 @@
 
   "SUBSCRIPTION_PLAN_CONTENT": {
     "NTD_SLASH_MONTH": "NTD/Month",
+    "MONTH": "Month",
     "PER_EXTRA_TEAM_MEMBER_PREFIX": "",
-    "PER_EXTRA_TEAM_MEMBER_SUFFIX": " per extra team member"
+    "PER_EXTRA_TEAM_MEMBER_SUFFIX": " per extra team member",
+    "SELECTED": "Selected",
+    "SELECT_THIS_PLAN": "Select this plan",
+    "EVERYTHING_IN_BEGINNER_PLUS": "Everything in Beginner, plus:",
+    "EVERYTHING_IN_PROFESSIONAL_PLUS": "Everything in Professional, plus:",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "You can cancel your subscription anytime",
+    "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
+    "FREE": "Free"
+  },
+
+  "PLANS_FEATURES_NAME": {
+    "CLOUD_STORAGE": "Cloud Storage",
+    "AI_ASSISTANT": "AI Assistant",
+    "REPORT_GENERATION": "Report Generation",
+    "FINANCIAL_STATEMENTS": "Financial Statements",
+    "MATCHMAKING_PLATFORM": "Matchmaking Platform",
+    "TEAM_MEMBERS": "Team Members",
+    "CUSTOMER_SUPPORT": "Customer Support",
+    "API_INTEGRATION": "API Integration",
+    "TECHNICAL_SUPPORT": "Technical Support",
+    "ADDITIONAL_PERKS": "Additional Perks"
+  },
+
+  "PLANS_FEATURES_VALUE": {
+    "10GB": "10GB",
+    "LIMITED_CAPACITY": "Limited capacity",
+    "UNLIMITED": "Unlimited",
+    "MANUAL_DOWNLOAD": "Manual download",
+    "TASK_ACCEPTANCE_ONLY": "Task acceptance only",
+    "LIMITED_TO_1_PERSON": "Limited to 1 person",
+    "LIVE_CHAT_SUPPORT": "Live chat support",
+    "1TB": "1TB",
+    "UNLIMITED_CAPACITY": "Unlimited capacity",
+    "POST_TASK_REQUIREMENTS": "Post task requirements",
+    "UP_TO_10_PEOPLE": "Up to 10 people",
+    "AUTO_UPDATED": "Auto-updated",
+    "UP_TO_24_HOURS_IN_TOTAL_4_HOURS_PER_SESSION": "Up to 24 hours in total, 4 hours per session",
+    "10_ASSET_TAGGING_STICKERS": "10 asset tagging stickers",
+    "CUSTOMIZABLE_REPORTS": "Customizable reports",
+    "PRIORITY_VISIBILITY": "Priority visibility",
+    "SYSTEM_SUPPORT": "System support",
+    "UP_TO_48_HOURS_IN_TOTAL_4_HOURS_PER_SESSION": "Up to 48 hours in total, 4 hours per session",
+    "100_ASSET_TAGGING_STICKERS": "100 asset tagging stickers",
+    "ONLINE_AND_OFFLINE_INTEGRATION": "online and offline integration",
+    "HARDWARE_SUPPORT": "hardware support"
   },
 
   "ERROR": {

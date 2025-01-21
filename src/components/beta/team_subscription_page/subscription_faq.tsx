@@ -18,22 +18,22 @@ const FAQS: IFaq[] = [
   {
     id: 2,
     question: 'FAQ2_QUESTION',
-    answer: '',
+    answer: 'FAQ2_ANSWER',
   },
   {
     id: 3,
     question: 'FAQ3_QUESTION',
-    answer: '',
+    answer: 'FAQ3_ANSWER',
   },
   {
     id: 4,
     question: 'FAQ4_QUESTION',
-    answer: '',
+    answer: 'FAQ4_ANSWER',
   },
   {
     id: 5,
     question: 'FAQ5_QUESTION',
-    answer: '',
+    answer: 'FAQ5_ANSWER',
   },
 ];
 
@@ -74,9 +74,7 @@ const SubscriptionFaq = () => {
 
             {isOpen === faq.id && (
               <p className="px-40px pb-32px text-lg font-normal text-accordion-surface-background-text-paragraph">
-                {faq.answer
-                  ? t(`subscriptions:SUBSCRIPTION_FAQ.${faq.answer}`)
-                  : 'No answer provided. Please contact support for more information.'}
+                {faq.answer ? t(`subscriptions:SUBSCRIPTION_FAQ.${faq.answer}`) : ''}
               </p>
             )}
           </div>

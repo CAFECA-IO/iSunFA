@@ -121,7 +121,7 @@ const SubscriptionPlan = ({ team, plan, getTeamData }: SubscriptionPlanProps) =>
           <div>
             <p>
               <span className="text-44px font-bold text-text-brand-secondary-lv2">
-                $ {plan.price}
+                $ {plan.price.toLocaleString('zh-TW')}
               </span>
               <span className="text-base font-semibold text-text-neutral-tertiary">
                 {' '}
@@ -130,12 +130,16 @@ const SubscriptionPlan = ({ team, plan, getTeamData }: SubscriptionPlanProps) =>
             </p>
 
             <p className="h-30px text-base font-semibold text-text-brand-primary-lv1">
-              {plan.id === TPlanType.PROFESSIONAL ? '+ $89 per extra team member' : ''}
+              {plan.id === TPlanType.PROFESSIONAL
+                ? `${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_PREFIX')}+ $${plan.extraMemberPrice}${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_SUFFIX')}`
+                : ''}
             </p>
           </div>
         ) : (
           <div>
-            <p className="text-44px font-bold text-text-brand-secondary-lv2">{`Free`}</p>
+            <p className="text-44px font-bold text-text-brand-secondary-lv2">
+              {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE')}
+            </p>
             <div className="invisible h-30px"></div>
           </div>
         )}
@@ -146,7 +150,11 @@ const SubscriptionPlan = ({ team, plan, getTeamData }: SubscriptionPlanProps) =>
         className={`flex items-center justify-center gap-8px rounded-xs px-32px py-14px ${isSelected ? 'pointer-events-none border border-stroke-brand-primary text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable' : 'bg-button-surface-strong-primary text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable'}`}
         onClick={selectSubscriptionPlan}
       >
-        <span className="text-lg font-medium">{isSelected ? 'Selected' : 'Select this plan'}</span>
+        <span className="text-lg font-medium">
+          {isSelected
+            ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')
+            : t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECT_THIS_PLAN')}
+        </span>
         {!isSelected && <FiArrowRight size={24} />}
       </button>
 
@@ -154,33 +162,51 @@ const SubscriptionPlan = ({ team, plan, getTeamData }: SubscriptionPlanProps) =>
         {plan.id === TPlanType.PROFESSIONAL && (
           <li className="flex items-start gap-4px">
             <Image src="/icons/yellow_star.svg" alt="yellow_star" width={16} height={16} />
-            <p className="font-semibold">Everything in Beginner, plus:</p>
+            <p className="font-semibold">
+              {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.EVERYTHING_IN_BEGINNER_PLUS')}
+            </p>
           </li>
         )}
 
         {plan.id === TPlanType.ENTERPRISE && (
           <li className="flex items-start gap-4px">
             <Image src="/icons/yellow_star.svg" alt="yellow_star" width={16} height={16} />
-            <p className="font-semibold">Everything in Professional, plus:</p>
+            <p className="font-semibold">
+              {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.EVERYTHING_IN_PROFESSIONAL_PLUS')}
+            </p>
           </li>
         )}
 
         {plan.features.map((feature) => (
           <li key={feature.id} className="flex items-start gap-4px">
-            <Image src="/icons/green_check.svg" alt="green_check" width={16} height={16} />
+            <Image
+              src="/icons/green_check.svg"
+              alt="green_check"
+              width={16}
+              height={16}
+              className="flex-none"
+            />
 
-            <p className="font-semibold">{feature.name}</p>
-            <span>:</span>
+            <div className="flex flex-auto flex-wrap gap-4px">
+              <p className="font-semibold">
+                {t(`subscriptions:PLANS_FEATURES_NAME.${feature.name.toUpperCase()}`)}
+              </p>
+              <span>:</span>
 
-            {Array.isArray(feature.value) ? (
-              <ul className="font-semibold text-text-support-baby">
-                {feature.value.map((value) => (
-                  <li key={value}>{value}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="font-semibold text-text-support-baby">{feature.value}</p>
-            )}
+              {Array.isArray(feature.value) ? (
+                <ul className="font-semibold text-text-support-baby">
+                  {feature.value.map((value) => (
+                    <li key={value}>
+                      {t(`subscriptions:PLANS_FEATURES_VALUE.${value.toUpperCase()}`)}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="font-semibold text-text-support-baby">
+                  {t(`subscriptions:PLANS_FEATURES_VALUE.${feature.value.toUpperCase()}`)}
+                </p>
+              )}
+            </div>
           </li>
         ))}
       </ul>
@@ -188,11 +214,10 @@ const SubscriptionPlan = ({ team, plan, getTeamData }: SubscriptionPlanProps) =>
       {!isBeginner && (
         <p className="mt-auto flex flex-col text-xs">
           <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
-            You can cancel your subscription anytime.
+            {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME')}
           </span>
           <span className="text-xs font-medium leading-5 text-text-neutral-tertiary">
-            * Your current plan will remain active until the next renewal date, and no refunds will
-            be issued for the current billing period.
+            {`* ${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.NOTE')}`}
           </span>
         </p>
       )}

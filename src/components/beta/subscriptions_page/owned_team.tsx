@@ -29,9 +29,10 @@ const OwnedTeam = ({
   const isPlanBeginner = team.plan === TPlanType.BEGINNER;
   const teamUsingPlan = PLANS.find((plan) => plan.id === team.plan);
 
-  const formatter = new Intl.NumberFormat('en-US');
-  const formatPrice = teamUsingPlan ? `$ ${formatter.format(teamUsingPlan.price)} / Month` : null;
-  const price = isPlanBeginner ? 'Free' : formatPrice;
+  const formatPrice = teamUsingPlan
+    ? `$ ${teamUsingPlan.price.toLocaleString('zh-TW')} / ${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.MONTH')}`
+    : null;
+  const price = isPlanBeginner ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE') : formatPrice;
   const isAutoRenewalEnabled = team.enableAutoRenewal;
 
   const openTurnOnAutoRenewalModal = () => {
