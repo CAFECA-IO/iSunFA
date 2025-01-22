@@ -88,7 +88,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
               <button
                 type="button"
                 onClick={handleAppleSignIn}
-                className="flex items-center justify-center gap-15px rounded-sm bg-black p-15px disabled:bg-button-surface-strong-disable"
+                className="flex items-center justify-center gap-15px rounded-sm bg-black p-15px"
               >
                 <IoLogoApple size={24} color="white" />
                 <p className="text-xl font-medium text-white">
