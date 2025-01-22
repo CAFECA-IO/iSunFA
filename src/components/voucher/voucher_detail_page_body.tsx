@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
@@ -41,6 +42,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     trigger: getVoucherDetail,
     data: voucherData,
     isLoading,
+    error,
   } = APIHandler<IVoucherDetailForFrontend>(APIName.VOUCHER_GET_BY_ID_V2, { params });
 
   // Info: (20241029 - Julian) Delete voucher API
@@ -359,6 +361,15 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   //     )}
   //   </div>
   // ) : null;
+
+  if (error) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-10px">
+        <Image src={'/elements/empty_list.svg'} alt="page_not_found" width={150} height={150} />
+        <p className="text-neutral-300">{t('journal:VOUCHER_DETAIL_PAGE.VOUCHER_NOT_FOUND')}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-y-auto px-40px pb-32px pt-10px">

@@ -150,7 +150,9 @@
     "CANCEL_BTN": "取消",
     "SUBMIT_BTN": "提交",
     "NO_ACCOUNTING_FOUND": "找不到会计科目。",
-    "ADD_NEW_ROW": "请新增项目"
+    "ADD_NEW_ROW": "请新增项目",
+    "TOAST_OPENING_SUCCESS": "手动开帐成功",
+    "TOAST_OPENING_FAIL": "无法开帐，请稍后重试。"
   },
   "IP": {
     "INFO": "登录设备与 IP 信息",
