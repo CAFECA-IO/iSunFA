@@ -31,7 +31,7 @@ import {
   VOUCHER_TYPE_TO_EVENT_TYPE_MAP,
   ProgressStatus,
 } from '@/constants/account';
-import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
+import { /* AIWorkingArea, */ AIState } from '@/components/voucher/ai_working_area';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
 import CertificateUploaderModal from '@/components/certificate/certificate_uploader_modal';
@@ -95,12 +95,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const typeList = Object.values(VoucherType).filter((type) => type !== VoucherType.OPENING);
 
   // Info: (20241108 - Julian) POST ASK AI
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { trigger: askAI, isLoading: isAskingAI } = APIHandler<{
     reason: string;
     resultId: string;
   }>(APIName.ASK_AI_V2);
 
   // Info: (20241108 - Julian) GET AI RESULT
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { trigger: getAIResult, success: analyzeSuccess } = APIHandler<IAIResultVoucher>(
     APIName.ASK_AI_RESULT_V2
   );
@@ -156,7 +158,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const [isShowReverseHint, setIsShowReverseHint] = useState<boolean>(false);
 
   // Info: (20241018 - Tzuhan) AI 分析相關 state
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
   const [targetIdList, setTargetIdList] = useState<number[]>([]);
   const [resultId, setResultId] = useState<string>('');
@@ -530,6 +534,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     messageModalVisibilityHandler();
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const fillUpWithAIResult = () => {
     setDate(aiDate);
     setType(aiType);
@@ -545,6 +550,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setLineItems(aiLineItemsUI);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const retryAIHandler = () => {
     setAiState(AIState.WORKING);
     if (resultId) {
@@ -966,7 +972,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         onClose={() => setOpenUploaderModal(false)}
       />
       {/* Info: (20240926 - Julian) AI analyze */}
-      <AIWorkingArea
+      {/* ToDo: (20250122 - Julian) 暫時隱藏 */}
+      {/* <AIWorkingArea
         aiState={aiState}
         analyzeSuccess={analyzeSuccess ?? false}
         setAiState={setAiState}
@@ -974,7 +981,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         retryClickHandler={retryAIHandler}
         retryDisabled={isAskingAI || aiState === AIState.WORKING}
         fillUpClickHandler={fillUpWithAIResult}
-      />
+      /> */}
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}
       <CertificateSelection
         selectedCertificates={selectedCertificates}
