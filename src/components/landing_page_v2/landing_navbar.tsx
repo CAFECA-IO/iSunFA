@@ -177,7 +177,7 @@ const LandingNavbar: React.FC = () => {
       {/* Info: (20241227 - Julian) Dropdown */}
       <div
         ref={dropdownRef}
-        className={`absolute right-0 flex flex-col rounded-sm border-b bg-landing-page-white/30 px-20px py-12px font-bold shadow-landing-nav backdrop-blur-md transition-all duration-300 ease-in-out md:right-40px lg:hidden ${isOpen ? 'visible top-80px opacity-100' : 'invisible top-50px opacity-0'}`}
+        className={`absolute right-0 flex flex-col rounded-sm border-b bg-landing-page-white/30 px-20px py-12px font-bold shadow-landing-nav backdrop-blur-md transition-all duration-300 ease-in-out md:right-40px lg:hidden ${isOpen ? 'visible top-110px opacity-100' : 'invisible top-50px opacity-0'}`}
       >
         {/* Info: (20241227 - Julian) I18n */}
         {langBtn}
@@ -195,7 +195,7 @@ const LandingNavbar: React.FC = () => {
 
       {/* Info: (20241227 - Julian) Language Dropdown */}
       <div
-        className={`absolute left-410px top-70px hidden w-170px rounded-sm border-b bg-landing-page-white/30 shadow-landing-nav transition-all duration-300 ease-in-out lg:grid ${
+        className={`absolute left-410px top-100px hidden w-170px rounded-sm border-b bg-landing-page-white/30 shadow-landing-nav transition-all duration-300 ease-in-out lg:grid ${
           isLangOpen ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'
         } overflow-hidden backdrop-blur-md`}
       >
