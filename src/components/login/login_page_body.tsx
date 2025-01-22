@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { IoLogoApple } from 'react-icons/io5';
 import AvatarSVG from '@/components/avatar_svg/avatar_svg';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Provider } from '@/constants/provider';
@@ -90,7 +89,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
                 onClick={handleAppleSignIn}
                 className="flex items-center justify-center gap-15px rounded-sm bg-black p-15px"
               >
-                <IoLogoApple size={24} color="white" />
+                <Image src="/icons/apple_logo.svg" alt="apple_logo" width="24" height="24"></Image>
                 <p className="text-xl font-medium text-white">
                   {t('dashboard:LOGIN.LOG_IN_WITH_APPLE')}
                 </p>
