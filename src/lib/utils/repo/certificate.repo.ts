@@ -615,3 +615,130 @@ export async function deleteMultipleCertificates(options: {
   const deletedIds = updateIdResults.map((result) => result.id);
   return deletedIds;
 }
+
+export async function getAllFilteredInvoice(options: {
+  companyId: number;
+  startDate?: number;
+  endDate?: number;
+  searchQuery?: string;
+  type?: InvoiceType;
+  tab?: InvoiceTabs;
+  isDeleted?: boolean;
+}) {
+  const { companyId, startDate, endDate, searchQuery, type, tab, isDeleted } = options;
+
+  function getVoucherCertificateRelation(invoiceTab: InvoiceTabs | undefined) {
+    if (!invoiceTab) {
+      return [];
+    }
+
+    switch (invoiceTab) {
+      case InvoiceTabs.WITH_VOUCHER:
+        return [
+          {
+            voucherCertificates: {
+              some: {
+                deletedAt: null,
+              },
+            },
+          },
+        ];
+      case InvoiceTabs.WITHOUT_VOUCHER:
+        return [
+          {
+            voucherCertificates: {
+              every: {
+                deletedAt: {
+                  not: null,
+                },
+              },
+            },
+          },
+          {
+            voucherCertificates: {
+              none: {},
+            },
+          },
+        ];
+
+      default:
+        return [];
+    }
+  }
+
+  const where: Prisma.CertificateWhereInput = {
+    createdAt: {
+      gte: startDate,
+      lte: endDate,
+    },
+    companyId,
+    deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
+    AND: [
+      {
+        OR: getVoucherCertificateRelation(tab),
+      },
+      {
+        OR: [
+          ...(type && type !== InvoiceType.ALL
+            ? [
+                {
+                  invoices: {
+                    some: {
+                      type,
+                    },
+                  },
+                },
+              ]
+            : [
+                {
+                  invoices: {
+                    some: {},
+                  },
+                },
+                {
+                  invoices: {
+                    none: {},
+                  },
+                },
+              ]),
+        ],
+      },
+      {
+        OR: [
+          {
+            file: {
+              name: {
+                contains: searchQuery,
+              },
+            },
+          },
+          {
+            invoices: {
+              some: {
+                name: {
+                  contains: searchQuery,
+                },
+                no: {
+                  contains: searchQuery,
+                },
+              },
+            },
+          },
+        ],
+      },
+    ],
+  };
+
+  const result = await prisma.certificate.findMany({
+    where,
+    select: {
+      invoices: {
+        select: {
+          totalPrice: true,
+        },
+      },
+    },
+  });
+
+  return result;
+}

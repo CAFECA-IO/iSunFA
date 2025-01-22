@@ -113,7 +113,15 @@ export const handleGetRequest: IHandleRequest<
       return certificate;
     });
 
-    const totalInvoicePrice = getListUtils.getSumOfTotalInvoicePrice(certificates);
+    const totalInvoicePrice = await getListUtils.getSumOfTotalInvoicePrice({
+      companyId,
+      startDate,
+      endDate,
+      searchQuery,
+      type,
+      tab,
+      isDeleted: false,
+    });
 
     const withVoucher = await getListUtils.getUnreadCertificateCount({
       userId,
@@ -128,14 +136,14 @@ export const handleGetRequest: IHandleRequest<
     });
 
     // Info: (20241126 - Murky) Record already read certificate
-    getListUtils.upsertUserReadCertificates({
+    await getListUtils.upsertUserReadCertificates({
       userId,
       certificateIdsBeenRead: certificates.map((certificate) => certificate.id),
       nowInSecond,
     });
 
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-    const payloadData = {
+    const payloadData: ICertificateListSummary = {
       totalInvoicePrice,
       unRead: {
         withVoucher,
