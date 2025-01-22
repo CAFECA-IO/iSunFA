@@ -169,9 +169,13 @@
     "SELECT_ALL": "Select All",
     "UPLOADED": "Uploaded",
     "TOTAL": "Total",
-    "CERTIFICATES": "Certificates"
+    "CERTIFICATES": "Certificates",
+    "EMPTY": "Empty"
   },
   "TOAST": {
-    "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error"
+    "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error",
+    "UPLOAD_FILE": "Upload file",
+    "UPLOADING": "Uploading",
+    "COMPLETED": "Completed"
   }
 }

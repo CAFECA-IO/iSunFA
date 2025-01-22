@@ -95,8 +95,8 @@
     "UNIFORM_INVOICE": "統一發票"
   },
   "SELECT": {
-    "TITLE": "選擇發票",
-    "CONTENT": "選擇您想要與傳票關聯的發票"
+    "TITLE": "選擇憑證",
+    "CONTENT": "選擇您想要與傳票關聯的憑證"
   },
   "EXPORT": {
     "TITLE": "匯出發票",
@@ -135,8 +135,8 @@
   "UPLOAD": {
     "FILE": "上傳文件",
     "UPLOADING": "上傳中",
-    "TITLE": "上傳發票",
-    "CONTENT": "請選擇您要上傳的發票",
+    "TITLE": "上傳憑證",
+    "CONTENT": "請選擇您要上傳的憑證",
     "NO_FILE": "沒有上傳中的文件",
     "REMAIN": "剩下 {{count}} 文件",
     "COMPLETE": "成功 {{success}} 文件, 失敗 {{failed}} 文件",
@@ -169,9 +169,13 @@
     "SELECT_ALL": "全選",
     "UPLOADED": "已上傳",
     "TOTAL": "總計",
-    "CERTIFICATES": "發票"
+    "CERTIFICATES": "發票",
+    "EMPTY": "無資料"
   },
   "TOAST": {
-    "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤"
+    "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤",
+    "UPLOAD_FILE": "上傳檔案",
+    "UPLOADING": "上傳中",
+    "COMPLETED": "已完成"
   }
 }

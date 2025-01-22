@@ -233,6 +233,7 @@
     "TYPE_RECEIVE": "Receiving",
     "TYPE_EXPENSE": "Payment",
     "TYPE_TRANSFER": "Transfer",
+    "TYPE_OPENING": "Opening",
     "NOTE": "Note",
     "COUNTERPARTY": "Counterparty",
     "RECURRING_ENTRY": "Recurring Entry",

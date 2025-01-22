@@ -25,16 +25,6 @@ const FAQS: IFaq[] = [
     question: 'FAQ3_QUESTION',
     answer: 'FAQ3_ANSWER',
   },
-  {
-    id: 4,
-    question: 'FAQ4_QUESTION',
-    answer: 'FAQ4_ANSWER',
-  },
-  {
-    id: 5,
-    question: 'FAQ5_QUESTION',
-    answer: 'FAQ5_ANSWER',
-  },
 ];
 
 const SubscriptionFaq = () => {
