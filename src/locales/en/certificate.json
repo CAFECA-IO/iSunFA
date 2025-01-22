@@ -133,6 +133,8 @@
     "REMOVE": "Remove"
   },
   "UPLOAD": {
+    "FILE": "Upload File",
+    "UPLOADING": "Uploading",
     "TITLE": "Upload Certificates",
     "CONTENT": "Upload the certificates you want to attach with the voucher",
     "NO_FILE": "No files uploading",
@@ -143,7 +145,7 @@
     "PHONE_SCANNER": "Phone Scanner",
     "SCAN_WITH_PHONE": "Please scan the QRcode to start scanning with your phone",
     "BACK": "Back",
-    "COMPLETED": "Complete",
+    "COMPLETED": "Completed",
     "USE_YOUR_PHONE_AS": "Use Your Phone as ",
     "SCANNER": "Scanner",
     "SCAN_THE_QRCODE": "Please scan the QRcode to start scanning with your phone",

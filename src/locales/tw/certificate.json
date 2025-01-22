@@ -133,6 +133,8 @@
     "REMOVE": "刪除"
   },
   "UPLOAD": {
+    "FILE": "上傳文件",
+    "UPLOADING": "上傳中",
     "TITLE": "上傳發票",
     "CONTENT": "請選擇您要上傳的發票",
     "NO_FILE": "沒有上傳中的文件",
