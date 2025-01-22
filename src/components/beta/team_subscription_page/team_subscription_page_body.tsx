@@ -20,10 +20,10 @@ const TeamSubscriptionPageBody = ({ team, getTeamData }: TeamSubscriptionPageBod
         {t('subscriptions:SUBSCRIPTIONS_PAGE.CHOOSE_THE_PLAN_THAT_FITS_YOUR_TEAM')}
       </h1>
 
-      <section className="flex">
-        <div className="w-24px flex-none rounded-l-lg border border-stroke-brand-primary bg-surface-brand-primary"></div>
+      <section className="flex overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2">
+        <div className="w-24px flex-none bg-surface-brand-primary"></div>
 
-        <section className="flex flex-auto items-center gap-40px rounded-r-lg border border-stroke-brand-primary bg-surface-brand-primary-5 p-24px">
+        <section className="flex flex-auto items-center gap-40px bg-surface-brand-primary-5 p-24px">
           <h2 className="text-36px font-bold text-text-brand-primary-lv1">{team.name}</h2>
 
           <div className="w-1px self-stretch bg-surface-neutral-depth"></div>

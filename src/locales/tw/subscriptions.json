@@ -34,10 +34,10 @@
     "SUBSCRIPTION_FAQ": "訂閱常見問題",
     "FAQ1_QUESTION": "誰負責支付團隊的訂閱費用？",
     "FAQ1_ANSWER": "任何使用者都可以透過輸入付款資訊將自己的團隊升級到專業計劃。升級後，只有所有者可以管理團隊未來的付款。",
-    "FAQ2_QUESTION": "如何取消我的付費方案？",
-    "FAQ3_QUESTION": "如果每個月都有更多人加入我的團隊怎麼辦？",
-    "FAQ4_QUESTION": "你能開發票給我嗎？",
-    "FAQ5_QUESTION": "有哪些付款方式？"
+    "FAQ2_QUESTION": "我可以免費使用 iSunFA 嗎？",
+    "FAQ2_ANSWER": "是的， iSunFA 基礎版永久免費，無需訂閱或綁定信用卡即可開始體驗。",
+    "FAQ3_QUESTION": "我可以使用什麼付款方式？",
+    "FAQ3_ANSWER": "信用卡 (MasterCard、Visa、JCB) : 自動扣款，確保訂閱不中斷。"
   },
 
   "SUBSCRIPTION_PLAN_CONTENT": {
@@ -139,7 +139,14 @@
   "BILLING_PAGE": {
     "META_TITLE": "帳單",
     "PAGE_TITLE_PREFIX": "",
-    "PAGE_TITLE_SUFFIX": "的帳單"
+    "PAGE_TITLE_SUFFIX": "的帳單",
+    "INVOICE_ID": "發票編號",
+    "BILLING_DATE": "帳單日期",
+    "PLAN": "方案",
+    "AMOUNT": "金額",
+    "STATUS": "狀態",
+    "PAID": "付款成功",
+    "FAILED": "付款失敗"
   },
 
   "INVOICE_PAGE": {
