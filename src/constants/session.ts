@@ -10,7 +10,7 @@ export const SESSION_DEVELOPER: ISessionData = {
   userAgent: DefaultValue.USER_AGENT,
   ipAddress: DefaultValue.IP,
   userId: 10000000,
-  companyId: 10000000,
+  companyId: 10001238,
   roleId: 1006,
   actionTime: 0,
   expires: 0,
