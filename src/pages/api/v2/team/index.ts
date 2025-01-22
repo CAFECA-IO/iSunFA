@@ -19,7 +19,7 @@ const handleGetRequest: IHandleRequest<
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
   const options: IPaginatedOptions<IUserOwnedTeam[]> = {
-    data: FAKE_OWNED_TEAMS,
+    data: FAKE_OWNED_TEAMS.slice(0, 1),
   };
   payload = toPaginatedData(options);
   return { statusMessage, payload };
