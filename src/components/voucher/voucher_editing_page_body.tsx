@@ -69,12 +69,8 @@ const VoucherEditingPageBody: React.FC<{
   const router = useRouter();
 
   const { selectedCompany } = useUserCtx();
-  const {
-    getAccountListHandler,
-    temporaryAssetList,
-    clearTemporaryAssetHandler,
-    clearReverseListHandler,
-  } = useAccountingCtx();
+  const { temporaryAssetList, clearTemporaryAssetHandler, clearReverseListHandler } =
+    useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
@@ -498,13 +494,6 @@ const VoucherEditingPageBody: React.FC<{
   const dateRef = useRef<HTMLDivElement>(null);
   const assetRef = useRef<HTMLDivElement>(null);
   const voucherLineRef = useRef<HTMLDivElement>(null);
-
-  // Info: (20241004 - Julian) 取得會計科目列表
-  useEffect(() => {
-    if (selectedCompany) {
-      getAccountListHandler(selectedCompany.id);
-    }
-  }, [selectedCompany]);
 
   // Info: (20241007 - Julian) 日期未選擇時顯示提示
   useEffect(() => {

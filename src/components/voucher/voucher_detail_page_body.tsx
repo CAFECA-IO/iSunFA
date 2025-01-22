@@ -382,7 +382,9 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
             type="button"
             variant="tertiary"
             size={'defaultSquare'}
-            disabled={isReverseRelated} // Info: (20250120 - Julian) 被刪除或反轉的傳票不能編輯
+            // Info: (20250120 - Julian) 被刪除或反轉的傳票不能編輯
+            // ToDo: (20250122 - Julian) 先不開放手動開帳的編輯功能
+            disabled={isReverseRelated || type === EventType.OPENING}
           >
             <FiEdit size={16} />
           </Button>

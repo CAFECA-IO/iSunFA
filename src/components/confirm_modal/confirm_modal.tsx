@@ -24,6 +24,7 @@ import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import { BUFFER_AMOUNT } from '@/constants/config';
+import { IAccount } from '@/interfaces/accounting_account';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -43,7 +44,6 @@ const ConfirmModal = ({
     getAIStatusHandler,
     totalCredit,
     totalDebit,
-    accountList,
     generateAccountTitle,
     accountingVoucher,
     addVoucherRowHandler,
@@ -122,6 +122,8 @@ const ConfirmModal = ({
   const addRowHandler = () => addVoucherRowHandler(1);
   const addDebitRowHandler = () => addVoucherRowHandler(1, VoucherRowType.DEBIT);
   const addCreditRowHandler = () => addVoucherRowHandler(1, VoucherRowType.CREDIT);
+
+  const accountList: IAccount[] = [];
 
   const importVoucherHandler = (initialLineItems?: ILineItem[]) => {
     try {
