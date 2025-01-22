@@ -4,7 +4,7 @@ import {
   getCertificatesV2,
   getUnreadCertificateCount,
   upsertUserReadCertificates,
-} from '@/lib/utils/repo/certificate.repo';
+ sumTotalInvoicePrice } from '@/lib/utils/repo/certificate.repo';
 import {
   ICertificate,
   ICertificateEntity,
@@ -392,13 +392,16 @@ export const certificateAPIGetListUtils = {
     return currency;
   },
 
-  getSumOfTotalInvoicePrice: (certificates: ICertificate[]): number => {
-    return certificates.reduce((acc, certificate) => {
-      if (!certificate?.invoice?.totalPrice) {
-        return acc;
-      }
-      return acc + certificate.invoice.totalPrice;
-    }, 0);
+  getSumOfTotalInvoicePrice: async (options: {
+    companyId: number;
+    startDate?: number;
+    endDate?: number;
+    searchQuery?: string;
+    type?: InvoiceType;
+    tab?: InvoiceTabs;
+    isDeleted?: boolean;
+  }): Promise<number> => {
+    return sumTotalInvoicePrice(options);
   },
 
   upsertUserReadCertificates: (options: {
