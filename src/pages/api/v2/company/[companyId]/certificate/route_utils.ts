@@ -4,7 +4,8 @@ import {
   getCertificatesV2,
   getUnreadCertificateCount,
   upsertUserReadCertificates,
- sumTotalInvoicePrice } from '@/lib/utils/repo/certificate.repo';
+  getAllFilteredInvoice,
+} from '@/lib/utils/repo/certificate.repo';
 import {
   ICertificate,
   ICertificateEntity,
@@ -401,7 +402,12 @@ export const certificateAPIGetListUtils = {
     tab?: InvoiceTabs;
     isDeleted?: boolean;
   }): Promise<number> => {
-    return sumTotalInvoicePrice(options);
+    const result = await getAllFilteredInvoice(options);
+    const totalPrice = result.reduce((acc, certificate) => {
+      const invoiceTotalPrice = certificate.invoices[0]?.totalPrice || 0;
+      return acc + invoiceTotalPrice;
+    }, 0);
+    return totalPrice;
   },
 
   upsertUserReadCertificates: (options: {

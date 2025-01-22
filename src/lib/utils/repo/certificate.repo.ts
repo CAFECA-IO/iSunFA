@@ -616,7 +616,7 @@ export async function deleteMultipleCertificates(options: {
   return deletedIds;
 }
 
-export async function sumTotalInvoicePrice(options: {
+export async function getAllFilteredInvoice(options: {
   companyId: number;
   startDate?: number;
   endDate?: number;
@@ -740,10 +740,5 @@ export async function sumTotalInvoicePrice(options: {
     },
   });
 
-  const totalPrice = result.reduce((acc, certificate) => {
-    const invoiceTotalPrice = certificate.invoices[0]?.totalPrice || 0;
-    return acc + invoiceTotalPrice;
-  }, 0);
-
-  return totalPrice;
+  return result;
 }
