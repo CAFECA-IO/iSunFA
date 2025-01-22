@@ -2,7 +2,7 @@ import { ProgressStatus } from '@/constants/account';
 import { APIName } from '@/constants/api_connection';
 import { EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
+import { IAccount } from '@/interfaces/accounting_account';
 import { IAssetDetails, IAssetPostOutput } from '@/interfaces/asset';
 import { IJournal } from '@/interfaces/journal';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
@@ -75,22 +75,6 @@ interface IAccountingContext {
   deleteOCRHandler: (aichId: string) => void;
   addPendingOCRHandler: (item: IOCRItem) => void;
   deletePendingOCRHandler: (uploadIdentifier: string) => void;
-  accountList: IAccount[];
-  getAccountListHandler: (
-    companyId: number,
-    type?: string,
-    liquidity?: string,
-    page?: number,
-    limit?: number,
-    // Info: (20240722 - Murky) @Julian, query will match IAccountQueryArgs
-    includeDefaultAccount?: boolean,
-    reportType?: string,
-    equityType?: string,
-    forUser?: boolean,
-    sortBy?: string,
-    sortOrder?: string,
-    searchKey?: string
-  ) => void;
   getAIStatusHandler: (
     params: { companyId: number; askAIId: string } | undefined,
     update: boolean
@@ -114,7 +98,6 @@ interface IAccountingContext {
   accountingVoucher: IAccountingVoucher[];
   addVoucherRowHandler: (count: number, type?: VoucherRowType) => void;
   changeVoucherAccountHandler: (index: number, account: IAccount | undefined) => void;
-  deleteVoucherRowHandler: (id: number) => void;
   changeVoucherStringHandler: (index: number, value: string, type: VoucherString) => void;
   changeVoucherAmountHandler: (
     index: number,
@@ -156,8 +139,6 @@ const initialAccountingContext: IAccountingContext = {
   deleteOCRHandler: () => {},
   addPendingOCRHandler: () => {},
   deletePendingOCRHandler: () => {},
-  accountList: [],
-  getAccountListHandler: () => {},
   getAIStatusHandler: () => {},
   AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
@@ -176,7 +157,6 @@ const initialAccountingContext: IAccountingContext = {
 
   accountingVoucher: [],
   addVoucherRowHandler: () => {},
-  deleteVoucherRowHandler: () => {},
   changeVoucherStringHandler: () => {},
   changeVoucherAccountHandler: () => {},
   changeVoucherAmountHandler: () => {},
@@ -206,11 +186,6 @@ export const AccountingContext = createContext<IAccountingContext>(initialAccoun
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const { userAuth, selectedCompany, isSignIn } = useUserCtx();
-  const {
-    trigger: getAccountList,
-    data: accountTitleList,
-    success: accountSuccess,
-  } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
   const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.ASK_AI_STATUS);
   const {
     trigger: listUnprocessedOCR,
@@ -218,11 +193,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     success: listSuccess,
     code: listCode,
   } = APIHandler<IOCR[]>(APIName.OCR_LIST);
-  const {
-    trigger: deleteAccountById,
-    data: deleteResult,
-    success: deleteSuccess,
-  } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID);
+  const { trigger: deleteAccountById } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID);
 
   const [OCRListParams, setOCRListParams] = useState<
     { companyId: number; update: boolean } | undefined
@@ -250,7 +221,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [totalDebit, setTotalDebit] = useState<number>(0); // Info: (20240430 - Julian) 計算總借方
   const [totalCredit, setTotalCredit] = useState<number>(0); // Info: (20240430 - Julian) 計算總貸方
 
-  const [accountList, setAccountList] = useState<IAccount[]>([]);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [inputDescription, setInputDescription] = useState<string>('');
 
@@ -264,47 +234,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }>({});
 
   const [reverseList, setReverseList] = useState<{ [key: string]: IReverseItemUI[] }>({});
-
-  const getAccountListHandler = (
-    companyId: number,
-    type?: string,
-    liquidity?: string,
-    page?: number,
-    limit?: number,
-    // ToDo: (20240719 - Julian) [Beta] lack of keyword search
-    // Info: (20240722 - Murky) @Julian, query will match IAccountQueryArgs
-    includeDefaultAccount?: boolean,
-    reportType?: string,
-    equityType?: string,
-    forUser?: boolean,
-    sortBy?: string,
-    sortOrder?: string,
-    searchKey?: string
-    // isDeleted?: boolean // Info: (20240806 - Murky)
-  ) => {
-    // Deprecated: (20241115 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('執行 getAccountListHandler, 會打 API: getAccountList');
-
-    getAccountList({
-      params: { companyId },
-      query: {
-        type,
-        liquidity,
-        page,
-        limit: Number.MAX_SAFE_INTEGER,
-        // Info: (20240720 - Murky) @Julian, I set default value for these query params
-        includeDefaultAccount: true,
-        reportType,
-        equityType,
-        forUser: true,
-        sortBy,
-        sortOrder,
-        searchKey,
-        isDeleted: false,
-      },
-    });
-  };
 
   const getAIStatusHandler = useCallback(
     (params: { companyId: number; askAIId: string } | undefined, update: boolean) => {
@@ -506,12 +435,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }, [isSignIn, selectedCompany]);
 
   useEffect(() => {
-    if (accountSuccess && accountTitleList) {
-      setAccountList(accountTitleList.data);
-    }
-  }, [accountSuccess, accountTitleList]);
-
-  useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
 
     if (OCRListParams && OCRListParams.update) {
@@ -624,14 +547,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     [accountingVoucher]
   );
 
-  // Info: (20240430 - Julian) 刪除日記帳列
-  const deleteVoucherRowHandler = useCallback(
-    (id: number) => {
-      setAccountingVoucher((prev) => prev.filter((voucher) => voucher.id !== id));
-    },
-    [accountingVoucher]
-  );
-
   const changeVoucherAccountHandler = useCallback(
     (index: number, account: IAccount | undefined) => {
       setAccountingVoucher((prev) => {
@@ -726,13 +641,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     setTotalCredit(credit);
   }, [accountingVoucher]);
 
-  useEffect(() => {
-    if (deleteSuccess && deleteResult) {
-      // Info: (20240719 - Julian) 重新取得 account list
-      getAccountListHandler(deleteResult.companyId);
-    }
-  }, [deleteSuccess, deleteResult]);
-
   const setInvoiceIdHandler = useCallback(
     (id: string | undefined) => setInvoiceId(id),
     [invoiceId]
@@ -818,13 +726,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       deleteOCRHandler,
       addPendingOCRHandler,
       deletePendingOCRHandler,
-      accountList,
-      getAccountListHandler,
       getAIStatusHandler,
       AIStatus,
       accountingVoucher,
       addVoucherRowHandler,
-      deleteVoucherRowHandler,
       changeVoucherStringHandler,
       changeVoucherAmountHandler,
       resetVoucherHandler,
@@ -866,11 +771,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       OCRList,
       OCRListStatus,
       AIStatus,
-      accountList,
-      getAccountListHandler,
       accountingVoucher,
       addVoucherRowHandler,
-      deleteVoucherRowHandler,
       changeVoucherStringHandler,
       changeVoucherAmountHandler,
       resetVoucherHandler,

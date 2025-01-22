@@ -3,8 +3,6 @@ import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { useAccountingCtx } from '@/contexts/accounting_context';
-import { useUserCtx } from '@/contexts/user_context';
 import Pagination from '@/components/pagination/pagination';
 import AccountingTitleTable, {
   ActionType,
@@ -35,39 +33,20 @@ const ITEM_PER_PAGE = 10;
 
 const AccountingTitlePageBody = () => {
   const { t } = useTranslation(['common', 'setting']);
-  const { selectedCompany } = useUserCtx();
-  const { getAccountListHandler, accountList } = useAccountingCtx();
 
   const [selectedAsset, setSelectedAsset] = useState(AssetOptions.ALL);
   const [selectedLiability, setSelectedLiability] = useState(LiabilityOptions.ALL);
   const [selectedEquity, setSelectedEquity] = useState(EquityOptions.ALL);
   const [searchValue, setSearchValue] = useState('');
   // Info: (20240820 - Julian) 計算總頁數
-  const [totalPage, setTotalPage] = useState(Math.ceil(accountList.length / ITEM_PER_PAGE));
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [totalPage, setTotalPage] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   // Info: (20240820 - Julian) account 列表
   const [ownAccountList, setOwnAccountList] = useState<IAccount[]>([]);
   const [originalAccountList, setOriginalAccountList] = useState<IAccount[]>([]);
 
-  useEffect(() => {
-    if (selectedCompany) {
-      const assetQuery =
-        selectedAsset === AssetOptions.ALL ? undefined : selectedAsset.toLowerCase();
-      const liabilityQuery =
-        selectedLiability === LiabilityOptions.ALL
-          ? undefined
-          : selectedLiability === LiabilityOptions.CURRENT
-            ? 'true'
-            : 'false';
-
-      getAccountListHandler(selectedCompany.id, assetQuery, liabilityQuery);
-    }
-  }, [selectedAsset, selectedLiability, selectedCompany]);
-
-  useEffect(() => {
-    // Info: (20240820 - Julian) 重新計算總頁數
-    setTotalPage(Math.ceil(accountList.length / ITEM_PER_PAGE));
-  }, [selectedAsset, selectedLiability, accountList]);
+  const accountList: IAccount[] = [];
 
   useEffect(() => {
     // Info: (20240820 - Julian) code 中有 '-' 的 account 代表是用戶自己新增的

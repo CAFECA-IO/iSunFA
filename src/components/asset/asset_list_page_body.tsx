@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'next-i18next';
 import AssetList from '@/components/asset/asset_list';
 import FilterSection from '@/components/filter_section/filter_section';
 import Pagination from '@/components/pagination/pagination';
 import { useUserCtx } from '@/contexts/user_context';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
 import { AssetStatus, AccountCodesOfAsset, AssetEntityType } from '@/constants/asset';
-import { useTranslation } from 'next-i18next';
+import { SortBy, SortOrder } from '@/constants/sort';
 import { IAssetItem } from '@/interfaces/asset';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { SortBy, SortOrder } from '@/constants/sort';
+import APIHandler from '@/lib/utils/api_handler';
+import { IPaginatedAccount } from '@/interfaces/accounting_account';
 
 const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('asset');
   const { selectedCompany } = useUserCtx();
-  const { accountList, getAccountListHandler } = useAccountingCtx();
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
   const params = { companyId };
+
+  const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
@@ -31,7 +33,6 @@ const AssetListPageBody: React.FC = () => {
   );
   const [residualValueSort, setResidualValueSort] = useState<null | SortOrder>(null);
   const [remainingLifeSort, setRemainingLifeSort] = useState<null | SortOrder>(null);
-
   const [selectedSort, setSelectedSort] = useState<
     | {
         by: SortBy;
@@ -40,9 +41,7 @@ const AssetListPageBody: React.FC = () => {
     | undefined
   >();
 
-  useEffect(() => {
-    getAccountListHandler(companyId);
-  }, [companyId]);
+  const [assetTypeOptions, setAssetTypeOptions] = useState<string[]>([AssetEntityType.ALL]);
 
   useEffect(() => {
     let sort: { by: SortBy; order: SortOrder } | undefined;
@@ -69,10 +68,32 @@ const AssetListPageBody: React.FC = () => {
     remainingLifeSort,
   ]);
 
-  // Info: (20241024 - Julian) 資產類別列表
-  const assetTypeList = accountList
-    .filter((account) => AccountCodesOfAsset.includes(account.code))
-    .map((account) => account.code);
+  // Info: (20241024 - Julian) 取得資產類別列表
+  useEffect(() => {
+    const getAccountList = async () => {
+      try {
+        const { data: accountData, success } = await getAccountListAPI({
+          params,
+          query: { limit: 9999 }, // Info: (20250122 - Julian) 一次取得全部
+        });
+
+        if (success && accountData) {
+          const accountList = accountData.data;
+
+          const assetTypeList = accountList
+            .filter((account) => AccountCodesOfAsset.includes(account.code))
+            .map((account) => account.code);
+          setAssetTypeOptions([AssetEntityType.ALL, ...assetTypeList]);
+        }
+      } catch (error) {
+        // Deprecated: (20241024 - Julian)
+        // eslint-disable-next-line no-console
+        console.log('取得資產類別列表失敗');
+      }
+    };
+
+    getAccountList();
+  }, [companyId]);
 
   // Info: (20241024 - Julian) 資產狀態列表
   const assetStatusList = Object.values(AssetStatus);
@@ -92,7 +113,7 @@ const AssetListPageBody: React.FC = () => {
           params={params}
           apiName={APIName.ASSET_LIST_V2}
           onApiResponse={handleApiResponse}
-          types={[AssetEntityType.ALL, ...assetTypeList]}
+          types={assetTypeOptions}
           statuses={[AssetStatus.ALL, ...assetStatusList]}
           page={currentPage}
           pageSize={DEFAULT_PAGE_LIMIT}

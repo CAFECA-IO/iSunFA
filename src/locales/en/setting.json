@@ -150,7 +150,9 @@
     "CANCEL_BTN": "Cancel",
     "SUBMIT_BTN": "Submit",
     "NO_ACCOUNTING_FOUND": "No Account Title Found.",
-    "ADD_NEW_ROW": "Please add new row."
+    "ADD_NEW_ROW": "Please add new row.",
+    "TOAST_OPENING_SUCCESS": "Manual account opening success.",
+    "TOAST_OPENING_FAIL": "Failed to open account, please try again later."
   },
   "IP": {
     "INFO": "Login device & IP information",

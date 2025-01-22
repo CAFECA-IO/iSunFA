@@ -150,7 +150,9 @@
     "CANCEL_BTN": "取消",
     "SUBMIT_BTN": "提交",
     "NO_ACCOUNTING_FOUND": "找不到會計科目。",
-    "ADD_NEW_ROW": "請新增項目。"
+    "ADD_NEW_ROW": "請新增項目。",
+    "TOAST_OPENING_SUCCESS": "手動開帳成功。",
+    "TOAST_OPENING_FAIL": "無法開帳，請稍後重試。"
   },
   "IP": {
     "INFO": "登入裝置與 IP 資訊",
