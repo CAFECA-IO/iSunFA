@@ -8,6 +8,8 @@ import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 import { ITeamInvoice } from '@/interfaces/subscription';
 import { checkRequestData, checkSessionUser, checkUserAuthorization } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
+// Deprecated: (20250122 - Luphia) remove eslint-disable
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { FAKE_INVOICE_LIST } from '@/lib/services/subscription_service';
 
 const handleGetRequest = async (req: NextApiRequest) => {
@@ -26,7 +28,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
   const options: IPaginatedOptions<ITeamInvoice[]> = {
-    data: FAKE_INVOICE_LIST,
+    data: [], // FAKE_INVOICE_LIST,
   };
 
   const payload: IPaginatedData<ITeamInvoice[]> = toPaginatedData(options);
