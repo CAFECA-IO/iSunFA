@@ -233,6 +233,7 @@
     "TYPE_RECEIVE": "收入",
     "TYPE_EXPENSE": "支付",
     "TYPE_TRANSFER": "移轉",
+    "TYPE_OPENING": "開帳",
     "NOTE": "備註",
     "COUNTERPARTY": "交易對象",
     "RECURRING_ENTRY": "週期性分錄",

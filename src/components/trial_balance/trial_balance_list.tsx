@@ -87,6 +87,8 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         });
 
         if (response.success && response.data) {
+          // eslint-disable-next-line no-console
+          // console.log('Fetched Trial Balance Data:', response.data);
           setAccountList(response.data.items.data); // Info: (20241204 - Anna) 更新帳戶列表
           setTotalData(response.data.total); // Info: (20241205 - Anna) 更新總計資料
           setHasFetchedOnce(true); // Info: (20241204 - Anna) 標記為已成功請求

@@ -86,14 +86,14 @@ const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({
           <div className="flex-auto flex-col items-center text-center">
             <div className="flex items-center justify-center space-x-2 text-lg font-semibold">
               <Image src="/elements/cloud_upload.svg" width={24} height={24} alt="Upload icon" />
-              <div>Upload file</div>
+              <div>{t('certificate:UPLOAD.FILE')}</div>
             </div>
             {files.length > 0 && (
               <div className="pb-4 pt-2">
                 <p className="text-sm text-file-uploading-text-disable">
                   {uploadingFileCount > 0
-                    ? `Uploading (${uploadingFileCount}/${files.length})...`
-                    : `Completed (${files.length - uploadingFileCount}/${files.length})`}
+                    ? `${t('certificate:UPLOAD.UPLOADING')} (${uploadingFileCount}/${files.length})...`
+                    : `${t('certificate:UPLOAD.COMPLETED')} (${files.length - uploadingFileCount}/${files.length})`}
                 </p>
               </div>
             )}
