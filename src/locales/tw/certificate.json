@@ -133,8 +133,10 @@
     "REMOVE": "刪除"
   },
   "UPLOAD": {
-    "TITLE": "上傳憑證",
-    "CONTENT": "請選擇您要上傳的憑證",
+    "FILE": "上傳文件",
+    "UPLOADING": "上傳中",
+    "TITLE": "上傳發票",
+    "CONTENT": "請選擇您要上傳的發票",
     "NO_FILE": "沒有上傳中的文件",
     "REMAIN": "剩下 {{count}} 文件",
     "COMPLETE": "成功 {{success}} 文件, 失敗 {{failed}} 文件",
