@@ -117,7 +117,7 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
               className={`flex h-full w-full flex-col items-center justify-center ${isSelectable ? 'hidden' : ''}`}
             >
               <Image src="/elements/empty_box.svg" alt="empty" width={32} height={32} />
-              <div className="text-sm text-text-neutral-mute">Empty</div>
+              <div className="text-sm text-text-neutral-mute">{t('certificate:COMMON.EMPTY')}</div>
             </div>
           )}
           {isSelectable && (
