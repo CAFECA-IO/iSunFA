@@ -112,6 +112,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail when companyId and voucherId are ready
     if (companyId && voucherId) {
+      // eslint-disable-next-line no-console
+      console.log('API Params:', params); // Info: (20250122 - Anna) 檢查 companyId 和 voucherId 是否正確
       getVoucherDetail();
     }
   }, [companyId, voucherId]);
