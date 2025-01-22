@@ -34,10 +34,10 @@
     "SUBSCRIPTION_FAQ": "Subscription FAQ",
     "FAQ1_QUESTION": "Who is responsible for team payments?",
     "FAQ1_ANSWER": "Any user can upgrade their own team to the Professional plan by entering payment information. After upgrading, only owner can manage future payments for the team.",
-    "FAQ2_QUESTION": "How do I cancel my paid plan?",
-    "FAQ3_QUESTION": "What if more people are added to my team every month?",
-    "FAQ4_QUESTION": "Can you send me an invoice?",
-    "FAQ5_QUESTION": "What are the payment methods?"
+    "FAQ2_QUESTION": "Can I use iSunFA for free?",
+    "FAQ2_ANSWER": "Yes, the Basic Plan of iSunFA is free forever. No subscription or credit card is required to get started.",
+    "FAQ3_QUESTION": "What payment methods are supported?",
+    "FAQ3_ANSWER": "Credit Cards (MasterCard, Visa, JCB): Auto-renewal ensures uninterrupted subscription services."
   },
 
   "SUBSCRIPTION_PLAN_CONTENT": {
