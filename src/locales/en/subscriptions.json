@@ -139,7 +139,14 @@
   "BILLING_PAGE": {
     "META_TITLE": "Billing",
     "PAGE_TITLE_PREFIX": "Billing of",
-    "PAGE_TITLE_SUFFIX": ""
+    "PAGE_TITLE_SUFFIX": "",
+    "INVOICE_ID": "Invoice ID",
+    "BILLING_DATE": "Billing Date",
+    "PLAN": "Plan",
+    "AMOUNT": "Amount",
+    "STATUS": "Status",
+    "PAID": "Paid",
+    "FAILED": "Failed"
   },
 
   "INVOICE_PAGE": {

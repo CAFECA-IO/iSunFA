@@ -139,7 +139,14 @@
   "BILLING_PAGE": {
     "META_TITLE": "帳單",
     "PAGE_TITLE_PREFIX": "",
-    "PAGE_TITLE_SUFFIX": "的帳單"
+    "PAGE_TITLE_SUFFIX": "的帳單",
+    "INVOICE_ID": "發票編號",
+    "BILLING_DATE": "帳單日期",
+    "PLAN": "方案",
+    "AMOUNT": "金額",
+    "STATUS": "狀態",
+    "PAID": "付款成功",
+    "FAILED": "付款失敗"
   },
 
   "INVOICE_PAGE": {
