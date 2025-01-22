@@ -4,6 +4,7 @@ import {
   getCertificatesV2,
   getUnreadCertificateCount,
   upsertUserReadCertificates,
+  getAllFilteredInvoice,
 } from '@/lib/utils/repo/certificate.repo';
 import {
   ICertificate,
@@ -392,13 +393,21 @@ export const certificateAPIGetListUtils = {
     return currency;
   },
 
-  getSumOfTotalInvoicePrice: (certificates: ICertificate[]): number => {
-    return certificates.reduce((acc, certificate) => {
-      if (!certificate?.invoice?.totalPrice) {
-        return acc;
-      }
-      return acc + certificate.invoice.totalPrice;
+  getSumOfTotalInvoicePrice: async (options: {
+    companyId: number;
+    startDate?: number;
+    endDate?: number;
+    searchQuery?: string;
+    type?: InvoiceType;
+    tab?: InvoiceTabs;
+    isDeleted?: boolean;
+  }): Promise<number> => {
+    const result = await getAllFilteredInvoice(options);
+    const totalPrice = result.reduce((acc, certificate) => {
+      const invoiceTotalPrice = certificate.invoices[0]?.totalPrice || 0;
+      return acc + invoiceTotalPrice;
     }, 0);
+    return totalPrice;
   },
 
   upsertUserReadCertificates: (options: {

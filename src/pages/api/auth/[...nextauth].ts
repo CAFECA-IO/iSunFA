@@ -255,10 +255,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Info: (20250114 - Luphia) 將 session id 寫入 cookie 內的 isunfa 參數
   const session = await getSession(req);
-  res.setHeader(
-    'Set-Cookie',
-    `isunfa=${session.isunfa}; Path=/; HttpOnly; SameSite=Strict; Secure`
-  );
+  res.setHeader('isunfa', session.isunfa);
 
   NextAuth(req, res, authOptions);
 }

@@ -22,10 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Info: (20250114 - Luphia) Step 0: generate session id in cookie.isunfa
     const session = await getSession(req);
-    res.setHeader(
-      'Set-Cookie',
-      `isunfa=${session.isunfa}; Path=/; HttpOnly; SameSite=Strict; Secure`
-    );
+    res.setHeader('isunfa', session.isunfa);
 
     // Info: (20241129 - tzuhan) Step 1: Handle Apple OAuth
     const { user, account } = await handleAppleOAuth(code);

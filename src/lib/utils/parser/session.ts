@@ -8,16 +8,29 @@ const randomSessionId = () => {
   return sessionId;
 };
 
-/* Info: (20250114 - Luphia) 解析 session ID
- * 1. 從 cookie 中解析 session ID，資料在 options.cookie.isunfa
- * 2. 從 session data 中解析 session ID，資料在 options.isunfa
- * 3. 若無法解析，則隨機生成一個 session ID
- * 4. 返回 session ID
+/* Info: (20250122 - Luphia) 解析 session ID
+ * 1. 從 header 中解析 isunfa 作為 session ID
+ * 2. 從 session 資料中解析 isunfa 作為 session ID
+ * 3. 從 header 中解析 csrf 作為 session ID
+ * 4. 從 cookie 中解析 csrf 作為 session ID
+ * 5. 若無法解析，則隨機生成一個 session ID
+ * 6. 返回 session ID
  */
 export const parseSessionId = (options: ISessionOption | ISessionData) => {
+  // Info: (20250122 - Luphia) step 1
+  const isunfaInHeader = (options as ISessionData).isunfa;
   const cookieHeader = (options as ISessionOption).cookie;
-  const isunfaInCookie = (parseCookie(cookieHeader) as { isunfa: string }).isunfa;
+  const cookieData = parseCookie(cookieHeader);
+  // Info: (20250122 - Luphia) step 2
   const isunfaInSession = (options as ISessionData).isunfa;
-  const sessionId = isunfaInSession || isunfaInCookie || randomSessionId();
+  const findCsrfKeyInHeader = Object.keys(options).find((key) => key.includes('csrf')) as string;
+  // Info: (20250122 - Luphia) step 3
+  const crsfInHeader = (options as { [key: string]: string })[findCsrfKeyInHeader];
+  const findCsrfKeyInCookie = Object.keys(cookieData).find((key) => key.includes('csrf')) as string;
+  // Info: (20250122 - Luphia) step 4
+  const crsfInCookie = (cookieData as { [key: string]: string })[findCsrfKeyInCookie];
+  // Info: (20250122 - Luphia) step 5
+  const randomId = randomSessionId();
+  const sessionId = isunfaInSession || isunfaInHeader || crsfInHeader || crsfInCookie || randomId;
   return sessionId;
 };
