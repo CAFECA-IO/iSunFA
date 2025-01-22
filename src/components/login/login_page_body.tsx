@@ -14,8 +14,8 @@ import TermsOfServiceModal from '@/components/login/terms_of_service_modal';
 import Loader from '@/components/loader/loader';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
-// ToDo: (20241119 - Liz) Beta version 不支援 Apple 登入
-const IS_APPLE_LOGIN_ENABLED = true;
+// ToDo: (20250122 - Liz) Apple Login 功能待修復
+const IS_APPLE_LOGIN_ENABLED = false;
 
 const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
   const { t } = useTranslation('dashboard');
@@ -89,7 +89,6 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
                 type="button"
                 onClick={handleAppleSignIn}
                 className="flex items-center justify-center gap-15px rounded-sm bg-black p-15px disabled:bg-button-surface-strong-disable"
-                disabled={IS_APPLE_LOGIN_ENABLED}
               >
                 <IoLogoApple size={24} color="white" />
                 <p className="text-xl font-medium text-white">
