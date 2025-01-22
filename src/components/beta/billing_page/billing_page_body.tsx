@@ -120,13 +120,13 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     [amountSort, billingDateSort, invoiceIDSort]
   );
 
-  // Info: (20250116 - Anna) 使用 useEffect 呼叫 fetchInvoiceData
+  // Info: (20250122 - Liz) 打 API 取得發票列表
   useEffect(() => {
     if (!team) return;
 
     const fetchInvoiceData = async () => {
       try {
-        // Info: (20250121 - Liz) // 組裝查詢參數
+        // Info: (20250121 - Liz) 組裝查詢參數
         const query = {
           page: 1,
           pageSize: 10,
