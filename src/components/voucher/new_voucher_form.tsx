@@ -95,6 +95,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const typeList = Object.values(VoucherType).filter((type) => type !== VoucherType.OPENING);
 
   // Info: (20241108 - Julian) POST ASK AI
+  // Deprecated: (20250122 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { trigger: askAI, isLoading: isAskingAI } = APIHandler<{
     reason: string;
@@ -102,6 +103,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   }>(APIName.ASK_AI_V2);
 
   // Info: (20241108 - Julian) GET AI RESULT
+  // Deprecated: (20250122 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { trigger: getAIResult, success: analyzeSuccess } = APIHandler<IAIResultVoucher>(
     APIName.ASK_AI_RESULT_V2
@@ -158,8 +160,10 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const [isShowReverseHint, setIsShowReverseHint] = useState<boolean>(false);
 
   // Info: (20241018 - Tzuhan) AI 分析相關 state
+  // Deprecated: (20250122 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
+  // Deprecated: (20250122 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
   const [targetIdList, setTargetIdList] = useState<number[]>([]);
