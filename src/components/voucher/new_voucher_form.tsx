@@ -74,13 +74,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const router = useRouter();
 
   const { selectedCompany } = useUserCtx();
-  const {
-    getAccountListHandler,
-    temporaryAssetList,
-    clearTemporaryAssetHandler,
-    reverseList,
-    clearReverseListHandler,
-  } = useAccountingCtx();
+  const { temporaryAssetList, clearTemporaryAssetHandler, reverseList, clearReverseListHandler } =
+    useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
@@ -437,13 +432,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const dateRef = useRef<HTMLDivElement>(null);
   const assetRef = useRef<HTMLDivElement>(null);
   const voucherLineRef = useRef<HTMLDivElement>(null);
-
-  // Info: (20241004 - Julian) 取得會計科目列表
-  useEffect(() => {
-    if (selectedCompany) {
-      getAccountListHandler(selectedCompany.id);
-    }
-  }, [selectedCompany]);
 
   // Info: (20241007 - Julian) 如果單位改變，則重設 Recurring Array
   // useEffect(() => {
