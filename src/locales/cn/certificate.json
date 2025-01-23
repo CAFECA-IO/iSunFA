@@ -95,8 +95,8 @@
     "UNIFORM_INVOICE": "统一发票"
   },
   "SELECT": {
-    "TITLE": "选择发票",
-    "CONTENT": "选择您想要传票关联的发票"
+    "TITLE": "选择凭证",
+    "CONTENT": "选择您想要传票关联的凭证"
   },
   "EXPORT": {
     "TITLE": "导出发票",
@@ -123,7 +123,8 @@
     "EDIT_NEW": "编辑客户/供应商",
     "REMOVE_THIS": "删除该客户/供应商",
     "NO_DATA_AVAILABLE": "没有可用资料",
-    "NAME_ALREADY_EXISTS": "此名称已有资料"
+    "NAME_ALREADY_EXISTS": "此名称已有资料",
+    "TAX_ID_ALREADY_EXISTS": "此统一编号已重复使用"
   },
   "LABEL": {
     "NEW": "新增"
@@ -135,8 +136,8 @@
   "UPLOAD": {
     "FILE": "上传文件",
     "UPLOADING": "上传中",
-    "TITLE": "上传发票",
-    "CONTENT": "上传您想要传票关联的发票",
+    "TITLE": "上传凭证",
+    "CONTENT": "上传您想要传票关联的凭证",
     "NO_FILE": "没有上传中的文件",
     "REMAIN": "剩下 {{count}} 文件",
     "COMPLETE": "成功 {{success}} 文件, 失败 {{failed}} 文件",
@@ -169,9 +170,13 @@
     "SELECT_ALL": "全选",
     "UPLOADED": "已上传",
     "TOTAL": "总计",
-    "CERTIFICATES": "发票"
+    "CERTIFICATES": "发票",
+    "EMPTY": "无资料"
   },
   "TOAST": {
-    "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误"
+    "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误",
+    "UPLOAD_FILE": "上传档案",
+    "UPLOADING": "上传中",
+    "COMPLETED": "已完成"
   }
 }

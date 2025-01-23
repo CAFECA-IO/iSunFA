@@ -123,7 +123,8 @@
     "EDIT_NEW": "Edit New Client/Supplier",
     "REMOVE_THIS": "Remove this Client/Supplier",
     "NO_DATA_AVAILABLE": "No Data Available",
-    "NAME_ALREADY_EXISTS": "Data already exists for this name."
+    "NAME_ALREADY_EXISTS": "Data already exists for this name.",
+    "TAX_ID_ALREADY_EXISTS": "This Business Tax has already been used."
   },
   "LABEL": {
     "NEW": "New"
@@ -169,9 +170,13 @@
     "SELECT_ALL": "Select All",
     "UPLOADED": "Uploaded",
     "TOTAL": "Total",
-    "CERTIFICATES": "Certificates"
+    "CERTIFICATES": "Certificates",
+    "EMPTY": "Empty"
   },
   "TOAST": {
-    "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error"
+    "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error",
+    "UPLOAD_FILE": "Upload file",
+    "UPLOADING": "Uploading",
+    "COMPLETED": "Completed"
   }
 }

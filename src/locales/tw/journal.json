@@ -233,6 +233,7 @@
     "TYPE_RECEIVE": "收入",
     "TYPE_EXPENSE": "支付",
     "TYPE_TRANSFER": "移轉",
+    "TYPE_OPENING": "開帳",
     "NOTE": "備註",
     "COUNTERPARTY": "交易對象",
     "RECURRING_ENTRY": "週期性分錄",
@@ -292,7 +293,8 @@
     "DELETE_MESSAGE_CONTENT": "與此傳票相關的所有資產也將被刪除。",
     "DELETE_MESSAGE_SUBMIT_BTN": "是的，刪除傳票",
     "DELETE_SUCCESS_TOAST": "傳票已刪除。",
-    "UNDO": "復原"
+    "UNDO": "復原",
+    "VOUCHER_NOT_FOUND": "找不到傳票，請確認網址是否正確"
   },
   "LEDGER": {
     "LEDGER_PERIOD": "分類帳期間",

@@ -233,6 +233,7 @@
     "TYPE_RECEIVE": "收入",
     "TYPE_EXPENSE": "支付",
     "TYPE_TRANSFER": "移转",
+    "TYPE_OPENING": "开帐",
     "NOTE": "备注",
     "COUNTERPARTY": "交易对象",
     "RECURRING_ENTRY": "周期性分录",
@@ -292,7 +293,8 @@
     "DELETE_MESSAGE_CONTENT": "与此传票相关的所有资产也将被删除。",
     "DELETE_MESSAGE_SUBMIT_BTN": "是的，删除传票",
     "DELETE_SUCCESS_TOAST": "传票已删除。",
-    "UNDO": "复原"
+    "UNDO": "复原",
+    "VOUCHER_NOT_FOUND": "找不到传票，请确认网址是否正确"
   },
   "LEDGER": {
     "LEDGER_PERIOD": "分类帐期间",

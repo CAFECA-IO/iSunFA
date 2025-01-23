@@ -15,7 +15,7 @@ const LandingPageBody: React.FC = () => {
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
       {/* Info: (20241204 - Julian) Background */}
-      <div className="absolute inset-x-0 top-0 h-546px w-full bg-cta bg-cover bg-top bg-no-repeat md:h-670px lg:h-1024px"></div>
+      <div className="absolute inset-x-0 top-0 h-546px w-full bg-cta bg-contain bg-top bg-no-repeat md:h-670px lg:h-1024px"></div>
 
       {/* Info: (20241204 - Julian) Header */}
       <LandingNavbar />
@@ -38,7 +38,7 @@ const LandingPageBody: React.FC = () => {
         <FlexibleFeatureSelection />
 
         {/* Info: (20241223 - Julian) Sunrise */}
-        <div className="h-600px w-full bg-sunrise bg-cover bg-top bg-no-repeat md:h-700px lg:h-850px"></div>
+        <div className="h-600px w-full bg-sunrise bg-contain bg-top bg-no-repeat md:h-700px lg:h-850px"></div>
 
         {/* Info: (20241205 - Julian) Technical Features */}
         <TechnicalFeatures />
