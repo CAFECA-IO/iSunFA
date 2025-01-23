@@ -26,7 +26,7 @@ const LoginAnimation = ({
       clearTimeout(titleTimer);
       clearTimeout(closeAnimation);
     };
-  }, []);
+  }, [setIsAnimationShowing]);
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
@@ -40,7 +40,7 @@ const LoginAnimation = ({
       {/* // Info: (20240925 - Liz) 根據 switchTitle 狀態顯示 Title */}
       {!switchTitle && (
         <div className="z-10 flex animate-fade-in-out">
-          <p className="text-64px font-bold text-surface-brand-secondary">Welcome, </p>
+          <p className="text-64px font-bold text-surface-brand-secondary">Welcome,&nbsp;</p>
           <p className="text-64px font-bold text-surface-brand-primary">{username}</p>
         </div>
       )}

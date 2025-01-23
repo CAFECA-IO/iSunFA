@@ -3,6 +3,10 @@ module.exports = {
   content: ['./src/**/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      flex: {
+        1.5: '1.5',
+        2: '2',
+      },
       height: {
         '50vh': '50vh',
       },
@@ -65,6 +69,7 @@ module.exports = {
         },
         neutral: {
           100: 'var(--neutral-100)',
+          150: 'var(--neutral-150)',
           200: 'var(--neutral-200)',
           25: 'var(--neutral-25)',
           300: 'var(--neutral-300)',
@@ -623,7 +628,7 @@ module.exports = {
         'input-text-input-filled': 'var(--input-text-input-filled)',
         'input-text-input-hover': 'var(--input-text-input-hover)',
         'input-text-input-placeholder': 'var(--input-text-input-placeholder)',
-        'input-text-primary': 'var(--input-text-primary)',
+        'input-text-primary': 'var(--neutral-light)',
         'input-text-secondary': 'var(--input-text-secondary)',
         'input-text-success': 'var(--input-text-success)',
         'input-text-warning': 'var(--input-text-warning)',
@@ -680,6 +685,26 @@ module.exports = {
         'tree-stroke-divider': 'var(--tree-stroke-divider)',
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
+
+        // Info: (20241204 - Julian) New iSunFA Landing Page
+        'landing-page': {
+          black: '#000A12',
+          black2: '#585142',
+
+          mute: '#1C2229',
+
+          orange: '#FFB632',
+
+          white: '#FFFFFF',
+
+          gray: '#C9C9C9',
+
+          taupe: '#E7E0D4',
+          taupe2: '#C1B192',
+        },
+      },
+      backdropBlur: {
+        pricing: '6px',
       },
       backgroundImage: {
         login_bg: "url('/images/login_bg.png')",
@@ -688,6 +713,8 @@ module.exports = {
         purpleLinear: 'linear-gradient(180deg, #3F497A 0%, #313866 100%)',
 
         spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
+
+        ipGradient: 'linear-gradient(0deg, #0024620D 0%, #0024620D 100%, #FFF)',
 
         web: 'url("/elements/web.svg")',
         light_up: 'url("/elements/light_up.svg")',
@@ -705,6 +732,19 @@ module.exports = {
         bg_select_role: 'url("/images/bg_select_role.png")',
         bg_bookkeeper: 'url("/images/bg_bookkeeper.png")',
         bg_educational_trial_version: 'url("/images/bg_educational_trial_version.png")',
+
+        // Info: (20241205 - Julian) Landing Page v2
+        'landing-btn':
+          'radial-gradient(circle at 50% 120%, #FFFFFF80, #FFA502 60%), linear-gradient(to bottom, #FFA502 0%, #FFA502 100%)',
+        'landing-nav': 'radial-gradient(farthest-corner at 50% 200%, #FFFFFF, #FFFFFF4D 50%)',
+        'cloudy-glass': 'radial-gradient(circle at 50% 150%, #FFFFFF, #FFFFFF4D 40%)',
+        cta: 'url("/elements/planet_edge.png")',
+        pricing_top: 'url("/elements/bg_pricing_top.png")',
+        pricing_middle: 'url("/elements/bg_pricing_middle.png")',
+        pricing_bottom: 'url("/elements/bg_pricing_bottom.png")',
+        digital: 'url("/elements/digital.png")',
+        sunrise: 'url("/elements/sunrise.png")',
+        'magic-ball': "url('/elements/magic_ball.png')",
       },
       zIndex: {
         '-10': '-10',
@@ -721,6 +761,7 @@ module.exports = {
         80: '80',
         90: '90',
         100: '100',
+        120: '120',
         10000: '10000',
       },
       fontSize: {
@@ -733,7 +774,7 @@ module.exports = {
         '2xl': ['24px', '32px'],
         '28px': ['28px', '36px'],
         '3xl': ['30px', '36px'],
-        '32px': ['32px', '36px'],
+        '32px': ['32px', '40px'],
         '4xl': ['36px', '40px'],
         '36px': ['36px', '44px'],
         '40px': ['40px', '44px'],
@@ -741,8 +782,10 @@ module.exports = {
         '44px': ['44px', '52px'],
         '48px': ['48px', '52px'],
         '6xl': ['56px', '60px'],
+        '60px': ['60px', '76px'],
         '64px': ['64px', '68px'],
         '7xl': ['72px', 1],
+        '80px': ['80px', '100px'],
         '8xl': ['96px', 1],
         '9xl': ['128px', 1],
         '8px': ['8px', '10px'],
@@ -766,6 +809,7 @@ module.exports = {
         '40px': '40px',
         '36px': '36px',
         '32px': '32px',
+        'extra-loose': '3',
       },
       screens: {
         /* Info: (20240315 - Shirley) 等同於 @media (min-width: ...px) */
@@ -839,6 +883,9 @@ module.exports = {
         'lv-10': 'var(--spacing-lv-10)',
         'lv-11': 'var(--spacing-lv-11)',
         'lv-12': 'var(--spacing-lv-12)',
+        'badge-gap-spacing-sm': 'var(--badge-gap-spacing-sm)',
+        'badge-spacing-x-sm': 'var(--badge-spacing-x-sm)',
+        'badge-spacing-y-sm': 'var(--badge-spacing-y-sm)',
 
         'stroke-width-lv-1': 'var(--stroke-width-lv-1)',
         'stroke-width-lv-2': 'var(--stroke-width-lv-2)',
@@ -946,12 +993,14 @@ module.exports = {
         '85px': '85px',
         '88px': '88px',
         '90px': '90px',
+        '91px': '91px',
         '95px': '95px',
         '98px': '98px',
         // '100px': '100px',
         '105px': '105px',
         '110px': '110px',
-        // '120px': '120px',
+        '112px': '112px',
+        '114px': '114px',
         '122px': '122px',
         '125px': '125px',
         '128px': '128px',
@@ -967,6 +1016,8 @@ module.exports = {
         '182px': '182px',
         '190px': '190px',
         '200px': '200px',
+        '210px': '210px',
+        '212px': '212px',
         '220px': '220px',
         '225px': '225px',
         '236px': '236px',
@@ -989,6 +1040,7 @@ module.exports = {
         '310px': '310px',
         '320px': '320px',
         '330px': '330px',
+        '335px': '335px',
         '340px': '340px',
         '350px': '350px',
         '354px': '354px',
@@ -1010,10 +1062,11 @@ module.exports = {
         '438px': '438px',
         '440px': '440px',
         '450px': '450px',
-        '452px': '452px',
+        '472px': '472px',
         '475px': '475px',
         '479px': '479px',
         '480px': '480px',
+        '489px': '489px',
         '500px': '500px',
         '505px': '505px',
         '510px': '510px',
@@ -1021,7 +1074,9 @@ module.exports = {
 
         '520px': '520px',
         '530px': '530px',
+        '536px': '536px',
         '540px': '540px',
+        '546px': '546px',
         '549px': '549px',
         '550px': '550px',
         '555px': '555px',
@@ -1036,18 +1091,24 @@ module.exports = {
         '640px': '640px',
         '650px': '650px',
         '660px': '660px',
+        '670px': '670px',
         '675px': '675px',
         '678px': '678px',
         '700px': '700px',
+        '720px': '720px',
         '726px': '726px',
         '750px': '750px',
         '800px': '800px',
         '850px': '850px',
         '865px': '865px',
+        '894px': '894px',
         '900px': '900px',
+        '920px': '920px',
         '950px': '950px',
         '960px': '960px',
+        '978px': '978px',
         '1000px': '1000px',
+        '1024px': '1024px',
         '1100px': '1100px',
         '1200px': '1200px',
         '1280px': '1280px',
@@ -1062,6 +1123,7 @@ module.exports = {
         '1900px': '1900px',
         '1920px': '1920px',
         '2000px': '2000px',
+        '2560px': '2560px',
         '0.1rem': '0.1rem',
         '0.2rem': '0.2rem',
         '1.3rem': '1.3rem',
@@ -1188,7 +1250,10 @@ module.exports = {
         '80%': '80%',
         '95%': '95%',
 
+        '46vh': '46vh',
         '60vh': '60vh',
+        '70vh': '70vh',
+        '75vh': '75vh',
         '80vh': '80vh',
         '90vh': '90vh',
         '95vh': '95vh',
@@ -1220,6 +1285,8 @@ module.exports = {
         // Info: (20240315- Shirley) A4 尺寸
         'a4-width': '595px',
         'a4-height': '842px',
+
+        auto: 'auto',
       },
       translate: {
         '19rem': '19rem',
@@ -1328,17 +1395,30 @@ module.exports = {
         Dropshadow_XS:
           '0px 2px 5px var(--shadow-lv-5, rgba(49, 67, 98, 0.10)), 0px 6px 10px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 11px 13px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 28px 15px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 50px 17px var(--shadow-lv-1, rgba(49, 67, 98, 0.00))',
 
-        // Shadow/Down/Dropshadow_S
+        // Info: (20241023 - Liz) Shadow/Down/Dropshadow_S
         Dropshadow_S:
           '0px 83px 23px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 53px 21px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 30px 18px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 13px 13px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 3px 7px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
 
-        // Shadow/Down/Dropshadow_M
+        // Info: (20241023 - Liz) /* Drop Shadow/sm */
+        Dropshadow_SM: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+
+        // Info: (20241023 - Liz) Shadow/Down/Dropshadow_M
         Dropshadow_M:
           '0px 166px 46px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
 
-        // Side menu
+        // Info: (20241023 - Liz) Side menu
         SideMenu:
           '50px 0px 17px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 28px 0px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 11px 0px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 6px 0px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 2px 0px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
+
+        normal_setting_brand:
+          '0px 50px 17px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 28px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 11px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 6px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 2px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
+
+        'landing-nav': 'inset 0px -1px 8px 4px rgba(255, 255, 255, 0.4)',
+        'landing-btn':
+          'inset 2px 4px 5px 0px rgba(255, 255, 255, 0.4), inset -2px -4px 5px 0px rgba(255, 255, 255, 0.4)',
+        'landing-btn-hover':
+          'inset 2px 4px 5px 0px rgba(255, 255, 255, 0.4), inset -2px -4px 5px 0px rgba(255, 255, 255, 0.4), 0px 0px 70px 10px rgba(255, 182, 50, 0.5)',
+        'technical-card': '0px 0px 80px 50px #120C00',
       },
       dropShadow: {
         xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',
@@ -1349,11 +1429,13 @@ module.exports = {
 
         '3xl': '0 35px 35px rgba(0, 0, 0, 0.25)',
         '4xl': ['0 35px 35px rgba(0, 0, 0, 0.25)', '0 45px 65px rgba(0, 0, 0, 0.15)'],
+        halo: '0px 0px 40px rgba(255, 182, 50, 0.5)',
       },
       fontFamily: {
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         barlow: ['Barlow', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         poppins: ['Poppins', 'sans-serif'],
+        'dm-sans': ['DM Sans', 'sans-serif'],
       },
       width: {
         'full-available': '-webkit-fill-available',
@@ -1461,10 +1543,17 @@ module.exports = {
       content: {
         checked: '"✔"',
       },
+      listStyleType: {
+        arrow: '"‣ "',
+      },
       gridTemplateColumns: {
         'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板
         'dynamic-fill': 'repeat(auto-fill, minmax(200px, 1fr))',
         13: 'repeat(13, minmax(0, 1fr))', // Info: (20240927 - Julian) Voucher line 用
+        14: 'repeat(14, minmax(0, 1fr))', // Info: (20241105 - Julian) Reverse item 用
+      },
+      gridAutoFlow: {
+        dense: 'dense',
       },
       gridAutoRows: {
         'min-content': 'min-content',

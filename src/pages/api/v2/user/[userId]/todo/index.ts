@@ -2,28 +2,41 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ITodo } from '@/interfaces/todo';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
+import { Company, File, Todo } from '@prisma/client';
+import { createTodo, listTodo } from '@/lib/utils/repo/todo.repo';
+import { ITodoCompany } from '@/interfaces/todo';
+import {
+  todoListPostApiUtils as postUtils,
+  todoListGetListApiUtils as getUtils,
+} from '@/pages/api/v2/user/[userId]/todo/route_utils';
 
-const handleGetRequest: IHandleRequest<APIName.TODO_LIST, ITodo[]> = async () => {
+const handleGetRequest: IHandleRequest<
+  APIName.TODO_LIST,
+  (Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] })[]
+> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITodo[] | null = null;
+  let payload: (Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] })[] = [];
 
-  const todoList: ITodo[] = [
-    {
-      id: 1,
-      title: 'Test',
-      content: 'Test',
-      type: 'Test',
-      time: 1000000000,
-      status: 'Test',
-      createdAt: 1000000000,
-      updatedAt: 1000000000,
-    },
-  ];
+  const { userId } = query;
+  const todoListFromPrisma = await listTodo(userId);
+
+  const todoList = todoListFromPrisma
+    .map((todo) => {
+      const { startTime, endTime, note } = getUtils.splitStartEndTimeInNote(todo.note);
+      return {
+        ...todo,
+        startTime,
+        endTime,
+        note,
+      };
+    })
+    .sort((a, b) => {
+      return a.endTime - b.endTime;
+    });
 
   payload = todoList;
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
@@ -31,23 +44,39 @@ const handleGetRequest: IHandleRequest<APIName.TODO_LIST, ITodo[]> = async () =>
   return { statusMessage, payload };
 };
 
-const handlePostRequest: IHandleRequest<APIName.CREATE_TODO, ITodo> = async ({ body }) => {
+const handlePostRequest: IHandleRequest<
+  APIName.CREATE_TODO,
+  Todo & {
+    userTodoCompanies: { company: Company & { imageFile: File } }[];
+    startTime: number;
+    endTime: number;
+  }
+> = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITodo | null = null;
+  let payload:
+    | (Todo & {
+        userTodoCompanies: { company: Company & { imageFile: File } }[];
+        startTime: number;
+        endTime: number;
+      })
+    | null = null;
 
-  const { title, content, type, time, status } = body;
-  const createdTodo = {
-    id: 1,
-    title,
-    content,
-    type,
-    time,
-    status,
-    createdAt: 1000000000,
-    updatedAt: 1000000000,
+  const { userId } = query;
+  const { companyId, name, note, deadline, startTime, endTime } = body;
+
+  const noteWithTime = postUtils.combineStartEndTimeInNote({
+    note,
+    startTime,
+    endTime,
+  });
+
+  const createdTodo = await createTodo(userId, name, deadline, noteWithTime, companyId);
+
+  payload = {
+    ...createdTodo,
+    startTime,
+    endTime,
   };
-
-  payload = createdTodo;
   statusMessage = STATUS_MESSAGE.CREATED;
 
   return { statusMessage, payload };
@@ -59,19 +88,21 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload: ITodo | ITodo[] | null;
+    payload: ITodoCompany | ITodoCompany[] | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.TODO_LIST, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.CREATE_TODO, req, res, handlePostRequest),
+  GET: (req) => withRequestValidation(APIName.TODO_LIST, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.CREATE_TODO, req, handlePostRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPaginatedData<ITodo[]> | ITodo | ITodo[] | null>>
+  res: NextApiResponse<
+    IResponseData<IPaginatedData<ITodoCompany[]> | ITodoCompany | ITodoCompany[] | null>
+  >
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITodo | ITodo[] | null = null;
+  let payload: ITodoCompany | ITodoCompany[] | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -86,7 +117,7 @@ export default async function handler(
     payload = null;
   } finally {
     const { httpCode, result } = formatApiResponse<
-      IPaginatedData<ITodo[]> | ITodo | ITodo[] | null
+      IPaginatedData<ITodoCompany[]> | ITodoCompany | ITodoCompany[] | null
     >(statusMessage, payload);
     res.status(httpCode).json(result);
   }

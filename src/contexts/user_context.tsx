@@ -2,19 +2,21 @@ import useStateRef from 'react-usestateref';
 import eventManager from '@/lib/utils/event_manager';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICompany } from '@/interfaces/company';
+import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
-import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
+import { signIn as authSignIn } from 'next-auth/react';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
+import { IRole } from '@/interfaces/role';
+import { IUserRole } from '@/interfaces/user_role';
+import { COMPANY_TAG } from '@/constants/company';
 
 interface UserContextType {
   credential: string | null;
@@ -23,30 +25,60 @@ interface UserContextType {
   username: string | null;
   isSignIn: boolean;
   isAgreeTermsOfService: boolean;
-  isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
-  role: string | null;
-  selectRole: (roleId: string) => void;
+  createRole: (roleId: number) => Promise<IUserRole | null>;
+  selectRole: (roleId: number) => Promise<IUserRole | null>;
+  getUserRoleList: () => Promise<IUserRole[] | null>;
+  getSystemRoleList: () => Promise<IRole[] | null>;
+  selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
+  switchRole: () => void;
+
+  createCompany: ({
+    name,
+    taxId,
+    tag,
+  }: {
+    name: string;
+    taxId: string;
+    tag: COMPANY_TAG;
+  }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
+
   selectedCompany: ICompany | null;
-  selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
-  successSelectCompany: boolean | undefined;
+  selectCompany: (companyId: number) => Promise<ICompany | null>;
+  updateCompany: ({
+    companyId,
+    action,
+    tag,
+  }: {
+    companyId: number;
+    action: string;
+    tag: COMPANY_TAG;
+  }) => Promise<ICompanyAndRole | null>;
+  deleteCompany: (companyId: number) => Promise<ICompany | null>;
+  deleteAccount: () => Promise<{
+    success: boolean;
+    data: IUser | null;
+    code: string;
+    error: Error | null;
+  }>;
+  cancelDeleteAccount: () => Promise<{
+    success: boolean;
+    data: IUser | null;
+    code: string;
+    error: Error | null;
+  }>;
+
   errorCode: string | null;
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
-  returnUrl: string | null;
   checkIsRegistered: () => Promise<{
     isRegistered: boolean;
     credentials: PublicKeyCredential | null;
   }>;
 
-  userAgreeResponse: {
-    success: boolean;
-    data: null;
-    code: string;
-    error: Error | null;
-  } | null;
-  handleUserAgree: (hash: Hash) => Promise<void>;
+  handleUserAgree: (hash: Hash) => Promise<boolean>;
   authenticateUser: (selectProvider: Provider, props: ILoginPageProps) => Promise<void>;
+  handleAppleSignIn: () => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -56,24 +88,33 @@ export const UserContext = createContext<UserContextType>({
   username: null,
   isSignIn: false,
   isAgreeTermsOfService: false,
-  isAgreePrivacyPolicy: false,
   isSignInError: false,
-  role: null,
-  selectRole: () => {},
+  createRole: async () => null,
+  selectRole: async () => null,
+  getUserRoleList: async () => null,
+  getSystemRoleList: async () => null,
+  selectedRole: null,
+  switchRole: () => {},
+  createCompany: async () => ({ success: false, code: '', errorMsg: '' }),
+
   selectedCompany: null,
-  selectCompany: async () => {},
-  successSelectCompany: undefined,
+  selectCompany: async () => null,
+  updateCompany: async () => null,
+  deleteCompany: async () => null,
+  deleteAccount: async () => Promise.resolve({ success: false, data: null, code: '', error: null }),
+  cancelDeleteAccount: async () =>
+    Promise.resolve({ success: false, data: null, code: '', error: null }),
+
   errorCode: null,
   toggleIsSignInError: () => {},
   isAuthLoading: false,
-  returnUrl: null,
   checkIsRegistered: async () => {
     return { isRegistered: false, credentials: null };
   },
 
-  userAgreeResponse: null,
-  handleUserAgree: async () => {},
+  handleUserAgree: async () => false,
   authenticateUser: async () => {},
+  handleAppleSignIn: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -82,36 +123,44 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [, setIsSignIn, isSignInRef] = useStateRef(false);
   const [, setCredential, credentialRef] = useStateRef<string | null>(null);
-  const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
+  const [, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
-  const [, setRole, roleRef] = useStateRef<string | null>(null);
+
+  const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
   const [, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(null);
-  const [, setSuccessSelectCompany, successSelectCompanyRef] = useStateRef<boolean | undefined>(
-    undefined
-  );
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
-  const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
-  const [, setIsAgreePrivacyPolicy, isAgreePrivacyPolicyRef] = useStateRef(false);
-  const [, setUserAgreeResponse, userAgreeResponseRef] = useStateRef<{
-    success: boolean;
-    data: null;
-    code: string;
-    error: Error | null;
-  } | null>(null);
+
   const isRouteChanging = useRef(false);
 
-  const { trigger: signOutAPI } = APIHandler<void>(APIName.SIGN_OUT, {
-    body: { credential: credentialRef.current },
-  });
+  const { trigger: signoutAPI } = APIHandler<string>(APIName.SIGN_OUT);
   const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
-  const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
-  const { trigger: getStatusInfoAPI } = APIHandler<{ user: IUser; company: ICompany }>(
-    APIName.STATUS_INFO_GET
-  );
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
+  const { trigger: getStatusInfoAPI } = APIHandler<{
+    user: IUser;
+    company: ICompany;
+    role: IRole;
+  }>(APIName.STATUS_INFO_GET);
+  // Info: (20241108 - Liz) 取得系統角色列表 API
+  const { trigger: systemRoleListAPI } = APIHandler<IRole[]>(APIName.ROLE_LIST);
+  // Info: (20241104 - Liz) 取得使用者角色列表 API
+  const { trigger: userRoleListAPI } = APIHandler<IUserRole[]>(APIName.USER_ROLE_LIST);
+  // Info: (20241104 - Liz) 建立角色 API
+  const { trigger: createRoleAPI } = APIHandler<IUserRole>(APIName.USER_CREATE_ROLE);
+  // Info: (20241101 - Liz) 選擇角色 API
+  const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
+  // Info: (20241104 - Liz) 建立公司 API
+  const { trigger: createCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.CREATE_USER_COMPANY);
+  // Info: (20241111 - Liz) 選擇公司 API
+  const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
+  // Info: (20241113 - Liz) 更新公司 API
+  const { trigger: updateCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.COMPANY_UPDATE);
+  // Info: (20241115 - Liz) 刪除公司 API
+  const { trigger: deleteCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_DELETE);
+  const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
+  const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -123,60 +172,69 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setCredential(null);
     setIsSignIn(false);
     setIsSignInError(false);
-    setRole(null);
+    setSelectedRole(null);
     setSelectedCompany(null);
-    setSuccessSelectCompany(undefined);
-    localStorage.removeItem('userId');
-    localStorage.removeItem('expired_at');
     clearAllItems(); // Info: (20240822 - Shirley) 清空 IndexedDB 中的數據
   };
 
-  // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
-  const redirectToLoginPage = () => {
+  const clearLocalStorage = () => {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('expired_at');
+    localStorage.removeItem('redirectPath');
+  };
+
+  // Info: (20250108 - Liz) 前往登入頁面
+  const goToLoginPage = () => {
+    // Deprecated: (20241001 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('呼叫 goToLoginPage (尚未導向)');
+
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       // Deprecated: (20241008 - Liz)
       // eslint-disable-next-line no-console
-      console.log('呼叫 redirectToLoginPage 並且重新導向到登入頁面');
+      console.log('呼叫 goToLoginPage 並且重新導向到登入頁面');
 
       router.push(ISUNFA_ROUTE.LOGIN);
     }
-    // Deprecated: (20241001 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 redirectToLoginPage (但不一定真的重新導向喔)');
   };
 
-  // Info: (20241001 - Liz) Alpha:重新導向到選擇公司的頁面 ; Beta:重新導向到選擇角色的頁面
-  // const redirectToSelectCompanyPage = () => {
-  //   if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
-  //     router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-  //   }
-  // };
-
-  // ToDo: (20241008 - Liz) Beta 要重新導向到選擇角色的頁面。但目前先導向到選擇公司的頁面。
+  // Info: (20250108 - Liz) 前往選擇角色頁面
   const goToSelectRolePage = () => {
     // Deprecated: (20241008 - Liz)
     // eslint-disable-next-line no-console
-    console.log('呼叫 goToSelectRolePage');
+    console.log('呼叫 goToSelectRolePage 重新導向到選擇角色頁面 (因為沒有選擇角色)');
 
-    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    router.push(ISUNFA_ROUTE.SELECT_ROLE);
   };
 
-  // ToDo: (20241008 - Liz) 如果沒有選擇公司，重新導向到可以選擇公司的儀表板
-  // const goToDashboard = () => {
-  //   router.push(ISUNFA_ROUTE.DASHBOARD);
-  // };
+  // Info: (20241111 - Liz) 前往儀表板
+  const goToDashboard = () => {
+    router.push(ISUNFA_ROUTE.DASHBOARD);
+
+    // Deprecated: (20241111 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('呼叫 goToDashboard 重新導向到儀表板 (因為沒有選擇公司)');
+  };
 
   const goBackToOriginalPath = () => {
     const redirectPath = localStorage.getItem('redirectPath');
-    localStorage.removeItem('redirectPath'); // Info: (20241008 - Liz) 移除 localStorage 中的 redirectPath
 
     // Deprecated: (20241008 - Liz)
     // eslint-disable-next-line no-console
     console.log('呼叫 goBackToOriginalPath, redirectPath:', redirectPath);
 
-    if (redirectPath) {
-      router.push(redirectPath || '/');
+    if (redirectPath && redirectPath !== ISUNFA_ROUTE.LOGIN) {
+      router.push(redirectPath);
+    } else {
+      router.push(ISUNFA_ROUTE.DASHBOARD);
     }
+  };
+
+  // Info: (20241209 - Liz) 切換角色的功能
+  const switchRole = () => {
+    setSelectedRole(null);
+    setSelectedCompany(null);
+    goToSelectRolePage();
   };
 
   const checkIsRegistered = async (): Promise<{
@@ -215,216 +273,218 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     };
   };
 
-  const handleReturnUrl = () => {
-    if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
-      if (returnUrl) {
-        const urlString = decodeURIComponent(returnUrl);
-        setReturnUrl(null);
-        router.push(urlString);
-      } else if (
-        router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY) ||
-        (selectedCompanyRef.current && router.pathname.includes(ISUNFA_ROUTE.LOGIN))
-      ) {
-        router.push(ISUNFA_ROUTE.DASHBOARD);
-      }
-    }
-  };
-
   const signOut = async () => {
-    await signOutAPI(); // Info: (20241004 - Liz) 打 API 清除後端 session
-    await authSignOut({ redirect: false }); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
+    // Deprecated: (20241111 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('call signOut 登出並且清除 user context 所有狀態 以及 localStorage');
+
+    await signoutAPI(); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
     clearStates(); // Info: (20241004 - Liz) 清除 context 中的狀態
-    redirectToLoginPage(); // Info: (20241004 - Liz) 重新導向到登入頁面
+    clearLocalStorage(); // Info: (20241004 - Liz) 清除 localStorage 中的資料
+    goToLoginPage(); // Info: (20241004 - Liz) 重新導向到登入頁面
   };
 
   const isProfileFetchNeeded = () => {
+    // Info: (20240822-Tzuhan) 如果 state 中沒有用戶資料，但 localStorage 中有記錄，則應該重新獲取 profile
+    // Info: (20240822-Tzuhan) 如果 expiredAt 未過期，應該重新獲取 profile
+    // Info: (20240822-Tzuhan) 如果 state 中有用戶資料，且 localStorage 中沒有記錄，則應該重新獲取 profile
+    // Info: (20240822-Tzuhan) 如果 state 和 localStorage 中都沒有用戶資料，則應該重新獲取 profile
+    // Info: (20240822-Tzuhan) 以上情況都不滿足，則不需要重新獲取 profile
+    // Info: (20241203 - Liz) 基於以上的邏輯，將程式碼簡化，先判斷 session 是否過期，再判斷是否有使用者資料以及 localStorage 資料，最後回傳結果， true 表示需要重新獲取使用者資料， false 表示不需要。
+
     const userId = localStorage.getItem('userId');
     const expiredAt = localStorage.getItem('expired_at');
     const isUserAuthAvailable = !!userAuthRef.current;
+    const hasLocalStorageData = userId && expiredAt;
+    const isSessionExpired = expiredAt && Date.now() >= Number(expiredAt);
 
-    // Info: (20240822-Tzuhan) 如果 state 中沒有用戶資料，且 localStorage 中有記錄，則應該重新獲取 profile
-    if (!isUserAuthAvailable && userId && expiredAt) {
-      // Info: (20240822-Tzuhan) 如果 expiredAt 未過期，應該重新獲取 profile
-      if (Date.now() < Number(expiredAt)) {
-        return true;
-      } else {
-        signOut();
-        return false;
-      }
+    if (isSessionExpired) {
+      signOut();
+      return false;
     }
-
-    // Info: (20240822-Tzuhan) 如果 state 中有用戶資料，且 localStorage 中沒有記錄，則應該重新獲取 profile
-    if (isUserAuthAvailable && (!userId || !expiredAt)) {
-      return true;
-    }
-
-    // Info: (20240822-Tzuhan) 如果 state 和 localStorage 中都沒有用戶資料，則應該重新獲取 profile
-    if (!isUserAuthAvailable && (!userId || !expiredAt)) {
-      return true;
-    }
-
-    // Info: (20240822-Tzuhan) 以上情況都不滿足，則不需要重新獲取 profile
-    return false;
+    return !(isUserAuthAvailable && hasLocalStorageData);
   };
 
   // ===============================================================================
-  // Info: (20241001 - Liz) 此函數根據使用者的協議列表，更新使用者是否同意了服務條款和隱私政策。
-  // 它會將結果存入狀態變數 setIsAgreeTermsOfService 和 setIsAgreePrivacyPolicy。
-  const updateUserAgreements = (user: IUser) => {
-    const hasAgreedToTerms = user.agreementList.includes(Hash.HASH_FOR_TERMS_OF_SERVICE);
-    const hasAgreedToPrivacy = user.agreementList.includes(Hash.HASH_FOR_PRIVACY_POLICY);
-
-    setIsAgreeTermsOfService(hasAgreedToTerms);
-    setIsAgreePrivacyPolicy(hasAgreedToPrivacy);
-  };
 
   // Info: (20241001 - Liz) 此函數處理公司資訊:
-  // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedCompany)，並標記成功選擇公司。
-  // 若公司資料不存在，會將公司資訊設為空，並標記為未選擇公司。
+  // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedCompany)，最後回傳公司資訊。
+  // 如果公司資料不存在，會將公司資訊設為 null，並回傳 null。
   const processCompanyInfo = (company: ICompany) => {
-    if (company && Object.keys(company).length > 0) {
-      // Deprecated: (20241008 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('執行 processCompanyInfo 並且 company 存在:', company);
-
-      setSelectedCompany(company);
-      setSuccessSelectCompany(true);
-
-      return true;
-    } else {
-      // Deprecated: (20241008 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('執行 processCompanyInfo 並且 company 不存在:', company);
-
-      setSuccessSelectCompany(undefined);
+    if (!company || Object.keys(company).length === 0) {
       setSelectedCompany(null);
-
-      return false;
+      return null;
     }
+    setSelectedCompany(company);
+    return company;
   };
 
-  // ToDo: (20241004 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」
+  // Info: (20241101 - Liz) 此函數處理角色資訊:
+  const processRoleInfo = (role: IRole) => {
+    if (!role || Object.keys(role).length === 0) {
+      setSelectedRole(null);
+      return null;
+    }
+    setSelectedRole(role.name);
+    return role;
+  };
 
   // Info: (20241001 - Liz) 此函數處理使用者資訊:
+  // 如果使用者資料不存在，會回傳 null。
   // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入，
-  // 它還會將使用者的 userId 和過期時間儲存在 localStorage 中，
-  // 接著它會呼叫 updateUserAgreements 函數更新使用者的協議狀態，
-  // 最後回傳 true。
-  // 如果使用者資料不存在，會回傳 false。
+  // 並且將使用者的 userId 和過期時間儲存在 localStorage 中，最後回傳使用者資訊。
   const processUserInfo = (user: IUser) => {
-    if (user && Object.keys(user).length > 0) {
-      setUserAuth(user);
-      setUsername(user.name);
-      setIsSignIn(true);
-      setIsSignInError(false);
+    if (!user || Object.keys(user).length === 0) return null;
 
-      localStorage.setItem('userId', user.id.toString());
-      localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
-
-      updateUserAgreements(user);
-
-      // Deprecated: (20241004 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('呼叫 processUserInfo 並且 user 存在:', user);
-
-      return true;
-    } else {
-      // clearStates(); // Deprecated: (20241009 - Liz)
-      // redirectToLoginPage(); // Deprecated: (20241009 - Liz)
-      return false;
-    }
+    setUserAuth(user);
+    setUsername(user.name);
+    setIsSignIn(true);
+    setIsSignInError(false);
+    localStorage.setItem('userId', user.id.toString());
+    localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
+    return user;
   };
 
-  // Info: (20241009 - Liz) 此函數是在處理使用者和公司資訊，並根據處理結果來決定下一步的操作:
-  // 它會呼叫 processUserInfo 和 processCompanyInfo 分別處理使用者和公司資訊。
+  // Info: (20241009 - Liz) 此函數是在處理 getStatusInfo 獲得的資料，包含使用者、公司、角色，並根據處理結果來決定下一步的操作:
+  // 它會呼叫 processUserInfo, processCompanyInfo, 和 processRoleInfo 分別處理使用者、公司、角色資訊。
   // 依據處理結果，它會執行不同的自動導向邏輯。
-  const handleUserAndCompanyProcessing = (user: IUser, company: ICompany) => {
-    const isProcessedInfo = processUserInfo(user);
-    const isProcessedCompany = processCompanyInfo(company);
-    // ToDo: (20241008 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」
-    // const isProcessedRole = processRoleInfo(role);
+  const handleProcessData = (statusInfo: { user: IUser; company: ICompany; role: IRole }) => {
+    const processedUser = processUserInfo(statusInfo.user);
+    const processedRole = processRoleInfo(statusInfo.role);
+    const processedCompany = processCompanyInfo(statusInfo.company);
 
-    // Deprecated: (20241008 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('isProcessedInfo: ', isProcessedInfo, 'isProcessedCompany: ', isProcessedCompany);
-
-    // ToDo: (20241008 - Liz) 之後會增加一個判斷是否有選擇角色的邏輯
-    if (isProcessedInfo && isProcessedCompany) {
-      goBackToOriginalPath();
-    } else if (isProcessedInfo && !isProcessedCompany) {
-      // goToDashboard(); // ToDo: (20241008 - Liz) 之後沒有選擇公司會導向到可以選擇公司的儀表板
-      goToSelectRolePage(); // Info: (20241008 - Liz) 暫時用 Alpha 版的選擇公司頁面
-    } else {
+    if (!processedUser) {
       clearStates();
-      redirectToLoginPage();
+      clearLocalStorage();
+      goToLoginPage();
+      return;
     }
+
+    // Info: (20241117 - Liz) 檢查是否已經同意服務條款和隱私政策
+    const hasAgreedToTermsOfService = processedUser.agreementList.includes(
+      Hash.HASH_FOR_TERMS_OF_SERVICE
+    );
+    // const hasAgreedToPrivacyPolicy = processedUser.agreementList.includes(
+    //   Hash.HASH_FOR_PRIVACY_POLICY
+    // );
+
+    setIsAgreeTermsOfService(hasAgreedToTermsOfService);
+    // setIsAgreePrivacyPolicy(hasAgreedToPrivacyPolicy);
+    // const hasAgreedToAll = hasAgreedToTermsOfService && hasAgreedToPrivacyPolicy;
+
+    if (!hasAgreedToTermsOfService) return;
+
+    if (!processedRole) {
+      goToSelectRolePage();
+      return;
+    }
+
+    if (!processedCompany) {
+      goToDashboard();
+      return;
+    }
+    goBackToOriginalPath();
   };
 
   // Info: (20241001 - Liz) 此函數使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
   // 它首先檢查是否需要取得使用者資料 (isProfileFetchNeeded)，如果不需要，則直接結束。
   // 當資料獲取中，它會設定載入狀態 (setIsAuthLoading)
-  // 當 API 回傳成功且有資料時，它會呼叫 handleUserAndCompanyProcessing 分別處理使用者和公司資訊。
+  // 當 API 回傳成功且有資料時，它會呼叫 handleProcessData 分別處理使用者、公司、角色資訊。
   // 如果獲取資料失敗，它會執行未登入的處理邏輯: 清除狀態、導向登入頁面、設定登入錯誤狀態、設定錯誤代碼。
   // 最後，它會將載入狀態設為完成。
   const getStatusInfo = useCallback(async () => {
-    if (!isProfileFetchNeeded()) return;
+    if (!isProfileFetchNeeded()) {
+      // Deprecated: (20241113 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('isProfileFetchNeeded 為 false, 不需要重新獲取使用者資料');
+      return;
+    }
 
     setIsAuthLoading(true);
 
-    // Info: (20241008 - Liz) 將當前路徑存入 localStorage，以便登入後可以重新導向回原本的路徑
-    const currentPath = router.asPath;
-    localStorage.setItem('redirectPath', currentPath);
+    try {
+      // Info: (20241008 - Liz) 將當前路徑存入 localStorage，以便登入後可以重新導向回原本的路徑
+      const currentPath = router.asPath;
+      localStorage.setItem('redirectPath', currentPath);
 
-    // Deprecated: (20241008 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('儲存現在路由 currentPath:', currentPath);
+      // Deprecated: (20241008 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('執行 getStatusInfo() 並且儲存現在路由 currentPath:', currentPath);
 
-    const {
-      data: StatusInfo,
-      success: getStatusInfoSuccess,
-      code: getStatusInfoCode,
-    } = await getStatusInfoAPI();
+      const {
+        data: statusInfo,
+        success: getStatusInfoSuccess,
+        code: getStatusInfoCode,
+      } = await getStatusInfoAPI();
 
-    // Deprecated: (20241001 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('getStatusInfo:', StatusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
+      // Deprecated: (20241001 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('getStatusInfo data:', statusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
 
-    if (getStatusInfoSuccess && StatusInfo) {
-      handleUserAndCompanyProcessing(StatusInfo.user, StatusInfo.company);
-    } else {
+      if (getStatusInfoSuccess && statusInfo) {
+        handleProcessData(statusInfo);
+      } else {
+        clearStates();
+        clearLocalStorage();
+        goToLoginPage();
+        setIsSignInError(true);
+        setErrorCode(getStatusInfoCode ?? '');
+      }
+    } catch (error) {
+      // Deprecated: (20250117 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('getStatusInfo 發生錯誤:', error);
       clearStates();
-      redirectToLoginPage();
+      clearLocalStorage();
+      goToLoginPage();
       setIsSignInError(true);
-      setErrorCode(getStatusInfoCode ?? '');
+    } finally {
+      setIsAuthLoading(false);
     }
-
-    setIsAuthLoading(false);
   }, [router.pathname]);
   // ===============================================================================
 
+  // Info: (20241119 - Liz) 簽署使用者同意條款和隱私政策的功能
   const handleUserAgree = async (hash: Hash) => {
+    setIsAuthLoading(true);
+
     try {
-      setIsAuthLoading(true);
       const response = await agreementAPI({
-        params: { userId: userAuth?.id },
+        params: { userId: userAuthRef.current?.id },
         body: { agreementHash: hash },
       });
-      setUserAgreeResponse(response);
-      setIsAuthLoading(false);
+
+      if (!response.success && response.error) {
+        throw new Error(response.error.message);
+      }
+
       if (hash === Hash.HASH_FOR_TERMS_OF_SERVICE) {
         setIsAgreeTermsOfService(true);
       }
-      if (hash === Hash.HASH_FOR_PRIVACY_POLICY) {
-        setIsAgreePrivacyPolicy(true);
-      }
+      // if (hash === Hash.HASH_FOR_PRIVACY_POLICY) {
+      //   setIsAgreePrivacyPolicy(true);
+      // }
+
+      return response.success;
     } catch (error) {
-      setUserAgreeResponse({
-        success: false,
-        data: null,
-        code: '',
-        error: error as Error,
-      });
+      // Deprecated: (20241116 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('Error handling user agreement:', error);
+      return false;
+    } finally {
+      setIsAuthLoading(false);
     }
+  };
+
+  const handleAppleSignIn = () => {
+    const clientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
+    const redirectUri = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI!;
+
+    const url = `https://appleid.apple.com/auth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(
+      redirectUri
+    )}&scope=openid%20email%20name&response_mode=form_post`;
+
+    window.location.href = url;
   };
 
   const authenticateUser = async (selectProvider: Provider, props: ILoginPageProps) => {
@@ -442,49 +502,198 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error(response.error);
       }
     } catch (error) {
-      // TODO: (20240814-Tzuhan) [Beta] handle error
+      // ToDo: (20240814-Tzuhan) [Beta] handle error
     }
   };
 
-  const handleSelectCompanyResponse = async (response: {
-    success: boolean;
-    data: ICompany | null;
-    code: string;
-    error: Error | null;
+  // Info: (20241029 - Liz) 建立角色的功能
+  const createRole = async (roleId: number) => {
+    // Deprecated: (20241108 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('call createRole, roleId:', roleId);
+
+    try {
+      const { success, data: userRole } = await createRoleAPI({
+        params: { userId: userAuthRef.current?.id },
+        body: { roleId },
+      });
+
+      // Info: (20241029 - Liz) 檢查建立角色的成功狀態
+      if (success && userRole) {
+        // Deprecated: (20241111 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('打 USER_CREATE_ROLE 成功, userRole:', userRole);
+        return userRole;
+      }
+
+      // Info: (20241107 - Liz) 建立失敗回傳 null
+      return null;
+    } catch (error) {
+      // Info: (20241107 - Liz) 例外發生視為建立失敗回傳 null
+      // console.error('Error creating role:', error);
+      return null;
+    }
+  };
+
+  // Info: (20241101 - Liz) 選擇角色的功能
+  const selectRole = async (roleId: number) => {
+    try {
+      const { success, data: userRole } = await selectRoleAPI({
+        params: { userId: userAuthRef.current?.id },
+        body: { roleId },
+      });
+
+      if (success && userRole) {
+        setSelectedRole(userRole.role.name);
+        return userRole;
+      }
+
+      return null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Info: (20241108 - Liz) 取得系統角色列表
+  const getSystemRoleList = async () => {
+    try {
+      const { data: systemRoleList, success } = await systemRoleListAPI({
+        query: { type: 'User' },
+      });
+
+      if (success && systemRoleList) return systemRoleList;
+
+      return null;
+    } catch (error) {
+      // Info: (20241107 - Liz) Handle error if needed
+      return null;
+    }
+  };
+
+  // Info: (20241025 - Liz) 取得使用者擁有的所有角色
+  const getUserRoleList = async () => {
+    try {
+      const { data: userRoleList, success } = await userRoleListAPI({
+        params: { userId: userAuthRef.current?.id },
+      });
+
+      if (success && userRoleList) {
+        return userRoleList;
+      }
+
+      return null;
+    } catch (error) {
+      // Info: (20241107 - Liz) Handle error if needed
+      return null;
+    }
+  };
+
+  // Info: (20241104 - Liz) 建立公司的功能
+  const createCompany = async ({
+    name,
+    taxId,
+    tag,
+  }: {
+    name: string;
+    taxId: string;
+    tag: COMPANY_TAG;
   }) => {
-    if (response.success && response.data !== null) {
-      setSelectedCompany(response.data);
-      setSuccessSelectCompany(true);
-      handleReturnUrl();
-    }
-    if (response.success === false) {
-      setSelectedCompany(null);
-      setSuccessSelectCompany(false);
-      setErrorCode(response.code ?? '');
+    try {
+      const { success, code, error } = await createCompanyAPI({
+        params: { userId: userAuthRef.current?.id },
+        body: { name, taxId, tag },
+      });
+
+      if (!success) {
+        return { success: false, code, errorMsg: error?.message ?? '' };
+      }
+
+      return { success: true, code: '', errorMsg: '' };
+    } catch (error) {
+      return { success: false, code: '', errorMsg: 'unknown error' };
     }
   };
 
-  // ToDo: (20241009 - Liz) 選擇角色的功能
-  const selectRole = (roleId: string) => {
-    setRole(roleId);
+  // Info: (20241111 - Liz) 選擇公司的功能
+  const selectCompany = async (companyId: number) => {
+    try {
+      const { success, data: userCompany } = await selectCompanyAPI({
+        params: { userId: userAuthRef.current?.id },
+        body: { companyId },
+      });
+
+      if (success) {
+        setSelectedCompany(userCompany);
+        return userCompany;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
   };
 
-  // Info: (20240513 - Julian) 選擇公司的功能
-  const selectCompany = async (company: ICompany | null, isPublic = false) => {
-    setSelectedCompany(null);
-    setSuccessSelectCompany(undefined);
+  // Info: (20241113 - Liz) 更新公司的功能(變更標籤)
+  const updateCompany = async ({
+    companyId,
+    action,
+    tag,
+  }: {
+    companyId: number;
+    action: string;
+    tag: COMPANY_TAG;
+  }) => {
+    try {
+      const { success, data: companyAndRole } = await updateCompanyAPI({
+        params: { companyId },
+        body: { action, tag },
+      });
 
-    const res = await selectCompanyAPI({
-      params: {
-        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
-      },
+      if (success && companyAndRole) {
+        return companyAndRole;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Info: (20241115 - Liz) 刪除公司的功能
+  const deleteCompany = async (companyId: number) => {
+    try {
+      const { success, data: company } = await deleteCompanyAPI({
+        params: { companyId },
+      });
+
+      if (success && company) {
+        setSelectedCompany(null);
+        return company;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const deleteAccount = async () => {
+    const res = await deleteAccountAPI({
+      params: { userId: userAuthRef.current?.id },
     });
 
-    if (!company && !isPublic) {
-      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-      return;
+    if (res.success && res.data) {
+      setUserAuth(res.data);
     }
-    await handleSelectCompanyResponse(res);
+    return res;
+  };
+
+  const cancelDeleteAccount = async () => {
+    const res = await cancelDeleteAccountAPI({
+      params: { userId: userAuthRef.current?.id },
+    });
+
+    if (res.success && res.data) {
+      setUserAuth(res.data);
+    }
+    return res;
   };
 
   const throttledGetStatusInfo = useCallback(
@@ -504,6 +713,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       isRouteChanging.current = true;
       throttledGetStatusInfo();
+      // Deprecated: (20241107 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('handleRouteChangeStart 並且 pathname 包含 ISUNFA_ROUTE.LOGIN 這個條件被啟動');
     }
   }, [throttledGetStatusInfo, router.pathname]);
 
@@ -531,19 +743,35 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [handleVisibilityChange, handleRouteChangeStart, handleRouteChangeComplete, router.events]);
 
   useEffect(() => {
-    // Deprecated: (20241004 - Liz)
+    // Deprecated: (20250108 - Liz)
     // eslint-disable-next-line no-console
     console.log('觸發 useEffect (監聽 UNAUTHORIZED_ACCESS)');
 
-    const handleUnauthorizedAccess = () => {
-      // Deprecated: (20241004 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('觸發 useEffect 並且呼叫 signOut 函數');
+    let isSigningOut = false;
 
-      signOut();
+    const handleUnauthorizedAccess = async () => {
+      if (isSigningOut) {
+        // Deprecated: (20250108 - Liz)
+        // eslint-disable-next-line no-console
+        console.warn('正在執行 signOut 所以跳過此次觸發');
+        return;
+      }
+      isSigningOut = true;
+
+      try {
+        // Deprecated: (20250108 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('觸發 useEffect 並且呼叫 signOut 函數');
+        await signOut();
+      } catch (error) {
+        // Deprecated: (20250108 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('Sign out failed:', error);
+
+        isSigningOut = false; // Info: (20250108 - Liz) 失敗後重置狀態，允許再次嘗試
+      }
     };
 
-    // Info: (20240822-Tzuhan) 確保只有一個監聽器
     eventManager.off(STATUS_MESSAGE.UNAUTHORIZED_ACCESS, handleUnauthorizedAccess);
     eventManager.on(STATUS_MESSAGE.UNAUTHORIZED_ACCESS, handleUnauthorizedAccess);
 
@@ -561,31 +789,35 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       username: usernameRef.current,
       isSignIn: isSignInRef.current,
       isAgreeTermsOfService: isAgreeTermsOfServiceRef.current,
-      isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current,
       isSignInError: isSignInErrorRef.current,
-      role: roleRef.current,
+      createRole,
       selectRole,
-      selectedCompany: selectedCompanyRef.current,
+      getUserRoleList,
+      getSystemRoleList,
+      selectedRole: selectedRoleRef.current,
+      switchRole,
+      createCompany,
       selectCompany,
-      successSelectCompany: successSelectCompanyRef.current,
+      updateCompany,
+      deleteCompany,
+      deleteAccount,
+      cancelDeleteAccount,
+      selectedCompany: selectedCompanyRef.current,
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
-      returnUrl: returnUrlRef.current,
       checkIsRegistered,
       handleUserAgree,
       authenticateUser,
-      userAgreeResponse: userAgreeResponseRef.current,
+      handleAppleSignIn,
     }),
     [
       credentialRef.current,
-      roleRef.current,
+      selectedRoleRef.current,
       selectedCompanyRef.current,
-      successSelectCompanyRef.current,
       errorCodeRef.current,
       isSignInErrorRef.current,
       isAuthLoadingRef.current,
-      returnUrlRef.current,
       router.pathname,
       userAuthRef.current,
     ]

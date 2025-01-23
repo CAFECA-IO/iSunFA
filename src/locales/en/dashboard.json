@@ -1,0 +1,140 @@
+{
+  "LOGIN": {
+    "LOG_IN_WITH_GOOGLE": "Log In with Google",
+    "LOG_IN_WITH_APPLE": "Log In with Apple",
+    "LAST_LOGIN_TIME": "Last Login Time"
+  },
+
+  "DASHBOARD": {
+    "DASHBOARD": "Dashboard",
+    "TO_DO_LIST": "Event Planner",
+    "CALENDAR_NOT_YET_LINKED": "Calendar not yet linked",
+    "LINK_MY_CALENDAR": "Link My Calendar",
+    "NO_SCHEDULE_FOR_TODAY": "No schedule for today",
+    "MY_COMPANY_LIST": "My Company List",
+    "COMPANY_NOT_YET_CREATED": "Company not yet created",
+    "PLEASE_PROCEED_TO": "Please proceed to",
+    "CREATE_A_COMPANY": "create a company",
+    "LATEST_NEWS": "Latest News",
+    "FINANCIAL": "Financial",
+    "SYSTEM": "System",
+    "MATCH": "Matching",
+    "MORE": "More",
+    "SEE_MORE": "See More",
+    "PENDING_TASKS": "Pending Tasks",
+    "PENDING_TASKS_TOTAL": "Pending Tasks (Total)",
+    "MISSING_CERTIFICATE": "Missing certificate",
+    "UNPOSTED_VOUCHERS": "Unposted vouchers",
+    "ADD_EVENT": "Add Event",
+    "NO_DATA_AVAILABLE": "No Data Available",
+    "NO_DATA": "No Data",
+    "ARE_YOU_SURE_YOU_WANT_TO": "Are you sure you want to",
+    "CHOOSE_THE_COMPANY": "Choose the Company",
+    "SURE": "?",
+    "CHOOSE": "Choose",
+    "NO_LATEST_NEWS": "No Latest News."
+  },
+
+  "COMMON": {
+    "ERROR": "Error",
+    "START": "Start",
+    "PREVIEW": "Preview",
+    "CANCEL": "Cancel",
+    "ADD": "Add",
+    "SAVE": "Save",
+    "DELETE": "Delete"
+  },
+
+  "HEADER": {
+    "SEARCH": "Search",
+    "MY_ACCOUNT": "My Account",
+    "SUBSCRIPTION_AND_BILLS": "Subscription and Bills",
+    "LOGOUT": "Logout",
+    "LOGIN": "Login",
+    "LANGUAGE": "Language",
+    "SWITCH_ROLE": "Switch Role",
+    "NO_NEW_NOTIFICATIONS": "No New Notifications",
+    "MARK_AS_ALL_READ": "Mark as all read",
+    "READ_MORE": "Read more",
+    "YOU_HAVE_A_TEAM_INVITATION_FROM": "You have a team invitation from",
+    "ACCEPT": "Accept",
+    "DECLINE": "Decline"
+  },
+
+  "ROLE": {
+    "ACCOUNTANT": "Accountant",
+    "BOOKKEEPER": "Bookkeeper",
+    "EDUCATIONAL_TRIAL_VERSION": "Educational Trial Version",
+    "EDUCATIONAL": "Educational",
+    "TRIAL_VERSION": "Trial Version"
+  },
+
+  "CREATE_ROLE_PAGE": {
+    "CREATE_ROLE_TITLE": "Create Role",
+    "SELECT_YOUR_ROLE": "Select Your Role",
+    "ROLE_FUNCTION_PREVIEW": "Role Function Preview",
+    "BACK_TO_SELECT_ROLE_PAGE": "Back to Select Role Page",
+
+    "COMMON_FUNCTIONS": "Common Functions",
+    "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "General Ledger, Voucher Issuance, Preparation of Financial and Tax Reports",
+    "COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION": "General Ledger, Voucher Issuance",
+    "DEFAULT_INTRODUCTION": "iSunFA offers various roles for users to choose from, each with its own dedicated interface and commonly used features. You can select the role that best suits your needs, allowing iSunFA to assist you in your work. The key advantage of iSunFA lies in its role-optimized interface and AI-integrated accounting, enabling you to complete tasks more efficiently!",
+    "BOOKKEEPER_INTRODUCTION": "A bookkeeper is a professional financial worker responsible for managing the daily financial records and accounting tasks of a business or individual. Their primary duties include preparing accounting vouchers, recording entries in ledgers, reconciling accounts, and generating financial statements to ensure the accuracy and completeness of financial information.",
+    "EDUCATIONAL_TRIAL_VERSION_INTRODUCTION": "The iSunFA Student Version is an educational tool tailored for students and interns in the accounting field. It offers practical hands-on experience in managing financial tasks such as creating accounting vouchers, journal entries, and reconciling accounts. It's ideal for building a solid foundation in financial management and preparing for professional bookkeeping or accounting roles."
+  },
+
+  "SELECT_ROLE_PAGE": {
+    "SELECT_ROLE_TITLE": "Select Role"
+  },
+
+  "MY_COMPANY_LIST_PAGE": {
+    "MY_COMPANY_LIST": "My Company List"
+  },
+
+  "LATEST_NEWS_PAGE": {
+    "LATEST_NEWS": "Latest News",
+    "FINANCIAL_NEWS": "Financial News",
+    "SYSTEM_NEWS": "System News",
+    "MATCH_NEWS": "Match News"
+  },
+
+  "TODO_LIST_PAGE": {
+    "TODO_LIST_TITLE": "Event Planner",
+    "NEW_EVENT": "New Event",
+    "UPCOMING_EVENTS": "Upcoming Events",
+    "ACTION": "Action",
+    "NO_PENDING_TASKS": "No Pending Tasks",
+    "ADD_NEW_EVENT": "Add New Event",
+    "EVENT_NAME": "Event Name",
+    "ENTER_NAME": "Enter name",
+    "DEADLINE": "Deadline",
+    "AFFILIATED_COMPANY": "Affiliated Company",
+    "NOTE": "Note",
+    "ENTER_TEXT": "Enter text",
+    "SELECT_COMPANY": "Select a company",
+    "NO_COMPANY": "No company",
+    "EDIT_MY_EVENT": "Edit My Event",
+    "DELETE_MESSAGE_TITLE": "Delete the event",
+    "DELETE_MESSAGE_CONTENT": "Are you sure you want to delete this event?",
+    "START_TIME": "Start Time",
+    "END_TIME": "End Time"
+  },
+
+  "CREATE_COMPANY_MODAL": {
+    "COMPANY_NAME": "Company Name",
+    "TAX_ID": "Business Tax ID Number",
+    "WORK_TAG": "Work Tag",
+    "CREATE_NEW_COMPANY": "Create New Company",
+    "ENTER_NAME": "Enter Name",
+    "ENTER_NUMBER": "Enter Tax ID",
+    "ENTER_FULL_ADDRESS": "Please enter the full address",
+    "CANCEL": "Cancel",
+    "ADD": "Add"
+  },
+
+  "COMPANY_TAG": {
+    "FINANCIAL": "Financial",
+    "TAX": "Tax",
+    "ALL": "All"
+  }
+}

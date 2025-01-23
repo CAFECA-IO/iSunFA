@@ -8,14 +8,16 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
 import { SortBy } from '@/constants/journal';
+import { DefaultValue } from '@/constants/default_value';
 
-export async function createNews(title: string, content: string, type: NewsType) {
+export async function createNews(imageId: number, title: string, content: string, type: NewsType) {
   const nowInSecond = getTimestampNow();
   let news: News | null = null;
 
   try {
     news = await prisma.news.create({
       data: {
+        imageId,
         title,
         content,
         type,
@@ -24,8 +26,11 @@ export async function createNews(title: string, content: string, type: NewsType)
       },
     });
   } catch (error) {
-    const logError = loggerError(0, 'create news in createNews failed', error as Error);
-    logError.error('Prisma related create news in createNews in news.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'create news in createNews failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return news;
@@ -35,11 +40,11 @@ export async function listNews(
   type: NewsType = NewsType.FINANCIAL,
   targetPage: number = DEFAULT_PAGE_NUMBER,
   pageSize: number = DEFAULT_PAGE_LIMIT,
-  sortOrder: SortOrder = SortOrder.ASC,
-  sortBy: SortBy = SortBy.CREATED_AT,
   startDateInSecond?: number,
   endDateInSecond?: number,
-  searchQuery?: string
+  searchQuery?: string,
+  sortOrder: SortOrder = SortOrder.ASC,
+  sortBy: SortBy = SortBy.CREATED_AT
 ) {
   let newsList: News[] = [];
   const where: Prisma.NewsWhereInput = {
@@ -66,8 +71,11 @@ export async function listNews(
   try {
     newsList = await prisma.news.findMany(findManyArgs);
   } catch (error) {
-    const logError = loggerError(0, 'find many news in listNews failed', error as Error);
-    logError.error('Prisma related find many news in listNews in news.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'find many news in listNews failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   const totalCount = newsList.length;
@@ -117,11 +125,34 @@ export async function listNewsSimple(
   try {
     newsList = await prisma.news.findMany(findManyArgs);
   } catch (error) {
-    const logError = loggerError(0, 'find many news in listNewsSimple failed', error as Error);
-    logError.error('Prisma related find many news in listNewsSimple in news.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'find many news in listNewsSimple failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return newsList;
+}
+
+export async function getNewsById(newsId: number): Promise<News | null> {
+  let news: News | null = null;
+
+  try {
+    news = await prisma.news.findUnique({
+      where: {
+        id: newsId,
+      },
+    });
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'find unique news in getNewsById failed',
+      errorMessage: (error as Error).message,
+    });
+  }
+
+  return news;
 }
 
 export async function deleteNewsForTesting(newsId: number) {
@@ -132,7 +163,10 @@ export async function deleteNewsForTesting(newsId: number) {
       },
     });
   } catch (error) {
-    const logError = loggerError(0, 'delete news in deleteNewsForTesting failed', error as Error);
-    logError.error('Prisma related delete news in deleteNewsForTesting in news.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'delete news in deleteNewsForTesting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 }

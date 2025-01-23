@@ -34,11 +34,8 @@ export async function createFile({
   url: string;
   isEncrypted: boolean;
   encryptedSymmetricKey: string;
-  iv?: Buffer | Uint8Array;
+  iv?: Buffer;
 }) {
-  // Info: (20240830 - Murky) iv has default "", so it can be not provided
-  const ivBuffer = iv ? Buffer.from(iv) : undefined;
-
   const nowInSecond = getTimestampNow();
 
   const fileData: Prisma.FileCreateInput = {
@@ -49,7 +46,7 @@ export async function createFile({
     url,
     isEncrypted,
     encryptedSymmetricKey,
-    iv: ivBuffer,
+    iv,
     createdAt: nowInSecond,
     updatedAt: nowInSecond,
   };
@@ -115,6 +112,49 @@ export async function findFileById(fileId: number): Promise<File | null> {
     loggerBack.error(error, 'Error happened in findFileById in file.repo.ts');
   }
   return file;
+}
+
+export async function putFileById(fileId: number, options: Partial<File>): Promise<File | null> {
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.FileWhereUniqueInput = {
+    id: fileId,
+  };
+
+  const data: Prisma.FileUpdateInput = {
+    ...options,
+    updatedAt: nowInSecond,
+  };
+
+  let file: File | null = null;
+
+  try {
+    file = await prisma.file.update({
+      where,
+      data,
+    });
+  } catch (error) {
+    loggerBack.error(error, 'Error happened in putFileById in file.repo.ts');
+  }
+
+  return file;
+}
+
+export async function listFileByIdList(fileIdList: number[]): Promise<File[]> {
+  let files: File[] = [];
+
+  try {
+    files = await prisma.file.findMany({
+      where: {
+        id: {
+          in: fileIdList,
+        },
+      },
+    });
+  } catch (error) {
+    loggerBack.error(error, 'Error happened in listFileByIdList in file.repo.ts');
+  }
+  return files;
 }
 
 export async function findFileInDBByName(name: string): Promise<File | null> {

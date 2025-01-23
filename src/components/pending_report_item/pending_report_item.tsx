@@ -27,7 +27,7 @@ const PendingReportItem = ({
   onReportItemUpdate = () => {},
   onReportItemDelete = () => {},
 }: IPendingReportItemProps) => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['reports']);
   const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
   const [reportItem, setReportItem] = useState(report);
@@ -72,12 +72,12 @@ const PendingReportItem = ({
   const deleteClickHandler = () => {
     messageModalDataHandler({
       title: '',
-      subtitle: t('report_401:MY_REPORTS_SECTION.DELETE_PROCESS'),
-      content: t('report_401:MY_REPORTS_SECTION.APPLY_AGAIN'),
-      submitBtnStr: t('report_401:PENDING_REPORT_ITEM.YES_DELETE_IT'),
+      subtitle: t('reports:MY_REPORTS_SECTION.DELETE_PROCESS'),
+      content: t('reports:MY_REPORTS_SECTION.APPLY_AGAIN'),
+      submitBtnStr: t('reports:PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,
-      backBtnStr: t('common:COMMON.CANCEL'),
+      backBtnStr: t('reports:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -175,34 +175,28 @@ const PendingReportItem = ({
     +remainingData.days > 0 ? (
       <>
         <span className="text-text-neutral-primary">{remainingData.days}</span>
-        <span className="text-text-neutral-tertiary">
-          {t('report_401:PENDING_REPORT_ITEM.DAYS')}
-        </span>
+        <span className="text-text-neutral-tertiary">{t('reports:PENDING_REPORT_ITEM.DAYS')}</span>
         <span className="text-text-neutral-primary">{remainingData.hours}</span>
-        <span className="text-text-neutral-tertiary">
-          {t('report_401:PENDING_REPORT_ITEM.HOURS')}
-        </span>
+        <span className="text-text-neutral-tertiary">{t('reports:PENDING_REPORT_ITEM.HOURS')}</span>
       </>
     ) : +remainingData.hours > 0 ? (
       <>
         <span className="text-text-neutral-primary">{remainingData.hours}</span>
-        <span className="text-text-neutral-tertiary">
-          {t('report_401:PENDING_REPORT_ITEM.HOURS')}
-        </span>
+        <span className="text-text-neutral-tertiary">{t('reports:PENDING_REPORT_ITEM.HOURS')}</span>
         <span className="text-text-neutral-primary">{remainingData.minutes}</span>
         <span className="text-text-neutral-tertiary">
-          {t('report_401:PENDING_REPORT_ITEM.MINUTES')}
+          {t('reports:PENDING_REPORT_ITEM.MINUTES')}
         </span>
       </>
     ) : (
       <>
         <span className="text-text-neutral-primary">{remainingData.minutes}</span>
         <span className="text-text-neutral-tertiary">
-          {t('report_401:PENDING_REPORT_ITEM.MINUTES')}
+          {t('reports:PENDING_REPORT_ITEM.MINUTES')}
         </span>
         <span className="text-text-neutral-primary">{remainingData.seconds}</span>
         <span className="text-text-neutral-tertiary">
-          {t('report_401:PENDING_REPORT_ITEM.SECONDS')}
+          {t('reports:PENDING_REPORT_ITEM.SECONDS')}
         </span>
       </>
     );
@@ -243,17 +237,17 @@ const PendingReportItem = ({
       <td className="hidden px-16px text-left font-medium lg:table-cell">
         <span className="text-sm text-text-neutral-primary">
           {t(
-            `common:PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
+            `reports:PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
           )}
         </span>
       </td>
       <td className="hidden min-w-220px px-16px text-left font-medium lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">
-            {t('report_401:REPORTS_HISTORY_ITEM.FROM')}
+            {t('reports:REPORTS_HISTORY_ITEM.FROM')}
           </span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
-          <span className="text-text-neutral-tertiary">{t('common:COMMON.TO')}</span>
+          <span className="text-text-neutral-tertiary">{t('reports:COMMON.TO')}</span>
           <span className="text-text-neutral-primary">{endDate.date}</span>
         </div>
       </td>
@@ -261,7 +255,7 @@ const PendingReportItem = ({
       <td className="hidden min-w-150px px-16px text-left font-medium lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">
-            {t('report_401:PENDING_REPORT_ITEM.ESTIMATED')}
+            {t('reports:PENDING_REPORT_ITEM.ESTIMATED')}
           </span>
           {displayedEstimatedTime}
         </div>

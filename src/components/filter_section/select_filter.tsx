@@ -10,6 +10,7 @@ interface SelectFilterProps {
   onChange: (value: string) => void; // Info: (20240920 - tzuhan) 當選項改變時觸發的函數
   containerClassName?: string; // Info: (20241015 - Anna) 父容器的 className
   className?: string; // Info: (20241015 - Anna) 因為ledger頁面需要改樣式，因此增加className屬性
+  width?: string; // Info: (20250121 - Liz) 設定寬度
 }
 
 // Info: (20241015 - Anna) 預設 className 為空
@@ -20,8 +21,9 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
   onChange,
   containerClassName = '',
   className = '',
+  width = '',
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['filter_section_type']);
   const {
     targetRef: menuRef,
     componentVisible: menuVisibility,
@@ -29,42 +31,44 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
   } = useOuterClick<HTMLDivElement>(false);
 
   const toggleMenuHandler = () => {
-    setMenuVisibility(!menuVisibility);
+    setMenuVisibility((prev) => !prev);
   };
 
   return (
     // Info: (20241015 - Anna) 在這裡使用containerClassName屬性
-    <div className={`flex w-full flex-col gap-8px lg:w-200px ${containerClassName}`}>
+    <div className={`flex flex-col gap-8px ${width || 'w-full lg:w-200px'} ${containerClassName}`}>
       <p className="text-sm font-semibold text-input-text-primary">
-        {t(`common:FILTER_SECTION_TYPE.${label.toUpperCase()}`)}
+        {t(`filter_section_type:FILTER_SECTION_TYPE.${label.toUpperCase()}`)}
       </p>
       {/* Info: (20241015 - Anna) 在這裡使用className屬性 */}
       <div
-        onClick={toggleMenuHandler}
+        ref={menuRef}
         className={`relative flex h-44px items-center justify-between rounded-sm border bg-input-surface-input-background text-sm ${menuVisibility ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer ${className}`}
+        onClick={toggleMenuHandler}
       >
-        <p className="text-input-text-input-placeholder">
+        <p className="flex-1 truncate text-input-text-input-placeholder">
           {selectedValue
-            ? t(`common:FILTER_SECTION_TYPE.${selectedValue.toUpperCase()}`)
+            ? t(`filter_section_type:FILTER_SECTION_TYPE.${selectedValue.toUpperCase()}`)
             : selectedValue}
         </p>
-        <FaChevronDown />
+        <div className="flex h-20px w-20px items-center justify-center">
+          <FaChevronDown className={menuVisibility ? 'rotate-180' : 'rotate-0'} />
+        </div>
         <div
-          ref={menuRef}
           className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input ${
             menuVisibility
               ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
               : 'grid-rows-0 border-transparent'
           } overflow-hidden transition-all duration-300 ease-in-out`}
         >
-          <ul className={`flex w-full flex-col items-start p-2`}>
+          <ul className={`z-20 flex max-h-400px w-full flex-col items-start overflow-y-auto p-2`}>
             {options.map((option) => (
               <li
                 key={option}
                 onClick={() => onChange(option)}
                 className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
               >
-                {t(`common:FILTER_SECTION_TYPE.${option.toUpperCase()}`)}
+                {t(`filter_section_type:FILTER_SECTION_TYPE.${option.toUpperCase()}`)}
               </li>
             ))}
           </ul>

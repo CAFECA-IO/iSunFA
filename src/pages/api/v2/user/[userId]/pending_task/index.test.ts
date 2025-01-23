@@ -26,6 +26,20 @@ describe('getTotalPendingTaskForUser', () => {
           createdAt: 1620000000,
           updatedAt: 1620000000,
           deletedAt: null,
+          imageFile: {
+            id: 1,
+            name: 'imageA',
+            size: 512.25,
+            mimeType: 'image/png',
+            type: 'invoice',
+            url: 'urlA',
+            isEncrypted: true,
+            iv: Buffer.from('a'),
+            encryptedSymmetricKey: 'c29tZUVuY3J5cHRlZEtleQ==',
+            createdAt: 1620000000,
+            updatedAt: 1620000000,
+            deletedAt: null,
+          },
         },
       },
       {
@@ -39,12 +53,26 @@ describe('getTotalPendingTaskForUser', () => {
           createdAt: 1620000000,
           updatedAt: 1620000000,
           deletedAt: null,
+          imageFile: {
+            id: 1,
+            name: 'imageA',
+            size: 512.25,
+            mimeType: 'image/png',
+            type: 'invoice',
+            url: 'urlA',
+            isEncrypted: true,
+            iv: Buffer.from('a'),
+            encryptedSymmetricKey: 'c29tZUVuY3J5cHRlZEtleQ==',
+            createdAt: 1620000000,
+            updatedAt: 1620000000,
+            deletedAt: null,
+          },
         },
       },
     ];
 
-    const mockMissingCertificateCount = 5;
-    const mockUnpostedVoucherCount = 3;
+    const mockMissingCertificateCount = 3;
+    const mockUnpostedVoucherCount = 5;
 
     jest.spyOn(adminRepo, 'listCompanyByUserId').mockResolvedValue(mockListedCompany);
     jest
@@ -53,20 +81,19 @@ describe('getTotalPendingTaskForUser', () => {
     jest.spyOn(voucherRepo, 'countUnpostedVoucher').mockResolvedValue(mockUnpostedVoucherCount);
 
     const result = await getTotalPendingTaskForUser(userId);
-
     expect(result).toEqual({
       userId,
-      totalMissingCertificate: 10,
-      totalMissingCertificatePercentage: 0.62,
+      totalMissingCertificate: 6,
+      totalMissingCertificatePercentage: 0.37,
       missingCertificateList: [
-        { companyId: 1, companyName: 'Company A', count: 5 },
-        { companyId: 2, companyName: 'Company B', count: 5 },
+        { companyId: 1, companyName: 'Company A', count: 3, companyLogoSrc: 'urlA' },
+        { companyId: 2, companyName: 'Company B', count: 3, companyLogoSrc: 'urlA' },
       ],
-      totalUnpostedVoucher: 6,
-      totalUnpostedVoucherPercentage: 0.38,
+      totalUnpostedVoucher: 10,
+      totalUnpostedVoucherPercentage: 0.63,
       unpostedVoucherList: [
-        { companyId: 1, companyName: 'Company A', count: 3 },
-        { companyId: 2, companyName: 'Company B', count: 3 },
+        { companyId: 1, companyName: 'Company A', count: 5, companyLogoSrc: 'urlA' },
+        { companyId: 2, companyName: 'Company B', count: 5, companyLogoSrc: 'urlA' },
       ],
     });
   });

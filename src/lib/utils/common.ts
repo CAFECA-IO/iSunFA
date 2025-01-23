@@ -2,7 +2,12 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { ALLOWED_ORIGINS, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
+import {
+  ALLOWED_ORIGINS,
+  DEFAULT_END_DATE,
+  DEFAULT_PAGE_LIMIT,
+  DEFAULT_PAGE_START_AT,
+} from '@/constants/config';
 import {
   MILLISECONDS_IN_A_SECOND,
   MONTH_LIST,
@@ -14,6 +19,10 @@ import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/consta
 import { FileFolder } from '@/constants/file';
 import { KYCFiles, UploadDocumentKeys } from '@/constants/kyc';
 import { ROCDate } from '@/interfaces/locale';
+
+export function isFloatsEqual(a: number, b: number, tolerance = Number.EPSILON): boolean {
+  return Math.abs(a - b) < tolerance;
+}
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -38,8 +47,11 @@ export const timestampToYMD = (timestamp: number) => {
   };
 };
 
-export const numberWithCommas = (x: number | string) => {
-  return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ',');
+// Info: (20241101 - Anna) 千分位符號、括號
+export const numberWithCommas = (number: number | string) => {
+  const num = typeof number === 'string' ? parseFloat(number) : number;
+  const formattedNumber = new Intl.NumberFormat().format(Math.abs(num));
+  return num < 0 ? `(${formattedNumber})` : formattedNumber;
 };
 
 // Info: (20240416 - Shirley) truncate the string to the given length
@@ -136,12 +148,12 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
   };
 };
 
-function rocYearToAD(rocYear: string, sperator: string): string {
+function rocYearToAD(rocYear: string, separator: string): string {
   let modifiedRocYear = rocYear;
-  if (rocYear.split(sperator)[0].length < 4) {
+  if (rocYear.split(separator)[0].length < 4) {
     // Info 民國年
-    const year = parseInt(rocYear.split(sperator)[0], 10) + 1911;
-    modifiedRocYear = `${year}-${rocYear.split(sperator)[1]}-${rocYear.split(sperator)[2]}`;
+    const year = parseInt(rocYear.split(separator)[0], 10) + 1911;
+    modifiedRocYear = `${year}-${rocYear.split(separator)[1]}-${rocYear.split(separator)[2]}`;
   }
   return modifiedRocYear;
 }
@@ -213,7 +225,7 @@ export const cleanBoolean = (booleanStr: unknown): boolean => {
   return false;
 };
 
-const getCodeByMessage = (statusMessage: string) => {
+export const getCodeByMessage = (statusMessage: string) => {
   let code: string;
   let message: string;
   if (statusMessage in STATUS_CODE) {
@@ -229,14 +241,19 @@ const getCodeByMessage = (statusMessage: string) => {
   return { code, message };
 };
 
+export function statusCodeToHttpCode(statusCode: string): number {
+  const httpCodeStr = statusCode.slice(0, 3);
+  const httpCode = parseInt(httpCodeStr, 10);
+  return httpCode;
+}
+
 export const formatApiResponse = <T>(
   statusMessage: string,
   payload: T
 ): { httpCode: number; result: IResponseData<T> } => {
   const { code, message } = getCodeByMessage(statusMessage);
   const success = !!code.startsWith('2');
-  const httpCodeStr = code.slice(0, 3);
-  const httpCode = Number(httpCodeStr);
+  const httpCode = statusCodeToHttpCode(code);
   const result: IResponseData<T> = {
     powerby: 'iSunFA v' + version,
     success,
@@ -257,6 +274,11 @@ export const getValueByKey = <T extends string>(
 
 export const firstCharToUpperCase = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+export const getCurrentTimestamp = (): number => {
+  const currentTimestamp = new Date().getTime();
+  return currentTimestamp;
 };
 
 /** Info: (20240521 - Shirley)
@@ -297,10 +319,11 @@ export const countdown = (remainingSeconds: number) => {
 
 export const convertTimestampToROCDate = (timestampInSecond: number): ROCDate => {
   const milliSecondTimestamp = timestampInMilliSeconds(timestampInSecond);
-  const date = new Date(milliSecondTimestamp);
-  const year = date.getUTCFullYear() - 1911;
-  const month = date.getUTCMonth() + 1;
-  const day = date.getUTCDate();
+  const utcDate = new Date(milliSecondTimestamp);
+  const date = new Date(utcDate.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+  const year = date.getFullYear() - 1911;
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
   return { year, month, day };
 };
 
@@ -437,6 +460,9 @@ export function transformYYYYMMDDToTimeStampInSecond(str: string) {
 }
 
 export function setTimestampToDayEnd(timestamp: number) {
+  if (timestamp >= DEFAULT_END_DATE) {
+    return timestamp;
+  }
   const timestampMilliSeconds = timestampInMilliSeconds(timestamp);
   const date = new Date(timestampMilliSeconds);
   date.setHours(23, 59, 59, 999);
@@ -444,6 +470,9 @@ export function setTimestampToDayEnd(timestamp: number) {
 }
 
 export function setTimestampToDayStart(timestamp: number) {
+  if (timestamp <= 0) {
+    return 0;
+  }
   const timestampMilliSeconds = timestampInMilliSeconds(timestamp);
   const date = new Date(timestampMilliSeconds);
   date.setHours(0, 0, 0, 0);
@@ -564,10 +593,10 @@ export const loadFileFromLocalStorage = (
 
 export const deleteFileFromLocalStorage = (
   fileType: UploadDocumentKeys,
-  loacalStorageFilesKey: string = KYCFiles,
+  localStorageFilesKey: string = KYCFiles,
   fileId?: number
 ) => {
-  const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
+  const currentData = JSON.parse(localStorage.getItem(localStorageFilesKey) || '{}');
   const data = currentData;
   let newData = {
     ...data,
@@ -596,7 +625,7 @@ export const deleteFileFromLocalStorage = (
       }
     }
   }
-  localStorage.setItem(loacalStorageFilesKey, JSON.stringify(newData));
+  localStorage.setItem(localStorageFilesKey, JSON.stringify(newData));
 };
 
 export function getEnumValue<T extends object>(enumObj: T, value: string): T[keyof T] | undefined {
@@ -665,3 +694,206 @@ export function numberBeDashIfFalsy(num: number | null | undefined | string) {
 
   return num < 0 ? `(${formattedNumber})` : formattedNumber;
 }
+
+/**
+ * Info: (20241029 - Murky)
+ * @describe 給定startDateInSecond和endDateInSecond，回傳這段時間內每個月的最後一秒, 包含endDate的月份
+ */
+export function getLastSecondsOfEachMonth(
+  startDateInSecond: number,
+  endDateInSecond: number
+): number[] {
+  const startDate = new Date(timestampInMilliSeconds(startDateInSecond));
+  const endDate = new Date(timestampInMilliSeconds(endDateInSecond));
+
+  const result: number[] = [];
+
+  // Info: (20241029 - Murky) 建立複製的日期避免修改原來的 `startDate`
+  const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+
+  // Info: (20241029 - Murky) 繼續迴圈直到 `current` 超過 `endDate` 的月份
+  while (current.getTime() <= endDate.getTime()) {
+    // Info: (20241029 - Murky) 找到當前月份的最後一天
+    const lastDayOfMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0);
+
+    // Info: (20241029 - Murky) 設定到該天的最後一秒
+    lastDayOfMonth.setHours(23, 59, 59, 999);
+
+    // Info: (20241029 - Murky) 將當月最後一天的最後一秒加入結果陣列
+    result.push(lastDayOfMonth.getTime());
+
+    // Info: (20241029 - Murky) 移動到下個月
+    current.setMonth(current.getMonth() + 1);
+  }
+
+  return result;
+}
+
+/**
+ * Info: (20241030 - Murky)
+ * @describe 給定開始時間和結束時間，回傳這段時間內每個星期的特定星期幾的日期
+ * @param startInSecond - {number} 開始時間 in second
+ * @param endInSecond - {number} 結束時間 in second
+ * @param dayByNumber - {number} 一週的第幾天, 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+ */
+export function getDaysBetweenDates({
+  startInSecond,
+  endInSecond,
+  dayByNumber,
+}: {
+  startInSecond: number;
+  endInSecond: number;
+  dayByNumber: number;
+}) {
+  const result = [];
+  const current = new Date(timestampInMilliSeconds(startInSecond));
+  const endDate = new Date(timestampInMilliSeconds(endInSecond));
+  // Info: (20241030 - Murky) Shift to next of required days
+  current.setDate(current.getDate() + ((dayByNumber - current.getDay() + 7) % 7));
+  //  Info: (20241030 - Murky) While less than end date, add dates to result array
+  while (current < endDate) {
+    result.push(new Date(+current));
+    current.setDate(current.getDate() + 7);
+  }
+  return result;
+}
+
+/**
+ * Info: (20241030 - Murky)
+ * @describe 給定開始時間和結束時間，回傳這段時間內每個月的最後一天
+ * @param startInSecond - {number} 開始時間 in second
+ * @param endInSecond - {number} 結束時間 in second
+ * @param monthByNumber - {number} 一年的第幾個月, 0 = January, 1 = February, ..., 11 = December
+ */
+export function getLastDatesOfMonthsBetweenDates({
+  startInSecond,
+  endInSecond,
+  monthByNumber,
+}: {
+  startInSecond: number;
+  endInSecond: number;
+  monthByNumber: number;
+}) {
+  const result = [];
+  const current = new Date(timestampInMilliSeconds(startInSecond));
+  const endDate = new Date(timestampInMilliSeconds(endInSecond));
+
+  current.setMonth(current.getMonth() + ((monthByNumber - current.getMonth() + 12) % 12));
+  current.setDate(0);
+
+  while (current < endDate) {
+    result.push(new Date(+current));
+    current.setMonth(current.getMonth() + 12);
+    current.setDate(0);
+  }
+  return result;
+}
+
+/** Info: (20241108 - Shirley)
+ * 將給定的 timestamp 和 時區偏移轉換為新的 timestamp。
+ *
+ * @param timestamp - 原始的時間戳（秒）
+ * @param timezone - 時區偏移，例如 '+0800', '-0530'
+ * @returns 轉換後的時間戳（秒）
+ */
+export const convertTimestampWithTimezone = (timestamp: number, timezone: string): number => {
+  // Info: (20241108 - Shirley) 檢查 timestamp 是否有效
+  if (typeof timestamp !== 'number' || Number.isNaN(timestamp)) {
+    throw new Error(STATUS_MESSAGE.INVALID_TIMESTAMP);
+  }
+
+  // Info: (20241108 - Shirley) 檢查 timezone 格式是否正確
+  const timezoneRegex = /^([+-])(\d{2})(\d{2})$/;
+  const match = timezone.match(timezoneRegex);
+  if (!match) {
+    throw new Error(STATUS_MESSAGE.INVALID_TIMEZONE_FORMAT);
+  }
+
+  const sign = match[1] === '+' ? 1 : -1;
+  const hours = parseInt(match[2], 10);
+  const minutes = parseInt(match[3], 10);
+
+  // Info: (20241108 - Shirley) 計算總的分鐘數
+  const totalOffsetMinutes = sign * (hours * 60 + minutes);
+
+  // Info: (20241108 - Shirley) 將總分鐘轉換為秒數
+  const offsetInSeconds = totalOffsetMinutes * 60;
+
+  // Info: (20241108 - Shirley) 調整 timestamp
+  const adjustedTimestamp = timestamp + offsetInSeconds;
+
+  return adjustedTimestamp;
+};
+
+/** Info: (20241108 - Shirley)
+ * 將給定的 timestamp 和時區偏移轉換為指定格式的日期字串。
+ *
+ * @param timestamp - 原始的時間戳（秒）
+ * @param timezone - 時區偏移，例如 '+0800', '-0530'
+ * @param format - 日期格式，例如 'YYYY-MM-DD', 'YYYY/MM/DD', 'DD-MM-YYYY'
+ * @returns 轉換後的日期字串
+ */
+export const formatTimestampByTZ = (
+  timestamp: number,
+  timezone: string,
+  format: string = 'YYYY-MM-DD'
+): string => {
+  const adjustedTimestamp = convertTimestampWithTimezone(timestamp, timezone);
+  const date = new Date(adjustedTimestamp * 1000);
+
+  const components: Record<string, string> = {
+    YYYY: String(date.getUTCFullYear()),
+    MM: String(date.getUTCMonth() + 1).padStart(2, '0'),
+    DD: String(date.getUTCDate()).padStart(2, '0'),
+    HH: String(date.getUTCHours()).padStart(2, '0'),
+    mm: String(date.getUTCMinutes()).padStart(2, '0'),
+    ss: String(date.getUTCSeconds()).padStart(2, '0'),
+  };
+
+  return format.replace(/YYYY|MM|DD|HH|mm|ss/g, (match) => components[match]);
+};
+
+export const waterfallPromise = (
+  callbacks: Array<(input: unknown) => Promise<unknown>>,
+  initialArgs: unknown
+): Promise<unknown> => {
+  return callbacks.reduce<Promise<unknown>>(
+    (accumulator, callback) => {
+      return accumulator.then(callback);
+    },
+    Promise.resolve(initialArgs as unknown)
+  );
+};
+
+/**
+ * Info: (20241213 - tzuhan) 簡化文件名稱，適配中英文字符
+ * @param name 文件名稱
+ * @param maxWidth 最大顯示寬度（如 120 px）
+ * @returns 簡化後的文件名稱
+ */
+export const simplifyFileName = (name: string): string => {
+  const isChinese = (char: string) => /[\u4e00-\u9fff]/.test(char);
+
+  const extensionIndex = name.lastIndexOf('.');
+  const extension = extensionIndex !== -1 ? name.slice(extensionIndex) : '';
+  const baseName = extensionIndex !== -1 ? name.slice(0, extensionIndex) : name;
+
+  // Info: (20241216 - tzuhan) 判斷是否包含中文，設定最大長度
+  const hasChinese = baseName.split('').some(isChinese);
+  const maxBaseLength = hasChinese ? 4 : 8;
+  const maxExtensionLength = 4; // Info: (20241216 - tzuhan) 副檔名最多 4 字元
+
+  // Info: (20241216 - tzuhan) 簡化副檔名
+  const simplifiedExtension =
+    extension.length > maxExtensionLength ? `${extension.slice(0, maxExtensionLength)}` : extension;
+
+  // Info: (20241216 - tzuhan) 簡化主名稱並在中間加入 "..."
+  if (baseName.length > maxBaseLength) {
+    const halfLength = Math.floor(maxBaseLength / 2);
+    const start = baseName.slice(0, halfLength - 1);
+    const end = baseName.slice(baseName.length - halfLength);
+    return `${start}...${end}${simplifiedExtension}`;
+  }
+
+  return `${baseName}${simplifiedExtension}`;
+};

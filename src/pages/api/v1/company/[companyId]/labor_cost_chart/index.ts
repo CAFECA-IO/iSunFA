@@ -93,14 +93,11 @@ function formatDateQuery(req: NextApiRequest) {
   return { date: null };
 }
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ILaborCostChartData>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ILaborCostChartData | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {
@@ -125,10 +122,11 @@ async function handleGetRequest(
           };
           statusMessage = STATUS_MESSAGE.SUCCESS_GET;
         } catch (error) {
-          const logError = loggerError(userId, 'handleGetRequest failed', error as Error);
-          logError.error(
-            'Prisma related func. in handleGetRequest in labor_cost_chart/index.ts failed'
-          );
+          loggerError({
+            userId,
+            errorType: 'handleGetRequest failed',
+            errorMessage: (error as Error).message,
+          });
           statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
         }
       }

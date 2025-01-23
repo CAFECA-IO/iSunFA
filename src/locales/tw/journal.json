@@ -33,7 +33,6 @@
     "TRANSFER": "移轉",
     "PAYMENT": "支付",
     "RECEIVING": "收入",
-    "TWD": "新台幣",
     "TAX": "稅 /",
     "NO_SLASH_TAX": "稅",
     "TWD_FEE": "新台幣費用",
@@ -58,7 +57,7 @@
     "ADD_NEW_CONTRACT": "新增合約",
     "PROJECT_CONTRACT_ISUNFA": "專案合約 - iSunFA",
     "FROM_TO": "供應商/客戶",
-    "VOUCHER_NO": "憑證號碼",
+    "VOUCHER_NO": "傳票號碼",
     "OPERATIONS": "操作",
     "INFO": "資訊",
     "EVENT_TYPE": "事件類型",
@@ -188,23 +187,44 @@
     "ACCOUNTING": "會計科目",
     "CREDIT": "貸方",
     "DEBIT": "借方",
-    "ISSUER": "發行人",
+    "ISSUER": "製單人",
     "RECEIVABLE_AMOUNT": "應收金額",
     "PAYABLE_AMOUNT": "應付金額",
     "RECEIVED_AMOUNT": "已收金額",
     "PAID_AMOUNT": "已付金額",
     "REMAIN_AMOUNT": "剩餘金額",
     "REVERSE": "沖銷",
+    "DELETED": "已刪除",
     "EXPORT_VOUCHER_MODAL_TITLE": "匯出傳票",
     "EXPORT_VOUCHER_MODAL_SUBTITLE": "請選擇您要匯出的傳票",
+    "TOAST_EXPORT_SUCCESS": "傳票已成功匯出。",
+    "TOAST_EXPORT_FAILED": "傳票匯出失敗，請稍後再試。",
     "VOUCHER_NUMBER": "傳票號碼",
     "EXPORT_BTN": "匯出",
     "FROM_PLACEHOLDER": "從",
     "TO_PLACEHOLDER": "到",
     "BALANCE": "餘額",
-    "LEDGER": "分類帳",
+    "LEDGER": "總帳/分類帳",
     "TRIAL_BALANCE": "試算表",
-    "NO_VOUCHER": "無傳票資料"
+    "NO_VOUCHER": "無傳票資料",
+    "UPLOADED_TAB": "已過帳傳票",
+    "UPCOMING_TAB": "未過帳傳票",
+    "RECEIVING_TAB": "應收傳票",
+    "PAYMENT_TAB": "應付傳票",
+    "SELECT": "選擇",
+    "SELECT_ALL": "全選",
+    "UNSELECT_ALL": "取消全選",
+    "HIDE_VOUCHER_TOGGLE": "隱藏已刪除的傳票和其相關沖銷分錄",
+    "WARNING_MODAL_TITLE": "警告",
+    "AT_LEAST_ONE_VOUCHER_CONTENT": "請至少選擇一張傳票",
+    "DELETE_ONE_VOUCHER_TITLE": "您確定要刪除{{voucherNo}}嗎？",
+    "DELETE_ONE_VOUCHER_CONTENT": "與此傳票相關的所有資產也將被刪除。",
+    "DELETE_ONE_VOUCHER_WARNING": "刪除後將自動生成一張沖銷分錄，原始傳票將保留以供參考。",
+    "DELETE_ONE_VOUCHER_SUBMIT_BTN": "是的，刪除此傳票",
+    "DELETE_MULTIPLE_VOUCHER_TITLE": "您確定要刪除這{{count}}張傳票嗎？",
+    "DELETE_MULTIPLE_VOUCHER_CONTENT": "與這些傳票相關的所有資產也將被刪除。",
+    "DELETE_MULTIPLE_VOUCHER_WARNING": "刪除後將自動生成沖銷分錄，原始傳票將保留以供參考。",
+    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "是的，刪除這些傳票"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增傳票",
@@ -212,14 +232,21 @@
     "VOUCHER_TYPE": "傳票類型",
     "TYPE_RECEIVE": "收入",
     "TYPE_EXPENSE": "支付",
-    "TYPE_TRANSFER": "轉帳",
+    "TYPE_TRANSFER": "移轉",
+    "TYPE_OPENING": "開帳",
     "NOTE": "備註",
     "COUNTERPARTY": "交易對象",
     "RECURRING_ENTRY": "週期性分錄",
     "SELECT_ACCOUNTING": "選擇會計科目",
     "NO_ACCOUNTING_FOUND": "查無會計科目",
     "NO_COUNTERPARTY_FOUND": "查無交易對象",
-    "EVERY": "每"
+    "EVERY": "每",
+    "TOAST_FAILED_TO_CREATE": "建立傳票失敗，請稍後再試。",
+    "TOAST_FILL_UP_FORM": "請完整填寫表格",
+    "TOAST_FAILED_TO_UPDATE": "更新傳票失敗，請稍後再試",
+    "LINE_ITEM_1": "請檢查借貸方是否平衡",
+    "LINE_ITEM_2": "請檢查會計科目是否皆已填寫",
+    "LINE_ITEM_3": "請檢查是否新增至少 1 筆會計分錄"
   },
   "ACCOUNT_TYPE": {
     "ASSET": "資產",
@@ -233,23 +260,18 @@
   },
   "ASSET_SECTION": {
     "TITLE": "資產",
+    "EMPTY": "無資料",
     "EMPTY_HINT": "請新增至少 1 筆資產！",
     "ADD_BTN": "新增資產"
-  },
-  "REVERSE_SECTION": {
-    "TITLE": "沖銷",
-    "REVERSE_VOUCHER": "沖銷傳票",
-    "REVERSE_VOUCHER_PLACEHOLDER": "請選擇...",
-    "REVERSE_AMOUNT": "沖銷金額",
-    "ADD_BTN": "新增更多沖銷傳票",
-    "EMPTY_HINT": "請新增至少 1 筆沖銷傳票！"
   },
   "VOUCHER_LINE_BLOCK": {
     "ACCOUNTING": "會計科目",
     "PARTICULARS": "摘要",
     "CREDIT": "貸方金額",
     "DEBIT": "借方金額",
-    "EMPTY_HINT": "請新增至少 1 筆會計分錄！"
+    "EMPTY_HINT": "請新增至少 1 筆會計分錄！",
+    "REVERSE_ITEM": "沖銷項目",
+    "REVERSE_HINT": "請新增至少 1 筆沖銷傳票！"
   },
   "VOUCHER_DETAIL_PAGE": {
     "TITLE": "傳票",
@@ -271,6 +293,52 @@
     "DELETE_MESSAGE_CONTENT": "與此傳票相關的所有資產也將被刪除。",
     "DELETE_MESSAGE_SUBMIT_BTN": "是的，刪除傳票",
     "DELETE_SUCCESS_TOAST": "傳票已刪除。",
-    "UNDO": "復原"
+    "UNDO": "復原",
+    "VOUCHER_NOT_FOUND": "找不到傳票，請確認網址是否正確"
+  },
+  "LEDGER": {
+    "LEDGER_PERIOD": "分類帳期間",
+    "LABEL_TYPE": "分類帳類型",
+    "GENERAL": "總分類帳",
+    "DETAILED": "明細分類帳",
+    "GENERAL_DETAILED": "總分類帳 和 明細分類帳",
+    "SPECIFIC_ACCOUNTING_TITLE": "會計科目",
+    "TOTAL_DEBIT_AMOUNT": "借方總額",
+    "TOTAL_CREDIT_AMOUNT": "貸方總額",
+    "INCOME": "營業外收支",
+    "ASSET": "資產",
+    "LIABILITY": "負債",
+    "EQUITY": "權益",
+    "COST": "成本",
+    "EXPENSE": "費用",
+    "REVENUE": "收入",
+    "OTHERCOMPREHENSIVEINCOME": "其他綜合損益"
+  },
+  "AI_WORKING_AREA": {
+    "RESTING_CONTENT": "請選擇憑證，讓 AI 為您生成所需的傳票",
+    "WORKING_CONTENT": "AI 正在分析您的憑證，請稍候...",
+    "STOP_BTN": "停止分析",
+    "FAILED_CONTENT": "AI 未從您的憑證中找到任何有效資料，請手動輸入或",
+    "RETRY_BTN": "重試",
+    "FINISH_CONTENT": "AI 已完成分析，點擊以讓 AI",
+    "FILL_UP_BTN": "填寫您的傳票",
+    "WARNING_CONTENT": "AI 可能會出錯，請仔細檢查重要資訊。"
+  },
+  "REVERSE_MODAL": {
+    "MODAL_TITLE": "選擇沖銷項目",
+    "SELECT": "選擇",
+    "TOTAL_REVERSE_AMOUNT": "總沖銷金額",
+    "VOUCHER_NO": "傳票號碼",
+    "ACCOUNTING": "會計科目",
+    "PARTICULARS": "摘要",
+    "AMOUNT": "金額",
+    "REVERSE_AMOUNT": "沖銷金額",
+    "NOT_FOUND": "查無沖銷項目"
+  },
+  "EDIT_VOUCHER": {
+    "PAGE_TITLE": "編輯傳票"
+  },
+  "COMMON": {
+    "STATUS": "狀態"
   }
 }

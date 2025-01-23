@@ -1,0 +1,172 @@
+{
+  "SUBSCRIPTIONS_PAGE": {
+    "META_TITLE": "Subscription",
+    "SUBSCRIPTION_PLANS": "Subscription Plans",
+    "MY_SUBSCRIPTIONS": "My Subscriptions",
+    "ENABLE_AUTO_RENEWAL": "Enable Auto-Renewal",
+    "CHANGE_PLAN": "Change Plan",
+    "CHANGE_CARD": "Change",
+    "BILLING": "Billing",
+    "NEXT_RENEWAL": "Next Renewal",
+    "EXPIRED_DATE": "Expired Date",
+    "TURN_ON_AUTO_RENEWAL_TITLE": "Turn On Auto-Renewal",
+    "TURN_ON_AUTO_RENEWAL_MESSAGE": "Are you sure you want to Turn On auto-renewal?",
+    "YES_TURN_ON_AUTO_RENEWAL": "Yes,Turn on auto-renewal",
+    "CANCEL": "Cancel",
+    "TURN_OFF_AUTO_RENEWAL_TITLE": "Turn off Auto-Renewal",
+    "TURN_OFF_AUTO_RENEWAL_MESSAGE": "Are you sure you want to Turn off auto-renewal?",
+    "YES_TURN_OFF_AUTO_RENEWAL": "Yes,Turn off auto-renewal",
+    "CHOOSE_THE_PLAN_THAT_FITS_YOUR_TEAM": "Choose the plan that fits your team",
+    "PLAN_FOR": "Plan for ",
+    "PAYMENT_FAILED": "Payment Failed",
+    "UPDATE_PAYMENT": "Update Payment",
+    "RETURNING_TO_BEGINNER_IN": "Returning to Beginner in ",
+    "DAYS": " Days"
+  },
+
+  "PLAN_NAME": {
+    "BEGINNER": "Beginner",
+    "PROFESSIONAL": "Professional",
+    "ENTERPRISE": "Enterprise"
+  },
+
+  "SUBSCRIPTION_FAQ": {
+    "SUBSCRIPTION_FAQ": "Subscription FAQ",
+    "FAQ1_QUESTION": "Who is responsible for team payments?",
+    "FAQ1_ANSWER": "Any user can upgrade their own team to the Professional plan by entering payment information. After upgrading, only owner can manage future payments for the team.",
+    "FAQ2_QUESTION": "Can I use iSunFA for free?",
+    "FAQ2_ANSWER": "Yes, the Basic Plan of iSunFA is free forever. No subscription or credit card is required to get started.",
+    "FAQ3_QUESTION": "What payment methods are supported?",
+    "FAQ3_ANSWER": "Credit Cards (MasterCard, Visa, JCB): Auto-renewal ensures uninterrupted subscription services."
+  },
+
+  "SUBSCRIPTION_PLAN_CONTENT": {
+    "NTD_SLASH_MONTH": "NTD/Month",
+    "MONTH": "Month",
+    "PER_EXTRA_TEAM_MEMBER_PREFIX": "",
+    "PER_EXTRA_TEAM_MEMBER_SUFFIX": " per extra team member",
+    "SELECTED": "Selected",
+    "SELECT_THIS_PLAN": "Select this plan",
+    "EVERYTHING_IN_BEGINNER_PLUS": "Everything in Beginner, plus:",
+    "EVERYTHING_IN_PROFESSIONAL_PLUS": "Everything in Professional, plus:",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "You can cancel your subscription anytime",
+    "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
+    "FREE": "Free"
+  },
+
+  "PLANS_FEATURES_NAME": {
+    "CLOUD_STORAGE": "Cloud Storage",
+    "AI_ASSISTANT": "AI Assistant",
+    "REPORT_GENERATION": "Report Generation",
+    "FINANCIAL_STATEMENTS": "Financial Statements",
+    "MATCHMAKING_PLATFORM": "Matchmaking Platform",
+    "TEAM_MEMBERS": "Team Members",
+    "CUSTOMER_SUPPORT": "Customer Support",
+    "API_INTEGRATION": "API Integration",
+    "TECHNICAL_SUPPORT": "Technical Support",
+    "ADDITIONAL_PERKS": "Additional Perks"
+  },
+
+  "PLANS_FEATURES_VALUE": {
+    "10GB": "10GB",
+    "LIMITED_CAPACITY": "Limited capacity",
+    "UNLIMITED": "Unlimited",
+    "MANUAL_DOWNLOAD": "Manual download",
+    "TASK_ACCEPTANCE_ONLY": "Task acceptance only",
+    "LIMITED_TO_1_PERSON": "Limited to 1 person",
+    "LIVE_CHAT_SUPPORT": "Live chat support",
+    "1TB": "1TB",
+    "UNLIMITED_CAPACITY": "Unlimited capacity",
+    "POST_TASK_REQUIREMENTS": "Post task requirements",
+    "UP_TO_10_PEOPLE": "Up to 10 people",
+    "AUTO_UPDATED": "Auto-updated",
+    "UP_TO_24_HOURS_IN_TOTAL_4_HOURS_PER_SESSION": "Up to 24 hours in total, 4 hours per session",
+    "10_ASSET_TAGGING_STICKERS": "10 asset tagging stickers",
+    "CUSTOMIZABLE_REPORTS": "Customizable reports",
+    "PRIORITY_VISIBILITY": "Priority visibility",
+    "SYSTEM_SUPPORT": "System support",
+    "UP_TO_48_HOURS_IN_TOTAL_4_HOURS_PER_SESSION": "Up to 48 hours in total, 4 hours per session",
+    "100_ASSET_TAGGING_STICKERS": "100 asset tagging stickers",
+    "ONLINE_AND_OFFLINE_INTEGRATION": "online and offline integration",
+    "HARDWARE_SUPPORT": "hardware support"
+  },
+
+  "ERROR": {
+    "ERROR": "Error",
+    "DATA_NOT_FOUND": "Data not found",
+    "TEAM_DATA_NOT_FOUND": "Team data not found",
+    "INVOICE_DATA_NOT_FOUND": "Invoice data not found",
+    "USER_OWNED_TEAMS_NOT_FOUND": "User owned teams not found",
+    "PLAN_NOT_FOUND": "Plan not found",
+    "TOAST_PAYMENT_FAILED_TITLE": "Payment Failed ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_PREFIX": "- The last payment of your plan is failed. Please update your payment as soon as possible, or it will be downgraded to Beginner after ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_SUFFIX": " days",
+    "UPDATE_PAYMENT": "Update Payment",
+    "TOAST_EXPIRED_REMINDER_TITLE": "Plan Expired ",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_PREFIX": "- Your plan is going to expired in ",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX": " days, please renew your payment to keep the service, or it will be downgraded after.",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_FOR_TODAY": "- Your plan is going to expired today, please renew your payment to keep the service, or it will be downgraded after.",
+    "RENEW_PAYMENT": "Renew Payment"
+  },
+
+  "MODAL": {
+    "SUBSCRIPTION_IS_NOT_DONE_YET": "Subscription is not done yet",
+    "SUBSCRIPTION_IS_NOT_DONE_YET_MESSAGE": "Your subscription is not done yet, are you sure you want to leave this page?",
+    "KEEP_FINISHING_MY_SUBSCRIPTION": "Keep finishing my subscription",
+    "LEAVE": "Leave",
+    "DOWNGRADE_MESSAGE_MODAL_TITLE": "Downgrade the plan",
+    "DOWNGRADE_MESSAGE_MODAL_CONTENT_PREFIX": "Are you sure you want to downgrade your plan to",
+    "DOWNGRADE_MESSAGE_MODAL_CONTENT_SUFFIX": "?",
+    "DOWNGRADE_MESSAGE_MODAL_SECONDARY_CONTENT": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
+    "DOWNGRADE_MESSAGE_MODAL_SUBMIT": "Yes. Downgrade my plan"
+  },
+
+  "PAYMENT_PAGE": {
+    "PAGE_TITLE": "Payment",
+    "PAYMENT": "Payment",
+    "ADD_CREDIT_CARD": "Add Credit Card",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "You can cancel your subscription anytime.",
+    "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
+    "SUBSCRIBE": "Subscribe",
+    "TOAST_SUBSCRIPTION_SUCCESS": "You have successfully completed your subscription.",
+    "DOWNGRADED_TO_BEGINNER_PLAN": "Downgraded to Beginner plan",
+    "MONTHLY_SUBSCRIPTION": "Monthly Subscription",
+    "SUBTOTAL": "Subtotal",
+    "TAX": "Tax",
+    "TOTAL_PRICE": "Total Price"
+  },
+
+  "BILLING_PAGE": {
+    "META_TITLE": "Billing",
+    "PAGE_TITLE_PREFIX": "Billing of",
+    "PAGE_TITLE_SUFFIX": "",
+    "INVOICE_ID": "Invoice ID",
+    "BILLING_DATE": "Billing Date",
+    "PLAN": "Plan",
+    "AMOUNT": "Amount",
+    "STATUS": "Status",
+    "PAID": "Paid",
+    "FAILED": "Failed"
+  },
+
+  "INVOICE_PAGE": {
+    "META_TITLE": "Invoice",
+    "PAGE_TITLE": "Invoice",
+    "INVOICE_TITLE": "Invoice",
+    "ISSUED": "Issued",
+    "DUE": "Due",
+    "BILLED_TO": "Billed To",
+    "TAX_ID": "Tax ID",
+    "FROM": "From",
+    "DESCRIPTION": "Description",
+    "QTY": "Qty",
+    "UNIT_PRICE": "Unit Price",
+    "AMOUNT": "Amount",
+    "SUBTOTAL": "Subtotal",
+    "TAX": "Tax",
+    "TOTAL": "Total",
+    "AMOUNT_DUE": "Amount Due",
+    "FOOTNOTE_DUE": "due",
+    "FOOTNOTE_PAGE": "Page 1 of 1"
+  }
+}

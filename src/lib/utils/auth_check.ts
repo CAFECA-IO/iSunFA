@@ -1,6 +1,5 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { NextApiRequest, NextApiResponse } from 'next';
-import { RoleName } from '@/constants/role_name';
+import { NextApiRequest } from 'next';
 import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import {
@@ -8,34 +7,18 @@ import {
   getAdminByCompanyIdAndUserIdAndRoleName,
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
-import i18next from 'i18next';
 import { AllRequiredParams, AuthFunctions, AuthFunctionsKeys } from '@/interfaces/auth';
 import { FREE_COMPANY_ID } from '@/constants/config';
-import { getUserById } from './repo/user.repo';
-
-const getTranslatedRoleName = (roleName: RoleName): string => {
-  const t = i18next.t.bind(i18next);
-  const roleTranslations: Record<RoleName, string> = {
-    [RoleName.SUPER_ADMIN]: t('common:ROLE.SUPER_ADMIN'),
-    [RoleName.ADMIN]: t('common:ROLE.ADMIN'),
-    [RoleName.OWNER]: t('common:ROLE.OWNER'),
-    [RoleName.ACCOUNTANT]: t('common:ROLE.ACCOUNTANT'),
-    [RoleName.BOOKKEEPER]: t('common:ROLE.BOOKKEEPER'),
-    [RoleName.FINANCE]: t('common:ROLE.FINANCE'),
-    [RoleName.VIEWER]: t('common:ROLE.VIEWER'),
-    [RoleName.TEST]: t('common:ROLE.TEST'),
-  };
-
-  return roleTranslations[roleName] || roleName;
-};
+import { CompanyRoleName } from '@/constants/role';
+import { getUserById } from '@/lib/utils/repo/user.repo';
 
 export async function checkUser(params: { userId: number }) {
   const user = await getUserById(params.userId);
   return !!user;
 }
 
-export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getSession(req, res);
+export async function checkAdmin(req: NextApiRequest) {
+  const session = await getSession(req);
   const { companyId, userId } = session;
   if (!userId) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
@@ -46,7 +29,7 @@ export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
   if (typeof companyId !== 'number' || typeof userId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
-  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  const admin = await getAdminByCompanyIdAndUserId(userId, companyId);
   if (!admin) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -57,7 +40,7 @@ export async function checkUserAdmin(params: {
   userId: number;
   companyId: number;
 }): Promise<boolean> {
-  const admin = await getAdminByCompanyIdAndUserId(params.companyId, params.userId);
+  const admin = await getAdminByCompanyIdAndUserId(params.userId, params.companyId);
   return !!admin;
 }
 
@@ -68,7 +51,7 @@ export async function checkUserCompanyOwner(params: {
   const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
     params.companyId,
     params.userId,
-    RoleName.OWNER
+    CompanyRoleName.OWNER
   );
   return !!admin;
 }
@@ -80,29 +63,9 @@ export async function checkUserCompanySuperAdmin(params: {
   const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
     params.companyId,
     params.userId,
-    RoleName.SUPER_ADMIN
+    CompanyRoleName.SUPER_ADMIN
   );
   return !!admin;
-}
-
-export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleName: RoleName) {
-  const translatedRoleName = getTranslatedRoleName(roleName);
-  const session = await getSession(req, res);
-  const { companyId, userId } = session;
-  if (!userId) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-  if (!companyId) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
-  if (typeof companyId !== 'number' || typeof userId !== 'number') {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
-  }
-  const admin = await getAdminByCompanyIdAndUserIdAndRoleName(companyId, userId, roleName);
-  if (!admin) {
-    throw new Error(`${STATUS_MESSAGE.FORBIDDEN} - Missing role: ${translatedRoleName}`);
-  }
-  return session;
 }
 
 export async function checkCompanyAdminMatch(params: {

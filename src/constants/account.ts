@@ -18,6 +18,7 @@ export enum EventType {
   PAYMENT = 'payment',
   INCOME = 'income',
   TRANSFER = 'transfer',
+  OPENING = 'opening',
 }
 
 export enum AccountType {
@@ -35,10 +36,24 @@ export enum AccountType {
   OTHER = 'other',
 }
 
+// Info: (20241112 - Julian) 11/11 和 Anna 確認的會計科目類型，目前用於 Account Setting
+export enum AccountTypeBeta {
+  ASSET = 'asset', // Info: (20241112 - Julian) 資產(1)
+  LIABILITY = 'liability', // Info: (20241112 - Julian) 負債(2)
+  EQUITY = 'equity', // Info: (20241112 - Julian) 權益(3)
+  REVENUE = 'revenue', // Info: (20241112 - Julian) 銷貨收入(4)
+  COST = 'cost', // Info: (20241112 - Julian) 成本(5)
+  EXPENSE = 'expense', // Info: (20241112 - Julian) 費用(6)
+  INCOME = 'income', // Info: (20241112 - Julian) 其他收益(6,7)
+  NON_OPERATING = 'non_operating', // Info: (20241112 - Julian) 營業外收支
+  OTHER_COMPREHENSIVE_INCOME = 'other_comprehensive_income', // Info: (20241112 - Julian) 其他綜合損益
+}
+
 export enum VoucherType {
   RECEIVE = 'receive',
   EXPENSE = 'expense',
   TRANSFER = 'transfer',
+  OPENING = 'opening',
 }
 
 export enum PaymentStatusType {
@@ -70,6 +85,16 @@ export const EVENT_TYPE_TO_VOUCHER_TYPE_MAP: {
   [EventType.INCOME]: VoucherType.RECEIVE,
   [EventType.PAYMENT]: VoucherType.EXPENSE,
   [EventType.TRANSFER]: VoucherType.TRANSFER,
+  [EventType.OPENING]: VoucherType.OPENING,
+};
+
+export const VOUCHER_TYPE_TO_EVENT_TYPE_MAP: {
+  [key in VoucherType]: EventType;
+} = {
+  [VoucherType.RECEIVE]: EventType.INCOME,
+  [VoucherType.EXPENSE]: EventType.PAYMENT,
+  [VoucherType.TRANSFER]: EventType.TRANSFER,
+  [VoucherType.OPENING]: EventType.OPENING,
 };
 
 export const MISSING_CODE_MARKERS = ['!', '@', '#', '$', '%'];
@@ -258,6 +283,7 @@ export const ASSET_CODE = [...CURRENT_ASSET_CODE, ...NON_CURRENT_ASSET_CODE];
  */
 export const SPECIAL_ACCOUNTS: {
   [key: string]: {
+    id: number;
     system: string;
     type: AccountType;
     debit: boolean;
@@ -281,6 +307,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '8200',
     rootCode: '8200',
     level: 0,
+    id: 1018,
   },
   OTHER_COMPREHENSIVE_INCOME: {
     system: 'IFRS',
@@ -293,6 +320,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '8300',
     rootCode: '8300',
     level: 0,
+    id: 1019,
   },
   NET_INCOME_IN_EQUITY: {
     system: 'IFRS',
@@ -305,6 +333,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '3350',
     rootCode: '3350',
     level: 3,
+    id: 2063,
   },
   ACCUMULATED_PROFIT_AND_LOSS: {
     system: 'IFRS',
@@ -317,6 +346,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '3350',
     rootCode: '3350',
     level: 3,
+    id: 2061,
   },
   OTHER_EQUITY_OTHER: {
     system: 'IFRS',
@@ -329,6 +359,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '3490',
     rootCode: '3400',
     level: 3,
+    id: 2098,
   },
   ASSET_TOTAL: {
     system: 'IFRS',
@@ -341,6 +372,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '1XXX',
     rootCode: '1XXX',
     level: 0,
+    id: 1000,
   },
   LIABILITY_TOTAL: {
     system: 'IFRS',
@@ -353,6 +385,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '2XXX',
     rootCode: '2XXX',
     level: 0,
+    id: 1033,
   },
   EQUITY_TOTAL: {
     system: 'IFRS',
@@ -365,6 +398,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '3XXX',
     rootCode: '3XXX',
     level: 0,
+    id: 1034,
   },
   FIXED_ASSET: {
     system: 'IFRS',
@@ -377,6 +411,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '15XX',
     rootCode: '1600',
     level: 2,
+    id: 1287,
   },
   LIABILITY_AND_EQUITY_TOTAL: {
     system: 'IFRS',
@@ -389,6 +424,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '3X2X',
     rootCode: '3X2X',
     level: 0,
+    id: 1035,
   },
   OPERATING_INCOME: {
     system: 'IFRS',
@@ -401,6 +437,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '4000',
     rootCode: '4000',
     level: 0,
+    id: 1001,
   },
   OPERATING_COST: {
     system: 'IFRS',
@@ -413,6 +450,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '5000',
     rootCode: '5000',
     level: 0,
+    id: 1002,
   },
   SELLING_EXPENSE_TOTAL: {
     system: 'IFRS',
@@ -425,6 +463,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '6000',
     rootCode: '6100',
     level: 1,
+    id: 1055,
   },
   OPERATING_EXPENSE_TOTAL: {
     system: 'IFRS',
@@ -437,6 +476,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '6000',
     rootCode: '6200',
     level: 1,
+    id: 1056,
   },
   RD_EXPENSE_TOTAL: {
     system: 'IFRS',
@@ -449,6 +489,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '6000',
     rootCode: '6300',
     level: 1,
+    id: 1057,
   },
   INVENTORY_TOTAL: {
     system: 'IFRS',
@@ -461,6 +502,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '11XX',
     rootCode: '130X',
     level: 2,
+    id: 1275,
   },
   CASH_GENERATE_FROM_OPERATING: {
     system: 'IFRS',
@@ -473,6 +515,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'AAAA0',
     rootCode: 'A33000',
     level: 1,
+    id: 1086,
   },
   CASH_OUTFLOW_FOR_DIVIDEND: {
     system: 'IFRS',
@@ -485,6 +528,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'AAAA0',
     rootCode: 'A33400',
     level: 1,
+    id: 1090,
   },
   CASH_FROM_TAX_REFUND: {
     system: 'IFRS',
@@ -497,6 +541,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'AAAA0',
     rootCode: 'A33500',
     level: 1,
+    id: 1091,
   },
   CASH_FLOW_FROM_OPERATING: {
     system: 'IFRS',
@@ -509,6 +554,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'AAAA',
     rootCode: 'AAAA',
     level: 0,
+    id: 1026,
   },
   /**
    * Info: (20241017 - Murky)
@@ -525,6 +571,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '$$$$',
     rootCode: '$$$$',
     level: 0,
+    id: 0, // TODO: (20241122 - Shirley) 沒有在 account table 裡面
   },
   CASH_FLOW_FROM_INVESTING: {
     system: 'IFRS',
@@ -537,6 +584,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'BBBB',
     level: 0,
+    id: 1027,
   },
   CASH_FLOW_FROM_FINANCING: {
     system: 'IFRS',
@@ -549,6 +597,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'CCCC',
     rootCode: 'CCCC',
     level: 0,
+    id: 1028,
   },
   CASH_FLOW_FROM_FOREIGN_EXCHANGE: {
     system: 'IFRS',
@@ -561,6 +610,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'DDDD',
     rootCode: 'DDDD',
     level: 0,
+    id: 1029,
   },
   CASH_INCREASE_THIS_PERIOD: {
     system: 'IFRS',
@@ -573,6 +623,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'EEEE',
     rootCode: 'EEEE',
     level: 0,
+    id: 1030,
   },
   CASH_AMOUNT_IN_BEGINNING: {
     system: 'IFRS',
@@ -585,6 +636,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'E00100',
     rootCode: 'E00100',
     level: 0,
+    id: 1031,
   },
   CASH_AMOUNT_IN_END: {
     system: 'IFRS',
@@ -597,6 +649,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'E00200',
     rootCode: 'E00200',
     level: 0,
+    id: 1032,
   },
   NET_INCOME_IN_CASH_FLOW: {
     system: 'IFRS',
@@ -609,6 +662,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'AAAA0',
     rootCode: 'A10000',
     level: 1,
+    id: 1084,
   },
   SALES_DEPRECIATION: {
     system: 'IFRS',
@@ -621,6 +675,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '6100',
     rootCode: '6124',
     level: 2,
+    id: 1356,
   },
   SALES_AMORTIZATION: {
     system: 'IFRS',
@@ -633,6 +688,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '6100',
     rootCode: '6125',
     level: 2,
+    id: 1357,
   },
   MANAGE_DEPRECIATION: {
     system: 'IFRS',
@@ -645,6 +701,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '6200',
     rootCode: '6224',
     level: 2,
+    id: 1379,
   },
   MANAGE_AMORTIZATION: {
     system: 'IFRS',
@@ -657,6 +714,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '6200',
     rootCode: '6225',
     level: 2,
+    id: 1380,
   },
   RD_DEPRECIATION: {
     system: 'IFRS',
@@ -669,6 +727,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '6300',
     rootCode: '6324',
     level: 2,
+    id: 1400,
   },
   CASH_INVEST_PPE: {
     system: 'IFRS',
@@ -681,6 +740,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'B02700',
     level: 1,
+    id: 1120,
   },
   CASH_DISPOSE_PPE: {
     system: 'IFRS',
@@ -693,6 +753,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'B02800',
     level: 1,
+    id: 1121,
   },
   CASH_INVEST_FVPL: {
     system: 'IFRS',
@@ -705,6 +766,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'B00100',
     level: 1,
+    id: 1106,
   },
   CASH_INVEST_FVOCI: {
     system: 'IFRS',
@@ -717,6 +779,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'B00010',
     level: 1,
+    id: 1100,
   },
   CASH_DISPOSE_FVOCI: {
     system: 'IFRS',
@@ -729,6 +792,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'B00020',
     level: 1,
+    id: 1101,
   },
   CASH_INVEST_AMORTIZED_FINANCIAL_ASSET: {
     system: 'IFRS',
@@ -741,6 +805,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'B00040',
     level: 1,
+    id: 1103,
   },
   CASH_DISPOSE_AMORTIZED_FINANCIAL_ASSET: {
     system: 'IFRS',
@@ -753,6 +818,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'B00050',
     level: 1,
+    id: 1104,
   },
   CASH_REMOVE_HEDGE_ASSET: {
     system: 'IFRS',
@@ -765,6 +831,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'B01700',
     level: 1,
+    id: 1110,
   },
   CASH_RECEIVE_STOCK_DIVIDEND: {
     system: 'IFRS',
@@ -777,6 +844,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'B07600',
     level: 1,
+    id: 1151,
   },
   CASH_INVEST_INTANGIBLE_ASSET: {
     system: 'IFRS',
@@ -789,6 +857,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'B04500',
     level: 1,
+    id: 1130,
   },
   CASH_DISPOSE_INTANGIBLE_ASSET: {
     system: 'IFRS',
@@ -801,6 +870,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: 'BBBB',
     rootCode: 'B04600',
     level: 1,
+    id: 1131,
   },
   INPUT_TAX: {
     system: 'IFRS',
@@ -813,6 +883,7 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '1410',
     rootCode: '1410',
     level: 3,
+    id: 1687,
   },
   OUTPUT_TAX: {
     system: 'IFRS',
@@ -825,5 +896,19 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '2200',
     rootCode: '2200',
     level: 3,
+    id: 1996,
+  },
+  ACCOUNT_PAYABLE: {
+    system: 'IFRS',
+    type: AccountType.LIABILITY,
+    debit: false,
+    liquidity: true,
+    code: '2171',
+    name: '應付帳款',
+    forUser: true,
+    parentCode: '2170',
+    rootCode: '2170',
+    level: 3,
+    id: 1981,
   },
 };

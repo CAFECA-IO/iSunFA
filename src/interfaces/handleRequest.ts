@@ -1,15 +1,13 @@
-import { API_ZOD_SCHEMA } from '@/constants/zod_schema';
-import { BodyType, QueryType } from '@/lib/utils/validator';
-import { ISessionData } from '@/interfaces/session_data';
+import { APIName } from '@/constants/api_connection';
+import { ISessionData } from '@/interfaces/session';
+import { body, query } from '@/lib/utils/validator';
+import { NextApiRequest } from 'next';
 
-export interface IHandleRequest<T extends keyof typeof API_ZOD_SCHEMA, U> {
-  (
-    handleRequestInput: IHandlerRequestInput<T>
-  ): Promise<{ statusMessage: string; payload: U | null }>;
-}
-
-interface IHandlerRequestInput<T extends keyof typeof API_ZOD_SCHEMA> {
-  query: QueryType<T>;
-  body: BodyType<T>;
-  session: ISessionData;
+export interface IHandleRequest<T extends APIName, U> {
+  (input: {
+    query: query<T>;
+    body: body<T>;
+    session: ISessionData;
+    req: NextApiRequest;
+  }): Promise<{ statusMessage: string; payload: U | null }>;
 }

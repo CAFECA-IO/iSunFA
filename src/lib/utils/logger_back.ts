@@ -66,24 +66,25 @@ function getErrorCode(
  * @param {string} errorType - 錯誤類型
  * @param {string | Error} errorMessage - 錯誤訊息
  */
-export function loggerError(userId: number, errorType: string, errorMessage: string | Error) {
-  const logData = { level: 'error', userId, errorType, errorMessage };
-  if (userId) {
-    logData.userId = userId;
-  }
+export const loggerError = ({
+  userId,
+  errorType,
+  errorMessage,
+}: {
+  userId: number;
+  errorType: string;
+  errorMessage: string | Error;
+}) => {
+  const logData = { userId, errorType, errorMessage };
 
   if (typeof errorMessage === 'string') {
-    // Info: (20240905 - Gibbs) 已知指定錯誤訊息
+    // Info: (20240905 - Gibbs) 如果錯誤訊息是字符串，表示已經過其他程序判定，直接使用
     logData.errorMessage = errorMessage;
-    /* Info: (20240905 - Gibbs) 已知指定錯誤訊息
-     * 處理 Prisma 錯誤, PrismaClientUnknownRequestError, PrismaClientRustPanicError, Prisma.PrismaClientValidationError 無 error code
-     * PrismaClientKnownRequestError: code, PrismaClientInitializationError: errorCode
-     */
   } else if (
     errorMessage instanceof Prisma.PrismaClientKnownRequestError ||
     errorMessage instanceof Prisma.PrismaClientInitializationError
   ) {
-    // Info: (20240905 - Gibbs) 轉換特定 Prisma code 錯誤, 其餘 Prisma code 錯誤給預設值
+    // Info: (20240905 - Gibbs) 如果錯誤訊息是 Prisma 已知錯誤，則根據 errorCode 歸納錯誤原因，若皆不符合則視為 Prisma 未知錯誤
     const errorCode = getErrorCode(errorMessage);
     switch (errorCode) {
       case 'P1008':
@@ -125,86 +126,114 @@ export function loggerError(userId: number, errorType: string, errorMessage: str
     errorMessage instanceof Prisma.PrismaClientRustPanicError ||
     errorMessage instanceof Prisma.PrismaClientValidationError
   ) {
-    // Info: (20240905 - Gibbs) 處理其餘 Prisma 錯誤
+    // Info: (20240905 - Gibbs) 如果錯誤訊息是 Prisma 未知錯誤或驗證錯誤，則直接使用錯誤訊息
     logData.errorMessage = `A Prisma error:\n${errorMessage.message}`;
   } else if (errorMessage instanceof Error) {
-    // Info: (20240905 - Gibbs) 處理一般錯誤
     logData.errorMessage = `Non Prisma error:\n${errorMessage.message}`;
   }
 
-  return loggerBack.child(logData);
-}
+  // Info: (20241128 - Jacky) 保存錯誤日誌並回傳記錄結果
+  return loggerBack.child({ level: 'error', ...logData }).error('Error occurred');
+};
 
 /** Info: (20240828 - Gibbs) 記錄請求和響應的詳細信息
- * @param {number} [userId] - 用戶ID
- * @param {string} url - 請求的URL
- * @param {string} method - HTTP方法 (如GET, POST)
- * @param {number} statusCode - 響應的HTTP狀態碼
+ * @param {number} [userId] - 用戶 ID
+ * @param {string} url - 請求的 URL
+ * @param {string} method - HTTP 方法 (如GET, POST)
+ * @param {number} statusCode - HTTP 狀態碼
  * @param {object} params - 請求參數
  * @param {string} userAgent - 用戶代理信息
- * @param {string} ipAddress - 用戶的IP地址
+ * @param {string} ipAddress - 用戶的 IP 地址
  */
-export function loggerRequest(
-  userId: number,
-  url: string,
-  method: string,
-  statusCode: number,
-  params: object,
-  userAgent: string,
-  ipAddress: string
-) {
-  const logData = { level: 'info', userId, url, method, statusCode, params, userAgent, ipAddress };
-  if (userId) {
-    logData.userId = userId;
-  }
-  return loggerBack.child(logData);
-}
+export const loggerRequest = ({
+  userId,
+  url,
+  method,
+  statusCode,
+  params,
+  userAgent,
+  ipAddress,
+}: {
+  userId: number;
+  url: string;
+  method: string;
+  statusCode: number;
+  params: object;
+  userAgent: string;
+  ipAddress: string;
+}) => {
+  const logData = { userId, url, method, statusCode, params, userAgent, ipAddress };
+  return loggerBack.child({ level: 'info', ...logData }).info('Request log');
+};
 
 /** Info: (20240828 - Gibbs) 記錄用戶行為
- * @param {number} userId - 用戶ID
+ * @param {number} userId - 用戶 ID
  * @param {string} actionType - 操作類型
  * @param {object} actionDetails - 操作詳細信息
  */
-export function loggerUserAction(userId: number, actionType: string, actionDetails: object) {
-  return loggerBack.child({ level: 'info', userId, actionType, actionDetails });
-}
+export const loggerUserAction = ({
+  userId,
+  actionType,
+  actionDetails,
+}: {
+  userId: number;
+  actionType: string;
+  actionDetails: object;
+}) => {
+  const logData = { userId, actionType, actionDetails };
+  return loggerBack.child({ level: 'info', ...logData }).info('User action log');
+};
 
 /** Info: (20240828 - Gibbs) 記錄系統事件
  * @param {string} eventType - 事件類型
  * @param {object} details - 事件詳細信息
  */
-export function loggerSystemEvent(eventType: string, details: object) {
-  return loggerBack.child({ level: 'info', eventType, details });
-}
+export const loggerSystemEvent = ({
+  eventType,
+  details,
+}: {
+  eventType: string;
+  details: object;
+}) => {
+  const logData = { eventType, details };
+  return loggerBack.child({ level: 'info', ...logData }).info('System event log');
+};
 
 /** Info: (20240828 - Gibbs) 記錄性能數據
- * @param {number} [userId] - 用戶ID
+ * @param {number} [userId] - 用戶 ID
  * @param {number} responseTime - 響應時間
  * @param {object} queryPerformance - 查詢性能
  * @param {number} resourceLoadTime - 資源加載時間
  */
-export function loggerPerformance(
-  userId: number,
-  responseTime: number,
-  queryPerformance: object,
-  resourceLoadTime: number
-) {
-  const logData = { level: 'info', userId, responseTime, queryPerformance, resourceLoadTime };
-  if (userId) {
-    logData.userId = userId;
-  }
-  return loggerBack.child(logData);
-}
+export const loggerPerformance = ({
+  userId,
+  responseTime,
+  queryPerformance,
+  resourceLoadTime,
+}: {
+  userId: number;
+  responseTime: number;
+  queryPerformance: object;
+  resourceLoadTime: number;
+}) => {
+  const logData = { userId, responseTime, queryPerformance, resourceLoadTime };
+  return loggerBack.child({ level: 'info', ...logData }).info('Performance log');
+};
 
 /** Info: (20240828 - Gibbs) 記錄安全相關事件
- * @param {number} [userId] - 用戶ID
+ * @param {number} [userId] - 用戶 ID
  * @param {object} authProcess - 認證過程
  * @param {object} securityEvent - 安全事件
  */
-export function loggerSecurity(userId: number, authProcess: unknown, securityEvent: unknown) {
-  const logData = { level: 'warn', userId, authProcess, securityEvent };
-  if (userId) {
-    logData.userId = userId;
-  }
-  return loggerBack.child(logData);
-}
+export const loggerSecurity = ({
+  userId,
+  authProcess,
+  securityEvent,
+}: {
+  userId: number;
+  authProcess: unknown;
+  securityEvent: unknown;
+}) => {
+  const logData = { userId, authProcess, securityEvent };
+  return loggerBack.child({ level: 'warn', ...logData }).warn('Security log');
+};

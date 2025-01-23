@@ -14,6 +14,7 @@ import {
 } from '@/lib/utils/repo/employee.repo';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 function getTargetTime(): number {
   const nowTime = new Date().getTime();
@@ -67,10 +68,11 @@ async function deleteEmployee(employeeIdNumber: number): Promise<void> {
   try {
     await updateEndDateByEmployeeId(employeeIdNumber, targetTime);
   } catch (error) {
-    const logError = loggerError(0, 'delete employee in deleteEmployee failed', error as Error);
-    logError.error(
-      'Prisma related updateEndDateByEmployeeId in deleteEmployee in employee/employeeId/index.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'delete employee in deleteEmployee failed',
+      errorMessage: (error as Error).message,
+    });
   }
 }
 
@@ -96,10 +98,11 @@ async function updateEmployee(
     );
     await updateEmployeeProject(employeeIdNumber, projectIdsNames, targetTime);
   } catch (error) {
-    const logError = loggerError(0, 'update employee in updateEmployee failed', error as Error);
-    logError.error(
-      'Prisma related updateEmployeeById or updateEmployeeProject in updateEmployee in employee/employeeId/index.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'update employee in updateEmployee failed',
+      errorMessage: (error as Error).message,
+    });
   }
   const employee = await getEmployeeById(employeeIdNumber);
   const projects = await getProjectsByEmployeeId(employeeIdNumber);
@@ -113,14 +116,11 @@ async function updateEmployee(
   return employeeData;
 }
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IEmployeeData | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IEmployeeData | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {
@@ -146,11 +146,11 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<null>>) {
+async function handleDeleteRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   const payload: null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {
@@ -175,14 +175,11 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse<IRe
   return { statusMessage, payload };
 }
 
-async function handlePutRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IEmployeeData | null>>
-) {
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IEmployeeData | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

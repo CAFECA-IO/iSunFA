@@ -1,182 +1,211 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import { useTranslation } from 'next-i18next';
-import LedgerItem, { ILedgerBeta } from '@/components/ledger/ledger_item';
-import Pagination from '@/components/pagination/pagination';
-import SortingButton from '@/components/voucher/sorting_button';
-import { checkboxStyle } from '@/constants/display';
-import { SortOrder } from '@/constants/sort';
-import { useGlobalCtx } from '@/contexts/global_context';
-import { VoucherType } from '@/constants/account';
+import LedgerItem from '@/components/ledger/ledger_item';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
+import { ILedgerPayload } from '@/interfaces/ledger';
+import Image from 'next/image';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { useReactToPrint } from 'react-to-print';
+import { useUserCtx } from '@/contexts/user_context';
 
-const dummyVoucherList: ILedgerBeta[] = [
-  {
-    id: 1,
-    date: 1632511200,
-    voucherNo: '20240920-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Printer-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [100200],
-    debit: [0],
-    balance: [100200],
-  },
-  {
-    id: 2,
-    date: 1662511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.EXPENSE,
-    note: 'Printer-0002',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [0],
-    debit: [10200],
-    balance: [100200],
-  },
-  {
-    id: 3,
-    date: 1672592800,
-    voucherNo: '20240925-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Scanner-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [0],
-    debit: [200],
-    balance: [100200],
-  },
-  {
-    id: 4,
-    date: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [300],
-    debit: [0],
-    balance: [100200],
-  },
-  {
-    id: 5,
-    date: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [300],
-    debit: [0],
-    balance: [100200],
-  },
-  {
-    id: 6,
-    date: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [300],
-    debit: [0],
-    balance: [100200],
-  },
-];
+interface LedgerListProps {
+  ledgerData: ILedgerPayload | null; // Info: (20241118 - Anna) 接收 API 數據
+  loading: boolean; // Info: (20241118 - Anna) 接收父组件傳遞的loading狀態
+  selectedDateRange: { startTimeStamp: number; endTimeStamp: number }; // Info: (20241218 - Anna) 從父組件傳來的日期範圍
+  labelType: string; // Info: (20241218 - Anna) 從父組件傳來的 labelType
+  selectedStartAccountNo: string;
+  selectedEndAccountNo: string;
+}
 
-const LedgerList = () => {
-  const { t } = useTranslation('common');
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+const LedgerList: React.FunctionComponent<LedgerListProps> = ({
+  ledgerData,
+  loading,
+  selectedDateRange,
+  labelType,
+  selectedStartAccountNo,
+  selectedEndAccountNo,
+}) => {
+  const { selectedCompany } = useUserCtx();
+  const companyId = selectedCompany?.id;
+  const { t } = useTranslation(['journal', 'date_picker', 'reports']);
+  const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 
-  // ToDo: (20240927 - Julian) data filter
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [voucherList, setVoucherList] = useState<ILedgerBeta[]>(dummyVoucherList);
-  const [currentPage, setCurrentPage] = useState(1);
-  // Info: (20240920 - Julian) 排序狀態
-  const [dateSort, setDateSort] = useState<null | SortOrder>(null);
-  const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
-  const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
+  const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
 
-  // ToDo: (20240920 - Julian) dummy data
-  const totalPage = 10;
+  // Info: (20241118 - Anna) 確保 ledgerItemsData 是一個有效的陣列
+  const ledgerItemsData = Array.isArray(ledgerData?.items?.data) ? ledgerData.items.data : [];
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'text-center align-middle';
   const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
-  //   const checkStyle = `'table-cell' text-center align-middle border-r border-stroke-neutral-quaternary`;
 
-  // Info: (20240920 - Julian) 日期排序按鈕
-  const displayedDate = SortingButton({
-    string: t('journal:VOUCHER.VOUCHER_DATE'),
-    sortOrder: dateSort,
-    setSortOrder: setDateSort,
+  const handlePrint = useReactToPrint({
+    contentRef: printRef, // Info: (20241203 - Anna) 指定需要打印的內容 Ref
+    documentTitle: `分類帳`,
+    onBeforePrint: async () => {
+      return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
+    },
+    onAfterPrint: async () => {
+      return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
+    },
   });
 
-  // Info: (20240920 - Julian) credit 排序按鈕
-  const displayedCredit = SortingButton({
-    string: t('journal:JOURNAL.CREDIT'),
-    sortOrder: creditSort,
-    setSortOrder: setCreditSort,
-  });
+  // Info: (20241218 - Anna) 匯出csv
+  const handleDownload = async () => {
+    const body = {
+      fileType: 'csv',
+      filters: {
+        startDate: selectedDateRange.startTimeStamp,
+        endDate: selectedDateRange.endTimeStamp,
+        labelType,
+      },
+      options: {
+        language: 'zh-TW',
+        timezone: '+0800',
+      },
+    };
 
-  // Info: (20240920 - Julian) debit 排序按鈕
-  const displayedDebit = SortingButton({
-    string: t('journal:JOURNAL.DEBIT'),
-    sortOrder: debitSort,
-    setSortOrder: setDebitSort,
-  });
+    try {
+      // Info: (20241218 - Anna) 使用 fetch 直接調用 API，處理非 JSON 格式的回應、解析 headers
+      // Info: (20241218 - Anna) 因為 APIHandler 將所有回應解析為 JSON，當遇到非 JSON 內容（ 如csv ），會SyntaxError，導致 response.data 為 null。
+      const response = await fetch(`/api/v2/company/${companyId}/ledger/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+
+      // Info: (20241218 - Anna) 獲取 Blob 內容
+      const blob = await response.blob();
+
+      const contentDisposition = response.headers.get('content-disposition'); // Info: (20241218 - Anna) 從 headers 提取檔名
+      const fileNameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
+      const fileName = fileNameMatch ? fileNameMatch[1] : 'ledger_export.csv';
+
+      // Info: (20241218 - Anna) 創建下載連結並觸發下載
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url); // Info: (20241218 - Anna) 釋放 URL 資源
+      link.parentNode?.removeChild(link);
+    } catch (error) {
+      // Deprecate: (20241218 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.error('Download failed:', error);
+    }
+  };
 
   const displayedSelectArea = (
-    <div className="ml-auto flex items-center gap-24px">
-      {/* Info: (20241004 - Anna) Export Voucher button */}
-      <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
+    <div className="ml-auto flex items-center gap-24px print:hidden">
+      {/* Info: (20241004 - Anna) Export button */}
+      <DownloadButton onClick={handleDownload} disabled={false} />
       {/* Info: (20241004 - Anna) PrintButton */}
-      <PrintButton onClick={() => {}} disabled={false} />
+      <PrintButton onClick={handlePrint} disabled={false} />
     </div>
   );
 
-  const displayedVoucherList = voucherList.map((voucher) => {
-    return <LedgerItem key={voucher.id} voucher={voucher} />;
+  // Info: (20241101 - Anna) 根據狀態來渲染不同的內容
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+        <SkeletonList count={5} />
+      </div>
+    );
+  } else if (!loading && (!ledgerItemsData || ledgerItemsData.length === 0)) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center">
+        <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+        <div>
+          <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
+          <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Info: (20241118 - Anna) 渲染有效的憑證數據列表
+  const displayedLedgerList = ledgerItemsData.map((ledger) => {
+    const {
+      id = '',
+      creditAmount = 0,
+      debitAmount = 0,
+      balance = 0,
+      voucherId = '',
+    } = ledger || {};
+    return (
+      <LedgerItem
+        key={id}
+        ledger={{
+          ...ledger,
+          creditAmount,
+          debitAmount,
+          balance,
+          // Info: (20241224 - Anna) 將字串轉換為整數
+          voucherId: typeof voucherId === 'string' ? parseInt(voucherId, 10) : voucherId,
+        }}
+        selectedDateRange={selectedDateRange}
+        selectedStartAccountNo={selectedStartAccountNo}
+        selectedEndAccountNo={selectedEndAccountNo}
+        selectedReportType={labelType}
+      />
+    );
   });
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" ref={printRef}>
       {/* Info: (20240920 - Julian) export & select button */}
       {displayedSelectArea}
 
-      <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
+      <div className="mb-4 mt-10 table w-full table-fixed overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 print:mt-0 print:bg-neutral-50">
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
-            <div className={`table-cell ${tableCellStyles} border-b border-r`}>
-              <div className="flex items-center justify-center">
-                <div className="relative">
-                  <input type="checkbox" className={checkboxStyle} />
-                </div>
-              </div>
+            <div
+              className={`table-cell ${tableCellStyles} ${sideBorderStyles} whitespace-nowrap print:bg-neutral-50`}
+            >
+              {t('journal:VOUCHER.VOUCHER_DATE')}
             </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              {displayedDate}
+            <div
+              className={`table-cell ${tableCellStyles} ${sideBorderStyles} whitespace-nowrap print:bg-neutral-50`}
+            >
+              {t('reports:REPORTS.CODE')}
             </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              {t('common:COMMON.CODE')}
-            </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
+            <div
+              className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:hidden print:bg-neutral-50`}
+            >
               {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
             </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
+            <div
+              className={`table-cell whitespace-nowrap ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
+            >
               {t('journal:VOUCHER.VOUCHER_NO')}
             </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
+            <div
+              className={`table-cell ${tableCellStyles} ${sideBorderStyles} whitespace-nowrap print:bg-neutral-50`}
+            >
               {t('journal:VOUCHER.NOTE')}
             </div>
-            {voucherList.some((voucher) => voucher.debit.some((d) => d !== 0)) && (
-              <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-                {displayedDebit}
-              </div>
-            )}
-            {voucherList.some((voucher) => voucher.credit.some((c) => c !== 0)) && (
-              <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-                {displayedCredit}
-              </div>
-            )}
             <div
-              className={`table-cell ${tableCellStyles} ${sideBorderStyles.replace('border-r', '')}`}
+              className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
+            >
+              {t('journal:JOURNAL.DEBIT')}
+            </div>
+
+            <div
+              className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
+            >
+              {t('journal:JOURNAL.CREDIT')}
+            </div>
+
+            <div
+              className={`table-cell ${tableCellStyles} ${sideBorderStyles.replace('border-r', '')} print:bg-neutral-50`}
             >
               {t('journal:VOUCHER.BALANCE')}
             </div>
@@ -184,36 +213,31 @@ const LedgerList = () => {
         </div>
 
         {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
-        <div className="table-row-group">{displayedVoucherList}</div>
+        <div className="table-row-group">{displayedLedgerList}</div>
       </div>
 
-      <div className="h-px w-full bg-neutral-100"></div>
+      <div className="h-px w-full bg-divider-stroke-lv-4"></div>
 
       {/* Info: (20241009 - Anna) 加總數字的表格 */}
-      <div className="mb-10 mt-4 grid h-70px grid-cols-9 overflow-hidden rounded-b-lg border-b border-t-0 bg-surface-neutral-surface-lv2 text-sm text-text-neutral-tertiary">
+      <div
+        className="mb-10 mt-4 grid h-70px grid-cols-9 overflow-hidden rounded-b-lg bg-surface-neutral-surface-lv2 text-text-neutral-tertiary print:bg-neutral-50"
+        // Info: (20241206 - Anna) 避免行內換頁
+        style={{ pageBreakInside: 'avoid' }}
+      >
         {/* Info: (20241009 - Anna) 表格內容 */}
         <div className="col-span-1"></div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
-          Total Debit amount
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
+          {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
         </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          1,800,000
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
+          {formatNumber(ledgerData?.total?.totalDebitAmount || 0)}
         </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
-          Total Credit amount
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
+          {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
         </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          1,120,000
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
+          {formatNumber(ledgerData?.total?.totalCreditAmount || 0)}
         </div>
-      </div>
-
-      {/* Info: (20240920 - Julian) Pagination */}
-      <div className="mx-auto">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPage}
-          setCurrentPage={setCurrentPage}
-        />
       </div>
     </div>
   );

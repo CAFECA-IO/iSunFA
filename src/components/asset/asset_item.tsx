@@ -1,40 +1,24 @@
 import React from 'react';
+import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { AssetStatus } from '@/constants/asset';
-import { timestampToYMD } from '@/lib/utils/common';
+import { numberWithCommas, timestampToYMD } from '@/lib/utils/common';
+import { IAssetItemUI } from '@/interfaces/asset';
+import { checkboxStyle } from '@/constants/display';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
-interface IAssetItem {
-  id: number;
-  acquisitionDate: number;
-  assetType: string;
-  assetNumber: string;
-  assetName: string;
-  purchasePrice: number;
-  accumulatedDepreciation: number;
-  residualValue: number;
-  remainingLife: number;
-  assetStatus: AssetStatus;
+interface IAssetItemProps {
+  assetData: IAssetItemUI;
+  selectHandler: (id: number) => void;
+  isCheckBoxOpen: boolean;
 }
 
-// ToDo: (20240925 - Julian) dummy data
-const dummyData: IAssetItem = {
-  id: 1,
-  acquisitionDate: 1632511200,
-  assetType: '123 Machinery',
-  assetNumber: 'A-000010',
-  assetName: 'MackBook',
-  purchasePrice: 100000,
-  accumulatedDepreciation: 5000,
-  residualValue: 5000,
-  remainingLife: 61580800,
-  assetStatus: AssetStatus.NORMAL,
-};
-
-const AssetItem = () => {
-  const { t } = useTranslation('common');
+const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isCheckBoxOpen }) => {
+  const { t } = useTranslation('asset');
 
   const {
+    id: assetId,
     acquisitionDate,
     assetType,
     assetNumber,
@@ -44,7 +28,12 @@ const AssetItem = () => {
     residualValue,
     remainingLife,
     assetStatus,
-  } = dummyData;
+    currencyAlias,
+    isSelected,
+  } = assetData;
+
+  const unit = t(`common:CURRENCY_ALIAS.${currencyAlias}`);
+  const assetTypeName = t(`filter_section_type:FILTER_SECTION_TYPE.${assetType}`);
 
   const displayedDate = (
     <div className="flex items-center justify-center">
@@ -52,41 +41,41 @@ const AssetItem = () => {
     </div>
   );
 
-  const assetTypeCode = assetType.split(' ')[0];
-  const assetTypeTitle = assetType.split(' ').slice(1).join(' ');
+  // Info: (20241024 - Julian) checkbox click handler
+  const checkboxHandler = () => selectHandler(assetId);
 
   const displayedAssetType = (
     <p className="text-text-neutral-primary">
-      {assetTypeCode}
-      <span className="text-text-neutral-tertiary"> {assetTypeTitle}</span>
+      {assetType}
+      <span className="w-120px truncate text-text-neutral-tertiary"> {assetTypeName}</span>
     </p>
   );
 
   const displayedAssetNumberAndName = (
     <div className="flex flex-col">
-      <p className="text-text-neutral-tertiary">{assetNumber}</p>
-      <p className="text-text-neutral-primary">{assetName}</p>
+      <p className="w-100px truncate text-text-neutral-tertiary">{assetNumber}</p>
+      <p className="w-100px truncate text-text-neutral-primary">{assetName}</p>
     </div>
   );
 
   const displayedPurchasePrice = (
     <p>
-      {purchasePrice}
-      <span className="text-text-neutral-tertiary"> TWD</span>
+      {numberWithCommas(purchasePrice)}
+      <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
 
   const displayedDepreciation = (
     <p>
-      {accumulatedDepreciation}
-      <span className="text-text-neutral-tertiary"> TWD</span>
+      {numberWithCommas(accumulatedDepreciation)}
+      <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
 
   const displayedResidual = (
     <p>
-      {residualValue}
-      <span className="text-text-neutral-tertiary"> TWD</span>
+      {numberWithCommas(residualValue)}
+      <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
 
@@ -114,24 +103,24 @@ const AssetItem = () => {
   const assetStatusString = t(`asset:ASSET.STATUS_${assetStatus.toUpperCase()}`);
 
   const displayedRemainingLife =
-    assetStatus === AssetStatus.NORMAL && remainingLife > 0 ? (
+    assetStatus === AssetStatus.NORMAL ? (
       <div className="flex flex-col items-end">
         {/* Info: (20240925 - Julian) Remaining count */}
         <div className="flex items-center gap-4px">
           {/* Info: (20240925 - Julian) Years */}
           <p className="text-text-neutral-primary">
             {remainingYears}{' '}
-            <span className="text-text-neutral-tertiary">{t('common:COMMON.Y')}</span>
+            <span className="text-text-neutral-tertiary">{t('asset:COMMON.Y')}</span>
           </p>
           {/* Info: (20240925 - Julian) Months */}
           <p className="text-text-neutral-primary">
             {remainingMonths}{' '}
-            <span className="text-text-neutral-tertiary">{t('common:COMMON.M')}</span>
+            <span className="text-text-neutral-tertiary">{t('asset:COMMON.M')}</span>
           </p>
           {/* Info: (20240925 - Julian) Days */}
           <p className="text-text-neutral-primary">
             {remainingDays}{' '}
-            <span className="text-text-neutral-tertiary">{t('common:COMMON.D')}</span>
+            <span className="text-text-neutral-tertiary">{t('asset:COMMON.D')}</span>
           </p>
         </div>
         {/* Info: (20240925 - Julian) process bar */}
@@ -143,23 +132,57 @@ const AssetItem = () => {
       </div>
     );
 
-  return (
-    <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
+  const content = (
+    <>
       {/* Info: (20240925 - Julian) Issued Date */}
       <div className="table-cell py-10px align-middle">{displayedDate}</div>
       {/* Info: (20240925 - Julian) Asset Type */}
-      <div className="table-cell text-center align-middle">{displayedAssetType}</div>
+      <div className="table-cell text-center align-middle text-xs">{displayedAssetType}</div>
       {/* Info: (20240925 - Julian) Asset Number and Name */}
-      <div className="table-cell px-8px text-left align-middle">{displayedAssetNumberAndName}</div>
+      <div className="table-cell px-8px text-left align-middle text-xs">
+        {displayedAssetNumberAndName}
+      </div>
       {/* Info: (20240925 - Julian) Purchase Price */}
-      <div className="table-cell px-8px text-right align-middle">{displayedPurchasePrice}</div>
+      <div className="table-cell px-8px text-right align-middle text-xs">
+        {displayedPurchasePrice}
+      </div>
       {/* Info: (20240925 - Julian) Accumulated Depreciation */}
-      <div className="table-cell px-8px text-right align-middle">{displayedDepreciation}</div>
+      <div className="table-cell px-8px text-right align-middle text-xs">
+        {displayedDepreciation}
+      </div>
       {/* Info: (20240925 - Julian) Residual Value */}
-      <div className="table-cell px-8px text-right align-middle">{displayedResidual}</div>
+      <div className="table-cell px-8px text-right align-middle text-xs">{displayedResidual}</div>
       {/* Info: (20240925 - Julian) Remaining Useful Life */}
       <div className="table-cell px-8px text-right align-middle">{displayedRemainingLife}</div>
+    </>
+  );
+
+  return isCheckBoxOpen ? (
+    <div
+      onClick={checkboxHandler} // Info: (20241227 - Julian) Select the row when clicking the row
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+    >
+      {/* Info: (20240920 - Julian) Select */}
+      <div className="table-cell text-center">
+        <div className="relative top-20px z-10 px-8px">
+          <input
+            type="checkbox"
+            className={checkboxStyle}
+            checked={isSelected}
+            onChange={checkboxHandler}
+            onClick={(e) => e.stopPropagation()} // Info: (20241127 - Julian) Prevent the event from bubbling up
+          />
+        </div>
+      </div>
+      {content}
     </div>
+  ) : (
+    <Link
+      href={`${ISUNFA_ROUTE.ASSET_LIST}/${assetId}`}
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+    >
+      {content}
+    </Link>
   );
 };
 

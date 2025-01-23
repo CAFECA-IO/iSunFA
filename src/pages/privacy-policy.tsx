@@ -8,7 +8,7 @@ import LandingFooter from '@/components/landing_page/landing_footer';
 import PrivacyPolicyPageBody from '@/components/landing_page/policy_body';
 
 const PrivacyPolicy = () => {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['landing_page']);
 
   return (
     <>
@@ -16,7 +16,7 @@ const PrivacyPolicy = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:LANDING_FOOTER.PRIVACY_POLICY')}</title>
+        <title>{t('landing_page:LANDING_FOOTER.PRIVACY_POLICY')}</title>
       </Head>
 
       <nav>
@@ -34,17 +34,7 @@ const PrivacyPolicy = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, [
-      'common',
-      'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-      'asset',
-    ])),
+    ...(await serverSideTranslations(locale, ['landing_page', 'terms'])),
   },
 });
 

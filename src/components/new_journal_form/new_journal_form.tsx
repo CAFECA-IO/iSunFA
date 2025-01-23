@@ -25,6 +25,7 @@ const eventTypeMap: { [key in EventType]: string } = {
   [EventType.PAYMENT]: 'journal:JOURNAL.PAYMENT',
   [EventType.INCOME]: 'project:PROJECT.INCOME',
   [EventType.TRANSFER]: 'common:COMMON.TRANSFER',
+  [EventType.OPENING]: 'journal:JOURNAL.OPENING',
 };
 const taxRateSelection: number[] = [0, 5, 20, 25];
 
@@ -716,7 +717,7 @@ const NewJournalForm = () => {
           <div className="relative flex w-full flex-col items-start gap-8px md:w-240px">
             <div id="date-picker" className="absolute -top-20"></div>
             <p className="text-sm font-semibold text-input-text-primary">
-              {t('common:DATE_PICKER.DATE')}
+              {t('common:COMMON.DATE')}
             </p>
             <DatePicker
               period={datePeriod}

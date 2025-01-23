@@ -24,9 +24,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
 
   const { id, account, particulars, debit, credit } = accountingVoucher;
   const {
-    accountList,
     generateAccountTitle,
-    deleteVoucherRowHandler,
     changeVoucherStringHandler,
     changeVoucherAmountHandler,
     changeVoucherAccountHandler,
@@ -50,9 +48,10 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
   const [tempAmount, setTempAmount] = useState<string>(amountValue.toString());
 
   const [searchValue, setSearchValue] = useState<string>('');
-  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(accountList);
+  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
 
   const accountTitle = generateAccountTitle(selectAccount);
+  const accountList: IAccount[] = [];
 
   const accountingMenuOpenHandler = () => setAccountingMenuOpen(!isAccountingMenuOpen);
 
@@ -60,7 +59,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
     changeVoucherStringHandler(id, event.target.value, VoucherString.PARTICULARS);
   };
 
-  const deleteVoucherRowMobileHandler = () => deleteVoucherRowHandler(id);
+  const deleteVoucherRowMobileHandler = () => {};
 
   const changeSearchHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(event.target.value);
@@ -164,7 +163,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
           <input
             id="search-accounting"
             type="text"
-            placeholder={t('common:COMMON.SEARCH')}
+            placeholder={t('search:COMMON.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"

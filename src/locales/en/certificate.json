@@ -1,6 +1,6 @@
 {
   "LIST": {
-    "INVOICE_TOTAL_PRRICE": "Invoice Total Price",
+    "INVOICE_TOTAL_PRICE": "Invoice Total Price",
     "EXPORT_CERTIFICATES": "Export Certificates"
   },
   "TAB": {
@@ -10,7 +10,7 @@
   "TABLE": {
     "DATE": "Date",
     "INVOICE_NAME": "Invoice Name",
-    "INVOICE_NUMBER": "Invoice NO.",
+    "INVOICE_NUMBER": "Invoice No.",
     "COUNTERPARTY": "Counterparty",
     "INVOICE_TYPE": "Invoice Type",
     "TAX": "Tax",
@@ -34,20 +34,33 @@
     "SUCCESS": "Certificates have been deleted.",
     "ERROR": "Something went wrong, please try again."
   },
+  "SUCCESS": {
+    "UPDATE_FILENAME": "Update file name successfully"
+  },
   "ERROR": {
     "SELECT_CERTIFICATE": "Failed to select certificate",
     "UPLOAD_CERTIFICATE": "Failed to upload certificate",
     "TOKEN_NOT_PROVIDED": "Token not provided",
     "NOTIFY_WEB": "Failed to notify web",
     "WENT_WRONG": "Something went wrong, please try again.",
-    "UPLOAD_AND_NOTIFY": "Failed to upload and notify web"
+    "UPLOAD_AND_NOTIFY": "Failed to upload and notify web",
+    "UPDATE_CERTIFICATE": "Failed to update certificate, {{reason}}",
+    "ENCRYPT_FILE": "Failed to encrypt file",
+    "COMPRESS_IMAGE": "Failed to compress image",
+    "UPDATE_FILENAME": "Failed to update file name",
+    "PLEASE_FILL_UP_THIS_FORM": "Please fill up this form",
+    "REQUIRED_COUNTERPARTY_NAME": "Counterparty name is required"
   },
   "WARNING": {
+    "UPLOAD_FAILED": "Uploading fail",
+    "UPLOAD_FAILED_NOTIFY": "There are some files haven't been uploaded successfully, do you want to cancel uploading?",
+    "UPLOAD_CANCEL": "Yes, Cancel Uploading",
+    "UPLOAD_CONTINUE": "No, Keep Uploading",
     "SUCCESS_UPLOAD_BUT_NOTIFY_ERROR": "Certificates have been uploaded, but failed to notify web"
   },
   "TITLE": {
     "UPLOAD": "Upload Certificate",
-    "SELECT": "Select 1 or more certificates",
+    "SELECT": "Upload Certificate",
     "LIST": "Certificate List"
   },
   "EDIT": {
@@ -57,15 +70,23 @@
     "INPUT": "Input",
     "OUTPUT": "Output",
     "INVOICE_NAME": "Invoice Name",
-    "INVOICE_NUMBER": "Invoice NO.",
+    "INVOICE_NUMBER": "Invoice No.",
     "PRICE_BEFORE_TAX": "Price Before Tax",
     "TAX": "Tax",
     "TAXABLE": "Taxable",
     "TOTAL_PRICE": "Total Price (Including Tax)",
     "COUNTERPARTY": "Counterparty (Client/Supplier)",
+    "ID_NUMBER": "ID Number",
+    "NAME": "Name",
     "INVOICE_TYPE": "Invoice Type",
     "DEDUCTIBLE": "Deductible",
-    "SUCCESS": "Your certificate information has been updated."
+    "SUCCESS": "Your certificate information has been updated.",
+    "TAXABLE_5": "Taxable 5%",
+    "ZERO_TAX_RATE": "Zero Tax Rate 0%",
+    "TAX_FREE": "Tax Free",
+    "NONE": "None",
+    "THROUGH_CUSTOMS": "Through Customs",
+    "NOT_THROUGH_CUSTOMS": "Not Through Customs"
   },
   "TYPE": {
     "TRIPLICATE": "Triplicate",
@@ -73,11 +94,20 @@
     "SPECIAL": "Special",
     "UNIFORM_INVOICE": "Uniform Invoice"
   },
+  "SELECT": {
+    "TITLE": "Select Certificates",
+    "CONTENT": "Choosing the certificates you want to attach with the voucher"
+  },
+  "EXPORT": {
+    "TITLE": "Export Certificates",
+    "CONTENT": "Please select the Certificates you want to export"
+  },
   "COUNTERPARTY": {
     "ADD_NEW": "Add New Client/Supplier",
     "BOTH": "Both",
     "CLIENT": "Client",
     "SUPPLIER": "Supplier",
+    "SELECT_TYPE": "Select Type",
     "TITLE": "Add this counterparty to Client/Supplier list",
     "CONTENT": "{{counterparty}} is not in your Client/Supplier list. Do you want to add it?",
     "YES": "Yes, Add it",
@@ -89,6 +119,63 @@
     "ENTER_NUMBER": "Enter Number",
     "PARTNER_TYPE": "Partner Type",
     "NOTE": "Note",
-    "ENTER_TEXT": "Enter Text"
+    "ENTER_TEXT": "Enter Text",
+    "EDIT_NEW": "Edit New Client/Supplier",
+    "REMOVE_THIS": "Remove this Client/Supplier",
+    "NO_DATA_AVAILABLE": "No Data Available",
+    "NAME_ALREADY_EXISTS": "Data already exists for this name."
+  },
+  "LABEL": {
+    "NEW": "New"
+  },
+  "OPERATION": {
+    "DOWNLOAD": "Download",
+    "REMOVE": "Remove"
+  },
+  "UPLOAD": {
+    "FILE": "Upload File",
+    "UPLOADING": "Uploading",
+    "TITLE": "Upload Certificates",
+    "CONTENT": "Upload the certificates you want to attach with the voucher",
+    "NO_FILE": "No files uploading",
+    "REMAIN": "{{count}} left",
+    "COMPLETE": "{{success}} success, {{failed}} failed",
+    "FAILED": "Upload failed",
+    "LOADING": "Uploadng...",
+    "PHONE_SCANNER": "Phone Scanner",
+    "SCAN_WITH_PHONE": "Please scan the QRcode to start scanning with your phone",
+    "BACK": "Back",
+    "COMPLETED": "Completed",
+    "USE_YOUR_PHONE_AS": "Use Your Phone as ",
+    "SCANNER": "Scanner",
+    "SCAN_THE_QRCODE": "Please scan the QRcode to start scanning with your phone",
+    "FILE_SIZE_EXCEEDED": "File upload failed: The file exceeds the size limit. Please upload a smaller file.",
+    "INDEX": "No.{{index}}",
+    "PREVIEW": "Preview",
+    "DELETE": "Delete"
+  },
+  "CREATE": {
+    "FAILED": "Failed to create certificate"
+  },
+  "SELECTION": {
+    "EXPORT": "Export",
+    "ADD_NEW_VOUCHER": "Add New Voucher",
+    "ADD_NEW_ASSET": "Add New Asset"
+  },
+  "COMMON": {
+    "PERIOD": "Period",
+    "CANCEL": "Cancel",
+    "SELECT": "Select",
+    "SELECT_ALL": "Select All",
+    "UPLOADED": "Uploaded",
+    "TOTAL": "Total",
+    "CERTIFICATES": "Certificates",
+    "EMPTY": "Empty"
+  },
+  "TOAST": {
+    "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error",
+    "UPLOAD_FILE": "Upload file",
+    "UPLOADING": "Uploading",
+    "COMPLETED": "Completed"
   }
 }

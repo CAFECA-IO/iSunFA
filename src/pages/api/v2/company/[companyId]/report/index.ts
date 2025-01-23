@@ -24,6 +24,7 @@ import CashFlowStatementGenerator from '@/lib/utils/report/cash_flow_statement_g
 
 type APIResponse = object | null;
 
+// TODO: (20241126 - Shirley) FIXME: account table schema 有修改，account code 可能重複，需要改用 account id
 export async function balanceSheetHandler({
   // ToDo: (20241007 - Murky) Use these param in function
   /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -116,6 +117,7 @@ export async function balanceSheetHandler({
   };
 }
 
+// TODO: (20241126 - Shirley) FIXME: account table schema 有修改，account code 可能重複，需要改用 account id
 export async function incomeStatementHandler({
   // ToDo: (20241007 - Murky) Use these param in function
   /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -208,6 +210,7 @@ export async function incomeStatementHandler({
   };
 }
 
+// TODO: (20241126 - Shirley) FIXME: account table schema 有修改，account code 可能重複，需要改用 account id
 export async function cashFlowHandler({
   // ToDo: (20241007 - Murky) Use these param in function
   /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -351,11 +354,11 @@ const reportHandlers: ReportHandlers = {
   [FinancialReportTypesKey.report_401]: report401Handler,
 };
 
-export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<APIResponse>) {
+export async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: object | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   // ToDo: (20240924 - Murky) We need to check auth
@@ -406,8 +409,11 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    });
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);

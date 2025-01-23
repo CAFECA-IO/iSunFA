@@ -3,7 +3,8 @@ import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
-import APandARPageBody from '@/components/voucher/ap_and_ar_page_body';
+import Layout from '@/components/beta/layout/layout';
+import PayableReceivableVoucherPageBody from '@/components/voucher/payable_receivable_voucher_body';
 
 const APandARListPage: React.FC = () => {
   const { t } = useTranslation('common');
@@ -17,18 +18,9 @@ const APandARListPage: React.FC = () => {
         <title>{t('journal:VOUCHER.AP_AND_AR_PAGE_TITLE')} - iSunFA</title>
       </Head>
 
-      <div className="ml-280px bg-text-neutral-secondary p-20px text-center text-white">
-        This is header
-      </div>
-
-      <div className="fixed flex h-screen w-280px flex-col items-center justify-center bg-surface-neutral-surface-lv2">
-        This is sidebar
-      </div>
-
-      {/* Info: (20240924 - Julian) Body */}
-      <main className="flex w-screen flex-col overflow-y-auto bg-surface-neutral-main-background pl-280px font-barlow">
-        <APandARPageBody />
-      </main>
+      <Layout isDashboard={false} pageTitle={t('journal:VOUCHER.AP_AND_AR_PAGE_TITLE')}>
+        <PayableReceivableVoucherPageBody />
+      </Layout>
     </>
   );
 };
@@ -36,15 +28,13 @@ const APandARListPage: React.FC = () => {
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
     ...(await serverSideTranslations(locale, [
+      'layout',
       'common',
       'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-      'asset',
+      'dashboard',
+      'date_picker',
+      'filter_section_type',
+      'search',
     ])),
     locale,
   },

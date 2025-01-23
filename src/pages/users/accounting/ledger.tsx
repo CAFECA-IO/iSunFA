@@ -7,7 +7,7 @@ import LedgerPageBody from '@/components/ledger/ledger_page_body';
 import Layout from '@/components/beta/layout/layout';
 
 const LedgerPage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('journal');
 
   return (
     <>
@@ -32,15 +32,13 @@ const LedgerPage = () => {
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
     ...(await serverSideTranslations(locale, [
+      'layout',
       'common',
       'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-      'asset',
+      'filter_section_type',
+      'search',
+      'date_picker',
+      'reports',
     ])),
     locale,
   },

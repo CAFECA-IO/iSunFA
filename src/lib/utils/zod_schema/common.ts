@@ -1,7 +1,21 @@
 import { z } from 'zod';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 export const zodStringToNumber = z.string().regex(/^\d+$/).transform(Number);
+
+export const zodStringToNumberOptional = z
+  .string()
+  .regex(/^\d+$/)
+  .optional()
+  .transform((val) => {
+    if (val === undefined) {
+      return undefined;
+    }
+    return Number(val);
+  });
+
+export const zodStringToBoolean = z.string().transform((val) => val.toLowerCase() === 'true');
 
 export function zodStringToNumberWithDefault(defaultValue: number) {
   return z
@@ -32,3 +46,59 @@ export function zodTimestampInSecondsNoDefault() {
     .transform((val) => timestampInSeconds(Number(val)));
   return setting;
 }
+
+/**
+ * Info: (20241105 - Murky)
+ * @description 前端的filter section sorting options, 可以用這個parse成 [{ by: SortBy, order: SortOrder }]
+ * @jacky
+ * @shirley
+ */
+export function zodFilterSectionSortingOptions() {
+  const setting = z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) {
+        return [];
+      }
+      const sortOptionsSlice = val.split('-');
+      const sortOptions = sortOptionsSlice.map((sortOption) => {
+        const [sort, order] = sortOption.split(':');
+        return {
+          sortBy: sort,
+          sortOrder: order,
+        };
+      });
+      return sortOptions;
+    })
+    .pipe(
+      z.array(
+        z.object({
+          sortBy: z.nativeEnum(SortBy),
+          sortOrder: z.nativeEnum(SortOrder),
+        })
+      )
+    );
+  return setting;
+}
+
+export const nullSchema = z.union([z.object({}), z.string(), z.undefined()]);
+
+export const nullAPISchema = {
+  input: {
+    querySchema: nullSchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: nullSchema,
+  frontend: nullSchema,
+};
+
+export const zodStringToBooleanOptional = z
+  .string()
+  .optional()
+  .transform((val) => {
+    if (val === undefined) {
+      return undefined;
+    }
+    return val.toLowerCase() === 'true';
+  });

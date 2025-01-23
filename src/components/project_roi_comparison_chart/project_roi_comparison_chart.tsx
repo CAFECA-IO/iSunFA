@@ -165,7 +165,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
-  const { t } = useTranslation(['common', 'project']);
+  const { t } = useTranslation(['alpha', 'project']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { layoutAssertion } = useGlobalCtx();
@@ -241,7 +241,7 @@ const ProjectRoiComparisonChart = () => {
     if (listSuccess === false) {
       toastHandler({
         id: `profit_comparison-${listCode}`,
-        content: `${t('common:DASHBOARD.FAILED_TO_GET_PROFIT_COMPARISON')} ${listCode}`,
+        content: `${t('alpha:DASHBOARD.FAILED_TO_GET_PROFIT_COMPARISON')} ${listCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -369,7 +369,7 @@ const ProjectRoiComparisonChart = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('common:COMMON.EMPTY')}
+          {t('alpha:COMMON.EMPTY')}
         </div>
       </section>
     </div>
@@ -421,7 +421,7 @@ const ProjectRoiComparisonChart = () => {
 
         <div className="hidden justify-end lg:flex">
           <Tooltip>
-            <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
+            <p>{t('alpha:COMMON.TOOLTIP_MESSAGE')}</p>
           </Tooltip>
         </div>
       </div>

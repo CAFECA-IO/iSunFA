@@ -153,7 +153,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<APIReturnType>>
 ) {
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   let payload: APIReturnType = null;
@@ -186,8 +186,11 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      const logError = loggerError(userId, 'handle OCR request failed', _error as Error);
-      logError.error('handle OCR request failed in handler function in ocr/[resultId]/index.ts');
+      loggerError({
+        userId,
+        errorType: 'handle OCR request failed',
+        errorMessage: (_error as Error).message,
+      });
       status = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

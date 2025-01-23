@@ -1,207 +1,78 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
-import { RiCoinsFill } from 'react-icons/ri';
-import { TbDatabaseSmile } from 'react-icons/tb';
-import { FiUserCheck } from 'react-icons/fi';
-import Link from 'next/link';
-
-interface TabsProps {
-  activeTab: React.SetStateAction<number>;
-  setActiveTab: React.Dispatch<React.SetStateAction<number>>;
-}
-const Tabs = ({ activeTab, setActiveTab }: TabsProps) => {
-  const tabs = [
-    { id: 0, name: 'Financial', icon: <RiCoinsFill size={20} /> },
-    { id: 1, name: 'System', icon: <TbDatabaseSmile size={20} /> },
-    { id: 2, name: 'Matching', icon: <FiUserCheck size={20} /> },
-  ];
-
-  const handleTabClick = (tabId: number) => {
-    setActiveTab(tabId);
-  };
-
-  return (
-    <div className="flex justify-between">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => handleTabClick(tab.id)}
-          className={`flex items-center gap-8px border-b-2 px-12px py-8px ${tab.id === activeTab ? 'border-b-tabs-stroke-active text-tabs-text-active' : 'border-b-tabs-stroke-default text-tabs-text-default hover:border-tabs-stroke-hover hover:text-tabs-text-hover'}`}
-        >
-          {tab.icon}
-          <p className="text-base font-medium">{tab.name}</p>
-        </button>
-      ))}
-    </div>
-  );
-};
-
-interface NewsListProps {
-  list: {
-    id: string;
-    title: string;
-    href: string;
-    date: string;
-  }[];
-}
-const NewsList = ({ list }: NewsListProps) => {
-  return (
-    <section className="flex flex-col gap-24px">
-      {list.map((news) => (
-        <div
-          key={news.id}
-          className="flex items-center justify-between gap-16px rounded-xs bg-surface-brand-primary-10 p-8px"
-        >
-          <p className="flex-none text-sm font-normal text-text-neutral-mute">{news.date}</p>
-
-          <p className="flex-auto truncate text-base font-semibold text-surface-brand-secondary">
-            {news.title}
-          </p>
-
-          <Link href={news.href} className="flex-none text-sm font-semibold text-link-text-primary">
-            See More
-          </Link>
-        </div>
-      ))}
-    </section>
-  );
-};
+import { ISUNFA_ROUTE } from '@/constants/url';
+import TabsForLatestNews from '@/components/beta/news_page/tabs_for_latest_news';
+import NewsList from '@/components/beta/news_page/news_list';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { INews } from '@/interfaces/news';
+import { NewsType } from '@/constants/news';
 
 const LatestNews = () => {
-  const [activeTab, setActiveTab] = useState<number>(0);
+  const { t } = useTranslation('dashboard');
+  const [type, setType] = useState<NewsType>(NewsType.FINANCIAL);
+  const [newsList, setNewsList] = useState<INews[]>([]);
 
-  /* === Fake Data === */
-  // Deprecated: (20241018 - Liz) 這是假資料，之後會改成從 user context 打 API 拿資料
-  const financialNews = [
-    {
-      id: 'financial-1',
-      title: '遇到金融詐騙免驚 移民署培力新住民金融消費新知',
-      href: '/',
-      date: '2024/09/13',
-    },
-    {
-      id: 'financial-2',
-      title: '凱基證券重視公平待客、友善金融',
-      href: '/',
-      date: '2024/09/12',
-    },
-    {
-      id: 'financial-3',
-      title: '華航志工到偏鄉2萬童樂學航空新知',
-      href: '/',
-      date: '2024/09/11',
-    },
-    {
-      id: 'financial-4',
-      title: '你在滑手機、追劇 他們正在汲取新知、思考未來！',
-      href: '/',
-      date: '2024/09/10',
-    },
-    {
-      id: 'financial-5',
-      title: 'ESG時代－金融業該如何落實責任投資？',
-      href: '/',
-      date: '2024/09/09',
-    },
-  ];
+  const isNoData = newsList.length === 0;
 
-  const systemNews = [
-    {
-      id: 'system-1',
-      title: 'iSunFA V.14.10 更新版本',
-      href: '/',
-      date: '2024/09/13',
-    },
-    {
-      id: 'system-2',
-      title: 'iSunFA V.14.10 更新通知',
-      href: '/',
-      date: '2024/09/12',
-    },
-    {
-      id: 'system-3',
-      title: 'iSunFA V.14.09 實裝小提醒',
-      href: '/',
-      date: '2024/09/11',
-    },
-    {
-      id: 'system-4',
-      title: 'iSunFA V.14.09 新功能重點整理',
-      href: '/',
-      date: '2024/09/10',
-    },
-    {
-      id: 'system-5',
-      title: 'iSunFA V.14.09 懶人包一次看',
-      href: '/',
-      date: '2024/09/09',
-    },
-  ];
+  // Info: (20241126 - Liz) 打 API 取得最新消息列表
+  const { trigger: getNewsListAPI } = APIHandler<INews[]>(APIName.NEWS_LIST);
 
-  const matchingNews = [
-    {
-      id: 'system-1',
-      title: 'Amazon 上傳相關憑證，徵求記帳士開立傳票',
-      href: '/',
-      date: '2024/09/13',
-    },
-    {
-      id: 'system-2',
-      title: 'Apple 上傳相關憑證，徵求記帳士開立傳票',
-      href: '/',
-      date: '2024/09/12',
-    },
-    {
-      id: 'system-3',
-      title: 'iSunFA V.14.09 實裝小提醒',
-      href: '/',
-      date: '2024/09/11',
-    },
-    {
-      id: 'system-4',
-      title: 'Google 上傳相關憑證，徵求記帳士開立傳票',
-      href: '/',
-      date: '2024/09/10',
-    },
-    {
-      id: 'system-5',
-      title: 'Netflix 上傳相關憑證，徵求記帳士開立傳票',
-      href: '/',
-      date: '2024/09/09',
-    },
-  ];
+  // Info: (20241126 - Liz) 取得最新消息列表 (根據不同的 type)
+  useEffect(() => {
+    const getNewsList = async () => {
+      try {
+        const { data, success, code } = await getNewsListAPI({
+          query: { simple: true, type },
+        });
 
-  let newsList: { id: string; title: string; href: string; date: string }[] = [];
+        if (success && data) {
+          setNewsList(data);
 
-  switch (activeTab) {
-    case 0:
-      newsList = financialNews;
-      break;
-    case 1:
-      newsList = systemNews;
-      break;
-    case 2:
-      newsList = matchingNews;
-      break;
-    default:
-      newsList = [];
-  }
+          // Deprecated: (20241126 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('getNewsListAPI success:', 'data:', data);
+        } else {
+          // Deprecated: (20241126 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('getNewsListAPI failed:', code);
+        }
+      } catch (error) {
+        // Deprecated: (20241126 - Liz)
+        // eslint-disable-next-line no-console
+        console.log(error);
+      }
+    };
+
+    getNewsList();
+  }, [type]);
 
   return (
     <DashboardCardLayout>
       <section className="flex flex-col gap-24px">
         <section className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-text-neutral-secondary">Latest News</h1>
-          <MoreLink href={'/'} />
+          <h1 className="text-xl font-bold text-text-neutral-secondary">
+            {t('dashboard:DASHBOARD.LATEST_NEWS')}
+          </h1>
+          <MoreLink href={ISUNFA_ROUTE.LATEST_NEWS_PAGE} />
         </section>
 
-        {/* Tab */}
-        <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        {/* // Info: (20241126 - Liz) Tab */}
+        <TabsForLatestNews activeTab={type} setActiveTab={setType} />
 
-        {/* News List */}
-        <NewsList list={newsList} />
+        {isNoData ? (
+          <div className="flex flex-col items-center">
+            <Image src={'/images/empty.svg'} alt="empty_image" width={120} height={134.787}></Image>
+            <p className="text-base font-medium text-text-neutral-mute">
+              {t('dashboard:DASHBOARD.NO_LATEST_NEWS')}
+            </p>
+          </div>
+        ) : (
+          <NewsList newsList={newsList} />
+        )}
       </section>
     </DashboardCardLayout>
   );

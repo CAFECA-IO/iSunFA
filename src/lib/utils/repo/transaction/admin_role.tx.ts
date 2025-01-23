@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { ROLE_NAME } from '@/constants/role_name';
+import { CompanyRoleName } from '@/constants/role';
 import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function transferOwnership(
@@ -18,7 +18,7 @@ export async function transferOwnership(
           userId: currentOwnerId,
           companyId,
           role: {
-            name: ROLE_NAME.OWNER,
+            name: CompanyRoleName.OWNER,
           },
           OR: [{ deletedAt: 0 }, { deletedAt: null }],
         },
@@ -63,7 +63,7 @@ export async function transferOwnership(
             data: {
               role: {
                 connect: {
-                  name: ROLE_NAME.OWNER,
+                  name: CompanyRoleName.OWNER,
                 },
               },
               updatedAt: nowTimestamp,

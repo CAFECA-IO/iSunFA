@@ -8,7 +8,7 @@ import LandingFooter from '@/components/landing_page/landing_footer';
 import TermsOfServicePageBody from '@/components/landing_page/terms_body';
 
 const TermsOfService = () => {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['landing_page']);
 
   return (
     <>
@@ -16,7 +16,7 @@ const TermsOfService = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:LANDING_FOOTER.TERMS_OF_SERVICE')}</title>
+        <title>{t('landing_page:LANDING_FOOTER.TERMS_OF_SERVICE')}</title>
       </Head>
 
       <nav>
@@ -34,17 +34,7 @@ const TermsOfService = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, [
-      'common',
-      'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-      'asset',
-    ])),
+    ...(await serverSideTranslations(locale, ['landing_page', 'terms'])),
   },
 });
 

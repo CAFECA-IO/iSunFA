@@ -62,7 +62,7 @@ const SalaryBookConfirmModal = ({
           </div>
           {/* Info: (20240716 - Julian) date */}
           <div className="flex w-full items-center justify-between">
-            <p className="text-text-neutral-secondary">{t('common:DATE_PICKER.DATE')}</p>
+            <p className="text-text-neutral-secondary">{t('common:COMMON.DATE')}</p>
             <p className="font-semibold text-text-neutral-primary">
               {timestampToString(dateTimestamp).date}
             </p>

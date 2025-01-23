@@ -91,7 +91,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IProfitInsight | null>>
 ) {
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
 
@@ -111,12 +111,11 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      const logError = loggerError(
+      loggerError({
         userId,
-        'request handler in profit_insight/index.ts failed',
-        _error as Error
-      );
-      logError.error('request handler in profit_insight/index.ts failed');
+        errorType: 'request handler in profit_insight/index.ts failed',
+        errorMessage: (_error as Error).message,
+      });
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

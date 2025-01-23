@@ -16,9 +16,20 @@ import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import BalanceDetailsButton from '@/components/button/balance_details_button';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { IDatePeriod } from '@/interfaces/date_period';
+import PrintButton from '@/components/button/print_button';
+import DownloadButton from '@/components/button/download_button';
+import Toggle from '@/components/toggle/toggle';
+import { useGlobalCtx } from '@/contexts/global_context';
+// import { useReactToPrint } from 'react-to-print';
+import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
+// import { ReportLanguagesKey } from '@/interfaces/report_language'; // Todo: (20241206 - Anna) 下個PR繼續處理
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
+  isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
+  printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
+  printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
+  //  selectedReportLanguage: ReportLanguagesKey; // Todo: (20241206 - Anna) 接收語言選擇 下個PR繼續處理
 }
 
 // Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
@@ -35,16 +46,33 @@ const COLOR_CLASSES = [
   'bg-[#9B8AFB]',
 ];
 
-const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }) => {
-  const { t } = useTranslation('common');
+const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
+  selectedDateRange,
+  isPrinting, // Info: (20241122 - Anna) 使用打印狀態
+  printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
+  printFn, // Info: (20241122 - Anna) 使用打印函數
+  // selectedReportLanguage, // Todo: (20241206 - Anna)接收語言選擇 下個PR繼續處理
+}) => {
+  const { t, i18n } = useTranslation(['reports']);
+  const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
+
+  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
+
   // Info: (20241023 - Anna) 使用 useRef 追蹤之前的日期範圍
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
 
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+
+  const [totalSubAccountsToggle, setTotalSubAccountsToggle] = useState(false); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 狀態
+
+  // Info: (20241029 - Anna) 切換 totalSubAccountsToggle 的開關狀態
+  const totalSubAccountsToggleHandler = () => {
+    setTotalSubAccountsToggle((prevState) => !prevState);
+  };
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -117,9 +145,11 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
 
   // Info: (20241023 - Anna) 在 useEffect 中依賴 getBalanceSheetReport，當日期範圍變更時觸發 API 請求
   useEffect(() => {
-    if (!selectedDateRange) return; // Info: (20241023 - Anna) 如果尚未選擇日期區間，不觸發請求
+    // if (!selectedDateRange) return; // Info: (20241023 - Anna) 如果尚未選擇日期區間，不觸發請求
+    if (!selectedDateRange || selectedDateRange.startTimeStamp === 0) return; // Info: (20241121 - Anna) 新增檢查
     getBalanceSheetReport();
-  }, [getBalanceSheetReport, selectedDateRange]);
+    // }, [getBalanceSheetReport, selectedDateRange]); // Info: (20241121 - Anna) 直接依賴 getBalanceSheetReport
+  }, [selectedDateRange, getBalanceSheetReport]); // Info: (20241121 - Anna) 簡化依賴
 
   const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
   const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
@@ -197,20 +227,53 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     if (reportFinancial && reportFinancial.details) {
       const initialCollapseState: { [key: string]: boolean } = reportFinancial.details.reduce(
         (acc, item) => {
-          acc[item.code] = true; // Info: (20241017 - Anna) 預設每個項目的展開狀態為摺疊
+          // acc[item.code] = true; // Info: (20241017 - Anna) 預設每個項目的展開狀態為摺疊
+          acc[item.code] = !totalSubAccountsToggle; // Info: (20241029 - Anna) 根據 totalSubAccountsToggle 設定初始展開狀態
           return acc;
         },
         {} as { [key: string]: boolean }
       );
       setIsSubAccountsCollapsed(initialCollapseState);
     }
-  }, [reportFinancial]);
+  }, [reportFinancial, totalSubAccountsToggle]); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 作為依賴項
+
+  useEffect(() => {
+    if (isPrinting && printRef.current) {
+      // Deprecated: (20241130 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('balance_sheet_list 觀察 Printing content:', printRef.current.innerHTML);
+      // Deprecated: (20241130 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('BalanceSheetList received isPrinting?', isPrinting);
+    } else {
+      // Deprecated: (20241130 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('BalanceSheetList printRef is null');
+    }
+  }, [isPrinting]);
+
+  // Info: (20241122 - Anna) 打印 Ref 的內容
+  useEffect(() => {
+    if (printRef.current) {
+      // Deprecated: (20241130 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('balance_sheet_list 觀察 Current printRef content:', printRef.current);
+    } else {
+      // Deprecated: (20241130 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('BalanceSheetList printRef is currently null');
+    }
+  }, [printRef]);
 
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen flex-col items-center justify-center">
         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+        <div>
+          <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
+          <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
+        </div>
       </div>
     );
   } else if (getReportFinancialIsLoading) {
@@ -233,18 +296,18 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   }
 
   const displayedCurALRChart = isNoDataForCurALR ? (
-    <div className="ml-20">
-      {/* // ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
+    <div className="flex w-300px items-center justify-center">
+      {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="200"
-        height="200"
+        width="232"
+        height="232"
         fill="none"
         viewBox="0 0 200 200"
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('common:COMMON.NO_DATA')}
+          {t('reports:REPORTS.NO_DATA')}
         </text>
       </svg>
     </div>
@@ -255,18 +318,18 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   );
 
   const displayedPreALRChart = isNoDataForPreALR ? (
-    <div className="ml-20">
-      {/* // ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
+    <div className="flex w-300px items-center justify-center">
+      {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="200"
-        height="200"
+        width="232"
+        height="232"
         fill="none"
         viewBox="0 0 200 200"
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('common:COMMON.NO_DATA')}
+          {t('reports:REPORTS.NO_DATA')}
         </text>
       </svg>
     </div>
@@ -309,8 +372,12 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
 
       return (
         <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="w-50px border border-stroke-brand-secondary-soft p-10px text-sm">
+            {item.code}
+          </td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+            <p>{t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}</p>
+          </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
@@ -351,18 +418,28 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
             <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
               {item.code}
             </td>
-            <td className="flex items-center justify-between border-b border-stroke-brand-secondary-soft p-10px text-sm">
-              {item.name}
-              {/* Info: (20241021 - Anna) 如果有 children 才顯示 CollapseButton */}
-              {item.children && item.children.length > 0 && (
-                <CollapseButton
-                  // Info: (20241017 - Anna) 指定 item 的 code 作為參數
-                  onClick={() => toggleSubAccounts(item.code)}
-                  // Info: (20241017 - Anna) 依據每個 item 的狀態決定是否展開
-                  isCollapsed={isSubAccountsCollapsed[item.code] ?? true}
-                  buttonType="orange"
-                />
-              )}
+            <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+              <div className="flex items-center justify-between">
+                {t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}
+                {/* Info: (20241021 - Anna) 如果有 children 才顯示 CollapseButton */}
+                {item.children &&
+                  item.children.filter(
+                    (child) =>
+                      child.curPeriodAmountString !== '-' ||
+                      child.curPeriodPercentageString !== '-' ||
+                      child.prePeriodAmountString !== '-' ||
+                      child.prePeriodPercentageString !== '-'
+                  ).length > 0 && (
+                    <CollapseButton
+                      className="print:hidden"
+                      // Info: (20241017 - Anna) 指定 item 的 code 作為參數
+                      onClick={() => toggleSubAccounts(item.code)}
+                      // Info: (20241017 - Anna) 依據每個 item 的狀態決定是否展開
+                      isCollapsed={isSubAccountsCollapsed[item.code] ?? true}
+                      buttonType="orange"
+                    />
+                  )}
+              </div>
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
               {item.curPeriodAmountString}
@@ -381,36 +458,80 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
           {!isSubAccountsCollapsed[item.code] &&
             item.children &&
             item.children.length > 0 &&
-            item.children.map((child) => (
-              <tr key={`sub-accounts-${child.code}`}>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-sm"></td>
-                <td className="items-center border border-stroke-brand-secondary-soft p-10px text-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="justify-start">
-                      <span>{child.code}</span>
-                      <span className="ml-2">{child.name}</span>
+            item.children
+              // Info: (20241203 - Anna) 過濾掉數值為 "0" 或 "-" 的子科目
+              .filter(
+                (child) =>
+                  child.curPeriodAmountString !== '-' ||
+                  child.curPeriodPercentageString !== '-' ||
+                  child.prePeriodAmountString !== '-' ||
+                  child.prePeriodPercentageString !== '-'
+              )
+              .map((child) => (
+                <tr key={`sub-accounts-${child.code}`}>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-sm"></td>
+                  <td className="items-center border border-t-0 border-stroke-brand-secondary-soft px-10px py-3px text-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="justify-start">
+                        <span>{child.code}</span>
+                        <span className="ml-2">
+                          {t(`reports:ACCOUNTING_ACCOUNT.${child.name}`)}
+                        </span>
+                      </div>
+                      {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給
+                    BalanceDetailsButton，用於顯示彈出視窗的標題 */}
+                      {/*  Info: (20241217 - Anna) 判斷 child.code 是否為 3353（本期損益（結轉來，沒有分錄）） or 3351（累積盈虧（結轉來，沒有分錄）），若不是才顯示按鈕 */}
+                      {child.code !== '3353' && child.code !== '3351' && (
+                        <BalanceDetailsButton
+                          accountName={child.name}
+                          accountId={child.accountId}
+                          className="print:hidden"
+                        />
+                      )}
                     </div>
-                    <BalanceDetailsButton />
-                  </div>
-                </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                  {child.curPeriodAmountString}
-                </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                  {child.curPeriodPercentageString}
-                </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                  {child.prePeriodAmountString}
-                </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                  {child.prePeriodPercentageString}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                    {child.curPeriodAmountString}
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                    {child.curPeriodPercentageString}
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                    {child.prePeriodAmountString}
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                    {child.prePeriodPercentageString}
+                  </td>
+                </tr>
+              ))}
         </React.Fragment>
       );
     });
     return rows;
+  };
+  // Info: (20241029 - Anna) 子科目 Toggle 開關、列印及下載按鈕
+  // const displayedSelectArea = (ref: React.RefObject<HTMLDivElement>) => {
+  const displayedSelectArea = () => {
+    // Deprecated: (20241130 - Anna) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log('[displayedSelectArea] Display Area Rendered');
+    return (
+      <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
+        <div className="flex items-center gap-4">
+          <Toggle
+            id="totalSubAccounts-toggle"
+            initialToggleState={totalSubAccountsToggle}
+            getToggledState={totalSubAccountsToggleHandler}
+            toggleStateFromParent={totalSubAccountsToggle}
+          />
+          <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
+        </div>
+        <div className="ml-auto flex items-center gap-24px">
+          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+          <PrintButton onClick={printFn} disabled={!isChinese} />
+        </div>
+      </div>
+    );
   };
 
   const ItemSummary = (
@@ -429,35 +550,37 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
       <section className="mx-1 text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p>項目彙總格式</p>
+            <p className="font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton
               onClick={toggleSummaryTable}
               isCollapsed={isSummaryCollapsed}
               buttonType="default"
             />
           </div>
-          <p>單位：新台幣元</p>
+          <p className="font-bold leading-5">{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {!isSummaryCollapsed && (
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
-              <tr>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  代號
+              <tr className="print:hidden">
+                <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                  {t('reports:REPORTS.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  會計項目
+                <th
+                  className={`w-800px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold`}
+                >
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   {curDate}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   %
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   {preDate}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   %
                 </th>
               </tr>
@@ -474,39 +597,37 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ItemDetail = (
-    <div id="3" className="relative overflow-y-hidden">
+    <div id="2" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p>細項分類格式</p>
-            <CollapseButton
-              onClick={toggleDetailTable}
-              isCollapsed={isDetailCollapsed}
-              buttonType="default"
-            />
+            <p className="font-bold leading-5">
+              {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
+            </p>
+            <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p>單位：新台幣元</p>
+          <p className="font-bold leading-5">{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
         {!isDetailCollapsed && (
           <table className="w-full border-collapse bg-white">
             <thead>
-              <tr>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  代號
+              <tr className="print:hidden">
+                <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                  {t('reports:REPORTS.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  會計項目
+                <th className="w-800px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   {curDate}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   %
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   {preDate}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   %
                 </th>
               </tr>
@@ -523,42 +644,42 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ProportionalTable = (
-    <div id="10" className="relative overflow-y-hidden">
+    <div id="3" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>三、資產負債比例表</p>
+          <p>{t('reports:REPORTS.ASSET_LIABILITY_RATIO')}</p>
         </div>
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-0">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
-            <div className="flex items-center">
+            <p className="text-base font-semibold text-text-brand-secondary-lv2">{curDate}</p>
+            <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {curAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span className="w-200px">{label}</span>
+                    <span className="w-200px">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
                   </li>
                 ))}
               </ul>
-              {displayedCurALRChart}{' '}
+              {displayedCurALRChart}
             </div>
           </div>
           <div className="flex flex-col space-y-0">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
-            <div className="flex items-center">
+            <p className="text-base font-semibold text-text-brand-secondary-lv2">{preDate}</p>
+            <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {preAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span className="w-200px">{label}</span>
+                    <span className="w-200px">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
                   </li>
                 ))}
               </ul>
-              {displayedPreALRChart}{' '}
+              {displayedPreALRChart}
             </div>
           </div>
         </div>
@@ -575,14 +696,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const AssetItem = (
-    <div id="11" className="relative overflow-y-hidden">
-      <section className="mx-1 text-text-neutral-secondary">
+    <div id="4" className={`relative overflow-y-hidden print:break-before-page`}>
+      <section className="mx-1 mb-6 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>四、資產分布圖</p>
+          <p>{t('reports:REPORTS.ASSET_DISTRIBUTION_CHART')}</p>
         </div>
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-5">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
+            <p className="text-base font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {curAssetMixLabels.map((label, index) => (
@@ -590,16 +711,40 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="text-sm">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
                   </li>
                 ))}
               </ul>
-              <PieChartAssets data={curAssetMixRatio} labels={curAssetMixLabels} colors={COLORS} />
+              <div className="relative" style={{ marginTop: '-20px' }}>
+                {curAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
+                  <div className="flex w-300px items-center justify-center">
+                    {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="232"
+                      height="232"
+                      fill="none"
+                      viewBox="0 0 200 200"
+                    >
+                      <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
+                      <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
+                        {t('reports:REPORTS.NO_DATA')}
+                      </text>
+                    </svg>
+                  </div>
+                ) : (
+                  <PieChartAssets
+                    data={curAssetMixRatio}
+                    labels={curAssetMixLabels}
+                    colors={COLORS}
+                  />
+                )}
+              </div>
             </div>
           </div>
 
           <div className="flex flex-col space-y-5">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
+            <p className="text-base font-semibold text-text-brand-secondary-lv2">{preDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {preAssetMixLabels.map((label, index) => (
@@ -607,11 +752,35 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="text-sm">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
                   </li>
                 ))}
               </ul>
-              <PieChartAssets data={preAssetMixRatio} labels={preAssetMixLabels} colors={COLORS} />
+              <div className="relative" style={{ marginTop: '-20px' }}>
+                {preAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
+                  <div className="flex w-300px items-center justify-center">
+                    {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="232"
+                      height="232"
+                      fill="none"
+                      viewBox="0 0 200 200"
+                    >
+                      <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
+                      <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
+                        {t('reports:REPORTS.NO_DATA')}
+                      </text>
+                    </svg>
+                  </div>
+                ) : (
+                  <PieChartAssets
+                    data={preAssetMixRatio}
+                    labels={preAssetMixLabels}
+                    colors={COLORS}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -628,51 +797,51 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const TurnoverDay = (
-    <div id="12" className="relative overflow-y-hidden">
+    <div id="5" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mt-30px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>五、應收帳款週轉天數</p>
-          <p>單位：天</p>
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
+          <p>{t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS')}</p>
+          <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                {curYear}年度
+              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
+              <th className="w-300px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: curYear })}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                {preYear}年度
+              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: preYear })}
               </th>
             </tr>
           </thead>
           <tbody>
             {renderDataRow(
-              '應收帳款週轉天數',
+              t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS'),
               reportFinancial?.otherInfo?.dso.curDso,
               reportFinancial?.otherInfo?.dso.preDso
             )}
           </tbody>
         </table>
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>六、存貨週轉天數</p>
-          <p>單位：天</p>
+          <p>{t('reports:REPORTS.INVENTORY_TURNOVER_DAYS')}</p>
+          <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                {curYear}年度
+              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
+              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: curYear })}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                {preYear}年度
+              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: preYear })}
               </th>
             </tr>
           </thead>
           <tbody>
             {renderDataRow(
-              '存貨週轉天數',
+              t('reports:REPORTS.INVENTORY_TURNOVER_DAYS'),
               reportFinancial?.otherInfo?.inventoryTurnoverDays.curInventoryTurnoverDays,
               reportFinancial?.otherInfo?.inventoryTurnoverDays.preInventoryTurnoverDays
             )}
@@ -692,16 +861,34 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   );
 
   return (
-    <div className="mx-auto w-full origin-top overflow-x-auto">
-      {ItemSummary}
-      <hr className="break-before-page" />
-      {ItemDetail}
-      <hr className="break-before-page" />
-      {ProportionalTable}
-      <hr className="break-before-page" />
-      {AssetItem}
-      <hr className="break-before-page" />
-      {TurnoverDay}
+    <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
+      {displayedSelectArea()}
+      {/* Info: (20241125 - Tzuhan) 渲染打印模板，通過 CSS 隱藏 */}
+      <div ref={printRef} className="hidden print:block">
+        <BalanceSheetA4Template
+          reportFinancial={reportFinancial}
+          curDate={curDate}
+          preDate={preDate}
+        >
+          {ItemSummary}
+          {ItemDetail}
+          {/* {ProportionalTable} Todo: (20241203 - Anna) 圖表有問題 */}
+          {/* {AssetItem} Todo: (20241203 - Anna) 圖表有問題 */}
+          {TurnoverDay}
+        </BalanceSheetA4Template>
+      </div>
+      {/*  Info: (20241125 - Tzuhan) 預覽區域 */}
+      <div className="block print:hidden">
+        {ItemSummary}
+        <hr className="break-before-page" />
+        {ItemDetail}
+        <hr className="break-before-page" />
+        {ProportionalTable}
+        <hr className="mb-16px mt-32px break-before-page" />
+        {AssetItem}
+        <hr className="break-before-page" />
+        {TurnoverDay}
+      </div>
     </div>
   );
 };

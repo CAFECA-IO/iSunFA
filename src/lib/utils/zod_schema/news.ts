@@ -1,54 +1,76 @@
 import { z } from 'zod';
-import { IZodValidator } from '@/interfaces/zod_validator';
 import { NewsType } from '@/constants/news';
+import {
+  zodStringToBoolean,
+  zodStringToNumber,
+  zodStringToNumberWithDefault,
+} from '@/lib/utils/zod_schema/common';
+import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 
-// Info: (20241015 - Jacky) News list validator
-const newsListQueryValidator = z.object({
-  simple: z.boolean().optional(),
+// Info: (20241029 - Jacky) News null schema
+const newsNullSchema = z.union([z.object({}), z.string()]);
+
+// Info: (20241015 - Jacky) News list schema
+const newsListQuerySchema = z.object({
+  simple: zodStringToBoolean.optional(),
   type: z.nativeEnum(NewsType).optional(),
-  targetPage: z.number().int().optional(),
-  pageSize: z.number().int().optional(),
-  startDateInSecond: z.number().int().optional(),
-  endDateInSecond: z.number().int().optional(),
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
+  startDateInSecond: zodStringToNumber.optional(),
+  endDateInSecond: zodStringToNumber.optional(),
   searchQuery: z.string().optional(),
 });
 
-const newsListBodyValidator = z.object({});
-
-export const newsListValidator: IZodValidator<
-  (typeof newsListQueryValidator)['shape'],
-  (typeof newsListBodyValidator)['shape']
-> = {
-  query: newsListQueryValidator,
-  body: newsListBodyValidator,
-};
-
-// Info: (20241015 - Jacky) News post validator
-const newsPostQueryValidator = z.object({});
-const newsPostBodyValidator = z.object({
+// Info: (20241015 - Jacky) News post schema
+const newsPostBodySchema = z.object({
+  imageId: z.number().int(),
   type: z.nativeEnum(NewsType),
   title: z.string(),
   content: z.string(),
 });
 
-export const newsPostValidator: IZodValidator<
-  (typeof newsPostQueryValidator)['shape'],
-  (typeof newsPostBodyValidator)['shape']
-> = {
-  query: newsPostQueryValidator,
-  body: newsPostBodyValidator,
+// Info: (20241024 - Jacky) News get by id schema
+const newsGetByIdQuerySchema = z.object({
+  newsId: zodStringToNumber,
+});
+
+const newsOutputSchema = z.object({
+  id: z.number().int(),
+  imageId: z.number().int(),
+  type: z.nativeEnum(NewsType),
+  title: z.string(),
+  content: z.string(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+});
+
+const paginatedNewsOutputSchema = paginatedDataSchema(newsOutputSchema);
+const arrayNewsOutputSchema = z.array(newsOutputSchema);
+
+export const newsListSchema = {
+  input: {
+    querySchema: newsListQuerySchema,
+    bodySchema: newsNullSchema,
+  },
+  outputSchema: z.union([paginatedNewsOutputSchema, arrayNewsOutputSchema]),
+  frontend: newsNullSchema,
 };
 
-// Info: (20241015 - Jacky) News select validator
-const newsSelectQueryValidator = z.object({
-  newsId: z.number().int(),
-});
-const newsSelectBodyValidator = z.object({});
+export const newsPostSchema = {
+  input: {
+    querySchema: newsNullSchema,
+    bodySchema: newsPostBodySchema,
+  },
+  outputSchema: newsOutputSchema,
+  frontend: newsNullSchema,
+};
 
-export const newsSelectValidator: IZodValidator<
-  (typeof newsSelectQueryValidator)['shape'],
-  (typeof newsSelectBodyValidator)['shape']
-> = {
-  query: newsSelectQueryValidator,
-  body: newsSelectBodyValidator,
+export const newsGetByIdSchema = {
+  input: {
+    querySchema: newsGetByIdQuerySchema,
+    bodySchema: newsNullSchema,
+  },
+  outputSchema: newsOutputSchema,
+  frontend: newsNullSchema,
 };

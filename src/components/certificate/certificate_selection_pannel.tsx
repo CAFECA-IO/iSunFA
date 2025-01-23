@@ -2,6 +2,7 @@ import { ICertificateUI } from '@/interfaces/certificate';
 // import Image from 'next/image';
 import CertificateSelectorThumbnail from '@/components/certificate/certificate_selector_thumbnail';
 import { FaPlus } from 'react-icons/fa6';
+import { useEffect, useState } from 'react';
 
 interface CertificateSelectionPannelProps {
   certificates: ICertificateUI[];
@@ -16,6 +17,22 @@ const CertificateSelectionPannel: React.FC<CertificateSelectionPannelProps> = ({
   handleSelect,
   openUploaderModal,
 }: CertificateSelectionPannelProps) => {
+  const [certificatesReOrdered, setCertificatesReOrdered] =
+    useState<ICertificateUI[]>(certificates);
+
+  useEffect(() => {
+    const unReadCertificates: ICertificateUI[] = [];
+    const readCertificates: ICertificateUI[] = [];
+    certificates.forEach((certificate) => {
+      if (certificate.unRead) {
+        unReadCertificates.push(certificate);
+      } else {
+        readCertificates.push(certificate);
+      }
+    });
+    setCertificatesReOrdered([...unReadCertificates, ...readCertificates]);
+  }, [certificates]);
+
   return (
     <div className="my-4 h-392px rounded-lg bg-surface-neutral-main-background px-8 py-4">
       <div className="h-full overflow-y-auto">
@@ -39,7 +56,7 @@ const CertificateSelectionPannel: React.FC<CertificateSelectionPannelProps> = ({
               /> */}
             </button>
           </div>
-          {certificates.map((certificate) => (
+          {certificatesReOrdered.map((certificate) => (
             <CertificateSelectorThumbnail
               key={certificate.id}
               isSelected={selectedIds.includes(certificate.id)}

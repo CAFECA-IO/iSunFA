@@ -1,25 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
+import { FiBookOpen } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { numberWithCommas } from '@/lib/utils/common';
 import VoucherLineItem from '@/components/voucher/voucher_line_item';
 import { Button } from '@/components/button/button';
-import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
-import { IAccount } from '@/interfaces/accounting_account';
-import { FiBookOpen } from 'react-icons/fi';
+import {
+  ILineItemBeta,
+  ILineItemUI,
+  //  IReverseItemUI,
+  initialVoucherLine,
+} from '@/interfaces/line_item';
+// import { IAccount } from '@/interfaces/accounting_account';
 import { inputStyle } from '@/constants/display';
 import { LuTrash2 } from 'react-icons/lu';
+import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 interface IVoucherLineBlockProps {
-  totalDebit: number;
-  totalCredit: number;
-  lineItems: ILineItemBeta[];
-  setLineItems: React.Dispatch<React.SetStateAction<ILineItemBeta[]>>;
-  flagOfClear: boolean;
-  flagOfSubmit: boolean;
-  isAccountingNull: boolean;
-  haveZeroLine: boolean;
-  isVoucherLineEmpty: boolean;
+  lineItems: ILineItemUI[];
+  setLineItems: React.Dispatch<React.SetStateAction<ILineItemUI[]>>;
+
+  flagOfClear: boolean; // Info: (20241104 - Julian) 判斷是否按下清除按鈕
+  flagOfSubmit: boolean; // Info: (20241104 - Julian) 判斷是否按下送出按鈕
+
+  setIsTotalZero: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷總借貸金額是否為 0
+  setIsTotalNotEqual: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷總借貸金額是否不相等
+  setHaveZeroLine: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否有金額為 0 的傳票列
+  setIsAccountingNull: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否有空的會計科目
+  setIsVoucherLineEmpty: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否傳票列為空
+  setIsCounterpartyRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要交易對象
+  setIsAssetRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要資產
 }
 
 interface IVoucherLinePreviewProps {
@@ -29,17 +40,24 @@ interface IVoucherLinePreviewProps {
 }
 
 const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
-  totalDebit,
-  totalCredit,
   lineItems,
   setLineItems,
+
   flagOfClear,
   flagOfSubmit,
-  isAccountingNull,
-  haveZeroLine,
-  isVoucherLineEmpty,
+
+  setIsTotalZero,
+  setIsTotalNotEqual,
+  setHaveZeroLine,
+  setIsAccountingNull,
+  setIsVoucherLineEmpty,
+  setIsCounterpartyRequired,
+  setIsAssetRequired,
 }) => {
   const { t } = useTranslation('common');
+
+  const [totalDebit, setTotalDebit] = useState<number>(0);
+  const [totalCredit, setTotalCredit] = useState<number>(0);
 
   // Info: (20241004 - Julian) 如果借貸金額相等且不為 0，顯示綠色，否則顯示紅色
   const totalStyle =
@@ -53,84 +71,76 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     setLineItems([...lineItems, { ...initialVoucherLine, id: newVoucherId }]);
   };
 
+  // Info: (20241125 - Julian) Ctrl + Enter 新增傳票列
+  const handleCtrlEnter = (event: KeyboardEvent) => {
+    event.preventDefault();
+    addNewVoucherLine();
+  };
+
+  useHotkeys('ctrl+enter', handleCtrlEnter);
+
+  // Info: (20241004 - Julian) 傳票列條件
+  useEffect(() => {
+    // Info: (20241004 - Julian) 計算總借貸金額
+    const debitTotal = lineItems.reduce((acc, item) => {
+      return item.debit === true ? acc + item.amount : acc;
+    }, 0);
+    const creditTotal = lineItems.reduce((acc, item) => {
+      return item.debit === false ? acc + item.amount : acc;
+    }, 0);
+    // Info: (20241004 - Julian) 檢查是否有未填的數字的傳票列
+    const zeroLine = lineItems.some((item) => item.amount === 0 || item.debit === null);
+    // Info: (20241004 - Julian) 檢查是否有未選擇的會計科目
+    const accountingNull = lineItems.some((item) => item.account === null);
+
+    // Info: (20241009 - Julian) 會計科目有應收付帳款時，顯示 Counterparty
+    const isAPorAR = lineItems.some((item) => {
+      return AccountCodesOfAPandAR.includes(item.account?.code || '');
+    });
+
+    // Info: (20241009 - Julian) 會計科目有資產時，顯示 Asset
+    const isAsset = lineItems.some((item) => {
+      return AccountCodesOfAsset.includes(item.account?.code || '');
+    });
+
+    setTotalDebit(debitTotal);
+    setTotalCredit(creditTotal);
+
+    setIsTotalZero(debitTotal === 0 && creditTotal === 0);
+    setIsTotalNotEqual(debitTotal !== creditTotal);
+    setHaveZeroLine(zeroLine);
+    setIsAccountingNull(accountingNull);
+    setIsVoucherLineEmpty(lineItems.length === 0);
+    setIsCounterpartyRequired(isAPorAR);
+    setIsAssetRequired(isAsset);
+  }, [lineItems]);
+
   const voucherLines =
     lineItems && lineItems.length > 0 ? (
-      lineItems.map((lineItem) => {
-        // Info: (20241001 - Julian) 複製傳票列
-        const duplicateLineItem = { ...lineItem };
-
-        // Info: (20241001 - Julian) 刪除傳票列
-        const deleteVoucherLine = () => {
-          setLineItems(lineItems.filter((item) => item.id !== lineItem.id));
-        };
-
-        // Info: (20241001 - Julian) 設定 Account title
-        const accountTitleHandler = (account: IAccount | null) => {
-          duplicateLineItem.account = account;
-          setLineItems(
-            lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
-          );
-        };
-
-        // Info: (20241001 - Julian) 設定 Particulars
-        const particularsChangeHandler = (particulars: string) => {
-          duplicateLineItem.description = particulars;
-          setLineItems(
-            lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
-          );
-        };
-
-        // Info: (20241001 - Julian) 設定 Debit
-        const debitChangeHandler = (debit: number) => {
-          duplicateLineItem.debit = true;
-          duplicateLineItem.amount = debit;
-          setLineItems(
-            lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
-          );
-        };
-
-        // Info: (20241001 - Julian) 設定 Credit
-        const creditChangeHandler = (credit: number) => {
-          duplicateLineItem.debit = false;
-          duplicateLineItem.amount = credit;
-          setLineItems(
-            lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
-          );
-        };
-        return (
-          <VoucherLineItem
-            key={lineItem.id}
-            deleteHandler={deleteVoucherLine}
-            accountTitleHandler={accountTitleHandler}
-            particularsChangeHandler={particularsChangeHandler}
-            debitChangeHandler={debitChangeHandler}
-            creditChangeHandler={creditChangeHandler}
-            flagOfClear={flagOfClear}
-            flagOfSubmit={flagOfSubmit}
-            accountIsNull={isAccountingNull}
-            amountIsZero={haveZeroLine}
-            amountNotEqual={totalCredit !== totalDebit}
-          />
-        );
-      })
+      lineItems.map((lineItem) => (
+        <VoucherLineItem
+          key={`${lineItem.id}-voucher-line`}
+          id={lineItem.id}
+          data={lineItem}
+          setLineItems={setLineItems}
+          flagOfClear={flagOfClear}
+          flagOfSubmit={flagOfSubmit}
+          accountIsNull={lineItem.account === null}
+          amountIsZero={lineItem.amount === 0}
+          amountNotEqual={totalCredit !== totalDebit}
+        />
+      ))
     ) : (
       <div className="col-start-1 col-end-14 flex w-full flex-col items-center rounded-sm bg-input-surface-input-background py-10px text-xs">
         <p className="text-text-neutral-tertiary">{t('common:COMMON.EMPTY')}</p>
-        <p
-          className={`${
-            isVoucherLineEmpty ? 'text-text-state-error' : 'text-text-neutral-primary'
-          }`}
-        >
-          {t('journal:VOUCHER_LINE_BLOCK.EMPTY_HINT')}
-        </p>
+        <p className={'text-text-state-error'}>{t('journal:VOUCHER_LINE_BLOCK.EMPTY_HINT')}</p>
       </div>
     );
 
   return (
-    <div id="voucher-line-block" className="col-span-2">
-      {/* Info: (20240927 - Julian) Table */}
-      <div className="grid w-full grid-cols-13 gap-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
-        {/* Info: (20240927 - Julian) Table Header */}
+    <div className="flex flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
+      {/* Info: (20240927 - Julian) Table Header */}
+      <div className="grid w-full grid-cols-13 gap-x-24px">
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
         </div>
@@ -140,11 +150,13 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.DEBIT')}
         </div>
-        <div className="col-span-3 col-end-14 font-semibold text-text-neutral-invert">
+        <div className="col-span-3 col-start-10 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
         </div>
+      </div>
 
-        {/* Info: (20240927 - Julian) Table Body */}
+      {/* Info: (20240927 - Julian) Table Body */}
+      <div className="grid w-full grid-cols-13 gap-x-24px gap-y-10px">
         {voucherLines}
 
         {/* Info: (20240927 - Julian) Total calculation */}
@@ -156,14 +168,17 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
         <div className="col-start-11 col-end-13 text-right">
           <p className={totalStyle}>{numberWithCommas(totalCredit)}</p>
         </div>
-
-        {/* Info: (20240927 - Julian) Add button */}
-        <div className="col-start-1 col-end-14 text-center">
-          <Button type="button" className="h-44px w-44px p-0" onClick={addNewVoucherLine}>
-            <FaPlus size={20} />
-          </Button>
-        </div>
       </div>
+
+      {/* Info: (20240927 - Julian) Add button */}
+      <Button
+        id="add-line-item-button"
+        type="button"
+        size={'defaultSquare'}
+        onClick={addNewVoucherLine}
+      >
+        <FaPlus size={20} />
+      </Button>
     </div>
   );
 };
@@ -251,7 +266,7 @@ export const VoucherLinePreview: React.FC<IVoucherLinePreviewProps> = ({
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.DEBIT')}
         </div>
-        <div className="col-span-3 col-end-14 font-semibold text-text-neutral-invert">
+        <div className="col-span-3 col-start-10 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
         </div>
 
@@ -270,7 +285,7 @@ export const VoucherLinePreview: React.FC<IVoucherLinePreviewProps> = ({
 
         {/* Info: (20241018 - Julian) Add button */}
         <div className="col-start-1 col-end-14 text-center">
-          <Button type="button" className="h-44px w-44px p-0">
+          <Button type="button" size={'defaultSquare'}>
             <FaPlus size={20} />
           </Button>
         </div>

@@ -133,12 +133,12 @@ const MessageModal = ({
   ) : null;
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 font-barlow">
+    <div className="fixed inset-0 z-10000 flex items-center justify-center bg-black/50 font-barlow">
       <div
-        className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-376px ${borderColor} bg-alert-surface-background px-32px py-16px`}
+        className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-fit md:min-w-376px ${borderColor} bg-alert-surface-background px-32px py-16px`}
       >
         {isDisplayCross}
-        <div className="mt-20px flex flex-col items-center gap-16px text-center">
+        <div className="mt-20px flex flex-col items-center gap-16px text-center md:max-w-376px">
           <h1 className={`text-xl font-bold ${titleColor}`}>{title}</h1>
           <h1 className={`text-base font-medium ${titleColor}`}>{displayedSubtitles}</h1>
           <Image src={imgStr} width={48} height={48} alt={imgAlt} />
@@ -150,7 +150,7 @@ const MessageModal = ({
             {notes}
           </div>
         </div>
-        <div className="flex items-center justify-center gap-24px">
+        <div className="flex flex-wrap items-center justify-center gap-24px md:flex-nowrap">
           {isBackBtn}
           <Button
             className={cn('px-16px py-8px', submitBtnClassName)}

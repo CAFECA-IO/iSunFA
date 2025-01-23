@@ -33,7 +33,6 @@
     "TRANSFER": "移转",
     "PAYMENT": "支付",
     "RECEIVING": "收入",
-    "TWD": "新台币",
     "TAX": "税 /",
     "NO_SLASH_TAX": "税",
     "TWD_FEE": "新台币费用",
@@ -58,7 +57,7 @@
     "ADD_NEW_CONTRACT": "添加新合同",
     "PROJECT_CONTRACT_ISUNFA": "项目合同 - iSunFA",
     "FROM_TO": "供应商/客户",
-    "VOUCHER_NO": "凭证号码",
+    "VOUCHER_NO": "传票号码",
     "OPERATIONS": "操作",
     "INFO": "信息",
     "EVENT_TYPE": "事件类型",
@@ -188,23 +187,44 @@
     "ACCOUNTING": "会计科目",
     "CREDIT": "贷方",
     "DEBIT": "借方",
-    "ISSUER": "发行人",
+    "ISSUER": "制单人",
     "RECEIVABLE_AMOUNT": "应收金额",
     "PAYABLE_AMOUNT": "应付金额",
     "RECEIVED_AMOUNT": "已收金额",
     "PAID_AMOUNT": "已付金额",
     "REMAIN_AMOUNT": "剩余金额",
     "REVERSE": "冲销",
+    "DELETED": "已删除",
     "EXPORT_VOUCHER_MODAL_TITLE": "汇出传票",
     "EXPORT_VOUCHER_MODAL_SUBTITLE": "请选择您要汇出的传票",
+    "TOAST_EXPORT_SUCCESS": "传票已成功汇出。",
+    "TOAST_EXPORT_FAILED": "传票汇出失败，请稍后再试。",
     "VOUCHER_NUMBER": "传票号码",
     "EXPORT_BTN": "汇出",
     "FROM_PLACEHOLDER": "从",
     "TO_PLACEHOLDER": "到",
     "BALANCE": "余额",
-    "LEDGER": "分类帐",
+    "LEDGER": "总帐/分类帐",
     "TRIAL_BALANCE": "试算表",
-    "NO_VOUCHER": "无传票资料"
+    "NO_VOUCHER": "无传票资料",
+    "UPLOADED_TAB": "已过账传票",
+    "UPCOMING_TAB": "未过账传票",
+    "RECEIVING_TAB": "应收传票",
+    "PAYMENT_TAB": "应付传票",
+    "SELECT": "选择",
+    "SELECT_ALL": "全选",
+    "UNSELECT_ALL": "取消全选",
+    "HIDE_VOUCHER_TOGGLE": "隐藏已删除的传票和其相关冲销分录",
+    "WARNING_MODAL_TITLE": "警告",
+    "AT_LEAST_ONE_VOUCHER_CONTENT": "请至少选择一张传票",
+    "DELETE_ONE_VOUCHER_TITLE": "您确定要删除{{voucherNo}}吗？",
+    "DELETE_ONE_VOUCHER_CONTENT": "与此传票相关的所有资产也将被删除。",
+    "DELETE_ONE_VOUCHER_WARNING": "删除后将自动生成一张冲销分录，原始传票将保留以供参考。",
+    "DELETE_ONE_VOUCHER_SUBMIT_BTN": "是的，删除此传票",
+    "DELETE_MULTIPLE_VOUCHER_TITLE": "您确定要删除这{{count}}张传票吗？",
+    "DELETE_MULTIPLE_VOUCHER_CONTENT": "与这些传票相关的所有资产也将被删除。",
+    "DELETE_MULTIPLE_VOUCHER_WARNING": "删除后将自动生成冲销分录，原始传票将保留以供参考。",
+    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "是的，删除这些传票"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增传票",
@@ -212,14 +232,21 @@
     "VOUCHER_TYPE": "传票类型",
     "TYPE_RECEIVE": "收入",
     "TYPE_EXPENSE": "支付",
-    "TYPE_TRANSFER": "转帐",
+    "TYPE_TRANSFER": "移转",
+    "TYPE_OPENING": "开帐",
     "NOTE": "备注",
     "COUNTERPARTY": "交易对象",
     "RECURRING_ENTRY": "周期性分录",
     "SELECT_ACCOUNTING": "选择会计科目",
     "NO_ACCOUNTING_FOUND": "查无会计科目",
     "NO_COUNTERPARTY_FOUND": "查无交易对象",
-    "EVERY": "每"
+    "EVERY": "每",
+    "TOAST_FAILED_TO_CREATE": "建立传票失败，请稍后再试。",
+    "TOAST_FILL_UP_FORM": "请完整填写表格",
+    "TOAST_FAILED_TO_UPDATE": "更新传票失败，请稍后再试",
+    "LINE_ITEM_1": "请检查借贷方是否平衡",
+    "LINE_ITEM_2": "请检查会计科目是否皆已填写",
+    "LINE_ITEM_3": "请检查是否新增至少 1 笔会计分录"
   },
   "ACCOUNT_TYPE": {
     "ASSET": "资产",
@@ -233,23 +260,18 @@
   },
   "ASSET_SECTION": {
     "TITLE": "资产",
+    "EMPTY": "无资料",
     "EMPTY_HINT": "请新增至少 1 笔资产！",
     "ADD_BTN": "新增资产"
-  },
-  "REVERSE_SECTION": {
-    "TITLE": "冲销",
-    "REVERSE_VOUCHER": "冲销传票",
-    "REVERSE_VOUCHER_PLACEHOLDER": "请选择...",
-    "REVERSE_AMOUNT": "冲销金额",
-    "ADD_BTN": "新增更多冲销传票",
-    "EMPTY_HINT": "请新增至少 1 笔冲销传票！"
   },
   "VOUCHER_LINE_BLOCK": {
     "ACCOUNTING": "会计科目",
     "PARTICULARS": "摘要",
     "CREDIT": "贷方金额",
     "DEBIT": "借方金额",
-    "EMPTY_HINT": "请新增至少 1 笔会计分录！"
+    "EMPTY_HINT": "请新增至少 1 笔会计分录！",
+    "REVERSE_ITEM": "冲销项目",
+    "REVERSE_HINT": "请新增至少 1 笔冲销传票！"
   },
   "VOUCHER_DETAIL_PAGE": {
     "TITLE": "传票",
@@ -271,6 +293,52 @@
     "DELETE_MESSAGE_CONTENT": "与此传票相关的所有资产也将被删除。",
     "DELETE_MESSAGE_SUBMIT_BTN": "是的，删除传票",
     "DELETE_SUCCESS_TOAST": "传票已删除。",
-    "UNDO": "复原"
+    "UNDO": "复原",
+    "VOUCHER_NOT_FOUND": "找不到传票，请确认网址是否正确"
+  },
+  "LEDGER": {
+    "LEDGER_PERIOD": "分类帐期间",
+    "LABEL_TYPE": "分类帐类型",
+    "GENERAL": "总分类帐",
+    "DETAILED": "明细分类帐",
+    "GENERAL_DETAILED": "总分类帐 和 明细分类帐",
+    "SPECIFIC_ACCOUNTING_TITLE": "会计科目",
+    "TOTAL_DEBIT_AMOUNT": "借方总额",
+    "TOTAL_CREDIT_AMOUNT": "贷方总额",
+    "INCOME": "营业外收支",
+    "ASSET": "资产",
+    "LIABILITY": "负债",
+    "EQUITY": "权益",
+    "COST": "成本",
+    "EXPENSE": "费用",
+    "REVENUE": "收入",
+    "OTHERCOMPREHENSIVEINCOME": "其他综合损益"
+  },
+  "AI_WORKING_AREA": {
+    "RESTING_CONTENT": "请选择凭证，让 AI 为您生成所需的传票",
+    "WORKING_CONTENT": "AI 正在分析您的凭证，请稍候...",
+    "STOP_BTN": "停止分析",
+    "FAILED_CONTENT": "AI 未从您的凭证中找到任何有效资料，请手动输入或",
+    "RETRY_BTN": "重试",
+    "FINISH_CONTENT": "AI 已完成分析，点击以让 AI",
+    "FILL_UP_BTN": "填写您的传票",
+    "WARNING_CONTENT": "AI 可能会出错，请仔细检查重要资讯。"
+  },
+  "REVERSE_MODAL": {
+    "MODAL_TITLE": "选择冲销项目",
+    "SELECT": "选择",
+    "TOTAL_REVERSE_AMOUNT": "总冲销金额",
+    "VOUCHER_NO": "传票号码",
+    "ACCOUNTING": "会计科目",
+    "PARTICULARS": "摘要",
+    "AMOUNT": "金额",
+    "REVERSE_AMOUNT": "冲销金额",
+    "NOT_FOUND": "查无冲销项目"
+  },
+  "EDIT_VOUCHER": {
+    "PAGE_TITLE": "编辑传票"
+  },
+  "COMMON": {
+    "STATUS": "状态"
   }
 }

@@ -52,10 +52,7 @@ function checkInput(
   );
 }
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IEasyEmployeeWithPagination | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IEasyEmployeeWithPagination | null = null;
 
@@ -63,7 +60,7 @@ async function handleGetRequest(
   const formattedPageSizeFromQuery = formatPageSizeFromQuery(pageSize);
   const formattedTargetPageFromQuery = formatTargetPageFromQuery(targetPage);
   const formattedSearchQueryFromQuery = formatSearchQueryFromQuery(searchQuery);
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], {
     userId,
@@ -84,10 +81,7 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IEmployee | null>>
-) {
+async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IEmployee | null = null;
   const { name, department, salaryPayMode, payFrequency, salary, bonus } = req.body;
@@ -95,7 +89,7 @@ async function handlePostRequest(
   if (!isValid) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const session = await getSession(req, res);
+    const session = await getSession(req);
     const { userId, companyId } = session;
     const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], {
       userId,

@@ -4,17 +4,11 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { FiPauseCircle, FiPlay, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
-import { useTranslation } from 'react-i18next';
-
-export interface UploadFile {
-  name: string;
-  size: number; // Info: (20240919 - tzuhan) 文件大小（KB）
-  progress: number; // Info: (20240919 - tzuhan) 上傳進度（0-100）
-  status: ProgressStatus; // Info: (20240919 - tzuhan) 是否暫停
-}
+import { useTranslation } from 'next-i18next';
+import { IFileUIBeta } from '@/interfaces/file';
 
 interface UploadFileItemProps {
-  file: UploadFile;
+  file: IFileUIBeta;
   onPauseToggle: () => void;
   onDelete: () => void;
   withoutImage?: boolean;
@@ -37,12 +31,30 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({
   const displayedStatus =
     file.status === ProgressStatus.FAILED ? (
       <div className="flex items-center gap-4 px-2 py-1">
-        <Image src="/icons/refresh-ccw-01.svg" width={20} height={20} alt="refresh" />
-        <Image src="/icons/red_warning.svg" width={20} height={20} alt="error_icon" />
+        <Image
+          src="/icons/refresh-ccw-01.svg"
+          width={20}
+          height={20}
+          alt="refresh"
+          className="min-w-20px"
+        />
+        <Image
+          src="/icons/red_warning.svg"
+          width={20}
+          height={20}
+          alt="error_icon"
+          className="min-w-20px"
+        />
       </div>
     ) : file.progress === 100 ? (
       <div className="flex items-center px-2 py-1">
-        <Image src="/icons/success_icon.svg" width={20} height={20} alt="success_icon" />
+        <Image
+          src="/icons/success_icon.svg"
+          width={20}
+          height={20}
+          alt="success_icon"
+          className="min-w-20px"
+        />
       </div>
     ) : (
       <Button
@@ -61,25 +73,19 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({
     <div
       className={`mb-2 flex items-start justify-between rounded-md ${withoutBorder ? '' : 'border'} p-2 ${file.status === ProgressStatus.FAILED ? 'border-stroke-state-error' : 'border-file-uploading-stroke-outline'}`}
     >
-      {file.status === ProgressStatus.FAILED ? (
-        <div className="m-2 w-24px"></div>
-      ) : (
-        <Image
-          className="m-2"
-          src="/elements/cloud_upload.svg"
-          width={24}
-          height={24}
-          alt="clock"
-        />
-      )}
       <div className="flex grow flex-col">
         <div className="mb-3 flex grow">
-          <div
-            className={`flex grow ${file.status === ProgressStatus.FAILED ? '-translate-x-40px' : ''}`}
-          >
+          <div className={`flex grow`}>
+            <Image
+              className="mx-1 my-2 min-w-24px"
+              src="/elements/cloud_upload.svg"
+              width={24}
+              height={24}
+              alt="clock"
+            />
             {!withoutImage && (
               <Image
-                className="m-2"
+                className="mx-1 my-2 min-w-32px"
                 src="/elements/file_pdf.svg"
                 width={32}
                 height={32}
@@ -88,7 +94,10 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({
             )}
             <div className="flex grow flex-col">
               <p className="text-sm font-medium">{file.name}</p>
-              <p className="text-xs text-gray-400"> {sizeFormatter(file.size)}</p>
+              <p className="text-xs text-text-neutral-mute"> {sizeFormatter(file.size)}</p>
+              {file.status === ProgressStatus.FAILED && file.error && (
+                <p className="text-xs text-text-state-error">{file.error}</p>
+              )}
             </div>
           </div>
           {displayedStatus}
@@ -103,7 +112,7 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({
                 setIsDeleting(true);
               }}
             >
-              <FiTrash2 size={20} />
+              <FiTrash2 size={20} className="min-w-20px" />
             </Button>
           )}
         </div>

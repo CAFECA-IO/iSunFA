@@ -2,102 +2,98 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 // import { AuthFunctionsKeys } from '@/interfaces/auth';
 // import { checkAuthorization } from '@/lib/utils/auth_check';
-import { formatApiResponse } from '@/lib/utils/common';
-import { getSession } from '@/lib/utils/session';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { mockCertificateList } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
-import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { IHandleRequest } from '@/interfaces/handleRequest';
+import { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
+import { certificateGetOneAPIUtils } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/route_utils';
+import { loggerError } from '@/lib/utils/logger_back';
+import {
+  certificateAPIPostUtils as postUtils,
+  certificateAPIGetListUtils as getListUtils,
+} from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
+import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import { IFileEntity } from '@/interfaces/file';
+import { IInvoiceEntity } from '@/interfaces/invoice';
+import { IUserEntity } from '@/interfaces/user';
+import { IUserCertificateEntity } from '@/interfaces/user_certificate';
+import { IVoucherEntity } from '@/interfaces/voucher';
 
-type APIResponse = object | null;
+type APIResponse = ICertificate | null;
 
-export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<APIResponse>) {
+export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_GET_V2, ICertificate> = async ({
+  query,
+  session,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: object | null = null;
-
-  const session = await getSession(req, res);
+  let payload: ICertificate | null = null;
+  const { certificateId } = query;
   const { userId } = session;
-  // ToDo: (20240924 - Murky) Remember to check auth
-  //   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+  const nowInSecond = getTimestampNow();
+  try {
+    const certificateFromPrisma =
+      await certificateGetOneAPIUtils.getCertificateByIdFromPrisma(certificateId);
+    const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
+    const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
+    const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
+    const voucherCertificateEntity =
+      postUtils.initVoucherCertificateEntities(certificateFromPrisma);
+    // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
+    const invoiceEntity = postUtils.initInvoiceEntity(certificateFromPrisma, {
+      nowInSecond,
+    });
+    const certificateEntity = postUtils.initCertificateEntity(certificateFromPrisma);
 
-  //   if (isAuth) {
-  const { query } = validateRequest(APIName.CERTIFICATE_GET_V2, req, userId);
+    const certificateReadyForTransfer: ICertificateEntity & {
+      invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
+      file: IFileEntity;
+      uploader: IUserEntity & { imageFile: IFileEntity };
+      userCertificates: IUserCertificateEntity[];
+      vouchers: IVoucherEntity[];
+    } = {
+      ...certificateEntity,
+      invoice: invoiceEntity,
+      file: fileEntity,
+      uploader: uploaderEntity,
+      vouchers: voucherCertificateEntity.map((voucherCertificate) => voucherCertificate.voucher),
+      userCertificates: userCertificateEntities,
+    };
 
-  if (query) {
-    // Info: (20240924 - Murky) Use certificateId to get id
-    //   const { certificateId } = query;
-    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-    [payload] = mockCertificateList;
+    const certificate: ICertificate = getListUtils.transformCertificateEntityToResponse(
+      certificateReadyForTransfer
+    );
+
+    payload = certificate;
+
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+  } catch (_error) {
+    const error = _error as Error;
+    const errorInfo = {
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    };
+    loggerError(errorInfo);
   }
-  //   }
 
   return {
     statusMessage,
     payload,
   };
-}
-
-export async function handlePutRequest(req: NextApiRequest, res: NextApiResponse<APIResponse>) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: object | null = null;
-
-  const session = await getSession(req, res);
-  const { userId } = session;
-  // ToDo: (20240924 - Murky) Remember to check auth
-  //   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-
-  //   if (isAuth) {
-  const { query, body } = validateRequest(APIName.CERTIFICATE_PUT_V2, req, userId);
-
-  if (query && body) {
-    // Info: (20240924 - Murky) Use certificateId to get id
-    //   const { certificateId } = query;
-    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    [payload] = mockCertificateList;
-  }
-  //   }
-
-  return {
-    statusMessage,
-    payload,
-  };
-}
-
-export async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse<APIResponse>) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: object | null = null;
-
-  const session = await getSession(req, res);
-  const { userId } = session;
-  // ToDo: (20240924 - Murky) Remember to check auth
-  //   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-
-  //   if (isAuth) {
-  const { query, body } = validateRequest(APIName.CERTIFICATE_DELETE_V2, req, userId);
-
-  if (query && body) {
-    // Info: (20240924 - Murky) Use certificateId to get id
-    //   const { certificateId } = query;
-    statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-    [payload] = mockCertificateList;
-  }
-  //   }
-
-  return {
-    statusMessage,
-    payload,
-  };
-}
+};
 
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: APIResponse }>;
+  ) => Promise<{
+    statusMessage: string;
+    payload: APIResponse;
+  }>;
 } = {
-  GET: handleGetRequest,
-  PUT: handlePutRequest,
-  DELETE: handleDeleteRequest,
+  GET: (req) => withRequestValidation(APIName.CERTIFICATE_GET_V2, req, handleGetRequest),
 };
 
 export default async function handler(

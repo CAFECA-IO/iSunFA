@@ -173,7 +173,7 @@ const ProjectProgressChart = () => {
   const { toastHandler } = useModalContext();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  const { t } = useTranslation(['common', 'project']);
+  const { t } = useTranslation(['alpha', 'project']);
 
   // TODO: (20240618 - Shirley) [Beta] 改成 company startDate
   const minDate = new Date(DUMMY_START_DATE);
@@ -241,7 +241,7 @@ const ProjectProgressChart = () => {
       setCategories(DUMMY_CATEGORIES);
       toastHandler({
         id: `project-progress-chart-${listCode}`,
-        content: `${t('common:DASHBOARD.FAILED_TO_GET_PROJECT_PROGRESS_DATA')} ${listCode}`,
+        content: `${t('alpha:DASHBOARD.FAILED_TO_GET_PROJECT_PROGRESS_DATA')} ${listCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -278,7 +278,7 @@ const ProjectProgressChart = () => {
     <div className="relative -ml-3 mt-5 md:mt-5 lg:mt-0">
       <ColumnChart data={data} />
       <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2">
-        <p className="text-xl font-bold text-text-neutral-mute">{t('common:COMMON.NO_DATA')}</p>
+        <p className="text-xl font-bold text-text-neutral-mute">{t('alpha:COMMON.NO_DATA')}</p>
       </div>
     </div>
   ) : (
@@ -319,7 +319,7 @@ const ProjectProgressChart = () => {
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
+              <p>{t('alpha:COMMON.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

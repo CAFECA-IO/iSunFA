@@ -35,6 +35,7 @@ import {
 import ReportGeneratorFactory from '@/lib/utils/report/report_generator_factory';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
   let targetPageNumber = DEFAULT_PAGE_NUMBER;
@@ -245,8 +246,11 @@ async function generateReport(
 
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
-    const logError = loggerError(0, 'generateReport failed', error as Error);
-    logError.error('Func. generateReport in company/companyId/report/index.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'generateReport failed',
+      errorMessage: (error as Error).message,
+    });
   }
   return reportContent;
 }
@@ -311,13 +315,12 @@ export async function generateReportIfNotExist(
 }
 
 export async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse
+  req: NextApiRequest
 ): Promise<{ statusMessage: string; payload: IPaginatedReport | null }> {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedReport | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAuth) {
@@ -352,10 +355,10 @@ export async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+export async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;

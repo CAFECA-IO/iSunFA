@@ -8,6 +8,7 @@ export const ISUNFA_API = {
 
 export const ISUNFA_ROUTE = {
   LANDING_PAGE: '/',
+  PRICING: '/pricing',
   ABOUT: '/#about',
   FEATURES: '/#features',
   REPORTS: '/reports',
@@ -16,14 +17,26 @@ export const ISUNFA_ROUTE = {
   PRIVACY_POLICY: '/privacy-policy',
   LOGIN: '/users/login',
   // Info: (20241015 - Liz) Beta routes
-  BETA_LOGIN: '/beta/login',
-  EXAMPLE: '/beta/example', // Info: (20241001 - Liz) Beta example page for testing login
-  SELECT_ROLE: '/beta/select_role',
-  JOB_RECORD: '/beta/job_record',
-  BETA_DASHBOARD: '/beta/dashboard',
-  BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
-
+  CREATE_ROLE: '/users/create_role',
+  SELECT_ROLE: '/users/select_role',
   DASHBOARD: '/users/dashboard',
+  MY_COMPANY_LIST_PAGE: '/users/my_company_list_page',
+  TODO_LIST_PAGE: '/users/todo_list_page',
+  LATEST_NEWS_PAGE: '/users/news_page',
+  FINANCIAL_NEWS_PAGE: '/users/news_page/financial_news_page',
+  SYSTEM_NEWS_PAGE: '/users/news_page/system_news_page',
+  MATCH_NEWS_PAGE: '/users/news_page/match_news_page',
+  BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
+  GENERAL_SETTING: '/users/setting/general',
+  BALANCE_SHEET: '/users/reports/financials/balance_sheet',
+  INCOME_STATEMENT: '/users/reports/financials/income_statement',
+  CASH_FLOW: '/users/reports/financials/cash_flow',
+  BUSINESS_TAX: '/users/reports/tax/business_tax',
+  LEDGER: '/users/accounting/ledger',
+  TRIAL_BALANCE: '/users/accounting/trial_balance',
+  COUNTERPARTY: '/users/setting/counterparty',
+  SUBSCRIPTIONS: '/users/subscriptions',
+
   KYC: '/users/kyc',
   SALARY: '/users/salary',
   SALARY_BOOKKEEPING: '/users/salary/bookkeeping',
@@ -34,7 +47,6 @@ export const ISUNFA_ROUTE = {
   CERTIFICATE_LIST: '/users/accounting/certificate_list',
   ASSET_LIST: '/users/asset',
 
-  SELECT_COMPANY: '/users/select_company',
   JOURNAL_LIST: '/users/accounting/journal_list',
   USERS_FINANCIAL_REPORTS: '/users/reports/financials',
   USERS_ANALYSES_REPORTS: '/users/reports/analyses',
@@ -48,6 +60,8 @@ export const ISUNFA_ROUTE = {
   USERS_FINANCIAL_REPORTS_INCOME_STATEMENT: `/users/reports/financials?report_type=${FinancialReportTypesKey.comprehensive_income_statement}`,
   USERS_FINANCIAL_REPORTS_CASH_FLOW: `/users/reports/financials?report_type=${FinancialReportTypesKey.cash_flow_statement}`,
   UPLOAD: `mobile_upload`,
+
+  ACCOUNTING_SETTING: '/users/setting/accounting_setting',
 };
 
 export const EXTERNAL_API = {

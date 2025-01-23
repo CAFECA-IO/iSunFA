@@ -3,7 +3,7 @@ import { numberWithCommas } from '@/lib/utils/common';
 
 interface INumericInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value: number;
-  setValue: React.Dispatch<React.SetStateAction<number>>;
+  setValue?: React.Dispatch<React.SetStateAction<number>>;
   isDecimal?: boolean;
   hasComma?: boolean; // Info: (20240722 - Liz) 新增逗號顯示
   triggerWhenChanged?: (value: number, e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -43,7 +43,7 @@ const NumericInput = ({
   }, [value, hasComma, isDecimal]);
 
   useEffect(() => {
-    setValue(dbValue);
+    if (setValue) setValue(dbValue);
   }, [dbValue, setValue]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {

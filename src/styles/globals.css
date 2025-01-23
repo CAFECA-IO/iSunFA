@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* colors */
+    /* Info: (20240506 - Shirley) colors */
     --green-100: #d3f4e5;
     --green-200: #b1ecd0;
     --green-25: #fcfffe;
@@ -38,6 +38,7 @@
     --navy-blue-800: #000c20;
     --navy-blue-900: #000510;
     --neutral-100: #cdd1d9;
+    --neutral-150: #c9c9c9;
     --neutral-200: #a6aebb;
     --neutral-25: #fcfdff;
     --neutral-300: #7f8a9d;
@@ -144,7 +145,7 @@
     --yellow-900: #322907;
     --card-text-sub: #878eac;
 
-    /* spacing */
+    /* Info: (20240506 - Shirley) spacing */
     --number-none: 0px;
     --number-1: 1px;
     --number-2: 2px;
@@ -171,7 +172,7 @@
     --number-120: 120px;
     --number-full: 999px;
 
-    /* light mode colors */
+    /* Info: (20240506 - Shirley) light mode colors */
     --shadow-lv-1: #31436200;
     --shadow-lv-2: #31436203;
     --shadow-lv-3: #3143620d;
@@ -277,7 +278,7 @@
     --text-neutral-link: var(--support-baby-600);
     --text-neutral-link-hover: var(--support-baby-300);
     --text-neutral-mute: var(--neutral-300);
-    --text-neutral-primary: var(--neutral-light);
+    --text-neutral-primary: var(--neutral-600);
     --text-input-filled: var(--neutral-600);
     --text-neutral-secondary: var(--neutral-400);
     --text-neutral-solid-dark: var(--neutral-600);
@@ -300,7 +301,7 @@
     --text-support-rose: var(--support-rose-600);
     --text-support-taro: var(--support-taro-600);
 
-    /* light mode spacing */
+    /* Info: (20240506 - Shirley) light mode spacing */
     --radius-xxs: var(--number-3);
     --radius-xs: var(--number-5);
     --radius-s: var(--number-10);
@@ -321,6 +322,9 @@
     --spacing-lv-10: var(--number-80);
     --spacing-lv-11: var(--number-96);
     --spacing-lv-12: var(--number-120);
+    --badge-gap-spacing-sm: var(--number-1);
+    --badge-spacing-y-sm: var(--number-1);
+    --badge-spacing-x-sm: var(--number-3);
     --stroke-width-lv-1: 1px;
     --stroke-width-lv-2: 2px;
     --stroke-width-lv-3: 3px;
@@ -328,7 +332,7 @@
     --stroke-width-lv-5: 5px;
     --stroke-width-lv-6: 10px;
 
-    /* component token in light mode */
+    /* Info: (20240506 - Shirley) component token in light mode */
     --accordion-stroke-border: var(--stroke-neutral-tertiary);
     --accordion-surface-background-primary: var(--surface-neutral-surface-lv2);
     --accordion-surface-background-secondary: var(--surface-neutral-surface-lv1);
@@ -498,7 +502,7 @@
     --dropdown-surface-scrollbar: var(--surface-neutral-depth);
     --dropdown-text-disable: var(--text-neutral-mute);
     --dropdown-text-head: var(--text-brand-secondary-lv2);
-    --dropdown-text-input-filled: var(--text-neutral-primary);
+    --dropdown-text-input-filled: var(--text-input-filled);
     --dropdown-text-input-hover: var(--button-text-primary);
     --dropdown-text-input-placeholder: var(--text-neutral-mute);
     --dropdown-text-primary: var(--text-neutral-primary);
@@ -599,7 +603,7 @@
   }
 
   .dark {
-    /* dark mode colors */
+    /* Info: (20240506 - Shirley) dark mode colors */
     --shadow-lv-1: #06080c00;
     --shadow-lv-2: #06080c03;
     --shadow-lv-3: #06080c17;
@@ -704,7 +708,7 @@
     --text-neutral-link: var(--support-baby-400);
     --text-neutral-link-hover: var(--support-baby-400);
     --text-neutral-mute: var(--neutral-300);
-    --text-neutral-primary: var(--neutral-light);
+    --text-neutral-primary: var(--neutral-600);
     --text-neutral-secondary: var(--neutral-50);
     --text-neutral-solid-dark: var(--neutral-600);
     --text-neutral-solid-light: var(--neutral-25);
@@ -726,7 +730,7 @@
     --text-support-rose: var(--support-rose-300);
     --text-support-taro: var(--support-taro-300);
 
-    /* dark mode spacing */
+    /* Info: (20240506 - Shirley) dark mode spacing */
     --radius-xxs: var(--number-3);
     --radius-xs: var(--number-5);
     --radius-s: var(--number-10);
@@ -754,7 +758,7 @@
     --stroke-width-lv-5: 5px;
     --stroke-width-lv-6: 10px;
 
-    /* component token in dark mode */
+    /* Info: (20240506 - Shirley) component token in dark mode */
     --accordion-stroke-border: var(--stroke-neutral-tertiary);
     --accordion-surface-background-primary: var(--surface-neutral-surface-lv2);
     --accordion-surface-background-secondary: var(--surface-neutral-surface-lv1);
@@ -1091,7 +1095,7 @@ a {
   background: radial-gradient(50% 50% at 50% 50%, rgba(0, 24, 64, 0.7) 0%, rgba(0, 24, 64, 0) 100%);
 }
 
-/* Custom bottom shadow */
+/* Info: (20240306 - Shirley) Custom bottom shadow */
 .bottomShadow {
   @apply shadow-lg;
   box-shadow:
@@ -1100,11 +1104,11 @@ a {
 }
 
 /* Info: (20240415 - Shirley) Hide horizontal scrollbar */
-/* For Webkit browser */
+/* Info: (20240415 - Shirley) For Webkit browser */
 .hideScrollbar::-webkit-scrollbar {
   display: none;
 }
-/* For Firefox */
+/* Info: (20240415 - Shirley) For Firefox */
 .hideScrollbar {
   scrollbar-width: none;
 }
@@ -1179,8 +1183,8 @@ div::-webkit-scrollbar {
 
 @media (max-width: 768px) {
   .fixed-top-right {
-    top: 20px; /* Adjust as needed */
-    right: 20px; /* Adjust as needed */
+    top: 20px; /* Info: (20240415 - Shirley) Adjust as needed */
+    right: 20px; /* Info: (20240415 - Shirley) Adjust as needed */
   }
 }
 
@@ -1188,11 +1192,15 @@ div::-webkit-scrollbar {
   /* Info: (20240729 - Shirley) size: A4 */
   size: 595px 843px;
   margin: 0cm;
+  padding: 0cm;
 }
 
 @media print {
   .break-before-page {
     break-before: page;
+  }
+  .print:block {
+    display: block !important;
   }
 }
 
@@ -1259,6 +1267,43 @@ input[type='checkbox']:checked::before {
 
 /* // Info: (20240725 - Liz) 使用自定義樣式調整 toast container */
 
+.pricing-header {
+  background: radial-gradient(
+      49.58% 61.81% at 50% 100%,
+      rgba(255, 255, 255, 0.24) 0%,
+      rgba(255, 255, 255, 0.12) 43%,
+      rgba(255, 255, 255, 0.02) 82.5%,
+      rgba(255, 255, 255, 0) 100%
+    ),
+    rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(6px);
+}
+
+.pricing-subtitle {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+}
+
+.pricing-cell {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+}
+
+.bg-pricing {
+  backdrop-filter: blur(6px);
+  background-image: url('/elements/bg_pricing_top.png'), url('/elements/bg_pricing_middle.png'),
+    url('/elements/bg_pricing_bottom.png');
+  background-position:
+    top center,
+    50% center,
+    bottom center; /* 中間背景移動到較高位置 */
+  background-repeat: no-repeat;
+  background-size:
+    100% auto,
+    100% 60%,
+    100% auto;
+}
+
 .toast-container {
   width: max-content;
   margin-top: 80px;
@@ -1277,6 +1322,25 @@ input[type='checkbox']:checked::before {
   align-items: center !important;
 }
 
+.bg-brand-gradient {
+  background: linear-gradient(
+      0deg,
+      var(--surface-brand-primary-10, rgba(255, 165, 2, 0.1)) 0%,
+      var(--surface-brand-primary-10, rgba(255, 165, 2, 0.1)) 100%
+    ),
+    var(--surface-neutral-surface-lv2, #fff);
+}
+
+/* Info: (20241210 - tzuhan) 隱藏所有瀏覽器的默認滾動條樣式 */
+.hide-scrollbar {
+  scrollbar-width: none; /* Info: (20241210 - tzuhan) Firefox */
+  -ms-overflow-style: none; /* Info: (20241210 - tzuhan) IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Info: (20241210 - tzuhan) Chrome, Safari, and Opera */
+}
+
 @media (max-width: 769px) {
   .toast-container {
     margin-bottom: 40px;
@@ -1287,4 +1351,24 @@ input[type='checkbox']:checked::before {
   .toast-container {
     margin-bottom: 70px;
   }
+}
+
+/* Info: (20241217 - Liz) 全域的 scroll bar 樣式設定 */
+/* Info: (20241217 - Liz) width 長寬 */
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+/* Info: (20241217 - Liz) Track 軌道 */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* Info: (20241217 - Liz) Handle 把手 */
+::-webkit-scrollbar-thumb {
+  background: #cdd1d9;
+  border-radius: 999px;
+}
+/* Info: (20241217 - Liz) Handle on hover 把手懸停效果 */
+::-webkit-scrollbar-thumb:hover {
+  background: #304872;
 }

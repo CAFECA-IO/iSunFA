@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import Head from 'next/head';
 import Link from 'next/dist/client/link';
 import { useTranslation } from 'next-i18next';
@@ -6,7 +6,6 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { FiPlusCircle } from 'react-icons/fi';
 import { ILocale } from '@/interfaces/locale';
 import { useUserCtx } from '@/contexts/user_context';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import NavBar from '@/components/nav_bar/nav_bar';
 import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
 import JournalListBody from '@/components/journal_list_body/journal_list_body';
@@ -18,13 +17,6 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 const JournalListPage = () => {
   const { t } = useTranslation(['common', 'journal']);
   const { selectedCompany, isAuthLoading } = useUserCtx();
-  const { getAccountListHandler } = useAccountingCtx();
-
-  useEffect(() => {
-    if (selectedCompany && selectedCompany?.id) {
-      getAccountListHandler(selectedCompany.id);
-    }
-  }, [selectedCompany]);
 
   const companyName = selectedCompany && selectedCompany.name ? `${selectedCompany.name} -` : '';
 
@@ -85,17 +77,7 @@ const JournalListPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, [
-      'common',
-      'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-      'asset',
-    ])),
+    ...(await serverSideTranslations(locale, ['common', 'journal'])),
   },
 });
 

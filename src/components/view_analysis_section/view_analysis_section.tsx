@@ -66,7 +66,7 @@ const ViewAnalysisSection = ({
           </div>
         </Button>
         <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full lg:text-4xl">
-          {t(`common:BOOKMARK_LIST.${reportTypesName.name.toUpperCase().replace(/ /g, '_')}`)}
+          {t(`alpha:BOOKMARK_LIST.${reportTypesName.name.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">

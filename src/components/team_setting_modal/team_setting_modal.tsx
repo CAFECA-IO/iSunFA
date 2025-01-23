@@ -1,3 +1,4 @@
+// Deprecated: (20241111 - Liz) 這是 Alpha 版本的元件
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
@@ -51,7 +52,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     if (isUpdateTeamLoading) return;
 
     if (updateTeamSuccess && updatedTeam) {
-      selectCompany(updatedTeam);
+      selectCompany(updatedTeam.id);
     } else if (updateTeamError) {
       toastHandler({
         id: `update_team-${updateTeamCode}`,
@@ -144,7 +145,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
               onClick={saveClickHandler}
               className="flex-1 rounded-xs"
             >
-              {t('common:EDIT_BOOKMARK_MODAL.SAVE')}
+              {t('alpha:EDIT_BOOKMARK_MODAL.SAVE')}
             </Button>
           </div>
         </div>

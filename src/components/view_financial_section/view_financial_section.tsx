@@ -1,12 +1,10 @@
 import html2canvas from 'html2canvas';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { ISUNFA_ROUTE } from '@/constants/url';
-// import { useGlobalCtx } from '@/contexts/global_context';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-// import { ToastType } from '@/interfaces/toastify';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import {
@@ -20,7 +18,7 @@ import {
 import { useUserCtx } from '@/contexts/user_context';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
-import { NON_EXISTING_REPORT_ID } from '@/constants/config';
+// import { NON_EXISTING_REPORT_ID } from '@/constants/config'; // Deprecated: (20241129 - Liz)
 import { useTranslation } from 'next-i18next';
 import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
 import { useRouter } from 'next/router';
@@ -132,14 +130,14 @@ const ViewFinancialSection = ({
   tokenId,
   reportLink,
 }: IViewReportSectionProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['reports']);
   const router = useRouter();
-  let intervalId: NodeJS.Timeout;
+  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
   // Info: (20240807 - Anna)
   // const globalCtx = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]); // Info: (20240909 - tzuhan)  保存縮略圖的 URL
@@ -154,36 +152,81 @@ const ViewFinancialSection = ({
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const { data: reportFinancial, isLoading: getReportFinancialIsLoading } =
-    APIHandler<FinancialReport>(
-      APIName.REPORT_GET_BY_ID,
-      {
-        params: {
-          companyId: selectedCompany?.id,
-          reportId: reportId ?? NON_EXISTING_REPORT_ID,
-        },
-      },
-      hasCompanyId
-    );
+  // Deprecated: (20241129 - Liz)
+  // const { data: reportFinancial, isLoading: getReportFinancialIsLoading } =
+  //   APIHandler<FinancialReport>(
+  //     APIName.REPORT_GET_BY_ID,
+  //     {
+  //       params: {
+  //         companyId: selectedCompany?.id,
+  //         reportId: reportId ?? NON_EXISTING_REPORT_ID,
+  //       },
+  //     },
+  //     hasCompanyId
+  //   );
+
+  const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
+  const [isReportFinancialIsLoading, setIsReportFinancialIsLoading] = useState<boolean>(false);
+
+  const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
+
+  useEffect(() => {
+    if (isAuthLoading || !selectedCompany) return;
+    if (isReportFinancialIsLoading) return;
+    setIsReportFinancialIsLoading(true);
+
+    const getFinancialReport = async () => {
+      try {
+        const {
+          data: reportFinancial,
+          code: getFRCode,
+          success: getFRSuccess,
+        } = await getFinancialReportAPI({
+          params: { companyId: selectedCompany.id, reportId },
+        });
+
+        if (!getFRSuccess) {
+          // Deprecated: (20241129 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('getFinancialReportAPI failed:', getFRCode);
+          return;
+        }
+
+        setFinancialReport(reportFinancial);
+        // Deprecated: (20241128 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('call getFinancialReportAPI and getFinancialReport:', reportFinancial);
+      } catch (error) {
+        // console.log('error:', error);
+      } finally {
+        setIsReportFinancialIsLoading(false);
+      }
+    };
+
+    getFinancialReport();
+    // Deprecated: (20241128 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('in useEffect and calling getFinancialReport_in ViewFinancialSection');
+  }, [isAuthLoading, reportId, selectedCompany]);
 
   const isInvalidReport = useMemo(() => {
-    if (!reportFinancial) return true;
+    if (!financialReport) return true;
 
-    switch (reportFinancial.reportType) {
+    switch (financialReport.reportType) {
       case ReportSheetType.INCOME_STATEMENT:
-        return !isValidIncomeStatementReport(reportFinancial as IncomeStatementReport);
+        return !isValidIncomeStatementReport(financialReport as IncomeStatementReport);
       case ReportSheetType.BALANCE_SHEET:
-        return !isValidBalanceSheetReport(reportFinancial as BalanceSheetReport);
+        return !isValidBalanceSheetReport(financialReport as BalanceSheetReport);
       case ReportSheetType.CASH_FLOW_STATEMENT:
-        return !isValidCashFlowStatementReport(reportFinancial as CashFlowStatementReport);
+        return !isValidCashFlowStatementReport(financialReport as CashFlowStatementReport);
       // Info:(20240815 - Anna) 新增定義 isValidReport401 函數
       case ReportSheetType.REPORT_401:
-        // Info:(20240912 - Anna) 將 reportFinancial 轉換為 TaxReport401Content 類型
-        return !isTaxReport401(reportFinancial as unknown as TaxReport401Content);
+        // Info:(20240912 - Anna) 將 financialReport 轉換為 TaxReport401Content 類型
+        return !isTaxReport401(financialReport as unknown as TaxReport401Content);
       default:
         return true;
     }
-  }, [reportFinancial]);
+  }, [financialReport]);
 
   // Info: (20240729 - Shirley) iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間
   const handleIframeLoad = () => {
@@ -319,7 +362,7 @@ const ViewFinancialSection = ({
       default:
         setReportThumbnails([]);
     }
-  }, []);
+  }, [reportTypesName?.id]);
 
   /* Info: (20240729 - Shirley)
   // useEffect(() => {
@@ -336,19 +379,21 @@ const ViewFinancialSection = ({
   // }, []);
   */
 
-  const generateCanvas = async () => {
+  const generateCanvas = useCallback(async () => {
     if (!isLoading && iframeRef.current) {
       const iframeWindow = iframeRef.current.contentWindow;
       const iframeDoc = iframeWindow?.document;
 
       if (iframeDoc && iframeWindow) {
         // Info: (20240909 - tzuhan) 使用 setInterval 定時輪詢檢查，直到找到第1頁的元素
-        intervalId = setInterval(() => {
+        intervalIdRef.current = setInterval(() => {
           const firstPageElement = iframeDoc.getElementById('1'); // Info: (20240909 - tzuhan) 檢查 id 為 '1' 的元素是否存在
 
           if (firstPageElement) {
             // Info: (20240909 - tzuhan) 當找到第1頁的元素後，清除輪詢並開始生成縮略圖
-            clearInterval(intervalId);
+            if (intervalIdRef.current) {
+              clearInterval(intervalIdRef.current);
+            }
 
             // Info: (20240909 - tzuhan) 創建 Promise 列表，生成所有頁面的縮略圖
             const canvasPromises = Array.from({ length: numPages }, async (_, i) => {
@@ -373,38 +418,45 @@ const ViewFinancialSection = ({
         }, 1000); // Info: (20240909 - tzuhan) 每秒檢查一次，直到找到目標元素
       }
     }
-  };
+  }, [isLoading, numPages]);
 
   useEffect(() => {
     // Info: (20240909 - tzuhan) 在 isLoading 為 false 且 iframe 引用存在時開始檢查
     if (!isLoading && iframeRef.current) {
       generateCanvas();
     }
-
     // Info: (20240909 - tzuhan)  在組件卸載時清除 setInterval，防止內存洩漏
-    return () => clearInterval(intervalId);
-  }, [isLoading, numPages]);
+    return () => {
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+      }
+    };
+  }, [generateCanvas, isLoading]);
 
-  const displayedReportType = getReportFinancialIsLoading ? (
+  const displayedReportType = isReportFinancialIsLoading ? (
     <Skeleton width={200} height={40} />
   ) : (
-    <p>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</p>
+    <p>{ReportSheetTypeDisplayMap[financialReport?.reportType ?? ReportSheetType.BALANCE_SHEET]}</p>
   );
 
   // Info: (20240730 - Anna) 創建一個新的變數來儲存翻譯後的字串
   const reportTypeString =
-    !getReportFinancialIsLoading && typeof displayedReportType.props.children === 'string'
+    !isReportFinancialIsLoading && typeof displayedReportType.props.children === 'string'
       ? displayedReportType.props.children
       : '';
   const translatedReportType = t(
-    `common:PLUGIN.${reportTypeString.toUpperCase().replace(/ /g, '_')}`
+    `reports:PLUGIN.${reportTypeString.toUpperCase().replace(/ /g, '_')}`
   );
 
   const renderedThumbnail = (
     thumbnail: { number: number; active: boolean; alt: string; src: string },
     index: number
   ) => (
-    <button type="button" onClick={() => thumbnailClickHandler(index)} key={index}>
+    <button
+      type="button"
+      onClick={() => thumbnailClickHandler(index)}
+      key={thumbnail.number + index}
+    >
       <div
         className={`flex flex-col rounded-2xl px-5 py-4 ${
           index === activeIndex
@@ -438,11 +490,11 @@ const ViewFinancialSection = ({
         <div className="mt-9 flex w-full flex-col items-center justify-center">
           <div className="flex h-850px flex-col gap-3">
             {isLoading || thumbnailUrls.length === 0 ? (
-              <p>{t('common:COMMON.LOADING')}</p>
+              <p>{t('reports:COMMON.LOADING')}</p>
             ) : isInvalidReport ? null : thumbnailUrls.length > 0 ? (
               thumbnailUrls.map((thumbnailUrl, index) => (
                 <div
-                  key={`thumbnail-${index + 1}`}
+                  key={`thumbnail-${thumbnailUrl + index}`}
                   className={`m-6 mb-0 self-center rounded-sm p-6 tracking-normal ${
                     index === activeIndex
                       ? 'bg-surface-brand-primary-soft'
@@ -454,6 +506,8 @@ const ViewFinancialSection = ({
                     src={thumbnailUrl}
                     alt="Report Thumbnail"
                     className="border border-stroke-brand-secondary"
+                    width={120}
+                    height={80}
                   />
                   <p
                     className={`mt-2 text-center ${index === activeIndex ? 'text-text-neutral-solid-dark' : 'text-text-neutral-primary'}`}
@@ -513,11 +567,7 @@ const ViewFinancialSection = ({
           {displayedReportType}
         </div> */}
         <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full lg:text-4xl">
-          {getReportFinancialIsLoading ? (
-            <Skeleton width={200} height={40} />
-          ) : (
-            translatedReportType
-          )}
+          {isReportFinancialIsLoading ? <Skeleton width={200} height={40} /> : translatedReportType}
         </div>
       </div>
       <div

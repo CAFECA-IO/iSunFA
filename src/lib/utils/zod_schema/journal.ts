@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z, ZodRawShape } from 'zod';
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import {
@@ -31,18 +31,18 @@ export const journalListValidator: IZodValidator<
   body: journalListBodyValidator,
 };
 
-const journalGetByIdQueryValidator = z.object({
+const journalGetOneQueryValidator = z.object({
   journalId: zodStringToNumber,
 });
 
-const journalGetByIdBodyValidator = z.object({});
+const journalGetOneBodyValidator = z.object({});
 
-export const journalGetByIdValidator: IZodValidator<
-  (typeof journalGetByIdQueryValidator)['shape'],
-  (typeof journalGetByIdBodyValidator)['shape']
+export const journalGetOneValidator: IZodValidator<
+  (typeof journalGetOneQueryValidator)['shape'],
+  (typeof journalGetOneBodyValidator)['shape']
 > = {
-  query: journalGetByIdQueryValidator,
-  body: journalGetByIdBodyValidator,
+  query: journalGetOneQueryValidator,
+  body: journalGetOneBodyValidator,
 };
 
 const journalDeleteQueryValidator = z.object({
@@ -57,4 +57,12 @@ export const journalDeleteValidator: IZodValidator<
 > = {
   query: journalDeleteQueryValidator,
   body: journalDeleteBodyValidator,
+};
+
+export const journalRequestValidators: {
+  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
+} = {
+  GET_ONE: journalGetOneValidator,
+  GET_LIST: journalListValidator,
+  DELETE: journalDeleteValidator,
 };

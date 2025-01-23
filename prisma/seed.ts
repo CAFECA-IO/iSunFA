@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import accounts from '@/seed_json/account.json';
+import accounts from '@/seed_json/account_new.json';
 import companies from '@/seed_json/company.json';
 import companyKYCs from '@/seed_json/company_kyc.json';
 import admins from '@/seed_json/admin.json';
@@ -35,14 +35,22 @@ import counterpartys from '@/seed_json/counterparty.json';
 import certificates from '@/seed_json/certificate.json';
 import voucherCertificates from '@/seed_json/voucher_certificate.json';
 import accountingSettings from '@/seed_json/accounting_setting.json';
+import userSettings from '@/seed_json/user_setting.json';
+import companySettings from '@/seed_json/company_setting.json';
+import userActionLogs from '@/seed_json/user_action_log.json';
+import invoice from '@/seed_json/invoice.json';
+
+// Info: (20241112 - Murky) Associate Related
+import associateLineItems from '@/seed_json/associate_line_item.json';
+import associateVouchers from '@/seed_json/associate_voucher.json';
+import event from '@/seed_json/event.json';
 
 const prisma = new PrismaClient();
-
 async function createFile() {
   const files = file.map((f) => {
     return {
       ...f,
-      iv: Buffer.from('1'),
+      iv: Buffer.from(f.iv, 'base64'),
     };
   });
   await prisma.file.createMany({
@@ -67,7 +75,7 @@ async function createMilestones() {
   });
 }
 
-// Info (2024722 - Murky) - Uncomment this line to seed generated reports
+// Info (20240722 - Murky) - Uncomment this line to seed generated reports
 // async function createGeneratedReports() {
 //   await prisma.report.createMany({
 //     data: generatedReports,
@@ -218,6 +226,7 @@ async function createVoucherCertificate() {
 }
 
 async function createLineItem(lineItem: {
+  id: number;
   amount: number;
   description: string;
   accountCode: string;
@@ -237,29 +246,42 @@ async function createLineItem(lineItem: {
   if (!account) {
     throw new Error(`Account with code ${lineItem.accountCode} not found`);
   }
-  await prisma.lineItem.create({
-    data: {
-      amount: lineItem.amount,
-      description: lineItem.description,
-      debit: lineItem.debit,
-      createdAt: lineItem.createdAt,
-      updatedAt: lineItem.updatedAt,
-      account: {
-        connect: {
-          id: account.id,
-        },
+  await prisma.lineItem.createMany({
+    data: [
+      {
+        id: lineItem.id,
+        amount: lineItem.amount,
+        description: lineItem.description,
+        debit: lineItem.debit,
+        createdAt: lineItem.createdAt,
+        updatedAt: lineItem.updatedAt,
+        accountId: account.id,
+        voucherId: lineItem.voucherId,
       },
-      voucher: {
-        connect: {
-          id: lineItem.voucherId,
-        },
-      },
-    },
+    ],
   });
 }
 
 async function createLineItems() {
   await Promise.all(lineItems.map((lineItem) => createLineItem(lineItem)));
+}
+
+async function createAssociateLineItem() {
+  await prisma.associateLineItem.createMany({
+    data: associateLineItems,
+  });
+}
+
+async function createAssociateVoucher() {
+  await prisma.associateVoucher.createMany({
+    data: associateVouchers,
+  });
+}
+
+async function createEvent() {
+  await prisma.event.createMany({
+    data: event,
+  });
 }
 
 async function createAsset() {
@@ -286,77 +308,105 @@ async function createAccountingSetting() {
   });
 }
 
-async function main() {
-  await createFile();
-  await createCompany();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
+async function createUserSetting() {
+  await prisma.userSetting.createMany({
+    data: userSettings,
   });
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
-  await createUser();
-  await createCounterparty();
-  await createAccountingSetting();
-  await createRole();
-  await createCompanyKYC();
-  await createAccount();
-  await createAdmin();
-  await createDepartment();
-  await createEmployee();
-  await createProjects();
-  await createSale();
-  await createValue();
-  await createEmployeeProject();
-  await createWorkRate();
-  await createPlan();
-  await createOrder();
-  await createPaymentRecord();
-  await createSubscription();
-  await createInvitation();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 5000);
-  });
-  await createIncomeExpenses();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
-  await createMilestones();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
-
-  // Info (20240316 - Murky) - Uncomment this line to seed generated reports
-  // await createGeneratedReports();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
-  await createPendingReports();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
-
-  await createJournal();
-  await createCertificate();
-  await createVoucher();
-  await createVoucherCertificate();
-  await createAsset();
-
-  await new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
-  await createLineItems();
-  await createSalaryRecord();
-  await createVoucherSalaryRecordFolder();
-  await createAssetVoucher();
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async () => {
-    // Info (20240316 - Murky) - disconnect prisma
-    await prisma.$disconnect();
-    process.exit(1);
+async function createCompanySetting() {
+  await prisma.companySetting.createMany({
+    data: companySettings,
   });
+}
+
+async function createUserActionLog() {
+  await prisma.userActionLog.createMany({
+    data: userActionLogs,
+  });
+}
+
+async function createInvoice() {
+  await prisma.invoice.createMany({
+    data: invoice,
+  });
+}
+
+async function main() {
+  try {
+    await createFile();
+    await createCompany();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    await createUser();
+    await createCounterparty();
+    await createUserActionLog();
+    await createAccountingSetting();
+    await createCompanySetting();
+    await createUserSetting();
+    await createRole();
+    await createCompanyKYC();
+    await createAccount();
+    await createAdmin();
+    await createDepartment();
+    await createEmployee();
+    await createProjects();
+    await createSale();
+    await createValue();
+    await createEmployeeProject();
+    await createWorkRate();
+    await createPlan();
+    await createOrder();
+    await createPaymentRecord();
+    await createSubscription();
+    await createInvitation();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 5000);
+    });
+    await createIncomeExpenses();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    await createMilestones();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+
+    // Info (20240316 - Murky) - Uncomment this line to seed generated reports
+    // await createGeneratedReports();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    await createPendingReports();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+
+    await createJournal();
+    await createCertificate();
+    await createVoucher();
+    await createVoucherCertificate();
+    await createAsset();
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    await createLineItems();
+    await createSalaryRecord();
+    await createVoucherSalaryRecordFolder();
+    await createAssetVoucher();
+
+    await createEvent();
+    await createAssociateVoucher();
+    await createAssociateLineItem();
+    await createInvoice();
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+main();

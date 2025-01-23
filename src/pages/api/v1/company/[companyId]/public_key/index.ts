@@ -8,14 +8,11 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { exportPublicKey, getPublicKeyByCompany } from '@/lib/utils/crypto';
 import loggerBack from '@/lib/utils/logger_back';
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<JsonWebKey | null>>
-) {
+async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   let payload: JsonWebKey | null = null;
 
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
 
   if (!userId) {

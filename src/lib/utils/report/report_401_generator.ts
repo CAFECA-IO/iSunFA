@@ -24,6 +24,7 @@ import {
   LineItem,
   Voucher,
 } from '@prisma/client';
+import { getCompanyWithSettingById } from '@/lib/utils/repo/company.repo';
 
 export default class Report401Generator extends ReportGenerator {
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
@@ -291,6 +292,12 @@ export default class Report401Generator extends ReportGenerator {
     to: number
   ): Promise<TaxReport401> {
     const companyKYC: CompanyKYC | null = await getCompanyKYCByCompanyId(companyId);
+    const company = await getCompanyWithSettingById(companyId);
+
+    // Info: (20241217 - Murky) Get Company Setting from company in prisma
+    const companySetting =
+      company && company.companySettings.length ? company.companySettings[0] : null;
+
     if (!companyKYC) {
       // Info: (20240912 - Murky) temporary allow to generate report without KYC
       // throw new Error(STATUS_MESSAGE.FORBIDDEN);
@@ -304,11 +311,11 @@ export default class Report401Generator extends ReportGenerator {
       voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
     })[] = await listInvoiceVoucherJournalFor401(companyId, from, to);
     const basicInfo = {
-      uniformNumber: companyKYC?.registrationNumber ?? '',
-      businessName: companyKYC?.legalName ?? '',
-      personInCharge: companyKYC?.representativeName ?? '',
-      taxSerialNumber: 'ABC123', // TODO (20240808 - Jacky): Implement this field in next sprint
-      businessAddress: companyKYC?.address ?? '',
+      uniformNumber: companyKYC?.registrationNumber ?? company?.taxId ?? '',
+      businessName: companyKYC?.legalName ?? company?.name ?? '',
+      personInCharge: companySetting?.representativeName ?? '',
+      taxSerialNumber: companySetting?.taxSerialNumber || '', // TODO (20240808 - Jacky): Implement this field in next sprint
+      businessAddress: companySetting?.address ?? '',
       currentYear: ROCStartDate.year.toString(),
       startMonth: ROCStartDate.month.toString(),
       endMonth: ROCEndDate.month.toString(),

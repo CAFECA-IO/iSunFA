@@ -7,8 +7,9 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
+import { ProgressStatus } from '@/constants/account';
 
-export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+export async function handlePostRequest(req: NextApiRequest) {
   /**
    * Info: (20240927 - Murky)
    * When user "enter" List voucher, List upcoming event or List payment and List receivable
@@ -18,13 +19,13 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
    */
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: string | null = null;
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId } = session;
   const { body } = validateRequest(APIName.VOUCHER_WAS_READ_V2, req, userId);
 
   if (body) {
     statusMessage = STATUS_MESSAGE.CREATED;
-    payload = 'success';
+    payload = ProgressStatus.SUCCESS;
   }
 
   return {
@@ -66,8 +67,11 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const logger = loggerError(userId, error.name, error.message);
-    logger.error(error);
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
+    });
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);

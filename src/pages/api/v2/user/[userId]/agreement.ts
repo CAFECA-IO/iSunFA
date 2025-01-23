@@ -1,69 +1,44 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
-import { getUserById } from '@/lib/utils/repo/user.repo';
-import { formatUser } from '@/lib/utils/formatter/user.formatter';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getSession } from '@/lib/utils/session';
-import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { createUserAgreement } from '@/lib/utils/repo/user_agreement.repo';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
+import { IHandleRequest } from '@/interfaces/handleRequest';
 
-async function checkInput(agreementHash: string): Promise<boolean> {
-  return !!agreementHash;
-}
-
-async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IUser | null>>
-) {
+const handlePostRequest: IHandleRequest<APIName.AGREE_TO_TERMS, string | null> = async ({
+  query,
+  body,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IUser | null = null;
-  const { agreementHash } = req.body;
-  const isValid = await checkInput(agreementHash);
-  if (!isValid) {
-    statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
-  } else {
-    const session = await getSession(req, res);
-    const { userId } = session;
-    if (!userId) {
-      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-    } else {
-      const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
-      if (!isAuth) {
-        statusMessage = STATUS_MESSAGE.FORBIDDEN;
-      } else {
-        await createUserAgreement(userId, agreementHash);
-        const getUser = await getUserById(userId);
-        if (!getUser) {
-          statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-        } else {
-          const user = formatUser(getUser);
-          statusMessage = STATUS_MESSAGE.CREATED;
-          payload = user;
-        }
-      }
-    }
+  let payload: string | null = null;
+
+  const { agreementHash } = body;
+  const { userId } = query;
+  const userAgreement = await createUserAgreement(userId, agreementHash);
+  if (userAgreement) {
+    statusMessage = STATUS_MESSAGE.CREATED;
+    payload = userAgreement.agreementHash;
   }
   return { statusMessage, payload };
-}
+};
 
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IUser | null }>;
+  ) => Promise<{ statusMessage: string; payload: string | null }>;
 } = {
-  POST: handlePostRequest,
+  POST: (req) => withRequestValidation(APIName.AGREE_TO_TERMS, req, handlePostRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IUser | null>>
+  res: NextApiResponse<IResponseData<string | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IUser | null = null;
+  let payload: string | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -77,7 +52,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IUser | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<string | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

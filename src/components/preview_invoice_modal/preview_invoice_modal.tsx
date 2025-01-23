@@ -45,7 +45,7 @@ const PreviewInvoiceModal = ({
   };
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div
         className={`relative flex h-700px w-90vw flex-col gap-16px rounded-xs bg-card-surface-primary py-16px md:w-700px`}
       >

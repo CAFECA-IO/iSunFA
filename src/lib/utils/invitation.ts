@@ -3,7 +3,7 @@ import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
 import { formatInvitation } from '@/lib/utils/formatter/invitation.formatter';
 import { IAdmin } from '@/interfaces/admin';
 import { Invitation } from '@prisma/client';
-import { timestampInSeconds } from './common';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function useInvitation(
   invitation: Invitation,
@@ -11,7 +11,7 @@ export async function useInvitation(
 ): Promise<IAdmin | null> {
   let admin = null;
   if (userId > 0) {
-    const getAdmin = await getAdminByCompanyIdAndUserId(invitation.companyId, userId);
+    const getAdmin = await getAdminByCompanyIdAndUserId(userId, invitation.companyId);
     if (!getAdmin) {
       const formattedInvitation = formatInvitation(invitation);
       admin = await createAdminByInvitation(userId, formattedInvitation);

@@ -39,18 +39,21 @@ export async function getPendingTaskByCompanyId(
       missingCertificatePercentage = 1 - unpostedVoucherPercentage;
     }
 
+    const imageUrl = company.imageFile.url;
     pendingTask = {
       companyId,
       missingCertificate: {
         companyId: company.id,
         companyName: company.name,
         count: missingCertificateCount,
+        companyLogoSrc: imageUrl,
       },
       missingCertificatePercentage,
       unpostedVoucher: {
         companyId: company.id,
         companyName: company.name,
         count: unpostedVoucherCount,
+        companyLogoSrc: imageUrl,
       },
       unpostedVoucherPercentage,
     };
@@ -84,8 +87,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IPendingTask | null }>;
 } = {
-  GET: (req, res) =>
-    withRequestValidation(APIName.COMPANY_PENDING_TASK_GET, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.COMPANY_PENDING_TASK_GET, req, handleGetRequest),
 };
 
 export default async function handler(

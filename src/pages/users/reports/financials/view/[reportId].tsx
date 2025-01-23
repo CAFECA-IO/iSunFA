@@ -1,4 +1,4 @@
-import NavBar from '@/components/nav_bar/nav_bar';
+// import NavBar from '@/components/nav_bar/nav_bar'; // ToDo: (20241129 - Liz) 使用新版的 Layout
 import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import ViewFinancialSection from '@/components/view_financial_section/view_financial_section';
 import {
@@ -9,7 +9,7 @@ import {
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
@@ -27,10 +27,9 @@ interface IServerSideProps {
 }
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['reports']);
   const { toastHandler } = useModalContext();
   const { selectedCompany, isAuthLoading } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const [reportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
@@ -39,31 +38,53 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     tokenId: '',
     reportLink: '',
   });
-  const {
-    data: reportFinancial,
-    code: getFRCode,
-    success: getFRSuccess,
-  } = APIHandler<FinancialReport>(
-    APIName.REPORT_GET_BY_ID,
-    {
-      params: { companyId: selectedCompany?.id, reportId },
-    },
-    hasCompanyId
-  );
+
+  const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
+  const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] = useState<boolean>(false);
+
+  const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
 
   useEffect(() => {
-    if (getFRSuccess === false) {
-      toastHandler({
-        id: `getFR-${getFRCode}_${reportId}`,
-        content: `${t('common:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('common:DASHBOARD.REPORT')}${getFRCode}`,
-        type: ToastType.ERROR,
-        closeable: true,
-      });
-    }
-  }, [getFRSuccess, getFRCode, reportFinancial]);
+    if (isAuthLoading || !selectedCompany) return;
+
+    const getFinancialReport = async () => {
+      try {
+        const {
+          data: reportFinancial,
+          code: getFRCode,
+          success: getFRSuccess,
+        } = await getFinancialReportAPI({
+          params: { companyId: selectedCompany.id, reportId },
+        });
+
+        if (!getFRSuccess) {
+          toastHandler({
+            id: `getFR-${getFRCode}_${reportId}`,
+            content: `${t('alpha:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('alpha:DASHBOARD.REPORT')}${getFRCode}`,
+            type: ToastType.ERROR,
+            closeable: true,
+          });
+          return;
+        }
+
+        setFinancialReport(reportFinancial);
+        setIsGetFinancialReportSuccess(getFRSuccess);
+        // Deprecated: (20241128 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('call getFinancialReportAPI and getFinancialReport:', reportFinancial);
+      } catch (error) {
+        // console.log('error:', error);
+      }
+    };
+
+    getFinancialReport();
+    // Deprecated: (20241128 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('in useEffect and calling getFinancialReport_in ViewFinancialReportPage');
+  }, [isAuthLoading, reportId, reportType, selectedCompany, t, toastHandler]);
 
   const displayedBody =
-    isAuthLoading || !getFRSuccess ? (
+    isAuthLoading || !isGetFinancialReportSuccess ? (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
@@ -83,7 +104,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
             }
             tokenContract={reportData.tokenContract}
             tokenId={reportData.tokenId}
-            reportLink={`/users/reports/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
+            reportLink={`/users/reports/${reportId}/${ReportUrlMap[financialReport?.reportType as keyof typeof ReportUrlMap]}`}
             reportId={reportId}
           />
         </div>
@@ -97,8 +118,8 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {t(`common:PLUGIN.${reportData.reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}-
-          iSunFA
+          {t(`reports:PLUGIN.${reportData.reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}
+          - iSunFA
         </title>
 
         <meta
@@ -116,9 +137,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       </Head>
 
       <div className="font-barlow">
-        <div className="">
-          <NavBar />
-        </div>
+        <div className="">{/* <NavBar /> */}</div>
 
         {displayedBody}
       </div>
@@ -136,17 +155,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
     props: {
       reportId: reportId as string,
       reportType: reportType as string,
-      ...(await serverSideTranslations(locale as string, [
-        'common',
-        'report_401',
-        'journal',
-        'kyc',
-        'project',
-        'setting',
-        'terms',
-        'salary',
-        'asset',
-      ])),
+      ...(await serverSideTranslations(locale as string, ['reports', 'common'])),
     },
   };
 };

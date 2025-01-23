@@ -1,62 +1,167 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { API_ZOD_SCHEMA } from '@/constants/zod_schema';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { NextApiRequest, NextApiResponse } from 'next';
-import { checkAuthorization } from '@/lib/utils/auth_check';
+import { NextApiRequest } from 'next';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
-import { validateRequest } from '@/lib/utils/validator';
+import { output, validateOutputData, validateRequestData } from '@/lib/utils/validator';
+import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
+import { APIName, APIPath } from '@/constants/api_connection';
+import { UserActionLogActionType } from '@/constants/user_action_log';
+import { ISessionData } from '@/interfaces/session';
+import { checkAuthorizationNew, isWhitelisted } from '@/lib/utils/auth_check_v2';
+import { DefaultValue } from '@/constants/default_value';
 
-export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEMA, U>(
+export async function checkSessionUser(
+  session: ISessionData,
+  apiName: APIName,
+  req: NextApiRequest
+) {
+  let isLogin = true;
+
+  if (isWhitelisted(apiName, req)) {
+    return true;
+  }
+
+  // Info: (20241128 - Luphia) If there is no user_id, it will be considered as a guest
+  if (!session.userId || session.userId === DefaultValue.USER_ID.GUEST) {
+    isLogin = false;
+  }
+
+  return isLogin;
+}
+
+export async function checkUserAuthorization<T extends APIName>(
   apiName: T,
   req: NextApiRequest,
-  res: NextApiResponse,
+  session: ISessionData
+) {
+  if (isWhitelisted(apiName, req)) {
+    return true;
+  }
+
+  const isAuth = await checkAuthorizationNew(apiName, req, session);
+  if (!isAuth) {
+    loggerError({
+      userId: session.userId,
+      errorType: `Forbidden Access for ${apiName} in middleware.ts`,
+      errorMessage: 'User is not authorized',
+    });
+  }
+  return isAuth;
+}
+
+export function checkRequestData<T extends APIName>(
+  apiName: T,
+  req: NextApiRequest,
+  session: ISessionData
+) {
+  const { query, body } = validateRequestData(apiName, req);
+
+  if (query === null && body === null) {
+    loggerError({
+      userId: session.userId || DefaultValue.USER_ID.GUEST,
+      errorType: `Invalid Input Parameter for ${apiName} in middleware.ts`,
+      errorMessage: req.body,
+    });
+  }
+
+  return { query, body };
+}
+
+export async function logUserAction<T extends APIName>(
+  session: ISessionData,
+  apiName: T,
+  req: NextApiRequest,
+  statusMessage: string
+) {
+  const userId = session.userId || DefaultValue.USER_ID.GUEST;
+  const sessionId = session.isunfa;
+
+  // Info: (20250108 - Luphia) Sometimes the user action log is not necessary
+  if (userId === DefaultValue.USER_ID.GUEST && apiName !== APIName.SIGN_IN) {
+    // Info: (20250108 - Luphia) Skip logging user action for guest user
+    return;
+  }
+
+  try {
+    const userActionLog = {
+      sessionId,
+      userId,
+      actionType: UserActionLogActionType.API,
+      actionDescription: apiName,
+      ipAddress: (req.headers['x-forwarded-for'] as string) || '',
+      userAgent: (req.headers['user-agent'] as string) || '',
+      apiEndpoint: APIPath[apiName as keyof typeof APIPath],
+      httpMethod: req.method || '',
+      requestPayload: req.body || '',
+      statusMessage,
+    };
+    await createUserActionLog(userActionLog);
+  } catch (error) {
+    loggerError({
+      userId,
+      errorType: `Failed to log user action for ${apiName} in middleware.ts`,
+      errorMessage: error as Error,
+    });
+  }
+}
+
+// TODO: (20241111 - Shirley) separate middleware according to different functionality
+export async function withRequestValidation<T extends APIName, U>(
+  apiName: T,
+  req: NextApiRequest,
   handler: IHandleRequest<T, U>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: U | null = null;
-  const session = await getSession(req, res);
-  const { userId } = session;
-  try {
-    if (!userId) {
-      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-      loggerError(
-        userId,
-        `Unauthorized Access for ${apiName} in middleware.ts`,
-        'User ID is missing in session'
-      );
-    } else {
-      // ToDo: (20241015 - Jacky) Add role and company check by roleId for the user
-      const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
+  let payload: output<T> | null = null;
+
+  const session = await getSession(req);
+  const isLogin = await checkSessionUser(session, apiName, req);
+  if (!isLogin) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    // Info: (20241204 - Luphia) zod validation for input data
+    const { query, body } = checkRequestData(apiName, req, session);
+    if (query !== null && body !== null) {
+      const isAuth = await checkUserAuthorization(apiName, req, session);
       if (!isAuth) {
         statusMessage = STATUS_MESSAGE.FORBIDDEN;
-        loggerError(
-          userId,
-          `Forbidden Access for ${apiName} in middleware.ts`,
-          'User is not authorized'
-        );
       } else {
-        const { query, body } = validateRequest(apiName, req, userId);
-        if (query !== null && body !== null) {
-          ({ statusMessage, payload } = await handler({
+        try {
+          // Todo: (20241113 - Jacky) req in handler is for parse formdata, should be removed after refactor
+          const { statusMessage: handlerStatusMessage, payload: handlerOutput } = await handler({
             query,
             body,
             session,
-          }));
-        } else {
-          statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
-          loggerError(
-            userId,
-            `Validation Error for ${apiName} in middleware.ts`,
-            'Query or Body is missing'
-          );
+            req,
+          });
+          statusMessage = handlerStatusMessage;
+          // Info: (20241204 - Luphia) zod validation for output data
+          const { isOutputDataValid, outputData } = validateOutputData(apiName, handlerOutput);
+          if (!isOutputDataValid) {
+            statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+          } else {
+            payload = outputData;
+          }
+        } catch (handlerError) {
+          // Info: (20250115 - Shirley) 如果 API handler function 拋出錯誤，則將錯誤訊息設置為錯誤訊息，否則設置為內部服務錯誤
+          if (handlerError instanceof Error) {
+            statusMessage = handlerError.message;
+          } else {
+            statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+          }
+          loggerError({
+            userId: session.userId ?? DefaultValue.USER_ID.GUEST,
+            errorType: `Handler Request Error for ${apiName} in middleware.ts`,
+            errorMessage: handlerError as Error,
+          });
         }
       }
+    } else {
+      statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
     }
-  } catch (error) {
-    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-    loggerError(userId, `Handler Request Error for ${apiName} in middleware.ts`, error as Error);
   }
+  await logUserAction(session, apiName, req, statusMessage);
+
   return { statusMessage, payload };
 }

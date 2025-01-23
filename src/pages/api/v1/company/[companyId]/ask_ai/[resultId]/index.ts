@@ -2,15 +2,13 @@ import { IResponseData } from '@/interfaces/response_data';
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { formatApiResponse, isParamString } from '@/lib/utils/common';
-import { ILineItem, ILineItemFromAICH } from '@/interfaces/line_item';
-import { fuzzySearchAccountByName } from '@/lib/utils/repo/account.repo';
-import { isILineItem } from '@/lib/utils/type_guard/line_item';
+import { ILineItemFromAICH } from '@/interfaces/line_item';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { IContract } from '@/interfaces/contract';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { getAichUrl } from '@/lib/utils/aich';
+import { formatLineItemsFromAICH, getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
@@ -56,34 +54,6 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
   return json.payload;
 }
 
-async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
-  const lineItems = await Promise.all(
-    rawLineItems.map(async (rawLineItem) => {
-      const { lineItemIndex, account, description, debit, amount } = rawLineItem;
-      const accountInDB = await fuzzySearchAccountByName(account);
-
-      if (!accountInDB) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
-
-      const resultAccount = {
-        lineItemIndex,
-        account: accountInDB?.name || account,
-        description,
-        debit,
-        amount,
-        accountId: accountInDB?.id || 0,
-      } as ILineItem;
-
-      if (!isILineItem(resultAccount)) {
-        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
-      }
-      return resultAccount;
-    })
-  );
-  return lineItems;
-}
-
 async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IVoucherDataForSavingToDB | IContract | null = null;
@@ -101,9 +71,15 @@ async function handleGetRequest(req: NextApiRequest) {
         };
 
         const lineItems = await formatLineItemsFromAICH(rawLineItems);
+        const lineItemsOld = lineItems.map((lineItem) => {
+          return {
+            ...lineItem,
+            account: lineItem.account.name,
+          };
+        });
         const voucher = {
-          lineItems,
-        } as IVoucherDataForSavingToDB;
+          lineItems: lineItemsOld,
+        };
         if (!isIVoucherDataForSavingToDB(voucher)) {
           statusMessage = STATUS_MESSAGE.INVALID_INPUT_TYPE;
           break;
@@ -134,7 +110,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
 
@@ -156,12 +132,11 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      const logError = await loggerError(
+      loggerError({
         userId,
-        'get_ask_ai_resultId',
-        'get_ask_ai_resultId failed'
-      );
-      logError.error(error);
+        errorType: error.name,
+        errorMessage: error.message,
+      });
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

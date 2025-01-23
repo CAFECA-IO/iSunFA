@@ -1,6 +1,7 @@
+// Deprecated: (20241111 - Liz) 這是 Alpha 版本的元件
 import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React from 'react';
 import { FiEdit, FiLayout, FiMail, FiPlusSquare, FiSettings } from 'react-icons/fi';
 import { BiBuildings } from 'react-icons/bi';
 import { TbLogout, TbGridDots } from 'react-icons/tb';
@@ -19,12 +20,13 @@ import {
 } from '@/constants/display';
 import version from '@/lib/version';
 import { useRouter } from 'next/router';
-import I18n from '@/components/i18n/i18n';
+// import I18n from '@/components/i18n/i18n';
 import { TranslateFunction } from '@/interfaces/locale';
 // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
 // import Notification from '@/components/notification/notification';
 import Skeleton from '@/components/skeleton/skeleton';
 import { UploadType } from '@/constants/file';
+import { CANCEL_COMPANY_ID } from '@/constants/company';
 
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -38,7 +40,6 @@ const NavBar = () => {
   const abbreviateCompanyName =
     companyName.length > 10 ? companyName.slice(0, 5) + '...' : companyName;
 
-  const [langIsOpen, setLangIsOpen] = useState(false);
   // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
   // const [notificationIsOpen, setNotificationIsOpen] = useState(false);
 
@@ -74,7 +75,6 @@ const NavBar = () => {
   const appMenuMobileClickHandler = () => setIsAppMenuMobileOpen(!isAppMenuMobileOpen);
   const burgerMenuClickHandler = () => {
     setIsBurgerMenuOpen(!isBurgerMenuOpen);
-    setLangIsOpen(false);
     // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
     // setNotificationIsOpen(false);
   };
@@ -90,7 +90,7 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
-    selectCompany(null);
+    selectCompany(CANCEL_COMPANY_ID);
   };
 
   const redirectTo = (target: string) => {
@@ -161,7 +161,7 @@ const NavBar = () => {
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover"
       >
         <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
-        <p>{t('report_401:REPORTS_SIDEBAR.REPORT')}</p>
+        <p>{t('reports:REPORTS_SIDEBAR.REPORT')}</p>
       </Link>
     </div>
   );
@@ -205,7 +205,7 @@ const NavBar = () => {
         mobileMenuIsOpen={notificationIsOpen}
         setMobileMenuIsOpen={setNotificationIsOpen}
       /> */}
-      <I18n langIsOpen={langIsOpen} setLangIsOpen={setLangIsOpen} />
+      {/* <I18n /> */}
       {displayedAppMenuMobile}
     </div>
   );
@@ -274,7 +274,7 @@ const NavBar = () => {
           className="flex flex-col items-center gap-8px hover:text-button-text-primary-hover disabled:text-button-text-disable"
         >
           <Image src={'/icons/report.svg'} width={48} height={48} alt="report_icon" />
-          <p>{t('report_401:REPORTS_SIDEBAR.REPORT')}</p>
+          <p>{t('reports:REPORTS_SIDEBAR.REPORT')}</p>
         </Link>
       </button>
     </div>
@@ -468,10 +468,7 @@ const NavBar = () => {
             </Link>
             <div className="my-auto flex flex-col justify-center self-stretch rounded-xs bg-badge-surface-soft-primary px-1 text-badge-text-primary-solid">
               <div className="flex flex-col justify-center rounded-xs px-0.1rem py-1">
-                <div className="justify-center px-1 text-xs">
-                  {t('common:COMMON.V')}
-                  {version}
-                </div>
+                <div className="justify-center px-1 text-xs">v{version}</div>
               </div>
             </div>
           </div>
@@ -506,7 +503,7 @@ const NavBar = () => {
         {/* Info: (20240408 - Shirley) desktop */}
         <div className="relative hidden space-x-8 text-button-text-secondary lg:flex">
           {/* Info: (20240605 - Shirley) globe (i18n) */}
-          <I18n />
+          {/* <I18n /> */}
           {/* Info: (20240606 - Shirley) notification */}
           {/* Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺) */}
           {/* <Notification /> */}

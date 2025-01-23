@@ -1,7 +1,7 @@
 import { useTranslation } from 'next-i18next';
 
 export const LoadingSVG = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common']);
   return (
     <div role="status">
       <svg

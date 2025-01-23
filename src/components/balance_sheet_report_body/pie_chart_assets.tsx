@@ -52,7 +52,7 @@ const PieChartAssets: React.FC<PieChartProps> = ({ data, labels, colors }) => {
 
   if (!chartOptions) return null;
 
-  return <Chart options={chartOptions} series={chartSeries} type="pie" width="340" />;
+  return <Chart options={chartOptions} series={chartSeries} type="pie" width="300" />;
 };
 
 export default PieChartAssets;

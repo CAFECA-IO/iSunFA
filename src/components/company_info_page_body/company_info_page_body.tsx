@@ -1,8 +1,9 @@
+// Deprecated: (20241111 - Liz) 這是 Alpha 版本的元件
 import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_COMPANY_IMAGE_URL } from '@/constants/display';
-import { RoleName } from '@/constants/role_name';
+import { CompanyRoleName } from '@/constants/role';
 import { UploadType } from '@/constants/file';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -23,6 +24,7 @@ import { FiEdit, FiTrash2 } from 'react-icons/fi';
 import { LuArrowLeftRight } from 'react-icons/lu';
 import { IoArrowForward } from 'react-icons/io5';
 import { FaCheck } from 'react-icons/fa6';
+import { CANCEL_COMPANY_ID } from '@/constants/company';
 
 const CompanyInfoPageBody = () => {
   const { t } = useTranslation(['common', 'kyc']);
@@ -61,7 +63,7 @@ const CompanyInfoPageBody = () => {
 
   const kycStatusDetail = companyData?.company.kycStatusDetail ?? null;
 
-  const isEditNameAllowed = role?.name === RoleName.OWNER;
+  const isEditNameAllowed = role?.name === CompanyRoleName.OWNER;
 
   useEffect(() => {
     if (getCompanyDataSuccessfully && companyData) {
@@ -97,8 +99,8 @@ const CompanyInfoPageBody = () => {
       },
     });
 
-    selectCompany(null);
-    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    selectCompany(CANCEL_COMPANY_ID);
+    router.push(ISUNFA_ROUTE.DASHBOARD);
   };
 
   const deleteCompanyClickHandler = () => {
@@ -132,7 +134,7 @@ const CompanyInfoPageBody = () => {
     <div className="">
       <Skeleton width={200} height={50} />
     </div>
-  ) : role?.name === RoleName.OWNER ? (
+  ) : role?.name === CompanyRoleName.OWNER ? (
     <>
       <div className="">
         <Button

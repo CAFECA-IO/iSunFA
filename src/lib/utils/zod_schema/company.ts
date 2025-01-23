@@ -1,95 +1,213 @@
 import { z } from 'zod';
-import { IZodValidator } from '@/interfaces/zod_validator';
-import { CompanyTag, CompanyUpdateAction } from '@/constants/company';
+import { COMPANY_TAG, CompanyUpdateAction } from '@/constants/company';
+import {
+  nullSchema,
+  zodStringToBoolean,
+  zodStringToNumber,
+  zodStringToNumberWithDefault,
+} from '@/lib/utils/zod_schema/common';
+import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
+import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
+import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 
-// Info: (20241016 - Jacky) Company list validator
-const companyListQueryValidator = z.object({
+// Info: (20241016 - Jacky) Company list schema
+const companyListQuerySchema = z.object({
+  userId: zodStringToNumber,
+  simple: zodStringToBoolean.optional(),
   searchQuery: z.string().optional(),
-  targetPage: z.number().int().optional(),
-  pageSize: z.number().int().optional(),
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
 });
 
-const companyListBodyValidator = z.object({});
-
-export const companyListValidator: IZodValidator<
-  (typeof companyListQueryValidator)['shape'],
-  (typeof companyListBodyValidator)['shape']
-> = {
-  query: companyListQueryValidator,
-  body: companyListBodyValidator,
-};
-
-// Info: (20241016 - Jacky) Company post validator
-const companyPostQueryValidator = z.object({});
-const companyPostBodyValidator = z.object({
+// Info: (20241016 - Jacky) Company post schema
+const companyPostQuerySchema = z.object({
+  userId: zodStringToNumber,
+});
+const companyPostBodySchema = z.object({
   name: z.string(),
   taxId: z.string(),
-  tag: z.nativeEnum(CompanyTag),
+  tag: z.nativeEnum(COMPANY_TAG),
 });
 
-export const companyPostValidator: IZodValidator<
-  (typeof companyPostQueryValidator)['shape'],
-  (typeof companyPostBodyValidator)['shape']
-> = {
-  query: companyPostQueryValidator,
-  body: companyPostBodyValidator,
-};
-
-// Info: (20241016 - Jacky) Company get validator
-const companyGetByIdQueryValidator = z.object({
-  companyId: z.number().int(),
+// Info: (20241016 - Jacky) Company get schema
+const companyGetByIdQuerySchema = z.object({
+  companyId: zodStringToNumber,
 });
-const companyGetByIdBodyValidator = z.object({});
 
-export const companyGetByIdValidator: IZodValidator<
-  (typeof companyGetByIdQueryValidator)['shape'],
-  (typeof companyGetByIdBodyValidator)['shape']
-> = {
-  query: companyGetByIdQueryValidator,
-  body: companyGetByIdBodyValidator,
-};
-
-// Info: (20241016 - Jacky) Company put validator
-const companyPutQueryValidator = z.object({
-  companyId: z.number().int(),
+// Info: (20241016 - Jacky) Company put schema
+const companyPutQuerySchema = z.object({
+  companyId: zodStringToNumber,
 });
-const companyPutBodyValidator = z.object({
+const companyPutBodySchema = z.object({
   action: z.nativeEnum(CompanyUpdateAction),
-  tag: z.nativeEnum(CompanyTag).optional(),
+  tag: z.nativeEnum(COMPANY_TAG).optional(),
 });
 
-export const companyPutValidator: IZodValidator<
-  (typeof companyPutQueryValidator)['shape'],
-  (typeof companyPutBodyValidator)['shape']
-> = {
-  query: companyPutQueryValidator,
-  body: companyPutBodyValidator,
-};
+// Info: (20241016 - Jacky) Company delete schema
+const companyDeleteQuerySchema = z.object({
+  companyId: zodStringToNumber,
+});
 
-// Info: (20241016 - Jacky) Company delete validator
-const companyDeleteQueryValidator = z.object({
+// Info: (20241015 - Jacky) Company select schema
+const companySelectQuerySchema = z.object({
+  userId: zodStringToNumber,
+});
+
+const companySelectBodySchema = z.object({
   companyId: z.number().int(),
 });
-const companyDeleteBodyValidator = z.object({});
 
-export const companyDeleteValidator: IZodValidator<
-  (typeof companyDeleteQueryValidator)['shape'],
-  (typeof companyDeleteBodyValidator)['shape']
-> = {
-  query: companyDeleteQueryValidator,
-  body: companyDeleteBodyValidator,
+const companyPrismaSchema = z.object({
+  id: z.number().int(),
+  imageFile: filePrismaSchema,
+  name: z.string(),
+  taxId: z.string(),
+  startDate: z.number().int(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+});
+
+export const companyOutputSchema = companyPrismaSchema.strip().transform((data) => {
+  const { imageFile, ...rest } = data;
+  const output = {
+    ...rest,
+    imageId: imageFile.url,
+  };
+  return output;
+});
+
+const companyRoleOutputSchema = z.object({
+  company: companyOutputSchema,
+  tag: z.nativeEnum(COMPANY_TAG),
+  order: z.number().int(),
+  role: rolePrimsaSchema,
+});
+// Info: (20241028 - Jacky) Paginated data schema
+const paginatedCompanyAndroleOutputSchema = paginatedDataSchema(companyRoleOutputSchema);
+
+const listedCompanyAndRoleOutputSchema = z.array(companyRoleOutputSchema);
+
+export const companyListSchema = {
+  input: {
+    querySchema: companyListQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: z.union([paginatedCompanyAndroleOutputSchema, listedCompanyAndRoleOutputSchema]),
+  frontend: nullSchema,
 };
 
-// Info: (20241015 - Jacky) Company select validator
-const companySelectQueryValidator = z.object({
-  companyId: z.number().int(),
-});
-const companySelectBodyValidator = z.object({});
+export const companyPostSchema = {
+  input: {
+    querySchema: companyPostQuerySchema,
+    bodySchema: companyPostBodySchema,
+  },
+  outputSchema: companyRoleOutputSchema.nullable(),
+  frontend: nullSchema,
+};
 
-export const companySelectValidator: IZodValidator<
-  (typeof companySelectQueryValidator)['shape'],
-  (typeof companySelectBodyValidator)['shape']
-> = {
-  query: companySelectQueryValidator,
-  body: companySelectBodyValidator,
+export const companyGetByIdSchema = {
+  input: {
+    querySchema: companyGetByIdQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: companyRoleOutputSchema.nullable(),
+  frontend: nullSchema,
+};
+
+export const companyPutSchema = {
+  input: {
+    querySchema: companyPutQuerySchema,
+    bodySchema: companyPutBodySchema,
+  },
+  outputSchema: companyRoleOutputSchema,
+  frontend: nullSchema,
+};
+
+export const companyDeleteSchema = {
+  input: {
+    querySchema: companyDeleteQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: companyOutputSchema.nullable(),
+  frontend: nullSchema,
+};
+
+export const companySelectSchema = {
+  input: {
+    querySchema: companySelectQuerySchema,
+    bodySchema: companySelectBodySchema,
+  },
+  outputSchema: companyOutputSchema.nullable(),
+  frontend: nullSchema,
+};
+
+const companySearchQuerySchema = z.object({
+  taxId: z.string().optional(),
+  name: z.string().optional(),
+});
+
+export const companySearchSchema = {
+  input: {
+    querySchema: companySearchQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: z
+    .object({
+      taxId: z.string(),
+      name: z.string(),
+    })
+    .strip(),
+  frontend: z.object({
+    taxId: z.string(),
+    name: z.string(),
+  }),
+};
+
+/**
+ * Info: (20241025 - Murky)
+ * @description schema for init company entity or parsed prisma company
+ */
+export const companyEntityValidator = z.object({
+  id: z.number(),
+  name: z.string(),
+  taxId: z.string(),
+  // Deprecated: (20241023 - Murky) - tag will be removed after 20241030
+  // tag: z.string(),
+  startDate: z.number(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+});
+
+export const ICompanyValidator = z.object({
+  id: z.number().int(),
+  imageId: z.string(),
+  name: z.string(),
+  taxId: z.string(),
+  startDate: z.number().int(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+});
+
+/**
+ * Info: (20241211 - Murky)
+ * @note used in APIName.COMPANY_PUT_ICON
+ */
+
+const companyPutIconQuerySchema = z.object({
+  companyId: zodStringToNumber,
+});
+
+const companyPutIconBodySchema = z.object({
+  fileId: z.number().int(),
+});
+
+export const companyPutIconSchema = {
+  input: {
+    querySchema: companyPutIconQuerySchema,
+    bodySchema: companyPutIconBodySchema,
+  },
+  outputSchema: companyOutputSchema.nullable(),
+  frontend: companyOutputSchema.nullable(),
 };

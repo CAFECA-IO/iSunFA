@@ -148,7 +148,7 @@ const StepOneTab = () => {
           <div className="flex items-center justify-between">
             <p>{t('journal:JOURNAL.PLEASE_SELECT_A_COMPANY_FIRST')}</p>
             <Link
-              href={ISUNFA_ROUTE.SELECT_COMPANY}
+              href={ISUNFA_ROUTE.DASHBOARD}
               className="font-semibold text-link-text-warning hover:opacity-70"
             >
               {t('journal:JOURNAL.GO_TO_SELECT')}

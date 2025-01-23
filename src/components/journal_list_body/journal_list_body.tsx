@@ -323,7 +323,7 @@ const JournalListBody = () => {
       <input
         disabled={isJournalListLoading}
         type="text"
-        placeholder={t('common:COMMON.SEARCH')}
+        placeholder={t('search:COMMON.SEARCH')}
         className={`relative flex h-44px w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
         onChange={handleInputChange}
         onKeyDown={(e) => {

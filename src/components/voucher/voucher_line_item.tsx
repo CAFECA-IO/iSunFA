@@ -1,40 +1,193 @@
-import React, { useState, useEffect, useRef } from 'react';
-import useOuterClick from '@/lib/hooks/use_outer_click';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import { LuTrash2 } from 'react-icons/lu';
-import { FiBookOpen } from 'react-icons/fi';
-import { AccountType } from '@/constants/account';
-import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
-import { numberWithCommas } from '@/lib/utils/common';
-import { APIName } from '@/constants/api_connection';
-import APIHandler from '@/lib/utils/api_handler';
+// import { numberWithCommas } from '@/lib/utils/common';
+import { ILineItemUI, IReverseItemUI } from '@/interfaces/line_item';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { FaPlus } from 'react-icons/fa6';
+import ReverseLineItem from '@/components/voucher/reverse_line_item';
+import { IAccount } from '@/interfaces/accounting_account';
+import AccountTitleDropmenu from '@/components/voucher/account_title_dropmenu';
+import NumericInput from '@/components/voucher/numeric_input';
+// import { useHotkeys } from 'react-hotkeys-hook';
 
 interface IVoucherLineItemProps {
+  id: number;
+  data: ILineItemUI; // Info: (20241121 - Julian) 單筆 LineItem 資料
+  setLineItems: React.Dispatch<React.SetStateAction<ILineItemUI[]>>; // Info: (20241121 - Julian) 更新 LineItem
   flagOfClear: boolean;
   flagOfSubmit: boolean;
   accountIsNull: boolean;
   amountNotEqual: boolean;
   amountIsZero: boolean;
-  deleteHandler: () => void;
-  accountTitleHandler: (account: IAccount | null) => void;
-  particularsChangeHandler: (particulars: string) => void;
-  debitChangeHandler: (debit: number) => void;
-  creditChangeHandler: (credit: number) => void;
 }
 
 const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
+  id,
+  data,
+  setLineItems,
   flagOfClear,
   flagOfSubmit,
   accountIsNull,
   amountNotEqual,
   amountIsZero,
-  deleteHandler,
-  accountTitleHandler,
-  particularsChangeHandler,
-  debitChangeHandler,
-  creditChangeHandler,
 }) => {
   const { t } = useTranslation('common');
+  const { reverseList: commonReverseList, addReverseListHandler } = useAccountingCtx();
+  const { selectReverseItemsModalVisibilityHandler, selectReverseDataHandler } = useGlobalCtx();
+
+  const {
+    id: lineItemId,
+    account: lineItemAccount,
+    description: lineItemDescription,
+    debit: lineItemDebit,
+    amount: lineItemAmount,
+    reverseList: lineItemReverseList,
+  } = data;
+
+  // Info: (20241121 - Julian) 判斷借貸金額
+  const lineItemDebitAmount = lineItemDebit === true ? lineItemAmount : 0;
+  const lineItemCreditAmount = lineItemDebit === false ? lineItemAmount : 0;
+
+  // Info: (20241210 - Anna) 判斷是否顯示沖銷項目
+  const defaultCondition = (amount: number) => amount > 0; // Info: (20241210 - Anna) 默認條件
+
+  // Info: (20241210 - Anna) 基於 lineItemDebitAmount 的會計科目 (應付、預收、租賃負債、合約負債、借款)
+  const debitConditions = [
+    '2102',
+    '2108',
+    '2131',
+    '2132',
+    '2133',
+    '2139',
+    '2151',
+    '2152',
+    '2161',
+    '2162',
+    '2171',
+    '2172',
+    '2181',
+    '2182',
+    '2190',
+    '2195',
+    '2202',
+    '2203',
+    '2204',
+    '2209',
+    '2211',
+    '2212',
+    '2213',
+    '2215',
+    '2219',
+    '2220',
+    '2281',
+    '2282',
+    '2313',
+    '2315',
+    '2322',
+    '2323',
+    '2324',
+    '2330',
+    '2335',
+    '2350',
+    '2355',
+    '2365',
+    '2370',
+    '2527',
+    '2541',
+    '2542',
+    '2543',
+    '2581',
+    '2582',
+    '2611',
+    '2612',
+    '2613',
+    '2614',
+    '2621',
+    '2622',
+    '2623',
+    '2624',
+    '2630',
+    '2645',
+    '2675',
+    '2680',
+  ].map((code) => ({
+    code,
+    amount: lineItemDebitAmount, // Info: (20241210 - Anna) 默認使用 lineItemDebitAmount
+    condition: defaultCondition, // Info: (20241210 - Anna) 默認條件
+  }));
+
+  // Info: (20241210 - Anna) 基於 lineItemCreditAmount 的會計科目 (應收、預付、合約資產)
+  const creditConditions = [
+    '1141',
+    '1151',
+    '1152',
+    '1161',
+    '1162',
+    '1172',
+    '1173',
+    '1175',
+    '1181',
+    '1182',
+    '1184',
+    '1190',
+    '1195',
+    '119A',
+    '119C',
+    '119F',
+    '119H',
+    '1201',
+    '1202',
+    '1203',
+    '1204',
+    '1205',
+    '1206',
+    '1211',
+    '1212',
+    '1221',
+    '1222',
+    '1325',
+    '1412',
+    '1414',
+    '1419',
+    '1421',
+    '1422',
+    '1429',
+    '1471',
+    '1472',
+    '1475',
+    '1478',
+    '1561',
+    '1915',
+    '1920',
+    '1931',
+    '1932',
+    '1933',
+    '1935',
+    '1941',
+    '1942',
+    '1943',
+    '1945',
+    '1947',
+    '194B',
+    '194E',
+    '194I',
+    '194L',
+    '1985',
+  ].map((code) => ({
+    code,
+    amount: lineItemCreditAmount, // Info: (20241210 - Anna) 默認使用 lineItemCreditAmount
+    condition: defaultCondition, // Info: (20241210 - Anna) 默認條件
+  }));
+
+  // Info: (20241210 - Anna) 合併條件
+  const reverseConditions = [...creditConditions, ...debitConditions];
+
+  // Info: (20241210 - Anna) 檢查條件
+  const isShowReverse = reverseConditions.some(
+    ({ code, amount, condition }) => lineItemAccount?.code === code && condition(amount)
+  );
 
   const inputStyle = {
     NORMAL:
@@ -43,103 +196,86 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       'border-input-text-error text-input-text-error placeholder:text-input-text-error disabled:text-input-text-error',
   };
 
-  const queryCondition = {
-    limit: 100, // Info: (20241018 - Julian) 限制每次取出 100 筆
-    forUser: true,
-    sortBy: 'code', // Info: (20241018 - Julian) 依 code 排序
-    sortOrder: 'asc',
-  };
-
-  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
-    APIName.ACCOUNT_LIST,
-    {
-      params: {
-        companyId: 1,
-      },
-      query: queryCondition,
-    },
-    false,
-    true
-  );
-
-  // Info: (20241007 - Julian) Account state
-  const [accountTitle, setAccountTitle] = useState<string>(
-    t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
-  );
-  const [searchKeyword, setSearchKeyword] = useState<string>('');
-  const [accountList, setAccountList] = useState<IAccount[]>([]);
-
   // Info: (20241007 - Julian) input state
   const [particulars, setParticulars] = useState<string>('');
-  const [debitInput, setDebitInput] = useState<string>('');
-  const [creditInput, setCreditInput] = useState<string>('');
+  const [debitInput, setDebitInput] = useState<number | undefined>();
+  const [creditInput, setCreditInput] = useState<number | undefined>();
 
   // Info: (20241007 - Julian) input style
-  const [accountStyle, setAccountStyle] = useState<string>(inputStyle.NORMAL);
   const [amountStyle, setAmountStyle] = useState<string>(inputStyle.NORMAL);
 
-  const accountInputRef = useRef<HTMLInputElement>(null);
+  // Info: (20241121 - Julian) ReverseList state
+  const [reverseListUI, setReverseListUI] = useState<IReverseItemUI[]>([]);
 
-  // Info: (20241001 - Julian) Accounting 下拉選單
-  const {
-    targetRef: accountingRef,
-    componentVisible: isAccountingMenuOpen,
-    setComponentVisible: setAccountingMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
+  // Info: (20241118 - Julian) 設定預設值
+  useEffect(() => {
+    const defaultDebit = lineItemDebitAmount;
+    const defaultCredit = lineItemCreditAmount;
 
-  // Info: (20241001 - Julian) Account 編輯狀態
-  const {
-    targetRef: accountRef,
-    componentVisible: isAccountEditing,
-    setComponentVisible: setIsAccountEditing,
-  } = useOuterClick<HTMLDivElement>(false);
+    setParticulars(lineItemDescription);
+    setDebitInput(defaultDebit);
+    setCreditInput(defaultCredit);
+  }, [data]);
 
   useEffect(() => {
-    getAccountList({
-      query: {
-        ...queryCondition,
-        searchKey: searchKeyword, // Info: (20241018 - Julian) 搜尋關鍵字
-      },
+    // Info: (20241220 - Julian) 更新 isReverse 狀態
+    setLineItems((prev) => {
+      const duplicateList = [...prev];
+      const index = duplicateList.findIndex((item) => item.id === data.id);
+      if (index !== -1) {
+        duplicateList[index] = { ...duplicateList[index], isReverse: isShowReverse };
+      }
+      return duplicateList;
     });
-  }, [searchKeyword]);
+  }, [isShowReverse]);
 
+  // Info: (20241121 - Julian) 把預設的反轉分錄列表丟進 reverseList 裡，讓使用者可以編輯
   useEffect(() => {
-    if (accountTitleList) {
-      setAccountList(accountTitleList.data);
-    }
-  }, [accountTitleList]);
+    if (lineItemReverseList.length > 0) {
+      const defaultReverseList: IReverseItemUI[] = data.reverseList.map((reverseItem) => {
+        const reverseItemUI: IReverseItemUI = {
+          ...reverseItem,
+          lineItemIndex: data.id,
+          isSelected: false,
+          reverseAmount: reverseItem.amount,
+        };
+        return reverseItemUI;
+      });
 
+      setReverseListUI(defaultReverseList);
+
+      defaultReverseList.forEach((item) => {
+        addReverseListHandler(item.lineItemIndex, [item]);
+      });
+    }
+  }, []);
+
+  // Info: (20241121 - Julian) 共用的反轉分錄列表變動時，更新 UI
   useEffect(() => {
-    // Info: (20241004 - Julian) 查詢會計科目關鍵字時聚焦
-    if (isAccountEditing && accountInputRef.current) {
-      accountInputRef.current.focus();
-    }
-
-    // Info: (20241001 - Julian) 查詢模式關閉後清除搜尋關鍵字
-    if (!isAccountEditing) {
-      setSearchKeyword('');
-    }
-  }, [isAccountEditing]);
+    const newReverseList: IReverseItemUI[] = commonReverseList[data.id] || [];
+    setReverseListUI(newReverseList);
+    // Info: (20241121 - Julian) 更新反轉分錄列表
+    setLineItems((prev) => {
+      const duplicateList = [...prev];
+      const index = duplicateList.findIndex((item) => item.id === data.id);
+      if (index !== -1) {
+        duplicateList[index] = { ...duplicateList[index], reverseList: newReverseList };
+      }
+      return duplicateList;
+    });
+  }, [commonReverseList]);
 
   useEffect(() => {
     // Info: (20241004 - Julian) Reset All State
-    setAccountTitle(t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING'));
     setParticulars('');
-    setDebitInput('');
-    setCreditInput('');
+    setDebitInput(undefined);
+    setCreditInput(undefined);
   }, [flagOfClear]);
 
   useEffect(() => {
-    // Info: (20241007 - Julian) 檢查是否填入會計科目
-    setAccountStyle(
-      accountIsNull &&
-        (accountTitle === t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING') || accountTitle === '')
-        ? inputStyle.ERROR
-        : inputStyle.NORMAL
-    );
     setAmountStyle(
       // Info: (20241007 - Julian) 檢查借貸金額是否為零
-      (amountIsZero && (debitInput === '' || creditInput === '')) ||
+      (amountIsZero && (debitInput === undefined || creditInput === undefined)) ||
         // Info: (20241007 - Julian) 檢查借貸金額是否相等
         amountNotEqual
         ? inputStyle.ERROR
@@ -148,177 +284,180 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   }, [flagOfSubmit]);
 
   useEffect(() => {
-    // Info: (20241007 - Julian) 修改會計科目時，樣式改回 NORMAL
-    setAccountStyle(inputStyle.NORMAL);
-  }, [accountTitle]);
-
-  useEffect(() => {
     // Info: (20241007 - Julian) 修改借貸金額時，樣式改回 NORMAL
     setAmountStyle(inputStyle.NORMAL);
   }, [debitInput, creditInput]);
 
-  const isDebitDisabled = creditInput !== '';
-  const isCreditDisabled = debitInput !== '';
-
-  const accountSearchHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchKeyword(e.target.value);
-    setAccountingMenuOpen(true);
-  };
+  // Info: (20241118 - Julian) 若借方金額不為 0，則禁用貸方金額輸入；反之亦然
+  const isDebitDisabled = creditInput !== 0 && creditInput !== undefined;
+  const isCreditDisabled = debitInput !== 0 && debitInput !== undefined;
 
   const particularsInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setParticulars(e.target.value);
-    particularsChangeHandler(e.target.value);
-  };
-
-  const debitInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭 0
-    const debitValue = e.target.value.replace(/\D/g, '').replace(/^0+/, '');
-    // Info: (20241001 - Julian) 加入千分位逗號
-    setDebitInput(numberWithCommas(debitValue));
-    // Info: (20241001 - Julian) 設定 Debit
-    debitChangeHandler(Number(debitValue));
-  };
-
-  const creditInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭 0
-    const creditValue = e.target.value.replace(/\D/g, '').replace(/^0+/, '');
-    // Info: (20241001 - Julian) 加入千分位逗號
-    setCreditInput(numberWithCommas(creditValue));
-    // Info: (20241001 - Julian) 設定 Credit
-    creditChangeHandler(Number(creditValue));
-  };
-
-  const accountEditingHandler = () => {
-    setIsAccountEditing(true);
-    setAccountingMenuOpen(true);
-  };
-
-  // Info: (20241004 - Julian) Remove AccountType.OTHER_COMPREHENSIVE_INCOME, AccountType.CASH_FLOW, AccountType.OTHER
-  const accountTypeList = Object.values(AccountType).filter(
-    (value) =>
-      value !== AccountType.OTHER_COMPREHENSIVE_INCOME &&
-      value !== AccountType.CASH_FLOW &&
-      value !== AccountType.OTHER
-  );
-
-  const accountTitleMenu = accountTypeList.map((value) => {
-    // Info: (20241004 - Julian) 子項目
-    const childAccountList = accountList.filter((account) => account.type === value);
-    const childAccountMenu = childAccountList.map((account) => {
-      const accountClickHandler = () => {
-        setAccountTitle(`${account.code} ${account.name}`);
-        // Info: (20241001 - Julian) 關閉 Accounting Menu 和編輯狀態
-        setAccountingMenuOpen(false);
-        setIsAccountEditing(false);
-        // Info: (20241001 - Julian) 重置搜尋關鍵字
-        setSearchKeyword('');
-        // Info: (20241001 - Julian) 設定 Account title
-        accountTitleHandler(account);
-      };
-
-      return (
-        <button
-          key={account.id}
-          type="button"
-          onClick={accountClickHandler}
-          className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-        >
-          <p className="text-dropdown-text-primary">{account.code}</p>
-          <p className="text-dropdown-text-secondary">{account.name}</p>
-        </button>
-      );
+    // Info: (20241121 - Julian) 設定 Particulars
+    setLineItems((prev) => {
+      const duplicateList = [...prev];
+      const index = duplicateList.findIndex((item) => item.id === data.id);
+      if (index !== -1) {
+        duplicateList[index] = { ...duplicateList[index], description: e.target.value };
+      }
+      return duplicateList;
     });
+  };
 
-    return (
-      // Info: (20241004 - Julian) 顯示有子項目的 AccountType
-      childAccountList.length > 0 ? (
-        <div className="flex flex-col">
-          <p className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
-            {t(`journal:ACCOUNT_TYPE.${value.toUpperCase()}`)}
-          </p>
-          <div className="flex flex-col py-4px">{childAccountMenu}</div>
-        </div>
-      ) : null
-    );
-  });
+  const debitInputChangeHandler = (value: number) => {
+    // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭
+    const debitValue = value;
 
-  // Info: (20241004 - Julian) 沒有子項目時顯示 no accounting found
-  const isShowAccountingMenu =
-    // Info: (20241004 - Julian) 找出有子項目的 AccountType
-    accountTitleMenu.filter((value) => value !== null).length > 0 ? (
-      accountTitleMenu
-    ) : (
-      <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
-        {t('journal:ADD_NEW_VOUCHER.NO_ACCOUNTING_FOUND')}
-      </p>
-    );
+    // Info: (20241105 - Julian) 加入千分位逗號會造成輸入錯誤，暫時移除
+    // setDebitInput(numberWithCommas(debitValue));
+    setDebitInput(debitValue);
+    // Info: (20241001 - Julian) 設定 Debit
+    setLineItems((prev) => {
+      const duplicateList = [...prev];
+      const index = duplicateList.findIndex((item) => item.id === data.id);
+      if (index !== -1) {
+        duplicateList[index] = { ...duplicateList[index], amount: debitValue, debit: true };
+      }
+      return duplicateList;
+    });
+  };
 
-  const displayedAccountingMenu = isAccountingMenuOpen ? (
-    <div
-      ref={accountingRef}
-      className="absolute top-50px z-30 w-full rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-dropmenu"
-    >
-      <div className="flex max-h-150px flex-col overflow-y-auto">{isShowAccountingMenu}</div>
-    </div>
-  ) : null;
+  const creditInputChangeHandler = (value: number) => {
+    // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭 0
+    // const creditNum = parseInt(e.target.value, 10);
+    // const creditValue = Number.isNaN(creditNum) ? 0 : creditNum;
+    const creditValue = value;
 
-  const isEditAccounting = isAccountEditing ? (
-    <input
-      ref={accountInputRef}
-      value={searchKeyword}
-      onChange={accountSearchHandler}
-      placeholder={accountTitle}
-      className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
-    />
-  ) : (
-    <p className={`truncate ${accountStyle}`}>{accountTitle}</p>
-  );
+    // Info: (20241105 - Julian) 加入千分位逗號會造成輸入錯誤，暫時移除
+    // setCreditInput(numberWithCommas(creditValue));
+    setCreditInput(creditValue);
+    // Info: (20241001 - Julian) 設定 Credit
+    setLineItems((prev) => {
+      const duplicateList = [...prev];
+      const index = duplicateList.findIndex((item) => item.id === data.id);
+      if (index !== -1) {
+        duplicateList[index] = { ...duplicateList[index], amount: creditValue, debit: false };
+      }
+      return duplicateList;
+    });
+  };
+
+  // Info: (20241120 - Julian) 新增反轉分錄
+  const addReverseHandler = () => {
+    const modalData = {
+      account: lineItemAccount, // Info: (20241105 - Julian) 會計科目編號
+      lineItemIndex: lineItemId, // Info: (20241105 - Julian) LineItem ID
+    };
+
+    selectReverseDataHandler(modalData);
+    selectReverseItemsModalVisibilityHandler();
+  };
+
+  const deleteLineHandler = () => {
+    setLineItems((prev) => prev.filter((item) => item.id !== data.id));
+  };
+
+  // Info: (20241125 - Julian)
+  const accountSelectedHandler = (account: IAccount) => {
+    setLineItems((prev) => {
+      const duplicateList = [...prev];
+      const index = duplicateList.findIndex((item) => item.id === data.id);
+      if (index !== -1) {
+        duplicateList[index] = { ...duplicateList[index], account };
+      }
+      return duplicateList;
+    });
+  };
 
   return (
     <>
-      {/* Info: (20240927 - Julian) Accounting */}
-      <div className="relative col-span-3">
+      {/* Info: (20241121 - Julian) Line Item */}
+      <>
+        {/* Info: (20241125 - Julian) Accounting */}
+        <AccountTitleDropmenu
+          id={id}
+          defaultAccount={lineItemAccount}
+          accountSelectedHandler={accountSelectedHandler}
+          accountIsNull={accountIsNull}
+          flagOfSubmit={flagOfSubmit}
+        />
+        {/* Info: (20240927 - Julian) Particulars */}
+        <input
+          id={`particulars-input-${id}`}
+          type="string"
+          value={particulars}
+          onChange={particularsInputChangeHandler}
+          className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled"
+        />
+        {/* Info: (20240927 - Julian) Debit */}
+        <NumericInput
+          id="input-price-before-tax"
+          name="input-price-before-tax"
+          value={debitInput}
+          isDecimal
+          required
+          hasComma
+          className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
+          triggerWhenChanged={debitInputChangeHandler}
+          disabled={isDebitDisabled}
+        />
+        {/* Info: (20240927 - Julian) Credit */}
+        <NumericInput
+          id="input-price-before-tax"
+          name="input-price-before-tax"
+          value={creditInput}
+          isDecimal
+          required
+          hasComma
+          className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
+          triggerWhenChanged={creditInputChangeHandler}
+          disabled={isCreditDisabled}
+        />
+        {/* Info: (20240927 - Julian) Delete button */}
         <div
-          ref={accountRef}
-          onClick={accountEditingHandler}
-          className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isAccountingMenuOpen ? 'border-input-stroke-selected' : accountStyle}`}
+          id={`delete-line-item-btn-${id}`}
+          className="text-center text-stroke-neutral-invert hover:text-button-text-primary-hover"
         >
-          {isEditAccounting}
-          <div className="h-20px w-20px">
-            <FiBookOpen size={20} />
-          </div>
+          <button type="button" className="p-12px" onClick={deleteLineHandler}>
+            <LuTrash2 size={22} />
+          </button>
         </div>
-        {/* Info: (20241001 - Julian) Accounting Menu */}
-        {displayedAccountingMenu}
-      </div>
-      {/* Info: (20240927 - Julian) Particulars */}
-      <input
-        value={particulars}
-        onChange={particularsInputChangeHandler}
-        className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled outline-none"
-      />
-      {/* Info: (20240927 - Julian) Debit */}
-      <input
-        value={debitInput}
-        onChange={debitInputChangeHandler}
-        placeholder="0"
-        disabled={isDebitDisabled}
-        className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right outline-none disabled:bg-input-surface-input-disable`}
-      />
-      {/* Info: (20240927 - Julian) Credit */}
-      <input
-        value={creditInput}
-        onChange={creditInputChangeHandler}
-        placeholder="0"
-        disabled={isCreditDisabled}
-        className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right outline-none disabled:bg-input-surface-input-disable`}
-      />
-      {/* Info: (20240927 - Julian) Delete button */}
-      <div className="text-center text-stroke-neutral-invert hover:text-button-text-primary-hover">
-        <button type="button" className="p-12px" onClick={deleteHandler}>
-          <LuTrash2 size={22} />
-        </button>
-      </div>
+      </>
+
+      {/* Info: (20241104 - Julian) 反轉分錄列表 */}
+      {commonReverseList && reverseListUI.length > 0
+        ? reverseListUI.map((item) => {
+            const removeReverse = () =>
+              addReverseListHandler(
+                data.id,
+                reverseListUI.filter((reverseItem) => reverseItem.voucherId !== item.voucherId)
+              );
+            return (
+              <ReverseLineItem
+                key={`${item.voucherId}-${id}`}
+                reverseItem={item}
+                addHandler={addReverseHandler}
+                removeHandler={removeReverse}
+              />
+            );
+          })
+        : null}
+
+      {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示新增按鈕 */}
+      {isShowReverse ? (
+        <div key={`add-reverse-item-${id}`} className="col-start-1 col-end-13">
+          <button
+            id="add-reverse-item-button"
+            type="button"
+            className="flex items-center gap-4px text-text-neutral-invert"
+            onClick={addReverseHandler}
+          >
+            <FaPlus />
+            <p>{t('journal:VOUCHER_LINE_BLOCK.REVERSE_ITEM')}</p>
+          </button>
+        </div>
+      ) : null}
     </>
   );
 };

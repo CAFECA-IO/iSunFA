@@ -19,7 +19,7 @@ import { ReportStatusType, ReportType } from '@/constants/report';
 import { IPaginatedReport, IReport, MOCK_REPORTS } from '@/interfaces/report';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['common', 'reports']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler } = useModalContext();
@@ -87,7 +87,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       toastHandler({
         id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
         type: ToastType.ERROR,
-        content: t('report_401:PENDING_REPORT_LIST.FAILED_TO_FETCH_PENDING_REPORTS', {
+        content: t('reports:PENDING_REPORT_LIST.FAILED_TO_FETCH_PENDING_REPORTS', {
           code: listPendingCode,
         }),
         closeable: true,
@@ -103,7 +103,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       toastHandler({
         id: `listGeneratedReportsFailed${listGeneratedCode}_${(Math.random() * 100000).toFixed(5)}`,
         type: ToastType.ERROR,
-        content: t('report_401:MY_REPORTS_SECTION.FAILED_TO_FETCH_GENERATED_REPORTS', {
+        content: t('reports:MY_REPORTS_SECTION.FAILED_TO_FETCH_GENERATED_REPORTS', {
           code: listGeneratedCode,
         }),
         closeable: true,
@@ -287,7 +287,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="pendingReportSearchBar"
             type="text"
-            placeholder={t('common:COMMON.SEARCH')}
+            placeholder={t('search:COMMON.SEARCH')}
             value={pendingSearch}
             onChange={pendingSearchChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"
@@ -302,7 +302,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         <div className="my-5 flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
             <Image src={'/icons/hour_glass.svg'} alt="pending_icon" width={16} height={16} />
-            <p>{t('report_401:MY_REPORTS_SECTION.PENDING')}</p>
+            <p>{t('reports:MY_REPORTS_SECTION.PENDING')}</p>
           </div>
           <hr className="flex-1 border-divider-stroke-lv-3" />
         </div>
@@ -343,7 +343,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="historyReportSearchBar"
             type="text"
-            placeholder={t('common:COMMON.SEARCH')}
+            placeholder={t('search:COMMON.SEARCH')}
             value={historySearch}
             onChange={historySearchChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"
@@ -358,7 +358,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         <div className="my-5 flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
             <Image src={'/icons/file.svg'} alt="history_icon" width={16} height={16} />
-            <p>{t('report_401:MY_REPORTS_SECTION.REPORTS_HISTORY')}</p>
+            <p>{t('reports:MY_REPORTS_SECTION.REPORTS_HISTORY')}</p>
           </div>
           <hr className="flex-1 border-divider-stroke-lv-3" />
         </div>

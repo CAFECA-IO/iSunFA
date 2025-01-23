@@ -13,15 +13,23 @@ const handleGetRequest: IHandleRequest<
   APIName.NEWS_LIST,
   INews[] | IPaginatedData<INews[]>
 > = async ({ query }) => {
+  // ToDo: (20241024 - Murky) API接口請符合 FilterSection 公版
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: INews[] | IPaginatedData<INews[]> | null = null;
 
   let newsList: INews[] | IPaginatedData<INews[]> | null;
-  const { simple, type, targetPage, pageSize } = query;
+  const { simple, type, page, pageSize, startDateInSecond, endDateInSecond, searchQuery } = query;
   if (simple) {
     newsList = await listNewsSimple(type, pageSize);
   } else {
-    newsList = await listNews(type, targetPage, pageSize);
+    newsList = await listNews(
+      type,
+      page,
+      pageSize,
+      startDateInSecond,
+      endDateInSecond,
+      searchQuery
+    );
   }
 
   payload = newsList;
@@ -34,8 +42,8 @@ const handlePostRequest: IHandleRequest<APIName.CREATE_NEWS, INews> = async ({ b
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: INews | null = null;
 
-  const { title, content, type } = body;
-  const createdNews = await createNews(title, content, type);
+  const { imageId, title, content, type } = body;
+  const createdNews = await createNews(imageId, title, content, type);
 
   payload = createdNews;
   statusMessage = STATUS_MESSAGE.CREATED;
@@ -52,8 +60,8 @@ const methodHandlers: {
     payload: IPaginatedData<INews[]> | INews | INews[] | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.NEWS_LIST, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.CREATE_NEWS, req, res, handlePostRequest),
+  GET: (req) => withRequestValidation(APIName.NEWS_LIST, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.CREATE_NEWS, req, handlePostRequest),
 };
 
 export default async function handler(

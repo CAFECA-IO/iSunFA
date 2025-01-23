@@ -16,7 +16,7 @@ import {
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
 import { ToastPosition, ToastType } from '@/interfaces/toastify';
-import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
+import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -31,17 +31,21 @@ import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
-import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
 import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
 import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 import { UploadType } from '@/constants/file';
-import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
 import { useModalContext } from '@/contexts/modal_context';
 import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher_modal';
 import AssetStatusSettingModal from '@/components/asset_status_setting_modal/asset_status_setting_modal';
+import { IAssetModal, initialAssetModal } from '@/interfaces/asset_modal';
+import SelectReverseItemsModal from '@/components/voucher/select_reverse_items_modal';
+import { IReverseItemModal, defaultReverseItemModal } from '@/interfaces/reverse';
+import AccountingTitleSettingModal from '@/components/account_settings/accounting_title_setting_modal';
+import ManualAccountOpeningModal from '@/components/account_settings/manual_account_opening_modal';
+import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
 
 interface IGlobalContext {
   width: number;
@@ -56,6 +60,7 @@ interface IGlobalContext {
 
   isAddAssetModalVisible: boolean;
   addAssetModalVisibilityHandler: () => void;
+  addAssetModalDataHandler: (defaultAssetData: IAssetModal) => void;
 
   isCameraScannerVisible: boolean;
   cameraScannerVisibilityHandler: () => void;
@@ -117,9 +122,17 @@ interface IGlobalContext {
 
   isAssetStatusSettingModalVisible: boolean;
   assetStatusSettingModalVisibilityHandler: () => void;
-  assetStatusSettingModalDataHandler: (status: string) => void;
+  assetStatusSettingModalDataHandler: (assetId: string, status: string) => void;
 
-  termsOfServiceConfirmModalVisibilityHandler: (visibility: boolean) => void;
+  isSelectReverseItemsModalVisible: boolean;
+  selectReverseItemsModalVisibilityHandler: () => void;
+  selectReverseDataHandler: (data: IReverseItemModal) => void;
+
+  isAccountingTitleSettingModalVisible: boolean;
+  accountingTitleSettingModalVisibilityHandler: () => void;
+
+  isManualAccountOpeningModalVisible: boolean;
+  manualAccountOpeningModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -129,17 +142,15 @@ export interface IGlobalProvider {
 const GlobalContext = createContext<IGlobalContext | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: IGlobalProvider) => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['common', 'reports']);
   const router = useRouter();
   const { pathname } = router;
-
-  const { isSignIn, selectedCompany, isAgreeTermsOfService, isAgreePrivacyPolicy } = useUserCtx();
+  const { isSignIn } = useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
   const {
     toastHandler,
-    eliminateToast,
     isMessageModalVisible,
     messageModalVisibilityHandler,
     messageModalData,
@@ -147,6 +158,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     confirmModalVisibilityHandler,
     isAddBookmarkModalVisible,
     addBookmarkModalVisibilityHandler,
+    isAddCounterPartyModalVisible,
+    addCounterPartyModalVisibilityHandler,
+    addCounterPartyModalData,
   } = useModalContext();
 
   const windowSize = useWindowSize();
@@ -155,6 +169,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
 
   const [isAddAssetModalVisible, setIsAddAssetModalVisible] = useState(false);
+  const [defaultAssetData, setDefaultAssetData] = useState<IAssetModal>(initialAssetModal);
 
   const [isCameraScannerVisible, setIsCameraScannerVisible] = useState(false);
 
@@ -205,16 +220,21 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
 
-  const [isTermsOfServiceConfirmModalVisible, setIsTermsOfServiceConfirmModalVisible] =
-    useState(false);
-
-  const [isPrivacyPolicyConfirmModalVisible, setIsPrivacyPolicyConfirmModalVisible] =
-    useState(false);
-
   const [isExportVoucherModalVisible, setIsExportVoucherModalVisible] = useState(false);
 
   const [isAssetStatusSettingModalVisible, setIsAssetStatusSettingModalVisible] = useState(false);
+  const [updateAssetId, setUpdateAssetId] = useState('');
   const [defaultStatus, setDefaultStatus] = useState('');
+
+  const [isSelectReverseItemsModalVisible, setIsSelectReverseItemsModalVisible] = useState(false);
+  const [selectedReverseData, setSelectedReverseData] =
+    useState<IReverseItemModal>(defaultReverseItemModal);
+
+  const [isAccountingTitleSettingModalVisible, setIsAccountingTitleSettingModalVisible] =
+    useState(false);
+
+  const [isManualAccountOpeningModalVisible, setIsManualAccountOpeningModalVisible] =
+    useState(false);
 
   const { width, height } = windowSize;
 
@@ -232,6 +252,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const addAssetModalVisibilityHandler = () => {
     setIsAddAssetModalVisible(!isAddAssetModalVisible);
+  };
+  const addAssetModalDataHandler = (assetData: IAssetModal) => {
+    setDefaultAssetData(assetData);
   };
 
   const cameraScannerVisibilityHandler = () => {
@@ -339,14 +362,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setFilterOptionsForContract(options);
   };
 
-  const termsOfServiceConfirmModalVisibilityHandler = (visibility: boolean) => {
-    setIsTermsOfServiceConfirmModalVisible(visibility);
-  };
-
-  const privacyPolicyConfirmModalVisibilityHandler = (visibility: boolean) => {
-    setIsPrivacyPolicyConfirmModalVisible(visibility);
-  };
-
   const exportVoucherModalVisibilityHandler = () => {
     setIsExportVoucherModalVisible(!isExportVoucherModalVisible);
   };
@@ -355,8 +370,25 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsAssetStatusSettingModalVisible(!isAssetStatusSettingModalVisible);
   };
 
-  const assetStatusSettingModalDataHandler = (status: string) => {
+  const assetStatusSettingModalDataHandler = (assetId: string, status: string) => {
+    setUpdateAssetId(assetId);
     setDefaultStatus(status);
+  };
+
+  const selectReverseItemsModalVisibilityHandler = () => {
+    setIsSelectReverseItemsModalVisible(!isSelectReverseItemsModalVisible);
+  };
+
+  const selectReverseDataHandler = (data: IReverseItemModal) => {
+    setSelectedReverseData(data);
+  };
+
+  const accountingTitleSettingModalVisibilityHandler = () => {
+    setIsAccountingTitleSettingModalVisible(!isAccountingTitleSettingModalVisible);
+  };
+
+  const manualAccountOpeningModalVisibilityHandler = () => {
+    setIsManualAccountOpeningModalVisible(!isManualAccountOpeningModalVisible);
   };
 
   useEffect(() => {
@@ -369,7 +401,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         closeable: true,
         content: (
           <div className="flex items-center space-x-5">
-            <p>{t('report_401:AUDIT_REPORT.YOUR_REPORT_IS_DONE')}</p>
+            <p>{t('reports:AUDIT_REPORT.YOUR_REPORT_IS_DONE')}</p>
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"
@@ -404,71 +436,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     // }
   }, [reportPendingStatus, reportGeneratedStatus, isSignIn, pathname]);
 
-  useEffect(() => {
-    if (isSignIn) {
-      if (!isAgreeTermsOfService || !isAgreePrivacyPolicy) {
-        if (router.pathname !== ISUNFA_ROUTE.LOGIN) router.push(ISUNFA_ROUTE.LOGIN);
-        if (!isAgreeTermsOfService) termsOfServiceConfirmModalVisibilityHandler(true);
-        if (isAgreeTermsOfService && !isAgreePrivacyPolicy) {
-          privacyPolicyConfirmModalVisibilityHandler(true);
-        }
-      } else {
-        termsOfServiceConfirmModalVisibilityHandler(false);
-        privacyPolicyConfirmModalVisibilityHandler(false);
-      }
-    }
-  }, [pathname, isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy]);
-
-  useEffect(() => {
-    if (isSignIn) {
-      if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-        eliminateToast(ToastId.ALPHA_TEST_REMINDER);
-        if (!router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)) {
-          // Info: (20240807 - Anna) 在KYC頁面時，不顯示試用版Toast
-          if (!selectedCompany && !router.pathname.includes(ISUNFA_ROUTE.KYC)) {
-            // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
-            toastHandler({
-              id: ToastId.TRIAL,
-              type: ToastType.INFO,
-              closeable: false,
-              content: (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm">{t('common:COMMON.ISUNFA_TRIAL_VERSION')}</p>
-                  <Link
-                    href={ISUNFA_ROUTE.SELECT_COMPANY}
-                    className="text-base font-semibold text-link-text-primary"
-                  >
-                    {t('common:COMMON.END_OF_TRIAL')}
-                  </Link>
-                </div>
-              ),
-            });
-          }
-        } else {
-          eliminateToast(ToastId.TRIAL);
-        }
-      }
-    } else {
-      eliminateToast();
-      // Info: (20240909 - Anna) 為了不顯示「Alpha 版本的資料只用於測試」這個彈窗，所以先註解掉，未來需要用到時再解開
-      // if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      //   toastHandler({
-      //     id: ToastId.ALPHA_TEST_REMINDER,
-      //     type: ToastType.INFO,
-      //     closeable: true,
-      //     autoClose: false,
-      //     content: (
-      //       <div className="flex items-center justify-between">
-      //         <p className="font-barlow text-sm">{t('common:COMMON.ALPHA_TEST_REMINDER')}</p>
-      //       </div>
-      //     ),
-      //   });
-      // } else {
-      //   eliminateToast(ToastId.ALPHA_TEST_REMINDER);
-      // }
-    }
-  }, [pathname, isSignIn]);
-
   // Info: (20240830 - Anna) 為了拿掉react/jsx-no-constructed-context-values註解，所以使用useMemo hook
 
   const value = useMemo(
@@ -482,6 +449,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       confirmModalDataHandler,
       isAddAssetModalVisible,
       addAssetModalVisibilityHandler,
+      addAssetModalDataHandler,
       isCameraScannerVisible,
       cameraScannerVisibilityHandler,
       isPreviewInvoiceModalVisible,
@@ -534,7 +502,15 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       assetStatusSettingModalVisibilityHandler,
       assetStatusSettingModalDataHandler,
 
-      termsOfServiceConfirmModalVisibilityHandler,
+      isSelectReverseItemsModalVisible,
+      selectReverseItemsModalVisibilityHandler,
+      selectReverseDataHandler,
+
+      isAccountingTitleSettingModalVisible,
+      accountingTitleSettingModalVisibilityHandler,
+
+      isManualAccountOpeningModalVisible,
+      manualAccountOpeningModalVisibilityHandler,
     }),
     [
       width,
@@ -546,6 +522,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       confirmModalDataHandler,
       isAddAssetModalVisible,
       addAssetModalVisibilityHandler,
+      addAssetModalDataHandler,
       isCameraScannerVisible,
       cameraScannerVisibilityHandler,
       isPreviewInvoiceModalVisible,
@@ -598,7 +575,15 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       assetStatusSettingModalVisibilityHandler,
       assetStatusSettingModalDataHandler,
 
-      termsOfServiceConfirmModalVisibilityHandler,
+      isSelectReverseItemsModalVisible,
+      selectReverseItemsModalVisibilityHandler,
+      selectReverseDataHandler,
+
+      isAccountingTitleSettingModalVisible,
+      accountingTitleSettingModalVisibilityHandler,
+
+      isManualAccountOpeningModalVisible,
+      manualAccountOpeningModalVisibilityHandler,
     ]
   );
 
@@ -620,6 +605,15 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         messageModalData={messageModalData}
       />
 
+      <AddCounterPartyModal
+        isModalVisible={isAddCounterPartyModalVisible}
+        modalVisibilityHandler={addCounterPartyModalVisibilityHandler}
+        //  onClose={addCounterPartyModalData.onClose}
+        onSave={addCounterPartyModalData.onSave}
+        name={addCounterPartyModalData.name}
+        taxId={addCounterPartyModalData.taxId}
+      />
+
       <ConfirmModal
         isModalVisible={isConfirmModalVisible}
         modalVisibilityHandler={confirmModalVisibilityHandler}
@@ -629,6 +623,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AddAssetModal
         isModalVisible={isAddAssetModalVisible}
         modalVisibilityHandler={addAssetModalVisibilityHandler}
+        defaultData={defaultAssetData}
       />
 
       <CameraScanner
@@ -723,29 +718,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={transferCompanyModalVisibilityHandler}
       />
 
-      <LoginConfirmModal
-        id="agree-to-our-terms-of-service"
-        isModalVisible={isTermsOfServiceConfirmModalVisible}
-        modalData={{
-          title: t('common:COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
-          content: 'terms_of_service',
-          buttonText: t('common:COMMON.AGREE_TO_OUR_TERMS_OF_SERVICE'),
-        }}
-        infoModalVisibilityHandler={termsOfServiceConfirmModalVisibilityHandler}
-        tosModalVisibilityHandler={privacyPolicyConfirmModalVisibilityHandler}
-      />
-      <LoginConfirmModal
-        id="agree-to-our-privacy-policy"
-        isModalVisible={isPrivacyPolicyConfirmModalVisible}
-        modalData={{
-          title: t('common:COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
-          content: 'privacy_policy',
-          buttonText: t('common:COMMON.AGREE_TO_OUR_PRIVACY_POLICY'),
-        }}
-        infoModalVisibilityHandler={termsOfServiceConfirmModalVisibilityHandler}
-        tosModalVisibilityHandler={privacyPolicyConfirmModalVisibilityHandler}
-      />
-
       <ExportVoucherModal
         isModalVisible={isExportVoucherModalVisible}
         modalVisibilityHandler={exportVoucherModalVisibilityHandler}
@@ -754,7 +726,24 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AssetStatusSettingModal
         isModalVisible={isAssetStatusSettingModalVisible}
         modalVisibilityHandler={assetStatusSettingModalVisibilityHandler}
+        updateAssetId={updateAssetId}
         defaultStatus={defaultStatus}
+      />
+
+      <SelectReverseItemsModal
+        isModalVisible={isSelectReverseItemsModalVisible}
+        modalVisibilityHandler={selectReverseItemsModalVisibilityHandler}
+        modalData={selectedReverseData}
+      />
+
+      <AccountingTitleSettingModal
+        isModalVisible={isAccountingTitleSettingModalVisible}
+        modalVisibilityHandler={accountingTitleSettingModalVisibilityHandler}
+      />
+
+      <ManualAccountOpeningModal
+        isModalVisible={isManualAccountOpeningModalVisible}
+        modalVisibilityHandler={manualAccountOpeningModalVisibilityHandler}
       />
 
       {children}

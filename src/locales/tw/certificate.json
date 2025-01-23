@@ -1,23 +1,23 @@
 {
   "LIST": {
-    "INVOICE_TOTAL_PRRICE": "發票總價",
+    "INVOICE_TOTAL_PRICE": "憑證總價",
     "EXPORT_CERTIFICATES": "匯出發票"
   },
   "TAB": {
-    "WITHOUT_VOUCHER": "無憑證的發票",
-    "WITH_VOUCHER": "有憑證的發票"
+    "WITHOUT_VOUCHER": "未入帳的憑證",
+    "WITH_VOUCHER": "已入帳的憑證"
   },
   "TABLE": {
     "DATE": "日期",
-    "INVOICE_NAME": "發票名稱",
-    "INVOICE_NUMBER": "發票編號",
+    "INVOICE_NAME": "憑證名稱",
+    "INVOICE_NUMBER": "憑證編號",
     "COUNTERPARTY": "交易對象",
-    "INVOICE_TYPE": "發票類型",
+    "INVOICE_TYPE": "憑證類型",
     "TAX": "稅額",
     "AMOUNT": "金額",
     "DEDUCTABLE": "可扣抵稅額",
     "UPLOADER": "上傳者",
-    "VOUCHER_NUMBER": "憑證編號"
+    "VOUCHER_NUMBER": "傳票編號"
   },
   "PAUSE": {
     "TITLE": "您確定要取消上傳嗎？",
@@ -34,21 +34,34 @@
     "SUCCESS": "憑證已被刪除。",
     "ERROR": "出錯了，請再試一次。"
   },
+  "SUCCESS": {
+    "UPDATE_FILENAME": "更新文件名成功"
+  },
   "ERROR": {
     "SELECT_CERTIFICATE": "選擇發票失敗",
     "UPLOAD_CERTIFICATE": "上傳發票失敗",
     "TOKEN_NOT_PROVIDED": "未提供令牌",
     "NOTIFY_WEB": "通知網頁失敗",
     "WENT_WRONG": "出錯了，請再試一次。",
-    "UPLOAD_AND_NOTIFY": "上傳並通知網頁失敗"
+    "UPLOAD_AND_NOTIFY": "上傳並通知網頁失敗",
+    "UPDATE_CERTIFICATE": "更新發票失敗，{{reason}}",
+    "ENCRYPT_FILE": "加密文件失敗",
+    "COMPRESS_IMAGE": "壓縮圖片失敗",
+    "UPDATE_FILENAME": "更新文件名失敗",
+    "PLEASE_FILL_UP_THIS_FORM": "請填寫此表格",
+    "REQUIRED_COUNTERPARTY_NAME": "交易對象名稱是必填的"
   },
   "WARNING": {
+    "UPLOAD_FAILED": "上傳失敗",
+    "UPLOAD_FAILED_NOTIFY": "有一些文件未成功上傳，您要取消上傳嗎？",
+    "UPLOAD_CANCEL": "是，取消上傳",
+    "UPLOAD_CONTINUE": "否，繼續上傳",
     "SUCCESS_UPLOAD_BUT_NOTIFY_ERROR": "發票已上傳，但通知網頁失敗"
   },
   "TITLE": {
     "UPLOAD": "上傳發票",
-    "SELECT": "選擇一個或多個發票",
-    "LIST": "發票列表"
+    "SELECT": "上傳憑證",
+    "LIST": "憑證管理"
   },
   "EDIT": {
     "HEADER": "發票資訊",
@@ -56,16 +69,24 @@
     "DATE": "發票日期",
     "INPUT": "進項",
     "OUTPUT": "銷項",
-    "INVOICE_NAME": "發票名稱",
-    "INVOICE_NUMBER": "發票編號",
+    "INVOICE_NAME": "憑證名稱",
+    "INVOICE_NUMBER": "憑證編號",
     "PRICE_BEFORE_TAX": "稅前價格",
     "TAX": "稅額",
     "TAXABLE": "應稅金額",
     "TOTAL_PRICE": "總價（含稅）",
     "COUNTERPARTY": "交易對象（客戶/供應商）",
-    "INVOICE_TYPE": "發票類型",
+    "ID_NUMBER": "統一編號",
+    "NAME": "名稱",
+    "INVOICE_TYPE": "憑證類型",
     "DEDUCTIBLE": "可扣抵稅額",
-    "SUCCESS": "您的發票資訊已更新。"
+    "SUCCESS": "您的發票資訊已更新。",
+    "TAXABLE_5": "應稅金額（5%）",
+    "ZERO_TAX_RATE": "零稅率（0%）",
+    "TAX_FREE": "免稅",
+    "NONE": "無",
+    "THROUGH_CUSTOMS": "通過海關",
+    "NOT_THROUGH_CUSTOMS": "未通過海關"
   },
   "TYPE": {
     "TRIPLICATE": "三聯",
@@ -73,11 +94,20 @@
     "SPECIAL": "專用",
     "UNIFORM_INVOICE": "統一發票"
   },
+  "SELECT": {
+    "TITLE": "選擇憑證",
+    "CONTENT": "選擇您想要與傳票關聯的憑證"
+  },
+  "EXPORT": {
+    "TITLE": "匯出發票",
+    "CONTENT": "選擇你想要導出的發票"
+  },
   "COUNTERPARTY": {
     "ADD_NEW": "新增客戶/供應商",
     "BOTH": "客戶/供應商",
     "CLIENT": "客戶",
     "SUPPLIER": "供應商",
+    "SELECT_TYPE": "選擇類型",
     "TITLE": "將此交易對象新增至客戶/供應商列表",
     "CONTENT": "{{counterparty}} 不在您的客戶/供應商列表中。您要將其新增嗎？",
     "YES": "是，新增",
@@ -85,10 +115,67 @@
     "SUCCESS": "新的客戶/供應商已新增。",
     "COMPANY_NAME": "公司名稱",
     "ENTER_NAME": "輸入名稱",
-    "TAX_NUMBER": "營業稅號",
+    "TAX_NUMBER": "統一編號",
     "ENTER_NUMBER": "輸入編號",
     "PARTNER_TYPE": "合作夥伴類型",
     "NOTE": "備註",
-    "ENTER_TEXT": "輸入文字"
+    "ENTER_TEXT": "輸入文字",
+    "EDIT_NEW": "編輯客戶/供應商",
+    "REMOVE_THIS": "刪除該客戶/供應商",
+    "NO_DATA_AVAILABLE": "沒有可用資料",
+    "NAME_ALREADY_EXISTS": "此名稱已有資料"
+  },
+  "LABEL": {
+    "NEW": "新增"
+  },
+  "OPERATION": {
+    "DOWNLOAD": "下載",
+    "REMOVE": "刪除"
+  },
+  "UPLOAD": {
+    "FILE": "上傳文件",
+    "UPLOADING": "上傳中",
+    "TITLE": "上傳憑證",
+    "CONTENT": "請選擇您要上傳的憑證",
+    "NO_FILE": "沒有上傳中的文件",
+    "REMAIN": "剩下 {{count}} 文件",
+    "COMPLETE": "成功 {{success}} 文件, 失敗 {{failed}} 文件",
+    "FAILED": "上傳失敗",
+    "LOADING": "上傳中...",
+    "PHONE_SCANNER": "手機掃描",
+    "SCAN_WITH_PHONE": "請使用您的手機掃描二維碼開始掃描",
+    "BACK": "返回",
+    "COMPLETED": "完成",
+    "USE_YOUR_PHONE_AS": "使用您的手機作為",
+    "SCANNER": "掃描器",
+    "SCAN_THE_QRCODE": "請掃描二維碼開始用手機掃描",
+    "FILE_SIZE_EXCEEDED": "檔案上傳失敗：檔案超過大小限制。請上傳較小的檔案",
+    "INDEX": "No.{{index}}",
+    "PREVIEW": "預覽",
+    "DELETE": "刪除"
+  },
+  "CREATE": {
+    "FAILED": "創建失敗"
+  },
+  "SELECTION": {
+    "EXPORT": "匯出",
+    "ADD_NEW_VOUCHER": "新增傳票",
+    "ADD_NEW_ASSET": "新增資產"
+  },
+  "COMMON": {
+    "PERIOD": "期間",
+    "CANCEL": "取消",
+    "SELECT": "選擇",
+    "SELECT_ALL": "全選",
+    "UPLOADED": "已上傳",
+    "TOTAL": "總計",
+    "CERTIFICATES": "發票",
+    "EMPTY": "無資料"
+  },
+  "TOAST": {
+    "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤",
+    "UPLOAD_FILE": "上傳檔案",
+    "UPLOADING": "上傳中",
+    "COMPLETED": "已完成"
   }
 }

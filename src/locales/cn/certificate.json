@@ -1,23 +1,23 @@
 {
   "LIST": {
-    "INVOICE_TOTAL_PRRICE": "发票总价",
+    "INVOICE_TOTAL_PRICE": "凭证总价",
     "EXPORT_CERTIFICATES": "导出发票"
   },
   "TAB": {
-    "WITHOUT_VOUCHER": "无凭证的发票",
-    "WITH_VOUCHER": "有凭证的发票"
+    "WITHOUT_VOUCHER": "未入帐的凭证",
+    "WITH_VOUCHER": "已入帐的凭证"
   },
   "TABLE": {
     "DATE": "日期",
-    "INVOICE_NAME": "发票名称",
-    "INVOICE_NUMBER": "发票编号",
+    "INVOICE_NAME": "凭证名称",
+    "INVOICE_NUMBER": "凭证编号",
     "COUNTERPARTY": "交易对象",
-    "INVOICE_TYPE": "发票类型",
+    "INVOICE_TYPE": "凭证类型",
     "TAX": "税额",
     "AMOUNT": "金额",
     "DEDUCTABLE": "可抵扣税额",
     "UPLOADER": "上传者",
-    "VOUCHER_NUMBER": "凭证编号"
+    "VOUCHER_NUMBER": "传票编号"
   },
   "PAUSE": {
     "TITLE": "您确定要取消上传吗？",
@@ -34,21 +34,34 @@
     "SUCCESS": "凭证已被删除。",
     "ERROR": "出错了，请再试一次。"
   },
+  "SUCCESS": {
+    "UPDATE_FILENAME": "更新文件名成功"
+  },
   "ERROR": {
     "SELECT_CERTIFICATE": "选择发票失败",
     "UPLOAD_CERTIFICATE": "上传发票失败",
     "TOKEN_NOT_PROVIDED": "未提供令牌",
     "NOTIFY_WEB": "通知网页失败",
     "WENT_WRONG": "出错了，请再试一次。",
-    "UPLOAD_AND_NOTIFY": "上传并通知网页失败"
+    "UPLOAD_AND_NOTIFY": "上传并通知网页失败",
+    "UPDATE_CERTIFICATE": "更新发票失败，{{reason}}",
+    "ENCRYPT_FILE": "加密文件失败",
+    "COMPRESS_IMAGE": "压缩图片失败",
+    "UPDATE_FILENAME": "更新文件名失败",
+    "PLEASE_FILL_UP_THIS_FORM": "请填写此表格",
+    "REQUIRED_COUNTERPARTY_NAME": "交易对象名称是必填的"
   },
   "WARNING": {
+    "UPLOAD_FAILED": "上传失败",
+    "UPLOAD_FAILED_NOTIFY": "有一些文件未成功上传，您要取消上传吗？",
+    "UPLOAD_CANCEL": "是，取消上传",
+    "UPLOAD_CONTINUE": "否，继续上传",
     "SUCCESS_UPLOAD_BUT_NOTIFY_ERROR": "发票已上传，但通知网页失败"
   },
   "TITLE": {
     "UPLOAD": "上传发票",
-    "SELECT": "选择一个或多个发票",
-    "LIST": "发票列表"
+    "SELECT": "上传凭证",
+    "LIST": "凭证管理"
   },
   "EDIT": {
     "HEADER": "发票信息",
@@ -56,16 +69,24 @@
     "DATE": "发票日期",
     "INPUT": "进项",
     "OUTPUT": "销项",
-    "INVOICE_NAME": "发票名称",
-    "INVOICE_NUMBER": "发票编号",
+    "INVOICE_NAME": "凭证名称",
+    "INVOICE_NUMBER": "凭证编号",
     "PRICE_BEFORE_TAX": "税前价格",
     "TAX": "税额",
     "TAXABLE": "应税金额",
     "TOTAL_PRICE": "总价（含税）",
     "COUNTERPARTY": "交易对象（客户/供应商）",
-    "INVOICE_TYPE": "发票类型",
+    "ID_NUMBER": "统一编号",
+    "NAME": "名称",
+    "INVOICE_TYPE": "凭证类型",
     "DEDUCTIBLE": "可抵扣税额",
-    "SUCCESS": "您的发票信息已更新。"
+    "SUCCESS": "您的发票信息已更新。",
+    "TAXABLE_5": "应税金额（5%）",
+    "ZERO_TAX_RATE": "零税率（0%）",
+    "TAX_FREE": "免税",
+    "NONE": "无",
+    "THROUGH_CUSTOMS": "通过海关",
+    "NOT_THROUGH_CUSTOMS": "未通过海关"
   },
   "TYPE": {
     "TRIPLICATE": "三联",
@@ -73,11 +94,20 @@
     "SPECIAL": "专用",
     "UNIFORM_INVOICE": "统一发票"
   },
+  "SELECT": {
+    "TITLE": "选择凭证",
+    "CONTENT": "选择您想要传票关联的凭证"
+  },
+  "EXPORT": {
+    "TITLE": "导出发票",
+    "CONTENT": "选择您想要导出的发票"
+  },
   "COUNTERPARTY": {
     "ADD_NEW": "新增客户/供应商",
     "BOTH": "客户/供应商",
     "CLIENT": "客户",
     "SUPPLIER": "供应商",
+    "SELECT_TYPE": "选择类型",
     "TITLE": "将此交易对象新增至客户/供应商列表",
     "CONTENT": "{{counterparty}} 不在您的客户/供应商列表中。您要将其新增吗？",
     "YES": "是，新增",
@@ -85,10 +115,67 @@
     "SUCCESS": "新的客户/供应商已新增。",
     "COMPANY_NAME": "公司名称",
     "ENTER_NAME": "输入名称",
-    "TAX_NUMBER": "营业税号",
+    "TAX_NUMBER": "统一编号",
     "ENTER_NUMBER": "输入编号",
     "PARTNER_TYPE": "合作伙伴类型",
     "NOTE": "备注",
-    "ENTER_TEXT": "输入文字"
+    "ENTER_TEXT": "输入文字",
+    "EDIT_NEW": "编辑客户/供应商",
+    "REMOVE_THIS": "删除该客户/供应商",
+    "NO_DATA_AVAILABLE": "没有可用资料",
+    "NAME_ALREADY_EXISTS": "此名称已有资料"
+  },
+  "LABEL": {
+    "NEW": "新增"
+  },
+  "OPERATION": {
+    "DOWNLOAD": "下载",
+    "REMOVE": "删除"
+  },
+  "UPLOAD": {
+    "FILE": "上传文件",
+    "UPLOADING": "上传中",
+    "TITLE": "上传凭证",
+    "CONTENT": "上传您想要传票关联的凭证",
+    "NO_FILE": "没有上传中的文件",
+    "REMAIN": "剩下 {{count}} 文件",
+    "COMPLETE": "成功 {{success}} 文件, 失败 {{failed}} 文件",
+    "FAILED": "上传失败",
+    "LOADING": "上传中...",
+    "PHONE_SCANNER": "手机扫描",
+    "SCAN_WITH_PHONE": "请使用您的手机扫描二维码开始扫描",
+    "BACK": "返回",
+    "COMPLETED": "完成",
+    "USE_YOUR_PHONE_AS": "使用您的手机作为",
+    "SCANNER": "扫描器",
+    "SCAN_THE_QRCODE": "请扫描二维码开始用手机扫描",
+    "FILE_SIZE_EXCEEDED": "文件上传失败：文件超过大小限制。请上传较小的文件",
+    "INDEX": "No.{{index}}",
+    "PREVIEW": "预览",
+    "DELETE": "删除"
+  },
+  "CREATE": {
+    "FAILED": "创建失败"
+  },
+  "SELECTION": {
+    "EXPORT": "导出",
+    "ADD_NEW_VOUCHER": "新增传票",
+    "ADD_NEW_ASSET": "新增资产"
+  },
+  "COMMON": {
+    "PERIOD": "期間",
+    "CANCEL": "取消",
+    "SELECT": "选择",
+    "SELECT_ALL": "全选",
+    "UPLOADED": "已上传",
+    "TOTAL": "总计",
+    "CERTIFICATES": "发票",
+    "EMPTY": "无资料"
+  },
+  "TOAST": {
+    "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误",
+    "UPLOAD_FILE": "上传档案",
+    "UPLOADING": "上传中",
+    "COMPLETED": "已完成"
   }
 }

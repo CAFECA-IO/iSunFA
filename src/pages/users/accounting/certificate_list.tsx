@@ -29,16 +29,12 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
       ...(await serverSideTranslations(locale as string, [
+        'layout',
         'common',
-        'report_401',
-        'journal',
-        'kyc',
-        'project',
-        'setting',
-        'terms',
-        'salary',
-        'asset',
         'certificate',
+        'filter_section_type',
+        'date_picker',
+        'search',
       ])),
     },
   };

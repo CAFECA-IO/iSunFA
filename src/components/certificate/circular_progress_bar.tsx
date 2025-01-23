@@ -43,7 +43,7 @@ const CircularProgressBar: React.FC<CircularProgressBarProps> = ({
           strokeLinecap="round" // Info: (20240926 - tzuhan) 圓形端點
         />
       </svg>
-      <span className="ml-2 font-semibold text-gray-800">{remainingText}</span>
+      <span className="ml-2 font-semibold text-text-neutral-primary">{remainingText}</span>
     </div>
   );
 };

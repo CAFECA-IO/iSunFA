@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils/common';
 
 // Info: (20240319 - Shirley) 用 cva 來定義 button 的樣式
 const buttonVariants = cva(
-  '"gap space-x-2 ring-offset-background focus-visible:ring-ring group inline-flex items-center justify-center whitespace-nowrap rounded-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-100 disabled:cursor-not-allowed',
+  '"gap gap-8px ring-offset-background focus-visible:ring-ring group inline-flex items-center justify-center whitespace-nowrap rounded-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-100 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
@@ -26,12 +26,20 @@ const buttonVariants = cva(
           'border border-stroke-state-error text-text-state-error hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover group-hover:border-button-stroke-primary-hover group-hover:text-button-text-primary-hover disabled:text-button-text-disable disabled:border-button-stroke-disable',
         disabledGray: 'border border-button-stroke-disable text-button-text-disable',
         disabledYellow: 'border border-button-stroke-primary text-button-text-primary',
+        linkBorderless:
+          'border-none text-text-neutral-link hover:text-button-text-primary-hover  disabled:text-button-text-disable',
+        errorBorderless: 'border-none text-text-state-error  disabled:text-button-text-disable',
       },
       size: {
-        default: 'px-6 py-3',
+        large: 'px-32px py-14px', // Info: (20241106 - Liz) 設計稿 Size: Large
+        default: 'px-24px py-10px', // Info: (20241106 - Liz) 設計稿 Size: Regular
         medium: 'px-5 py-2',
-        small: 'px-4 py-1',
+        small: 'px-16px py-8px', // Info: (20241106 - Liz) 設計稿 Size: Small
         extraSmall: 'px-2 py-1',
+        defaultSquare: 'p-10px w-44px h-44px',
+        smallSquare: 'p-10px w-36px h-36px',
+        placeholderInput: 'px-12px py-10px', // Info: (20241119 - Liz) 像是 DatePicker 就有用到這個尺寸當作 Input 的尺寸
+        noPadding: 'p-0',
       },
     },
     defaultVariants: {

@@ -1,148 +1,143 @@
-import React, { useState } from 'react';
+import React from 'react';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { numberWithCommas } from '@/lib/utils/common';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
-import { checkboxStyle } from '@/constants/display';
-import { VoucherType } from '@/constants/account';
+import { EventType, VoucherType } from '@/constants/account';
+import Link from 'next/link';
 
 // Info: (20241004 - Anna) temp interface
 export interface ILedgerBeta {
   id: number;
-  date: number;
-  voucherNo: string;
-  voucherType: VoucherType;
-  note: string;
-  accounting: {
-    code: string;
-    name: string;
-  }[];
-  credit: number[];
-  debit: number[];
-  balance: number[];
+  voucherDate: number;
+  voucherNumber: string;
+  voucherType: VoucherType | EventType;
+  particulars: string;
+  no: string;
+  accountingTitle: string;
+  creditAmount: number;
+  debitAmount: number;
+  balance: number;
+  voucherId: number;
 }
 
 interface ILedgerItemProps {
-  voucher: ILedgerBeta;
+  ledger: ILedgerBeta; // Info: (20241118 - Anna) 傳入單個 ledger 作為 prop
+  selectedDateRange: { startTimeStamp: number; endTimeStamp: number };
+  selectedStartAccountNo: string;
+  selectedEndAccountNo: string;
+  selectedReportType: string;
 }
 
-const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
-  const { date, voucherNo, voucherType, note, accounting, credit, debit } = voucher;
+const LedgerItem = React.memo(
+  ({
+    ledger,
+    selectedDateRange,
+    selectedStartAccountNo,
+    selectedEndAccountNo,
+    selectedReportType,
+  }: ILedgerItemProps) => {
+    const { voucherDate, voucherNumber, voucherType, particulars, voucherId } = ledger;
 
-  const [isChecked, setIsChecked] = useState(false);
-
-  const displayedCheckbox = (
-    <div className="relative top-20px px-8px">
-      <input
-        type="checkbox"
-        className={checkboxStyle}
-        checked={isChecked}
-        onChange={() => setIsChecked(!isChecked)}
-      />
-    </div>
-  );
-
-  const displayedDate = (
-    <div className="flex h-full items-center justify-center py-4">
-      <CalendarIcon timestamp={date} />
-    </div>
-  );
-
-  const displayedVoucherNo =
-    voucherType === VoucherType.RECEIVE ? (
-      <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
-        <FaDownload size={14} className="text-surface-state-error-dark" />
-        <p className="text-sm text-text-state-error-solid">{voucherNo}</p>
-      </div>
-    ) : voucherType === VoucherType.EXPENSE ? (
-      <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
-        <FaUpload size={14} className="text-surface-state-success-dark" />
-        <p className="text-sm text-text-state-success-solid">{voucherNo}</p>
-      </div>
-    ) : (
-      <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
-        <FiRepeat size={14} className="text-surface-brand-secondary" />
-        <p className="text-sm text-badge-text-secondary-solid">{voucherNo}</p>
+    const displayedDate = (
+      <div className="flex h-full items-center justify-center py-4">
+        <CalendarIcon timestamp={voucherDate} unRead={false} />
       </div>
     );
 
-  const displayedNote = (
-    <p className="flex h-full items-center justify-start font-normal text-text-neutral-tertiary">
-      {note}
-    </p>
-  );
+    const linkHref = {
+      pathname: `/users/accounting/${voucherId}}`, // Info: (20241225 - Anna) 傳票詳細頁面路徑
+      query: {
+        from: 'ledger', // Info: (20241225 - Anna) from=ledger 為了返回時能回到分類帳頁面
+        startDate: selectedDateRange.startTimeStamp,
+        endDate: selectedDateRange.endTimeStamp,
+        startAccountNo: selectedStartAccountNo,
+        endAccountNo: selectedEndAccountNo,
+        labelType: selectedReportType,
+        voucherNo: voucherNumber,
+      },
+    };
 
-  const displayedAccountingCode = (
-    <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-      {accounting.map((account) => (
-        <div key={account.code}>
-          <p className="m-0 flex items-center">{account.code}</p>
+    const displayedVoucherNo =
+      voucherType === VoucherType.RECEIVE ? (
+        <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px print:origin-left print:scale-75">
+          <FaDownload size={14} className="text-surface-state-error-dark" />
+          <p className="text-text-state-error-solid">{voucherNumber}</p>
         </div>
-      ))}
-    </div>
-  );
-  const displayedAccountingName = (
-    <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-      {accounting.map((account) => (
-        <div key={account.code}>
-          <p className="m-0 flex items-center">{account.name}</p>
+      ) : voucherType === VoucherType.EXPENSE ? (
+        <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px print:origin-left print:scale-75">
+          <FaUpload size={14} className="text-surface-state-success-dark" />
+          <p className="text-text-state-success-solid">{voucherNumber}</p>
         </div>
-      ))}
-    </div>
-  );
+      ) : (
+        <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px print:origin-left print:scale-75">
+          <FiRepeat size={14} className="text-surface-brand-secondary" />
+          <p className="text-badge-text-secondary-solid">{voucherNumber}</p>
+        </div>
+      );
 
-  const displayedCredit = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      {/* Info: (20240920 - Julian) credit */}
-      {credit.map((cre) => (
-        <p key={cre} className="m-0 flex items-center text-text-neutral-primary">
-          {numberWithCommas(cre)}
-        </p>
-      ))}
-    </div>
-  );
+    const displayedNote = (
+      <p className="flex h-full items-center justify-start px-1 font-normal text-text-neutral-tertiary">
+        {particulars === '' ? '-' : particulars}
+      </p>
+    );
 
-  const displayedDebit = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      {debit.map((de) => (
-        <p key={de} className="text-text-neutral-primary">
-          {numberWithCommas(de)}
-        </p>
-      ))}
-    </div>
-  );
+    const displayedAccountingCode = (
+      <p className="font-medium text-text-neutral-primary">{ledger.no}</p>
+    );
 
-  const displayedBalance = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      {voucher.balance.map((bal) => (
-        <p key={`${bal}-${voucher.voucherNo}`} className="align-middle text-text-neutral-primary">
-          {numberWithCommas(bal)}
-        </p>
-      ))}
-    </div>
-  );
+    const displayedAccountingName = (
+      <p className="w-full truncate font-medium text-text-neutral-primary">
+        {ledger.accountingTitle}
+      </p>
+    );
 
-  return (
-    <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
-      {/* Info: (20240920 - Julian) Select */}
-      <div className={`table-cell text-center`}>{displayedCheckbox}</div>
-      {/* Info: (20240920 - Julian) Issued Date */}
-      <div className="table-cell text-center">{displayedDate}</div>
-      {/* Info: (20241004 - Anna) Accounting */}
-      <div className="table-cell text-center align-middle">{displayedAccountingCode}</div>
-      <div className="table-cell text-center align-middle">{displayedAccountingName}</div>
-      {/* Info: (20240920 - Julian) Voucher No */}
-      <div className="table-cell py-8px text-right align-middle">{displayedVoucherNo}</div>
-      {/* Info: (20240920 - Julian) Note */}
-      <div className="table-cell py-8px text-right align-middle">{displayedNote}</div>
-      {/* Info: (20240920 - Julian) Credit */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">{displayedCredit}</div>
-      {/* Info: (20240920 - Julian) Debit */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">{displayedDebit}</div>
-      {/* Info: (20241004 - Anna) Balance */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">{displayedBalance}</div>
-    </div>
-  );
-});
+    // Info: (20241118 - Anna) 使用傳入的 creditAmount、debitAmount、balance，而非 ledgerItemsData 的遍歷
+    const displayedCredit = (
+      <p className="font-semibold text-text-neutral-primary">
+        {numberWithCommas(ledger.creditAmount)}
+      </p>
+    );
+
+    const displayedDebit = (
+      <p className="font-semibold text-text-neutral-primary">
+        {numberWithCommas(ledger.debitAmount)}
+      </p>
+    );
+
+    const displayedBalance = (
+      <p className="font-semibold text-text-neutral-primary">{numberWithCommas(ledger.balance)}</p>
+    );
+
+    return (
+      <Link
+        href={linkHref}
+        className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10 print:text-xs"
+        // Info: (20241206 - Anna) 避免行內換頁
+        style={{ pageBreakInside: 'avoid' }}
+      >
+        {/* Info: (20240920 - Julian) Issued Date */}
+        <div className="table-cell text-center">{displayedDate}</div>
+        {/* Info: (20241004 - Anna) Accounting */}
+        <div className="table-cell text-center align-middle">{displayedAccountingCode}</div>
+        <div className="table-cell text-center align-middle print:hidden">
+          {displayedAccountingName}
+        </div>
+        {/* Info: (20240920 - Julian) Voucher No */}
+        <div className="table-cell p-8px text-center align-middle print:p-0">
+          {displayedVoucherNo}
+        </div>
+        {/* Info: (20240920 - Julian) Note */}
+        <div className="table-cell p-8px text-left align-middle print:p-2px">{displayedNote}</div>
+        {/* Info: (202401101 - Anna) Debit */}
+        <div className="table-cell p-8px text-right align-middle">{displayedDebit}</div>
+        {/* Info: (202401101 - Anna) Credit */}
+        <div className="table-cell p-8px text-right align-middle">{displayedCredit}</div>
+        {/* Info: (20241004 - Anna) Balance */}
+        <div className="table-cell p-8px text-right align-middle">{displayedBalance}</div>
+      </Link>
+    );
+  }
+);
 
 export default LedgerItem;

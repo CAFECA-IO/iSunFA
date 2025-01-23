@@ -1,0 +1,64 @@
+{
+  "SIDE_MENU": {
+    "TERMS_OF_SERVICE": "服務條款",
+    "PRIVACY_POLICY": "隱私權政策",
+    "ACCOUNTING": "會計",
+    "ADDING_VOUCHER": "新增傳票",
+    "VOUCHER_LIST": "傳票清單",
+    "PAYABLE_RECEIVABLE_LIST": "應收應付款列表",
+    "CERTIFICATES": "憑證",
+    "UPLOAD_CERTIFICATE": "憑證管理",
+    "ASSET_MANAGEMENT": "資產管理",
+    "ASSET": "資產",
+    "ASSET_LIST": "資產清單",
+    "PERSONNEL_MANAGEMENT": "人員管理",
+    "REPORTS": "報表",
+    "FINANCIAL_REPORT": "財務報表",
+    "BALANCE_SHEET": "資產負債表",
+    "INCOME_STATEMENT": "損益表",
+    "STATEMENT_OF_CASH_FLOWS": "現金流量表",
+    "TAX_REPORT": "稅務報表",
+    "BUSINESS_TAX_RETURN_401": "營業稅申報表 (401)",
+    "DAILY_REPORT": "每日報表",
+    "LEDGER": "總帳/分類帳",
+    "TRIAL_BALANCE": "試算表",
+    "EMBED_CODE": "嵌入程式碼",
+    "GENERATE_EMBED_CODE": "生成嵌入程式碼",
+    "PARAMETER_SETTING": "參數設定",
+    "SETTING": "設定",
+    "GENERAL_SETTING": "一般設定",
+    "COMPANY_SETTING": "公司設定",
+    "ACCOUNTING_SETTING": "會計設定",
+    "CLIENTS_SUPPLIERS_MANAGEMENT": "客戶/供應商",
+    "BACK_TO_DASHBOARD": "回到儀表板"
+  },
+
+  "TOAST": {
+    "PLEASE_SELECT_A_COMPANY_BEFORE_PROCEEDING_WITH_THE_OPERATION": "請先選擇一家公司再進行操作",
+    "GO_TO_SELECT_COMPANY": "前往選擇公司"
+  },
+
+  "USER": {
+    "DELETE_WARNING": "此帳戶將在 {{days}} 個工作天內被刪除。",
+    "DELETE_HINT": "請確保資料備份。如需取消刪除過程，請前往設定頁面。",
+    "SETTING": "設定"
+  },
+  "EMBED_CODE_MODAL": {
+    "EMBED_CODE": "嵌入程式碼",
+    "WHAT_TYPE_OF_REPORT": "您想在網站上顯示什麼類型的報告？",
+    "REPORT_LANGUAGE": "報告語言",
+    "COPY": "複製",
+    "THE_LATEST_REPORT": "在您的網站上顯示最新報告",
+    "GENERATE": "產生",
+    "CODE_COPIED_TO_CLIPBOARD": "代碼已複製到剪貼簿",
+    "BALANCE_SHEET": "資產負債表",
+    "COMPREHENSIVE_INCOME_STATEMENT": "綜合損益表",
+    "CASH_FLOW_STATEMENT": "現金流量表",
+    "PROJECT": "專案",
+    "CANCEL": "取消",
+    "OVERALL": "全部",
+    "COPIED": "複製成功!",
+    "COPY_FAILED": "複製失敗",
+    "CLOSE": "關閉"
+  }
+}

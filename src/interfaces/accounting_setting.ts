@@ -3,7 +3,7 @@ interface ITaxRate {
   rate: number;
 }
 
-interface ITaxSetting {
+export interface ITaxSetting {
   salesTax: ITaxRate;
   purchaseTax: ITaxRate;
   returnPeriodicity: string;
@@ -29,6 +29,6 @@ export interface IAccountingSetting {
   id: number;
   companyId: number;
   taxSettings: ITaxSetting;
-  currency: string;
+  currency: string; // ToDo: (20241210 - tzuhan) @Murky 這裡的 currency 是不是應該是 CurrencyType？
   shortcutList: IShortcut[];
 }

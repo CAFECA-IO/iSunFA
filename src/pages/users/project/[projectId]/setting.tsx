@@ -199,7 +199,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
           <input
             id="companySearchBar"
             type="text"
-            placeholder={t('common:COMMON.SEARCH')}
+            placeholder={t('search:COMMON.SEARCH')}
             value={searchMemberValue}
             onChange={searchMemberChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"
@@ -380,7 +380,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
       projectId: params.projectId,
       ...(await serverSideTranslations(locale as string, [
         'common',
-        'report_401',
+        'reports',
         'journal',
         'kyc',
         'project',

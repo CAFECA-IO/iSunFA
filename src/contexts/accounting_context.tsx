@@ -2,9 +2,11 @@ import { ProgressStatus } from '@/constants/account';
 import { APIName } from '@/constants/api_connection';
 import { EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
+import { IAccount } from '@/interfaces/accounting_account';
+import { IAssetDetails, IAssetPostOutput } from '@/interfaces/asset';
 import { IJournal } from '@/interfaces/journal';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
+import { IReverseItemUI } from '@/interfaces/line_item';
 import { IVoucher } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
 import { getTimestampNow } from '@/lib/utils/common';
@@ -60,11 +62,6 @@ export const accountTitleMap: AccountTitleMap = {
 };
 
 interface IAccountingContext {
-  // Info: (20240430 - Julian)
-  // tempJournalList: IJournal[];
-  // addTempJournal: (journal: IJournal) => void;
-  // duplicateTempJournal: (id: string) => void;
-  // removeTempJournal: (id: string) => void;
   OCRList: IOCR[];
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number | undefined, update: boolean) => void;
@@ -78,22 +75,6 @@ interface IAccountingContext {
   deleteOCRHandler: (aichId: string) => void;
   addPendingOCRHandler: (item: IOCRItem) => void;
   deletePendingOCRHandler: (uploadIdentifier: string) => void;
-  accountList: IAccount[];
-  getAccountListHandler: (
-    companyId: number,
-    type?: string,
-    liquidity?: string,
-    page?: number,
-    limit?: number,
-    // Info: (20240722 - Murky) @Julian, query will match IAccountQueryArgs
-    includeDefaultAccount?: boolean,
-    reportType?: string,
-    equityType?: string,
-    forUser?: boolean,
-    sortBy?: string,
-    sortOrder?: string,
-    searchKey?: string
-  ) => void;
   getAIStatusHandler: (
     params: { companyId: number; askAIId: string } | undefined,
     update: boolean
@@ -117,7 +98,6 @@ interface IAccountingContext {
   accountingVoucher: IAccountingVoucher[];
   addVoucherRowHandler: (count: number, type?: VoucherRowType) => void;
   changeVoucherAccountHandler: (index: number, account: IAccount | undefined) => void;
-  deleteVoucherRowHandler: (id: number) => void;
   changeVoucherStringHandler: (index: number, value: string, type: VoucherString) => void;
   changeVoucherAmountHandler: (
     index: number,
@@ -136,15 +116,22 @@ interface IAccountingContext {
   pendingOCRList: IOCRItem[];
   pendingOCRListFromBrowser: IOCRItem[];
   excludeUploadIdentifier: (OCRs: IOCR[], pendingOCRs: IOCRItem[]) => IOCRItem[];
+
+  // Info: (20241025 - Julian) 暫存的資產列表 (用於新增資產顯示)
+  temporaryAssetList: { [key: number]: IAssetPostOutput[] };
+  addTemporaryAssetHandler: (companyId: number, asset: IAssetDetails) => void;
+  deleteTemporaryAssetHandler: (companyId: number, assetId: number) => void;
+  clearTemporaryAssetHandler: (companyId: number) => void;
+
+  // Info: (20241105 - Julian) 反轉分錄列表
+  reverseList: {
+    [key: number]: IReverseItemUI[];
+  };
+  addReverseListHandler: (lineItemId: number, item: IReverseItemUI[]) => void;
+  clearReverseListHandler: () => void;
 }
 
 const initialAccountingContext: IAccountingContext = {
-  // Info: (20240430 - Julian)
-  // tempJournalList: [],
-  // addTempJournal: () => {},
-  // duplicateTempJournal: () => {},
-  // removeTempJournal: () => {},
-
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
   updateOCRListHandler: () => {},
@@ -152,8 +139,6 @@ const initialAccountingContext: IAccountingContext = {
   deleteOCRHandler: () => {},
   addPendingOCRHandler: () => {},
   deletePendingOCRHandler: () => {},
-  accountList: [],
-  getAccountListHandler: () => {},
   getAIStatusHandler: () => {},
   AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
@@ -172,7 +157,6 @@ const initialAccountingContext: IAccountingContext = {
 
   accountingVoucher: [],
   addVoucherRowHandler: () => {},
-  deleteVoucherRowHandler: () => {},
   changeVoucherStringHandler: () => {},
   changeVoucherAccountHandler: () => {},
   changeVoucherAmountHandler: () => {},
@@ -187,17 +171,21 @@ const initialAccountingContext: IAccountingContext = {
   pendingOCRList: [],
   pendingOCRListFromBrowser: [],
   excludeUploadIdentifier: () => [],
+
+  temporaryAssetList: {},
+  addTemporaryAssetHandler: () => {},
+  deleteTemporaryAssetHandler: () => {},
+  clearTemporaryAssetHandler: () => {},
+
+  reverseList: {},
+  addReverseListHandler: () => {},
+  clearReverseListHandler: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const { userAuth, selectedCompany, isSignIn } = useUserCtx();
-  const {
-    trigger: getAccountList,
-    data: accountTitleList,
-    success: accountSuccess,
-  } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
   const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.ASK_AI_STATUS);
   const {
     trigger: listUnprocessedOCR,
@@ -205,11 +193,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     success: listSuccess,
     code: listCode,
   } = APIHandler<IOCR[]>(APIName.OCR_LIST);
-  const {
-    trigger: deleteAccountById,
-    data: deleteResult,
-    success: deleteSuccess,
-  } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID);
+  const { trigger: deleteAccountById } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID);
 
   const [OCRListParams, setOCRListParams] = useState<
     { companyId: number; update: boolean } | undefined
@@ -237,7 +221,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [totalDebit, setTotalDebit] = useState<number>(0); // Info: (20240430 - Julian) 計算總借方
   const [totalCredit, setTotalCredit] = useState<number>(0); // Info: (20240430 - Julian) 計算總貸方
 
-  const [accountList, setAccountList] = useState<IAccount[]>([]);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [inputDescription, setInputDescription] = useState<string>('');
 
@@ -246,42 +229,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [pendingOCRListFromBrowser, setPendingOCRListFromBrowser] = useState<IOCRItem[]>([]);
   const [unprocessedOCRs, setUnprocessedOCRs] = useState<IOCR[]>([]);
 
-  const getAccountListHandler = (
-    companyId: number,
-    type?: string,
-    liquidity?: string,
-    page?: number,
-    limit?: number,
-    // ToDo: (20240719 - Julian) [Beta] lack of keyword search
-    // Info: (20240722 - Murky) @Julian, query will match IAccountQueryArgs
-    includeDefaultAccount?: boolean,
-    reportType?: string,
-    equityType?: string,
-    forUser?: boolean,
-    sortBy?: string,
-    sortOrder?: string,
-    searchKey?: string
-    // isDeleted?: boolean // Info: (20240806 - Murky)
-  ) => {
-    getAccountList({
-      params: { companyId },
-      query: {
-        type,
-        liquidity,
-        page,
-        limit: Number.MAX_SAFE_INTEGER,
-        // Info: (20240720 - Murky) @Julian, I set default value for these query params
-        includeDefaultAccount: true,
-        reportType,
-        equityType,
-        forUser: true,
-        sortBy,
-        sortOrder,
-        searchKey,
-        isDeleted: false,
-      },
-    });
-  };
+  const [temporaryAssetList, setTemporaryAssetList] = useState<{
+    [key: string]: IAssetPostOutput[];
+  }>({});
+
+  const [reverseList, setReverseList] = useState<{ [key: string]: IReverseItemUI[] }>({});
 
   const getAIStatusHandler = useCallback(
     (params: { companyId: number; askAIId: string } | undefined, update: boolean) => {
@@ -483,12 +435,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }, [isSignIn, selectedCompany]);
 
   useEffect(() => {
-    if (accountSuccess && accountTitleList) {
-      setAccountList(accountTitleList.data);
-    }
-  }, [accountSuccess, accountTitleList]);
-
-  useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
 
     if (OCRListParams && OCRListParams.update) {
@@ -601,14 +547,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     [accountingVoucher]
   );
 
-  // Info: (20240430 - Julian) 刪除日記帳列
-  const deleteVoucherRowHandler = useCallback(
-    (id: number) => {
-      setAccountingVoucher((prev) => prev.filter((voucher) => voucher.id !== id));
-    },
-    [accountingVoucher]
-  );
-
   const changeVoucherAccountHandler = useCallback(
     (index: number, account: IAccount | undefined) => {
       setAccountingVoucher((prev) => {
@@ -703,13 +641,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     setTotalCredit(credit);
   }, [accountingVoucher]);
 
-  useEffect(() => {
-    if (deleteSuccess && deleteResult) {
-      // Info: (20240719 - Julian) 重新取得 account list
-      getAccountListHandler(deleteResult.companyId);
-    }
-  }, [deleteSuccess, deleteResult]);
-
   const setInvoiceIdHandler = useCallback(
     (id: string | undefined) => setInvoiceId(id),
     [invoiceId]
@@ -723,40 +654,50 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     [voucherPreview]
   );
 
-  // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------ [Start]
-  // const [tempJournalList, setTempJournalList] = useState<IJournal[]>([]);
+  // Info: (20241119 - Julian) 將 Asset list 與 user id 綁定，用於新增資產顯示
+  const addTemporaryAssetHandler = (companyId: number, asset: IAssetDetails) => {
+    setTemporaryAssetList((prev) => {
+      return {
+        ...prev,
+        [companyId]: [...(prev[companyId] ?? []), asset],
+      };
+    });
+  };
 
-  // // Info: (20240426 - Julian) 新增暫存日記帳
-  // const addTempJournal = useCallback(
-  //   (journal: IJournal) => {
-  //     setTempJournalList([...tempJournalList, journal]);
-  //   },
-  //   [tempJournalList]
-  // );
+  // Info: (20241119 - Julian) 刪除該用戶暫存在資產列表中的項目
+  const deleteTemporaryAssetHandler = (companyId: number, assetId: number) => {
+    setTemporaryAssetList((prev) => {
+      return {
+        ...prev,
+        [companyId]: prev[companyId]?.filter((asset) => asset.id !== assetId),
+      };
+    });
+  };
 
-  // // Info: (20240426 - Julian) 複製暫存日記帳
-  // const duplicateTempJournal = useCallback(
-  //   (id: string) => {
-  //     const targetJournal = tempJournalList.find((item) => item.id === id);
-  //     const newId = `${targetJournal?.basicInfo.description}_${Date.now()}_copy`;
+  // Info: (20241119 - Julian) 清空該用戶暫存在資產列表
+  const clearTemporaryAssetHandler = (companyId: number) => {
+    setTemporaryAssetList((prev) => {
+      return {
+        ...prev,
+        [companyId]: [],
+      };
+    });
+  };
 
-  //     if (targetJournal) {
-  //       const duplicatedJournal = { ...targetJournal, id: newId };
-  //       setTempJournalList([...tempJournalList, duplicatedJournal]);
-  //     }
-  //   },
-  //   [tempJournalList]
-  // );
+  // Info: (20241105 - Julian) 新增反轉分錄列表
+  const addReverseListHandler = (lineItemId: number, reverseItemList: IReverseItemUI[]) => {
+    setReverseList((prev) => {
+      return {
+        ...prev,
+        [lineItemId]: reverseItemList,
+      };
+    });
+  };
 
-  // // Info: (20240426 - Julian) 移除暫存日記帳
-  // const removeTempJournal = useCallback(
-  //   (id: string) => {
-  //     const newJournalList = tempJournalList.filter((item) => item.id !== id);
-  //     setTempJournalList(newJournalList);
-  //   },
-  //   [tempJournalList]
-  // );
-  // ------------ 目前已經取消暫存日記帳的功能，預計刪除以上程式碼 ------------ [End]
+  // Info: (20241105 - Julian) 清空反轉分錄列表
+  const clearReverseListHandler = () => {
+    setReverseList({});
+  };
 
   const selectOCRHandler = useCallback(
     (OCR: IOCR | undefined) => {
@@ -785,13 +726,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       deleteOCRHandler,
       addPendingOCRHandler,
       deletePendingOCRHandler,
-      accountList,
-      getAccountListHandler,
       getAIStatusHandler,
       AIStatus,
       accountingVoucher,
       addVoucherRowHandler,
-      deleteVoucherRowHandler,
       changeVoucherStringHandler,
       changeVoucherAmountHandler,
       resetVoucherHandler,
@@ -819,16 +757,22 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       pendingOCRList,
       pendingOCRListFromBrowser,
       excludeUploadIdentifier,
+
+      temporaryAssetList,
+      addTemporaryAssetHandler,
+      deleteTemporaryAssetHandler,
+      clearTemporaryAssetHandler,
+
+      reverseList,
+      addReverseListHandler,
+      clearReverseListHandler,
     }),
     [
       OCRList,
       OCRListStatus,
       AIStatus,
-      accountList,
-      getAccountListHandler,
       accountingVoucher,
       addVoucherRowHandler,
-      deleteVoucherRowHandler,
       changeVoucherStringHandler,
       changeVoucherAmountHandler,
       resetVoucherHandler,
@@ -845,6 +789,13 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       inputDescription,
       pendingOCRList,
       pendingOCRListFromBrowser,
+      temporaryAssetList,
+      addTemporaryAssetHandler,
+      deleteTemporaryAssetHandler,
+      clearTemporaryAssetHandler,
+      reverseList,
+      addReverseListHandler,
+      clearReverseListHandler,
     ]
   );
 

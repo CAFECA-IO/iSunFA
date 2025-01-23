@@ -23,6 +23,7 @@ import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_facto
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 function formatCompanyIdAccountId(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
@@ -179,19 +180,19 @@ export function formatGetQuery(companyId: number, req: NextApiRequest): IAccount
   };
 }
 
-export async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPaginatedAccount | null>>
-) {
-  const { companyId, userId } = await getSession(req, res);
+export async function handleGetRequest(req: NextApiRequest) {
+  const { companyId, userId } = await getSession(req);
   const formattedQuery = formatGetQuery(companyId, req);
   const accountRetriever = AccountRetrieverFactory.createRetriever(formattedQuery);
   let paginatedAccount: IPaginatedAccount | null = null;
   try {
     paginatedAccount = await accountRetriever.getAccounts();
   } catch (error) {
-    const logError = loggerError(userId, 'Failed to retrieve accounts', error as Error);
-    logError.error('Prisma related error');
+    loggerError({
+      userId,
+      errorType: 'Failed to retrieve accounts',
+      errorMessage: (error as Error).message,
+    });
   }
   return paginatedAccount;
 }
@@ -211,11 +212,8 @@ function setNewCode(parentAccount: Account, latestSubAccount: Account | null) {
   return newCode;
 }
 
-export async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccount>>
-) {
-  const session = await getSession(req, res);
+export async function handlePostRequest(req: NextApiRequest) {
+  const session = await getSession(req);
   const { userId, companyId } = session;
   const { accountId, name } = req.body;
   if (!userId) {
@@ -249,6 +247,9 @@ export async function handlePostRequest(
     createdAt: timeInSeconds,
     updatedAt: timeInSeconds,
     level: parentAccount.level + 1,
+    parentId: parentAccount.id,
+    rootId: parentAccount.rootId,
+    note: '',
   };
   let savedNewOwnAccount: IAccount | null = null;
   try {
@@ -256,8 +257,11 @@ export async function handlePostRequest(
       data: newOwnAccount,
     });
   } catch (error) {
-    const logError = loggerError(userId, 'Failed to create new own account', error as Error);
-    logError.error('Prisma related error');
+    loggerError({
+      userId,
+      errorType: 'Failed to create new own account',
+      errorMessage: (error as Error).message,
+    });
   }
   return savedNewOwnAccount;
 }
@@ -271,11 +275,11 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'GET':
-        payload = await handleGetRequest(req, res);
+        payload = await handleGetRequest(req);
         statusMessage = STATUS_MESSAGE.SUCCESS;
         break;
       case 'POST':
-        payload = await handlePostRequest(req, res);
+        payload = await handlePostRequest(req);
         statusMessage = STATUS_MESSAGE.CREATED;
         break;
       default:
@@ -283,8 +287,11 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const logError = loggerError(0, 'handle account request failed', error);
-    logError.error('handle account request failed in handler function in account/index.ts');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'handle account request failed',
+      errorMessage: error.message,
+    });
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<IAccount | IPaginatedAccount | null>(

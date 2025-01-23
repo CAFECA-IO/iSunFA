@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import { useModalContext } from '@/contexts/modal_context';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
@@ -29,7 +28,6 @@ const EditAccountTitleModal = ({
   const { t } = useTranslation(['common', 'setting']);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { getAccountListHandler, deleteOwnAccountTitle } = useAccountingCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { accountId } = modalData;
@@ -75,8 +73,6 @@ const EditAccountTitleModal = ({
     if (updateSuccess && updateResult && selectedCompany) {
       // Info: (20240719 - Julian) 關閉 modal
       modalVisibilityHandler();
-      // Info: (20240719 - Julian) 重新取得 account list
-      getAccountListHandler(selectedCompany.id);
       // Info: (20240719 - Julian) 顯示 toast
       toastHandler({
         id: `updateAccount-${updateCode}`,
@@ -141,7 +137,6 @@ const EditAccountTitleModal = ({
       submitBtnStr: t('setting:SETTING.REMOVE'),
       submitBtnFunction: () => {
         if (!hasCompanyId) return;
-        deleteOwnAccountTitle(selectedCompany?.id, accountId);
         modalVisibilityHandler();
       },
       backBtnStr: t('common:COMMON.CANCEL'),
@@ -266,7 +261,7 @@ const EditAccountTitleModal = ({
             disabled={disableSubmit}
             onClick={handleSave}
           >
-            {t('common:EDIT_BOOKMARK_MODAL.SAVE')}
+            {t('alpha:EDIT_BOOKMARK_MODAL.SAVE')}
           </Button>
         </div>
       </div>

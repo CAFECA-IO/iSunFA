@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { useUserCtx } from '@/contexts/user_context';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -28,7 +27,6 @@ const AddAccountTitleModal = ({
   const { t } = useTranslation(['common', 'setting']);
   const { selectedCompany } = useUserCtx();
   const { toastHandler } = useModalContext();
-  const { getAccountListHandler } = useAccountingCtx();
 
   const { accountId } = modalData;
 
@@ -72,8 +70,7 @@ const AddAccountTitleModal = ({
     if (createSuccess && result && selectedCompany) {
       // Info: (20240719 - Julian) 關閉 modal
       modalVisibilityHandler();
-      // Info: (20240719 - Julian) 重新取得 account list
-      getAccountListHandler(selectedCompany.id);
+
       // Info: (20240719 - Julian) 顯示 toast
       toastHandler({
         id: `createSubAccount-${createCode}`,

@@ -33,7 +33,7 @@ const Skeleton = ({ width, height, rounded, className }: ISkeletonProps) => {
 };
 
 export const SkeletonList = ({ count }: ISkeletonListProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common']);
   return (
     <div role="status" className="space-y-2 rounded p-4 md:p-6">
       {' '}

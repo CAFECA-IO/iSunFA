@@ -49,6 +49,10 @@ const ViewAnalysisReportPage = ({
     reportLink: ReportLink[reportType],
   });
 
+  // Deprecated: (20241128 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('進入 ViewAnalysisReportPage', 'reportType:', reportType);
+
   // TODO: (20240429 - Shirley) [Beta] Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp`
   const {
     data: reportAnalysis,
@@ -69,7 +73,7 @@ const ViewAnalysisReportPage = ({
     if (getARSuccess === false) {
       toastHandler({
         id: `getAR-${getARCode}}`,
-        content: `${t('common:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('common:DASHBOARD.REPORT')}${getARCode}`,
+        content: `${t('alpha:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('alpha:DASHBOARD.REPORT')}${getARCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -146,7 +150,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
       reportType: reportType as string,
       ...(await serverSideTranslations(locale as string, [
         'common',
-        'report_401',
+        'reports',
         'journal',
         'kyc',
         'project',

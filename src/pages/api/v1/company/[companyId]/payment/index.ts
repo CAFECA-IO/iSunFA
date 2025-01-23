@@ -10,13 +10,13 @@ import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { CurrencyType, OEN_CURRENCY } from '@/constants/currency';
-import { SubscriptionPeriod, SubscriptionPlan } from '@/constants/subscription';
+import { SubscriptionPeriod, SubscriptionPlanV1 } from '@/constants/subscription';
 import { isEnumValue } from '@/lib/utils/type_guard/common';
 
 function formatSubscriptionPlan(subscriptionPlan: unknown) {
-  let subPlan = SubscriptionPlan.TRIAL;
+  let subPlan = SubscriptionPlanV1.TRIAL;
 
-  if (isEnumValue(SubscriptionPlan, subscriptionPlan)) {
+  if (isEnumValue(SubscriptionPlanV1, subscriptionPlan)) {
     subPlan = subscriptionPlan;
   }
 
@@ -38,7 +38,7 @@ function formatSubscriptionPeriod(subscriptionPeriod: unknown) {
  * @param req - The NextApiRequest object containing the query parameters.
  * @returns {Object} An object containing the formatted query parameters.
  * @returns {number} returns.orderIdNum - The numeric ID of the order.
- * @returns {SubscriptionPlan} returns.subPlan - The formatted subscription plan.
+ * @returns {SubscriptionPlanV1} returns.subPlan - The formatted subscription plan.
  * @returns {SubscriptionPeriod} returns.subPeriod - The formatted subscription period.
  */
 function formatGetQuery(req: NextApiRequest) {
@@ -55,12 +55,12 @@ function formatGetQuery(req: NextApiRequest) {
  * @param customId - The custom ID to decrypt.
  * @returns An object containing the decrypted order ID, subscription plan, and subscription period.
  * @returns {number} returns.orderIdNum - The numeric ID of the order.
- * @returns {SubscriptionPlan} returns.subPlan - The formatted subscription plan.
+ * @returns {SubscriptionPlanV1} returns.subPlan - The formatted subscription plan.
  * @returns {SubscriptionPeriod} returns.subPeriod - The formatted subscription period.
  */
 function decryptCustomId(customId: unknown) {
   let orderId = 0;
-  let subPlan = SubscriptionPlan.TRIAL;
+  let subPlan = SubscriptionPlanV1.TRIAL;
   let subPeriod = SubscriptionPeriod.MONTHLY;
 
   if (typeof customId === 'string') {
@@ -73,7 +73,7 @@ function decryptCustomId(customId: unknown) {
   return { orderId, subPlan, subPeriod };
 }
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handleGetRequest(req: NextApiRequest) {
   /* Info: (20240823 - Murky) 流程： 1. 前端呼叫Get payment 傳入資訊，後端可以用 "customId" 來讓資料與第三方之間做傳遞
    * 2. 後端呼叫第三方 API，取得 token(CHECKOUT_TOKEN)
    * 3. 第三方webhook Post payment, 後端從customId 取得get的資訊, 並使用TOKEN_TRANSACTION付款
@@ -83,7 +83,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   let payload = '';
   const oenToken = process.env.PAYMENT_TOKEN;
   const oenMerchantId = process.env.PAYMENT_ID ?? '';
-  const session = await getSession(req, res);
+  const session = await getSession(req);
   const { userId, companyId } = session;
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;

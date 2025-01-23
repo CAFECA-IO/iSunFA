@@ -1,0 +1,140 @@
+{
+  "LOGIN": {
+    "LOG_IN_WITH_GOOGLE": "使用 Google 登入",
+    "LOG_IN_WITH_APPLE": "使用 Apple 登入",
+    "LAST_LOGIN_TIME": "上次登入時間"
+  },
+
+  "DASHBOARD": {
+    "DASHBOARD": "儀表板",
+    "TO_DO_LIST": "事件計劃",
+    "CALENDAR_NOT_YET_LINKED": "行事曆尚未連結",
+    "LINK_MY_CALENDAR": "連結我的行事曆",
+    "NO_SCHEDULE_FOR_TODAY": "今天沒有安排待辦事項",
+    "MY_COMPANY_LIST": "我的公司列表",
+    "COMPANY_NOT_YET_CREATED": "尚未建立公司",
+    "PLEASE_PROCEED_TO": "請前往",
+    "CREATE_A_COMPANY": "建立公司",
+    "LATEST_NEWS": "最新消息",
+    "FINANCIAL": "財經新聞",
+    "SYSTEM": "系統資訊",
+    "MATCH": "媒合資訊",
+    "MORE": "更多",
+    "SEE_MORE": "查看更多",
+    "PENDING_TASKS": "待處理任務",
+    "PENDING_TASKS_TOTAL": "待處理任務 (全部)",
+    "MISSING_CERTIFICATE": "缺少憑證",
+    "UNPOSTED_VOUCHERS": "尚未入帳",
+    "ADD_EVENT": "新增至事件計畫",
+    "NO_DATA_AVAILABLE": "沒有可用資料",
+    "NO_DATA": "沒有資料",
+    "ARE_YOU_SURE_YOU_WANT_TO": "您確定要",
+    "CHOOSE_THE_COMPANY": "選擇這家公司",
+    "SURE": "嗎？",
+    "CHOOSE": "選擇",
+    "NO_LATEST_NEWS": "沒有最新消息"
+  },
+
+  "COMMON": {
+    "ERROR": "錯誤",
+    "START": "開始",
+    "PREVIEW": "預覽",
+    "CANCEL": "取消",
+    "ADD": "新增",
+    "SAVE": "儲存",
+    "DELETE": "刪除"
+  },
+
+  "HEADER": {
+    "SEARCH": "搜尋",
+    "MY_ACCOUNT": "我的帳號",
+    "SUBSCRIPTION_AND_BILLS": "訂閱與帳單",
+    "LOGOUT": "登出",
+    "LOGIN": "登入",
+    "LANGUAGE": "語言",
+    "SWITCH_ROLE": "切換角色",
+    "NO_NEW_NOTIFICATIONS": "沒有新通知",
+    "MARK_AS_ALL_READ": "全部標記為已讀",
+    "READ_MORE": "載入更多通知",
+    "YOU_HAVE_A_TEAM_INVITATION_FROM": "您有一個團隊邀請來自",
+    "ACCEPT": "接受",
+    "DECLINE": "拒絕"
+  },
+
+  "ROLE": {
+    "ACCOUNTANT": "會計",
+    "BOOKKEEPER": "記帳士",
+    "EDUCATIONAL_TRIAL_VERSION": "教育試用版",
+    "EDUCATIONAL": "教育",
+    "TRIAL_VERSION": "試用版"
+  },
+
+  "CREATE_ROLE_PAGE": {
+    "CREATE_ROLE_TITLE": "建立角色",
+    "SELECT_YOUR_ROLE": "選擇您的角色",
+    "ROLE_FUNCTION_PREVIEW": "角色功能預覽",
+    "BACK_TO_SELECT_ROLE_PAGE": "回到選擇角色頁面",
+
+    "COMMON_FUNCTIONS": "常用功能",
+    "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "管理總帳、開立憑證、製作財務及稅務報表",
+    "COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION": "管理總帳、開立憑證",
+    "DEFAULT_INTRODUCTION": "iSunFA提供了多種角色供使用者選擇，每個角色都有專屬介面和常用功能。您可以選擇最符合您需求的角色，讓 iSunFA 協助您的工作。iSunFA 的關鍵優勢在於角色優化的介面和 AI 整合會計，讓您更有效率地完成工作！",
+    "BOOKKEEPER_INTRODUCTION": "記帳士是專業的財務工作者，負責管理企業或個人的日常財務記錄和會計工作。他們的主要職責包括建立會計憑證、記錄分類帳分錄、對帳和產生財務報表，以確保財務資訊的正確性和完整性。",
+    "EDUCATIONAL_TRIAL_VERSION_INTRODUCTION": "iSunFA學生版是為會計領域的學生和實習生量身訂製的教育工具。它提供了管理財務工作（例如建立會計憑證、日記帳分錄和對帳）的實用實務經驗。它非常適合在財務管理方面打下堅實的基礎，並為專業簿記或會計職位做好準備。"
+  },
+
+  "SELECT_ROLE_PAGE": {
+    "SELECT_ROLE_TITLE": "選擇角色"
+  },
+
+  "MY_COMPANY_LIST_PAGE": {
+    "MY_COMPANY_LIST": "我的公司列表"
+  },
+
+  "LATEST_NEWS_PAGE": {
+    "LATEST_NEWS": "最新消息",
+    "FINANCIAL_NEWS": "財經新聞",
+    "SYSTEM_NEWS": "系統新聞",
+    "MATCH_NEWS": "媒合資訊"
+  },
+
+  "TODO_LIST_PAGE": {
+    "TODO_LIST_TITLE": "事件計劃",
+    "NEW_EVENT": "新增事件",
+    "UPCOMING_EVENTS": "即將到期事件",
+    "ACTION": "操作",
+    "NO_PENDING_TASKS": "沒有待辦事項",
+    "ADD_NEW_EVENT": "新增至事件計畫",
+    "EVENT_NAME": "事件名稱",
+    "ENTER_NAME": "輸入名稱",
+    "DEADLINE": "截止日期",
+    "AFFILIATED_COMPANY": "關聯公司",
+    "NOTE": "備註",
+    "ENTER_TEXT": "輸入文字",
+    "SELECT_COMPANY": "選擇公司",
+    "NO_COMPANY": "沒有公司",
+    "EDIT_MY_EVENT": "編輯我的事件",
+    "DELETE_MESSAGE_TITLE": "刪除此事件",
+    "DELETE_MESSAGE_CONTENT": "您確定要刪除此事件嗎？",
+    "START_TIME": "開始時間",
+    "END_TIME": "結束時間"
+  },
+
+  "CREATE_COMPANY_MODAL": {
+    "COMPANY_NAME": "公司名稱",
+    "TAX_ID": "統一編號",
+    "WORK_TAG": "工作標籤",
+    "CREATE_NEW_COMPANY": "建立新公司",
+    "ENTER_NAME": "輸入名稱",
+    "ENTER_NUMBER": "輸入統一編號",
+    "ENTER_FULL_ADDRESS": "輸入完整地址",
+    "CANCEL": "取消",
+    "ADD": "新增"
+  },
+
+  "COMPANY_TAG": {
+    "FINANCIAL": "財務",
+    "TAX": "稅務",
+    "ALL": "全部"
+  }
+}

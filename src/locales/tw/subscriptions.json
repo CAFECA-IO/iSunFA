@@ -1,0 +1,172 @@
+{
+  "SUBSCRIPTIONS_PAGE": {
+    "META_TITLE": "訂閱",
+    "SUBSCRIPTION_PLANS": "訂閱管理",
+    "MY_SUBSCRIPTIONS": "我的訂閱",
+    "ENABLE_AUTO_RENEWAL": "開啟自動續訂",
+    "CHANGE_PLAN": "變更方案",
+    "CHANGE_CARD": "變更",
+    "BILLING": "帳單",
+    "NEXT_RENEWAL": "下次續訂",
+    "EXPIRED_DATE": "到期日",
+    "TURN_ON_AUTO_RENEWAL_TITLE": "開啟自動續訂",
+    "TURN_ON_AUTO_RENEWAL_MESSAGE": "您確定要開啟自動續訂嗎？",
+    "YES_TURN_ON_AUTO_RENEWAL": "是，開啟自動續訂",
+    "CANCEL": "取消",
+    "TURN_OFF_AUTO_RENEWAL_TITLE": "關閉自動續訂",
+    "TURN_OFF_AUTO_RENEWAL_MESSAGE": "您確定要關閉自動續訂嗎？",
+    "YES_TURN_OFF_AUTO_RENEWAL": "是，關閉自動續訂",
+    "CHOOSE_THE_PLAN_THAT_FITS_YOUR_TEAM": "選擇適合您團隊的方案",
+    "PLAN_FOR": "管理方案 - ",
+    "PAYMENT_FAILED": "付款失敗",
+    "UPDATE_PAYMENT": "重新設定付款資訊",
+    "RETURNING_TO_BEGINNER_IN": "",
+    "DAYS": " 天後恢復為基礎版方案"
+  },
+
+  "PLAN_NAME": {
+    "BEGINNER": "基礎版",
+    "PROFESSIONAL": "專業版",
+    "ENTERPRISE": "企業版"
+  },
+
+  "SUBSCRIPTION_FAQ": {
+    "SUBSCRIPTION_FAQ": "訂閱常見問題",
+    "FAQ1_QUESTION": "誰負責支付團隊的訂閱費用？",
+    "FAQ1_ANSWER": "任何使用者都可以透過輸入付款資訊將自己的團隊升級到專業計劃。升級後，只有所有者可以管理團隊未來的付款。",
+    "FAQ2_QUESTION": "我可以免費使用 iSunFA 嗎？",
+    "FAQ2_ANSWER": "是的， iSunFA 基礎版永久免費，無需訂閱或綁定信用卡即可開始體驗。",
+    "FAQ3_QUESTION": "我可以使用什麼付款方式？",
+    "FAQ3_ANSWER": "信用卡 (MasterCard、Visa、JCB) : 自動扣款，確保訂閱不中斷。"
+  },
+
+  "SUBSCRIPTION_PLAN_CONTENT": {
+    "NTD_SLASH_MONTH": "新台幣/月",
+    "MONTH": "月",
+    "PER_EXTRA_TEAM_MEMBER_PREFIX": "每增加一名團隊成員 ",
+    "PER_EXTRA_TEAM_MEMBER_SUFFIX": "",
+    "SELECTED": "已選擇",
+    "SELECT_THIS_PLAN": "選擇此方案",
+    "EVERYTHING_IN_BEGINNER_PLUS": "包含基礎版所有功能，再加上：",
+    "EVERYTHING_IN_PROFESSIONAL_PLUS": "包含專業版所有功能，再加上：",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "您可以隨時取消訂閱",
+    "NOTE": "您的目前方案將持續有效至下一次續訂日期，本次計費週期不會提供退款。",
+    "FREE": "免費"
+  },
+
+  "PLANS_FEATURES_NAME": {
+    "CLOUD_STORAGE": "雲端儲存空間",
+    "AI_ASSISTANT": "AI 小助手",
+    "REPORT_GENERATION": "產生報告",
+    "FINANCIAL_STATEMENTS": "財務報表",
+    "MATCHMAKING_PLATFORM": "媒合平台",
+    "TEAM_MEMBERS": "團隊成員",
+    "CUSTOMER_SUPPORT": "客服支援",
+    "API_INTEGRATION": "API 串接",
+    "TECHNICAL_SUPPORT": "技術支援",
+    "ADDITIONAL_PERKS": "額外提供"
+  },
+
+  "PLANS_FEATURES_VALUE": {
+    "10GB": "10GB",
+    "LIMITED_CAPACITY": "限制次數",
+    "UNLIMITED": "無限制",
+    "MANUAL_DOWNLOAD": "手動下載",
+    "TASK_ACCEPTANCE_ONLY": "僅可接受任務",
+    "LIMITED_TO_1_PERSON": "限 1 人",
+    "LIVE_CHAT_SUPPORT": "提供線上文字服務",
+    "1TB": "1TB",
+    "UNLIMITED_CAPACITY": "無限次數",
+    "POST_TASK_REQUIREMENTS": "可刊登需求",
+    "UP_TO_10_PEOPLE": "限 10 人",
+    "AUTO_UPDATED": "自動更新",
+    "UP_TO_24_HOURS_IN_TOTAL_4_HOURS_PER_SESSION": "每次 4 小時，最多 24 小時",
+    "10_ASSET_TAGGING_STICKERS": "10 張資產標記貼紙",
+    "CUSTOMIZABLE_REPORTS": "可客製化報告",
+    "PRIORITY_VISIBILITY": "優先曝光",
+    "SYSTEM_SUPPORT": "系統支援",
+    "UP_TO_48_HOURS_IN_TOTAL_4_HOURS_PER_SESSION": "每次 4 小時，最多 48 小時",
+    "100_ASSET_TAGGING_STICKERS": "100 張資產標記貼紙",
+    "ONLINE_AND_OFFLINE_INTEGRATION": "可申請實體伺服器",
+    "HARDWARE_SUPPORT": "離線版部署與硬體整合"
+  },
+
+  "ERROR": {
+    "ERROR": "錯誤",
+    "DATA_NOT_FOUND": "找不到資料",
+    "TEAM_DATA_NOT_FOUND": "找不到團隊資料",
+    "INVOICE_DATA_NOT_FOUND": "找不到發票資料",
+    "USER_OWNED_TEAMS_NOT_FOUND": "找不到使用者擁有的團隊",
+    "PLAN_NOT_FOUND": "找不到訂閱方案",
+    "TOAST_PAYMENT_FAILED_TITLE": "付款失敗 ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_PREFIX": "- 您的方案最後一次付款失敗。請盡快更新您的付款資訊，否則將在 ",
+    "TOAST_PAYMENT_FAILED_MESSAGE_SUFFIX": " 天後恢復為基礎版方案",
+    "UPDATE_PAYMENT": "重新設定付款資訊",
+    "TOAST_EXPIRED_REMINDER_TITLE": "您的方案已到期",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_PREFIX": "您的訂閱方案將在 ",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX": " 天後到期，請續訂以保留該服務，否則方案將會降級。",
+    "TOAST_EXPIRED_REMINDER_MESSAGE_FOR_TODAY": "您的訂閱方案將在今天到期，請續訂以保留該服務，否則方案將會降級。",
+    "RENEW_PAYMENT": "續訂付款"
+  },
+
+  "MODAL": {
+    "SUBSCRIPTION_IS_NOT_DONE_YET": "尚未完成訂閱",
+    "SUBSCRIPTION_IS_NOT_DONE_YET_MESSAGE": "您尚未完成訂閱，確定要離開此頁面嗎？",
+    "KEEP_FINISHING_MY_SUBSCRIPTION": "繼續完成我的訂閱",
+    "LEAVE": "離開",
+    "DOWNGRADE_MESSAGE_MODAL_TITLE": "降級訂閱方案",
+    "DOWNGRADE_MESSAGE_MODAL_CONTENT_PREFIX": "您確定要將您的方案降級為",
+    "DOWNGRADE_MESSAGE_MODAL_CONTENT_SUFFIX": "嗎？",
+    "DOWNGRADE_MESSAGE_MODAL_SECONDARY_CONTENT": "您的目前方案將持續有效至下一次續訂日期，本次計費週期不會提供退款。",
+    "DOWNGRADE_MESSAGE_MODAL_SUBMIT": "對，我要降級"
+  },
+
+  "PAYMENT_PAGE": {
+    "PAGE_TITLE": "付款頁面",
+    "PAYMENT": "付款",
+    "ADD_CREDIT_CARD": "新增信用卡",
+    "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "您可以隨時取消訂閱",
+    "NOTE": "您的目前方案將持續有效至下一次續訂日期，本次計費週期不會提供退款。",
+    "SUBSCRIBE": "訂閱",
+    "TOAST_SUBSCRIPTION_SUCCESS": "您已成功訂閱",
+    "DOWNGRADED_TO_BEGINNER_PLAN": "已降級為基礎版方案",
+    "MONTHLY_SUBSCRIPTION": "每月訂閱",
+    "SUBTOTAL": "小計",
+    "TAX": "稅金",
+    "TOTAL_PRICE": "總金額"
+  },
+
+  "BILLING_PAGE": {
+    "META_TITLE": "帳單",
+    "PAGE_TITLE_PREFIX": "",
+    "PAGE_TITLE_SUFFIX": "的帳單",
+    "INVOICE_ID": "發票編號",
+    "BILLING_DATE": "帳單日期",
+    "PLAN": "方案",
+    "AMOUNT": "金額",
+    "STATUS": "狀態",
+    "PAID": "付款成功",
+    "FAILED": "付款失敗"
+  },
+
+  "INVOICE_PAGE": {
+    "META_TITLE": "發票",
+    "PAGE_TITLE": "發票",
+    "INVOICE_TITLE": "發票",
+    "ISSUED": "開立日",
+    "DUE": "到期日",
+    "BILLED_TO": "收款人",
+    "TAX_ID": "統一編號",
+    "FROM": "付款人",
+    "DESCRIPTION": "描述",
+    "QTY": "數量",
+    "UNIT_PRICE": "單價",
+    "AMOUNT": "金額",
+    "SUBTOTAL": "小計",
+    "TAX": "稅",
+    "TOTAL": "總計",
+    "AMOUNT_DUE": "應付金額",
+    "FOOTNOTE_DUE": "，到期日為",
+    "FOOTNOTE_PAGE": "第 1 頁，共 1 頁"
+  }
+}

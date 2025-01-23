@@ -9,7 +9,7 @@ interface IReportsHistoryListProps {
 }
 
 const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['common', 'reports']);
   // Info: (20240514 - Shirley) 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來
   const [reportItems] = useState<IReport[]>(reports);
 
@@ -150,12 +150,12 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
           <tr className="h-10 border border-stroke-neutral-quaternary bg-surface-neutral-main-background text-left text-sm text-text-neutral-tertiary">
             {/* Info: (20240514 - Shirley) checkboxes */}
             {displayedCheckbox}
-            <th className="text-center">{t('report_401:REPORTS_HISTORY_LIST.DATE')}</th>
-            <th className="px-16px">{t('report_401:REPORTS_HISTORY_LIST.REPORT_NAME')}</th>
+            <th className="text-center">{t('reports:REPORTS_HISTORY_LIST.DATE')}</th>
+            <th className="px-16px">{t('reports:REPORTS_HISTORY_LIST.REPORT_NAME')}</th>
             <th className="hidden px-16px lg:table-cell">{t('common:COMMON.TYPE')}</th>
             <th className="hidden px-16px lg:table-cell">{t('common:COMMON.PERIOD')}</th>
             <th className="hidden px-16px lg:table-cell">
-              {t('report_401:REPORTS_HISTORY_LIST.BLOCKCHAIN')}
+              {t('reports:REPORTS_HISTORY_LIST.BLOCKCHAIN')}
             </th>
             <th className="hidden px-16px lg:table-cell">{t('common:COMMON.PROJECT')}</th>
             <th className="hidden px-16px lg:table-cell">{t('common:COMMON.OPERATIONS')}</th>

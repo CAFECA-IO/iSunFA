@@ -17,21 +17,25 @@ export async function getTotalPendingTaskForUser(userId: number): Promise<IPendi
   // Info: (20241018 - Jacky) 使用 Promise.all 同時計算每個公司的數據
   const results = await Promise.all(
     listedCompany.map(async ({ company }) => {
-      const [missingCertificateCount, unpostedVoucherCount] = await Promise.all([
-        countMissingCertificate(company.id),
+      const [certificateWithoutVoucherCount, voucherWithNoCertificateCount] = await Promise.all([
         countUnpostedVoucher(company.id),
+        countMissingCertificate(company.id),
       ]);
+
+      const imageUrl = company.imageFile.url;
 
       return {
         missingCertificate: {
           companyId: company.id,
           companyName: company.name,
-          count: missingCertificateCount,
+          count: voucherWithNoCertificateCount,
+          companyLogoSrc: imageUrl,
         },
         unpostedVoucher: {
           companyId: company.id,
           companyName: company.name,
-          count: unpostedVoucherCount,
+          count: certificateWithoutVoucherCount,
+          companyLogoSrc: imageUrl,
         },
       };
     })
@@ -95,8 +99,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IPendingTaskTotal | null }>;
 } = {
-  GET: (req, res) =>
-    withRequestValidation(APIName.USER_PENDING_TASK_GET, req, res, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.USER_PENDING_TASK_GET, req, handleGetRequest),
 };
 
 export default async function handler(

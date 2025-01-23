@@ -1,7 +1,59 @@
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
-import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
+import {
+  IAccountForSheetDisplay,
+  IAccountNode,
+  IAccountEntity,
+  IAccountNodeWithDebitAndCredit,
+} from '@/interfaces/accounting_account';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
-import { Account } from '@prisma/client';
+import { AccountType } from '@/constants/account';
+import { Account as PrismaAccount } from '@prisma/client';
+import { getTimestampNow } from '@/lib/utils/common';
+import { AccountBookNode } from '@/lib/utils/account/account_book_node';
+
+export function initAccountEntity(
+  dto: Partial<PrismaAccount> & {
+    companyId: number;
+    system: string;
+    type: AccountType;
+    debit: boolean;
+    liquidity: boolean;
+    code: string;
+    name: string;
+    forUser: boolean;
+    parentCode: string;
+    rootCode: string;
+    parentId: number;
+    rootId: number;
+    level: number;
+    parent?: IAccountEntity;
+    root?: IAccountEntity;
+  }
+): IAccountEntity {
+  const nowInSecond = getTimestampNow();
+  const accountEntity: IAccountEntity = {
+    id: dto.id || 0,
+    companyId: dto.companyId,
+    system: dto.system,
+    type: dto.type,
+    debit: dto.debit,
+    liquidity: dto.liquidity,
+    code: dto.code,
+    name: dto.name,
+    forUser: dto.forUser,
+    level: dto.level,
+    parentCode: dto.parentCode,
+    rootCode: dto.rootCode,
+    parentId: dto.parentId,
+    rootId: dto.rootId,
+    parent: dto.parent,
+    root: dto.root,
+    createdAt: dto.createdAt || nowInSecond,
+    updatedAt: dto.updatedAt || nowInSecond,
+    deletedAt: dto.deletedAt || null,
+  };
+  return accountEntity;
+}
 
 export function transformLineItemsFromDBToMap(
   lineItemsFromDB: ILineItemIncludeAccount[]
@@ -19,7 +71,7 @@ export function transformLineItemsFromDBToMap(
   return lineItems;
 }
 
-function transformAccountsToMap(accounts: Account[]): Map<string, IAccountNode> {
+function transformAccountsToMap(accounts: PrismaAccount[]): Map<string, IAccountNode> {
   const accountMap = new Map<string, IAccountNode>();
 
   accounts.forEach((account) => {
@@ -33,7 +85,7 @@ function transformAccountsToMap(accounts: Account[]): Map<string, IAccountNode> 
   return accountMap;
 }
 
-export function buildAccountForest(accounts: Account[]): IAccountNode[] {
+export function buildAccountForest(accounts: PrismaAccount[]): IAccountNode[] {
   const accountMap = transformAccountsToMap(accounts);
   const rootAccounts: IAccountNode[] = [];
 
@@ -45,6 +97,52 @@ export function buildAccountForest(accounts: Account[]): IAccountNode[] {
       }
     } else {
       rootAccounts.push(account);
+    }
+  });
+
+  return rootAccounts;
+}
+
+function transformAccountsToMapAndCodeSet(accounts: PrismaAccount[]): {
+  accountMap: Map<string, IAccountNodeWithDebitAndCredit>;
+  accountCode: Set<string>;
+} {
+  const accountMap = new Map<string, IAccountNodeWithDebitAndCredit>();
+  const accountCode = new Set<string>();
+
+  accounts.forEach((account) => {
+    accountCode.add(account.code);
+    accountMap.set(account.code, {
+      ...account,
+      children: [],
+      debitAmount: 0,
+      creditAmount: 0,
+    });
+  });
+
+  return { accountMap, accountCode };
+}
+
+/** Info: (20250102 - Shirley)
+ * 將 forUser = true 的會計科目列表轉換成樹狀結構
+ * @param accounts 放入 forUser = true 的會計科目列表
+ * @returns 樹狀結構
+ */
+export function buildAccountForestForUser(
+  accounts: PrismaAccount[]
+): IAccountNodeWithDebitAndCredit[] {
+  const { accountMap, accountCode } = transformAccountsToMapAndCodeSet(accounts);
+  const rootAccounts: IAccountNodeWithDebitAndCredit[] = [];
+
+  accountMap.forEach((account) => {
+    // Info: (20241111 - Shirley) 如果 parentCode 不在 forUserCodeSet 中，則為 rootAccount
+    if (!accountCode.has(account.parentCode)) {
+      rootAccounts.push(account);
+    } else {
+      const parentAccount = accountMap.get(account.parentCode);
+      if (parentAccount) {
+        parentAccount.children.push(account);
+      }
     }
   });
 
@@ -83,7 +181,13 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
     level: account.level,
     deletedAt: account.deletedAt,
     children: updatedChildren,
+    parentId: account.parentId,
+    rootId: account.rootId,
+    note: account.note,
   };
+  // if (account.code === '1100') {
+  // console.log('account: ', account, 'newAmount: ', newAmount);
+  // }
 
   // updatedAccount.amount = newAmount; // Info: (20240801 - Murky)
 
@@ -91,6 +195,61 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
   updatedAccount.children = updatedAccount.children.filter(
     (child) => child.companyId === PUBLIC_COMPANY_ID
   );
+
+  return updatedAccount;
+}
+
+// Info: (20241114 - Shirley) 用於Trial Balance，跟 `updateAccountAmountsByDFS` 的差別在於保留公司自訂會計科目
+function updateAccountAmountByDFSForTrialBalance(
+  account: IAccountNode,
+  lineItemsMap: Map<number, { debitAmount: number; creditAmount: number }>
+) {
+  const newAmount = lineItemsMap.get(account.id) || { debitAmount: 0, creditAmount: 0 };
+
+  const updatedChildren = account.children.map((child) => {
+    const childAccount = updateAccountAmountByDFSForTrialBalance(child, lineItemsMap);
+
+    // Info: (20240702 - Murky) 如果parent和child的debit方向不同，則child的amount要取負值
+    // 例如：Parent 是 機具設備淨額，Child 是 機具設備成本 and 累計折舊－機具設備，則機具設備淨額 = 機具設備成本 - 累計折舊
+    newAmount.debitAmount +=
+      account.debit === child.debit ? childAccount.debitAmount : -childAccount.debitAmount;
+    newAmount.creditAmount +=
+      account.debit === child.debit ? childAccount.creditAmount : -childAccount.creditAmount;
+
+    return childAccount;
+  });
+
+  // Info: (20240702 - Murky) Copy child to prevent call by reference
+  const updatedAccount: IAccountNodeWithDebitAndCredit = {
+    id: account.id,
+    debitAmount: newAmount.debitAmount,
+    creditAmount: newAmount.creditAmount,
+    companyId: account.companyId,
+    system: account.system,
+    type: account.type,
+    debit: account.debit,
+    liquidity: account.liquidity,
+    code: account.code,
+    name: account.name,
+    forUser: account.forUser,
+    parentCode: account.parentCode,
+    rootCode: account.rootCode,
+    createdAt: account.createdAt,
+    updatedAt: account.updatedAt,
+    level: account.level,
+    deletedAt: account.deletedAt,
+    children: updatedChildren,
+    parentId: account.parentId,
+    rootId: account.rootId,
+    note: account.note,
+  };
+
+  // updatedAccount.amount = newAmount; // Info: (20240801 - Murky)
+
+  // Info: (20240702 - Murky)刪除children中公司自行建立的account
+  // updatedAccount.children = updatedAccount.children.filter(
+  //   (child) => child.companyId === PUBLIC_COMPANY_ID
+  // );
 
   return updatedAccount;
 }
@@ -103,9 +262,29 @@ export function updateAccountAmountsInSingleTree(
   return updatedIAccountNode;
 }
 
+// Info: (20241114 - Shirley) 用於Trial Balance，跟 `updateAccountAmountsInSingleTree` 的差別在於保留公司自訂會計科目
+export function updateAccountAmountsInSingleTreeForTrialBalance(
+  accounts: IAccountNode,
+  lineItemsMap: Map<number, { debitAmount: number; creditAmount: number }>
+) {
+  return updateAccountAmountByDFSForTrialBalance(accounts, lineItemsMap);
+}
+
 export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<number, number>) {
   const updatedForest = forest.map((account) => {
     return updateAccountAmountsInSingleTree(account, lineItemsMap);
+  });
+
+  return updatedForest;
+}
+
+// Info: (20241114 - Shirley) 用於Trial Balance，跟 `updateAccountAmounts` 的差別在於保留公司自訂會計科目
+export function updateAccountAmountsForTrialBalance(
+  forest: IAccountNode[],
+  lineItemsMap: Map<number, { debitAmount: number; creditAmount: number }>
+) {
+  const updatedForest = forest.map((account) => {
+    return updateAccountAmountsInSingleTreeForTrialBalance(account, lineItemsMap);
   });
 
   return updatedForest;
@@ -177,6 +356,7 @@ export function iAccountNode2IAccountForSheetDisplay(
   children?: IAccountForSheetDisplay[]
 ): IAccountForSheetDisplay {
   const iAccountForSheetDisplay: IAccountForSheetDisplay = {
+    accountId: accountNode.id,
     code: accountNode.code,
     name: accountNode.name,
     amount: accountNode.amount,
@@ -209,6 +389,7 @@ export function mappingAccountToSheetDisplay(
     const account = accountMap.get(row.code);
     if (!account) {
       sheetDisplay.push({
+        accountId: -1,
         code: row.code,
         name: row.name,
         amount: 0,
@@ -230,6 +411,7 @@ export function mappingAccountToSheetDisplay(
           })
         : [];
       sheetDisplay.push({
+        accountId: -1,
         code: row.code,
         name: row.name,
         amount: account.accountNode.amount,
@@ -464,4 +646,18 @@ export function reverseNetIncome(netIncome: number = 0, originalNumber: number =
 
 export function absoluteNetIncome(netIncome: number = 0, originalNumber: number = 0): number {
   return Math.abs(netIncome + originalNumber);
+}
+
+export function isNodeCircularReference(
+  node: AccountBookNode,
+  newParent: AccountBookNode
+): boolean {
+  let current = newParent;
+  while (current) {
+    if (current.id === node.id) {
+      return true;
+    }
+    current = current.parent as AccountBookNode;
+  }
+  return false;
 }

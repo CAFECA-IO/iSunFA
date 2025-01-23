@@ -33,7 +33,6 @@
     "TRANSFER": "Transfer",
     "PAYMENT": "Payment",
     "RECEIVING": "Receiving",
-    "TWD": "TWD",
     "TAX": "Tax /",
     "NO_SLASH_TAX": "Tax",
     "TWD_FEE": " TWD fee",
@@ -195,8 +194,11 @@
     "PAID_AMOUNT": "Paid Amount",
     "REMAIN_AMOUNT": "Remain Amount",
     "REVERSE": "Reverse",
+    "DELETED": "Deleted",
     "EXPORT_VOUCHER_MODAL_TITLE": "Export Voucher",
     "EXPORT_VOUCHER_MODAL_SUBTITLE": "Please select the vouchers you want to export",
+    "TOAST_EXPORT_SUCCESS": "Voucher exported successfully.",
+    "TOAST_EXPORT_FAILED": "Failed to export voucher, please try again later.",
     "VOUCHER_NUMBER": "Voucher Number",
     "EXPORT_BTN": "Export",
     "FROM_PLACEHOLDER": "From",
@@ -204,7 +206,25 @@
     "BALANCE": "Balance",
     "LEDGER": "Ledger",
     "TRIAL_BALANCE": "Trial_Balance",
-    "NO_VOUCHER": "No voucher data"
+    "NO_VOUCHER": "No voucher data",
+    "UPLOADED_TAB": "Uploaded Voucher",
+    "UPCOMING_TAB": "Upcoming Events",
+    "RECEIVING_TAB": "Receiving",
+    "PAYMENT_TAB": "Payment",
+    "SELECT": "Select",
+    "SELECT_ALL": "Select All",
+    "UNSELECT_ALL": "Unselect All",
+    "HIDE_VOUCHER_TOGGLE": "Hide deleted vouchers and their reversals.",
+    "WARNING_MODAL_TITLE": "Warning",
+    "AT_LEAST_ONE_VOUCHER_CONTENT": "Please select at least one voucher to delete",
+    "DELETE_ONE_VOUCHER_TITLE": "Do you really want to delete {{voucherNo}}?",
+    "DELETE_ONE_VOUCHER_CONTENT": "All the assets that are connected to this voucher will be deleted too.",
+    "DELETE_ONE_VOUCHER_WARNING": "A reversal voucher will be created to offset the deleted voucher. The original voucher will remain visible for reference.",
+    "DELETE_ONE_VOUCHER_SUBMIT_BTN": "Yes, delete the voucher.",
+    "DELETE_MULTIPLE_VOUCHER_TITLE": "Do you really want to delete {{count}} vouchers?",
+    "DELETE_MULTIPLE_VOUCHER_CONTENT": "All the assets that are connected to these vouchers will be deleted too.",
+    "DELETE_MULTIPLE_VOUCHER_WARNING": "Reversal vouchers will be created to offset the deleted vouchers. The original vouchers will remain visible for reference.",
+    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "Yes, delete these vouchers."
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "Add New Voucher",
@@ -213,13 +233,20 @@
     "TYPE_RECEIVE": "Receiving",
     "TYPE_EXPENSE": "Payment",
     "TYPE_TRANSFER": "Transfer",
+    "TYPE_OPENING": "Opening",
     "NOTE": "Note",
     "COUNTERPARTY": "Counterparty",
     "RECURRING_ENTRY": "Recurring Entry",
     "SELECT_ACCOUNTING": "Select Accounting",
     "NO_ACCOUNTING_FOUND": "No accounting found",
     "NO_COUNTERPARTY_FOUND": "No counterparty found",
-    "EVERY": "Every"
+    "EVERY": "Every",
+    "TOAST_FAILED_TO_CREATE": "Failed to create voucher, please try again later.",
+    "TOAST_FILL_UP_FORM": "Please fill up the form.",
+    "TOAST_FAILED_TO_UPDATE": "Failed to update voucher, please try again later.",
+    "LINE_ITEM_1": "Please verify whether the debit and credit sides are balanced.",
+    "LINE_ITEM_2": "Please ensure that all accounting subjects have been filled in.",
+    "LINE_ITEM_3": "Please confirm that at least one accounting entry has been added."
   },
   "ACCOUNT_TYPE": {
     "ASSET": "Assets",
@@ -233,23 +260,18 @@
   },
   "ASSET_SECTION": {
     "TITLE": "Asset",
+    "EMPTY": "Empty",
     "EMPTY_HINT": "Please add at least 1 asset!",
     "ADD_BTN": "Add New Asset"
-  },
-  "REVERSE_SECTION": {
-    "TITLE": "Reverse",
-    "REVERSE_VOUCHER": "Reverse Voucher",
-    "REVERSE_VOUCHER_PLACEHOLDER": "Please select...",
-    "REVERSE_AMOUNT": "Reverse Amount",
-    "ADD_BTN": "Add more reverse voucher",
-    "EMPTY_HINT": "Please add at least 1 reverse voucher!"
   },
   "VOUCHER_LINE_BLOCK": {
     "ACCOUNTING": "Accounting",
     "PARTICULARS": "Particulars",
     "CREDIT": "Credit",
     "DEBIT": "Debit",
-    "EMPTY_HINT": "Please add at least 1 accounting voucher!"
+    "EMPTY_HINT": "Please add at least 1 accounting voucher!",
+    "REVERSE_ITEM": "Reverse Item",
+    "REVERSE_HINT": "Please add at least 1 reverse voucher!"
   },
   "VOUCHER_DETAIL_PAGE": {
     "TITLE": "Voucher",
@@ -271,6 +293,52 @@
     "DELETE_MESSAGE_CONTENT": "All the assets that are connected to this voucher will be deleted too.",
     "DELETE_MESSAGE_SUBMIT_BTN": "Yes, delete the voucher",
     "DELETE_SUCCESS_TOAST": "Vouchers have been deleted.",
-    "UNDO": "Undo"
+    "UNDO": "Undo",
+    "VOUCHER_NOT_FOUND": "Voucher not found, please make sure the URL is correct."
+  },
+  "LEDGER": {
+    "LEDGER_PERIOD": "Ledger Period",
+    "LABEL_TYPE": "Label Type",
+    "GENERAL": "General",
+    "DETAILED": "Detailed",
+    "GENERAL_DETAILED": "General & Detailed",
+    "SPECIFIC_ACCOUNTING_TITLE": "Specific accounting title",
+    "TOTAL_DEBIT_AMOUNT": "Total Debit amount",
+    "TOTAL_CREDIT_AMOUNT": "Total Credit amount",
+    "INCOME": "Non-operating Income and Expenses",
+    "ASSET": "Asset",
+    "LIABILITY": "Liability",
+    "EQUITY": "Equity",
+    "COST": "Cost",
+    "EXPENSE": "Expense",
+    "REVENUE": "Revenue",
+    "OTHERCOMPREHENSIVEINCOME": "Other Comprehensive Income"
+  },
+  "AI_WORKING_AREA": {
+    "RESTING_CONTENT": "Please select the certificates for AI to generate the voucher for you",
+    "WORKING_CONTENT": "AI is scanning your certificates, please wait...",
+    "STOP_BTN": "Stop scanning",
+    "FAILED_CONTENT": "AI didn’t find any valid data from your certificate, please enter manually or",
+    "RETRY_BTN": "Try again",
+    "FINISH_CONTENT": "AI has done scanning. Click here to allow AI",
+    "FILL_UP_BTN": "Fill up your voucher",
+    "WARNING_CONTENT": "AI can make mistake, please double check important information."
+  },
+  "REVERSE_MODAL": {
+    "MODAL_TITLE": "Select Reverse Items",
+    "SELECT": "Select",
+    "TOTAL_REVERSE_AMOUNT": "Total Reverse Amount",
+    "VOUCHER_NO": "Voucher No",
+    "ACCOUNTING": "Accounting",
+    "PARTICULARS": "Particulars",
+    "AMOUNT": "Amount",
+    "REVERSE_AMOUNT": "Reverse Amount",
+    "NOT_FOUND": "No Reverse Item Found"
+  },
+  "EDIT_VOUCHER": {
+    "PAGE_TITLE": "Edit Voucher"
+  },
+  "COMMON": {
+    "STATUS": "Status"
   }
 }

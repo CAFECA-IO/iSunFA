@@ -2,6 +2,8 @@ import prisma from '@/client';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getTimestampNow } from '@/lib/utils/common';
+import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function createAccountingSetting(companyId: number) {
   let accountingSetting = null;
@@ -10,24 +12,21 @@ export async function createAccountingSetting(companyId: number) {
     accountingSetting = await prisma.accountingSetting.create({
       data: {
         companyId,
-        salesTaxTaxable: true,
-        salesTaxRate: 0.05,
-        purchaseTaxTaxable: true,
-        purchaseTaxRate: 0.05,
-        returnPeriodicity: 'monthly',
-        currency: 'USD',
+        salesTaxTaxable: DEFAULT_ACCOUNTING_SETTING.SALES_TAX_TAXABLE,
+        salesTaxRate: DEFAULT_ACCOUNTING_SETTING.SALES_TAX_RATE,
+        purchaseTaxTaxable: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_TAXABLE,
+        purchaseTaxRate: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_RATE,
+        returnPeriodicity: DEFAULT_ACCOUNTING_SETTING.RETURN_PERIODICITY,
+        currency: DEFAULT_ACCOUNTING_SETTING.CURRENCY,
       },
       include: { shortcuts: true },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'create accounting setting in createAccountingSetting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related create accounting setting in createAccountingSetting in accounting_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'create accounting setting in createAccountingSetting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return accountingSetting;
@@ -42,14 +41,11 @@ export async function getAccountingSettingByCompanyId(companyId: number) {
       include: { shortcuts: true },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'get accounting setting in getAccountingSetting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related get accounting setting in getAccountingSetting in accounting_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get accounting setting in getAccountingSetting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return accountingSetting;
@@ -91,14 +87,11 @@ export async function updateAccountingSettingById(id: number, data: IAccountingS
       accountingSetting = await getAccountingSettingByCompanyId(data.companyId);
     }
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'update accounting setting in updateAccountingSetting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related update accounting setting in updateAccountingSetting in accounting_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'update accounting setting in updateAccountingSetting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return accountingSetting;
@@ -112,14 +105,11 @@ export async function deleteAccountingSettingByIdForTesting(id: number) {
       where: { id },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'delete accounting setting in deleteAccountingSettingByIdForTesting failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related delete accounting setting in deleteAccountingSettingByIdForTesting in accounting_setting.repo.ts failed'
-    );
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'delete accounting setting in deleteAccountingSettingByIdForTesting failed',
+      errorMessage: (error as Error).message,
+    });
   }
 
   return accountingSetting;

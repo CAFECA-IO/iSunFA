@@ -8,6 +8,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 export async function findManyAccountsInPrisma({
   companyId,
@@ -66,7 +67,7 @@ export async function findManyAccountsInPrisma({
             ? includeDefaultAccount
               ? [{ companyId }, { companyId: PUBLIC_COMPANY_ID }]
               : [{ companyId }]
-            : [],
+            : [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
       },
       equityType && type === AccountType.EQUITY
         ? {
@@ -78,7 +79,7 @@ export async function findManyAccountsInPrisma({
       {
         OR: searchKey
           ? [
-              { name: { startsWith: searchKey, mode: 'insensitive' } },
+              { name: { contains: searchKey, mode: 'insensitive' } },
               { code: { startsWith: searchKey, mode: 'insensitive' } },
             ]
           : [],
@@ -91,12 +92,11 @@ export async function findManyAccountsInPrisma({
   try {
     totalCount = await prisma.account.count({ where });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Count tototal count of account in findManyAccountsInPrisma failed',
-      error as Error
-    );
-    logError.error('Prisma count account in account.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Count total count of account in findManyAccountsInPrisma failed',
+      errorMessage: error as Error,
+    });
   }
 
   const totalPage = Math.ceil(totalCount / limit);
@@ -115,12 +115,11 @@ export async function findManyAccountsInPrisma({
   try {
     accounts = await prisma.account.findMany(findManyArgs);
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Find many accounts in findManyAccountsInPrisma failed',
-      error as Error
-    );
-    logError.error('Prisma find many accounts in account.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Find many accounts in findManyAccountsInPrisma failed',
+      errorMessage: error as Error,
+    });
   }
 
   const hasNextPage = accounts.length > limit;
@@ -162,12 +161,11 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Find first account in findFirstAccountInPrisma failed',
-      error as Error
-    );
-    logError.error('Prisma find first account in account.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Find first account in findFirstAccountInPrisma failed',
+      errorMessage: error as Error,
+    });
   }
 
   return account;
@@ -176,7 +174,8 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
 export async function updateAccountInPrisma(
   accountIdNumber: number,
   companyIdNumber: number,
-  name: string
+  name: string,
+  note?: string
 ) {
   let account: Account | null = null;
   try {
@@ -187,15 +186,15 @@ export async function updateAccountInPrisma(
       },
       data: {
         name,
+        note: note ?? '',
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Update account in updateAccountInPrisma failed',
-      error as Error
-    );
-    logError.error('Prisma update account in account.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Update account in updateAccountInPrisma failed',
+      errorMessage: error as Error,
+    });
   }
 
   return account;
@@ -216,12 +215,11 @@ export async function softDeleteAccountInPrisma(accountIdNumber: number, company
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Soft delete account in softDeleteAccountInPrisma failed',
-      error as Error
-    );
-    logError.error('Prisma soft delete account in account.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Soft delete account in softDeleteAccountInPrisma failed',
+      errorMessage: error as Error,
+    });
   }
   return account;
 }
@@ -231,19 +229,18 @@ export async function findLatestSubAccountInPrisma(parentAccount: Account) {
   try {
     latestSubAccount = await prisma.account.findFirst({
       where: {
-        parentCode: parentAccount.code,
+        parentId: parentAccount.id,
       },
       orderBy: {
         createdAt: SortOrder.DESC,
       },
     });
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Find latest sub account in findLatestSubAccountInPrisma failed',
-      error as Error
-    );
-    logError.error('Prisma find latest sub account in account.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Find latest sub account in findLatestSubAccountInPrisma failed',
+      errorMessage: error as Error,
+    });
   }
   return latestSubAccount;
 }
@@ -258,11 +255,21 @@ export async function easyFindManyAccountsInPrisma(companyId: number, type: Acco
   return accounts;
 }
 
-export async function findUniqueAccountByCodeInPrisma(code: string, companyId?: number) {
-  const account: Account | null = await prisma.account.findUnique({
+// TODO: (20241126 - Shirley) FIXME: account code 可能重複，要改用 account id 找
+export async function findFirstAccountByCodeInPrisma(code: string, companyId?: number) {
+  const account: Account | null = await prisma.account.findFirst({
     where: {
       OR: [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
       code,
+    },
+  });
+  return account;
+}
+
+export async function findAccountByIdInPrisma(accountId: number) {
+  const account: Account | null = await prisma.account.findUnique({
+    where: {
+      id: accountId,
     },
   });
   return account;
@@ -280,13 +287,78 @@ export async function fuzzySearchAccountByName(name: string) {
     `;
     [account] = accounts;
   } catch (error) {
-    const logError = loggerError(
-      0,
-      'Fuzzy search account by name in fuzzySearchAccountByName failed',
-      error as Error
-    );
-    logError.error('Prisma fuzzy search account by name in account.repo.ts failed');
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Fuzzy search account by name in fuzzySearchAccountByName failed',
+      errorMessage: error as Error,
+    });
   }
 
+  return account;
+}
+
+export async function createAccountInPrisma(options: {
+  nowInSecond: number;
+  companyId: number;
+  system: string;
+  type: string;
+  debit: boolean;
+  liquidity: boolean;
+  code: string;
+  name: string;
+  forUser: boolean;
+  parentCode: string;
+  rootCode: string;
+  level: number;
+  parentId: number;
+  rootId: number;
+  note: string | null;
+}) {
+  const {
+    companyId,
+    system,
+    type,
+    debit,
+    liquidity,
+    code,
+    name,
+    forUser,
+    parentCode,
+    rootCode,
+    level,
+    parentId,
+    rootId,
+    note,
+    nowInSecond,
+  } = options;
+  let account: Account | null = null;
+  try {
+    account = await prisma.account.create({
+      data: {
+        companyId,
+        system,
+        type,
+        debit,
+        liquidity,
+        code,
+        name,
+        forUser,
+        parentCode,
+        rootCode,
+        level,
+        parentId,
+        rootId,
+        note,
+        createdAt: nowInSecond,
+        updatedAt: nowInSecond,
+      },
+    });
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Create account in createAccountInPrisma failed',
+      errorMessage: error as Error,
+    });
+  }
   return account;
 }

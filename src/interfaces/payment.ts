@@ -1,4 +1,5 @@
 import { PaymentPeriodType, PaymentStatusType } from '@/constants/account';
+import { PAYMENT_METHOD_TYPE } from '@/constants/payment';
 
 /** Info: (20240823 - Jacky) Represents a payment.
  *
@@ -38,4 +39,13 @@ export interface IPayment {
 
 export interface IPaymentBeta extends IPayment {
   taxPrice: number;
+}
+
+export interface IPaymentMethod {
+  id: number;
+  type: PAYMENT_METHOD_TYPE;
+  number: string;
+  expirationDate: string;
+  cvv: string;
+  default: boolean;
 }

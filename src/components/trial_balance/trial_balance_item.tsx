@@ -1,127 +1,178 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { numberWithCommas } from '@/lib/utils/common';
-import { checkboxStyle } from '@/constants/display';
 import type { TrialBalanceItem } from '@/interfaces/trial_balance';
+import CollapseButton from '@/components/button/collapse_button';
 
 interface ITrialBalanceItemProps {
-  voucher: TrialBalanceItem;
+  account: TrialBalanceItem;
+  totalExpanded: boolean; // Info: (20241029 - Anna) Receive expanded state from parent
 }
-const tableCellStyles = 'text-center align-middle';
-const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
 
-const TrialBalanceItemRow = React.memo(({ voucher }: ITrialBalanceItemProps) => {
-  const [isChecked, setIsChecked] = useState(false);
+const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanceItemProps) => {
+  // Info: (20241025 - Anna) 新增狀態來追蹤按鈕展開狀態
+  const [localIsExpanded, setLocalIsExpanded] = useState(totalExpanded); // Info: (20241029 - Anna) 使用解構的 totalExpanded 作為初始值
 
-  const displayedCheckbox = (
-    <div className="relative px-8px py-6">
-      <input
-        type="checkbox"
-        className={checkboxStyle}
-        checked={isChecked}
-        onChange={() => setIsChecked(!isChecked)}
-      />
-    </div>
-  );
+  // Info: (20241029 - Anna) Update local isExpanded when parent state changes
+  useEffect(() => {
+    setLocalIsExpanded(totalExpanded);
+  }, [totalExpanded]);
 
   const displayedAccountingCode = (
-    <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-      <div>
-        <p className="m-0 flex items-center">{voucher.no}</p>
+    <div className="ml-2 flex items-center justify-start font-medium text-text-neutral-primary">
+      <div className="flex items-center justify-between">
+        <p className="flex items-center">{account.no}</p>
+        {/* Info: (20241025 - Anna) 在 account.no 右側加入 CollapseButton */}
+        {/* Info: (20241025 - Anna) 只有當 account.subAccounts 有數據時才顯示 CollapseButton */}
+        {account.subAccounts.length > 0 && (
+          <CollapseButton
+            onClick={() => setLocalIsExpanded(!localIsExpanded)} // Info: (20241029 - Anna) 使用 localIsExpanded
+            isCollapsed={!localIsExpanded}
+          />
+        )}
       </div>
     </div>
   );
   const displayedAccountingName = (
-    <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-      <div>
-        <p className="m-0 flex items-center">{voucher.accountingTitle}</p>
-      </div>
+    <div className="flex items-center justify-center p-8px font-medium text-text-neutral-primary print:justify-start">
+      {account.accountingTitle}
     </div>
   );
 
   const displayedBeginningDebitAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="m-0 flex items-center text-text-neutral-primary">
-        {numberWithCommas(voucher.beginningDebitAmount)}
-      </p>
+    <div className="flex items-center justify-end">
+      {numberWithCommas(account.beginningDebitAmount)}
     </div>
   );
 
   const displayedBeginningCreditAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="text-text-neutral-primary">{numberWithCommas(voucher.beginningCreditAmount)}</p>
+    <div className="flex items-center justify-end">
+      {numberWithCommas(account.beginningCreditAmount)}
     </div>
   );
   const displayedMidtermDebitAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="m-0 flex items-center text-text-neutral-primary">
-        {numberWithCommas(voucher.midtermDebitAmount)}
-      </p>
+    <div className="flex items-center justify-end">
+      {numberWithCommas(account.midtermDebitAmount)}
     </div>
   );
 
   const displayedMidtermCreditAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="text-text-neutral-primary">{numberWithCommas(voucher.midtermCreditAmount)}</p>
+    <div className="flex items-center justify-end">
+      {numberWithCommas(account.midtermCreditAmount)}
     </div>
   );
+
   const displayedEndingDebitAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="m-0 flex items-center text-text-neutral-primary">
-        {numberWithCommas(voucher.endingDebitAmount)}
-      </p>
+    <div className="flex items-center justify-end">
+      {numberWithCommas(account.endingDebitAmount)}
     </div>
   );
 
   const displayedEndingCreditAmount = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="text-text-neutral-primary">{numberWithCommas(voucher.endingCreditAmount)}</p>
+    <div className="flex items-center justify-end">
+      {numberWithCommas(account.endingCreditAmount)}
     </div>
   );
 
   return (
-    <div className="table-row h-20px font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
-      {/* Info: (20240920 - Julian) Select */}
-      <div className={`table-cell w-32px text-center`}>{displayedCheckbox}</div>
-      {/* Info: (20241004 - Anna) Accounting */}
-      <div className="table-cell w-50px text-center align-middle">{displayedAccountingCode}</div>
-      <div className="table-cell w-370px text-center align-middle">{displayedAccountingName}</div>
-      {/* Info: (20241009 - Anna) Beginning Debit */}
-      <div
-        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
-      >
-        {displayedBeginningDebitAmount}
+    <>
+      <div className="table-row font-medium print:text-xxs">
+        {/* Info: (20241004 - Anna) Accounting */}
+        {/* Info: (20250116 - Anna) print:max-w-55px */}
+        <div className="table-cell h-60px bg-surface-neutral-surface-lv1 text-center align-middle print:max-w-55px print:bg-neutral-50">
+          {displayedAccountingCode}
+        </div>
+        {/* Info: (20250116 - Anna) Accounting Name */}
+        {/* Info: (20250116 - Anna) print:max-w-150px */}
+        <div className="table-cell bg-surface-neutral-surface-lv1 text-center align-middle print:max-w-150px print:bg-neutral-50">
+          {displayedAccountingName}
+        </div>
+        {/* Info: (20241009 - Anna) Beginning Debit */}
+        {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+        <div
+          className={`table-cell border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+        >
+          {displayedBeginningDebitAmount}
+        </div>
+        {/* Info: (20241009 - Anna) Beginning Credit */}
+        {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+        <div
+          className={`table-cell border-l border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+        >
+          {displayedBeginningCreditAmount}
+        </div>
+        {/* Info: (20241009 - Anna) Midterm Debit */}
+        {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+        <div
+          className={`table-cell border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+        >
+          {displayedMidtermDebitAmount}
+        </div>
+        {/* Info: (20241009 - Anna) Midterm Credit */}
+        {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+        <div
+          className={`table-cell border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+        >
+          {displayedMidtermCreditAmount}
+        </div>
+        {/* Info: (20241009 - Anna) Ending Debit */}
+        {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+        <div
+          className={`table-cell border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+        >
+          {displayedEndingDebitAmount}
+        </div>
+        {/* Info: (20241009 - Anna) Ending Credit */}
+        {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+        <div
+          className={`table-cell border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+        >
+          {displayedEndingCreditAmount}
+        </div>
       </div>
-      {/* Info: (20241009 - Anna) Beginning Credit */}
-      <div
-        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
-      >
-        {displayedBeginningCreditAmount}
-      </div>
-      {/* Info: (20241009 - Anna) Midterm Debit */}
-      <div
-        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
-      >
-        {displayedMidtermDebitAmount}
-      </div>
-      {/* Info: (20241009 - Anna) Midterm Credit */}
-      <div
-        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
-      >
-        {displayedMidtermCreditAmount}
-      </div>
-      {/* Info: (20241009 - Anna) Ending Debit */}
-      <div
-        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
-      >
-        {displayedEndingDebitAmount}
-      </div>
-      {/* Info: (20241009 - Anna) Ending Credit */}
-      <div
-        className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')} ${sideBorderStyles.replace('border-r', '')}`}
-      >
-        {displayedEndingCreditAmount}
-      </div>
-    </div>
+      {/* Info: (20241025 - Anna) 如果展開，新增子科目表格 */}
+      {localIsExpanded &&
+        account.subAccounts.map((subAccount) => (
+          <div
+            key={subAccount.id}
+            className="table-row font-medium text-text-neutral-primary print:text-xxs"
+          >
+            {/* Info: (20241025 - Anna) print:max-w-55px */}
+            <div className="table-cell text-center align-middle print:max-w-55px print:bg-neutral-50">
+              <span className="ml-6 print:ml-3">{subAccount.no}</span>
+            </div>
+            {/* Info: (20241025 - Anna) print:max-w-150px */}
+            <div className="table-cell text-center align-middle print:max-w-150px print:bg-neutral-50 print:text-start">
+              <div className="flex items-center justify-center font-medium print:justify-start">
+                <span className="ml-12 flex items-center print:ml-6">{subAccount.accountingTitle}</span>
+              </div>
+            </div>
+            {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
+            <div className="table-cell border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
+              {numberWithCommas(subAccount.beginningDebitAmount)}
+            </div>
+            {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
+            <div className="table-cell border-l border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
+              {numberWithCommas(subAccount.beginningCreditAmount)}
+            </div>
+            {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
+            <div className="table-cell border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
+              {numberWithCommas(subAccount.midtermDebitAmount)}
+            </div>
+            {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
+            <div className="table-cell border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
+              {numberWithCommas(subAccount.midtermCreditAmount)}
+            </div>
+            {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
+            <div className="table-cell border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
+              {numberWithCommas(subAccount.endingDebitAmount)}
+            </div>
+            {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
+            <div className="table-cell border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
+              {numberWithCommas(subAccount.endingCreditAmount)}
+            </div>
+          </div>
+        ))}
+    </>
   );
 });
 

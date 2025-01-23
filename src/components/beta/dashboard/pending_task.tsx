@@ -1,260 +1,52 @@
-import Image from 'next/image';
-import { Doughnut } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, type ChartData } from 'chart.js';
+import { useEffect, useState } from 'react';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
-// import { IPendingTask, IPendingTaskTotal } from '@/interfaces/pending_task';
-
-ChartJS.register(ArcElement, Tooltip, Legend);
-
-interface DonutChartProps {
-  percentageForMissingCertificate: number;
-  percentageForUnpostedVoucher: number;
-  isChartForTotal: boolean;
-}
+import { useTranslation } from 'next-i18next';
+import { useUserCtx } from '@/contexts/user_context';
+import APIHandler from '@/lib/utils/api_handler';
+import { ICompanyAndRole } from '@/interfaces/company';
+import { APIName } from '@/constants/api_connection';
+import DonutChart from '@/components/beta/dashboard/donut_chart';
+import TaskType from '@/components/beta/dashboard/task_type';
+import PendingTasksForCompany from '@/components/beta/dashboard/pending_task_for_company';
+import {
+  IPendingTaskTotal,
+  PendingTaskIconName,
+  TaskTitle,
+  IMissingCertificate,
+} from '@/interfaces/pending_task';
+import Image from 'next/image';
+import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data';
 
 interface CompanyListProps {
-  list: {
-    companyName: string;
-    companyLogoSrc: string;
-    count: number;
-  }[];
+  list: IMissingCertificate[]; // Info: (20250109 - Liz) IMissingCertificate 與 IUnpostedVoucher 相同
 }
 
-/* === 研究資料格式 === */
-// ToDo: (20241016 - Liz) 已選擇的公司的待辦事項
-// const pendingTaskForCompany: IPendingTask = {
-//   id: 1,
-//   companyId: 1,
-//   missingCertificate: {
-//     id: 1,
-//     companyId: 1,
-//     count: 50,
-//   },
-//   unpostedVoucher: {
-//     id: 1,
-//     companyId: 1,
-//     count: 20,
-//   },
-// };
-
-// const countForMissingCertificate = pendingTaskForCompany.missingCertificate.count;
-// const countForUnpostedVoucher = pendingTaskForCompany.unpostedVoucher.count;
-// const total = countForMissingCertificate + countForUnpostedVoucher;
-// const percentageForMissingCertificate = (countForMissingCertificate / total) * 100;
-// const percentageForUnpostedVoucher = (countForUnpostedVoucher / total) * 100;
-
-// ToDo: (20241016 - Liz) 所有公司的待辦事項
-// const pendingTaskTotal: IPendingTaskTotal = {
-//   id: 1,
-//   userId: 1,
-//   totalMissingCertificate: 62,
-//   missingCertificateList: [
-//     {
-//       id: 1,
-//       companyId: 1,
-//       count: 50,
-//     },
-//     {
-//       id: 2,
-//       companyId: 2,
-//       count: 10,
-//     },
-//     {
-//       id: 3,
-//       companyId: 3,
-//       count: 2,
-//     },
-//   ],
-//   totalUnpostedVoucher: 38,
-//   unpostedVoucherList: [
-//     {
-//       id: 1,
-//       companyId: 1,
-//       count: 20,
-//     },
-//     {
-//       id: 2,
-//       companyId: 2,
-//       count: 10,
-//     },
-//     {
-//       id: 3,
-//       companyId: 3,
-//       count: 8,
-//     },
-//   ],
-// };
-
-// const countForMissingCertificate = pendingTaskTotal.totalMissingCertificate;
-// const countForUnpostedVoucher = pendingTaskTotal.totalUnpostedVoucher;
-// const total = countForMissingCertificate + countForUnpostedVoucher;
-// const percentageForMissingCertificate = (countForMissingCertificate / total) * 100;
-// const percentageForUnpostedVoucher = (countForUnpostedVoucher / total) * 100;
-
-const PendingTasksNoData = () => {
-  return (
-    <section className="flex flex-col gap-24px">
-      <h3 className="text-xl font-bold text-text-neutral-secondary">Pending tasks</h3>
-      <div className="flex flex-col items-center">
-        <Image src={'/images/empty.svg'} alt="empty_image" width={120} height={134.787}></Image>
-        <p className="text-base font-medium text-text-neutral-mute">No Data</p>
-      </div>
-    </section>
-  );
-};
-
-const DonutChart = ({
-  percentageForMissingCertificate,
-  percentageForUnpostedVoucher,
-  isChartForTotal,
-}: DonutChartProps) => {
-  const backgroundColorSwitch = isChartForTotal ? ['#FFB946', '#1C4E80'] : ['#D3F4E5', '#FED7D7'];
-
-  const data: ChartData<'doughnut', number[], string> = {
-    labels: ['Missing certificate', 'Unposted vouchers'],
-    datasets: [
-      {
-        data: [percentageForMissingCertificate, percentageForUnpostedVoucher],
-        backgroundColor: backgroundColorSwitch, // Info: (20241017 - Liz) 區塊顏色依照順序設定
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  return (
-    <Doughnut
-      data={data}
-      options={{
-        responsive: true,
-        plugins: {
-          legend: {
-            display: false, // Info: (20241018 - Liz) Disable the default legend
-          },
-          tooltip: {
-            // Info: (20241018 - Liz) 可以設定 tooltip 的顯示內容或者關閉
-            // enabled: false,
-          },
-        },
-        cutout: '20%', // Info: (20241018 - Liz) This creates the donut hole
-      }}
-    />
-  );
-};
-
-const PendingTasksForCompany = () => {
-  // Deprecated: (20241016 - Liz) 這是假資料，等之後串真正資料後再刪除
-  const countForMissingCertificate = 40;
-  const countForUnpostedVoucher = 30;
-  const total = countForMissingCertificate + countForUnpostedVoucher;
-  const percentageForMissingCertificate = Math.ceil((countForMissingCertificate / total) * 100);
-  const percentageForUnpostedVoucher = 100 - percentageForMissingCertificate;
-
-  return (
-    <section className="flex flex-col gap-24px">
-      <h3 className="text-xl font-bold text-text-neutral-secondary">Pending tasks</h3>
-
-      {/* Chart Section */}
-      <section className="flex items-center gap-16px">
-        <div className="w-160px">
-          <DonutChart
-            percentageForMissingCertificate={percentageForMissingCertificate}
-            percentageForUnpostedVoucher={percentageForUnpostedVoucher}
-            isChartForTotal={false}
-          />
-        </div>
-
-        <div className="flex grow flex-col gap-16px">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8px">
-              <Image
-                src={'/icons/missing_certificate_icon.svg'}
-                alt="missing_certificate_icon"
-                width={22}
-                height={22}
-                className="h-22px w-22px"
-              ></Image>
-              <h4 className="text-xs font-semibold text-text-neutral-primary">
-                Missing certificate
-              </h4>
-            </div>
-
-            <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-              {countForMissingCertificate}{' '}
-              <span className="text-lg font-semibold text-text-brand-secondary-lv3">
-                ({percentageForMissingCertificate}%)
-              </span>
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8px">
-              <Image
-                src={'/icons/unposted_vouchers_icon.svg'}
-                alt="unposted_vouchers_icon"
-                width={22}
-                height={22}
-                className="h-22px w-22px"
-              ></Image>
-              <h4 className="text-xs font-semibold text-text-neutral-primary">Unposted vouchers</h4>
-            </div>
-            <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-              {countForUnpostedVoucher}{' '}
-              <span className="text-lg font-semibold text-text-brand-secondary-lv3">
-                ({percentageForUnpostedVoucher}%)
-              </span>
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-8px">
-          <Image
-            src={'/icons/missing_certificate_icon.svg'}
-            alt="missing_certificate_icon"
-            width={22}
-            height={22}
-            className="h-22px w-22px"
-          ></Image>
-          <h4 className="text-xs font-semibold text-text-neutral-primary">Missing certificate</h4>
-        </div>
-
-        <button type="button" className="text-sm font-semibold text-link-text-primary">
-          Add to My Calendar
-        </button>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-8px">
-          <Image
-            src={'/icons/unposted_vouchers_icon.svg'}
-            alt="unposted_vouchers_icon"
-            width={22}
-            height={22}
-            className="h-22px w-22px"
-          ></Image>
-          <h4 className="text-xs font-semibold text-text-neutral-primary">Unposted vouchers</h4>
-        </div>
-
-        <button type="button" className="text-sm font-semibold text-link-text-primary">
-          Add to My Calendar
-        </button>
-      </div>
-    </section>
-  );
-};
-
 const CompanyList = ({ list }: CompanyListProps) => {
+  const { t } = useTranslation('dashboard');
+
+  const isListNoData = list.length === 0;
+
+  if (isListNoData) {
+    return (
+      <div className="text-center text-base font-medium text-text-neutral-mute">
+        {t('dashboard:DASHBOARD.NO_DATA_AVAILABLE')}
+      </div>
+    );
+  }
+
+  // Info: (20250109 - Liz) 依照 list.count 由大到小排序(降冪)
+  list.sort((a, b) => b.count - a.count);
+
   return (
     <section className="flex flex-col gap-8px">
       {list.map((item) => (
         <div
-          key={item.companyName}
+          key={item.companyId}
           className="flex items-center justify-between gap-8px bg-surface-brand-primary-10 px-8px py-4px"
         >
           <div className="flex items-center gap-8px">
-            <div className="h-24px w-24px overflow-hidden rounded-xxs bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS">
-              <Image src={item.companyLogoSrc} alt="company_logo" width={24} height={24}></Image>
+            <div className="h-24px w-24px overflow-hidden rounded-xxs border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
+              <Image src={item.companyLogoSrc} alt="company_logo" width={24} height={24} />
             </div>
             <p className="text-xs font-semibold text-text-neutral-primary">{item.companyName}</p>
           </div>
@@ -267,157 +59,185 @@ const CompanyList = ({ list }: CompanyListProps) => {
 };
 
 const PendingTasksForAll = () => {
-  // Deprecated: (20241016 - Liz) 這是假資料，等之後串真正資料後再刪除
-  const missingCertificateList = [
-    { companyName: 'Company A', companyLogoSrc: '/images/fake_company_log_01.png', count: 50 },
-    {
-      companyName: 'Company B',
-      companyLogoSrc: '/images/fake_company_log_02.png',
-      count: 10,
-    },
-    {
-      companyName: 'Company C',
-      companyLogoSrc: '/images/fake_company_log_03.png',
-      count: 2,
-    },
-  ];
+  const { t } = useTranslation('dashboard');
+  const [userPendingTaskTotal, setUserPendingTaskTotal] = useState<IPendingTaskTotal>();
+  const { userAuth } = useUserCtx();
 
-  const unpostedVoucherList = [
-    { companyName: 'Company A', companyLogoSrc: '/images/fake_company_log_01.png', count: 20 },
-    {
-      companyName: 'Company B',
-      companyLogoSrc: '/images/fake_company_log_02.png',
-      count: 10,
-    },
-    {
-      companyName: 'Company C',
-      companyLogoSrc: '/images/fake_company_log_03.png',
-      count: 8,
-    },
-  ];
-  const countForMissingCertificate = 62;
-  const countForUnpostedVoucher = 38;
-  const total = countForMissingCertificate + countForUnpostedVoucher;
-  const percentageForMissingCertificate = Math.ceil((countForMissingCertificate / total) * 100);
-  const percentageForUnpostedVoucher = 100 - percentageForMissingCertificate;
+  // Info: (20241127 - Liz) 打 API 取得使用者的待辦任務(總數)
+  const { trigger: getUserPendingTaskAPI } = APIHandler<IPendingTaskTotal>(
+    APIName.USER_PENDING_TASK_GET
+  );
+
+  useEffect(() => {
+    if (!userAuth) return;
+
+    const getUserPendingTask = async () => {
+      try {
+        const { data, success, code } = await getUserPendingTaskAPI({
+          params: { userId: userAuth.id },
+        });
+
+        if (success && data) {
+          setUserPendingTaskTotal(data);
+        } else {
+          // Deprecated: (20241127 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('PendingTasksForAll getUserPendingTaskAPI code:', code);
+        }
+      } catch (error) {
+        // Deprecated: (20241127 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('PendingTasksForAll getUserPendingTaskAPI error:', error);
+      }
+    };
+
+    getUserPendingTask();
+  }, [userAuth]);
+
+  if (!userPendingTaskTotal) {
+    return <PendingTaskNoData />;
+  }
+
+  const isUserPendingTaskTotalEmpty =
+    userPendingTaskTotal.totalMissingCertificate === 0 &&
+    userPendingTaskTotal.totalUnpostedVoucher === 0 &&
+    userPendingTaskTotal.totalMissingCertificatePercentage === 0 &&
+    userPendingTaskTotal.totalUnpostedVoucherPercentage === 0;
+
+  if (isUserPendingTaskTotalEmpty) {
+    return <PendingTaskNoData />;
+  }
+
+  const percentageForMissingCertificate =
+    userPendingTaskTotal.totalMissingCertificatePercentage * 100;
+  const percentageForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucherPercentage * 100;
+  const countForMissingCertificate = userPendingTaskTotal.totalMissingCertificate;
+  const countForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucher;
 
   return (
     <section className="flex flex-col gap-24px">
-      <h3 className="text-xl font-bold text-text-neutral-secondary">Pending tasks (Total)</h3>
+      <h3 className="text-xl font-bold text-text-neutral-secondary">
+        {t('dashboard:DASHBOARD.PENDING_TASKS_TOTAL')}
+      </h3>
 
-      {/* Chart Section */}
+      {/* === // Info: (20241209 - Liz) Chart Section === */}
       <section className="flex items-center gap-16px">
         <div className="w-160px">
           <DonutChart
             percentageForMissingCertificate={percentageForMissingCertificate}
-            percentageForUnpostedVoucher={percentageForUnpostedVoucher}
+            percentageForUnpostedVouchers={percentageForUnpostedVouchers}
             isChartForTotal
           />
         </div>
 
         <div className="flex grow flex-col gap-16px">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8px">
-              <Image
-                src={'/icons/missing_certificate_icon.svg'}
-                alt="missing_certificate_icon"
-                width={22}
-                height={22}
-                className="h-22px w-22px"
-              ></Image>
-              <h4 className="text-xs font-semibold text-text-neutral-primary">
-                Missing certificate
-              </h4>
-            </div>
+            <TaskType
+              iconName={PendingTaskIconName.MISSING_CERTIFICATE}
+              title={TaskTitle.MISSING_CERTIFICATE}
+            />
             <p className="text-2xl font-bold text-text-brand-secondary-lv2">
               {percentageForMissingCertificate}%
             </p>
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8px">
-              <Image
-                src={'/icons/unposted_vouchers_icon.svg'}
-                alt="unposted_vouchers_icon"
-                width={22}
-                height={22}
-                className="h-22px w-22px"
-              ></Image>
-              <h4 className="text-xs font-semibold text-text-neutral-primary">Unposted vouchers</h4>
-            </div>
+            <TaskType
+              iconName={PendingTaskIconName.UNPOSTED_VOUCHERS}
+              title={TaskTitle.UNPOSTED_VOUCHERS}
+            />
             <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-              {percentageForUnpostedVoucher}%
+              {percentageForUnpostedVouchers}%
             </p>
           </div>
         </div>
       </section>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-8px">
-          <Image
-            src={'/icons/missing_certificate_icon.svg'}
-            alt="missing_certificate_icon"
-            width={22}
-            height={22}
-            className="h-22px w-22px"
-          ></Image>
-          <h4 className="text-xs font-semibold text-text-neutral-primary">Missing certificate</h4>
+      {/* === // Info: (20241209 - Liz) List Section === */}
+      <section className="flex flex-col gap-24px">
+        <div className="flex items-center justify-between">
+          <TaskType
+            iconName={PendingTaskIconName.MISSING_CERTIFICATE}
+            title={TaskTitle.MISSING_CERTIFICATE}
+          />
+          <p className="text-2xl font-bold text-text-brand-secondary-lv2">
+            {countForMissingCertificate}
+          </p>
         </div>
-        <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-          {countForMissingCertificate}{' '}
-          <span className="text-lg font-semibold text-text-brand-secondary-lv3">
-            ({percentageForMissingCertificate}%)
-          </span>
-        </p>
-      </div>
 
-      <CompanyList list={missingCertificateList} />
+        <CompanyList list={userPendingTaskTotal.missingCertificateList} />
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-8px">
-          <Image
-            src={'/icons/unposted_vouchers_icon.svg'}
-            alt="unposted_vouchers_icon"
-            width={22}
-            height={22}
-            className="h-22px w-22px"
-          ></Image>
-          <h4 className="text-xs font-semibold text-text-neutral-primary">Unposted vouchers</h4>
+        <div className="flex items-center justify-between">
+          <TaskType
+            iconName={PendingTaskIconName.UNPOSTED_VOUCHERS}
+            title={TaskTitle.UNPOSTED_VOUCHERS}
+          />
+          <p className="text-2xl font-bold text-text-brand-secondary-lv2">
+            {countForUnpostedVouchers}
+          </p>
         </div>
-        <p className="text-2xl font-bold text-text-brand-secondary-lv2">
-          {countForUnpostedVoucher}{' '}
-          <span className="text-lg font-semibold text-text-brand-secondary-lv3">
-            ({percentageForUnpostedVoucher}%)
-          </span>
-        </p>
-      </div>
 
-      <CompanyList list={unpostedVoucherList} />
+        <CompanyList list={userPendingTaskTotal.unpostedVoucherList} />
+      </section>
     </section>
   );
 };
 
-const PendingTasks = () => {
+interface PendingTasksProps {
+  getTodoList: () => Promise<void>;
+}
+
+const PendingTasks = ({ getTodoList }: PendingTasksProps) => {
   // Info: (20241018 - Liz) 元件顯示邏輯
   // 沒有公司列表 : 顯示 PendingTaskNoData
   // 有公司列表 且 有選擇公司 : 顯示 PendingTasksForCompany
   // 有公司列表 且 沒有選擇公司 : 顯示 PendingTasksForAll
 
-  // ToDo: (20241018 - Liz) 串接真實資料
-  // 從 user context 中打 API 取得選擇的公司(selectedCompany)、所有公司的待辦事項(pendingTaskTotal)
-  // 依據 selectedCompany 是否有值，轉換為布林值 isSelectedCompany，判斷是否有選擇公司
-  // 依據 pendingTaskTotal 是否有值，轉換為布林值 hasCompanyList，判斷是否有公司列表
-
-  /* === Fake Data === */
-  // Deprecated: (20241016 - Liz) 這是假資料，等之後串真正資料後再刪除
-  const selectedCompany = '';
+  const { userAuth, selectedCompany } = useUserCtx();
   const isSelectedCompany = !!selectedCompany; // 強制轉為布林值
-  const hasCompanyList = true;
+  const [companyAndRoleList, setCompanyAndRoleList] = useState<ICompanyAndRole[]>([]);
+  const hasCompanyList = companyAndRoleList.length > 0;
+
+  // Info: (20241127 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
+  const { trigger: listUserCompanyAPI } = APIHandler<ICompanyAndRole[]>(APIName.LIST_USER_COMPANY);
+
+  useEffect(() => {
+    const getCompanyList = async () => {
+      if (!userAuth) return;
+
+      try {
+        const {
+          data: userCompanyList,
+          success,
+          code,
+        } = await listUserCompanyAPI({
+          params: { userId: userAuth.id },
+          query: { simple: true },
+        });
+
+        if (success && userCompanyList && userCompanyList.length > 0) {
+          // Info: (20241127 - Liz) 取得使用者擁有的公司列表成功
+          setCompanyAndRoleList(userCompanyList);
+        } else {
+          // Info: (20241127 - Liz)  取得使用者擁有的公司列表失敗時顯示錯誤訊息
+          // Deprecated: (20241127 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('listUserCompanyAPI(Simple) failed:', code);
+        }
+      } catch (error) {
+        // Deprecated: (20241127 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('listUserCompanyAPI(Simple) error:', error);
+      }
+    };
+
+    getCompanyList();
+  }, [userAuth]);
 
   if (!hasCompanyList) {
     return (
       <DashboardCardLayout>
-        <PendingTasksNoData />
+        <PendingTaskNoData />
       </DashboardCardLayout>
     );
   }
@@ -425,7 +245,7 @@ const PendingTasks = () => {
   if (isSelectedCompany) {
     return (
       <DashboardCardLayout>
-        <PendingTasksForCompany />
+        <PendingTasksForCompany getTodoList={getTodoList} />
       </DashboardCardLayout>
     );
   }
