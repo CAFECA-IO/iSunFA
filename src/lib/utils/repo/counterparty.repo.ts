@@ -25,6 +25,18 @@ export async function getCounterpartyByName(options: {
 
   return counterparty;
 }
+
+export async function getCounterpartyByTaxId(options: {
+  taxId: string;
+  companyId: number;
+}): Promise<Counterparty | null> {
+  const { taxId, companyId } = options;
+  const counterparty = await prisma.counterparty.findFirst({
+    where: { taxId, companyId, OR: [{ deletedAt: 0 }, { deletedAt: null }] },
+  });
+  return counterparty;
+}
+
 // Info: (20241022 - Jacky) Create
 export async function createCounterparty(
   companyId: number,

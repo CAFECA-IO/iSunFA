@@ -10,6 +10,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import {
   createCounterparty,
   getCounterpartyByName,
+  getCounterpartyByTaxId,
   listCounterparty,
 } from '@/lib/utils/repo/counterparty.repo';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
@@ -44,11 +45,15 @@ const handlePostRequest: IHandleRequest<APIName.COUNTERPARTY_ADD, ICounterparty>
 
   const { companyId } = query;
   const { name, taxId, type, note } = body;
-  const originClient = await getCounterpartyByName({ name, companyId });
+  const originClientByName = await getCounterpartyByName({ name, companyId });
+  const originClientByTaxId = await getCounterpartyByTaxId({ taxId, companyId });
 
-  if (originClient) {
-    statusMessage = STATUS_MESSAGE.BAD_REQUEST;
-    payload = parsePrismaCounterPartyToCounterPartyEntity(originClient);
+  if (originClientByName) {
+    statusMessage = STATUS_MESSAGE.DUPLICATE_COUNTERPARTY_NAME;
+    payload = parsePrismaCounterPartyToCounterPartyEntity(originClientByName);
+  } else if (originClientByTaxId) {
+    statusMessage = STATUS_MESSAGE.DUPLICATE_COUNTERPARTY_TAX_ID;
+    payload = parsePrismaCounterPartyToCounterPartyEntity(originClientByTaxId);
   } else {
     const newClient = await createCounterparty(companyId, name, taxId, type, note);
     if (newClient) {
