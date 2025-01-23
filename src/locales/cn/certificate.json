@@ -123,7 +123,8 @@
     "EDIT_NEW": "编辑客户/供应商",
     "REMOVE_THIS": "删除该客户/供应商",
     "NO_DATA_AVAILABLE": "没有可用资料",
-    "NAME_ALREADY_EXISTS": "此名称已有资料"
+    "NAME_ALREADY_EXISTS": "此名称已有资料",
+    "TAX_ID_ALREADY_EXISTS": "此统一编号已重复使用"
   },
   "LABEL": {
     "NEW": "新增"
