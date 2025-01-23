@@ -136,7 +136,7 @@ const VoucherListPageBody: React.FC = () => {
     );
 
   return (
-    <div className="relative flex flex-col items-center gap-40px p-40px">
+    <div className="relative flex flex-col items-center gap-40px">
       {/* Info: (20240920 - Julian) Add New Voucher button */}
       <div className="ml-auto">
         <Link href={ISUNFA_ROUTE.ADD_NEW_VOUCHER}>
