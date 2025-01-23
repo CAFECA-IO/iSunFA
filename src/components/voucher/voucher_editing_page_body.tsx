@@ -817,7 +817,7 @@ const VoucherEditingPageBody: React.FC<{
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center gap-40px p-40px">
+    <div className="relative flex flex-col items-center gap-40px">
       <CertificateSelectorModal
         companyId={companyId}
         isOpen={openSelectorModal}
