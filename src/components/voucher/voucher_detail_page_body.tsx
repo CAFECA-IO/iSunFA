@@ -57,7 +57,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     voucherDate,
     type,
     note,
-    counterParty,
+    // counterParty,
     payableInfo,
     receivingInfo,
     reverseVoucherIds,
@@ -227,11 +227,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     <Skeleton width={200} height={24} rounded />
   );
 
-  const isDisplayCounterParty = !isLoading ? (
-    <p className="text-input-text-primary">{counterParty.name}</p>
-  ) : (
-    <Skeleton width={200} height={24} rounded />
-  );
+  // const isDisplayCounterParty = !isLoading ? (
+  //   <p className="text-input-text-primary">{counterParty.name}</p>
+  // ) : (
+  //   <Skeleton width={200} height={24} rounded />
+  // );
 
   const isDisplayReverseVoucher = !isLoading ? (
     <div className="flex flex-col">
@@ -426,12 +426,13 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           {isDisplayNote}
         </div>
         {/* Info: (20241007 - Julian) Counterparty */}
-        <div className="flex justify-between">
+        {/* ToDo: (20250123 - Julian) 暫時不顯示 */}
+        {/* <div className="flex justify-between">
           <p className="text-text-neutral-tertiary">
             {t('journal:VOUCHER_DETAIL_PAGE.COUNTERPARTY')}
           </p>
           {isDisplayCounterParty}
-        </div>
+        </div> */}
         {/* Info: (20241007 - Julian) Recurring Entry */}
         {/* {isRecurringEntry} */}
         {/* Info: (20241007 - Julian) Payable Amount */}
