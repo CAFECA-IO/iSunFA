@@ -18,6 +18,7 @@ import {
   listCompanyAndRoleSimple,
 } from '@/lib/utils/repo/admin.repo';
 import { Company, Role, File } from '@prisma/client';
+import { createAccountingSetting } from '@/lib/utils/repo/accounting_setting.repo';
 
 const handleGetRequest: IHandleRequest<
   APIName.LIST_USER_COMPANY,
@@ -111,6 +112,8 @@ const handlePostRequest: IHandleRequest<
       const companyId = createdCompanyAndRole.company.id;
       const companyKeyPair = await generateKeyPair();
       await storeKeyByCompany(companyId, companyKeyPair);
+
+      await createAccountingSetting(companyId);
     }
   }
 
