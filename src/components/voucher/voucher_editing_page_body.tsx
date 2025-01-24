@@ -69,12 +69,8 @@ const VoucherEditingPageBody: React.FC<{
   const router = useRouter();
 
   const { selectedCompany } = useUserCtx();
-  const {
-    getAccountListHandler,
-    temporaryAssetList,
-    clearTemporaryAssetHandler,
-    clearReverseListHandler,
-  } = useAccountingCtx();
+  const { temporaryAssetList, clearTemporaryAssetHandler, clearReverseListHandler } =
+    useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
@@ -499,13 +495,6 @@ const VoucherEditingPageBody: React.FC<{
   const assetRef = useRef<HTMLDivElement>(null);
   const voucherLineRef = useRef<HTMLDivElement>(null);
 
-  // Info: (20241004 - Julian) 取得會計科目列表
-  useEffect(() => {
-    if (selectedCompany) {
-      getAccountListHandler(selectedCompany.id);
-    }
-  }, [selectedCompany]);
-
   // Info: (20241007 - Julian) 日期未選擇時顯示提示
   useEffect(() => {
     if (date.startTimeStamp !== 0 && date.endTimeStamp !== 0) {
@@ -817,7 +806,7 @@ const VoucherEditingPageBody: React.FC<{
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center gap-40px p-40px">
+    <div className="relative flex flex-col items-center gap-40px">
       <CertificateSelectorModal
         companyId={companyId}
         isOpen={openSelectorModal}

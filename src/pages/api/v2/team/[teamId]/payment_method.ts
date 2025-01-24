@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { IPaymentMethod } from '@/interfaces/payment';
-import { PAYMENT_METHOD_TYPE } from '@/constants/payment';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import { HttpMethod } from '@/constants/api_connection';
@@ -25,6 +24,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   // Info: (20250117 - Luphia) mock data
   const payload: IPaymentMethod[] = [
+    /*
     {
       id: 10000001,
       type: PAYMENT_METHOD_TYPE.VISA,
@@ -33,6 +33,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       cvv: '123',
       default: true,
     },
+    */
   ];
   const result = formatApiResponse(statusMessage, payload);
   return result;

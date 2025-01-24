@@ -1,4 +1,4 @@
-import Announcement from '@/components/beta/dashboard/announcement';
+// import Announcement from '@/components/beta/dashboard/announcement';
 import MyCompanyList from '@/components/beta/dashboard/my_company_list';
 import PendingTasks from '@/components/beta/dashboard/pending_task';
 import TodayTodoList from '@/components/beta/dashboard/today_todo_list';
@@ -63,7 +63,8 @@ const DashboardBody = () => {
 
   return (
     <div className="space-y-40px">
-      <Announcement />
+      {/* ToDo: (20250122 - Julian) 暫時隱藏 */}
+      {/* <Announcement /> */}
 
       <div className="flex flex-col gap-24px">
         <section className="flex flex-wrap items-start gap-24px">

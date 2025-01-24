@@ -19,7 +19,6 @@ import { ASSET_DELETE_TERM } from '@/constants/common';
 import { AssetModalType } from '@/interfaces/asset_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastId } from '@/constants/toast_id';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 
 const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const { t } = useTranslation('asset');
@@ -34,7 +33,6 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
-  const { accountList, getAccountListHandler } = useAccountingCtx();
 
   const companyId = selectedCompany?.id;
 
@@ -107,6 +105,9 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     </Link>
   ));
 
+  // Info: (20250122 - Julian) 資產類別代碼
+  const assetCode = assetType.split(' ')[0];
+
   // ToDo: (20241016 - Julian) Call API to undo delete asset
   // const undoDeleteAssetHandler = async () => {
   //   // eslint-disable-next-line no-console
@@ -150,7 +151,6 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     // Info: (20241121 - Julian) Get voucher detail & account list when companyId & assetId are ready
     if (companyId && assetId) {
       getAssetDetail();
-      getAccountListHandler(companyId ?? -1);
     }
   }, [companyId, assetId]);
 
@@ -200,7 +200,6 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     }
   }, [isDeleting, deleteSuccess, deleteError]);
 
-  const accountTitleName = accountList.find((account) => account.code === assetType)?.name;
   const noteStr = note === '' ? '-' : note;
 
   const remainingProcessBar = (
@@ -268,7 +267,10 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
 
   const isType = !isLoading ? (
     <p className="text-input-text-primary">
-      {assetType} <span className="text-text-neutral-tertiary">{accountTitleName}</span>
+      {assetCode}{' '}
+      <span className="text-text-neutral-tertiary">
+        {t(`filter_section_type:FILTER_SECTION_TYPE.${assetCode}`)}
+      </span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />

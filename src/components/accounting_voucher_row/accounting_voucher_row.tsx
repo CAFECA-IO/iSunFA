@@ -21,9 +21,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
   const { t } = useTranslation('common');
   const { id, account, particulars, debit, credit } = accountingVoucher;
   const {
-    accountList,
     generateAccountTitle,
-    deleteVoucherRowHandler,
     changeVoucherAccountHandler,
     changeVoucherStringHandler,
     changeVoucherAmountHandler,
@@ -34,7 +32,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
   const [tempCredit, setTempCredit] = useState<string>(credit ? credit.toString() : '0');
 
   const [searchValue, setSearchValue] = useState<string>('');
-  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(accountList);
+  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
 
   const {
     targetRef: accountingRef,
@@ -42,6 +40,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
     setComponentVisible: setAccountingMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const accountList: IAccount[] = [];
   const accountTitle = generateAccountTitle(selectAccount);
 
   // Info: (20240430 - Julian) 判斷是借方還是貸方
@@ -127,7 +126,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
   };
 
   // Info: (20240711 - Julian) 刪除該列
-  const deleteClickHandler = () => deleteVoucherRowHandler(id);
+  const deleteClickHandler = () => {};
 
   useEffect(() => {
     setSelectAccount(account);

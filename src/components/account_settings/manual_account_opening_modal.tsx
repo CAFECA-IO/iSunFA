@@ -59,7 +59,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
   setAmount,
   deleteHandler,
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('setting');
   const { id, subcategory, isDebit, beginningAmount } = data;
 
   // Info: (20241112 - Julian) 設定 debit 和 credit 的金額
@@ -300,20 +300,20 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   useEffect(() => {
     if (!isCreatingVoucher) {
       if (createVoucherSuccess) {
-        // Info: (20241115 - Julian) 如果 create new voucher 成功，則提示成功訊息
+        // Info: (20241115 - Julian) 如果開帳成功，則提示成功訊息
         toastHandler({
           id: 'manual-account-opening-success',
           type: ToastType.SUCCESS,
-          content: 'Manual account opening success.',
+          content: t('setting:MANUAL_ACCOUNT_OPENING_MODAL.TOAST_OPENING_SUCCESS'),
           closeable: true,
         });
         modalVisibilityHandler();
       } else if (createVoucherError) {
-        // Info: (20241115 - Julian) 如果 create new voucher 失敗，則提示錯誤訊息
+        // Info: (20241115 - Julian) 如果開帳失敗，則提示錯誤訊息
         toastHandler({
           id: 'manual-account-opening-error',
           type: ToastType.ERROR,
-          content: 'Failed to create new voucher, please try again.',
+          content: t('setting:MANUAL_ACCOUNT_OPENING_MODAL.TOAST_OPENING_FAIL'),
           closeable: true,
         });
       }
@@ -447,7 +447,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
 
   const displaySubcategoryMenu = (
     <div
-      className={`absolute left-0 w-200px ${'top-10px'} z-10 grid w-1/5 rounded-sm ${isExpanded ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
+      className={`absolute left-15px w-200px ${'top-10px'} z-10 grid w-1/5 rounded-sm ${isExpanded ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
     >
       <div
         ref={dropmenuRef}

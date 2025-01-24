@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
@@ -41,6 +42,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     trigger: getVoucherDetail,
     data: voucherData,
     isLoading,
+    error,
   } = APIHandler<IVoucherDetailForFrontend>(APIName.VOUCHER_GET_BY_ID_V2, { params });
 
   // Info: (20241029 - Julian) Delete voucher API
@@ -55,7 +57,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     voucherDate,
     type,
     note,
-    counterParty,
+    // counterParty,
     payableInfo,
     receivingInfo,
     reverseVoucherIds,
@@ -227,11 +229,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     <Skeleton width={200} height={24} rounded />
   );
 
-  const isDisplayCounterParty = !isLoading ? (
-    <p className="text-input-text-primary">{counterParty.name}</p>
-  ) : (
-    <Skeleton width={200} height={24} rounded />
-  );
+  // const isDisplayCounterParty = !isLoading ? (
+  //   <p className="text-input-text-primary">{counterParty.name}</p>
+  // ) : (
+  //   <Skeleton width={200} height={24} rounded />
+  // );
 
   const isDisplayReverseVoucher = !isLoading ? (
     <div className="flex flex-col">
@@ -362,6 +364,15 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   //   </div>
   // ) : null;
 
+  if (error) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-10px">
+        <Image src={'/elements/empty_list.svg'} alt="page_not_found" width={150} height={150} />
+        <p className="text-neutral-300">{t('journal:VOUCHER_DETAIL_PAGE.VOUCHER_NOT_FOUND')}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-y-auto px-40px pb-32px pt-10px">
       <div className="flex justify-end gap-2 p-4">
@@ -384,7 +395,9 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
             type="button"
             variant="tertiary"
             size={'defaultSquare'}
-            disabled={isReverseRelated} // Info: (20250120 - Julian) 被刪除或反轉的傳票不能編輯
+            // Info: (20250120 - Julian) 被刪除或反轉的傳票不能編輯
+            // ToDo: (20250122 - Julian) 先不開放手動開帳的編輯功能
+            disabled={isReverseRelated || type === EventType.OPENING}
           >
             <FiEdit size={16} />
           </Button>
@@ -415,12 +428,13 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           {isDisplayNote}
         </div>
         {/* Info: (20241007 - Julian) Counterparty */}
-        <div className="flex justify-between">
+        {/* ToDo: (20250123 - Julian) 暫時不顯示 */}
+        {/* <div className="flex justify-between">
           <p className="text-text-neutral-tertiary">
             {t('journal:VOUCHER_DETAIL_PAGE.COUNTERPARTY')}
           </p>
           {isDisplayCounterParty}
-        </div>
+        </div> */}
         {/* Info: (20241007 - Julian) Recurring Entry */}
         {/* {isRecurringEntry} */}
         {/* Info: (20241007 - Julian) Payable Amount */}

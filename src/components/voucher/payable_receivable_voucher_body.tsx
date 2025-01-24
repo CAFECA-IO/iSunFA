@@ -117,7 +117,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
     );
 
   return (
-    <div className="relative flex flex-col items-center gap-40px p-40px">
+    <div className="relative flex flex-col items-center gap-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs
