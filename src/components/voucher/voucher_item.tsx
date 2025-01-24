@@ -46,7 +46,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   // Info: (20250107 - Julian) 標記為已刪除的條件由 isReverseRelated 判斷
   // Info: (20250120 - Shirley) @Julian isReverseRelated===true 代表該傳票被刪除或反轉
   const isDisplayDeleteTag = isReverseRelated ? (
-    <div className="rounded-full bg-badge-surface-soft-primary text-hxs text-badge-text-primary-solid">
+    <div className="rounded-full bg-badge-surface-soft-primary px-8px py-4px text-hxs text-badge-text-primary-solid">
       {t('journal:VOUCHER.DELETED')}
     </div>
   ) : null;
@@ -88,7 +88,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const debit = lineItems.map((item) => (item.debit ? item.amount : 0));
 
   const displayedAccounting = (
-    <div className="flex flex-col items-start text-hxs font-semibold text-text-neutral-tertiary">
+    <div className="flex flex-col items-start gap-lv-1 text-hxs font-semibold text-text-neutral-tertiary">
       {accounting.map((account) => (
         <p key={account?.code} className="w-160px truncate">
           {account?.code} - {account?.name}
