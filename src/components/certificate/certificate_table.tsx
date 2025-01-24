@@ -6,10 +6,12 @@ import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
 import { InvoiceTabs } from '@/constants/certificate';
+import { CurrencyType } from '@/constants/currency';
 
 interface CertificateTableProps {
   activeTab: InvoiceTabs;
   certificates: ICertificateUI[];
+  currencyAlias: CurrencyType;
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態 // Info: (20240923 - tzuhan) 選中的項目 ID 列表
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - tzuhan) 當選擇變更時的回調函數
   handleSelectAll: () => void;
@@ -27,6 +29,7 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
   activeTab,
   activeSelection,
   certificates,
+  currencyAlias,
   handleSelect,
   handleSelectAll,
   isSelectedAll,
@@ -123,6 +126,7 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
           {/* Deprecated: (20240919 - tzuhan) Example of dynamic rows, should map actual data here */}
           {certificates.map((certificate, index) => (
             <CertificateItem
+              currencyAlias={currencyAlias}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
               certificate={certificate}

@@ -668,6 +668,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               totalPages={totalPages}
               totalCount={totalCount}
               certificates={filterCertificates}
+              currencyAlias={currency}
               viewType={viewType}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
