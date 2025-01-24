@@ -38,6 +38,11 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
       }).toString();
       setGoBackUrl(`${ISUNFA_ROUTE.LEDGER}?${queryString}`);
     }
+
+    // Info: (20250124 - Julian) 檢查 URL 查詢參數是否包含from=ARandAP
+    if (from === 'ARandAP') {
+      setGoBackUrl(`${ISUNFA_ROUTE.PAYABLE_RECEIVABLE_LIST}`);
+    }
   }, [router.query]);
 
   const pageTitle = `${t('journal:VOUCHER_DETAIL_PAGE.TITLE')} ${voucherNo ?? voucherId}`;

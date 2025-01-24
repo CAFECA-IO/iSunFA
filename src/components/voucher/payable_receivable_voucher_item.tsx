@@ -130,7 +130,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
 
   return (
     <Link
-      href={`/users/accounting/${voucherId}?voucherNo=${voucherNo}`}
+      href={`/users/accounting/${voucherId}?voucherNo=${voucherNo}&from=ARandAP`}
       className="table-row text-xs font-medium odd:bg-surface-neutral-surface-lv2 even:bg-surface-neutral-surface-lv1 hover:cursor-pointer hover:bg-surface-brand-primary-10"
     >
       {/* Info: (20240924 - Julian) Issued Date */}

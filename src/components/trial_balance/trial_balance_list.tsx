@@ -482,7 +482,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     // Info: (20241105 - Anna) 如果尚未成功請求過 API 且沒有加載
     return (
       <div className="flex h-screen flex-col items-center justify-center">
-        <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+        <Image src="/images/empty.svg" alt="No data image" width={120} height={135} />
         <div>
           <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
           <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>

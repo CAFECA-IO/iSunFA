@@ -175,7 +175,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
-        <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+        <Image src="/images/empty.svg" alt="No data image" width={120} height={135} />
         <div>
           <p className="mb-0 text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
           <p className="mb-0 text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
