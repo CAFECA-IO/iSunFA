@@ -367,7 +367,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   if (error) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-10px">
-        <Image src={'/elements/empty_list.svg'} alt="page_not_found" width={150} height={150} />
+        <Image src={'/images/empty.svg'} alt="page_not_found" width={150} height={150} />
         <p className="text-neutral-300">{t('journal:VOUCHER_DETAIL_PAGE.VOUCHER_NOT_FOUND')}</p>
       </div>
     );
