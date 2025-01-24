@@ -92,7 +92,7 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
   });
 
   const displayedList = voucherList.map((voucher) => (
-      <PayableReceivableVoucherItem key={voucher.id} activeTab={activeTab} voucherData={voucher} />
+    <PayableReceivableVoucherItem key={voucher.id} activeTab={activeTab} voucherData={voucher} />
   ));
 
   return (
