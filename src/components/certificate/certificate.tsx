@@ -6,6 +6,7 @@ import CertificateTable from '@/components/certificate/certificate_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 import { SortOrder } from '@/constants/sort';
 import { InvoiceTabs } from '@/constants/certificate';
+import { CurrencyType } from '@/constants/currency';
 
 interface CertificateProps {
   activeTab: InvoiceTabs;
@@ -14,6 +15,7 @@ interface CertificateProps {
   totalCount: number;
   totalPages: number;
   certificates: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表
+  currencyAlias: CurrencyType;
   viewType: DISPLAY_LIST_VIEW_TYPE; // Info: (20240923 - tzuhan) 顯示模式
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態
   handleSelect: (ids: number[], isSelected: boolean) => void;
@@ -39,6 +41,7 @@ const Certificate: React.FC<CertificateProps> = ({
   totalCount,
   totalPages,
   certificates,
+  currencyAlias,
   viewType,
   activeSelection,
   handleSelect,
@@ -76,6 +79,7 @@ const Certificate: React.FC<CertificateProps> = ({
         <CertificateTable
           activeTab={activeTab}
           certificates={certificatesReOrdered}
+          currencyAlias={currencyAlias}
           activeSelection={activeSelection}
           handleSelect={handleSelect}
           handleSelectAll={handleSelectAll}
