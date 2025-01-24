@@ -100,7 +100,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div
-          className={`w-full ${certificate.invoice?.taxRatio !== undefined ? 'text-center' : 'text-left'} text-text-neutral-primary`}
+          className={`w-full ${certificate.invoice?.taxRatio !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
         >
           {certificate.invoice?.taxRatio !== undefined
             ? `Taxable ${certificate.invoice?.taxRatio} %`
