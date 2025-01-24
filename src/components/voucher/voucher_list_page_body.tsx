@@ -73,7 +73,12 @@ const VoucherListPageBody: React.FC = () => {
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
   );
 
-  const voucherTypeList = ['All', ...Object.keys(EventType).map((key) => key.toLowerCase())];
+  const voucherTypeList = [
+    'All',
+    ...Object.keys(EventType)
+      .map((key) => key.toLowerCase())
+      .filter((key) => key !== EventType.OPENING), // Info: (20250124 - Julian) 不顯示開帳
+  ];
 
   const params = { companyId: selectedCompany?.id ?? FREE_COMPANY_ID };
 
@@ -136,7 +141,7 @@ const VoucherListPageBody: React.FC = () => {
     );
 
   return (
-    <div className="relative flex flex-col items-center gap-40px p-40px">
+    <div className="relative flex flex-col items-center gap-40px">
       {/* Info: (20240920 - Julian) Add New Voucher button */}
       <div className="ml-auto">
         <Link href={ISUNFA_ROUTE.ADD_NEW_VOUCHER}>

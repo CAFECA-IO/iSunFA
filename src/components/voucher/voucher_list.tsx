@@ -343,21 +343,27 @@ const VoucherList: React.FC<IVoucherListProps> = ({
                 </div>
               </span>
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px min-w-90px`}>
               {displayedDate}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-90px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px`}>
               {t('journal:VOUCHER.VOUCHER_NO')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/3 min-w-90px`}>
               {t('journal:VOUCHER.NOTE')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-180px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/6 min-w-180px`}>
               {t('journal:VOUCHER.ACCOUNTING')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-84px`}>{displayedDebit}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-84px`}>{displayedCredit}</div>
-            <div className={`${tableCellStyles} w-120px border-b border-stroke-neutral-quaternary`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px`}>
+              {displayedDebit}
+            </div>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px`}>
+              {displayedCredit}
+            </div>
+            <div
+              className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-120px border-b border-stroke-neutral-quaternary`}
+            >
               {t('journal:VOUCHER.ISSUER')}
             </div>
           </div>

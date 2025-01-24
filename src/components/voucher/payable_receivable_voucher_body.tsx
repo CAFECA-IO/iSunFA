@@ -88,8 +88,8 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   ) => {
     setPage(data.page);
     setUnRead(data.data.unRead);
-    setTotalPages(data.totalPages);
-    setTotalCount(data.totalCount);
+    setTotalPages(Math.max(1, Math.ceil(data.data.vouchers.length / DEFAULT_PAGE_LIMIT)));// Info: (20250124 - Anna) 改為不是全部傳票的總頁數，而是應收/應付傳票的總頁數
+    setTotalCount(data.data.vouchers.length); // Info: (20250124 - Anna) 改為不是全部傳票的總筆數，而是應收/應付傳票的總筆數
     setVoucherList(data.data.vouchers);
   };
 
@@ -117,7 +117,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
     );
 
   return (
-    <div className="relative flex flex-col items-center gap-40px p-40px">
+    <div className="relative flex flex-col items-center gap-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs

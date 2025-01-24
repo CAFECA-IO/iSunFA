@@ -686,7 +686,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           </>
         ) : (
           <div className="flex flex-auto items-center justify-center">
-            <Image src="/elements/empty_list.svg" alt="empty" width={120} height={135} />
+            <Image src="/images/empty.svg" alt="empty" width={120} height={135} />
           </div>
         )}
       </div>

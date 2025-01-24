@@ -57,17 +57,17 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
     voucherType === VoucherType.EXPENSE ? (
       <div className="mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
         <FaUpload size={14} className="text-surface-state-success-dark" />
-        <p className="text-sm text-text-state-success-solid">{voucherNo}</p>
+        <p className="text-xs text-text-state-success-solid">{voucherNo}</p>
       </div>
     ) : voucherType === VoucherType.RECEIVE ? (
       <div className="mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
         <FaDownload size={14} className="text-surface-state-error-dark" />
-        <p className="text-sm text-text-state-error-solid">{voucherNo}</p>
+        <p className="text-xs text-text-state-error-solid">{voucherNo}</p>
       </div>
     ) : (
       <div className="mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
         <FiRepeat size={14} className="text-surface-brand-secondary" />
-        <p className="text-sm text-badge-text-secondary-solid">{voucherNo}</p>
+        <p className="text-xs text-badge-text-secondary-solid">{voucherNo}</p>
       </div>
     );
 
@@ -130,7 +130,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
 
   return (
     <Link
-      href={`/users/accounting/${voucherId}?voucherNo=${voucherNo}`}
+      href={`/users/accounting/${voucherId}?voucherNo=${voucherNo}&from=ARandAP`}
       className="table-row text-xs font-medium odd:bg-surface-neutral-surface-lv2 even:bg-surface-neutral-surface-lv1 hover:cursor-pointer hover:bg-surface-brand-primary-10"
     >
       {/* Info: (20240924 - Julian) Issued Date */}

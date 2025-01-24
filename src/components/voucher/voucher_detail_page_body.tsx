@@ -57,7 +57,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     voucherDate,
     type,
     note,
-    counterParty,
+    // counterParty,
     payableInfo,
     receivingInfo,
     reverseVoucherIds,
@@ -114,6 +114,9 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail when companyId and voucherId are ready
     if (companyId && voucherId) {
+      // Deprecated: (20250124 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('API Params:', params); // Info: (20250122 - Anna) 檢查 companyId 和 voucherId 是否正確
       getVoucherDetail();
     }
   }, [companyId, voucherId]);
@@ -227,11 +230,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     <Skeleton width={200} height={24} rounded />
   );
 
-  const isDisplayCounterParty = !isLoading ? (
-    <p className="text-input-text-primary">{counterParty.name}</p>
-  ) : (
-    <Skeleton width={200} height={24} rounded />
-  );
+  // const isDisplayCounterParty = !isLoading ? (
+  //   <p className="text-input-text-primary">{counterParty.name}</p>
+  // ) : (
+  //   <Skeleton width={200} height={24} rounded />
+  // );
 
   const isDisplayReverseVoucher = !isLoading ? (
     <div className="flex flex-col">
@@ -365,7 +368,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   if (error) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-10px">
-        <Image src={'/elements/empty_list.svg'} alt="page_not_found" width={150} height={150} />
+        <Image src={'/images/empty.svg'} alt="page_not_found" width={150} height={150} />
         <p className="text-neutral-300">{t('journal:VOUCHER_DETAIL_PAGE.VOUCHER_NOT_FOUND')}</p>
       </div>
     );
@@ -426,12 +429,13 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           {isDisplayNote}
         </div>
         {/* Info: (20241007 - Julian) Counterparty */}
-        <div className="flex justify-between">
+        {/* ToDo: (20250123 - Julian) 暫時不顯示 */}
+        {/* <div className="flex justify-between">
           <p className="text-text-neutral-tertiary">
             {t('journal:VOUCHER_DETAIL_PAGE.COUNTERPARTY')}
           </p>
           {isDisplayCounterParty}
-        </div>
+        </div> */}
         {/* Info: (20241007 - Julian) Recurring Entry */}
         {/* {isRecurringEntry} */}
         {/* Info: (20241007 - Julian) Payable Amount */}
