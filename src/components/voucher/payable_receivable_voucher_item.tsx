@@ -48,7 +48,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
   } = activeTab === PayableReceivableTabs.RECEIVING ? receivingInfo : payableInfo;
 
   const displayedDate = (
-    <div className="flex items-center justify-center">
+    <div className="relative mx-auto px-18px pt-12px text-center">
       <CalendarIcon timestamp={voucherDate} />
     </div>
   );
@@ -134,7 +134,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
       className="table-row text-xs font-medium odd:bg-surface-neutral-surface-lv2 even:bg-surface-neutral-surface-lv1 hover:cursor-pointer hover:bg-surface-brand-primary-10"
     >
       {/* Info: (20240924 - Julian) Issued Date */}
-      <div className="table-cell">{displayedDate}</div>
+      <div className="table-cell align-top">{displayedDate}</div>
       {/* Info: (20240924 - Julian) Voucher No */}
       <div className="table-cell px-lv-2 py-lv-5 text-center">{displayedVoucherNo}</div>
       {/* Info: (20240924 - Julian) Counterparty */}

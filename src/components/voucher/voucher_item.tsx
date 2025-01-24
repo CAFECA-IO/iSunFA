@@ -38,7 +38,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const checkboxHandler = () => selectHandler(voucher.id);
 
   const displayedDate = (
-    <div className="relative flex justify-center">
+    <div className="relative mx-auto px-18px pt-12px text-center">
       <CalendarIcon timestamp={voucherDate} unRead={unRead} />
     </div>
   );
@@ -148,7 +148,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const content = (
     <>
       {/* Info: (20240920 - Julian) Issued Date */}
-      <div className="table-cell">{displayedDate}</div>
+      <div className="table-cell align-top">{displayedDate}</div>
       {/* Info: (20240920 - Julian) Voucher No */}
       <div className="table-cell px-lv-2 py-lv-5 text-center">
         <div className="flex flex-col items-start gap-10px">
