@@ -73,7 +73,12 @@ const VoucherListPageBody: React.FC = () => {
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
   );
 
-  const voucherTypeList = ['All', ...Object.keys(EventType).map((key) => key.toLowerCase())];
+  const voucherTypeList = [
+    'All',
+    ...Object.keys(EventType)
+      .map((key) => key.toLowerCase())
+      .filter((key) => key !== EventType.OPENING), // Info: (20250124 - Julian) 不顯示開帳
+  ];
 
   const params = { companyId: selectedCompany?.id ?? FREE_COMPANY_ID };
 
