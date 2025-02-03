@@ -62,6 +62,12 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const sideBorderStyles = 'border-b border-stroke-neutral-quaternary';
   const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
 
+  // Info: (20250203 - Julian) 根據 voucher 的數量決定底色：奇數白色、偶數灰色
+  const bottomColor =
+    voucherList.length % 2 === 0
+      ? 'bg-surface-neutral-surface-lv1'
+      : 'bg-surface-neutral-surface-lv2';
+
   // Info: (20241029 - Julian) Delete voucher API
   const {
     trigger: deleteVoucher,
@@ -333,7 +339,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       </p>
 
       {/* Info: (20240920 - Julian) Table */}
-      <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv1">
+      <div className={`table overflow-hidden rounded-lg ${bottomColor}`}>
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
@@ -379,7 +385,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         <div className="table-row-group">{displayedVoucherList}</div>
 
         {/* Info: (20240920 - Julian) ---------------- Table Footer ---------------- */}
-        <div className="table-footer-group h-20px border-t bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary"></div>
+        <div className="table-footer-group h-20px"></div>
       </div>
     </div>
   );

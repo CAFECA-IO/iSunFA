@@ -32,7 +32,6 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
     isSelected,
   } = assetData;
 
-  const unit = t(`common:CURRENCY_ALIAS.${currencyAlias}`);
   const assetTypeName = t(`filter_section_type:FILTER_SECTION_TYPE.${assetType}`);
 
   const displayedDate = (
@@ -61,21 +60,21 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
   const displayedPurchasePrice = (
     <p>
       {numberWithCommas(purchasePrice)}
-      <span className="text-text-neutral-tertiary"> {unit}</span>
+      <span className="text-text-neutral-tertiary"> {currencyAlias}</span>
     </p>
   );
 
   const displayedDepreciation = (
     <p>
       {numberWithCommas(accumulatedDepreciation)}
-      <span className="text-text-neutral-tertiary"> {unit}</span>
+      <span className="text-text-neutral-tertiary"> {currencyAlias}</span>
     </p>
   );
 
   const displayedResidual = (
     <p>
       {numberWithCommas(residualValue)}
-      <span className="text-text-neutral-tertiary"> {unit}</span>
+      <span className="text-text-neutral-tertiary"> {currencyAlias}</span>
     </p>
   );
 
@@ -137,7 +136,7 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
       {/* Info: (20240925 - Julian) Issued Date */}
       <div className="table-cell py-10px align-middle">{displayedDate}</div>
       {/* Info: (20240925 - Julian) Asset Type */}
-      <div className="table-cell text-center align-middle text-xs">{displayedAssetType}</div>
+      <div className="table-cell px-lv-4 text-left align-middle text-xs">{displayedAssetType}</div>
       {/* Info: (20240925 - Julian) Asset Number and Name */}
       <div className="table-cell px-8px text-left align-middle text-xs">
         {displayedAssetNumberAndName}
