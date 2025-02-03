@@ -282,7 +282,7 @@ const SubMenuOption = ({
             {t('layout:TOAST.PLEASE_SELECT_A_COMPANY_BEFORE_PROCEEDING_WITH_THE_OPERATION')}
           </p>
           <Link
-            href={ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE}
+            href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE}
             className="text-base font-semibold text-link-text-primary"
           >
             {t('layout:TOAST.GO_TO_SELECT_COMPANY')}

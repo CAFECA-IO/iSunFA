@@ -10,13 +10,13 @@ import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import Pagination from '@/components/pagination/pagination';
 import MessageModal from '@/components/message_modal/message_modal';
 import FilterSection from '@/components/filter_section/filter_section';
-import NoData from '@/components/beta/my_company_list_page/no_data';
-import UploadCompanyAvatarModal from '@/components/beta/my_company_list_page/upload_company_avatar_modal';
-import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
-import ChangeTagModal from '@/components/beta/my_company_list_page/change_tag_modal';
-import CompanyList from '@/components/beta/my_company_list_page/company_list';
+import NoData from '@/components/beta/account_books_page/no_data';
+import UploadCompanyAvatarModal from '@/components/beta/account_books_page/upload_company_avatar_modal';
+import CreateCompanyModal from '@/components/beta/account_books_page/create_company_modal';
+import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
+import CompanyList from '@/components/beta/account_books_page/company_list';
 
-const MyCompanyListPageBody = () => {
+const AccountBooksPageBody = () => {
   const { t } = useTranslation(['company']);
   const { userAuth, deleteCompany } = useUserCtx();
   const userId = userAuth?.id;
@@ -58,7 +58,7 @@ const MyCompanyListPageBody = () => {
     } catch (error) {
       // Deprecated: (20241115 - Liz)
       // eslint-disable-next-line no-console
-      console.error('MyCompanyListPageBody handleDeleteCompany error:', error);
+      console.error('AccountBooksPageBody handleDeleteCompany error:', error);
     }
   };
 
@@ -167,4 +167,4 @@ const MyCompanyListPageBody = () => {
   );
 };
 
-export default MyCompanyListPageBody;
+export default AccountBooksPageBody;

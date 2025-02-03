@@ -10,7 +10,7 @@ const CompanyBadge = () => {
     <div>
       {selectedCompany ? (
         <Link
-          href={ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE}
+          href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE}
           className="flex w-80px items-center justify-center gap-1px rounded-md bg-badge-surface-soft-primary px-3px py-1px text-badge-text-primary-solid"
         >
           <Image

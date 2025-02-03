@@ -3,10 +3,10 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Layout from '@/components/beta/layout/layout';
-import MyCompanyListPageBody from '@/components/beta/my_company_list_page/my_company_list_page_body';
+import AccountBooksPageBody from '@/components/beta/account_books_page/account_books_page_body';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
-const MyCompanyListPage = () => {
+const AccountBooksPage = () => {
   const { t } = useTranslation(['dashboard']);
 
   return (
@@ -35,7 +35,7 @@ const MyCompanyListPage = () => {
         pageTitle={t('dashboard:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}
         goBackUrl={ISUNFA_ROUTE.DASHBOARD}
       >
-        <MyCompanyListPageBody />
+        <AccountBooksPageBody />
       </Layout>
     </>
   );
@@ -55,4 +55,4 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   };
 };
 
-export default MyCompanyListPage;
+export default AccountBooksPage;

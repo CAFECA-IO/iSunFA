@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction } from 'react';
-import CompanyItem from '@/components/beta/my_company_list_page/company_item';
+import CompanyItem from '@/components/beta/account_books_page/company_item';
 import { ICompanyAndRole } from '@/interfaces/company';
 
 interface CompanyListProps {
