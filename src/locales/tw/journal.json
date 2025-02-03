@@ -214,6 +214,7 @@
     "SELECT": "選擇",
     "SELECT_ALL": "全選",
     "UNSELECT_ALL": "取消全選",
+    "CURRENCY": "貨幣單位",
     "HIDE_VOUCHER_TOGGLE": "隱藏已刪除的傳票和其相關沖銷分錄",
     "WARNING_MODAL_TITLE": "警告",
     "AT_LEAST_ONE_VOUCHER_CONTENT": "請至少選擇一張傳票",

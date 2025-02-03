@@ -59,7 +59,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-xs text-center align-middle';
-  const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
+  const sideBorderStyles = 'border-b border-stroke-neutral-quaternary';
   const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
 
   // Info: (20241029 - Julian) Delete voucher API
@@ -325,8 +325,12 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   });
 
   return (
-    <div className="flex flex-col gap-40px">
+    <div className="flex flex-col gap-lv-4">
       {displayedSelectArea}
+
+      <p className="ml-auto text-xs font-semibold uppercase text-text-neutral-tertiary">
+        {t('journal:VOUCHER.CURRENCY')}: TWD
+      </p>
 
       {/* Info: (20240920 - Julian) Table */}
       <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv1">
@@ -343,22 +347,24 @@ const VoucherList: React.FC<IVoucherListProps> = ({
                 </div>
               </span>
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px min-w-90px`}>
+            <div
+              className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px min-w-90px border-r`}
+            >
               {displayedDate}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
               {t('journal:VOUCHER.VOUCHER_NO')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/3 min-w-90px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/3 min-w-90px border-r`}>
               {t('journal:VOUCHER.NOTE')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/6 min-w-180px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/6 min-w-180px border-r`}>
               {t('journal:VOUCHER.ACCOUNTING')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
               {displayedDebit}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
               {displayedCredit}
             </div>
             <div
