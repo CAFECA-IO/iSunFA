@@ -1176,6 +1176,7 @@ export async function getManyVoucherV2(options: {
   type?: EventType | undefined;
   searchQuery?: string | undefined;
   isDeleted?: boolean | undefined;
+  hideReversedRelated?: boolean | undefined;
 }): Promise<
   IPaginatedData<IGetManyVoucherResponseButOne[]> & {
     where: Prisma.VoucherWhereInput;
@@ -1192,6 +1193,7 @@ export async function getManyVoucherV2(options: {
     type,
     searchQuery,
     isDeleted,
+    hideReversedRelated,
   } = options;
   // const { page, pageSize, sortOption, isDeleted } = options;
   let vouchers: IGetManyVoucherResponseButOne[] = [];
@@ -1219,6 +1221,28 @@ export async function getManyVoucherV2(options: {
     status: getStatusFilter(tab),
     type: type || undefined,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
+    ...(hideReversedRelated && {
+      AND: [
+        {
+          originalVouchers: {
+            none: {
+              event: {
+                eventType: 'delete',
+              },
+            },
+          },
+        },
+        {
+          resultVouchers: {
+            none: {
+              event: {
+                eventType: 'delete',
+              },
+            },
+          },
+        },
+      ],
+    }),
     OR: [
       {
         issuer: {
@@ -1257,12 +1281,6 @@ export async function getManyVoucherV2(options: {
         lineItems: {
           some: {
             OR: [
-              // Info: (20241121 - Murky) 如果有需要搜尋再打開
-              // {
-              //   description: {
-              //     contains: searchQuery,
-              //   },
-              // },
               {
                 account: {
                   name: {
