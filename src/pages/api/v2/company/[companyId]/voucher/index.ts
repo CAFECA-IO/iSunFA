@@ -54,7 +54,17 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
 
   const { userId, companyId } = session;
 
-  const { page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } = query;
+  const {
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    tab,
+    sortOption,
+    searchQuery,
+    type,
+    hideReversedRelated,
+  } = query;
   const paginationVouchersFromPrisma = await getUtils.getVoucherListFromPrisma({
     companyId,
     page,
@@ -65,6 +75,7 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
     sortOption,
     searchQuery,
     type,
+    hideReversedRelated,
   });
   const { data: vouchersFromPrisma, where, ...pagination } = paginationVouchersFromPrisma;
   try {

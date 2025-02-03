@@ -1176,6 +1176,7 @@ export async function getManyVoucherV2(options: {
   type?: EventType | undefined;
   searchQuery?: string | undefined;
   isDeleted?: boolean | undefined;
+  hideReversedRelated?: boolean | undefined;
 }): Promise<
   IPaginatedData<IGetManyVoucherResponseButOne[]> & {
     where: Prisma.VoucherWhereInput;
@@ -1192,6 +1193,7 @@ export async function getManyVoucherV2(options: {
     type,
     searchQuery,
     isDeleted,
+    hideReversedRelated,
   } = options;
   // const { page, pageSize, sortOption, isDeleted } = options;
   let vouchers: IGetManyVoucherResponseButOne[] = [];
@@ -1210,6 +1212,17 @@ export async function getManyVoucherV2(options: {
     }
   }
   // Info: (20241121 - Murky) payable 和 receivable 如果要再搜尋中處理的話要用rowQuery, 所以這邊先用filter的
+  /**
+   * Info: (20250203 - Shirley) 建立查詢條件
+   * 1. 基本條件：日期範圍、公司ID、傳票狀態、傳票類型、刪除狀態
+   * 2. 反轉相關過濾：如果 hideReversedRelated 為 true，過濾掉與 delete event 相關的傳票
+   * 3. 搜尋條件：使用 OR 組合多個欄位的模糊搜尋
+   *    - 開立人名稱
+   *    - 交易對象名稱或統一編號
+   *    - 傳票備註
+   *    - 傳票號碼
+   *    - 會計科目名稱
+   */
   const where: Prisma.VoucherWhereInput = {
     date: {
       gte: startDate,
@@ -1219,6 +1232,29 @@ export async function getManyVoucherV2(options: {
     status: getStatusFilter(tab),
     type: type || undefined,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
+    // Info: (20250203 - Shirley) 如果 hideReversedRelated 為 true，則過濾掉與 delete event 相關的傳票
+    ...(hideReversedRelated && {
+      AND: [
+        {
+          originalVouchers: {
+            none: {
+              event: {
+                eventType: 'delete',
+              },
+            },
+          },
+        },
+        {
+          resultVouchers: {
+            none: {
+              event: {
+                eventType: 'delete',
+              },
+            },
+          },
+        },
+      ],
+    }),
     OR: [
       {
         issuer: {
@@ -1257,12 +1293,6 @@ export async function getManyVoucherV2(options: {
         lineItems: {
           some: {
             OR: [
-              // Info: (20241121 - Murky) 如果有需要搜尋再打開
-              // {
-              //   description: {
-              //     contains: searchQuery,
-              //   },
-              // },
               {
                 account: {
                   name: {
@@ -1279,6 +1309,11 @@ export async function getManyVoucherV2(options: {
 
   let totalCount = 0;
 
+  /**
+   * Info: (20250203 - Shirley) 第一次查詢：計算總筆數
+   * 使用相同的 where 條件計算符合條件的總筆數
+   * 用於計算總頁數和分頁資訊
+   */
   try {
     totalCount = await prisma.voucher.count({ where });
   } catch (error) {
@@ -1293,6 +1328,12 @@ export async function getManyVoucherV2(options: {
 
   const offset = pageToOffset(page, pageSize);
   // const orderBy = { [sortBy]: sortOrder };
+
+  /**
+   * Info: (20250203 - Shirley) 建立排序條件列表
+   * 根據傳入的排序選項建立對應的排序條件
+   * 目前只處理日期排序，其他排序（Credit、Debit等）在程式碼中處理
+   */
   function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
     const orderBy: { [key: string]: SortOrder }[] = [];
     sortOptions.forEach((sort) => {
@@ -1317,6 +1358,13 @@ export async function getManyVoucherV2(options: {
     return orderBy;
   }
 
+  /**
+   * Info: (20250203 - Shirley) 建立分頁查詢參數
+   * 1. skip: 跳過前面幾筆
+   * 2. take: 多取一筆用於判斷是否還有下一頁
+   * 3. orderBy: 排序條件
+   * 4. where: 上面建立的查詢條件
+   */
   const findManyArgs = {
     skip: offset,
     take: pageSize + 1,
@@ -1324,6 +1372,14 @@ export async function getManyVoucherV2(options: {
     where,
   };
 
+  /**
+   * Info: (20250203 - Shirley) 第二次查詢：取得分頁資料
+   * 1. 使用 findManyArgs 進行分頁查詢
+   * 2. include 完整的關聯資料（lineItems, account, counterparty 等）
+   * 3. 根據分頁類型（tab）進行額外的資料過濾：
+   *    - PAYMENT: 只包含應付帳款相關的傳票
+   *    - RECEIVING: 只包含應收帳款相關的傳票
+   */
   try {
     const vouchersFromPrisma = await prisma.voucher.findMany({
       ...findManyArgs,
@@ -1444,6 +1500,12 @@ export async function getManyVoucherV2(options: {
     });
   }
 
+  /**
+   * Info: (20250203 - Shirley) 處理分頁資訊
+   * 1. hasNextPage: 如果取得的資料比要求的多，表示還有下一頁
+   * 2. hasPreviousPage: 如果目前頁數大於 1，表示有上一頁
+   * 3. 如果有下一頁，移除多取的那一筆資料
+   */
   const hasNextPage = vouchers.length > pageSize;
   const hasPreviousPage = page > DEFAULT_PAGE_NUMBER; // 1;
 
