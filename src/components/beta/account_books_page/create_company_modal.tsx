@@ -82,7 +82,7 @@ const CreateCompanyModal = ({
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('dashboard:CREATE_COMPANY_MODAL.CREATE_NEW_COMPANY')}
+            {t('dashboard:CREATE_COMPANY_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
           </h1>
           <button type="button" onClick={modalVisibilityHandler}>
             <IoCloseOutline size={24} />

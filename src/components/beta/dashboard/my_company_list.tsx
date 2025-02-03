@@ -234,7 +234,7 @@ const MyCompanyList = () => {
       <section className="flex flex-col gap-24px">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-text-neutral-secondary">
-            {t('dashboard:DASHBOARD.MY_COMPANY_LIST')}
+            {t('dashboard:DASHBOARD.ACCOUNT_BOOKS')}
           </h3>
 
           <MoreLink href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE} />

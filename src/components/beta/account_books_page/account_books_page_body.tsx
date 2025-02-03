@@ -63,13 +63,13 @@ const AccountBooksPageBody = () => {
   };
 
   const messageModalData: IMessageModal = {
-    title: t('company:PAGE_BODY.DELETE_MESSAGE_TITLE'),
-    content: t('company:PAGE_BODY.DELETE_MESSAGE_CONTENT'),
-    submitBtnStr: t('company:PAGE_BODY.DELETE'),
+    title: t('company:ACCOUNT_BOOKS_PAGE_BODY.DELETE_MESSAGE_TITLE'),
+    content: t('company:ACCOUNT_BOOKS_PAGE_BODY.DELETE_MESSAGE_CONTENT'),
+    submitBtnStr: t('company:ACCOUNT_BOOKS_PAGE_BODY.DELETE'),
     submitBtnFunction: handleDeleteCompany,
     messageType: MessageType.WARNING,
     backBtnFunction: closeDeleteModal,
-    backBtnStr: t('company:PAGE_BODY.CANCEL'),
+    backBtnStr: t('company:ACCOUNT_BOOKS_PAGE_BODY.CANCEL'),
   };
 
   const handleApiResponse = (resData: IPaginatedData<ICompanyAndRole[]>) => {
@@ -101,7 +101,7 @@ const AccountBooksPageBody = () => {
             className="flex items-center gap-8px rounded-xs bg-button-surface-strong-secondary px-24px py-10px text-base font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             <BsPlusLg size={20} />
-            <p>{t('company:PAGE_BODY.ADD_NEW')}</p>
+            <p>{t('company:ACCOUNT_BOOKS_PAGE_BODY.ADD_NEW')}</p>
           </button>
 
           <button
@@ -109,7 +109,7 @@ const AccountBooksPageBody = () => {
             className="flex items-center gap-8px rounded-xs border border-button-stroke-secondary bg-button-surface-soft-secondary px-24px py-10px text-base font-medium text-button-text-secondary-solid hover:border-button-stroke-secondary-hover hover:bg-button-surface-soft-secondary-hover disabled:border-button-stroke-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             <BsEnvelope size={20} />
-            <p>{t('company:PAGE_BODY.INVITE_CODE')}</p>
+            <p>{t('company:ACCOUNT_BOOKS_PAGE_BODY.INVITE_CODE')}</p>
           </button>
         </div>
       </section>

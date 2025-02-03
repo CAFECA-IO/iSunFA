@@ -128,7 +128,7 @@ const CompanyItem = ({
                 className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
               >
                 <FiTag size={16} className="text-icon-surface-single-color-primary" />
-                <p>{t('company:PAGE_BODY.CHANGE_WORK_TAG')}</p>
+                <p>{t('company:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}</p>
               </button>
 
               <button
@@ -137,7 +137,7 @@ const CompanyItem = ({
                 onClick={openDeleteCompanyModal}
               >
                 <FiTrash2 size={16} className="text-icon-surface-single-color-primary" />
-                <p>{t('company:PAGE_BODY.DELETE')}</p>
+                <p>{t('company:ACCOUNT_BOOKS_PAGE_BODY.DELETE')}</p>
               </button>
             </div>
           )}
@@ -157,19 +157,19 @@ const CompanyItem = ({
         >
           {isCompanySelected ? (
             <div className="flex items-center gap-4px rounded-xs border border-surface-state-success bg-surface-state-success px-16px py-8px group-hover:opacity-0">
-              <p className="text-sm font-medium">{t('company:PAGE_BODY.LINKED')}</p>
+              <p className="text-sm font-medium">{t('company:ACCOUNT_BOOKS_PAGE_BODY.LINKED')}</p>
               <FaRegCircleCheck size={16} />
             </div>
           ) : (
             <div className="flex items-center gap-4px rounded-xs border border-button-stroke-secondary px-16px py-8px hover:bg-button-surface-soft-secondary-hover">
-              <p className="text-sm font-medium">{t('company:PAGE_BODY.CONNECT')}</p>
+              <p className="text-sm font-medium">{t('company:ACCOUNT_BOOKS_PAGE_BODY.CONNECT')}</p>
               <IoArrowForward size={16} />
             </div>
           )}
 
           {isCompanySelected && (
             <div className="absolute inset-0 flex items-center justify-center gap-4px rounded-xs border border-surface-state-success-soft bg-surface-state-success-soft px-16px py-8px text-sm opacity-0 group-hover:opacity-100">
-              <p className="text-sm font-medium">{t('company:PAGE_BODY.CANCEL')}</p>
+              <p className="text-sm font-medium">{t('company:ACCOUNT_BOOKS_PAGE_BODY.CANCEL')}</p>
               <IoClose size={16} />
             </div>
           )}

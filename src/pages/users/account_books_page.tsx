@@ -15,7 +15,7 @@ const AccountBooksPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('dashboard:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}</title>
+        <title>{t('dashboard:ACCOUNT_BOOKS_PAGE.PAGE_TITLE')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -32,7 +32,7 @@ const AccountBooksPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('dashboard:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}
+        pageTitle={t('dashboard:ACCOUNT_BOOKS_PAGE.PAGE_TITLE')}
         goBackUrl={ISUNFA_ROUTE.DASHBOARD}
       >
         <AccountBooksPageBody />
