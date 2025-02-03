@@ -12,9 +12,9 @@ import MessageModal from '@/components/message_modal/message_modal';
 import FilterSection from '@/components/filter_section/filter_section';
 import NoData from '@/components/beta/account_books_page/no_data';
 import UploadCompanyAvatarModal from '@/components/beta/account_books_page/upload_company_avatar_modal';
-import CreateCompanyModal from '@/components/beta/account_books_page/create_company_modal';
+import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
-import CompanyList from '@/components/beta/account_books_page/company_list';
+import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 
 const AccountBooksPageBody = () => {
   const { t } = useTranslation(['company']);
@@ -117,7 +117,7 @@ const AccountBooksPageBody = () => {
       {isNoData && <NoData />}
       {!isNoData && (
         <>
-          <CompanyList
+          <AccountBookList
             companyList={companyList}
             setCompanyToEdit={setCompanyToEdit}
             setCompanyToDelete={setCompanyToDelete}
@@ -132,7 +132,7 @@ const AccountBooksPageBody = () => {
       )}
 
       {/* // Info: (20241108 - Liz) Modals */}
-      <CreateCompanyModal
+      <CreateAccountBookModal
         isModalVisible={isCreateCompanyModalOpen}
         modalVisibilityHandler={toggleCreateCompanyModal}
         setRefreshKey={setRefreshKey}

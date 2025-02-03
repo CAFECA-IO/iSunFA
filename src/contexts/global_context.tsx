@@ -16,7 +16,6 @@ import {
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
 import { ToastPosition, ToastType } from '@/interfaces/toastify';
-import CreateCompanyModal from '@/components/beta/account_books_page/create_company_modal';
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -74,9 +73,6 @@ interface IGlobalContext {
 
   isCompanyInvitationModalVisible: boolean;
   companyInvitationModalVisibilityHandler: () => void;
-
-  isCreateCompanyModalVisible: boolean;
-  createCompanyModalVisibilityHandler: () => void;
 
   isLoadingModalVisible: boolean;
   loadingModalVisibilityHandler: () => void;
@@ -182,8 +178,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isCompanyInvitationModalVisible, setIsCompanyInvitationModalVisible] = useState(false);
 
-  const [isCreateCompanyModalVisible, setIsCreateCompanyModalVisible] = useState(false);
-
   const [isLoadingModalVisible, setIsLoadingModalVisible] = useState(false);
 
   const [isFilterOptionsModalForHistoryVisible, setIsFilterOptionsModalForHistoryVisible] =
@@ -274,10 +268,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const companyInvitationModalVisibilityHandler = () => {
     setIsCompanyInvitationModalVisible(!isCompanyInvitationModalVisible);
-  };
-
-  const createCompanyModalVisibilityHandler = () => {
-    setIsCreateCompanyModalVisible(!isCreateCompanyModalVisible);
   };
 
   const loadingModalVisibilityHandler = () => {
@@ -459,8 +449,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       embedCodeModalVisibilityHandler,
       isCompanyInvitationModalVisible,
       companyInvitationModalVisibilityHandler,
-      isCreateCompanyModalVisible,
-      createCompanyModalVisibilityHandler,
       isLoadingModalVisible,
       loadingModalVisibilityHandler,
       isSalaryBookConfirmModalVisible,
@@ -532,8 +520,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       embedCodeModalVisibilityHandler,
       isCompanyInvitationModalVisible,
       companyInvitationModalVisibilityHandler,
-      isCreateCompanyModalVisible,
-      createCompanyModalVisibilityHandler,
       isLoadingModalVisible,
       loadingModalVisibilityHandler,
       isSalaryBookConfirmModalVisible,
@@ -640,11 +626,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <EmbedCodeModal
         isModalVisible={isEmbedCodeModalVisible}
         modalVisibilityHandler={embedCodeModalVisibilityHandler}
-      />
-
-      <CreateCompanyModal
-        isModalVisible={isCreateCompanyModalVisible}
-        modalVisibilityHandler={createCompanyModalVisibilityHandler}
       />
 
       <CompanyInvitationModal

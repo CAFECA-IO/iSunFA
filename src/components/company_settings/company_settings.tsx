@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import CreateCompanyModal from '@/components/beta/account_books_page/create_company_modal';
+import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
 import CompanyListModal from '@/components/company_settings/company_list_modal';
 
 interface CompanySettingsProps {}
@@ -22,7 +22,7 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
 
   return (
     <div className="flex flex-col">
-      <CreateCompanyModal
+      <CreateAccountBookModal
         modalVisibilityHandler={toggleCreateCompanyModal}
         isModalVisible={isCreateCompanyModalOpen}
       />

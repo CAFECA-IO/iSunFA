@@ -8,7 +8,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import CreateCompanyModal from '@/components/beta/account_books_page/create_company_modal';
+import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MyCompanyListNoData from '@/components/beta/dashboard/my_company_list_no_data';
@@ -259,7 +259,7 @@ const MyCompanyList = () => {
         )}
 
         {isCreateCompanyModalOpen && (
-          <CreateCompanyModal
+          <CreateAccountBookModal
             isModalVisible={isCreateCompanyModalOpen}
             modalVisibilityHandler={toggleCreateCompanyModal}
             getCompanyList={getCompanyList}

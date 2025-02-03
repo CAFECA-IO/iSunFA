@@ -13,7 +13,7 @@ interface CreateCompanyModalProps {
   getCompanyList?: () => void;
 }
 
-const CreateCompanyModal = ({
+const CreateAccountBookModal = ({
   isModalVisible,
   modalVisibilityHandler,
   setRefreshKey,
@@ -70,7 +70,7 @@ const CreateCompanyModal = ({
     } catch (error) {
       // Deprecated: (20241104 - Liz)
       // eslint-disable-next-line no-console
-      console.log('CreateCompanyModal handleSubmit error:', error);
+      console.log('CreateAccountBookModal handleSubmit error:', error);
     } finally {
       // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
       setIsLoading(false);
@@ -181,4 +181,4 @@ const CreateCompanyModal = ({
   ) : null;
 };
 
-export default CreateCompanyModal;
+export default CreateAccountBookModal;
