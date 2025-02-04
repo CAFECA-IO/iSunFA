@@ -30,7 +30,7 @@ const CompanyTag = ({ tag }: WorkTagProps) => {
     case COMPANY_TAG.ALL:
       backgroundColor = 'bg-badge-surface-soft-secondary';
       textColor = 'text-badge-text-secondary-solid';
-      icon = <LuFileCheck size={16} />;
+      icon = <LuFileCheck size={16} className="text-navy-blue-400" />;
       break;
 
     default:

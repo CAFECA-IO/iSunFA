@@ -195,13 +195,13 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                <th className="w-250px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold">
                   {!isSummaryCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow text-xs font-semibold leading-5">
                       {formattedCurFromDate}
@@ -209,11 +209,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                     </p>
                   )}
                 </th>
-                <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                   %
                 </th>
                 <th
-                  className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                  className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {financialReport && financialReport.company && (
@@ -223,7 +223,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                     </p>
                   )}
                 </th>
-                <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                   %
                 </th>
               </tr>
@@ -272,14 +272,14 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -288,11 +288,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -301,7 +301,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -349,13 +349,13 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold">
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}
@@ -363,10 +363,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold">
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}
@@ -374,7 +374,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -446,14 +446,14 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <table className="w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                <th className="w-50px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                <th className="w-250px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th
-                  className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                  className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {!isDetailCollapsed && financialReport && financialReport.company && (
@@ -463,11 +463,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                     </p>
                   )}
                 </th>
-                <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                   %
                 </th>
                 <th
-                  className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                  className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {financialReport && financialReport.company && (
@@ -477,7 +477,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                     </p>
                   )}
                 </th>
-                <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                   %
                 </th>
               </tr>
@@ -528,14 +528,14 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -545,11 +545,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -559,7 +559,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -609,14 +609,14 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -626,11 +626,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -640,7 +640,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -690,14 +690,14 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -706,11 +706,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -719,7 +719,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -769,14 +769,14 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -786,11 +786,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -800,7 +800,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </p>
                 )}
               </th>
-              <th className="w-45px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-45px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -819,22 +819,22 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               financialReport.details &&
               financialReport.details.slice(58, 62).map((value, index) => (
                 <tr key={`${value.code + index}`} className="h-40px">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {value.code}
                   </td>
-                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="w-177px border border-stroke-neutral-quaternary p-10px text-xs">
                     {value.name}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {value.curPeriodAmount === 0 ? '-' : value.curPeriodAmount}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
                     &nbsp;
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {value.prePeriodAmount === 0 ? '-' : value.prePeriodAmount}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
                     &nbsp;
                   </td>
                 </tr>
@@ -885,14 +885,14 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -902,7 +902,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 )}
               </th>
               <th
-                className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -918,18 +918,18 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.revenue && (
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.revenue.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.prePeriodAmountString}
                   </td>
                 </tr>
@@ -937,12 +937,12 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
           <tbody>
             <tr>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-xs">&nbsp;</td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-xs">&nbsp;</td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+              <td className="border border-stroke-neutral-quaternary p-10px text-xs">&nbsp;</td>
+              <td className="border border-stroke-neutral-quaternary p-10px text-xs">&nbsp;</td>
+              <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                 &nbsp;
               </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+              <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                 &nbsp;
               </td>
             </tr>
@@ -952,18 +952,18 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.totalCost && (
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.totalCost.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.prePeriodAmountString}
                   </td>
                 </tr>
@@ -974,18 +974,18 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.salesExpense && (
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.salesExpense.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.prePeriodAmountString}
                   </td>
                 </tr>
@@ -996,18 +996,18 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.administrativeExpense && (
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.administrativeExpense.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.prePeriodAmountString}
                   </td>
                 </tr>
@@ -1015,16 +1015,16 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
           <tbody>
             <tr className="font-semibold">
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+              <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                 &nbsp;
               </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs">
+              <td className="border border-stroke-neutral-quaternary p-10px text-start text-xs">
                 {t(`reports:REPORTS.TOTAL_EXPENSES_AND_COSTS`)}
               </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+              <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                 {curPeriodTotal}
               </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+              <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                 {prePeriodTotal}
               </td>
             </tr>
@@ -1059,20 +1059,20 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-250px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-250px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold">
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate} <br /> {t('reports:COMMON.TO')} {formattedCurToDate}
                   </p>
                 )}
               </th>
-              <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold">
                 {financialReport && financialReport.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate} <br /> {t('reports:COMMON.TO')} {formattedPreToDate}
@@ -1085,47 +1085,47 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {revenueToRD && (
               <>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {revenueToRD.revenue.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(`reports:ACCOUNTING_ACCOUNT.${revenueToRD.revenue.name}`)}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.revenue.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.revenue.prePeriodAmountString}
                   </td>
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${revenueToRD.researchAndDevelopmentExpense.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.prePeriodAmountString}
                   </td>
                 </tr>
                 <tr className="font-semibold">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     &nbsp;
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-start text-xs">
                     {t('reports:REPORTS.REVENUE_TO_RD')}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
                     {revenueToRD.ratio.curRatio.toFixed(2)}%
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.ratio.preRatio.toFixed(2)}%
                   </td>
                 </tr>

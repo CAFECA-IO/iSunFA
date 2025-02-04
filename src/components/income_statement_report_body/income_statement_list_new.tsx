@@ -235,22 +235,20 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
 
       return [
         <tr key={key} className="h-40px" data-key={key} data-is-tr="true">
-          <td className="w-77px border border-stroke-brand-secondary-soft p-10px text-sm">
+          <td className="w-77px border border-stroke-neutral-quaternary p-10px text-sm">
             {displayCode}
           </td>
-          <td className="w-77px border border-stroke-brand-secondary-soft p-10px text-sm">
-            {name}
-          </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+          <td className="w-77px border border-stroke-neutral-quaternary p-10px text-sm">{name}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
             {displayCurPeriodAmount}
           </td>
-          <td className="w-50px border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+          <td className="w-50px border border-stroke-neutral-quaternary p-10px text-center text-sm">
             {displayCurPeriodPercentage}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
             {displayPrePeriodAmount}
           </td>
-          <td className="w-50px border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+          <td className="w-50px border border-stroke-neutral-quaternary p-10px text-center text-sm">
             {displayPrePeriodPercentage}
           </td>
         </tr>,
@@ -287,24 +285,24 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="w-77px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="w-77px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-285px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
                   {!isSummaryCollapsed && financialReport && financialReport.company && (
                     <p className="text-center font-barlow font-semibold leading-5">
                       {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
                     </p>
                   )}
                 </th>
-                <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                <th className="w-50px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
                   %
                 </th>
                 <th
-                  className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                  className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {financialReport && financialReport.company && (
@@ -313,7 +311,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                     </p>
                   )}
                 </th>
-                <th className="w-50px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                <th className="w-50px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
                   %
                 </th>
               </tr>
@@ -352,14 +350,14 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           <table className="w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
                 <th
-                  className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                  className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {!isDetailCollapsed && financialReport && financialReport.company && (
@@ -368,11 +366,11 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                     </p>
                   )}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
                   %
                 </th>
                 <th
-                  className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                  className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {financialReport && financialReport.company && (
@@ -381,7 +379,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                     </p>
                   )}
                 </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
                   %
                 </th>
               </tr>
@@ -406,14 +404,14 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+              <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+              <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -423,7 +421,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 )}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -439,18 +437,18 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.revenue && (
                 <tr key={otherInfo.revenueAndExpenseRatio.revenue.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {otherInfo.revenueAndExpenseRatio.revenue.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.revenue.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {otherInfo.revenueAndExpenseRatio.revenue.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {otherInfo.revenueAndExpenseRatio.revenue.prePeriodAmountString}
                   </td>
                 </tr>
@@ -458,10 +456,10 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           </tbody>
           <tbody>
             <tr>
-              <td className="border border-stroke-brand-secondary-soft p-10px">&nbsp;</td>
-              <td className="border border-stroke-brand-secondary-soft p-10px">&nbsp;</td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end">&nbsp;</td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end">&nbsp;</td>
+              <td className="border border-stroke-neutral-quaternary p-10px">&nbsp;</td>
+              <td className="border border-stroke-neutral-quaternary p-10px">&nbsp;</td>
+              <td className="border border-stroke-neutral-quaternary p-10px text-end">&nbsp;</td>
+              <td className="border border-stroke-neutral-quaternary p-10px text-end">&nbsp;</td>
             </tr>
           </tbody>
           <tbody>
@@ -469,18 +467,18 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.totalCost && (
                 <tr key={otherInfo.revenueAndExpenseRatio.totalCost.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {otherInfo.revenueAndExpenseRatio.totalCost.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.totalCost.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {otherInfo.revenueAndExpenseRatio.totalCost.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {otherInfo.revenueAndExpenseRatio.totalCost.prePeriodAmountString}
                   </td>
                 </tr>
@@ -491,18 +489,18 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.salesExpense && (
                 <tr key={otherInfo.revenueAndExpenseRatio.salesExpense.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.salesExpense.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.prePeriodAmountString}
                   </td>
                 </tr>
@@ -513,18 +511,18 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.administrativeExpense && (
                 <tr key={otherInfo.revenueAndExpenseRatio.administrativeExpense.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.administrativeExpense.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.prePeriodAmountString}
                   </td>
                 </tr>
@@ -532,14 +530,14 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           </tbody>
           <tbody>
             <tr className="font-semibold">
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end">&nbsp;</td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-start">
+              <td className="border border-stroke-neutral-quaternary p-10px text-end">&nbsp;</td>
+              <td className="border border-stroke-neutral-quaternary p-10px text-start">
                 {t(`reports:REPORTS.TOTAL_EXPENSES_AND_COSTS`)}
               </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+              <td className="border border-stroke-neutral-quaternary p-10px text-end">
                 {curPeriodTotal}
               </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+              <td className="border border-stroke-neutral-quaternary p-10px text-end">
                 {prePeriodTotal}
               </td>
             </tr>
@@ -572,14 +570,14 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+              <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+              <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -589,7 +587,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                 )}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -604,47 +602,47 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
             {revenueToRD && (
               <>
                 <tr key={revenueToRD.revenue.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {revenueToRD.revenue.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {t(`reports:ACCOUNTING_ACCOUNT.${revenueToRD.revenue.name}`)}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {revenueToRD.revenue.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {revenueToRD.revenue.prePeriodAmountString}
                   </td>
                 </tr>
                 <tr key={revenueToRD.researchAndDevelopmentExpense.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {revenueToRD.researchAndDevelopmentExpense.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                  <td className="border border-stroke-neutral-quaternary p-10px">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${revenueToRD.researchAndDevelopmentExpense.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {revenueToRD.researchAndDevelopmentExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {revenueToRD.researchAndDevelopmentExpense.prePeriodAmountString}
                   </td>
                 </tr>
                 <tr className="font-semibold">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     &nbsp;
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-start">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-start">
                     {t('reports:REPORTS.REVENUE_TO_RD')}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
                     {revenueToRD.ratio.curRatio.toFixed(2)}%
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {revenueToRD.ratio.preRatio.toFixed(2)}%
                   </td>
                 </tr>

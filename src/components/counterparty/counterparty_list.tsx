@@ -100,7 +100,7 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({
           </div>
         </div>
 
-        <div className="table-row-group">{displayedCounterPartyList}</div>
+        <div className="table-row-group bg-neutral-white">{displayedCounterPartyList}</div>
       </div>
 
       <div className="mx-auto mt-10">

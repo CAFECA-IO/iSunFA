@@ -70,14 +70,14 @@ const PrintCostRevRatio = ({
         <table className="relative z-10 w-full border-collapse bg-white text-xxs">
           <thead>
             <tr>
-              <th className="w-40px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+              <th className="w-40px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-177px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+              <th className="w-177px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -87,7 +87,7 @@ const PrintCostRevRatio = ({
                 )}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -103,18 +103,18 @@ const PrintCostRevRatio = ({
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.revenue && (
                 <tr key={otherInfo.revenueAndExpenseRatio.revenue.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.revenue.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.prePeriodAmountString}
                   </td>
                 </tr>
@@ -122,10 +122,10 @@ const PrintCostRevRatio = ({
           </tbody>
           <tbody>
             <tr>
-              <td className="border border-stroke-brand-secondary-soft p-10px">&nbsp;</td>
-              <td className="border border-stroke-brand-secondary-soft p-10px">&nbsp;</td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end">&nbsp;</td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end">&nbsp;</td>
+              <td className="border border-stroke-neutral-quaternary p-10px">&nbsp;</td>
+              <td className="border border-stroke-neutral-quaternary p-10px">&nbsp;</td>
+              <td className="border border-stroke-neutral-quaternary p-10px text-end">&nbsp;</td>
+              <td className="border border-stroke-neutral-quaternary p-10px text-end">&nbsp;</td>
             </tr>
           </tbody>
           <tbody>
@@ -133,18 +133,18 @@ const PrintCostRevRatio = ({
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.totalCost && (
                 <tr key={otherInfo.revenueAndExpenseRatio.totalCost.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.totalCost.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.prePeriodAmountString}
                   </td>
                 </tr>
@@ -155,18 +155,18 @@ const PrintCostRevRatio = ({
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.salesExpense && (
                 <tr key={otherInfo.revenueAndExpenseRatio.salesExpense.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.salesExpense.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.prePeriodAmountString}
                   </td>
                 </tr>
@@ -177,18 +177,18 @@ const PrintCostRevRatio = ({
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.administrativeExpense && (
                 <tr key={otherInfo.revenueAndExpenseRatio.administrativeExpense.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${otherInfo.revenueAndExpenseRatio.administrativeExpense.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.prePeriodAmountString}
                   </td>
                 </tr>
@@ -196,16 +196,16 @@ const PrintCostRevRatio = ({
           </tbody>
           <tbody>
             <tr className="font-semibold">
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+              <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                 &nbsp;
               </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs">
+              <td className="border border-stroke-neutral-quaternary p-10px text-start text-xs">
                 {t(`reports:REPORTS.TOTAL_EXPENSES_AND_COSTS`)}
               </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+              <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                 {curPeriodTotal}
               </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+              <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                 {prePeriodTotal}
               </td>
             </tr>
@@ -240,14 +240,14 @@ const PrintCostRevRatio = ({
         <table className="relative z-10 mb-75px w-full border-collapse bg-white text-xxs">
           <thead>
             <tr>
-              <th className="w-40px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+              <th className="w-40px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-177px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+              <th className="w-177px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -257,7 +257,7 @@ const PrintCostRevRatio = ({
                 )}
               </th>
               <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end font-semibold"
+                className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -272,47 +272,47 @@ const PrintCostRevRatio = ({
             {revenueToRD && (
               <>
                 <tr key={revenueToRD.revenue.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {revenueToRD.revenue.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(`reports:ACCOUNTING_ACCOUNT.${revenueToRD.revenue.name}`)}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.revenue.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.revenue.prePeriodAmountString}
                   </td>
                 </tr>
                 <tr key={revenueToRD.researchAndDevelopmentExpense.code}>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.code}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-xs">
                     {t(
                       `reports:ACCOUNTING_ACCOUNT.${revenueToRD.researchAndDevelopmentExpense.name}`
                     )}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.prePeriodAmountString}
                   </td>
                 </tr>
                 <tr className="font-semibold">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     &nbsp;
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-start text-xs">
                     {t('reports:REPORTS.REVENUE_TO_RD')}
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
                     {revenueToRD.ratio.curRatio.toFixed(2)}%
                   </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.ratio.preRatio.toFixed(2)}%
                   </td>
                 </tr>
