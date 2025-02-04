@@ -64,7 +64,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       </div>
     ) : (
       <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
-        <FiRepeat size={14} className="text-surface-brand-secondary" />
+        <FiRepeat size={14} className="text-navy-blue-400" />
         <p className="text-hxs text-badge-text-secondary-solid">{voucherNo}</p>
       </div>
     );

@@ -581,7 +581,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       <div className="h-px w-full bg-divider-stroke-lv-4"></div>
       {/* Info: (20241018 - Anna) Total開始 */}
       <div className="mb-10 mt-4 table w-full overflow-hidden rounded-b-lg">
-        <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary print:max-w-a4-width">
+        <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-secondary print:max-w-a4-width">
           <div className="table-row h-60px print:text-xxs">
             <div
               className={`col-span-3 table-cell border-stroke-neutral-quaternary text-center align-middle font-medium print:bg-neutral-50`}
