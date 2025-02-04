@@ -12,7 +12,7 @@ import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/vouch
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemBeta, ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
-import { ICounterparty } from '@/interfaces/counterparty';
+import { ICounterpartyOptional } from '@/interfaces/counterparty';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
@@ -42,6 +42,7 @@ import { ToastType } from '@/interfaces/toastify';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
 import { ToastId } from '@/constants/toast_id';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
 
 type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
 
@@ -50,7 +51,7 @@ interface IAIResultVoucher {
   voucherDate: number;
   type: string;
   note: string;
-  counterParty?: ICounterparty;
+  counterParty?: ICounterpartyOptional;
   lineItems: ILineItemUI[];
 }
 
@@ -149,7 +150,11 @@ const VoucherEditingPageBody: React.FC<{
   // Info: (20241118 - Julian) State
   const [date, setDate] = useState<IDatePeriod>(defaultDate);
   const [type, setType] = useState<string>(defaultType);
-  const [note, setNote] = useState<string>(voucherNote);
+  const [note, setNote] = useState<{
+    note: string;
+    name: string | undefined;
+    taxId: string | undefined;
+  }>(parseNoteData(voucherNote));
   const [lineItems, setLineItems] = useState<ILineItemUI[]>(defaultLineItems);
   const [assetList, setAssetList] = useState<IAssetPostOutput[]>(defaultAssetList);
 
@@ -173,7 +178,9 @@ const VoucherEditingPageBody: React.FC<{
   const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 交易對象相關 state
-  const [counterparty, setCounterparty] = useState<ICounterparty | undefined>(voucherCounterParty);
+  const [counterparty, setCounterparty] = useState<ICounterpartyOptional | undefined>(
+    voucherCounterParty
+  );
 
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
@@ -511,7 +518,7 @@ const VoucherEditingPageBody: React.FC<{
   const typeToggleHandler = () => setTypeVisible(!typeVisible);
 
   const noteChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNote(e.target.value);
+    setNote((prev) => ({ ...prev, note: e.target.value }));
   };
 
   // Info: (20241018 - Julian) 欄位顯示
@@ -532,7 +539,11 @@ const VoucherEditingPageBody: React.FC<{
   const clearAllHandler = () => {
     setDate(default30DayPeriodInSec);
     setType(VoucherType.EXPENSE);
-    setNote('');
+    setNote({
+      note: '',
+      name: undefined,
+      taxId: undefined,
+    });
     setCounterparty(undefined);
     clearTemporaryAssetHandler(companyId);
     clearReverseListHandler();
@@ -556,7 +567,12 @@ const VoucherEditingPageBody: React.FC<{
   const fillUpWithAIResult = () => {
     setDate(aiDate);
     setType(aiType);
-    setNote(aiNote);
+    setNote((prev) => ({
+      ...prev,
+      note: aiNote,
+      name: aiCounterParty?.name,
+      taxId: aiCounterParty?.taxId,
+    }));
     setCounterparty(aiCounterParty);
     const aiLineItemsUI = aiLineItems.map((item) => {
       return {
@@ -622,7 +638,7 @@ const VoucherEditingPageBody: React.FC<{
       certificateIds: selectedIds,
       voucherDate: resultDate,
       type: resultType,
-      note: resultNote,
+      note: JSON.stringify(resultNote),
       counterPartyId: resultCounterpartyId,
       lineItems: resultLineItems,
       assetIds: resultAssetIds,
@@ -791,6 +807,15 @@ const VoucherEditingPageBody: React.FC<{
     [certificates]
   );
 
+  const handleCounterpartySelect = (counterpartyPartial: ICounterpartyOptional) => {
+    setCounterparty(counterpartyPartial);
+    setNote((prev) => ({
+      ...prev,
+      name: counterpartyPartial.name,
+      taxId: counterpartyPartial.taxId,
+    }));
+  };
+
   // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
   useEffect(() => {
     const pusher = getPusherInstance();
@@ -891,7 +916,7 @@ const VoucherEditingPageBody: React.FC<{
           <input
             id="voucher-note"
             type="text"
-            value={note}
+            value={note.note}
             onChange={noteChangeHandler}
             placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
             className={`rounded-sm border border-input-stroke-input px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
@@ -901,7 +926,7 @@ const VoucherEditingPageBody: React.FC<{
         {isShowCounter && (
           <CounterpartyInput
             counterparty={counterparty}
-            onSelect={setCounterparty}
+            onSelect={handleCounterpartySelect}
             className="col-span-2"
             flagOfSubmit={flagOfSubmit}
           />

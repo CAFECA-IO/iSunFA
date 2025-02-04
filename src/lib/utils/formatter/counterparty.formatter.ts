@@ -1,7 +1,11 @@
 import { Counterparty as PrismaCounterParty } from '@prisma/client';
-import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import { PartialPrismaCounterparty } from '@/interfaces/voucher';
+import { ICounterPartyEntity, ICounterPartyEntityPartial } from '@/interfaces/counterparty';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
-import { counterPartyEntityValidator } from '@/constants/counterparty';
+import {
+  counterPartyEntityValidator,
+  partialCounterPartyEntityValidator,
+} from '@/constants/counterparty';
 
 /**
  * Info: (20241023 - Murky)
@@ -15,6 +19,27 @@ export function parsePrismaCounterPartyToCounterPartyEntity(
 
   if (!success) {
     throw new FormatterError('CounterPartyEntity format prisma data error', {
+      dto,
+      zodErrorMessage: error.message,
+      issues: error.errors,
+    });
+  }
+
+  return data;
+}
+
+/**
+ * Info: (20250204 - Tzuhan)
+ * @description convert CounterParty from prisma to ICounterPartyEntityPartial
+ */
+export function parsePartialPrismaCounterPartyToCounterPartyEntity(
+  dto: PartialPrismaCounterparty
+): ICounterPartyEntityPartial {
+  // ToDo: (20250204 - Tzuhan) Need to move to other place
+  const { data, success, error } = partialCounterPartyEntityValidator.safeParse(dto);
+
+  if (!success) {
+    throw new FormatterError('CounterPartyEntityPartial format prisma data error', {
       dto,
       zodErrorMessage: error.message,
       issues: error.errors,

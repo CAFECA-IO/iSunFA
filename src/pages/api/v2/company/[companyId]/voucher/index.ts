@@ -18,7 +18,7 @@ import { initVoucherEntity } from '@/lib/utils/voucher';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { initCounterPartyEntity } from '@/lib/utils/counterparty';
-import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
 import { IEventEntity } from '@/interfaces/event';
 import { IVoucherBeta, IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
@@ -300,7 +300,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
     const newVoucherNo = ''; // Info: (20241025 - Murky) [Warning!] VoucherNo 需要在存入的transaction中取得
 
     // Info: (20241029 - Murky) 一開始都先用public counterParty, 進入Reverse邏輯後在使用前端傳進來的counterParty
-    const counterPartyEntity: ICounterPartyEntity = isCounterPartyIdExist
+    const counterPartyEntity: ICounterPartyEntityPartial = isCounterPartyIdExist
       ? await postUtils.initCounterPartyFromPrisma(counterPartyId!)
       : initCounterPartyEntity({
           id: PUBLIC_COUNTER_PARTY.id,
@@ -318,7 +318,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
 
     const voucher = initVoucherEntity({
       issuerId: issuer.id,
-      counterPartyId: counterPartyEntity.id,
+      counterPartyId: counterPartyEntity.id ?? PUBLIC_COUNTER_PARTY.id,
       companyId: company.id,
       type: voucherInfo.type,
       status: JOURNAL_EVENT.UPLOADED,

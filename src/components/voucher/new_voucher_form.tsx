@@ -13,7 +13,7 @@ import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/vouch
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
-import { ICounterparty } from '@/interfaces/counterparty';
+import { ICounterpartyOptional } from '@/interfaces/counterparty';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
@@ -121,7 +121,15 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241004 - Julian) 通用項目
   const [date, setDate] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [type, setType] = useState<string>(VoucherType.EXPENSE);
-  const [note, setNote] = useState<string>('');
+  const [note, setNote] = useState<{
+    note: string;
+    name: string | undefined;
+    taxId: string | undefined;
+  }>({
+    note: '',
+    name: undefined,
+    taxId: undefined,
+  });
 
   // Info: (20241004 - Julian) 週期性分錄相關 state
   // const [isRecurring, setIsRecurring] = useState<boolean>(false);
@@ -150,7 +158,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 交易對象相關 state
-  const [counterparty, setCounterparty] = useState<ICounterparty | undefined>(undefined);
+  const [counterparty, setCounterparty] = useState<ICounterpartyOptional | undefined>(undefined);
 
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
@@ -476,7 +484,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const typeToggleHandler = () => setTypeVisible(!typeVisible);
 
   const noteChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNote(e.target.value);
+    setNote((prev) => ({ ...prev, note: e.target.value }));
   };
 
   // const recurringToggleHandler = () => {
@@ -513,7 +521,11 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const clearAllHandler = () => {
     setDate(default30DayPeriodInSec);
     setType(VoucherType.EXPENSE);
-    setNote('');
+    setNote({
+      note: '',
+      name: undefined,
+      taxId: undefined,
+    });
     setCounterparty(undefined);
     // setIsRecurring(false);
     // setRecurringPeriod(default30DayPeriodInSec);
@@ -542,7 +554,12 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const fillUpWithAIResult = () => {
     setDate(aiDate);
     setType(aiType);
-    setNote(aiNote);
+    setNote((prev) => ({
+      ...prev,
+      note: aiNote,
+      name: aiCounterParty?.name,
+      taxId: aiCounterParty?.taxId,
+    }));
     setCounterparty(aiCounterParty);
     const aiLineItemsUI = aiLineItems.map((item) => {
       return {
@@ -610,7 +627,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       certificateIds: selectedIds,
       voucherDate: date.startTimeStamp,
       type: VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType],
-      note,
+      note: JSON.stringify(note),
       counterPartyId: counterparty?.id,
       lineItems,
       assetIds,
@@ -953,6 +970,15 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   //   };
   // }, []);
 
+  const handleCounterpartySelect = (counterpartyPartial: ICounterpartyOptional) => {
+    setCounterparty(counterpartyPartial);
+    setNote((prev) => ({
+      ...prev,
+      name: counterpartyPartial.name,
+      taxId: counterpartyPartial.taxId,
+    }));
+  };
+
   useEffect(() => {
     setSelectedCertificates(Object.values(selectedData));
     setSelectedIds(Object.keys(selectedData).map(Number));
@@ -1047,7 +1073,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           <input
             id="voucher-note"
             type="text"
-            value={note}
+            value={note.note}
             onChange={noteChangeHandler}
             placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
             className={`rounded-sm border border-input-stroke-input px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
@@ -1057,7 +1083,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         {isShowCounter && (
           <CounterpartyInput
             counterparty={counterparty}
-            onSelect={setCounterparty}
+            onSelect={handleCounterpartySelect}
             flagOfSubmit={flagOfSubmit}
             className="col-span-2"
           />

@@ -10,7 +10,7 @@ import { Logger } from 'pino';
 
 import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_item.formatter';
 import { initVoucherEntity } from '@/lib/utils/voucher';
-import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
+import { parsePartialPrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { parsePrismaAssetToAssetEntity } from '@/lib/utils/formatter/asset.formatter';
 import {
   getDaysBetweenDates,
@@ -52,7 +52,7 @@ import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatte
 import { initUserVoucherEntity } from '@/lib/utils/user_voucher';
 import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
 import { voucherAPIGetOneUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
-import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import { IAccountEntity } from '@/interfaces/accounting_account';
@@ -64,7 +64,7 @@ import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
  * @note 僅限於 GET /voucher 輸出時使用
  */
 export type IGetManyVoucherBetaEntity = IVoucherEntity & {
-  counterParty: ICounterPartyEntity;
+  counterParty: ICounterPartyEntityPartial;
   issuer: IUserEntity & { imageFile: IFileEntity };
   readByUsers: IUserVoucherEntity[];
   lineItems: (ILineItemEntity & { account: IAccountEntity })[];
@@ -181,7 +181,7 @@ export const voucherAPIGetUtils = {
   },
 
   initCounterPartyEntity: (voucher: IGetManyVoucherResponseButOne) => {
-    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(voucher.counterparty);
+    const counterParty = parsePartialPrismaCounterPartyToCounterPartyEntity(voucher.counterparty);
     return counterParty;
   },
 
@@ -522,7 +522,7 @@ export const voucherAPIPostUtils = {
       });
     }
 
-    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto!);
+    const counterParty = parsePartialPrismaCounterPartyToCounterPartyEntity(counterPartyDto!);
     return counterParty;
   },
 

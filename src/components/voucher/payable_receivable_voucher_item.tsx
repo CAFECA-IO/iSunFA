@@ -39,6 +39,8 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
     payableInfo,
     // eslint-disable-next-line react/prop-types
     reverseVouchers,
+    // eslint-disable-next-line react/prop-types
+    unRead,
   } = voucherData;
 
   const {
@@ -49,7 +51,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
 
   const displayedDate = (
     <div className="relative mx-auto px-18px pt-12px text-center">
-      <CalendarIcon timestamp={voucherDate} />
+      <CalendarIcon timestamp={voucherDate} unRead={unRead} />
     </div>
   );
 
@@ -74,7 +76,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
   const displayedCounterparty = (
     <div className="flex flex-col items-start gap-4px text-hxs">
       {/* eslint-disable-next-line react/prop-types */}
-      <p className="text-text-neutral-tertiary">{counterParty.companyId}</p>
+      <p className="text-text-neutral-tertiary">{counterParty.taxId}</p>
       {/* eslint-disable-next-line react/prop-types */}
       <p className="text-text-neutral-primary">{counterParty.name}</p>
     </div>

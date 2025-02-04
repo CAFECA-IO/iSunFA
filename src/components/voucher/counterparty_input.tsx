@@ -16,14 +16,14 @@ import { useModalContext } from '@/contexts/modal_context';
 import APIHandler from '@/lib/utils/api_handler';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { ICounterparty } from '@/interfaces/counterparty';
+import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import Loader, { LoaderSize } from '@/components/loader/loader';
 
 interface ICounterpartyInputProps {
-  counterparty: ICounterparty | undefined;
-  onSelect: (counterparty: ICounterparty) => void;
+  counterparty: ICounterpartyOptional | undefined;
+  onSelect: (counterparty: ICounterpartyOptional) => void;
   flagOfSubmit?: boolean;
   className?: string;
   onTriggerSave?: () => Promise<void>;
@@ -148,6 +148,11 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         onSelect(newCounterparty);
       };
 
+      onSelect({
+        name: searchName,
+        taxId: searchTaxId,
+      });
+
       // Info: (20241209 - Julian) 將資料傳入 AddCounterpartyModal
       addCounterPartyModalDataHandler({
         onSave: handleAddCounterparty,
@@ -220,7 +225,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         <div
           className={`flex truncate ${counterparty ? 'text-dropdown-text-input-filled' : 'text-dropdown-text-secondary'}`}
         >
-          <p className="w-100px border-r px-12px py-10px">
+          <p className="h-44px w-100px border-r px-12px py-10px">
             {counterparty?.taxId ?? t('certificate:EDIT.ID_NUMBER')}
           </p>
           <p className="px-12px py-10px">{counterparty?.name ?? t('certificate:EDIT.NAME')}</p>

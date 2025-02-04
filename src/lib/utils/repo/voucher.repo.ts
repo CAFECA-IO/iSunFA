@@ -46,6 +46,7 @@ import {
   AccountCodesOfARRegex,
 } from '@/constants/asset';
 import { DefaultValue } from '@/constants/default_value';
+import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
@@ -906,7 +907,7 @@ export async function putVoucherWithoutCreateNew(
   } catch (error) {
     loggerBack.error(
       'update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-      error as Error
+      { message: (error as Error).message, stack: (error as Error).stack }
     );
   }
   return voucherUpdated;
@@ -1436,6 +1437,17 @@ export async function getManyVoucherV2(options: {
         vouchers = vouchersFromPrisma;
         break;
     }
+    vouchers = vouchers.map((voucher) => {
+      const noteData = parseNoteData(voucher.note ?? '');
+      return {
+        ...voucher,
+        counterparty: {
+          ...voucher.counterparty,
+          name: noteData.name || voucher.counterparty.name,
+          taxId: noteData.taxId || voucher.counterparty.taxId,
+        },
+      };
+    });
   } catch (error) {
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
