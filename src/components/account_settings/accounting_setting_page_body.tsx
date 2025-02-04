@@ -405,7 +405,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 alt="currency_icon"
                 className="rounded-full"
               />
-              <p>{t(`common:CURRENCY_ALIAS.${currency}`)}</p>
+              <p>{currency}</p>
             </div>
           );
         })}
@@ -524,9 +524,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 src={`/currencies/${currentCurrency.toLowerCase()}.svg`}
                 className="rounded-full"
               />
-              <div className="flex-1 text-input-text-input-filled">
-                {t(`common:CURRENCY_ALIAS.${currentCurrency}`)}
-              </div>
+              <div className="flex-1 text-input-text-input-filled">{currentCurrency}</div>
               <div
                 className={`text-icon-surface-single-color-primary ${currencyMenuVisible ? 'rotate-180' : 'rotate-0'}`}
               >
