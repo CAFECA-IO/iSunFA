@@ -247,11 +247,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     preValue: number | undefined
   ) => (
     <tr>
-      <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{label}</td>
-      <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+      <td className="border border-stroke-neutral-quaternary p-10px text-xs">{label}</td>
+      <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
         {curValue}
       </td>
-      <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+      <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
         {preValue}
       </td>
     </tr>
@@ -264,7 +264,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
+              className="border border-stroke-neutral-quaternary p-10px text-xs font-bold"
             >
               {item.name}
             </td>
@@ -275,9 +275,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.name}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {
               item.curPeriodAmount === 0
                 ? '-' // Info: (20241022 - Anna) 如果數字是 0，顯示 "-"
@@ -286,21 +286,21 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                   : item.curPeriodAmount.toLocaleString() // Info: (20241022 - Anna) 正數，顯示千分位
             }
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
                 ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
                 : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
               ? '-'
               : item.prePeriodAmount < 0
                 ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
                 : item.prePeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
@@ -320,7 +320,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
+              className="border border-stroke-neutral-quaternary p-10px text-xs font-bold"
             >
               {item.name}
             </td>
@@ -331,30 +331,30 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.name}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.curPeriodAmount === 0
               ? '-'
               : item.curPeriodAmount < 0
                 ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
                 : item.curPeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
                 ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
                 : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
               ? '-'
               : item.prePeriodAmount < 0
                 ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
                 : item.prePeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
@@ -374,7 +374,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
+              className="border border-stroke-neutral-quaternary p-10px text-xs font-bold"
             >
               {item.name}
             </td>
@@ -385,30 +385,30 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.name}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.curPeriodAmount === 0
               ? '-'
               : item.curPeriodAmount < 0
                 ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
                 : item.curPeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
                 ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
                 : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
               ? '-'
               : item.prePeriodAmount < 0
                 ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
                 : item.prePeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
@@ -428,7 +428,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
+              className="border border-stroke-neutral-quaternary p-10px text-xs font-bold"
             >
               {item.name}
             </td>
@@ -439,30 +439,30 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.name}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.curPeriodAmount === 0
               ? '-'
               : item.curPeriodAmount < 0
                 ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
                 : item.curPeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
                 ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
                 : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
               ? '-'
               : item.prePeriodAmount < 0
                 ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
                 : item.prePeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
@@ -482,7 +482,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
+              className="border border-stroke-neutral-quaternary p-10px text-xs font-bold"
             >
               {item.name}
             </td>
@@ -493,30 +493,30 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.name}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.curPeriodAmount === 0
               ? '-'
               : item.curPeriodAmount < 0
                 ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
                 : item.curPeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
                 ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
                 : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
               ? '-'
               : item.prePeriodAmount < 0
                 ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
                 : item.prePeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
@@ -536,7 +536,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
+              className="border border-stroke-neutral-quaternary p-10px text-xs font-bold"
             >
               {item.name}
             </td>
@@ -547,30 +547,30 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.name}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.curPeriodAmount === 0
               ? '-'
               : item.curPeriodAmount < 0
                 ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
                 : item.curPeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
                 ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
                 : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
               ? '-'
               : item.prePeriodAmount < 0
                 ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
                 : item.prePeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
@@ -590,7 +590,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
+              className="border border-stroke-neutral-quaternary p-10px text-xs font-bold"
             >
               {item.name}
             </td>
@@ -601,30 +601,30 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.name}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.curPeriodAmount === 0
               ? '-'
               : item.curPeriodAmount < 0
                 ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
                 : item.curPeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
                 ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
                 : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
               ? '-'
               : item.prePeriodAmount < 0
                 ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
                 : item.prePeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
@@ -644,7 +644,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
+              className="border border-stroke-neutral-quaternary p-10px text-xs font-bold"
             >
               {item.name}
             </td>
@@ -655,30 +655,30 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.name}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.curPeriodAmount === 0
               ? '-'
               : item.curPeriodAmount < 0
                 ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
                 : item.curPeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
                 ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
                 : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
               ? '-'
               : item.prePeriodAmount < 0
                 ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
                 : item.prePeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
@@ -698,7 +698,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tr key={`${item.code + item.name + index}`}>
             <td
               colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
+              className="border border-stroke-neutral-quaternary p-10px text-xs font-bold"
             >
               {item.name}
             </td>
@@ -709,30 +709,30 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-xs">{item.name}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.curPeriodAmount === 0
               ? '-'
               : item.curPeriodAmount < 0
                 ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
                 : item.curPeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
                 ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
                 : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
               ? '-'
               : item.prePeriodAmount < 0
                 ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
                 : item.prePeriodAmount.toLocaleString()}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
@@ -796,22 +796,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
               <tr>
-                <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                   {t('reports:TAX_REPORT.CODE_NUMBER')}
                 </th>
-                <th className="w-400px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                <th className="w-400px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                   {curDate}
                 </th>
-                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                   %
                 </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                   {preDate}
                 </th>
-                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                   %
                 </th>
               </tr>
@@ -852,22 +852,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-400px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-400px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {curDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {preDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -923,22 +923,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-400px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-400px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {curDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {preDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -980,22 +980,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-400px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-400px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {curDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {preDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -1037,22 +1037,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-400px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-400px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold">
                 {curDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="w-120px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="w-120px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold">
                 {preDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -1094,22 +1094,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-400px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-400px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {curDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {preDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -1151,22 +1151,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-400px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-400px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {curDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {preDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -1208,22 +1208,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-400px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-400px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {curDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {preDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -1265,22 +1265,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:TAX_REPORT.CODE_NUMBER')}
               </th>
-              <th className="w-400px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+              <th className="w-400px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {curDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 {preDate}
               </th>
-              <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+              <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -1519,11 +1519,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold"></th>
-              <th className="w-300px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold"></th>
+              <th className="w-300px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold">
                 {curYear}年度
               </th>
-              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold">
                 {preYear}年度
               </th>
             </tr>
@@ -1543,11 +1543,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold"></th>
-              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-xs font-semibold"></th>
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold">
                 {curYear}年度
               </th>
-              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-xs font-semibold">
                 {preYear}年度
               </th>
             </tr>

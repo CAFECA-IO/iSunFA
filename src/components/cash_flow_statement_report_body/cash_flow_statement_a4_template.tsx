@@ -113,25 +113,25 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
   const firstTableHeaders = (
     <tr className="text-neutral-400">
       <th
-        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
+        className="whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"
         style={{ width: '55px' }}
       >
         {t('reports:TAX_REPORT.CODE_NUMBER')}
       </th>
       <th
-        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
+        className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"
         style={{ width: '261px' }}
       >
         {t('reports:REPORTS.ACCOUNTING_ITEMS')}
       </th>
       <th
-        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold print:whitespace-pre-line"
+        className="whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold print:whitespace-pre-line"
         style={{ width: '120px' }}
       >
         {curDate}
       </th>
       <th
-        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold print:whitespace-pre-line"
+        className="whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold print:whitespace-pre-line"
         style={{ width: '120px' }}
       >
         {preDate}
@@ -143,25 +143,25 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
   const secondTableHeaders = (
     <tr className="text-neutral-400">
       <th
-        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
+        className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"
         style={{ width: '55px' }}
       >
         {t('reports:TAX_REPORT.CODE_NUMBER')}
       </th>
       <th
-        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"
+        className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"
         style={{ width: '261px' }}
       >
         {t('reports:REPORTS.ACCOUNTING_ITEMS')}
       </th>
       <th
-        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold print:whitespace-pre-line"
+        className="whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold print:whitespace-pre-line"
         style={{ width: '120px' }}
       >
         {curDate}
       </th>
       <th
-        className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold print:whitespace-pre-line"
+        className="whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-xs font-semibold print:whitespace-pre-line"
         style={{ width: '120px' }}
       >
         {preDate}

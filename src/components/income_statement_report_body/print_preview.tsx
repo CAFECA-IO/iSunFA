@@ -178,13 +178,13 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                     <tr className="h-16px"></tr>
 
                     <tr>
-                      <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+                      <th className="whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
                         {t('reports:TAX_REPORT.CODE_NUMBER')}
                       </th>
-                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
                         {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                       </th>
-                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-3px text-end font-semibold">
+                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-3px text-end font-semibold">
                         {financialReport && financialReport.company && (
                           <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
                             {formattedCurFromDate}
@@ -193,11 +193,11 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                           </p>
                         )}
                       </th>
-                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
                         %
                       </th>
                       <th
-                        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-3px text-end font-semibold"
+                        className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-3px text-end font-semibold"
                         style={{ whiteSpace: 'nowrap' }}
                       >
                         {financialReport && financialReport.company && (
@@ -208,7 +208,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                           </p>
                         )}
                       </th>
-                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
                         %
                       </th>
                     </tr>
@@ -273,13 +273,13 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                     <tr className="h-16px"></tr>
 
                     <tr>
-                      <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+                      <th className="whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
                         {t('reports:TAX_REPORT.CODE_NUMBER')}
                       </th>
-                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left font-semibold">
+                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
                         {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                       </th>
-                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-3px text-end font-semibold">
+                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-3px text-end font-semibold">
                         {financialReport && financialReport.company && (
                           <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
                             {formattedCurFromDate}
@@ -288,11 +288,11 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                           </p>
                         )}
                       </th>
-                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
                         %
                       </th>
                       <th
-                        className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-3px text-end font-semibold"
+                        className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-3px text-end font-semibold"
                         style={{ whiteSpace: 'nowrap' }}
                       >
                         {financialReport && financialReport.company && (
@@ -303,7 +303,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                           </p>
                         )}
                       </th>
-                      <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center font-semibold">
+                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
                         %
                       </th>
                     </tr>
