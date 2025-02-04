@@ -144,17 +144,5 @@
     "PENDING": "Pending",
     "COMPLETE_KYC": "Complete KYC",
     "VERIFICATION_FAILED_PLEASE_RE_UPLOAD": "Verification failed, please re-upload."
-  },
-  "SELECT_COMPANY": {
-    "WELCOME_BACK": "Welcome back, ",
-    "YOUR_COMPANY": "Select your company to log in, or create your own company.",
-    "MY_COMPANY_LIST": "My Company List",
-    "CREATE_MY_COMPANY": "Create My Company",
-    "TRY_IT_OUT": "Try it out",
-    "ENTER_INVITATION_CODE": "Enter Invitation Code",
-    "SELECT_COMPANY_ISUNFA": "Select Company - iSunFA",
-    "SELECT_AN_COMPANY": "Select an Company",
-    "ENTER_COMPANY_NAME": "Enter company name",
-    "ENTER_BUSINESS_REGISTRATION_NUMBER": "Enter business registration number"
   }
 }

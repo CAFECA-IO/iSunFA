@@ -84,7 +84,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   console.log('isPrinting:', isPrinting);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
-  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
   // Info: (20241001 - Anna) 管理表格摺疊狀態
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
   const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
@@ -95,7 +95,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   const toggleDetailTable = () => {
     setIsDetailCollapsed(!isDetailCollapsed);
   };
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
 
   const [isGetReportAPILoading, setIsGetReportAPILoading] = useState<boolean>(false);
   const [isGetReportAPISuccess, setIsGetReportAPISuccess] = useState<boolean>(false);
@@ -122,7 +122,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
       try {
         const { success, data, code } = await getReportAPI({
           params: {
-            companyId: selectedCompany?.id,
+            companyId: selectedAccountBook?.id,
           },
           query: {
             startDate: selectedDateRange.startTimeStamp,
@@ -153,7 +153,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
     };
 
     getIncomeStatementReport();
-  }, [hasCompanyId, hasFetchedOnce, selectedCompany?.id, selectedDateRange]);
+  }, [hasCompanyId, hasFetchedOnce, selectedAccountBook?.id, selectedDateRange]);
 
   if (!hasFetchedOnce && !isGetReportAPILoading) {
     return <NoData />;
@@ -640,7 +640,9 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(2)}%
+                    {revenueToRD.ratio.curRatio.toFixed(
+                      2
+                    )}%
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {revenueToRD.ratio.preRatio.toFixed(2)}%

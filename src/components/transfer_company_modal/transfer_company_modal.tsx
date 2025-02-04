@@ -21,15 +21,15 @@ const TransferCompanyModal = ({
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
   // Info: (20240729 - Liz) API Handler
   const { trigger: transferOwner } = APIHandler<IAdmin[]>(APIName.TRANSFER_OWNER);
 
   const handleSubmit = (newOwnerId: string) => {
-    if (!selectedCompany?.id) return;
+    if (!selectedAccountBook?.id) return;
     transferOwner({
-      params: { companyId: selectedCompany?.id },
+      params: { companyId: selectedAccountBook?.id },
       body: {
         newOwnerId,
       },

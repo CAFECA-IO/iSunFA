@@ -64,8 +64,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // Info: (20241023 - Anna) 使用 useRef 追蹤之前的日期範圍
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
 
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
 
   const [totalSubAccountsToggle, setTotalSubAccountsToggle] = useState(false); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 狀態
 
@@ -121,7 +121,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     try {
       const response = await trigger({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedAccountBook?.id,
         },
         query: {
           startDate: selectedDateRange.startTimeStamp,
@@ -141,7 +141,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     } finally {
       (() => {})(); // Info: (20241023 - Anna) Empty function, does nothing
     }
-  }, [hasCompanyId, selectedCompany?.id, selectedDateRange, trigger]);
+  }, [hasCompanyId, selectedAccountBook?.id, selectedDateRange, trigger]);
 
   // Info: (20241023 - Anna) 在 useEffect 中依賴 getBalanceSheetReport，當日期範圍變更時觸發 API 請求
   useEffect(() => {

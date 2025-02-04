@@ -4,15 +4,15 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 export const SEARCH_KEYWORDS: ISearchKeyword[] = [
   {
     label: 'My Company List',
-    path: ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE,
+    path: ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
   },
   {
     label: '公司列表',
-    path: ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE,
+    path: ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
   },
   {
     label: '建立公司',
-    path: ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE,
+    path: ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
   },
   {
     label: 'Event Planner',

@@ -11,7 +11,7 @@
     "CALENDAR_NOT_YET_LINKED": "Calendar not yet linked",
     "LINK_MY_CALENDAR": "Link My Calendar",
     "NO_SCHEDULE_FOR_TODAY": "No schedule for today",
-    "MY_COMPANY_LIST": "My Company List",
+    "ACCOUNT_BOOKS": "Account Books",
     "COMPANY_NOT_YET_CREATED": "Company not yet created",
     "PLEASE_PROCEED_TO": "Please proceed to",
     "CREATE_A_COMPANY": "create a company",
@@ -87,8 +87,8 @@
     "SELECT_ROLE_TITLE": "Select Role"
   },
 
-  "MY_COMPANY_LIST_PAGE": {
-    "MY_COMPANY_LIST": "My Company List"
+  "ACCOUNT_BOOKS_PAGE": {
+    "PAGE_TITLE": "Account Books"
   },
 
   "LATEST_NEWS_PAGE": {
@@ -124,7 +124,7 @@
     "COMPANY_NAME": "Company Name",
     "TAX_ID": "Business Tax ID Number",
     "WORK_TAG": "Work Tag",
-    "CREATE_NEW_COMPANY": "Create New Company",
+    "CREATE_NEW_ACCOUNT_BOOK": "Create New Account Book",
     "ENTER_NAME": "Enter Name",
     "ENTER_NUMBER": "Enter Tax ID",
     "ENTER_FULL_ADDRESS": "Please enter the full address",

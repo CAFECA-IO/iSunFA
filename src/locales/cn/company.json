@@ -34,9 +34,9 @@
     "ENTER_NUMBER": "输入号码",
     "ENTER_FULL_ADDRESS": "输入完整地址"
   },
-  "PAGE_BODY": {
-    "NO_COMPANY_DATA_AVAILABLE": "没有可用的公司数据",
-    "PLEASE_ADD_A_NEW_COMPANY": "请添加新公司",
+  "ACCOUNT_BOOKS_PAGE_BODY": {
+    "NO_ACCOUNT_BOOK_DATA_AVAILABLE": "没有账本数据",
+    "PLEASE_ADD_A_NEW_ACCOUNT_BOOK": "请新增账本",
     "ADD_NEW": "新增",
     "INVITE_CODE": "邀请码",
     "CANCEL": "取消",
@@ -54,6 +54,6 @@
     "WARNING": "您确定要删除公司吗？"
   },
   "UPLOAD_COMPANY_AVATAR_MODAL": {
-    "CHANGE_COMPANY_AVATAR": "变更公司头像"
+    "TITLE": "变更公司图片"
   }
 }

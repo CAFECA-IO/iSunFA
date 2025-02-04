@@ -29,7 +29,7 @@ interface IServerSideProps {
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
   const { t } = useTranslation(['reports']);
   const { toastHandler } = useModalContext();
-  const { selectedCompany, isAuthLoading } = useUserCtx();
+  const { selectedAccountBook, isAuthLoading } = useUserCtx();
   const [reportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
@@ -45,7 +45,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
 
   useEffect(() => {
-    if (isAuthLoading || !selectedCompany) return;
+    if (isAuthLoading || !selectedAccountBook) return;
 
     const getFinancialReport = async () => {
       try {
@@ -54,7 +54,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
           code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: selectedCompany.id, reportId },
+          params: { companyId: selectedAccountBook.id, reportId },
         });
 
         if (!getFRSuccess) {
@@ -81,7 +81,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
     console.log('in useEffect and calling getFinancialReport_in ViewFinancialReportPage');
-  }, [isAuthLoading, reportId, reportType, selectedCompany, t, toastHandler]);
+  }, [isAuthLoading, reportId, reportType, selectedAccountBook, t, toastHandler]);
 
   const displayedBody =
     isAuthLoading || !isGetFinancialReportSuccess ? (

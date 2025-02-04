@@ -25,7 +25,7 @@ const CompanyInvitationModal = ({
   toastHandler,
 }: ICompanyInvitationModal) => {
   const { t } = useTranslation(['common', 'kyc']);
-  const { userAuth, selectCompany } = useUserCtx();
+  const { userAuth, selectAccountBook } = useUserCtx();
   const [codeInput, setCodeInput] = useState<string>('');
   const [isCodeValid, setIsCodeValid] = useState<boolean>(true);
 
@@ -42,7 +42,7 @@ const CompanyInvitationModal = ({
       const company = adminData.company as ICompany;
       // Info: (20240613 - Julian) Reset modal and redirect to dashboard
       if (company) {
-        selectCompany(company.id);
+        selectAccountBook(company.id);
         setCodeInput('');
         modalVisibilityHandler();
         // Info: (20240515 - Julian) Toastify

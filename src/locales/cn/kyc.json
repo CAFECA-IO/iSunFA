@@ -144,17 +144,5 @@
     "EXISTED_COMPANY": "已经存在的公司",
     "COMPANY_ALREADY_REGISTERED": "该公司已注册",
     "PLEASE_COMPLETE_KYC": "如果您是该公司的所有者，请完成KYC以重新获得存取权限。"
-  },
-  "SELECT_COMPANY": {
-    "WELCOME_BACK": "欢迎回来，",
-    "YOUR_COMPANY": "选择您的公司进行登录，或建立您自己的公司。",
-    "MY_COMPANY_LIST": "我的公司列表",
-    "CREATE_MY_COMPANY": "创建我的公司",
-    "TRY_IT_OUT": "试试看",
-    "ENTER_INVITATION_CODE": "输入邀请码",
-    "SELECT_COMPANY_ISUNFA": "选择公司 - iSunFA",
-    "SELECT_AN_COMPANY": "选择公司",
-    "ENTER_COMPANY_NAME": "输入公司名称",
-    "ENTER_BUSINESS_REGISTRATION_NUMBER": "输入商业登记号码"
   }
 }

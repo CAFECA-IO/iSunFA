@@ -20,8 +20,8 @@ import { IPaginatedReport, IReport, MOCK_REPORTS } from '@/interfaces/report';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   const { t } = useTranslation(['common', 'reports']);
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   const { toastHandler } = useModalContext();
 
   const typeOptions = ['All', ReportType.FINANCIAL, ReportType.FINANCIAL];
@@ -55,7 +55,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   } = APIHandler<IPaginatedReport>(
     APIName.REPORT_LIST,
     {
-      params: { companyId: selectedCompany?.id },
+      params: { companyId: selectedAccountBook?.id },
       query: {
         status: ReportStatusType.PENDING,
         projectId,
@@ -71,7 +71,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   } = APIHandler<IPaginatedReport>(
     APIName.REPORT_LIST,
     {
-      params: { companyId: selectedCompany?.id },
+      params: { companyId: selectedAccountBook?.id },
       query: {
         status: ReportStatusType.GENERATED,
         projectId,

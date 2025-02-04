@@ -38,7 +38,7 @@ const ConfirmModal = ({
   confirmData,
 }: IConfirmModalProps) => {
   const { t } = useTranslation(['common', 'journal']);
-  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
   const {
     AIStatus,
     getAIStatusHandler,
@@ -113,7 +113,7 @@ const ConfirmModal = ({
     APIName.VOUCHER_UPDATE
   );
 
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   // Info: (20240430 - Julian) Get first letter of each word
   const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
   // Info: (20240711 - Julian) Check if AI result is successful
@@ -259,13 +259,13 @@ const ConfirmModal = ({
       };
       if (selectedJournal && journal?.voucher && Object.keys(journal.voucher).length > 0) {
         const updateRes = await updateVoucher({
-          params: { companyId: selectedCompany.id },
+          params: { companyId: selectedAccountBook.id },
           body: { voucher },
         });
         handleAPIResponse(updateRes);
       } else {
         const createRes = await createVoucher({
-          params: { companyId: selectedCompany.id },
+          params: { companyId: selectedAccountBook.id },
           body: { voucher },
         });
         handleAPIResponse(createRes);
@@ -280,7 +280,7 @@ const ConfirmModal = ({
       data,
       code: getJournalCode,
     } = await getJournalById({
-      params: { companyId: selectedCompany.id, journalId },
+      params: { companyId: selectedAccountBook.id, journalId },
     });
     if (data && getJournalSuccess) {
       setJournal(data);
@@ -326,7 +326,7 @@ const ConfirmModal = ({
     setIsAILoading(true);
 
     // Info: (20240528 - Julian) Call AI API first time
-    getAIStatusHandler({ companyId: selectedCompany.id!, askAIId: askAIId! }, true);
+    getAIStatusHandler({ companyId: selectedAccountBook.id!, askAIId: askAIId! }, true);
   }, [isModalVisible]);
 
   // Info: (20240528 - Julian) Error handling
@@ -334,7 +334,7 @@ const ConfirmModal = ({
     if (hasCompanyId && AIStatus === ProgressStatus.SUCCESS) {
       getAIResult({
         params: {
-          companyId: selectedCompany.id!,
+          companyId: selectedAccountBook.id!,
           resultId: askAIId,
         },
       });

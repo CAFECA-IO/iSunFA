@@ -34,9 +34,9 @@
     "ENTER_NUMBER": "輸入數字",
     "ENTER_FULL_ADDRESS": "輸入完整地址"
   },
-  "PAGE_BODY": {
-    "NO_COMPANY_DATA_AVAILABLE": "沒有可用的公司資料",
-    "PLEASE_ADD_A_NEW_COMPANY": "請新增公司",
+  "ACCOUNT_BOOKS_PAGE_BODY": {
+    "NO_ACCOUNT_BOOK_DATA_AVAILABLE": "沒有帳本資料",
+    "PLEASE_ADD_A_NEW_ACCOUNT_BOOK": "請新增帳本",
     "ADD_NEW": "新增",
     "INVITE_CODE": "邀請碼",
     "CANCEL": "取消",
@@ -54,6 +54,6 @@
     "WARNING": "您確定要移除公司嗎？"
   },
   "UPLOAD_COMPANY_AVATAR_MODAL": {
-    "CHANGE_COMPANY_AVATAR": "變更公司頭像"
+    "TITLE": "變更公司圖片"
   }
 }

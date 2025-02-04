@@ -38,8 +38,8 @@ interface CertificateListBodyProps {}
 const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate']);
   const router = useRouter();
-  const { userAuth, selectedCompany } = useUserCtx();
-  const companyId = selectedCompany?.id || FREE_COMPANY_ID;
+  const { userAuth, selectedAccountBook } = useUserCtx();
+  const companyId = selectedAccountBook?.id || FREE_COMPANY_ID;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);

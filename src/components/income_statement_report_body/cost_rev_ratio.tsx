@@ -369,7 +369,9 @@ const CostRevRatio = ({
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-neutral-quaternary p-10px text-end`}
                   >
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(2)}%
+                    {revenueToRD.ratio.curRatio.toFixed(
+                      2
+                    )}%
                   </td>
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-neutral-quaternary p-10px text-end`}

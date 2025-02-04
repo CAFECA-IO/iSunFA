@@ -61,7 +61,7 @@ export const DEFAULT_MAX_PAGE_LIMIT = 2147483647;
 export const DEFAULT_PAGE_OFFSET = 0;
 export const DEFAULT_END_DATE = 2147483647;
 
-export const DEFAULT_PAGE_LIMIT_FOR_COMPANY_LIST = 5;
+export const DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST = 5;
 
 export const USER_ICON_BACKGROUND_COLORS = [
   // Info: (20230814 - Murky) color from surface/support/strong/Light_Mode and Dark_Mode

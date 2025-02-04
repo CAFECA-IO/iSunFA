@@ -29,7 +29,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
   defaultAssetList = [],
 }) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { addAssetModalVisibilityHandler, addAssetModalDataHandler } = useGlobalCtx();
   const { deleteTemporaryAssetHandler, temporaryAssetList } = useAccountingCtx();
   const { toastHandler } = useModalContext();
@@ -38,7 +38,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     APIName.DELETE_ASSET_V2
   );
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
 
   const defaultList: IAssetPostOutput[] = defaultAssetList.map((asset) => ({
     ...asset,

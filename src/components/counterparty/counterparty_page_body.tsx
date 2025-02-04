@@ -14,7 +14,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 const CounterpartyPageBody = () => {
   const { t } = useTranslation(['search', 'common']);
 
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { addCounterPartyModalVisibilityHandler, addCounterPartyModalDataHandler } =
     useModalContext();
 
@@ -34,7 +34,7 @@ const CounterpartyPageBody = () => {
     APIName.COUNTERPARTY_LIST
   );
   const fetchCounterpartyData = async () => {
-    if (!selectedCompany?.id) {
+    if (!selectedAccountBook?.id) {
       // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.error('公司 ID 不存在，無法呼叫 API');
@@ -46,7 +46,7 @@ const CounterpartyPageBody = () => {
       // eslint-disable-next-line no-console
       console.log('Fetching counterparty data...');
       const response = await getCounterpartyList({
-        params: { companyId: selectedCompany.id },
+        params: { companyId: selectedAccountBook.id },
         query: queryCondition,
       });
       // Deprecate: (20241118 - Anna) 檢查 response 的結構
@@ -105,7 +105,7 @@ const CounterpartyPageBody = () => {
   // Info: (20241112 - Anna) 呼叫 API 並儲存回傳資料到狀態
   useEffect(() => {
     fetchCounterpartyData();
-  }, [selectedCompany]);
+  }, [selectedAccountBook]);
 
   // const handleModalOpen = () => {
   //   setIsModalOpen(true); // Info: (20241106 - Anna) Function to open the modal

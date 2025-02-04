@@ -26,8 +26,8 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
   selectedStartAccountNo,
   selectedEndAccountNo,
 }) => {
-  const { selectedCompany } = useUserCtx();
-  const companyId = selectedCompany?.id;
+  const { selectedAccountBook } = useUserCtx();
+  const companyId = selectedAccountBook?.id;
   const { t } = useTranslation(['journal', 'date_picker', 'reports']);
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 

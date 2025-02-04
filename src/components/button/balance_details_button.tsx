@@ -70,8 +70,8 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
 
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
 
-  const { selectedCompany } = useUserCtx(); // Info: (20241107 - Anna) 使用 useUserCtx 獲取 selectedCompany
-  const companyId = selectedCompany?.id; // Info: (20241107 - Anna) 獲取 companyId
+  const { selectedAccountBook } = useUserCtx(); // Info: (20241107 - Anna) 使用 useUserCtx 獲取 selectedAccountBook
+  const companyId = selectedAccountBook?.id; // Info: (20241107 - Anna) 獲取 companyId
   const params = { companyId, accountId }; // Info: (20241107 - Anna) 設定 API 請求的 params
 
   const handleApiResponse = (resData: IPaginatedData<IVoucherForSingleAccount[]>) => {

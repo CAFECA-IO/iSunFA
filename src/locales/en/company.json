@@ -34,9 +34,9 @@
     "ENTER_NUMBER": "Enter Number",
     "ENTER_FULL_ADDRESS": "Please enter the full address"
   },
-  "PAGE_BODY": {
-    "NO_COMPANY_DATA_AVAILABLE": "No company data available.",
-    "PLEASE_ADD_A_NEW_COMPANY": "Please add a new company.",
+  "ACCOUNT_BOOKS_PAGE_BODY": {
+    "NO_ACCOUNT_BOOK_DATA_AVAILABLE": "No account book data available.",
+    "PLEASE_ADD_A_NEW_ACCOUNT_BOOK": "Please add a new account book.",
     "ADD_NEW": "Add New",
     "INVITE_CODE": "Invite Code",
     "CANCEL": "Cancel",
@@ -54,6 +54,6 @@
     "WARNING": "Are you sure you want to Remove the Company?"
   },
   "UPLOAD_COMPANY_AVATAR_MODAL": {
-    "CHANGE_COMPANY_AVATAR": "Change Company Avatar"
+    "TITLE": "Change Company Picture"
   }
 }

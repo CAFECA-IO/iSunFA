@@ -34,8 +34,8 @@
   },
 
   "TOAST": {
-    "PLEASE_SELECT_A_COMPANY_BEFORE_PROCEEDING_WITH_THE_OPERATION": "Please select a company before proceeding with the operation.",
-    "GO_TO_SELECT_COMPANY": "Go to select company"
+    "PLEASE_SELECT_AN_ACCOUNT_BOOK_BEFORE_PROCEEDING_WITH_THE_OPERATION": "Please select an account book before proceeding with the operation",
+    "ACCOUNT_BOOKS_LINK": "Account Books Link"
   },
 
   "USER": {

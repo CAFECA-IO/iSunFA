@@ -43,7 +43,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   // hideReversalsToggleHandler,
 }) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   // const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
@@ -127,7 +127,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     if (!isDeleting) {
       selectedVoucherList.forEach((voucher) => {
         deleteVoucher({
-          params: { companyId: selectedCompany?.id, voucherId: voucher.id },
+          params: { companyId: selectedAccountBook?.id, voucherId: voucher.id },
         });
       });
 

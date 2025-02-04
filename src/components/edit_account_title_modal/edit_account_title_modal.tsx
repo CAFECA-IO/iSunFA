@@ -28,8 +28,8 @@ const EditAccountTitleModal = ({
   const { t } = useTranslation(['common', 'setting']);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   const { accountId } = modalData;
 
   const {
@@ -53,12 +53,12 @@ const EditAccountTitleModal = ({
   const [nameValue, setNameValue] = useState('');
 
   useEffect(() => {
-    if (selectedCompany && accountId) {
+    if (selectedAccountBook && accountId) {
       getAccountById({
-        params: { companyId: selectedCompany.id, accountId },
+        params: { companyId: selectedAccountBook.id, accountId },
       });
     }
-  }, [selectedCompany, accountId]);
+  }, [selectedAccountBook, accountId]);
 
   useEffect(() => {
     if (accountData) {
@@ -70,7 +70,7 @@ const EditAccountTitleModal = ({
   }, [accountData]);
 
   useEffect(() => {
-    if (updateSuccess && updateResult && selectedCompany) {
+    if (updateSuccess && updateResult && selectedAccountBook) {
       // Info: (20240719 - Julian) 關閉 modal
       modalVisibilityHandler();
       // Info: (20240719 - Julian) 顯示 toast
@@ -118,9 +118,9 @@ const EditAccountTitleModal = ({
   };
 
   const handleSave = () => {
-    if (selectedCompany && accountId) {
+    if (selectedAccountBook && accountId) {
       updateAccountInfoById({
-        params: { companyId: selectedCompany.id, accountId },
+        params: { companyId: selectedAccountBook.id, accountId },
         body: {
           name: nameValue,
         },

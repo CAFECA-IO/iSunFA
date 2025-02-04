@@ -29,9 +29,9 @@ interface IVoucherDetailPageBodyProps {
 const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherId, voucherNo }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedCompany?.id;
+  const companyId = selectedAccountBook?.id;
 
   const params = { companyId, voucherId };
 

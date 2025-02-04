@@ -33,7 +33,7 @@ const ProjectPageBody = () => {
   const { t } = useTranslation(['common', 'project']);
 
   const { addProjectModalVisibilityHandler } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
   const [search, setSearch] = useState<string>('');
   const [filteredStage, setFilteredStage] = useState<string>(t('project:STAGE_NAME_MAP.ALL')); // Info: (2024704 - Anna) For list
@@ -97,7 +97,7 @@ const ProjectPageBody = () => {
 
   useEffect(() => {
     getProjectList({
-      params: { companyId: selectedCompany?.id },
+      params: { companyId: selectedAccountBook?.id },
     });
   }, []);
 
