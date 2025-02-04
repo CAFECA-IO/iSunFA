@@ -6,6 +6,7 @@ import { RxCross1 } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
 import { timestampToString } from '@/lib/utils/common';
 import Magnifier from '@/components/magnifier/magifier';
+import { useTranslation } from 'next-i18next';
 
 interface CertificatePreviewModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
   certificate,
   isOnTopOfModal,
 }) => {
+  const { t } = useTranslation(['common']);
   if (!isOpen || !certificate) return null;
 
   return (
@@ -65,7 +67,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
             className="p-2 px-4"
             onClick={onClose}
           >
-            <div className="flex items-end gap-2">Close</div>
+            <div className="flex items-end gap-2">{t('common:COMMON.CLOSE')}</div>
           </Button>
         </div>
       </div>
