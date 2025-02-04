@@ -215,6 +215,7 @@
     "SELECT": "选择",
     "SELECT_ALL": "全选",
     "UNSELECT_ALL": "取消全选",
+    "CURRENCY": "货币单位",
     "HIDE_VOUCHER_TOGGLE": "隐藏已删除的传票和其相关冲销分录",
     "WARNING_MODAL_TITLE": "警告",
     "AT_LEAST_ONE_VOUCHER_CONTENT": "请至少选择一张传票",
