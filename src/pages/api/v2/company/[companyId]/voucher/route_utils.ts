@@ -127,6 +127,7 @@ export const voucherAPIGetUtils = {
     type?: EventType | undefined;
     searchQuery?: string | undefined;
     isDeleted?: boolean | undefined;
+    hideReversedRelated?: boolean | undefined;
   }): Promise<
     IPaginatedData<IGetManyVoucherResponseButOne[]> & {
       where: Prisma.VoucherWhereInput;
