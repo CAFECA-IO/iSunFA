@@ -215,6 +215,7 @@
     "SELECT": "Select",
     "SELECT_ALL": "Select All",
     "UNSELECT_ALL": "Unselect All",
+    "CURRENCY": "Currency",
     "HIDE_VOUCHER_TOGGLE": "Hide deleted vouchers and their reversals.",
     "WARNING_MODAL_TITLE": "Warning",
     "AT_LEAST_ONE_VOUCHER_CONTENT": "Please select at least one voucher to delete",
