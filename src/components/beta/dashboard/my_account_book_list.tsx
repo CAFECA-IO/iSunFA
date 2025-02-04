@@ -56,12 +56,12 @@ const AccountBookItem = ({
   );
 };
 
-interface CompanyListProps {
+interface AccountBookListProps {
   companyAndRoleList: ICompanyAndRole[];
   setAccountBookToSelect: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
-const AccountBookList = ({ companyAndRoleList, setAccountBookToSelect }: CompanyListProps) => {
+const AccountBookList = ({ companyAndRoleList, setAccountBookToSelect }: AccountBookListProps) => {
   const { selectedAccountBook } = useUserCtx();
   const containerRef = useRef<HTMLDivElement>(null);
   const [disabledCards, setDisabledCards] = useState<number[]>([]);
@@ -128,24 +128,24 @@ const MyAccountBookList = () => {
   const { t } = useTranslation('dashboard');
   const { userAuth } = useUserCtx();
   const [companyAndRoleList, setCompanyAndRoleList] = useState<ICompanyAndRole[]>([]);
-  const isCompanyListEmpty = companyAndRoleList.length === 0;
+  const isAccountBookListEmpty = companyAndRoleList.length === 0;
   const [accountBookToSelect, setAccountBookToSelect] = useState<ICompanyAndRole | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
 
-  // Info: (20241126 - Liz) 選擇公司 API
+  // Info: (20241126 - Liz) 選擇帳本 API (原為公司)
   const { selectAccountBook, selectedAccountBook } = useUserCtx();
 
   const closeMessageModal = () => {
     setAccountBookToSelect(undefined);
   };
 
-  const toggleCreateCompanyModal = () => {
+  const toggleCreateAccountBookModal = () => {
     setIsCreateAccountBookModalOpen((prev) => !prev);
   };
 
-  // Info: (20241126 - Liz) 打 API 選擇公司
-  const handleSelectCompany = () => {
+  // Info: (20241126 - Liz) 打 API 選擇帳本(原為公司)
+  const handleSelectAccountBook = () => {
     if (isLoading) return;
     if (!accountBookToSelect) return;
 
@@ -178,13 +178,13 @@ const MyAccountBookList = () => {
       </div>
     ),
     submitBtnStr: t('dashboard:DASHBOARD.CHOOSE'),
-    submitBtnFunction: handleSelectCompany,
+    submitBtnFunction: handleSelectAccountBook,
     messageType: MessageType.WARNING,
     backBtnFunction: closeMessageModal,
     backBtnStr: t('dashboard:COMMON.CANCEL'),
   };
 
-  // Info: (20241120 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
+  // Info: (20241120 - Liz) 打 API 取得使用者擁有的帳本列表(原為公司) - simple version
   const { trigger: listUserCompanyAPI } = APIHandler<ICompanyAndRole[]>(APIName.LIST_USER_COMPANY);
 
   const getCompanyList = useCallback(async () => {
@@ -201,7 +201,7 @@ const MyAccountBookList = () => {
       });
 
       if (success && userCompanyList && userCompanyList.length > 0) {
-        // Info: (20241216 - Liz) 已被選擇的公司顯示在第一個
+        // Info: (20241216 - Liz) 已被選擇的帳本顯示在第一個(原為公司)
         if (selectedAccountBook) {
           const selectedCompanyIndex = userCompanyList.findIndex(
             (companyAndRole) => companyAndRole.company.id === selectedAccountBook.id
@@ -215,7 +215,7 @@ const MyAccountBookList = () => {
 
         setCompanyAndRoleList(userCompanyList);
       } else {
-        // Info: (20241120 - Liz) 取得使用者擁有的公司列表失敗時顯示錯誤訊息
+        // Info: (20241120 - Liz) 取得使用者擁有的帳本列表失敗時顯示錯誤訊息(原為公司)
         // Deprecated: (20241120 - Liz)
         // eslint-disable-next-line no-console
         console.log('listUserCompanyAPI(Simple) failed:', code);
@@ -242,8 +242,8 @@ const MyAccountBookList = () => {
           <MoreLink href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE} />
         </div>
 
-        {isCompanyListEmpty ? (
-          <MyAccountBookListNoData toggleCreateCompanyModal={toggleCreateCompanyModal} />
+        {isAccountBookListEmpty ? (
+          <MyAccountBookListNoData toggleCreateAccountBookModal={toggleCreateAccountBookModal} />
         ) : (
           <AccountBookList
             companyAndRoleList={companyAndRoleList}
@@ -262,7 +262,7 @@ const MyAccountBookList = () => {
 
         {isCreateAccountBookModalOpen && (
           <CreateAccountBookModal
-            modalVisibilityHandler={toggleCreateCompanyModal}
+            modalVisibilityHandler={toggleCreateAccountBookModal}
             getCompanyList={getCompanyList}
           />
         )}
