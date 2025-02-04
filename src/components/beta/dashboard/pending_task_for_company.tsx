@@ -28,7 +28,7 @@ interface PendingTaskForCompanyProps {
 
 const PendingTaskForCompany = ({ getTodoList }: PendingTaskForCompanyProps) => {
   const { t } = useTranslation('dashboard');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const [companyPendingTask, setCompanyPendingTask] = useState<IPendingTask | null>(null);
   const [isCreateTodoModalOpen, setIsCreateTodoModalOpen] = useState(false);
   const [defaultTodoName, setDefaultTodoName] = useState('');
@@ -41,12 +41,12 @@ const PendingTaskForCompany = ({ getTodoList }: PendingTaskForCompanyProps) => {
   );
 
   useEffect(() => {
-    if (!selectedCompany) return;
+    if (!selectedAccountBook) return;
 
     const getCompanyPendingTask = async () => {
       try {
         const { data, success, code } = await getCompanyPendingTaskAPI({
-          params: { companyId: selectedCompany.id },
+          params: { companyId: selectedAccountBook.id },
         });
 
         if (success) {
@@ -64,7 +64,7 @@ const PendingTaskForCompany = ({ getTodoList }: PendingTaskForCompanyProps) => {
     };
 
     getCompanyPendingTask();
-  }, [selectedCompany]);
+  }, [selectedAccountBook]);
 
   const handleAddEvent = (title: string) => {
     toggleCreateTodoModal();
@@ -156,7 +156,7 @@ const PendingTaskForCompany = ({ getTodoList }: PendingTaskForCompanyProps) => {
           toggleModal={toggleCreateTodoModal}
           getTodoList={getTodoList}
           defaultTodoName={defaultTodoName}
-          defaultCompany={selectedCompany ?? undefined}
+          defaultCompany={selectedAccountBook ?? undefined}
         />
       )}
     </section>

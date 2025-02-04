@@ -7,20 +7,18 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 
 interface CreateCompanyModalProps {
-  isModalVisible: boolean;
   modalVisibilityHandler: () => void;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
   getCompanyList?: () => void;
 }
 
 const CreateAccountBookModal = ({
-  isModalVisible,
   modalVisibilityHandler,
   setRefreshKey,
   getCompanyList,
 }: CreateCompanyModalProps) => {
   const { t } = useTranslation(['dashboard']);
-  const { createCompany } = useUserCtx();
+  const { createAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const [companyName, setCompanyName] = useState('');
@@ -41,7 +39,11 @@ const CreateAccountBookModal = ({
     setIsLoading(true);
 
     try {
-      const { success, code, errorMsg } = await createCompany({ name: companyName, taxId, tag });
+      const { success, code, errorMsg } = await createAccountBook({
+        name: companyName,
+        taxId,
+        tag,
+      });
 
       if (success) {
         // Info: (20241114 - Liz) 新增公司成功後清空表單並關閉 modal
@@ -77,7 +79,7 @@ const CreateAccountBookModal = ({
     }
   };
 
-  return isModalVisible ? (
+  return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
@@ -178,7 +180,7 @@ const CreateAccountBookModal = ({
         </section>
       </div>
     </main>
-  ) : null;
+  );
 };
 
 export default CreateAccountBookModal;

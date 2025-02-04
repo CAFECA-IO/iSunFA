@@ -21,14 +21,14 @@ interface IProjectContractPageProps {
 
 const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
   const { t } = useTranslation(['common', 'journal']);
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
 
   // Info: (20240821 - Julian) 取得專案資料
   const { data: projectData } = APIHandler<IProject>(
     APIName.GET_PROJECT_BY_ID,
     {
-      params: { companyId: selectedCompany?.id, projectId },
+      params: { companyId: selectedAccountBook?.id, projectId },
     },
     hasCompanyId
   );

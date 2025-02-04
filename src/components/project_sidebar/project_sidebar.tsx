@@ -25,8 +25,8 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
   const inReport = pathname.includes('report');
   const inSetting = pathname.includes('setting');
 
-  const { selectedCompany } = useUserCtx();
-  const companyName = selectedCompany?.name;
+  const { selectedAccountBook } = useUserCtx();
+  const companyName = selectedAccountBook?.name;
 
   const displayedCompanyName = companyName ? (
     <Link

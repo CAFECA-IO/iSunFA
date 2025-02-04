@@ -21,7 +21,7 @@ import { ToastType } from '@/interfaces/toastify';
 
 const VoucherListPageBody: React.FC = () => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const [activeTab, setActiveTab] = useState<VoucherTabs>(VoucherTabs.UPLOADED);
@@ -80,7 +80,7 @@ const VoucherListPageBody: React.FC = () => {
       .filter((key) => key !== EventType.OPENING), // Info: (20250124 - Julian) 不顯示開帳
   ];
 
-  const params = { companyId: selectedCompany?.id ?? FREE_COMPANY_ID };
+  const params = { companyId: selectedAccountBook?.id ?? FREE_COMPANY_ID };
 
   const handleApiResponse = useCallback(
     (

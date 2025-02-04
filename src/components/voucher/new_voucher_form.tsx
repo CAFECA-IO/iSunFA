@@ -73,13 +73,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { temporaryAssetList, clearTemporaryAssetHandler, reverseList, clearReverseListHandler } =
     useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
 
   const temporaryAssetListByUser = temporaryAssetList[companyId] ?? [];
 

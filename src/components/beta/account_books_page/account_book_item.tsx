@@ -10,24 +10,24 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
-interface ICompanyItemProps {
-  myCompany: ICompanyAndRole;
-  setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setCompanyToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setCompanyToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+interface AccountBookItemProps {
+  accountBook: ICompanyAndRole;
+  setAccountBookToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
-const CompanyItem = ({
-  myCompany,
-  setCompanyToEdit,
-  setCompanyToDelete,
-  setCompanyToUploadAvatar,
-}: ICompanyItemProps) => {
+const AccountBookItem = ({
+  accountBook,
+  setAccountBookToEdit,
+  setAccountBookToDelete,
+  setAccountBookToUploadAvatar,
+}: AccountBookItemProps) => {
   const { t } = useTranslation(['company']);
-  const { selectCompany, selectedCompany } = useUserCtx();
+  const { selectAccountBook, selectedAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
 
-  const isCompanySelected = myCompany.company.id === selectedCompany?.id;
+  const isCompanySelected = accountBook.company.id === selectedAccountBook?.id;
   const {
     targetRef: optionsDropdownRef,
     componentVisible: isOptionsDropdownOpen,
@@ -43,17 +43,17 @@ const CompanyItem = ({
   };
 
   const openChangeTagModal = () => {
-    setCompanyToEdit(myCompany);
+    setAccountBookToEdit(accountBook);
     closeOptionsDropdown();
   };
 
   const openDeleteCompanyModal = () => {
-    setCompanyToDelete(myCompany);
+    setAccountBookToDelete(accountBook);
     closeOptionsDropdown();
   };
 
   const openUploadCompanyAvatarModal = () => {
-    setCompanyToUploadAvatar(myCompany);
+    setAccountBookToUploadAvatar(accountBook);
     closeOptionsDropdown();
   };
 
@@ -63,19 +63,19 @@ const CompanyItem = ({
 
     setIsLoading(true);
 
-    const companyId = isCompanySelected ? CANCEL_COMPANY_ID : myCompany.company.id;
+    const companyId = isCompanySelected ? CANCEL_COMPANY_ID : accountBook.company.id;
 
     try {
-      const data = selectCompany(companyId);
+      const data = selectAccountBook(companyId);
 
       if (data) {
         // Deprecated: (20241113 - Liz)
         // eslint-disable-next-line no-console
-        console.log('selectCompany success:', data);
+        console.log('selectAccountBook success:', data);
       } else {
         // Deprecated: (20241113 - Liz)
         // eslint-disable-next-line no-console
-        console.log('selectCompany failed!');
+        console.log('selectAccountBook failed!');
       }
     } catch (error) {
       // Deprecated: (20241113 - Liz)
@@ -88,13 +88,13 @@ const CompanyItem = ({
 
   return (
     <div
-      key={myCompany.company.id}
+      key={accountBook.company.id}
       className="flex items-center gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
     >
       <button type="button" onClick={openUploadCompanyAvatarModal} className="group relative">
         <Image
-          src={myCompany.company.imageId}
-          alt={myCompany.company.name}
+          src={accountBook.company.imageId}
+          alt={accountBook.company.name}
           width={60}
           height={60}
           className="h-60px w-60px rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
@@ -107,7 +107,7 @@ const CompanyItem = ({
 
       <div className="flex flex-auto items-center gap-8px">
         <p className="max-w-170px truncate text-base font-medium text-text-neutral-solid-dark">
-          {myCompany.company.name}
+          {accountBook.company.name}
         </p>
 
         <div className="relative flex items-center" ref={optionsDropdownRef}>
@@ -145,7 +145,7 @@ const CompanyItem = ({
       </div>
 
       <div className="flex w-90px justify-center">
-        <CompanyTag tag={myCompany.tag} />
+        <CompanyTag tag={accountBook.tag} />
       </div>
 
       <div className="flex w-120px items-center justify-end">
@@ -179,4 +179,4 @@ const CompanyItem = ({
   );
 };
 
-export default CompanyItem;
+export default AccountBookItem;

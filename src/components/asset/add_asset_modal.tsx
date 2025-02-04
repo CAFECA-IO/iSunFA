@@ -38,10 +38,10 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const { t } = useTranslation(['common', 'journal', 'asset']);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { addTemporaryAssetHandler } = useAccountingCtx();
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
 
   const { assetAccountList, modalType, assetData } = defaultData;
 

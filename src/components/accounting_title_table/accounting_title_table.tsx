@@ -33,7 +33,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
     editAccountTitleDataHandler,
   } = useGlobalCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { deleteOwnAccountTitle } = useAccountingCtx();
   const { id, code, name } = rowData;
 
@@ -50,14 +50,14 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
   };
 
   const handleRemove = () => {
-    if (!selectedCompany?.id) return;
+    if (!selectedAccountBook?.id) return;
     messageModalDataHandler({
       title: t('setting:SETTING.REMOVE_ACCOUNTING_TITLE'),
       content: t('setting:SETTING.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
       notes: name,
       messageType: MessageType.WARNING,
       submitBtnStr: t('setting:SETTING.REMOVE'),
-      submitBtnFunction: () => deleteOwnAccountTitle(selectedCompany.id, id),
+      submitBtnFunction: () => deleteOwnAccountTitle(selectedAccountBook.id, id),
       backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();

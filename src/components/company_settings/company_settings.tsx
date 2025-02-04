@@ -9,11 +9,11 @@ interface CompanySettingsProps {}
 const CompanySettings: React.FC<CompanySettingsProps> = () => {
   const { t } = useTranslation(['setting', 'common']);
 
-  const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
+  const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
   const [isCompanyListModalOpen, setIsCompanyListModalOpen] = useState(false);
 
-  const toggleCreateCompanyModal = () => {
-    setIsCreateCompanyModalOpen((prev) => !prev);
+  const toggleCreateAccountBookModal = () => {
+    setIsCreateAccountBookModalOpen((prev) => !prev);
   };
 
   const toggleCompanyListModal = () => {
@@ -22,10 +22,9 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
 
   return (
     <div className="flex flex-col">
-      <CreateAccountBookModal
-        modalVisibilityHandler={toggleCreateCompanyModal}
-        isModalVisible={isCreateCompanyModalOpen}
-      />
+      {isCreateAccountBookModalOpen && (
+        <CreateAccountBookModal modalVisibilityHandler={toggleCreateAccountBookModal} />
+      )}
       {isCompanyListModalOpen && <CompanyListModal toggleModal={toggleCompanyListModal} />}
       <div id="company-setting-section" className="mb-lv-7 flex items-center gap-4">
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
@@ -39,7 +38,7 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
         id="setting-add-company"
         type="button"
         className="group mb-lv-7 inline-flex items-center justify-start whitespace-nowrap rounded-xs border-none font-medium text-text-neutral-link hover:text-button-text-primary-hover focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:text-button-text-disable disabled:opacity-100"
-        onClick={toggleCreateCompanyModal}
+        onClick={toggleCreateAccountBookModal}
       >
         <p className="flex gap-2">
           <Image src="/icons/plus.svg" width={16} height={16} alt="notice_icon" />

@@ -25,7 +25,7 @@ const AddAccountTitleModal = ({
   modalData,
 }: IAddAccountTitleModalProps) => {
   const { t } = useTranslation(['common', 'setting']);
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const { accountId } = modalData;
@@ -51,12 +51,12 @@ const AddAccountTitleModal = ({
   const [nameValue, setNameValue] = useState('');
 
   useEffect(() => {
-    if (selectedCompany && accountId) {
+    if (selectedAccountBook && accountId) {
       getAccountById({
-        params: { companyId: selectedCompany.id, accountId },
+        params: { companyId: selectedAccountBook.id, accountId },
       });
     }
-  }, [selectedCompany, accountId]);
+  }, [selectedAccountBook, accountId]);
 
   useEffect(() => {
     if (accountData) {
@@ -67,7 +67,7 @@ const AddAccountTitleModal = ({
   }, [accountData]);
 
   useEffect(() => {
-    if (createSuccess && result && selectedCompany) {
+    if (createSuccess && result && selectedAccountBook) {
       // Info: (20240719 - Julian) 關閉 modal
       modalVisibilityHandler();
 
@@ -115,9 +115,9 @@ const AddAccountTitleModal = ({
   };
 
   const addNewSubAccount = () => {
-    if (selectedCompany && accountId) {
+    if (selectedAccountBook && accountId) {
       createNewSubAccount({
-        params: { companyId: selectedCompany.id },
+        params: { companyId: selectedAccountBook.id },
         body: {
           accountId,
           name: nameValue,

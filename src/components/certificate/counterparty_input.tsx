@@ -40,8 +40,8 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const { counterparty, counterpartyList, onSelect, flagOfSubmit, className } = props;
     const { t } = useTranslation(['certificate', 'common']);
 
-    const { selectedCompany } = useUserCtx();
-    const companyId = selectedCompany?.id;
+    const { selectedAccountBook } = useUserCtx();
+    const companyId = selectedAccountBook?.id;
 
     const { trigger: fetchCompanyDataAPI } = APIHandler<ICompanyTaxIdAndName>(
       APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID

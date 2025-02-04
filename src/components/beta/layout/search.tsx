@@ -19,8 +19,8 @@ const Search = ({ toggleOverlay }: SearchProps) => {
   const [inputValue, setInputValue] = useState('');
   const [searchResults, setSearchResults] = useState<ISearchKeyword[]>([]);
   const router = useRouter();
-  const { selectedCompany } = useUserCtx();
-  const noSelectedCompany = !selectedCompany;
+  const { selectedAccountBook } = useUserCtx();
+  const noSelectedCompany = !selectedAccountBook;
   const { toastHandler } = useModalContext();
 
   const hasSearchResults = searchResults.length > 0;

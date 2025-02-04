@@ -19,8 +19,8 @@ interface CertificateFileUploadProps {
 }
 
 const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisabled, setFiles }) => {
-  const { userAuth, selectedCompany } = useUserCtx();
-  const companyId = selectedCompany?.id || FREE_COMPANY_ID;
+  const { userAuth, selectedAccountBook } = useUserCtx();
+  const companyId = selectedAccountBook?.id || FREE_COMPANY_ID;
   const [room, setRoom] = useState<IRoom | null>(null);
   const [getRoomSuccess, setGetRoomSuccess] = useState<boolean | undefined>(undefined);
   const [getRoomCode, setGetRoomCode] = useState<string | undefined>(undefined);

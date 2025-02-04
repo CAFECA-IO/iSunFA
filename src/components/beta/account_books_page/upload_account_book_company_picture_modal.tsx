@@ -9,28 +9,30 @@ import APIHandler from '@/lib/utils/api_handler';
 import UploadArea from '@/components/upload_area/upload_area';
 import { useUserCtx } from '@/contexts/user_context';
 
-interface UploadCompanyAvatarModalProps {
-  companyToUploadAvatar: ICompanyAndRole;
+interface UploadAccountBookCompanyPictureModalProps {
+  accountBookToUploadAvatar: ICompanyAndRole;
   isModalOpen: boolean;
-  setCompanyToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
 }
 
-const UploadCompanyAvatarModal = ({
-  companyToUploadAvatar,
+const UploadAccountBookCompanyPictureModal = ({
+  accountBookToUploadAvatar,
   isModalOpen,
-  setCompanyToUploadAvatar,
+  setAccountBookToUploadAvatar,
   setRefreshKey,
-}: UploadCompanyAvatarModalProps) => {
+}: UploadAccountBookCompanyPictureModalProps) => {
   const { t } = useTranslation(['company']);
-  const { selectedCompany, selectCompany } = useUserCtx();
+  const { selectedAccountBook, selectAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
-  const { trigger: uploadCompanyAvatarAPI } = APIHandler<ICompany>(APIName.COMPANY_PUT_ICON);
+  const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<ICompany>(
+    APIName.COMPANY_PUT_ICON
+  );
 
-  const closeUploadCompanyAvatarModal = useCallback(() => {
-    setCompanyToUploadAvatar(undefined);
-  }, [setCompanyToUploadAvatar]);
+  const closeUploadAccountBookCompanyPictureModal = useCallback(() => {
+    setAccountBookToUploadAvatar(undefined);
+  }, [setAccountBookToUploadAvatar]);
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -44,7 +46,7 @@ const UploadCompanyAvatarModal = ({
         const { success: uploadFileSuccess, data: fileMeta } = await uploadFileAPI({
           query: {
             type: UploadType.COMPANY,
-            targetId: String(companyToUploadAvatar.company.id),
+            targetId: String(accountBookToUploadAvatar.company.id),
           },
           body: formData,
         });
@@ -56,27 +58,28 @@ const UploadCompanyAvatarModal = ({
           return;
         }
 
-        // Info: (20241212 - Liz) 打 API 更新公司頭像
-        const { success, error } = await uploadCompanyAvatarAPI({
-          params: { companyId: companyToUploadAvatar.company.id },
+        // Info: (20241212 - Liz) 打 API 更新帳本的公司照片
+        const { success, error } = await uploadAccountBookCompanyPictureAPI({
+          params: { companyId: accountBookToUploadAvatar.company.id },
           body: { fileId: fileMeta.id },
         });
 
         if (!success) {
           // Deprecated: (20241212 - Liz)
           // eslint-disable-next-line no-console
-          console.error('Failed to update company avatar! error message:', error?.message);
+          console.error('更新帳本的公司照片失敗! error message:', error?.message);
           return;
         }
 
-        closeUploadCompanyAvatarModal();
+        closeUploadAccountBookCompanyPictureModal();
         if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241212 - Liz) This is a workaround to refresh the company list after creating a new company
 
-        const isChangingSelectedCompany = selectedCompany?.id === companyToUploadAvatar.company.id;
+        const isChangingSelectedCompany =
+          selectedAccountBook?.id === accountBookToUploadAvatar.company.id;
 
-        // Info: (20241212 - Liz) 如果是改變已選擇的公司，就打 API 再重新選擇一次以更新公司頭像
+        // Info: (20241212 - Liz) 如果是改變已選擇的帳本的公司照片，就打 API 選擇該帳本以更新公司照片
         if (isChangingSelectedCompany) {
-          selectCompany(companyToUploadAvatar.company.id);
+          selectAccountBook(accountBookToUploadAvatar.company.id);
         }
       } catch (error) {
         // Deprecated: (20241212 - Liz)
@@ -87,10 +90,10 @@ const UploadCompanyAvatarModal = ({
       }
     },
     [
-      closeUploadCompanyAvatarModal,
-      companyToUploadAvatar.company.id,
+      closeUploadAccountBookCompanyPictureModal,
+      accountBookToUploadAvatar.company.id,
       isLoading,
-      selectedCompany?.id,
+      selectedAccountBook?.id,
       setRefreshKey,
     ]
   );
@@ -102,7 +105,7 @@ const UploadCompanyAvatarModal = ({
           <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">
             {t('company:UPLOAD_COMPANY_AVATAR_MODAL.TITLE')}
           </h1>
-          <button type="button" onClick={closeUploadCompanyAvatarModal}>
+          <button type="button" onClick={closeUploadAccountBookCompanyPictureModal}>
             <IoCloseOutline size={24} />
           </button>
         </section>
@@ -113,4 +116,4 @@ const UploadCompanyAvatarModal = ({
   ) : null;
 };
 
-export default UploadCompanyAvatarModal;
+export default UploadAccountBookCompanyPictureModal;

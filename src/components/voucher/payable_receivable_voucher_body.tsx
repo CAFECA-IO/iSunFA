@@ -15,7 +15,7 @@ import { PayableReceivableTabs } from '@/constants/voucher';
 
 const PayableReceivableVoucherPageBody: React.FC = () => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
   const [activeTab, setActiveTab] = useState(PayableReceivableTabs.PAYMENT);
   const [page, setPage] = useState(1);
@@ -75,7 +75,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
   );
 
-  const params = { companyId: selectedCompany?.id };
+  const params = { companyId: selectedAccountBook?.id };
 
   const handleApiResponse = (
     data: IPaginatedData<{
@@ -88,7 +88,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   ) => {
     setPage(data.page);
     setUnRead(data.data.unRead);
-    setTotalPages(Math.max(1, Math.ceil(data.data.vouchers.length / DEFAULT_PAGE_LIMIT)));// Info: (20250124 - Anna) 改為不是全部傳票的總頁數，而是應收/應付傳票的總頁數
+    setTotalPages(Math.max(1, Math.ceil(data.data.vouchers.length / DEFAULT_PAGE_LIMIT))); // Info: (20250124 - Anna) 改為不是全部傳票的總頁數，而是應收/應付傳票的總頁數
     setTotalCount(data.data.vouchers.length); // Info: (20250124 - Anna) 改為不是全部傳票的總筆數，而是應收/應付傳票的總筆數
     setVoucherList(data.data.vouchers);
   };

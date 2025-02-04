@@ -26,7 +26,7 @@ interface FileInfo extends IOCRItem {
 
 const JournalUploadArea = () => {
   const { t } = useTranslation(['common', 'journal']);
-  const { userAuth, selectedCompany } = useUserCtx();
+  const { userAuth, selectedAccountBook } = useUserCtx();
   const {
     setInvoiceIdHandler,
     addOCRHandler,
@@ -67,7 +67,7 @@ const JournalUploadArea = () => {
       publicKey: JsonWebKey;
       iv: Uint8Array;
     } | null> => {
-      if (!selectedCompany?.id || !publicKeyData || fetchPublicKeySuccess === false) {
+      if (!selectedAccountBook?.id || !publicKeyData || fetchPublicKeySuccess === false) {
         toastHandler({
           id: 'uploadFile',
           content: t('journal:JOURNAL.FAILED_TO_UPLOAD_FILE'),
@@ -93,9 +93,9 @@ const JournalUploadArea = () => {
 
   const storeToIndexedDB = async (fileItem: IOCRItem) => {
     // Info: 檢查是否有使用者和公司資訊 (20240822 - Shirley)
-    if (!userAuth?.id || !selectedCompany?.id) {
+    if (!userAuth?.id || !selectedAccountBook?.id) {
       return;
-    } else if (fileItem.companyId !== selectedCompany.id || fileItem.userId !== userAuth.id) {
+    } else if (fileItem.companyId !== selectedAccountBook.id || fileItem.userId !== userAuth.id) {
       return;
     }
     await addItem(fileItem.uploadIdentifier, fileItem);
@@ -124,7 +124,7 @@ const JournalUploadArea = () => {
       timestamp: now,
       encryptedSymmetricKey,
       publicKey,
-      companyId: selectedCompany?.id || -1,
+      companyId: selectedAccountBook?.id || -1,
       userId: userAuth?.id || -1,
     };
     const newFile: FileInfo = {
@@ -242,10 +242,10 @@ const JournalUploadArea = () => {
   };
 
   useEffect(() => {
-    if (selectedCompany?.id) {
-      fetchPublicKey({ params: { companyId: selectedCompany.id } });
+    if (selectedAccountBook?.id) {
+      fetchPublicKey({ params: { companyId: selectedAccountBook.id } });
     }
-  }, [selectedCompany?.id]);
+  }, [selectedAccountBook?.id]);
 
   useEffect(() => {
     if (fetchPublicKeySuccess === false) {
@@ -262,20 +262,20 @@ const JournalUploadArea = () => {
   }, [fetchPublicKeySuccess]);
 
   useEffect(() => {
-    if (!selectedCompany?.id || pendingOCRListFromBrowser.length === 0) return;
+    if (!selectedAccountBook?.id || pendingOCRListFromBrowser.length === 0) return;
 
     pendingOCRListFromBrowser.forEach(async (item) => {
-      const file = await uploadToFileApi(selectedCompany?.id, item);
-      await upload(item, selectedCompany.id, false, file?.name, file?.id);
+      const file = await uploadToFileApi(selectedAccountBook?.id, item);
+      await upload(item, selectedAccountBook.id, false, file?.name, file?.id);
     });
   }, [pendingOCRListFromBrowser]);
 
   useEffect(() => {
-    if (uploadFile && selectedCompany) {
+    if (uploadFile && selectedAccountBook) {
       const uploadFileToOcr = async () => {
         // Info: (20240829 - Murky) To Shirely 更改這邊
-        const file = await uploadToFileApi(selectedCompany?.id, uploadFile);
-        await upload(uploadFile, selectedCompany?.id || -1, true, file?.name, file?.id);
+        const file = await uploadToFileApi(selectedAccountBook?.id, uploadFile);
+        await upload(uploadFile, selectedAccountBook?.id || -1, true, file?.name, file?.id);
       };
       uploadFileToOcr();
       setUploadFile(null);

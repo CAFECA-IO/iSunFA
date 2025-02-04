@@ -15,9 +15,9 @@ import { IPaginatedAccount } from '@/interfaces/accounting_account';
 
 const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('asset');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
   const params = { companyId };
 
   const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);

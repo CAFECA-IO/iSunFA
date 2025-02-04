@@ -22,7 +22,7 @@ const LedgerPageBody = () => {
   const router = useRouter();
 
   const { t } = useTranslation(['journal', 'date_picker', 'filter_section_type', 'reports']);
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   // const [financialReport, setFinancialReport] = useState<IPaginatedAccount | null>(null); // Info: (20241205 - Anna) 用來看回傳的會計科目 Add state to hold the financial report data for debugging output
 
   // Info: (20241105 - Anna) 定義各類別的會計科目選項
@@ -74,7 +74,7 @@ const LedgerPageBody = () => {
 
   useEffect(() => {
     if (
-      selectedCompany?.id &&
+      selectedAccountBook?.id &&
       selectedDateRange.startTimeStamp &&
       selectedDateRange.endTimeStamp &&
       selectedReportType
@@ -87,7 +87,7 @@ const LedgerPageBody = () => {
         labelType: selectedReportType.toLowerCase(), // Info: (20241118 - Anna) 確保傳遞的是小寫的值
       };
 
-      const params = { companyId: selectedCompany.id };
+      const params = { companyId: selectedAccountBook.id };
 
       // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
@@ -101,7 +101,7 @@ const LedgerPageBody = () => {
         const endAccountNo = selectedEndAccountNo.split(' ')[0]; // Info: (20241117 - Liz) 取出科目編號
 
         const { data } = await fetchLedgerDataAPI({
-          params: { companyId: selectedCompany.id },
+          params: { companyId: selectedAccountBook.id },
           query: {
             startDate: selectedDateRange.startTimeStamp,
             endDate: selectedDateRange.endTimeStamp,
@@ -118,7 +118,7 @@ const LedgerPageBody = () => {
       fetchLedgerData();
     }
   }, [
-    selectedCompany,
+    selectedAccountBook,
     selectedDateRange,
     selectedReportType,
     selectedStartAccountNo,
@@ -127,11 +127,11 @@ const LedgerPageBody = () => {
 
   // Info: (20241117 - Liz) 取得會計科目列表
   useEffect(() => {
-    if (!selectedCompany) return;
+    if (!selectedAccountBook) return;
 
     const getAccountList = async () => {
       const { data: accountTitleList } = await getAccountListAPI({
-        params: { companyId: selectedCompany.id },
+        params: { companyId: selectedAccountBook.id },
         query: {
           limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
           forUser: true,
@@ -235,7 +235,7 @@ const LedgerPageBody = () => {
     };
 
     getAccountList();
-  }, [selectedCompany]);
+  }, [selectedAccountBook]);
 
   const handleReportTypeChange = (type: ReportType) => {
     setSelectedReportType(type);

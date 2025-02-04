@@ -6,22 +6,22 @@ import { ICompanyAndRole } from '@/interfaces/company';
 import { COMPANY_TAG } from '@/constants/company';
 
 interface ChangeTagModalProps {
-  companyToEdit: ICompanyAndRole;
+  accountBookToEdit: ICompanyAndRole;
   isModalOpen: boolean;
-  setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
 }
 
 const ChangeTagModal = ({
-  companyToEdit,
+  accountBookToEdit,
   isModalOpen,
-  setCompanyToEdit,
+  setAccountBookToEdit,
   setRefreshKey,
 }: ChangeTagModalProps) => {
   const { t } = useTranslation(['company']);
-  const { updateCompany } = useUserCtx();
+  const { updateAccountBook } = useUserCtx();
 
-  const [tag, setTag] = useState<COMPANY_TAG>(companyToEdit.tag);
+  const [tag, setTag] = useState<COMPANY_TAG>(accountBookToEdit.tag);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -30,7 +30,7 @@ const ChangeTagModal = ({
   };
 
   const closeChangeTagModal = () => {
-    setCompanyToEdit(undefined);
+    setAccountBookToEdit(undefined);
   };
 
   // Info: (20241113 - Liz) 打 API 變更公司的 tag
@@ -42,8 +42,8 @@ const ChangeTagModal = ({
     setIsLoading(true);
 
     try {
-      const data = await updateCompany({
-        companyId: companyToEdit.company.id,
+      const data = await updateAccountBook({
+        companyId: accountBookToEdit.company.id,
         action: 'updateTag',
         tag,
       });
@@ -96,7 +96,7 @@ const ChangeTagModal = ({
               type="text"
               placeholder="Enter number"
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-              value={companyToEdit.company.name}
+              value={accountBookToEdit.company.name}
             />
           </div>
 

@@ -52,7 +52,7 @@ const AddProjectModal = ({
   defaultStage,
 }: IAddProjectModalProps) => {
   const { t } = useTranslation(['common', 'project']);
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   const {
@@ -100,7 +100,7 @@ const AddProjectModal = ({
     event.preventDefault();
     createProject({
       params: {
-        companyId: selectedCompany?.id,
+        companyId: selectedAccountBook?.id,
       },
       body: {
         name: inputName,

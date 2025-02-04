@@ -1,29 +1,29 @@
 import { Dispatch, SetStateAction } from 'react';
-import CompanyItem from '@/components/beta/account_books_page/company_item';
+import AccountBookItem from '@/components/beta/account_books_page/account_book_item';
 import { ICompanyAndRole } from '@/interfaces/company';
 
 interface AccountBookListProps {
-  companyList: ICompanyAndRole[];
-  setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setCompanyToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setCompanyToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  accountBookList: ICompanyAndRole[];
+  setAccountBookToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
 const AccountBookList = ({
-  companyList,
-  setCompanyToEdit,
-  setCompanyToDelete,
-  setCompanyToUploadAvatar,
+  accountBookList,
+  setAccountBookToEdit,
+  setAccountBookToDelete,
+  setAccountBookToUploadAvatar,
 }: AccountBookListProps) => {
   return (
     <section className="flex flex-auto flex-col gap-8px">
-      {companyList.map((myCompany) => (
-        <CompanyItem
-          key={myCompany.company.id}
-          myCompany={myCompany}
-          setCompanyToEdit={setCompanyToEdit}
-          setCompanyToDelete={setCompanyToDelete}
-          setCompanyToUploadAvatar={setCompanyToUploadAvatar}
+      {accountBookList.map((accountBook) => (
+        <AccountBookItem
+          key={accountBook.company.id}
+          accountBook={accountBook}
+          setAccountBookToEdit={setAccountBookToEdit}
+          setAccountBookToDelete={setAccountBookToDelete}
+          setAccountBookToUploadAvatar={setAccountBookToUploadAvatar}
         />
       ))}
     </section>

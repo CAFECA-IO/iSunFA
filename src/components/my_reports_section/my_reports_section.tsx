@@ -34,8 +34,8 @@ const MyReportsSection = () => {
   const { t } = useTranslation(['common', 'reports']);
   const router = useRouter();
 
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   // TODO: (20240528 - Shirley) [Beta] 區分 pending 跟 history 兩種 filter options
   // TODO: (20240528 - Shirley) [Beta] filterOptionsGotFromModal for API queries in mobile devices
   const {
@@ -75,7 +75,7 @@ const MyReportsSection = () => {
   } = APIHandler<IPaginatedReport>(
     APIName.REPORT_LIST,
     {
-      params: { companyId: selectedCompany?.id },
+      params: { companyId: selectedAccountBook?.id },
       query: {
         status: ReportStatusType.PENDING,
         sortOrder: sortOptionQuery[filteredPendingSort],
@@ -99,7 +99,7 @@ const MyReportsSection = () => {
   } = APIHandler<IPaginatedReport>(
     APIName.REPORT_LIST,
     {
-      params: { companyId: selectedCompany?.id },
+      params: { companyId: selectedAccountBook?.id },
       query: {
         status: ReportStatusType.GENERATED,
         sortOrder: sortOptionQuery[filteredHistorySort],
@@ -173,7 +173,7 @@ const MyReportsSection = () => {
 
       await fetchPendingReports({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedAccountBook?.id,
         },
         query: {
           status: ReportStatusType.PENDING,
@@ -188,7 +188,7 @@ const MyReportsSection = () => {
     },
     [
       fetchPendingReports,
-      selectedCompany,
+      selectedAccountBook,
       filteredPendingSort,
       searchPendingQuery,
       pendingCurrentPage,
@@ -213,7 +213,7 @@ const MyReportsSection = () => {
 
       await fetchGeneratedReports({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedAccountBook?.id,
         },
         query: {
           status: ReportStatusType.GENERATED,
@@ -228,7 +228,7 @@ const MyReportsSection = () => {
     },
     [
       fetchGeneratedReports,
-      selectedCompany,
+      selectedAccountBook,
       filteredHistorySort,
       searchHistoryQuery,
       historyCurrentPage,

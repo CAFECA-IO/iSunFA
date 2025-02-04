@@ -41,8 +41,8 @@ interface IncomeStatementListProps {
 const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) => {
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   const [isGetReportAPILoading, setIsGetReportAPILoading] = useState<boolean>(false);
   const [isGetReportAPISuccess, setIsGetReportAPISuccess] = useState<boolean>(false);
   const [reportAPICode, setReportAPICode] = useState<string>('');
@@ -77,7 +77,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
       try {
         const { success, data, code } = await getReportAPI({
           params: {
-            companyId: selectedCompany?.id,
+            companyId: selectedAccountBook?.id,
           },
           query: {
             startDate: selectedDateRange.startTimeStamp,
@@ -108,7 +108,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
     };
 
     getIncomeStatementReport();
-  }, [hasCompanyId, selectedCompany?.id, selectedDateRange]);
+  }, [hasCompanyId, selectedAccountBook?.id, selectedDateRange]);
 
   if (!hasFetchedOnce && !isGetReportAPILoading) {
     return <NoData />;

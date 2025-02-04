@@ -11,27 +11,27 @@ import { useUserCtx } from '@/contexts/user_context';
 import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
-import MyCompanyListNoData from '@/components/beta/dashboard/my_company_list_no_data';
+import MyAccountBookListNoData from '@/components/beta/dashboard/my_account_book_list_no_data';
 
-interface CompanyItemProps {
+interface AccountBookItemProps {
   companyAndRole: ICompanyAndRole;
-  setCompanyToSelect: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToSelect: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   isDisabled: boolean;
   dataIndex: number;
 }
 
-const CompanyItem = ({
+const AccountBookItem = ({
   companyAndRole,
-  setCompanyToSelect,
+  setAccountBookToSelect,
   isDisabled,
   dataIndex,
-}: CompanyItemProps) => {
-  const { selectedCompany } = useUserCtx();
-  const isCompanySelected = companyAndRole.company.id === selectedCompany?.id;
+}: AccountBookItemProps) => {
+  const { selectedAccountBook } = useUserCtx();
+  const isCompanySelected = companyAndRole.company.id === selectedAccountBook?.id;
 
   const openMessageModal = () => {
     if (!isDisabled && !isCompanySelected) {
-      setCompanyToSelect(companyAndRole);
+      setAccountBookToSelect(companyAndRole);
     }
   };
 
@@ -58,11 +58,11 @@ const CompanyItem = ({
 
 interface CompanyListProps {
   companyAndRoleList: ICompanyAndRole[];
-  setCompanyToSelect: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToSelect: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
-const CompanyList = ({ companyAndRoleList, setCompanyToSelect }: CompanyListProps) => {
-  const { selectedCompany } = useUserCtx();
+const AccountBookList = ({ companyAndRoleList, setAccountBookToSelect }: CompanyListProps) => {
+  const { selectedAccountBook } = useUserCtx();
   const containerRef = useRef<HTMLDivElement>(null);
   const [disabledCards, setDisabledCards] = useState<number[]>([]);
 
@@ -104,18 +104,18 @@ const CompanyList = ({ companyAndRoleList, setCompanyToSelect }: CompanyListProp
     const container = containerRef.current;
     if (!container) return;
 
-    if (selectedCompany) {
+    if (selectedAccountBook) {
       container.scrollTo({ left: 0, behavior: 'smooth' });
     }
-  }, [selectedCompany]);
+  }, [selectedAccountBook]);
 
   return (
     <div ref={containerRef} className="flex max-w-full gap-24px overflow-x-auto px-1px pb-8px">
       {companyAndRoleList.map((companyAndRole, index) => (
-        <CompanyItem
+        <AccountBookItem
           key={companyAndRole.company.id}
           companyAndRole={companyAndRole}
-          setCompanyToSelect={setCompanyToSelect}
+          setAccountBookToSelect={setAccountBookToSelect}
           isDisabled={disabledCards.includes(index)}
           dataIndex={index}
         />
@@ -124,39 +124,39 @@ const CompanyList = ({ companyAndRoleList, setCompanyToSelect }: CompanyListProp
   );
 };
 
-const MyCompanyList = () => {
+const MyAccountBookList = () => {
   const { t } = useTranslation('dashboard');
   const { userAuth } = useUserCtx();
   const [companyAndRoleList, setCompanyAndRoleList] = useState<ICompanyAndRole[]>([]);
   const isCompanyListEmpty = companyAndRoleList.length === 0;
-  const [companyToSelect, setCompanyToSelect] = useState<ICompanyAndRole | undefined>();
+  const [accountBookToSelect, setAccountBookToSelect] = useState<ICompanyAndRole | undefined>();
   const [isLoading, setIsLoading] = useState(false);
-  const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
+  const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
 
   // Info: (20241126 - Liz) 選擇公司 API
-  const { selectCompany, selectedCompany } = useUserCtx();
+  const { selectAccountBook, selectedAccountBook } = useUserCtx();
 
   const closeMessageModal = () => {
-    setCompanyToSelect(undefined);
+    setAccountBookToSelect(undefined);
   };
 
   const toggleCreateCompanyModal = () => {
-    setIsCreateCompanyModalOpen((prev) => !prev);
+    setIsCreateAccountBookModalOpen((prev) => !prev);
   };
 
   // Info: (20241126 - Liz) 打 API 選擇公司
   const handleSelectCompany = () => {
     if (isLoading) return;
-    if (!companyToSelect) return;
+    if (!accountBookToSelect) return;
 
     setIsLoading(true);
 
     try {
-      selectCompany(companyToSelect.company.id);
+      selectAccountBook(accountBookToSelect.company.id);
     } catch (error) {
       // Deprecated: (20241126 - Liz)
       // eslint-disable-next-line no-console
-      console.log('CompanyList handleConnect error:', error);
+      console.log('AccountBookList handleConnect error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -172,7 +172,9 @@ const MyCompanyList = () => {
           {t('dashboard:DASHBOARD.SURE')}
         </p>
         <br />
-        <p className="font-semibold text-text-neutral-primary">{companyToSelect?.company.name}</p>
+        <p className="font-semibold text-text-neutral-primary">
+          {accountBookToSelect?.company.name}
+        </p>
       </div>
     ),
     submitBtnStr: t('dashboard:DASHBOARD.CHOOSE'),
@@ -200,9 +202,9 @@ const MyCompanyList = () => {
 
       if (success && userCompanyList && userCompanyList.length > 0) {
         // Info: (20241216 - Liz) 已被選擇的公司顯示在第一個
-        if (selectedCompany) {
+        if (selectedAccountBook) {
           const selectedCompanyIndex = userCompanyList.findIndex(
-            (companyAndRole) => companyAndRole.company.id === selectedCompany.id
+            (companyAndRole) => companyAndRole.company.id === selectedAccountBook.id
           );
 
           if (selectedCompanyIndex > -1) {
@@ -223,7 +225,7 @@ const MyCompanyList = () => {
       // eslint-disable-next-line no-console
       console.error('listUserCompanyAPI(Simple) error:', error);
     }
-  }, [selectedCompany, userAuth]);
+  }, [selectedAccountBook, userAuth]);
 
   useEffect(() => {
     getCompanyList();
@@ -241,26 +243,25 @@ const MyCompanyList = () => {
         </div>
 
         {isCompanyListEmpty ? (
-          <MyCompanyListNoData toggleCreateCompanyModal={toggleCreateCompanyModal} />
+          <MyAccountBookListNoData toggleCreateCompanyModal={toggleCreateCompanyModal} />
         ) : (
-          <CompanyList
+          <AccountBookList
             companyAndRoleList={companyAndRoleList}
-            setCompanyToSelect={setCompanyToSelect}
+            setAccountBookToSelect={setAccountBookToSelect}
           />
         )}
 
         {/* // Info: (20241209 - Liz) Modals */}
-        {companyToSelect && (
+        {accountBookToSelect && (
           <MessageModal
             messageModalData={messageModalData}
-            isModalVisible={!!companyToSelect}
+            isModalVisible={!!accountBookToSelect}
             modalVisibilityHandler={closeMessageModal}
           />
         )}
 
-        {isCreateCompanyModalOpen && (
+        {isCreateAccountBookModalOpen && (
           <CreateAccountBookModal
-            isModalVisible={isCreateCompanyModalOpen}
             modalVisibilityHandler={toggleCreateCompanyModal}
             getCompanyList={getCompanyList}
           />
@@ -270,4 +271,4 @@ const MyCompanyList = () => {
   );
 };
 
-export default MyCompanyList;
+export default MyAccountBookList;

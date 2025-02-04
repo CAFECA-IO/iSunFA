@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 interface NoDataProps {
   toggleCreateCompanyModal: () => void;
 }
-const MyCompanyListNoData = ({ toggleCreateCompanyModal }: NoDataProps) => {
+const MyAccountBookListNoData = ({ toggleCreateCompanyModal }: NoDataProps) => {
   const { t } = useTranslation('dashboard');
 
   return (
@@ -25,4 +25,4 @@ const MyCompanyListNoData = ({ toggleCreateCompanyModal }: NoDataProps) => {
   );
 };
 
-export default MyCompanyListNoData;
+export default MyAccountBookListNoData;

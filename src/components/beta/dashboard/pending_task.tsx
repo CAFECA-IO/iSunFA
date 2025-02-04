@@ -193,8 +193,8 @@ const PendingTasks = ({ getTodoList }: PendingTasksProps) => {
   // 有公司列表 且 有選擇公司 : 顯示 PendingTasksForCompany
   // 有公司列表 且 沒有選擇公司 : 顯示 PendingTasksForAll
 
-  const { userAuth, selectedCompany } = useUserCtx();
-  const isSelectedCompany = !!selectedCompany; // 強制轉為布林值
+  const { userAuth, selectedAccountBook } = useUserCtx();
+  const isSelectedCompany = !!selectedAccountBook; // 強制轉為布林值
   const [companyAndRoleList, setCompanyAndRoleList] = useState<ICompanyAndRole[]>([]);
   const hasCompanyList = companyAndRoleList.length > 0;
 
