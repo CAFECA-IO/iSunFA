@@ -20,6 +20,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { IVoucherDetailForFrontend, defaultVoucherDetail } from '@/interfaces/voucher';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType } from '@/constants/account';
+import { AccountCodesOfAPRegex } from '@/constants/asset';
 
 interface IVoucherDetailPageBodyProps {
   voucherId: string;
@@ -57,7 +58,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     voucherDate,
     type,
     note,
-    // counterParty,
+    counterParty,
     payableInfo,
     receivingInfo,
     reverseVoucherIds,
@@ -65,6 +66,12 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     lineItems,
     isReverseRelated,
   } = voucherData || defaultVoucherDetail;
+
+  // Info: (20250205 - Tzuhan) 判斷是否為應收應付款
+  const isARandAP = lineItems.some((lineItem) =>
+    AccountCodesOfAPRegex.test(lineItem?.account?.code || '')
+  );
+
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
 
@@ -230,11 +237,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     <Skeleton width={200} height={24} rounded />
   );
 
-  // const isDisplayCounterParty = !isLoading ? (
-  //   <p className="text-input-text-primary">{counterParty.name}</p>
-  // ) : (
-  //   <Skeleton width={200} height={24} rounded />
-  // );
+  const isDisplayCounterParty = !isLoading ? (
+    <p className="text-input-text-primary">{`${counterParty.taxId} ${counterParty.name}`}</p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
 
   const isDisplayReverseVoucher = !isLoading ? (
     <div className="flex flex-col">
@@ -428,14 +435,15 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           <p className="text-text-neutral-tertiary">{t('journal:VOUCHER_DETAIL_PAGE.NOTE')}</p>
           {isDisplayNote}
         </div>
-        {/* Info: (20241007 - Julian) Counterparty */}
-        {/* ToDo: (20250123 - Julian) 暫時不顯示 */}
-        {/* <div className="flex justify-between">
-          <p className="text-text-neutral-tertiary">
-            {t('journal:VOUCHER_DETAIL_PAGE.COUNTERPARTY')}
-          </p>
-          {isDisplayCounterParty}
-        </div> */}
+        {/* Info: (20241007 - Julian) Counterparty「非應收應付款」的 counterparty 不用顯示 */}
+        {isARandAP && (
+          <div className="flex justify-between">
+            <p className="text-text-neutral-tertiary">
+              {t('journal:VOUCHER_DETAIL_PAGE.COUNTERPARTY')}
+            </p>
+            {isDisplayCounterParty}
+          </div>
+        )}
         {/* Info: (20241007 - Julian) Recurring Entry */}
         {/* {isRecurringEntry} */}
         {/* Info: (20241007 - Julian) Payable Amount */}

@@ -47,7 +47,6 @@ import { isUserReadCertificate } from '@/lib/utils/user_certificate';
 import { userCertificateEntityValidator } from '@/lib/utils/zod_schema/user_certificate';
 import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
 import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
-import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -256,17 +255,16 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
   })
 ).transform((data) => {
   const parsedVouchers: IVoucherBeta[] = data.data.vouchers.map((voucher) => {
-    const noteData = parseNoteData(voucher.note ?? '');
     return {
       id: voucher.id,
       voucherDate: voucher.date,
       voucherNo: voucher.no,
       voucherType: eventTypeToVoucherType(voucher.type),
-      note: noteData.note ?? '',
+      note: voucher.note ?? '',
       counterParty: {
         companyId: z.number().parse(voucher.counterParty.id),
-        name: voucher.counterParty.name || noteData.name,
-        taxId: voucher.counterParty.taxId || noteData.taxId,
+        name: voucher.counterParty.name,
+        taxId: voucher.counterParty.taxId,
       },
       issuer: {
         avatar: voucher.issuer.imageFile.url,
@@ -504,16 +502,15 @@ const voucherGetOneOutputValidatorV2 = z
       // Info: (20241223 - Murky) 如果輸入為 null，直接返回 null
       return null;
     }
-    const noteData = parseNoteData(data.note ?? '');
     const voucherDetail: IVoucherDetailForFrontend = {
       id: data.id,
       voucherDate: data.date,
       type: data.type,
-      note: noteData.note ?? '',
-      counterParty: data.counterParty || {
+      note: data.note ?? '',
+      counterParty: {
         companyId: data.companyId,
-        name: noteData.name ?? '',
-        taxId: noteData.taxId ?? '',
+        name: data.counterParty.name,
+        taxId: data.counterParty.taxId,
       },
       // Info: (20241105 - Murky) Recurring info 不需要，所以都會是 空值
       recurringInfo: {
@@ -634,14 +631,14 @@ const IVoucherDetailForFrontendValidator = z.object({
   type: z.nativeEnum(EventType),
   note: z.string(),
   counterParty: z.object({
-    id: z.number(),
-    companyId: z.number(),
-    name: z.string(),
-    taxId: z.string(),
-    type: z.string(),
-    note: z.string(),
-    createdAt: z.number(),
-    updatedAt: z.number(),
+    id: z.number().optional(),
+    companyId: z.number().optional(),
+    name: z.string().optional(),
+    taxId: z.string().optional(),
+    type: z.string().optional(),
+    note: z.string().optional(),
+    createdAt: z.number().optional(),
+    updatedAt: z.number().optional(),
   }),
   recurringInfo: z.object({
     // Deprecated: (20241105 - Murky)
@@ -791,7 +788,7 @@ const voucherGetByAccountOutputValidatorV2 = paginatedDataSchema(
       id: voucher.id,
       voucherNo: voucher.no,
       date: voucher.date,
-      note: parseNoteData(voucher.note ?? '').note ?? '',
+      note: voucher.note ?? '',
       voucherType: eventTypeToVoucherType(voucher.type),
       lineItems,
       issuer: {

@@ -1497,10 +1497,11 @@ export async function getManyVoucherV2(options: {
       const noteData = parseNoteData(voucher.note ?? '');
       return {
         ...voucher,
+        note: noteData.note ?? voucher.note ?? '',
         counterparty: {
           ...voucher.counterparty,
-          name: noteData.name || voucher.counterparty.name,
-          taxId: noteData.taxId || voucher.counterparty.taxId,
+          name: voucher.counterparty.id === 555 ? noteData.name : voucher.counterparty.name,
+          taxId: voucher.counterparty.id === 555 ? noteData.taxId : voucher.counterparty.taxId,
         },
       };
     });

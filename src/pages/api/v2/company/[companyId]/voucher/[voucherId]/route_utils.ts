@@ -45,6 +45,7 @@ import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/cons
 import { CurrencyType } from '@/constants/currency';
 import { isFloatsEqual } from '@/lib/utils/common';
 import { EventType } from '@/constants/account';
+import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
 
 export const voucherAPIGetOneUtils = {
   /**
@@ -98,6 +99,16 @@ export const voucherAPIGetOneUtils = {
         errorMessage: `voucherId: ${voucherId} not found`,
         statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
       });
+    } else {
+      if (voucher.counterparty && voucher.counterparty.id === 555) {
+        voucher.counterparty.id = undefined;
+        voucher.counterparty.name = undefined;
+        voucher.counterparty.taxId = undefined;
+      }
+      const noteData = parseNoteData(voucher?.note ?? '');
+      voucher.note = noteData.note;
+      voucher.counterparty.name = voucher.counterparty.name || noteData.name;
+      voucher.counterparty.taxId = voucher.counterparty.taxId || noteData.taxId;
     }
     return voucher!;
   },
