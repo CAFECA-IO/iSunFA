@@ -31,12 +31,19 @@ import { CANCEL_COMPANY_ID } from '@/constants/company';
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
-  const { isSignIn, signOut, username, selectedCompany, userAuth, isAuthLoading, selectCompany } =
-    useUserCtx();
+  const {
+    isSignIn,
+    signOut,
+    username,
+    selectedAccountBook,
+    userAuth,
+    isAuthLoading,
+    selectAccountBook,
+  } = useUserCtx();
   const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
   const router = useRouter();
 
-  const companyName = selectedCompany?.name.split(' ')[0] ?? '';
+  const companyName = selectedAccountBook?.name.split(' ')[0] ?? '';
   const abbreviateCompanyName =
     companyName.length > 10 ? companyName.slice(0, 5) + '...' : companyName;
 
@@ -90,7 +97,7 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
-    selectCompany(CANCEL_COMPANY_ID);
+    selectAccountBook(CANCEL_COMPANY_ID);
   };
 
   const redirectTo = (target: string) => {
@@ -175,7 +182,7 @@ const NavBar = () => {
       <button
         type="button"
         onClick={appMenuMobileClickHandler}
-        className={`${selectedCompany ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover`}
+        className={`${selectedAccountBook ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover`}
       >
         <div className="flex flex-1 items-center gap-8px">
           <TbGridDots size={20} />
@@ -186,7 +193,7 @@ const NavBar = () => {
       </button>
       <Link
         href={ISUNFA_ROUTE.DASHBOARD}
-        className={`${selectedCompany ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover`}
+        className={`${selectedAccountBook ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover`}
       >
         <FiLayout size={20} />
 
@@ -323,7 +330,7 @@ const NavBar = () => {
         <Button
           variant={'secondaryBorderless'}
           onClick={companyChangeClickHandler}
-          className={`mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 ${selectedCompany ? '' : 'pointer-events-none text-button-text-disable'}`}
+          className={`mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 ${selectedAccountBook ? '' : 'pointer-events-none text-button-text-disable'}`}
         >
           <div className="my-auto flex items-center justify-center">
             <BiBuildings size={20} />
@@ -334,7 +341,7 @@ const NavBar = () => {
         </Button>
         <Button
           variant={'secondaryBorderless'}
-          disabled={!selectedCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
+          disabled={!selectedAccountBook} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           // Info: (20240809 - Shirley) disabled for now
           className="mt-3 hidden w-full justify-start rounded-xs px-4 py-2.5 disabled:text-button-text-disable"
         >
@@ -348,7 +355,7 @@ const NavBar = () => {
         <Button
           onClick={() => redirectTo(ISUNFA_ROUTE.COMPANY_INFO)}
           variant={'secondaryBorderless'}
-          disabled={!selectedCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
+          disabled={!selectedAccountBook} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           className="mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 disabled:text-button-text-disable"
         >
           <div className="my-auto flex items-center justify-center">
@@ -380,15 +387,15 @@ const NavBar = () => {
   );
 
   const displayedCompanyChangeBtn =
-    !isAuthLoading && selectedCompany ? (
+    !isAuthLoading && selectedAccountBook ? (
       <button
         type="button"
         onClick={companyChangeClickHandler}
         className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
       >
         <Image
-          alt={`${selectedCompany?.name}_icon`}
-          src={selectedCompany.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
+          alt={`${selectedAccountBook?.name}_icon`}
+          src={selectedAccountBook.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
           width={16}
           height={16}
           className="rounded-full"
@@ -478,7 +485,7 @@ const NavBar = () => {
             <Link
               href={ISUNFA_ROUTE.DASHBOARD}
               // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
-              className={`${selectedCompany ? 'flex' : 'hidden'} justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-button-text-primary-hover max-md:px-5`}
+              className={`${selectedAccountBook ? 'flex' : 'hidden'} justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-button-text-primary-hover max-md:px-5`}
             >
               <div className="my-auto flex items-center justify-center">
                 <FiLayout size={22} />
@@ -512,7 +519,7 @@ const NavBar = () => {
             <button
               type="button"
               onClick={appMenuClickHandler}
-              className={selectedCompany ? 'flex' : 'hidden'} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
+              className={selectedAccountBook ? 'flex' : 'hidden'} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
             >
               <Image src="/icons/app.svg" alt="app_icon" width={24} height={24} />
             </button>

@@ -52,32 +52,32 @@ const Rows = ({ flattenAccounts, isPrint }: RowsProps) => {
         return (
           <tr className="h-40px bg-white" key={`${accountId}_${code}_${name}`}>
             <td
-              className={`border border-stroke-brand-secondary-soft p-10px ${isPrint ? 'text-xs' : 'text-sm'}`}
+              className={`border border-stroke-neutral-quaternary p-10px ${isPrint ? 'text-xs' : 'text-sm'}`}
             >
               {displayCode}
             </td>
             <td
-              className={`border border-stroke-brand-secondary-soft p-10px ${isPrint ? 'text-xs' : 'text-sm'}`}
+              className={`border border-stroke-neutral-quaternary p-10px ${isPrint ? 'text-xs' : 'text-sm'}`}
             >
               {t(`reports:ACCOUNTING_ACCOUNT.${name}`)}
             </td>
             <td
-              className={`border border-stroke-brand-secondary-soft p-10px text-end ${isPrint ? 'text-xs' : 'text-sm'}`}
+              className={`border border-stroke-neutral-quaternary p-10px text-end ${isPrint ? 'text-xs' : 'text-sm'}`}
             >
               {displayCurPeriodAmount}
             </td>
             <td
-              className={`border border-stroke-brand-secondary-soft p-10px text-center ${isPrint ? 'text-xs' : 'text-sm'}`}
+              className={`border border-stroke-neutral-quaternary p-10px text-center ${isPrint ? 'text-xs' : 'text-sm'}`}
             >
               {displayCurPeriodPercentage}
             </td>
             <td
-              className={`border border-stroke-brand-secondary-soft p-10px text-end ${isPrint ? 'text-xs' : 'text-sm'}`}
+              className={`border border-stroke-neutral-quaternary p-10px text-end ${isPrint ? 'text-xs' : 'text-sm'}`}
             >
               {displayPrePeriodAmount}
             </td>
             <td
-              className={`border border-stroke-brand-secondary-soft p-10px text-center ${isPrint ? 'text-xs' : 'text-sm'}`}
+              className={`border border-stroke-neutral-quaternary p-10px text-center ${isPrint ? 'text-xs' : 'text-sm'}`}
             >
               {displayPrePeriodPercentage}
             </td>

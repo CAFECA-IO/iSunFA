@@ -42,8 +42,8 @@ const LandingFooter: React.FC = () => {
           <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.USERS')}</Link>
         </li>
         {/* ToDo: (20250106 - Julian) To be opened later */}
-        <li className="hidden text-landing-page-black2">
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.PRICING')}</Link>
+        <li className="whitespace-nowrap hover:cursor-pointer hover:text-landing-page-orange">
+          <Link href={ISUNFA_ROUTE.PRICING}>{t('landing_page_v2:FOOTER.PRICING')}</Link>
         </li>
         {/* ToDo: (20250106 - Julian) To be opened later */}
         <li className="hidden text-landing-page-black2">

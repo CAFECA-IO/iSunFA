@@ -69,13 +69,13 @@ const VoucherEditingPageBody: React.FC<{
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { temporaryAssetList, clearTemporaryAssetHandler, clearReverseListHandler } =
     useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
   const temporaryAssetListByCompany = temporaryAssetList[companyId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
@@ -819,14 +819,14 @@ const VoucherEditingPageBody: React.FC<{
   // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
   useEffect(() => {
     const pusher = getPusherInstance();
-    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedAccountBook?.id}`);
 
     channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
     return () => {
       channel.unbind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
       channel.unsubscribe();
-      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedCompany?.id}`);
+      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${selectedAccountBook?.id}`);
     };
   }, []);
 

@@ -43,7 +43,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   // hideReversalsToggleHandler,
 }) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   // const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
@@ -59,8 +59,14 @@ const VoucherList: React.FC<IVoucherListProps> = ({
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-xs text-center align-middle';
-  const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
+  const sideBorderStyles = 'border-b border-stroke-neutral-quaternary';
   const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
+
+  // Info: (20250203 - Julian) 根據 voucher 的數量決定底色：奇數白色、偶數灰色
+  const bottomColor =
+    voucherList.length % 2 === 0
+      ? 'bg-surface-neutral-surface-lv1'
+      : 'bg-surface-neutral-surface-lv2';
 
   // Info: (20241029 - Julian) Delete voucher API
   const {
@@ -121,7 +127,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     if (!isDeleting) {
       selectedVoucherList.forEach((voucher) => {
         deleteVoucher({
-          params: { companyId: selectedCompany?.id, voucherId: voucher.id },
+          params: { companyId: selectedAccountBook?.id, voucherId: voucher.id },
         });
       });
 
@@ -325,11 +331,15 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   });
 
   return (
-    <div className="flex flex-col gap-40px">
+    <div className="flex flex-col gap-lv-4">
       {displayedSelectArea}
 
+      <p className="ml-auto text-xs font-semibold uppercase text-text-neutral-tertiary">
+        {t('journal:VOUCHER.CURRENCY')}: TWD
+      </p>
+
       {/* Info: (20240920 - Julian) Table */}
-      <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv1">
+      <div className={`table overflow-hidden rounded-lg ${bottomColor}`}>
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
@@ -343,22 +353,24 @@ const VoucherList: React.FC<IVoucherListProps> = ({
                 </div>
               </span>
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px min-w-90px`}>
+            <div
+              className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px min-w-90px border-r`}
+            >
               {displayedDate}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
               {t('journal:VOUCHER.VOUCHER_NO')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/3 min-w-90px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/3 min-w-90px border-r`}>
               {t('journal:VOUCHER.NOTE')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/6 min-w-180px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/6 min-w-180px border-r`}>
               {t('journal:VOUCHER.ACCOUNTING')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
               {displayedDebit}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px`}>
+            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
               {displayedCredit}
             </div>
             <div
@@ -373,7 +385,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         <div className="table-row-group">{displayedVoucherList}</div>
 
         {/* Info: (20240920 - Julian) ---------------- Table Footer ---------------- */}
-        <div className="table-footer-group h-20px border-t bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary"></div>
+        <div className="table-footer-group h-20px"></div>
       </div>
     </div>
   );

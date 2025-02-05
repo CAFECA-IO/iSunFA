@@ -7,20 +7,18 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 
 interface CreateCompanyModalProps {
-  isModalVisible: boolean;
   modalVisibilityHandler: () => void;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
   getCompanyList?: () => void;
 }
 
-const CreateCompanyModal = ({
-  isModalVisible,
+const CreateAccountBookModal = ({
   modalVisibilityHandler,
   setRefreshKey,
   getCompanyList,
 }: CreateCompanyModalProps) => {
   const { t } = useTranslation(['dashboard']);
-  const { createCompany } = useUserCtx();
+  const { createAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const [companyName, setCompanyName] = useState('');
@@ -41,7 +39,11 @@ const CreateCompanyModal = ({
     setIsLoading(true);
 
     try {
-      const { success, code, errorMsg } = await createCompany({ name: companyName, taxId, tag });
+      const { success, code, errorMsg } = await createAccountBook({
+        name: companyName,
+        taxId,
+        tag,
+      });
 
       if (success) {
         // Info: (20241114 - Liz) 新增公司成功後清空表單並關閉 modal
@@ -70,19 +72,19 @@ const CreateCompanyModal = ({
     } catch (error) {
       // Deprecated: (20241104 - Liz)
       // eslint-disable-next-line no-console
-      console.log('CreateCompanyModal handleSubmit error:', error);
+      console.log('CreateAccountBookModal handleSubmit error:', error);
     } finally {
       // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
       setIsLoading(false);
     }
   };
 
-  return isModalVisible ? (
+  return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('dashboard:CREATE_COMPANY_MODAL.CREATE_NEW_COMPANY')}
+            {t('dashboard:CREATE_COMPANY_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
           </h1>
           <button type="button" onClick={modalVisibilityHandler}>
             <IoCloseOutline size={24} />
@@ -178,7 +180,7 @@ const CreateCompanyModal = ({
         </section>
       </div>
     </main>
-  ) : null;
+  );
 };
 
-export default CreateCompanyModal;
+export default CreateAccountBookModal;

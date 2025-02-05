@@ -6,22 +6,22 @@ import { ICompanyAndRole } from '@/interfaces/company';
 import { COMPANY_TAG } from '@/constants/company';
 
 interface ChangeTagModalProps {
-  companyToEdit: ICompanyAndRole;
+  accountBookToEdit: ICompanyAndRole;
   isModalOpen: boolean;
-  setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
 }
 
 const ChangeTagModal = ({
-  companyToEdit,
+  accountBookToEdit,
   isModalOpen,
-  setCompanyToEdit,
+  setAccountBookToEdit,
   setRefreshKey,
 }: ChangeTagModalProps) => {
   const { t } = useTranslation(['company']);
-  const { updateCompany } = useUserCtx();
+  const { updateAccountBook } = useUserCtx();
 
-  const [tag, setTag] = useState<COMPANY_TAG>(companyToEdit.tag);
+  const [tag, setTag] = useState<COMPANY_TAG>(accountBookToEdit.tag);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -30,7 +30,7 @@ const ChangeTagModal = ({
   };
 
   const closeChangeTagModal = () => {
-    setCompanyToEdit(undefined);
+    setAccountBookToEdit(undefined);
   };
 
   // Info: (20241113 - Liz) 打 API 變更公司的 tag
@@ -42,8 +42,8 @@ const ChangeTagModal = ({
     setIsLoading(true);
 
     try {
-      const data = await updateCompany({
-        companyId: companyToEdit.company.id,
+      const data = await updateAccountBook({
+        companyId: accountBookToEdit.company.id,
         action: 'updateTag',
         tag,
       });
@@ -78,7 +78,7 @@ const ChangeTagModal = ({
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('company:PAGE_BODY.CHANGE_WORK_TAG')}
+            {t('company:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}
           </h1>
           <button type="button" onClick={closeChangeTagModal}>
             <IoCloseOutline size={24} />
@@ -96,7 +96,7 @@ const ChangeTagModal = ({
               type="text"
               placeholder="Enter number"
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-              value={companyToEdit.company.name}
+              value={accountBookToEdit.company.name}
             />
           </div>
 
@@ -146,7 +146,7 @@ const ChangeTagModal = ({
             onClick={closeChangeTagModal}
             className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
           >
-            {t('company:PAGE_BODY.CANCEL')}
+            {t('company:ACCOUNT_BOOKS_PAGE_BODY.CANCEL')}
           </button>
 
           <button
@@ -155,7 +155,7 @@ const ChangeTagModal = ({
             disabled={isLoading}
             className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
-            <span>{t('company:PAGE_BODY.SAVE')}</span>
+            <span>{t('company:ACCOUNT_BOOKS_PAGE_BODY.SAVE')}</span>
             <IoSaveOutline size={16} />
           </button>
         </section>

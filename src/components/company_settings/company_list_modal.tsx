@@ -26,7 +26,7 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
   const [companies, setCompanies] = useState<ICompanyAndRole[]>([]);
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState<ICompanyAndRole | null>(null);
+  const [selectedAccountBook, setSelectedCompany] = useState<ICompanyAndRole | null>(null);
   const { userAuth } = useUserCtx();
 
   const displayedType = SortingButton({
@@ -48,9 +48,9 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      {isEditModalOpen && selectedCompany && (
+      {isEditModalOpen && selectedAccountBook && (
         <CompanyEditModal
-          companyAndRole={selectedCompany}
+          companyAndRole={selectedAccountBook}
           toggleModal={() => setIsEditModalOpen((prev) => !prev)}
         />
       )}

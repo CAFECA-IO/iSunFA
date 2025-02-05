@@ -34,8 +34,8 @@ const JournalListBody = () => {
   const { t } = useTranslation(['common', 'journal']);
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
     useModalContext();
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   const [pagenatedJournalListItems, setPagenatedJournalListItems] = useState<{
     [key: string]: IPaginatedData<IJournalListItem[]>;
   } | null>(null);
@@ -135,7 +135,7 @@ const JournalListBody = () => {
       } = query;
       const response = await trigger({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedAccountBook?.id,
         },
         query: {
           ...toSort(sortBy ?? filteredJournalSortBy),
@@ -147,7 +147,7 @@ const JournalListBody = () => {
           endDate: !(period ?? filteredPeriod).endTimeStamp
             ? undefined
             : (period ?? filteredPeriod).endTimeStamp,
-          searchQuery: !(searchString ?? search) ? undefined : searchString ?? search,
+          searchQuery: !(searchString ?? search) ? undefined : (searchString ?? search),
         },
       });
 
@@ -534,7 +534,7 @@ const JournalListBody = () => {
       {/* Info: (20240418 - Julian) Journal list */}
       <JournalList
         event={currentTab}
-        companyId={selectedCompany?.id ?? NON_EXISTING_COMPANY_ID}
+        companyId={selectedAccountBook?.id ?? NON_EXISTING_COMPANY_ID}
         journalsProps={{
           journals,
           isLoading,

@@ -35,8 +35,8 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   const { t, i18n } = useTranslation('reports'); // Info: (20250108 - Anna) 使用 i18n 來獲取當前語言
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   // Info: (20241024 - Anna) 用 useRef 追蹤之前的日期範圍
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false); // Info: (20241024 - Anna) 追蹤是否已經成功請求過一次 API
@@ -96,7 +96,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     try {
       const response = await trigger({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedAccountBook?.id,
         },
         query: {
           startDate: selectedDateRange.startTimeStamp, // Info: (20241001 - Anna) 根據選擇的日期範圍傳遞參數
@@ -113,7 +113,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     } catch (error) {
       (() => {})(); // Info: (20241024 - Anna) Empty function, does nothing
     }
-  }, [hasCompanyId, selectedCompany?.id, selectedDateRange, trigger]);
+  }, [hasCompanyId, selectedAccountBook?.id, selectedDateRange, trigger]);
 
   // Info: (20241024 - Anna) 在 useEffect 中依賴 getCashFlowReport，當日期範圍變更時觸發 API 請求
   useEffect(() => {
@@ -206,16 +206,16 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       <table className="relative z-1 w-full border-collapse bg-white">
         <thead>
           <tr className="print:hidden">
-            <th className="w-125px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+            <th className="w-125px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
               {t('reports:REPORTS.CODE_NUMBER')}
             </th>
-            <th className="w-540px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+            <th className="w-540px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
               {t('reports:REPORTS.ACCOUNTING_ITEMS')}
             </th>
-            <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+            <th className="w-285px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
               {curDate.from} {t('reports:COMMON.TO')} {curDate.to}
             </th>
-            <th className="w-285px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+            <th className="w-285px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
               {preDate.from} {t('reports:COMMON.TO')} {preDate.to}
             </th>
           </tr>
@@ -227,7 +227,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                 <tr key={value.code}>
                   <td
                     colSpan={6}
-                    className="border border-stroke-brand-secondary-soft p-10px font-bold"
+                    className="border border-stroke-neutral-quaternary p-10px font-bold"
                   >
                     {value.name}
                   </td>
@@ -236,13 +236,13 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             }
             return (
               <tr key={value.code}>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                <td className="border border-stroke-neutral-quaternary p-10px text-sm">
                   {value.code}
                 </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                <td className="border border-stroke-neutral-quaternary p-10px text-sm">
                   {t(`reports:ACCOUNTING_ACCOUNT.${value.name}`)}
                 </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
                   {
                     value.curPeriodAmount === 0
                       ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
@@ -251,7 +251,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                         : value.curPeriodAmount.toLocaleString() // Info:(20241021 - Anna) 正數，顯示千分位
                   }
                 </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
                   {value.prePeriodAmount === 0
                     ? '-'
                     : value.prePeriodAmount < 0
@@ -310,10 +310,10 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       reportFinancial?.otherInfo?.freeCash[previousYear] ? (
         <tbody>
           <tr>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
               {t('reports:REPORTS.CASH_INFLOWS_FROM_OPERATING')}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow < 0
@@ -322,7 +322,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                       currentYear
                     ]?.operatingCashFlow.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow < 0
@@ -333,17 +333,17 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             </td>
           </tr>
           <tr>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
               {t('reports:REPORTS.PROPERTY_PLANT_EQUIPMENT')}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe < 0
                   ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe).toLocaleString()})`
                   : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe < 0
@@ -352,10 +352,10 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             </td>
           </tr>
           <tr>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
               {t('reports:REPORTS.EXPENDITURES_ON_INTANGIBLE_ASSETS')}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset < 0
@@ -364,7 +364,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                       currentYear
                     ]?.intangibleAsset.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset < 0
@@ -375,17 +375,17 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             </td>
           </tr>
           <tr>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-start text-sm font-normal leading-5 text-text-neutral-secondary">
               {t('reports:REPORTS.AVAILABLE_CASH_FLOW')}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash < 0
                   ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash).toLocaleString()})`
                   : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash < 0
@@ -402,12 +402,12 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       <div className="mt-4">
         <table className="w-full border-collapse bg-white">
           <thead>
-            <tr className="bg-surface-brand-primary-soft">
-              <th className="w-300px border border-stroke-brand-secondary-soft p-10px text-left text-xxs font-semibold leading-5 text-text-neutral-secondary"></th>
-              <th className="w-300px border border-stroke-brand-secondary-soft p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
+            <tr className="bg-surface-brand-primary-50">
+              <th className="w-300px border border-stroke-neutral-quaternary p-10px text-left text-xxs font-semibold leading-5 text-text-neutral-secondary"></th>
+              <th className="w-300px border border-stroke-neutral-quaternary p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
                 {t('reports:REPORTS.YEAR_TEMPLATE', { year: currentYear })}
               </th>
-              <th className="w-300px border border-stroke-brand-secondary-soft p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
+              <th className="w-300px border border-stroke-neutral-quaternary p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
                 {t('reports:REPORTS.YEAR_TEMPLATE', { year: previousYear })}
               </th>
             </tr>
@@ -515,11 +515,11 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <table className="relative w-full border-collapse bg-white">
               <thead>
                 <tr className="text-xxs">
-                  <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
+                  <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"></th>
                   {lineChartLabels?.map((label) => (
                     <th
                       key={label}
-                      className="w-170px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold"
+                      className="w-170px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold"
                     >
                       {label}
                     </th>
@@ -528,20 +528,20 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
               </thead>
               <tbody>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm font-semibold">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-sm font-semibold">
                     A
                   </td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
                         key={year}
-                        className="border border-stroke-brand-secondary-soft p-10px font-semibold"
+                        className="border border-stroke-neutral-quaternary p-10px font-semibold"
                       ></td>
                     )
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
                     {t('reports:REPORTS.PBT')}
                   </td>
                   {Object.entries(
@@ -549,7 +549,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                   ).map(([year, value]) => (
                     <td
                       key={year}
-                      className="border border-stroke-brand-secondary-soft p-10px text-end text-sm"
+                      className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
                     >
                       {value === 0
                         ? '-'
@@ -560,14 +560,14 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                   ))}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
                     {t('reports:REPORTS.DA')}
                   </td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
                         key={year}
-                        className="border border-stroke-brand-secondary-soft p-10px text-end text-sm"
+                        className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
                       >
                         {
                           reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
@@ -589,14 +589,14 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
                     {t('reports:REPORTS.INCOME_TAXES_PAID')}
                   </td>
                   {Object.entries(reportFinancial.otherInfo.operatingStabilized.tax).map(
                     ([year, value]) => (
                       <td
                         key={year}
-                        className="border border-stroke-brand-secondary-soft p-10px text-end text-sm"
+                        className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
                       >
                         {value === 0
                           ? '-'
@@ -608,20 +608,20 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm font-semibold">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-sm font-semibold">
                     B
                   </td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
                         key={year}
-                        className="border border-stroke-brand-secondary-soft p-10px font-semibold"
+                        className="border border-stroke-neutral-quaternary p-10px font-semibold"
                       ></td>
                     )
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
                     {t('reports:REPORTS.CASH_FROM_OPERATING')}
                   </td>
                   {Object.entries(
@@ -629,7 +629,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                   ).map(([year, value]) => (
                     <td
                       key={year}
-                      className="border border-stroke-brand-secondary-soft p-10px text-end text-sm"
+                      className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
                     >
                       {value === 0
                         ? '-'
@@ -640,25 +640,25 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                   ))}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px"></td>
+                  <td className="border border-stroke-neutral-quaternary p-10px"></td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td
                         key={year}
-                        className="border border-stroke-brand-secondary-soft p-20px"
+                        className="border border-stroke-neutral-quaternary p-20px"
                       ></td>
                     )
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
                     {t('reports:REPORTS.RATIO_A_B')}
                   </td>
                   {Object.entries(reportFinancial.otherInfo.operatingStabilized.ratio).map(
                     ([year, value]) => (
                       <td
                         key={year}
-                        className="border border-stroke-brand-secondary-soft p-10px text-end text-sm"
+                        className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
                       >
                         {value.toFixed(2)}
                       </td>

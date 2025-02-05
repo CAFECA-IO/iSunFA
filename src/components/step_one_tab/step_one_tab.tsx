@@ -36,7 +36,7 @@ const StepOneTab = () => {
   const { t } = useTranslation(['common', 'journal']);
   const { cameraScannerVisibilityHandler } = useGlobalCtx();
   const { toastHandler } = useModalContext();
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const {
     OCRList,
     OCRListStatus,
@@ -54,7 +54,7 @@ const StepOneTab = () => {
   const { trigger: deleteOCRTrigger } = APIHandler<void>(APIName.OCR_DELETE);
 
   useEffect(() => {
-    const companyId = selectedCompany?.id;
+    const companyId = selectedAccountBook?.id;
     updateOCRListHandler(companyId, true);
 
     return () => updateOCRListHandler(companyId, false);
@@ -114,7 +114,7 @@ const StepOneTab = () => {
   const fileItemDeleteHandler = async (aichResultId: string) => {
     // Info: (20240718 - Tzuhan) To Julian, Emily 已串接刪除 item 的 API
     const { success, code } = await deleteOCRTrigger({
-      params: { companyId: selectedCompany!.id, resultId: aichResultId },
+      params: { companyId: selectedAccountBook!.id, resultId: aichResultId },
     });
     if (success === false) {
       toastHandler({
@@ -139,7 +139,7 @@ const StepOneTab = () => {
   };
 
   const qrCodeScanClickHandler = () => {
-    if (selectedCompany) {
+    if (selectedAccountBook) {
       cameraScannerVisibilityHandler();
     } else {
       toastHandler({

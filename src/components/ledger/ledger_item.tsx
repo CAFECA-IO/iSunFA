@@ -71,7 +71,7 @@ const LedgerItem = React.memo(
         </div>
       ) : (
         <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px print:origin-left print:scale-75">
-          <FiRepeat size={14} className="text-surface-brand-secondary" />
+          <FiRepeat size={14} className="text-navy-blue-400" />
           <p className="text-badge-text-secondary-solid">{voucherNumber}</p>
         </div>
       );

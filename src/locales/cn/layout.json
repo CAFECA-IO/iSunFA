@@ -34,8 +34,8 @@
   },
 
   "TOAST": {
-    "PLEASE_SELECT_A_COMPANY_BEFORE_PROCEEDING_WITH_THE_OPERATION": "请先选择一家公司再进行操作",
-    "GO_TO_SELECT_COMPANY": "前往选择公司"
+    "PLEASE_SELECT_AN_ACCOUNT_BOOK_BEFORE_PROCEEDING_WITH_THE_OPERATION": "请先选择一个公司账本再进行操作",
+    "ACCOUNT_BOOKS_LINK": "前往选择公司账本"
   },
 
   "USER": {

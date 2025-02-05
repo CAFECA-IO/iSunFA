@@ -136,8 +136,8 @@ const ViewFinancialSection = ({
 
   // Info: (20240807 - Anna)
   // const globalCtx = useGlobalCtx();
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  // const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id; // Deprecated: (20241129 - Liz)
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  // const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id; // Deprecated: (20241129 - Liz)
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]); // Info: (20240909 - tzuhan)  保存縮略圖的 URL
@@ -158,7 +158,7 @@ const ViewFinancialSection = ({
   //     APIName.REPORT_GET_BY_ID,
   //     {
   //       params: {
-  //         companyId: selectedCompany?.id,
+  //         companyId: selectedAccountBook?.id,
   //         reportId: reportId ?? NON_EXISTING_REPORT_ID,
   //       },
   //     },
@@ -171,7 +171,7 @@ const ViewFinancialSection = ({
   const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
 
   useEffect(() => {
-    if (isAuthLoading || !selectedCompany) return;
+    if (isAuthLoading || !selectedAccountBook) return;
     if (isReportFinancialIsLoading) return;
     setIsReportFinancialIsLoading(true);
 
@@ -182,7 +182,7 @@ const ViewFinancialSection = ({
           code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: selectedCompany.id, reportId },
+          params: { companyId: selectedAccountBook.id, reportId },
         });
 
         if (!getFRSuccess) {
@@ -207,7 +207,7 @@ const ViewFinancialSection = ({
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
     console.log('in useEffect and calling getFinancialReport_in ViewFinancialSection');
-  }, [isAuthLoading, reportId, selectedCompany]);
+  }, [isAuthLoading, reportId, selectedAccountBook]);
 
   const isInvalidReport = useMemo(() => {
     if (!financialReport) return true;
@@ -460,7 +460,7 @@ const ViewFinancialSection = ({
       <div
         className={`flex flex-col rounded-2xl px-5 py-4 ${
           index === activeIndex
-            ? 'bg-surface-brand-primary-soft'
+            ? 'bg-surface-brand-primary-50'
             : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
         }`}
       >
@@ -497,7 +497,7 @@ const ViewFinancialSection = ({
                   key={`thumbnail-${thumbnailUrl + index}`}
                   className={`m-6 mb-0 self-center rounded-sm p-6 tracking-normal ${
                     index === activeIndex
-                      ? 'bg-surface-brand-primary-soft'
+                      ? 'bg-surface-brand-primary-50'
                       : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
                   }`}
                   onClick={() => thumbnailClickHandler(index)}

@@ -166,8 +166,8 @@ const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
   const { t } = useTranslation(['alpha', 'project']);
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   const { layoutAssertion } = useGlobalCtx();
   const { toastHandler } = useModalContext();
 
@@ -213,7 +213,7 @@ const ProjectRoiComparisonChart = () => {
     APIName.PROJECT_LIST_PROFIT_COMPARISON,
     {
       params: {
-        companyId: selectedCompany?.id,
+        companyId: selectedAccountBook?.id,
       },
       query: {
         page: currentPage,
@@ -258,7 +258,7 @@ const ProjectRoiComparisonChart = () => {
       setCurrentPage(currentPage + 1);
       listProjectProfitComparison({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedAccountBook?.id,
         },
         query: {
           page: currentPage + 1,
@@ -275,7 +275,7 @@ const ProjectRoiComparisonChart = () => {
       setCurrentPage(currentPage - 1);
       listProjectProfitComparison({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedAccountBook?.id,
         },
         query: {
           page: currentPage - 1,
@@ -291,7 +291,7 @@ const ProjectRoiComparisonChart = () => {
     if (!hasCompanyId) return;
     listProjectProfitComparison({
       params: {
-        companyId: selectedCompany?.id,
+        companyId: selectedAccountBook?.id,
       },
       query: {
         page: currentPage - 1,

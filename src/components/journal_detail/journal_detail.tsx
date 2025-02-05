@@ -37,8 +37,8 @@ interface IJournalDetailProps {
 
 const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const { t } = useTranslation(['common', 'journal']);
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   const { previewInvoiceModalDataHandler, previewInvoiceModalVisibilityHandler } = useGlobalCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const {
@@ -49,7 +49,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   } = APIHandler<IJournal>(
     APIName.JOURNAL_GET_BY_ID,
     {
-      params: { companyId: selectedCompany?.id, journalId },
+      params: { companyId: selectedAccountBook?.id, journalId },
     },
     hasCompanyId
   );
@@ -471,7 +471,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   // Info: (20240802 - Julian) No token contract and token id in free company
   const displayToken =
-    selectedCompany?.id !== FREE_COMPANY_ID ? (
+    selectedAccountBook?.id !== FREE_COMPANY_ID ? (
       <div className="flex flex-col items-start gap-x-80px md:flex-row md:items-center">
         {/* Info: (20240503 - Julian) Token Contract */}
         <div className="flex flex-wrap items-center text-base text-text-neutral-tertiary">

@@ -13,6 +13,7 @@ import {
 import {
   nullSchema,
   zodFilterSectionSortingOptions,
+  zodStringToBooleanOptional,
   zodStringToNumber,
   zodStringToNumberWithDefault,
 } from '@/lib/utils/zod_schema/common';
@@ -205,6 +206,7 @@ const voucherGetAllQueryValidatorV2 = z.object({
   endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
   sortOption: zodFilterSectionSortingOptions(),
   searchQuery: z.string().optional(),
+  hideReversedRelated: zodStringToBooleanOptional,
 });
 
 const voucherGetAllBodyValidatorV2 = z.object({});

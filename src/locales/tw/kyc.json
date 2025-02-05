@@ -144,17 +144,5 @@
     "EXISTED_COMPANY": "已經存在的公司",
     "COMPANY_ALREADY_REGISTERED": "該公司已註冊",
     "PLEASE_COMPLETE_KYC": "如果您是該公司的所有者，請完成KYC以重新獲得存取權限。"
-  },
-  "SELECT_COMPANY": {
-    "WELCOME_BACK": "歡迎回來，",
-    "YOUR_COMPANY": "選擇您的公司進行登錄，或建立您自己的公司。",
-    "MY_COMPANY_LIST": "我的公司列表",
-    "CREATE_MY_COMPANY": "創建我的公司",
-    "TRY_IT_OUT": "試試看",
-    "ENTER_INVITATION_CODE": "輸入邀請碼",
-    "SELECT_COMPANY_ISUNFA": "選擇公司 - iSunFA",
-    "SELECT_AN_COMPANY": "選擇公司",
-    "ENTER_COMPANY_NAME": "輸入公司名稱",
-    "ENTER_BUSINESS_REGISTRATION_NUMBER": "輸入商業登記號碼"
   }
 }

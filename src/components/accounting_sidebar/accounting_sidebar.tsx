@@ -15,8 +15,8 @@ const AccountingSidebar = () => {
 
   const { pathname } = useRouter();
 
-  const { selectedCompany } = useUserCtx();
-  const companyName = selectedCompany?.name;
+  const { selectedAccountBook } = useUserCtx();
+  const companyName = selectedAccountBook?.name;
 
   const displayedCompanyName = companyName ? (
     <Link

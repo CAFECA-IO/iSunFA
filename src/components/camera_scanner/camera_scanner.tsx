@@ -33,7 +33,7 @@ enum ScannerStep {
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
   const { t } = useTranslation(['common', 'journal']);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { setInvoiceIdHandler } = useAccountingCtx();
   const {
     trigger: uploadInvoice,
@@ -84,7 +84,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
   // Info: (20240506 - Julian) 取得攝影機畫面
   const getCameraVideo = () => {
-    if (!isModalVisible || !selectedCompany) return;
+    if (!isModalVisible || !selectedAccountBook) return;
     navigator.mediaDevices
       .getUserMedia({
         video: {
@@ -143,7 +143,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
     formData.append('image', file);
     setIsShowSuccessModal(true); // Info: (20240528 - Julian) 點擊上傳後才升起 flag
-    uploadInvoice({ params: { companyId: selectedCompany!.id }, body: formData });
+    uploadInvoice({ params: { companyId: selectedAccountBook!.id }, body: formData });
 
     // Info: (20240506 - Julian) 關閉攝影機
     handleCloseCamera();
@@ -157,17 +157,17 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   };
 
   useEffect(() => {
-    if (!isModalVisible || !selectedCompany) return; // Info: (20240523 - Shirley) 在 modal 隱藏時，不做任何事情
+    if (!isModalVisible || !selectedAccountBook) return; // Info: (20240523 - Shirley) 在 modal 隱藏時，不做任何事情
 
     // Info: (20240522 - Julian) 清空 invoiceId
     setInvoiceIdHandler(undefined);
 
-    if (isModalVisible && selectedCompany) {
+    if (isModalVisible && selectedAccountBook) {
       // Info: (20240506 - Julian) 版面重啟時，將步驟設定為相機模式，並開啟攝影機
       setCurrentStep(ScannerStep.Camera);
       getCameraVideo();
     }
-  }, [isModalVisible, selectedCompany]);
+  }, [isModalVisible, selectedAccountBook]);
 
   useEffect(() => {
     if (uploadSuccess && results && isShowSuccessModal) {
@@ -390,7 +390,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   );
 
   const isDisplayScanner =
-    selectedCompany && isModalVisible ? (
+    selectedAccountBook && isModalVisible ? (
       <div className="fixed inset-0 left-0 top-0 z-70 flex h-full w-full items-center justify-center bg-black/50">
         <div className="relative flex h-fit w-320px flex-col items-center gap-y-16px rounded-sm bg-surface-neutral-surface-lv2 py-16px">
           {/* Info: (20240506 - Julian) title */}
