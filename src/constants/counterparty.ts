@@ -51,3 +51,15 @@ export const counterPartyEntityValidator = z.object({
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
 });
+
+export const partialCounterPartyEntityValidator = z.object({
+  id: z.number().optional(),
+  companyId: z.number().optional(),
+  name: z.string().optional(),
+  taxId: z.string().optional(),
+  type: z.nativeEnum(CounterpartyType).optional(),
+  note: z.string().optional(),
+  createdAt: z.number().optional(),
+  updatedAt: z.number().optional(),
+  deletedAt: z.number().nullable().optional(),
+});

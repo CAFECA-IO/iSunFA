@@ -152,3 +152,5 @@ export interface ICounterPartyEntity {
    */
   company?: ICompanyEntity;
 }
+
+export type ICounterPartyEntityPartial = Partial<ICounterPartyEntity>;

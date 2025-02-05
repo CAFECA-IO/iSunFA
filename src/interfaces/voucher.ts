@@ -24,7 +24,7 @@ import {
 } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
-import type { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
+import type { ICounterPartyEntityPartial, ICounterpartyOptional } from '@/interfaces/counterparty';
 import type { IAssetDetails, IAssetEntity } from '@/interfaces/asset';
 import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
 import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
@@ -116,7 +116,7 @@ export interface IVoucherDetailForFrontend {
   voucherDate: number;
   type: string;
   note: string;
-  counterParty: ICounterparty;
+  counterParty: ICounterpartyOptional;
   recurringInfo?: {
     // Info: (20241105 - Murky) @Julian 如過不需要的話可以加上?
     type: string;
@@ -188,10 +188,7 @@ export interface IVoucherBeta {
   voucherNo: string;
   voucherType: VoucherType;
   note: string;
-  counterParty: {
-    companyId: string;
-    name: string;
-  };
+  counterParty: ICounterpartyOptional;
   issuer: {
     avatar: string;
     name: string;
@@ -435,7 +432,7 @@ export interface IVoucherEntity {
    * Info: (20241023 - Murky)
    * @description this voucher is caused by which company
    */
-  counterParty?: ICounterPartyEntity;
+  counterParty?: ICounterPartyEntityPartial;
 
   /**
    * Info: (20241024 - Murky)
@@ -480,6 +477,8 @@ export interface IVoucherEntity {
   isReverseRelated?: boolean;
 }
 
+export type PartialPrismaCounterparty = Partial<PrismaCounterParty>;
+
 export type IGetOneVoucherResponse = PrismaVoucher & {
   issuer: PrismaUser;
   voucherCertificates: (PrismaVoucherCertificate & {
@@ -489,7 +488,7 @@ export type IGetOneVoucherResponse = PrismaVoucher & {
       UserCertificate: PrismaUserCertificate[];
     };
   })[];
-  counterparty: PrismaCounterParty;
+  counterparty: PartialPrismaCounterparty;
   originalVouchers: (PrismaAssociateVoucher & {
     event: PrismaEvent;
     resultVoucher: PrismaVoucher & {
@@ -536,7 +535,7 @@ export type IGetManyVoucherResponseButOne = PrismaVoucher & {
   issuer: PrismaUser & {
     imageFile: PrismaFile;
   };
-  counterparty: PrismaCounterParty;
+  counterparty: PartialPrismaCounterparty;
   originalVouchers: (PrismaAssociateVoucher & {
     event: PrismaEvent;
     resultVoucher: PrismaVoucher & {
@@ -590,6 +589,6 @@ export interface IAIResultVoucher {
   voucherDate: number;
   type: string;
   note: string;
-  counterParty?: ICounterparty;
+  counterParty?: ICounterpartyOptional;
   lineItems: ILineItemBeta[];
 }
