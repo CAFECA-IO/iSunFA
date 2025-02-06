@@ -15,30 +15,44 @@ interface IPayableReceivableVoucherItemProps {
 
 const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps> = ({
   // Info: (20241122 - Julian) 由於 Typescript 已經定義了 IVoucherBeta 的 interface，所以這邊不需要再用 PropTypes 定義 props 的型別
+  // Deprecated: (20250206 - Tzuhan) remove eslint-disable
   // eslint-disable-next-line react/prop-types
   activeTab,
+  // Deprecated: (20250206 - Tzuhan) remove eslint-disable
   // eslint-disable-next-line react/prop-types
   voucherData,
 }) => {
   const {
+    // Deprecated: (20250206 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line react/prop-types
     id: voucherId,
+    // Deprecated: (20250206 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line react/prop-types
     voucherDate,
+    // Deprecated: (20250206 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line react/prop-types
     voucherType,
+    // Deprecated: (20250206 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line react/prop-types
     voucherNo,
+    // Deprecated: (20250206 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line react/prop-types
     counterParty,
+    // Deprecated: (20250206 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line react/prop-types
     issuer,
+    // Deprecated: (20250206 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line react/prop-types
     receivingInfo,
+    // Deprecated: (20250206 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line react/prop-types
     payableInfo,
+    // Deprecated: (20250206 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line react/prop-types
     reverseVouchers,
+    // Deprecated: (20250206 - Tzuhan) remove eslint-disable
+    // eslint-disable-next-line react/prop-types
+    unRead,
   } = voucherData;
 
   const {
@@ -49,7 +63,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
 
   const displayedDate = (
     <div className="relative mx-auto px-18px pt-12px text-center">
-      <CalendarIcon timestamp={voucherDate} />
+      <CalendarIcon timestamp={voucherDate} unRead={unRead} />
     </div>
   );
 
@@ -74,7 +88,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
   const displayedCounterparty = (
     <div className="flex flex-col items-start gap-4px text-hxs">
       {/* eslint-disable-next-line react/prop-types */}
-      <p className="text-text-neutral-tertiary">{counterParty.companyId}</p>
+      <p className="text-text-neutral-tertiary">{counterParty.taxId}</p>
       {/* eslint-disable-next-line react/prop-types */}
       <p className="text-text-neutral-primary">{counterParty.name}</p>
     </div>
