@@ -24,15 +24,15 @@ interface CardProps {
 const ROLES_IMAGE = [
   {
     roleName: RoleName.BOOKKEEPER,
-    imageSrc: '/images/bookkeeper.png',
+    imageSrc: '/images/bookkeeper_image.svg',
   },
   {
     roleName: RoleName.EDUCATIONAL_TRIAL_VERSION,
-    imageSrc: '/images/educational_trial.png',
+    imageSrc: '/images/educational_trial_version_image.svg',
   },
   {
-    roleName: RoleName.ACCOUNTANT,
-    imageSrc: '/images/accountant.png',
+    roleName: RoleName.ENTERPRISE,
+    imageSrc: '/images/enterprise_image.svg',
   },
 ];
 
@@ -55,7 +55,7 @@ const Card = ({
     setSelectedRoleId(roleId);
   };
 
-  const isDisabled = roleName === RoleName.ACCOUNTANT;
+  const isDisabled = roleName === RoleName.ENTERPRISE;
 
   return (
     <button
@@ -87,7 +87,7 @@ const RoleCards = ({
   setSelectedRoleId,
 }: RoleCardsProps) => {
   return (
-    <div className="flex justify-center gap-80px">
+    <section className="mx-100px mb-40px flex justify-center gap-80px">
       {roleList.map((role) => {
         const imageSrc =
           ROLES_IMAGE.find((rolesImage) => rolesImage.roleName === role.name)?.imageSrc ?? '';
@@ -104,7 +104,7 @@ const RoleCards = ({
           />
         );
       })}
-    </div>
+    </section>
   );
 };
 
