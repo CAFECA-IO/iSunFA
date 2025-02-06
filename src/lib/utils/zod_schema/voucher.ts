@@ -150,6 +150,7 @@ export const IVoucherBetaValidator = z.object({
     }),
     lineItems: z.array(ILineItemBetaValidator),
   }),
+  deletedAt: z.number().nullable(),
 });
 
 export const IVoucherForSingleAccountValidator = z.object({
@@ -304,6 +305,7 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
         [] as { id: number; voucherNo: string }[]
       ),
       isReverseRelated: !!voucher.isReverseRelated,
+      deletedAt: voucher.deletedAt,
     };
   });
 

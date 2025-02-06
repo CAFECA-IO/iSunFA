@@ -230,6 +230,7 @@ export interface IVoucherBeta {
    * @Julian 該傳票是否被刪除或反轉
    */
   isReverseRelated: boolean;
+  deletedAt: number | null;
 }
 
 export interface IVoucherUI extends IVoucherBeta {
