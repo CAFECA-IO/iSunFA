@@ -151,6 +151,11 @@ export interface IVoucherDetailForFrontend {
   isReverseRelated?: boolean;
 }
 
+export enum FromWhere {
+  LEDGER = 'ledger',
+  ARandAP = 'ARandAP',
+}
+
 export const defaultVoucherDetail: IVoucherDetailForFrontend = {
   id: 0,
   voucherDate: 0,

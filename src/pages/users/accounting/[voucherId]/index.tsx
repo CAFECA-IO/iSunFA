@@ -7,6 +7,7 @@ import { useTranslation } from 'next-i18next';
 import Layout from '@/components/beta/layout/layout';
 import VoucherDetailPageBody from '@/components/voucher/voucher_detail_page_body';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { FromWhere } from '@/interfaces/voucher';
 
 const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
   const { t } = useTranslation('common');
@@ -28,7 +29,7 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
     setVoucherNo(router.query.voucherNo as string);
 
     // Info: (20241225 - Anna) 檢查 URL 查詢參數是否包含from=ledger
-    if (from === 'ledger') {
+    if (from === FromWhere.LEDGER) {
       const queryString = new URLSearchParams({
         startDate: String(startDate),
         endDate: String(endDate),
@@ -40,7 +41,7 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
     }
 
     // Info: (20250124 - Julian) 檢查 URL 查詢參數是否包含from=ARandAP
-    if (from === 'ARandAP') {
+    if (from === FromWhere.ARandAP) {
       setGoBackUrl(`${ISUNFA_ROUTE.PAYABLE_RECEIVABLE_LIST}`);
     }
   }, [router.query]);
