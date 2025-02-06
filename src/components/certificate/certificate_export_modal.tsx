@@ -13,17 +13,7 @@ import { DEFAULT_MAX_PAGE_LIMIT } from '@/constants/config';
 interface CertificateExportModalProps {
   isOpen: boolean;
   onClose: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
-  handleApiResponse: (
-    data: IPaginatedData<{
-      totalInvoicePrice: number;
-      unRead: {
-        withVoucher: number;
-        withoutVoucher: number;
-      };
-      currency: string;
-      certificates: ICertificate[];
-    }>
-  ) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
+  handleApiResponse: (data: IPaginatedData<ICertificate[]>) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
   handleExport: () => void;
   certificates: ICertificate[];
 }

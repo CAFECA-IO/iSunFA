@@ -7,7 +7,7 @@ import Pagination from '@/components/pagination/pagination';
 import FilterSection from '@/components/filter_section/filter_section';
 import { SortOrder, SortBy } from '@/constants/sort';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { IVoucherBeta } from '@/interfaces/voucher';
+import { IVoucherBeta, IVoucherListSummary } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { PayableReceivableTabs } from '@/constants/voucher';
@@ -77,20 +77,13 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
 
   const params = { companyId: selectedAccountBook?.id };
 
-  const handleApiResponse = (
-    data: IPaginatedData<{
-      unRead: {
-        receivingVoucher: number;
-        paymentVoucher: number;
-      };
-      vouchers: IVoucherBeta[];
-    }>
-  ) => {
+  const handleApiResponse = (data: IPaginatedData<IVoucherBeta[]>) => {
+    const note = JSON.parse(data.note ?? '{}') as IVoucherListSummary;
     setPage(data.page);
-    setUnRead(data.data.unRead);
-    setTotalPages(Math.max(1, Math.ceil(data.data.vouchers.length / DEFAULT_PAGE_LIMIT))); // Info: (20250124 - Anna) 改為不是全部傳票的總頁數，而是應收/應付傳票的總頁數
-    setTotalCount(data.data.vouchers.length); // Info: (20250124 - Anna) 改為不是全部傳票的總筆數，而是應收/應付傳票的總筆數
-    setVoucherList(data.data.vouchers);
+    setUnRead(note.unRead);
+    setTotalPages(Math.max(1, Math.ceil(data.data.length / DEFAULT_PAGE_LIMIT))); // Info: (20250124 - Anna) 改為不是全部傳票的總頁數，而是應收/應付傳票的總頁數
+    setTotalCount(data.data.length); // Info: (20250124 - Anna) 改為不是全部傳票的總筆數，而是應收/應付傳票的總筆數
+    setVoucherList(data.data);
   };
 
   const tabsClick = (tab: string) => setActiveTab(tab as PayableReceivableTabs);
@@ -128,13 +121,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           counts={[unRead.receivingVoucher, unRead.paymentVoucher]}
         />
         {/* Info: (20241122 - Julian) Filter Section */}
-        <FilterSection<{
-          unRead: {
-            receivingVoucher: number;
-            paymentVoucher: number;
-          };
-          vouchers: IVoucherBeta[];
-        }>
+        <FilterSection<IVoucherBeta[]>
           params={params}
           apiName={APIName.VOUCHER_LIST_V2}
           onApiResponse={handleApiResponse}

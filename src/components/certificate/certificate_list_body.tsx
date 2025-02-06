@@ -142,22 +142,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const [exportModalData, setExportModalData] = useState<ICertificate[]>([]);
 
-  const handleExportModalApiResponse = useCallback(
-    (
-      resData: IPaginatedData<{
-        totalInvoicePrice: number;
-        unRead: {
-          withVoucher: number;
-          withoutVoucher: number;
-        };
-        currency: string;
-        certificates: ICertificate[];
-      }>
-    ) => {
-      setExportModalData(resData.data.certificates);
-    },
-    []
-  );
+  const handleExportModalApiResponse = useCallback((resData: IPaginatedData<ICertificate[]>) => {
+    setExportModalData(resData.data);
+  }, []);
 
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
 
@@ -181,27 +168,35 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     },
   ]);
 
+  // {
+  //   totalInvoicePrice: number;
+  //   unRead: {
+  //     withVoucher: number;
+  //     withoutVoucher: number;
+  //   };
+  //   currency: string;
+  //   certificates: ICertificate[];
+  // }
+
   const handleApiResponse = useCallback(
-    (
-      resData: IPaginatedData<{
-        totalInvoicePrice: number;
-        unRead: {
-          withVoucher: number;
-          withoutVoucher: number;
-        };
-        currency: CurrencyType;
-        certificates: ICertificate[];
-      }>
-    ) => {
+    (resData: IPaginatedData<ICertificate[]>) => {
       try {
-        setTotalInvoicePrice(resData.data.totalInvoicePrice);
-        setUnRead(resData.data.unRead);
+        const note = JSON.parse(resData.note || '{}') as {
+          totalInvoicePrice: number;
+          unRead: {
+            withVoucher: number;
+            withoutVoucher: number;
+          };
+          currency: string;
+        };
+        setTotalInvoicePrice(note.totalInvoicePrice);
+        setUnRead(note.unRead);
         setTotalPages(resData.totalPages);
         setTotalCount(resData.totalCount);
         setPage(resData.page);
-        setCurrency(resData.data.currency);
+        setCurrency(note.currency as CurrencyType);
 
-        const certificateData = resData.data.certificates.reduce(
+        const certificateData = resData.data.reduce(
           (acc, item) => {
             acc[item.id] = {
               ...item,
@@ -615,15 +610,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
 
         {/* Info: (20240919 - tzuhan) Filter Section */}
-        <FilterSection<{
-          totalInvoicePrice: number;
-          unRead: {
-            withVoucher: number;
-            withoutVoucher: number;
-          };
-          currency: CurrencyType;
-          certificates: ICertificate[];
-        }>
+        <FilterSection<ICertificate[]>
           className="mt-2"
           params={{ companyId }}
           apiName={APIName.CERTIFICATE_LIST_V2}

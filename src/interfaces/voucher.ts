@@ -186,6 +186,14 @@ export const defaultVoucherDetail: IVoucherDetailForFrontend = {
   lineItems: [],
 };
 
+export interface IVoucherListSummary {
+  unRead: {
+    uploadedVoucher: number;
+    upcomingEvents: number;
+    receivingVoucher: number;
+    paymentVoucher: number;
+  };
+}
 // Info: (20240926 - Julian) temp interface
 export interface IVoucherBeta {
   id: number;

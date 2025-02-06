@@ -30,10 +30,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { eventTypeToVoucherType } from '@/lib/utils/common';
 import { fileEntityValidator } from '@/lib/utils/zod_schema/file';
 import { accountEntityValidator } from '@/lib/utils/zod_schema/account';
-import {
-  paginatedDataSchema,
-  paginatedDataSchemaDataNotArray,
-} from '@/lib/utils/zod_schema/pagination';
+import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { eventEntityValidator } from '@/lib/utils/zod_schema/event';
 import { assetEntityValidator, IAssetDetailsValidator } from '@/lib/utils/zod_schema/asset';
 import {
@@ -211,51 +208,41 @@ const voucherGetAllQueryValidatorV2 = z.object({
 
 const voucherGetAllBodyValidatorV2 = z.object({});
 
-const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
+const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
   z.object({
-    vouchers: z.array(
+    ...voucherEntityValidator.shape,
+    counterParty: partialCounterPartyEntityValidator,
+    issuer: z.object({
+      ...userEntityValidator.shape,
+      imageFile: fileEntityValidator,
+    }),
+    readByUsers: z.array(userVoucherEntityValidator),
+    lineItems: z.array(
       z.object({
-        ...voucherEntityValidator.shape,
-        counterParty: partialCounterPartyEntityValidator,
-        issuer: z.object({
-          ...userEntityValidator.shape,
-          imageFile: fileEntityValidator,
-        }),
-        readByUsers: z.array(userVoucherEntityValidator),
-        lineItems: z.array(
-          z.object({
-            ...iLineItemBodyValidatorV2.shape,
-            id: z.number(),
-            account: accountEntityValidator,
-          })
-        ),
-        sum: z.object({
-          debit: z.boolean(),
-          amount: z.number(),
-        }),
-        payableInfo: z.object({
-          total: z.number(),
-          alreadyHappened: z.number(),
-          remain: z.number(),
-        }),
-        receivingInfo: z.object({
-          total: z.number(),
-          alreadyHappened: z.number(),
-          remain: z.number(),
-        }),
-        originalEvents: z.array(eventEntityValidator),
-        isReverseRelated: z.boolean().optional(),
+        ...iLineItemBodyValidatorV2.shape,
+        id: z.number(),
+        account: accountEntityValidator,
       })
     ),
-    unRead: z.object({
-      uploadedVoucher: z.number(),
-      upcomingEvents: z.number(),
-      paymentVoucher: z.number(),
-      receivingVoucher: z.number(),
+    sum: z.object({
+      debit: z.boolean(),
+      amount: z.number(),
     }),
+    payableInfo: z.object({
+      total: z.number(),
+      alreadyHappened: z.number(),
+      remain: z.number(),
+    }),
+    receivingInfo: z.object({
+      total: z.number(),
+      alreadyHappened: z.number(),
+      remain: z.number(),
+    }),
+    originalEvents: z.array(eventEntityValidator),
+    isReverseRelated: z.boolean().optional(),
   })
 ).transform((data) => {
-  const parsedVouchers: IVoucherBeta[] = data.data.vouchers.map((voucher) => {
+  const parsedVouchers: IVoucherBeta[] = data.data.map((voucher) => {
     return {
       id: voucher.id,
       voucherDate: voucher.date,
@@ -309,15 +296,7 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
     };
   });
 
-  const parsedData: IPaginatedData<{
-    unRead: {
-      uploadedVoucher: number;
-      upcomingEvents: number;
-      paymentVoucher: number;
-      receivingVoucher: number;
-    };
-    vouchers: IVoucherBeta[];
-  }> = {
+  const parsedData: IPaginatedData<IVoucherBeta[]> = {
     page: data.page,
     totalPages: data.totalPages,
     totalCount: data.totalCount,
@@ -325,25 +304,21 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
     hasNextPage: data.hasNextPage,
     hasPreviousPage: data.hasPreviousPage,
     sort: data.sort,
-    data: {
-      unRead: data.data.unRead,
-      vouchers: parsedVouchers,
-    },
+    data: parsedVouchers,
+    note: data.note,
   };
   return parsedData;
 });
 
-const voucherGetAllFrontendDataValidatorV2 = z.object({
-  vouchers: z.array(IVoucherBetaValidator),
-  unRead: z.object({
-    uploadedVoucher: z.number(),
-    upcomingEvents: z.number(),
-  }),
-});
+// const voucherGetAllFrontendDataValidatorV2 = z.object({
+//   vouchers: z.array(IVoucherBetaValidator),
+//   unRead: z.object({
+//     uploadedVoucher: z.number(),
+//     upcomingEvents: z.number(),
+//   }),
+// });
 
-const voucherGetAllFrontendValidatorV2 = paginatedDataSchemaDataNotArray(
-  voucherGetAllFrontendDataValidatorV2
-);
+const voucherGetAllFrontendValidatorV2 = paginatedDataSchema(IVoucherBetaValidator);
 
 export const voucherGetAllValidatorV2: IZodValidator<
   (typeof voucherGetAllQueryValidatorV2)['shape'],
