@@ -48,8 +48,8 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const [isLoadingCounterparty, setIsLoadingCounterparty] = useState(false);
     const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
     const [filteredCounterpartyList, setFilteredCounterpartyList] = useState<ICounterparty[]>([]);
-    const [searchName, setSearchName] = useState<string>('');
-    const [searchTaxId, setSearchTaxId] = useState<string>('');
+    const [searchName, setSearchName] = useState<string>(counterparty?.name ?? '');
+    const [searchTaxId, setSearchTaxId] = useState<string>(counterparty?.taxId ?? '');
     const [isShowRedHint, setIsShowRedHint] = useState(false);
 
     const {
