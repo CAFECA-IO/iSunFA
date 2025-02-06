@@ -55,7 +55,7 @@ const Card = ({
     setSelectedRoleId(roleId);
   };
 
-  const isDisabled = roleName === RoleName.ENTERPRISE; // ToDo: (20250206 - Liz) 等 api 回傳正確資料後就改成 RoleName.ENTERPRISE
+  const isDisabled = roleName === RoleName.ENTERPRISE;
 
   return (
     <button
