@@ -31,7 +31,7 @@ const ROLES_IMAGE = [
     imageSrc: '/images/educational_trial_version_image.svg',
   },
   {
-    roleName: RoleName.ACCOUNTANT, // ToDo: (20250206 - Liz) 等 api 回傳正確資料後就改成 RoleName.ENTERPRISE
+    roleName: RoleName.ENTERPRISE,
     imageSrc: '/images/enterprise_image.svg',
   },
 ];
@@ -55,7 +55,7 @@ const Card = ({
     setSelectedRoleId(roleId);
   };
 
-  const isDisabled = roleName === RoleName.ACCOUNTANT; // ToDo: (20250206 - Liz) 等 api 回傳正確資料後就改成 RoleName.ENTERPRISE
+  const isDisabled = roleName === RoleName.ENTERPRISE; // ToDo: (20250206 - Liz) 等 api 回傳正確資料後就改成 RoleName.ENTERPRISE
 
   return (
     <button
