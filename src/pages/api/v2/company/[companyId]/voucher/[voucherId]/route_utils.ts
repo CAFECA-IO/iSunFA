@@ -20,7 +20,7 @@ import { IAssetEntity } from '@/interfaces/asset';
 import { getOneVoucherByVoucherNoV2, getOneVoucherV2 } from '@/lib/utils/repo/voucher.repo';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
-import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
+import { parsePartialPrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_item.formatter';
 import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
@@ -134,7 +134,7 @@ export const voucherAPIGetOneUtils = {
    */
   initCounterPartyEntity: (voucher: IGetOneVoucherResponse) => {
     const counterPartyDto = voucher.counterparty;
-    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto);
+    const counterParty = parsePartialPrismaCounterPartyToCounterPartyEntity(counterPartyDto);
     return counterParty;
   },
 

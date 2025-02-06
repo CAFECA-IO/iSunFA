@@ -23,7 +23,7 @@ import { IGetManyVoucherResponseButOne, IVoucherEntity } from '@/interfaces/vouc
 import { listLineItemsByAccount } from '@/lib/utils/repo/line_item.beta.repo';
 import { findFirstAccountInPrisma } from '@/lib/utils/repo/account.repo';
 import { getManyVoucherByAccountV2 } from '@/lib/utils/repo/voucher.repo';
-import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
+import { parsePartialPrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
 import { initUserVoucherEntity } from '@/lib/utils/user_voucher';
@@ -409,7 +409,7 @@ export const voucherGetByAccountAPIUtils = {
   },
 
   initCounterPartyEntity: (voucher: IGetManyVoucherResponseButOne) => {
-    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(voucher.counterparty);
+    const counterParty = parsePartialPrismaCounterPartyToCounterPartyEntity(voucher.counterparty);
     return counterParty;
   },
 
