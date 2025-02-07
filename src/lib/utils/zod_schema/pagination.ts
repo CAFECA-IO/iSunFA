@@ -15,8 +15,10 @@ export const paginatedDataSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
     hasNextPage: z.boolean(),
     hasPreviousPage: z.boolean(),
     sort: z.array(SortSchema),
+    note: z.string().optional(),
   });
 
+/** Deprecated: 20250206 - Tzuhan 需要移除非陣列的 data 額外資訊放在 note
 export const paginatedDataSchemaDataNotArray = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
     data: dataSchema,
@@ -28,3 +30,4 @@ export const paginatedDataSchemaDataNotArray = <T extends z.ZodTypeAny>(dataSche
     hasPreviousPage: z.boolean(),
     sort: z.array(SortSchema),
   });
+*/

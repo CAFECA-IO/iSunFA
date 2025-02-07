@@ -301,19 +301,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241018 - Tzuhan) 處理選擇憑證 API 回傳
   const handleCertificateApiResponse = useCallback(
-    (
-      resData: IPaginatedData<{
-        totalInvoicePrice: number;
-        unRead: {
-          withVoucher: number;
-          withoutVoucher: number;
-        };
-        currency: string;
-        certificates: ICertificate[];
-      }>
-    ) => {
+    (resData: IPaginatedData<ICertificate[]>) => {
       const { data } = resData;
-      const certificatesData = data.certificates.reduce(
+      const certificatesData = data.reduce(
         (acc, item) => {
           acc[item.id] = {
             ...item,

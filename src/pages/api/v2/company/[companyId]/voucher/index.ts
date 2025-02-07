@@ -25,15 +25,7 @@ import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher
 import { IPaginatedData } from '@/interfaces/pagination';
 import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
 
-type IVoucherGetOutput = IPaginatedData<{
-  unRead: {
-    uploadedVoucher: number;
-    upcomingEvents: number;
-    paymentVoucher: number;
-    receivingVoucher: number;
-  };
-  vouchers: IGetManyVoucherBetaEntity[];
-}>;
+type IVoucherGetOutput = IPaginatedData<IGetManyVoucherBetaEntity[]>;
 
 /**
  * Info: (20241120 - Murky)
@@ -160,15 +152,15 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
       hasNextPage: pagination.hasNextPage,
       hasPreviousPage: pagination.hasPreviousPage,
       sort: sortOption,
-      data: {
+      data: voucherBetas,
+      note: JSON.stringify({
         unRead: {
           uploadedVoucher: unreadUploadedVoucherCounts,
           upcomingEvents: unreadUpcomingEventCounts,
           paymentVoucher: unreadPayableVoucherCounts,
           receivingVoucher: unreadReceivedVoucherCounts,
         },
-        vouchers: voucherBetas,
-      },
+      }),
     };
   } catch (_error) {
     const error = _error as Error;
@@ -491,16 +483,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
   };
 };
 
-type APIResponse =
-  | IPaginatedData<{
-      unRead: {
-        uploadedVoucher: number;
-        upcomingEvents: number;
-      };
-      vouchers: IVoucherBeta[];
-    }>
-  | number
-  | null;
+type APIResponse = IPaginatedData<IVoucherBeta[]> | number | null;
 
 const methodHandlers: {
   [key: string]: (

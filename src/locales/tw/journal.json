@@ -226,7 +226,8 @@
     "DELETE_MULTIPLE_VOUCHER_TITLE": "您確定要刪除這{{count}}張傳票嗎？",
     "DELETE_MULTIPLE_VOUCHER_CONTENT": "與這些傳票相關的所有資產也將被刪除。",
     "DELETE_MULTIPLE_VOUCHER_WARNING": "刪除後將自動生成沖銷分錄，原始傳票將保留以供參考。",
-    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "是的，刪除這些傳票"
+    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "是的，刪除這些傳票",
+    "REVERSE_DETAIL": "反轉傳票（刪除）"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增傳票",

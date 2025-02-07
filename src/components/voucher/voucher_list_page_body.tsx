@@ -9,7 +9,7 @@ import Pagination from '@/components/pagination/pagination';
 import { EventType } from '@/constants/account';
 import Tabs from '@/components/tabs/tabs';
 import { APIName } from '@/constants/api_connection';
-import { IVoucherBeta, IVoucherUI } from '@/interfaces/voucher';
+import { IVoucherBeta, IVoucherListSummary, IVoucherUI } from '@/interfaces/voucher';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
@@ -83,22 +83,15 @@ const VoucherListPageBody: React.FC = () => {
   const params = { companyId: selectedAccountBook?.id ?? FREE_COMPANY_ID };
 
   const handleApiResponse = useCallback(
-    (
-      data: IPaginatedData<{
-        unRead: {
-          uploadedVoucher: number;
-          upcomingEvents: number;
-        };
-        vouchers: IVoucherBeta[];
-      }>
-    ) => {
+    (data: IPaginatedData<IVoucherBeta[]>) => {
       try {
+        const note = JSON.parse(data.note ?? '{}') as IVoucherListSummary;
         setPage(data.page);
-        setUnRead(data.data.unRead);
+        setUnRead(note.unRead);
         setTotalPages(data.totalPages);
         setTotalCount(data.totalCount);
 
-        const voucherListUI: IVoucherUI[] = data.data.vouchers.map((voucher) => {
+        const voucherListUI: IVoucherUI[] = data.data.map((voucher) => {
           return {
             ...voucher,
             isSelected: false,
@@ -162,13 +155,7 @@ const VoucherListPageBody: React.FC = () => {
           counts={[unRead.uploadedVoucher, unRead.upcomingEvents]}
         />
         {/* Info: (20241022 - Julian) Filter Section */}
-        <FilterSection<{
-          unRead: {
-            uploadedVoucher: number;
-            upcomingEvents: number;
-          };
-          vouchers: IVoucherBeta[];
-        }>
+        <FilterSection<IVoucherBeta[]>
           params={params}
           apiName={APIName.VOUCHER_LIST_V2}
           onApiResponse={handleApiResponse}

@@ -29,6 +29,8 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     lineItemsInfo,
     isSelected,
     isReverseRelated,
+    reverseVouchers,
+    deletedAt,
   } = voucher;
 
   // Info: (20240920 - Julian) 借貸總和
@@ -45,9 +47,28 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
 
   // Info: (20250107 - Julian) 標記為已刪除的條件由 isReverseRelated 判斷
   // Info: (20250120 - Shirley) @Julian isReverseRelated===true 代表該傳票被刪除或反轉
-  const isDisplayDeleteTag = isReverseRelated ? (
+  // Info: (20250206 - Tzuhan) @Shirley 傳票被反轉的話，不會顯示已刪除的標籤，所以改用 deleteAt 判斷
+  const isDisplayDeleteTag = deletedAt ? (
     <div className="rounded-full bg-badge-surface-soft-primary px-8px py-4px text-hxs text-badge-text-primary-solid">
       {t('journal:VOUCHER.DELETED')}
+    </div>
+  ) : null;
+
+  // Todo: (20250207 - tzuhan) 先確認 UI 邏輯是否正確
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const isDisplayReverseNote = isReverseRelated ? (
+    <div className="flex flex-col">
+      {reverseVouchers.map((reverseVoucher) => (
+        <div key={reverseVoucher.id} className="text-hxs">
+          <Link
+            href={`/users/accounting/${reverseVoucher.id}?voucherNo=${voucherNo}`}
+            className="text-text-neutral-link hover:underline"
+          >
+            {reverseVoucher.voucherNo}
+          </Link>
+          <span className="text-text-neutral-primary">{t('journal:VOUCHER.REVERSE_DETAIL')}</span>
+        </div>
+      ))}
     </div>
   ) : null;
 
@@ -70,7 +91,10 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     );
 
   const displayedNote = (
-    <p className="text-hxs text-text-neutral-primary">{note !== '' ? note : '-'}</p>
+    <>
+      {/* {isDisplayReverseNote} */}
+      <p className="text-hxs text-text-neutral-primary">{note !== '' ? note : '-'}</p>
+    </>
   );
 
   // Info: (20241220 - Julian) 借方排在前面，貸方排在後面
@@ -157,7 +181,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
         </div>
       </div>
       {/* Info: (20240920 - Julian) Note */}
-      <div className="table-cell px-16px py-lv-5 text-left">{displayedNote}</div>
+      <div className="table-cell px-16px py-lv-5 text-left align-top">{displayedNote}</div>
       {/* Info: (20240920 - Julian) Accounting */}
       <div className="table-cell px-lv-2 py-lv-5">{displayedAccounting}</div>
       {/* Info: (20240920 - Julian) Debit */}
