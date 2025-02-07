@@ -62,11 +62,11 @@
   },
 
   "ROLE": {
-    "ACCOUNTANT": "会计",
     "BOOKKEEPER": "记帐员",
     "EDUCATIONAL_TRIAL_VERSION": "教育试用版",
     "EDUCATIONAL": "教育",
-    "TRIAL_VERSION": "试用版"
+    "TRIAL_VERSION": "试用版",
+    "ENTERPRISE": "企业版"
   },
 
   "CREATE_ROLE_PAGE": {
