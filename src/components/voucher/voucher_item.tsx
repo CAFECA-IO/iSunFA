@@ -179,7 +179,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
         </div>
       </div>
       {/* Info: (20240920 - Julian) Note */}
-      <div className="table-cell px-16px py-lv-5 text-left">{displayedNote}</div>
+      <div className="table-cell px-16px py-lv-5 text-left align-top">{displayedNote}</div>
       {/* Info: (20240920 - Julian) Accounting */}
       <div className="table-cell px-lv-2 py-lv-5">{displayedAccounting}</div>
       {/* Info: (20240920 - Julian) Debit */}
