@@ -97,7 +97,7 @@ const AccountBookList = ({ companyAndRoleList, setAccountBookToSelect }: Account
       container.removeEventListener('scroll', updateDisabledCards);
       window.removeEventListener('resize', updateDisabledCards);
     };
-  }, [companyAndRoleList]);
+  }, []);
 
   // Info: (20241216 - Liz) 當選擇公司後，將滾動條重設到最左側
   useEffect(() => {
