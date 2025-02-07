@@ -7,7 +7,7 @@ export const SEARCH_KEYWORDS: ISearchKeyword[] = [
     path: ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
   },
   {
-    label: '公司列表',
+    label: '公司清單',
     path: ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
   },
   {
@@ -78,7 +78,7 @@ export const SEARCH_KEYWORDS: ISearchKeyword[] = [
     needToVerifyCompany: true,
   },
   {
-    label: '憑證列表',
+    label: '憑證清單',
     path: ISUNFA_ROUTE.CERTIFICATE_LIST,
     needToVerifyCompany: true,
   },
