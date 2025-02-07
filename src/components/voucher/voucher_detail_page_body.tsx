@@ -238,7 +238,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   );
 
   const isDisplayCounterParty = !isLoading ? (
-    <p className="text-input-text-primary">{`${counterParty.taxId} ${counterParty.name}`}</p>
+    <p className="text-input-text-primary">{`${counterParty.taxId ?? ''} ${counterParty.name ?? '-'}`}</p>
   ) : (
     <Skeleton width={200} height={24} rounded />
   );

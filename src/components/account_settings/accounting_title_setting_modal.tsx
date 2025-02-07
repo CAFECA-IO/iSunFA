@@ -10,6 +10,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import AccountTitleSection from '@/components/account_settings/account_title_section';
 import AddNewTitleSection from '@/components/account_settings/add_new_title_section';
 import { TitleFormType } from '@/constants/accounting_setting';
+import Image from 'next/image';
 
 interface IAccountingTitleSettingModalProps {
   isModalVisible: boolean;
@@ -37,6 +38,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     trigger: getAccountList,
     data: accountTitleList,
     isLoading,
+    success,
   } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
     { params: { companyId }, query: queryCondition },
@@ -124,13 +126,23 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
         {/* Info: (20241108 - Julian) Modal Body */}
         <div className="grid grid-cols-2 gap-24px">
           {/* Info: (20241108 - Julian) Left: Account Title Section */}
-          <AccountTitleSection
-            accountTitleList={filteredAccountList}
-            isLoading={isLoading ?? true}
-            setFormType={setFormType}
-            setSelectedAccountTitle={setSelectedAccountTitle}
-            setIsRecallApi={setIsRecallApi}
-          />
+          {success === false ? (
+            <div className="flex flex-col items-center justify-center gap-lv-4 rounded-sm bg-surface-brand-primary-5 shadow-Dropshadow_XS">
+              <Image src="/images/empty.svg" width={120} height={135} alt="empty_icon" />
+              <div className="text-center text-base text-text-state-error">
+                <p>{t('setting:ACCOUNTING_SETTING_MODAL.LOADING_ERROR')}</p>
+                <p>{t('setting:ACCOUNTING_SETTING_MODAL.TRY_AGAIN')}</p>
+              </div>
+            </div>
+          ) : (
+            <AccountTitleSection
+              accountTitleList={filteredAccountList}
+              isLoading={isLoading ?? true}
+              setFormType={setFormType}
+              setSelectedAccountTitle={setSelectedAccountTitle}
+              setIsRecallApi={setIsRecallApi}
+            />
+          )}
           {/* Info: (20241108 - Julian) Right: Add New Title Section */}
           <AddNewTitleSection
             accountTitleList={accountList}

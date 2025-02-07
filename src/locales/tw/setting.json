@@ -136,7 +136,9 @@
     "ADD_BTN": "新增",
     "SAVE_BTN": "保存",
     "DELETE_BTN": "是的，刪除科目",
-    "NO_ACCOUNTING_FOUND": "找不到會計科目。"
+    "NO_ACCOUNTING_FOUND": "找不到會計科目。",
+    "LOADING_ERROR": "加載錯誤。",
+    "TRY_AGAIN": "請稍後重試。"
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "手動開帳",
@@ -156,7 +158,7 @@
   },
   "IP": {
     "INFO": "登入裝置與 IP 資訊",
-    "LIST": "登入裝置與 IP 列表",
+    "LIST": "登入裝置與 IP 清單",
     "TIME": "登入時間",
     "DEVICE": "登入裝置",
     "ADDRESS": "登入地址",

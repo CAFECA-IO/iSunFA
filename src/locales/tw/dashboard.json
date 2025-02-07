@@ -11,7 +11,7 @@
     "CALENDAR_NOT_YET_LINKED": "行事曆尚未連結",
     "LINK_MY_CALENDAR": "連結我的行事曆",
     "NO_SCHEDULE_FOR_TODAY": "今天沒有安排待辦事項",
-    "ACCOUNT_BOOKS": "帳本列表",
+    "ACCOUNT_BOOKS": "帳本清單",
     "COMPANY_NOT_YET_CREATED": "尚未建立公司",
     "PLEASE_PROCEED_TO": "請前往",
     "CREATE_A_COMPANY": "建立公司",
@@ -88,7 +88,7 @@
   },
 
   "ACCOUNT_BOOKS_PAGE": {
-    "PAGE_TITLE": "帳本列表"
+    "PAGE_TITLE": "帳本清單"
   },
 
   "LATEST_NEWS_PAGE": {

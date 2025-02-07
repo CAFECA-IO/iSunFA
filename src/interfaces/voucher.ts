@@ -186,6 +186,14 @@ export const defaultVoucherDetail: IVoucherDetailForFrontend = {
   lineItems: [],
 };
 
+export interface IVoucherListSummary {
+  unRead: {
+    uploadedVoucher: number;
+    upcomingEvents: number;
+    receivingVoucher: number;
+    paymentVoucher: number;
+  };
+}
 // Info: (20240926 - Julian) temp interface
 export interface IVoucherBeta {
   id: number;
@@ -230,6 +238,7 @@ export interface IVoucherBeta {
    * @Julian 該傳票是否被刪除或反轉
    */
   isReverseRelated: boolean;
+  deletedAt: number | null;
 }
 
 export interface IVoucherUI extends IVoucherBeta {

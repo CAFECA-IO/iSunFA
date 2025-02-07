@@ -16,7 +16,7 @@ import {
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 import { CounterpartyType } from '@/constants/counterparty';
-import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
+import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
 const nullSchema = z.union([z.object({}), z.string()]);
 
@@ -95,19 +95,7 @@ const certificateListQueryValidator = z.object({
 
 const certificateListBodyValidator = z.object({});
 
-const paginatedCertificates = paginatedDataSchemaDataNotArray(
-  z
-    .object({
-      totalInvoicePrice: z.number(),
-      unRead: z.object({
-        withVoucher: z.number(),
-        withoutVoucher: z.number(),
-      }),
-      currency: z.nativeEnum(CurrencyType),
-      certificates: z.array(ICertificatePartialInvoiceValidator.passthrough()),
-    })
-    .strip()
-);
+const paginatedCertificates = paginatedDataSchema(ICertificatePartialInvoiceValidator);
 
 const certificateListFrontendSchema = paginatedCertificates;
 
