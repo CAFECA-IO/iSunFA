@@ -54,6 +54,8 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     </div>
   ) : null;
 
+  // Todo: (20250207 - tzuhan) 先確認 UI 邏輯是否正確
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isDisplayReverseNote = isReverseRelated ? (
     <div className="flex flex-col">
       {reverseVouchers.map((reverseVoucher) => (
@@ -90,7 +92,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
 
   const displayedNote = (
     <>
-      {isDisplayReverseNote}
+      {/* {isDisplayReverseNote} */}
       <p className="text-hxs text-text-neutral-primary">{note !== '' ? note : '-'}</p>
     </>
   );
