@@ -22,17 +22,7 @@ interface CertificateSelectorModalProps {
 
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240926 - tzuhan) 保存數據的回調函數
   certificates: ICertificateUI[]; // Info: (20240926 - tzuhan) 證書列表
-  handleApiResponse: (
-    data: IPaginatedData<{
-      totalInvoicePrice: number;
-      unRead: {
-        withVoucher: number;
-        withoutVoucher: number;
-      };
-      currency: string;
-      certificates: ICertificate[];
-    }>
-  ) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
+  handleApiResponse: (data: IPaginatedData<ICertificate[]>) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
   openUploaderModal: () => void; // Info: (20240926 - tzuhan) 打開上傳模態框的回調函數
 }
 

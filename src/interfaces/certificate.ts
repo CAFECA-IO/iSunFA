@@ -17,6 +17,15 @@ import {
   // Counterparty as PrismaCounterparty,
 } from '@prisma/client';
 
+export interface ICertificateListSummary {
+  totalInvoicePrice: number;
+  unRead: {
+    withVoucher: number;
+    withoutVoucher: number;
+  };
+  currency: string;
+}
+
 export interface ICertificate {
   id: number;
   name: string;

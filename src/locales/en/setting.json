@@ -136,7 +136,9 @@
     "ADD_BTN": "Add",
     "SAVE_BTN": "Save",
     "DELETE_BTN": "Yes, Delete Account",
-    "NO_ACCOUNTING_FOUND": "No Accounting Title Found."
+    "NO_ACCOUNTING_FOUND": "No Accounting Title Found.",
+    "LOADING_ERROR": "Loading Error.",
+    "TRY_AGAIN": "Please try again later."
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "Manual Account Opening",
