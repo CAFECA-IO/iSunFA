@@ -4,7 +4,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Introduction from '@/components/beta/create_role/introduction';
-import RoleCard from '@/components/beta/create_role/role_cards';
+import RoleCards from '@/components/beta/create_role/role_cards';
 import PreviewModal from '@/components/beta/create_role/preview_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { IRole } from '@/interfaces/role';
@@ -163,7 +163,7 @@ const CreateRolePage = () => {
           />
 
           {/* Info: (20250206 - Liz) 切換按鈕 */}
-          <RoleCard
+          <RoleCards
             roleList={unusedSystemRoles}
             showingRole={showingRole}
             setShowingRole={setShowingRole}

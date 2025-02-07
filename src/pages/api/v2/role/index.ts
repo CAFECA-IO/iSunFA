@@ -13,7 +13,8 @@ const handleGetRequest: IHandleRequest<APIName.ROLE_LIST, Role[]> = async ({ que
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: Role[] | null = null;
   const { type } = query;
-  const listedUserRole = await listRole(type);
+  // Info: (20250207 - Luphia) Remove 1007 (Accountant) role from the list
+  const listedUserRole = (await listRole(type)).filter((role) => role.id !== 1007);
 
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
   payload = listedUserRole;

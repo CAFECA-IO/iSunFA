@@ -62,11 +62,11 @@
   },
 
   "ROLE": {
-    "ACCOUNTANT": "Accountant",
     "BOOKKEEPER": "Bookkeeper",
     "EDUCATIONAL_TRIAL_VERSION": "Educational Trial Version",
     "EDUCATIONAL": "Educational",
-    "TRIAL_VERSION": "Trial Version"
+    "TRIAL_VERSION": "Trial Version",
+    "ENTERPRISE": "Enterprise"
   },
 
   "CREATE_ROLE_PAGE": {

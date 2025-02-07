@@ -62,11 +62,11 @@
   },
 
   "ROLE": {
-    "ACCOUNTANT": "會計",
     "BOOKKEEPER": "記帳士",
     "EDUCATIONAL_TRIAL_VERSION": "教育試用版",
     "EDUCATIONAL": "教育",
-    "TRIAL_VERSION": "試用版"
+    "TRIAL_VERSION": "試用版",
+    "ENTERPRISE": "企業版"
   },
 
   "CREATE_ROLE_PAGE": {
