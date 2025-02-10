@@ -370,26 +370,14 @@ export const certificateAPIGetListUtils = {
     return (a, b, tab) => {
       switch (sortBy) {
         case SortBy.DATE:
-          loggerBack.info(
-            `SortBy.DATE: ${JSON.stringify(a.invoice.date)}  ${JSON.stringify(b.invoice.date)}`
-          );
           return a.invoice.date && b.invoice.date ? a.invoice.date - b.invoice.date : 0;
 
         case SortBy.VOUCHER_NUMBER:
-          loggerBack.info(
-            `SortBy.VOUCHER_NUMBER: ${JSON.stringify(a.voucherNo)}  ${JSON.stringify(b.voucherNo)}`
-          );
           return tab && tab === InvoiceTabs.WITH_VOUCHER && a.voucherNo && b.voucherNo
             ? a.voucherNo.localeCompare(b.voucherNo)
             : 0;
 
         case SortBy.AMOUNT:
-          loggerBack.info(
-            `SortBy.AMOUNT: ${JSON.stringify(a.invoice.totalPrice)}  ${JSON.stringify(b.invoice.totalPrice)}`
-          );
-          loggerBack.info(
-            `SortBy.AMOUNT: ${JSON.stringify(a.invoice.priceBeforeTax)}  ${JSON.stringify(b.invoice.priceBeforeTax)}`
-          );
           return a.invoice.totalPrice && b.invoice.totalPrice
             ? a.invoice.totalPrice - b.invoice.totalPrice
             : a.invoice.priceBeforeTax && b.invoice.priceBeforeTax
