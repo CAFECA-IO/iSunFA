@@ -392,24 +392,30 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           type="button"
           variant="tertiary"
           size={'defaultSquare'}
-          onClick={deleteClickHandler}
+          className="disabled:cursor-not-allowed"
+          onClick={isReverseRelated ? () => {} : deleteClickHandler}
           disabled={isReverseRelated} // Info: (20250120 - Julian) 被刪除或反轉的傳票不能再次刪除
         >
           <FiTrash2 size={16} />
         </Button>
-        <Link href={`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`}>
-          <Button
-            id="edit-voucher-btn"
-            type="button"
-            variant="tertiary"
-            size={'defaultSquare'}
-            // Info: (20250120 - Julian) 被刪除或反轉的傳票不能編輯
-            // ToDo: (20250122 - Julian) 先不開放手動開帳的編輯功能
-            disabled={isReverseRelated || type === EventType.OPENING}
-          >
-            <FiEdit size={16} />
-          </Button>
-        </Link>
+
+        <Button
+          id="edit-voucher-btn"
+          type="button"
+          variant="tertiary"
+          size={'defaultSquare'}
+          // Info: (20250120 - Julian) 被刪除或反轉的傳票不能編輯
+          // ToDo: (20250122 - Julian) 先不開放手動開帳的編輯功能
+          disabled={isReverseRelated || type === EventType.OPENING}
+          className="disabled:cursor-not-allowed"
+          onClick={() => {
+            if (!(isReverseRelated || type === EventType.OPENING)) {
+              router.push(`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`);
+            }
+          }}
+        >
+          <FiEdit size={16} />
+        </Button>
       </div>
       {/* Info: (20240926 - tzuhan) CertificateSelection */}
       <CertificateSelection
