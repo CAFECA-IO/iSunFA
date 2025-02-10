@@ -15,7 +15,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
 import { HiCheck } from 'react-icons/hi';
-// import Toggle from '@/components/toggle/toggle';
+import Toggle from '@/components/toggle/toggle';
 
 interface IVoucherListProps {
   voucherList: IVoucherUI[];
@@ -25,9 +25,7 @@ interface IVoucherListProps {
   setDebitSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
   dateSort: null | SortOrder;
   setDateSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
-  // eslint-disable-next-line react/no-unused-prop-types
   isHideReversals: boolean;
-  // eslint-disable-next-line react/no-unused-prop-types
   hideReversalsToggleHandler: () => void;
 }
 
@@ -39,8 +37,8 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   setDebitSort,
   dateSort,
   setDateSort,
-  // isHideReversals,
-  // hideReversalsToggleHandler,
+  isHideReversals,
+  hideReversalsToggleHandler,
 }) => {
   const { t } = useTranslation('common');
   const { selectedAccountBook } = useUserCtx();
@@ -250,9 +248,9 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   });
 
   const displayedSelectArea = (
-    <div className="ml-auto flex items-center justify-between">
+    <div className="flex items-center justify-between">
       {/* Info: (20250107 - Julian) hidden delete voucher & reversals toggle */}
-      {/* <div className="flex items-center gap-16px">
+      <div className="flex items-center gap-16px">
         <Toggle
           id="hide-reversals-toggle"
           initialToggleState={isHideReversals}
@@ -266,7 +264,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         >
           {t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
         </div>
-      </div> */}
+      </div>
 
       {/* Info: (20250107 - Julian) export & select button */}
       <div className="flex h-50px items-center gap-24px">

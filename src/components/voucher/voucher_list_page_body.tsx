@@ -168,6 +168,7 @@ const VoucherListPageBody: React.FC = () => {
           otherSorts={otherSorts} // Info: (20241104 - Murky) 可以用哪些sort 請參考 VoucherListAllSortOptions, 在 src/lib/utils/zod_schema/voucher.ts
           */
           sort={selectedSort}
+          hideReversedRelated={isHideReversals} // Info: (20250210 - Julian) 隱藏沖銷分錄
         />
         {/* Info: (20240920 - Julian) Voucher List */}
         {displayVoucherList}
