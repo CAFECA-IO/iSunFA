@@ -14,11 +14,11 @@ import WorkTag from '@/components/company_settings/work_tag';
 import CompanyEditModal from '@/components/company_settings/company_edit_modal';
 import { useUserCtx } from '@/contexts/user_context';
 
-interface CompanyListModalProps {
+interface AccountBookListModalProps {
   toggleModal: () => void;
 }
 
-const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
+const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal }) => {
   const { t } = useTranslation(['setting', 'common', 'company']);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -153,4 +153,4 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
   );
 };
 
-export default CompanyListModal;
+export default AccountBookListModal;
