@@ -102,10 +102,10 @@ const RoleCards = ({
 
     const updateScrollState = () => {
       if (!container) return;
-      const { scrollLeft, clientWidth } = container;
+      const { scrollLeft, clientWidth, scrollWidth, children } = container;
       const newDisabledCards: number[] = [];
 
-      Array.from(container.children).forEach((child, index) => {
+      Array.from(children).forEach((child, index) => {
         const cardLeft = (child as HTMLElement).offsetLeft;
         const cardRight = cardLeft + (child as HTMLElement).offsetWidth;
 
@@ -116,11 +116,8 @@ const RoleCards = ({
 
       setDisabledCards(newDisabledCards);
       // Info: (20250207 - Liz) 檢查是否還能繼續向左或向右滾動
-      setCanScrollLeft(container.scrollLeft > 0);
-      setCanScrollRight(
-        container.scrollLeft + container.clientWidth < container.scrollWidth ||
-          container.scrollWidth === container.clientWidth
-      );
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollWidth > clientWidth && scrollLeft + clientWidth < scrollWidth);
     };
 
     // Info: (20250207 - Liz) 監聽滾動事件
@@ -139,13 +136,14 @@ const RoleCards = ({
 
   // Info: (20250207 - Liz) 左右滾動控制
   const scroll = (direction: 'left' | 'right') => {
-    if (containerRef.current) {
-      const scrollAmount = 200;
-      containerRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth',
-      });
-    }
+    const container = containerRef.current;
+    if (!container) return;
+
+    const scrollAmount = 200;
+    container.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
   };
 
   return (
