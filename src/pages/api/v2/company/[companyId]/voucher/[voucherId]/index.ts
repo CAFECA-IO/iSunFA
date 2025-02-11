@@ -116,7 +116,6 @@ export const handleGetRequest: IHandleRequest<
       receivingInfo,
     };
     payload = mockVoucher;
-    loggerBack.info(`Get voucher by id: ${JSON.stringify(mockVoucher)}`);
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   } catch (_error) {
     const error = _error as Error;

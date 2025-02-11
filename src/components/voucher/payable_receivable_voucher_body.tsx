@@ -137,6 +137,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           otherSorts={otherSorts}
           */
           sort={selectedSort}
+          hideReversedRelated
         />
         {/* Info: (20250109 - Julian) hidden delete voucher & reversals toggle */}
         {/* <div className="flex items-center gap-16px">
