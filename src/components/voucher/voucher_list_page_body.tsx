@@ -12,7 +12,7 @@ import { APIName } from '@/constants/api_connection';
 import { IVoucherBeta, IVoucherListSummary, IVoucherUI } from '@/interfaces/voucher';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
-import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
+import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -80,7 +80,7 @@ const VoucherListPageBody: React.FC = () => {
       .filter((key) => key !== EventType.OPENING), // Info: (20250124 - Julian) 不顯示開帳
   ];
 
-  const params = { companyId: selectedAccountBook?.id ?? FREE_COMPANY_ID };
+  const params = { companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID };
 
   const handleApiResponse = useCallback(
     (data: IPaginatedData<IVoucherBeta[]>) => {

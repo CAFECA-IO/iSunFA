@@ -11,7 +11,7 @@ import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
+import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { ToastId } from '@/constants/toast_id';
 import { APIName } from '@/constants/api_connection';
@@ -39,7 +39,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate']);
   const router = useRouter();
   const { userAuth, selectedAccountBook } = useUserCtx();
-  const companyId = selectedAccountBook?.id || FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);

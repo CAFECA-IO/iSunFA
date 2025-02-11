@@ -19,7 +19,7 @@ import { ToastId } from '@/constants/toast_id';
 import { default30DayPeriodInSec, inputStyle } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { IAssetDetails } from '@/interfaces/asset';
 import { AssetModalType, IAssetModal } from '@/interfaces/asset_modal';
 import { AssetDepreciationMethod } from '@/constants/asset';
@@ -41,7 +41,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const { selectedAccountBook } = useUserCtx();
   const { addTemporaryAssetHandler } = useAccountingCtx();
 
-  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const { assetAccountList, modalType, assetData } = defaultData;
 

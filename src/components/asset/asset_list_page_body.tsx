@@ -5,7 +5,7 @@ import FilterSection from '@/components/filter_section/filter_section';
 import Pagination from '@/components/pagination/pagination';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
-import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
+import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { AssetStatus, AccountCodesOfAsset, AssetEntityType } from '@/constants/asset';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IAssetItem } from '@/interfaces/asset';
@@ -17,7 +17,7 @@ const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('asset');
   const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const params = { companyId };
 
   const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);

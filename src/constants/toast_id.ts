@@ -50,4 +50,5 @@ export enum ToastId {
   NEED_TO_SELECT_COMPANY = 'toast-need-to-select-company',
   PLAN_EXPIRED_REMINDER = 'toast-plan-expired-reminder',
   DOWNGRADE_TO_BEGINNER_PLAN = 'toast-downgrade-to-beginner-plan',
+  ACCOUNT_BOOK_NEEDED = 'toast-account-book-needed',
 }

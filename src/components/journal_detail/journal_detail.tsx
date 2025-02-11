@@ -13,7 +13,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { ILineItem } from '@/interfaces/line_item';
 import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { Button } from '@/components/button/button';
 
 interface IVoucherItem {
@@ -471,7 +471,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   // Info: (20240802 - Julian) No token contract and token id in free company
   const displayToken =
-    selectedAccountBook?.id !== FREE_COMPANY_ID ? (
+    selectedAccountBook?.id !== FREE_ACCOUNT_BOOK_ID ? (
       <div className="flex flex-col items-start gap-x-80px md:flex-row md:items-center">
         {/* Info: (20240503 - Julian) Token Contract */}
         <div className="flex flex-wrap items-center text-base text-text-neutral-tertiary">

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
-import CompanyListModal from '@/components/company_settings/company_list_modal';
+import AccountBookListModal from '@/components/account_book_settings/account_book_list_modal';
 
 interface CompanySettingsProps {}
 
@@ -10,14 +10,14 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
   const { t } = useTranslation(['setting', 'common']);
 
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
-  const [isCompanyListModalOpen, setIsCompanyListModalOpen] = useState(false);
+  const [isAccountBookListModalOpen, setIsAccountBookListModalOpen] = useState(false);
 
   const toggleCreateAccountBookModal = () => {
     setIsCreateAccountBookModalOpen((prev) => !prev);
   };
 
-  const toggleCompanyListModal = () => {
-    setIsCompanyListModalOpen((prev) => !prev);
+  const toggleAccountBookListModal = () => {
+    setIsAccountBookListModalOpen((prev) => !prev);
   };
 
   return (
@@ -25,7 +25,9 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
       {isCreateAccountBookModalOpen && (
         <CreateAccountBookModal modalVisibilityHandler={toggleCreateAccountBookModal} />
       )}
-      {isCompanyListModalOpen && <CompanyListModal toggleModal={toggleCompanyListModal} />}
+      {isAccountBookListModalOpen && (
+        <AccountBookListModal toggleModal={toggleAccountBookListModal} />
+      )}
       <div id="company-setting-section" className="mb-lv-7 flex items-center gap-4">
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
@@ -49,7 +51,7 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
         id="setting-list-company"
         type="button"
         className="group inline-flex items-center justify-start whitespace-nowrap rounded-xs border-none font-medium text-text-neutral-link hover:text-button-text-primary-hover focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:text-button-text-disable disabled:opacity-100"
-        onClick={toggleCompanyListModal}
+        onClick={toggleAccountBookListModal}
       >
         <p className="flex gap-2">
           <Image src="/icons/notification-text.svg" width={16} height={16} alt="notice_icon" />
