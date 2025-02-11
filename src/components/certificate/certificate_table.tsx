@@ -78,8 +78,8 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
     // eslint-disable-next-line tailwindcss/no-custom-classname
     <div className="min-h-500px w-full flex-auto overflow-hidden rounded-md">
       <div className="table w-full rounded-md bg-surface-neutral-surface-lv2 shadow-normal_setting_brand">
-        <div className="table-header-group h-60px w-full max-w-920px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
-          <div className="table-row w-full">
+        <div className="table-header-group w-full max-w-920px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+          <div className="table-row h-60px w-full">
             {activeSelection && (
               <div className="table-cell w-32px max-w-32px border-b border-r border-stroke-neutral-quaternary px-8px text-center align-middle">
                 <div

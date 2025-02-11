@@ -143,6 +143,8 @@ export const handleGetRequest: IHandleRequest<
       currency,
     };
 
+    getListUtils.sortCertificateList(certificates, { sortOption, tab });
+
     payload = {
       page: pagination.page,
       totalPages: pagination.totalPages,

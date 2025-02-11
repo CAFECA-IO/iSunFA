@@ -354,6 +354,61 @@ export const certificateAPIPostUtils = {
 };
 
 export const certificateAPIGetListUtils = {
+  getSortFunction: (
+    sortBy: SortBy
+  ): ((
+    a: ICertificate & {
+      uploaderUrl: string;
+      voucherId: number | undefined;
+    },
+    b: ICertificate & {
+      uploaderUrl: string;
+      voucherId: number | undefined;
+    },
+    tab?: InvoiceTabs
+  ) => number) => {
+    return (a, b, tab) => {
+      switch (sortBy) {
+        case SortBy.DATE:
+          return a.invoice.date && b.invoice.date ? a.invoice.date - b.invoice.date : 0;
+
+        case SortBy.VOUCHER_NUMBER:
+          return tab && tab === InvoiceTabs.WITH_VOUCHER && a.voucherNo && b.voucherNo
+            ? a.voucherNo.localeCompare(b.voucherNo)
+            : 0;
+
+        case SortBy.AMOUNT:
+          return a.invoice.totalPrice && b.invoice.totalPrice
+            ? a.invoice.totalPrice - b.invoice.totalPrice
+            : a.invoice.priceBeforeTax && b.invoice.priceBeforeTax
+              ? a.invoice.priceBeforeTax - b.invoice.priceBeforeTax
+              : 0;
+
+        default:
+          loggerBack.info('No sorting applied.');
+          return 0; // Info: (20241121 - Murky) 默認不排序
+      }
+    };
+  },
+  sortCertificateList: (
+    certificate: (ICertificate & {
+      uploaderUrl: string;
+      voucherId: number | undefined;
+    })[],
+    options: {
+      sortOption: { sortBy: SortBy; sortOrder: SortOrder }[];
+      tab?: InvoiceTabs;
+    }
+  ) => {
+    const { sortOption, tab } = options;
+    sortOption.forEach((option) => {
+      const sortFunction = certificateAPIGetListUtils.getSortFunction(option.sortBy);
+      certificate.sort(
+        (a, b) => sortFunction(a, b, tab) * (option.sortOrder === SortOrder.ASC ? 1 : -1)
+      );
+    });
+  },
+
   getPaginatedCertificateList: (options: {
     companyId: number;
     startDate: number;
