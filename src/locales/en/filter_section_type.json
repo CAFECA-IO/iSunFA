@@ -3,6 +3,8 @@
     "TYPE": "Type",
     "STATUS": "Status",
     "ALL": "All",
+    "PENDING": "Pending",
+    "REVERSED": "Reversed",
     "INVOICE": "Invoice",
     "RECEIPT": "Receipt",
     "ASSET": "Asset",

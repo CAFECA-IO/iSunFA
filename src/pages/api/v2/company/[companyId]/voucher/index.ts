@@ -24,6 +24,7 @@ import { IVoucherBeta, IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
+import { EventType, TransactionStatus } from '@/constants/account';
 
 type IVoucherGetOutput = IPaginatedData<IGetManyVoucherBetaEntity[]>;
 
@@ -57,6 +58,23 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
     type,
     hideReversedRelated,
   } = query;
+  function getTypeFilter(selectedType: EventType | TransactionStatus | undefined) {
+    switch (selectedType) {
+      case EventType.INCOME:
+        return { type: EventType.INCOME, condition: undefined };
+      case EventType.OPENING:
+        return { type: EventType.OPENING, condition: undefined };
+      case EventType.PAYMENT:
+        return { type: EventType.PAYMENT, condition: undefined };
+      case EventType.TRANSFER:
+        return { type: EventType.TRANSFER, condition: undefined };
+      case TransactionStatus.REVERSED:
+      case TransactionStatus.PENDING:
+        return { type: undefined, condition: selectedType };
+      default:
+        return { type: undefined, condition: undefined };
+    }
+  }
   const paginationVouchersFromPrisma = await getUtils.getVoucherListFromPrisma({
     companyId,
     page,
@@ -66,7 +84,7 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
     tab,
     sortOption,
     searchQuery,
-    type,
+    type: getTypeFilter(type).type,
     hideReversedRelated,
   });
   const { data: vouchersFromPrisma, where, ...pagination } = paginationVouchersFromPrisma;
@@ -152,7 +170,7 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
       hasNextPage: pagination.hasNextPage,
       hasPreviousPage: pagination.hasPreviousPage,
       sort: sortOption,
-      data: voucherBetas,
+      data: getUtils.filterTransactionStatus(voucherBetas, tab, getTypeFilter(type).condition),
       note: JSON.stringify({
         unRead: {
           uploadedVoucher: unreadUploadedVoucherCounts,

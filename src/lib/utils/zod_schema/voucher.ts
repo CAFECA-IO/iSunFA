@@ -18,7 +18,7 @@ import {
   zodStringToNumberWithDefault,
 } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_END_DATE, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import { EventType, VoucherType } from '@/constants/account';
+import { EventType, TransactionStatus, VoucherType } from '@/constants/account';
 import { SortBy } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
 import { JOURNAL_EVENT } from '@/constants/journal';
@@ -194,10 +194,15 @@ const voucherListAllSortOptions = z.enum([
 const voucherGetAllQueryValidatorV2 = z.object({
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
-  type: z.preprocess((input) => {
-    const result = typeof input === 'string' && input.toLowerCase() === 'all' ? undefined : input;
-    return result;
-  }, z.nativeEnum(EventType).optional()),
+  type: z.preprocess(
+    (input) => {
+      if (typeof input === 'string' && input.toLowerCase() === 'all') {
+        return undefined;
+      }
+      return input;
+    },
+    z.union([z.nativeEnum(EventType), z.nativeEnum(TransactionStatus)]).optional()
+  ),
   tab: z.nativeEnum(VoucherListTabV2),
   startDate: zodStringToNumberWithDefault(0),
   endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
