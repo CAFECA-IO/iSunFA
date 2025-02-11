@@ -8,7 +8,7 @@ import UploadArea from '@/components/upload_area/upload_area';
 import { ProgressStatus } from '@/constants/account';
 import { ICertificate } from '@/interfaces/certificate';
 import { useUserCtx } from '@/contexts/user_context';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { compressImageToTargetSize } from '@/lib/utils/image_compress';
 import { encryptFileWithPublicKey, importPublicKey } from '@/lib/utils/crypto';
 
@@ -48,7 +48,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
       let key = publicKey;
       if (!key) {
         const { success, data } = await fetchPublicKey({
-          params: { companyId: selectedAccountBook?.id ?? FREE_COMPANY_ID },
+          params: { companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
         });
         if (!success || !data) {
           throw new Error(t('certificate:UPLOAD.FAILED'));
@@ -111,10 +111,10 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
         );
 
         const { success, data: fileMeta } = await uploadFileAPI({
-          params: { companyId: selectedAccountBook?.id ?? FREE_COMPANY_ID },
+          params: { companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
           query: {
             type: UploadType.INVOICE,
-            targetId: String(selectedAccountBook?.id ?? FREE_COMPANY_ID),
+            targetId: String(selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID),
           },
           body: formData,
         });
@@ -133,7 +133,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
         );
 
         const { success: successCreated, data: certificate } = await createCertificateAPI({
-          params: { companyId: selectedAccountBook?.id ?? FREE_COMPANY_ID },
+          params: { companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
           body: { fileIds: [fileMeta.id] }, // Info: (20241126 - Murky) @tsuhan 這邊已經可以使用批次上傳, 但是我不知道怎麼改，所以先放在array
         });
         if (!successCreated || !certificate) {

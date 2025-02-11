@@ -15,7 +15,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
 import { AssetModalType } from '@/interfaces/asset_modal';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 
 interface IAssetSectionProps {
   isShowAssetHint: boolean;
@@ -38,7 +38,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     APIName.DELETE_ASSET_V2
   );
 
-  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const defaultList: IAssetPostOutput[] = defaultAssetList.map((asset) => ({
     ...asset,

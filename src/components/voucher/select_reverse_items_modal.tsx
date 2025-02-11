@@ -12,7 +12,7 @@ import { IReverseItem, IReverseItemUI } from '@/interfaces/line_item';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 
 interface ISelectReverseItemsModal {
   isModalVisible: boolean;
@@ -116,7 +116,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   const { selectedAccountBook } = useUserCtx();
 
   const params = {
-    companyId: selectedAccountBook?.id ?? FREE_COMPANY_ID,
+    companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
     accountId: modalData.account?.id,
   };
 

@@ -13,7 +13,7 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { ToastType } from '@/interfaces/toastify';
@@ -43,14 +43,15 @@ const AccountingSettingPageBody: React.FC = () => {
   const { toastHandler } = useModalContext();
   const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const currencyList = ['TWD', 'USD'];
 
   // Info: (20241113 - Julian) 取得會計設定資料
   const { trigger: getAccountSetting, data: accountingSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET,
-    { params: { companyId } }
+    { params: { companyId: accountBookId } }
   );
+  // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要一起修改成 accountBookId
 
   const {
     trigger: updateSetting,
@@ -58,8 +59,9 @@ const AccountingSettingPageBody: React.FC = () => {
     success: updatedSuccess,
     error: updatedError,
   } = APIHandler<IAccountingSetting>(APIName.ACCOUNTING_SETTING_UPDATE, {
-    params: { companyId },
+    params: { companyId: accountBookId },
   });
+  // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要一起修改成 accountBookId
 
   const initialAccountingSetting: IAccountingSetting = {
     id: 0,
@@ -177,7 +179,7 @@ const AccountingSettingPageBody: React.FC = () => {
 
     const body = {
       id: accountingSetting?.id ?? 0,
-      companyId,
+      companyId: accountBookId,
       currency: currentCurrency,
       taxSettings: {
         salesTax: {
@@ -193,7 +195,8 @@ const AccountingSettingPageBody: React.FC = () => {
       shortcutList: [], // ToDo: (20250109 - Julian) 自訂快捷鍵功能未實作
     };
 
-    updateSetting({ params: { companyId }, body });
+    updateSetting({ params: { companyId: accountBookId }, body });
+    // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要一起修改成 accountBookId
   };
 
   useEffect(() => {
@@ -207,7 +210,8 @@ const AccountingSettingPageBody: React.FC = () => {
           closeable: true,
         });
 
-        getAccountSetting({ params: { companyId } });
+        getAccountSetting({ params: { companyId: accountBookId } });
+        // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要一起修改成 accountBookId
       } else if (updatedError) {
         // Info: (20241114 - Julian) 更新失敗顯示 Toast
         toastHandler({

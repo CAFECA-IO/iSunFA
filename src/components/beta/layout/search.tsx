@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
+import { ToastId } from '@/constants/toast_id';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import { SEARCH_KEYWORDS } from '@/constants/search';
 import { ISearchKeyword } from '@/interfaces/search';
@@ -44,7 +45,7 @@ const Search = ({ toggleOverlay }: SearchProps) => {
 
   const showCompanyNeededToast = () => {
     toastHandler({
-      id: 'company-needed',
+      id: ToastId.ACCOUNT_BOOK_NEEDED,
       type: ToastType.INFO,
       content: (
         <div className="flex items-center gap-32px">

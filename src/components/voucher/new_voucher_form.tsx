@@ -49,7 +49,7 @@ import { IAIResultVoucher } from '@/interfaces/voucher';
 import { AI_TYPE } from '@/constants/aich';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
 import { ToastId } from '@/constants/toast_id';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -79,7 +79,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const temporaryAssetListByUser = temporaryAssetList[companyId] ?? [];
 

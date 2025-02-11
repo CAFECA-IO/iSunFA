@@ -11,7 +11,7 @@ import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { TitleFormType } from '@/constants/accounting_setting';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 import { FiBookOpen } from 'react-icons/fi';
@@ -36,7 +36,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const { toastHandler } = useModalContext();
   const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   // Info: (20241121 - Julian) 會計科目 input ref
   const accountInputRef = useRef<HTMLInputElement>(null);

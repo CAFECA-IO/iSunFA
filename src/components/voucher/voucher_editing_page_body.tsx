@@ -41,7 +41,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
 import { ToastId } from '@/constants/toast_id';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
 
 type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
@@ -75,7 +75,7 @@ const VoucherEditingPageBody: React.FC<{
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const temporaryAssetListByCompany = temporaryAssetList[companyId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI

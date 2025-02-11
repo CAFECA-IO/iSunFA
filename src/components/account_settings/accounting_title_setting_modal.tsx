@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { RxCross2 } from 'react-icons/rx';
 import { FiSearch } from 'react-icons/fi';
 import { useUserCtx } from '@/contexts/user_context';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -24,7 +24,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   const { t } = useTranslation('common');
   const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedAccountBook?.id ?? FREE_COMPANY_ID;
+  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const queryCondition = {
     limit: 9999, // Info: (20241212 - Julian) 全部取出

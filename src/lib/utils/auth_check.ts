@@ -8,7 +8,7 @@ import {
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
 import { AllRequiredParams, AuthFunctions, AuthFunctionsKeys } from '@/interfaces/auth';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { CompanyRoleName } from '@/constants/role';
 import { getUserById } from '@/lib/utils/repo/user.repo';
 
@@ -104,12 +104,12 @@ export async function checkAuthorization<T extends AuthFunctionsKeys[]>(
 ): Promise<boolean> {
   let isAuthorized = false;
 
-  // Info: (20240729 - Jacky) 檢查 companyId 是否為 FREE_COMPANY_ID
+  // Info: (20240729 - Jacky) 檢查 companyId 是否為 FREE_ACCOUNT_BOOK_ID
   if (
     typeof authParams === 'object' &&
     authParams !== null &&
     'companyId' in authParams &&
-    authParams.companyId === FREE_COMPANY_ID
+    authParams.companyId === FREE_ACCOUNT_BOOK_ID
   ) {
     isAuthorized = true;
   } else {

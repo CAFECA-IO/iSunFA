@@ -18,7 +18,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { KYCStatus } from '@/constants/kyc';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
 import { LuArrowLeftRight } from 'react-icons/lu';
@@ -161,7 +161,7 @@ const CompanyInfoPageBody = () => {
 
   // Info: (20240802 - Julian) No KYC in free company
   const displayedKYC =
-    selectedAccountBook?.id !== FREE_COMPANY_ID ? (
+    selectedAccountBook?.id !== FREE_ACCOUNT_BOOK_ID ? (
       <>
         {/* ===== KYC ===== */}
         <div className="mt-10 flex gap-4 max-md:max-w-full max-md:flex-wrap">
