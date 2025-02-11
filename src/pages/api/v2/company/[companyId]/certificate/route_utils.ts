@@ -370,11 +370,14 @@ export const certificateAPIGetListUtils = {
     return (a, b, tab) => {
       switch (sortBy) {
         case SortBy.DATE:
-          return a.invoice.date && b.invoice.date ? a.invoice.date - b.invoice.date : 0;
+          // Info: (20250211 - tzuhan) 如果 `a.invoice.date` 為 undefined，則 `a` 排在前面
+          if (a.invoice.date === undefined) return -1;
+          if (b.invoice.date === undefined) return 1;
+          return a.invoice.date - b.invoice.date;
 
         case SortBy.VOUCHER_NUMBER:
-          return tab && tab === InvoiceTabs.WITH_VOUCHER && a.voucherNo && b.voucherNo
-            ? a.voucherNo.localeCompare(b.voucherNo)
+          return tab && tab === InvoiceTabs.WITH_VOUCHER
+            ? (a.voucherNo ?? '').localeCompare(b.voucherNo ?? '')
             : 0;
 
         case SortBy.AMOUNT:
@@ -386,7 +389,7 @@ export const certificateAPIGetListUtils = {
 
         default:
           loggerBack.info('No sorting applied.');
-          return 0; // Info: (20241121 - Murky) 默認不排序
+          return 0; // Info: (20250211 - tzuhan) 默認不排序
       }
     };
   },
