@@ -11,6 +11,7 @@ import { IVoucherBeta, IVoucherListSummary } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { PayableReceivableTabs } from '@/constants/voucher';
+import { TransactionStatus } from '@/constants/account';
 // import Toggle from '@/components/toggle/toggle';
 
 const PayableReceivableVoucherPageBody: React.FC = () => {
@@ -109,6 +110,8 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
       </div>
     );
 
+  const transactionStatusList = ['All', ...Object.values(TransactionStatus)];
+
   return (
     <div className="relative flex flex-col items-center gap-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
@@ -128,11 +131,13 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
+          types={transactionStatusList}
           /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
           dateSort={dateSort}
           otherSorts={otherSorts}
           */
           sort={selectedSort}
+          hideReversedRelated
         />
         {/* Info: (20250109 - Julian) hidden delete voucher & reversals toggle */}
         {/* <div className="flex items-center gap-16px">

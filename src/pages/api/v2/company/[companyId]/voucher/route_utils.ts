@@ -19,7 +19,7 @@ import {
   timestampInSeconds,
 } from '@/lib/utils/common';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
-import { EventType, ProgressStatus } from '@/constants/account';
+import { EventType, ProgressStatus, TransactionStatus } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { parsePrismaCompanyToCompanyEntity } from '@/lib/utils/formatter/company.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
@@ -389,6 +389,32 @@ export const voucherAPIGetUtils = {
     const hasResultVouchers = voucher.resultVouchers.length > 0;
 
     return isDeleted || hasOriginalVouchers || hasResultVouchers;
+  },
+
+  filterTransactionStatus: (
+    voucherBetas: IGetManyVoucherBetaEntity[],
+    tab: VoucherListTabV2,
+    status: TransactionStatus | undefined
+  ) => {
+    return voucherBetas.filter((voucher) => {
+      switch (status) {
+        case TransactionStatus.PENDING:
+          if (tab === VoucherListTabV2.PAYMENT) {
+            return voucher.payableInfo.remain > 0;
+          } else {
+            return voucher.receivingInfo.remain > 0;
+          }
+        case TransactionStatus.REVERSED:
+          if (tab === VoucherListTabV2.PAYMENT) {
+            return voucher.payableInfo.remain === 0;
+          } else {
+            return voucher.receivingInfo.remain === 0;
+          }
+        case undefined:
+        default:
+          return true;
+      }
+    });
   },
 };
 

@@ -232,10 +232,7 @@ export const certificateAPIPostUtils = {
       userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
-  ): ICertificate & {
-    uploaderUrl: string;
-    voucherId: number | undefined;
-  } => {
+  ): ICertificate => {
     const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
     const file: IFileBeta = {
       id: certificateEntity.file.id,
@@ -281,12 +278,9 @@ export const certificateAPIPostUtils = {
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
-    const voucherId = firstVoucher?.id;
+    const voucherId = firstVoucher?.id || null;
 
-    const certificate: ICertificate & {
-      uploaderUrl: string;
-      voucherId: number | undefined;
-    } = {
+    const certificate: ICertificate = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
@@ -356,25 +350,18 @@ export const certificateAPIPostUtils = {
 export const certificateAPIGetListUtils = {
   getSortFunction: (
     sortBy: SortBy
-  ): ((
-    a: ICertificate & {
-      uploaderUrl: string;
-      voucherId: number | undefined;
-    },
-    b: ICertificate & {
-      uploaderUrl: string;
-      voucherId: number | undefined;
-    },
-    tab?: InvoiceTabs
-  ) => number) => {
+  ): ((a: ICertificate, b: ICertificate, tab?: InvoiceTabs) => number) => {
     return (a, b, tab) => {
       switch (sortBy) {
         case SortBy.DATE:
-          return a.invoice.date && b.invoice.date ? a.invoice.date - b.invoice.date : 0;
+          // Info: (20250211 - tzuhan) 如果 `a.invoice.date` 為 undefined，則 `a` 排在前面
+          if (a.invoice.date === undefined) return -1;
+          if (b.invoice.date === undefined) return 1;
+          return a.invoice.date - b.invoice.date;
 
         case SortBy.VOUCHER_NUMBER:
-          return tab && tab === InvoiceTabs.WITH_VOUCHER && a.voucherNo && b.voucherNo
-            ? a.voucherNo.localeCompare(b.voucherNo)
+          return tab && tab === InvoiceTabs.WITH_VOUCHER
+            ? (a.voucherNo ?? '').localeCompare(b.voucherNo ?? '')
             : 0;
 
         case SortBy.AMOUNT:
@@ -386,15 +373,12 @@ export const certificateAPIGetListUtils = {
 
         default:
           loggerBack.info('No sorting applied.');
-          return 0; // Info: (20241121 - Murky) 默認不排序
+          return 0; // Info: (20250211 - tzuhan) 默認不排序
       }
     };
   },
   sortCertificateList: (
-    certificate: (ICertificate & {
-      uploaderUrl: string;
-      voucherId: number | undefined;
-    })[],
+    certificate: ICertificate[],
     options: {
       sortOption: { sortBy: SortBy; sortOrder: SortOrder }[];
       tab?: InvoiceTabs;
@@ -496,10 +480,7 @@ export const certificateAPIGetListUtils = {
       userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
-  ): ICertificate & {
-    uploaderUrl: string;
-    voucherId: number | undefined;
-  } => {
+  ): ICertificate => {
     const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
     const file: IFileBeta = {
       id: certificateEntity.file.id,
@@ -553,12 +534,9 @@ export const certificateAPIGetListUtils = {
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
-    const voucherId = firstVoucher?.id;
+    const voucherId = firstVoucher?.id || null;
 
-    const certificate: ICertificate & {
-      uploaderUrl: string;
-      voucherId: number | undefined;
-    } = {
+    const certificate: ICertificate = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
