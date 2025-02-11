@@ -23,7 +23,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [companies, setCompanies] = useState<ICompanyAndRole[]>([]);
+  const [accountBookList, setAccountBookList] = useState<ICompanyAndRole[]>([]);
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedAccountBook, setSelectedCompany] = useState<ICompanyAndRole | null>(null);
@@ -38,7 +38,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   const handleApiResponse = (data: IPaginatedData<ICompanyAndRole[]>) => {
     setTotalCount(data.totalCount);
     setTotalPages(data.totalPages);
-    setCompanies(data.data);
+    setAccountBookList(data.data);
   };
 
   const handleEditModal = (company: ICompanyAndRole) => {
@@ -106,24 +106,24 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
                 </div>
               </div>
               <div className="table-row-group">
-                {companies.map((company, index) => (
+                {accountBookList.map((accountBook, index) => (
                   <div
                     className="group table-row h-72px text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10"
-                    key={`${company.company.taxId}-${index + 1}`}
+                    key={`${accountBook.company.taxId}-${index + 1}`}
                   >
                     <div className="relative table-cell text-center align-middle">
-                      <div className="text-text-neutral-primary">{company.company.name}</div>
+                      <div className="text-text-neutral-primary">{accountBook.company.name}</div>
                     </div>
                     <div className="relative table-cell text-center align-middle">
-                      <div className="text-text-neutral-tertiary">{company.company.taxId}</div>
+                      <div className="text-text-neutral-tertiary">{accountBook.company.taxId}</div>
                     </div>
                     <div className="relative table-cell"></div>
                     <div className="relative table-cell justify-center align-middle">
-                      <WorkTag type={company.tag} />
+                      <WorkTag type={accountBook.tag} />
                     </div>
                     <div
                       className="relative table-cell justify-center align-middle"
-                      onClick={handleEditModal.bind(null, company)}
+                      onClick={handleEditModal.bind(null, accountBook)}
                     >
                       <Image
                         alt="edit"
