@@ -44,6 +44,7 @@ interface FilterSectionProps<T> {
   };
   disableDateSearch?: boolean;
   displayTypeFilter?: boolean;
+  hideReversedRelated?: boolean; // Info: (20250210 - Julian) 用於 VoucherListBody，隱藏沖銷分錄
 }
 
 const FilterSection = <T,>({
@@ -68,6 +69,7 @@ const FilterSection = <T,>({
   sort,
   disableDateSearch,
   displayTypeFilter,
+  hideReversedRelated,
 }: FilterSectionProps<T>) => {
   // const { t } = useTranslation(['common']);
   const { toastHandler } = useModalContext();
@@ -122,6 +124,7 @@ const FilterSection = <T,>({
             : selectedDateRange.startTimeStamp,
           endDate: !selectedDateRange.endTimeStamp ? undefined : selectedDateRange.endTimeStamp,
           searchQuery,
+          hideReversedRelated,
         },
       });
       if (success && onApiResponse && data) onApiResponse(data);
@@ -154,6 +157,7 @@ const FilterSection = <T,>({
     searchQuery,
     selectedSortOption,
     page,
+    hideReversedRelated,
   ]);
 
   // const handleSort = () => {
@@ -188,6 +192,7 @@ const FilterSection = <T,>({
     selectedDateRange,
     searchQuery,
     selectedSortOption,
+    hideReversedRelated,
   ]);
 
   return (
