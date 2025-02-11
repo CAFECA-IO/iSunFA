@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Pagination from '@/components/pagination/pagination';
 import { ICertificateUI } from '@/interfaces/certificate';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
@@ -57,28 +57,12 @@ const Certificate: React.FC<CertificateProps> = ({
   setAmountSort,
   setVoucherSort,
 }) => {
-  const [certificatesReOrdered, setCertificatesReOrdered] =
-    useState<ICertificateUI[]>(certificates);
-
-  useEffect(() => {
-    const unReadCertificates: ICertificateUI[] = [];
-    const readCertificates: ICertificateUI[] = [];
-    certificates.forEach((certificate) => {
-      if (certificate.unRead) {
-        unReadCertificates.push(certificate);
-      } else {
-        readCertificates.push(certificate);
-      }
-    });
-    setCertificatesReOrdered([...unReadCertificates, ...readCertificates]);
-  }, [certificates]);
-
   return (
     <>
       {viewType === DISPLAY_LIST_VIEW_TYPE.LIST && (
         <CertificateTable
           activeTab={activeTab}
-          certificates={certificatesReOrdered}
+          certificates={certificates}
           currencyAlias={currencyAlias}
           activeSelection={activeSelection}
           handleSelect={handleSelect}
@@ -95,7 +79,7 @@ const Certificate: React.FC<CertificateProps> = ({
       )}
       {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (
         <CertificateGrid
-          certificates={certificatesReOrdered}
+          certificates={certificates}
           activeSelection={activeSelection}
           handleSelect={handleSelect}
           onDownload={onDownload}
