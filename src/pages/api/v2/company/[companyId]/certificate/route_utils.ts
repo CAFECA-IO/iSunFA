@@ -232,10 +232,7 @@ export const certificateAPIPostUtils = {
       userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
-  ): ICertificate & {
-    uploaderUrl: string;
-    voucherId: number | undefined;
-  } => {
+  ): ICertificate => {
     const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
     const file: IFileBeta = {
       id: certificateEntity.file.id,
@@ -281,12 +278,9 @@ export const certificateAPIPostUtils = {
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
-    const voucherId = firstVoucher?.id;
+    const voucherId = firstVoucher?.id || null;
 
-    const certificate: ICertificate & {
-      uploaderUrl: string;
-      voucherId: number | undefined;
-    } = {
+    const certificate: ICertificate = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
@@ -356,17 +350,7 @@ export const certificateAPIPostUtils = {
 export const certificateAPIGetListUtils = {
   getSortFunction: (
     sortBy: SortBy
-  ): ((
-    a: ICertificate & {
-      uploaderUrl: string;
-      voucherId: number | undefined;
-    },
-    b: ICertificate & {
-      uploaderUrl: string;
-      voucherId: number | undefined;
-    },
-    tab?: InvoiceTabs
-  ) => number) => {
+  ): ((a: ICertificate, b: ICertificate, tab?: InvoiceTabs) => number) => {
     return (a, b, tab) => {
       switch (sortBy) {
         case SortBy.DATE:
@@ -394,10 +378,7 @@ export const certificateAPIGetListUtils = {
     };
   },
   sortCertificateList: (
-    certificate: (ICertificate & {
-      uploaderUrl: string;
-      voucherId: number | undefined;
-    })[],
+    certificate: ICertificate[],
     options: {
       sortOption: { sortBy: SortBy; sortOrder: SortOrder }[];
       tab?: InvoiceTabs;
@@ -499,10 +480,7 @@ export const certificateAPIGetListUtils = {
       userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
-  ): ICertificate & {
-    uploaderUrl: string;
-    voucherId: number | undefined;
-  } => {
+  ): ICertificate => {
     const fileURL = certificateAPIPostUtils.transformFileURL(certificateEntity.file);
     const file: IFileBeta = {
       id: certificateEntity.file.id,
@@ -556,12 +534,9 @@ export const certificateAPIGetListUtils = {
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
-    const voucherId = firstVoucher?.id;
+    const voucherId = firstVoucher?.id || null;
 
-    const certificate: ICertificate & {
-      uploaderUrl: string;
-      voucherId: number | undefined;
-    } = {
+    const certificate: ICertificate = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,

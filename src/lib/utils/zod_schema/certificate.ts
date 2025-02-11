@@ -32,11 +32,13 @@ export const ICertificateValidator = z.object({
   file: IFileBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
   invoice: IInvoiceBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
   voucherNo: z.string().nullable(),
+  voucherId: z.number().nullable(),
   aiResultId: z.string().optional(),
   aiStatus: z.string().optional(),
   createdAt: z.number(),
   updatedAt: z.number(),
   uploader: z.string(),
+  uploaderUrl: z.string(),
 });
 
 export const ICertificatePartialInvoiceValidator = z.object({
@@ -47,11 +49,13 @@ export const ICertificatePartialInvoiceValidator = z.object({
   file: IFileBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
   invoice: IInvoiceBetaValidatorOptional, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
   voucherNo: z.string().nullable(),
+  voucherId: z.number().nullable(),
   aiResultId: z.string().optional(),
   aiStatus: z.string().optional(),
   createdAt: z.number(),
   updatedAt: z.number(),
   uploader: z.string(),
+  uploaderUrl: z.string(),
 });
 
 /**
@@ -73,6 +77,7 @@ export const certificateEntityValidator = z.object({
   company: z.any().optional(),
   vouchers: z.array(z.any()).optional(),
   uploader: z.any().optional(),
+  uploaderUrl: z.any().optional(),
   userCertificates: z.array(z.any()).optional(),
 });
 
