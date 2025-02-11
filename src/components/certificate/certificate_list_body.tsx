@@ -476,25 +476,21 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, companyId]
   );
 
-  const handleNewCertificateComing = useCallback(
-    async (newCertificate: ICertificate) => {
-      setCertificates((prev) => {
-        const newCertificateUI: ICertificateUI = {
-          ...newCertificate,
-          isSelected: false,
-          actions: !newCertificate.voucherNo
-            ? [
-                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-              ]
-            : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-        };
-
-        return [newCertificateUI, ...prev];
-      });
-    },
-    [certificates]
-  );
+  const handleNewCertificateComing = useCallback(async (newCertificate: ICertificate) => {
+    setCertificates((prev) => [
+      {
+        ...newCertificate,
+        isSelected: false,
+        actions: !newCertificate.voucherNo
+          ? [
+              CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+              CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+            ]
+          : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+      },
+      ...prev,
+    ]);
+  }, []);
 
   const parseCertificateCreateEventMessage = useCallback(
     (data: { message: string }) => {

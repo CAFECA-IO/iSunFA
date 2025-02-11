@@ -21,6 +21,15 @@ export enum EventType {
   OPENING = 'opening',
 }
 
+export enum TransactionStatus {
+  PENDING = 'pending', // Info: (20250211 - tzuhan) 待收/付中
+  // PARTIALLY_PAID = "PARTIALLY_PAID", //
+  // PAID = "PAID", //
+  REVERSED = 'reversed', // Info: (20250211 - tzuhan) 已全額沖銷完
+  // WRITTEN_OFF = "WRITTEN_OFF", // 呆帳
+  // DISPUTED = "DISPUTED" // 有爭議
+}
+
 export enum AccountType {
   ASSET = 'asset',
   LIABILITY = 'liability',

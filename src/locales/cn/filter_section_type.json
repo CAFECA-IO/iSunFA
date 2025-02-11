@@ -3,6 +3,8 @@
     "TYPE": "类型",
     "STATUS": "状态",
     "ALL": "全部",
+    "PENDING": "待处理",
+    "REVERSED": "已冲销",
     "INVOICE": "发票",
     "RECEIPT": "收据",
     "ASSET": "资产",
