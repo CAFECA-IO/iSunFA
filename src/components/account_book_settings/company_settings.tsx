@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
-import AccountBookListModal from '@/components/company_settings/account_book_list_modal';
+import AccountBookListModal from '@/components/account_book_settings/account_book_list_modal';
 
 interface CompanySettingsProps {}
 

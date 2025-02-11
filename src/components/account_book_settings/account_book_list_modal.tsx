@@ -10,8 +10,8 @@ import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
-import WorkTag from '@/components/company_settings/work_tag';
-import CompanyEditModal from '@/components/company_settings/company_edit_modal';
+import WorkTag from '@/components/account_book_settings/work_tag';
+import CompanyEditModal from '@/components/account_book_settings/company_edit_modal';
 import { useUserCtx } from '@/contexts/user_context';
 
 interface AccountBookListModalProps {
