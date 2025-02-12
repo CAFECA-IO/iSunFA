@@ -298,7 +298,7 @@
     "DELETE_SUCCESS_TOAST": "Vouchers have been deleted.",
     "UNDO": "Undo",
     "VOUCHER_NOT_FOUND": "Voucher not found, please make sure the URL is correct.",
-    "DELETED_REVERSE_VOUCHER": "{{voucherNo}} Reverse voucher (Delete)"
+    "DELETED_REVERSE_VOUCHER": "<link>{{voucherNo}}</link> Reverse voucher (Delete)"
   },
   "LEDGER": {
     "LEDGER_PERIOD": "Ledger Period",

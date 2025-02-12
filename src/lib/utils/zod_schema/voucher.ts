@@ -494,36 +494,32 @@ const voucherGetOneOutputValidatorV2 = z
                 voucherNo: associateVoucher.resultVoucher?.no,
               })) ?? []
           ) ?? []),
-          ...(data.resultEvents?.flatMap(
-            (event) =>
-              event.associateVouchers
-                ?.filter(
-                  (associateVoucher) =>
-                    associateVoucher.event?.eventType === 'revert' &&
-                    associateVoucher.originalVoucher
-                )
-                .map((associateVoucher) => ({
-                  id: associateVoucher.originalVoucher.id,
-                  voucherNo: associateVoucher.originalVoucher.no,
-                })) ?? []
-          ) ?? []),
+          ...(data.resultEvents
+            ?.filter((event) => event.eventType === 'revert')
+            ?.flatMap(
+              (event) =>
+                event.associateVouchers
+                  ?.filter((associateVoucher) => associateVoucher.originalVoucher)
+                  .map((associateVoucher) => ({
+                    id: associateVoucher.originalVoucher.id,
+                    voucherNo: associateVoucher.originalVoucher.no,
+                  })) ?? []
+            ) ?? []),
         ].map((item) => [item.id, item])
       ).values()
     );
-
     let deletedReverseVoucherIds =
-      data.resultEvents?.flatMap(
-        (event) =>
-          event.associateVouchers
-            ?.filter(
-              (associateVoucher) =>
-                associateVoucher.event?.eventType === 'delete' && associateVoucher.originalVoucher
-            )
-            .map((associateVoucher) => ({
-              id: associateVoucher.originalVoucher.id,
-              voucherNo: associateVoucher.originalVoucher.no,
-            })) ?? []
-      ) ?? [];
+      data.resultEvents
+        ?.filter((event) => event.eventType === 'delete')
+        ?.flatMap(
+          (event) =>
+            event.associateVouchers
+              ?.filter((associateVoucher) => associateVoucher.originalVoucher)
+              .map((associateVoucher) => ({
+                id: associateVoucher.originalVoucher.id,
+                voucherNo: associateVoucher.originalVoucher.no,
+              })) ?? []
+        ) ?? [];
 
     //  Info: (20250212 - Tzuhan) 過濾掉 `undefined`
     reverseVoucherIds = reverseVoucherIds.filter((voucher) => voucher.id && voucher.voucherNo);

@@ -298,7 +298,7 @@
     "DELETE_SUCCESS_TOAST": "傳票已刪除。",
     "UNDO": "復原",
     "VOUCHER_NOT_FOUND": "找不到傳票，請確認網址是否正確",
-    "DELETED_REVERSE_VOUCHER": "因刪除 {{voucherNo}} 傳票生成的反轉分錄"
+    "DELETED_REVERSE_VOUCHER": "因刪除 <link>{{voucherNo}}</link> 傳票生成的反轉分錄"
   },
   "LEDGER": {
     "LEDGER_PERIOD": "分類帳期間",

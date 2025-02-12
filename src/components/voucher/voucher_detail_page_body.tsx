@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { useTranslation } from 'next-i18next';
+import { useTranslation, Trans } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { ICertificateUI } from '@/interfaces/certificate';
@@ -234,17 +234,21 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
       {note && <p className="text-input-text-primary">{note}</p>}
       {deletedReverseVoucherIds.length > 0 &&
         deletedReverseVoucherIds.map((deletedReverseVoucherId) => (
-          <p className="text-text-neutral-tertiary">
-            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER', {
-              voucherNo: (
-                <Link
-                  href={`/users/accounting/${deletedReverseVoucherId.id}?voucherNo=${deletedReverseVoucherId.voucherNo}`}
-                  className="text-link-text-primary hover:underline"
-                >
-                  {deletedReverseVoucherId.voucherNo}
-                </Link>
-              ),
-            })}
+          <p className="text-input-text-primary">
+            <Trans
+              i18nKey="journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER"
+              values={{ voucherNo: deletedReverseVoucherId.voucherNo }}
+              components={{
+                link: (
+                  <Link
+                    href={`/users/accounting/${deletedReverseVoucherId.id}?voucherNo=${deletedReverseVoucherId.voucherNo}`}
+                    className="text-link-text-primary hover:underline"
+                  >
+                    {deletedReverseVoucherId.voucherNo}
+                  </Link>
+                ),
+              }}
+            />
           </p>
         ))}
       {!note && deletedReverseVoucherIds.length === 0 && (
