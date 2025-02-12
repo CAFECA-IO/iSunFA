@@ -75,8 +75,8 @@ const VoucherEditingPageBody: React.FC<{
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
-  const temporaryAssetListByCompany = temporaryAssetList[companyId] ?? [];
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const temporaryAssetListByCompany = temporaryAssetList[accountBookId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
   const { trigger: askAI, isLoading: isAskingAI } = APIHandler<{
@@ -141,7 +141,7 @@ const VoucherEditingPageBody: React.FC<{
     number: asset.assetNumber,
     note: asset.note ?? '',
     status: 'normal',
-    companyId: companyId ?? 0,
+    companyId: accountBookId ?? 0,
   }));
 
   // Info: (20250116 - Julian) 不顯示 Opening
@@ -238,7 +238,7 @@ const VoucherEditingPageBody: React.FC<{
   const getResult = useCallback(async () => {
     // Info: (20241220 - Julian) 問 AI 分析結果
     const analysisResult = await getAIResult({
-      params: { companyId, resultId },
+      params: { companyId: accountBookId, resultId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       query: { reason: 'voucher' },
     });
 
@@ -253,7 +253,7 @@ const VoucherEditingPageBody: React.FC<{
   // Info: (20241220 - Julian) 從 resultId 判斷是否已經 POST 成功
   const askAIAnalysis = async (targetIds: number[]) => {
     const aiResult = await askAI({
-      params: { companyId },
+      params: { companyId: accountBookId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       query: { reason: 'voucher' },
       body: { targetIdList: targetIds },
     });
@@ -374,7 +374,7 @@ const VoucherEditingPageBody: React.FC<{
       setAiState(AIState.WORKING);
       // Info: (20241021 - Julian) 呼叫 ask AI
       askAI({
-        params: { companyId },
+        params: { companyId: accountBookId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
         query: { reason: 'voucher' },
         body: { certificateId: selectedCertificatesUI[0].id },
       });
@@ -535,7 +535,7 @@ const VoucherEditingPageBody: React.FC<{
       taxId: undefined,
     });
     setCounterparty(undefined);
-    clearTemporaryAssetHandler(companyId);
+    clearTemporaryAssetHandler(accountBookId);
     clearReverseListHandler();
     setLineItems([initialVoucherLine, { ...initialVoucherLine, id: 1 }]);
     setFlagOfClear(!flagOfClear);
@@ -639,11 +639,13 @@ const VoucherEditingPageBody: React.FC<{
 
     if (isOnlyUpdateVoucher) {
       // Info: (20241119 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
-      updateVoucher({ params: { companyId, voucherId }, body });
+      updateVoucher({ params: { companyId: accountBookId, voucherId }, body }); // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     } else {
       // Info: (20241119 - Julian) 如果有改動到 Voucher line -> 先 DELETE 舊的再 POST 新的
-      deleteVoucher({ params: { companyId, voucherId } });
-      createNewVoucher({ params: { companyId }, body });
+      deleteVoucher({ params: { companyId: accountBookId, voucherId } });
+      // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+      createNewVoucher({ params: { companyId: accountBookId }, body });
+      // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     }
   };
 
@@ -823,7 +825,7 @@ const VoucherEditingPageBody: React.FC<{
   return (
     <div className="relative flex flex-col items-center gap-40px">
       <CertificateSelectorModal
-        companyId={companyId}
+        accountBookId={accountBookId}
         isOpen={openSelectorModal}
         onClose={() => setOpenSelectorModal(false)}
         openUploaderModal={() => setOpenUploaderModal(true)}

@@ -17,8 +17,9 @@ const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('asset');
   const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
-  const params = { companyId };
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const params = { companyId: accountBookId };
+  // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
   const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
 
@@ -93,7 +94,7 @@ const AssetListPageBody: React.FC = () => {
     };
 
     getAccountList();
-  }, [companyId]);
+  }, [params]);
 
   // Info: (20241024 - Julian) 資產狀態列表
   const assetStatusList = Object.values(AssetStatus);

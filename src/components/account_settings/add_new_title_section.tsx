@@ -36,7 +36,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const { toastHandler } = useModalContext();
   const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   // Info: (20241121 - Julian) 會計科目 input ref
   const accountInputRef = useRef<HTMLInputElement>(null);
@@ -309,7 +309,8 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const addBtnClickHandler = async () => {
     if (selectSubcategory) {
       createNewAccount({
-        params: { companyId },
+        params: { companyId: accountBookId },
+        // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
         body: {
           accountId: selectSubcategory.id,
           name: titleName,
@@ -322,7 +323,8 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const updateBtnClickHandler = async () => {
     if (selectSubcategory) {
       updateNewAccount({
-        params: { companyId, accountId: selectSubcategory.id },
+        params: { companyId: accountBookId, accountId: selectSubcategory.id },
+        // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
         body: {
           code: selectSubcategory.code,
           name: titleName,

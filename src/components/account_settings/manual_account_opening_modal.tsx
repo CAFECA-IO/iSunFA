@@ -212,7 +212,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   const [totalDebit, setTotalDebit] = useState<number>(0);
   const [totalCredit, setTotalCredit] = useState<number>(0);
 
-  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const totalStyle =
     totalDebit === totalCredit ? 'text-text-state-success' : 'text-text-state-error';
@@ -228,7 +228,8 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   // Info: (20241115 - Julian) 取得會計科目列表
   const { trigger: getAccountList, data: accountList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { companyId }, query: queryCondition },
+    { params: { companyId: accountBookId }, query: queryCondition },
+    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     false,
     true
   );
@@ -284,7 +285,8 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       reverseVouchers: [],
     };
     // Info: (20250102 - Julian) POST API
-    createNewVoucher({ params: { companyId }, body });
+    createNewVoucher({ params: { companyId: accountBookId }, body });
+    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   const submitDisabled =
@@ -334,7 +336,8 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   useEffect(() => {
     // Info: (20241114 - Julian) 關鍵字搜尋
     getAccountList({
-      params: { companyId },
+      params: { companyId: accountBookId },
+      // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       query: { ...queryCondition, searchKey: searchWord },
     });
   }, [searchWord]);
