@@ -10,7 +10,7 @@ interface SelectCountryDropdownProps {
 }
 
 const SelectCountryDropdown: React.FC<SelectCountryDropdownProps> = ({ country, onSelect }) => {
-  const { t } = useTranslation(['setting', 'common']);
+  const { t } = useTranslation(['settings', 'common']);
   const selectedCountry = country ? CountriesMap[country] : undefined;
 
   const {
@@ -44,7 +44,7 @@ const SelectCountryDropdown: React.FC<SelectCountryDropdownProps> = ({ country, 
           alt="country icon"
         />
         <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-input-text-primary">
-          {selectedCountry?.name || t('setting:NORMAL.SELECT_COUNTRY')}
+          {selectedCountry?.name || t('settings:NORMAL.SELECT_COUNTRY')}
         </div>
         <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
@@ -84,7 +84,7 @@ const SelectCountryDropdown: React.FC<SelectCountryDropdownProps> = ({ country, 
   return (
     <div className="flex flex-col space-y-3 max-md:max-w-full">
       <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-        {t('setting:NORMAL.SELECT_COUNTRY')}
+        {t('settings:NORMAL.SELECT_COUNTRY')}
       </div>
       {displayedCountryMenu}
     </div>

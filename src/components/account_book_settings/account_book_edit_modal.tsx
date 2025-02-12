@@ -26,7 +26,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
   companyAndRole,
   toggleModal,
 }) => {
-  const { t } = useTranslation(['setting', 'common', 'account_book']);
+  const { t } = useTranslation(['settings', 'common', 'account_book']);
   const router = useRouter();
   const [companyName, setCompanyName] = React.useState('');
   const [businessTaxId, setBusinessTaxId] = React.useState('');
@@ -104,7 +104,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
       title: t('account_book:DELETE.TITLE'),
       content: t('account_book:DELETE.WARNING'),
       backBtnStr: t('common:COMMON.CANCEL'),
-      submitBtnStr: t('setting:SETTINGS.REMOVE'),
+      submitBtnStr: t('settings:SETTINGS.REMOVE'),
       submitBtnFunction: procedureOfDelete,
     });
     messageModalVisibilityHandler();
@@ -253,7 +253,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
           </div>
           <div className="grid grid-cols-1 gap-lv-7">
             <Button
-              id="setting-remove-company"
+              id="settings-remove-company"
               type="button"
               variant="errorBorderless"
               className="justify-start p-0"

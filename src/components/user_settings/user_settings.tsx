@@ -15,7 +15,7 @@ interface UserSettingsProps {
 
 const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, loginDevices }) => {
   const { userAuth } = useUserCtx();
-  const { t } = useTranslation(['setting', 'common']);
+  const { t } = useTranslation(['settings', 'common']);
 
   // Info: (20241218 - tzuhan) 計算用戶名稱：優先使用 userSetting，否則使用 userAuth
   const getUserName = useMemo(() => {
@@ -40,11 +40,11 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, loginDevices }
 
   return (
     <>
-      <div id="user-setting-section" className="flex items-center gap-4">
+      <div id="user-settings-section" className="flex items-center gap-4">
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/user-identifier-card.svg" width={16} height={16} alt="info_icon" />
-          <p>{t('setting:NORMAL.USER_SETTINGS')}</p>
+          <p>{t('settings:NORMAL.USER_SETTINGS')}</p>
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>

@@ -1,3 +1,4 @@
+// Deprecated: (20250212 - Liz) 這是 Alpha 版本的元件，即將移除。
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';

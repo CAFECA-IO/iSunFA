@@ -15,7 +15,7 @@ interface NoticeSettingsProps {
 }
 
 const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
-  const { t } = useTranslation(['setting', 'common']);
+  const { t } = useTranslation(['settings', 'common']);
   const { toastHandler } = useModalContext();
   const { trigger: updateUserSettingAPI } = APIHandler<IUserSetting>(APIName.USER_SETTING_UPDATE);
 
@@ -52,7 +52,7 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
           toastHandler({
             id: ToastId.USER_SETTING_UPDATE_ERROR,
             type: ToastType.ERROR,
-            content: t('setting:USER.UPDATE_ERROR'),
+            content: t('settings:USER.UPDATE_ERROR'),
             closeable: true,
           });
           setNotificationSettings(initialSettings); // Info: (20250108 - Tzuhan) 設定失敗，switch 還原回原本狀態，提示錯誤資訊
@@ -62,7 +62,7 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
         toastHandler({
           id: ToastId.USER_SETTING_UPDATE_ERROR,
           type: ToastType.ERROR,
-          content: t('setting:USER.UPDATE_ERROR'),
+          content: t('settings:USER.UPDATE_ERROR'),
           closeable: true,
         });
       }
@@ -81,27 +81,27 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
     {
       key: 'systemNotification',
       icon: '/icons/codepen.svg',
-      label: t('setting:NORMAL.SYSTEM_NOTIFICATION'),
+      label: t('settings:NORMAL.SYSTEM_NOTIFICATION'),
     },
     {
       key: 'updateAndSubscriptionNotification',
       icon: '/icons/bag.svg',
-      label: t('setting:NORMAL.UPDATES_N_SUBSCRIPTION_NOTIFICATION'),
+      label: t('settings:NORMAL.UPDATES_N_SUBSCRIPTION_NOTIFICATION'),
     },
     {
       key: 'emailNotification',
       icon: <FiSend size={16} className="text-icon-surface-single-color-primary" />,
-      label: t('setting:NORMAL.EMAIL_NOTIFICATION'),
+      label: t('settings:NORMAL.EMAIL_NOTIFICATION'),
     },
   ];
 
   return (
     <div>
-      <div id="notice-setting-section" className="mb-lv-7 flex items-center gap-4">
+      <div id="notice-settings-section" className="mb-lv-7 flex items-center gap-4">
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/ringing_bell.svg" width={16} height={16} alt="notice_icon" />
-          <p>{t('setting:NORMAL.NOTICE_SETTINGS')}</p>
+          <p>{t('settings:NORMAL.NOTICE_SETTINGS')}</p>
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>

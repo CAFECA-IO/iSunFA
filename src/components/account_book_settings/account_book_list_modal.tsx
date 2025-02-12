@@ -19,7 +19,7 @@ interface AccountBookListModalProps {
 }
 
 const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal }) => {
-  const { t } = useTranslation(['setting', 'common', 'account_book']);
+  const { t } = useTranslation(['settings', 'common', 'account_book']);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -73,7 +73,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
             pageSize={DEFAULT_PAGE_LIMIT}
             disableDateSearch
           />
-          <div id="company-setting-list" className="flex items-center gap-4">
+          <div id="company-settings-list" className="flex items-center gap-4">
             <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
             <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
               <Image
