@@ -87,6 +87,11 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     setFilteredAccountList(accountList);
   }, [accountTitleList]);
 
+  const clearSearchWord = () => {
+    setSearchWord('');
+    getAccountList({ params: { companyId } });
+  };
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="relative mx-auto flex w-90vw flex-col items-stretch gap-y-24px rounded-lg bg-card-surface-primary p-40px shadow-lg shadow-black/80 lg:w-720px">
@@ -145,11 +150,11 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
           )}
           {/* Info: (20241108 - Julian) Right: Add New Title Section */}
           <AddNewTitleSection
-            accountTitleList={accountList}
             formType={formType}
             selectedAccountTitle={selectedAccountTitle}
             isRecallApi={isRecallApi}
             setIsRecallApi={setIsRecallApi}
+            clearSearchWord={clearSearchWord}
           />
         </div>
       </div>

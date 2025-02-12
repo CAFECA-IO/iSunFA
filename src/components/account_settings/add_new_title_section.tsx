@@ -17,19 +17,19 @@ import { ToastId } from '@/constants/toast_id';
 import { FiBookOpen } from 'react-icons/fi';
 
 interface IAddNewTitleSectionProps {
-  accountTitleList: IAccount[];
   formType: TitleFormType;
   selectedAccountTitle: IAccount | null;
   isRecallApi: boolean;
   setIsRecallApi: React.Dispatch<React.SetStateAction<boolean>>;
+  clearSearchWord: () => void;
 }
 
 const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
-  accountTitleList,
   formType,
   selectedAccountTitle,
   isRecallApi,
   setIsRecallApi,
+  clearSearchWord,
 }) => {
   const { t } = useTranslation('common');
 
@@ -37,6 +37,13 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const { selectedAccountBook } = useUserCtx();
 
   const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const queryCondition = {
+    limit: 9999, // Info: (20250212 - Julian) 全部取出
+    forUser: true,
+    sortBy: 'code', // Info: (20250212 - Julian) 依 code 排序
+    sortOrder: 'asc',
+    isDeleted: false, // Info: (20250212 - Julian) 只取未刪除的
+  };
 
   // Info: (20241121 - Julian) 會計科目 input ref
   const accountInputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +64,18 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     error: updateError,
   } = APIHandler<IPaginatedAccount>(APIName.UPDATE_ACCOUNT_INFO_BY_ID);
 
+  // Info: (20250212 - Julian) 取得會計科目列表的 API
+  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
+    APIName.ACCOUNT_LIST,
+    { params: { companyId }, query: queryCondition },
+    false,
+    true
+  );
+
+  // Info: (20250212 - Julian) 會計科目列表
+  const accountList = accountTitleList?.data ?? [];
+
+  // Info: (20250212 - Julian) Category 輸入狀態
   const {
     targetRef: categoryRef,
     componentVisible: isCategoryMenuOpen,
@@ -78,13 +97,14 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const [titleNote, setTitleNote] = useState<string>('');
   // Info: (20241213 - Julian) 會計科目搜尋
   const [searchKeyword, setSearchKeyword] = useState<string>('');
-  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(accountTitleList);
+  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
 
   const formTitle =
     formType === TitleFormType.add
       ? t('setting:ACCOUNTING_SETTING_MODAL.ADD_NEW_TITLE')
       : t('setting:ACCOUNTING_SETTING_MODAL.EDIT_TITLE');
 
+  // Info: (20250212 - Julian) 大類別
   const accountTypeList = Object.values(AccountTypeBeta);
 
   const categoryString =
@@ -112,7 +132,9 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     setTitleNote(e.target.value);
   };
 
+  // Info: (20250212 - Julian) 清空所有欄位
   const clearAllHandler = () => {
+    clearSearchWord();
     setSelectCategory('');
     setSelectSubcategory(null);
     setTitleName('');
@@ -125,6 +147,44 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     setSearchKeyword(e.target.value);
     setIsAccountEditing(true);
   };
+
+  // Info: (20250212 - Julian) 從 API 取得會計科目列表
+  useEffect(() => {
+    getAccountList({ params: { companyId }, query: queryCondition });
+    setFilteredAccountList(accountList);
+  }, []);
+
+  useEffect(() => {
+    // Info: (20250212 - Julian) 過濾會計科目列表
+    const filteredList = accountList
+      .filter((title) => title.type === selectCategory) // Info: (20250212 - Julian) 依照 selectCategory 過濾
+      .filter((title) => {
+        const isNameMatch = title.name.includes(searchKeyword); // Info: (20250212 - Julian) 名稱包含關鍵字
+        const isCodeMatch = title.code.startsWith(searchKeyword); // Info: (20250212 - Julian) 代碼開頭是關鍵字
+        return isNameMatch || isCodeMatch;
+      });
+    setFilteredAccountList(filteredList);
+
+    if (selectSubcategory?.type !== selectCategory) {
+      setSelectSubcategory(null); // Info: (20250212 - Julian) selectCategory 重置時，清空 selectSubcategory
+    }
+  }, [selectCategory, searchKeyword]);
+
+  // Info: (20250212 - Julian) categoryList 重新渲染時，將 dropdown (id = accounting-category-menu) 捲動至最上方
+  useEffect(() => {
+    const categoryMenu = document.getElementById('accounting-category-menu');
+    if (categoryMenu) {
+      categoryMenu.scrollTop = 0;
+    }
+  }, [isCategoryMenuOpen]);
+
+  // Info: (20250212 - Julian) subcategoryList 重新渲染時，將 dropdown (id = accounting-subcategory-menu) 捲動至最上方
+  useEffect(() => {
+    const subcategoryMenu = document.getElementById('accounting-subcategory-menu');
+    if (subcategoryMenu) {
+      subcategoryMenu.scrollTop = 0;
+    }
+  }, [isAccountEditing]);
 
   useEffect(() => {
     if (!isCreating) {
@@ -190,15 +250,6 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   }, [selectedAccountTitle]);
 
   useEffect(() => {
-    // Info: (20241112 - Julian) 如果重選大分類，且小分類不包含在更新的大分類中，則清空小分類
-    const selectSubcategoryType = selectSubcategory?.type;
-    const isSubCategoryInclude = selectSubcategoryType?.includes(selectCategory);
-    if (!isSubCategoryInclude) {
-      setSelectSubcategory(null);
-    }
-  }, [selectCategory]);
-
-  useEffect(() => {
     // Info: (20241112 - Julian) 如果重選小分類，則清空將大分類指向對應的 type
     const selectSubcategoryType = selectSubcategory?.type;
     if (selectSubcategoryType) {
@@ -217,21 +268,6 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       setSearchKeyword('');
     }
   }, [isAccountEditing]);
-
-  useEffect(() => {
-    if (searchKeyword === '') {
-      setFilteredAccountList(accountTitleList);
-    } else {
-      const filteredList = accountTitleList.filter((account) => {
-        // Info: (20241213 - Julian) 名稱搜尋：包含關鍵字
-        const isNameMatch = account.name.includes(searchKeyword);
-        // Info: (20241213 - Julian) 代碼搜尋：開頭符合關鍵字
-        const isCodeMatch = account.code.startsWith(searchKeyword);
-        return isNameMatch || isCodeMatch;
-      });
-      setFilteredAccountList(filteredList);
-    }
-  }, [searchKeyword]);
 
   const isEditAccounting = isAccountEditing ? (
     <input
@@ -290,7 +326,10 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     <div
       className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${isCategoryMenuOpen ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
     >
-      <div className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
+      <div
+        id="accounting-category-menu"
+        className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px"
+      >
         {categoryList}
       </div>
     </div>
@@ -300,7 +339,10 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     <div
       className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${isAccountEditing ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
     >
-      <div className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
+      <div
+        id="accounting-subcategory-menu"
+        className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px"
+      >
         {subcategoryList}
       </div>
     </div>
