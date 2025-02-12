@@ -1233,29 +1233,45 @@ export async function getManyVoucherV2(options: {
     status: getStatusFilter(tab),
     type: type || undefined,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
-    // Info: (20250203 - Shirley) 如果 hideReversedRelated 為 true，則過濾掉與 delete event 相關的傳票
-    ...(hideReversedRelated && {
-      AND: [
-        {
-          originalVouchers: {
-            none: {
-              event: {
-                eventType: 'delete',
+    AND: [
+      // 1. Info: (20250203 - Shirley) 如果 `hideReversedRelated = true`，則過濾掉與 `delete` 事件相關的傳票
+      ...(hideReversedRelated
+        ? [
+            {
+              originalVouchers: {
+                none: {
+                  event: {
+                    eventType: 'delete',
+                  },
+                },
               },
             },
-          },
-        },
-        {
-          resultVouchers: {
-            none: {
-              event: {
-                eventType: 'delete',
+            {
+              resultVouchers: {
+                none: {
+                  event: {
+                    eventType: 'delete',
+                  },
+                },
               },
             },
-          },
-        },
-      ],
-    }),
+          ]
+        : []),
+      // 2. Info: (20250212 - Tzuhan) 如果 `tab = PAYMENT` 或 `tab = RECEIVING`，則過濾掉 `revert` 沖銷傳票
+      ...(tab === VoucherListTabV2.PAYMENT || tab === VoucherListTabV2.RECEIVING
+        ? [
+            {
+              resultVouchers: {
+                none: {
+                  event: {
+                    eventType: 'revert',
+                  },
+                },
+              },
+            },
+          ]
+        : []),
+    ],
     OR: [
       {
         issuer: {
@@ -1326,9 +1342,7 @@ export async function getManyVoucherV2(options: {
   }
 
   const totalPages = Math.ceil(totalCount / pageSize);
-
   const offset = pageToOffset(page, pageSize);
-  // const orderBy = { [sortBy]: sortOrder };
 
   /**
    * Info: (20250203 - Shirley) 建立排序條件列表
@@ -1476,18 +1490,14 @@ export async function getManyVoucherV2(options: {
 
     switch (tab) {
       case VoucherListTabV2.PAYMENT:
-        vouchers = vouchersFromPrisma.filter((voucher) => {
-          return voucher.lineItems.some((lineItem) =>
-            AccountCodesOfAPRegex.test(lineItem.account.code)
-          );
-        });
+        vouchers = vouchersFromPrisma.filter((voucher) =>
+          voucher.lineItems.some((lineItem) => AccountCodesOfAPRegex.test(lineItem.account.code))
+        );
         break;
       case VoucherListTabV2.RECEIVING:
-        vouchers = vouchersFromPrisma.filter((voucher) => {
-          return voucher.lineItems.some((lineItem) =>
-            AccountCodesOfARRegex.test(lineItem.account.code)
-          );
-        });
+        vouchers = vouchersFromPrisma.filter((voucher) =>
+          voucher.lineItems.some((lineItem) => AccountCodesOfARRegex.test(lineItem.account.code))
+        );
         break;
       default:
         vouchers = vouchersFromPrisma;
@@ -1508,7 +1518,7 @@ export async function getManyVoucherV2(options: {
   } catch (error) {
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
-      errorType: 'Find many accounts in findManyAccountsInPrisma failed',
+      errorType: 'Find many vouchers failed in getManyVoucherV2',
       errorMessage: error as Error,
     });
   }
@@ -1520,7 +1530,7 @@ export async function getManyVoucherV2(options: {
    * 3. 如果有下一頁，移除多取的那一筆資料
    */
   const hasNextPage = vouchers.length > pageSize;
-  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER; // 1;
+  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER;
 
   if (hasNextPage) {
     vouchers.pop();
@@ -1537,7 +1547,6 @@ export async function getManyVoucherV2(options: {
     sort: sortOption,
     where,
   };
-
   return returnValue;
 }
 
