@@ -30,6 +30,23 @@ const UserInfo: React.FC<UserInfoProps> = ({
   const { t } = useTranslation(['settings', 'common']);
   const [isIPModalOpen, setIsIPModalOpen] = useState(false);
 
+  // Info: (20250212 - Anna) 從 loginDevices 找出當前登入的裝置 for 異常登入判斷
+  // Info: (20250212 - Anna) 沒有用 isCurrent: true 判斷，因為不確定是否會多個裝置同時登入
+  const currentDevice = loginDevices?.data.find((device) => device.userAgent === loginDevice);
+  const isAbnormal = currentDevice?.normal === false;
+
+  // eslint-disable-next-line no-console
+  // console.log('登入裝置列表', loginDevices);
+
+  // eslint-disable-next-line no-console
+  // console.log('當前裝置:', currentDevice);
+
+  // eslint-disable-next-line no-console
+  // console.log('loginDevice', loginDevice);
+
+  // eslint-disable-next-line no-console
+  // console.log('是否異常登入:', isAbnormal);
+
   const toggleIPModal = () => {
     setIsIPModalOpen((prev) => !prev);
   };
@@ -77,7 +94,10 @@ const UserInfo: React.FC<UserInfoProps> = ({
             className="justify-start p-0 text-base font-normal"
             onClick={toggleIPModal}
           >
-            <p className="flex max-w-280px flex-wrap gap-1">
+            {/* Info: (20250212 - Anna) 如果 `isAbnormal === true` (異常登入)，IP顯示紅色) */}
+            <p
+              className={`flex max-w-280px flex-wrap gap-1 ${isAbnormal ? 'text-text-state-error' : ''}`}
+            >
               <span>{extractLoginDevice(loginDevice)} /</span>
               <span>{loginIP}</span>
             </p>
