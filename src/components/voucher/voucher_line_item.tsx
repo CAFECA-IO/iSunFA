@@ -53,6 +53,12 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   // Info: (20241210 - Anna) 判斷是否顯示沖銷項目
   const defaultCondition = (amount: number) => amount > 0; // Info: (20241210 - Anna) 默認條件
 
+  const shouldShowReverseButton = (code: string, amount: number) => ({
+    regex: new RegExp(`^${code}(-\\d+)?$`), // Info: (20250212 - Anna) 匹配 'code' 或 'code-數字'
+    amount,
+    condition: defaultCondition,
+  });
+
   // Info: (20241210 - Anna) 基於 lineItemDebitAmount 的會計科目 (應付、預收、租賃負債、合約負債、借款)
   const debitConditions = [
     '2102',
@@ -112,11 +118,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     '2645',
     '2675',
     '2680',
-  ].map((code) => ({
-    code,
-    amount: lineItemDebitAmount, // Info: (20241210 - Anna) 默認使用 lineItemDebitAmount
-    condition: defaultCondition, // Info: (20241210 - Anna) 默認條件
-  }));
+  ].map((code) => shouldShowReverseButton(code, lineItemDebitAmount));
 
   // Info: (20241210 - Anna) 基於 lineItemCreditAmount 的會計科目 (應收、預付、合約資產)
   const creditConditions = [
@@ -175,18 +177,14 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     '194I',
     '194L',
     '1985',
-  ].map((code) => ({
-    code,
-    amount: lineItemCreditAmount, // Info: (20241210 - Anna) 默認使用 lineItemCreditAmount
-    condition: defaultCondition, // Info: (20241210 - Anna) 默認條件
-  }));
+  ].map((code) => shouldShowReverseButton(code, lineItemCreditAmount));
 
   // Info: (20241210 - Anna) 合併條件
   const reverseConditions = [...creditConditions, ...debitConditions];
 
   // Info: (20241210 - Anna) 檢查條件
   const isShowReverse = reverseConditions.some(
-    ({ code, amount, condition }) => lineItemAccount?.code === code && condition(amount)
+    ({ regex, amount, condition }) => regex.test(lineItemAccount?.code || '') && condition(amount)
   );
 
   const inputStyle = {
