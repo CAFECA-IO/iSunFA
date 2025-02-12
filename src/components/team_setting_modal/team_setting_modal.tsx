@@ -57,7 +57,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
       toastHandler({
         id: `update_team-${updateTeamCode}`,
         type: ToastType.ERROR,
-        content: <p>{t('setting:SETTING.FAIL_UPDATE_COMPANY_NAME', { updateTeamCode })}</p>,
+        content: <p>{t('setting:SETTINGS.FAIL_UPDATE_COMPANY_NAME', { updateTeamCode })}</p>,
         closeable: true,
       });
     }

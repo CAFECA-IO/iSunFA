@@ -11,7 +11,7 @@ import { IoCloseOutline } from 'react-icons/io5';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import WorkTag from '@/components/account_book_settings/work_tag';
-import CompanyEditModal from '@/components/account_book_settings/company_edit_modal';
+import AccountBookEditModal from '@/components/account_book_settings/account_book_edit_modal';
 import { useUserCtx } from '@/contexts/user_context';
 
 interface AccountBookListModalProps {
@@ -49,7 +49,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       {isEditModalOpen && selectedAccountBook && (
-        <CompanyEditModal
+        <AccountBookEditModal
           companyAndRole={selectedAccountBook}
           toggleModal={() => setIsEditModalOpen((prev) => !prev)}
         />
@@ -57,7 +57,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
       <div className="ml-250px flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
         <section className="flex items-center justify-between">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('company:LIST.TITLE')}
+            {t('company:LIST.ACCOUNT_BOOK_LIST_TITLE')}
           </h1>
           <button type="button" onClick={toggleModal}>
             <IoCloseOutline size={24} />
@@ -82,7 +82,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
                 height={16}
                 alt="company_icon"
               />
-              <p>{t('company:LIST.TITLE')}</p>
+              <p>{t('company:LIST.ACCOUNT_BOOK_LIST_TITLE')}</p>
             </div>
             <hr className="flex-1 border-divider-stroke-lv-4" />
           </div>

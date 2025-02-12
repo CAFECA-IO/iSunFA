@@ -54,10 +54,10 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
             <p>{t('layout:USER.DELETE_HINT')}</p>
           </div>
           <Link
-            href={ISUNFA_ROUTE.GENERAL_SETTING}
+            href={ISUNFA_ROUTE.GENERAL_SETTINGS}
             className="text-sm font-bold text-link-text-warning"
           >
-            {t('layout:USER.SETTING')}
+            {t('layout:USER.SETTINGS')}
           </Link>
         </div>
       ),

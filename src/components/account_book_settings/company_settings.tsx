@@ -32,7 +32,7 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/asset_management_icon.svg" width={16} height={16} alt="company_icon" />
-          <p>{t('setting:NORMAL.COMPANY_SETTING')}</p>
+          <p>{t('setting:NORMAL.ACCOUNT_BOOK_SETTINGS')}</p>
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>
@@ -44,7 +44,7 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
       >
         <p className="flex gap-2">
           <Image src="/icons/plus.svg" width={16} height={16} alt="notice_icon" />
-          <span>{t('setting:NORMAL.ADD_A_COMPANY')}</span>
+          <span>{t('setting:NORMAL.ADD_AN_ACCOUNT_BOOK')}</span>
         </p>
       </button>
       <button
@@ -55,7 +55,7 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
       >
         <p className="flex gap-2">
           <Image src="/icons/notification-text.svg" width={16} height={16} alt="notice_icon" />
-          <span>{t('setting:NORMAL.VIEW_ALL_COMPANIES')}</span>
+          <span>{t('setting:NORMAL.VIEW_ACCOUNT_BOOK_LIST')}</span>
         </p>
       </button>
     </div>

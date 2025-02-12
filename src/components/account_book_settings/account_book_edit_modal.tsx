@@ -17,12 +17,15 @@ import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
-interface CompanyEditModalProps {
+interface AccountBookEditModalProps {
   companyAndRole: ICompanyAndRole;
   toggleModal: () => void;
 }
 
-const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, toggleModal }) => {
+const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
+  companyAndRole,
+  toggleModal,
+}) => {
   const { t } = useTranslation(['setting', 'common', 'company']);
   const router = useRouter();
   const [companyName, setCompanyName] = React.useState('');
@@ -38,14 +41,14 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
   const { trigger: getCompanySettingAPI } = APIHandler<ICompanySetting>(
     APIName.COMPANY_SETTING_GET
   );
-  const { trigger: updateCompanySettingAPI } = APIHandler(APIName.COMPANY_SETTING_UPDATE);
-  const { trigger: deleteCompanyAPI } = APIHandler(APIName.COMPANY_DELETE);
+  const { trigger: updateAccountBookSettingAPI } = APIHandler(APIName.COMPANY_SETTING_UPDATE);
+  const { trigger: deleteAccountBookAPI } = APIHandler(APIName.COMPANY_DELETE);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (companyAndRole) {
       try {
-        const res = await updateCompanySettingAPI({
+        const res = await updateAccountBookSettingAPI({
           params: {
             companyId: companyAndRole.company.id,
           },
@@ -64,7 +67,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
         const { success } = res;
         if (success) {
           toastHandler({
-            id: ToastId.COMPANY_SETTING_UPDATE_SUCCESS,
+            id: ToastId.ACCOUNT_BOOK_SETTING_UPDATE_SUCCESS,
             type: ToastType.SUCCESS,
             content: t('company:EDIT.UPDATE_SUCCESS'),
             closeable: true,
@@ -73,7 +76,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
         }
       } catch (err) {
         toastHandler({
-          id: ToastId.COMPANY_SETTING_UPDATE_ERROR,
+          id: ToastId.ACCOUNT_BOOK_SETTING_UPDATE_ERROR,
           type: ToastType.ERROR,
           content: (err as Error).message,
           closeable: true,
@@ -85,7 +88,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
   const procedureOfDelete = () => {
     if (!companyAndRole) return;
     messageModalVisibilityHandler();
-    deleteCompanyAPI({
+    deleteAccountBookAPI({
       params: {
         companyId: companyAndRole.company.id,
       },
@@ -101,7 +104,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
       title: t('company:DELETE.TITLE'),
       content: t('company:DELETE.WARNING'),
       backBtnStr: t('common:COMMON.CANCEL'),
-      submitBtnStr: t('setting:SETTING.REMOVE'),
+      submitBtnStr: t('setting:SETTINGS.REMOVE'),
       submitBtnFunction: procedureOfDelete,
     });
     messageModalVisibilityHandler();
@@ -155,14 +158,14 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
           </Button>
         </section>
         <section className="flex flex-col gap-lv-5">
-          <div id="company-setting-list" className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
             <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
             <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
               <Image
                 src="/icons/asset_management_icon.svg"
                 width={16}
                 height={16}
-                alt="company_icon"
+                alt="building_icon"
               />
               <p>{t('company:EDIT.INFO')}</p>
             </div>
@@ -217,7 +220,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
                 {t('company:EDIT.COMPANY_REPRESENTATIVE_NAME')}
               </p>
               <input
-                id="comany-representative-name-input"
+                id="company-representative-name-input"
                 type="text"
                 value={representativeName}
                 onChange={(e) => setRepresentativeName(e.target.value)}
@@ -239,7 +242,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
                 {t('company:EDIT.COMPANY_ADDRESS')}
               </p>
               <input
-                id="comany-address-input"
+                id="company-address-input"
                 type="text"
                 value={companyAddress}
                 onChange={(e) => setCompanyAddress(e.target.value)}
@@ -257,7 +260,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
             >
               <p className="flex cursor-pointer gap-2" onClick={deleteCompanyClickHandler}>
                 <Image src="/icons/trash.svg" width={16} height={16} alt="notice_icon" />
-                <span>{t('company:EDIT.REMOVE_THIS_COMPANY')}</span>
+                <span>{t('company:EDIT.DELETE_THIS_ACCOUNT_BOOK')}</span>
               </p>
             </Button>
           </div>
@@ -275,4 +278,4 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
   );
 };
 
-export default CompanyEditModal;
+export default AccountBookEditModal;

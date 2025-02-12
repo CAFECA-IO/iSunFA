@@ -12,6 +12,7 @@ import { Button } from '@/components/button/button';
 import SelectCountryDropdown from '@/components/user_settings/select_country_dropdown';
 import SelectLanguageDropdown from '@/components/user_settings/select_language_dropdown';
 import PhoneNumberInput from '@/components/user_settings/phone_number_input';
+import { toConstantCase } from '@/lib/utils/common';
 
 interface UserInfoFormProps {
   userSetting: IUserSetting | null;
@@ -120,13 +121,13 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
         {['firstName', 'lastName'].map((field) => (
           <div key={field} className="flex flex-col gap-2">
             <label
-              htmlFor={`usersetting-${field}`}
+              htmlFor={`user-setting-${field}`}
               className="text-sm font-semibold text-input-text-primary"
             >
-              {t(`setting:NORMAL.${field.toUpperCase()}`)}
+              {t(`setting:NORMAL.${toConstantCase(field)}`)}
             </label>
             <input
-              id={`usersetting-${field}`}
+              id={`user-setting-${field}`}
               type="text"
               value={formState[field as 'firstName' | 'lastName']}
               onChange={(e) => handleInputChange(field as keyof typeof formState, e.target.value)}

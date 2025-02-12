@@ -24,11 +24,11 @@
     "TRIAL_BALANCE": "Trial Balance",
     "EMBED_CODE": "Embed Code",
     "GENERATE_EMBED_CODE": "Generate Embed Code",
-    "PARAMETER_SETTING": "Parameter Setting",
-    "SETTING": "Setting",
-    "GENERAL_SETTING": "General Setting",
-    "ACCOUNT_BOOK_SETTING": "Account Book Setting",
-    "ACCOUNTING_SETTING": "Accounting Setting",
+    "PARAMETER_SETTINGS": "Parameter Settings",
+    "SETTINGS": "Settings",
+    "GENERAL_SETTINGS": "General Settings",
+    "ACCOUNT_BOOK_SETTINGS": "Account Book Settings",
+    "ACCOUNTING_SETTINGS": "Accounting Settings",
     "CLIENTS_SUPPLIERS_MANAGEMENT": "Clients/Suppliers Management",
     "BACK_TO_DASHBOARD": "Back to Dashboard"
   },
@@ -41,7 +41,7 @@
   "USER": {
     "DELETE_WARNING": "This account will be deleted in {{days}} business days.",
     "DELETE_HINT": "Please ensure data backup. To cancel the deletion process, please go to the settings page.",
-    "SETTING": "Setting"
+    "SETTINGS": "Settings"
   },
   "EMBED_CODE_MODAL": {
     "EMBED_CODE": "Embed Code",

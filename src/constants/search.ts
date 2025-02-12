@@ -175,20 +175,20 @@ export const SEARCH_KEYWORDS: ISearchKeyword[] = [
   },
   {
     label: 'General Setting',
-    path: ISUNFA_ROUTE.GENERAL_SETTING,
+    path: ISUNFA_ROUTE.GENERAL_SETTINGS,
   },
   {
     label: '一般設定',
-    path: ISUNFA_ROUTE.GENERAL_SETTING,
+    path: ISUNFA_ROUTE.GENERAL_SETTINGS,
   },
   {
     label: 'Accounting Setting',
-    path: ISUNFA_ROUTE.ACCOUNTING_SETTING,
+    path: ISUNFA_ROUTE.ACCOUNTING_SETTINGS,
     needToVerifyCompany: true,
   },
   {
     label: '會計設定',
-    path: ISUNFA_ROUTE.ACCOUNTING_SETTING,
+    path: ISUNFA_ROUTE.ACCOUNTING_SETTINGS,
     needToVerifyCompany: true,
   },
 ];

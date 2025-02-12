@@ -15,11 +15,11 @@ const CounterpartyPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('setting:NORMAL.CLIENT_SUPPLIER_SETTING')} - iSunFA</title>
+        <title>{t('setting:NORMAL.CLIENT_SUPPLIER_SETTINGS')} - iSunFA</title>
       </Head>
 
       {/* Info: (20241017 - Anna) Body */}
-      <Layout isDashboard={false} pageTitle={t('setting:NORMAL.CLIENT_SUPPLIER_SETTING')}>
+      <Layout isDashboard={false} pageTitle={t('setting:NORMAL.CLIENT_SUPPLIER_SETTINGS')}>
         {/* Info: (20241017 - Anna) 拿掉w-screen */}
         <main className="flex flex-col overflow-y-auto bg-surface-neutral-main-background font-barlow transition-all duration-300 ease-in-out">
           <CounterpartyPageBody />

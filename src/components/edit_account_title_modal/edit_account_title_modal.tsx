@@ -77,14 +77,14 @@ const EditAccountTitleModal = ({
       toastHandler({
         id: `updateAccount-${updateCode}`,
         type: ToastType.SUCCESS,
-        content: `${t('setting:SETTING.SUCCESSFULLY_UPDATED_ACCOUNT')} ${updateResult.name}`,
+        content: `${t('setting:SETTINGS.SUCCESSFULLY_UPDATED_ACCOUNT')} ${updateResult.name}`,
         closeable: true,
       });
     } else if (updateSuccess === false) {
       toastHandler({
         id: `updateAccount-${updateCode}`,
         type: ToastType.ERROR,
-        content: t('setting:SETTING.FAILED_TO_UPDATE_ACCOUNT'),
+        content: t('setting:SETTINGS.FAILED_TO_UPDATE_ACCOUNT'),
         closeable: true,
       });
     }
@@ -104,7 +104,7 @@ const EditAccountTitleModal = ({
       toastHandler({
         id: `getAccount-${errorCode}`,
         type: ToastType.ERROR,
-        content: t('setting:SETTING.FAILED_TO_GET_ACCOUNT_DATA'),
+        content: t('setting:SETTINGS.FAILED_TO_GET_ACCOUNT_DATA'),
         closeable: true,
       });
     }
@@ -130,11 +130,11 @@ const EditAccountTitleModal = ({
 
   const handleRemove = () => {
     messageModalDataHandler({
-      title: t('setting:SETTING.REMOVE_ACCOUNTING_TITLE'),
-      content: t('setting:SETTING.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
+      title: t('setting:SETTINGS.REMOVE_ACCOUNTING_TITLE'),
+      content: t('setting:SETTINGS.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
       notes: nameValue,
       messageType: MessageType.WARNING,
-      submitBtnStr: t('setting:SETTING.REMOVE'),
+      submitBtnStr: t('setting:SETTINGS.REMOVE'),
       submitBtnFunction: () => {
         if (!hasCompanyId) return;
         modalVisibilityHandler();
@@ -152,7 +152,7 @@ const EditAccountTitleModal = ({
       type="text"
       // Info: (20240805 - Anna) value={accountingType}
       value={t(
-        `setting:SETTING.${accountingType.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`
+        `setting:SETTINGS.${accountingType.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`
       )}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
@@ -167,7 +167,7 @@ const EditAccountTitleModal = ({
       type="text"
       // Info: (20240805 - Anna) value={liquidityText}
       value={t(
-        `setting:SETTING.${liquidityText.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`
+        `setting:SETTINGS.${liquidityText.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`
       )}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
@@ -193,7 +193,7 @@ const EditAccountTitleModal = ({
       >
         {/* Info: (20240717 - Julian) Title */}
         <div className="relative flex items-center justify-center py-16px text-xl font-bold text-card-text-primary">
-          <h1>{t('setting:SETTING.EDIT_MY_NEW_ACCOUNTING_TITLE')}</h1>
+          <h1>{t('setting:SETTINGS.EDIT_MY_NEW_ACCOUNTING_TITLE')}</h1>
           <button
             type="button"
             onClick={modalVisibilityHandler}
@@ -207,33 +207,33 @@ const EditAccountTitleModal = ({
           {/* Info: (20240717 - Julian) Accounting Type */}
           <div className="flex flex-col gap-y-8px">
             <p className="font-semibold text-input-text-primary">
-              {t('setting:SETTING.ACCOUNTING_TYPE')}
+              {t('setting:SETTINGS.ACCOUNTING_TYPE')}
             </p>
             {displayType}
           </div>
           {/* Info: (20240717 - Julian) Liquidity */}
           <div className="flex flex-col gap-y-8px">
             <p className="font-semibold text-input-text-primary">
-              {t('setting:SETTING.LIQUIDITY')}
+              {t('setting:SETTINGS.LIQUIDITY')}
             </p>
             {displayLiquidity}
           </div>
           {/* Info: (20240717 - Julian) Current Liquidity */}
           <div className="col-span-2 flex flex-col gap-y-8px">
             <p className="font-semibold text-input-text-primary">
-              {t('setting:SETTING.CURRENT_LIQUIDITY')}
+              {t('setting:SETTINGS.CURRENT_LIQUIDITY')}
             </p>
             {displayCurrentAsset}
           </div>
           {/* Info: (20240717 - Julian) Name */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">{t('setting:SETTING.NAME')}</p>
+            <p className="font-semibold text-input-text-primary">{t('setting:SETTINGS.NAME')}</p>
             <input
               id="input-name"
               type="text"
               value={nameValue}
               onChange={handleNameChange}
-              placeholder={t('setting:SETTING.ENTER_NAME')}
+              placeholder={t('setting:SETTINGS.ENTER_NAME')}
               className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
@@ -245,7 +245,7 @@ const EditAccountTitleModal = ({
               variant="secondaryOutline"
               onClick={handleRemove}
             >
-              <RiDeleteBinLine /> <p>{t('setting:SETTING.REMOVE_ACCOUNTING_TITLE')}</p>
+              <RiDeleteBinLine /> <p>{t('setting:SETTINGS.REMOVE_ACCOUNTING_TITLE')}</p>
             </Button>
           </div>
         </div>

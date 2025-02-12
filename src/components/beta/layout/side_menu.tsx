@@ -203,30 +203,30 @@ const MENU_CONFIG: TMenuOption[] = [
     ],
   },
   {
-    title: 'PARAMETER_SETTING',
+    title: 'PARAMETER_SETTINGS',
     iconSrc: '/icons/parameter_setting.svg',
     iconSrcAlt: 'parameter_setting',
     iconWidth: 23.77,
     iconHeight: 23.73,
     subMenu: [
       {
-        caption: 'SETTING',
+        caption: 'SETTINGS',
         subMenu: [
           {
             type: SubMenuOptionType.LINK,
-            title: 'GENERAL_SETTING',
-            link: ISUNFA_ROUTE.GENERAL_SETTING,
+            title: 'GENERAL_SETTINGS',
+            link: ISUNFA_ROUTE.GENERAL_SETTINGS,
             needToVerifyAccountBook: false,
           },
         ],
       },
       {
-        caption: 'ACCOUNT_BOOK_SETTING',
+        caption: 'ACCOUNT_BOOK_SETTINGS',
         subMenu: [
           {
             type: SubMenuOptionType.LINK,
-            title: 'ACCOUNTING_SETTING',
-            link: ISUNFA_ROUTE.ACCOUNTING_SETTING,
+            title: 'ACCOUNTING_SETTINGS',
+            link: ISUNFA_ROUTE.ACCOUNTING_SETTINGS,
             needToVerifyAccountBook: true,
           },
           {

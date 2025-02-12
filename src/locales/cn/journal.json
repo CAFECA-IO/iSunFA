@@ -314,8 +314,7 @@
     "EQUITY": "权益",
     "COST": "成本",
     "EXPENSE": "费用",
-    "REVENUE": "收入",
-    "OTHERCOMPREHENSIVEINCOME": "其他综合损益"
+    "REVENUE": "收入"
   },
   "AI_WORKING_AREA": {
     "RESTING_CONTENT": "请选择凭证，让 AI 为您生成所需的传票",

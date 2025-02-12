@@ -44,7 +44,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, loginDevices }
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/user-identifier-card.svg" width={16} height={16} alt="info_icon" />
-          <p>{t('setting:NORMAL.USER_SETTING')}</p>
+          <p>{t('setting:NORMAL.USER_SETTINGS')}</p>
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>

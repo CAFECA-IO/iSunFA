@@ -65,10 +65,10 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
               <p>{t('layout:USER.DELETE_HINT')}</p>
             </div>
             <Link
-              href={ISUNFA_ROUTE.GENERAL_SETTING}
+              href={ISUNFA_ROUTE.GENERAL_SETTINGS}
               className="text-sm font-bold text-link-text-warning"
             >
-              {t('layout:USER.SETTING')}
+              {t('layout:USER.SETTINGS')}
             </Link>
           </div>
         );
@@ -121,7 +121,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/attribution.svg" width={16} height={16} alt="notice_icon" />
-          <p>{t('setting:NORMAL.ACCOUNT_SETTING')}</p>
+          <p>{t('setting:NORMAL.ACCOUNT_SETTINGS')}</p>
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>

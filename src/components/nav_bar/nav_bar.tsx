@@ -362,7 +362,7 @@ const NavBar = () => {
             <FiSettings size={20} />
           </div>
           <div className="text-base font-medium leading-6 tracking-normal">
-            {t('common:NAV_BAR.SETTING')}
+            {t('common:NAV_BAR.SETTINGS')}
           </div>
         </Button>
         <div className="mt-3 flex flex-col justify-center py-2.5">
