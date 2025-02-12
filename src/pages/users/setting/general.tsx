@@ -6,7 +6,7 @@ import Head from 'next/head';
 import Layout from '@/components/beta/layout/layout';
 import UserSettings from '@/components/user_settings/user_settings';
 import NoticeSettings from '@/components/notice_settings/notice_settings';
-import CompanySettings from '@/components/account_book_settings/company_settings';
+import AccountBookSettings from '@/components/account_book_settings/account_book_settings';
 import AccountSettings from '@/components/account_settings/account_settings';
 import APIHandler from '@/lib/utils/api_handler';
 import { IUserSetting } from '@/interfaces/user_setting';
@@ -83,7 +83,7 @@ const GeneralSettingsPage: React.FC = () => {
         <div className="mx-auto flex w-full flex-col gap-lv-7">
           <UserSettings userSetting={userSetting} loginDevices={loginDevices} />
           <NoticeSettings userSetting={userSetting} />
-          <CompanySettings />
+          <AccountBookSettings />
           <AccountSettings />
         </div>
       </Layout>

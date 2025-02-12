@@ -4,9 +4,9 @@ import Image from 'next/image';
 import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
 import AccountBookListModal from '@/components/account_book_settings/account_book_list_modal';
 
-interface CompanySettingsProps {}
+interface AccountBookSettingsProps {}
 
-const CompanySettings: React.FC<CompanySettingsProps> = () => {
+const AccountBookSettings: React.FC<AccountBookSettingsProps> = () => {
   const { t } = useTranslation(['setting', 'common']);
 
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
@@ -62,4 +62,4 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
   );
 };
 
-export default CompanySettings;
+export default AccountBookSettings;
