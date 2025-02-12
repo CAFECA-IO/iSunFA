@@ -143,6 +143,10 @@ export interface IVoucherDetailForFrontend {
     id: number;
     voucherNo: string;
   }[];
+  deletedReverseVoucherIds: {
+    id: number;
+    voucherNo: string;
+  }[];
   assets: IAssetDetails[];
   certificates: ICertificate[];
   lineItems: (ILineItemBeta & {
@@ -181,6 +185,7 @@ export const defaultVoucherDetail: IVoucherDetailForFrontend = {
   payableInfo: undefined,
   receivingInfo: undefined,
   reverseVoucherIds: [],
+  deletedReverseVoucherIds: [],
   assets: [],
   certificates: [],
   lineItems: [],

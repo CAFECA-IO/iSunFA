@@ -1208,6 +1208,7 @@ export const mockVouchersReturn = [
         voucherNo: '240817-002',
       },
     ],
+    deletedReverseVoucherIds: [],
     issuer: {
       // Info: (20240927 - Murky) IUser
       id: 1001,
