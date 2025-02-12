@@ -19,20 +19,21 @@ const VoucherEditingPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
   const router = useRouter();
   const [voucherNo, setVoucherNo] = useState<string | undefined>();
 
-  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   // Info: (20241118 - Julian) 取得 Voucher 資料
   const { trigger: getVoucherData, data: voucherData } = APIHandler<IVoucherDetailForFrontend>(
     APIName.VOUCHER_GET_BY_ID_V2,
-    { params: { companyId, voucherId } }
+    { params: { companyId: accountBookId, voucherId } }
+    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   );
 
   useEffect(() => {
-    // Info: (20241121 - Julian) Get voucher data when companyId is ready
-    if (companyId) {
+    // Info: (20241121 - Julian) Get voucher data when accountBookId is ready
+    if (accountBookId) {
       getVoucherData();
     }
-  }, [companyId]);
+  }, [accountBookId]);
 
   useEffect(() => {
     if (router.query.voucherNo) {
@@ -80,7 +81,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
         'layout',
         'common',
         'journal',
-        'setting',
+        'settings',
         'terms',
         'asset',
         'dashboard',

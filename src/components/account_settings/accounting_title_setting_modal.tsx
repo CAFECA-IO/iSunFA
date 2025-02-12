@@ -24,7 +24,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   const { t } = useTranslation('common');
   const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const queryCondition = {
     limit: 9999, // Info: (20241212 - Julian) 全部取出
@@ -41,7 +41,8 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     success,
   } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { companyId }, query: queryCondition },
+    { params: { companyId: accountBookId }, query: queryCondition },
+    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     false,
     true
   );
@@ -62,7 +63,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   const handleSearchWordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       getAccountList({
-        params: { companyId },
+        params: { companyId: accountBookId },
         query: { ...queryCondition, searchKey: searchWord },
       });
     }
@@ -70,7 +71,8 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
 
   useEffect(() => {
     if (isModalVisible) {
-      getAccountList({ params: { companyId } });
+      getAccountList({ params: { companyId: accountBookId } });
+      // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     } else {
       // Info: (20241108 - Julian) 關閉 Modal 時重置 state
       setSearchWord('');
@@ -80,7 +82,8 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   }, [isModalVisible]);
 
   useEffect(() => {
-    getAccountList({ params: { companyId } });
+    getAccountList({ params: { companyId: accountBookId } });
+    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   }, [isRecallApi]);
 
   useEffect(() => {
@@ -89,7 +92,8 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
 
   const clearSearchWord = () => {
     setSearchWord('');
-    getAccountList({ params: { companyId } });
+    getAccountList({ params: { companyId: accountBookId } });
+    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   const isDisplayModal = isModalVisible ? (

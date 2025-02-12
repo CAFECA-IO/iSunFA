@@ -79,9 +79,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
-  const temporaryAssetListByUser = temporaryAssetList[companyId] ?? [];
+  const temporaryAssetListByUser = temporaryAssetList[accountBookId] ?? [];
 
   const initialLineItems: ILineItemUI[] = [
     initialVoucherLine,
@@ -209,7 +209,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const getResult = useCallback(async () => {
     // Info: (20241220 - Julian) 問 AI 分析結果
     const analysisResult = await getAIResult({
-      params: { companyId, resultId },
+      params: { companyId: accountBookId, resultId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       query: { reason: 'voucher' },
     });
 
@@ -224,7 +224,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241220 - Julian) 從 resultId 判斷是否已經 POST 成功
   const askAIAnalysis = async (targetIds: number[]) => {
     const aiResult = await askAI({
-      params: { companyId },
+      params: { companyId: accountBookId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       query: { reason: 'voucher' },
       body: { targetIdList: targetIds },
     });
@@ -521,7 +521,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     // setRecurringPeriod(default30DayPeriodInSec);
     // setRecurringUnit(RecurringUnit.MONTH);
     // setRecurringArray([]);
-    clearTemporaryAssetHandler(companyId);
+    clearTemporaryAssetHandler(accountBookId);
     clearReverseListHandler();
     setLineItems(initialLineItems);
     setFlagOfClear(!flagOfClear);
@@ -624,9 +624,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       reverseVouchers,
     };
 
-    clearTemporaryAssetHandler(companyId);
+    clearTemporaryAssetHandler(accountBookId);
     clearReverseListHandler();
-    createVoucher({ params: { companyId }, body });
+    createVoucher({ params: { companyId: accountBookId }, body }); // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
@@ -922,14 +922,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
   useEffect(() => {
     const pusher = getPusherInstance();
-    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
 
     channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
     return () => {
       channel.unbind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
       channel.unsubscribe();
-      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     };
   }, []);
 
@@ -977,7 +977,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   return (
     <div className="relative flex flex-col items-center gap-40px">
       <CertificateSelectorModal
-        companyId={companyId}
+        accountBookId={accountBookId}
         isOpen={openSelectorModal}
         onClose={() => setOpenSelectorModal(false)}
         openUploaderModal={() => setOpenUploaderModal(true)}

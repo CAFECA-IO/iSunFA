@@ -15,7 +15,7 @@ import {
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
-import { CompanyUpdateAction } from '@/constants/company';
+import { ACCOUNT_BOOK_UPDATE_ACTION } from '@/constants/company';
 import { Company, Role, File } from '@prisma/client';
 
 const handleGetRequest: IHandleRequest<
@@ -64,7 +64,7 @@ const handlePutRequest: IHandleRequest<
   const { action, tag } = body;
   const { userId } = session;
   switch (action) {
-    case CompanyUpdateAction.UPDATE_TAG: {
+    case ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG: {
       const admin = await getAdminByCompanyIdAndUserId(userId, companyId);
       if (admin && tag) {
         const updatedCompanyAndRole = await updateCompanyTagById(admin.id, tag);
@@ -73,7 +73,7 @@ const handlePutRequest: IHandleRequest<
       }
       break;
     }
-    case CompanyUpdateAction.SET_TO_TOP: {
+    case ACCOUNT_BOOK_UPDATE_ACTION.SET_TO_TOP: {
       const updatedCompanyAndRole = await setCompanyToTop(userId, companyId);
       if (updatedCompanyAndRole) {
         statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;

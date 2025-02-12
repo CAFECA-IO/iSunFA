@@ -11,7 +11,7 @@ import { IoCloseOutline } from 'react-icons/io5';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import WorkTag from '@/components/account_book_settings/work_tag';
-import CompanyEditModal from '@/components/account_book_settings/company_edit_modal';
+import AccountBookEditModal from '@/components/account_book_settings/account_book_edit_modal';
 import { useUserCtx } from '@/contexts/user_context';
 
 interface AccountBookListModalProps {
@@ -19,7 +19,7 @@ interface AccountBookListModalProps {
 }
 
 const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal }) => {
-  const { t } = useTranslation(['setting', 'common', 'company']);
+  const { t } = useTranslation(['settings', 'common', 'account_book']);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -30,7 +30,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   const { userAuth } = useUserCtx();
 
   const displayedType = SortingButton({
-    string: t('company:INFO.WORK_TAG'),
+    string: t('account_book:INFO.WORK_TAG'),
     sortOrder: typeSort,
     setSortOrder: setTypeSort,
   });
@@ -49,7 +49,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       {isEditModalOpen && selectedAccountBook && (
-        <CompanyEditModal
+        <AccountBookEditModal
           companyAndRole={selectedAccountBook}
           toggleModal={() => setIsEditModalOpen((prev) => !prev)}
         />
@@ -57,7 +57,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
       <div className="ml-250px flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
         <section className="flex items-center justify-between">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('company:LIST.TITLE')}
+            {t('account_book:LIST.ACCOUNT_BOOK_LIST_TITLE')}
           </h1>
           <button type="button" onClick={toggleModal}>
             <IoCloseOutline size={24} />
@@ -73,7 +73,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
             pageSize={DEFAULT_PAGE_LIMIT}
             disableDateSearch
           />
-          <div id="company-setting-list" className="flex items-center gap-4">
+          <div id="company-settings-list" className="flex items-center gap-4">
             <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
             <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
               <Image
@@ -82,7 +82,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
                 height={16}
                 alt="company_icon"
               />
-              <p>{t('company:LIST.TITLE')}</p>
+              <p>{t('account_book:LIST.ACCOUNT_BOOK_LIST_TITLE')}</p>
             </div>
             <hr className="flex-1 border-divider-stroke-lv-4" />
           </div>
@@ -91,17 +91,17 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
               <div className="table-header-group h-60px w-full rounded-sm bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
                 <div className="table-row w-full">
                   <div className="table-cell min-w-134px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-                    <div>{t('company:INFO.COMPANY_NAME')}</div>
+                    <div>{t('account_book:INFO.COMPANY_NAME')}</div>
                   </div>
                   <div className="table-cell min-w-84px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-                    <div>{t('company:INFO.TAX_ID')}</div>
+                    <div>{t('account_book:INFO.TAX_ID')}</div>
                   </div>
                   <div className="table-cell w-full border-b border-r"></div>
                   <div className="table-cell min-w-105px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
                     {displayedType}
                   </div>
                   <div className="table-cell min-w-64px border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
-                    <div>{t('company:LIST.ACTION')}</div>
+                    <div>{t('account_book:LIST.ACTION')}</div>
                   </div>
                 </div>
               </div>

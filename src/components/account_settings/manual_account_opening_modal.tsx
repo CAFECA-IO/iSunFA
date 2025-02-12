@@ -59,7 +59,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
   setAmount,
   deleteHandler,
 }) => {
-  const { t } = useTranslation('setting');
+  const { t } = useTranslation('settings');
   const { id, subcategory, isDebit, beginningAmount } = data;
 
   // Info: (20241112 - Julian) 設定 debit 和 credit 的金額
@@ -70,7 +70,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
 
   const subcategoryPlaceholder = subcategory
     ? `${subcategory.code} ${subcategory.name}`
-    : t('setting:MANUAL_ACCOUNT_OPENING_MODAL.DROPMENU_PLACEHOLDER');
+    : t('settings:MANUAL_ACCOUNT_OPENING_MODAL.DROPMENU_PLACEHOLDER');
 
   const debitDisabled = credit !== 0;
   const creditDisabled = debit !== 0;
@@ -212,7 +212,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   const [totalDebit, setTotalDebit] = useState<number>(0);
   const [totalCredit, setTotalCredit] = useState<number>(0);
 
-  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const totalStyle =
     totalDebit === totalCredit ? 'text-text-state-success' : 'text-text-state-error';
@@ -228,7 +228,8 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   // Info: (20241115 - Julian) 取得會計科目列表
   const { trigger: getAccountList, data: accountList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { companyId }, query: queryCondition },
+    { params: { companyId: accountBookId }, query: queryCondition },
+    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     false,
     true
   );
@@ -284,7 +285,8 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       reverseVouchers: [],
     };
     // Info: (20250102 - Julian) POST API
-    createNewVoucher({ params: { companyId }, body });
+    createNewVoucher({ params: { companyId: accountBookId }, body });
+    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   const submitDisabled =
@@ -304,7 +306,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
         toastHandler({
           id: 'manual-account-opening-success',
           type: ToastType.SUCCESS,
-          content: t('setting:MANUAL_ACCOUNT_OPENING_MODAL.TOAST_OPENING_SUCCESS'),
+          content: t('settings:MANUAL_ACCOUNT_OPENING_MODAL.TOAST_OPENING_SUCCESS'),
           closeable: true,
         });
         modalVisibilityHandler();
@@ -313,7 +315,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
         toastHandler({
           id: 'manual-account-opening-error',
           type: ToastType.ERROR,
-          content: t('setting:MANUAL_ACCOUNT_OPENING_MODAL.TOAST_OPENING_FAIL'),
+          content: t('settings:MANUAL_ACCOUNT_OPENING_MODAL.TOAST_OPENING_FAIL'),
           closeable: true,
         });
       }
@@ -334,7 +336,8 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   useEffect(() => {
     // Info: (20241114 - Julian) 關鍵字搜尋
     getAccountList({
-      params: { companyId },
+      params: { companyId: accountBookId },
+      // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       query: { ...queryCondition, searchKey: searchWord },
     });
   }, [searchWord]);
@@ -406,7 +409,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       })
     ) : (
       <div className="px-16px py-8px text-center text-text-neutral-primary">
-        <p>{t('setting:MANUAL_ACCOUNT_OPENING_MODAL.ADD_NEW_ROW')}</p>
+        <p>{t('settings:MANUAL_ACCOUNT_OPENING_MODAL.ADD_NEW_ROW')}</p>
       </div>
     );
 
@@ -441,7 +444,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       })
     ) : (
       <div className="text-xs text-input-text-input-placeholder">
-        {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.NO_ACCOUNTING_FOUND')}
+        {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.NO_ACCOUNTING_FOUND')}
       </div>
     );
 
@@ -464,16 +467,16 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
         {/* Info: (20241112 - Julian) table header */}
         <div className="table-row bg-surface-brand-secondary-5 text-xs font-medium text-text-brand-secondary-lv2">
           <div className={`${tableCellStyle} border-b border-r`}>
-            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.SUBCATEGORY_TYPE')}
+            {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.SUBCATEGORY_TYPE')}
           </div>
           <div className={`${tableCellStyle} border-b border-r`}>
-            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.BEGINNING_DEBIT')}
+            {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.BEGINNING_DEBIT')}
           </div>
           <div className={`${tableCellStyle} border-b border-r`}>
-            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.BEGINNING_CREDIT')}
+            {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.BEGINNING_CREDIT')}
           </div>
           <div className={`${tableCellStyle} border-b`}>
-            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.ACTION')}
+            {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.ACTION')}
           </div>
         </div>
         {/* Info: (20241112 - Julian) table body */}
@@ -487,7 +490,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       <div className="relative mx-auto flex w-90vw flex-col items-stretch gap-y-24px rounded-lg bg-card-surface-primary p-40px shadow-lg shadow-black/80 lg:w-800px">
         {/* Info: (20241112 - Julian) Title */}
         <h1 className="text-center text-xl font-bold text-text-neutral-primary">
-          {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.MODAL_TITLE')}
+          {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.MODAL_TITLE')}
         </h1>
 
         {/* Info: (20241112 - Julian) Close button */}
@@ -504,7 +507,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
           {/* Info: (20250102 - Julian) Opening Date */}
           <div className="flex w-full flex-col gap-8px">
             <p className="text-sm font-semibold text-input-text-primary">
-              {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.OPENING_DATE')}
+              {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.OPENING_DATE')}
             </p>
             <DatePicker
               type={DatePickerType.TEXT_DATE}
@@ -522,13 +525,13 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
           {/* Info: (20250102 - Julian) Calculate total amount */}
           <div className="grid w-full grid-cols-4 items-center">
             <p className="text-sm font-medium text-text-neutral-secondary">
-              {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.BEGINNING_DEBIT')}
+              {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.BEGINNING_DEBIT')}
             </p>
             <p className={totalDebit === 0 ? 'text-text-neutral-primary' : totalStyle}>
               {totalDebit === 0 ? '-' : numberWithCommas(totalDebit)}
             </p>
             <p className="text-sm font-medium text-text-neutral-secondary">
-              {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.BEGINNING_CREDIT')}
+              {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.BEGINNING_CREDIT')}
             </p>
             <p className={totalCredit === 0 ? 'text-text-neutral-primary' : totalStyle}>
               {totalCredit === 0 ? '-' : numberWithCommas(totalCredit)}
@@ -552,7 +555,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
         {/* Info: (20241112 - Julian) buttons */}
         <div className="ml-auto flex items-center gap-12px">
           <Button type="button" variant="secondaryBorderless" onClick={modalVisibilityHandler}>
-            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.CANCEL_BTN')}
+            {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.CANCEL_BTN')}
           </Button>
           <Button
             type="button"
@@ -560,7 +563,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
             onClick={submitHandler}
             disabled={submitDisabled}
           >
-            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.SUBMIT_BTN')} <FaArrowRight />
+            {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.SUBMIT_BTN')} <FaArrowRight />
           </Button>
         </div>
       </div>

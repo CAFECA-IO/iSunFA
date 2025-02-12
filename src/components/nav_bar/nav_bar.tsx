@@ -26,7 +26,7 @@ import { TranslateFunction } from '@/interfaces/locale';
 // import Notification from '@/components/notification/notification';
 import Skeleton from '@/components/skeleton/skeleton';
 import { UploadType } from '@/constants/file';
-import { CANCEL_COMPANY_ID } from '@/constants/company';
+import { CANCEL_ACCOUNT_BOOK_ID } from '@/constants/company';
 
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -97,7 +97,7 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
-    selectAccountBook(CANCEL_COMPANY_ID);
+    selectAccountBook(CANCEL_ACCOUNT_BOOK_ID);
   };
 
   const redirectTo = (target: string) => {
@@ -362,7 +362,7 @@ const NavBar = () => {
             <FiSettings size={20} />
           </div>
           <div className="text-base font-medium leading-6 tracking-normal">
-            {t('common:NAV_BAR.SETTING')}
+            {t('common:NAV_BAR.SETTINGS')}
           </div>
         </Button>
         <div className="mt-3 flex flex-col justify-center py-2.5">

@@ -24,11 +24,11 @@
     "TRIAL_BALANCE": "試算表",
     "EMBED_CODE": "嵌入程式碼",
     "GENERATE_EMBED_CODE": "生成嵌入程式碼",
-    "PARAMETER_SETTING": "參數設定",
-    "SETTING": "設定",
-    "GENERAL_SETTING": "一般設定",
-    "ACCOUNT_BOOK_SETTING": "帳本設定",
-    "ACCOUNTING_SETTING": "會計設定",
+    "PARAMETER_SETTINGS": "參數設定",
+    "SETTINGS": "設定",
+    "GENERAL_SETTINGS": "一般設定",
+    "ACCOUNT_BOOK_SETTINGS": "帳本設定",
+    "ACCOUNTING_SETTINGS": "會計設定",
     "CLIENTS_SUPPLIERS_MANAGEMENT": "客戶/供應商",
     "BACK_TO_DASHBOARD": "回到儀表板"
   },
@@ -41,7 +41,7 @@
   "USER": {
     "DELETE_WARNING": "此帳戶將在 {{days}} 個工作天內被刪除。",
     "DELETE_HINT": "請確保資料備份。如需取消刪除過程，請前往設定頁面。",
-    "SETTING": "設定"
+    "SETTINGS": "設定"
   },
   "EMBED_CODE_MODAL": {
     "EMBED_CODE": "嵌入程式碼",

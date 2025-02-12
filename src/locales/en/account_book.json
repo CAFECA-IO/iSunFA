@@ -1,6 +1,6 @@
 {
   "LIST": {
-    "TITLE": "Company List",
+    "ACCOUNT_BOOK_LIST_TITLE": "Account Book List",
     "PARTNER_NAME": "Partner's Name",
     "TAX_ID": "Tax ID",
     "TYPE": "Type",
@@ -9,12 +9,11 @@
   "INFO": {
     "COMPANY_NAME": "Company Name",
     "TAX_ID": "Business Tax ID Number",
-    "WORK_TAG": "Work Tag",
-    "CREATE": "Create New Company"
+    "WORK_TAG": "Work Tag"
   },
   "EDIT": {
     "BACK": "Back",
-    "INFO": "Company Information",
+    "INFO": "Account Book Information",
     "COMPANY_NAME": "Company Name",
     "BUSINESS_TAX_ID": "Business Tax ID Number",
     "TAX_SERIAL_NUMBER": "Tax Serial Number",
@@ -22,9 +21,9 @@
     "COUNTRY_OF_INCORPORATION": "Country of incorporation",
     "COMPANY_ADDRESS": "Company address",
     "PHONE_NUMBER": "Phone number",
-    "REMOVE_THIS_COMPANY": "Remove This Company"
+    "DELETE_THIS_ACCOUNT_BOOK": "Delete This Account Book"
   },
-  "TAG": {
+  "WORK_TAG": {
     "FINANCIAL": "Financial",
     "TAX": "Tax",
     "ALL": "All"
@@ -46,12 +45,12 @@
     "LINKED": "Linked",
     "CHANGE_WORK_TAG": "Change Work Tag",
     "DELETE": "Delete",
-    "DELETE_MESSAGE_TITLE": "Delete the Company",
-    "DELETE_MESSAGE_CONTENT": "Are you sure you want to Delete the Company?"
+    "DELETE_MESSAGE_TITLE": "Delete the Account Book",
+    "DELETE_MESSAGE_CONTENT": "Are you sure you want to delete the account book?"
   },
   "DELETE": {
-    "TITLE": "Remove the Company",
-    "WARNING": "Are you sure you want to Remove the Company?"
+    "TITLE": "Delete the Account Book",
+    "WARNING": "Are you sure you want to delete the account book?"
   },
   "UPLOAD_COMPANY_AVATAR_MODAL": {
     "TITLE": "Change Company Picture"

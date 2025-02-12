@@ -172,7 +172,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
           // Info: (20241114 - Julian) 點擊刪除按鈕時，觸發刪除事件
           const deleteAccountHandler = async () => {
             deleteAccount({ params: { companyId: accountBookId, accountId: child.id } });
-            // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要一起修改成 accountBookId
+            // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
           };
           return (
             <AccountThirdLayerItem

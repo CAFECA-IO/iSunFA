@@ -4,19 +4,19 @@ import CertificateSelectorThumbnail from '@/components/certificate/certificate_s
 import { FaPlus } from 'react-icons/fa6';
 import { useEffect, useState } from 'react';
 
-interface CertificateSelectionPannelProps {
+interface CertificateSelectionPanelProps {
   certificates: ICertificateUI[];
   selectedIds: number[];
   handleSelect: (id: number) => void;
   openUploaderModal: () => void;
 }
 
-const CertificateSelectionPannel: React.FC<CertificateSelectionPannelProps> = ({
+const CertificateSelectionPanel: React.FC<CertificateSelectionPanelProps> = ({
   certificates,
   selectedIds,
   handleSelect,
   openUploaderModal,
-}: CertificateSelectionPannelProps) => {
+}: CertificateSelectionPanelProps) => {
   const [certificatesReOrdered, setCertificatesReOrdered] =
     useState<ICertificateUI[]>(certificates);
 
@@ -72,4 +72,4 @@ const CertificateSelectionPannel: React.FC<CertificateSelectionPannelProps> = ({
   );
 };
 
-export default CertificateSelectionPannel;
+export default CertificateSelectionPanel;

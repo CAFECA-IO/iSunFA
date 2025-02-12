@@ -6,7 +6,7 @@ import Head from 'next/head';
 import Layout from '@/components/beta/layout/layout';
 import UserSettings from '@/components/user_settings/user_settings';
 import NoticeSettings from '@/components/notice_settings/notice_settings';
-import CompanySettings from '@/components/account_book_settings/company_settings';
+import AccountBookSettings from '@/components/account_book_settings/account_book_settings';
 import AccountSettings from '@/components/account_settings/account_settings';
 import APIHandler from '@/lib/utils/api_handler';
 import { IUserSetting } from '@/interfaces/user_setting';
@@ -19,7 +19,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { ILoginDevice } from '@/interfaces/login_device';
 
 const GeneralSettingsPage: React.FC = () => {
-  const { t } = useTranslation(['setting', 'common']);
+  const { t } = useTranslation(['settings', 'common']);
   const { toastHandler } = useModalContext();
   const { userAuth } = useUserCtx();
   const [userSetting, setUserSetting] = useState<IUserSetting | null>(null);
@@ -40,7 +40,7 @@ const GeneralSettingsPage: React.FC = () => {
       toastHandler({
         id: ToastId.USER_SETTING_ERROR,
         type: ToastType.ERROR,
-        content: t('setting:ERROR.FETCH_DATA'),
+        content: t('settings:ERROR.FETCH_DATA'),
         closeable: true,
       });
     }
@@ -58,7 +58,7 @@ const GeneralSettingsPage: React.FC = () => {
       toastHandler({
         id: ToastId.USER_SETTING_ERROR,
         type: ToastType.ERROR,
-        content: t('setting:ERROR.FETCH_DATA'),
+        content: t('settings:ERROR.FETCH_DATA'),
         closeable: true,
       });
     }
@@ -76,14 +76,14 @@ const GeneralSettingsPage: React.FC = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('setting:NORMAL.TITLE')} - iSunFA</title>
+        <title>{t('settings:NORMAL.TITLE')} - iSunFA</title>
       </Head>
 
-      <Layout isDashboard={false} pageTitle={t('setting:NORMAL.TITLE')}>
+      <Layout isDashboard={false} pageTitle={t('settings:NORMAL.TITLE')}>
         <div className="mx-auto flex w-full flex-col gap-lv-7">
           <UserSettings userSetting={userSetting} loginDevices={loginDevices} />
           <NoticeSettings userSetting={userSetting} />
-          <CompanySettings />
+          <AccountBookSettings />
           <AccountSettings />
         </div>
       </Layout>
@@ -97,8 +97,8 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
       ...(await serverSideTranslations(locale as string, [
         'layout',
         'common',
-        'setting',
-        'company',
+        'settings',
+        'account_book',
         'filter_section_type',
         'search',
         'dashboard',

@@ -36,7 +36,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const { toastHandler } = useModalContext();
   const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const queryCondition = {
     limit: 9999, // Info: (20250212 - Julian) 全部取出
     forUser: true,
@@ -67,7 +67,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   // Info: (20250212 - Julian) 取得會計科目列表的 API
   const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { companyId }, query: queryCondition },
+    { params: { companyId: accountBookId }, query: queryCondition }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     false,
     true
   );
@@ -150,7 +150,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
 
   // Info: (20250212 - Julian) 從 API 取得會計科目列表
   useEffect(() => {
-    getAccountList({ params: { companyId }, query: queryCondition });
+    getAccountList({ params: { companyId: accountBookId }, query: queryCondition }); // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     setFilteredAccountList(accountList);
   }, []);
 
@@ -351,7 +351,8 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const addBtnClickHandler = async () => {
     if (selectSubcategory) {
       createNewAccount({
-        params: { companyId },
+        params: { companyId: accountBookId },
+        // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
         body: {
           accountId: selectSubcategory.id,
           name: titleName,
@@ -364,7 +365,8 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const updateBtnClickHandler = async () => {
     if (selectSubcategory) {
       updateNewAccount({
-        params: { companyId, accountId: selectSubcategory.id },
+        params: { companyId: accountBookId, accountId: selectSubcategory.id },
+        // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
         body: {
           code: selectSubcategory.code,
           name: titleName,

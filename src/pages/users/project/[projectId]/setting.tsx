@@ -239,7 +239,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
               </Button>
               {/* Info: (20240611 - Julian) Project Name */}
               <h1 className="text-4xl font-semibold text-text-neutral-secondary">
-                {projectName} - {t('common:NAV_BAR.SETTING')}
+                {projectName} - {t('common:NAV_BAR.SETTINGS')}
               </h1>
             </div>
             {/* Info: (20240617 - Julian) Divider */}
@@ -384,7 +384,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
         'journal',
         'kyc',
         'project',
-        'setting',
+        'settings',
         'terms',
         'salary',
         'asset',

@@ -78,7 +78,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
         'layout',
         'common',
         'journal',
-        'setting',
+        'settings',
         'terms',
         'asset',
         'dashboard',

@@ -38,7 +38,7 @@ const Profile = () => {
         <div className="absolute right-0 top-full z-70 flex w-max translate-y-6 flex-col text-nowrap rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
           {/* // Info: (20241014 - Liz) ===== 我的帳號 ===== */}
           <Link
-            href={ISUNFA_ROUTE.GENERAL_SETTING}
+            href={ISUNFA_ROUTE.GENERAL_SETTINGS}
             className="flex items-center gap-12px rounded-xs px-12px py-8px hover:bg-dropdown-surface-item-hover"
           >
             <Image

@@ -317,8 +317,7 @@
     "EQUITY": "權益",
     "COST": "成本",
     "EXPENSE": "費用",
-    "REVENUE": "收入",
-    "OTHERCOMPREHENSIVEINCOME": "其他綜合損益"
+    "REVENUE": "收入"
   },
   "AI_WORKING_AREA": {
     "RESTING_CONTENT": "請選擇憑證，讓 AI 為您生成所需的傳票",

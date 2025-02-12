@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { NO_COMPANY_ID } from '@/constants/company';
+import { NO_ACCOUNT_BOOK_ID } from '@/constants/company';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { Prisma, Todo } from '@prisma/client';
 
@@ -9,7 +9,7 @@ export async function createTodo(
   name: string,
   deadline: number,
   note: string | null,
-  companyId: number = NO_COMPANY_ID
+  companyId: number = NO_ACCOUNT_BOOK_ID
 ) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);

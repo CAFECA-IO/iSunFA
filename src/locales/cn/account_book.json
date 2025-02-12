@@ -1,6 +1,6 @@
 {
   "LIST": {
-    "TITLE": "公司清單",
+    "ACCOUNT_BOOK_LIST_TITLE": "帐本清单",
     "PARTNER_NAME": "合作伙伴名称",
     "TAX_ID": "税务编号",
     "TYPE": "类型",
@@ -9,12 +9,11 @@
   "INFO": {
     "COMPANY_NAME": "公司名称",
     "TAX_ID": "统一编号",
-    "WORK_TAG": "工作标签",
-    "CREATE": "创建新公司"
+    "WORK_TAG": "工作标签"
   },
   "EDIT": {
     "BACK": "返回",
-    "INFO": "公司信息",
+    "INFO": "帐本信息",
     "COMPANY_NAME": "公司名称",
     "BUSINESS_TAX_ID": "营业税编号",
     "TAX_SERIAL_NUMBER": "税务序号",
@@ -22,9 +21,9 @@
     "COUNTRY_OF_INCORPORATION": "注册国家",
     "COMPANY_ADDRESS": "公司地址",
     "PHONE_NUMBER": "电话号码",
-    "REMOVE_THIS_COMPANY": "移除此公司"
+    "DELETE_THIS_ACCOUNT_BOOK": "删除此帐本"
   },
-  "TAG": {
+  "WORK_TAG": {
     "FINANCIAL": "财务",
     "TAX": "税务",
     "ALL": "全部"
@@ -46,12 +45,12 @@
     "LINKED": "已连接",
     "CHANGE_WORK_TAG": "更改标签",
     "DELETE": "删除",
-    "DELETE_MESSAGE_TITLE": "删除公司",
-    "DELETE_MESSAGE_CONTENT": "您确定要删除此公司吗？"
+    "DELETE_MESSAGE_TITLE": "删除账本",
+    "DELETE_MESSAGE_CONTENT": "您确定要删除此账本吗？"
   },
   "DELETE": {
-    "TITLE": "删除公司",
-    "WARNING": "您确定要删除公司吗？"
+    "TITLE": "删除账本",
+    "WARNING": "您确定要删除此账本吗？"
   },
   "UPLOAD_COMPANY_AVATAR_MODAL": {
     "TITLE": "变更公司图片"

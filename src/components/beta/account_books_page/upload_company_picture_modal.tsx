@@ -9,20 +9,20 @@ import APIHandler from '@/lib/utils/api_handler';
 import UploadArea from '@/components/upload_area/upload_area';
 import { useUserCtx } from '@/contexts/user_context';
 
-interface UploadAccountBookCompanyPictureModalProps {
-  accountBookToUploadAvatar: ICompanyAndRole;
+interface UploadCompanyPictureModalProps {
+  accountBookToUploadPicture: ICompanyAndRole;
   isModalOpen: boolean;
-  setAccountBookToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToUploadPicture: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
 }
 
-const UploadAccountBookCompanyPictureModal = ({
-  accountBookToUploadAvatar,
+const UploadCompanyPictureModal = ({
+  accountBookToUploadPicture,
   isModalOpen,
-  setAccountBookToUploadAvatar,
+  setAccountBookToUploadPicture,
   setRefreshKey,
-}: UploadAccountBookCompanyPictureModalProps) => {
-  const { t } = useTranslation(['company']);
+}: UploadCompanyPictureModalProps) => {
+  const { t } = useTranslation(['account_book']);
   const { selectedAccountBook, selectAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
@@ -31,8 +31,8 @@ const UploadAccountBookCompanyPictureModal = ({
   );
 
   const closeUploadAccountBookCompanyPictureModal = useCallback(() => {
-    setAccountBookToUploadAvatar(undefined);
-  }, [setAccountBookToUploadAvatar]);
+    setAccountBookToUploadPicture(undefined);
+  }, [setAccountBookToUploadPicture]);
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -46,7 +46,7 @@ const UploadAccountBookCompanyPictureModal = ({
         const { success: uploadFileSuccess, data: fileMeta } = await uploadFileAPI({
           query: {
             type: UploadType.COMPANY,
-            targetId: String(accountBookToUploadAvatar.company.id),
+            targetId: String(accountBookToUploadPicture.company.id),
           },
           body: formData,
         });
@@ -60,7 +60,7 @@ const UploadAccountBookCompanyPictureModal = ({
 
         // Info: (20241212 - Liz) 打 API 更新帳本的公司照片
         const { success, error } = await uploadAccountBookCompanyPictureAPI({
-          params: { companyId: accountBookToUploadAvatar.company.id },
+          params: { companyId: accountBookToUploadPicture.company.id }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
           body: { fileId: fileMeta.id },
         });
 
@@ -75,11 +75,11 @@ const UploadAccountBookCompanyPictureModal = ({
         if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241212 - Liz) This is a workaround to refresh the company list after creating a new company
 
         const isChangingSelectedCompany =
-          selectedAccountBook?.id === accountBookToUploadAvatar.company.id;
+          selectedAccountBook?.id === accountBookToUploadPicture.company.id;
 
         // Info: (20241212 - Liz) 如果是改變已選擇的帳本的公司照片，就打 API 選擇該帳本以更新公司照片
         if (isChangingSelectedCompany) {
-          selectAccountBook(accountBookToUploadAvatar.company.id);
+          selectAccountBook(accountBookToUploadPicture.company.id);
         }
       } catch (error) {
         // Deprecated: (20241212 - Liz)
@@ -91,7 +91,7 @@ const UploadAccountBookCompanyPictureModal = ({
     },
     [
       closeUploadAccountBookCompanyPictureModal,
-      accountBookToUploadAvatar.company.id,
+      accountBookToUploadPicture.company.id,
       isLoading,
       selectedAccountBook?.id,
       setRefreshKey,
@@ -103,7 +103,7 @@ const UploadAccountBookCompanyPictureModal = ({
       <div className="flex w-400px flex-col gap-24px rounded-lg bg-surface-neutral-surface-lv2 p-40px">
         <section className="flex items-center">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">
-            {t('company:UPLOAD_COMPANY_AVATAR_MODAL.TITLE')}
+            {t('account_book:UPLOAD_COMPANY_AVATAR_MODAL.TITLE')}
           </h1>
           <button type="button" onClick={closeUploadAccountBookCompanyPictureModal}>
             <IoCloseOutline size={24} />
@@ -116,4 +116,4 @@ const UploadAccountBookCompanyPictureModal = ({
   ) : null;
 };
 
-export default UploadAccountBookCompanyPictureModal;
+export default UploadCompanyPictureModal;

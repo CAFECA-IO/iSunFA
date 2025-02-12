@@ -41,7 +41,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const { selectedAccountBook } = useUserCtx();
   const { addTemporaryAssetHandler } = useAccountingCtx();
 
-  const companyId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const { assetAccountList, modalType, assetData } = defaultData;
 
@@ -285,10 +285,12 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     };
 
     // Info: (20241028 - Julian) 新增資產只需 companyId
-    const addParams = { companyId };
+    const addParams = { companyId: accountBookId };
+    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
     // Info: (20241028 - Julian) 更新資產需 assetId
-    const updateParams = { companyId, assetId: assetData?.id };
+    const updateParams = { companyId: accountBookId, assetId: assetData?.id };
+    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
     if (inputAmount > 1) {
       // Info: (20241210 - Julian) 若數量大於 1，則使用 createAssetBulk API
@@ -312,7 +314,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
           // Info: (20241028 - Julian) 新增資產的處理
           case AssetModalType.ADD:
             // Info: (20241025 - Julian) 新增資產至暫存
-            addTemporaryAssetHandler(companyId, assetResult);
+            addTemporaryAssetHandler(accountBookId, assetResult);
 
             // Info: (20241025 - Julian) 顯示成功 toast 訊息
             toastHandler({
@@ -352,7 +354,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       if (createAssetBulkSuccess && assetBulkResult) {
         // Info: (20241210 - Julian) 新增資產至暫存
         assetBulkResult.forEach((asset) => {
-          addTemporaryAssetHandler(companyId, asset);
+          addTemporaryAssetHandler(accountBookId, asset);
         });
 
         // Info: (20241210 - Julian) 顯示成功 toast 訊息

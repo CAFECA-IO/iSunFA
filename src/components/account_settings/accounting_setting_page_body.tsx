@@ -51,7 +51,7 @@ const AccountingSettingPageBody: React.FC = () => {
     APIName.ACCOUNTING_SETTING_GET,
     { params: { companyId: accountBookId } }
   );
-  // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要一起修改成 accountBookId
+  // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
   const {
     trigger: updateSetting,
@@ -61,7 +61,7 @@ const AccountingSettingPageBody: React.FC = () => {
   } = APIHandler<IAccountingSetting>(APIName.ACCOUNTING_SETTING_UPDATE, {
     params: { companyId: accountBookId },
   });
-  // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要一起修改成 accountBookId
+  // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
   const initialAccountingSetting: IAccountingSetting = {
     id: 0,
@@ -196,7 +196,7 @@ const AccountingSettingPageBody: React.FC = () => {
     };
 
     updateSetting({ params: { companyId: accountBookId }, body });
-    // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要一起修改成 accountBookId
+    // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   useEffect(() => {
@@ -211,7 +211,7 @@ const AccountingSettingPageBody: React.FC = () => {
         });
 
         getAccountSetting({ params: { companyId: accountBookId } });
-        // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要一起修改成 accountBookId
+        // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       } else if (updatedError) {
         // Info: (20241114 - Julian) 更新失敗顯示 Toast
         toastHandler({

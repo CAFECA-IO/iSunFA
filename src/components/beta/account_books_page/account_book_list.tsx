@@ -6,14 +6,14 @@ interface AccountBookListProps {
   accountBookList: ICompanyAndRole[];
   setAccountBookToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setAccountBookToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setAccountBookToUploadAvatar: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToUploadPicture: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
 const AccountBookList = ({
   accountBookList,
   setAccountBookToEdit,
   setAccountBookToDelete,
-  setAccountBookToUploadAvatar,
+  setAccountBookToUploadPicture,
 }: AccountBookListProps) => {
   return (
     <section className="flex flex-auto flex-col gap-8px">
@@ -23,7 +23,7 @@ const AccountBookList = ({
           accountBook={accountBook}
           setAccountBookToEdit={setAccountBookToEdit}
           setAccountBookToDelete={setAccountBookToDelete}
-          setAccountBookToUploadAvatar={setAccountBookToUploadAvatar}
+          setAccountBookToUploadPicture={setAccountBookToUploadPicture}
         />
       ))}
     </section>

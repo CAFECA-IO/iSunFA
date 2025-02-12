@@ -4,7 +4,7 @@ import { AccountBookNode } from '@/lib/utils/account/account_book_node';
 import { IAccountNode } from '@/interfaces/accounting_account';
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { isNodeCircularReference } from '@/lib/utils/account/common';
-import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { PUBLIC_ACCOUNT_BOOK_ID } from '@/constants/company';
 
 /** Info: (20241129 - Shirley)
  * 1. 用 companyId & publicCompanyId 搜尋 account table 取得所有會計科目
@@ -131,7 +131,7 @@ export async function getAccountBook(
 ): Promise<AccountBook> {
   const accountBookInstance = await initializeAccountBook(
     companyId,
-    PUBLIC_COMPANY_ID,
+    PUBLIC_ACCOUNT_BOOK_ID,
     startTimestamp,
     endTimestamp
   );

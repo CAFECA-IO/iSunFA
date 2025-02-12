@@ -1,4 +1,4 @@
-import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { PUBLIC_ACCOUNT_BOOK_ID } from '@/constants/company';
 import {
   IAccountForSheetDisplay,
   IAccountNode,
@@ -193,7 +193,7 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
 
   // Info: (20240702 - Murky)刪除children中公司自行建立的account
   updatedAccount.children = updatedAccount.children.filter(
-    (child) => child.companyId === PUBLIC_COMPANY_ID
+    (child) => child.companyId === PUBLIC_ACCOUNT_BOOK_ID
   );
 
   return updatedAccount;
@@ -248,7 +248,7 @@ function updateAccountAmountByDFSForTrialBalance(
 
   // Info: (20240702 - Murky)刪除children中公司自行建立的account
   // updatedAccount.children = updatedAccount.children.filter(
-  //   (child) => child.companyId === PUBLIC_COMPANY_ID
+  //   (child) => child.companyId === PUBLIC_ACCOUNT_BOOK_ID
   // );
 
   return updatedAccount;

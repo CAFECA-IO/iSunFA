@@ -27,7 +27,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
   imageId,
   loginDevices,
 }) => {
-  const { t } = useTranslation(['setting', 'common']);
+  const { t } = useTranslation(['settings', 'common']);
   const [isIPModalOpen, setIsIPModalOpen] = useState(false);
 
   // Info: (20250212 - Anna) 從 loginDevices 找出當前登入的裝置 for 異常登入判斷
@@ -67,7 +67,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
         <div className="mb-lv-4 flex items-center gap-3 text-sm text-gray-700">
           <TbUserCircle size={16} />
           <div className="flex items-center gap-1">
-            <span className="text-text-neutral-mute">{t('setting:NORMAL.USER_NAME')}:</span>
+            <span className="text-text-neutral-mute">{t('settings:NORMAL.USER_NAME')}:</span>
             <span className="text-base font-semibold text-text-neutral-primary">{username}</span>
           </div>
           {/* <FiEdit3 size={16} /> */}
@@ -76,7 +76,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
           <FiMail size={16} />
           <div className="flex max-w-280px flex-wrap items-center gap-1">
             <span className="min-w-130px text-text-neutral-mute">
-              {t('setting:NORMAL.LINKED_EMAIL')}:
+              {t('settings:NORMAL.LINKED_EMAIL')}:
             </span>
             <span className="text-base font-semibold text-text-neutral-primary">{email}</span>
           </div>
@@ -85,9 +85,9 @@ const UserInfo: React.FC<UserInfoProps> = ({
       <div className="flex items-center gap-3 text-sm text-gray-700">
         <FiLink size={16} />
         <div className="flex flex-col items-start gap-1">
-          <span className="text-text-neutral-mute">{t('setting:NORMAL.LOGIN_DEVICE_N_IP')}:</span>
+          <span className="text-text-neutral-mute">{t('settings:NORMAL.LOGIN_DEVICE_N_IP')}:</span>
           <Button
-            id="setting-add-company"
+            id="settings-add-company"
             type="button"
             variant="linkBorderless"
             size="noPadding"

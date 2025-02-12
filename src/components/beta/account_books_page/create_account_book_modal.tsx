@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoAdd } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { COMPANY_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/constants/company';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 
@@ -23,7 +23,7 @@ const CreateAccountBookModal = ({
 
   const [companyName, setCompanyName] = useState('');
   const [taxId, setTaxId] = useState('');
-  const [tag, setTag] = useState<COMPANY_TAG>(COMPANY_TAG.ALL);
+  const [tag, setTag] = useState<WORK_TAG>(WORK_TAG.ALL);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -49,7 +49,7 @@ const CreateAccountBookModal = ({
         // Info: (20241114 - Liz) 新增公司成功後清空表單並關閉 modal
         setCompanyName('');
         setTaxId('');
-        setTag(COMPANY_TAG.ALL);
+        setTag(WORK_TAG.ALL);
         modalVisibilityHandler();
 
         if (getCompanyList) getCompanyList(); // Info: (20241209 - Liz) 重新取得公司列表
@@ -130,7 +130,7 @@ const CreateAccountBookModal = ({
                 onClick={toggleDropdown}
               >
                 <p className="px-12px py-10px text-base font-medium">
-                  {t('dashboard:COMPANY_TAG.' + tag.toUpperCase())}
+                  {t('dashboard:WORK_TAG.' + tag.toUpperCase())}
                 </p>
 
                 <div className="px-12px py-10px">
@@ -140,7 +140,7 @@ const CreateAccountBookModal = ({
 
               {isDropdownOpen && (
                 <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                  {Object.values(COMPANY_TAG).map((item) => (
+                  {Object.values(WORK_TAG).map((item) => (
                     <button
                       key={item}
                       type="button"
@@ -150,7 +150,7 @@ const CreateAccountBookModal = ({
                       }}
                       className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                     >
-                      {t('dashboard:COMPANY_TAG.' + item.toUpperCase())}
+                      {t('dashboard:WORK_TAG.' + item.toUpperCase())}
                     </button>
                   ))}
                 </div>

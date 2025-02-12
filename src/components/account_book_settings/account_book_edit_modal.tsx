@@ -17,13 +17,16 @@ import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
-interface CompanyEditModalProps {
+interface AccountBookEditModalProps {
   companyAndRole: ICompanyAndRole;
   toggleModal: () => void;
 }
 
-const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, toggleModal }) => {
-  const { t } = useTranslation(['setting', 'common', 'company']);
+const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
+  companyAndRole,
+  toggleModal,
+}) => {
+  const { t } = useTranslation(['settings', 'common', 'account_book']);
   const router = useRouter();
   const [companyName, setCompanyName] = React.useState('');
   const [businessTaxId, setBusinessTaxId] = React.useState('');
@@ -38,14 +41,14 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
   const { trigger: getCompanySettingAPI } = APIHandler<ICompanySetting>(
     APIName.COMPANY_SETTING_GET
   );
-  const { trigger: updateCompanySettingAPI } = APIHandler(APIName.COMPANY_SETTING_UPDATE);
-  const { trigger: deleteCompanyAPI } = APIHandler(APIName.COMPANY_DELETE);
+  const { trigger: updateAccountBookSettingAPI } = APIHandler(APIName.COMPANY_SETTING_UPDATE);
+  const { trigger: deleteAccountBookAPI } = APIHandler(APIName.COMPANY_DELETE);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (companyAndRole) {
       try {
-        const res = await updateCompanySettingAPI({
+        const res = await updateAccountBookSettingAPI({
           params: {
             companyId: companyAndRole.company.id,
           },
@@ -64,16 +67,16 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
         const { success } = res;
         if (success) {
           toastHandler({
-            id: ToastId.COMPANY_SETTING_UPDATE_SUCCESS,
+            id: ToastId.ACCOUNT_BOOK_SETTING_UPDATE_SUCCESS,
             type: ToastType.SUCCESS,
-            content: t('company:EDIT.UPDATE_SUCCESS'),
+            content: t('account_book:EDIT.UPDATE_SUCCESS'),
             closeable: true,
           });
           toggleModal();
         }
       } catch (err) {
         toastHandler({
-          id: ToastId.COMPANY_SETTING_UPDATE_ERROR,
+          id: ToastId.ACCOUNT_BOOK_SETTING_UPDATE_ERROR,
           type: ToastType.ERROR,
           content: (err as Error).message,
           closeable: true,
@@ -85,7 +88,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
   const procedureOfDelete = () => {
     if (!companyAndRole) return;
     messageModalVisibilityHandler();
-    deleteCompanyAPI({
+    deleteAccountBookAPI({
       params: {
         companyId: companyAndRole.company.id,
       },
@@ -98,10 +101,10 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
     if (!companyAndRole) return;
     messageModalDataHandler({
       messageType: MessageType.WARNING,
-      title: t('company:DELETE.TITLE'),
-      content: t('company:DELETE.WARNING'),
+      title: t('account_book:DELETE.TITLE'),
+      content: t('account_book:DELETE.WARNING'),
       backBtnStr: t('common:COMMON.CANCEL'),
-      submitBtnStr: t('setting:SETTING.REMOVE'),
+      submitBtnStr: t('settings:SETTINGS.REMOVE'),
       submitBtnFunction: procedureOfDelete,
     });
     messageModalVisibilityHandler();
@@ -145,7 +148,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
         <section className="flex items-center justify-between">
           <Button variant="secondaryBorderless" className="p-0" type="button" onClick={toggleModal}>
             <Image width={20} height={20} src="/icons/back.svg" alt="language icon" />
-            <p>{t('company:EDIT.BACK')}</p>
+            <p>{t('account_book:EDIT.BACK')}</p>
           </Button>
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             {companyAndRole.company.name}
@@ -155,16 +158,16 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
           </Button>
         </section>
         <section className="flex flex-col gap-lv-5">
-          <div id="company-setting-list" className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
             <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
             <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
               <Image
                 src="/icons/asset_management_icon.svg"
                 width={16}
                 height={16}
-                alt="company_icon"
+                alt="building_icon"
               />
-              <p>{t('company:EDIT.INFO')}</p>
+              <p>{t('account_book:EDIT.INFO')}</p>
             </div>
             <hr className="flex-1 border-divider-stroke-lv-4" />
           </div>
@@ -173,40 +176,40 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
           <div className="grid grid-cols-3 gap-lv-7">
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.COMPANY_NAME')}
+                {t('account_book:EDIT.COMPANY_NAME')}
               </p>
               <input
                 id="company-name-input"
                 type="text"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder={t('company:PLACEHOLDER.ENTER_NAME')}
+                placeholder={t('account_book:PLACEHOLDER.ENTER_NAME')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.BUSINESS_TAX_ID')}
+                {t('account_book:EDIT.BUSINESS_TAX_ID')}
               </p>
               <input
                 id="company-tax-id-input"
                 type="text"
                 value={businessTaxId}
                 onChange={(e) => setBusinessTaxId(e.target.value)}
-                placeholder={t('company:PLACEHOLDER.ENTER_NUMBER')}
+                placeholder={t('account_book:PLACEHOLDER.ENTER_NUMBER')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.TAX_SERIAL_NUMBER')}
+                {t('account_book:EDIT.TAX_SERIAL_NUMBER')}
               </p>
               <input
                 id="company-tax-serial-number-input"
                 type="text"
                 value={taxSerialNumber}
                 onChange={(e) => setTaxSerialNumber(e.target.value)}
-                placeholder={t('company:PLACEHOLDER.ENTER_NUMBER')}
+                placeholder={t('account_book:PLACEHOLDER.ENTER_NUMBER')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
@@ -214,14 +217,14 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
           <div className="grid grid-cols-3 gap-lv-7">
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.COMPANY_REPRESENTATIVE_NAME')}
+                {t('account_book:EDIT.COMPANY_REPRESENTATIVE_NAME')}
               </p>
               <input
-                id="comany-representative-name-input"
+                id="company-representative-name-input"
                 type="text"
                 value={representativeName}
                 onChange={(e) => setRepresentativeName(e.target.value)}
-                placeholder={t('company:PLACEHOLDER.ENTER_NAME')}
+                placeholder={t('account_book:PLACEHOLDER.ENTER_NAME')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
@@ -236,28 +239,28 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
           <div className="grid grid-cols-1 gap-lv-7">
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.COMPANY_ADDRESS')}
+                {t('account_book:EDIT.COMPANY_ADDRESS')}
               </p>
               <input
-                id="comany-address-input"
+                id="company-address-input"
                 type="text"
                 value={companyAddress}
                 onChange={(e) => setCompanyAddress(e.target.value)}
-                placeholder={t('company:PLACEHOLDER.ENTER_FULL_ADDRESS')}
+                placeholder={t('account_book:PLACEHOLDER.ENTER_FULL_ADDRESS')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-lv-7">
             <Button
-              id="setting-remove-company"
+              id="settings-remove-company"
               type="button"
               variant="errorBorderless"
               className="justify-start p-0"
             >
               <p className="flex cursor-pointer gap-2" onClick={deleteCompanyClickHandler}>
                 <Image src="/icons/trash.svg" width={16} height={16} alt="notice_icon" />
-                <span>{t('company:EDIT.REMOVE_THIS_COMPANY')}</span>
+                <span>{t('account_book:EDIT.DELETE_THIS_ACCOUNT_BOOK')}</span>
               </p>
             </Button>
           </div>
@@ -275,4 +278,4 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
   );
 };
 
-export default CompanyEditModal;
+export default AccountBookEditModal;
