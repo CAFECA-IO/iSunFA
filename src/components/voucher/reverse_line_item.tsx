@@ -2,6 +2,7 @@ import React from 'react';
 import { IReverseItemUI } from '@/interfaces/line_item';
 import { FaMinus } from 'react-icons/fa6';
 import { FiEdit } from 'react-icons/fi';
+import { useTranslation } from 'next-i18next';
 
 interface IReverseLineItemProps {
   reverseItem: IReverseItemUI;
@@ -14,6 +15,7 @@ const ReverseLineItem: React.FC<IReverseLineItemProps> = ({
   addHandler,
   removeHandler,
 }) => {
+  const { t } = useTranslation('common');
   const { voucherNo, account, description, reverseAmount } = reverseItem;
   return (
     <div className="col-start-1 col-end-13 flex items-center justify-between gap-4px font-medium text-text-neutral-invert">
@@ -32,7 +34,9 @@ const ReverseLineItem: React.FC<IReverseLineItemProps> = ({
         <div>{description}</div>
       </div>
       <div className="flex items-center gap-4px">
-        <div>Reverse: {reverseAmount}</div>
+        <div>
+          {t('journal:VOUCHER.REVERSE')}: {reverseAmount}
+        </div>
         <button
           type="button"
           className="p-10px text-button-text-primary hover:text-button-text-primary-hover"

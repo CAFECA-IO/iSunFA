@@ -200,7 +200,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       toastHandler({
         id: 'delete-voucher-success',
         type: ToastType.SUCCESS,
-        content: 'Delete vouchers successfully',
+        content: t('journal:VOUCHER.DELETE_VOUCHERS_SUCCESSFULLY'),
         closeable: true,
       });
     } else if (deleteError) {
@@ -208,7 +208,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       toastHandler({
         id: 'delete-voucher-error',
         type: ToastType.ERROR,
-        content: 'Delete vouchers failed',
+        content: t('journal:VOUCHER.DELETE_VOUCHERS_FAILED'),
         closeable: true,
       });
     }
