@@ -14,7 +14,7 @@ import {
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import type { ILineItem, ILineItemEntity } from '@/interfaces/line_item';
-import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { PUBLIC_ACCOUNT_BOOK_ID } from '@/constants/company';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 import {
   IGetManyVoucherResponseButOne,
@@ -112,7 +112,7 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
           },
           {
             company: {
-              id: PUBLIC_COMPANY_ID,
+              id: PUBLIC_ACCOUNT_BOOK_ID,
             },
           },
         ],

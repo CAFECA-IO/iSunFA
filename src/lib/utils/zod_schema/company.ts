@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { WORK_TAG, CompanyUpdateAction } from '@/constants/company';
+import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/constants/company';
 import {
   nullSchema,
   zodStringToBoolean,
@@ -40,7 +40,7 @@ const companyPutQuerySchema = z.object({
   companyId: zodStringToNumber,
 });
 const companyPutBodySchema = z.object({
-  action: z.nativeEnum(CompanyUpdateAction),
+  action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
   tag: z.nativeEnum(WORK_TAG).optional(),
 });
 

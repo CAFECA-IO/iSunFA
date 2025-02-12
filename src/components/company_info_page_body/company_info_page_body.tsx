@@ -24,7 +24,7 @@ import { FiEdit, FiTrash2 } from 'react-icons/fi';
 import { LuArrowLeftRight } from 'react-icons/lu';
 import { IoArrowForward } from 'react-icons/io5';
 import { FaCheck } from 'react-icons/fa6';
-import { CANCEL_COMPANY_ID } from '@/constants/company';
+import { CANCEL_ACCOUNT_BOOK_ID } from '@/constants/company';
 
 const CompanyInfoPageBody = () => {
   const { t } = useTranslation(['common', 'kyc']);
@@ -99,7 +99,7 @@ const CompanyInfoPageBody = () => {
       },
     });
 
-    selectAccountBook(CANCEL_COMPANY_ID);
+    selectAccountBook(CANCEL_ACCOUNT_BOOK_ID);
     router.push(ISUNFA_ROUTE.DASHBOARD);
   };
 

@@ -5,7 +5,7 @@ import { IoArrowForward, IoClose } from 'react-icons/io5';
 import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
 import CompanyTag from '@/components/beta/account_books_page/company_tag';
-import { CANCEL_COMPANY_ID } from '@/constants/company';
+import { CANCEL_ACCOUNT_BOOK_ID } from '@/constants/company';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -63,7 +63,7 @@ const AccountBookItem = ({
 
     setIsLoading(true);
 
-    const companyId = isCompanySelected ? CANCEL_COMPANY_ID : accountBook.company.id;
+    const companyId = isCompanySelected ? CANCEL_ACCOUNT_BOOK_ID : accountBook.company.id;
 
     try {
       const data = selectAccountBook(companyId);
