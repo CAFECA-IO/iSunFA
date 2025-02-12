@@ -18,7 +18,7 @@ const ChangeTagModal = ({
   setAccountBookToEdit,
   setRefreshKey,
 }: ChangeTagModalProps) => {
-  const { t } = useTranslation(['company']);
+  const { t } = useTranslation(['account_book']);
   const { updateAccountBook } = useUserCtx();
 
   const [tag, setTag] = useState<WORK_TAG>(accountBookToEdit.tag);
@@ -78,7 +78,7 @@ const ChangeTagModal = ({
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('company:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}
+            {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}
           </h1>
           <button type="button" onClick={closeChangeTagModal}>
             <IoCloseOutline size={24} />
@@ -89,7 +89,7 @@ const ChangeTagModal = ({
           {/* Company Name */}
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
-              {t('company:INFO.COMPANY_NAME')}
+              {t('account_book:INFO.COMPANY_NAME')}
             </h4>
             <input
               disabled
@@ -102,7 +102,9 @@ const ChangeTagModal = ({
 
           {/* Work Tag / Company Tag */}
           <div className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">{t('company:INFO.WORK_TAG')}</h4>
+            <h4 className="font-semibold text-input-text-primary">
+              {t('account_book:INFO.WORK_TAG')}
+            </h4>
 
             <div className="relative flex">
               <button
@@ -111,7 +113,7 @@ const ChangeTagModal = ({
                 onClick={toggleDropdown}
               >
                 <p className="px-12px py-10px text-base font-medium">
-                  {t(`company:WORK_TAG.${tag.toUpperCase()}`)}
+                  {t(`account_book:WORK_TAG.${tag.toUpperCase()}`)}
                 </p>
 
                 <div className="px-12px py-10px">
@@ -131,7 +133,7 @@ const ChangeTagModal = ({
                       }}
                       className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                     >
-                      {t(`company:WORK_TAG.${item.toUpperCase()}`)}
+                      {t(`account_book:WORK_TAG.${item.toUpperCase()}`)}
                     </button>
                   ))}
                 </div>
@@ -146,7 +148,7 @@ const ChangeTagModal = ({
             onClick={closeChangeTagModal}
             className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
           >
-            {t('company:ACCOUNT_BOOKS_PAGE_BODY.CANCEL')}
+            {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL')}
           </button>
 
           <button
@@ -155,7 +157,7 @@ const ChangeTagModal = ({
             disabled={isLoading}
             className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
-            <span>{t('company:ACCOUNT_BOOKS_PAGE_BODY.SAVE')}</span>
+            <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.SAVE')}</span>
             <IoSaveOutline size={16} />
           </button>
         </section>

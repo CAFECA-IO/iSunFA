@@ -26,7 +26,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
   companyAndRole,
   toggleModal,
 }) => {
-  const { t } = useTranslation(['setting', 'common', 'company']);
+  const { t } = useTranslation(['setting', 'common', 'account_book']);
   const router = useRouter();
   const [companyName, setCompanyName] = React.useState('');
   const [businessTaxId, setBusinessTaxId] = React.useState('');
@@ -69,7 +69,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
           toastHandler({
             id: ToastId.ACCOUNT_BOOK_SETTING_UPDATE_SUCCESS,
             type: ToastType.SUCCESS,
-            content: t('company:EDIT.UPDATE_SUCCESS'),
+            content: t('account_book:EDIT.UPDATE_SUCCESS'),
             closeable: true,
           });
           toggleModal();
@@ -101,8 +101,8 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
     if (!companyAndRole) return;
     messageModalDataHandler({
       messageType: MessageType.WARNING,
-      title: t('company:DELETE.TITLE'),
-      content: t('company:DELETE.WARNING'),
+      title: t('account_book:DELETE.TITLE'),
+      content: t('account_book:DELETE.WARNING'),
       backBtnStr: t('common:COMMON.CANCEL'),
       submitBtnStr: t('setting:SETTINGS.REMOVE'),
       submitBtnFunction: procedureOfDelete,
@@ -148,7 +148,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
         <section className="flex items-center justify-between">
           <Button variant="secondaryBorderless" className="p-0" type="button" onClick={toggleModal}>
             <Image width={20} height={20} src="/icons/back.svg" alt="language icon" />
-            <p>{t('company:EDIT.BACK')}</p>
+            <p>{t('account_book:EDIT.BACK')}</p>
           </Button>
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             {companyAndRole.company.name}
@@ -167,7 +167,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
                 height={16}
                 alt="building_icon"
               />
-              <p>{t('company:EDIT.INFO')}</p>
+              <p>{t('account_book:EDIT.INFO')}</p>
             </div>
             <hr className="flex-1 border-divider-stroke-lv-4" />
           </div>
@@ -176,40 +176,40 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
           <div className="grid grid-cols-3 gap-lv-7">
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.COMPANY_NAME')}
+                {t('account_book:EDIT.COMPANY_NAME')}
               </p>
               <input
                 id="company-name-input"
                 type="text"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder={t('company:PLACEHOLDER.ENTER_NAME')}
+                placeholder={t('account_book:PLACEHOLDER.ENTER_NAME')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.BUSINESS_TAX_ID')}
+                {t('account_book:EDIT.BUSINESS_TAX_ID')}
               </p>
               <input
                 id="company-tax-id-input"
                 type="text"
                 value={businessTaxId}
                 onChange={(e) => setBusinessTaxId(e.target.value)}
-                placeholder={t('company:PLACEHOLDER.ENTER_NUMBER')}
+                placeholder={t('account_book:PLACEHOLDER.ENTER_NUMBER')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.TAX_SERIAL_NUMBER')}
+                {t('account_book:EDIT.TAX_SERIAL_NUMBER')}
               </p>
               <input
                 id="company-tax-serial-number-input"
                 type="text"
                 value={taxSerialNumber}
                 onChange={(e) => setTaxSerialNumber(e.target.value)}
-                placeholder={t('company:PLACEHOLDER.ENTER_NUMBER')}
+                placeholder={t('account_book:PLACEHOLDER.ENTER_NUMBER')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
@@ -217,14 +217,14 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
           <div className="grid grid-cols-3 gap-lv-7">
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.COMPANY_REPRESENTATIVE_NAME')}
+                {t('account_book:EDIT.COMPANY_REPRESENTATIVE_NAME')}
               </p>
               <input
                 id="company-representative-name-input"
                 type="text"
                 value={representativeName}
                 onChange={(e) => setRepresentativeName(e.target.value)}
-                placeholder={t('company:PLACEHOLDER.ENTER_NAME')}
+                placeholder={t('account_book:PLACEHOLDER.ENTER_NAME')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
@@ -239,14 +239,14 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
           <div className="grid grid-cols-1 gap-lv-7">
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.COMPANY_ADDRESS')}
+                {t('account_book:EDIT.COMPANY_ADDRESS')}
               </p>
               <input
                 id="company-address-input"
                 type="text"
                 value={companyAddress}
                 onChange={(e) => setCompanyAddress(e.target.value)}
-                placeholder={t('company:PLACEHOLDER.ENTER_FULL_ADDRESS')}
+                placeholder={t('account_book:PLACEHOLDER.ENTER_FULL_ADDRESS')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
@@ -260,7 +260,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
             >
               <p className="flex cursor-pointer gap-2" onClick={deleteCompanyClickHandler}>
                 <Image src="/icons/trash.svg" width={16} height={16} alt="notice_icon" />
-                <span>{t('company:EDIT.DELETE_THIS_ACCOUNT_BOOK')}</span>
+                <span>{t('account_book:EDIT.DELETE_THIS_ACCOUNT_BOOK')}</span>
               </p>
             </Button>
           </div>

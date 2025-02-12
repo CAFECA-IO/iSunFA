@@ -98,7 +98,7 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
         'layout',
         'common',
         'setting',
-        'company',
+        'account_book',
         'filter_section_type',
         'search',
         'dashboard',

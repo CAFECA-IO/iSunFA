@@ -19,7 +19,7 @@ interface AccountBookListModalProps {
 }
 
 const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal }) => {
-  const { t } = useTranslation(['setting', 'common', 'company']);
+  const { t } = useTranslation(['setting', 'common', 'account_book']);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -30,7 +30,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   const { userAuth } = useUserCtx();
 
   const displayedType = SortingButton({
-    string: t('company:INFO.WORK_TAG'),
+    string: t('account_book:INFO.WORK_TAG'),
     sortOrder: typeSort,
     setSortOrder: setTypeSort,
   });
@@ -57,7 +57,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
       <div className="ml-250px flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
         <section className="flex items-center justify-between">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('company:LIST.ACCOUNT_BOOK_LIST_TITLE')}
+            {t('account_book:LIST.ACCOUNT_BOOK_LIST_TITLE')}
           </h1>
           <button type="button" onClick={toggleModal}>
             <IoCloseOutline size={24} />
@@ -82,7 +82,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
                 height={16}
                 alt="company_icon"
               />
-              <p>{t('company:LIST.ACCOUNT_BOOK_LIST_TITLE')}</p>
+              <p>{t('account_book:LIST.ACCOUNT_BOOK_LIST_TITLE')}</p>
             </div>
             <hr className="flex-1 border-divider-stroke-lv-4" />
           </div>
@@ -91,17 +91,17 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
               <div className="table-header-group h-60px w-full rounded-sm bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
                 <div className="table-row w-full">
                   <div className="table-cell min-w-134px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-                    <div>{t('company:INFO.COMPANY_NAME')}</div>
+                    <div>{t('account_book:INFO.COMPANY_NAME')}</div>
                   </div>
                   <div className="table-cell min-w-84px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-                    <div>{t('company:INFO.TAX_ID')}</div>
+                    <div>{t('account_book:INFO.TAX_ID')}</div>
                   </div>
                   <div className="table-cell w-full border-b border-r"></div>
                   <div className="table-cell min-w-105px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
                     {displayedType}
                   </div>
                   <div className="table-cell min-w-64px border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
-                    <div>{t('company:LIST.ACTION')}</div>
+                    <div>{t('account_book:LIST.ACTION')}</div>
                   </div>
                 </div>
               </div>

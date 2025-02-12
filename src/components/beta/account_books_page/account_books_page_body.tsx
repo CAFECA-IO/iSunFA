@@ -11,13 +11,13 @@ import Pagination from '@/components/pagination/pagination';
 import MessageModal from '@/components/message_modal/message_modal';
 import FilterSection from '@/components/filter_section/filter_section';
 import NoData from '@/components/beta/account_books_page/no_data';
-import UploadAccountBookCompanyPictureModal from '@/components/beta/account_books_page/upload_account_book_company_picture_modal';
+import UploadCompanyPictureModal from '@/components/beta/account_books_page/upload_company_picture_modal';
 import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 
 const AccountBooksPageBody = () => {
-  const { t } = useTranslation(['company']);
+  const { t } = useTranslation(['account_book']);
   const { userAuth, deleteAccountBook } = useUserCtx();
   const userId = userAuth?.id;
 
@@ -26,7 +26,7 @@ const AccountBooksPageBody = () => {
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
   const [accountBookToEdit, setAccountBookToEdit] = useState<ICompanyAndRole | undefined>();
   const [accountBookToDelete, setAccountBookToDelete] = useState<ICompanyAndRole | undefined>();
-  const [accountBookToUploadAvatar, setAccountBookToUploadAvatar] = useState<
+  const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
     ICompanyAndRole | undefined
   >();
   const [totalPage, setTotalPage] = useState(1);
@@ -65,13 +65,13 @@ const AccountBooksPageBody = () => {
   };
 
   const messageModalData: IMessageModal = {
-    title: t('company:ACCOUNT_BOOKS_PAGE_BODY.DELETE_MESSAGE_TITLE'),
-    content: t('company:ACCOUNT_BOOKS_PAGE_BODY.DELETE_MESSAGE_CONTENT'),
-    submitBtnStr: t('company:ACCOUNT_BOOKS_PAGE_BODY.DELETE'),
+    title: t('account_book:ACCOUNT_BOOKS_PAGE_BODY.DELETE_MESSAGE_TITLE'),
+    content: t('account_book:ACCOUNT_BOOKS_PAGE_BODY.DELETE_MESSAGE_CONTENT'),
+    submitBtnStr: t('account_book:ACCOUNT_BOOKS_PAGE_BODY.DELETE'),
     submitBtnFunction: handleDeleteAccountBook,
     messageType: MessageType.WARNING,
     backBtnFunction: closeDeleteModal,
-    backBtnStr: t('company:ACCOUNT_BOOKS_PAGE_BODY.CANCEL'),
+    backBtnStr: t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL'),
   };
 
   const handleApiResponse = (resData: IPaginatedData<ICompanyAndRole[]>) => {
@@ -103,7 +103,7 @@ const AccountBooksPageBody = () => {
             className="flex items-center gap-8px rounded-xs bg-button-surface-strong-secondary px-24px py-10px text-base font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             <BsPlusLg size={20} />
-            <p>{t('company:ACCOUNT_BOOKS_PAGE_BODY.ADD_NEW')}</p>
+            <p>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.ADD_NEW')}</p>
           </button>
 
           <button
@@ -111,7 +111,7 @@ const AccountBooksPageBody = () => {
             className="flex items-center gap-8px rounded-xs border border-button-stroke-secondary bg-button-surface-soft-secondary px-24px py-10px text-base font-medium text-button-text-secondary-solid hover:border-button-stroke-secondary-hover hover:bg-button-surface-soft-secondary-hover disabled:border-button-stroke-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             <BsEnvelope size={20} />
-            <p>{t('company:ACCOUNT_BOOKS_PAGE_BODY.INVITE_CODE')}</p>
+            <p>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.INVITE_CODE')}</p>
           </button>
         </div>
       </section>
@@ -123,7 +123,7 @@ const AccountBooksPageBody = () => {
             accountBookList={accountBookList}
             setAccountBookToEdit={setAccountBookToEdit}
             setAccountBookToDelete={setAccountBookToDelete}
-            setAccountBookToUploadAvatar={setAccountBookToUploadAvatar}
+            setAccountBookToUploadPicture={setAccountBookToUploadPicture}
           />
           <Pagination
             totalPages={totalPage}
@@ -150,11 +150,11 @@ const AccountBooksPageBody = () => {
         />
       )}
 
-      {accountBookToUploadAvatar && (
-        <UploadAccountBookCompanyPictureModal
-          accountBookToUploadAvatar={accountBookToUploadAvatar}
-          isModalOpen={!!accountBookToUploadAvatar}
-          setAccountBookToUploadAvatar={setAccountBookToUploadAvatar}
+      {accountBookToUploadPicture && (
+        <UploadCompanyPictureModal
+          accountBookToUploadPicture={accountBookToUploadPicture}
+          isModalOpen={!!accountBookToUploadPicture}
+          setAccountBookToUploadPicture={setAccountBookToUploadPicture}
           setRefreshKey={setRefreshKey}
         />
       )}

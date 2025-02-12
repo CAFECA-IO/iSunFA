@@ -47,7 +47,7 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
       ...(await serverSideTranslations(locale as string, [
         'layout',
         'dashboard',
-        'company',
+        'account_book',
         'search',
         'common',
       ])),
