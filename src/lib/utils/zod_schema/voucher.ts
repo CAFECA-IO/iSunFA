@@ -644,8 +644,6 @@ const voucherGetOneOutputValidatorV2 = z
       })),
       isReverseRelated: data.isReverseRelated,
     };
-    // eslint-disable-next-line no-console
-    console.log('voucherDetail', voucherDetail);
     return voucherDetail;
   });
 
