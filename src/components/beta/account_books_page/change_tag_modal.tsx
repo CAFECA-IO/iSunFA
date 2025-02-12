@@ -3,7 +3,7 @@ import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { ICompanyAndRole } from '@/interfaces/company';
-import { COMPANY_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/constants/company';
 
 interface ChangeTagModalProps {
   accountBookToEdit: ICompanyAndRole;
@@ -21,7 +21,7 @@ const ChangeTagModal = ({
   const { t } = useTranslation(['company']);
   const { updateAccountBook } = useUserCtx();
 
-  const [tag, setTag] = useState<COMPANY_TAG>(accountBookToEdit.tag);
+  const [tag, setTag] = useState<WORK_TAG>(accountBookToEdit.tag);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,7 +50,7 @@ const ChangeTagModal = ({
 
       if (data) {
         // Info: (20241113 - Liz) 更新公司成功後清空表單並關閉 modal
-        setTag(COMPANY_TAG.ALL);
+        setTag(WORK_TAG.ALL);
         closeChangeTagModal();
 
         if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the company list after creating a new company
@@ -111,7 +111,7 @@ const ChangeTagModal = ({
                 onClick={toggleDropdown}
               >
                 <p className="px-12px py-10px text-base font-medium">
-                  {t(`company:TAG.${tag.toUpperCase()}`)}
+                  {t(`company:WORK_TAG.${tag.toUpperCase()}`)}
                 </p>
 
                 <div className="px-12px py-10px">
@@ -121,7 +121,7 @@ const ChangeTagModal = ({
 
               {isDropdownOpen && (
                 <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                  {Object.values(COMPANY_TAG).map((item) => (
+                  {Object.values(WORK_TAG).map((item) => (
                     <button
                       key={item}
                       type="button"
@@ -131,7 +131,7 @@ const ChangeTagModal = ({
                       }}
                       className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                     >
-                      {t(`company:TAG.${item.toUpperCase()}`)}
+                      {t(`company:WORK_TAG.${item.toUpperCase()}`)}
                     </button>
                   ))}
                 </div>

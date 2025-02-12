@@ -16,7 +16,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
-import { COMPANY_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/constants/company';
 
 interface UserContextType {
   credential: string | null;
@@ -40,7 +40,7 @@ interface UserContextType {
   }: {
     name: string;
     taxId: string;
-    tag: COMPANY_TAG;
+    tag: WORK_TAG;
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
   selectedAccountBook: ICompany | null;
@@ -52,7 +52,7 @@ interface UserContextType {
   }: {
     companyId: number;
     action: string;
-    tag: COMPANY_TAG;
+    tag: WORK_TAG;
   }) => Promise<ICompanyAndRole | null>;
   deleteAccountBook: (companyId: number) => Promise<ICompany | null>;
   deleteAccount: () => Promise<{
@@ -598,7 +598,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }: {
     name: string;
     taxId: string;
-    tag: COMPANY_TAG;
+    tag: WORK_TAG;
   }) => {
     try {
       const { success, code, error } = await createAccountBookAPI({
@@ -642,7 +642,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }: {
     companyId: number;
     action: string;
-    tag: COMPANY_TAG;
+    tag: WORK_TAG;
   }) => {
     try {
       const { success, data: companyAndRole } = await updateAccountBookAPI({

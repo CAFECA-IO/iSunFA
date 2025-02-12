@@ -1,10 +1,10 @@
 import { RiCheckboxMultipleLine, RiCoinsFill } from 'react-icons/ri';
 import { LuFileCheck } from 'react-icons/lu';
-import { COMPANY_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/constants/company';
 import { useTranslation } from 'next-i18next';
 
 interface WorkTagProps {
-  tag: COMPANY_TAG;
+  tag: WORK_TAG;
 }
 
 const CompanyTag = ({ tag }: WorkTagProps) => {
@@ -15,19 +15,19 @@ const CompanyTag = ({ tag }: WorkTagProps) => {
   let icon = null;
 
   switch (tag) {
-    case COMPANY_TAG.FINANCIAL:
+    case WORK_TAG.FINANCIAL:
       backgroundColor = 'bg-badge-surface-strong-secondary';
       textColor = 'text-badge-text-invert';
       icon = <RiCoinsFill size={16} />;
       break;
 
-    case COMPANY_TAG.TAX:
+    case WORK_TAG.TAX:
       backgroundColor = 'bg-badge-surface-strong-primary';
       textColor = 'text-badge-text-invert';
       icon = <RiCheckboxMultipleLine size={16} />;
       break;
 
-    case COMPANY_TAG.ALL:
+    case WORK_TAG.ALL:
       backgroundColor = 'bg-badge-surface-soft-secondary';
       textColor = 'text-badge-text-secondary-solid';
       icon = <LuFileCheck size={16} className="text-navy-blue-400" />;
@@ -45,7 +45,7 @@ const CompanyTag = ({ tag }: WorkTagProps) => {
       className={`flex w-max items-center gap-1px rounded-full p-6px text-xs font-medium ${backgroundColor} ${textColor}`}
     >
       {icon}
-      <p className="px-4px capitalize">{t(`company:TAG.${tag.toUpperCase()}`)}</p>
+      <p className="px-4px capitalize">{t(`company:WORK_TAG.${tag.toUpperCase()}`)}</p>
     </div>
   );
 };
