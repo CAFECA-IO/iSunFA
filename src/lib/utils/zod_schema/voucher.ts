@@ -484,6 +484,52 @@ const voucherGetOneOutputValidatorV2 = z
       // Info: (20241223 - Murky) 如果輸入為 null，直接返回 null
       return null;
     }
+    let reverseVoucherIds = Array.from(
+      new Map(
+        [
+          ...(data.originalEvents?.flatMap(
+            (event) =>
+              event.associateVouchers?.map((associateVoucher) => ({
+                id: associateVoucher.resultVoucher?.id,
+                voucherNo: associateVoucher.resultVoucher?.no,
+              })) ?? []
+          ) ?? []),
+          ...(data.resultEvents?.flatMap(
+            (event) =>
+              event.associateVouchers
+                ?.filter(
+                  (associateVoucher) =>
+                    associateVoucher.event?.eventType === 'revert' &&
+                    associateVoucher.originalVoucher
+                )
+                .map((associateVoucher) => ({
+                  id: associateVoucher.originalVoucher.id,
+                  voucherNo: associateVoucher.originalVoucher.no,
+                })) ?? []
+          ) ?? []),
+        ].map((item) => [item.id, item])
+      ).values()
+    );
+
+    let deletedReverseVoucherIds =
+      data.resultEvents?.flatMap(
+        (event) =>
+          event.associateVouchers
+            ?.filter(
+              (associateVoucher) =>
+                associateVoucher.event?.eventType === 'delete' && associateVoucher.originalVoucher
+            )
+            .map((associateVoucher) => ({
+              id: associateVoucher.originalVoucher.id,
+              voucherNo: associateVoucher.originalVoucher.no,
+            })) ?? []
+      ) ?? [];
+
+    //  Info: (20250212 - Tzuhan) 過濾掉 `undefined`
+    reverseVoucherIds = reverseVoucherIds.filter((voucher) => voucher.id && voucher.voucherNo);
+    deletedReverseVoucherIds = deletedReverseVoucherIds.filter(
+      (voucher) => voucher.id && voucher.voucherNo
+    );
     const voucherDetail: IVoucherDetailForFrontend = {
       id: data.id,
       voucherDate: data.date,
@@ -504,11 +550,8 @@ const voucherGetOneOutputValidatorV2 = z
       },
       payableInfo: data.payableInfo,
       receivingInfo: data.receivingInfo,
-      reverseVoucherIds:
-        data.originalEvents[0]?.associateVouchers?.map((associateVoucher) => ({
-          id: associateVoucher.resultVoucher.id,
-          voucherNo: associateVoucher.resultVoucher.no,
-        })) ?? [],
+      reverseVoucherIds,
+      deletedReverseVoucherIds,
       assets: data.asset.map((asset) => ({
         id: asset.id,
         currencyAlias: data.accountSetting.currency,
@@ -605,7 +648,8 @@ const voucherGetOneOutputValidatorV2 = z
       })),
       isReverseRelated: data.isReverseRelated,
     };
-
+    // eslint-disable-next-line no-console
+    console.log('voucherDetail', voucherDetail);
     return voucherDetail;
   });
 
@@ -647,6 +691,12 @@ const IVoucherDetailForFrontendValidator = z.object({
     })
     .optional(),
   reverseVoucherIds: z.array(
+    z.object({
+      id: z.number(),
+      voucherNo: z.string(),
+    })
+  ),
+  deletedReverseVoucherIds: z.array(
     z.object({
       id: z.number(),
       voucherNo: z.string(),

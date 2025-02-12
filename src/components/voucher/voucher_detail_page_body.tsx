@@ -28,7 +28,7 @@ interface IVoucherDetailPageBodyProps {
 }
 
 const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherId, voucherNo }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   const router = useRouter();
   const { selectedAccountBook } = useUserCtx();
 
@@ -62,6 +62,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     payableInfo,
     receivingInfo,
     reverseVoucherIds,
+    deletedReverseVoucherIds,
     assets,
     lineItems,
     isReverseRelated,
@@ -77,9 +78,6 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
 
   const totalDebit = lineItems.reduce((acc, cur) => (cur.debit ? acc + cur.amount : acc), 0);
   const totalCredit = lineItems.reduce((acc, cur) => (!cur.debit ? acc + cur.amount : acc), 0);
-
-  // Info: (20241118 - Julian) If note is empty, display '-'
-  const noteText = note !== '' ? note : '-';
 
   // Info: (20241227 - Julian) type 字串轉換
   const translateType = (voucherType: string) => {
@@ -232,7 +230,27 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   );
 
   const isDisplayNote = !isLoading ? (
-    <p className="text-input-text-primary">{noteText}</p>
+    <div className="flex flex-col">
+      {note && <p className="text-input-text-primary">{note}</p>}
+      {deletedReverseVoucherIds.length > 0 &&
+        deletedReverseVoucherIds.map((deletedReverseVoucherId) => (
+          <p className="text-text-neutral-tertiary">
+            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER', {
+              voucherNo: (
+                <Link
+                  href={`/users/accounting/${deletedReverseVoucherId.id}?voucherNo=${deletedReverseVoucherId.voucherNo}`}
+                  className="text-link-text-primary hover:underline"
+                >
+                  {deletedReverseVoucherId.voucherNo}
+                </Link>
+              ),
+            })}
+          </p>
+        ))}
+      {!note && deletedReverseVoucherIds.length === 0 && (
+        <p className="text-input-text-primary">-</p>
+      )}
+    </div>
   ) : (
     <Skeleton width={200} height={24} rounded />
   );
