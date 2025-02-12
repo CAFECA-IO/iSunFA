@@ -1,21 +1,7 @@
 {
   "SETTINGS": {
-    "PERSONAL_SETTINGS": "個人設定",
-    "ACCOUNT_BOOK_SETTINGS": "公司設定",
-    "BASIC_INFO": "基本資訊",
-    "ACCOUNTING_TITLE": "會計科目",
-    "TRADING_PARTNER_LIST": "交易夥伴名單",
-    "ADMINISTRATOR": "管理人",
-    "SUBSCRIPTION_BILLS": "訂閱及帳單",
-    "ACCOUNTING_TITLE_MANAGEMENT": "會計科目管理",
     "ASSETS": "資產",
-    "LIABILITY": "負債",
-    "EQUITY": "權益",
     "ALL": "全部",
-    "INCOME": "收入",
-    "EXPENSE": "費用",
-    "CURRENT": "流動",
-    "NON_CURRENT": "非流動",
     "ENTER_NAME": "輸入科目名稱",
     "FAVORITE_ACCOUNTING_TITLE": "最喜歡的會計科目",
     "MY_NEW_ACCOUNTING_TITLE": "我的新會計科目",
@@ -39,8 +25,7 @@
     "SUCCESSFULLY_UPDATED_ACCOUNT": "會計科目更新成功：",
     "FAILED_TO_UPDATE_ACCOUNT": "更新科目失敗，請稍後重試。",
     "FAILED_TO_GET_ACCOUNT_DATA": "取得科目資料失敗，請稍後重試。",
-    "FAIL_UPDATE_COMPANY_NAME": "無法更新公司名稱。錯誤代碼：{{updateTeamCode}}",
-    "ASSET": "資產"
+    "FAIL_UPDATE_COMPANY_NAME": "無法更新公司名稱。錯誤代碼：{{updateTeamCode}}"
   },
   "NORMAL": {
     "TITLE": "一般設定",
@@ -49,7 +34,7 @@
     "SYSTEM_NOTIFICATION": "系統通知",
     "UPDATES_N_SUBSCRIPTION_NOTIFICATION": "更新與訂閱通知",
     "EMAIL_NOTIFICATION": "發送通知到電子郵件",
-    "ACCOUNT_BOOK_SETTINGS": "公司設定",
+    "ACCOUNT_BOOK_SETTINGS": "帳本設定",
     "ACCOUNT_SETTINGS": "帳戶設定",
     "ADD_AN_ACCOUNT_BOOK": "新增帳本",
     "VIEW_ACCOUNT_BOOK_LIST": "查看帳本清單",

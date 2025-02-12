@@ -1,3 +1,4 @@
+// Deprecated: (20250212 - Liz) 這是 Alpha 版本的元件，已經不再使用，即將被刪除。
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
