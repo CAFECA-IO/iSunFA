@@ -182,7 +182,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         className="flex items-center justify-between gap-8px rounded-sm bg-input-surface-input-background px-12px py-10px"
       >
         <p className="overflow-x-auto whitespace-nowrap">
-          {lineItem.account?.id} - {lineItem.account?.name}
+          {lineItem.account?.code} - {lineItem.account?.name}
         </p>
         <div className="h-20px w-20px">
           <FiBookOpen size={20} />
