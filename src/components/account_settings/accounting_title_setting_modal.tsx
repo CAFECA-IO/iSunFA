@@ -92,7 +92,8 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
 
   const clearSearchWord = () => {
     setSearchWord('');
-    getAccountList({ params: { companyId } });
+    getAccountList({ params: { companyId: accountBookId } });
+    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   const isDisplayModal = isModalVisible ? (
