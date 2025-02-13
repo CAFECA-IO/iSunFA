@@ -242,10 +242,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
                 link: (
                   <Link
                     href={`/users/accounting/${deletedReverseVoucherId.id}?voucherNo=${deletedReverseVoucherId.voucherNo}`}
-                    className="text-link-text-primary hover:underline"
-                  >
-                    {deletedReverseVoucherId.voucherNo}
-                  </Link>
+                    className="text-link-text-primary"
+                  />
                 ),
               }}
             />

@@ -244,6 +244,7 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
       remain: z.number(),
     }),
     originalEvents: z.array(eventEntityValidator),
+    resultEvents: z.array(eventEntityValidator),
     isReverseRelated: z.boolean().optional(),
   })
 ).transform((data) => {
@@ -290,6 +291,22 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
                 id: associateVoucher.resultVoucher.id,
                 voucherNo: associateVoucher.resultVoucher.no,
               });
+            });
+          }
+          return acc;
+        },
+        [] as { id: number; voucherNo: string }[]
+      ),
+      deletedReverseVouchers: voucher.resultEvents.reduce(
+        (acc, event) => {
+          if (event.associateVouchers) {
+            event.associateVouchers.forEach((associateVoucher) => {
+              if (associateVoucher.originalVoucher) {
+                acc.push({
+                  id: associateVoucher.originalVoucher.id,
+                  voucherNo: associateVoucher.originalVoucher.no,
+                });
+              }
             });
           }
           return acc;

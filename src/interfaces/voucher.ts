@@ -238,6 +238,10 @@ export interface IVoucherBeta {
     id: number;
     voucherNo: string;
   }[];
+  deletedReverseVouchers: {
+    id: number;
+    voucherNo: string;
+  }[];
   /**
    * Info: (20250120 - Shirley)
    * @Julian 該傳票是否被刪除或反轉
