@@ -516,13 +516,13 @@ const voucherGetOneOutputValidatorV2 = z
                     type:
                       event.eventType === 'delete' // Info: (20250213 - Tzuhan)  **1. 刪除的傳票 -> 反轉傳票**
                         ? 'reverse'
-                        : event.eventType === 'revert' // Info: (20250213 - Tzuhan)  **2. 沖銷傳票 -> 立賬傳票**
-                          ? 'original'
+                        : event.eventType === 'revert' // Info: (20250213 - Tzuhan)  **2. 立賬傳票 -> 沖銷傳票**
+                          ? 'settlement'
                           : '',
                   })) ?? []
             ) ?? []),
 
-          // Info: (20250213 - Tzuhan)  **3. 立賬傳票 -> 沖銷傳票**
+          // Info: (20250213 - Tzuhan)  **3. 沖銷傳票 -> 立賬傳票**
           ...(data.resultEvents
             ?.filter((event) => event.eventType === 'revert') // Info: (20250213 - Tzuhan)  只篩選 eventType === 'revert'
             ?.flatMap(
@@ -532,7 +532,7 @@ const voucherGetOneOutputValidatorV2 = z
                   .map((associateVoucher) => ({
                     id: associateVoucher.originalVoucher.id,
                     voucherNo: associateVoucher.originalVoucher.no,
-                    type: 'settlement',
+                    type: 'original',
                   })) ?? []
             ) ?? []),
         ].map((item) => [item.id, item]) // Info: (20250213 - Tzuhan)  使用 Map 去重複
