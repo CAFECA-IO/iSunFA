@@ -234,7 +234,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
       {note && <p className="text-input-text-primary">{note}</p>}
       {deletedReverseVoucherIds.length > 0 &&
         deletedReverseVoucherIds.map((deletedReverseVoucherId) => (
-          <p className="text-input-text-primary">
+          <p key={deletedReverseVoucherId.id} className="text-input-text-primary">
             <Trans
               i18nKey="journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER"
               values={{ voucherNo: deletedReverseVoucherId.voucherNo }}

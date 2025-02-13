@@ -76,7 +76,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       {note && <p className="text-hxs text-text-neutral-primary">{note}</p>}
       {deletedReverseVouchers.length > 0 &&
         deletedReverseVouchers.map((deletedReverseVoucher) => (
-          <p className="text-hxs text-text-neutral-primary">
+          <p key={deletedReverseVoucher.id} className="text-hxs text-text-neutral-primary">
             <Trans
               i18nKey="journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER"
               values={{ voucherNo: deletedReverseVoucher.voucherNo }}
