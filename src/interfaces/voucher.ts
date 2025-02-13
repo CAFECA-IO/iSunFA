@@ -142,6 +142,7 @@ export interface IVoucherDetailForFrontend {
   reverseVoucherIds: {
     id: number;
     voucherNo: string;
+    type: string;
   }[];
   deletedReverseVoucherIds: {
     id: number;

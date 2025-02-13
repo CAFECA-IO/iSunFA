@@ -268,7 +268,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
       {reverseVoucherIds.map((reverseVoucher) => (
         <Link
           key={reverseVoucher.id}
-          href={`/users/accounting/${reverseVoucher.id}?voucherNo=${voucherNo}`}
+          href={`/users/accounting/${reverseVoucher.id}?voucherNo=${reverseVoucher.voucherNo}`}
           className="text-link-text-primary hover:underline"
         >
           {reverseVoucher.voucherNo}
@@ -355,7 +355,9 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     reverseVoucherIds.length > 0 ? (
       <div className="flex justify-between">
         <p className="text-text-neutral-tertiary">
-          {t('journal:VOUCHER_DETAIL_PAGE.REVERSE_VOUCHERS')}
+          {t(
+            `journal:VOUCHER_DETAIL_PAGE.REVERSE_VOUCHERS_${reverseVoucherIds[0].type.toUpperCase()}`
+          )}
         </p>
         {isDisplayReverseVoucher}
       </div>

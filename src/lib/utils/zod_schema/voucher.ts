@@ -504,15 +504,27 @@ const voucherGetOneOutputValidatorV2 = z
     let reverseVoucherIds = Array.from(
       new Map(
         [
-          ...(data.originalEvents?.flatMap(
-            (event) =>
-              event.associateVouchers?.map((associateVoucher) => ({
-                id: associateVoucher.resultVoucher?.id,
-                voucherNo: associateVoucher.resultVoucher?.no,
-              })) ?? []
-          ) ?? []),
+          ...(data.originalEvents
+            ?.filter((event) => event.eventType === 'revert' || event.eventType === 'delete')
+            ?.flatMap(
+              (event) =>
+                event.associateVouchers
+                  ?.filter((associateVoucher) => associateVoucher.resultVoucher)
+                  .map((associateVoucher) => ({
+                    id: associateVoucher.resultVoucher.id,
+                    voucherNo: associateVoucher.resultVoucher.no,
+                    type:
+                      event.eventType === 'delete' // Info: (20250213 - Tzuhan)  **1. 刪除的傳票 -> 反轉傳票**
+                        ? 'reverse'
+                        : event.eventType === 'revert' // Info: (20250213 - Tzuhan)  **2. 沖銷傳票 -> 立賬傳票**
+                          ? 'original'
+                          : '',
+                  })) ?? []
+            ) ?? []),
+
+          // Info: (20250213 - Tzuhan)  **3. 立賬傳票 -> 沖銷傳票**
           ...(data.resultEvents
-            ?.filter((event) => event.eventType === 'revert')
+            ?.filter((event) => event.eventType === 'revert') // Info: (20250213 - Tzuhan)  只篩選 eventType === 'revert'
             ?.flatMap(
               (event) =>
                 event.associateVouchers
@@ -520,11 +532,13 @@ const voucherGetOneOutputValidatorV2 = z
                   .map((associateVoucher) => ({
                     id: associateVoucher.originalVoucher.id,
                     voucherNo: associateVoucher.originalVoucher.no,
+                    type: 'settlement',
                   })) ?? []
             ) ?? []),
-        ].map((item) => [item.id, item])
+        ].map((item) => [item.id, item]) // Info: (20250213 - Tzuhan)  使用 Map 去重複
       ).values()
     );
+
     let deletedReverseVoucherIds =
       data.resultEvents
         ?.filter((event) => event.eventType === 'delete')
