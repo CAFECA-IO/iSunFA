@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Trans, useTranslation } from 'next-i18next';
+import { useTranslation } from 'next-i18next';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { HiCheck } from 'react-icons/hi';
@@ -77,7 +77,15 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       {deletedReverseVouchers.length > 0 &&
         deletedReverseVouchers.map((deletedReverseVoucher) => (
           <p key={deletedReverseVoucher.id} className="text-hxs text-text-neutral-primary">
-            <Trans
+            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_1')}
+            <Link
+              href={`/users/accounting/${deletedReverseVoucher.id}?voucherNo=${deletedReverseVoucher.voucherNo}`}
+              className="px-1 text-link-text-primary"
+            >
+              {deletedReverseVoucher.voucherNo}
+            </Link>
+            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_2')}
+            {/* <Trans
               i18nKey="journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER"
               values={{ voucherNo: deletedReverseVoucher.voucherNo }}
               components={{
@@ -88,7 +96,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
                   />
                 ),
               }}
-            />
+            /> */}
           </p>
         ))}
       {!note && deletedReverseVouchers.length === 0 && (

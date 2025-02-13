@@ -303,7 +303,9 @@
     "DELETE_SUCCESS_TOAST": "传票已删除。",
     "UNDO": "复原",
     "VOUCHER_NOT_FOUND": "找不到传票，请确认网址是否正确",
-    "DELETED_REVERSE_VOUCHER":  "因刪除 <link>{{voucherNo}}</link> 传票生成的反转分录"
+    "DELETED_REVERSE_VOUCHER":  "因刪除 <link>{{voucherNo}}</link> 传票生成的反转分录",
+    "DELETED_REVERSE_VOUCHER_1":  "因刪除",
+    "DELETED_REVERSE_VOUCHER_2":  "传票生成的反转分录"
   },
   "LEDGER": {
     "LEDGER_PERIOD": "分类帐期间",
