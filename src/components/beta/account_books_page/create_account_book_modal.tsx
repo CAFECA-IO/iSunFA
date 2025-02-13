@@ -5,6 +5,8 @@ import { useUserCtx } from '@/contexts/user_context';
 import { WORK_TAG } from '@/constants/company';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
+import { ITeam } from '@/interfaces/team';
+import { FAKE_TEAM_LIST } from '@/constants/team';
 
 interface CreateCompanyModalProps {
   modalVisibilityHandler: () => void;
@@ -21,19 +23,47 @@ const CreateAccountBookModal = ({
   const { createAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
-  const [companyName, setCompanyName] = useState('');
-  const [taxId, setTaxId] = useState('');
-  const [tag, setTag] = useState<WORK_TAG>(WORK_TAG.ALL);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [companyName, setCompanyName] = useState<string>('');
+  const [taxId, setTaxId] = useState<string>('');
+  const [tag, setTag] = useState<WORK_TAG | null>(null);
+  // ToDo: (20250213 - Liz) 打 api 取得使用者的團隊清單後存入 teamList state
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [teamList, setTeamList] = useState<ITeam[] | null>(FAKE_TEAM_LIST);
+  const [team, setTeam] = useState<ITeam | null>(null);
+  const [isTagDropdownOpen, setIsTagDropdownOpen] = useState<boolean>(false);
+  const [isTeamDropdownOpen, setIsTeamDropdownOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [companyNameError, setCompanyNameError] = useState<string | null>(null);
+  const [tagError, setTagError] = useState<string | null>(null);
+  const [teamError, setTeamError] = useState<string | null>(null);
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen((prevState) => !prevState);
+  const toggleTagDropdown = () => {
+    setIsTagDropdownOpen((prevState) => !prevState);
+    setIsTeamDropdownOpen(false);
+  };
+
+  const toggleTeamDropdown = () => {
+    setIsTeamDropdownOpen((prevState) => !prevState);
+    setIsTagDropdownOpen(false);
   };
 
   const handleSubmit = async () => {
     // Info: (20241114 - Liz) 防止重複點擊
     if (isLoading) return;
+
+    // Info: (20250213 - Liz) 必填機制
+    if (!companyName) {
+      setCompanyNameError(t('dashboard:CREATE_COMPANY_MODAL.PLEASE_ENTER_THE_NAME'));
+      return;
+    }
+    if (!tag) {
+      setTagError(t('dashboard:CREATE_COMPANY_MODAL.PLEASE_SELECT_A_WORK_TAG'));
+      return;
+    }
+    if (!team) {
+      setTeamError(t('dashboard:CREATE_COMPANY_MODAL.PLEASE_SELECT_A_TEAM'));
+      return;
+    }
 
     // Info: (20241104 - Liz) 開始 API 請求時設為 loading 狀態
     setIsLoading(true);
@@ -79,105 +109,191 @@ const CreateAccountBookModal = ({
     }
   };
 
+  // ToDo: (20250213 - Liz) 打 api 取得使用者的團隊清單
+
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
-        <section className="flex items-center justify-between py-16px pl-40px pr-20px">
-          <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('dashboard:CREATE_COMPANY_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
-          </h1>
-          <button type="button" onClick={modalVisibilityHandler}>
-            <IoCloseOutline size={24} />
-          </button>
-        </section>
+      <div className="overflow-hidden rounded-lg">
+        <div className="flex max-h-80vh w-400px flex-col overflow-y-auto bg-surface-neutral-surface-lv2">
+          <section className="flex items-center justify-between py-16px pl-40px pr-20px">
+            <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
+              {t('dashboard:CREATE_COMPANY_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
+            </h1>
+            <button type="button" onClick={modalVisibilityHandler}>
+              <IoCloseOutline size={24} />
+            </button>
+          </section>
 
-        <section className="flex flex-col gap-24px px-40px py-16px">
-          <div className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">
-              {t('dashboard:CREATE_COMPANY_MODAL.COMPANY_NAME')}
-            </h4>
-            <input
-              type="text"
-              placeholder={t('dashboard:CREATE_COMPANY_MODAL.ENTER_NAME')}
-              className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-            />
-          </div>
-
-          <div className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">
-              {t('dashboard:CREATE_COMPANY_MODAL.TAX_ID')}
-            </h4>
-            <input
-              type="text"
-              placeholder={t('dashboard:CREATE_COMPANY_MODAL.ENTER_NUMBER')}
-              className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
-              value={taxId}
-              onChange={(e) => setTaxId(e.target.value)}
-            />
-          </div>
-
-          <div className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">
-              {t('dashboard:CREATE_COMPANY_MODAL.WORK_TAG')}
-            </h4>
-
-            <div className="relative flex">
-              <button
-                type="button"
-                className="flex flex-auto items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
-                onClick={toggleDropdown}
-              >
-                <p className="px-12px py-10px text-base font-medium">
-                  {t('dashboard:WORK_TAG.' + tag.toUpperCase())}
+          <section className="flex flex-col gap-24px px-40px py-16px">
+            {/* // Info: (20250213 - Liz) Company Name */}
+            <div className="flex flex-col gap-8px">
+              <h4 className="font-semibold text-input-text-primary">
+                {t('dashboard:CREATE_COMPANY_MODAL.COMPANY_NAME')}
+                <span className="text-text-state-error"> *</span>
+              </h4>
+              <input
+                type="text"
+                placeholder={t('dashboard:CREATE_COMPANY_MODAL.ENTER_NAME')}
+                className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+              />
+              {companyNameError && !companyName && (
+                <p className="text-right text-sm font-medium text-text-state-error">
+                  {companyNameError}
                 </p>
-
-                <div className="px-12px py-10px">
-                  {isDropdownOpen ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
-                </div>
-              </button>
-
-              {isDropdownOpen && (
-                <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                  {Object.values(WORK_TAG).map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => {
-                        setTag(item);
-                        toggleDropdown();
-                      }}
-                      className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
-                    >
-                      {t('dashboard:WORK_TAG.' + item.toUpperCase())}
-                    </button>
-                  ))}
-                </div>
               )}
             </div>
-          </div>
-        </section>
 
-        <section className="flex justify-end gap-12px px-20px py-16px">
-          <button
-            type="button"
-            onClick={modalVisibilityHandler}
-            className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
-          >
-            {t('dashboard:CREATE_COMPANY_MODAL.CANCEL')}
-          </button>
+            {/* // Info: (20250213 - Liz) Business Tax Number */}
+            <div className="flex flex-col gap-8px">
+              <h4 className="font-semibold text-input-text-primary">
+                {t('dashboard:CREATE_COMPANY_MODAL.TAX_ID')}
+              </h4>
+              <input
+                type="text"
+                placeholder={t('dashboard:CREATE_COMPANY_MODAL.ENTER_NUMBER')}
+                className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
+                value={taxId}
+                onChange={(e) => setTaxId(e.target.value)}
+              />
+            </div>
 
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-          >
-            <p>{t('dashboard:CREATE_COMPANY_MODAL.ADD')}</p>
-            <IoAdd size={16} />
-          </button>
-        </section>
+            {/* // Info: (20250213 - Liz) Work Tag */}
+            <div className="flex flex-col gap-8px">
+              <h4 className="font-semibold text-input-text-primary">
+                {t('dashboard:CREATE_COMPANY_MODAL.WORK_TAG')}
+                <span className="text-text-state-error"> *</span>
+              </h4>
+
+              <div className="relative flex flex-col">
+                <button
+                  type="button"
+                  className="flex flex-auto items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
+                  onClick={toggleTagDropdown}
+                >
+                  <p className="px-12px py-10px text-base font-medium">
+                    {tag ? (
+                      t('dashboard:WORK_TAG.' + tag.toUpperCase())
+                    ) : (
+                      <span className="text-input-text-input-placeholder">
+                        {t('dashboard:CREATE_COMPANY_MODAL.CHOOSE_WORK_TAG')}
+                      </span>
+                    )}
+                  </p>
+
+                  <div className="px-12px py-10px">
+                    {isTagDropdownOpen ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
+                  </div>
+                </button>
+
+                {tagError && !isTagDropdownOpen && (
+                  <p className="text-right text-sm font-medium text-text-state-error">{tagError}</p>
+                )}
+
+                {isTagDropdownOpen && (
+                  <div className="absolute inset-x-0 top-full z-10 mt-8px">
+                    <div className="mb-20px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
+                      {Object.values(WORK_TAG).map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => {
+                            setTag(item);
+                            toggleTagDropdown();
+                            setTagError(null);
+                          }}
+                          className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
+                        >
+                          {t('dashboard:WORK_TAG.' + item.toUpperCase())}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* // Info: (20250213 - Liz) Team */}
+            <div className="flex flex-col gap-8px">
+              <h4 className="font-semibold text-input-text-primary">
+                {t('dashboard:CREATE_COMPANY_MODAL.TEAM')}
+                <span className="text-text-state-error"> *</span>
+              </h4>
+
+              <div className="relative flex flex-col">
+                <button
+                  type="button"
+                  className="flex flex-auto items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
+                  onClick={toggleTeamDropdown}
+                >
+                  <p className="px-12px py-10px text-base font-medium">
+                    {team ? (
+                      team.name
+                    ) : (
+                      <span className="text-input-text-input-placeholder">
+                        {t('dashboard:CREATE_COMPANY_MODAL.CHOOSE_TEAM')}
+                      </span>
+                    )}
+                  </p>
+
+                  <div className="px-12px py-10px">
+                    {isTeamDropdownOpen ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
+                  </div>
+                </button>
+
+                {teamError && !isTeamDropdownOpen && (
+                  <p className="text-right text-sm font-medium text-text-state-error">
+                    {teamError}
+                  </p>
+                )}
+
+                {isTeamDropdownOpen && (
+                  <div className="absolute inset-x-0 top-full z-10 mt-8px">
+                    <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
+                      {teamList &&
+                        teamList.length > 0 &&
+                        teamList.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setTeam(item);
+                              toggleTeamDropdown();
+                              setTeamError(null);
+                            }}
+                            className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
+                          >
+                            {item.name}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="flex justify-end gap-12px px-20px py-16px">
+            <button
+              type="button"
+              onClick={modalVisibilityHandler}
+              className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
+            >
+              {t('dashboard:CREATE_COMPANY_MODAL.CANCEL')}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+            >
+              <p>{t('dashboard:CREATE_COMPANY_MODAL.ADD')}</p>
+              <IoAdd size={16} />
+            </button>
+          </section>
+        </div>
       </div>
     </main>
   );
