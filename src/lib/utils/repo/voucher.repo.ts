@@ -2049,11 +2049,23 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
   const result = await prisma.$transaction(async (tx) => {
     const assetIds = voucherDeleteOtherEntity.asset?.map((a) => a.id) || [];
 
-    // Info: (20250213 - Shirley) 更新 asset_voucher 的 deleted_at
+    // Info: (20250213 - Shirley) 刪除 asset
     if (assetIds.length > 0) {
+      // Info: (20250213 - Shirley) 更新 asset_voucher 的 deleted_at
       await tx.assetVoucher.updateMany({
         where: {
           voucherId: deleteVersionOriginVoucher.id,
+          deletedAt: null,
+        },
+        data: { deletedAt: nowInSecond },
+      });
+
+      // Info: (20250213 - Shirley) 更新 asset 的 deleted_at
+      await tx.asset.updateMany({
+        where: {
+          id: {
+            in: assetIds,
+          },
           deletedAt: null,
         },
         data: { deletedAt: nowInSecond },
