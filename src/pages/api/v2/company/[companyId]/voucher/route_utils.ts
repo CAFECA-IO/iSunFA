@@ -1202,10 +1202,12 @@ export const mockVouchersReturn = [
       {
         id: 1111,
         voucherNo: '240817-001',
+        type: 'reverse',
       },
       {
         id: 1112,
         voucherNo: '240817-002',
+        type: 'reverse',
       },
     ],
     deletedReverseVoucherIds: [],

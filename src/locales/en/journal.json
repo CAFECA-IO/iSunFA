@@ -289,6 +289,9 @@
     "PAID_AMOUNT": "Paid Amount",
     "REMAIN_AMOUNT": "Remain Amount",
     "REVERSE_VOUCHERS": "Reverse Vouchers",
+    "REVERSE_VOUCHERS_REVERSE": "Reverse Vouchers",
+    "REVERSE_VOUCHERS_SETTLEMENT": "Reverse Vouchers",
+    "REVERSE_VOUCHERS_ORIGINAL": "Original Vouchers",
     "ASSET": "Asset",
     "ACCOUNTING": "Accounting",
     "PARTICULARS": "Particulars",
@@ -300,7 +303,9 @@
     "DELETE_SUCCESS_TOAST": "Vouchers have been deleted.",
     "UNDO": "Undo",
     "VOUCHER_NOT_FOUND": "Voucher not found, please make sure the URL is correct.",
-    "DELETED_REVERSE_VOUCHER": "<link>{{voucherNo}}</link> Reverse voucher (Delete)"
+    "DELETED_REVERSE_VOUCHER": "<link>{{voucherNo}}</link> Reverse voucher (Delete)",
+    "DELETED_REVERSE_VOUCHER_1": "",
+    "DELETED_REVERSE_VOUCHER_2": "Reverse voucher (Delete)"
   },
   "LEDGER": {
     "LEDGER_PERIOD": "Ledger Period",
