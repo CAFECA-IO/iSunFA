@@ -304,8 +304,8 @@
     "UNDO": "Undo",
     "VOUCHER_NOT_FOUND": "Voucher not found, please make sure the URL is correct.",
     "DELETED_REVERSE_VOUCHER": "<link>{{voucherNo}}</link> Reverse voucher (Delete)",
-    "DELETED_REVERSE_VOUCHER_1": "Reverse voucher",
-    "DELETED_REVERSE_VOUCHER_2": "(Delete)"
+    "DELETED_REVERSE_VOUCHER_1": "",
+    "DELETED_REVERSE_VOUCHER_2": "Reverse voucher (Delete)"
   },
   "LEDGER": {
     "LEDGER_PERIOD": "Ledger Period",
