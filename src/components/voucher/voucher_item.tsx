@@ -28,8 +28,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     unRead,
     lineItemsInfo,
     isSelected,
-    isReverseRelated,
-    reverseVouchers,
+    deletedReverseVouchers,
     deletedAt,
   } = voucher;
 
@@ -54,24 +53,6 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     </div>
   ) : null;
 
-  // Todo: (20250207 - tzuhan) 先確認 UI 邏輯是否正確
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const isDisplayReverseNote = isReverseRelated ? (
-    <div className="flex flex-col">
-      {reverseVouchers.map((reverseVoucher) => (
-        <div key={reverseVoucher.id} className="text-hxs">
-          <Link
-            href={`/users/accounting/${reverseVoucher.id}?voucherNo=${voucherNo}`}
-            className="text-text-neutral-link hover:underline"
-          >
-            {reverseVoucher.voucherNo}
-          </Link>
-          <span className="text-text-neutral-primary">{t('journal:VOUCHER.REVERSE_DETAIL')}</span>
-        </div>
-      ))}
-    </div>
-  ) : null;
-
   const displayedVoucherNo =
     voucherType === VoucherType.RECEIVE ? (
       <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
@@ -91,10 +72,37 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     );
 
   const displayedNote = (
-    <>
-      {/* {isDisplayReverseNote} */}
-      <p className="text-hxs text-text-neutral-primary">{note !== '' ? note : '-'}</p>
-    </>
+    <div className="flex flex-col">
+      {note && <p className="text-hxs text-text-neutral-primary">{note}</p>}
+      {deletedReverseVouchers.length > 0 &&
+        deletedReverseVouchers.map((deletedReverseVoucher) => (
+          <p key={deletedReverseVoucher.id} className="text-hxs text-text-neutral-primary">
+            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_1')}
+            <Link
+              href={`/users/accounting/${deletedReverseVoucher.id}?voucherNo=${deletedReverseVoucher.voucherNo}`}
+              className="px-1 text-link-text-primary"
+            >
+              {deletedReverseVoucher.voucherNo}
+            </Link>
+            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_2')}
+            {/* <Trans
+              i18nKey="journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER"
+              values={{ voucherNo: deletedReverseVoucher.voucherNo }}
+              components={{
+                link: (
+                  <Link
+                    href={`/users/accounting/${deletedReverseVoucher.id}?voucherNo=${deletedReverseVoucher.voucherNo}`}
+                    className="text-link-text-primary"
+                  />
+                ),
+              }}
+            /> */}
+          </p>
+        ))}
+      {!note && deletedReverseVouchers.length === 0 && (
+        <p className="text-hxs text-text-neutral-primary">-</p>
+      )}
+    </div>
   );
 
   // Info: (20241220 - Julian) 借方排在前面，貸方排在後面

@@ -142,6 +142,7 @@ export interface IVoucherDetailForFrontend {
   reverseVoucherIds: {
     id: number;
     voucherNo: string;
+    type: string;
   }[];
   deletedReverseVoucherIds: {
     id: number;
@@ -235,6 +236,10 @@ export interface IVoucherBeta {
    * @Julian 這邊可以用來顯示 voucher list 後面要reverse的地方
    */
   reverseVouchers: {
+    id: number;
+    voucherNo: string;
+  }[];
+  deletedReverseVouchers: {
     id: number;
     voucherNo: string;
   }[];

@@ -124,12 +124,18 @@
     "COMPANY_NAME": "Company Name",
     "TAX_ID": "Business Tax ID Number",
     "WORK_TAG": "Work Tag",
+    "TEAM": "Team",
     "CREATE_NEW_ACCOUNT_BOOK": "Create New Account Book",
     "ENTER_NAME": "Enter Name",
     "ENTER_NUMBER": "Enter Tax ID",
     "ENTER_FULL_ADDRESS": "Please enter the full address",
     "CANCEL": "Cancel",
-    "ADD": "Add"
+    "ADD": "Add",
+    "CHOOSE_WORK_TAG": "Choose Work Tag",
+    "CHOOSE_TEAM": "Choose Team",
+    "PLEASE_ENTER_THE_NAME": "Please enter the name",
+    "PLEASE_SELECT_A_WORK_TAG": "Please select a work tag",
+    "PLEASE_SELECT_A_TEAM": "Please select a team"
   },
 
   "WORK_TAG": {
