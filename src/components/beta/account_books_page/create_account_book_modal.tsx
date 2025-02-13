@@ -26,7 +26,7 @@ const CreateAccountBookModal = ({
   const [companyName, setCompanyName] = useState<string>('');
   const [taxId, setTaxId] = useState<string>('');
   const [tag, setTag] = useState<WORK_TAG | null>(null);
-  // ToDo: (20250213 - Liz) 打 api 取得使用者的團隊清單後存入 teamList state
+  // ToDo: (20250213 - Liz) 打 API 取得使用者的團隊清單後存入 teamList state
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [teamList, setTeamList] = useState<ITeam[] | null>(FAKE_TEAM_LIST);
   const [team, setTeam] = useState<ITeam | null>(null);
@@ -109,7 +109,7 @@ const CreateAccountBookModal = ({
     }
   };
 
-  // ToDo: (20250213 - Liz) 打 api 取得使用者的團隊清單
+  // ToDo: (20250213 - Liz) 打 API 取得使用者的團隊清單
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
