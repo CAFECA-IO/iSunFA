@@ -4,6 +4,7 @@ import { ICompanyAndRole } from '@/interfaces/company';
 import { IoArrowForward, IoClose } from 'react-icons/io5';
 import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
+import { PiShareFatBold } from 'react-icons/pi';
 import CompanyTag from '@/components/beta/account_books_page/company_tag';
 import { CANCEL_ACCOUNT_BOOK_ID } from '@/constants/company';
 import { useTranslation } from 'next-i18next';
@@ -12,6 +13,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface AccountBookItemProps {
   accountBook: ICompanyAndRole;
+  setAccountBookToTransfer: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setAccountBookToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setAccountBookToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setAccountBookToUploadPicture: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
@@ -19,6 +21,7 @@ interface AccountBookItemProps {
 
 const AccountBookItem = ({
   accountBook,
+  setAccountBookToTransfer,
   setAccountBookToEdit,
   setAccountBookToDelete,
   setAccountBookToUploadPicture,
@@ -42,6 +45,11 @@ const AccountBookItem = ({
     setIsOptionsDropdownOpen(false);
   };
 
+  const openAccountBookTransferModal = () => {
+    setAccountBookToTransfer(accountBook);
+    closeOptionsDropdown();
+  };
+
   const openChangeTagModal = () => {
     setAccountBookToEdit(accountBook);
     closeOptionsDropdown();
@@ -57,7 +65,7 @@ const AccountBookItem = ({
     closeOptionsDropdown();
   };
 
-  // Info: (20241113 - Liz) 打 API 選擇公司
+  // Info: (20241113 - Liz) 打 API 選擇帳本 (原為公司)
   const handleConnect = async () => {
     if (isLoading) return;
 
@@ -122,22 +130,34 @@ const AccountBookItem = ({
 
           {isOptionsDropdownOpen && (
             <div className="absolute left-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS">
+              {/* // Info: (20250213 - Liz) Account Book Transfer */}
+              <button
+                type="button"
+                onClick={openAccountBookTransferModal}
+                className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+              >
+                <PiShareFatBold size={16} className="text-icon-surface-single-color-primary" />
+                <span>{t('account_book:ACCOUNT_BOOK_TRANSFER_MODAL.ACCOUNT_BOOK_TRANSFER')}</span>
+              </button>
+
+              {/* // Info: (20250213 - Liz) Change Tag */}
               <button
                 type="button"
                 onClick={openChangeTagModal}
                 className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
               >
                 <FiTag size={16} className="text-icon-surface-single-color-primary" />
-                <p>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}</p>
+                <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}</span>
               </button>
 
+              {/* // Info: (20250213 - Liz) Delete */}
               <button
                 type="button"
                 className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
                 onClick={openDeleteCompanyModal}
               >
                 <FiTrash2 size={16} className="text-icon-surface-single-color-primary" />
-                <p>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.DELETE')}</p>
+                <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.DELETE')}</span>
               </button>
             </div>
           )}

@@ -120,7 +120,7 @@
     "END_TIME": "End Time"
   },
 
-  "CREATE_COMPANY_MODAL": {
+  "CREATE_ACCOUNT_BOOK_MODAL": {
     "COMPANY_NAME": "Company Name",
     "TAX_ID": "Business Tax ID Number",
     "WORK_TAG": "Work Tag",

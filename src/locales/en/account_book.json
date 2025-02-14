@@ -54,5 +54,11 @@
   },
   "UPLOAD_COMPANY_AVATAR_MODAL": {
     "TITLE": "Change Company Picture"
+  },
+  "ACCOUNT_BOOK_TRANSFER_MODAL": {
+    "ACCOUNT_BOOK_TRANSFER": "Account Book Transfer",
+    "CONTENT": "Transferring a ledger will move all its associated data, including company details and financial records, to another team. Ensure that the recipient team is authorized and capable of managing the transferred ledger before initiating the process.",
+    "TRANSFER": "Transfer",
+    "CANCEL": "Cancel"
   }
 }

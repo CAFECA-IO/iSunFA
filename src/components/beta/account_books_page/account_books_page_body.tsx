@@ -15,6 +15,7 @@ import UploadCompanyPictureModal from '@/components/beta/account_books_page/uplo
 import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
+import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
 
 const AccountBooksPageBody = () => {
   const { t } = useTranslation(['account_book']);
@@ -24,6 +25,7 @@ const AccountBooksPageBody = () => {
   const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20241114 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
 
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
+  const [accountBookToTransfer, setAccountBookToTransfer] = useState<ICompanyAndRole | undefined>();
   const [accountBookToEdit, setAccountBookToEdit] = useState<ICompanyAndRole | undefined>();
   const [accountBookToDelete, setAccountBookToDelete] = useState<ICompanyAndRole | undefined>();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
@@ -121,6 +123,7 @@ const AccountBooksPageBody = () => {
         <>
           <AccountBookList
             accountBookList={accountBookList}
+            setAccountBookToTransfer={setAccountBookToTransfer}
             setAccountBookToEdit={setAccountBookToEdit}
             setAccountBookToDelete={setAccountBookToDelete}
             setAccountBookToUploadPicture={setAccountBookToUploadPicture}
@@ -138,6 +141,13 @@ const AccountBooksPageBody = () => {
         <CreateAccountBookModal
           modalVisibilityHandler={toggleCreateAccountBookModal}
           setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {accountBookToTransfer && (
+        <TransferAccountBookModal
+          accountBookToTransfer={accountBookToTransfer}
+          setAccountBookToTransfer={setAccountBookToTransfer}
         />
       )}
 

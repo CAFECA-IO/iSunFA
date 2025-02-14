@@ -54,5 +54,11 @@
   },
   "UPLOAD_COMPANY_AVATAR_MODAL": {
     "TITLE": "變更公司圖片"
+  },
+  "ACCOUNT_BOOK_TRANSFER_MODAL": {
+    "ACCOUNT_BOOK_TRANSFER": "帳本轉移",
+    "CONTENT": "轉移帳本會將其所有相關資料（包括公司詳細資料和財務記錄）轉移到另一個團隊。在啟動流程之前，請確保接收團隊有授權並且有能力管理轉移的帳本。",
+    "TRANSFER": "轉移",
+    "CANCEL": "取消"
   }
 }

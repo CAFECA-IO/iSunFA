@@ -4,6 +4,7 @@ import { ICompanyAndRole } from '@/interfaces/company';
 
 interface AccountBookListProps {
   accountBookList: ICompanyAndRole[];
+  setAccountBookToTransfer: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setAccountBookToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setAccountBookToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
   setAccountBookToUploadPicture: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
@@ -11,6 +12,7 @@ interface AccountBookListProps {
 
 const AccountBookList = ({
   accountBookList,
+  setAccountBookToTransfer,
   setAccountBookToEdit,
   setAccountBookToDelete,
   setAccountBookToUploadPicture,
@@ -21,6 +23,7 @@ const AccountBookList = ({
         <AccountBookItem
           key={accountBook.company.id}
           accountBook={accountBook}
+          setAccountBookToTransfer={setAccountBookToTransfer}
           setAccountBookToEdit={setAccountBookToEdit}
           setAccountBookToDelete={setAccountBookToDelete}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
