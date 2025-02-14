@@ -101,8 +101,8 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
 
   const formTitle =
     formType === TitleFormType.add
-      ? t('setting:ACCOUNTING_SETTING_MODAL.ADD_NEW_TITLE')
-      : t('setting:ACCOUNTING_SETTING_MODAL.EDIT_TITLE');
+      ? t('settings:ACCOUNTING_SETTING_MODAL.ADD_NEW_TITLE')
+      : t('settings:ACCOUNTING_SETTING_MODAL.EDIT_TITLE');
 
   // Info: (20250212 - Julian) 大類別
   const accountTypeList = Object.values(AccountTypeBeta);
@@ -110,16 +110,16 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const categoryString =
     selectCategory === '' ? (
       <p className="flex-1 text-input-text-input-placeholder">
-        {t('setting:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER')}
+        {t('settings:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER')}
       </p>
     ) : (
       <p className="flex-1 text-input-text-input-filled">
-        {t(`setting:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${selectCategory.toUpperCase()}`)}
+        {t(`settings:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${selectCategory.toUpperCase()}`)}
       </p>
     );
   const subcategoryString = selectSubcategory
     ? `${selectSubcategory?.code} ${selectSubcategory?.name}`
-    : t('setting:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER');
+    : t('settings:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER');
 
   const submitDisabled = selectCategory === '' || selectSubcategory === null;
 
@@ -193,7 +193,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_CREATE_SUCCESS,
           type: ToastType.SUCCESS,
-          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_SUCCESS'),
+          content: t('settings:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_SUCCESS'),
           closeable: true,
         });
         setIsRecallApi(!isRecallApi);
@@ -203,7 +203,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_CREATE_ERROR,
           type: ToastType.ERROR,
-          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_FAIL'),
+          content: t('settings:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_FAIL'),
           closeable: true,
         });
       }
@@ -217,7 +217,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_UPDATE_SUCCESS,
           type: ToastType.SUCCESS,
-          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_SUCCESS'),
+          content: t('settings:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_SUCCESS'),
           closeable: true,
         });
         setIsRecallApi(!isRecallApi);
@@ -227,7 +227,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_UPDATE_ERROR,
           type: ToastType.ERROR,
-          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_FAIL'),
+          content: t('settings:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_FAIL'),
           closeable: true,
         });
       }
@@ -294,7 +294,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         onClick={categoryClickHandler}
         className="px-12px py-8px text-sm text-dropdown-text-primary hover:bg-drag-n-drop-surface-hover"
       >
-        <p>{t(`setting:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${category.toUpperCase()}`)}</p>
+        <p>{t(`settings:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${category.toUpperCase()}`)}</p>
       </div>
     );
   });
@@ -318,7 +318,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         })
     ) : (
       <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
-        {t('setting:ACCOUNTING_SETTING_MODAL.NO_ACCOUNTING_FOUND')}
+        {t('settings:ACCOUNTING_SETTING_MODAL.NO_ACCOUNTING_FOUND')}
       </p>
     );
 
@@ -385,7 +385,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         disabled={submitDisabled}
         onClick={addBtnClickHandler}
       >
-        {t('setting:ACCOUNTING_SETTING_MODAL.ADD_BTN')}
+        {t('settings:ACCOUNTING_SETTING_MODAL.ADD_BTN')}
       </Button>
     ) : (
       // ToDo: (20241113 - Julian) Update API
@@ -395,7 +395,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         disabled={submitDisabled}
         onClick={updateBtnClickHandler}
       >
-        {t('setting:ACCOUNTING_SETTING_MODAL.SAVE_BTN')}
+        {t('settings:ACCOUNTING_SETTING_MODAL.SAVE_BTN')}
       </Button>
     );
 
@@ -413,7 +413,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         {/* Info: (20241112 - Julian) Category Type */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('setting:ACCOUNTING_SETTING_MODAL.CATEGORY_TYPE')}
+            {t('settings:ACCOUNTING_SETTING_MODAL.CATEGORY_TYPE')}
             <span className="text-text-state-error">*</span>
           </p>
           <div
@@ -433,7 +433,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         {/* Info: (20241112 - Julian) Subcategory Type */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('setting:ACCOUNTING_SETTING_MODAL.SUBCATEGORY_TYPE')}
+            {t('settings:ACCOUNTING_SETTING_MODAL.SUBCATEGORY_TYPE')}
             <span className="text-text-state-error">*</span>
           </p>
           <div
@@ -455,7 +455,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         {/* Info: (20241112 - Julian) Title Name */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('setting:ACCOUNTING_SETTING_MODAL.TITLE_NAME')}
+            {t('settings:ACCOUNTING_SETTING_MODAL.TITLE_NAME')}
           </p>
           <input
             id="add-title-name-input"
@@ -463,20 +463,20 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
             value={titleName}
             onChange={changeNameHandler}
             className="rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-            placeholder={t('setting:ACCOUNTING_SETTING_MODAL.TITLE_NAME_PLACEHOLDER')}
+            placeholder={t('settings:ACCOUNTING_SETTING_MODAL.TITLE_NAME_PLACEHOLDER')}
           />
         </div>
 
         {/* Info: (20241112 - Julian) Title Code */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('setting:ACCOUNTING_SETTING_MODAL.TITLE_CODE')}
+            {t('settings:ACCOUNTING_SETTING_MODAL.TITLE_CODE')}
           </p>
           <input
             id="add-title-code-input"
             type="text"
             value={titleCode}
-            placeholder={t('setting:ACCOUNTING_SETTING_MODAL.TITLE_CODE')}
+            placeholder={t('settings:ACCOUNTING_SETTING_MODAL.TITLE_CODE')}
             disabled
             readOnly
             className="rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
@@ -486,7 +486,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         {/* Info: (20241112 - Julian) Title Note */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('setting:ACCOUNTING_SETTING_MODAL.TITLE_NOTE')}
+            {t('settings:ACCOUNTING_SETTING_MODAL.TITLE_NOTE')}
           </p>
           <textarea
             id="add-title-note-input"
@@ -494,7 +494,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
             value={titleNote}
             onChange={changeNoteHandler}
             className="rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-            placeholder={t('setting:ACCOUNTING_SETTING_MODAL.TITLE_NOTE_PLACEHOLDER')}
+            placeholder={t('settings:ACCOUNTING_SETTING_MODAL.TITLE_NOTE_PLACEHOLDER')}
           />
         </div>
       </div>
@@ -502,7 +502,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       {/* Info: (20241112 - Julian) Buttons */}
       <div className="ml-auto flex items-center gap-12px">
         <Button type="button" variant="secondaryBorderless" onClick={clearAllHandler}>
-          {t('setting:ACCOUNTING_SETTING_MODAL.CLEAR_ALL_BTN')}
+          {t('settings:ACCOUNTING_SETTING_MODAL.CLEAR_ALL_BTN')}
         </Button>
         {submitBtn}
       </div>
