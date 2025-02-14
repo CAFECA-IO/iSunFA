@@ -2,15 +2,10 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import {
-  ILineItemInTrialBalanceItem,
-  ITrialBalanceTotal,
-  TrialBalanceItem,
-} from '@/interfaces/trial_balance';
+import { ILineItemInTrialBalanceItem, ITrialBalancePayload } from '@/interfaces/trial_balance';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { IPaginatedData } from '@/interfaces/pagination';
 import {
   convertToAPIFormat,
   convertToTrialBalanceItem,
@@ -30,11 +25,7 @@ import { SortOrder } from '@/constants/sort';
 
 export const handleGetRequest: IHandleRequest<
   APIName.TRIAL_BALANCE_LIST,
-  {
-    currencyAlias: string;
-    items: IPaginatedData<TrialBalanceItem[]>;
-    total: ITrialBalanceTotal;
-  }
+  ITrialBalancePayload
 > = async ({ query }) => {
   /* Info: (20241227 - Luphia) 指定期間取得有變動的會計科目，分析期初、期中、期末的借方與貸方金額，並總計餘額。
    * 0.1. 需求：取得當下 401 申報週期 (每兩個月為一期，例如當下時間點為 2024/11/01 ~ 2024/12/31)
@@ -64,17 +55,13 @@ export const handleGetRequest: IHandleRequest<
    * 8. 合併 midterm line items 並計算其借方貸方金額，統計總額 totalDebit、totalCredit
    * 9. 將 beginning 與 midterm 的科目合併加總為期末部份 ending，並計算其借方貸方金額，統計總額 totalDebit、totalCredit
    * 10. 複製出三個帳戶樹，為 beginning、midterm、ending，依照 accountId 分別跟 beginning、midterm、ending 的 Line Items 合併，實作加總子科目
-   * 11. 將三個帳戶樹根據 beginning、midterm、ending 的 creditAmount 跟 debitAmount，整理成 ITrialBalanceData 資料格式，然後排序
+   * 11. 將三個帳戶樹根據 beginning、midterm、ending 的 creditAmount 跟 debitAmount，整理成 ITrialBalancePayload 資料格式，然後排序
    * 12. 整理資料為 API 回傳格式
    * 13. 整理可能發生的例外情形
    * 14. 回傳 API 回應
    */
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: {
-    currencyAlias: string;
-    items: IPaginatedData<TrialBalanceItem[]>;
-    total: ITrialBalanceTotal;
-  } | null = null;
+  let payload: ITrialBalancePayload | null = null;
   try {
     // Info: (20250102 - Shirley) Step 1
     const { periodBegin, periodEnd } = getCurrent401Period();
@@ -138,11 +125,17 @@ export const handleGetRequest: IHandleRequest<
         page ?? DEFAULT_PAGE_NUMBER,
         pageSize ?? DEFAULT_PAGE_LIMIT
       );
-      payload = {
+
+      const note = {
         currencyAlias,
-        items: paginatedTrialBalance,
         total: APIData.total,
       };
+
+      payload = {
+        ...paginatedTrialBalance,
+        note: JSON.stringify(note),
+      };
+
       statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     }
   } catch (error) {
@@ -161,11 +154,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload: {
-      currencyAlias: string;
-      items: IPaginatedData<TrialBalanceItem[]>;
-      total: ITrialBalanceTotal;
-    } | null;
+    payload: ITrialBalancePayload | null;
   }>;
 } = {
   GET: (req) => withRequestValidation(APIName.TRIAL_BALANCE_LIST, req, handleGetRequest),
@@ -173,20 +162,10 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<
-    IResponseData<{
-      currencyAlias: string;
-      items: IPaginatedData<TrialBalanceItem[]>;
-      total: ITrialBalanceTotal;
-    } | null>
-  >
+  res: NextApiResponse<IResponseData<ITrialBalancePayload | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: {
-    currencyAlias: string;
-    items: IPaginatedData<TrialBalanceItem[]>;
-    total: ITrialBalanceTotal;
-  } | null = null;
+  let payload: ITrialBalancePayload | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -200,11 +179,10 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<{
-      currencyAlias: string;
-      items: IPaginatedData<TrialBalanceItem[]>;
-      total: ITrialBalanceTotal;
-    } | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<ITrialBalancePayload | null>(
+      statusMessage,
+      payload
+    );
     res.status(httpCode).json(result);
   }
 }
