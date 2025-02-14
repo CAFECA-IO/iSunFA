@@ -289,6 +289,9 @@
     "PAID_AMOUNT": "已付金额",
     "REMAIN_AMOUNT": "剩余金额",
     "REVERSE_VOUCHERS": "冲销传票",
+    "REVERSE_VOUCHERS_REVERSE": "冲销传票",
+    "REVERSE_VOUCHERS_SETTLEMENT": "冲销传票",
+    "REVERSE_VOUCHERS_ORIGINAL": "原始立账传票",
     "ASSET": "资产",
     "ACCOUNTING": "会计科目",
     "PARTICULARS": "摘要",
@@ -300,7 +303,9 @@
     "DELETE_SUCCESS_TOAST": "传票已删除。",
     "UNDO": "复原",
     "VOUCHER_NOT_FOUND": "找不到传票，请确认网址是否正确",
-    "DELETED_REVERSE_VOUCHER":  "因刪除 <link>{{voucherNo}}</link> 传票生成的反转分录"
+    "DELETED_REVERSE_VOUCHER":  "因刪除 <link>{{voucherNo}}</link> 传票生成的反转分录",
+    "DELETED_REVERSE_VOUCHER_1":  "因刪除",
+    "DELETED_REVERSE_VOUCHER_2":  "传票生成的反转分录"
   },
   "LEDGER": {
     "LEDGER_PERIOD": "分类帐期间",
