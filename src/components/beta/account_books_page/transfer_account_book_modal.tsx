@@ -15,8 +15,10 @@ const TransferAccountBookModal = ({
 }: TransferAccountBookModalProps) => {
   const { t } = useTranslation(['account_book']);
 
+  // Deprecated: (20250213 - Liz)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [transferToTeamId, setTransferToTeamId] = useState<string>('');
+  // Deprecated: (20250213 - Liz)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
