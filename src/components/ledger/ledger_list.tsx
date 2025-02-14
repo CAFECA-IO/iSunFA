@@ -3,11 +3,12 @@ import { useTranslation } from 'next-i18next';
 import LedgerItem from '@/components/ledger/ledger_item';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
-import { ILedgerPayload } from '@/interfaces/ledger';
+import { ILedgerPayload, ILedgerNote } from '@/interfaces/ledger';
 import Image from 'next/image';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useReactToPrint } from 'react-to-print';
 import { useUserCtx } from '@/contexts/user_context';
+import { CurrencyType } from '@/constants/currency';
 
 interface LedgerListProps {
   ledgerData: ILedgerPayload | null; // Info: (20241118 - Anna) 接收 API 數據
@@ -34,7 +35,30 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
   const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
 
   // Info: (20241118 - Anna) 確保 ledgerItemsData 是一個有效的陣列
-  const ledgerItemsData = Array.isArray(ledgerData?.items?.data) ? ledgerData.items.data : [];
+  const ledgerItemsData = Array.isArray(ledgerData?.data) ? ledgerData.data : [];
+
+  // Info: (20250214 - Shirley) @Anna 解析 note 字串，並提供預設值
+  const parseNote = (noteString: string | undefined): ILedgerNote => {
+    try {
+      if (!noteString) {
+        throw new Error('Note string is empty');
+      }
+      return JSON.parse(noteString) as ILedgerNote;
+    } catch (error) {
+      // Info: (20250214 - Shirley) 如果note為空字串、其他原因造成解析失敗，返回預設值
+      return {
+        currencyAlias: CurrencyType.TWD,
+        total: {
+          totalDebitAmount: 0,
+          totalCreditAmount: 0,
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      };
+    }
+  };
+
+  const { total } = parseNote(ledgerData?.note);
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'text-center align-middle';
@@ -230,13 +254,13 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
           {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
-          {formatNumber(ledgerData?.total?.totalDebitAmount || 0)}
+          {formatNumber(total.totalDebitAmount)}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
           {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
-          {formatNumber(ledgerData?.total?.totalCreditAmount || 0)}
+          {formatNumber(total.totalCreditAmount)}
         </div>
       </div>
     </div>

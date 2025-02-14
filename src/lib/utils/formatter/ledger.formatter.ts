@@ -1,7 +1,8 @@
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { SortOrder } from '@/constants/sort';
-import { IPaginatedLedger, ILedgerItem } from '@/interfaces/ledger';
+import { ILedgerItem } from '@/interfaces/ledger';
 import { pageToOffset } from '@/lib/utils/common';
+import { IPaginatedData } from '@/interfaces/pagination';
 /** Info: (20241203 - Shirley)
  * 處理分類帳的分頁資料
  */
@@ -9,7 +10,7 @@ export function formatPaginatedLedger(
   data: ILedgerItem[],
   page: number,
   pageSize: number = DEFAULT_PAGE_LIMIT
-): IPaginatedLedger {
+): IPaginatedData<ILedgerItem[]> {
   const skip = pageToOffset(page, pageSize);
   const totalCount = data.length;
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -17,7 +18,7 @@ export function formatPaginatedLedger(
   const hasNextPage = skip + pageSize < totalCount;
   const hasPreviousPage = page > 1;
 
-  const paginatedLedger: IPaginatedLedger = {
+  return {
     data: paginatedData,
     page,
     totalPages,
@@ -32,6 +33,4 @@ export function formatPaginatedLedger(
       },
     ],
   };
-
-  return paginatedLedger;
 }
