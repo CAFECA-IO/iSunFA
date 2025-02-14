@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { RxCross2 } from 'react-icons/rx';
 import { FiSearch } from 'react-icons/fi';
@@ -10,7 +11,6 @@ import APIHandler from '@/lib/utils/api_handler';
 import AccountTitleSection from '@/components/account_settings/account_title_section';
 import AddNewTitleSection from '@/components/account_settings/add_new_title_section';
 import { TitleFormType } from '@/constants/accounting_setting';
-import Image from 'next/image';
 
 interface IAccountingTitleSettingModalProps {
   isModalVisible: boolean;
@@ -59,8 +59,9 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     setSearchWord(e.target.value);
   };
 
-  // Info: (20241108 - Julian) 按下 Enter 鍵才執行搜尋
+  // Info: (20250214 - Julian) 按鍵事件
   const handleSearchWordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Info: (20241108 - Julian) 按下 Enter 鍵才執行搜尋
     if (e.key === 'Enter') {
       getAccountList({
         params: { companyId: accountBookId },
@@ -68,6 +69,17 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
       });
     }
   };
+
+  useEffect(() => {
+    setFilteredAccountList(accountList); // Info: (20250214 - Julian) 一開始顯示全部
+  }, [accountTitleList]);
+
+  useEffect(() => {
+    // Info: (20250214 - Julian) 關鍵字為空時顯示全部
+    if (searchWord === '') {
+      getAccountList({ params: { companyId: accountBookId }, query: queryCondition });
+    }
+  }, [searchWord]);
 
   useEffect(() => {
     if (isModalVisible) {
@@ -86,10 +98,6 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   }, [isRecallApi]);
 
-  useEffect(() => {
-    setFilteredAccountList(accountList);
-  }, [accountTitleList]);
-
   const clearSearchWord = () => {
     setSearchWord('');
     getAccountList({ params: { companyId: accountBookId } });
@@ -101,7 +109,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
       <div className="relative mx-auto flex w-90vw flex-col items-stretch gap-y-24px rounded-lg bg-card-surface-primary p-40px shadow-lg shadow-black/80 lg:w-720px">
         {/* Info: (20241108 - Julian) Title */}
         <h1 className="text-center text-xl font-bold text-text-neutral-primary">
-          {t('setting:ACCOUNTING_SETTING_MODAL.MODAL_TITLE')}
+          {t('settings:ACCOUNTING_SETTING_MODAL.MODAL_TITLE')}
         </h1>
 
         {/* Info: (20241108 - Julian) Close button */}
@@ -116,7 +124,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
         {/* Info: (20241108 - Julian) Search */}
         <div className="flex flex-col items-start gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('setting:ACCOUNTING_SETTING_MODAL.SEARCH_ACCOUNTING_TITLE')}
+            {t('settings:ACCOUNTING_SETTING_MODAL.SEARCH_ACCOUNTING_TITLE')}
           </p>
           <div className="flex w-full items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px placeholder:text-input-text-input-placeholder">
             <input
@@ -139,8 +147,8 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
             <div className="flex flex-col items-center justify-center gap-lv-4 rounded-sm bg-surface-brand-primary-5 shadow-Dropshadow_XS">
               <Image src="/images/empty.svg" width={120} height={135} alt="empty_icon" />
               <div className="text-center text-base text-text-state-error">
-                <p>{t('setting:ACCOUNTING_SETTING_MODAL.LOADING_ERROR')}</p>
-                <p>{t('setting:ACCOUNTING_SETTING_MODAL.TRY_AGAIN')}</p>
+                <p>{t('settings:ACCOUNTING_SETTING_MODAL.LOADING_ERROR')}</p>
+                <p>{t('settings:ACCOUNTING_SETTING_MODAL.TRY_AGAIN')}</p>
               </div>
             </div>
           ) : (
