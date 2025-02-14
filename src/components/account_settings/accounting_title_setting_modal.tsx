@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { RxCross2 } from 'react-icons/rx';
 import { FiSearch } from 'react-icons/fi';
@@ -10,7 +11,6 @@ import APIHandler from '@/lib/utils/api_handler';
 import AccountTitleSection from '@/components/account_settings/account_title_section';
 import AddNewTitleSection from '@/components/account_settings/add_new_title_section';
 import { TitleFormType } from '@/constants/accounting_setting';
-import Image from 'next/image';
 
 interface IAccountingTitleSettingModalProps {
   isModalVisible: boolean;
@@ -59,8 +59,9 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     setSearchWord(e.target.value);
   };
 
-  // Info: (20241108 - Julian) 按下 Enter 鍵才執行搜尋
+  // Info: (20250214 - Julian) 按鍵事件
   const handleSearchWordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Info: (20241108 - Julian) 按下 Enter 鍵才執行搜尋
     if (e.key === 'Enter') {
       getAccountList({
         params: { companyId: accountBookId },
@@ -68,6 +69,17 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
       });
     }
   };
+
+  useEffect(() => {
+    setFilteredAccountList(accountList); // Info: (20250214 - Julian) 一開始顯示全部
+  }, [accountTitleList]);
+
+  useEffect(() => {
+    // Info: (20250214 - Julian) 關鍵字為空時顯示全部
+    if (searchWord === '') {
+      getAccountList({ params: { companyId: accountBookId }, query: queryCondition });
+    }
+  }, [searchWord]);
 
   useEffect(() => {
     if (isModalVisible) {
@@ -85,10 +97,6 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     getAccountList({ params: { companyId: accountBookId } });
     // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   }, [isRecallApi]);
-
-  useEffect(() => {
-    setFilteredAccountList(accountList);
-  }, [accountTitleList]);
 
   const clearSearchWord = () => {
     setSearchWord('');
