@@ -8,9 +8,10 @@ import { SortOrder, SortBy } from '@/constants/sort';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import {
-  MOCK_RESPONSE as TrialBalanceData,
   TrialBalanceItem,
   ITrialBalancePayload,
+  ITrialBalanceNote,
+  ITrialBalanceTotal,
 } from '@/interfaces/trial_balance';
 import Toggle from '@/components/toggle/toggle';
 import { RiCoinsLine } from 'react-icons/ri';
@@ -22,6 +23,8 @@ import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { useReactToPrint } from 'react-to-print';
 import { ISortOption } from '@/interfaces/sort';
+import { CurrencyType } from '@/constants/currency';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 
 interface TrialBalanceListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241105 - Anna) 接收來自上層的日期範圍
@@ -37,7 +40,8 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
 
   // Info: (20241101 - Anna) 將資料原始狀態設為空
   const [accountList, setAccountList] = useState<TrialBalanceItem[]>([]);
-  const [totalData, setTotalData] = useState<ITrialBalancePayload['total'] | null>(null); // Info: (20241205 - Anna) 儲存總計資料
+  const [currencyAlias, setCurrencyAlias] = useState<string>(CurrencyType.TWD);
+  const [totalData, setTotalData] = useState<ITrialBalanceTotal | null>(null); // Info: (20241205 - Anna) 儲存總計資料
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false); // Info: (20241105 - Anna) 追蹤是否已經成功請求過一次 API
   const [isLoading, setIsLoading] = useState(false); // Info: (20241105 - Anna) 追蹤 API 請求的加載狀態
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null); // Info: (20241105 - Anna) 追蹤之前的日期範圍
@@ -49,6 +53,30 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   const [midtermCreditSort, setMidtermCreditSort] = useState<null | SortOrder>(null);
   const [endingDebitSort, setEndingDebitSort] = useState<null | SortOrder>(null);
   const [endingCreditSort, setEndingCreditSort] = useState<null | SortOrder>(null);
+
+  // Info: (20250214 - Shirley) 解析 note 字串，並提供預設值
+  const parseNote = (noteString: string | undefined): ITrialBalanceNote => {
+    try {
+      if (!noteString) {
+        throw new Error('Note string is empty');
+      }
+      return JSON.parse(noteString) as ITrialBalanceNote;
+    } catch (error) {
+      return {
+        currencyAlias: CurrencyType.TWD,
+        total: {
+          beginningCreditAmount: 0,
+          beginningDebitAmount: 0,
+          midtermCreditAmount: 0,
+          midtermDebitAmount: 0,
+          endingCreditAmount: 0,
+          endingDebitAmount: 0,
+          createAt: 0,
+          updateAt: 0,
+        },
+      };
+    }
+  };
 
   // Info: (20241204 - Anna) 使用 trigger 方法替代直接調用 APIHandler
   const { trigger: fetchTrialBalance } = APIHandler<ITrialBalancePayload>(
@@ -87,10 +115,11 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         });
 
         if (response.success && response.data) {
-          // eslint-disable-next-line no-console
-          // console.log('Fetched Trial Balance Data:', response.data);
-          setAccountList(response.data.items.data); // Info: (20241204 - Anna) 更新帳戶列表
-          setTotalData(response.data.total); // Info: (20241205 - Anna) 更新總計資料
+          // Info: (20250214 - Shirley) @Anna 修改 list trial balance API 資料格式，array 的 data 放到 data 裡，非 array 的 data 放到 note 裡，解析 note 字串，並提供預設值
+          setAccountList(response.data.data);
+          const { currencyAlias: currency, total } = parseNote(response.data.note);
+          setCurrencyAlias(currency);
+          setTotalData(total);
           setHasFetchedOnce(true); // Info: (20241204 - Anna) 標記為已成功請求
           prevSelectedDateRange.current = selectedDateRange; // Info: (20241204 - Anna) 更新前一个日期範圍
         } else {
@@ -110,7 +139,6 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       fetchTrialBalance,
       selectedDateRange,
       hasFetchedOnce,
-      beginningCreditSort,
       beginningCreditSort,
       beginningDebitSort,
       midtermDebitSort,
@@ -444,9 +472,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       {/* Info: (20241101 - Anna) 幣別 */}
       <div className="mr-42px flex w-fit items-center gap-5px rounded-full border border-badge-stroke-primary bg-badge-surface-base-soft px-10px py-6px text-sm font-medium text-badge-text-primary">
         <RiCoinsLine />
-        <p className="whitespace-nowrap">
-          {t(`reports:REPORTS.${TrialBalanceData.currencyAlias}`)}
-        </p>
+        <p className="whitespace-nowrap">{t(`reports:REPORTS.${currencyAlias}`)}</p>
       </div>
       {/* Info: (20241028 - Anna) 新增 Display Sub-Accounts Toggle 開關 */}
       <div className="flex items-center gap-4">
@@ -631,7 +657,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       <div className="mx-auto print:hidden">
         <Pagination
           currentPage={currentPage}
-          totalPages={TrialBalanceData.items.totalPages}
+          totalPages={Math.ceil(accountList.length / DEFAULT_PAGE_LIMIT)}
           setCurrentPage={setCurrentPage}
         />
       </div>

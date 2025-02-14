@@ -15,11 +15,7 @@ const ledgerListQuerySchema = z.object({
   endDate: zodStringToNumber,
   startAccountNo: z.string().optional(),
   endAccountNo: z.string().optional(),
-  labelType: z
-    .nativeEnum(LabelType)
-    // .enum([LabelType.GENERAL, LabelType.DETAILED, LabelType.ALL])
-    .optional()
-    .default(LabelType.GENERAL),
+  labelType: z.nativeEnum(LabelType).optional().default(LabelType.GENERAL),
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
 });

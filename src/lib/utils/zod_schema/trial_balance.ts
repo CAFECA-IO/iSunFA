@@ -38,37 +38,22 @@ export const trialBalanceItemSchema: z.ZodType<subAccounts> = basicTrialBalanceI
   subAccounts: z.lazy(() => trialBalanceItemSchema.array()),
 });
 
-// Info: (20241022 - Shirley) Trial balance total schema
-const trialBalanceTotalSchema = z.object({
-  beginningCreditAmount: z.number(),
-  beginningDebitAmount: z.number(),
-  midtermCreditAmount: z.number(),
-  midtermDebitAmount: z.number(),
-  endingCreditAmount: z.number(),
-  endingDebitAmount: z.number(),
-  createAt: z.number(),
-  updateAt: z.number(),
-});
-
 // Info: (20241022 - Shirley) Trial balance list response validator
 export const trialBalanceListResponseValidator = z.object({
-  currencyAlias: z.string(),
-  items: z.object({
-    data: z.array(trialBalanceItemSchema),
-    page: z.number(),
-    totalPages: z.number(),
-    totalCount: z.number(),
-    pageSize: z.number(),
-    hasNextPage: z.boolean(),
-    hasPreviousPage: z.boolean(),
-    sort: z.array(
-      z.object({
-        sortBy: z.string(),
-        sortOrder: z.string(),
-      })
-    ),
-  }),
-  total: trialBalanceTotalSchema,
+  data: z.array(trialBalanceItemSchema),
+  page: z.number(),
+  totalPages: z.number(),
+  totalCount: z.number(),
+  pageSize: z.number(),
+  hasNextPage: z.boolean(),
+  hasPreviousPage: z.boolean(),
+  sort: z.array(
+    z.object({
+      sortBy: z.string(),
+      sortOrder: z.string(),
+    })
+  ),
+  note: z.string(),
 });
 
 export const trialBalanceListSchema = {

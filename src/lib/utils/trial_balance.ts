@@ -6,7 +6,7 @@ import {
   ILineItemInTrialBalanceItem,
   ILineItemInTrialBalanceItemWithHierarchy,
   IMergedAccounts,
-  ITrialBalanceData,
+  ITrialBalancePayload,
   ITrialBalanceTotal,
   TrialBalanceItem,
 } from '@/interfaces/trial_balance';
@@ -307,17 +307,24 @@ const filterZeroAmounts = (items: TrialBalanceItem[]): TrialBalanceItem[] => {
 };
 
 /* Info: (20241130 - Shirley)
- * 將排序後的試算表項目轉換為 ITrialBalanceData 格式
+ * 將排序後的試算表項目轉換為 ITrialBalancePayload 格式
  * @param sortedItems 排序後的試算表項目
- * @returns ITrialBalanceData 格式的資料
+ * @returns ITrialBalancePayload 格式的資料
  */
-export function convertToTrialBalanceData(sortedItems: TrialBalanceItem[]): ITrialBalanceData {
+export function convertToTrialBalanceData(sortedItems: TrialBalanceItem[]): ITrialBalancePayload {
   const filteredItems = filterZeroAmounts(sortedItems);
   const total = calculateTotal(filteredItems);
 
   return {
-    items: filteredItems,
-    total,
+    data: filteredItems,
+    page: 1,
+    totalPages: 1,
+    totalCount: filteredItems.length,
+    pageSize: filteredItems.length,
+    hasNextPage: false,
+    hasPreviousPage: false,
+    sort: [],
+    note: JSON.stringify({ total }),
   };
 }
 
@@ -350,8 +357,8 @@ export function convertAccountBookJsonToTrialBalanceItem(
   return trialBalanceData;
 }
 
-export const convertTrialBalanceDataToCsvData = (trialBalanceData: ITrialBalanceData) => {
-  const csvData = trialBalanceData.items.map((item) => {
+export const convertTrialBalanceDataToCsvData = (trialBalanceData: ITrialBalancePayload) => {
+  const csvData = trialBalanceData.data.map((item) => {
     return {
       accountingTitle: item.accountingTitle,
     };
@@ -632,7 +639,7 @@ export function convertLineItemsToTrialBalanceAPIFormat(lineItems: {
   beginning: ILineItemInTrialBalanceItem[];
   midterm: ILineItemInTrialBalanceItem[];
   ending: ILineItemInTrialBalanceItem[];
-}): ITrialBalanceData {
+}): ITrialBalancePayload {
   // Info: (20250102 - Shirley) 計算總額
   const total = {
     beginningCreditAmount: lineItems.beginning.reduce((sum, item) => sum + item.creditAmount, 0),
@@ -665,12 +672,17 @@ export function convertLineItemsToTrialBalanceAPIFormat(lineItems: {
     subAccounts: [],
   }));
 
-  const rs = {
-    items,
-    total,
+  return {
+    data: items,
+    page: 1,
+    totalPages: 1,
+    totalCount: items.length,
+    pageSize: items.length,
+    hasNextPage: false,
+    hasPreviousPage: false,
+    sort: [],
+    note: JSON.stringify({ total }),
   };
-
-  return rs;
 }
 
 // Info: (20250102 - Shirley) 根據 accountId 將金額累加到帳戶樹中
