@@ -317,15 +317,22 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   // ToDo: (20241014 - Julian) should display asset name
   const isDisplayAsset = !isLoading ? (
     <div className="flex flex-col">
-      {assets.map((asset) => (
-        <Link
-          key={asset.id}
-          href={`/users/asset/${asset.id}`}
-          className="text-link-text-primary hover:underline"
-        >
-          {asset.id}
-        </Link>
-      ))}
+      {assets.map((asset) =>
+        // Info: (20250214 - Julian) 被刪除的資產不顯示連結
+        (asset.deletedAt === null ? (
+          <Link
+            key={asset.id}
+            href={`/users/asset/${asset.id}`}
+            className="text-link-text-primary hover:underline"
+          >
+            {asset.id}
+          </Link>
+        ) : (
+          <div key={asset.id} className="text-text-neutral-tertiary">
+            {asset.id}
+          </div>
+        ))
+      )}
     </div>
   ) : (
     <Skeleton width={200} height={24} rounded />
