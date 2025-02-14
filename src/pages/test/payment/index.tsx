@@ -27,7 +27,7 @@ const PaymentPage = () => {
       </div>
 
       {/* 交易表單 */}
-      <form method="POST" action="https://testtrustlink.hitrust.com.tw/TrustLink/TrxReqForJava">
+      <form method="POST" action="https://trustlink.hitrust.com.tw/TrustLink/TrxReqForJava">
         <input type="hidden" name="Type" value="“Auth" />
         <input type="hidden" name="storeid" value="62695" />
         <input type="hidden" name="ordernumber" value={orderNumber} />
