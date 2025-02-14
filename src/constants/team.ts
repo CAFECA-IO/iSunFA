@@ -1,40 +1,55 @@
 import { ITeam } from '@/interfaces/team';
+import { TPlanType } from '@/interfaces/subscription';
 
 export const FAKE_TEAM_LIST: ITeam[] = [
   {
     id: '1',
-    name: 'Team A',
-    members: [
-      {
-        id: '1',
-        name: 'User A',
-        email: 'user_a@gmail.com',
-        role: 'admin',
-      },
-      {
-        id: '2',
-        name: 'User B',
-        email: 'user_b@gmail.com',
-        role: 'member',
-      },
-    ],
+    name: {
+      value: 'Team A',
+      editable: true,
+    },
+    about: {
+      value: 'About Team A',
+      editable: true,
+    },
+    profile: {
+      value: 'Profile Team A',
+      editable: true,
+    },
+    planType: {
+      value: TPlanType.ENTERPRISE,
+      editable: true,
+    },
+    totalMembers: 3,
+    totalAccountBooks: 3,
+    bankAccount: {
+      value: '12345678',
+      editable: true,
+    },
   },
   {
     id: '2',
-    name: 'Team B',
-    members: [
-      {
-        id: '1',
-        name: 'User C',
-        email: 'user_c@gmail.com',
-        role: 'admin',
-      },
-      {
-        id: '2',
-        name: 'User D',
-        email: 'user_d@gmail.com',
-        role: 'member',
-      },
-    ],
+    name: {
+      value: 'Team B',
+      editable: true,
+    },
+    about: {
+      value: 'About Team B',
+      editable: true,
+    },
+    profile: {
+      value: 'Profile Team B',
+      editable: true,
+    },
+    planType: {
+      value: TPlanType.PROFESSIONAL,
+      editable: true,
+    },
+    totalMembers: 2,
+    totalAccountBooks: 2,
+    bankAccount: {
+      value: '12345678',
+      editable: true,
+    },
   },
 ];

@@ -54,5 +54,11 @@
   },
   "UPLOAD_COMPANY_AVATAR_MODAL": {
     "TITLE": "变更公司图片"
+  },
+  "ACCOUNT_BOOK_TRANSFER_MODAL": {
+    "ACCOUNT_BOOK_TRANSFER": "账本转移",
+    "CONTENT": "转移账本会将其所有相关资料（包括公司详细资料和财务记录）转移到另一个团队。在启动流程之前，请确保接收团队有授权并且有能力管理转移的账本。",
+    "TRANSFER": "转移",
+    "CANCEL": "取消"
   }
 }

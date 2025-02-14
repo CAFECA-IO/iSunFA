@@ -4,6 +4,7 @@ import { ICompanyAndRole } from '@/interfaces/company';
 import { IoArrowForward, IoClose } from 'react-icons/io5';
 import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
+import { PiShareFatBold } from 'react-icons/pi';
 import CompanyTag from '@/components/beta/account_books_page/company_tag';
 import { CANCEL_ACCOUNT_BOOK_ID } from '@/constants/company';
 import { useTranslation } from 'next-i18next';
@@ -135,8 +136,8 @@ const AccountBookItem = ({
                 onClick={openAccountBookTransferModal}
                 className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
               >
-                <FiTag size={16} className="text-icon-surface-single-color-primary" />
-                <span>Account Book Transfer</span>
+                <PiShareFatBold size={16} className="text-icon-surface-single-color-primary" />
+                <span>{t('account_book:ACCOUNT_BOOK_TRANSFER_MODAL.ACCOUNT_BOOK_TRANSFER')}</span>
               </button>
 
               {/* // Info: (20250213 - Liz) Change Tag */}
