@@ -122,9 +122,10 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const displayedAccounting = (
     <div className="flex flex-col items-start gap-lv-1 text-hxs font-semibold text-text-neutral-tertiary">
       {accounting.map((account) => (
-        <p key={account?.code} className="w-160px truncate">
-          {account?.code} - {account?.name}
-        </p>
+        <div key={account?.code} className="flex items-center">
+          <p className="w-45px">{account?.code}</p>
+          <div className="w-120px truncate">{account?.name}</div>
+        </div>
       ))}
     </div>
   );
