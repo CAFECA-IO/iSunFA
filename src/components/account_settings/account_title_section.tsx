@@ -55,10 +55,10 @@ const AccountThirdLayerItem: React.FC<IAccountThirdLayerItemProps> = ({
   const deleteBtnClickHandler = () => {
     messageModalDataHandler({
       messageType: MessageType.WARNING,
-      title: t('setting:ACCOUNTING_SETTING_MODAL.REMOVE_ACCOUNT_TITLE_MESSAGE_TITLE'),
-      content: t('setting:ACCOUNTING_SETTING_MODAL.REMOVE_ACCOUNT_TITLE_MESSAGE_CONTENT'),
-      backBtnStr: t('setting:ACCOUNTING_SETTING_MODAL.CANCEL_BTN'),
-      submitBtnStr: t('setting:ACCOUNTING_SETTING_MODAL.DELETE_BTN'),
+      title: t('settings:ACCOUNTING_SETTING_MODAL.REMOVE_ACCOUNT_TITLE_MESSAGE_TITLE'),
+      content: t('settings:ACCOUNTING_SETTING_MODAL.REMOVE_ACCOUNT_TITLE_MESSAGE_CONTENT'),
+      backBtnStr: t('settings:ACCOUNTING_SETTING_MODAL.CANCEL_BTN'),
+      submitBtnStr: t('settings:ACCOUNTING_SETTING_MODAL.DELETE_BTN'),
       submitBtnFunction: deleteHandler,
     });
     messageModalVisibilityHandler();
@@ -140,7 +140,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_DELETE_SUCCESS,
           type: ToastType.SUCCESS,
-          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_DELETE_SUCCESS'),
+          content: t('settings:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_DELETE_SUCCESS'),
           closeable: true,
         });
         setIsRecallApi((prev) => !prev);
@@ -149,7 +149,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_DELETE_ERROR,
           type: ToastType.ERROR,
-          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_DELETE_FAIL'),
+          content: t('settings:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_DELETE_FAIL'),
           closeable: true,
         });
       }
@@ -302,7 +302,7 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
             alt={`${mainTitle}_icon`}
           />
           <p className="whitespace-nowrap text-sm font-medium text-divider-text-lv-1">
-            {t(`setting:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${mainTitle.toUpperCase()}`)}
+            {t(`settings:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${mainTitle.toUpperCase()}`)}
           </p>
           <hr className="w-fit flex-1 border-divider-stroke-lv-1" />
         </div>
