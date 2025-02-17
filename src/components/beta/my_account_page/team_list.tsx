@@ -3,6 +3,7 @@ import TeamItem from '@/components/beta/my_account_page/team_item';
 import { FAKE_TEAM_LIST } from '@/constants/team';
 
 const TeamList: React.FC = () => {
+  // Deprecated: (20250217 - Julian) Remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [teamList, setTeamList] = useState(FAKE_TEAM_LIST);
 
