@@ -8,6 +8,7 @@ interface ICreateTeamModalProps {
 }
 
 const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandler }) => {
+  // Deprecated: (20250217 - Julian) Remove eslint-disable 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentStep, setCurrentStep] = useState(0);
 
