@@ -11,6 +11,7 @@ const HiTrustPaymentForm = () => {
   const [orderDesc, setOrderDesc] = useState('測試交易');
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
+  const [fetchResponse, setFetchResponse] = useState<string | null>(null);
 
   // 交易類型變更時，`Auth` 和 `AuthSSL` 自動生成訂單編號
   useEffect(() => {
@@ -21,7 +22,7 @@ const HiTrustPaymentForm = () => {
     }
   }, [type]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     // 交易金額轉換為「分」的單位 (10 元 = 1000)
     const amountInCents = Number(amount) * 100;
 
@@ -57,13 +58,40 @@ const HiTrustPaymentForm = () => {
     if (hiddenAmount) hiddenAmount.value = type === 'Query' ? '0' : String(amountInCents);
   };
 
+  const handleFetchSubmit = async () => {
+    // 交易金額轉換為「分」的單位 (10 元 = 1000)
+    const amountInCents = Number(amount) * 100;
+
+    const formData = new FormData();
+    formData.append('Type', type);
+    formData.append('storeid', '62695');
+    formData.append('ordernumber', orderNumber);
+    if (type !== 'Query') formData.append('amount', String(amountInCents));
+    formData.append('orderdesc', orderDesc);
+    formData.append('returnURL', 'https://isunfa.tw/test/payment/result');
+    formData.append('merUpdateURL', 'https://isunfa.tw/api/test/payment/update');
+
+    if (type === 'AuthSSL') {
+      formData.append('pan', cardNumber);
+      formData.append('expiry', expiry);
+    }
+
+    const response = await fetch('https://testtrustlink.hitrust.com.tw/TrustLink/TrxReqForJava', {
+      method: 'POST',
+      body: formData,
+    });
+
+    setFetchResponse(await response.text());
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">
       <h2 className="mb-4 text-xl font-semibold">信用卡支付測試</h2>
+
       <form
         method="POST"
         action="https://testtrustlink.hitrust.com.tw/TrustLink/TrxReqForJava"
-        onSubmit={handleSubmit}
+        onSubmit={handleFormSubmit}
       >
         {/* 交易類型選擇 */}
         <label className="block font-semibold">交易類型 (Type)</label>
@@ -124,7 +152,7 @@ const HiTrustPaymentForm = () => {
           </>
         )}
 
-        {/* 訂單描述 (顯示用) */}
+        {/* 訂單描述 */}
         <label htmlFor="orderdesc" className="mt-4 block font-semibold">
           訂單描述
         </label>
@@ -232,10 +260,22 @@ const HiTrustPaymentForm = () => {
           value="https://isunfa.tw/api/test/payment/update"
         />
 
-        <button type="submit" className="mt-4 rounded bg-blue-500 px-6 py-2 text-white">
-          前往支付
-        </button>
+        {/* 按鈕區 */}
+        <div className="flex gap-4">
+          <button type="submit" className="mt-4 rounded bg-blue-500 px-6 py-2 text-white">
+            {`使用 <form> 提交`}
+          </button>
+          <button
+            type="button"
+            onClick={handleFetchSubmit}
+            className="mt-4 rounded bg-green-500 px-6 py-2 text-white"
+          >
+            使用 fetch() 提交
+          </button>
+        </div>
       </form>
+
+      {fetchResponse && <p className="mt-4 text-gray-700">HiTRUSTpay 回應: {fetchResponse}</p>}
     </div>
   );
 };
