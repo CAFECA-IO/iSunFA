@@ -4,7 +4,7 @@ export default function PaymentResult() {
   const router = useRouter();
   const { type, ordernumber, amount, retcode, pan } = router.query;
 
-  if (!ordernumber || !amount || !retcode) {
+  if (!ordernumber || !retcode) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
         <h2 className="text-2xl font-bold">❌ 交易結果不完整</h2>
@@ -22,15 +22,19 @@ export default function PaymentResult() {
       <p>
         <strong>交易類型:</strong> {type}
       </p>
-      <p>
-        <strong>交易金額:</strong> {Number(amount) / 100} 元
-      </p>
+      {amount && (
+        <p>
+          <strong>交易金額:</strong> {Number(amount) / 100} 元
+        </p>
+      )}
       <p>
         <strong>交易結果:</strong> {retcode === '00' ? '成功 ✅' : '失敗 ❌'}
       </p>
-      <p>
-        <strong>信用卡卡號:</strong> {pan}
-      </p>
+      {pan && (
+        <p>
+          <strong>信用卡卡號:</strong> {pan}
+        </p>
+      )}
       <button
         type="button"
         onClick={() => router.push('/test/payment')}
