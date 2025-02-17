@@ -181,8 +181,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tr>
         </thead>
         <tbody>
-          {/* Info: (20250217 - Anna) */}
-          {/* {data.slice(startIndex, endIndex).map((value, index) => { */}
           {filteredData.slice(startIndex, endIndex).map((value, index) => {
             if (!value.code) {
               return (
@@ -381,7 +379,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </div>
     );
   };
-  // Info: (20250217 - Anna)
+  // Info: (20250217 - Anna) 只有當 financialReport.general 有數據時才渲染，否則返回 null
   const page1Table = financialReport?.general ? renderTable(financialReport.general, 0, 10) : null;
   const page1 = page1Table && (
     <div id="1" className="relative h-a4-height overflow-hidden">
@@ -418,7 +416,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </div>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {/* {financialReport && financialReport.general && renderTable(financialReport.general, 0, 10)} */}
         {page1Table}
       </section>
     </div>
@@ -443,7 +440,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {/* {financialReport && financialReport.general && renderTable(financialReport.general, 10, 19)} */}
         {page2Table}
         <div className="relative -z-10">
           <Image
@@ -487,7 +483,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {/* {financialReport && financialReport.details && renderTable(financialReport.details, 0, 13)} */}
         {page3Table}
 
         <div className="relative bottom-20 right-0 -z-10">
@@ -522,7 +517,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {/* {financialReport && financialReport.details && renderTable(financialReport.details, 13, 26)} */}
         {page4Table}
 
         <div className="relative bottom-20 right-0 -z-10">
@@ -557,7 +551,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {/* {financialReport && financialReport.details && renderTable(financialReport.details, 26, 41)} */}
         {page5Table}
 
         <div className="relative bottom-20 right-0 -z-10">
@@ -592,7 +585,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {/* {financialReport && financialReport.details && renderTable(financialReport.details, 41, 55)} */}
         {page6Table}
 
         <div className="relative bottom-20 right-0 -z-10">
@@ -607,9 +599,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </section>
     </div>
   );
-    const page7Table = financialReport?.details
-      ? renderTable(financialReport.details, 55, 70)
-      : null;
+  const page7Table = financialReport?.details ? renderTable(financialReport.details, 55, 70) : null;
   const page7 = page7Table && (
     <div id="7" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
@@ -629,7 +619,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {/* {financialReport && financialReport.details && renderTable(financialReport.details, 55, 70)} */}
         {page7Table}
 
         <div className="relative bottom-20 right-0 -z-10">
@@ -1010,63 +999,19 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     </div>
   );
 
-  // Info: (20250217 - Anna) 取得 general 和 details 的資料筆數，用於判斷是否要顯示對應頁面
-  // const generalLength = financialReport?.general?.length || 0;
-  // const detailsLength = financialReport?.details?.length || 0;
-
-  // Info: (20250214 - Anna) 第一部分：summary (彙總)
-  // const hasPage1 = financialReport?.general?.length && financialReport.general.length > 0;
-  // const hasPage2 = financialReport?.general?.length && financialReport.general.length > 10; // (page1 -> slice(0, 10))
-
-  // Info: (20250214 - Anna) 第二部分：details (細項)
-  // const hasPage3 = financialReport?.details?.length && financialReport.details.length > 0;
-  // const hasPage4 = financialReport?.details?.length && financialReport.details.length > 13; // (page3 -> slice(0, 13))
-  // const hasPage5 = financialReport?.details?.length && financialReport.details.length > 26; // (page4 -> slice(13, 26))
-  // const hasPage6 = financialReport?.details?.length && financialReport.details.length > 41; // (page5 -> slice(26, 41))
-  // const hasPage7 = financialReport?.details?.length && financialReport.details.length > 55; // (page6 -> slice(41, 55))
-
   const pages: { component: React.ReactElement; pageNumber: number }[] = [];
   let currentPageNumber = 1; // Info: (20250217 - Anna) 追蹤實際的顯示頁碼
 
   // Info: (20250217 - Anna) 第一部分：Summary (彙總)
-  // if (hasPage1) {
-  //   pages.push({ component: page1, pageNumber: currentPageNumber });
-  //   currentPageNumber += 1;
-  // }
   if (page1) {
     pages.push({ component: page1, pageNumber: currentPageNumber });
     currentPageNumber += 1;
   }
-  // if (hasPage2) {
-  //   pages.push({ component: page2, pageNumber: currentPageNumber });
-  //   currentPageNumber += 1;
-  // }
   if (page2) {
     pages.push({ component: page2, pageNumber: currentPageNumber });
     currentPageNumber += 1;
   }
   // Info: (20250217 - Anna) 第二部分：Details (細項)
-  // if (hasPage3) {
-  //   pages.push({ component: page3, pageNumber: currentPageNumber });
-  //   currentPageNumber += 1;
-  // }
-  // if (hasPage4) {
-  //   pages.push({ component: page4, pageNumber: currentPageNumber });
-  //   currentPageNumber += 1;
-  // }
-  // if (hasPage5) {
-  //   pages.push({ component: page5, pageNumber: currentPageNumber });
-  //   currentPageNumber += 1;
-  // }
-  // if (hasPage6) {
-  //   pages.push({ component: page6, pageNumber: currentPageNumber });
-  //   currentPageNumber += 1;
-  // }
-  // if (hasPage7) {
-  //   pages.push({ component: page7, pageNumber: currentPageNumber });
-  //   currentPageNumber += 1;
-  // }
-
   if (page3) {
     pages.push({ component: page3, pageNumber: currentPageNumber });
     currentPageNumber += 1;
@@ -1098,34 +1043,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   // Info: (20250217 - Anna) 在這裡同步更新 `currentPageNumber`，以防後續還有頁面
   currentPageNumber += 4;
 
-  // return (
-  //   <div className="mx-auto w-a4-width origin-top overflow-x-auto">
-  //     {page1}
-  //     {page2}
-  //     {page3}
-  //     {page4}
-  //     {page5}
-  //     {page6}
-  //     {page7}
-  //     {page8}
-  //     {page9}
-  //     {page10}
-  //     {page11}
-  //   </div>
-  // );
-  // return (
-  //   <div className="mx-auto w-a4-width origin-top overflow-x-auto">
-  //     {pages.map(({ component, pageNumber }, index) => (
-  //       <React.Fragment key={`page-${index + 1}`}>
-  //         {index !== 0 && <hr className="break-before-page" />}
-  //         {/* Info: (20250217 - Anna) 原本 component（ page1, page2 ...）沒有 renderedFooter(pageNumber)，所以透過 React.cloneElement() 動態新增到 component 的 children 裡 */}
-  //         {React.cloneElement(component, {
-  //           children: [...component.props.children, renderedFooter(pageNumber)],
-  //         })}
-  //       </React.Fragment>
-  //     ))}
-  //   </div>
-  // );
   return (
     <div className="mx-auto w-a4-width origin-top overflow-x-auto">
       {pages
