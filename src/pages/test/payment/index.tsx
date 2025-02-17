@@ -16,6 +16,8 @@ const HiTrustPaymentForm = () => {
   useEffect(() => {
     if (type === 'Auth' || type === 'AuthSSL') {
       setOrderNumber(generateOrderNumber());
+    } else {
+      setOrderNumber('');
     }
   }, [type]);
 
