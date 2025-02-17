@@ -109,19 +109,62 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
     //   ? flattenAccounts(financialReport.details)
     //   : [];
 
+    const firstPageSize = 10; // Info: (20250214 - Anna) 第一頁最多顯示 10 項
     const groupSize = 12;
 
+    // Info: (20250214 - Anna) 過濾掉沒有金額的項目
+    const filteredAccounts = flattenGeneralAccounts.filter((account) => {
+      const normalizeValue = (value: unknown) => {
+        if (typeof value === 'number') return value; // Info: (20250214 - Anna) 若是數字，直接返回
+        if (typeof value === 'string' && value.trim() === '-') return 0; // Info: (20250214 - Anna) 若是 "-"，當作 0 處理
+        return Number(value) || 0; // Info: (20250214 - Anna) 若是其他可轉數字的字串，轉換為數字，否則當作 0
+      };
+
+      const curAmount = normalizeValue(account.curPeriodAmount);
+      const curPercentage = normalizeValue(account.curPeriodPercentage);
+      const preAmount = normalizeValue(account.prePeriodAmount);
+      const prePercentage = normalizeValue(account.prePeriodPercentage);
+
+      // Info: (20250214 - Anna) 判斷四個值是否全為 0
+      const isAllZeroOrDash =
+        curAmount === 0 && curPercentage === 0 && preAmount === 0 && prePercentage === 0;
+
+      return !isAllZeroOrDash; /// Info: (20250214 - Anna) 只有當四個值 都為0才過濾掉
+    });
+
+    // Info: (20250214 - Anna) 重新分組，確保沒有空白行或空白頁
     const groupedGeneral: IAccountReadyForFrontend[][] = [];
-    flattenGeneralAccounts.forEach((account, index) => {
-      if (index < 10) {
-        if (groupedGeneral.length === 0) groupedGeneral.push([]);
-        groupedGeneral[0].push(account);
-      } else {
-        const groupIndex = Math.floor((index - 10) / groupSize) + 1;
-        if (!groupedGeneral[groupIndex]) groupedGeneral[groupIndex] = [];
-        groupedGeneral[groupIndex].push(account);
+    let currentGroup: IAccountReadyForFrontend[] = [];
+    let pageSize = firstPageSize; // Info: (20250214 - Anna) 第一頁是 10 項，之後變 12 項
+
+    filteredAccounts.forEach((account) => {
+      currentGroup.push(account);
+
+      // Info: (20250214 - Anna) 如果當前分頁達到 `pageSize`，則放入 `groupedGeneral`，並重置 currentGroup
+      if (currentGroup.length === pageSize) {
+        groupedGeneral.push(currentGroup);
+        currentGroup = [];
+        pageSize = groupSize; // Info: (20250214 - Anna) 之後的頁面都固定為 12 筆
       }
     });
+
+    // Info: (20250214 - Anna) 確保最後一頁不會遺漏數據
+    if (currentGroup.length > 0) {
+      groupedGeneral.push(currentGroup);
+    }
+
+    // Info: (20250214 - Anna)
+    // const groupedGeneral: IAccountReadyForFrontend[][] = [];
+    // flattenGeneralAccounts.forEach((account, index) => {
+    //   if (index < 10) {
+    //     if (groupedGeneral.length === 0) groupedGeneral.push([]);
+    //     groupedGeneral[0].push(account);
+    //   } else {
+    //     const groupIndex = Math.floor((index - 10) / groupSize) + 1;
+    //     if (!groupedGeneral[groupIndex]) groupedGeneral[groupIndex] = [];
+    //     groupedGeneral[groupIndex].push(account);
+    //   }
+    // });
 
     const totalPagesForSummary = groupedGeneral.length;
 

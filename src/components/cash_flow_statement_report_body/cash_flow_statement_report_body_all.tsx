@@ -141,10 +141,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     return <div>Error {errorCode}</div>;
   }
 
-  const renderedFooter = (page: number) => {
+  const renderedFooter = (pageNumber: number) => {
     return (
       <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
-        <p className="m-0 text-xs text-white">{page}</p>
+        <p className="m-0 text-xs text-white">{pageNumber}</p>
         <div className="text-base font-bold text-surface-brand-secondary">
           <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
@@ -153,6 +153,15 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   };
 
   const renderTable = (data: FinancialReportItem[], startIndex: number, endIndex: number) => {
+    // Info: (20250217 - Anna) 過濾掉 curPeriodAmount 和 prePeriodAmount 皆為 0 的列
+    const filteredData = data.filter(
+      (value) => (value.curPeriodAmount ?? 0) !== 0 || (value.prePeriodAmount ?? 0) !== 0
+    );
+
+    // Info: (20250217 - Anna) 如果 `slice(startIndex, endIndex)` 內沒有資料，回傳 null，避免渲染該區間
+    const slicedData = filteredData.slice(startIndex, endIndex);
+    if (slicedData.length === 0) return null;
+
     return (
       <table className="relative w-full border-collapse bg-white">
         <thead>
@@ -172,7 +181,9 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tr>
         </thead>
         <tbody>
-          {data.slice(startIndex, endIndex).map((value, index) => {
+          {/* Info: (20250217 - Anna) */}
+          {/* {data.slice(startIndex, endIndex).map((value, index) => { */}
+          {filteredData.slice(startIndex, endIndex).map((value, index) => {
             if (!value.code) {
               return (
                 <tr key={`${value.code + value.name + index}`}>
@@ -370,8 +381,9 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </div>
     );
   };
-
-  const page1 = (
+  // Info: (20250217 - Anna)
+  const page1Table = financialReport?.general ? renderTable(financialReport.general, 0, 10) : null;
+  const page1 = page1Table && (
     <div id="1" className="relative h-a4-height overflow-hidden">
       <header className="mb-10 flex justify-between text-white">
         <div className="w-30% bg-surface-brand-secondary pb-14px pl-10px pr-14px pt-40px font-bold">
@@ -406,12 +418,13 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </div>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {financialReport && financialReport.general && renderTable(financialReport.general, 0, 10)}
+        {/* {financialReport && financialReport.general && renderTable(financialReport.general, 0, 10)} */}
+        {page1Table}
       </section>
-      {renderedFooter(1)}
     </div>
   );
-  const page2 = (
+  const page2Table = financialReport?.general ? renderTable(financialReport.general, 10, 19) : null;
+  const page2 = page2Table && (
     <div id="2" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-30px flex w-28%">
@@ -430,7 +443,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {financialReport && financialReport.general && renderTable(financialReport.general, 10, 19)}
+        {/* {financialReport && financialReport.general && renderTable(financialReport.general, 10, 19)} */}
+        {page2Table}
         <div className="relative -z-10">
           <Image
             className="absolute -top-300px right-0"
@@ -451,10 +465,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           />
         </div>
       </section>
-      {renderedFooter(2)}
     </div>
   );
-  const page3 = (
+  const page3Table = financialReport?.details ? renderTable(financialReport.details, 0, 13) : null;
+  const page3 = page3Table && (
     <div id="3" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-30px flex w-28%">
@@ -473,7 +487,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {financialReport && financialReport.details && renderTable(financialReport.details, 0, 13)}
+        {/* {financialReport && financialReport.details && renderTable(financialReport.details, 0, 13)} */}
+        {page3Table}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -485,10 +500,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           />
         </div>
       </section>
-      {renderedFooter(3)}
     </div>
   );
-  const page4 = (
+  const page4Table = financialReport?.details ? renderTable(financialReport.details, 13, 26) : null;
+  const page4 = page4Table && (
     <div id="4" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-30px flex w-28%">
@@ -507,7 +522,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {financialReport && financialReport.details && renderTable(financialReport.details, 13, 26)}
+        {/* {financialReport && financialReport.details && renderTable(financialReport.details, 13, 26)} */}
+        {page4Table}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -519,10 +535,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           />
         </div>
       </section>
-      {renderedFooter(4)}
     </div>
   );
-  const page5 = (
+  const page5Table = financialReport?.details ? renderTable(financialReport.details, 26, 41) : null;
+  const page5 = page5Table && (
     <div id="5" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-30px flex w-28%">
@@ -541,7 +557,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {financialReport && financialReport.details && renderTable(financialReport.details, 26, 41)}
+        {/* {financialReport && financialReport.details && renderTable(financialReport.details, 26, 41)} */}
+        {page5Table}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -553,10 +570,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           />
         </div>
       </section>
-      {renderedFooter(5)}
     </div>
   );
-  const page6 = (
+  const page6Table = financialReport?.details ? renderTable(financialReport.details, 41, 55) : null;
+  const page6 = page6Table && (
     <div id="6" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-30px flex w-28%">
@@ -575,7 +592,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {financialReport && financialReport.details && renderTable(financialReport.details, 41, 55)}
+        {/* {financialReport && financialReport.details && renderTable(financialReport.details, 41, 55)} */}
+        {page6Table}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -587,10 +605,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           />
         </div>
       </section>
-      {renderedFooter(6)}
     </div>
   );
-  const page7 = (
+    const page7Table = financialReport?.details
+      ? renderTable(financialReport.details, 55, 70)
+      : null;
+  const page7 = page7Table && (
     <div id="7" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-30px flex w-28%">
@@ -609,7 +629,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
         </div>
-        {financialReport && financialReport.details && renderTable(financialReport.details, 55, 70)}
+        {/* {financialReport && financialReport.details && renderTable(financialReport.details, 55, 70)} */}
+        {page7Table}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -621,7 +642,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           />
         </div>
       </section>
-      {renderedFooter(7)}
     </div>
   );
   const page8 = (
@@ -852,7 +872,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           />
         </div>
       </section>
-      {renderedFooter(8)}
     </div>
   );
   const page9 = (
@@ -929,7 +948,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           />
         </div>
       </section>
-      {renderedFooter(9)}
     </div>
   );
   const page10 = (
@@ -956,7 +974,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         </div>
         {renderedPage10part1()}
       </section>
-      {renderedFooter(10)}
     </div>
   );
   const page11 = (
@@ -990,23 +1007,137 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </div>
         </div>
       </section>
-      {renderedFooter(11)}
     </div>
   );
 
+  // Info: (20250217 - Anna) 取得 general 和 details 的資料筆數，用於判斷是否要顯示對應頁面
+  // const generalLength = financialReport?.general?.length || 0;
+  // const detailsLength = financialReport?.details?.length || 0;
+
+  // Info: (20250214 - Anna) 第一部分：summary (彙總)
+  // const hasPage1 = financialReport?.general?.length && financialReport.general.length > 0;
+  // const hasPage2 = financialReport?.general?.length && financialReport.general.length > 10; // (page1 -> slice(0, 10))
+
+  // Info: (20250214 - Anna) 第二部分：details (細項)
+  // const hasPage3 = financialReport?.details?.length && financialReport.details.length > 0;
+  // const hasPage4 = financialReport?.details?.length && financialReport.details.length > 13; // (page3 -> slice(0, 13))
+  // const hasPage5 = financialReport?.details?.length && financialReport.details.length > 26; // (page4 -> slice(13, 26))
+  // const hasPage6 = financialReport?.details?.length && financialReport.details.length > 41; // (page5 -> slice(26, 41))
+  // const hasPage7 = financialReport?.details?.length && financialReport.details.length > 55; // (page6 -> slice(41, 55))
+
+  const pages: { component: React.ReactElement; pageNumber: number }[] = [];
+  let currentPageNumber = 1; // Info: (20250217 - Anna) 追蹤實際的顯示頁碼
+
+  // Info: (20250217 - Anna) 第一部分：Summary (彙總)
+  // if (hasPage1) {
+  //   pages.push({ component: page1, pageNumber: currentPageNumber });
+  //   currentPageNumber += 1;
+  // }
+  if (page1) {
+    pages.push({ component: page1, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  // if (hasPage2) {
+  //   pages.push({ component: page2, pageNumber: currentPageNumber });
+  //   currentPageNumber += 1;
+  // }
+  if (page2) {
+    pages.push({ component: page2, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  // Info: (20250217 - Anna) 第二部分：Details (細項)
+  // if (hasPage3) {
+  //   pages.push({ component: page3, pageNumber: currentPageNumber });
+  //   currentPageNumber += 1;
+  // }
+  // if (hasPage4) {
+  //   pages.push({ component: page4, pageNumber: currentPageNumber });
+  //   currentPageNumber += 1;
+  // }
+  // if (hasPage5) {
+  //   pages.push({ component: page5, pageNumber: currentPageNumber });
+  //   currentPageNumber += 1;
+  // }
+  // if (hasPage6) {
+  //   pages.push({ component: page6, pageNumber: currentPageNumber });
+  //   currentPageNumber += 1;
+  // }
+  // if (hasPage7) {
+  //   pages.push({ component: page7, pageNumber: currentPageNumber });
+  //   currentPageNumber += 1;
+  // }
+
+  if (page3) {
+    pages.push({ component: page3, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  if (page4) {
+    pages.push({ component: page4, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  if (page5) {
+    pages.push({ component: page5, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  if (page6) {
+    pages.push({ component: page6, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  if (page7) {
+    pages.push({ component: page7, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  // Info: (20250217 - Anna) 第三部分：固定的圖表頁 (不受資料長度影響)
+  pages.push(
+    { component: page8, pageNumber: currentPageNumber },
+    { component: page9, pageNumber: currentPageNumber + 1 },
+    { component: page10, pageNumber: currentPageNumber + 2 },
+    { component: page11, pageNumber: currentPageNumber + 3 }
+  );
+
+  // Info: (20250217 - Anna) 在這裡同步更新 `currentPageNumber`，以防後續還有頁面
+  currentPageNumber += 4;
+
+  // return (
+  //   <div className="mx-auto w-a4-width origin-top overflow-x-auto">
+  //     {page1}
+  //     {page2}
+  //     {page3}
+  //     {page4}
+  //     {page5}
+  //     {page6}
+  //     {page7}
+  //     {page8}
+  //     {page9}
+  //     {page10}
+  //     {page11}
+  //   </div>
+  // );
+  // return (
+  //   <div className="mx-auto w-a4-width origin-top overflow-x-auto">
+  //     {pages.map(({ component, pageNumber }, index) => (
+  //       <React.Fragment key={`page-${index + 1}`}>
+  //         {index !== 0 && <hr className="break-before-page" />}
+  //         {/* Info: (20250217 - Anna) 原本 component（ page1, page2 ...）沒有 renderedFooter(pageNumber)，所以透過 React.cloneElement() 動態新增到 component 的 children 裡 */}
+  //         {React.cloneElement(component, {
+  //           children: [...component.props.children, renderedFooter(pageNumber)],
+  //         })}
+  //       </React.Fragment>
+  //     ))}
+  //   </div>
+  // );
   return (
     <div className="mx-auto w-a4-width origin-top overflow-x-auto">
-      {page1}
-      {page2}
-      {page3}
-      {page4}
-      {page5}
-      {page6}
-      {page7}
-      {page8}
-      {page9}
-      {page10}
-      {page11}
+      {pages
+        .filter(({ component }) => component) // Info: (20250217 - Anna) 過濾掉 null 或 undefined 的 component
+        .map(({ component, pageNumber }, index) => (
+          <React.Fragment key={`page-${index + 1}`}>
+            {index !== 0 && <hr className="break-before-page" />}
+            {React.cloneElement(component, {
+              children: [...component.props.children, renderedFooter(pageNumber)],
+            })}
+          </React.Fragment>
+        ))}
     </div>
   );
 };

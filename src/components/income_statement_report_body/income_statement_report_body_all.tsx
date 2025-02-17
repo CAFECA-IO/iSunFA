@@ -61,7 +61,39 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           return;
         }
 
-        setFinancialReport(report);
+        // Info: (20250217 - Anna) 篩選 general 和 details，只保留四個數據不為 0 的項目
+        if (report) {
+          const filteredGeneral =
+            report.general?.filter(
+              (item) =>
+                !(
+                  // Info: (20250217 - Anna) 如果 item. 是 null 或 undefined，則轉為 0 再進行判斷
+                  (
+                    (item.curPeriodAmount ?? 0) === 0 &&
+                    (item.curPeriodPercentage ?? 0) === 0 &&
+                    (item.prePeriodAmount ?? 0) === 0 &&
+                    (item.prePeriodPercentage ?? 0) === 0
+                  )
+                )
+            ) ?? [];
+
+          const filteredDetails =
+            report.details?.filter(
+              (item) =>
+                !(
+                  (item.curPeriodAmount ?? 0) === 0 &&
+                  (item.curPeriodPercentage ?? 0) === 0 &&
+                  (item.prePeriodAmount ?? 0) === 0 &&
+                  (item.prePeriodPercentage ?? 0) === 0
+                )
+            ) ?? [];
+
+          setFinancialReport({
+            ...report, // Info: (20250217 - Anna) 保留原有數據
+            general: filteredGeneral, // Info: (20250217 - Anna) 更新 general
+            details: filteredDetails, // Info: (20250217 - Anna) 更新 details
+          });
+        }
         setIsGetFinancialReportSuccess(getFRSuccess);
         setErrorCode(getFRCode);
         // Deprecated: (20241128 - Liz)
@@ -96,17 +128,14 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   ) {
     return <div>錯誤 {errorCode}</div>;
   }
-
-  const renderedFooter = (page: number) => {
-    return (
-      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
-        <p className="text-xs text-white">{page}</p>
-        <div className="text-base font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
-    );
-  };
+  const renderedFooter = (pageNumber: number) => (
+    <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
+      <p className="text-xs text-white">{pageNumber}</p>
+      <div className="text-base font-bold text-surface-brand-secondary">
+        <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+      </div>
+    </footer>
+  );
   const otherInfo = financialReport?.otherInfo as IncomeStatementOtherInfo;
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
@@ -149,7 +178,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           height={300}
         />
       </div>
-
       <header className="mb-50px flex justify-between text-white">
         <div className="w-30% bg-surface-brand-secondary pb-14px pl-10px pr-14px pt-40px font-bold">
           <div className="">
@@ -177,7 +205,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </h2>
         </div>
       </header>
-
       <section className="text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
@@ -240,7 +267,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </table>
         )}
       </section>
-      {renderedFooter(1)}
+      {/* {renderedFooter(1)} */}
     </div>
   );
   const page2 = (
@@ -317,7 +344,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      {renderedFooter(2)}
+      {/* {renderedFooter(2)} */}
     </div>
   );
   const page3 = (
@@ -408,7 +435,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      {renderedFooter(3)}
+      {/* {renderedFooter(3)} */}
     </div>
   );
   const page4 = (
@@ -494,7 +521,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </table>
         )}
       </section>
-      {renderedFooter(4)}
+      {/* {renderedFooter(4)} */}
     </div>
   );
   const page5 = (
@@ -575,7 +602,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      {renderedFooter(5)}
+      {/* {renderedFooter(5)} */}
     </div>
   );
   const page6 = (
@@ -656,7 +683,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      {renderedFooter(6)}
+      {/* {renderedFooter(6)} */}
     </div>
   );
   const page7 = (
@@ -735,7 +762,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      {renderedFooter(7)}
+      {/* {renderedFooter(7)} */}
     </div>
   );
   const page8 = (
@@ -852,7 +879,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      {renderedFooter(8)}
+      {/* {renderedFooter(8)} */}
     </div>
   );
   const page9 = (
@@ -1123,9 +1150,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(
-                      2
-                    )}%
+                    {revenueToRD.ratio.curRatio.toFixed(2)}%
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.ratio.preRatio.toFixed(2)}%
@@ -1146,29 +1171,80 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      {renderedFooter(9)}
+      {/* {renderedFooter(9)} */}
     </div>
   );
 
+  // Info: (20250217 - Anna) 取得 general 和 details 的資料筆數，用於判斷是否要顯示對應頁面
+  const generalLength = financialReport?.general?.length || 0;
+  const detailsLength = financialReport?.details?.length || 0;
+
+  // Info: (20250217 - Anna) 第一部分：Summary (彙總)
+  const hasPage1 = generalLength > 0;
+  const hasPage2 = generalLength > 10; // (page1 -> slice(0, 10))
+  const hasPage3 = generalLength > 24; // (page2 -> slice(10, 24))
+
+  // Info: (20250217 - Anna) 第二部分：Details (細項)
+  const hasPage4 = detailsLength > 0;
+  const hasPage5 = detailsLength > 14; // (page4 -> slice(0, 14))
+  const hasPage6 = detailsLength > 28; // (page5 -> slice(14, 28))
+  const hasPage7 = detailsLength > 39; // (page6 -> slice(28, 39))
+  const hasPage8 = detailsLength > 49; // (page7 -> slice(39, 49))
+
+  const pages: { component: React.ReactElement; pageNumber: number }[] = [];
+  let currentPageNumber = 1; // Info: (20250217 - Anna) 追蹤實際的顯示頁碼
+
+  // Info: (20250217 - Anna) 第一部分：Summary (彙總)
+  if (hasPage1) {
+    pages.push({ component: page1, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  if (hasPage2) {
+    pages.push({ component: page2, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  if (hasPage3) {
+    pages.push({ component: page3, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+
+  // Info: (20250217 - Anna) 第二部分：Details (細項)
+  if (hasPage4) {
+    pages.push({ component: page4, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  if (hasPage5) {
+    pages.push({ component: page5, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  if (hasPage6) {
+    pages.push({ component: page6, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  if (hasPage7) {
+    pages.push({ component: page7, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  if (hasPage8) {
+    pages.push({ component: page8, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+
+  // Info: (20250217 - Anna) 第三部分：固定的圖表頁 (不受資料長度影響)
+  pages.push({ component: page9, pageNumber: currentPageNumber });
+
+  // Info: (20250217 - Anna) 依據資料長度，動態 render 頁面
   return (
     <div className="mx-auto w-a4-width origin-top overflow-x-auto">
-      {page1}
-      <hr className="break-before-page" />
-      {page2}
-      <hr className="break-before-page" />
-      {page3}
-      <hr className="break-before-page" />
-      {page4}
-      <hr className="break-before-page" />
-      {page5}
-      <hr className="break-before-page" />
-      {page6}
-      <hr className="break-before-page" />
-      {page7}
-      <hr className="break-before-page" />
-      {page8}
-      <hr className="break-before-page" />
-      {page9}
+      {pages.map(({ component, pageNumber }, index) => (
+        <React.Fragment key={`page-${index + 1}`}>
+          {index !== 0 && <hr className="break-before-page" />}
+          {/* Info: (20250217 - Anna) 原本 component（ page1, page2 ...）沒有 renderedFooter(pageNumber)，所以透過 React.cloneElement() 動態新增到 component 的 children 裡 */}
+          {React.cloneElement(component, {
+            children: [...component.props.children, renderedFooter(pageNumber)],
+          })}
+        </React.Fragment>
+      ))}
     </div>
   );
 };

@@ -357,6 +357,17 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
 
   const rowsForSummary = (items: Array<IAccountReadyForFrontend>) => {
     const rows = items.map((item) => {
+      // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"
+      const isAllZeroOrDash =
+        (item.curPeriodAmountString === '0' || item.curPeriodAmountString === '-') &&
+        (item.curPeriodPercentageString === '0' || item.curPeriodPercentageString === '-') &&
+        (item.prePeriodAmountString === '0' || item.prePeriodAmountString === '-') &&
+        (item.prePeriodPercentageString === '0' || item.prePeriodPercentageString === '-');
+
+      if (isAllZeroOrDash) {
+        return null; // Info: (20250213 - Anna) 這一列不顯示
+      }
+
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -399,6 +410,17 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // Info: (20241021 - Anna) 要記得改interface
   const rowsForDetail = (items: Array<IAccountReadyForFrontend>) => {
     const rows = items.map((item) => {
+      // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"
+      const isAllZeroOrDash =
+        (item.curPeriodAmountString === '0' || item.curPeriodAmountString === '-') &&
+        (item.curPeriodPercentageString === '0' || item.curPeriodPercentageString === '-') &&
+        (item.prePeriodAmountString === '0' || item.prePeriodAmountString === '-') &&
+        (item.prePeriodPercentageString === '0' || item.prePeriodPercentageString === '-');
+
+      if (isAllZeroOrDash) {
+        return null; // Info: (20250213 - Anna) 這一列不顯示
+      }
+
       if (!item.code) {
         return (
           <tr key={item.code}>

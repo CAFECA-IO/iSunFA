@@ -202,6 +202,8 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   }
 
   const renderTable = (data: FinancialReportItem[]) => {
+    // Info: (20250213 - Anna) 先去除重複，確保相同 `code` 只顯示一次
+    const uniqueData = Array.from(new Map(data.map((item) => [item.code, item])).values());
     return (
       <table className="relative z-1 w-full border-collapse bg-white">
         <thead>
@@ -221,46 +223,53 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
           </tr>
         </thead>
         <tbody>
-          {data.map((value) => {
-            if (!value.code) {
+          {/* {data */}
+          {uniqueData
+            // Info: (20250213 - Anna) 先過濾掉 `curPeriodAmount` 和 `prePeriodAmount` 都為 0 的行
+            .filter(
+              (value) =>
+                !(Number(value.curPeriodAmount) === 0 && Number(value.prePeriodAmount) === 0)
+            )
+            .map((value) => {
+              if (!value.code) {
+                return (
+                  <tr key={value.code}>
+                    <td
+                      colSpan={6}
+                      className="border border-stroke-neutral-quaternary p-10px font-bold"
+                    >
+                      {value.name}
+                    </td>
+                  </tr>
+                );
+              }
               return (
                 <tr key={value.code}>
-                  <td
-                    colSpan={6}
-                    className="border border-stroke-neutral-quaternary p-10px font-bold"
-                  >
-                    {value.name}
+                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+                    {value.code}
+                  </td>
+                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+                    {t(`reports:ACCOUNTING_ACCOUNT.${value.name}`)}
+                  </td>
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+                    {
+                      value.curPeriodAmount === 0
+                        ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                        : value.curPeriodAmount < 0
+                          ? `(${Math.abs(value.curPeriodAmount).toLocaleString()})` // Info:(20241021 - Anna) 負數，顯示括號和千分位
+                          : value.curPeriodAmount.toLocaleString() // Info:(20241021 - Anna) 正數，顯示千分位
+                    }
+                  </td>
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+                    {value.prePeriodAmount === 0
+                      ? '-'
+                      : value.prePeriodAmount < 0
+                        ? `(${Math.abs(value.prePeriodAmount).toLocaleString()})`
+                        : value.prePeriodAmount.toLocaleString()}
                   </td>
                 </tr>
               );
-            }
-            return (
-              <tr key={value.code}>
-                <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-                  {value.code}
-                </td>
-                <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-                  {t(`reports:ACCOUNTING_ACCOUNT.${value.name}`)}
-                </td>
-                <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-                  {
-                    value.curPeriodAmount === 0
-                      ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                      : value.curPeriodAmount < 0
-                        ? `(${Math.abs(value.curPeriodAmount).toLocaleString()})` // Info:(20241021 - Anna) 負數，顯示括號和千分位
-                        : value.curPeriodAmount.toLocaleString() // Info:(20241021 - Anna) 正數，顯示千分位
-                  }
-                </td>
-                <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-                  {value.prePeriodAmount === 0
-                    ? '-'
-                    : value.prePeriodAmount < 0
-                      ? `(${Math.abs(value.prePeriodAmount).toLocaleString()})`
-                      : value.prePeriodAmount.toLocaleString()}
-                </td>
-              </tr>
-            );
-          })}
+            })}
         </tbody>
       </table>
     );

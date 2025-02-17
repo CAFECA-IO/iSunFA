@@ -22,8 +22,9 @@ interface ISelectReverseItemsModal {
 
 interface IReverseItemProps {
   reverseData: IReverseItemUI;
-  selectHandler: (id: number) => void;
-  amountChangeHandler: (id: number, value: number) => void;
+  // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
+  selectHandler: (id: number, itemIndex: number) => void;
+  amountChangeHandler: (id: number, itemIndex: number, value: number) => void;
 }
 
 const ReverseItem: React.FC<IReverseItemProps> = ({
@@ -39,14 +40,17 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
   const accountCode = account?.code ?? '';
   const accountName = account?.name ?? '';
 
-  const checkboxChangeHandler = () => selectHandler(voucherId);
+  // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
+  const checkboxChangeHandler = () => selectHandler(voucherId, reverseData.lineItemIndex);
+
   const reverseAmountChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Info: (20241105 - Julian) 金額只能輸入數字
     const num = parseInt(e.target.value, 10);
     const numValue = Number.isNaN(num) ? 0 : num;
     // Info: (20241105 - Julian) 金額範圍限制 0 ~ amount
     const valueInRange = numValue < 0 ? 0 : numValue > amount ? amount : numValue;
-    amountChangeHandler(voucherId, valueInRange);
+    // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
+    amountChangeHandler(voucherId, reverseData.lineItemIndex, valueInRange);
   };
 
   return (
@@ -161,10 +165,11 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   };
 
   const handleApiResponse = (resData: IPaginatedData<IReverseItem[]>) => {
-    const reverseItemList: IReverseItemUI[] = resData.data.map((reverse) => {
+    const reverseItemList: IReverseItemUI[] = resData.data.map((reverse, index) => {
       return {
         ...reverse,
-        lineItemIndex: 0,
+        // Info: (20250213 - Anna) 使用 `index` 作為 `lineItemIndex`，確保每筆資料都有獨立的索引，不會互相影響
+        lineItemIndex: index,
         reverseAmount: 0,
         isSelected: false,
       };
@@ -201,10 +206,11 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
     uiReverseItemList.length > 0 ? (
       uiReverseItemList.map((reverse) => {
         // Info: (20241104 - Julian) 單選
-        const selectCountHandler = (id: number) => {
+        // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
+        const selectCountHandler = (id: number, itemIndex: number) => {
           setUiReverseItemList((prev) => {
             return prev.map((voucher) => {
-              if (voucher.voucherId === id) {
+              if (voucher.voucherId === id && voucher.lineItemIndex === itemIndex) {
                 return {
                   ...voucher,
                   isSelected: !voucher.isSelected,
@@ -216,10 +222,11 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
         };
 
         // Info: (20241104 - Julian) reverse 金額變更
-        const amountChangeHandler = (id: number, value: number) => {
+        // Info: (2025-213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
+        const amountChangeHandler = (id: number, itemIndex: number, value: number) => {
           setUiReverseItemList((prev) => {
             return prev.map((item) => {
-              if (item.voucherId === id) {
+              if (item.voucherId === id && item.lineItemIndex === itemIndex) {
                 return {
                   ...item,
                   reverseAmount: value,
@@ -231,8 +238,9 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
         };
 
         return (
+          // Info: (2025-213 - Anna) 確保 key 唯一
           <ReverseItem
-            key={reverse.voucherId}
+            key={`${reverse.voucherId}-${reverse.lineItemIndex}`}
             reverseData={reverse}
             selectHandler={selectCountHandler}
             amountChangeHandler={amountChangeHandler}

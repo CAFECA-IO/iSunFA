@@ -164,6 +164,37 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       setPreDate(previousDateString.date);
       setCurYear(currentYear);
       setPreYear(previousYear);
+
+      // Info: (20250214 - Anna) 新增過濾 general 和 details 的邏輯
+      if (financialReport.general || financialReport.details) {
+        const filteredGeneral = financialReport.general
+          ? financialReport.general.filter((item) => {
+              return !(
+                item.curPeriodAmount === 0 &&
+                item.curPeriodPercentage === 0 &&
+                item.prePeriodAmount === 0 &&
+                item.prePeriodPercentage === 0
+              );
+            })
+          : [];
+
+        const filteredDetails = financialReport.details
+          ? financialReport.details.filter((item) => {
+              return !(
+                item.curPeriodAmount === 0 &&
+                item.curPeriodPercentage === 0 &&
+                item.prePeriodAmount === 0 &&
+                item.prePeriodPercentage === 0
+              );
+            })
+          : [];
+
+        setFinancialReport({
+          ...financialReport,
+          general: filteredGeneral,
+          details: filteredDetails,
+        });
+      }
     }
   }, [financialReport]);
 
@@ -230,10 +261,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
 
-  const renderedFooter = (page: number) => {
+  const renderedFooter = (pageNumber: number) => {
     return (
       <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
-        <p className="text-xs text-white">{page}</p>
+        <p className="text-xs text-white">{pageNumber}</p>
         <div className="text-base font-bold text-surface-brand-secondary">
           <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
@@ -825,8 +856,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </table>
         )}
       </section>
-
-      {renderedFooter(1)}
     </div>
   );
 
@@ -891,7 +920,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           />
         </div>
       </section>
-      {renderedFooter(2)}
     </div>
   );
   const page3 = (
@@ -951,7 +979,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      {renderedFooter(3)}
     </div>
   );
   const page4 = (
@@ -1008,7 +1035,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      {renderedFooter(4)}
     </div>
   );
   const page5 = (
@@ -1065,7 +1091,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      {renderedFooter(5)}
     </div>
   );
   const page6 = (
@@ -1122,7 +1147,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      {renderedFooter(6)}
     </div>
   );
   const page7 = (
@@ -1179,7 +1203,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      {renderedFooter(7)}
     </div>
   );
   const page8 = (
@@ -1236,7 +1259,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      {renderedFooter(8)}
     </div>
   );
   const page9 = (
@@ -1303,7 +1325,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           />
         </div>
       </section>
-      {renderedFooter(9)}
     </div>
   );
   const page10 = (
@@ -1372,7 +1393,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           />
         </div>
       </section>
-      {renderedFooter(10)}
     </div>
   );
   const page11 = (
@@ -1490,7 +1510,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           />
         </div>
       </section>
-      {renderedFooter(11)}
     </div>
   );
   const page12 = (
@@ -1570,35 +1589,102 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           />
         </div>
       </section>
-      {renderedFooter(12)}
     </div>
   );
 
+  // Info: (20250214 - Anna) 取得 general 和 details 的資料筆數，用於判斷是否要顯示對應頁面
+  const generalLength = financialReport?.general?.length || 0;
+  const detailsLength = financialReport?.details?.length || 0;
+
+  // Info: (20250214 - Anna) 第一部分：summary (彙總)
+  const hasPage1 = generalLength > 0;
+  const hasPage2 = generalLength > 9; // (rowsForPage1 -> slice(0, 9))
+
+  // Info: (20250214 - Anna) 第二部分：details (細項)
+  const hasPage3 = detailsLength > 0;
+  const hasPage4 = detailsLength > 13; // (rowsForPage3 -> slice(0, 13))
+  const hasPage5 = detailsLength > 26; // (rowsForPage4 -> slice(13, 26))
+  const hasPage6 = detailsLength > 39; // (rowsForPage5 -> slice(26, 39))
+  const hasPage7 = detailsLength > 53; // (rowsForPage6 -> slice(39, 53))
+  const hasPage8 = detailsLength > 67; // (rowsForPage7 -> slice(53, 67))
+  const hasPage9 = detailsLength > 80; // (rowsForPage8 -> slice(67, 80))
+
+  // const pages = [];
+  const pages: { component: React.ReactElement; pageNumber: number }[] = [];
+  let currentPageNumber = 1; // Info: (20250217 - Anna) 追蹤實際的顯示頁碼
+
+  // Info: (20250214 - Anna) 第一部分：summary (彙總)
+  // if (hasPage1) pages.push(page1);
+  if (hasPage1) {
+    pages.push({ component: page1, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  // if (hasPage2) pages.push(page2);
+  if (hasPage2) {
+    pages.push({ component: page2, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+
+  // Info: (20250214 - Anna) 第二部分：details (細項)
+  // if (hasPage3) pages.push(page3);
+  if (hasPage3) {
+    pages.push({ component: page3, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  // if (hasPage4) pages.push(page4);
+  if (hasPage4) {
+    pages.push({ component: page4, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  // if (hasPage5) pages.push(page5);
+  if (hasPage5) {
+    pages.push({ component: page5, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  // if (hasPage6) pages.push(page6);
+  if (hasPage6) {
+    pages.push({ component: page6, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  // if (hasPage7) pages.push(page7);
+  if (hasPage7) {
+    pages.push({ component: page7, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  // if (hasPage8) pages.push(page8);
+  if (hasPage8) {
+    pages.push({ component: page8, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+  // if (hasPage9) pages.push(page9);
+  if (hasPage9) {
+    pages.push({ component: page9, pageNumber: currentPageNumber });
+    currentPageNumber += 1;
+  }
+
+  // Info: (20250214 - Anna) 第三部分：固定的圖表頁 (不受資料長度影響)
+  pages.push(
+    { component: page10, pageNumber: currentPageNumber },
+    { component: page11, pageNumber: currentPageNumber + 1 },
+    { component: page12, pageNumber: currentPageNumber + 2 }
+  );
+
+  // Info: (20250217 - Anna) 在這裡同步更新 `currentPageNumber`，以防後續還有頁面
+  currentPageNumber += 3;
+
+  // Info: (20250214 - Anna) 依據資料長度，動態 render 頁面
   return (
     <div className="mx-auto w-a4-width origin-top overflow-x-auto">
-      {page1}
-      <hr className="break-before-page" />
-      {page2}
-      <hr className="break-before-page" />
-      {page3}
-      <hr className="break-before-page" />
-      {page4}
-      <hr className="break-before-page" />
-      {page5}
-      <hr className="break-before-page" />
-      {page6}
-      <hr className="break-before-page" />
-      {page7}
-      <hr className="break-before-page" />
-      {page8}
-      <hr className="break-before-page" />
-      {page9}
-      <hr className="break-before-page" />
-      {page10}
-      <hr className="break-before-page" />
-      {page11}
-      <hr className="break-before-page" />
-      {page12}
+      {pages.map(({ component, pageNumber }, index) => (
+        <React.Fragment key={`page-${index + 1}`}>
+          {index !== 0 && <hr className="break-before-page" />}
+          {/* {page} */}
+          {/* Info: (20250217 - Anna) 原本 component（ page1, page2 ...）沒有 renderedFooter(pageNumber)，所以透過 React.cloneElement() 動態新增到 component 的 children 裡 */}
+          {React.cloneElement(component, {
+            children: [...component.props.children, renderedFooter(pageNumber)],
+          })}
+        </React.Fragment>
+      ))}
     </div>
   );
 };
