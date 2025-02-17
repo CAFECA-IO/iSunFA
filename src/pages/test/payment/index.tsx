@@ -51,14 +51,9 @@ const HiTrustPaymentForm = () => {
       return;
     }
 
-    // 設定訂單描述為 URL encoding
-    const encodedDesc = encodeURIComponent(orderDesc);
-
     // 更新隱藏欄位的值
     const hiddenAmount = document.getElementById('hiddenAmount') as HTMLInputElement;
-    const hiddenOrderDesc = document.getElementById('hiddenOrderDesc') as HTMLInputElement;
     if (hiddenAmount) hiddenAmount.value = type === 'Query' ? '0' : String(amountInCents);
-    if (hiddenOrderDesc) hiddenOrderDesc.value = encodedDesc;
   };
 
   return (
