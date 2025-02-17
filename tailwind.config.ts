@@ -628,7 +628,7 @@ module.exports = {
         'input-text-input-filled': 'var(--input-text-input-filled)',
         'input-text-input-hover': 'var(--input-text-input-hover)',
         'input-text-input-placeholder': 'var(--input-text-input-placeholder)',
-        'input-text-primary': 'var(--neutral-light)',
+        'input-text-primary': 'var(--neutral-600)',
         'input-text-secondary': 'var(--input-text-secondary)',
         'input-text-success': 'var(--input-text-success)',
         'input-text-warning': 'var(--input-text-warning)',
@@ -767,6 +767,7 @@ module.exports = {
       fontSize: {
         xxs: ['10px', '12px'],
         xs: ['12px', '16px'],
+        hxs: ['12px', '20px'],
         sm: ['14px', '20px'],
         base: ['16px', '24px'],
         lg: ['18px', '28px'],

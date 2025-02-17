@@ -14,7 +14,7 @@ import {
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import type { ILineItem, ILineItemEntity } from '@/interfaces/line_item';
-import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { PUBLIC_ACCOUNT_BOOK_ID } from '@/constants/company';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 import {
   IGetManyVoucherResponseButOne,
@@ -46,6 +46,7 @@ import {
   AccountCodesOfARRegex,
 } from '@/constants/asset';
 import { DefaultValue } from '@/constants/default_value';
+import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
@@ -111,7 +112,7 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
           },
           {
             company: {
-              id: PUBLIC_COMPANY_ID,
+              id: PUBLIC_ACCOUNT_BOOK_ID,
             },
           },
         ],
@@ -906,7 +907,7 @@ export async function putVoucherWithoutCreateNew(
   } catch (error) {
     loggerBack.error(
       'update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-      error as Error
+      { message: (error as Error).message, stack: (error as Error).stack }
     );
   }
   return voucherUpdated;
@@ -1176,6 +1177,7 @@ export async function getManyVoucherV2(options: {
   type?: EventType | undefined;
   searchQuery?: string | undefined;
   isDeleted?: boolean | undefined;
+  hideReversedRelated?: boolean | undefined;
 }): Promise<
   IPaginatedData<IGetManyVoucherResponseButOne[]> & {
     where: Prisma.VoucherWhereInput;
@@ -1192,6 +1194,7 @@ export async function getManyVoucherV2(options: {
     type,
     searchQuery,
     isDeleted,
+    hideReversedRelated,
   } = options;
   // const { page, pageSize, sortOption, isDeleted } = options;
   let vouchers: IGetManyVoucherResponseButOne[] = [];
@@ -1210,6 +1213,17 @@ export async function getManyVoucherV2(options: {
     }
   }
   // Info: (20241121 - Murky) payable 和 receivable 如果要再搜尋中處理的話要用rowQuery, 所以這邊先用filter的
+  /**
+   * Info: (20250203 - Shirley) 建立查詢條件
+   * 1. 基本條件：日期範圍、公司ID、傳票狀態、傳票類型、刪除狀態
+   * 2. 反轉相關過濾：如果 hideReversedRelated 為 true，過濾掉與 delete event 相關的傳票
+   * 3. 搜尋條件：使用 OR 組合多個欄位的模糊搜尋
+   *    - 開立人名稱
+   *    - 交易對象名稱或統一編號
+   *    - 傳票備註
+   *    - 傳票號碼
+   *    - 會計科目名稱
+   */
   const where: Prisma.VoucherWhereInput = {
     date: {
       gte: startDate,
@@ -1219,6 +1233,45 @@ export async function getManyVoucherV2(options: {
     status: getStatusFilter(tab),
     type: type || undefined,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
+    AND: [
+      // 1. Info: (20250203 - Shirley) 如果 `hideReversedRelated = true`，則過濾掉與 `delete` 事件相關的傳票
+      ...(hideReversedRelated
+        ? [
+            {
+              originalVouchers: {
+                none: {
+                  event: {
+                    eventType: 'delete',
+                  },
+                },
+              },
+            },
+            {
+              resultVouchers: {
+                none: {
+                  event: {
+                    eventType: 'delete',
+                  },
+                },
+              },
+            },
+          ]
+        : []),
+      // 2. Info: (20250212 - Tzuhan) 如果 `tab = PAYMENT` 或 `tab = RECEIVING`，則過濾掉 `revert` 沖銷傳票
+      ...(tab === VoucherListTabV2.PAYMENT || tab === VoucherListTabV2.RECEIVING
+        ? [
+            {
+              resultVouchers: {
+                none: {
+                  event: {
+                    eventType: 'revert',
+                  },
+                },
+              },
+            },
+          ]
+        : []),
+    ],
     OR: [
       {
         issuer: {
@@ -1257,12 +1310,6 @@ export async function getManyVoucherV2(options: {
         lineItems: {
           some: {
             OR: [
-              // Info: (20241121 - Murky) 如果有需要搜尋再打開
-              // {
-              //   description: {
-              //     contains: searchQuery,
-              //   },
-              // },
               {
                 account: {
                   name: {
@@ -1279,6 +1326,11 @@ export async function getManyVoucherV2(options: {
 
   let totalCount = 0;
 
+  /**
+   * Info: (20250203 - Shirley) 第一次查詢：計算總筆數
+   * 使用相同的 where 條件計算符合條件的總筆數
+   * 用於計算總頁數和分頁資訊
+   */
   try {
     totalCount = await prisma.voucher.count({ where });
   } catch (error) {
@@ -1290,9 +1342,13 @@ export async function getManyVoucherV2(options: {
   }
 
   const totalPages = Math.ceil(totalCount / pageSize);
-
   const offset = pageToOffset(page, pageSize);
-  // const orderBy = { [sortBy]: sortOrder };
+
+  /**
+   * Info: (20250203 - Shirley) 建立排序條件列表
+   * 根據傳入的排序選項建立對應的排序條件
+   * 目前只處理日期排序，其他排序（Credit、Debit等）在程式碼中處理
+   */
   function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
     const orderBy: { [key: string]: SortOrder }[] = [];
     sortOptions.forEach((sort) => {
@@ -1317,6 +1373,13 @@ export async function getManyVoucherV2(options: {
     return orderBy;
   }
 
+  /**
+   * Info: (20250203 - Shirley) 建立分頁查詢參數
+   * 1. skip: 跳過前面幾筆
+   * 2. take: 多取一筆用於判斷是否還有下一頁
+   * 3. orderBy: 排序條件
+   * 4. where: 上面建立的查詢條件
+   */
   const findManyArgs = {
     skip: offset,
     take: pageSize + 1,
@@ -1324,6 +1387,14 @@ export async function getManyVoucherV2(options: {
     where,
   };
 
+  /**
+   * Info: (20250203 - Shirley) 第二次查詢：取得分頁資料
+   * 1. 使用 findManyArgs 進行分頁查詢
+   * 2. include 完整的關聯資料（lineItems, account, counterparty 等）
+   * 3. 根據分頁類型（tab）進行額外的資料過濾：
+   *    - PAYMENT: 只包含應付帳款相關的傳票
+   *    - RECEIVING: 只包含應收帳款相關的傳票
+   */
   try {
     const vouchersFromPrisma = await prisma.voucher.findMany({
       ...findManyArgs,
@@ -1419,33 +1490,47 @@ export async function getManyVoucherV2(options: {
 
     switch (tab) {
       case VoucherListTabV2.PAYMENT:
-        vouchers = vouchersFromPrisma.filter((voucher) => {
-          return voucher.lineItems.some((lineItem) =>
-            AccountCodesOfAPRegex.test(lineItem.account.code)
-          );
-        });
+        vouchers = vouchersFromPrisma.filter((voucher) =>
+          voucher.lineItems.some((lineItem) => AccountCodesOfAPRegex.test(lineItem.account.code))
+        );
         break;
       case VoucherListTabV2.RECEIVING:
-        vouchers = vouchersFromPrisma.filter((voucher) => {
-          return voucher.lineItems.some((lineItem) =>
-            AccountCodesOfARRegex.test(lineItem.account.code)
-          );
-        });
+        vouchers = vouchersFromPrisma.filter((voucher) =>
+          voucher.lineItems.some((lineItem) => AccountCodesOfARRegex.test(lineItem.account.code))
+        );
         break;
       default:
         vouchers = vouchersFromPrisma;
         break;
     }
+    vouchers = vouchers.map((voucher) => {
+      const noteData = parseNoteData(voucher.note ?? '');
+      return {
+        ...voucher,
+        note: noteData.note ?? voucher.note ?? '',
+        counterparty: {
+          ...voucher.counterparty,
+          name: voucher.counterparty.id === 555 ? noteData.name : voucher.counterparty.name,
+          taxId: voucher.counterparty.id === 555 ? noteData.taxId : voucher.counterparty.taxId,
+        },
+      };
+    });
   } catch (error) {
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
-      errorType: 'Find many accounts in findManyAccountsInPrisma failed',
+      errorType: 'Find many vouchers failed in getManyVoucherV2',
       errorMessage: error as Error,
     });
   }
 
+  /**
+   * Info: (20250203 - Shirley) 處理分頁資訊
+   * 1. hasNextPage: 如果取得的資料比要求的多，表示還有下一頁
+   * 2. hasPreviousPage: 如果目前頁數大於 1，表示有上一頁
+   * 3. 如果有下一頁，移除多取的那一筆資料
+   */
   const hasNextPage = vouchers.length > pageSize;
-  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER; // 1;
+  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER;
 
   if (hasNextPage) {
     vouchers.pop();
@@ -1462,7 +1547,6 @@ export async function getManyVoucherV2(options: {
     sort: sortOption,
     where,
   };
-
   return returnValue;
 }
 
@@ -1963,6 +2047,43 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
   } = options;
 
   const result = await prisma.$transaction(async (tx) => {
+    const assetIds = voucherDeleteOtherEntity.asset?.map((a) => a.id) || [];
+
+    // Info: (20250213 - Shirley) 刪除 asset
+    if (assetIds.length > 0) {
+      // Info: (20250213 - Shirley) 更新 asset_voucher 的 deleted_at
+      await tx.assetVoucher.updateMany({
+        where: {
+          voucherId: deleteVersionOriginVoucher.id,
+          deletedAt: null,
+        },
+        data: { deletedAt: nowInSecond },
+      });
+
+      // Info: (20250213 - Shirley) 更新 asset 的 deleted_at
+      await tx.asset.updateMany({
+        where: {
+          id: {
+            in: assetIds,
+          },
+          deletedAt: null,
+        },
+        data: { deletedAt: nowInSecond },
+      });
+    }
+
+    // Info: (20250213 - Shirley) 更新 voucher_certificate 的 deletedAt
+    const certificateIds = voucherDeleteOtherEntity.certificates?.map((c) => c.id) || [];
+    if (certificateIds.length > 0) {
+      await tx.voucherCertificate.updateMany({
+        where: {
+          voucherId: deleteVersionOriginVoucher.id,
+          deletedAt: null,
+        },
+        data: { deletedAt: nowInSecond },
+      });
+    }
+
     const newVoucherNo = await getLatestVoucherNoInPrisma(companyId, {
       voucherDate: voucherDeleteOtherEntity.date,
     });

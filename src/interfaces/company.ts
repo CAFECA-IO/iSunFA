@@ -1,4 +1,4 @@
-import { COMPANY_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/constants/company';
 import { IRole } from '@/interfaces/role';
 
 export interface ICompany {
@@ -23,7 +23,7 @@ export interface ICompanyAndRoleDetail {
 
 export interface ICompanyAndRole {
   company: ICompany;
-  tag: COMPANY_TAG;
+  tag: WORK_TAG;
   order: number;
   role: IRole;
 }

@@ -5,7 +5,7 @@ import FilterSection from '@/components/filter_section/filter_section';
 import Pagination from '@/components/pagination/pagination';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
-import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
+import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { AssetStatus, AccountCodesOfAsset, AssetEntityType } from '@/constants/asset';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IAssetItem } from '@/interfaces/asset';
@@ -15,10 +15,11 @@ import { IPaginatedAccount } from '@/interfaces/accounting_account';
 
 const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('asset');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
-  const params = { companyId };
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const params = { companyId: accountBookId };
+  // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
   const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
 
@@ -93,7 +94,7 @@ const AssetListPageBody: React.FC = () => {
     };
 
     getAccountList();
-  }, [companyId]);
+  }, [params]);
 
   // Info: (20241024 - Julian) 資產狀態列表
   const assetStatusList = Object.values(AssetStatus);
@@ -105,7 +106,7 @@ const AssetListPageBody: React.FC = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center gap-40px p-40px">
+    <div className="relative flex flex-col items-center gap-40px">
       {/* Info: (20240925 - Julian) Asset List */}
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20241024 - Julian) Filter Section */}

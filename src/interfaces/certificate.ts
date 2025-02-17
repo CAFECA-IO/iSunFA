@@ -17,6 +17,15 @@ import {
   // Counterparty as PrismaCounterparty,
 } from '@prisma/client';
 
+export interface ICertificateListSummary {
+  totalInvoicePrice: number;
+  unRead: {
+    withVoucher: number;
+    withoutVoucher: number;
+  };
+  currency: string;
+}
+
 export interface ICertificate {
   id: number;
   name: string;
@@ -25,13 +34,13 @@ export interface ICertificate {
   file: IFileBeta; // Info: (20241108 - Tzuhan) !!! removed IFileBeta and update IFile
   invoice: IInvoiceBetaOptional;
   voucherNo: string | null;
-  voucherId?: number;
+  voucherId: number | null;
   aiResultId?: string;
   aiStatus?: string;
   createdAt: number;
   updatedAt: number;
   uploader: string; // Info: (20241108 - tzuhan) moved from IInvoiceBetaOptional
-  uploaderUrl?: string; // Info: (20241108 - tzuhan) moved from IInvoiceBetaOptional
+  uploaderUrl: string; // Info: (20241108 - tzuhan) moved from IInvoiceBetaOptional
 }
 
 export interface ICertificateUI extends ICertificate {

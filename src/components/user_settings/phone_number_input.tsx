@@ -17,7 +17,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   phoneNumber,
   onUpdate,
 }) => {
-  const { t } = useTranslation(['setting', 'common']);
+  const { t } = useTranslation(['settings', 'common']);
 
   const selectedCountryCode = countryCode ? CountryCodeMap[countryCode] : undefined;
 
@@ -69,7 +69,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
           type="text"
           value={phoneNumber}
           onChange={onUpdate}
-          placeholder={t('setting:NORMAL.ENTER_NUMBER')}
+          placeholder={t('settings:NORMAL.ENTER_NUMBER')}
           className="block flex-1 outline-none placeholder:text-input-text-input-placeholder"
         />
       </button>
@@ -99,7 +99,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   return (
     <div className="flex flex-col gap-8px">
       <p className="text-sm font-semibold text-input-text-primary">
-        {t('setting:NORMAL.PHONE_NUMBER')}
+        {t('settings:NORMAL.PHONE_NUMBER')}
       </p>
       <div className="group flex items-center max-md:max-w-full">{displayedCountryCodeMenu}</div>
     </div>

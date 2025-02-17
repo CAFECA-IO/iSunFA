@@ -10,6 +10,7 @@ export interface IPaginatedData<T> {
     sortBy: string; // Info: (20240716 - Jacky) 排序欄位的鍵
     sortOrder: string; // Info: (20240716 - Jacky) 排序欄位的值
   }[];
+  note?: string; // Info: (20250206 - Tzuhan) 用來存成額外的資訊
 }
 
 export interface IPaginatedOptions<T> {
@@ -22,4 +23,5 @@ export interface IPaginatedOptions<T> {
     sortBy: string;
     sortOrder: string;
   }[];
+  note?: string;
 }

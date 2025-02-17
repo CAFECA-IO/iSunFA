@@ -28,25 +28,13 @@ const DefaultIntroduction: React.FC = () => {
   const { t } = useTranslation('dashboard');
 
   return (
-    <section className="relative h-full">
-      <div className="flex flex-col gap-40px pl-60px pt-70px">
-        <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
-          {t('dashboard:CREATE_ROLE_PAGE.SELECT_YOUR_ROLE')}
-        </h1>
-        <p className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
-          {t('dashboard:CREATE_ROLE_PAGE.DEFAULT_INTRODUCTION')}
-        </p>
-      </div>
-
-      <div className="absolute right-0 top-0 z-0 w-600px screen1280:w-800px">
-        <Image
-          src="/images/bg_select_role.png"
-          alt="bg_select_role"
-          width={600}
-          height={600}
-          className="w-full"
-        ></Image>
-      </div>
+    <section className="flex flex-col gap-40px pl-60px pt-70px">
+      <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
+        {t('dashboard:CREATE_ROLE_PAGE.SELECT_YOUR_ROLE')}
+      </h1>
+      <p className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
+        {t('dashboard:CREATE_ROLE_PAGE.DEFAULT_INTRODUCTION')}
+      </p>
     </section>
   );
 };
@@ -119,40 +107,28 @@ const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({ childre
   const { t } = useTranslation('dashboard');
 
   return (
-    <section className="relative h-full">
-      <div className="flex flex-col gap-40px pl-60px pt-70px">
-        <div className="flex items-center gap-24px">
-          <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
-            {t('dashboard:ROLE.BOOKKEEPER')}
-          </h1>
-          <Image
-            src={'/icons/information_desk.svg'}
-            alt="information_desk"
-            width={30}
-            height={30}
-          ></Image>
-        </div>
-
-        <div className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
-          <p>{t('dashboard:CREATE_ROLE_PAGE.BOOKKEEPER_INTRODUCTION')}</p>
-          <h3 className="pt-24px text-xl font-bold text-text-neutral-primary">
-            {t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS')}
-          </h3>
-          <p>{t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS_FOR_BOOKKEEPER')}</p>
-        </div>
-
-        {children}
-      </div>
-
-      <div className="absolute right-0 top-0 z-0 w-500px screen1280:w-600px">
+    <section className="flex flex-col gap-40px pl-60px pt-70px">
+      <div className="flex items-center gap-24px">
+        <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
+          {t('dashboard:ROLE.BOOKKEEPER')}
+        </h1>
         <Image
-          src="/images/bg_bookkeeper.png"
-          alt="bg_bookkeeper"
-          width={600}
-          height={600}
-          className="w-full"
+          src={'/icons/information_desk.svg'}
+          alt="information_desk"
+          width={30}
+          height={30}
         ></Image>
       </div>
+
+      <div className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
+        <p>{t('dashboard:CREATE_ROLE_PAGE.BOOKKEEPER_INTRODUCTION')}</p>
+        <h3 className="pt-24px text-xl font-bold text-text-neutral-primary">
+          {t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS')}
+        </h3>
+        <p>{t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS_FOR_BOOKKEEPER')}</p>
+      </div>
+
+      {children}
     </section>
   );
 };
@@ -163,50 +139,38 @@ const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntro
   const { t } = useTranslation('dashboard');
 
   return (
-    <section className="relative h-full">
-      <div className="flex flex-col gap-40px pl-60px pt-70px">
-        <div className="flex items-center gap-24px">
-          <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
-            {t('dashboard:ROLE.EDUCATIONAL')}
-            <span className="ml-8px text-28px text-text-neutral-tertiary">
-              {'(' + t('dashboard:ROLE.TRIAL_VERSION') + ')'}
-            </span>
-          </h1>
-          <Image
-            src={'/icons/graduation_cap.svg'}
-            alt="graduation_cap"
-            width={30}
-            height={30}
-          ></Image>
-        </div>
-
-        <div className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
-          <p>{t('dashboard:CREATE_ROLE_PAGE.EDUCATIONAL_TRIAL_VERSION_INTRODUCTION')}</p>
-          <h3 className="pt-24px text-xl font-bold text-text-neutral-primary">
-            {t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS')}
-          </h3>
-          <p>{t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION')}</p>
-        </div>
-
-        {children}
-      </div>
-
-      <div className="absolute right-0 top-0 z-0 w-500px screen1280:w-600px">
+    <section className="flex flex-col gap-40px pl-60px pt-70px">
+      <div className="flex items-center gap-24px">
+        <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
+          {t('dashboard:ROLE.EDUCATIONAL')}
+          <span className="ml-8px text-28px text-text-neutral-tertiary">
+            {'(' + t('dashboard:ROLE.TRIAL_VERSION') + ')'}
+          </span>
+        </h1>
         <Image
-          src="/images/bg_educational_trial_version.png"
-          alt="bg_educational_trial_version"
-          width={600}
-          height={600}
-          className="w-full"
+          src={'/icons/graduation_cap.svg'}
+          alt="graduation_cap"
+          width={30}
+          height={30}
         ></Image>
       </div>
+
+      <div className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
+        <p>{t('dashboard:CREATE_ROLE_PAGE.EDUCATIONAL_TRIAL_VERSION_INTRODUCTION')}</p>
+        <h3 className="pt-24px text-xl font-bold text-text-neutral-primary">
+          {t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS')}
+        </h3>
+        <p>{t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION')}</p>
+      </div>
+
+      {children}
     </section>
   );
 };
 
 const Introduction = ({ selectedRoleId, showingRole, togglePreviewModal }: IntroductionProps) => {
   return (
-    <>
+    <main className="flex flex-auto">
       {!showingRole && <DefaultIntroduction />}
       {showingRole === RoleName.BOOKKEEPER && (
         <BookkeeperIntroduction>
@@ -218,7 +182,7 @@ const Introduction = ({ selectedRoleId, showingRole, togglePreviewModal }: Intro
           <Buttons togglePreviewModal={togglePreviewModal} selectedRoleId={selectedRoleId} />
         </EducationalTrialVersionIntroduction>
       )}
-    </>
+    </main>
   );
 };
 

@@ -18,6 +18,7 @@ import {
   listCompanyAndRoleSimple,
 } from '@/lib/utils/repo/admin.repo';
 import { Company, Role, File } from '@prisma/client';
+import { createAccountingSetting } from '@/lib/utils/repo/accounting_setting.repo';
 
 const handleGetRequest: IHandleRequest<
   APIName.LIST_USER_COMPANY,
@@ -67,6 +68,13 @@ const handleGetRequest: IHandleRequest<
   return { statusMessage, payload };
 };
 
+/* Info: (20250124 - Shirley) 建立帳本
+ * 1. 搜尋是帳號下是否有相同統編的公司帳本，若有則取消創建
+ * 2. 建立公司帳本 icon
+ * 3. 建立將此用戶設定為公司帳本管理者角色
+ * 4. 建立帳本公私鑰對用於加解密
+ * 5. 建立公司設定
+ */
 const handlePostRequest: IHandleRequest<
   APIName.CREATE_USER_COMPANY,
   {
@@ -86,11 +94,13 @@ const handlePostRequest: IHandleRequest<
   const { userId } = query;
   const { taxId, name, tag } = body;
 
+  // Info: (20250124 - Shirley) Step 1.
   const getCompany = await getCompanyAndRoleByTaxId(userId, taxId);
 
   if (getCompany) {
     statusMessage = STATUS_MESSAGE.DUPLICATE_COMPANY;
   } else {
+    // Info: (20250124 - Shirley) Step 2.
     const companyIcon = await generateIcon(name);
     const nowInSecond = getTimestampNow();
     const imageName = name + '_icon' + nowInSecond;
@@ -104,13 +114,17 @@ const handlePostRequest: IHandleRequest<
       encryptedSymmetricKey: '',
     });
     if (file) {
+      // Info: (20250124 - Shirley) Step 3.
       const createdCompanyAndRole = await createCompanyAndRole(userId, taxId, name, file.id, tag);
       statusMessage = STATUS_MESSAGE.CREATED;
       payload = createdCompanyAndRole;
 
       const companyId = createdCompanyAndRole.company.id;
+      // Info: (20250124 - Shirley) Step 4.
       const companyKeyPair = await generateKeyPair();
       await storeKeyByCompany(companyId, companyKeyPair);
+      // Info: (20250124 - Shirley) Step 5.
+      await createAccountingSetting(companyId);
     }
   }
 

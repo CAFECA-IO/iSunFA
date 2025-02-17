@@ -27,7 +27,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   taxId,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const [inputName, setInputName] = useState<string>('');
   const [inputTaxId, setInputTaxId] = useState<string>('');
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
@@ -38,7 +38,9 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   // Deprecate: (20241226 - Tzuhan) remove isOptionSelected
   // const [isOptionSelected, setIsOptionSelected] = useState(false); // Info: (20241223 - Anna) 選擇選項的狀態
   const [nameInputStyle, setNameInputStyle] = useState<string>(inputStyle.NORMAL); // Info: (20250121 - Anna) 控制名稱輸入框樣式
-  const [nameErrorMessage, setNameErrorMessage] = useState<string | null>(null); // Info: (20250121 - Anna) 錯誤訊息狀態
+  const [nameErrorMessage, setNameErrorMessage] = useState<string | null>(null); // Info: (20250121 - Anna) 名稱錯誤訊息狀態
+  const [taxIdInputStyle, setTaxIdInputStyle] = useState<string>(inputStyle.NORMAL); // Info: (20250122 - Anna) 控制統編輸入框樣式
+  const [taxIdErrorMessage, setTaxIdErrorMessage] = useState<string | null>(null); // Info: (20250122 - Anna) 統編錯誤訊息狀態
   const dropdownRef = useRef<HTMLDivElement>(null); // Info: (20241223 - Anna) Ref 追蹤下拉選單
 
   const {
@@ -220,6 +222,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   const taxIdChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newTaxId = event.target.value.trim();
     setInputTaxId(newTaxId);
+    setTaxIdInputStyle(inputStyle.NORMAL); // Info: (20250122 - Anna) 用戶修改統編時，恢復正常樣式
+    setTaxIdErrorMessage(null); // Info: (20250122 - Anna) 用戶修改統編時，清空錯誤訊息
 
     // Info: (20241212 - Anna) 當輸入的統一編號滿 8 碼時，觸發 API
     if (newTaxId.length === 8 && /^[0-9]{8}$/.test(newTaxId)) {
@@ -254,30 +258,47 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
         type: counterpartyData.type.toString(),
       };
 
-      await addCounterpartyTrigger({ params: { companyId: selectedCompany?.id }, body: apiData });
+      await addCounterpartyTrigger({
+        params: { companyId: selectedAccountBook?.id },
+        body: apiData,
+      });
     }
   };
 
   useEffect(() => {
     if (success && data) {
+      // Deprecated: (20250122 - Shirley) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Counterparty created successfully.');
       onSave(data);
       modalVisibilityHandler();
     } else if (error) {
       // Info: (20250121 - Anna) 確認 error 的實際結構
+      // Deprecated: (20250122 - Shirley) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Error content:', error);
+      // Info: (20250122 - Anna) 嘗試從錯誤中提取 ErrorCode
+      const errorCode = (error as { code?: string })?.code || '';
+      // Deprecated: (20250122 - Shirley) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('Error code:', errorCode);
       // Info: (20250121 - Anna) 檢查是否有內嵌的錯誤信息
       const apiErrorMessage = (error as { message?: string })?.message || '';
       // Info: (20250121 - Anna) 定義名稱重複的錯誤訊息
       const errorNameMessageContent = t('certificate:COUNTERPARTY.NAME_ALREADY_EXISTS');
-      if (apiErrorMessage.includes('Bad request')) {
+      const errorTaxIdMessageContent = t('certificate:COUNTERPARTY.TAX_ID_ALREADY_EXISTS');
+      if (apiErrorMessage.includes('Duplicate counterparty name')) {
         // Info: (20250121 - Anna) 修改輸入框樣式
         setNameInputStyle(`${inputStyle.ERROR}`);
         // Info: (20250121 - Anna) 顯示名稱錯誤訊息
         setNameErrorMessage(errorNameMessageContent);
+      } else if (apiErrorMessage.includes('Duplicate counterparty tax ID')) {
+        // Info: (20250122 - Anna) 修改輸入框樣式
+        setTaxIdInputStyle(`${inputStyle.ERROR}`);
+        // Info: (20250122 - Anna) 顯示統編錯誤訊息
+        setTaxIdErrorMessage(errorTaxIdMessageContent);
       } else {
+        // Deprecated: (20250122 - Shirley) remove eslint-disable
         // eslint-disable-next-line no-console
         console.error('Unexpected error:', error);
       }
@@ -304,6 +325,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       setShowHint(false);
       setNameInputStyle(inputStyle.NORMAL); // Info: (20250121 - Anna) 關閉 Modal 時重置名稱輸入框樣式
       setNameErrorMessage(null); // Info: (20250121 - Anna) 關閉 Modal 時清空錯誤訊息
+      setTaxIdInputStyle(inputStyle.NORMAL); // Info: (20250122 - Anna) 關閉 Modal 時重置統編輸入框樣式
+      setTaxIdErrorMessage(null); // Info: (20250122 - Anna) 關閉 Modal 時清空錯誤訊息
     }
   }, [isModalVisible]);
 
@@ -406,10 +429,24 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
                   value={inputTaxId}
                   onChange={taxIdChangeHandler}
                   style={{
-                    boxShadow: '0 0 0px 1000px #FCFDFF inset', // Info: (20250121 - Anna) 移除 autofill 背景影響
+                    boxShadow: '0 0 0px 1000px #FCFDFF inset', // Info: (20250122 - Anna) 移除 autofill 背景影響
+                    WebkitTextFillColor: taxIdErrorMessage
+                      ? '#C84949' // Info: (20250122 - Anna) 錯誤情況
+                      : inputTaxId
+                        ? '#27354E' // Info: (20250122 - Anna) 已經輸入文字
+                        : '#7F8A9D', // Info: (20250122 - Anna) 初始情況
                   }}
-                  className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none"
+                  className={`h-46px flex-1 rounded-sm border ${
+                    taxIdErrorMessage
+                      ? 'border-red-500 placeholder:text-red-600'
+                      : 'border-input-stroke-input'
+                  } bg-neutral-25 p-10px outline-none ${taxIdInputStyle}`}
                 />
+              </div>
+              <div className="w-full text-right">
+                {taxIdErrorMessage && ( // Info: (20250122 - Anna) 顯示統編錯誤訊息
+                  <p className="text-sm text-text-state-error">{taxIdErrorMessage}</p>
+                )}
               </div>
             </div>
 

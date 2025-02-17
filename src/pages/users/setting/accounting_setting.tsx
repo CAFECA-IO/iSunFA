@@ -7,7 +7,7 @@ import Layout from '@/components/beta/layout/layout';
 import AccountingSettingPageBody from '@/components/account_settings/accounting_setting_page_body';
 
 const AccountingSettingPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['settings']);
 
   return (
     <>
@@ -15,10 +15,10 @@ const AccountingSettingPage: React.FC = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('setting:ACCOUNTING.TITLE')} - iSunFA</title>
+        <title>{t('settings:ACCOUNTING.TITLE')} - iSunFA</title>
       </Head>
 
-      <Layout isDashboard={false} pageTitle={t('setting:ACCOUNTING.TITLE')}>
+      <Layout isDashboard={false} pageTitle={t('settings:ACCOUNTING.TITLE')}>
         <AccountingSettingPageBody />
       </Layout>
     </>
@@ -31,7 +31,7 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
       'layout',
       'common',
       'journal',
-      'setting',
+      'settings',
       'asset',
       'dashboard',
       'date_picker',

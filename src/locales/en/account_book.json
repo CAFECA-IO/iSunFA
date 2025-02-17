@@ -1,0 +1,64 @@
+{
+  "LIST": {
+    "ACCOUNT_BOOK_LIST_TITLE": "Account Book List",
+    "PARTNER_NAME": "Partner's Name",
+    "TAX_ID": "Tax ID",
+    "TYPE": "Type",
+    "ACTION": "Action"
+  },
+  "INFO": {
+    "COMPANY_NAME": "Company Name",
+    "TAX_ID": "Business Tax ID Number",
+    "WORK_TAG": "Work Tag"
+  },
+  "EDIT": {
+    "BACK": "Back",
+    "INFO": "Account Book Information",
+    "COMPANY_NAME": "Company Name",
+    "BUSINESS_TAX_ID": "Business Tax ID Number",
+    "TAX_SERIAL_NUMBER": "Tax Serial Number",
+    "COMPANY_REPRESENTATIVE_NAME": "Company representative's name",
+    "COUNTRY_OF_INCORPORATION": "Country of incorporation",
+    "COMPANY_ADDRESS": "Company address",
+    "PHONE_NUMBER": "Phone number",
+    "DELETE_THIS_ACCOUNT_BOOK": "Delete This Account Book"
+  },
+  "WORK_TAG": {
+    "FINANCIAL": "Financial",
+    "TAX": "Tax",
+    "ALL": "All"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "Enter Name",
+    "ENTER_NUMBER": "Enter Number",
+    "ENTER_FULL_ADDRESS": "Please enter the full address"
+  },
+  "ACCOUNT_BOOKS_PAGE_BODY": {
+    "NO_ACCOUNT_BOOK_DATA_AVAILABLE": "No account book data available.",
+    "PLEASE_ADD_A_NEW_ACCOUNT_BOOK": "Please add a new account book.",
+    "ADD_NEW": "Add New",
+    "INVITE_CODE": "Invite Code",
+    "CANCEL": "Cancel",
+    "SUBMIT": "Submit",
+    "SAVE": "Save",
+    "CONNECT": "Connect",
+    "LINKED": "Linked",
+    "CHANGE_WORK_TAG": "Change Work Tag",
+    "DELETE": "Delete",
+    "DELETE_MESSAGE_TITLE": "Delete the Account Book",
+    "DELETE_MESSAGE_CONTENT": "Are you sure you want to delete the account book?"
+  },
+  "DELETE": {
+    "TITLE": "Delete the Account Book",
+    "WARNING": "Are you sure you want to delete the account book?"
+  },
+  "UPLOAD_COMPANY_AVATAR_MODAL": {
+    "TITLE": "Change Company Picture"
+  },
+  "ACCOUNT_BOOK_TRANSFER_MODAL": {
+    "ACCOUNT_BOOK_TRANSFER": "Account Book Transfer",
+    "CONTENT": "Transferring a ledger will move all its associated data, including company details and financial records, to another team. Ensure that the recipient team is authorized and capable of managing the transferred ledger before initiating the process.",
+    "TRANSFER": "Transfer",
+    "CANCEL": "Cancel"
+  }
+}

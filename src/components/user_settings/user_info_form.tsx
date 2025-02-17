@@ -12,6 +12,7 @@ import { Button } from '@/components/button/button';
 import SelectCountryDropdown from '@/components/user_settings/select_country_dropdown';
 import SelectLanguageDropdown from '@/components/user_settings/select_language_dropdown';
 import PhoneNumberInput from '@/components/user_settings/phone_number_input';
+import { toConstantCase } from '@/lib/utils/common';
 
 interface UserInfoFormProps {
   userSetting: IUserSetting | null;
@@ -24,7 +25,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
   handleUsernameUpdate,
   name,
 }) => {
-  const { t, i18n } = useTranslation(['setting', 'common']);
+  const { t, i18n } = useTranslation(['settings', 'common']);
   const { userAuth } = useUserCtx();
   const { toastHandler } = useModalContext();
   const { trigger: updateUserSettingAPI } = APIHandler<IUserSetting>(APIName.USER_SETTING_UPDATE);
@@ -66,7 +67,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
         toastHandler({
           id: ToastId.USER_SETTING_UPDATE_SUCCESS,
           type: ToastType.SUCCESS,
-          content: t('setting:USER.UPDATE_SUCCESS'),
+          content: t('settings:USER.UPDATE_SUCCESS'),
           closeable: true,
         });
         handleUsernameUpdate(`${formState.firstName} ${formState.lastName}`);
@@ -77,7 +78,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
       toastHandler({
         id: ToastId.USER_SETTING_UPDATE_ERROR,
         type: ToastType.ERROR,
-        content: t('setting:USER.UPDATE_ERROR', { reason: (error as Error).message }),
+        content: t('settings:USER.UPDATE_ERROR', { reason: (error as Error).message }),
         closeable: true,
       });
     }
@@ -120,17 +121,17 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
         {['firstName', 'lastName'].map((field) => (
           <div key={field} className="flex flex-col gap-2">
             <label
-              htmlFor={`usersetting-${field}`}
+              htmlFor={`user-settings-${field}`}
               className="text-sm font-semibold text-input-text-primary"
             >
-              {t(`setting:NORMAL.${field.toUpperCase()}`)}
+              {t(`settings:NORMAL.${toConstantCase(field)}`)}
             </label>
             <input
-              id={`usersetting-${field}`}
+              id={`user-settings-${field}`}
               type="text"
               value={formState[field as 'firstName' | 'lastName']}
               onChange={(e) => handleInputChange(field as keyof typeof formState, e.target.value)}
-              placeholder={t(`setting:NORMAL.EX_${field === 'firstName' ? 'JOHN' : 'DOE'}`)}
+              placeholder={t(`settings:NORMAL.EX_${field === 'firstName' ? 'JOHN' : 'DOE'}`)}
               className="rounded-sm border border-input-stroke-input px-3 py-2 outline-none placeholder:text-input-text-input-placeholder"
             />
           </div>

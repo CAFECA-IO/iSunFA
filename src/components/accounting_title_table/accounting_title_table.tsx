@@ -25,7 +25,7 @@ interface IAccountingTitleRowProps {
 }
 
 const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
-  const { t } = useTranslation(['common', 'setting']);
+  const { t } = useTranslation(['common', 'settings']);
   const {
     addAccountTitleModalVisibilityHandler,
     addAccountTitleDataHandler,
@@ -33,7 +33,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
     editAccountTitleDataHandler,
   } = useGlobalCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { deleteOwnAccountTitle } = useAccountingCtx();
   const { id, code, name } = rowData;
 
@@ -50,14 +50,14 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
   };
 
   const handleRemove = () => {
-    if (!selectedCompany?.id) return;
+    if (!selectedAccountBook?.id) return;
     messageModalDataHandler({
-      title: t('setting:SETTING.REMOVE_ACCOUNTING_TITLE'),
-      content: t('setting:SETTING.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
+      title: t('settings:SETTINGS.REMOVE_ACCOUNTING_TITLE'),
+      content: t('settings:SETTINGS.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
       notes: name,
       messageType: MessageType.WARNING,
-      submitBtnStr: t('setting:SETTING.REMOVE'),
-      submitBtnFunction: () => deleteOwnAccountTitle(selectedCompany.id, id),
+      submitBtnStr: t('settings:SETTINGS.REMOVE'),
+      submitBtnFunction: () => deleteOwnAccountTitle(selectedAccountBook.id, id),
       backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
@@ -75,7 +75,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         >
           <FaRegSquarePlus className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            {t('setting:SETTING.ADD_NEW_SUB')}
+            {t('settings:SETTINGS.ADD_NEW_SUB')}
           </p>
         </button>
       </div>
@@ -90,7 +90,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         >
           <FiEdit className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            {t('setting:SETTING.EDIT')}
+            {t('settings:SETTINGS.EDIT')}
           </p>
         </button>
         {/* Info: (20240717 - Julian) Remove button */}
@@ -101,7 +101,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         >
           <RiDeleteBinLine className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            {t('setting:SETTING.REMOVE')}
+            {t('settings:SETTINGS.REMOVE')}
           </p>
         </button>
       </div>
@@ -166,7 +166,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
 };
 
 const AccountingTitleTable = ({ accountingTitleData, actionType }: IAccountingTitleTableProps) => {
-  const { t } = useTranslation(['common', 'setting']);
+  const { t } = useTranslation(['common', 'settings']);
   const accountingTableBody = accountingTitleData.map((account) => (
     <AccountingRow key={account.id} rowData={account} actionType={actionType} />
   ));
@@ -178,13 +178,13 @@ const AccountingTitleTable = ({ accountingTitleData, actionType }: IAccountingTi
         {/* Info: (20240717 - Julian) Desktop Table Header Row */}
         <div className="hidden lg:table-row">
           <div className="table-cell w-1/10 py-12px">{t('common:COMMON.CODE')}</div>
-          <div className="table-cell w-6/10 py-12px">{t('setting:SETTING.NAME')}</div>
+          <div className="table-cell w-6/10 py-12px">{t('settings:SETTINGS.NAME')}</div>
           <div className="table-cell w-3/10 py-12px">{t('common:COMMON.OPERATIONS')}</div>
         </div>
         {/* Info: (20240717 - Julian) Mobile Table Header Row */}
         <div className="table-row lg:hidden">
-          <div className="table-cell py-12px">{t('setting:SETTING.CODE_NAME')}</div>
-          <div className="table-cell py-12px">{t('setting:SETTING.ACTION')}</div>
+          <div className="table-cell py-12px">{t('settings:SETTINGS.CODE_NAME')}</div>
+          <div className="table-cell py-12px">{t('settings:SETTINGS.ACTION')}</div>
         </div>
       </div>
       {/* Info: (20240717 - Julian) Table Body */}

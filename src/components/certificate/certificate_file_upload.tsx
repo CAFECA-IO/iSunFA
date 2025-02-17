@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { IFileUIBeta } from '@/interfaces/file';
 import { Channel } from 'pusher-js';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
 import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
@@ -19,8 +19,8 @@ interface CertificateFileUploadProps {
 }
 
 const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisabled, setFiles }) => {
-  const { userAuth, selectedCompany } = useUserCtx();
-  const companyId = selectedCompany?.id || FREE_COMPANY_ID;
+  const { userAuth, selectedAccountBook } = useUserCtx();
+  const companyId = selectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const [room, setRoom] = useState<IRoom | null>(null);
   const [getRoomSuccess, setGetRoomSuccess] = useState<boolean | undefined>(undefined);
   const [getRoomCode, setGetRoomCode] = useState<string | undefined>(undefined);

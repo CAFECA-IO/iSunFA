@@ -8,7 +8,7 @@
     "UPCOMING": "即將到來的",
     "EVENTS": "會計事件",
     "JOURNAL_LIST": "日記帳",
-    "INVOICE_LIST": "發票列表",
+    "INVOICE_LIST": "發票清單",
     "ADD_NEW_JOURNAL": "新增日記帳",
     "ACCOUNTING": "會計",
     "JOURNAL": "日記帳",
@@ -36,6 +36,7 @@
     "TAX": "稅 /",
     "NO_SLASH_TAX": "稅",
     "TWD_FEE": "新台幣費用",
+    "TWD": "TWD",
     "NONE": "無",
     "ACCOUNTING_VOUCHER": "會計分錄",
     "PARTICULARS": "摘要",
@@ -214,6 +215,7 @@
     "SELECT": "選擇",
     "SELECT_ALL": "全選",
     "UNSELECT_ALL": "取消全選",
+    "CURRENCY": "貨幣單位",
     "HIDE_VOUCHER_TOGGLE": "隱藏已刪除的傳票和其相關沖銷分錄",
     "WARNING_MODAL_TITLE": "警告",
     "AT_LEAST_ONE_VOUCHER_CONTENT": "請至少選擇一張傳票",
@@ -224,7 +226,10 @@
     "DELETE_MULTIPLE_VOUCHER_TITLE": "您確定要刪除這{{count}}張傳票嗎？",
     "DELETE_MULTIPLE_VOUCHER_CONTENT": "與這些傳票相關的所有資產也將被刪除。",
     "DELETE_MULTIPLE_VOUCHER_WARNING": "刪除後將自動生成沖銷分錄，原始傳票將保留以供參考。",
-    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "是的，刪除這些傳票"
+    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "是的，刪除這些傳票",
+    "REVERSE_DETAIL": "反轉傳票（刪除）",
+    "DELETE_VOUCHERS_SUCCESSFULLY": "刪除傳票成功",
+    "DELETE_VOUCHERS_FAILED": "刪除傳票失敗"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增傳票",
@@ -284,6 +289,9 @@
     "PAID_AMOUNT": "已付金額",
     "REMAIN_AMOUNT": "剩餘金額",
     "REVERSE_VOUCHERS": "沖銷傳票",
+    "REVERSE_VOUCHERS_REVERSE": "沖銷傳票",
+    "REVERSE_VOUCHERS_SETTLEMENT": "沖銷傳票",
+    "REVERSE_VOUCHERS_ORIGINAL": "原始立帳傳票",
     "ASSET": "資產",
     "ACCOUNTING": "會計科目",
     "PARTICULARS": "摘要",
@@ -294,7 +302,10 @@
     "DELETE_MESSAGE_SUBMIT_BTN": "是的，刪除傳票",
     "DELETE_SUCCESS_TOAST": "傳票已刪除。",
     "UNDO": "復原",
-    "VOUCHER_NOT_FOUND": "找不到傳票，請確認網址是否正確"
+    "VOUCHER_NOT_FOUND": "找不到傳票，請確認網址是否正確",
+    "DELETED_REVERSE_VOUCHER": "因刪除 <link>{{voucherNo}}</link> 傳票生成的反轉分錄",
+    "DELETED_REVERSE_VOUCHER_1": "因刪除",
+    "DELETED_REVERSE_VOUCHER_2": "傳票生成的反轉分錄"
   },
   "LEDGER": {
     "LEDGER_PERIOD": "分類帳期間",
@@ -311,8 +322,7 @@
     "EQUITY": "權益",
     "COST": "成本",
     "EXPENSE": "費用",
-    "REVENUE": "收入",
-    "OTHERCOMPREHENSIVEINCOME": "其他綜合損益"
+    "REVENUE": "收入"
   },
   "AI_WORKING_AREA": {
     "RESTING_CONTENT": "請選擇憑證，讓 AI 為您生成所需的傳票",

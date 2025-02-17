@@ -8,7 +8,7 @@ import { getSession, setSession } from '@/lib/utils/session';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
+import { NON_EXISTING_ACCOUNT_BOOK_ID } from '@/constants/config';
 
 async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -28,7 +28,7 @@ async function handlePutRequest(req: NextApiRequest) {
     } else {
       const getCompany = await getCompanyById(companyIdNum);
       statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-      const companyId = getCompany ? companyIdNum : NON_EXISTING_COMPANY_ID;
+      const companyId = getCompany ? companyIdNum : NON_EXISTING_ACCOUNT_BOOK_ID;
       const company = getCompany ? formatCompany(getCompany) : null;
       await setSession(session, { companyId });
       payload = company;

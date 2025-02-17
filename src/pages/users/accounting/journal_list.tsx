@@ -16,9 +16,10 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 
 const JournalListPage = () => {
   const { t } = useTranslation(['common', 'journal']);
-  const { selectedCompany, isAuthLoading } = useUserCtx();
+  const { selectedAccountBook, isAuthLoading } = useUserCtx();
 
-  const companyName = selectedCompany && selectedCompany.name ? `${selectedCompany.name} -` : '';
+  const companyName =
+    selectedAccountBook && selectedAccountBook.name ? `${selectedAccountBook.name} -` : '';
 
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center">

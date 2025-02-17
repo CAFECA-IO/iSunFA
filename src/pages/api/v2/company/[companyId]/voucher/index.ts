@@ -18,22 +18,15 @@ import { initVoucherEntity } from '@/lib/utils/voucher';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { initCounterPartyEntity } from '@/lib/utils/counterparty';
-import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
 import { IEventEntity } from '@/interfaces/event';
 import { IVoucherBeta, IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
+import { EventType, TransactionStatus } from '@/constants/account';
 
-type IVoucherGetOutput = IPaginatedData<{
-  unRead: {
-    uploadedVoucher: number;
-    upcomingEvents: number;
-    paymentVoucher: number;
-    receivingVoucher: number;
-  };
-  vouchers: IGetManyVoucherBetaEntity[];
-}>;
+type IVoucherGetOutput = IPaginatedData<IGetManyVoucherBetaEntity[]>;
 
 /**
  * Info: (20241120 - Murky)
@@ -54,7 +47,34 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
 
   const { userId, companyId } = session;
 
-  const { page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } = query;
+  const {
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    tab,
+    sortOption,
+    searchQuery,
+    type,
+    hideReversedRelated,
+  } = query;
+  function getTypeFilter(selectedType: EventType | TransactionStatus | undefined) {
+    switch (selectedType) {
+      case EventType.INCOME:
+        return { type: EventType.INCOME, condition: undefined };
+      case EventType.OPENING:
+        return { type: EventType.OPENING, condition: undefined };
+      case EventType.PAYMENT:
+        return { type: EventType.PAYMENT, condition: undefined };
+      case EventType.TRANSFER:
+        return { type: EventType.TRANSFER, condition: undefined };
+      case TransactionStatus.REVERSED:
+      case TransactionStatus.PENDING:
+        return { type: undefined, condition: selectedType };
+      default:
+        return { type: undefined, condition: undefined };
+    }
+  }
   const paginationVouchersFromPrisma = await getUtils.getVoucherListFromPrisma({
     companyId,
     page,
@@ -64,7 +84,8 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
     tab,
     sortOption,
     searchQuery,
-    type,
+    type: getTypeFilter(type).type,
+    hideReversedRelated,
   });
   const { data: vouchersFromPrisma, where, ...pagination } = paginationVouchersFromPrisma;
   try {
@@ -149,15 +170,15 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
       hasNextPage: pagination.hasNextPage,
       hasPreviousPage: pagination.hasPreviousPage,
       sort: sortOption,
-      data: {
+      data: getUtils.filterTransactionStatus(voucherBetas, tab, getTypeFilter(type).condition),
+      note: JSON.stringify({
         unRead: {
           uploadedVoucher: unreadUploadedVoucherCounts,
           upcomingEvents: unreadUpcomingEventCounts,
           paymentVoucher: unreadPayableVoucherCounts,
           receivingVoucher: unreadReceivedVoucherCounts,
         },
-        vouchers: voucherBetas,
-      },
+      }),
     };
   } catch (_error) {
     const error = _error as Error;
@@ -300,7 +321,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
     const newVoucherNo = ''; // Info: (20241025 - Murky) [Warning!] VoucherNo 需要在存入的transaction中取得
 
     // Info: (20241029 - Murky) 一開始都先用public counterParty, 進入Reverse邏輯後在使用前端傳進來的counterParty
-    const counterPartyEntity: ICounterPartyEntity = isCounterPartyIdExist
+    const counterPartyEntity: ICounterPartyEntityPartial = isCounterPartyIdExist
       ? await postUtils.initCounterPartyFromPrisma(counterPartyId!)
       : initCounterPartyEntity({
           id: PUBLIC_COUNTER_PARTY.id,
@@ -318,7 +339,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
 
     const voucher = initVoucherEntity({
       issuerId: issuer.id,
-      counterPartyId: counterPartyEntity.id,
+      counterPartyId: counterPartyEntity.id ?? PUBLIC_COUNTER_PARTY.id,
       companyId: company.id,
       type: voucherInfo.type,
       status: JOURNAL_EVENT.UPLOADED,
@@ -480,16 +501,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
   };
 };
 
-type APIResponse =
-  | IPaginatedData<{
-      unRead: {
-        uploadedVoucher: number;
-        upcomingEvents: number;
-      };
-      vouchers: IVoucherBeta[];
-    }>
-  | number
-  | null;
+type APIResponse = IPaginatedData<IVoucherBeta[]> | number | null;
 
 const methodHandlers: {
   [key: string]: (

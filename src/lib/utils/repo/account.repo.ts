@@ -1,7 +1,7 @@
 import { AccountType, EQUITY_TYPE_TO_CODE_MAP, EquityType } from '@/constants/account';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from '@/constants/config';
 import prisma from '@/client';
-import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { PUBLIC_ACCOUNT_BOOK_ID } from '@/constants/company';
 import { pageToOffset, timestampInSeconds } from '@/lib/utils/common';
 import { Account, Prisma } from '@prisma/client';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
@@ -65,9 +65,9 @@ export async function findManyAccountsInPrisma({
         OR:
           includeDefaultAccount !== undefined
             ? includeDefaultAccount
-              ? [{ companyId }, { companyId: PUBLIC_COMPANY_ID }]
+              ? [{ companyId }, { companyId: PUBLIC_ACCOUNT_BOOK_ID }]
               : [{ companyId }]
-            : [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
+            : [{ companyId }, { companyId: PUBLIC_ACCOUNT_BOOK_ID }],
       },
       equityType && type === AccountType.EQUITY
         ? {
@@ -155,7 +155,7 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
             companyId,
           },
           {
-            companyId: PUBLIC_COMPANY_ID,
+            companyId: PUBLIC_ACCOUNT_BOOK_ID,
           },
         ],
       },
@@ -248,7 +248,7 @@ export async function findLatestSubAccountInPrisma(parentAccount: Account) {
 export async function easyFindManyAccountsInPrisma(companyId: number, type: AccountType) {
   const accounts: Account[] = await prisma.account.findMany({
     where: {
-      OR: [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
+      OR: [{ companyId }, { companyId: PUBLIC_ACCOUNT_BOOK_ID }],
       type,
     },
   });
@@ -259,7 +259,7 @@ export async function easyFindManyAccountsInPrisma(companyId: number, type: Acco
 export async function findFirstAccountByCodeInPrisma(code: string, companyId?: number) {
   const account: Account | null = await prisma.account.findFirst({
     where: {
-      OR: [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
+      OR: [{ companyId }, { companyId: PUBLIC_ACCOUNT_BOOK_ID }],
       code,
     },
   });

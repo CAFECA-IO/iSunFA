@@ -1,3 +1,4 @@
+// Deprecated: (20250212 - Liz) 這是 Alpha 版本的元件，即將移除。
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -25,8 +26,8 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
   const inReport = pathname.includes('report');
   const inSetting = pathname.includes('setting');
 
-  const { selectedCompany } = useUserCtx();
-  const companyName = selectedCompany?.name;
+  const { selectedAccountBook } = useUserCtx();
+  const companyName = selectedAccountBook?.name;
 
   const displayedCompanyName = companyName ? (
     <Link

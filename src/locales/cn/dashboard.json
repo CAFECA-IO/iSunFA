@@ -11,7 +11,7 @@
     "CALENDAR_NOT_YET_LINKED": "行事历尚未连结",
     "LINK_MY_CALENDAR": "连结我的行事历",
     "NO_SCHEDULE_FOR_TODAY": "今天没有安排待办事项",
-    "MY_COMPANY_LIST": "我的公司列表",
+    "ACCOUNT_BOOKS": "账本清單",
     "COMPANY_NOT_YET_CREATED": "尚未创建公司",
     "PLEASE_PROCEED_TO": "请前往",
     "CREATE_A_COMPANY": "创建公司",
@@ -62,11 +62,11 @@
   },
 
   "ROLE": {
-    "ACCOUNTANT": "会计",
     "BOOKKEEPER": "记帐员",
     "EDUCATIONAL_TRIAL_VERSION": "教育试用版",
     "EDUCATIONAL": "教育",
-    "TRIAL_VERSION": "试用版"
+    "TRIAL_VERSION": "试用版",
+    "ENTERPRISE": "企业版"
   },
 
   "CREATE_ROLE_PAGE": {
@@ -87,8 +87,8 @@
     "SELECT_ROLE_TITLE": "选择角色"
   },
 
-  "MY_COMPANY_LIST_PAGE": {
-    "MY_COMPANY_LIST": "我的公司列表"
+  "ACCOUNT_BOOKS_PAGE": {
+    "PAGE_TITLE": "账本清單"
   },
 
   "LATEST_NEWS_PAGE": {
@@ -101,7 +101,7 @@
   "TODO_LIST_PAGE": {
     "TODO_LIST_TITLE": "事件计划",
     "NEW_EVENT": "新增事件",
-    "UPCOMING_EVENTS": "即将到期事件列表",
+    "UPCOMING_EVENTS": "即将到期事件清單",
     "ACTION": "操作",
     "NO_PENDING_TASKS": "没有待办事项",
     "ADD_NEW_EVENT": "新增至事件计画",
@@ -120,19 +120,25 @@
     "END_TIME": "结束时间"
   },
 
-  "CREATE_COMPANY_MODAL": {
+  "CREATE_ACCOUNT_BOOK_MODAL": {
     "COMPANY_NAME": "公司名称",
     "TAX_ID": "营业税号",
     "WORK_TAG": "工作标签",
-    "CREATE_NEW_COMPANY": "创建新公司",
+    "TEAM": "团队",
+    "CREATE_NEW_ACCOUNT_BOOK": "创建新账本",
     "ENTER_NAME": "输入名称",
     "ENTER_NUMBER": "输入营业税号",
     "ENTER_FULL_ADDRESS": "输入完整地址",
     "CANCEL": "取消",
-    "ADD": "添加"
+    "ADD": "添加",
+    "CHOOSE_WORK_TAG": "选择工作标签",
+    "CHOOSE_TEAM": "选择团队",
+    "PLEASE_ENTER_THE_NAME": "请输入名称",
+    "PLEASE_SELECT_A_WORK_TAG": "请选择工作标签",
+    "PLEASE_SELECT_A_TEAM": "请选择团队"
   },
 
-  "COMPANY_TAG": {
+  "WORK_TAG": {
     "FINANCIAL": "财务",
     "TAX": "税务",
     "ALL": "全部"

@@ -29,7 +29,7 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
 }) => {
   const { t } = useTranslation('common');
 
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
   // Info: (20241121 - Julian) 會計科目 input ref
   const accountInputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +59,7 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
 
   const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { companyId: selectedCompany?.id }, query: queryCondition },
+    { params: { companyId: selectedAccountBook?.id }, query: queryCondition },
     false,
     true
   );

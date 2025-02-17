@@ -1,0 +1,64 @@
+{
+  "LIST": {
+    "ACCOUNT_BOOK_LIST_TITLE": "帳本清單",
+    "PARTNER_NAME": "合作夥伴名稱",
+    "TAX_ID": "稅務編號",
+    "TYPE": "類型",
+    "ACTION": "操作"
+  },
+  "INFO": {
+    "COMPANY_NAME": "公司名稱",
+    "TAX_ID": "統一編號",
+    "WORK_TAG": "工作標籤"
+  },
+  "EDIT": {
+    "BACK": "返回",
+    "INFO": "帳本資訊",
+    "COMPANY_NAME": "公司名稱",
+    "BUSINESS_TAX_ID": "營業稅編號",
+    "TAX_SERIAL_NUMBER": "稅務序號",
+    "COMPANY_REPRESENTATIVE_NAME": "公司代表名稱",
+    "COUNTRY_OF_INCORPORATION": "註冊國家",
+    "COMPANY_ADDRESS": "公司地址",
+    "PHONE_NUMBER": "電話號碼",
+    "DELETE_THIS_ACCOUNT_BOOK": "刪除此帳本"
+  },
+  "WORK_TAG": {
+    "FINANCIAL": "財務",
+    "TAX": "稅務",
+    "ALL": "全部"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "輸入名稱",
+    "ENTER_NUMBER": "輸入數字",
+    "ENTER_FULL_ADDRESS": "輸入完整地址"
+  },
+  "ACCOUNT_BOOKS_PAGE_BODY": {
+    "NO_ACCOUNT_BOOK_DATA_AVAILABLE": "沒有帳本資料",
+    "PLEASE_ADD_A_NEW_ACCOUNT_BOOK": "請新增帳本",
+    "ADD_NEW": "新增",
+    "INVITE_CODE": "邀請碼",
+    "CANCEL": "取消",
+    "SUBMIT": "提交",
+    "SAVE": "儲存",
+    "CONNECT": "連結",
+    "LINKED": "已連結",
+    "CHANGE_WORK_TAG": "變更標籤",
+    "DELETE": "刪除",
+    "DELETE_MESSAGE_TITLE": "刪除帳本",
+    "DELETE_MESSAGE_CONTENT": "您確定要刪除此帳本嗎？"
+  },
+  "DELETE": {
+    "TITLE": "刪除帳本",
+    "WARNING": "您確定要刪除此帳本嗎？"
+  },
+  "UPLOAD_COMPANY_AVATAR_MODAL": {
+    "TITLE": "變更公司圖片"
+  },
+  "ACCOUNT_BOOK_TRANSFER_MODAL": {
+    "ACCOUNT_BOOK_TRANSFER": "帳本轉移",
+    "CONTENT": "轉移帳本會將其所有相關資料（包括公司詳細資料和財務記錄）轉移到另一個團隊。在啟動流程之前，請確保接收團隊有授權並且有能力管理轉移的帳本。",
+    "TRANSFER": "轉移",
+    "CANCEL": "取消"
+  }
+}

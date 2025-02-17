@@ -143,7 +143,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
         <div className="flex max-h-80vh w-400px flex-col overflow-y-auto bg-surface-neutral-surface-lv2">
           <section className="flex items-center justify-between py-16px pl-40px pr-20px">
             <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-              {t('dashboard:TODO_LIST_PAGE.ADD_NEW_EVENT')}
+              {t('dashboard:TODO_LIST_PAGE.EDIT_MY_EVENT')}
             </h1>
             <button type="button" onClick={closeModal}>
               <IoCloseOutline size={24} />

@@ -15,7 +15,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
 import { AssetModalType } from '@/interfaces/asset_modal';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 
 interface IAssetSectionProps {
   isShowAssetHint: boolean;
@@ -29,7 +29,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
   defaultAssetList = [],
 }) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { addAssetModalVisibilityHandler, addAssetModalDataHandler } = useGlobalCtx();
   const { deleteTemporaryAssetHandler, temporaryAssetList } = useAccountingCtx();
   const { toastHandler } = useModalContext();
@@ -38,7 +38,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     APIName.DELETE_ASSET_V2
   );
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const defaultList: IAssetPostOutput[] = defaultAssetList.map((asset) => ({
     ...asset,
@@ -46,9 +46,9 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     number: asset.assetNumber,
     note: asset.note ?? '',
     status: 'normal',
-    companyId: companyId ?? '',
+    companyId: accountBookId ?? '', // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   }));
-  const temporaryAssetListByCompany: IAssetPostOutput[] = temporaryAssetList[companyId] ?? [];
+  const temporaryAssetListByCompany: IAssetPostOutput[] = temporaryAssetList[accountBookId] ?? [];
 
   const [assetList, setAssetList] = useState<IAssetPostOutput[]>([
     ...defaultList,
@@ -80,7 +80,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     if (!isLoading) {
       if (success && data) {
         // Info: (20241025 - Julian) 確定 API 刪除成功後，更新畫面
-        deleteTemporaryAssetHandler(companyId, data.id);
+        deleteTemporaryAssetHandler(accountBookId, data.id);
       } else if (error) {
         // Info: (20241025 - Julian) 刪除失敗後，提示使用者
         toastHandler({
@@ -95,7 +95,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
 
   useEffect(() => {
     // Info: (20241119 - Julian) 更新 assetList
-    const newTemporaryAssetList: IAssetPostOutput[] = temporaryAssetList[companyId] ?? [];
+    const newTemporaryAssetList: IAssetPostOutput[] = temporaryAssetList[accountBookId] ?? [];
     setAssetList([...defaultList, ...newTemporaryAssetList]);
   }, [temporaryAssetList]);
 
@@ -113,7 +113,8 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
 
         const deleteHandler = () => {
           // Info: (20241025 - Julian) trigger API to delete asset
-          trigger({ params: { companyId, assetId: asset.id } });
+          trigger({ params: { companyId: accountBookId, assetId: asset.id } });
+          // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
         };
 
         return (

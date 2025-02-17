@@ -11,7 +11,7 @@
     "CALENDAR_NOT_YET_LINKED": "Calendar not yet linked",
     "LINK_MY_CALENDAR": "Link My Calendar",
     "NO_SCHEDULE_FOR_TODAY": "No schedule for today",
-    "MY_COMPANY_LIST": "My Company List",
+    "ACCOUNT_BOOKS": "Account Books",
     "COMPANY_NOT_YET_CREATED": "Company not yet created",
     "PLEASE_PROCEED_TO": "Please proceed to",
     "CREATE_A_COMPANY": "create a company",
@@ -62,11 +62,11 @@
   },
 
   "ROLE": {
-    "ACCOUNTANT": "Accountant",
     "BOOKKEEPER": "Bookkeeper",
     "EDUCATIONAL_TRIAL_VERSION": "Educational Trial Version",
     "EDUCATIONAL": "Educational",
-    "TRIAL_VERSION": "Trial Version"
+    "TRIAL_VERSION": "Trial Version",
+    "ENTERPRISE": "Enterprise"
   },
 
   "CREATE_ROLE_PAGE": {
@@ -87,8 +87,8 @@
     "SELECT_ROLE_TITLE": "Select Role"
   },
 
-  "MY_COMPANY_LIST_PAGE": {
-    "MY_COMPANY_LIST": "My Company List"
+  "ACCOUNT_BOOKS_PAGE": {
+    "PAGE_TITLE": "Account Books"
   },
 
   "LATEST_NEWS_PAGE": {
@@ -120,19 +120,25 @@
     "END_TIME": "End Time"
   },
 
-  "CREATE_COMPANY_MODAL": {
+  "CREATE_ACCOUNT_BOOK_MODAL": {
     "COMPANY_NAME": "Company Name",
     "TAX_ID": "Business Tax ID Number",
     "WORK_TAG": "Work Tag",
-    "CREATE_NEW_COMPANY": "Create New Company",
+    "TEAM": "Team",
+    "CREATE_NEW_ACCOUNT_BOOK": "Create New Account Book",
     "ENTER_NAME": "Enter Name",
     "ENTER_NUMBER": "Enter Tax ID",
     "ENTER_FULL_ADDRESS": "Please enter the full address",
     "CANCEL": "Cancel",
-    "ADD": "Add"
+    "ADD": "Add",
+    "CHOOSE_WORK_TAG": "Choose Work Tag",
+    "CHOOSE_TEAM": "Choose Team",
+    "PLEASE_ENTER_THE_NAME": "Please enter the name",
+    "PLEASE_SELECT_A_WORK_TAG": "Please select a work tag",
+    "PLEASE_SELECT_A_TEAM": "Please select a team"
   },
 
-  "COMPANY_TAG": {
+  "WORK_TAG": {
     "FINANCIAL": "Financial",
     "TAX": "Tax",
     "ALL": "All"

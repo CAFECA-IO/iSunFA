@@ -27,7 +27,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 }) => {
   const { t } = useTranslation(['reports']);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
-  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
 
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241204 - Anna) 定義需要列印內容的 ref
 
@@ -75,7 +75,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
   // Info: (20241204 - Anna) 新增 handleGenerateReport 方法 generate report
   const handleGenerateReport = async () => {
-    if (!selectedDateRange || !selectedCompany?.id) return;
+    if (!selectedDateRange || !selectedAccountBook?.id) return;
 
     const { startTimeStamp, endTimeStamp } = selectedDateRange;
 
@@ -86,7 +86,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
     try {
       const response = await generateFinancialReport({
-        params: { companyId: selectedCompany.id },
+        params: { companyId: selectedAccountBook.id },
         body: {
           type: FinancialReportTypesKey.report_401,
           reportLanguage: selectedReportLanguage,
@@ -123,7 +123,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
         success: getFRSuccess,
       } = await getFinancialReportAPI({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedAccountBook?.id,
           reportId: reportId ?? NON_EXISTING_REPORT_ID,
         },
       });
@@ -156,16 +156,16 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
   // Info: (20241204 - Anna)  監聽 reportId，觸發報告加載 get report by id
   useEffect(() => {
-    if (isAuthLoading || !selectedCompany || !reportId || isLoading) return;
+    if (isAuthLoading || !selectedAccountBook || !reportId || isLoading) return;
     if (isReportGenerated && !isLoading && reportId) {
       setIsLoading(true);
     }
     getFinancialReport();
-  }, [isAuthLoading, selectedCompany, reportId]);
+  }, [isAuthLoading, selectedAccountBook, reportId]);
 
   // Deprecated: (20241204 - Anna) 在 useEffect 中監聽 selectedDateRange
   useEffect(() => {
-    if (!selectedDateRange || !selectedCompany?.id) return;
+    if (!selectedDateRange || !selectedAccountBook?.id) return;
 
     const { startTimeStamp, endTimeStamp } = selectedDateRange;
 
@@ -185,7 +185,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     };
 
     generateReport();
-  }, [selectedDateRange, selectedCompany?.id]);
+  }, [selectedDateRange, selectedAccountBook?.id]);
 
   // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger('financialReport in reportId', financialReport)
 
@@ -277,8 +277,8 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
               {financialReport?.content.basicInfo.currentYear ?? 'N/A'}
               {/* Info: (20240814 - Anna) 年 */}
               {t('reports:TAX_REPORT.Y')}
-              {financialReport?.content.basicInfo.startMonth ?? 'N/A'}-
-              {financialReport?.content.basicInfo.endMonth ?? 'N/A'}
+              {financialReport?.content.basicInfo.startMonth ??
+                'N/A'}-{financialReport?.content.basicInfo.endMonth ?? 'N/A'}
               {/* Info: (20240814 - Anna) 月 */}
               {t('reports:TAX_REPORT.M')}
             </p>
@@ -733,7 +733,9 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
             <td className="border border-black px-1 py-0">14</td>
             <td className="flex items-center text-nowrap border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 本期(月)應退稅額 */}
-              {t('reports:TAX_REPORT.REFUNDABLE_TAX')}({/* 如 */}
+              {t(
+                'reports:TAX_REPORT.REFUNDABLE_TAX'
+              )}({/* 如 */}
               {t('reports:TAX_REPORT.IF')}
               <div>
                 <span>12&gt;13</span>
@@ -1104,7 +1106,9 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
               {/* Info: (20240814 - Anna) 載有稅額之其他憑證 */}
               {t('reports:TAX_REPORT.OTHER_VOUCHERS')}
               <br />({/* Info: (20240814 - Anna) 包括二聯式收銀機發票 */}
-              {t('reports:TAX_REPORT.INCLUDING_CASH_REGISTER')})
+              {t(
+                'reports:TAX_REPORT.INCLUDING_CASH_REGISTER'
+              )})
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 進貨及費用 */}
@@ -1509,7 +1513,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   if (!reportId) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
-        <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+        <Image src="/images/empty.svg" alt="No data image" width={120} height={135} />
         <div>
           <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
           <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>

@@ -9,7 +9,7 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { getCompanyAndRoleByUserIdAndCompanyId } from '@/lib/utils/repo/admin.repo';
 import { Company } from '@prisma/client';
-import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
+import { NON_EXISTING_ACCOUNT_BOOK_ID } from '@/constants/config';
 
 const handlePutRequest: IHandleRequest<APIName.COMPANY_SELECT, Company> = async ({
   query,
@@ -21,7 +21,7 @@ const handlePutRequest: IHandleRequest<APIName.COMPANY_SELECT, Company> = async 
 
   const { companyId } = body;
   const { userId } = query;
-  if (companyId === NON_EXISTING_COMPANY_ID) {
+  if (companyId === NON_EXISTING_ACCOUNT_BOOK_ID) {
     await setSession(session, { companyId });
     statusMessage = STATUS_MESSAGE.SUCCESS;
   } else {

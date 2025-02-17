@@ -108,8 +108,8 @@
     "CLIENT": "客戶",
     "SUPPLIER": "供應商",
     "SELECT_TYPE": "選擇類型",
-    "TITLE": "將此交易對象新增至客戶/供應商列表",
-    "CONTENT": "{{counterparty}} 不在您的客戶/供應商列表中。您要將其新增嗎？",
+    "TITLE": "將此交易對象新增至客戶/供應商清單",
+    "CONTENT": "{{counterparty}} 不在您的客戶/供應商清單中。您要將其新增嗎？",
     "YES": "是，新增",
     "NO": "否，取消",
     "SUCCESS": "新的客戶/供應商已新增。",
@@ -123,7 +123,8 @@
     "EDIT_NEW": "編輯客戶/供應商",
     "REMOVE_THIS": "刪除該客戶/供應商",
     "NO_DATA_AVAILABLE": "沒有可用資料",
-    "NAME_ALREADY_EXISTS": "此名稱已有資料"
+    "NAME_ALREADY_EXISTS": "此名稱已有資料",
+    "TAX_ID_ALREADY_EXISTS": "此統一編號已重複使用"
   },
   "LABEL": {
     "NEW": "新增"

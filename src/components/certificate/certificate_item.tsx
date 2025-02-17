@@ -6,10 +6,12 @@ import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
 import Link from 'next/link';
 import { simplifyFileName } from '@/lib/utils/common';
+import { CurrencyType } from '@/constants/currency';
 
 interface CertificateListIrops {
   activeSelection: boolean;
   certificate: ICertificateUI;
+  currencyAlias: CurrencyType;
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;
 }
@@ -33,6 +35,7 @@ const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; classN
 const CertificateItem: React.FC<CertificateListIrops> = ({
   activeSelection,
   certificate,
+  currencyAlias,
   handleSelect,
   onEdit,
 }) => {
@@ -96,7 +99,9 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
-        <div className="w-full text-left text-text-neutral-primary">
+        <div
+          className={`w-full ${certificate.invoice?.taxRatio !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
+        >
           {certificate.invoice?.taxRatio !== undefined
             ? `Taxable ${certificate.invoice?.taxRatio} %`
             : '-'}
@@ -115,7 +120,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             <div className="text-text-neutral-primary">
               {certificate.invoice?.priceBeforeTax ?? 0}
               <span className="ml-1 w-full text-left text-text-neutral-tertiary">
-                {certificate.invoice?.currencyAlias ?? ''}
+                {certificate.invoice?.currencyAlias ?? currencyAlias}
               </span>
             </div>
           </div>
@@ -129,7 +134,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             <div className="text-text-neutral-primary">
               {certificate.invoice?.totalPrice ?? 0}
               <span className="ml-1 w-full text-left text-text-neutral-tertiary">
-                {certificate.invoice?.currencyAlias ?? ''}
+                {certificate.invoice?.currencyAlias ?? currencyAlias}
               </span>
             </div>
           </div>

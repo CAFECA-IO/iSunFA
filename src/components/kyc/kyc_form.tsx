@@ -31,8 +31,8 @@ const KYCForm = () => {
   const router = useRouter();
 
   const formRef = useRef<HTMLFormElement>(null);
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { trigger: triggerUpload } = APIHandler(APIName.KYC_UPLOAD);
   const [step, setStep] = useState(0);
@@ -107,7 +107,7 @@ const KYCForm = () => {
     if (isComplete) {
       const { success, code } = await triggerUpload({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedAccountBook?.id,
         },
         body: companyKYCForm,
       });

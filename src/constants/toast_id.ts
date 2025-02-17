@@ -20,8 +20,8 @@ export enum ToastId {
   UPDATE_CERTIFICATE_ERROR = 'toast-update-certificate-error',
   IP_ABNORMAL = 'toast-ip-abnormal',
   COMPANY_SETTING_GET_ERROR = 'toast-company-setting-get-error',
-  COMPANY_SETTING_UPDATE_SUCCESS = 'toast-company-setting-update-success',
-  COMPANY_SETTING_UPDATE_ERROR = 'toast-company-setting-update-error',
+  ACCOUNT_BOOK_SETTING_UPDATE_SUCCESS = 'toast-account-book-setting-update-success',
+  ACCOUNT_BOOK_SETTING_UPDATE_ERROR = 'toast-account-book-setting-update-error',
   ACCOUNTING_SETTING_UPDATE_SUCCESS = 'toast-accounting-setting-update-success',
   ACCOUNTING_SETTING_UPDATE_ERROR = 'toast-accounting-setting-update-error',
   ACCOUNTING_CREATE_SUCCESS = 'toast-accounting-create-success',
@@ -50,4 +50,5 @@ export enum ToastId {
   NEED_TO_SELECT_COMPANY = 'toast-need-to-select-company',
   PLAN_EXPIRED_REMINDER = 'toast-plan-expired-reminder',
   DOWNGRADE_TO_BEGINNER_PLAN = 'toast-downgrade-to-beginner-plan',
+  ACCOUNT_BOOK_NEEDED = 'toast-account-book-needed',
 }

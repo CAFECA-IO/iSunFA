@@ -11,32 +11,39 @@ import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { TitleFormType } from '@/constants/accounting_setting';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 import { FiBookOpen } from 'react-icons/fi';
 
 interface IAddNewTitleSectionProps {
-  accountTitleList: IAccount[];
   formType: TitleFormType;
   selectedAccountTitle: IAccount | null;
   isRecallApi: boolean;
   setIsRecallApi: React.Dispatch<React.SetStateAction<boolean>>;
+  clearSearchWord: () => void;
 }
 
 const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
-  accountTitleList,
   formType,
   selectedAccountTitle,
   isRecallApi,
   setIsRecallApi,
+  clearSearchWord,
 }) => {
   const { t } = useTranslation('common');
 
   const { toastHandler } = useModalContext();
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const queryCondition = {
+    limit: 9999, // Info: (20250212 - Julian) 全部取出
+    forUser: true,
+    sortBy: 'code', // Info: (20250212 - Julian) 依 code 排序
+    sortOrder: 'asc',
+    isDeleted: false, // Info: (20250212 - Julian) 只取未刪除的
+  };
 
   // Info: (20241121 - Julian) 會計科目 input ref
   const accountInputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +64,18 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     error: updateError,
   } = APIHandler<IPaginatedAccount>(APIName.UPDATE_ACCOUNT_INFO_BY_ID);
 
+  // Info: (20250212 - Julian) 取得會計科目列表的 API
+  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
+    APIName.ACCOUNT_LIST,
+    { params: { companyId: accountBookId }, query: queryCondition }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+    false,
+    true
+  );
+
+  // Info: (20250212 - Julian) 會計科目列表
+  const accountList = accountTitleList?.data ?? [];
+
+  // Info: (20250212 - Julian) Category 輸入狀態
   const {
     targetRef: categoryRef,
     componentVisible: isCategoryMenuOpen,
@@ -78,28 +97,29 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const [titleNote, setTitleNote] = useState<string>('');
   // Info: (20241213 - Julian) 會計科目搜尋
   const [searchKeyword, setSearchKeyword] = useState<string>('');
-  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(accountTitleList);
+  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
 
   const formTitle =
     formType === TitleFormType.add
-      ? t('setting:ACCOUNTING_SETTING_MODAL.ADD_NEW_TITLE')
-      : t('setting:ACCOUNTING_SETTING_MODAL.EDIT_TITLE');
+      ? t('settings:ACCOUNTING_SETTING_MODAL.ADD_NEW_TITLE')
+      : t('settings:ACCOUNTING_SETTING_MODAL.EDIT_TITLE');
 
+  // Info: (20250212 - Julian) 大類別
   const accountTypeList = Object.values(AccountTypeBeta);
 
   const categoryString =
     selectCategory === '' ? (
       <p className="flex-1 text-input-text-input-placeholder">
-        {t('setting:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER')}
+        {t('settings:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER')}
       </p>
     ) : (
       <p className="flex-1 text-input-text-input-filled">
-        {t(`setting:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${selectCategory.toUpperCase()}`)}
+        {t(`settings:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${selectCategory.toUpperCase()}`)}
       </p>
     );
   const subcategoryString = selectSubcategory
     ? `${selectSubcategory?.code} ${selectSubcategory?.name}`
-    : t('setting:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER');
+    : t('settings:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER');
 
   const submitDisabled = selectCategory === '' || selectSubcategory === null;
 
@@ -112,7 +132,9 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     setTitleNote(e.target.value);
   };
 
+  // Info: (20250212 - Julian) 清空所有欄位
   const clearAllHandler = () => {
+    clearSearchWord();
     setSelectCategory('');
     setSelectSubcategory(null);
     setTitleName('');
@@ -126,6 +148,44 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     setIsAccountEditing(true);
   };
 
+  // Info: (20250212 - Julian) 從 API 取得會計科目列表
+  useEffect(() => {
+    getAccountList({ params: { companyId: accountBookId }, query: queryCondition }); // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+    setFilteredAccountList(accountList);
+  }, []);
+
+  useEffect(() => {
+    // Info: (20250212 - Julian) 過濾會計科目列表
+    const filteredList = accountList
+      .filter((title) => title.type === selectCategory) // Info: (20250212 - Julian) 依照 selectCategory 過濾
+      .filter((title) => {
+        const isNameMatch = title.name.includes(searchKeyword); // Info: (20250212 - Julian) 名稱包含關鍵字
+        const isCodeMatch = title.code.startsWith(searchKeyword); // Info: (20250212 - Julian) 代碼開頭是關鍵字
+        return isNameMatch || isCodeMatch;
+      });
+    setFilteredAccountList(filteredList);
+
+    if (selectSubcategory?.type !== selectCategory) {
+      setSelectSubcategory(null); // Info: (20250212 - Julian) selectCategory 重置時，清空 selectSubcategory
+    }
+  }, [selectCategory, searchKeyword]);
+
+  // Info: (20250212 - Julian) categoryList 重新渲染時，將 dropdown (id = accounting-category-menu) 捲動至最上方
+  useEffect(() => {
+    const categoryMenu = document.getElementById('accounting-category-menu');
+    if (categoryMenu) {
+      categoryMenu.scrollTop = 0;
+    }
+  }, [isCategoryMenuOpen]);
+
+  // Info: (20250212 - Julian) subcategoryList 重新渲染時，將 dropdown (id = accounting-subcategory-menu) 捲動至最上方
+  useEffect(() => {
+    const subcategoryMenu = document.getElementById('accounting-subcategory-menu');
+    if (subcategoryMenu) {
+      subcategoryMenu.scrollTop = 0;
+    }
+  }, [isAccountEditing]);
+
   useEffect(() => {
     if (!isCreating) {
       if (createSuccess) {
@@ -133,7 +193,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_CREATE_SUCCESS,
           type: ToastType.SUCCESS,
-          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_SUCCESS'),
+          content: t('settings:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_SUCCESS'),
           closeable: true,
         });
         setIsRecallApi(!isRecallApi);
@@ -143,7 +203,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_CREATE_ERROR,
           type: ToastType.ERROR,
-          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_FAIL'),
+          content: t('settings:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_FAIL'),
           closeable: true,
         });
       }
@@ -157,7 +217,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_UPDATE_SUCCESS,
           type: ToastType.SUCCESS,
-          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_SUCCESS'),
+          content: t('settings:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_SUCCESS'),
           closeable: true,
         });
         setIsRecallApi(!isRecallApi);
@@ -167,7 +227,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_UPDATE_ERROR,
           type: ToastType.ERROR,
-          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_FAIL'),
+          content: t('settings:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_FAIL'),
           closeable: true,
         });
       }
@@ -190,15 +250,6 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   }, [selectedAccountTitle]);
 
   useEffect(() => {
-    // Info: (20241112 - Julian) 如果重選大分類，且小分類不包含在更新的大分類中，則清空小分類
-    const selectSubcategoryType = selectSubcategory?.type;
-    const isSubCategoryInclude = selectSubcategoryType?.includes(selectCategory);
-    if (!isSubCategoryInclude) {
-      setSelectSubcategory(null);
-    }
-  }, [selectCategory]);
-
-  useEffect(() => {
     // Info: (20241112 - Julian) 如果重選小分類，則清空將大分類指向對應的 type
     const selectSubcategoryType = selectSubcategory?.type;
     if (selectSubcategoryType) {
@@ -217,21 +268,6 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       setSearchKeyword('');
     }
   }, [isAccountEditing]);
-
-  useEffect(() => {
-    if (searchKeyword === '') {
-      setFilteredAccountList(accountTitleList);
-    } else {
-      const filteredList = accountTitleList.filter((account) => {
-        // Info: (20241213 - Julian) 名稱搜尋：包含關鍵字
-        const isNameMatch = account.name.includes(searchKeyword);
-        // Info: (20241213 - Julian) 代碼搜尋：開頭符合關鍵字
-        const isCodeMatch = account.code.startsWith(searchKeyword);
-        return isNameMatch || isCodeMatch;
-      });
-      setFilteredAccountList(filteredList);
-    }
-  }, [searchKeyword]);
 
   const isEditAccounting = isAccountEditing ? (
     <input
@@ -258,7 +294,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         onClick={categoryClickHandler}
         className="px-12px py-8px text-sm text-dropdown-text-primary hover:bg-drag-n-drop-surface-hover"
       >
-        <p>{t(`setting:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${category.toUpperCase()}`)}</p>
+        <p>{t(`settings:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${category.toUpperCase()}`)}</p>
       </div>
     );
   });
@@ -282,7 +318,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         })
     ) : (
       <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
-        {t('setting:ACCOUNTING_SETTING_MODAL.NO_ACCOUNTING_FOUND')}
+        {t('settings:ACCOUNTING_SETTING_MODAL.NO_ACCOUNTING_FOUND')}
       </p>
     );
 
@@ -290,7 +326,10 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     <div
       className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${isCategoryMenuOpen ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
     >
-      <div className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
+      <div
+        id="accounting-category-menu"
+        className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px"
+      >
         {categoryList}
       </div>
     </div>
@@ -300,7 +339,10 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     <div
       className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${isAccountEditing ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
     >
-      <div className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
+      <div
+        id="accounting-subcategory-menu"
+        className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px"
+      >
         {subcategoryList}
       </div>
     </div>
@@ -309,7 +351,8 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const addBtnClickHandler = async () => {
     if (selectSubcategory) {
       createNewAccount({
-        params: { companyId },
+        params: { companyId: accountBookId },
+        // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
         body: {
           accountId: selectSubcategory.id,
           name: titleName,
@@ -322,7 +365,8 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const updateBtnClickHandler = async () => {
     if (selectSubcategory) {
       updateNewAccount({
-        params: { companyId, accountId: selectSubcategory.id },
+        params: { companyId: accountBookId, accountId: selectSubcategory.id },
+        // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
         body: {
           code: selectSubcategory.code,
           name: titleName,
@@ -341,7 +385,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         disabled={submitDisabled}
         onClick={addBtnClickHandler}
       >
-        {t('setting:ACCOUNTING_SETTING_MODAL.ADD_BTN')}
+        {t('settings:ACCOUNTING_SETTING_MODAL.ADD_BTN')}
       </Button>
     ) : (
       // ToDo: (20241113 - Julian) Update API
@@ -351,7 +395,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         disabled={submitDisabled}
         onClick={updateBtnClickHandler}
       >
-        {t('setting:ACCOUNTING_SETTING_MODAL.SAVE_BTN')}
+        {t('settings:ACCOUNTING_SETTING_MODAL.SAVE_BTN')}
       </Button>
     );
 
@@ -369,7 +413,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         {/* Info: (20241112 - Julian) Category Type */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('setting:ACCOUNTING_SETTING_MODAL.CATEGORY_TYPE')}
+            {t('settings:ACCOUNTING_SETTING_MODAL.CATEGORY_TYPE')}
             <span className="text-text-state-error">*</span>
           </p>
           <div
@@ -389,7 +433,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         {/* Info: (20241112 - Julian) Subcategory Type */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('setting:ACCOUNTING_SETTING_MODAL.SUBCATEGORY_TYPE')}
+            {t('settings:ACCOUNTING_SETTING_MODAL.SUBCATEGORY_TYPE')}
             <span className="text-text-state-error">*</span>
           </p>
           <div
@@ -411,7 +455,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         {/* Info: (20241112 - Julian) Title Name */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('setting:ACCOUNTING_SETTING_MODAL.TITLE_NAME')}
+            {t('settings:ACCOUNTING_SETTING_MODAL.TITLE_NAME')}
           </p>
           <input
             id="add-title-name-input"
@@ -419,20 +463,20 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
             value={titleName}
             onChange={changeNameHandler}
             className="rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-            placeholder={t('setting:ACCOUNTING_SETTING_MODAL.TITLE_NAME_PLACEHOLDER')}
+            placeholder={t('settings:ACCOUNTING_SETTING_MODAL.TITLE_NAME_PLACEHOLDER')}
           />
         </div>
 
         {/* Info: (20241112 - Julian) Title Code */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('setting:ACCOUNTING_SETTING_MODAL.TITLE_CODE')}
+            {t('settings:ACCOUNTING_SETTING_MODAL.TITLE_CODE')}
           </p>
           <input
             id="add-title-code-input"
             type="text"
             value={titleCode}
-            placeholder={t('setting:ACCOUNTING_SETTING_MODAL.TITLE_CODE')}
+            placeholder={t('settings:ACCOUNTING_SETTING_MODAL.TITLE_CODE')}
             disabled
             readOnly
             className="rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
@@ -442,7 +486,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         {/* Info: (20241112 - Julian) Title Note */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('setting:ACCOUNTING_SETTING_MODAL.TITLE_NOTE')}
+            {t('settings:ACCOUNTING_SETTING_MODAL.TITLE_NOTE')}
           </p>
           <textarea
             id="add-title-note-input"
@@ -450,7 +494,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
             value={titleNote}
             onChange={changeNoteHandler}
             className="rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-            placeholder={t('setting:ACCOUNTING_SETTING_MODAL.TITLE_NOTE_PLACEHOLDER')}
+            placeholder={t('settings:ACCOUNTING_SETTING_MODAL.TITLE_NOTE_PLACEHOLDER')}
           />
         </div>
       </div>
@@ -458,7 +502,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       {/* Info: (20241112 - Julian) Buttons */}
       <div className="ml-auto flex items-center gap-12px">
         <Button type="button" variant="secondaryBorderless" onClick={clearAllHandler}>
-          {t('setting:ACCOUNTING_SETTING_MODAL.CLEAR_ALL_BTN')}
+          {t('settings:ACCOUNTING_SETTING_MODAL.CLEAR_ALL_BTN')}
         </Button>
         {submitBtn}
       </div>

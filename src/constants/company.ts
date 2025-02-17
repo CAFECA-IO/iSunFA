@@ -1,14 +1,14 @@
-export const PUBLIC_COMPANY_ID = 1002;
-export const NO_COMPANY_ID = 555;
-export const CANCEL_COMPANY_ID: number = -1;
+export const PUBLIC_ACCOUNT_BOOK_ID = 1002;
+export const NO_ACCOUNT_BOOK_ID = 555;
+export const CANCEL_ACCOUNT_BOOK_ID: number = -1;
 
-export enum COMPANY_TAG {
+export enum WORK_TAG {
   ALL = 'all',
   FINANCIAL = 'financial',
   TAX = 'tax',
 }
 
-export enum CompanyUpdateAction {
+export enum ACCOUNT_BOOK_UPDATE_ACTION {
   SET_TO_TOP = 'setToTop',
   UPDATE_TAG = 'updateTag',
 }

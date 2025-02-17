@@ -18,6 +18,13 @@ export enum TPlanType {
   ENTERPRISE = 'enterprise',
 }
 
+export enum TPlanPrice {
+  BEGINNER_PRICE = 0,
+  PROFESSIONAL_PRICE = 899,
+  ENTERPRISE_PRICE = 8990,
+  EXTRA_MEMBER_PRICE = 89,
+}
+
 interface IPlanFeature {
   id: string;
   name: string;
@@ -27,8 +34,8 @@ interface IPlanFeature {
 export interface IPlan {
   id: TPlanType;
   planName: string;
-  price: number;
-  extraMemberPrice?: number;
+  price: TPlanPrice;
+  extraMemberPrice?: TPlanPrice.EXTRA_MEMBER_PRICE;
   features: IPlanFeature[];
 }
 
@@ -38,8 +45,9 @@ export enum TPaymentStatus {
   FREE = 'free', // Info: (20250110 - Liz) 免費所以不用付款
 }
 
+// Info: (20250214 - Liz) 使用者擁有的團隊 (使用者為團隊的擁有者 owner)
 export interface IUserOwnedTeam {
-  id: number;
+  id: number; // Info: (20250110 - Liz) 團隊 ID
   name: string; // Info: (20250110 - Liz) 團隊名稱
   plan: TPlanType; // Info: (20250110 - Liz) 訂閱方案
   enableAutoRenewal: boolean; // Info: (20250110 - Liz) 是否開啟自動續約

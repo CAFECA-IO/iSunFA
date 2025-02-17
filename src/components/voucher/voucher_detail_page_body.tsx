@@ -20,6 +20,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { IVoucherDetailForFrontend, defaultVoucherDetail } from '@/interfaces/voucher';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType } from '@/constants/account';
+import { AccountCodesOfAPRegex } from '@/constants/asset';
 
 interface IVoucherDetailPageBodyProps {
   voucherId: string;
@@ -27,11 +28,11 @@ interface IVoucherDetailPageBodyProps {
 }
 
 const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherId, voucherNo }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   const router = useRouter();
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedCompany?.id;
+  const companyId = selectedAccountBook?.id;
 
   const params = { companyId, voucherId };
 
@@ -61,18 +62,22 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     payableInfo,
     receivingInfo,
     reverseVoucherIds,
+    deletedReverseVoucherIds,
     assets,
     lineItems,
     isReverseRelated,
   } = voucherData || defaultVoucherDetail;
+
+  // Info: (20250205 - Tzuhan) 判斷是否為應收應付款
+  const isARandAP = lineItems.some((lineItem) =>
+    AccountCodesOfAPRegex.test(lineItem?.account?.code || '')
+  );
+
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
 
   const totalDebit = lineItems.reduce((acc, cur) => (cur.debit ? acc + cur.amount : acc), 0);
   const totalCredit = lineItems.reduce((acc, cur) => (!cur.debit ? acc + cur.amount : acc), 0);
-
-  // Info: (20241118 - Julian) If note is empty, display '-'
-  const noteText = note !== '' ? note : '-';
 
   // Info: (20241227 - Julian) type 字串轉換
   const translateType = (voucherType: string) => {
@@ -114,6 +119,9 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail when companyId and voucherId are ready
     if (companyId && voucherId) {
+      // Deprecated: (20250124 - Anna) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('API Params:', params); // Info: (20250122 - Anna) 檢查 companyId 和 voucherId 是否正確
       getVoucherDetail();
     }
   }, [companyId, voucherId]);
@@ -174,7 +182,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         className="flex items-center justify-between gap-8px rounded-sm bg-input-surface-input-background px-12px py-10px"
       >
         <p className="overflow-x-auto whitespace-nowrap">
-          {lineItem.account?.id} - {lineItem.account?.name}
+          {lineItem.account?.code} - {lineItem.account?.name}
         </p>
         <div className="h-20px w-20px">
           <FiBookOpen size={20} />
@@ -222,13 +230,43 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   );
 
   const isDisplayNote = !isLoading ? (
-    <p className="text-input-text-primary">{noteText}</p>
+    <div className="flex flex-col">
+      {note && <p className="text-input-text-primary">{note}</p>}
+      {deletedReverseVoucherIds.length > 0 &&
+        deletedReverseVoucherIds.map((deletedReverseVoucherId) => (
+          <p key={deletedReverseVoucherId.id} className="text-input-text-primary">
+            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_1')}
+            <Link
+              href={`/users/accounting/${deletedReverseVoucherId.id}?voucherNo=${deletedReverseVoucherId.voucherNo}`}
+              className="px-1 text-link-text-primary"
+            >
+              {deletedReverseVoucherId.voucherNo}
+            </Link>
+            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_2')}
+            {/* <Trans
+              i18nKey="journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER"
+              values={{ voucherNo: deletedReverseVoucherId.voucherNo }}
+              components={{
+                link: (
+                  <Link
+                    href={`/users/accounting/${deletedReverseVoucherId.id}?voucherNo=${deletedReverseVoucherId.voucherNo}`}
+                    className="text-link-text-primary"
+                  />
+                ),
+              }}
+            /> */}
+          </p>
+        ))}
+      {!note && deletedReverseVoucherIds.length === 0 && (
+        <p className="text-input-text-primary">-</p>
+      )}
+    </div>
   ) : (
     <Skeleton width={200} height={24} rounded />
   );
 
   const isDisplayCounterParty = !isLoading ? (
-    <p className="text-input-text-primary">{counterParty.name}</p>
+    <p className="text-input-text-primary">{`${counterParty.taxId ?? ''} ${counterParty.name ?? '-'}`}</p>
   ) : (
     <Skeleton width={200} height={24} rounded />
   );
@@ -238,7 +276,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
       {reverseVoucherIds.map((reverseVoucher) => (
         <Link
           key={reverseVoucher.id}
-          href={`/users/accounting/${reverseVoucher.id}?voucherNo=${voucherNo}`}
+          href={`/users/accounting/${reverseVoucher.id}?voucherNo=${reverseVoucher.voucherNo}`}
           className="text-link-text-primary hover:underline"
         >
           {reverseVoucher.voucherNo}
@@ -279,15 +317,22 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   // ToDo: (20241014 - Julian) should display asset name
   const isDisplayAsset = !isLoading ? (
     <div className="flex flex-col">
-      {assets.map((asset) => (
-        <Link
-          key={asset.id}
-          href={`/users/asset/${asset.id}`}
-          className="text-link-text-primary hover:underline"
-        >
-          {asset.id}
-        </Link>
-      ))}
+      {assets.map((asset) =>
+        // Info: (20250214 - Julian) 被刪除的資產不顯示連結
+        (asset.deletedAt === null ? (
+          <Link
+            key={asset.id}
+            href={`/users/asset/${asset.id}`}
+            className="text-link-text-primary hover:underline"
+          >
+            {asset.id}
+          </Link>
+        ) : (
+          <div key={asset.id} className="text-text-neutral-tertiary">
+            {asset.id}
+          </div>
+        ))
+      )}
     </div>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -325,7 +370,9 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     reverseVoucherIds.length > 0 ? (
       <div className="flex justify-between">
         <p className="text-text-neutral-tertiary">
-          {t('journal:VOUCHER_DETAIL_PAGE.REVERSE_VOUCHERS')}
+          {t(
+            `journal:VOUCHER_DETAIL_PAGE.REVERSE_VOUCHERS_${reverseVoucherIds[0].type.toUpperCase()}`
+          )}
         </p>
         {isDisplayReverseVoucher}
       </div>
@@ -365,7 +412,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   if (error) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-10px">
-        <Image src={'/elements/empty_list.svg'} alt="page_not_found" width={150} height={150} />
+        <Image src={'/images/empty.svg'} alt="page_not_found" width={150} height={150} />
         <p className="text-neutral-300">{t('journal:VOUCHER_DETAIL_PAGE.VOUCHER_NOT_FOUND')}</p>
       </div>
     );
@@ -382,24 +429,30 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           type="button"
           variant="tertiary"
           size={'defaultSquare'}
-          onClick={deleteClickHandler}
+          className="disabled:cursor-not-allowed"
+          onClick={isReverseRelated ? () => {} : deleteClickHandler}
           disabled={isReverseRelated} // Info: (20250120 - Julian) 被刪除或反轉的傳票不能再次刪除
         >
           <FiTrash2 size={16} />
         </Button>
-        <Link href={`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`}>
-          <Button
-            id="edit-voucher-btn"
-            type="button"
-            variant="tertiary"
-            size={'defaultSquare'}
-            // Info: (20250120 - Julian) 被刪除或反轉的傳票不能編輯
-            // ToDo: (20250122 - Julian) 先不開放手動開帳的編輯功能
-            disabled={isReverseRelated || type === EventType.OPENING}
-          >
-            <FiEdit size={16} />
-          </Button>
-        </Link>
+
+        <Button
+          id="edit-voucher-btn"
+          type="button"
+          variant="tertiary"
+          size={'defaultSquare'}
+          // Info: (20250120 - Julian) 被刪除或反轉的傳票不能編輯
+          // ToDo: (20250122 - Julian) 先不開放手動開帳的編輯功能
+          disabled={isReverseRelated || type === EventType.OPENING}
+          className="disabled:cursor-not-allowed"
+          onClick={() => {
+            if (!(isReverseRelated || type === EventType.OPENING)) {
+              router.push(`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`);
+            }
+          }}
+        >
+          <FiEdit size={16} />
+        </Button>
       </div>
       {/* Info: (20240926 - tzuhan) CertificateSelection */}
       <CertificateSelection
@@ -425,13 +478,15 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           <p className="text-text-neutral-tertiary">{t('journal:VOUCHER_DETAIL_PAGE.NOTE')}</p>
           {isDisplayNote}
         </div>
-        {/* Info: (20241007 - Julian) Counterparty */}
-        <div className="flex justify-between">
-          <p className="text-text-neutral-tertiary">
-            {t('journal:VOUCHER_DETAIL_PAGE.COUNTERPARTY')}
-          </p>
-          {isDisplayCounterParty}
-        </div>
+        {/* Info: (20241007 - Julian) Counterparty「非應收應付款」的 counterparty 不用顯示 */}
+        {isARandAP && (
+          <div className="flex justify-between">
+            <p className="text-text-neutral-tertiary">
+              {t('journal:VOUCHER_DETAIL_PAGE.COUNTERPARTY')}
+            </p>
+            {isDisplayCounterParty}
+          </div>
+        )}
         {/* Info: (20241007 - Julian) Recurring Entry */}
         {/* {isRecurringEntry} */}
         {/* Info: (20241007 - Julian) Payable Amount */}

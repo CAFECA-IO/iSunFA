@@ -12,7 +12,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { ToastType } from '@/interfaces/toastify';
 
 interface IAssetStatusSettingModal {
@@ -29,7 +29,7 @@ const AssetStatusSettingModal: React.FC<IAssetStatusSettingModal> = ({
   defaultStatus,
 }) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const {
@@ -39,7 +39,7 @@ const AssetStatusSettingModal: React.FC<IAssetStatusSettingModal> = ({
     error: updateError,
   } = APIHandler<IAssetDetails>(APIName.UPDATE_ASSET_V2, {
     params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+      companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
       assetId: updateAssetId,
     },
   });

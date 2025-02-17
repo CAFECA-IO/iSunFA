@@ -5,7 +5,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
-import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
 import { IEventEntity } from '@/interfaces/event';
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { IAccountEntity } from '@/interfaces/accounting_account';
@@ -37,7 +37,7 @@ import {
 type GetOneVoucherResponse = IVoucherEntity & {
   issuer: IUserEntity;
   accountSetting: PrismaAccountingSetting; // ToDo: (20241105 - Murky)  換成entity
-  counterParty: ICounterPartyEntity;
+  counterParty: ICounterPartyEntityPartial;
   originalEvents: IEventEntity[];
   resultEvents: IEventEntity[];
   asset: IAssetEntity[];
@@ -92,7 +92,8 @@ export const handleGetRequest: IHandleRequest<
     const accountSetting: PrismaAccountingSetting =
       await getUtils.getAccountingSettingFromPrisma(accountSettingCompanyId);
     const issuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
-    const counterParty: ICounterPartyEntity = getUtils.initCounterPartyEntity(voucherFromPrisma);
+    const counterParty: ICounterPartyEntityPartial =
+      getUtils.initCounterPartyEntity(voucherFromPrisma);
     const originalEvents: IEventEntity[] = getUtils.initOriginalEventEntities(voucherFromPrisma);
     const resultEvents: IEventEntity[] = getUtils.initResultEventEntities(voucherFromPrisma);
     const asset: IAssetEntity[] = getUtils.initAssetEntities(voucherFromPrisma);
@@ -409,6 +410,8 @@ export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, numb
 
     // Info: (20241119 - Murky) 需要多加asset voucher嗎？
     const isAssetVoucherNeeded = deleteUtils.isAssetEventNeeded(voucherFromPrisma);
+
+    // TODO: (20250213 - Shirley) 實作資產折舊後，需檢查「已經折舊的資產，對應的 voucher 無法被刪除」
 
     // ToDo: (20241118 - Murky) 先組合出要刪除的voucherEntity
     const deleteVersionReverseLineItemPairs =

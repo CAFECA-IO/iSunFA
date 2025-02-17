@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
+import { ToastId } from '@/constants/toast_id';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import { SEARCH_KEYWORDS } from '@/constants/search';
 import { ISearchKeyword } from '@/interfaces/search';
@@ -19,8 +20,8 @@ const Search = ({ toggleOverlay }: SearchProps) => {
   const [inputValue, setInputValue] = useState('');
   const [searchResults, setSearchResults] = useState<ISearchKeyword[]>([]);
   const router = useRouter();
-  const { selectedCompany } = useUserCtx();
-  const noSelectedCompany = !selectedCompany;
+  const { selectedAccountBook } = useUserCtx();
+  const noSelectedCompany = !selectedAccountBook;
   const { toastHandler } = useModalContext();
 
   const hasSearchResults = searchResults.length > 0;
@@ -44,18 +45,18 @@ const Search = ({ toggleOverlay }: SearchProps) => {
 
   const showCompanyNeededToast = () => {
     toastHandler({
-      id: 'company-needed',
+      id: ToastId.ACCOUNT_BOOK_NEEDED,
       type: ToastType.INFO,
       content: (
         <div className="flex items-center gap-32px">
           <p className="text-sm text-text-neutral-primary">
-            {t('layout:TOAST.PLEASE_SELECT_A_COMPANY_BEFORE_PROCEEDING_WITH_THE_OPERATION')}
+            {t('layout:TOAST.PLEASE_SELECT_AN_ACCOUNT_BOOK_BEFORE_PROCEEDING_WITH_THE_OPERATION')}
           </p>
           <Link
-            href={ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE}
+            href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE}
             className="text-base font-semibold text-link-text-primary"
           >
-            {t('layout:TOAST.GO_TO_SELECT_COMPANY')}
+            {t('layout:TOAST.ACCOUNT_BOOKS_LINK')}
           </Link>
         </div>
       ),

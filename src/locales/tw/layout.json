@@ -5,7 +5,7 @@
     "ACCOUNTING": "會計",
     "ADDING_VOUCHER": "新增傳票",
     "VOUCHER_LIST": "傳票清單",
-    "PAYABLE_RECEIVABLE_LIST": "應收應付款列表",
+    "PAYABLE_RECEIVABLE_LIST": "應收應付款清單",
     "CERTIFICATES": "憑證",
     "UPLOAD_CERTIFICATE": "憑證管理",
     "ASSET_MANAGEMENT": "資產管理",
@@ -24,24 +24,24 @@
     "TRIAL_BALANCE": "試算表",
     "EMBED_CODE": "嵌入程式碼",
     "GENERATE_EMBED_CODE": "生成嵌入程式碼",
-    "PARAMETER_SETTING": "參數設定",
-    "SETTING": "設定",
-    "GENERAL_SETTING": "一般設定",
-    "COMPANY_SETTING": "公司設定",
-    "ACCOUNTING_SETTING": "會計設定",
+    "PARAMETER_SETTINGS": "參數設定",
+    "SETTINGS": "設定",
+    "GENERAL_SETTINGS": "一般設定",
+    "ACCOUNT_BOOK_SETTINGS": "帳本設定",
+    "ACCOUNTING_SETTINGS": "會計設定",
     "CLIENTS_SUPPLIERS_MANAGEMENT": "客戶/供應商",
     "BACK_TO_DASHBOARD": "回到儀表板"
   },
 
   "TOAST": {
-    "PLEASE_SELECT_A_COMPANY_BEFORE_PROCEEDING_WITH_THE_OPERATION": "請先選擇一家公司再進行操作",
-    "GO_TO_SELECT_COMPANY": "前往選擇公司"
+    "PLEASE_SELECT_AN_ACCOUNT_BOOK_BEFORE_PROCEEDING_WITH_THE_OPERATION": "請先選擇一個公司帳本再進行操作",
+    "ACCOUNT_BOOKS_LINK": "前往選擇公司帳本"
   },
 
   "USER": {
     "DELETE_WARNING": "此帳戶將在 {{days}} 個工作天內被刪除。",
     "DELETE_HINT": "請確保資料備份。如需取消刪除過程，請前往設定頁面。",
-    "SETTING": "設定"
+    "SETTINGS": "設定"
   },
   "EMBED_CODE_MODAL": {
     "EMBED_CODE": "嵌入程式碼",

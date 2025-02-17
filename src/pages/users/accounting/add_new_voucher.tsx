@@ -49,7 +49,7 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
       'common',
       'journal',
       'salary',
-      'setting',
+      'settings',
       'terms',
       'asset',
       'dashboard',

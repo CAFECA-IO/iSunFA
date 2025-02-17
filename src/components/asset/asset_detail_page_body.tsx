@@ -32,9 +32,9 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     addAssetModalDataHandler,
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedCompany?.id;
+  const companyId = selectedAccountBook?.id;
 
   const params = { companyId, assetId };
 
@@ -75,6 +75,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     note,
     relatedVouchers,
     assetStatus,
+    currencyAlias,
   } = assetDetail || mockAssetDetails;
 
   // Info: (20241016 - Julian) 可刪除資產的期限
@@ -301,7 +302,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isPurchasePrice = !isLoading ? (
     <p>
       {numberWithCommas(purchasePrice)}{' '}
-      <span className="text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{currencyAlias}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -309,7 +310,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isAccumDep = !isLoading ? (
     <p>
       {numberWithCommas(accumulatedDepreciation)}{' '}
-      <span className="text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{currencyAlias}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -317,7 +318,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isResidualValue = !isLoading ? (
     <p>
       {numberWithCommas(residualValue)}{' '}
-      <span className="text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
+      <span className="text-text-neutral-tertiary">{currencyAlias}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />

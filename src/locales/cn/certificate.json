@@ -108,8 +108,8 @@
     "CLIENT": "客户",
     "SUPPLIER": "供应商",
     "SELECT_TYPE": "选择类型",
-    "TITLE": "将此交易对象新增至客户/供应商列表",
-    "CONTENT": "{{counterparty}} 不在您的客户/供应商列表中。您要将其新增吗？",
+    "TITLE": "将此交易对象新增至客户/供应商清單",
+    "CONTENT": "{{counterparty}} 不在您的客户/供应商清單中。您要将其新增吗？",
     "YES": "是，新增",
     "NO": "否，取消",
     "SUCCESS": "新的客户/供应商已新增。",
@@ -123,7 +123,8 @@
     "EDIT_NEW": "编辑客户/供应商",
     "REMOVE_THIS": "删除该客户/供应商",
     "NO_DATA_AVAILABLE": "没有可用资料",
-    "NAME_ALREADY_EXISTS": "此名称已有资料"
+    "NAME_ALREADY_EXISTS": "此名称已有资料",
+    "TAX_ID_ALREADY_EXISTS": "此统一编号已重复使用"
   },
   "LABEL": {
     "NEW": "新增"

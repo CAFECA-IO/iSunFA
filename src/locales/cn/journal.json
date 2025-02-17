@@ -36,6 +36,7 @@
     "TAX": "税 /",
     "NO_SLASH_TAX": "税",
     "TWD_FEE": "新台币费用",
+    "TWD": "TWD",
     "NONE": "无",
     "ACCOUNTING_VOUCHER": "会计分录",
     "PARTICULARS": "摘要",
@@ -214,6 +215,7 @@
     "SELECT": "选择",
     "SELECT_ALL": "全选",
     "UNSELECT_ALL": "取消全选",
+    "CURRENCY": "货币单位",
     "HIDE_VOUCHER_TOGGLE": "隐藏已删除的传票和其相关冲销分录",
     "WARNING_MODAL_TITLE": "警告",
     "AT_LEAST_ONE_VOUCHER_CONTENT": "请至少选择一张传票",
@@ -224,7 +226,10 @@
     "DELETE_MULTIPLE_VOUCHER_TITLE": "您确定要删除这{{count}}张传票吗？",
     "DELETE_MULTIPLE_VOUCHER_CONTENT": "与这些传票相关的所有资产也将被删除。",
     "DELETE_MULTIPLE_VOUCHER_WARNING": "删除后将自动生成冲销分录，原始传票将保留以供参考。",
-    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "是的，删除这些传票"
+    "DELETE_MULTIPLE_VOUCHER_SUBMIT_BTN": "是的，删除这些传票",
+    "REVERSE_DETAIL": "反转传票（刪除）",
+    "DELETE_VOUCHERS_SUCCESSFULLY": "删除传票成功",
+    "DELETE_VOUCHERS_FAILED": "删除传票失败"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增传票",
@@ -284,6 +289,9 @@
     "PAID_AMOUNT": "已付金额",
     "REMAIN_AMOUNT": "剩余金额",
     "REVERSE_VOUCHERS": "冲销传票",
+    "REVERSE_VOUCHERS_REVERSE": "冲销传票",
+    "REVERSE_VOUCHERS_SETTLEMENT": "冲销传票",
+    "REVERSE_VOUCHERS_ORIGINAL": "原始立账传票",
     "ASSET": "资产",
     "ACCOUNTING": "会计科目",
     "PARTICULARS": "摘要",
@@ -294,7 +302,10 @@
     "DELETE_MESSAGE_SUBMIT_BTN": "是的，删除传票",
     "DELETE_SUCCESS_TOAST": "传票已删除。",
     "UNDO": "复原",
-    "VOUCHER_NOT_FOUND": "找不到传票，请确认网址是否正确"
+    "VOUCHER_NOT_FOUND": "找不到传票，请确认网址是否正确",
+    "DELETED_REVERSE_VOUCHER":  "因刪除 <link>{{voucherNo}}</link> 传票生成的反转分录",
+    "DELETED_REVERSE_VOUCHER_1":  "因刪除",
+    "DELETED_REVERSE_VOUCHER_2":  "传票生成的反转分录"
   },
   "LEDGER": {
     "LEDGER_PERIOD": "分类帐期间",
@@ -311,8 +322,7 @@
     "EQUITY": "权益",
     "COST": "成本",
     "EXPENSE": "费用",
-    "REVENUE": "收入",
-    "OTHERCOMPREHENSIVEINCOME": "其他综合损益"
+    "REVENUE": "收入"
   },
   "AI_WORKING_AREA": {
     "RESTING_CONTENT": "请选择凭证，让 AI 为您生成所需的传票",

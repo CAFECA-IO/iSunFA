@@ -62,5 +62,13 @@
     "permissions": [],
     "createdAt": 1,
     "updatedAt": 1
+  },
+  {
+    "id": 1009,
+    "name": "Enterprise",
+    "type": "User",
+    "permissions": [],
+    "createdAt": 1,
+    "updatedAt": 1
   }
 ]

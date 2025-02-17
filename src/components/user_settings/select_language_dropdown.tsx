@@ -12,7 +12,7 @@ interface SelectLanguageDropdownProps {
 }
 
 const SelectLanguageDropdown: React.FC<SelectLanguageDropdownProps> = ({ language, onSelect }) => {
-  const { t } = useTranslation(['setting', 'common']);
+  const { t } = useTranslation(['settings', 'common']);
   const selectedLanguage = LanguagesMap[language];
   const { asPath } = useRouter();
 
@@ -48,7 +48,7 @@ const SelectLanguageDropdown: React.FC<SelectLanguageDropdownProps> = ({ languag
   return (
     <div className="flex flex-col space-y-3 max-md:max-w-full">
       <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-        {t('setting:NORMAL.SELECT_LANGUAGE')}
+        {t('settings:NORMAL.SELECT_LANGUAGE')}
       </div>
 
       <div ref={languageMenuRef} className="relative flex w-full">

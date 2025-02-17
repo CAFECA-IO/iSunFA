@@ -64,8 +64,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // Info: (20241023 - Anna) 使用 useRef 追蹤之前的日期範圍
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
 
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
 
   const [totalSubAccountsToggle, setTotalSubAccountsToggle] = useState(false); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 狀態
 
@@ -121,7 +121,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     try {
       const response = await trigger({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedAccountBook?.id,
         },
         query: {
           startDate: selectedDateRange.startTimeStamp,
@@ -141,7 +141,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     } finally {
       (() => {})(); // Info: (20241023 - Anna) Empty function, does nothing
     }
-  }, [hasCompanyId, selectedCompany?.id, selectedDateRange, trigger]);
+  }, [hasCompanyId, selectedAccountBook?.id, selectedDateRange, trigger]);
 
   // Info: (20241023 - Anna) 在 useEffect 中依賴 getBalanceSheetReport，當日期範圍變更時觸發 API 請求
   useEffect(() => {
@@ -269,7 +269,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
-        <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+        <Image src="/images/empty.svg" alt="No data image" width={120} height={135} />
         <div>
           <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
           <p className="text-neutral-300">{t('reports:REPORT.PLEASE_SELECT_PERIOD')}</p>
@@ -345,11 +345,11 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     preValue: number | undefined
   ) => (
     <tr>
-      <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{label}</td>
-      <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+      <td className="border border-stroke-neutral-quaternary p-10px text-sm">{label}</td>
+      <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
         {curValue}
       </td>
-      <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+      <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
         {preValue}
       </td>
     </tr>
@@ -362,7 +362,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <tr key={item.code}>
             <td
               colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+              className="border border-stroke-neutral-quaternary p-10px text-sm font-bold"
             >
               {item.name}
             </td>
@@ -372,22 +372,22 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
 
       return (
         <tr key={item.code}>
-          <td className="w-50px border border-stroke-brand-secondary-soft p-10px text-sm">
+          <td className="w-50px border border-stroke-neutral-quaternary p-10px text-sm">
             {item.code}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+          <td className="border border-stroke-neutral-quaternary p-10px text-sm">
             <p>{t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}</p>
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
             {item.curPeriodPercentageString}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
             {item.prePeriodPercentageString}
           </td>
         </tr>
@@ -404,7 +404,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <tr key={item.code}>
             <td
               colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+              className="border border-stroke-neutral-quaternary p-10px text-sm font-bold"
             >
               {item.name}
             </td>
@@ -415,10 +415,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       return (
         <React.Fragment key={item.code}>
           <tr>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
-              {item.code}
-            </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+            <td className="border border-stroke-neutral-quaternary p-10px text-sm">{item.code}</td>
+            <td className="border border-stroke-neutral-quaternary p-10px text-sm">
               <div className="flex items-center justify-between">
                 {t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}
                 {/* Info: (20241021 - Anna) 如果有 children 才顯示 CollapseButton */}
@@ -441,16 +439,16 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                   )}
               </div>
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
               {item.curPeriodAmountString}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+            <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
               {item.curPeriodPercentageString}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
               {item.prePeriodAmountString}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+            <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
               {item.prePeriodPercentageString}
             </td>
           </tr>
@@ -563,24 +561,24 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <table className="relative z-1 w-full border-collapse bg-white">
             <thead>
               <tr className="print:hidden">
-                <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.CODE_NUMBER')}
                 </th>
                 <th
-                  className={`w-800px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold`}
+                  className={`w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold`}
                 >
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
                   {curDate}
                 </th>
-                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
                   %
                 </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
                   {preDate}
                 </th>
-                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
                   %
                 </th>
               </tr>
@@ -612,22 +610,22 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <table className="w-full border-collapse bg-white">
             <thead>
               <tr className="print:hidden">
-                <th className="w-50px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.CODE_NUMBER')}
                 </th>
-                <th className="w-800px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
+                <th className="w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                   {t('reports:REPORTS.ACCOUNTING_ITEMS')}
                 </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
                   {curDate}
                 </th>
-                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
                   %
                 </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
                   {preDate}
                 </th>
-                <th className="w-60px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
+                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
                   %
                 </th>
               </tr>
@@ -806,11 +804,11 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
-              <th className="w-300px whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"></th>
+              <th className="w-300px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
                 {t('reports:REPORTS.YEAR_TEMPLATE', { year: curYear })}
               </th>
-              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
                 {t('reports:REPORTS.YEAR_TEMPLATE', { year: preYear })}
               </th>
             </tr>
@@ -830,11 +828,11 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
-              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"></th>
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
                 {t('reports:REPORTS.YEAR_TEMPLATE', { year: curYear })}
               </th>
-              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
                 {t('reports:REPORTS.YEAR_TEMPLATE', { year: preYear })}
               </th>
             </tr>

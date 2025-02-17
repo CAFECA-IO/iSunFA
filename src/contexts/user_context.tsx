@@ -16,7 +16,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
-import { COMPANY_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/constants/company';
 
 interface UserContextType {
   credential: string | null;
@@ -33,28 +33,28 @@ interface UserContextType {
   selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
   switchRole: () => void;
 
-  createCompany: ({
+  createAccountBook: ({
     name,
     taxId,
     tag,
   }: {
     name: string;
     taxId: string;
-    tag: COMPANY_TAG;
+    tag: WORK_TAG;
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
-  selectedCompany: ICompany | null;
-  selectCompany: (companyId: number) => Promise<ICompany | null>;
-  updateCompany: ({
+  selectedAccountBook: ICompany | null;
+  selectAccountBook: (companyId: number) => Promise<ICompany | null>;
+  updateAccountBook: ({
     companyId,
     action,
     tag,
   }: {
     companyId: number;
     action: string;
-    tag: COMPANY_TAG;
+    tag: WORK_TAG;
   }) => Promise<ICompanyAndRole | null>;
-  deleteCompany: (companyId: number) => Promise<ICompany | null>;
+  deleteAccountBook: (companyId: number) => Promise<ICompany | null>;
   deleteAccount: () => Promise<{
     success: boolean;
     data: IUser | null;
@@ -95,12 +95,12 @@ export const UserContext = createContext<UserContextType>({
   getSystemRoleList: async () => null,
   selectedRole: null,
   switchRole: () => {},
-  createCompany: async () => ({ success: false, code: '', errorMsg: '' }),
+  createAccountBook: async () => ({ success: false, code: '', errorMsg: '' }),
 
-  selectedCompany: null,
-  selectCompany: async () => null,
-  updateCompany: async () => null,
-  deleteCompany: async () => null,
+  selectedAccountBook: null,
+  selectAccountBook: async () => null,
+  updateAccountBook: async () => null,
+  deleteAccountBook: async () => null,
   deleteAccount: async () => Promise.resolve({ success: false, data: null, code: '', error: null }),
   cancelDeleteAccount: async () =>
     Promise.resolve({ success: false, data: null, code: '', error: null }),
@@ -127,7 +127,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
 
   const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
-  const [, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(null);
+  const [, setSelectedAccountBook, selectedAccountBookRef] = useStateRef<ICompany | null>(null);
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
@@ -151,14 +151,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: createRoleAPI } = APIHandler<IUserRole>(APIName.USER_CREATE_ROLE);
   // Info: (20241101 - Liz) 選擇角色 API
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
-  // Info: (20241104 - Liz) 建立公司 API
-  const { trigger: createCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.CREATE_USER_COMPANY);
-  // Info: (20241111 - Liz) 選擇公司 API
-  const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
-  // Info: (20241113 - Liz) 更新公司 API
-  const { trigger: updateCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.COMPANY_UPDATE);
-  // Info: (20241115 - Liz) 刪除公司 API
-  const { trigger: deleteCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_DELETE);
+  // Info: (20241104 - Liz) 建立帳本 API(原為公司)
+  const { trigger: createAccountBookAPI } = APIHandler<ICompanyAndRole>(
+    APIName.CREATE_USER_COMPANY
+  );
+  // Info: (20241111 - Liz) 選擇帳本 API(原為公司)
+  const { trigger: selectAccountBookAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
+  // Info: (20241113 - Liz) 更新帳本 API(原為公司)
+  const { trigger: updateAccountBookAPI } = APIHandler<ICompanyAndRole>(APIName.COMPANY_UPDATE);
+  // Info: (20241115 - Liz) 刪除帳本 API(原為公司)
+  const { trigger: deleteAccountBookAPI } = APIHandler<ICompany>(APIName.COMPANY_DELETE);
   const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
   const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
 
@@ -173,7 +175,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignIn(false);
     setIsSignInError(false);
     setSelectedRole(null);
-    setSelectedCompany(null);
+    setSelectedAccountBook(null);
     clearAllItems(); // Info: (20240822 - Shirley) 清空 IndexedDB 中的數據
   };
 
@@ -233,7 +235,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241209 - Liz) 切換角色的功能
   const switchRole = () => {
     setSelectedRole(null);
-    setSelectedCompany(null);
+    setSelectedAccountBook(null);
     goToSelectRolePage();
   };
 
@@ -308,14 +310,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // ===============================================================================
 
   // Info: (20241001 - Liz) 此函數處理公司資訊:
-  // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedCompany)，最後回傳公司資訊。
+  // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedAccountBook)，最後回傳公司資訊。
   // 如果公司資料不存在，會將公司資訊設為 null，並回傳 null。
   const processCompanyInfo = (company: ICompany) => {
     if (!company || Object.keys(company).length === 0) {
-      setSelectedCompany(null);
+      setSelectedAccountBook(null);
       return null;
     }
-    setSelectedCompany(company);
+    setSelectedAccountBook(company);
     return company;
   };
 
@@ -588,18 +590,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241104 - Liz) 建立公司的功能
-  const createCompany = async ({
+  // Info: (20241104 - Liz) 建立帳本的功能(原為公司)
+  const createAccountBook = async ({
     name,
     taxId,
     tag,
   }: {
     name: string;
     taxId: string;
-    tag: COMPANY_TAG;
+    tag: WORK_TAG;
   }) => {
     try {
-      const { success, code, error } = await createCompanyAPI({
+      const { success, code, error } = await createAccountBookAPI({
         params: { userId: userAuthRef.current?.id },
         body: { name, taxId, tag },
       });
@@ -614,16 +616,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241111 - Liz) 選擇公司的功能
-  const selectCompany = async (companyId: number) => {
+  // Info: (20241111 - Liz) 選擇帳本的功能(原為公司)
+  const selectAccountBook = async (companyId: number) => {
     try {
-      const { success, data: userCompany } = await selectCompanyAPI({
+      const { success, data: userCompany } = await selectAccountBookAPI({
         params: { userId: userAuthRef.current?.id },
         body: { companyId },
       });
 
       if (success) {
-        setSelectedCompany(userCompany);
+        setSelectedAccountBook(userCompany);
         return userCompany;
       }
       return null;
@@ -632,18 +634,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241113 - Liz) 更新公司的功能(變更標籤)
-  const updateCompany = async ({
+  // Info: (20241113 - Liz) 更新帳本的功能(原為公司) - 變更標籤
+  const updateAccountBook = async ({
     companyId,
     action,
     tag,
   }: {
     companyId: number;
     action: string;
-    tag: COMPANY_TAG;
+    tag: WORK_TAG;
   }) => {
     try {
-      const { success, data: companyAndRole } = await updateCompanyAPI({
+      const { success, data: companyAndRole } = await updateAccountBookAPI({
         params: { companyId },
         body: { action, tag },
       });
@@ -657,15 +659,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241115 - Liz) 刪除公司的功能
-  const deleteCompany = async (companyId: number) => {
+  // Info: (20241115 - Liz) 刪除帳本的功能(原為公司)
+  const deleteAccountBook = async (companyId: number) => {
     try {
-      const { success, data: company } = await deleteCompanyAPI({
+      const { success, data: company } = await deleteAccountBookAPI({
         params: { companyId },
       });
 
       if (success && company) {
-        setSelectedCompany(null);
+        setSelectedAccountBook(null);
         return company;
       }
       return null;
@@ -796,13 +798,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       getSystemRoleList,
       selectedRole: selectedRoleRef.current,
       switchRole,
-      createCompany,
-      selectCompany,
-      updateCompany,
-      deleteCompany,
+      createAccountBook,
+      selectAccountBook,
+      updateAccountBook,
+      deleteAccountBook,
       deleteAccount,
       cancelDeleteAccount,
-      selectedCompany: selectedCompanyRef.current,
+      selectedAccountBook: selectedAccountBookRef.current,
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
@@ -814,7 +816,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     [
       credentialRef.current,
       selectedRoleRef.current,
-      selectedCompanyRef.current,
+      selectedAccountBookRef.current,
       errorCodeRef.current,
       isSignInErrorRef.current,
       isAuthLoadingRef.current,

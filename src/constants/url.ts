@@ -20,14 +20,14 @@ export const ISUNFA_ROUTE = {
   CREATE_ROLE: '/users/create_role',
   SELECT_ROLE: '/users/select_role',
   DASHBOARD: '/users/dashboard',
-  MY_COMPANY_LIST_PAGE: '/users/my_company_list_page',
+  ACCOUNT_BOOKS_PAGE: '/users/account_books_page',
   TODO_LIST_PAGE: '/users/todo_list_page',
   LATEST_NEWS_PAGE: '/users/news_page',
   FINANCIAL_NEWS_PAGE: '/users/news_page/financial_news_page',
   SYSTEM_NEWS_PAGE: '/users/news_page/system_news_page',
   MATCH_NEWS_PAGE: '/users/news_page/match_news_page',
   BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
-  GENERAL_SETTING: '/users/setting/general',
+  GENERAL_SETTINGS: '/users/setting/general',
   BALANCE_SHEET: '/users/reports/financials/balance_sheet',
   INCOME_STATEMENT: '/users/reports/financials/income_statement',
   CASH_FLOW: '/users/reports/financials/cash_flow',
@@ -61,7 +61,7 @@ export const ISUNFA_ROUTE = {
   USERS_FINANCIAL_REPORTS_CASH_FLOW: `/users/reports/financials?report_type=${FinancialReportTypesKey.cash_flow_statement}`,
   UPLOAD: `mobile_upload`,
 
-  ACCOUNTING_SETTING: '/users/setting/accounting_setting',
+  ACCOUNTING_SETTINGS: '/users/setting/accounting_setting',
 };
 
 export const EXTERNAL_API = {

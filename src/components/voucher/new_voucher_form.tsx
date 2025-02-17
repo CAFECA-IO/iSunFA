@@ -13,7 +13,7 @@ import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/vouch
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
-import { ICounterparty } from '@/interfaces/counterparty';
+import { ICounterpartyOptional } from '@/interfaces/counterparty';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
@@ -49,7 +49,7 @@ import { IAIResultVoucher } from '@/interfaces/voucher';
 import { AI_TYPE } from '@/constants/aich';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
 import { ToastId } from '@/constants/toast_id';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -73,15 +73,15 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { temporaryAssetList, clearTemporaryAssetHandler, reverseList, clearReverseListHandler } =
     useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
-  const temporaryAssetListByUser = temporaryAssetList[companyId] ?? [];
+  const temporaryAssetListByUser = temporaryAssetList[accountBookId] ?? [];
 
   const initialLineItems: ILineItemUI[] = [
     initialVoucherLine,
@@ -121,7 +121,15 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241004 - Julian) 通用項目
   const [date, setDate] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [type, setType] = useState<string>(VoucherType.EXPENSE);
-  const [note, setNote] = useState<string>('');
+  const [note, setNote] = useState<{
+    note: string;
+    name: string | undefined;
+    taxId: string | undefined;
+  }>({
+    note: '',
+    name: undefined,
+    taxId: undefined,
+  });
 
   // Info: (20241004 - Julian) 週期性分錄相關 state
   // const [isRecurring, setIsRecurring] = useState<boolean>(false);
@@ -150,7 +158,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 交易對象相關 state
-  const [counterparty, setCounterparty] = useState<ICounterparty | undefined>(undefined);
+  const [counterparty, setCounterparty] = useState<ICounterpartyOptional | undefined>(undefined);
 
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
@@ -201,7 +209,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const getResult = useCallback(async () => {
     // Info: (20241220 - Julian) 問 AI 分析結果
     const analysisResult = await getAIResult({
-      params: { companyId, resultId },
+      params: { companyId: accountBookId, resultId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       query: { reason: 'voucher' },
     });
 
@@ -216,7 +224,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241220 - Julian) 從 resultId 判斷是否已經 POST 成功
   const askAIAnalysis = async (targetIds: number[]) => {
     const aiResult = await askAI({
-      params: { companyId },
+      params: { companyId: accountBookId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       query: { reason: 'voucher' },
       body: { targetIdList: targetIds },
     });
@@ -293,19 +301,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241018 - Tzuhan) 處理選擇憑證 API 回傳
   const handleCertificateApiResponse = useCallback(
-    (
-      resData: IPaginatedData<{
-        totalInvoicePrice: number;
-        unRead: {
-          withVoucher: number;
-          withoutVoucher: number;
-        };
-        currency: string;
-        certificates: ICertificate[];
-      }>
-    ) => {
+    (resData: IPaginatedData<ICertificate[]>) => {
       const { data } = resData;
-      const certificatesData = data.certificates.reduce(
+      const certificatesData = data.reduce(
         (acc, item) => {
           acc[item.id] = {
             ...item,
@@ -476,7 +474,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const typeToggleHandler = () => setTypeVisible(!typeVisible);
 
   const noteChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNote(e.target.value);
+    setNote((prev) => ({ ...prev, note: e.target.value }));
   };
 
   // const recurringToggleHandler = () => {
@@ -513,13 +511,17 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const clearAllHandler = () => {
     setDate(default30DayPeriodInSec);
     setType(VoucherType.EXPENSE);
-    setNote('');
+    setNote({
+      note: '',
+      name: undefined,
+      taxId: undefined,
+    });
     setCounterparty(undefined);
     // setIsRecurring(false);
     // setRecurringPeriod(default30DayPeriodInSec);
     // setRecurringUnit(RecurringUnit.MONTH);
     // setRecurringArray([]);
-    clearTemporaryAssetHandler(companyId);
+    clearTemporaryAssetHandler(accountBookId);
     clearReverseListHandler();
     setLineItems(initialLineItems);
     setFlagOfClear(!flagOfClear);
@@ -542,7 +544,12 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const fillUpWithAIResult = () => {
     setDate(aiDate);
     setType(aiType);
-    setNote(aiNote);
+    setNote((prev) => ({
+      ...prev,
+      note: aiNote,
+      name: aiCounterParty?.name,
+      taxId: aiCounterParty?.taxId,
+    }));
     setCounterparty(aiCounterParty);
     const aiLineItemsUI = aiLineItems.map((item) => {
       return {
@@ -610,16 +617,16 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       certificateIds: selectedIds,
       voucherDate: date.startTimeStamp,
       type: VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType],
-      note,
+      note: JSON.stringify(note),
       counterPartyId: counterparty?.id,
       lineItems,
       assetIds,
       reverseVouchers,
     };
 
-    clearTemporaryAssetHandler(companyId);
+    clearTemporaryAssetHandler(accountBookId);
     clearReverseListHandler();
-    createVoucher({ params: { companyId }, body });
+    createVoucher({ params: { companyId: accountBookId }, body }); // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
@@ -915,14 +922,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
   useEffect(() => {
     const pusher = getPusherInstance();
-    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
 
     channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
     return () => {
       channel.unbind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
       channel.unsubscribe();
-      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     };
   }, []);
 
@@ -953,15 +960,24 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   //   };
   // }, []);
 
+  const handleCounterpartySelect = (counterpartyPartial: ICounterpartyOptional) => {
+    setCounterparty(counterpartyPartial);
+    setNote((prev) => ({
+      ...prev,
+      name: counterpartyPartial.name,
+      taxId: counterpartyPartial.taxId,
+    }));
+  };
+
   useEffect(() => {
     setSelectedCertificates(Object.values(selectedData));
     setSelectedIds(Object.keys(selectedData).map(Number));
   }, [selectedData]);
 
   return (
-    <div className="relative flex flex-col items-center gap-40px p-40px">
+    <div className="relative flex flex-col items-center gap-40px">
       <CertificateSelectorModal
-        companyId={companyId}
+        accountBookId={accountBookId}
         isOpen={openSelectorModal}
         onClose={() => setOpenSelectorModal(false)}
         openUploaderModal={() => setOpenUploaderModal(true)}
@@ -1047,7 +1063,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           <input
             id="voucher-note"
             type="text"
-            value={note}
+            value={note.note}
             onChange={noteChangeHandler}
             placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
             className={`rounded-sm border border-input-stroke-input px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
@@ -1057,7 +1073,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         {isShowCounter && (
           <CounterpartyInput
             counterparty={counterparty}
-            onSelect={setCounterparty}
+            onSelect={handleCounterpartySelect}
             flagOfSubmit={flagOfSubmit}
             className="col-span-2"
           />

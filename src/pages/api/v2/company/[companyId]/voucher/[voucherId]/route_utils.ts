@@ -20,7 +20,7 @@ import { IAssetEntity } from '@/interfaces/asset';
 import { getOneVoucherByVoucherNoV2, getOneVoucherV2 } from '@/lib/utils/repo/voucher.repo';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
-import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
+import { parsePartialPrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_item.formatter';
 import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
@@ -45,6 +45,7 @@ import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/cons
 import { CurrencyType } from '@/constants/currency';
 import { isFloatsEqual } from '@/lib/utils/common';
 import { EventType } from '@/constants/account';
+import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
 
 export const voucherAPIGetOneUtils = {
   /**
@@ -98,6 +99,16 @@ export const voucherAPIGetOneUtils = {
         errorMessage: `voucherId: ${voucherId} not found`,
         statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
       });
+    } else {
+      if (voucher.counterparty && voucher.counterparty.id === 555) {
+        voucher.counterparty.id = undefined;
+        voucher.counterparty.name = undefined;
+        voucher.counterparty.taxId = undefined;
+      }
+      const noteData = parseNoteData(voucher?.note ?? '');
+      voucher.note = noteData.note;
+      voucher.counterparty.name = voucher.counterparty.name || noteData.name;
+      voucher.counterparty.taxId = voucher.counterparty.taxId || noteData.taxId;
     }
     return voucher!;
   },
@@ -134,7 +145,7 @@ export const voucherAPIGetOneUtils = {
    */
   initCounterPartyEntity: (voucher: IGetOneVoucherResponse) => {
     const counterPartyDto = voucher.counterparty;
-    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto);
+    const counterParty = parsePartialPrismaCounterPartyToCounterPartyEntity(counterPartyDto);
     return counterParty;
   },
 

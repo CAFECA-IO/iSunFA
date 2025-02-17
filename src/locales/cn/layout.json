@@ -5,7 +5,7 @@
     "ACCOUNTING": "会计",
     "ADDING_VOUCHER": "新增传票",
     "VOUCHER_LIST": "传票清单",
-    "PAYABLE_RECEIVABLE_LIST": "应收应付款列表",
+    "PAYABLE_RECEIVABLE_LIST": "应收应付款清單",
     "CERTIFICATES": "凭证",
     "UPLOAD_CERTIFICATE": "凭证管理",
     "ASSET_MANAGEMENT": "资产管理",
@@ -24,24 +24,24 @@
     "TRIAL_BALANCE": "试算表",
     "EMBED_CODE": "嵌入程式码",
     "GENERATE_EMBED_CODE": "生成嵌入程式码",
-    "PARAMETER_SETTING": "参数设定",
-    "SETTING": "设定",
-    "GENERAL_SETTING": "一般设定",
-    "COMPANY_SETTING": "公司设定",
-    "ACCOUNTING_SETTING": "会计设定",
+    "PARAMETER_SETTINGS": "参数设定",
+    "SETTINGS": "设定",
+    "GENERAL_SETTINGS": "一般设定",
+    "ACCOUNT_BOOK_SETTINGS": "帐本设定",
+    "ACCOUNTING_SETTINGS": "会计设定",
     "CLIENTS_SUPPLIERS_MANAGEMENT": "客户/供应商",
     "BACK_TO_DASHBOARD": "回到仪表板"
   },
 
   "TOAST": {
-    "PLEASE_SELECT_A_COMPANY_BEFORE_PROCEEDING_WITH_THE_OPERATION": "请先选择一家公司再进行操作",
-    "GO_TO_SELECT_COMPANY": "前往选择公司"
+    "PLEASE_SELECT_AN_ACCOUNT_BOOK_BEFORE_PROCEEDING_WITH_THE_OPERATION": "请先选择一个公司账本再进行操作",
+    "ACCOUNT_BOOKS_LINK": "前往选择公司账本"
   },
 
   "USER": {
     "DELETE_WARNING": "此账户将在 {{days}} 个工作日内被删除。",
     "DELETE_HINT": "请确保数据备份。如需取消删除过程，请前往设置页面。",
-    "SETTING": "设定"
+    "SETTINGS": "设定"
   },
   "EMBED_CODE_MODAL": {
     "EMBED_CODE": "嵌入程式码",

@@ -42,7 +42,7 @@ interface ISubMenuSubMenuSection {
 interface IDefaultSubMenuOption {
   title: string;
   disabled?: boolean;
-  needToVerifyCompany: boolean;
+  needToVerifyAccountBook: boolean;
 }
 
 enum SubMenuOptionType {
@@ -74,19 +74,19 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'ADDING_VOUCHER',
             link: ISUNFA_ROUTE.ADD_NEW_VOUCHER,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'VOUCHER_LIST',
             link: ISUNFA_ROUTE.VOUCHER_LIST,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'PAYABLE_RECEIVABLE_LIST',
             link: ISUNFA_ROUTE.PAYABLE_RECEIVABLE_LIST,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
         ],
       },
@@ -97,7 +97,7 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'UPLOAD_CERTIFICATE',
             link: ISUNFA_ROUTE.CERTIFICATE_LIST,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
         ],
       },
@@ -117,7 +117,7 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'ASSET_LIST',
             link: ISUNFA_ROUTE.ASSET_LIST,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
         ],
       },
@@ -146,19 +146,19 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'BALANCE_SHEET',
             link: ISUNFA_ROUTE.BALANCE_SHEET,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'INCOME_STATEMENT',
             link: ISUNFA_ROUTE.INCOME_STATEMENT,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'STATEMENT_OF_CASH_FLOWS',
             link: ISUNFA_ROUTE.CASH_FLOW,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
         ],
       },
@@ -169,7 +169,7 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'BUSINESS_TAX_RETURN_401',
             link: ISUNFA_ROUTE.BUSINESS_TAX,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
         ],
       },
@@ -180,13 +180,13 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'LEDGER',
             link: ISUNFA_ROUTE.LEDGER,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'TRIAL_BALANCE',
             link: ISUNFA_ROUTE.TRIAL_BALANCE,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
         ],
       },
@@ -196,44 +196,44 @@ const MENU_CONFIG: TMenuOption[] = [
           {
             type: SubMenuOptionType.BUTTON,
             title: 'GENERATE_EMBED_CODE',
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
         ],
       },
     ],
   },
   {
-    title: 'PARAMETER_SETTING',
+    title: 'PARAMETER_SETTINGS',
     iconSrc: '/icons/parameter_setting.svg',
     iconSrcAlt: 'parameter_setting',
     iconWidth: 23.77,
     iconHeight: 23.73,
     subMenu: [
       {
-        caption: 'SETTING',
+        caption: 'SETTINGS',
         subMenu: [
           {
             type: SubMenuOptionType.LINK,
-            title: 'GENERAL_SETTING',
-            link: ISUNFA_ROUTE.GENERAL_SETTING,
-            needToVerifyCompany: false,
+            title: 'GENERAL_SETTINGS',
+            link: ISUNFA_ROUTE.GENERAL_SETTINGS,
+            needToVerifyAccountBook: false,
           },
         ],
       },
       {
-        caption: 'COMPANY_SETTING',
+        caption: 'ACCOUNT_BOOK_SETTINGS',
         subMenu: [
           {
             type: SubMenuOptionType.LINK,
-            title: 'ACCOUNTING_SETTING',
-            link: ISUNFA_ROUTE.ACCOUNTING_SETTING,
-            needToVerifyCompany: true,
+            title: 'ACCOUNTING_SETTINGS',
+            link: ISUNFA_ROUTE.ACCOUNTING_SETTINGS,
+            needToVerifyAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'CLIENTS_SUPPLIERS_MANAGEMENT',
             link: ISUNFA_ROUTE.COUNTERPARTY,
-            needToVerifyCompany: true,
+            needToVerifyAccountBook: true,
           },
         ],
       },
@@ -259,13 +259,13 @@ const SubMenuOption = ({
   title,
   link,
   disabled,
-  needToVerifyCompany,
+  needToVerifyAccountBook,
   toggleOverlay = () => {},
 }: SubMenuOptionProps) => {
   const { t } = useTranslation(['layout']);
   const { toastHandler } = useModalContext();
-  const { selectedCompany } = useUserCtx();
-  const noSelectedCompany = !selectedCompany;
+  const { selectedAccountBook } = useUserCtx();
+  const noSelectedCompany = !selectedAccountBook;
   const [isEmbedCodeModalOpen, setIsEmbedCodeModalOpen] = useState<boolean>(false);
 
   const toggleEmbedCodeModal = () => {
@@ -279,13 +279,13 @@ const SubMenuOption = ({
       content: (
         <div className="flex items-center gap-32px">
           <p className="text-sm text-text-neutral-primary">
-            {t('layout:TOAST.PLEASE_SELECT_A_COMPANY_BEFORE_PROCEEDING_WITH_THE_OPERATION')}
+            {t('layout:TOAST.PLEASE_SELECT_AN_ACCOUNT_BOOK_BEFORE_PROCEEDING_WITH_THE_OPERATION')}
           </p>
           <Link
-            href={ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE}
+            href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE}
             className="text-base font-semibold text-link-text-primary"
           >
-            {t('layout:TOAST.GO_TO_SELECT_COMPANY')}
+            {t('layout:TOAST.ACCOUNT_BOOKS_LINK')}
           </Link>
         </div>
       ),
@@ -303,7 +303,7 @@ const SubMenuOption = ({
   };
 
   const onClickButton = () => {
-    if (needToVerifyCompany && noSelectedCompany) {
+    if (needToVerifyAccountBook && noSelectedCompany) {
       showCompanyNeededToast();
       return;
     }
@@ -315,7 +315,7 @@ const SubMenuOption = ({
   };
 
   const onClickLink = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (needToVerifyCompany && noSelectedCompany) {
+    if (needToVerifyAccountBook && noSelectedCompany) {
       // Info: (20241018 - Liz) 阻止導航
       e.preventDefault();
       showCompanyNeededToast();

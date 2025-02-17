@@ -7,15 +7,16 @@ import Pagination from '@/components/pagination/pagination';
 import FilterSection from '@/components/filter_section/filter_section';
 import { SortOrder, SortBy } from '@/constants/sort';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { IVoucherBeta } from '@/interfaces/voucher';
+import { IVoucherBeta, IVoucherListSummary } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { PayableReceivableTabs } from '@/constants/voucher';
+import { TransactionStatus } from '@/constants/account';
 // import Toggle from '@/components/toggle/toggle';
 
 const PayableReceivableVoucherPageBody: React.FC = () => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
   const [activeTab, setActiveTab] = useState(PayableReceivableTabs.PAYMENT);
   const [page, setPage] = useState(1);
@@ -75,22 +76,15 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
   );
 
-  const params = { companyId: selectedCompany?.id };
+  const params = { companyId: selectedAccountBook?.id };
 
-  const handleApiResponse = (
-    data: IPaginatedData<{
-      unRead: {
-        receivingVoucher: number;
-        paymentVoucher: number;
-      };
-      vouchers: IVoucherBeta[];
-    }>
-  ) => {
+  const handleApiResponse = (data: IPaginatedData<IVoucherBeta[]>) => {
+    const note = JSON.parse(data.note ?? '{}') as IVoucherListSummary;
     setPage(data.page);
-    setUnRead(data.data.unRead);
-    setTotalPages(data.totalPages);
-    setTotalCount(data.totalCount);
-    setVoucherList(data.data.vouchers);
+    setUnRead(note.unRead);
+    setTotalPages(Math.max(1, Math.ceil(data.data.length / DEFAULT_PAGE_LIMIT))); // Info: (20250124 - Anna) 改為不是全部傳票的總頁數，而是應收/應付傳票的總頁數
+    setTotalCount(data.data.length); // Info: (20250124 - Anna) 改為不是全部傳票的總筆數，而是應收/應付傳票的總筆數
+    setVoucherList(data.data);
   };
 
   const tabsClick = (tab: string) => setActiveTab(tab as PayableReceivableTabs);
@@ -116,8 +110,10 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
       </div>
     );
 
+  const transactionStatusList = ['All', ...Object.values(TransactionStatus)];
+
   return (
-    <div className="relative flex flex-col items-center gap-40px p-40px">
+    <div className="relative flex flex-col items-center gap-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs
@@ -128,24 +124,20 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           counts={[unRead.receivingVoucher, unRead.paymentVoucher]}
         />
         {/* Info: (20241122 - Julian) Filter Section */}
-        <FilterSection<{
-          unRead: {
-            receivingVoucher: number;
-            paymentVoucher: number;
-          };
-          vouchers: IVoucherBeta[];
-        }>
+        <FilterSection<IVoucherBeta[]>
           params={params}
           apiName={APIName.VOUCHER_LIST_V2}
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
+          types={transactionStatusList}
           /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
           dateSort={dateSort}
           otherSorts={otherSorts}
           */
           sort={selectedSort}
+          hideReversedRelated
         />
         {/* Info: (20250109 - Julian) hidden delete voucher & reversals toggle */}
         {/* <div className="flex items-center gap-16px">

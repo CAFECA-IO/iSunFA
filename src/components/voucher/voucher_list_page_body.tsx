@@ -9,10 +9,10 @@ import Pagination from '@/components/pagination/pagination';
 import { EventType } from '@/constants/account';
 import Tabs from '@/components/tabs/tabs';
 import { APIName } from '@/constants/api_connection';
-import { IVoucherBeta, IVoucherUI } from '@/interfaces/voucher';
+import { IVoucherBeta, IVoucherListSummary, IVoucherUI } from '@/interfaces/voucher';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
-import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
+import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -21,7 +21,7 @@ import { ToastType } from '@/interfaces/toastify';
 
 const VoucherListPageBody: React.FC = () => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const [activeTab, setActiveTab] = useState<VoucherTabs>(VoucherTabs.UPLOADED);
@@ -73,27 +73,25 @@ const VoucherListPageBody: React.FC = () => {
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
   );
 
-  const voucherTypeList = ['All', ...Object.keys(EventType).map((key) => key.toLowerCase())];
+  const voucherTypeList = [
+    'All',
+    ...Object.keys(EventType)
+      .map((key) => key.toLowerCase())
+      .filter((key) => key !== EventType.OPENING), // Info: (20250124 - Julian) 不顯示開帳
+  ];
 
-  const params = { companyId: selectedCompany?.id ?? FREE_COMPANY_ID };
+  const params = { companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID };
 
   const handleApiResponse = useCallback(
-    (
-      data: IPaginatedData<{
-        unRead: {
-          uploadedVoucher: number;
-          upcomingEvents: number;
-        };
-        vouchers: IVoucherBeta[];
-      }>
-    ) => {
+    (data: IPaginatedData<IVoucherBeta[]>) => {
       try {
+        const note = JSON.parse(data.note ?? '{}') as IVoucherListSummary;
         setPage(data.page);
-        setUnRead(data.data.unRead);
+        setUnRead(note.unRead);
         setTotalPages(data.totalPages);
         setTotalCount(data.totalCount);
 
-        const voucherListUI: IVoucherUI[] = data.data.vouchers.map((voucher) => {
+        const voucherListUI: IVoucherUI[] = data.data.map((voucher) => {
           return {
             ...voucher,
             isSelected: false,
@@ -136,7 +134,7 @@ const VoucherListPageBody: React.FC = () => {
     );
 
   return (
-    <div className="relative flex flex-col items-center gap-40px p-40px">
+    <div className="relative flex flex-col items-center gap-40px">
       {/* Info: (20240920 - Julian) Add New Voucher button */}
       <div className="ml-auto">
         <Link href={ISUNFA_ROUTE.ADD_NEW_VOUCHER}>
@@ -157,13 +155,7 @@ const VoucherListPageBody: React.FC = () => {
           counts={[unRead.uploadedVoucher, unRead.upcomingEvents]}
         />
         {/* Info: (20241022 - Julian) Filter Section */}
-        <FilterSection<{
-          unRead: {
-            uploadedVoucher: number;
-            upcomingEvents: number;
-          };
-          vouchers: IVoucherBeta[];
-        }>
+        <FilterSection<IVoucherBeta[]>
           params={params}
           apiName={APIName.VOUCHER_LIST_V2}
           onApiResponse={handleApiResponse}
@@ -176,6 +168,7 @@ const VoucherListPageBody: React.FC = () => {
           otherSorts={otherSorts} // Info: (20241104 - Murky) 可以用哪些sort 請參考 VoucherListAllSortOptions, 在 src/lib/utils/zod_schema/voucher.ts
           */
           sort={selectedSort}
+          hideReversedRelated={isHideReversals} // Info: (20250210 - Julian) 隱藏沖銷分錄
         />
         {/* Info: (20240920 - Julian) Voucher List */}
         {displayVoucherList}

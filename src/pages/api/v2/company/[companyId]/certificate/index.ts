@@ -9,12 +9,15 @@ import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
+import {
+  ICertificate,
+  ICertificateEntity,
+  ICertificateListSummary,
+} from '@/interfaces/certificate';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IUserEntity } from '@/interfaces/user';
-import { CurrencyType } from '@/constants/currency';
 import { IPaginatedData } from '@/interfaces/pagination';
 
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
@@ -27,19 +30,7 @@ import {
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { InvoiceTabs } from '@/constants/certificate';
 
-type ICertificateListSummary = {
-  totalInvoicePrice: number;
-  unRead: {
-    withVoucher: number;
-    withoutVoucher: number;
-  };
-  currency: CurrencyType;
-  certificates: ICertificate[];
-};
-
-type PaginatedCertificateListResponse = IPaginatedData<ICertificateListSummary>;
-
-type APIResponse = ICertificate[] | PaginatedCertificateListResponse | number[] | null;
+type APIResponse = ICertificate[] | IPaginatedData<ICertificate[]> | number[] | null;
 
 /**
  * Info: (20241126 - Murky)
@@ -51,11 +42,11 @@ type APIResponse = ICertificate[] | PaginatedCertificateListResponse | number[] 
  */
 export const handleGetRequest: IHandleRequest<
   APIName.CERTIFICATE_LIST_V2,
-  PaginatedCertificateListResponse
+  IPaginatedData<ICertificate[]>
 > = async ({ query, session }) => {
   // ToDo: (20241024 - Murky) API接口請符合 FilterSection 公版
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: PaginatedCertificateListResponse | null = null;
+  let payload: IPaginatedData<ICertificate[]> | null = null;
 
   const { userId, companyId } = session;
   const { page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } = query;
@@ -106,10 +97,9 @@ export const handleGetRequest: IHandleRequest<
         userCertificates: userCertificateEntities,
       };
 
-      const certificate: ICertificate & {
-        uploaderUrl: string;
-        voucherId: number | undefined;
-      } = getListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
+      const certificate: ICertificate = getListUtils.transformCertificateEntityToResponse(
+        certificateReadyForTransfer
+      );
       return certificate;
     });
 
@@ -143,15 +133,16 @@ export const handleGetRequest: IHandleRequest<
     });
 
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-    const payloadData: ICertificateListSummary = {
+    const summary: ICertificateListSummary = {
       totalInvoicePrice,
       unRead: {
         withVoucher,
         withoutVoucher,
       },
       currency,
-      certificates,
     };
+
+    getListUtils.sortCertificateList(certificates, { sortOption, tab });
 
     payload = {
       page: pagination.page,
@@ -161,7 +152,8 @@ export const handleGetRequest: IHandleRequest<
       hasNextPage: pagination.hasNextPage,
       hasPreviousPage: pagination.hasPreviousPage,
       sort: sortOption,
-      data: payloadData,
+      data: certificates,
+      note: JSON.stringify(summary),
     };
   } catch (_error) {
     const error = _error as Error;
@@ -199,10 +191,7 @@ export const handlePostRequest: IHandleRequest<
   try {
     const nowInSecond = getTimestampNow();
 
-    const certificates: (ICertificate & {
-      uploaderUrl: string;
-      voucherId: number | undefined;
-    })[] = await Promise.all(
+    const certificates: ICertificate[] = await Promise.all(
       fileIds.map(async (fileId) => {
         const certificateFromPrisma = await postUtils.createCertificateInPrisma({
           nowInSecond,
@@ -239,10 +228,9 @@ export const handlePostRequest: IHandleRequest<
           userCertificates: userCertificateEntities,
         };
 
-        const certificate: ICertificate & {
-          uploaderUrl: string;
-          voucherId: number | undefined;
-        } = postUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
+        const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
+          certificateReadyForTransfer
+        );
 
         postUtils.triggerPusherNotification(certificate, {
           companyId,

@@ -13,7 +13,7 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { ToastType } from '@/interfaces/toastify';
@@ -41,16 +41,17 @@ const AccountingSettingPageBody: React.FC = () => {
     manualAccountOpeningModalVisibilityHandler,
   } = useGlobalCtx();
   const { toastHandler } = useModalContext();
-  const { selectedCompany } = useUserCtx();
+  const { selectedAccountBook } = useUserCtx();
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const currencyList = ['TWD', 'USD'];
 
   // Info: (20241113 - Julian) 取得會計設定資料
   const { trigger: getAccountSetting, data: accountingSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET,
-    { params: { companyId } }
+    { params: { companyId: accountBookId } }
   );
+  // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
   const {
     trigger: updateSetting,
@@ -58,8 +59,9 @@ const AccountingSettingPageBody: React.FC = () => {
     success: updatedSuccess,
     error: updatedError,
   } = APIHandler<IAccountingSetting>(APIName.ACCOUNTING_SETTING_UPDATE, {
-    params: { companyId },
+    params: { companyId: accountBookId },
   });
+  // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
   const initialAccountingSetting: IAccountingSetting = {
     id: 0,
@@ -177,7 +179,7 @@ const AccountingSettingPageBody: React.FC = () => {
 
     const body = {
       id: accountingSetting?.id ?? 0,
-      companyId,
+      companyId: accountBookId,
       currency: currentCurrency,
       taxSettings: {
         salesTax: {
@@ -193,7 +195,8 @@ const AccountingSettingPageBody: React.FC = () => {
       shortcutList: [], // ToDo: (20250109 - Julian) 自訂快捷鍵功能未實作
     };
 
-    updateSetting({ params: { companyId }, body });
+    updateSetting({ params: { companyId: accountBookId }, body });
+    // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   useEffect(() => {
@@ -203,17 +206,18 @@ const AccountingSettingPageBody: React.FC = () => {
         toastHandler({
           id: ToastId.ACCOUNTING_SETTING_UPDATE_SUCCESS,
           type: ToastType.SUCCESS,
-          content: t('setting:ACCOUNTING.TOAST_UPDATE_SUCCESS'),
+          content: t('settings:ACCOUNTING.TOAST_UPDATE_SUCCESS'),
           closeable: true,
         });
 
-        getAccountSetting({ params: { companyId } });
+        getAccountSetting({ params: { companyId: accountBookId } });
+        // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       } else if (updatedError) {
         // Info: (20241114 - Julian) 更新失敗顯示 Toast
         toastHandler({
           id: ToastId.ACCOUNTING_SETTING_UPDATE_ERROR,
           type: ToastType.ERROR,
-          content: t('setting:ACCOUNTING.TOAST_UPDATE_FAIL'),
+          content: t('settings:ACCOUNTING.TOAST_UPDATE_FAIL'),
           closeable: true,
         });
       }
@@ -227,7 +231,7 @@ const AccountingSettingPageBody: React.FC = () => {
         return (
           <div className="flex flex-1 items-center justify-between">
             <p className="text-input-text-input-filled">
-              {t('setting:ACCOUNTING.TAX_OPTION_ZERO_TAX_RATE')}
+              {t('settings:ACCOUNTING.TAX_OPTION_ZERO_TAX_RATE')}
             </p>
             <p className="text-input-text-input-placeholder">0%</p>
           </div>
@@ -250,14 +254,14 @@ const AccountingSettingPageBody: React.FC = () => {
       case 'taxFree':
         return (
           <p className="flex-1 text-input-text-input-filled">
-            {t('setting:ACCOUNTING.TAX_OPTION_TAX_FREE')}
+            {t('settings:ACCOUNTING.TAX_OPTION_TAX_FREE')}
           </p>
         );
       default:
         return (
           <div className="flex flex-1 items-center justify-between">
             <p className="text-input-text-input-filled">
-              {t('setting:ACCOUNTING.TAX_OPTION_TAXABLE')}
+              {t('settings:ACCOUNTING.TAX_OPTION_TAXABLE')}
             </p>
             <p className="text-input-text-input-placeholder">{taxRate}%</p>
           </div>
@@ -290,7 +294,7 @@ const AccountingSettingPageBody: React.FC = () => {
             className="flex items-center gap-12px px-12px py-8px hover:bg-dropdown-surface-item-hover"
           >
             <p className="text-dropdown-text-primary">
-              {t('setting:ACCOUNTING.TAX_OPTION_TAXABLE')}
+              {t('settings:ACCOUNTING.TAX_OPTION_TAXABLE')}
             </p>
             <p className="text-dropdown-text-secondary">5%</p>
           </button>
@@ -302,7 +306,7 @@ const AccountingSettingPageBody: React.FC = () => {
               className="flex flex-1 items-center gap-12px px-12px py-8px hover:bg-dropdown-surface-item-hover"
             >
               <p className="text-dropdown-text-primary">
-                {t('setting:ACCOUNTING.TAX_OPTION_ZERO_TAX_RATE')}
+                {t('settings:ACCOUNTING.TAX_OPTION_ZERO_TAX_RATE')}
               </p>
               <p className="text-dropdown-text-secondary">0%</p>
             </button>
@@ -339,7 +343,7 @@ const AccountingSettingPageBody: React.FC = () => {
             className="flex items-center px-12px py-8px hover:bg-dropdown-surface-item-hover"
           >
             <p className="text-dropdown-text-primary">
-              {t('setting:ACCOUNTING.TAX_OPTION_TAX_FREE')}
+              {t('settings:ACCOUNTING.TAX_OPTION_TAX_FREE')}
             </p>
           </button>
         </div>
@@ -370,7 +374,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 className="flex items-center px-12px py-8px hover:bg-dropdown-surface-item-hover"
               >
                 <p className="text-dropdown-text-primary">
-                  {t(`setting:ACCOUNTING.${period.toUpperCase()}`)}
+                  {t(`settings:ACCOUNTING.${period.toUpperCase()}`)}
                 </p>
               </button>
             );
@@ -405,7 +409,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 alt="currency_icon"
                 className="rounded-full"
               />
-              <p>{t(`common:CURRENCY_ALIAS.${currency}`)}</p>
+              <p>{currency}</p>
             </div>
           );
         })}
@@ -421,7 +425,7 @@ const AccountingSettingPageBody: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/money.svg" width={16} height={16} alt="money_icon" />
-            <p>{t('setting:ACCOUNTING.TAX_SETTING_TITLE')}</p>
+            <p>{t('settings:ACCOUNTING.TAX_SETTING_TITLE')}</p>
           </div>
           <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
@@ -429,7 +433,7 @@ const AccountingSettingPageBody: React.FC = () => {
         <div className="grid grid-cols-2 gap-x-40px gap-y-24px">
           {/* Info: (20241106 - Julian) ===== 銷售稅 ===== */}
           <div ref={salesTaxRef} className="flex flex-col gap-10px">
-            <p className="text-sm text-input-text-primary">{t('setting:ACCOUNTING.TAX_SALES')}</p>
+            <p className="text-sm text-input-text-primary">{t('settings:ACCOUNTING.TAX_SALES')}</p>
             {/* Info: (20241106 - Julian) ===== 銷售稅下拉選單 ===== */}
             <div
               onClick={toggleSalesTaxMenu}
@@ -449,7 +453,7 @@ const AccountingSettingPageBody: React.FC = () => {
           {/* Info: (20241106 - Julian) ===== 消費稅 ===== */}
           <div ref={purchaseTaxRef} className="flex flex-col gap-10px">
             <p className="text-sm text-input-text-primary">
-              {t('setting:ACCOUNTING.TAX_PURCHASE')}
+              {t('settings:ACCOUNTING.TAX_PURCHASE')}
             </p>
             {/* Info: (20241106 - Julian) ===== 消費稅下拉選單 ===== */}
             <div
@@ -470,19 +474,19 @@ const AccountingSettingPageBody: React.FC = () => {
           {/* Info: (20241106 - Julian) ===== 稅務申報週期 ===== */}
           <div ref={periodRef} className="flex flex-col gap-10px">
             <p className="text-sm text-input-text-primary">
-              {t('setting:ACCOUNTING.TAX_RETURN_PERIODICITY')}
+              {t('settings:ACCOUNTING.TAX_RETURN_PERIODICITY')}
             </p>
             {/* Info: (20241106 - Julian) ===== 稅務申報週期下拉選單 ===== */}
             <div className="relative flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
               <div className="px-12px py-10px text-input-text-input-placeholder">
-                {t('setting:ACCOUNTING.EVERY')}
+                {t('settings:ACCOUNTING.EVERY')}
               </div>
               <div
                 onClick={togglePeriodMenu}
                 className="flex flex-1 items-center justify-between px-12px py-10px font-medium hover:cursor-pointer"
               >
                 <p className="text-input-text-input-filled">
-                  {t(`setting:ACCOUNTING.${currentTaxPeriod.toUpperCase()}`)}
+                  {t(`settings:ACCOUNTING.${currentTaxPeriod.toUpperCase()}`)}
                 </p>
                 <div
                   className={`text-icon-surface-single-color-primary ${periodVisible ? 'rotate-180' : 'rotate-0'}`}
@@ -502,7 +506,7 @@ const AccountingSettingPageBody: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/coin.svg" width={16} height={16} alt="coin_icon" />
-            <p>{t('setting:ACCOUNTING.CURRENCY_SETTING_TITLE')}</p>
+            <p>{t('settings:ACCOUNTING.CURRENCY_SETTING_TITLE')}</p>
           </div>
           <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
@@ -524,9 +528,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 src={`/currencies/${currentCurrency.toLowerCase()}.svg`}
                 className="rounded-full"
               />
-              <div className="flex-1 text-input-text-input-filled">
-                {t(`common:CURRENCY_ALIAS.${currentCurrency}`)}
-              </div>
+              <div className="flex-1 text-input-text-input-filled">{currentCurrency}</div>
               <div
                 className={`text-icon-surface-single-color-primary ${currencyMenuVisible ? 'rotate-180' : 'rotate-0'}`}
               >
@@ -544,7 +546,7 @@ const AccountingSettingPageBody: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/division_sign.svg" width={16} height={16} alt="division_sign" />
-            <p>{t('setting:ACCOUNTING.ACCOUNTING_SETTING_TITLE')}</p>
+            <p>{t('settings:ACCOUNTING.ACCOUNTING_SETTING_TITLE')}</p>
           </div>
           <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
@@ -554,13 +556,13 @@ const AccountingSettingPageBody: React.FC = () => {
           {/* TODO: (20241106 - Julian) 須確認是否保留 */}
           <div className="hidden items-center gap-10px text-sm font-semibold text-text-neutral-primary">
             <div className="h-8px w-8px rounded-full bg-surface-support-strong-maple"></div>
-            <p>{t('setting:ACCOUNTING.PERIOD_SETTINGS_SUBTITLE')}</p>
+            <p>{t('settings:ACCOUNTING.PERIOD_SETTINGS_SUBTITLE')}</p>
           </div>
           <div className="hidden w-full items-start gap-40px">
             {/* Info: (20241106 - Julian) ===== 會計年度 ===== */}
             <div className="flex flex-col gap-10px">
               <p className="text-sm text-input-text-primary">
-                {t('setting:ACCOUNTING.FISCAL_YEAR')}
+                {t('settings:ACCOUNTING.FISCAL_YEAR')}
               </p>
               {/* Info: (20241106 - Julian) ===== 會計年度下拉選單 ===== */}
               <div className="flex w-140px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
@@ -581,7 +583,7 @@ const AccountingSettingPageBody: React.FC = () => {
               {/* Info: (20241106 - Julian) ===== 會計期間選擇 ===== */}
               <div className="flex w-4/5 flex-col gap-10px">
                 <p className="text-sm text-input-text-primary">
-                  {t('setting:ACCOUNTING.FISCAL_YEAR_PERIOD')}
+                  {t('settings:ACCOUNTING.FISCAL_YEAR_PERIOD')}
                 </p>
                 <div className="w-full">
                   <DatePicker
@@ -595,7 +597,7 @@ const AccountingSettingPageBody: React.FC = () => {
               <div className="flex w-4/5 items-center justify-between">
                 {/* Info: (20241106 - Julian) ===== 年度報告設定 ===== */}
                 <div className="flex items-center gap-10px whitespace-nowrap text-sm font-semibold text-text-neutral-primary">
-                  <p>{t('setting:ACCOUNTING.GENERATE_REPORT_1')}</p>
+                  <p>{t('settings:ACCOUNTING.GENERATE_REPORT_1')}</p>
                   <input
                     type="number"
                     value={reportGenerateDay}
@@ -604,7 +606,7 @@ const AccountingSettingPageBody: React.FC = () => {
                     onWheel={(e) => e.currentTarget.blur()} // Info: (20241106 - Julian) 防止滾輪滾動
                     className={`h-44px w-80px rounded-xs border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none transition-all duration-300 ease-in-out disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
                   />
-                  <p>{t('setting:ACCOUNTING.GENERATE_REPORT_2')}</p>
+                  <p>{t('settings:ACCOUNTING.GENERATE_REPORT_2')}</p>
                 </div>
                 {/* Info: (20241106 - Julian) ===== 年度報告下載 ===== */}
                 <button
@@ -612,7 +614,7 @@ const AccountingSettingPageBody: React.FC = () => {
                   disabled
                   className="flex items-center gap-4px text-sm text-link-text-primary disabled:text-text-neutral-mute"
                 >
-                  <MdOutlineFileDownload size={16} /> {t('setting:ACCOUNTING.DOWNLOAD_REPORT')}
+                  <MdOutlineFileDownload size={16} /> {t('settings:ACCOUNTING.DOWNLOAD_REPORT')}
                 </button>
               </div>
             </div>
@@ -621,7 +623,7 @@ const AccountingSettingPageBody: React.FC = () => {
           {/* Info: (20241106 - Julian) ===== 會計科目子標題 ===== */}
           <div className="flex items-center gap-10px text-sm font-semibold text-text-neutral-primary">
             <div className="h-8px w-8px rounded-full bg-surface-support-strong-maple"></div>
-            <p>{t('setting:ACCOUNTING.ACCOUNTING_TITLE_SETTINGS_SUBTITLE')}</p>
+            <p>{t('settings:ACCOUNTING.ACCOUNTING_TITLE_SETTINGS_SUBTITLE')}</p>
           </div>
           <div className="flex flex-col gap-24px">
             {/* Info: (20241106 - Julian) ===== 查看所有會計科目 ===== */}
@@ -637,7 +639,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 className="flex items-center gap-4px text-sm text-link-text-primary disabled:text-text-neutral-mute"
                 onClick={accountingTitleSettingModalVisibilityHandler}
               >
-                {t('setting:ACCOUNTING.VIEW_ALL_ACCOUNTING')}
+                {t('settings:ACCOUNTING.VIEW_ALL_ACCOUNTING')}
               </button>
             </div>
           </div>
@@ -645,7 +647,7 @@ const AccountingSettingPageBody: React.FC = () => {
           {/* Info: (20241106 - Julian) ===== 導入會計科目子標題 ===== */}
           <div className="flex items-center gap-10px text-sm font-semibold text-text-neutral-primary">
             <div className="h-8px w-8px rounded-full bg-surface-support-strong-maple"></div>
-            <p>{t('setting:ACCOUNTING.ACCOUNTING_IMPORT_SUBTITLE')}</p>
+            <p>{t('settings:ACCOUNTING.ACCOUNTING_IMPORT_SUBTITLE')}</p>
           </div>
           <div className="flex flex-col gap-24px">
             {/* Info: (20241106 - Julian) ===== 上傳檔案 ===== */}
@@ -656,7 +658,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 disabled
                 className="flex items-center gap-4px text-sm text-link-text-primary disabled:text-text-neutral-mute"
               >
-                {t('setting:ACCOUNTING.IMPORT_FILE')}
+                {t('settings:ACCOUNTING.IMPORT_FILE')}
               </button>
             </div>
             {/* Info: (20241106 - Julian) ===== 手動開帳 ===== */}
@@ -672,7 +674,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 onClick={manualAccountOpeningModalVisibilityHandler}
                 className="flex items-center gap-4px text-sm text-link-text-primary disabled:text-text-neutral-mute"
               >
-                {t('setting:ACCOUNTING.MANUAL_ACCOUNT_OPENING')}
+                {t('settings:ACCOUNTING.MANUAL_ACCOUNT_OPENING')}
               </button>
             </div>
           </div>
@@ -682,7 +684,7 @@ const AccountingSettingPageBody: React.FC = () => {
       {/* Info: (20241106 - Julian) ===== 儲存按鈕 ===== */}
       <div className="ml-auto flex items-center">
         <Button type="button" variant="tertiary" disabled={saveDisabled} onClick={saveClickHandler}>
-          {t('setting:ACCOUNTING.SAVE_BTN')}
+          {t('settings:ACCOUNTING.SAVE_BTN')}
         </Button>
       </div>
     </div>

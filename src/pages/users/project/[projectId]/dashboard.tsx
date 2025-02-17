@@ -47,9 +47,9 @@ interface IProjectDashboardPageProps {
 
 const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
   const { t } = useTranslation(['alpha', 'project']);
-  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
 
   const [stageHolder, setStageHolder] = useState('-');
 
@@ -57,7 +57,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
   const { data: projectData } = APIHandler<IProject>(
     APIName.GET_PROJECT_BY_ID,
     {
-      params: { companyId: selectedCompany?.id, projectId },
+      params: { companyId: selectedAccountBook?.id, projectId },
     },
     hasCompanyId
   );

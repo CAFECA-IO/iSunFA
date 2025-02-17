@@ -16,7 +16,7 @@ import {
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 import { CounterpartyType } from '@/constants/counterparty';
-import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
+import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
 const nullSchema = z.union([z.object({}), z.string()]);
 
@@ -32,11 +32,13 @@ export const ICertificateValidator = z.object({
   file: IFileBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
   invoice: IInvoiceBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
   voucherNo: z.string().nullable(),
+  voucherId: z.number().nullable(),
   aiResultId: z.string().optional(),
   aiStatus: z.string().optional(),
   createdAt: z.number(),
   updatedAt: z.number(),
   uploader: z.string(),
+  uploaderUrl: z.string(),
 });
 
 export const ICertificatePartialInvoiceValidator = z.object({
@@ -47,11 +49,13 @@ export const ICertificatePartialInvoiceValidator = z.object({
   file: IFileBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
   invoice: IInvoiceBetaValidatorOptional, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
   voucherNo: z.string().nullable(),
+  voucherId: z.number().nullable(),
   aiResultId: z.string().optional(),
   aiStatus: z.string().optional(),
   createdAt: z.number(),
   updatedAt: z.number(),
   uploader: z.string(),
+  uploaderUrl: z.string(),
 });
 
 /**
@@ -73,6 +77,7 @@ export const certificateEntityValidator = z.object({
   company: z.any().optional(),
   vouchers: z.array(z.any()).optional(),
   uploader: z.any().optional(),
+  uploaderUrl: z.any().optional(),
   userCertificates: z.array(z.any()).optional(),
 });
 
@@ -95,19 +100,7 @@ const certificateListQueryValidator = z.object({
 
 const certificateListBodyValidator = z.object({});
 
-const paginatedCertificates = paginatedDataSchemaDataNotArray(
-  z
-    .object({
-      totalInvoicePrice: z.number(),
-      unRead: z.object({
-        withVoucher: z.number(),
-        withoutVoucher: z.number(),
-      }),
-      currency: z.nativeEnum(CurrencyType),
-      certificates: z.array(ICertificatePartialInvoiceValidator.passthrough()),
-    })
-    .strip()
-);
+const paginatedCertificates = paginatedDataSchema(ICertificatePartialInvoiceValidator);
 
 const certificateListFrontendSchema = paginatedCertificates;
 

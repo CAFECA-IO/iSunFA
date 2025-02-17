@@ -4,7 +4,7 @@ import { useTranslation } from 'next-i18next';
 import FilterSection from '@/components/filter_section/filter_section';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { APIName } from '@/constants/api_connection';
-import SelectionPannl from '@/components/certificate/certificate_selection_pannel';
+import SelectionPanel from '@/components/certificate/certificate_selection_panel';
 import { Button } from '@/components/button/button';
 import { RxCross1 } from 'react-icons/rx';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -15,30 +15,20 @@ import { InvoiceType } from '@/constants/invoice';
 
 interface CertificateSelectorModalProps {
   isOpen: boolean;
-  companyId: number;
+  accountBookId: number;
   selectedIds: number[];
   setSelectedIds: React.Dispatch<React.SetStateAction<number[]>>;
   onClose: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
 
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240926 - tzuhan) 保存數據的回調函數
   certificates: ICertificateUI[]; // Info: (20240926 - tzuhan) 證書列表
-  handleApiResponse: (
-    data: IPaginatedData<{
-      totalInvoicePrice: number;
-      unRead: {
-        withVoucher: number;
-        withoutVoucher: number;
-      };
-      currency: string;
-      certificates: ICertificate[];
-    }>
-  ) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
+  handleApiResponse: (data: IPaginatedData<ICertificate[]>) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
   openUploaderModal: () => void; // Info: (20240926 - tzuhan) 打開上傳模態框的回調函數
 }
 
 const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
   isOpen,
-  companyId,
+  accountBookId,
   onClose,
   handleSelect,
   handleApiResponse,
@@ -55,7 +45,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
     setSelectedIds(certificates.map((item) => item.id));
   };
 
-  const handleComfirm = () => {
+  const handleConfirm = () => {
     handleSelect(selectedIds, true);
     onClose();
   };
@@ -89,7 +79,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
         </p>
         <FilterSection
           apiName={APIName.CERTIFICATE_LIST_V2}
-          params={{ companyId }}
+          params={{ companyId: accountBookId }} // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
           page={1}
           pageSize={DEFAULT_MAX_PAGE_LIMIT} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
           tab={InvoiceTabs.WITHOUT_VOUCHER}
@@ -110,7 +100,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
             </button>
           </div>
         </div>
-        <SelectionPannl
+        <SelectionPanel
           certificates={certificates}
           selectedIds={selectedIds}
           handleSelect={handleSelectOne}
@@ -131,7 +121,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
             type="button"
             variant="tertiary"
             className="gap-x-4px px-4 py-2"
-            onClick={handleComfirm}
+            onClick={handleConfirm}
           >
             {t('common:COMMON.CONFIRM')}
           </Button>

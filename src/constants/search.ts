@@ -4,15 +4,15 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 export const SEARCH_KEYWORDS: ISearchKeyword[] = [
   {
     label: 'My Company List',
-    path: ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE,
+    path: ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
   },
   {
-    label: '公司列表',
-    path: ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE,
+    label: '公司清單',
+    path: ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
   },
   {
     label: '建立公司',
-    path: ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE,
+    path: ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
   },
   {
     label: 'Event Planner',
@@ -78,7 +78,7 @@ export const SEARCH_KEYWORDS: ISearchKeyword[] = [
     needToVerifyCompany: true,
   },
   {
-    label: '憑證列表',
+    label: '憑證清單',
     path: ISUNFA_ROUTE.CERTIFICATE_LIST,
     needToVerifyCompany: true,
   },
@@ -175,20 +175,20 @@ export const SEARCH_KEYWORDS: ISearchKeyword[] = [
   },
   {
     label: 'General Setting',
-    path: ISUNFA_ROUTE.GENERAL_SETTING,
+    path: ISUNFA_ROUTE.GENERAL_SETTINGS,
   },
   {
     label: '一般設定',
-    path: ISUNFA_ROUTE.GENERAL_SETTING,
+    path: ISUNFA_ROUTE.GENERAL_SETTINGS,
   },
   {
     label: 'Accounting Setting',
-    path: ISUNFA_ROUTE.ACCOUNTING_SETTING,
+    path: ISUNFA_ROUTE.ACCOUNTING_SETTINGS,
     needToVerifyCompany: true,
   },
   {
     label: '會計設定',
-    path: ISUNFA_ROUTE.ACCOUNTING_SETTING,
+    path: ISUNFA_ROUTE.ACCOUNTING_SETTINGS,
     needToVerifyCompany: true,
   },
 ];

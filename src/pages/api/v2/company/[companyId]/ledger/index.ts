@@ -2,7 +2,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ILedgerPayload } from '@/interfaces/ledger';
+import { ILedgerPayload, ILedgerNote } from '@/interfaces/ledger';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
@@ -70,13 +70,26 @@ export const handleGetRequest: IHandleRequest<APIName.LEDGER_LIST, IPayload> = a
     lineItems = filterByLabelType(lineItems, labelType as LabelType);
     const processedLineItems = sortAndCalculateBalances(lineItems);
     const sumUpData = calculateTotals(processedLineItems);
-    const paginatedLedger = formatPaginatedLedger(processedLineItems, pageNumber, pageSize);
-
-    payload = {
+    const note: ILedgerNote = {
       currencyAlias,
-      items: paginatedLedger,
       total: sumUpData,
     };
+
+    const paginatedLedger = formatPaginatedLedger(processedLineItems, pageNumber, pageSize);
+    const noteString = JSON.stringify(note);
+
+    payload = {
+      data: paginatedLedger.data,
+      page: paginatedLedger.page,
+      totalPages: paginatedLedger.totalPages,
+      totalCount: paginatedLedger.totalCount,
+      pageSize: paginatedLedger.pageSize,
+      hasNextPage: paginatedLedger.hasNextPage,
+      hasPreviousPage: paginatedLedger.hasPreviousPage,
+      sort: paginatedLedger.sort,
+      note: noteString,
+    } as ILedgerPayload;
+
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
   } catch (error) {
     const err = error as Error;

@@ -3,6 +3,8 @@
     "TYPE": "類型",
     "STATUS": "狀態",
     "ALL": "全部",
+    "PENDING": "待處理",
+    "REVERSED": "已沖銷",
     "INVOICE": "發票",
     "RECEIPT": "收據",
     "ASSET": "資產",

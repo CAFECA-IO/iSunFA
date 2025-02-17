@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Pagination from '@/components/pagination/pagination';
 import { ICertificateUI } from '@/interfaces/certificate';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
@@ -6,6 +6,7 @@ import CertificateTable from '@/components/certificate/certificate_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 import { SortOrder } from '@/constants/sort';
 import { InvoiceTabs } from '@/constants/certificate';
+import { CurrencyType } from '@/constants/currency';
 
 interface CertificateProps {
   activeTab: InvoiceTabs;
@@ -14,6 +15,7 @@ interface CertificateProps {
   totalCount: number;
   totalPages: number;
   certificates: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表
+  currencyAlias: CurrencyType;
   viewType: DISPLAY_LIST_VIEW_TYPE; // Info: (20240923 - tzuhan) 顯示模式
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態
   handleSelect: (ids: number[], isSelected: boolean) => void;
@@ -39,6 +41,7 @@ const Certificate: React.FC<CertificateProps> = ({
   totalCount,
   totalPages,
   certificates,
+  currencyAlias,
   viewType,
   activeSelection,
   handleSelect,
@@ -54,28 +57,13 @@ const Certificate: React.FC<CertificateProps> = ({
   setAmountSort,
   setVoucherSort,
 }) => {
-  const [certificatesReOrdered, setCertificatesReOrdered] =
-    useState<ICertificateUI[]>(certificates);
-
-  useEffect(() => {
-    const unReadCertificates: ICertificateUI[] = [];
-    const readCertificates: ICertificateUI[] = [];
-    certificates.forEach((certificate) => {
-      if (certificate.unRead) {
-        unReadCertificates.push(certificate);
-      } else {
-        readCertificates.push(certificate);
-      }
-    });
-    setCertificatesReOrdered([...unReadCertificates, ...readCertificates]);
-  }, [certificates]);
-
   return (
     <>
       {viewType === DISPLAY_LIST_VIEW_TYPE.LIST && (
         <CertificateTable
           activeTab={activeTab}
-          certificates={certificatesReOrdered}
+          certificates={certificates}
+          currencyAlias={currencyAlias}
           activeSelection={activeSelection}
           handleSelect={handleSelect}
           handleSelectAll={handleSelectAll}
@@ -91,7 +79,7 @@ const Certificate: React.FC<CertificateProps> = ({
       )}
       {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (
         <CertificateGrid
-          certificates={certificatesReOrdered}
+          certificates={certificates}
           activeSelection={activeSelection}
           handleSelect={handleSelect}
           onDownload={onDownload}

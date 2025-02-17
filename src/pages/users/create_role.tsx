@@ -4,15 +4,17 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Introduction from '@/components/beta/create_role/introduction';
-import RoleCard from '@/components/beta/create_role/role_cards';
+import RoleCards from '@/components/beta/create_role/role_cards';
 import PreviewModal from '@/components/beta/create_role/preview_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { PiArrowUUpLeftBold } from 'react-icons/pi';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import LoginAnimation from '@/components/login/login_animation';
+import { RoleName } from '@/constants/role';
 
 const findUnusedRoles = (systemRoles: IRole[], userRoles: IUserRole[]): IRole[] => {
   // Info: (20241122 - Liz) 將 userRoles 中的角色 ID 建立為一個 Set
@@ -95,7 +97,7 @@ const CreateRolePage = () => {
       {isAnimationShowing && <LoginAnimation setIsAnimationShowing={setIsAnimationShowing} />}
 
       {!isAnimationShowing && (
-        <main className="relative h-screen overflow-hidden">
+        <main className="relative flex h-screen flex-col overflow-hidden">
           {isAbleToGoBack && (
             <Link
               href={ISUNFA_ROUTE.SELECT_ROLE}
@@ -111,22 +113,62 @@ const CreateRolePage = () => {
             </Link>
           )}
 
-          <div className="h-75%">
-            <Introduction
-              showingRole={showingRole}
-              selectedRoleId={selectedRoleId}
-              togglePreviewModal={togglePreviewModal}
-            />
-          </div>
+          {/* Info: (20250206 - Liz) 背景圖片 */}
+          {!showingRole && (
+            <Image
+              src="/images/select_role_bg.svg"
+              alt="default_introduction"
+              width={734.92}
+              height={356.48}
+              className="absolute right-0 top-140px z-0"
+            ></Image>
+          )}
 
-          <div className="mx-100px mb-40px">
-            <RoleCard
-              roleList={unusedSystemRoles}
-              showingRole={showingRole}
-              setShowingRole={setShowingRole}
-              setSelectedRoleId={setSelectedRoleId}
-            />
-          </div>
+          {showingRole === RoleName.BOOKKEEPER && (
+            <Image
+              src="/images/bookkeeper_bg.svg"
+              alt="bookkeeper_introduction"
+              width={566}
+              height={671}
+              className="absolute right-74px top-30px z-0"
+            ></Image>
+          )}
+
+          {showingRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
+            <Image
+              src="/images/educational_bg.svg"
+              alt="educational_trial_version"
+              width={446}
+              height={545}
+              className="absolute right-110px top-30px z-0"
+            ></Image>
+          )}
+
+          {showingRole === RoleName.ENTERPRISE && (
+            // ToDo: (20250206 - Liz) 企業角色的背景圖片尚未設計，有之後再替換
+            <Image
+              src="/images/educational_bg.svg"
+              alt="educational_trial_version"
+              width={446}
+              height={545}
+              className="absolute right-110px top-30px z-0"
+            ></Image>
+          )}
+
+          {/* Info: (20250206 - Liz) 介紹區塊 */}
+          <Introduction
+            showingRole={showingRole}
+            selectedRoleId={selectedRoleId}
+            togglePreviewModal={togglePreviewModal}
+          />
+
+          {/* Info: (20250206 - Liz) 切換按鈕 */}
+          <RoleCards
+            roleList={unusedSystemRoles}
+            showingRole={showingRole}
+            setShowingRole={setShowingRole}
+            setSelectedRoleId={setSelectedRoleId}
+          />
 
           {isPreviewModalVisible && <PreviewModal togglePreviewModal={togglePreviewModal} />}
         </main>

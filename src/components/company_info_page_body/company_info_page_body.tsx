@@ -18,20 +18,20 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { KYCStatus } from '@/constants/kyc';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
 import { LuArrowLeftRight } from 'react-icons/lu';
 import { IoArrowForward } from 'react-icons/io5';
 import { FaCheck } from 'react-icons/fa6';
-import { CANCEL_COMPANY_ID } from '@/constants/company';
+import { CANCEL_ACCOUNT_BOOK_ID } from '@/constants/company';
 
 const CompanyInfoPageBody = () => {
   const { t } = useTranslation(['common', 'kyc']);
 
   const router = useRouter();
-  const { isAuthLoading, selectedCompany, selectCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook, selectAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   const {
     teamSettingModalVisibilityHandler,
     transferCompanyModalVisibilityHandler,
@@ -40,11 +40,11 @@ const CompanyInfoPageBody = () => {
   } = useGlobalCtx();
   const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
-  const [company, setCompany] = useState<ICompany | null>(selectedCompany);
+  const [company, setCompany] = useState<ICompany | null>(selectedAccountBook);
   const [ownerId, setOwnerId] = useState<number | null>(null);
   const [role, setRole] = useState<IRole | null>(null);
 
-  const { trigger: deleteCompany } = APIHandler<ICompany>(APIName.COMPANY_DELETE);
+  const { trigger: deleteAccountBook } = APIHandler<ICompany>(APIName.COMPANY_DELETE);
 
   const {
     data: companyData,
@@ -55,7 +55,7 @@ const CompanyInfoPageBody = () => {
     APIName.COMPANY_GET_BY_ID,
     {
       params: {
-        companyId: selectedCompany?.id,
+        companyId: selectedAccountBook?.id,
       },
     },
     hasCompanyId
@@ -74,8 +74,8 @@ const CompanyInfoPageBody = () => {
   }, [companyData, getCompanyDataSuccessfully, getCompanyDataCode]);
 
   useEffect(() => {
-    setCompany(selectedCompany);
-  }, [selectedCompany]);
+    setCompany(selectedAccountBook);
+  }, [selectedAccountBook]);
 
   const updateImageClickHandler = () => {
     profileUploadModalDataHandler(UploadType.COMPANY);
@@ -93,13 +93,13 @@ const CompanyInfoPageBody = () => {
   const procedureOfDelete = () => {
     if (!company) return;
     messageModalVisibilityHandler();
-    deleteCompany({
+    deleteAccountBook({
       params: {
-        companyId: selectedCompany?.id,
+        companyId: selectedAccountBook?.id,
       },
     });
 
-    selectCompany(CANCEL_COMPANY_ID);
+    selectAccountBook(CANCEL_ACCOUNT_BOOK_ID);
     router.push(ISUNFA_ROUTE.DASHBOARD);
   };
 
@@ -161,7 +161,7 @@ const CompanyInfoPageBody = () => {
 
   // Info: (20240802 - Julian) No KYC in free company
   const displayedKYC =
-    selectedCompany?.id !== FREE_COMPANY_ID ? (
+    selectedAccountBook?.id !== FREE_ACCOUNT_BOOK_ID ? (
       <>
         {/* ===== KYC ===== */}
         <div className="mt-10 flex gap-4 max-md:max-w-full max-md:flex-wrap">

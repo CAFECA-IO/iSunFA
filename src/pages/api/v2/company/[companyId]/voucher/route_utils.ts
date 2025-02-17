@@ -10,7 +10,7 @@ import { Logger } from 'pino';
 
 import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_item.formatter';
 import { initVoucherEntity } from '@/lib/utils/voucher';
-import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
+import { parsePartialPrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { parsePrismaAssetToAssetEntity } from '@/lib/utils/formatter/asset.formatter';
 import {
   getDaysBetweenDates,
@@ -19,7 +19,7 @@ import {
   timestampInSeconds,
 } from '@/lib/utils/common';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
-import { EventType, ProgressStatus } from '@/constants/account';
+import { EventType, ProgressStatus, TransactionStatus } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { parsePrismaCompanyToCompanyEntity } from '@/lib/utils/formatter/company.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
@@ -52,7 +52,7 @@ import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatte
 import { initUserVoucherEntity } from '@/lib/utils/user_voucher';
 import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
 import { voucherAPIGetOneUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
-import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import { IAccountEntity } from '@/interfaces/accounting_account';
@@ -64,7 +64,7 @@ import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
  * @note 僅限於 GET /voucher 輸出時使用
  */
 export type IGetManyVoucherBetaEntity = IVoucherEntity & {
-  counterParty: ICounterPartyEntity;
+  counterParty: ICounterPartyEntityPartial;
   issuer: IUserEntity & { imageFile: IFileEntity };
   readByUsers: IUserVoucherEntity[];
   lineItems: (ILineItemEntity & { account: IAccountEntity })[];
@@ -127,6 +127,7 @@ export const voucherAPIGetUtils = {
     type?: EventType | undefined;
     searchQuery?: string | undefined;
     isDeleted?: boolean | undefined;
+    hideReversedRelated?: boolean | undefined;
   }): Promise<
     IPaginatedData<IGetManyVoucherResponseButOne[]> & {
       where: Prisma.VoucherWhereInput;
@@ -181,7 +182,7 @@ export const voucherAPIGetUtils = {
   },
 
   initCounterPartyEntity: (voucher: IGetManyVoucherResponseButOne) => {
-    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(voucher.counterparty);
+    const counterParty = parsePartialPrismaCounterPartyToCounterPartyEntity(voucher.counterparty);
     return counterParty;
   },
 
@@ -389,6 +390,32 @@ export const voucherAPIGetUtils = {
 
     return isDeleted || hasOriginalVouchers || hasResultVouchers;
   },
+
+  filterTransactionStatus: (
+    voucherBetas: IGetManyVoucherBetaEntity[],
+    tab: VoucherListTabV2,
+    status: TransactionStatus | undefined
+  ) => {
+    return voucherBetas.filter((voucher) => {
+      switch (status) {
+        case TransactionStatus.PENDING:
+          if (tab === VoucherListTabV2.PAYMENT) {
+            return voucher.payableInfo.remain > 0;
+          } else {
+            return voucher.receivingInfo.remain > 0;
+          }
+        case TransactionStatus.REVERSED:
+          if (tab === VoucherListTabV2.PAYMENT) {
+            return voucher.payableInfo.remain === 0;
+          } else {
+            return voucher.receivingInfo.remain === 0;
+          }
+        case undefined:
+        default:
+          return true;
+      }
+    });
+  },
 };
 
 /**
@@ -522,7 +549,7 @@ export const voucherAPIPostUtils = {
       });
     }
 
-    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto!);
+    const counterParty = parsePartialPrismaCounterPartyToCounterPartyEntity(counterPartyDto!);
     return counterParty;
   },
 
@@ -1175,12 +1202,15 @@ export const mockVouchersReturn = [
       {
         id: 1111,
         voucherNo: '240817-001',
+        type: 'reverse',
       },
       {
         id: 1112,
         voucherNo: '240817-002',
+        type: 'reverse',
       },
     ],
+    deletedReverseVoucherIds: [],
     issuer: {
       // Info: (20240927 - Murky) IUser
       id: 1001,

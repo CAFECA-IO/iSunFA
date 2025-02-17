@@ -80,7 +80,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
         'journal',
         'kyc',
         'project',
-        'setting',
+        'settings',
         'terms',
         'salary',
         'asset',

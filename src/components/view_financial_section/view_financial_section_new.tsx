@@ -280,7 +280,7 @@ const ViewFinancialSectionNew = ({
       <div
         className={`flex flex-col rounded-2xl px-5 py-4 ${
           index === activeIndex
-            ? 'bg-surface-brand-primary-soft'
+            ? 'bg-surface-brand-primary-50'
             : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
         }`}
       >
@@ -309,7 +309,7 @@ const ViewFinancialSectionNew = ({
                   key={`thumbnail-${thumbnailUrl + index}`}
                   className={`m-6 mb-0 self-center rounded-sm p-6 tracking-normal ${
                     index === activeIndex
-                      ? 'bg-surface-brand-primary-soft'
+                      ? 'bg-surface-brand-primary-50'
                       : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
                   }`}
                   onClick={() => thumbnailClickHandler(index)}

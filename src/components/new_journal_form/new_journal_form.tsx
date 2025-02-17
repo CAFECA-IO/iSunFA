@@ -80,8 +80,8 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
 
 const NewJournalForm = () => {
   const { t } = useTranslation(['common', 'journal']);
-  const { isAuthLoading, selectedCompany } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   const disabledAddNewAsset = true;
   // Info: (20240428 - Julian) get values from context
   const { addAssetModalVisibilityHandler, confirmModalDataHandler } = useGlobalCtx();
@@ -160,7 +160,7 @@ const NewJournalForm = () => {
   useEffect(() => {
     if (selectedOCR !== undefined && hasCompanyId) {
       getOCRResult({
-        params: { companyId: selectedCompany.id, resultId: selectedOCR.aichResultId },
+        params: { companyId: selectedAccountBook.id, resultId: selectedOCR.aichResultId },
       });
     }
   }, [selectedOCR]);
@@ -170,7 +170,7 @@ const NewJournalForm = () => {
       if (selectedJournal.invoice === null) {
         getOCRResult({
           params: {
-            companyId: selectedCompany.id,
+            companyId: selectedAccountBook.id,
             resultId: selectedJournal.aichResultId,
           },
         });
@@ -206,7 +206,7 @@ const NewJournalForm = () => {
       }
       getAIStatusHandler(
         {
-          companyId: selectedCompany.id,
+          companyId: selectedAccountBook.id,
           askAIId: selectedJournal.aichResultId,
         },
         true
@@ -217,7 +217,7 @@ const NewJournalForm = () => {
       });
       confirmModalVisibilityHandler();
     }
-  }, [selectedCompany, selectedJournal, selectedOCR]);
+  }, [selectedAccountBook, selectedJournal, selectedOCR]);
 
   useEffect(() => {
     if (getSuccess && OCRResult) {
@@ -407,7 +407,7 @@ const NewJournalForm = () => {
       data: updateAIResult,
       code: updateCode,
     } = await updateInvoice({
-      params: { companyId: selectedCompany.id, invoiceId: 0 }, // Info: (20240723 - Murky) invoiceId目前沒有作用
+      params: { companyId: selectedAccountBook.id, invoiceId: 0 }, // Info: (20240723 - Murky) invoiceId目前沒有作用
       body: { invoice: invoiceDataToUpdate },
     });
     if (
@@ -417,7 +417,7 @@ const NewJournalForm = () => {
     ) {
       getAIStatusHandler(
         {
-          companyId: selectedCompany.id,
+          companyId: selectedAccountBook.id,
           askAIId: updateAIResult.resultStatus.resultId,
         },
         true
@@ -446,14 +446,14 @@ const NewJournalForm = () => {
       success: createSuccess,
       code: createCode,
     } = await createInvoice({
-      params: { companyId: selectedCompany.id },
+      params: { companyId: selectedAccountBook.id },
       body: { invoice: invoiceData, ocrId: selectedOCR?.id },
     });
     if (createSuccess && invoice?.journalId && invoice?.resultStatus) {
       setJournalId(invoice.journalId);
       getAIStatusHandler(
         {
-          companyId: selectedCompany.id,
+          companyId: selectedAccountBook.id,
           askAIId: invoice.resultStatus.resultId,
         },
         true
