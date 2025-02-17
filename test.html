@@ -1,0 +1,170 @@
+<html>
+  <head></head>
+  <body>
+    <h3><strong>📌 目前測試結果分析與待解決問題</strong></h3>
+    <p>
+      根據測試結果，成功透過 <code inline="">&lt;form&gt;</code> 提交交易，並且在
+      <strong>HiTRUSTpay 商家後台</strong> 看到訂單記錄，但仍有以下
+      <strong>兩個主要問題需要解決</strong>：
+    </p>
+    <hr />
+    <h2>
+      <strong>1️⃣ Webhook (<code inline="">merUpdateURL</code>) 是否有被 HiTRUSTpay 呼叫？</strong>
+    </h2>
+    <h3><strong>🔹 問題</strong></h3>
+    <ul>
+      <li>
+        HiTRUSTpay 應該會在交易完成後，透過 <code inline="">merUpdateURL</code> (<code inline=""
+          >https://isunfa.tw/api/test/payment/update</code
+        >) <strong>回傳交易結果</strong>，但目前 <strong>後端沒有看到任何請求</strong>。
+      </li>
+      <li>無法確認 HiTRUSTpay 是否真的有發送 Webhook，或者是否被擋住。</li>
+    </ul>
+    <h3><strong>🔹 可能原因</strong></h3>
+    <ol>
+      <li>
+        <strong>Webhook 未觸發</strong>
+        <ul>
+          <li>
+            HiTRUSTpay 可能未正確發送請求到 <code inline="">merUpdateURL</code>，需要從 HiTRUSTpay
+            後台確認交易通知狀態。
+          </li>
+        </ul>
+      </li>
+      <li>
+        <strong>請求被擋住</strong>
+        <ul>
+          <li>
+            伺服器防火牆或 WAF 可能攔截了來自 HiTRUSTpay 的 Webhook 請求（IP：<code inline=""
+              >203.75.242.8</code
+            >）。
+          </li>
+        </ul>
+      </li>
+      <li>
+        <strong>請求格式或 Header 不符合後端驗證邏輯</strong>
+        <ul>
+          <li>
+            HiTRUSTpay 可能使用了
+            <strong>不同的 <code inline="">Content-Type</code> 或 Header</strong>，導致後端 API
+            拒絕處理請求。
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <h3><strong>🔹 解決方案</strong></h3>
+    <p>✅ <strong>檢查 HiTRUSTpay 是否有發送 Webhook</strong></p>
+    <ul>
+      <li>
+        <strong>從 HiTRUSTpay 後台查看 <code inline="">merUpdateURL</code> 交易通知紀錄</strong
+        >，確認 HiTRUSTpay 是否有發送請求。
+      </li>
+      <li>若後台沒有紀錄，可能 HiTRUSTpay 端有問題，需聯絡客服。</li>
+    </ul>
+    <p>✅ <strong>檢查伺服器日誌 &amp; 設置 Debug Log</strong></p>
+    <ul>
+      <li>
+        在 <code inline="">https://isunfa.tw/api/test/payment/update</code>
+        <strong>後端 API 加入請求日誌</strong>，紀錄所有請求 Header &amp; Body：
+      </li>
+    </ul>
+    <pre><code class="language-typescript">app.post('/api/test/payment/update', (req, res) =&gt; {
+      console.log('Received Webhook:', {
+        headers: req.headers,
+        body: req.body
+      });
+      res.send('R01=00'); // 必須回傳這個，否則 HiTRUSTpay 會重發 Webhook
+    });
+    </code></pre>
+    <ul>
+      <li>檢查 Nginx / Cloudflare 是否有攔截 Webhook。</li>
+    </ul>
+    <p>✅ <strong>開放 HiTRUSTpay 來源 IP</strong></p>
+    <ul>
+      <li>確保伺服器允許來自 <strong>203.75.242.8</strong> 的請求：</li>
+    </ul>
+    <pre><code class="language-sh">iptables -A INPUT -s 203.75.242.8 -j ACCEPT
+    </code></pre>
+    <p>（適用於 Linux 防火牆，若使用 Cloudflare，請在「防火牆規則」內開放）</p>
+    <hr />
+    <h2>
+      <strong>2️⃣ <code inline="">orderdesc</code> 在 HiTRUSTpay 後台顯示亂碼</strong>
+    </h2>
+    <h3><strong>🔹 問題</strong></h3>
+    <ul>
+      <li>
+        <code inline="">orderdesc="測試交易"</code> 這個值
+        <strong>在 HiTRUSTpay 後台顯示為亂碼</strong>，可能是 <strong>字元編碼問題</strong>。
+      </li>
+    </ul>
+    <h3><strong>🔹 可能原因</strong></h3>
+    <ol>
+      <li>
+        <strong>HiTRUSTpay 可能要求 <code inline="">orderdesc</code> 必須是 URL encoded</strong>
+        <ul>
+          <li>
+            HiTRUSTpay 可能 <strong>不支援 UTF-8 字元直接傳送</strong>，需要先用
+            <code inline="">encodeURIComponent</code> 轉換。
+          </li>
+        </ul>
+      </li>
+      <li>
+        <strong>HiTRUSTpay 可能只支援 Big5 或其他編碼</strong>
+        <ul>
+          <li>
+            需要確認 API 文件，看 HiTRUSTpay 是否只支援 <strong>Big5 編碼</strong>，而不是 UTF-8。
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <h3><strong>🔹 解決方案</strong></h3>
+    <p>✅ <strong>嘗試 URL encoding</strong></p>
+    <ul>
+      <li>
+        修改 <code inline="">&lt;form&gt;</code>，使用 JavaScript 先將
+        <code inline="">orderdesc</code> <strong>進行 URL encoding</strong>：
+      </li>
+    </ul>
+    <pre><code class="language-html">&lt;input type="hidden" name="orderdesc" value="測試交易" id="orderdesc" /&gt;
+    &lt;script&gt;
+      document.getElementById('orderdesc').value = encodeURIComponent('測試交易');
+    &lt;/script&gt;
+    </code></pre>
+    <p>✅ <strong>測試 Big5 編碼</strong></p>
+    <ul>
+      <li>若 HiTRUSTpay 只支援 <strong>Big5</strong>，可改用 Big5 轉換：</li>
+    </ul>
+    <pre><code class="language-javascript">import iconv from 'iconv-lite';
+    
+    const orderdesc = '測試交易';
+    const big5Encoded = iconv.encode(orderdesc, 'big5').toString('hex');
+    console.log(big5Encoded);
+    </code></pre>
+    <ul>
+      <li>但 <code inline="">&lt;form&gt;</code> 無法直接處理 Big5，需要後端轉換。</li>
+    </ul>
+    <p>✅ <strong>聯絡 HiTRUSTpay 客服確認</strong></p>
+    <ul>
+      <li>
+        <strong
+          >詢問 HiTRUSTpay 是否有指定 <code inline="">orderdesc</code> 需要特定編碼（Big5 / URL
+          encoded）</strong
+        >。
+      </li>
+    </ul>
+    <hr />
+    <h2><strong>📌 目前行動計畫</strong></h2>
+
+    問題 | 可能原因 | 解決方案 | 負責人 -- | -- | -- | -- Webhook 未收到 | HiTRUSTpay 未發送 /
+    伺服器擋住 | 1. 從 HiTRUSTpay 後台檢查 Webhook 紀錄2. 在 API 端加 Debug Log 確認是否收到請求3.
+    確保防火牆允許 203.75.242.8 | ✅ 先由後端檢查日誌 orderdesc 亂碼 | HiTRUSTpay 可能只支援 Big5 /
+    需要 URL encode | 1. 試 encodeURIComponent 轉換2. 嘗試 Big5 編碼（若適用）3. 聯絡 HiTRUSTpay
+    確認 | ✅ 前端先改 encodeURIComponent，後端確認編碼需求
+
+    <hr />
+    <p>
+      這次測試確認了付款可以成功，但
+      <strong>Webhook 是否運作 &amp; 訂單描述亂碼</strong> 仍需解決，請依照建議進行調整與測試！ 🚀
+    </p>
+  </body>
+</html>
