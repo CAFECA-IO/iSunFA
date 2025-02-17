@@ -1,9 +1,9 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const HiTrustPaymentForm = () => {
   const generateOrderNumber = () => `ORDER${Date.now()}`;
-  const [orderNumber, setOrderNumber] = useState(`ORDER${Date.now()}`);
+  const [orderNumber, setOrderNumber] = useState(generateOrderNumber());
   const [type, setType] = useState('Auth');
   const [depositFlag, setDepositFlag] = useState('1');
   const [queryFlag, setQueryFlag] = useState('1');
@@ -12,7 +12,7 @@ const HiTrustPaymentForm = () => {
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
 
-  // 當用戶選擇 `Auth` 或 `AuthSSL`，自動生成新的 `ordernumber`
+  // 交易類型變更時，`Auth` 和 `AuthSSL` 自動生成訂單編號
   useEffect(() => {
     if (type === 'Auth' || type === 'AuthSSL') {
       setOrderNumber(generateOrderNumber());
@@ -22,8 +22,9 @@ const HiTrustPaymentForm = () => {
   }, [type]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    // 轉換金額為「分」的單位 (10 元 = 1000)
+    // 交易金額轉換為「分」的單位 (10 元 = 1000)
     const amountInCents = Number(amount) * 100;
+
     if (!type) {
       alert('請選擇交易類型');
       e.preventDefault();
@@ -92,24 +93,21 @@ const HiTrustPaymentForm = () => {
         {/* 商家代碼 */}
         <input type="hidden" name="storeid" value="62695" />
 
-        {/* 訂單編號（僅在需要時顯示） */}
-        {['AuthRe', 'Capture', 'CaptureRe', 'Refund', 'RefundRe', 'Query'].includes(type) && (
-          <>
-            <label htmlFor="ordernumber" className="mt-4 block font-semibold">
-              訂單編號
-            </label>
-            <input
-              id="ordernumber"
-              type="text"
-              value={orderNumber}
-              onChange={(e) => setOrderNumber(e.target.value)}
-              className="mb-2 border p-2"
-              name="ordernumber"
-            />
-          </>
-        )}
+        {/* 訂單編號（`Auth` 和 `AuthSSL` 自動生成，其他交易手動輸入） */}
+        <label htmlFor="ordernumber" className="mt-4 block font-semibold">
+          訂單編號
+        </label>
+        <input
+          id="ordernumber"
+          type="text"
+          value={orderNumber}
+          onChange={(e) => setOrderNumber(e.target.value)}
+          className="mb-2 border p-2"
+          name="ordernumber"
+          readOnly={type === 'Auth' || type === 'AuthSSL'} // `Auth` 和 `AuthSSL` 不允許手動輸入
+        />
 
-        {/* 訂單金額（查詢時不顯示） */}
+        {/* 訂單金額（查詢時不傳送） */}
         {type !== 'Query' && (
           <>
             <label htmlFor="amount" className="mt-4 block font-semibold">
@@ -139,7 +137,7 @@ const HiTrustPaymentForm = () => {
         />
         <input type="hidden" name="orderdesc" id="hiddenOrderDesc" value="" />
 
-        {/* 卡號與有效期限（僅 `AuthSSL` 需要） */}
+        {/* `AuthSSL` 交易時輸入信用卡資訊 */}
         {type === 'AuthSSL' && (
           <>
             <label htmlFor="pan" className="mt-4 block font-semibold">
@@ -169,51 +167,64 @@ const HiTrustPaymentForm = () => {
         )}
 
         {/* 請款模式選擇 */}
-        <label className="mt-4 block font-semibold">請款模式 (depositflag)</label>
-        <label className="mr-4">
-          <input
-            type="radio"
-            name="depositflag"
-            value="1"
-            checked={depositFlag === '1'}
-            onChange={(e) => setDepositFlag(e.target.value)}
-          />
-          自動請款 (Sale 交易)
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="depositflag"
-            value="0"
-            checked={depositFlag === '0'}
-            onChange={(e) => setDepositFlag(e.target.value)}
-          />
-          手動請款 (一般交易)
-        </label>
+        {(type === 'Auth' || type === 'AuthSSL') && (
+          <>
+            <label className="mt-4 block font-semibold">請款模式 (depositflag)</label>
+            <label className="mr-4">
+              <input
+                type="radio"
+                name="depositflag"
+                value="1"
+                checked={depositFlag === '1'}
+                onChange={(e) => setDepositFlag(e.target.value)}
+              />
+              自動請款 (Sale 交易)
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="depositflag"
+                value="0"
+                checked={depositFlag === '0'}
+                onChange={(e) => setDepositFlag(e.target.value)}
+              />
+              手動請款 (一般交易)
+            </label>
+          </>
+        )}
 
-        {/* 啟動查詢選擇 */}
-        <label className="mt-4 block font-semibold">啟動查詢 (queryflag)</label>
-        <label className="mr-4">
-          <input
-            type="radio"
-            name="queryflag"
-            value="1"
-            checked={queryFlag === '1'}
-            onChange={(e) => setQueryFlag(e.target.value)}
-          />
-          詳細資料 (交易詳細資訊會送到 merUpdateURL)
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="queryflag"
-            value="0"
-            checked={queryFlag === '0'}
-            onChange={(e) => setQueryFlag(e.target.value)}
-          />
-          一般資料
-        </label>
-
+        {(type === 'Auth' ||
+          type === 'AuthSSL' ||
+          type === 'AuthRe' ||
+          type === 'Capture' ||
+          type === 'CaptureRe' ||
+          type === 'Refund' ||
+          type === 'RefundRe') && (
+          <>
+            {/* 啟動查詢選擇 */}
+            <label className="mt-4 block font-semibold">啟動查詢 (queryflag)</label>
+            <label className="mr-4">
+              <input
+                type="radio"
+                name="queryflag"
+                value="1"
+                checked={queryFlag === '1'}
+                onChange={(e) => setQueryFlag(e.target.value)}
+              />
+              詳細資料 (交易詳細資訊會送到 merUpdateURL)
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="queryflag"
+                value="0"
+                checked={queryFlag === '0'}
+                onChange={(e) => setQueryFlag(e.target.value)}
+              />
+              一般資料
+            </label>
+          </>
+        )}
         {/* 回傳 URL */}
         <input type="hidden" name="returnURL" value="https://isunfa.tw/test/payment/result" />
         <input
