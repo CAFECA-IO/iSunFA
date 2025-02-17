@@ -19,10 +19,10 @@ const PaymentResult = () => {
       <h2 className="text-xl font-semibold">{message}</h2>
       <button
         type="button"
-        onClick={() => router.push('/')}
+        onClick={() => router.push('/test/payment')}
         className="mt-4 rounded bg-blue-500 px-6 py-2 text-white"
       >
-        回首頁
+        回付款頁面
       </button>
     </div>
   );
