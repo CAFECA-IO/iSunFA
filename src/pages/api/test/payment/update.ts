@@ -7,10 +7,40 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   );
 
   // 交易類型 (GET 或 POST 皆可能回傳)
-  const { type, ordernumber, retcode } = req.method === 'GET' ? req.query : req.body;
+  const params = req.method === 'GET' ? req.query : req.body;
+  const {
+    type,
+    ordernumber,
+    retcode,
+    storeid,
+    currency,
+    authCode,
+    authRRN,
+    orderstatus,
+    approveamount,
+    depositamount,
+    credamount,
+    orderdate,
+    capDate,
+    creddate,
+    credcode,
+    credRRN,
+    eci,
+    trxStatusCode,
+    trxToken,
+    pan,
+  } = params;
 
   // 需要透過 GET 回傳的交易類型
-  const GET_METHOD_TYPES = ['AuthSSL', 'AuthRe', 'Capture', 'CaptureRe', 'Refund', 'RefundRe'];
+  const GET_METHOD_TYPES = [
+    'AuthSSL',
+    'AuthRe',
+    'Capture',
+    'CaptureRe',
+    'Refund',
+    'RefundRe',
+    'Query',
+  ];
   const POST_METHOD_TYPES = ['AUTH']; // 授權交易使用 POST 回傳
 
   if (req.method === 'POST') {
@@ -37,9 +67,26 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   // 記錄交易結果
   loggerBack.info(`
-    🔹 交易類型: ${type}
+     🔹 交易類型: ${type}
     🔹 訂單編號: ${ordernumber}
     🔹 交易結果: ${retcode}
+    🔹 商店代碼: ${storeid || 'N/A'}
+    🔹 貨幣: ${currency || 'N/A'}
+    🔹 授權碼: ${authCode || 'N/A'}
+    🔹 銀行調單編號: ${authRRN || 'N/A'}
+    🔹 訂單狀態: ${orderstatus || 'N/A'}
+    🔹 核准金額: ${approveamount || 'N/A'}
+    🔹 入帳金額: ${depositamount || 'N/A'}
+    🔹 退款金額: ${credamount || 'N/A'}
+    🔹 訂單建立時間: ${orderdate || 'N/A'}
+    🔹 請款時間: ${capDate || 'N/A'}
+    🔹 退款時間: ${creddate || 'N/A'}
+    🔹 退款授權碼: ${credcode || 'N/A'}
+    🔹 退款調單編號: ${credRRN || 'N/A'}
+    🔹 交易 ECI (3D 驗證狀態): ${eci || 'N/A'}
+    🔹 交易狀態碼: ${trxStatusCode || 'N/A'}
+    🔹 交易 Token: ${trxToken || 'N/A'}
+    🔹 信用卡號 (遮蔽後): ${pan || 'N/A'}
   `);
 
   // **重要**：回應 `R01=00` 避免 HiTRUSTpay 重發 Webhook

@@ -135,7 +135,6 @@ const HiTrustPaymentForm = () => {
           onChange={(e) => setOrderDesc(e.target.value)}
           className="mb-2 border p-2"
         />
-        <input type="hidden" name="orderdesc" id="hiddenOrderDesc" value="" />
 
         {/* `AuthSSL` 交易時輸入信用卡資訊 */}
         {type === 'AuthSSL' && (

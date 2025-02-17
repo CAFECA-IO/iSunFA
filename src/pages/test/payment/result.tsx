@@ -4,7 +4,7 @@ export default function PaymentResult() {
   const router = useRouter();
   const { type, ordernumber, amount, retcode, pan } = router.query;
 
-  if (!ordernumber || !amount || !retcode || !pan) {
+  if (!ordernumber || !amount || !retcode) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
         <h2 className="text-2xl font-bold">❌ 交易結果不完整</h2>
