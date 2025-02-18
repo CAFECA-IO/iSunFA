@@ -51,9 +51,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
   // const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
-  const [selectedCertificates, setSelectedCertificates] = useState<{
-    [id: string]: ICertificateUI;
-  }>({});
+  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+
   const [totalInvoicePrice, setTotalInvoicePrice] = useState<number>(0);
   const [unRead, setUnRead] = useState<{
     withVoucher: number;
@@ -130,7 +129,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleDownloadItem = useCallback(
     (id: number) => {
-      const { file } = certificates[id];
+      const downloadItem = certificates.find((certificate) => certificate.id === id);
+      if (!downloadItem) return;
+      const { file } = downloadItem;
       const link = document.createElement('a');
       link.href = file.url;
       link.download = file.name || `image_${file.id}`;
@@ -224,44 +225,32 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleSelect = useCallback(
     (ids: number[], isSelected: boolean) => {
-      const updatedData = {
-        ...certificates,
-      };
-      if (ids.length === Object.keys(updatedData).length) {
-        setIsSelectedAll(isSelected);
-      } else {
-        setIsSelectedAll(false);
-      }
-      const selectedData: { [id: string]: ICertificateUI } = {
-        ...selectedCertificates,
-      };
-      ids.forEach((id) => {
-        updatedData[id] = {
-          ...updatedData[id],
-          isSelected,
-        };
-        if (isSelected) {
-          selectedData[id] = updatedData[id];
-        } else {
-          delete selectedData[id];
-        }
-      });
+      const updatedData = certificates.map((certificate) =>
+        (ids.includes(certificate.id) ? { ...certificate, isSelected } : certificate)
+      );
+
+      const selectedData = isSelected
+        ? Array.from(
+            new Set([...selectedCertificates, ...certificates.filter((c) => ids.includes(c.id))])
+          )
+        : selectedCertificates.filter((c) => !ids.includes(c.id));
+
       localStorage.setItem('selectedCertificates', JSON.stringify(selectedData));
       setCertificates(updatedData);
       setSelectedCertificates(selectedData);
+      setIsSelectedAll(updatedData.every((cert) => cert.isSelected));
     },
-    [certificates, activeTab, isSelectedAll]
+    [certificates, selectedCertificates]
   );
 
   // Info: (20240920 - tzuhan) 全選操作
   const handleSelectAll = useCallback(() => {
-    const ids = Object.values(certificates)
-      .filter((certificate) => {
-        return activeTab === InvoiceTabs.WITHOUT_VOUCHER
-          ? !certificate.voucherNo
-          : certificate.voucherNo;
-      })
+    const ids = certificates
+      .filter((certificate) =>
+        (activeTab === InvoiceTabs.WITHOUT_VOUCHER ? !certificate.voucherNo : certificate.voucherNo)
+      )
       .map((certificate) => certificate.id);
+
     handleSelect(ids, !isSelectedAll);
   }, [certificates, activeTab, isSelectedAll]);
 
@@ -270,17 +259,12 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       try {
         const { success, data: deletedIds } = await deleteCertificatesAPI({
           params: { companyId },
-          body: { certificateIds: selectedIds }, // Info: (20241128 - Murky) @tzuhan 這邊用multiple delete，然後把要delete的東西放在array裡
+          body: { certificateIds: selectedIds },
         });
+
         if (success && deletedIds) {
-          let updatedData: ICertificateUI[] = [];
-          setCertificates((prev) => {
-            updatedData = [...prev];
-            deletedIds.forEach((id) => {
-              delete updatedData[id];
-            });
-            return updatedData;
-          });
+          setCertificates((prev) => prev.filter((cert) => !deletedIds.includes(cert.id)));
+
           toastHandler({
             id: ToastId.DELETE_CERTIFICATE_SUCCESS,
             type: ToastType.SUCCESS,
@@ -305,7 +289,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
         content: t('certificate:DELETE.CONTENT'),
-        notes: `${certificates[selectedId].name}?`,
+        notes: `${certificates.find((certificate) => certificate.id === selectedId)?.name || ''}?`,
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
@@ -320,18 +304,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleDeleteSelectedItems = useCallback(() => {
     setActiveSelection(false);
-    // Info: (20241025 - tzuhan) 找出所有選中的項目 ID
-    const selectedIds = Object.values(certificates)
-      .filter((certificate) => {
-        return (
-          (activeTab === InvoiceTabs.WITHOUT_VOUCHER
-            ? !certificate.voucherNo
-            : certificate.voucherNo) && certificate.isSelected
-        );
-      })
-      .map((certificate) => certificate.id);
 
-    // Info: (20241025 - tzuhan) 如果有選中的項目，顯示刪除確認模態框
+    const selectedIds = selectedCertificates.map((c) => c.id);
+
     if (selectedIds.length > 0) {
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
@@ -339,26 +314,14 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
-          // Info: (20241025 - tzuhan) 批量刪除選中的項目
-          // Deprecated: (20240923 - tzuhan) debugging purpose
-          // eslint-disable-next-line no-console
-          console.log('Remove multiple ids:', selectedIds);
           await deleteSelectedCertificates(selectedIds);
         },
         backBtnStr: t('certificate:DELETE.NO'),
       });
 
-      // Info: (20241025 - tzuhan) 顯示確認刪除的模態框
       messageModalVisibilityHandler();
     }
-  }, [
-    certificates,
-    activeTab,
-    t,
-    messageModalDataHandler,
-    messageModalVisibilityHandler,
-    toastHandler,
-  ]);
+  }, [selectedCertificates]);
 
   const onTabClick = useCallback(
     (tab: string) => {
@@ -389,22 +352,17 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const onUpdateFilename = useCallback(
     (id: number, filename: string) => {
-      let updatedData: ICertificateUI[] = [];
-      setCertificates((prev) => {
-        updatedData = [...prev];
-        updatedData[id] = {
-          ...prev[id],
-          file: {
-            ...prev[id].file,
-            name: filename,
-          },
-          name: filename,
-        };
-        // Deprecate: (20241218 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log('updatedData[id]', updatedData[id]);
-        return updatedData;
-      });
+      setCertificates((prev) =>
+        prev.map((cert) =>
+          (cert.id === id
+            ? {
+                ...cert,
+                file: { ...cert.file, name: filename },
+                name: filename,
+              }
+            : cert)
+        )
+      );
     },
     [certificates]
   );
@@ -501,7 +459,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         withoutVoucher: prev.withoutVoucher + 1,
       }));
     },
-    [companyId, certificates, activeTab]
+    [handleNewCertificateComing]
   );
 
   useEffect(() => {
@@ -558,7 +516,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           isOpen={isEditModalOpen}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           currencyAlias={currency}
-          certificate={editingId ? certificates[editingId] : undefined}
+          certificate={
+            editingId ? certificates.find((certificate) => certificate.id === editingId) : undefined
+          }
           onUpdateFilename={onUpdateFilename}
           onSave={handleEditItem}
           onDelete={handleDeleteItem}

@@ -136,7 +136,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
               <button
                 type="button"
                 className="hover:underline"
-                onClick={onActiveChange.bind(null, true)}
+                onClick={() => onActiveChange(true)}
               >
                 {t('certificate:COMMON.SELECT')}
               </button>
