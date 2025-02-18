@@ -1,9 +1,11 @@
-import { ITeam } from '@/interfaces/team';
+import { ITeam, TeamRole } from '@/interfaces/team';
 import { TPlanType } from '@/interfaces/subscription';
 
 export const FAKE_TEAM_LIST: ITeam[] = [
   {
-    id: '1',
+    id: 'TeamUID00001',
+    imageId: '/images/fake_team_img.svg',
+    role: TeamRole.OWNER,
     name: {
       value: 'Team A',
       editable: true,
@@ -29,7 +31,9 @@ export const FAKE_TEAM_LIST: ITeam[] = [
     },
   },
   {
-    id: '2',
+    id: 'TeamUID00002',
+    imageId: '/images/fake_team_img.svg',
+    role: TeamRole.OWNER,
     name: {
       value: 'Team B',
       editable: true,
@@ -54,7 +58,9 @@ export const FAKE_TEAM_LIST: ITeam[] = [
     },
   },
   {
-    id: '3',
+    id: 'TeamUID00003',
+    imageId: '/images/fake_team_img.svg',
+    role: TeamRole.OWNER,
     name: {
       value: 'Team C',
       editable: true,

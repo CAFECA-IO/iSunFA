@@ -14,10 +14,10 @@ import { APIName } from '@/constants/api_connection';
 interface PaymentPageBodyProps {
   team: IUserOwnedTeam;
   subscriptionPlan?: IPlan;
-  getTeamData: () => Promise<void>;
+  getOwnedTeam: () => Promise<void>;
 }
 
-const PaymentPageBody = ({ team, subscriptionPlan, getTeamData }: PaymentPageBodyProps) => {
+const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
 
   // Info: (20250114 - Liz) 如果沒有 subscriptionPlan，表示是要修改已經訂閱方案的付款資料，所以要找出 team 的 plan 資料。如果有 subscriptionPlan，表示是要訂閱新方案，所以直接使用 subscriptionPlan。
@@ -54,7 +54,7 @@ const PaymentPageBody = ({ team, subscriptionPlan, getTeamData }: PaymentPageBod
     // Info: (20250120 - Liz) 打完開啟自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
     if (success) {
       closeAutoRenewalModal();
-      getTeamData();
+      getOwnedTeam();
     }
   };
 
@@ -70,7 +70,7 @@ const PaymentPageBody = ({ team, subscriptionPlan, getTeamData }: PaymentPageBod
     // Info: (20250120 - Liz) 打完關閉自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
     if (success) {
       closeAutoRenewalModal();
-      getTeamData();
+      getOwnedTeam();
     }
   };
 
