@@ -76,6 +76,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [teamNameInput, setTeamNameInput] = useState<string>('');
   const [teamMemberInput, setTeamMemberInput] = useState<string>(''); // Info: (20250218 - Julian) input value
+  // Deprecated: (20250218 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [teamMembers, setTeamMembers] = useState<IMember[]>([]);
 
@@ -120,6 +121,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   // ToDo: (20250218 - Julian) Recall API call
   const getOwnedTeam = async () => {
+    // Deprecated: (20250218 - Julian) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('getOwnedTeam');
   };
