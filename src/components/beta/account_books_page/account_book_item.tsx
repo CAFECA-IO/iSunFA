@@ -60,7 +60,7 @@ const AccountBookItem = ({
     closeOptionsDropdown();
   };
 
-  const openUploadCompanyAvatarModal = () => {
+  const openUploadCompanyPictureModal = () => {
     setAccountBookToUploadPicture(accountBook);
     closeOptionsDropdown();
   };
@@ -99,7 +99,7 @@ const AccountBookItem = ({
       key={accountBook.company.id}
       className="flex items-center gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
     >
-      <button type="button" onClick={openUploadCompanyAvatarModal} className="group relative">
+      <button type="button" onClick={openUploadCompanyPictureModal} className="group relative">
         <Image
           src={accountBook.company.imageId}
           alt={accountBook.company.name}
