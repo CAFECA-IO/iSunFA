@@ -36,6 +36,8 @@ export const ISUNFA_ROUTE = {
   TRIAL_BALANCE: '/users/accounting/trial_balance',
   COUNTERPARTY: '/users/setting/counterparty',
   SUBSCRIPTIONS: '/users/subscriptions',
+  MY_ACCOUNT_PAGE: '/users/my_account_page',
+  TEAM_PAGE: '/users/team', // Info: (20250218 - Liz) /users/team/:teamId
 
   KYC: '/users/kyc',
   SALARY: '/users/salary',
