@@ -1,0 +1,10 @@
+{
+  "TEAM_PAGE": {
+    "META_TITLE": "團隊管理",
+    "LIBRARY": "圖書館"
+  },
+
+  "ERROR": {
+    "TEAM_DATA_NOT_FOUND": "找不到團隊資料"
+  }
+}
