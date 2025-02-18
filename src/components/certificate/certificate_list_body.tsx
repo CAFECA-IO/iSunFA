@@ -264,6 +264,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
         if (success && deletedIds) {
           setCertificates((prev) => prev.filter((cert) => !deletedIds.includes(cert.id)));
+          setSelectedCertificates((prev) => prev.filter((cert) => !deletedIds.includes(cert.id)));
 
           toastHandler({
             id: ToastId.DELETE_CERTIFICATE_SUCCESS,
