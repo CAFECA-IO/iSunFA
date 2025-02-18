@@ -6,7 +6,7 @@ import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { loggerError } from '@/lib/utils/logger_back';
-import { voucherAPIRestoreUtils as restoreUtils } from './route_utils';
+import { voucherAPIRestoreUtils as restoreUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
 
 interface IHandlerResult {
   statusMessage: string;
