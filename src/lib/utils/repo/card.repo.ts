@@ -1,6 +1,6 @@
 import { PAYMENT_METHOD_TYPE } from '@/constants/payment';
 import { IPaymentMethod } from '@/interfaces/payment';
-import { TPlanType } from '@/interfaces/subscription';
+import { ITeamInvoice, TPlanType } from '@/interfaces/subscription';
 import { z } from 'zod';
 
 // Info: (20250218 - tzuhan) 綁卡 API 請求
@@ -21,9 +21,19 @@ export const BindCardBodySchema = z.object({
 });
 
 // Info: (20250218 - tzuhan) 付款 API 請求
-export const PaymentSchema = z.object({
-  id: z.number(),
+export const PaymentQuerySchema = z.object({
+  userId: z.number(),
 });
+
+export const PaymentBodySchema = z.object({
+  planId: z.enum(Object.keys(TPlanType) as [string, ...string[]]),
+});
+
+export const planPrices: Record<string, number> = {
+  beginner: 0,
+  professional: 899,
+  enterprise: 8990,
+};
 
 /**
  * Info: (20250218 - tzuhan)
@@ -85,5 +95,37 @@ export const mockCards: Record<number, IPaymentMethod> = {
     expirationDate: '12/25',
     cvv: '123',
     default: true,
+  },
+};
+
+export const mockInvoices: Record<number, ITeamInvoice> = {
+  1001: {
+    id: 100000,
+    teamId: 3,
+    status: false,
+    issuedTimestamp: 1630406400000,
+    dueTimestamp: 1630406400000,
+    planId: TPlanType.PROFESSIONAL,
+    planStartTimestamp: 1630406400000,
+    planEndTimestamp: 1630406400000,
+    planQuantity: 1,
+    planUnitPrice: 1000,
+    planAmount: 1000,
+    payer: {
+      name: 'John Doe',
+      address: '1234 Main St',
+      phone: '123-456-7890',
+      taxId: '123456789',
+    },
+    payee: {
+      name: 'Jane Doe',
+      address: '5678 Elm St',
+      phone: '098-765-4321',
+      taxId: '987654321',
+    },
+    subtotal: 899,
+    tax: 0,
+    total: 899,
+    amountDue: 899,
   },
 };
