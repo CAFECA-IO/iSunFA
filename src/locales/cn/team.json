@@ -1,7 +1,8 @@
 {
   "TEAM_PAGE": {
     "META_TITLE": "团队管理",
-    "LIBRARY": "图书馆"
+    "LIBRARY": "图书馆",
+    "COPIED": "已复制"
   },
 
   "ERROR": {
