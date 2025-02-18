@@ -73,6 +73,7 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
       'asset',
       'dashboard',
       'date_picker',
+      'subscriptions',
     ])),
     locale,
   },

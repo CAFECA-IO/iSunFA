@@ -933,6 +933,18 @@ export const voucherDeleteSchema = {
   frontend: z.number(),
 };
 
+// Info: (20250218 - Shirley) Restore voucher schema
+export const voucherRestoreSchema = {
+  input: {
+    querySchema: z.object({
+      voucherId: zodStringToNumber,
+    }),
+    bodySchema: nullSchema,
+  },
+  outputSchema: z.union([z.number(), z.null()]),
+  frontend: z.number(),
+};
+
 export const voucherGetByAccountSchema = {
   input: {
     querySchema: voucherGetByAccountQueryValidatorV2,
