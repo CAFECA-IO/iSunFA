@@ -4,14 +4,14 @@ import SubscriptionPlan from '@/components/beta/team_subscription_page/subscript
 
 interface SubscriptionPlansProps {
   team: IUserOwnedTeam;
-  getTeamData: () => Promise<void>;
+  getOwnedTeam: () => Promise<void>;
 }
 
-const SubscriptionPlans = ({ team, getTeamData }: SubscriptionPlansProps) => {
+const SubscriptionPlans = ({ team, getOwnedTeam }: SubscriptionPlansProps) => {
   return (
     <main className="flex justify-center gap-10px">
       {PLANS.map((plan) => (
-        <SubscriptionPlan key={plan.id} team={team} plan={plan} getTeamData={getTeamData} />
+        <SubscriptionPlan key={plan.id} team={team} plan={plan} getOwnedTeam={getOwnedTeam} />
       ))}
     </main>
   );

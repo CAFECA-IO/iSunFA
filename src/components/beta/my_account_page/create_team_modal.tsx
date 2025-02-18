@@ -119,9 +119,9 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const cancelButtonText = currentStep === 1 ? 'Cancel' : 'Skip for Now';
 
   // ToDo: (20250218 - Julian) Recall API call
-  const getTeamData = async () => {
+  const getOwnedTeam = async () => {
     // eslint-disable-next-line no-console
-    console.log('getTeamData');
+    console.log('getOwnedTeam');
   };
 
   const nextButtonDisabled =
@@ -202,7 +202,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
                 key={plan.id}
                 team={newTeam}
                 plan={plan}
-                getTeamData={getTeamData}
+                getOwnedTeam={getOwnedTeam}
               />
             ))}
         </div>

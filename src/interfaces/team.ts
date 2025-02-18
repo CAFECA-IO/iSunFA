@@ -16,6 +16,8 @@ export interface ITeamMember {
 
 export interface ITeam {
   id: string;
+  imageId: string;
+  role: TeamRole;
   name: {
     value: string;
     editable: boolean;

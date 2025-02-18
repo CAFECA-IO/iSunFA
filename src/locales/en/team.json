@@ -1,0 +1,10 @@
+{
+  "TEAM_PAGE": {
+    "META_TITLE": "Team",
+    "LIBRARY": "Library"
+  },
+
+  "ERROR": {
+    "TEAM_DATA_NOT_FOUND": "Team data not found"
+  }
+}
