@@ -11,6 +11,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { ITeam } from '@/interfaces/team';
 import { FAKE_TEAM_LIST } from '@/constants/team';
+import TeamPageBody from '@/components/beta/team_page/team_page_body';
 
 const TeamPage = () => {
   const { t } = useTranslation(['team']);
@@ -107,7 +108,7 @@ const TeamPage = () => {
         pageTitle={team.name.value}
         goBackUrl={ISUNFA_ROUTE.MY_ACCOUNT_PAGE}
       >
-        Team Page
+        <TeamPageBody team={team} />
       </Layout>
     </>
   );
