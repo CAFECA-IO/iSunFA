@@ -1034,7 +1034,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.VOUCHER_RESTORE_V2]: createConfig({
     name: APIName.VOUCHER_RESTORE_V2,
-    method: HttpMethod.PUT,
+    method: HttpMethod.POST,
     path: APIPath.VOUCHER_RESTORE_V2,
   }),
 };

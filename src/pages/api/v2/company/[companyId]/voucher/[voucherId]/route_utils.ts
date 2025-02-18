@@ -47,6 +47,7 @@ import { CurrencyType } from '@/constants/currency';
 import { isFloatsEqual } from '@/lib/utils/common';
 import { EventType } from '@/constants/account';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
+import { VOUCHER_RESTORE_WINDOW_IN_SECONDS } from '@/constants/common';
 
 const prisma = new PrismaClient();
 
@@ -1154,11 +1155,11 @@ export const voucherAPIRestoreUtils = {
 
   /**
    * Info: (20250218 - Shirley)
-   * @description 檢查傳票是否存在且符合復原條件
-   * 條件：
-   * 1. 傳票必須存在且被刪除（deletedAt 不為 null）
-   * 2. 必須有對應的 associate_voucher 記錄，且該記錄的 eventId 對應的 event 的 event_type 是 "delete"
-   * 3. 這些傳票必須是 associate_voucher 中的 original_voucher
+   * @description Check if the voucher exists and meets the restoration conditions
+   * Conditions:
+   * 1. The voucher must exist and be deleted (deletedAt is not null)
+   * 2. Must have corresponding associate_voucher records, and the event with the eventId in these records must have event_type "delete"
+   * 3. These vouchers must be the original_voucher in associate_voucher
    */
   async checkVoucherCanBeRestored(params: {
     voucherId: number;
@@ -1199,7 +1200,7 @@ export const voucherAPIRestoreUtils = {
 
     if (!deletedVoucher) {
       this.throwErrorAndLog(loggerBack, {
-        errorMessage: '找不到符合條件的已刪除傳票',
+        errorMessage: 'Cannot find deleted voucher that meets the conditions',
         statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
         userId,
       });
@@ -1216,7 +1217,7 @@ export const voucherAPIRestoreUtils = {
   }) {
     const { voucherId, companyId, now, userId } = params;
 
-    // 1. 檢查傳票是否存在且符合復原條件
+    // Info: (20250218 - Shirley) 1. Check if the voucher exists and meets restoration conditions
     const deletedVoucher = await this.checkVoucherCanBeRestored({
       voucherId,
       companyId,
@@ -1225,25 +1226,25 @@ export const voucherAPIRestoreUtils = {
 
     if (!deletedVoucher) {
       this.throwErrorAndLog(loggerBack, {
-        errorMessage: '找不到符合條件的已刪除傳票',
+        errorMessage: 'Cannot find deleted voucher that meets the conditions',
         statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
         userId,
       });
       return null;
     }
 
-    // 2. 檢查是否在 30 秒內
-    if (Math.abs(deletedVoucher.deletedAt! - now) > 3000000000000000000000) {
+    // Info: (20250218 - Shirley) 2. Check if within 30 seconds
+    if (Math.abs(deletedVoucher.deletedAt! - now) > VOUCHER_RESTORE_WINDOW_IN_SECONDS) {
       this.throwErrorAndLog(loggerBack, {
-        errorMessage: '已超過可復原時間（30秒）',
+        errorMessage: 'Exceeded restoration time limit (30 seconds)',
         statusMessage: STATUS_MESSAGE.FORBIDDEN,
         userId,
       });
     }
 
-    // 3. 開始復原操作
+    // Info: (20250218 - Shirley) 3. Start restoration process
     return prisma.$transaction(async (txPrisma) => {
-      // 3.1 復原 asset_voucher 和相關的 asset
+      // Info: (20250218 - Shirley) 3.1 Restore asset_voucher and related assets
       await txPrisma.assetVoucher.updateMany({
         where: {
           voucherId,
@@ -1279,7 +1280,7 @@ export const voucherAPIRestoreUtils = {
         });
       }
 
-      // 3.2 查找並刪除 reverse voucher
+      // Info: (20250218 - Shirley) 3.2 Find and delete reverse voucher
       const associateVouchers = await txPrisma.associateVoucher.findMany({
         where: {
           originalVoucherId: voucherId,
@@ -1301,7 +1302,7 @@ export const voucherAPIRestoreUtils = {
           .filter((id): id is number => id !== null);
 
         if (reverseVoucherIds.length > 0) {
-          // 1. 先刪除 asset_voucher 記錄
+          // Info: (20250218 - Shirley) 3.2.1. First delete assetVoucher records
           await txPrisma.assetVoucher.deleteMany({
             where: {
               voucherId: {
@@ -1321,7 +1322,7 @@ export const voucherAPIRestoreUtils = {
             },
           });
 
-          // 2. 刪除 associate_line_item
+          // Info: (20250218 - Shirley) 3.2.2. Delete associateLineItem
           await txPrisma.associateLineItem.deleteMany({
             where: {
               OR: [
@@ -1339,7 +1340,7 @@ export const voucherAPIRestoreUtils = {
             },
           });
 
-          // 3. 刪除 associateVoucher
+          // Info: (20250218 - Shirley) 3.2.3. Delete associateVoucher
           await txPrisma.associateVoucher.deleteMany({
             where: {
               id: {
@@ -1348,7 +1349,7 @@ export const voucherAPIRestoreUtils = {
             },
           });
 
-          // 4. 刪除 line_item
+          // Info: (20250218 - Shirley) 3.2.4. Delete lineItem
           await txPrisma.lineItem.deleteMany({
             where: {
               voucherId: {
@@ -1357,7 +1358,7 @@ export const voucherAPIRestoreUtils = {
             },
           });
 
-          // 5. 最後刪除 voucher
+          // Info: (20250218 - Shirley) 3.2.5. Finally delete reverse voucher
           await txPrisma.voucher.deleteMany({
             where: {
               id: {
@@ -1368,7 +1369,7 @@ export const voucherAPIRestoreUtils = {
         }
       }
 
-      // 3.3 復原被刪除的傳票
+      // Info: (20250218 - Shirley) 3.3 Restore the deleted voucher
       const restoredVoucher = await txPrisma.voucher.update({
         where: {
           id: voucherId,
