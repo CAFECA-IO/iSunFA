@@ -17,10 +17,10 @@ import { SortOrder } from '@/constants/sort';
 
 interface BillingPageBodyProps {
   team: IUserOwnedTeam;
-  getTeamData: () => Promise<void>;
+  getOwnedTeam: () => Promise<void>;
 }
 
-const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
+const BillingPageBody = ({ team, getOwnedTeam }: BillingPageBodyProps) => {
   const { t } = useTranslation([
     'subscriptions',
     'filter_section_type',
@@ -201,7 +201,7 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     // Info: (20250120 - Liz) 打完開啟自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
     if (success) {
       closeAutoRenewalModal();
-      getTeamData();
+      getOwnedTeam();
     }
   };
 
@@ -217,7 +217,7 @@ const BillingPageBody = ({ team, getTeamData }: BillingPageBodyProps) => {
     // Info: (20250120 - Liz) 打完關閉自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
     if (success) {
       closeAutoRenewalModal();
-      getTeamData();
+      getOwnedTeam();
     }
   };
 
