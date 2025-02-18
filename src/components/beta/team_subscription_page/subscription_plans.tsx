@@ -15,10 +15,10 @@ import { ToastId } from '@/constants/toast_id';
 interface SubscriptionPlanProps {
   team: IUserOwnedTeam;
   plan: IPlan;
-  getTeamData: () => Promise<void>;
+  getOwnedTeam: () => Promise<void>;
 }
 
-const SubscriptionPlan = ({ team, plan, getTeamData }: SubscriptionPlanProps) => {
+const SubscriptionPlan = ({ team, plan, getOwnedTeam }: SubscriptionPlanProps) => {
   const { t } = useTranslation(['subscriptions']);
   const { toastHandler } = useModalContext();
   const router = useRouter();
@@ -74,7 +74,7 @@ const SubscriptionPlan = ({ team, plan, getTeamData }: SubscriptionPlanProps) =>
       // console.log('Failed to downgrade, error:', error);
     } finally {
       closeDowngradeMessageModal();
-      getTeamData(); // Info: (20250120 - Liz) 重新打 API 取得最新的 userOwnedTeam
+      getOwnedTeam(); // Info: (20250120 - Liz) 重新打 API 取得最新的 userOwnedTeam
     }
   };
 
@@ -235,14 +235,14 @@ const SubscriptionPlan = ({ team, plan, getTeamData }: SubscriptionPlanProps) =>
 
 interface SubscriptionPlansProps {
   team: IUserOwnedTeam;
-  getTeamData: () => Promise<void>;
+  getOwnedTeam: () => Promise<void>;
 }
 
-const SubscriptionPlans = ({ team, getTeamData }: SubscriptionPlansProps) => {
+const SubscriptionPlans = ({ team, getOwnedTeam }: SubscriptionPlansProps) => {
   return (
     <main className="flex justify-center gap-10px">
       {PLANS.map((plan) => (
-        <SubscriptionPlan key={plan.id} team={team} plan={plan} getTeamData={getTeamData} />
+        <SubscriptionPlan key={plan.id} team={team} plan={plan} getOwnedTeam={getOwnedTeam} />
       ))}
     </main>
   );
