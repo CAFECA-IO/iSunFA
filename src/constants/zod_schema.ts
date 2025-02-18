@@ -65,6 +65,7 @@ import {
   voucherPutSchema,
   voucherRequestValidatorsV1,
   voucherWasReadValidatorV2,
+  voucherRestoreSchema,
 } from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidators } from '@/lib/utils/zod_schema/zod_example';
 import {
@@ -212,6 +213,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneSchema,
   [APIName.VOUCHER_PUT_V2]: voucherPutSchema,
   [APIName.VOUCHER_DELETE_V2]: voucherDeleteSchema,
+  [APIName.VOUCHER_RESTORE_V2]: voucherRestoreSchema,
   [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: lineItemGetByAccountSchema,
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,

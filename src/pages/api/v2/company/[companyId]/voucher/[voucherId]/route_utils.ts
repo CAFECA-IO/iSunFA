@@ -3,7 +3,7 @@ import { ILineItemEntity } from '@/interfaces/line_item';
 import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
 import { Logger } from 'pino';
 import { IGetOneVoucherResponse, IVoucherEntity } from '@/interfaces/voucher';
-import loggerBack from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
 import {
@@ -15,6 +15,7 @@ import {
   Invoice as PrismaInvoice,
   File as PrismaFile,
   UserCertificate as PrismaUserCertificate,
+  PrismaClient,
 } from '@prisma/client';
 import { IAssetEntity } from '@/interfaces/asset';
 import { getOneVoucherByVoucherNoV2, getOneVoucherV2 } from '@/lib/utils/repo/voucher.repo';
@@ -46,6 +47,8 @@ import { CurrencyType } from '@/constants/currency';
 import { isFloatsEqual } from '@/lib/utils/common';
 import { EventType } from '@/constants/account';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
+
+const prisma = new PrismaClient();
 
 export const voucherAPIGetOneUtils = {
   /**
@@ -1132,5 +1135,251 @@ export const voucherAPIDeleteUtils = {
   ) => {
     logger.error(errorMessage);
     throw new Error(statusMessage);
+  },
+};
+
+export const voucherAPIRestoreUtils = {
+  throwErrorAndLog: (
+    logger: typeof loggerBack,
+    options: { errorMessage: string; statusMessage: string; userId: number }
+  ) => {
+    const { errorMessage, statusMessage, userId } = options;
+    loggerError({
+      userId,
+      errorType: 'Voucher Restore Error',
+      errorMessage,
+    });
+    throw new Error(statusMessage);
+  },
+
+  /**
+   * Info: (20250218 - Shirley)
+   * @description 檢查傳票是否存在且符合復原條件
+   * 條件：
+   * 1. 傳票必須存在且被刪除（deletedAt 不為 null）
+   * 2. 必須有對應的 associate_voucher 記錄，且該記錄的 eventId 對應的 event 的 event_type 是 "delete"
+   * 3. 這些傳票必須是 associate_voucher 中的 original_voucher
+   */
+  async checkVoucherCanBeRestored(params: {
+    voucherId: number;
+    companyId: number;
+    userId: number;
+  }) {
+    const { voucherId, companyId, userId } = params;
+
+    const deletedVoucher = await prisma.voucher.findFirst({
+      where: {
+        id: voucherId,
+        companyId,
+        deletedAt: { not: null },
+        originalVouchers: {
+          some: {
+            deletedAt: null,
+            event: {
+              eventType: EventEntityType.DELETE,
+            },
+          },
+        },
+      },
+      include: {
+        originalVouchers: {
+          where: {
+            deletedAt: null,
+            event: {
+              eventType: EventEntityType.DELETE,
+            },
+          },
+          include: {
+            event: true,
+            resultVoucher: true,
+          },
+        },
+      },
+    });
+
+    if (!deletedVoucher) {
+      this.throwErrorAndLog(loggerBack, {
+        errorMessage: '找不到符合條件的已刪除傳票',
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+        userId,
+      });
+    }
+
+    return deletedVoucher;
+  },
+
+  async restoreVoucherAndRelations(params: {
+    voucherId: number;
+    companyId: number;
+    now: number;
+    userId: number;
+  }) {
+    const { voucherId, companyId, now, userId } = params;
+
+    // 1. 檢查傳票是否存在且符合復原條件
+    const deletedVoucher = await this.checkVoucherCanBeRestored({
+      voucherId,
+      companyId,
+      userId,
+    });
+
+    if (!deletedVoucher) {
+      this.throwErrorAndLog(loggerBack, {
+        errorMessage: '找不到符合條件的已刪除傳票',
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+        userId,
+      });
+      return null;
+    }
+
+    // 2. 檢查是否在 30 秒內
+    if (Math.abs(deletedVoucher.deletedAt! - now) > 3000000000000000000000) {
+      this.throwErrorAndLog(loggerBack, {
+        errorMessage: '已超過可復原時間（30秒）',
+        statusMessage: STATUS_MESSAGE.FORBIDDEN,
+        userId,
+      });
+    }
+
+    // 3. 開始復原操作
+    return prisma.$transaction(async (txPrisma) => {
+      // 3.1 復原 asset_voucher 和相關的 asset
+      await txPrisma.assetVoucher.updateMany({
+        where: {
+          voucherId,
+          deletedAt: { not: null },
+        },
+        data: {
+          deletedAt: null,
+          updatedAt: now,
+        },
+      });
+
+      const assetVouchers = await txPrisma.assetVoucher.findMany({
+        where: {
+          voucherId,
+        },
+        select: {
+          assetId: true,
+        },
+      });
+
+      if (assetVouchers.length > 0) {
+        await txPrisma.asset.updateMany({
+          where: {
+            id: {
+              in: assetVouchers.map((av) => av.assetId),
+            },
+            deletedAt: { not: null },
+          },
+          data: {
+            deletedAt: null,
+            updatedAt: now,
+          },
+        });
+      }
+
+      // 3.2 查找並刪除 reverse voucher
+      const associateVouchers = await txPrisma.associateVoucher.findMany({
+        where: {
+          originalVoucherId: voucherId,
+          event: {
+            eventType: EventEntityType.DELETE,
+          },
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+          resultVoucherId: true,
+          resultVoucher: true,
+        },
+      });
+
+      if (associateVouchers.length > 0) {
+        const reverseVoucherIds = associateVouchers
+          .map((av) => av.resultVoucherId)
+          .filter((id): id is number => id !== null);
+
+        if (reverseVoucherIds.length > 0) {
+          // 1. 先刪除 asset_voucher 記錄
+          await txPrisma.assetVoucher.deleteMany({
+            where: {
+              voucherId: {
+                in: reverseVoucherIds,
+              },
+            },
+          });
+
+          const reverseLineItems = await txPrisma.lineItem.findMany({
+            where: {
+              voucherId: {
+                in: reverseVoucherIds,
+              },
+            },
+            select: {
+              id: true,
+            },
+          });
+
+          // 2. 刪除 associate_line_item
+          await txPrisma.associateLineItem.deleteMany({
+            where: {
+              OR: [
+                {
+                  associateVoucherId: {
+                    in: associateVouchers.map((av) => av.id),
+                  },
+                },
+                {
+                  resultLineItemId: {
+                    in: reverseLineItems.map((li) => li.id),
+                  },
+                },
+              ],
+            },
+          });
+
+          // 3. 刪除 associateVoucher
+          await txPrisma.associateVoucher.deleteMany({
+            where: {
+              id: {
+                in: associateVouchers.map((av) => av.id),
+              },
+            },
+          });
+
+          // 4. 刪除 line_item
+          await txPrisma.lineItem.deleteMany({
+            where: {
+              voucherId: {
+                in: reverseVoucherIds,
+              },
+            },
+          });
+
+          // 5. 最後刪除 voucher
+          await txPrisma.voucher.deleteMany({
+            where: {
+              id: {
+                in: reverseVoucherIds,
+              },
+            },
+          });
+        }
+      }
+
+      // 3.3 復原被刪除的傳票
+      const restoredVoucher = await txPrisma.voucher.update({
+        where: {
+          id: voucherId,
+        },
+        data: {
+          deletedAt: null,
+          updatedAt: now,
+        },
+      });
+
+      return restoredVoucher;
+    });
   },
 };

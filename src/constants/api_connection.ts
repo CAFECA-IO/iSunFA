@@ -85,6 +85,7 @@ export enum APIName {
   VOUCHER_DELETE_V2 = 'VOUCHER_DELETE_V2',
   VOUCHER_WAS_READ_V2 = 'VOUCHER_WAS_READ_V2',
   VOUCHER_PUT_V2 = 'VOUCHER_PUT_V2',
+  VOUCHER_RESTORE_V2 = 'VOUCHER_RESTORE_V2',
   REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = 'REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2',
   VOUCHER_LIST_GET_BY_ACCOUNT_V2 = 'VOUCHER_LIST_GET_BY_ACCOUNT_V2',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
@@ -226,6 +227,7 @@ export enum APIPath {
   VOUCHER_POST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
   VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
   VOUCHER_PUT_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
+  VOUCHER_RESTORE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId/restore`,
   REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/lineitem`,
   VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/voucher`,
   VOUCHER_DELETE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
@@ -1029,5 +1031,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.GET_CREDIT_CARD_INFO,
     method: HttpMethod.GET,
     path: APIPath.GET_CREDIT_CARD_INFO,
+  }),
+  [APIName.VOUCHER_RESTORE_V2]: createConfig({
+    name: APIName.VOUCHER_RESTORE_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.VOUCHER_RESTORE_V2,
   }),
 };
