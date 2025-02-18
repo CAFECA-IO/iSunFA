@@ -34,11 +34,8 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
     >
       <div
         className="my-3 flex flex-col items-center"
-        onClick={
-          activeSelection
-            ? handleSelect.bind(null, [data.id], !data.isSelected)
-            : onEdit.bind(null, data.id)
-        }
+        onClick={() =>
+          (activeSelection ? handleSelect([data.id], !data.isSelected) : onEdit(data.id))}
       >
         <div className="flex max-h-134px min-h-134px max-w-90px items-center overflow-hidden">
           {/* Info: (20240924 - Tzuhan) 縮略圖 */}
@@ -78,7 +75,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       {activeSelection && (
         <div
           className={`absolute left-3 top-3 h-16px w-16px rounded border border-checkbox-stroke-unselected ${data.isSelected ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
-          onClick={handleSelect.bind(null, [data.id], !data.isSelected)}
+          onClick={() => handleSelect([data.id], !data.isSelected)}
         >
           {data.isSelected && (
             <HiCheck className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-neutral-white" />
@@ -99,7 +96,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
             {data.actions.includes(CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD) && (
               <li
                 className="pointer-events-auto flex cursor-pointer items-center rounded-t-sm p-2 px-4"
-                onClick={onDownload.bind(null, data.id)}
+                onClick={() => onDownload(data.id)}
               >
                 <span className="mr-2">
                   <Image src="/elements/download.svg" alt="⬇" width={20} height={20} />
@@ -110,7 +107,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
             {data.actions.includes(CERTIFICATE_USER_INTERACT_OPERATION.REMOVE) && (
               <li
                 className="pointer-events-auto flex cursor-pointer items-center rounded-b-sm p-2 px-4"
-                onClick={onRemove.bind(null, data.id)}
+                onClick={() => onRemove(data.id)}
               >
                 <span className="mr-2">
                   <Image src="/elements/remove.svg" alt="🗑️" width={20} height={20} />
