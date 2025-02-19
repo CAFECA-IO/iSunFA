@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 
 const SettingSidebar = () => {
-  const { t } = useTranslation(['common', 'setting']);
+  const { t } = useTranslation(['common', 'settings']);
   const router = useRouter();
 
   return (
@@ -57,7 +57,7 @@ const SettingSidebar = () => {
                 ></path>
               </svg>
               <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                {t('setting:SETTINGS.PERSONAL_SETTINGS')}
+                {t('settings:SETTINGS.PERSONAL_SETTINGS')}
               </p>
               {/* </Link> */}
             </div>
@@ -67,7 +67,7 @@ const SettingSidebar = () => {
             <div className="mt-4 flex gap-4 text-sm leading-5 tracking-normal text-divider-text-lv-1">
               <div className="flex gap-2">
                 <Image src="/icons/real_home.svg" width={20} height={20} alt="setting_icon" />
-                <div>{t('setting:SETTINGS.ACCOUNT_BOOK_SETTINGS')}</div>
+                <div>{t('settings:SETTINGS.ACCOUNT_BOOK_SETTINGS')}</div>
               </div>
               <div className="my-auto h-px w-80px flex-1 shrink-0 bg-divider-stroke-lv-4" />
             </div>
@@ -98,7 +98,7 @@ const SettingSidebar = () => {
                 </svg>
 
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('setting:SETTINGS.BASIC_INFO')}
+                  {t('settings:SETTINGS.BASIC_INFO')}
                 </p>
               </Link>
 
@@ -130,7 +130,7 @@ const SettingSidebar = () => {
                 </svg>
 
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('setting:SETTINGS.ACCOUNTING_TITLE')}
+                  {t('settings:SETTINGS.ACCOUNTING_TITLE')}
                 </p>
               </Link>
 
@@ -161,7 +161,7 @@ const SettingSidebar = () => {
                   ></path>
                 </svg>
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('setting:SETTINGS.TRADING_PARTNER_LIST')}
+                  {t('settings:SETTINGS.TRADING_PARTNER_LIST')}
                 </p>
                 {/* </Link> */}
               </div>
@@ -193,7 +193,7 @@ const SettingSidebar = () => {
                   ></path>
                 </svg>
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('setting:SETTINGS.ADMINISTRATOR')}
+                  {t('settings:SETTINGS.ADMINISTRATOR')}
                 </p>
                 {/* </Link> */}
               </div>
@@ -225,7 +225,7 @@ const SettingSidebar = () => {
                   ></path>
                 </svg>
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('setting:SETTINGS.SUBSCRIPTION_BILLS')}
+                  {t('settings:SETTINGS.SUBSCRIPTION_BILLS')}
                 </p>
                 {/* </Link> */}
               </div>
