@@ -3,17 +3,20 @@ import { FiUser, FiInfo, FiEdit } from 'react-icons/fi';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ITeam } from '@/interfaces/team';
+import { useTranslation } from 'next-i18next';
 
 interface TeamPageButtonsProps {
   team: ITeam;
 }
 
 const TeamPageButtons = ({ team }: TeamPageButtonsProps) => {
+  const { t } = useTranslation(['team']);
+
   return (
     <main className="flex gap-16px">
       <Button variant="tertiary" size="small" className="text-xs leading-5">
         <FiUser size={16} />
-        <span>Member</span>
+        <span>{t('team:TEAM_PAGE.MEMBER')}</span>
       </Button>
 
       <Link
