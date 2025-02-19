@@ -1621,54 +1621,44 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const hasPage8 = detailsLength > 67; // (rowsForPage7 -> slice(53, 67))
   const hasPage9 = detailsLength > 80; // (rowsForPage8 -> slice(67, 80))
 
-  // const pages = [];
   const pages: { component: React.ReactElement; pageNumber: number }[] = [];
   let currentPageNumber = 1; // Info: (20250217 - Anna) 追蹤實際的顯示頁碼
 
   // Info: (20250214 - Anna) 第一部分：summary (彙總)
-  // if (hasPage1) pages.push(page1);
   if (hasPage1) {
     pages.push({ component: page1, pageNumber: currentPageNumber });
     currentPageNumber += 1;
   }
-  // if (hasPage2) pages.push(page2);
   if (hasPage2) {
     pages.push({ component: page2, pageNumber: currentPageNumber });
     currentPageNumber += 1;
   }
 
   // Info: (20250214 - Anna) 第二部分：details (細項)
-  // if (hasPage3) pages.push(page3);
   if (hasPage3) {
     pages.push({ component: page3, pageNumber: currentPageNumber });
     currentPageNumber += 1;
   }
-  // if (hasPage4) pages.push(page4);
   if (hasPage4) {
     pages.push({ component: page4, pageNumber: currentPageNumber });
     currentPageNumber += 1;
   }
-  // if (hasPage5) pages.push(page5);
   if (hasPage5) {
     pages.push({ component: page5, pageNumber: currentPageNumber });
     currentPageNumber += 1;
   }
-  // if (hasPage6) pages.push(page6);
   if (hasPage6) {
     pages.push({ component: page6, pageNumber: currentPageNumber });
     currentPageNumber += 1;
   }
-  // if (hasPage7) pages.push(page7);
   if (hasPage7) {
     pages.push({ component: page7, pageNumber: currentPageNumber });
     currentPageNumber += 1;
   }
-  // if (hasPage8) pages.push(page8);
   if (hasPage8) {
     pages.push({ component: page8, pageNumber: currentPageNumber });
     currentPageNumber += 1;
   }
-  // if (hasPage9) pages.push(page9);
   if (hasPage9) {
     pages.push({ component: page9, pageNumber: currentPageNumber });
     currentPageNumber += 1;
@@ -1690,7 +1680,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       {pages.map(({ component, pageNumber }, index) => (
         <React.Fragment key={`page-${index + 1}`}>
           {index !== 0 && <hr className="break-before-page" />}
-          {/* {page} */}
           {/* Info: (20250217 - Anna) 原本 component（ page1, page2 ...）沒有 renderedFooter(pageNumber)，所以透過 React.cloneElement() 動態新增到 component 的 children 裡 */}
           {React.cloneElement(component, {
             children: [...component.props.children, renderedFooter(pageNumber)],

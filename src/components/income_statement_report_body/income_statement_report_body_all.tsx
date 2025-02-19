@@ -267,7 +267,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </table>
         )}
       </section>
-      {/* {renderedFooter(1)} */}
     </div>
   );
   const page2 = (
@@ -344,7 +343,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      {/* {renderedFooter(2)} */}
     </div>
   );
   const page3 = (
@@ -435,7 +433,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      {/* {renderedFooter(3)} */}
     </div>
   );
   const page4 = (
@@ -521,7 +518,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </table>
         )}
       </section>
-      {/* {renderedFooter(4)} */}
     </div>
   );
   const page5 = (
@@ -602,7 +598,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      {/* {renderedFooter(5)} */}
     </div>
   );
   const page6 = (
@@ -683,7 +678,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      {/* {renderedFooter(6)} */}
     </div>
   );
   const page7 = (
@@ -762,7 +756,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      {/* {renderedFooter(7)} */}
     </div>
   );
   const page8 = (
@@ -879,7 +872,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      {/* {renderedFooter(8)} */}
     </div>
   );
   const page9 = (
@@ -1171,7 +1163,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      {/* {renderedFooter(9)} */}
     </div>
   );
 

@@ -223,7 +223,6 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
           </tr>
         </thead>
         <tbody>
-          {/* {data */}
           {uniqueData
             // Info: (20250213 - Anna) 先過濾掉 `curPeriodAmount` 和 `prePeriodAmount` 都為 0 的行
             .filter(
