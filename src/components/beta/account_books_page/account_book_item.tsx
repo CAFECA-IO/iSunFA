@@ -119,7 +119,7 @@ const AccountBookItem = ({
           alt="lock"
           width={16}
           height={16}
-          className={accountBook.isPrivate ? 'visible' : 'invisible'}
+          className={accountBook.company.isPrivate ? 'visible' : 'invisible'}
         ></Image>
 
         <p className="max-w-170px truncate text-base font-medium text-text-neutral-solid-dark">

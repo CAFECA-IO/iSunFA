@@ -2,6 +2,7 @@ import { WORK_TAG } from '@/constants/company';
 import { IRole } from '@/interfaces/role';
 
 // ToDo: (20250219 - Liz) ICompany 將被改名成 IAccountBook (因為公司已經改名成帳本)
+// Info: (20250219 - Liz) 新增一個屬性 isPrivate ，用來判斷是否為私人帳本，這只有 owner 可以設定。如果是公開帳本，帳本才可以被其他使用者看到
 export interface ICompany {
   id: number;
   imageId: string;
@@ -10,6 +11,7 @@ export interface ICompany {
   startDate: number;
   createdAt: number;
   updatedAt: number;
+  isPrivate?: boolean;
 }
 
 export interface ICompanyDetail extends ICompany {
@@ -25,16 +27,12 @@ export interface ICompanyAndRoleDetail {
 // ToDo: (20250219 - Liz) ICompanyAndRole 將被改名成 IAccountBookAndRole
 // 這個資料格式目前只有使用 company.id 和 tag
 // order 跟 role 都沒有用到
-// 考慮是否要將 tag 合併到 IAccountBook 裡面?
-// 但如果 tag 是每個使用者都可以設定自己專屬的、不是帳本本身的屬性，那就不能合併
-// Info: (20250219 - Liz) 新增一個屬性 isPrivate ，用來判斷是否為私人帳本，這只有 owner 可以設定。如果是公開帳本，帳本才可以被其他使用者看到
-
+// tag 是每個使用者都可以設定自己專屬的工作標籤，不是帳本本身的屬性
 export interface ICompanyAndRole {
   company: ICompany;
   tag: WORK_TAG;
   order: number;
   role: IRole;
-  isPrivate: boolean;
 }
 
 export interface ICompanyTaxIdAndName {

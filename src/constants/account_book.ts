@@ -11,6 +11,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST: ICompanyAndRole[] = [
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
+      isPrivate: true,
     },
     role: {
       id: 1,
@@ -21,7 +22,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: ICompanyAndRole[] = [
     },
     order: 1,
     tag: WORK_TAG.ALL,
-    isPrivate: true,
   },
   {
     company: {
@@ -32,6 +32,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST: ICompanyAndRole[] = [
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
+      isPrivate: true,
     },
     role: {
       id: 2,
@@ -42,7 +43,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: ICompanyAndRole[] = [
     },
     order: 2,
     tag: WORK_TAG.FINANCIAL,
-    isPrivate: true,
   },
   {
     company: {
@@ -53,6 +53,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST: ICompanyAndRole[] = [
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
+      isPrivate: false,
     },
     role: {
       id: 3,
@@ -63,7 +64,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: ICompanyAndRole[] = [
     },
     order: 3,
     tag: WORK_TAG.TAX,
-    isPrivate: false,
   },
   {
     company: {
@@ -74,6 +74,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST: ICompanyAndRole[] = [
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
+      isPrivate: true,
     },
     role: {
       id: 4,
@@ -84,7 +85,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: ICompanyAndRole[] = [
     },
     order: 4,
     tag: WORK_TAG.ALL,
-    isPrivate: true,
   },
   {
     company: {
@@ -95,6 +95,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST: ICompanyAndRole[] = [
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
+      isPrivate: true,
     },
     role: {
       id: 5,
@@ -105,6 +106,5 @@ export const FAKE_COMPANY_AND_ROLE_LIST: ICompanyAndRole[] = [
     },
     order: 5,
     tag: WORK_TAG.FINANCIAL,
-    isPrivate: true,
   },
 ];

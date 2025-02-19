@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ITeam } from '@/interfaces/team';
 import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_picture_modal';
 import TeamHeader from '@/components/beta/team_page/team_header';
+import TeamPageButtons from '@/components/beta/team_page/team_page_buttons';
 import { useTranslation } from 'next-i18next';
 import { ICompanyAndRole } from '@/interfaces/company';
 import { useUserCtx } from '@/contexts/user_context';
@@ -97,7 +98,10 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
 
   return (
     <main className="flex flex-col gap-40px">
-      <TeamHeader team={team} setTeamToUploadPicture={setTeamToUploadPicture} />
+      <div className="flex items-center">
+        <TeamHeader team={team} setTeamToUploadPicture={setTeamToUploadPicture} />
+        <TeamPageButtons team={team} />
+      </div>
 
       <div className="flex items-center gap-16px">
         <div className="flex items-center gap-8px">
