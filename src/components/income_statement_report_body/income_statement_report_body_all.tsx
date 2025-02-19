@@ -1172,15 +1172,15 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
 
   // Info: (20250217 - Anna) 第一部分：Summary (彙總)
   const hasPage1 = generalLength > 0;
-  const hasPage2 = generalLength > 10; // (page1 -> slice(0, 10))
-  const hasPage3 = generalLength > 24; // (page2 -> slice(10, 24))
+  const hasPage2 = generalLength > 10; // Info: (20250217 - Anna) (page1 -> slice(0, 10))
+  const hasPage3 = generalLength > 24; // Info: (20250217 - Anna) (page2 -> slice(10, 24))
 
   // Info: (20250217 - Anna) 第二部分：Details (細項)
   const hasPage4 = detailsLength > 0;
-  const hasPage5 = detailsLength > 14; // (page4 -> slice(0, 14))
-  const hasPage6 = detailsLength > 28; // (page5 -> slice(14, 28))
-  const hasPage7 = detailsLength > 39; // (page6 -> slice(28, 39))
-  const hasPage8 = detailsLength > 49; // (page7 -> slice(39, 49))
+  const hasPage5 = detailsLength > 14; // Info: (20250217 - Anna) (page4 -> slice(0, 14))
+  const hasPage6 = detailsLength > 28; // Info: (20250217 - Anna) (page5 -> slice(14, 28))
+  const hasPage7 = detailsLength > 39; // Info: (20250217 - Anna) (page6 -> slice(28, 39))
+  const hasPage8 = detailsLength > 49; // Info: (20250217 - Anna) (page7 -> slice(39, 49))
 
   const pages: { component: React.ReactElement; pageNumber: number }[] = [];
   let currentPageNumber = 1; // Info: (20250217 - Anna) 追蹤實際的顯示頁碼

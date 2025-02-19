@@ -1610,16 +1610,16 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   // Info: (20250214 - Anna) 第一部分：summary (彙總)
   const hasPage1 = generalLength > 0;
-  const hasPage2 = generalLength > 9; // (rowsForPage1 -> slice(0, 9))
+  const hasPage2 = generalLength > 9; // Info: (20250214 - Anna) (rowsForPage1 -> slice(0, 9))
 
   // Info: (20250214 - Anna) 第二部分：details (細項)
   const hasPage3 = detailsLength > 0;
-  const hasPage4 = detailsLength > 13; // (rowsForPage3 -> slice(0, 13))
-  const hasPage5 = detailsLength > 26; // (rowsForPage4 -> slice(13, 26))
-  const hasPage6 = detailsLength > 39; // (rowsForPage5 -> slice(26, 39))
-  const hasPage7 = detailsLength > 53; // (rowsForPage6 -> slice(39, 53))
-  const hasPage8 = detailsLength > 67; // (rowsForPage7 -> slice(53, 67))
-  const hasPage9 = detailsLength > 80; // (rowsForPage8 -> slice(67, 80))
+  const hasPage4 = detailsLength > 13; // Info: (20250214 - Anna) (rowsForPage3 -> slice(0, 13))
+  const hasPage5 = detailsLength > 26; // Info: (20250214 - Anna) (rowsForPage4 -> slice(13, 26))
+  const hasPage6 = detailsLength > 39; // Info: (20250214 - Anna) (rowsForPage5 -> slice(26, 39))
+  const hasPage7 = detailsLength > 53; // Info: (20250214 - Anna) (rowsForPage6 -> slice(39, 53))
+  const hasPage8 = detailsLength > 67; // Info: (20250214 - Anna) (rowsForPage7 -> slice(53, 67))
+  const hasPage9 = detailsLength > 80; // Info: (20250214 - Anna) (rowsForPage8 -> slice(67, 80))
 
   const pages: { component: React.ReactElement; pageNumber: number }[] = [];
   let currentPageNumber = 1; // Info: (20250217 - Anna) 追蹤實際的顯示頁碼

@@ -129,7 +129,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
       const isAllZeroOrDash =
         curAmount === 0 && curPercentage === 0 && preAmount === 0 && prePercentage === 0;
 
-      return !isAllZeroOrDash; /// Info: (20250214 - Anna) 只有當四個值 都為0才過濾掉
+      return !isAllZeroOrDash; // Info: (20250214 - Anna) 只有當四個值 都為0才過濾掉
     });
 
     // Info: (20250214 - Anna) 重新分組，確保沒有空白行或空白頁
