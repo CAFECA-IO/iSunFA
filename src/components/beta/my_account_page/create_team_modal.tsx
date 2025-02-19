@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { FaArrowRight } from 'react-icons/fa';
+import { useTranslation } from 'next-i18next';
+import { FaArrowRight, FaAngleDoubleDown } from 'react-icons/fa';
 import { FaPlus } from 'react-icons/fa6';
 import { IoMailOutline } from 'react-icons/io5';
 import { RxCross2 } from 'react-icons/rx';
@@ -17,6 +18,8 @@ interface ICreateTeamModalProps {
 }
 
 const CreateTeamStepper: React.FC<{ currentStep: number }> = ({ currentStep }) => {
+  const { t } = useTranslation(['team']);
+
   const step1src = currentStep === 1 ? '/icons/team_name_active.svg' : '/icons/team_name.svg';
   const step1textColor =
     currentStep === 1 ? 'text-stepper-text-active' : 'text-stepper-text-finish';
@@ -48,7 +51,9 @@ const CreateTeamStepper: React.FC<{ currentStep: number }> = ({ currentStep }) =
       {/* Info: (20250218 - Julian) Step 1 */}
       <div className="z-10 flex w-75px flex-col items-center">
         <Image src={step1src} width={30} height={30} alt="create_team_step_1" />
-        <p className={`text-xs font-medium ${step1textColor}`}>Team Name</p>
+        <p className={`text-xs font-medium ${step1textColor}`}>
+          {t('team:CREATE_TEAM_MODAL.STEP_1')}
+        </p>
       </div>
 
       {/* Info: (20250218 - Julian) Line 1 */}
@@ -57,7 +62,9 @@ const CreateTeamStepper: React.FC<{ currentStep: number }> = ({ currentStep }) =
       {/* Info: (20250218 - Julian) Step 2 */}
       <div className="z-10 flex w-75px flex-col items-center">
         <Image src={step2src} width={30} height={30} alt="create_team_step_2" />
-        <p className={`text-xs font-medium ${step2textColor}`}>Member</p>
+        <p className={`text-xs font-medium ${step2textColor}`}>
+          {t('team:CREATE_TEAM_MODAL.STEP_2')}
+        </p>
       </div>
 
       {/* Info: (20250218 - Julian) Line 2 */}
@@ -66,13 +73,17 @@ const CreateTeamStepper: React.FC<{ currentStep: number }> = ({ currentStep }) =
       {/* Info: (20250218 - Julian) Step 3 */}
       <div className="z-10 flex w-75px flex-col items-center">
         <Image src={step3src} width={30} height={30} alt="create_team_step_3" />
-        <p className={`text-xs font-medium ${step3textColor}`}>Sub Plan</p>
+        <p className={`text-xs font-medium ${step3textColor}`}>
+          {t('team:CREATE_TEAM_MODAL.STEP_3')}
+        </p>
       </div>
     </div>
   );
 };
 
 const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandler }) => {
+  const { t } = useTranslation(['team', 'common']);
+
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [teamNameInput, setTeamNameInput] = useState<string>('');
   const [teamMemberInput, setTeamMemberInput] = useState<string>(''); // Info: (20250218 - Julian) input value
@@ -81,6 +92,8 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const [teamMembers, setTeamMembers] = useState<IMember[]>([]);
 
   const [isValidEmail, setIsValidEmail] = useState<boolean>(true);
+
+  const [isShowBounceAnim, setIsShowBounceAnim] = useState<boolean>(false);
 
   // ToDo: (20250218 - Julian) For testing UI
   const fakeTeam = {
@@ -102,6 +115,8 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     data,
   } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
 
+  const formBodyRef = useRef<HTMLDivElement>(null);
+
   // Info: (20250218 - Julian) 送出 API 後，取得 Team 資訊
   useEffect(() => {
     if (createSuccess && data) {
@@ -116,8 +131,31 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     }
   }, [teamMemberInput]);
 
-  const nextButtonStr = currentStep === 1 ? 'Create Team' : 'Continue';
-  const cancelButtonText = currentStep === 1 ? 'Cancel' : 'Skip for Now';
+  // Info: (20250219 - Julian) 根據 formBodyRef 的高度 決定是否顯示 Bounce 動畫
+  // ToDo: (20250219 - Julian) 施工中🔧
+  useEffect(() => {
+    const handleScroll = () => {
+      if (formBodyRef.current) {
+        // Info: (20250219 - Julian) 判斷是否在最底部，如果是則不顯示 Bounce 動畫
+        const isAtBottom =
+          formBodyRef.current.scrollHeight - formBodyRef.current.scrollTop ===
+          formBodyRef.current.clientHeight;
+        setIsShowBounceAnim(!isAtBottom);
+      }
+    };
+
+    const element = formBodyRef.current;
+    element?.addEventListener('scroll', handleScroll);
+
+    return () => element?.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const nextButtonStr =
+    currentStep === 1
+      ? t('team:CREATE_TEAM_MODAL.CREATE_BTN')
+      : t('team:CREATE_TEAM_MODAL.CONTINUE_BTN');
+  const cancelButtonText =
+    currentStep === 1 ? t('common:COMMON.CANCEL') : t('team:CREATE_TEAM_MODAL.SKIP_BTN');
 
   // ToDo: (20250218 - Julian) Recall API call
   const getOwnedTeam = async () => {
@@ -160,7 +198,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       // Info: (20250217 - Julian) Team Name
       <div className="flex flex-col gap-8px text-sm">
         <p className="font-semibold text-input-text-primary">
-          Team Name <span className="text-text-state-error">*</span>
+          {t('team:CREATE_TEAM_MODAL.TEAM_NAME')} <span className="text-text-state-error">*</span>
         </p>
         <input
           id="team-name"
@@ -168,13 +206,15 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           value={teamNameInput}
           onChange={(e) => setTeamNameInput(e.target.value)}
           className="rounded-sm border border-input-stroke-input px-12px py-10px placeholder:text-input-text-input-placeholder"
-          placeholder="Name"
+          placeholder={t('team:CREATE_TEAM_MODAL.TEAM_NAME')}
         />
       </div>
     ) : currentStep === 2 ? (
       // Info: (20250217 - Julian) Member Email
       <div className="flex flex-col gap-8px text-sm">
-        <p className="font-semibold text-input-text-primary">Member Email</p>
+        <p className="font-semibold text-input-text-primary">
+          {t('team:CREATE_TEAM_MODAL.MEMBER_EMAIL')}
+        </p>
         <div className="flex items-center gap-12px rounded-sm border border-input-stroke-input px-12px py-10px">
           <div className="text-icon-surface-single-color-primary">
             <IoMailOutline size={16} />
@@ -191,7 +231,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           </button>
         </div>
         <p className={`text-red-600 ${isValidEmail ? 'opacity-0' : 'opacity-100'}`}>
-          Please enter a valid email address.
+          {t('team:CREATE_TEAM_MODAL.EMAIL_HINT')}
         </p>
       </div>
     ) : (
@@ -208,12 +248,9 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
               />
             ))}
         </div>
-        <ul className="list-disc font-normal text-text-neutral-primary marker:text-surface-support-strong-maple">
-          <li>
-            If you choose to skip this step, we will automatically set your team to the free
-            version.You can opt to use the free version of the service temporarily, enjoying basic
-            features with potential limitations compared to premium plans.
-          </li>
+
+        <ul className="ml-20px list-outside list-disc font-normal text-text-neutral-primary marker:text-surface-support-strong-maple">
+          <li>{t('team:CREATE_TEAM_MODAL.PLAN_HINT')}</li>
         </ul>
       </>
     );
@@ -227,7 +264,9 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       >
         {/* Info: (20250217 - Julian) Title */}
         <div className="relative flex items-start justify-center">
-          <h2 className="text-xl font-bold text-text-neutral-primary">Create a Team</h2>
+          <h2 className="text-xl font-bold text-text-neutral-primary">
+            {t('team:CREATE_TEAM_MODAL.MODAL_TITLE')}
+          </h2>
           <button
             type="button"
             className="absolute right-0 text-icon-surface-single-color-primary"
@@ -241,8 +280,22 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
         <CreateTeamStepper currentStep={currentStep} />
 
         {/* Info: (20250217 - Julian) Form */}
-        <div className="flex flex-col gap-lv-7">
+        <div
+          ref={formBodyRef}
+          className="relative flex max-h-600px flex-col gap-lv-7 overflow-y-auto py-20px"
+        >
           {formBody}
+
+          {/* Info: (20250219 - Julian) 提示向下滾動的動畫 */}
+          {currentStep === 3 && (
+            <div
+              className={`sticky bottom-0 left-0 flex w-full items-center justify-center bg-gradient-to-t from-white to-transparent ${isShowBounceAnim ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <div className="animate-bounce text-button-text-secondary">
+                <FaAngleDoubleDown size={32} />
+              </div>
+            </div>
+          )}
 
           {/* Info: (20250217 - Julian) Buttons */}
           <div className="ml-auto flex items-center gap-24px">

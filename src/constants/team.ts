@@ -33,7 +33,7 @@ export const FAKE_TEAM_LIST: ITeam[] = [
   {
     id: 'TeamUID00002',
     imageId: '/images/fake_team_img.svg',
-    role: TeamRole.OWNER,
+    role: TeamRole.ADMIN,
     name: {
       value: 'Team B',
       editable: true,
@@ -60,7 +60,7 @@ export const FAKE_TEAM_LIST: ITeam[] = [
   {
     id: 'TeamUID00003',
     imageId: '/images/fake_team_img.svg',
-    role: TeamRole.OWNER,
+    role: TeamRole.VIEWER,
     name: {
       value: 'Team C',
       editable: true,

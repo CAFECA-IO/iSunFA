@@ -6,5 +6,32 @@
 
   "ERROR": {
     "TEAM_DATA_NOT_FOUND": "Team data not found"
+  },
+
+  "MY_ACCOUNT_PAGE": {
+    "PAGE_TITLE": "My Account",
+    "USER_INFO_TITLE": "User information",
+    "MY_TEAM_TITLE": "My team",
+    "ADD_TEAM_BTN": "Add Team",
+    "PLAN_BEGINNER": "Free",
+    "PLAN_PROFESSIONAL": "Professional",
+    "PLAN_ENTERPRISE": "Enterprise",
+    "ROLE_OWNER": "Owner",
+    "ROLE_ADMIN": "Admin",
+    "ROLE_EDITOR": "Editor",
+    "ROLE_VIEWER": "Viewer"
+  },
+  "CREATE_TEAM_MODAL": {
+    "MODAL_TITLE": "Create a Team",
+    "STEP_1": "Team Name",
+    "STEP_2": "Member",
+    "STEP_3": "Sub Plan",
+    "TEAM_NAME": "Team Name",
+    "MEMBER_EMAIL": "Member Email",
+    "EMAIL_HINT": "Please enter a valid email address.",
+    "PLAN_HINT": "If you choose to skip this step, we will automatically set your team to the free version.You can opt to use the free version of the service temporarily, enjoying basic features with potential limitations compared to premium plans.",
+    "SKIP_BTN": "Skip for Now",
+    "CONTINUE_BTN": "Continue",
+    "CREATE_BTN": "Create Team"
   }
 }

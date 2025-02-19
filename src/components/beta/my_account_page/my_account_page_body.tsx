@@ -15,7 +15,7 @@ interface MyAccountPageBodyProps {
 }
 
 const MyAccountPageBody: React.FC<MyAccountPageBodyProps> = ({ loginDevices }) => {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['team']);
   const { userAuth } = useUserCtx();
 
   const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
@@ -34,7 +34,7 @@ const MyAccountPageBody: React.FC<MyAccountPageBodyProps> = ({ loginDevices }) =
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm font-medium text-divider-text-lv-1">
           <Image src="/icons/user-identifier-card.svg" width={16} height={16} alt="info_icon" />
-          <p>{t('User information')}</p>
+          <p>{t('team:MY_ACCOUNT_PAGE.USER_INFO_TITLE')}</p>
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>
@@ -54,7 +54,7 @@ const MyAccountPageBody: React.FC<MyAccountPageBodyProps> = ({ loginDevices }) =
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm font-medium text-divider-text-lv-1">
           <Image src="/icons/building.svg" width={16} height={16} alt="info_icon" />
-          <p>{t('My team')}</p>
+          <p>{t('team:MY_ACCOUNT_PAGE.MY_TEAM_TITLE')}</p>
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>
@@ -67,7 +67,7 @@ const MyAccountPageBody: React.FC<MyAccountPageBodyProps> = ({ loginDevices }) =
           className="ml-auto"
           onClick={toggleCreateTeamModal}
         >
-          <FaPlus /> Add Team
+          <FaPlus /> {t('team:MY_ACCOUNT_PAGE.ADD_TEAM_BTN')}
         </Button>
 
         <TeamList />
