@@ -15,7 +15,7 @@ import Layout from '@/components/beta/layout/layout';
 import MyAccountPageBody from '@/components/beta/my_account_page/my_account_page_body';
 
 const MyAccountPage: React.FC = () => {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['common', 'team', 'settings']);
   const { toastHandler } = useModalContext();
   const { userAuth } = useUserCtx();
   const [loginDevices, setLoginDevices] = useState<IPaginatedData<ILoginDevice[]> | null>(null);
@@ -53,10 +53,10 @@ const MyAccountPage: React.FC = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{'My Account'} - iSunFA</title>
+        <title>{t('team:MY_ACCOUNT_PAGE.PAGE_TITLE')} - iSunFA</title>
       </Head>
 
-      <Layout isDashboard={false} pageTitle={'My Account'}>
+      <Layout isDashboard={false} pageTitle={t('team:MY_ACCOUNT_PAGE.PAGE_TITLE')}>
         <MyAccountPageBody loginDevices={loginDevices} />
       </Layout>
     </>
@@ -74,6 +74,7 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
       'dashboard',
       'date_picker',
       'subscriptions',
+      'team',
     ])),
     locale,
   },

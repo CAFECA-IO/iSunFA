@@ -1,9 +1,10 @@
 import React from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import { ITeam } from '@/interfaces/team';
 
-const TeamItem: React.FC<ITeam> = ({ name, profile, planType }) => {
-  // ToDo: (20250217 - Julian) 缺少 my role 的資料
+const TeamItem: React.FC<ITeam> = ({ name, profile, planType, role }) => {
+  const { t } = useTranslation(['team']);
 
   return (
     <div className="flex items-center gap-lv-7 rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 px-lv-5 py-lv-3">
@@ -18,10 +19,10 @@ const TeamItem: React.FC<ITeam> = ({ name, profile, planType }) => {
         </div>
         {/* Info: (20250217 - Julian) Tags */}
         <div className="rounded-full bg-badge-surface-strong-secondary px-lv-3 py-2px font-medium text-badge-text-invert">
-          {planType.value}
+          {t(`team:MY_ACCOUNT_PAGE.PLAN_${planType.value.toUpperCase()}`)}
         </div>
         <div className="rounded-full bg-badge-surface-soft-primary px-lv-3 py-2px font-medium text-badge-text-primary-solid">
-          &#123;my role&#125;
+          {t(`team:MY_ACCOUNT_PAGE.ROLE_${role.toUpperCase()}`)}
         </div>
       </div>
     </div>
