@@ -22,7 +22,7 @@ const internationalizationList: IInternationalization[] = [
 ];
 
 const LandingNavbar: React.FC = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('landing_page_v2');
   const { asPath, locale } = useRouter();
 
   // Info: (20241227 - Julian) Navbar 下拉選單
