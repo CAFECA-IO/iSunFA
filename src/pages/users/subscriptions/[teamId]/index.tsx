@@ -20,16 +20,16 @@ const TeamSubscriptionPage = () => {
   const [team, setTeam] = useState<IUserOwnedTeam | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Info: (20250117 - Liz) 取得團隊資料 API
-  const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+  // Info: (20250117 - Liz) 取得使用者擁有的團隊資料 API (user is the owner of the team)
+  const { trigger: getOwnedTeamAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
 
-  // Info: (20250117 - Liz) 打 API 取得團隊資料
-  const getTeamData = useCallback(async () => {
+  // Info: (20250117 - Liz) 打 API 取得使用者擁有的團隊資料
+  const getOwnedTeam = useCallback(async () => {
     if (!teamIdString) return;
     setIsLoading(true);
 
     try {
-      const { data: teamData, success } = await getTeamDataAPI({
+      const { data: teamData, success } = await getOwnedTeamAPI({
         params: { teamId: teamIdString },
       });
 
@@ -46,8 +46,8 @@ const TeamSubscriptionPage = () => {
   }, [teamIdString]);
 
   useEffect(() => {
-    getTeamData();
-  }, [getTeamData]);
+    getOwnedTeam();
+  }, [getOwnedTeam]);
 
   // Info: (20250117 - Liz) 如果打 API 還在載入中，顯示載入中頁面
   if (isLoading) {
@@ -99,7 +99,7 @@ const TeamSubscriptionPage = () => {
         pageTitle={t('subscriptions:SUBSCRIPTIONS_PAGE.PLAN_FOR') + team.name}
         goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
       >
-        <TeamSubscriptionPageBody team={team} getTeamData={getTeamData} />
+        <TeamSubscriptionPageBody team={team} getOwnedTeam={getOwnedTeam} />
       </Layout>
     </>
   );

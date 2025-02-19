@@ -3,7 +3,7 @@ import { ILineItemEntity } from '@/interfaces/line_item';
 import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
 import { Logger } from 'pino';
 import { IGetOneVoucherResponse, IVoucherEntity } from '@/interfaces/voucher';
-import loggerBack from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
 import {
@@ -15,6 +15,7 @@ import {
   Invoice as PrismaInvoice,
   File as PrismaFile,
   UserCertificate as PrismaUserCertificate,
+  PrismaClient,
 } from '@prisma/client';
 import { IAssetEntity } from '@/interfaces/asset';
 import { getOneVoucherByVoucherNoV2, getOneVoucherV2 } from '@/lib/utils/repo/voucher.repo';
@@ -46,6 +47,9 @@ import { CurrencyType } from '@/constants/currency';
 import { isFloatsEqual } from '@/lib/utils/common';
 import { EventType } from '@/constants/account';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
+import { VOUCHER_RESTORE_WINDOW_IN_SECONDS } from '@/constants/common';
+
+const prisma = new PrismaClient();
 
 export const voucherAPIGetOneUtils = {
   /**
@@ -1132,5 +1136,251 @@ export const voucherAPIDeleteUtils = {
   ) => {
     logger.error(errorMessage);
     throw new Error(statusMessage);
+  },
+};
+
+export const voucherAPIRestoreUtils = {
+  throwErrorAndLog: (
+    logger: typeof loggerBack,
+    options: { errorMessage: string; statusMessage: string; userId: number }
+  ) => {
+    const { errorMessage, statusMessage, userId } = options;
+    loggerError({
+      userId,
+      errorType: 'Voucher Restore Error',
+      errorMessage,
+    });
+    throw new Error(statusMessage);
+  },
+
+  /**
+   * Info: (20250218 - Shirley)
+   * @description Check if the voucher exists and meets the restoration conditions
+   * Conditions:
+   * 1. The voucher must exist and be deleted (deletedAt is not null)
+   * 2. Must have corresponding associate_voucher records, and the event with the eventId in these records must have event_type "delete"
+   * 3. These vouchers must be the original_voucher in associate_voucher
+   */
+  async checkVoucherCanBeRestored(params: {
+    voucherId: number;
+    companyId: number;
+    userId: number;
+  }) {
+    const { voucherId, companyId, userId } = params;
+
+    const deletedVoucher = await prisma.voucher.findFirst({
+      where: {
+        id: voucherId,
+        companyId,
+        deletedAt: { not: null },
+        originalVouchers: {
+          some: {
+            deletedAt: null,
+            event: {
+              eventType: EventEntityType.DELETE,
+            },
+          },
+        },
+      },
+      include: {
+        originalVouchers: {
+          where: {
+            deletedAt: null,
+            event: {
+              eventType: EventEntityType.DELETE,
+            },
+          },
+          include: {
+            event: true,
+            resultVoucher: true,
+          },
+        },
+      },
+    });
+
+    if (!deletedVoucher) {
+      this.throwErrorAndLog(loggerBack, {
+        errorMessage: 'Cannot find deleted voucher that meets the conditions',
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+        userId,
+      });
+    }
+
+    return deletedVoucher;
+  },
+
+  async restoreVoucherAndRelations(params: {
+    voucherId: number;
+    companyId: number;
+    now: number;
+    userId: number;
+  }) {
+    const { voucherId, companyId, now, userId } = params;
+
+    // Info: (20250218 - Shirley) 1. Check if the voucher exists and meets restoration conditions
+    const deletedVoucher = await this.checkVoucherCanBeRestored({
+      voucherId,
+      companyId,
+      userId,
+    });
+
+    if (!deletedVoucher) {
+      this.throwErrorAndLog(loggerBack, {
+        errorMessage: 'Cannot find deleted voucher that meets the conditions',
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+        userId,
+      });
+      return null;
+    }
+
+    // Info: (20250218 - Shirley) 2. Check if within 30 seconds
+    if (Math.abs(deletedVoucher.deletedAt! - now) > VOUCHER_RESTORE_WINDOW_IN_SECONDS) {
+      this.throwErrorAndLog(loggerBack, {
+        errorMessage: 'Exceeded restoration time limit (30 seconds)',
+        statusMessage: STATUS_MESSAGE.FORBIDDEN,
+        userId,
+      });
+    }
+
+    // Info: (20250218 - Shirley) 3. Start restoration process
+    return prisma.$transaction(async (txPrisma) => {
+      // Info: (20250218 - Shirley) 3.1 Restore asset_voucher and related assets
+      await txPrisma.assetVoucher.updateMany({
+        where: {
+          voucherId,
+          deletedAt: { not: null },
+        },
+        data: {
+          deletedAt: null,
+          updatedAt: now,
+        },
+      });
+
+      const assetVouchers = await txPrisma.assetVoucher.findMany({
+        where: {
+          voucherId,
+        },
+        select: {
+          assetId: true,
+        },
+      });
+
+      if (assetVouchers.length > 0) {
+        await txPrisma.asset.updateMany({
+          where: {
+            id: {
+              in: assetVouchers.map((av) => av.assetId),
+            },
+            deletedAt: { not: null },
+          },
+          data: {
+            deletedAt: null,
+            updatedAt: now,
+          },
+        });
+      }
+
+      // Info: (20250218 - Shirley) 3.2 Find and delete reverse voucher
+      const associateVouchers = await txPrisma.associateVoucher.findMany({
+        where: {
+          originalVoucherId: voucherId,
+          event: {
+            eventType: EventEntityType.DELETE,
+          },
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+          resultVoucherId: true,
+          resultVoucher: true,
+        },
+      });
+
+      if (associateVouchers.length > 0) {
+        const reverseVoucherIds = associateVouchers
+          .map((av) => av.resultVoucherId)
+          .filter((id): id is number => id !== null);
+
+        if (reverseVoucherIds.length > 0) {
+          // Info: (20250218 - Shirley) 3.2.1. First delete assetVoucher records
+          await txPrisma.assetVoucher.deleteMany({
+            where: {
+              voucherId: {
+                in: reverseVoucherIds,
+              },
+            },
+          });
+
+          const reverseLineItems = await txPrisma.lineItem.findMany({
+            where: {
+              voucherId: {
+                in: reverseVoucherIds,
+              },
+            },
+            select: {
+              id: true,
+            },
+          });
+
+          // Info: (20250218 - Shirley) 3.2.2. Delete associateLineItem
+          await txPrisma.associateLineItem.deleteMany({
+            where: {
+              OR: [
+                {
+                  associateVoucherId: {
+                    in: associateVouchers.map((av) => av.id),
+                  },
+                },
+                {
+                  resultLineItemId: {
+                    in: reverseLineItems.map((li) => li.id),
+                  },
+                },
+              ],
+            },
+          });
+
+          // Info: (20250218 - Shirley) 3.2.3. Delete associateVoucher
+          await txPrisma.associateVoucher.deleteMany({
+            where: {
+              id: {
+                in: associateVouchers.map((av) => av.id),
+              },
+            },
+          });
+
+          // Info: (20250218 - Shirley) 3.2.4. Delete lineItem
+          await txPrisma.lineItem.deleteMany({
+            where: {
+              voucherId: {
+                in: reverseVoucherIds,
+              },
+            },
+          });
+
+          // Info: (20250218 - Shirley) 3.2.5. Finally delete reverse voucher
+          await txPrisma.voucher.deleteMany({
+            where: {
+              id: {
+                in: reverseVoucherIds,
+              },
+            },
+          });
+        }
+      }
+
+      // Info: (20250218 - Shirley) 3.3 Restore the deleted voucher
+      const restoredVoucher = await txPrisma.voucher.update({
+        where: {
+          id: voucherId,
+        },
+        data: {
+          deletedAt: null,
+          updatedAt: now,
+        },
+      });
+
+      return restoredVoucher;
+    });
   },
 };

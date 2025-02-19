@@ -44,18 +44,17 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
   return (
     <div
       className={`group table-row h-72px w-full max-w-920px overflow-y-hidden text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10`}
-      onClick={
-        activeSelection
-          ? handleSelect.bind(null, [certificate.id], !certificate.isSelected)
-          : onEdit.bind(null, certificate.id)
-      }
+      onClick={() =>
+        (activeSelection
+          ? handleSelect([certificate.id], !certificate.isSelected)
+          : onEdit(certificate.id))}
     >
       {/* Info: (20240924 - tzuhan) CheckBox */}
       {activeSelection && (
         <BorderCell isSelected={certificate.isSelected} className="max-w-32px px-8px">
           <div
             className={`h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${certificate.isSelected ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
-            onClick={handleSelect.bind(null, [certificate.id], !certificate.isSelected)}
+            onClick={() => handleSelect([certificate.id], !certificate.isSelected)}
           >
             {certificate.isSelected && <HiCheck className="absolute text-neutral-white" />}
           </div>

@@ -1,9 +1,11 @@
-import { ITeam } from '@/interfaces/team';
+import { ITeam, TeamRole } from '@/interfaces/team';
 import { TPlanType } from '@/interfaces/subscription';
 
 export const FAKE_TEAM_LIST: ITeam[] = [
   {
-    id: '1',
+    id: 'TeamUID00001',
+    imageId: '/images/fake_team_img.svg',
+    role: TeamRole.OWNER,
     name: {
       value: 'Team A',
       editable: true,
@@ -13,7 +15,8 @@ export const FAKE_TEAM_LIST: ITeam[] = [
       editable: true,
     },
     profile: {
-      value: 'Profile Team A',
+      value:
+        'https://static-cdn.jtvnw.net/jtv_user_pictures/44ed4bd3-5f4f-47e6-b89b-90de65386dbb-profile_banner-480.png',
       editable: true,
     },
     planType: {
@@ -28,7 +31,9 @@ export const FAKE_TEAM_LIST: ITeam[] = [
     },
   },
   {
-    id: '2',
+    id: 'TeamUID00002',
+    imageId: '/images/fake_team_img.svg',
+    role: TeamRole.OWNER,
     name: {
       value: 'Team B',
       editable: true,
@@ -38,7 +43,7 @@ export const FAKE_TEAM_LIST: ITeam[] = [
       editable: true,
     },
     profile: {
-      value: 'Profile Team B',
+      value: 'https://i.pinimg.com/236x/cc/48/41/cc4841ce4212d47ca59c5ec0e63f53bc.jpg',
       editable: true,
     },
     planType: {
@@ -49,6 +54,33 @@ export const FAKE_TEAM_LIST: ITeam[] = [
     totalAccountBooks: 2,
     bankAccount: {
       value: '12345678',
+      editable: true,
+    },
+  },
+  {
+    id: 'TeamUID00003',
+    imageId: '/images/fake_team_img.svg',
+    role: TeamRole.OWNER,
+    name: {
+      value: 'Team C',
+      editable: true,
+    },
+    about: {
+      value: 'About Team C',
+      editable: true,
+    },
+    profile: {
+      value: 'https://i.pinimg.com/736x/ea/78/01/ea78014cd14a79714042729c661bd46c.jpg',
+      editable: true,
+    },
+    planType: {
+      value: TPlanType.BEGINNER,
+      editable: true,
+    },
+    totalMembers: 1,
+    totalAccountBooks: 1,
+    bankAccount: {
+      value: '87654321',
       editable: true,
     },
   },
