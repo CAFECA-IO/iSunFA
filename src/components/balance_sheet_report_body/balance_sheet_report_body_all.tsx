@@ -89,7 +89,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           setErrorCode(code);
           return;
         }
-
         setFinancialReport(data);
         setIsGetFinancialReportSuccess(getReportFinancialSuccess);
         // Deprecated: (20241128 - Liz)
@@ -169,6 +168,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (financialReport.general || financialReport.details) {
         const filteredGeneral = financialReport.general
           ? financialReport.general.filter((item) => {
+              // Info: (20250219 - Anna) 如果是標題列（沒有 code），則保留
+              if (!item.code) return true;
               return !(
                 item.curPeriodAmount === 0 &&
                 item.curPeriodPercentage === 0 &&
@@ -180,6 +181,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
         const filteredDetails = financialReport.details
           ? financialReport.details.filter((item) => {
+              // Info: (20250219 - Anna) 如果是標題列（沒有 code），則保留
+              if (!item.code) return true;
               return !(
                 item.curPeriodAmount === 0 &&
                 item.curPeriodPercentage === 0 &&
@@ -189,11 +192,20 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             })
           : [];
 
-        setFinancialReport({
-          ...financialReport,
-          general: filteredGeneral,
-          details: filteredDetails,
-        });
+        // Info: (20250219 - Anna) 如果資料沒有變化，就不要呼叫 `setFinancialReport`
+        if (
+          JSON.stringify(financialReport.general) !== JSON.stringify(filteredGeneral) ||
+          JSON.stringify(financialReport.details) !== JSON.stringify(filteredDetails)
+        ) {
+          setFinancialReport((prev) => {
+            if (!prev) return null; //  Info: (20250219 - Anna) 如果 prev 為 null，則不更新 state
+            return {
+              ...prev,
+              general: filteredGeneral,
+              details: filteredDetails,
+            };
+          });
+        }
       }
     }
   }, [financialReport]);

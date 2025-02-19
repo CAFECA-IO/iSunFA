@@ -153,19 +153,6 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
       groupedGeneral.push(currentGroup);
     }
 
-    // Info: (20250214 - Anna)
-    // const groupedGeneral: IAccountReadyForFrontend[][] = [];
-    // flattenGeneralAccounts.forEach((account, index) => {
-    //   if (index < 10) {
-    //     if (groupedGeneral.length === 0) groupedGeneral.push([]);
-    //     groupedGeneral[0].push(account);
-    //   } else {
-    //     const groupIndex = Math.floor((index - 10) / groupSize) + 1;
-    //     if (!groupedGeneral[groupIndex]) groupedGeneral[groupIndex] = [];
-    //     groupedGeneral[groupIndex].push(account);
-    //   }
-    // });
-
     const totalPagesForSummary = groupedGeneral.length;
 
     // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail

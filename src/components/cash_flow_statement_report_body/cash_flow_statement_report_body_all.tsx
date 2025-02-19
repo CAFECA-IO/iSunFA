@@ -153,9 +153,15 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   };
 
   const renderTable = (data: FinancialReportItem[], startIndex: number, endIndex: number) => {
-    // Info: (20250217 - Anna) 過濾掉 curPeriodAmount 和 prePeriodAmount 皆為 0 的列
+    // Info: (20250219 - Anna) 判斷是否為「標題列」：如果 `code` 為空值，則視為標題列
+    const isTitleRow = (value: FinancialReportItem) => !value.code;
+
+    // Info: (20250219 - Anna) 過濾掉 curPeriodAmount 和 prePeriodAmount 皆為 0 的列
     const filteredData = data.filter(
-      (value) => (value.curPeriodAmount ?? 0) !== 0 || (value.prePeriodAmount ?? 0) !== 0
+      (value) =>
+        isTitleRow(value) ||
+        (value.curPeriodAmount ?? 0) !== 0 ||
+        (value.prePeriodAmount ?? 0) !== 0
     );
 
     // Info: (20250217 - Anna) 如果 `slice(startIndex, endIndex)` 內沒有資料，回傳 null，避免渲染該區間
