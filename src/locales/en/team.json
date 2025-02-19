@@ -1,7 +1,9 @@
 {
   "TEAM_PAGE": {
     "META_TITLE": "Team",
-    "LIBRARY": "Library"
+    "LIBRARY": "Library",
+    "COPIED": "Copied",
+    "CHANGE_TEAM_PICTURE": "Change team picture"
   },
 
   "ERROR": {

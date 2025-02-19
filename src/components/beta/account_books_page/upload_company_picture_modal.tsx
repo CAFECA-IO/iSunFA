@@ -58,7 +58,7 @@ const UploadCompanyPictureModal = ({
           return;
         }
 
-        // Info: (20241212 - Liz) 打 API 更新帳本的公司照片
+        // Info: (20241212 - Liz) 打 API 更新帳本的公司圖片
         const { success, error } = await uploadAccountBookCompanyPictureAPI({
           params: { companyId: accountBookToUploadPicture.company.id }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
           body: { fileId: fileMeta.id },
@@ -67,7 +67,7 @@ const UploadCompanyPictureModal = ({
         if (!success) {
           // Deprecated: (20241212 - Liz)
           // eslint-disable-next-line no-console
-          console.error('更新帳本的公司照片失敗! error message:', error?.message);
+          console.error('更新帳本的公司圖片失敗! error message:', error?.message);
           return;
         }
 
@@ -77,7 +77,7 @@ const UploadCompanyPictureModal = ({
         const isChangingSelectedCompany =
           selectedAccountBook?.id === accountBookToUploadPicture.company.id;
 
-        // Info: (20241212 - Liz) 如果是改變已選擇的帳本的公司照片，就打 API 選擇該帳本以更新公司照片
+        // Info: (20241212 - Liz) 如果是改變已選擇的帳本的公司圖片，就打 API 選擇該帳本以更新公司圖片
         if (isChangingSelectedCompany) {
           selectAccountBook(accountBookToUploadPicture.company.id);
         }

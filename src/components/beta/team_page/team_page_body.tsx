@@ -1,31 +1,38 @@
+import { useState } from 'react';
 import Image from 'next/image';
-import { PiCopySimple } from 'react-icons/pi';
 import { ITeam } from '@/interfaces/team';
+import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_picture_modal';
+import TeamHeader from '@/components/beta/team_page/team_header';
+import { useTranslation } from 'next-i18next';
 
 interface TeamPageBodyProps {
   team: ITeam;
 }
 
 const TeamPageBody = ({ team }: TeamPageBodyProps) => {
-  // Deprecated: (20250218 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('team', team);
+  const { t } = useTranslation(['team']);
 
-  // ToDo: (20250218 - Liz)
-  const copyTeamId = () => {};
+  const [teamToUploadPicture, setTeamToUploadPicture] = useState<ITeam | undefined>();
 
   return (
     <main className="flex flex-col gap-40px">
-      <section className="flex items-center gap-8px">
-        <Image src={team.imageId} width={60} height={60} alt="team_image"></Image>
-        <h1 className="text-44px font-bold text-text-neutral-primary">{team.name.value}</h1>
-        <div className="flex items-center text-text-neutral-tertiary">
-          <span className="text-xl font-bold leading-8">#{team.id}</span>
-          <button type="button" onClick={copyTeamId} className="p-10px">
-            <PiCopySimple size={16} />
-          </button>
+      <TeamHeader team={team} setTeamToUploadPicture={setTeamToUploadPicture} />
+
+      <div className="flex items-center gap-16px">
+        <div className="flex items-center gap-8px">
+          <Image src="/icons/open_book.svg" alt="open_book" width={16} height={15.235}></Image>
+          <span>{t('team:TEAM_PAGE.LIBRARY')}</span>
         </div>
-      </section>
+        <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
+      </div>
+
+      {/* // Info: (20250218 - Liz) Modal */}
+      {teamToUploadPicture && (
+        <UploadTeamPictureModal
+          teamToUploadPicture={teamToUploadPicture}
+          setTeamToUploadPicture={setTeamToUploadPicture}
+        />
+      )}
     </main>
   );
 };
