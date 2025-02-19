@@ -93,7 +93,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   const [isValidEmail, setIsValidEmail] = useState<boolean>(true);
 
-  const [isShowBounceAnim, setIsShowBounceAnim] = useState<boolean>(false);
+  const [isHideArrow, setIsHideArrow] = useState<boolean>(false);
 
   // ToDo: (20250218 - Julian) For testing UI
   const fakeTeam = {
@@ -116,6 +116,12 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
 
   const formBodyRef = useRef<HTMLDivElement>(null);
+  // Info: (20250219 - Julian) 根據 formBodyRef 的高度 決定是否顯示 Bounce 動畫
+  const toggleVisibility = () => {
+    if (formBodyRef.current) {
+      setIsHideArrow(formBodyRef.current.scrollTop > 160);
+    }
+  };
 
   // Info: (20250218 - Julian) 送出 API 後，取得 Team 資訊
   useEffect(() => {
@@ -131,23 +137,12 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     }
   }, [teamMemberInput]);
 
-  // Info: (20250219 - Julian) 根據 formBodyRef 的高度 決定是否顯示 Bounce 動畫
-  // ToDo: (20250219 - Julian) 施工中🔧
+  // Info: (20250219 - Julian) 監聽 formBodyRef 的 scroll 事件
   useEffect(() => {
-    const handleScroll = () => {
-      if (formBodyRef.current) {
-        // Info: (20250219 - Julian) 判斷是否在最底部，如果是則不顯示 Bounce 動畫
-        const isAtBottom =
-          formBodyRef.current.scrollHeight - formBodyRef.current.scrollTop ===
-          formBodyRef.current.clientHeight;
-        setIsShowBounceAnim(!isAtBottom);
-      }
+    formBodyRef.current?.addEventListener('scroll', toggleVisibility);
+    return () => {
+      formBodyRef.current?.removeEventListener('scroll', toggleVisibility);
     };
-
-    const element = formBodyRef.current;
-    element?.addEventListener('scroll', handleScroll);
-
-    return () => element?.removeEventListener('scroll', handleScroll);
   }, []);
 
   const nextButtonStr =
@@ -289,7 +284,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           {/* Info: (20250219 - Julian) 提示向下滾動的動畫 */}
           {currentStep === 3 && (
             <div
-              className={`sticky bottom-0 left-0 flex w-full items-center justify-center bg-gradient-to-t from-white to-transparent ${isShowBounceAnim ? 'opacity-100' : 'opacity-0'}`}
+              className={`sticky -bottom-20px left-0 min-h-100px w-full items-center justify-center bg-gradient-to-t from-surface-neutral-surface-lv1 to-transparent ${isHideArrow ? 'hidden' : 'flex'}`}
             >
               <div className="animate-bounce text-button-text-secondary">
                 <FaAngleDoubleDown size={32} />
