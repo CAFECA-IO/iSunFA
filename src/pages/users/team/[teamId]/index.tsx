@@ -122,6 +122,7 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
         'layout',
         'dashboard',
         'team',
+        'account_book',
       ])),
     },
   };
