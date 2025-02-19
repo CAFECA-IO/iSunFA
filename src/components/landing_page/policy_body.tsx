@@ -1,8 +1,11 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
+import { ISUNFA_ROUTE } from '@/constants/url';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
 import LandingFooter from '@/components/landing_page_v2/landing_footer';
+import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import ScrollToTopButton from '@/components/landing_page_v2/scroll_to_top';
 import {
   LinearGradientText,
@@ -50,8 +53,9 @@ const PrivacyPolicyPageBody: React.FC = () => {
             <ol className="flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
               <li>
                 This privacy policy applies to the personal information you provide when using this
-                website (including the App, hereafter referred to as this website or &apos;we&apos).
-                When you click on links provided by this website to access other websites,{' '}
+                website (including the App, hereafter referred to as this website or
+                &apos;we&apos;). When you click on links provided by this website to access other
+                websites,{' '}
                 <span className="font-bold text-text-brand-primary-lv3">
                   the privacy policy of this website does not apply to those other websites.
                 </span>
@@ -209,53 +213,110 @@ const PrivacyPolicyPageBody: React.FC = () => {
               </li>
               {/* Info: (20250219 - Julian) 2. */}
               <li>
-                Categories of personal information: When using this website and related services, we
-                will collect the following information based on your needs and the nature of the
-                services (collectively referred to as personal information), including but not
-                limited to the following legally specified categories of personal data:
+                Purpose of collecting personal information: The primary legal purposes for which
+                this website collects the personal information you provide include the following:
                 <div className="mt-40px grid grid-cols-2 gap-80px rounded-md border border-landing-page-white px-40px py-20px">
                   {/* Info: (20250219 - Julian) Left List */}
                   <ul className="ml-20px flex list-outside list-disc flex-col gap-40px">
-                    <li>C001 Personal identifiers</li>
-                    <li>C002 Financial identifiers</li>
-                    <li>C003 Government data identifiers</li>
-                    <li>C011 Personal descriptions</li>
-                    <li>C021 Family situations</li>
-                    <li>C023 Details of other family members</li>
-                    <li>C031 Residential and facility details</li>
-                    <li>C032 Property details</li>
-                    <li>C037 Membership in charitable organizations or other groups</li>
-                    <li>C038 Occupation</li>
-                    <li>C053 Membership in professional associations</li>
-                    <li>C061 Current employment status</li>
-                    <li>C062 Employment history</li>
-                    <li>C063 Separation history</li>
-                    <li>C065 Work and attendance records</li>
-                    <li>C068 Salary and withholdings</li>
-                    <li>C070 Work management details</li>
+                    <li>001 Life insurance</li>
+                    <li>002 Personnel management</li>
+                    <li>008 Assistance to SMEs and other industries</li>
+                    <li>022 Foreign exchange business</li>
+                    <li>
+                      031 National health insurance, labor insurance, farmer insurance, national
+                      pension insurance, or other social insurance
+                    </li>
+                    <li>036 Deposits and remittances</li>
+                    <li>040 Marketing</li>
+                    <li>044 Investment management</li>
+                    <li>049 Religious or non-profit organization activities</li>
+                    <li>
+                      052 Internal management of shareholders, members, or representatives,
+                      directors, supervisors, council members, or other members of legal entities or
+                      organizations
+                    </li>
+                    <li>
+                      063 Collection, processing, and utilization of personal information by
+                      non-public agencies according to legal obligations
+                    </li>
+                    <li>065 Insurance brokerage, agency, or notarization business</li>
+                    <li>067 Credit card, debit card, or electronic payment card services</li>
+                    <li>068 Trust business</li>
+                    <li>082 Comprehensive management of borrowing and deposits</li>
+                    <li>088 Loan and credit approval business</li>
+                    <li>090 Consumer and customer management and services</li>
+                    <li>093 Property insurance</li>
                   </ul>
                   {/* Info: (20250219 - Julian) Right List */}
                   <ul className="ml-20px flex list-outside list-disc flex-col gap-40px">
-                    <li>C081 Income, assets, and investments</li>
-                    <li>C082 Liabilities and expenses</li>
-                    <li>C083 Credit rating</li>
-                    <li>C084 Loan records</li>
-                    <li>C085 Foreign exchange transaction records</li>
-                    <li>C086 Bill credit</li>
-                    <li>C087 Allowances, benefits, and grants</li>
-                    <li>C088 Insurance details</li>
-                    <li>C089 Social insurance payments, pensions, and other retirement benefits</li>
-                    <li>C091 Goods or services obtained by the data subject</li>
-                    <li>C092 Goods or services provided by the data subject</li>
-                    <li>C093 Financial transactions</li>
-                    <li>C094 Compensation</li>
-                    <li>C101 Commercial activities of the data subject</li>
-                    <li>C102 Contracts or agreements, etc.</li>
+                    <li>094 Property management</li>
+                    <li>095 Financial and tax administration</li>
+                    <li>098 Business and technical information</li>
+                    <li>
+                      103 Management, discipline, and relief of professional and technical personnel
+                    </li>
+                    <li>104 Account management and debt trading business</li>
+                    <li>106 Credit business</li>
+                    <li>107 Procurement and supply management</li>
+                    <li>111 Securities business</li>
+                    <li>112 Bill exchange business</li>
+                    <li>120 Tax administration</li>
+                    <li>129 Accounting and related services</li>
+                    <li>145 Employment and service management</li>
+                    <li>148 Online shopping and other e-commerce services</li>
+                    <li>151 Audit, investigation, and other supervisory activities</li>
+                    <li>152 Advertising or commercial behavior management</li>
+                    <li>157 Investigation, statistics, and research analysis</li>
+                    <li>159 Academic research</li>
+                    <li>160 Certificate business management</li>
+                    <li>
+                      166 Securities, futures, securities investment trust, and advisory related
+                      business
+                    </li>
+                    <li>
+                      181 Other business activities or consultancy services aligned with registered
+                      business items or organizational charters.
+                    </li>
                   </ul>
                 </div>
               </li>
             </ol>
+
+            {/* Info: (20250219 - Julian) What personal information would we collect */}
+            <PrivacyPolicyDivider text={t('What are &apos; Cookies &apos;')} />
+            <div className="flex flex-col gap-80px text-xl leading-10 text-landing-page-white">
+              <p>
+                Cookies are files stored by a web server on your computer&apos;s hard drive, which
+                can{' '}
+                <span className="font-bold text-text-brand-primary-lv3">
+                  store your browsing information and provide you with a smoother and more
+                  convenient internet experience.{' '}
+                </span>
+                To offer you the best and most personalized service, this website will place and
+                access our Cookies on your computer.
+              </p>
+              <p>
+                <span className="font-bold text-text-brand-primary-lv3">
+                  You may choose to accept or refuse Cookies.{' '}
+                </span>
+                Most browsers automatically accept Cookies, but you can refuse them by modifying
+                your privacy settings. However, this may cause certain functions of this website to
+                not work properly, preventing you from fully utilizing all the services provided by
+                this website.
+              </p>
+            </div>
           </div>
+
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+            <LandingButton
+              type="button"
+              variant="primary"
+              className="mx-auto whitespace-nowrap px-60px text-center text-base font-bold"
+            >
+              <Image src="/icons/goback.svg" alt="go_back_icon" width={20} height={20} />
+              Back
+            </LandingButton>
+          </Link>
         </div>
 
         {/* Info: (20250219 - Julian) Footer */}
