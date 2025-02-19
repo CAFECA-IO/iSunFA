@@ -3,7 +3,8 @@
     "META_TITLE": "Team",
     "LIBRARY": "Library",
     "COPIED": "Copied",
-    "CHANGE_TEAM_PICTURE": "Change team picture"
+    "CHANGE_TEAM_PICTURE": "Change team picture",
+    "MEMBER": "Member"
   },
 
   "ERROR": {

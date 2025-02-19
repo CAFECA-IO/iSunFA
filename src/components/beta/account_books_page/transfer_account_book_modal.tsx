@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import { ICompanyAndRole } from '@/interfaces/company';
 import { IoCloseOutline } from 'react-icons/io5';
 import { PiShareFatBold } from 'react-icons/pi';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 interface TransferAccountBookModalProps {
   accountBookToTransfer: ICompanyAndRole;
