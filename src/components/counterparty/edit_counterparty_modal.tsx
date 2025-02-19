@@ -178,7 +178,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
       content: '您確定要刪除這個交易夥伴嗎？',
       notes: inputName,
       messageType: MessageType.WARNING,
-      submitBtnStr: t('setting:SETTINGS.REMOVE'),
+      submitBtnStr: t('settings:SETTINGS.REMOVE'),
       submitBtnFunction: async () => {
         try {
           await deleteCounterpartyTrigger(); // Info: (20241115 - Anna) 呼叫 deleteCounterpartyTrigger 以執行刪除

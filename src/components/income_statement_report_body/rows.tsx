@@ -49,6 +49,17 @@ const Rows = ({ flattenAccounts, isPrint }: RowsProps) => {
           ? numberBeDashIfFalsy(prePeriodPercentage)
           : '';
 
+        // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"
+        const isAllZeroOrDash =
+          (displayCurPeriodAmount === '0' || displayCurPeriodAmount === '-') &&
+          (displayCurPeriodPercentage === '0' || displayCurPeriodPercentage === '-') &&
+          (displayPrePeriodAmount === '0' || displayPrePeriodAmount === '-') &&
+          (displayPrePeriodPercentage === '0' || displayPrePeriodPercentage === '-');
+
+        if (isAllZeroOrDash) {
+          return null; // Info: (20250213 - Anna) 這一列不顯示
+        }
+
         return (
           <tr className="h-40px bg-white" key={`${accountId}_${code}_${name}`}>
             <td
