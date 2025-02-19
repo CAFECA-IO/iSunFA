@@ -9,5 +9,32 @@
 
   "ERROR": {
     "TEAM_DATA_NOT_FOUND": "找不到團隊資料"
+  },
+
+  "MY_ACCOUNT_PAGE": {
+    "PAGE_TITLE": "我的帳號",
+    "USER_INFO_TITLE": "使用者資訊",
+    "MY_TEAM_TITLE": "我的團隊",
+    "ADD_TEAM_BTN": "新增團隊",
+    "PLAN_BEGINNER": "免費版",
+    "PLAN_PROFESSIONAL": "專業版",
+    "PLAN_ENTERPRISE": "企業版",
+    "ROLE_OWNER": "擁有者",
+    "ROLE_ADMIN": "管理者",
+    "ROLE_EDITOR": "編輯者",
+    "ROLE_VIEWER": "檢視者"
+  },
+  "CREATE_TEAM_MODAL": {
+    "MODAL_TITLE": "建立團隊",
+    "STEP_1": "團隊名稱",
+    "STEP_2": "團隊成員",
+    "STEP_3": "訂閱方案",
+    "TEAM_NAME": "團隊名稱",
+    "MEMBER_EMAIL": "成員的電子郵件",
+    "EMAIL_HINT": "請輸入有效的電子郵件地址。",
+    "PLAN_HINT": "如果您選擇跳過此步驟，我們將自動將您的團隊設置為免費版本。您可以選擇暫時使用服務的免費版本，享受基本功能，但可能會受到與高級方案相比的潛在限制。",
+    "SKIP_BTN": "暫時跳過",
+    "CONTINUE_BTN": "繼續",
+    "CREATE_BTN": "建立團隊"
   }
 }
