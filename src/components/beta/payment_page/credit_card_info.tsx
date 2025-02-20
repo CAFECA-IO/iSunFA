@@ -26,12 +26,14 @@ const CreditCardInfo = ({
   team,
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
+  // Deprecated: (20250220 - Tzuhan) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setIsDirty,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
   // const { toastHandler } = useModalContext();
   // const router = useRouter();
+  // Deprecated: (20250220 - Tzuhan) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
 
@@ -169,7 +171,7 @@ const CreditCardInfo = ({
         method="POST"
         action="https://testtrustlink.hitrust.com.tw/TrustLink/TrxReqForJava"
         onSubmit={() => {
-          window.onbeforeunload = null; // 移除「離開網站」的提示
+          window.onbeforeunload = null; // Info: (20250220 - Tzuhan) 移除「離開網站」的提示
         }}
       >
         <input type="hidden" name="Type" value="Auth" />
