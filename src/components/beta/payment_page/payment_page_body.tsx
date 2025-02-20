@@ -10,6 +10,9 @@ import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastId } from '@/constants/toast_id';
+import { ToastType } from '@/interfaces/toastify';
 
 interface PaymentPageBodyProps {
   team: IUserOwnedTeam;
@@ -19,6 +22,7 @@ interface PaymentPageBodyProps {
 
 const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
+  const { toastHandler } = useModalContext();
 
   // Info: (20250114 - Liz) 如果沒有 subscriptionPlan，表示是要修改已經訂閱方案的付款資料，所以要找出 team 的 plan 資料。如果有 subscriptionPlan，表示是要訂閱新方案，所以直接使用 subscriptionPlan。
   const plan = subscriptionPlan ?? PLANS.find((p) => p.id === team.plan);
@@ -28,6 +32,8 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
   const [isConfirmLeaveModalOpen, setIsConfirmLeaveModalOpen] = useState(false);
   const [nextRoute, setNextRoute] = useState<string | null>(null); // Info: (20250116 - Liz) 儲存即將導向的網址
   const router = useRouter();
+  const { retcode } = router.query;
+
   // Info: (20250116 - Liz) 開啟或關閉自動續約的 Modal 狀態
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
@@ -153,6 +159,24 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
       router.events.off('routeChangeStart', handleRouteChangeStart);
     };
   }, [isDirty, router]);
+
+  useEffect(() => {
+    if (retcode === '00') {
+      toastHandler({
+        id: ToastId.SUBSCRIPTION_UPDATE_SUCCESS,
+        type: ToastType.SUCCESS,
+        content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_SUCCESS'),
+        closeable: true,
+      });
+    } else {
+      toastHandler({
+        id: ToastId.SUBSCRIPTION_UPDATE_ERROR,
+        type: ToastType.ERROR,
+        content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_UPDATE_ERROR'),
+        closeable: true,
+      });
+    }
+  }, [retcode]);
 
   return (
     <main className="flex min-h-full gap-40px">

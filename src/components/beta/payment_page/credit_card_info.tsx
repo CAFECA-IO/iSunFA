@@ -32,10 +32,11 @@ const CreditCardInfo = ({
   const { t } = useTranslation(['subscriptions']);
   // const { toastHandler } = useModalContext();
   // const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
-  const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
+  // const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
 
   // Info: (20250120 - Liz) 取得信用卡 number
   // const creditCardNumber = hasCreditCardInfo ? paymentMethod[0].number : '';
@@ -163,16 +164,36 @@ const CreditCardInfo = ({
         <span className="font-medium text-text-neutral-tertiary">{`* ${t('subscriptions:PAYMENT_PAGE.NOTE')}`}</span>
       </div>
 
-      <form method="POST" action="https://testtrustlink.hitrust.com.tw/TrustLink/TrxReqForJava">
+      <form
+        className="w-full"
+        method="POST"
+        action="https://testtrustlink.hitrust.com.tw/TrustLink/TrxReqForJava"
+        onSubmit={() => {
+          window.onbeforeunload = null; // 移除「離開網站」的提示
+        }}
+      >
         <input type="hidden" name="Type" value="Auth" />
         <input type="hidden" name="storeid" value="62695" />
-        <input type="hidden" name="ordernumber" value={`ORDER${Date.now()}`} />
+        <input
+          type="hidden"
+          name="ordernumber"
+          value={`${team.id}${plan?.planName || ''}${isAutoRenewalEnabled}`}
+        />
         <input type="hidden" name="amount" value={(plan?.price || 0) * 100} />
-        <input type="hidden" name="orderdesc" value="iSunFA Pro 訂閱" />
+        <input
+          type="hidden"
+          name="orderdesc"
+          value={`iSunFa-team_${team.id}-plan_${plan?.planName}-autorenew_${isAutoRenewalEnabled}-
+          time_${Math.floor(Date.now() / 1000)}`}
+        />
         <input type="hidden" name="depositflag" value="1" /> {/* 自動請款 */}
         <input type="hidden" name="queryflag" value="1" /> {/* 回傳交易詳情 */}
-        <input type="hidden" name="returnURL" value="https://isunfa.tw/payment/success" />
-        <input type="hidden" name="merUpdateURL" value="https://isunfa.tw/api/payment/update" />
+        <input
+          type="hidden"
+          name="returnURL"
+          value={`https://isunfa.tw/users/subscriptions/${team.id}`}
+        />
+        <input type="hidden" name="merUpdateURL" value="https://isunfa.tw/api/v2/payment/update" />
         {/* 如果用戶選擇「自動續訂」，則設定定期扣款 */}
         {isAutoRenewalEnabled && (
           <>
@@ -183,9 +204,9 @@ const CreditCardInfo = ({
         )}
         <button
           type="submit"
-          className="rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-semibold text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+          className="w-full rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-semibold text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           // onClick={updateSubscription}
-          disabled={!hasCreditCardInfo}
+          disabled={(plan?.price || 0) <= 0}
         >
           {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
         </button>
