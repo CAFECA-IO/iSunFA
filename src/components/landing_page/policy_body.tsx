@@ -12,6 +12,7 @@ import {
   LinearTextSize,
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
+import BlueStarList from '@/components/landing_page_v2/blue_star_list';
 
 // Info: (20250220 - Julian) 分隔線
 const PrivacyPolicyDivider: React.FC<{ text: string }> = ({ text }) => {
@@ -23,18 +24,6 @@ const PrivacyPolicyDivider: React.FC<{ text: string }> = ({ text }) => {
       </div>
       <hr className="flex-1 border-landing-page-white" />
     </div>
-  );
-};
-
-// Info: (20250220 - Julian) 藍星列表
-const BlueStarList: React.FC<{ listItem: string[] }> = ({ listItem }) => {
-  return (
-    <ul className="ml-5 list-outside list-image-blue-star indent-2 leading-44px marker:text-surface-support-strong-baby">
-      {listItem.map((item, index) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <li key={index}>{item}</li>
-      ))}
-    </ul>
   );
 };
 
