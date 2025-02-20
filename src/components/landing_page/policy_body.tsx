@@ -13,6 +13,7 @@ import {
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
 
+// Info: (20250220 - Julian) 分隔線
 const PrivacyPolicyDivider: React.FC<{ text: string }> = ({ text }) => {
   return (
     <div className="flex w-full items-center gap-lv-4">
@@ -25,8 +26,59 @@ const PrivacyPolicyDivider: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
+// Info: (20250220 - Julian) 藍星列表
+const BlueStarList: React.FC<{ listItem: string[] }> = ({ listItem }) => {
+  return (
+    <ul className="ml-5 list-outside list-image-blue-star indent-2 leading-44px marker:text-surface-support-strong-baby">
+      {listItem.map((item, index) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <li key={index}>{item}</li>
+      ))}
+    </ul>
+  );
+};
+
+// Info: (20250220 - Julian) 分類列表
+const CategoriesList: React.FC<{ leftList: string[]; rightList: string[] }> = ({
+  leftList,
+  rightList,
+}) => {
+  return (
+    <div className="mt-40px grid grid-cols-2 gap-80px rounded-md border border-landing-page-white px-40px py-20px">
+      {/* Info: (20250219 - Julian) Left List */}
+      <ul className="ml-20px flex list-outside list-disc flex-col gap-40px">
+        {leftList.map((item, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
+      {/* Info: (20250219 - Julian) Right List */}
+      <ul className="ml-20px flex list-outside list-disc flex-col gap-40px">
+        {rightList.map((item, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 const PrivacyPolicyPageBody: React.FC = () => {
   const { t } = useTranslation(['landing_page_2', 'terms']);
+
+  const formatText = (text: string) => {
+    return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          // eslint-disable-next-line react/no-array-index-key
+          <span key={index} className="font-bold text-text-brand-primary-lv3">
+            {part.slice(2, -2)}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
 
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
@@ -49,261 +101,154 @@ const PrivacyPolicyPageBody: React.FC = () => {
           {/* Info: (20250219 - Julian) Content */}
           <div className="flex flex-col gap-80px tracking-wide">
             {/* Info: (20250219 - Julian) Where does this policy apply */}
-            <PrivacyPolicyDivider text={t('Where does this policy apply')} />
-            <ol className="flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
-              <li>
-                This privacy policy applies to the personal information you provide when using this
-                website (including the App, hereafter referred to as this website or
-                &apos;we&apos;). When you click on links provided by this website to access other
-                websites,{' '}
-                <span className="font-bold text-text-brand-primary-lv3">
-                  the privacy policy of this website does not apply to those other websites.
-                </span>
-              </li>
+            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY.DIVIDER_01')} />
+            <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
+              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_01'))}</li>
             </ol>
 
             {/* Info: (20250219 - Julian) How might my personal information would be used */}
-            <PrivacyPolicyDivider text={t('How might my personal information would be used')} />
-            <ol className="flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
+            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY.DIVIDER_02')} />
+            <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
               {/* Info: (20250219 - Julian) 1. */}
               <li>
-                To provide you with more accurate services or respond to your inquiries,{' '}
-                <span className="font-bold text-text-brand-primary-lv3">
-                  we may need you to provide personal
-                </span>{' '}
-                information under the following circumstances:
-                <ul className="ml-5 list-outside list-image-blue-star indent-2 leading-44px marker:text-surface-support-strong-baby">
-                  <li>
-                    When you join as a customer of this website to receive our customer services.
-                  </li>
-                  <li>When you inquire about service information from this website.</li>
-                  <li>When you request services from this website, whether paid or free.</li>
-                </ul>
+                {formatText(t('terms:PRIVACY_POLICY.TEXT_02_01'))}
+                <BlueStarList
+                  listItem={[
+                    t('terms:PRIVACY_POLICY.TEXT_02_01_LI_01'),
+                    t('terms:PRIVACY_POLICY.TEXT_02_01_LI_02'),
+                    t('terms:PRIVACY_POLICY.TEXT_02_01_LI_03'),
+                  ]}
+                />
               </li>
               {/* Info: (20250219 - Julian) 2. */}
-              <li>
-                The primary purpose of collecting personal information is to enable this website to
-                provide services to customers more accurately, meet customer needs, or notify
-                customers about the latest products and services of this website. We may also use
-                personal information for internal purposes, such as auditing, data analysis, and
-                research to improve our products, services, web presentation, and communication with
-                customers.{' '}
-                <span className="font-bold text-text-brand-primary-lv3">
-                  Without your consent, this website will not provide or disclose your personal
-                  information to unrelated third parties, rent or resell it to any other party, or
-                  use it for purposes not previously disclosed.
-                </span>
-              </li>
+              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_02_02'))}</li>
               {/* Info: (20250219 - Julian) 3. */}
               <li>
-                information under the following circumstances: Except in the following
-                circumstances, this website will not sell or disclose your personal information to
-                any person or company without your consent:
-                <ul className="ml-5 list-outside list-image-blue-star indent-2 leading-44px marker:text-surface-support-strong-baby">
-                  <li>
-                    When your actions on this website violate the terms of service or may harm or
-                    hinder the rights of this website, or your actions have caused harm to others,
-                    and it is necessary to identify, contact, or take legal action.
-                  </li>
-                  <li>
-                    When the judicial authorities or other competent agencies require this website
-                    to disclose specific personal information for public safety, and this website
-                    must cooperate with the judicial authorities according to legal procedures.
-                  </li>
-                </ul>
+                {formatText(t('terms:PRIVACY_POLICY.TEXT_02_03'))}
+                <BlueStarList
+                  listItem={[
+                    t('terms:PRIVACY_POLICY.TEXT_02_03_LI_01'),
+                    t('terms:PRIVACY_POLICY.TEXT_02_03_LI_02'),
+                  ]}
+                />
               </li>
             </ol>
 
             {/* Info: (20250219 - Julian) How can I manage my personal information */}
-            <PrivacyPolicyDivider text={t('How can I manage my personal informationy')} />
-            <ol className="flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
+            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY.DIVIDER_03')} />
+            <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
               {/* Info: (20250219 - Julian) 1. */}
-              <li>
-                After registering as a customer on this website,{' '}
-                <span className="font-bold text-text-brand-primary-lv3">
-                  you can modify or delete the information{' '}
-                </span>
-                you initially provided at any time using your account and password to ensure its
-                accuracy.
-              </li>
+              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_03_01'))}</li>
               {/* Info: (20250219 - Julian) 2. */}
-              <li>
-                To protect your privacy and security, your account information is{' '}
-                <span className="font-bold text-text-brand-primary-lv3">
-                  protected by a password.
-                </span>
-              </li>
+              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_03_02'))}</li>
               {/* Info: (20250219 - Julian) 3. */}
-              <li>
-                When editing customer information or accessing personal data and privacy pages, this
-                website{' '}
-                <span className="font-bold text-text-brand-primary-lv3">
-                  will require you to enter account identification information
-                </span>{' '}
-                to verify your identity.
-              </li>
+              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_03_03'))}</li>
               {/* Info: (20250219 - Julian) 4. */}
-              <li>
-                To ensure the security of your account and personal information, in addition to
-                promoting various security mechanisms, this website also recommends that you{' '}
-                <span className="font-bold text-text-brand-primary-lv3">
-                  regularly update your operating system and pay attention to antivirus measures.
-                </span>
-              </li>
+              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_03_04'))}</li>
               {/* Info: (20250219 - Julian) 5. */}
-              <li>
-                This website may modify this privacy policy at any time based on relevant legal
-                requirements or actual circumstances to fulfill the legislative purpose of
-                protecting privacy.{' '}
-                <span className="font-bold text-text-brand-primary-lv3">
-                  You should check the latest version regularly.
-                </span>
-              </li>
+              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_03_05'))}</li>
             </ol>
 
             {/* Info: (20250219 - Julian) What personal information would we collect */}
-            <PrivacyPolicyDivider text={t('What personal information would we collect')} />
-            <ol className="flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
+            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY.DIVIDER_04')} />
+            <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
               {/* Info: (20250219 - Julian) 1. */}
               <li>
-                Categories of personal information: When using this website and related services, we
-                will collect the following information based on your needs and the nature of the
-                services (collectively referred to as personal information), including but not
-                limited to the following legally specified categories of personal data:
-                <div className="mt-40px grid grid-cols-2 gap-80px rounded-md border border-landing-page-white px-40px py-20px">
-                  {/* Info: (20250219 - Julian) Left List */}
-                  <ul className="ml-20px flex list-outside list-disc flex-col gap-40px">
-                    <li>C001 Personal identifiers</li>
-                    <li>C002 Financial identifiers</li>
-                    <li>C003 Government data identifiers</li>
-                    <li>C011 Personal descriptions</li>
-                    <li>C021 Family situations</li>
-                    <li>C023 Details of other family members</li>
-                    <li>C031 Residential and facility details</li>
-                    <li>C032 Property details</li>
-                    <li>C037 Membership in charitable organizations or other groups</li>
-                    <li>C038 Occupation</li>
-                    <li>C053 Membership in professional associations</li>
-                    <li>C061 Current employment status</li>
-                    <li>C062 Employment history</li>
-                    <li>C063 Separation history</li>
-                    <li>C065 Work and attendance records</li>
-                    <li>C068 Salary and withholdings</li>
-                    <li>C070 Work management details</li>
-                  </ul>
-                  {/* Info: (20250219 - Julian) Right List */}
-                  <ul className="ml-20px flex list-outside list-disc flex-col gap-40px">
-                    <li>C081 Income, assets, and investments</li>
-                    <li>C082 Liabilities and expenses</li>
-                    <li>C083 Credit rating</li>
-                    <li>C084 Loan records</li>
-                    <li>C085 Foreign exchange transaction records</li>
-                    <li>C086 Bill credit</li>
-                    <li>C087 Allowances, benefits, and grants</li>
-                    <li>C088 Insurance details</li>
-                    <li>C089 Social insurance payments, pensions, and other retirement benefits</li>
-                    <li>C091 Goods or services obtained by the data subject</li>
-                    <li>C092 Goods or services provided by the data subject</li>
-                    <li>C093 Financial transactions</li>
-                    <li>C094 Compensation</li>
-                    <li>C101 Commercial activities of the data subject</li>
-                    <li>C102 Contracts or agreements, etc.</li>
-                  </ul>
-                </div>
+                {t('terms:PRIVACY_POLICY.TEXT_04_01')}
+                <CategoriesList
+                  leftList={[
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_01'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_02'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_03'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_04'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_05'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_06'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_07'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_08'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_09'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_10'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_11'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_12'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_13'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_14'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_15'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_16'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_17'),
+                  ]}
+                  rightList={[
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_18'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_19'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_20'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_21'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_22'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_23'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_24'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_25'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_26'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_27'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_28'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_29'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_30'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_31'),
+                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_32'),
+                  ]}
+                />
               </li>
               {/* Info: (20250219 - Julian) 2. */}
               <li>
-                Purpose of collecting personal information: The primary legal purposes for which
-                this website collects the personal information you provide include the following:
-                <div className="mt-40px grid grid-cols-2 gap-80px rounded-md border border-landing-page-white px-40px py-20px">
-                  {/* Info: (20250219 - Julian) Left List */}
-                  <ul className="ml-20px flex list-outside list-disc flex-col gap-40px">
-                    <li>001 Life insurance</li>
-                    <li>002 Personnel management</li>
-                    <li>008 Assistance to SMEs and other industries</li>
-                    <li>022 Foreign exchange business</li>
-                    <li>
-                      031 National health insurance, labor insurance, farmer insurance, national
-                      pension insurance, or other social insurance
-                    </li>
-                    <li>036 Deposits and remittances</li>
-                    <li>040 Marketing</li>
-                    <li>044 Investment management</li>
-                    <li>049 Religious or non-profit organization activities</li>
-                    <li>
-                      052 Internal management of shareholders, members, or representatives,
-                      directors, supervisors, council members, or other members of legal entities or
-                      organizations
-                    </li>
-                    <li>
-                      063 Collection, processing, and utilization of personal information by
-                      non-public agencies according to legal obligations
-                    </li>
-                    <li>065 Insurance brokerage, agency, or notarization business</li>
-                    <li>067 Credit card, debit card, or electronic payment card services</li>
-                    <li>068 Trust business</li>
-                    <li>082 Comprehensive management of borrowing and deposits</li>
-                    <li>088 Loan and credit approval business</li>
-                    <li>090 Consumer and customer management and services</li>
-                    <li>093 Property insurance</li>
-                  </ul>
-                  {/* Info: (20250219 - Julian) Right List */}
-                  <ul className="ml-20px flex list-outside list-disc flex-col gap-40px">
-                    <li>094 Property management</li>
-                    <li>095 Financial and tax administration</li>
-                    <li>098 Business and technical information</li>
-                    <li>
-                      103 Management, discipline, and relief of professional and technical personnel
-                    </li>
-                    <li>104 Account management and debt trading business</li>
-                    <li>106 Credit business</li>
-                    <li>107 Procurement and supply management</li>
-                    <li>111 Securities business</li>
-                    <li>112 Bill exchange business</li>
-                    <li>120 Tax administration</li>
-                    <li>129 Accounting and related services</li>
-                    <li>145 Employment and service management</li>
-                    <li>148 Online shopping and other e-commerce services</li>
-                    <li>151 Audit, investigation, and other supervisory activities</li>
-                    <li>152 Advertising or commercial behavior management</li>
-                    <li>157 Investigation, statistics, and research analysis</li>
-                    <li>159 Academic research</li>
-                    <li>160 Certificate business management</li>
-                    <li>
-                      166 Securities, futures, securities investment trust, and advisory related
-                      business
-                    </li>
-                    <li>
-                      181 Other business activities or consultancy services aligned with registered
-                      business items or organizational charters.
-                    </li>
-                  </ul>
-                </div>
+                {t('terms:PRIVACY_POLICY.TEXT_04_02')}
+                <CategoriesList
+                  leftList={[
+                    t('terms:PRIVACY_POLICY.PURPOSE_01'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_02'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_03'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_04'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_05'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_06'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_07'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_08'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_09'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_10'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_11'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_12'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_13'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_14'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_15'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_16'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_17'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_18'),
+                  ]}
+                  rightList={[
+                    t('terms:PRIVACY_POLICY.PURPOSE_19'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_20'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_21'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_22'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_23'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_24'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_25'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_26'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_27'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_28'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_29'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_30'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_31'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_32'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_33'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_34'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_35'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_36'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_37'),
+                    t('terms:PRIVACY_POLICY.PURPOSE_38'),
+                  ]}
+                />
               </li>
             </ol>
 
             {/* Info: (20250219 - Julian) What personal information would we collect */}
-            <PrivacyPolicyDivider text={t('What are &apos; Cookies &apos;')} />
+            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY.DIVIDER_05')} />
             <div className="flex flex-col gap-80px text-xl leading-10 text-landing-page-white">
-              <p>
-                Cookies are files stored by a web server on your computer&apos;s hard drive, which
-                can{' '}
-                <span className="font-bold text-text-brand-primary-lv3">
-                  store your browsing information and provide you with a smoother and more
-                  convenient internet experience.{' '}
-                </span>
-                To offer you the best and most personalized service, this website will place and
-                access our Cookies on your computer.
-              </p>
-              <p>
-                <span className="font-bold text-text-brand-primary-lv3">
-                  You may choose to accept or refuse Cookies.{' '}
-                </span>
-                Most browsers automatically accept Cookies, but you can refuse them by modifying
-                your privacy settings. However, this may cause certain functions of this website to
-                not work properly, preventing you from fully utilizing all the services provided by
-                this website.
-              </p>
+              <p>{formatText(t('terms:PRIVACY_POLICY.TEXT_05_01'))}</p>
+              <p>{formatText(t('terms:PRIVACY_POLICY.TEXT_05_02'))}</p>
             </div>
           </div>
 
@@ -314,7 +259,7 @@ const PrivacyPolicyPageBody: React.FC = () => {
               className="mx-auto whitespace-nowrap px-60px text-center text-base font-bold"
             >
               <Image src="/icons/goback.svg" alt="go_back_icon" width={20} height={20} />
-              Back
+              {t('terms:PRIVACY_POLICY.BACK_BTN')}
             </LandingButton>
           </Link>
         </div>
