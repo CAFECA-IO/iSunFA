@@ -1,7 +1,7 @@
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
+import { TbArrowBack } from 'react-icons/tb';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
 import LandingFooter from '@/components/landing_page_v2/landing_footer';
@@ -86,7 +86,7 @@ const TermsOfServicePageBody: React.FC = () => {
               variant="primary"
               className="mx-auto whitespace-nowrap px-60px text-center text-base font-bold"
             >
-              <Image src="/icons/goback.svg" alt="go_back_icon" width={20} height={20} />
+              <TbArrowBack size={28} />
               {t('terms:TERMS_OF_SERVICE_PAGE.BACK_BTN')}
             </LandingButton>
           </Link>
