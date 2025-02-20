@@ -93,165 +93,166 @@ const PrivacyPolicyPageBody: React.FC = () => {
           {/* Info: (20250219 - Julian) Title */}
           <div className="flex flex-col gap-lv-3">
             <LinearGradientText size={LinearTextSize.XL} align={TextAlign.LEFT}>
-              {t('terms:PRIVACY_POLICY.MAIN_TITLE')}
+              {t('terms:PRIVACY_POLICY_PAGE.MAIN_TITLE')}
             </LinearGradientText>
-            <p className="text-xl font-medium">{t('terms:PRIVACY_POLICY.MAIN_DESC')}</p>
+            <p className="text-xl font-medium">{t('terms:PRIVACY_POLICY_PAGE.MAIN_DESC')}</p>
           </div>
 
           {/* Info: (20250219 - Julian) Content */}
           <div className="flex flex-col gap-80px tracking-wide">
             {/* Info: (20250219 - Julian) Where does this policy apply */}
-            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY.DIVIDER_01')} />
+            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_01')} />
             <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
-              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_01'))}</li>
+              <li>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_01'))}</li>
             </ol>
 
             {/* Info: (20250219 - Julian) How might my personal information would be used */}
-            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY.DIVIDER_02')} />
+            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_02')} />
             <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
               {/* Info: (20250219 - Julian) 1. */}
               <li>
-                {formatText(t('terms:PRIVACY_POLICY.TEXT_02_01'))}
+                {formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_02_01'))}
                 <BlueStarList
                   listItem={[
-                    t('terms:PRIVACY_POLICY.TEXT_02_01_LI_01'),
-                    t('terms:PRIVACY_POLICY.TEXT_02_01_LI_02'),
-                    t('terms:PRIVACY_POLICY.TEXT_02_01_LI_03'),
+                    t('terms:PRIVACY_POLICY_PAGE.TEXT_02_01_LI_01'),
+                    t('terms:PRIVACY_POLICY_PAGE.TEXT_02_01_LI_02'),
+                    t('terms:PRIVACY_POLICY_PAGE.TEXT_02_01_LI_03'),
                   ]}
                 />
               </li>
               {/* Info: (20250219 - Julian) 2. */}
-              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_02_02'))}</li>
+              <li>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_02_02'))}</li>
               {/* Info: (20250219 - Julian) 3. */}
               <li>
-                {formatText(t('terms:PRIVACY_POLICY.TEXT_02_03'))}
+                {formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_02_03'))}
                 <BlueStarList
                   listItem={[
-                    t('terms:PRIVACY_POLICY.TEXT_02_03_LI_01'),
-                    t('terms:PRIVACY_POLICY.TEXT_02_03_LI_02'),
+                    t('terms:PRIVACY_POLICY_PAGE.TEXT_02_03_LI_01'),
+                    t('terms:PRIVACY_POLICY_PAGE.TEXT_02_03_LI_02'),
                   ]}
                 />
               </li>
             </ol>
 
             {/* Info: (20250219 - Julian) How can I manage my personal information */}
-            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY.DIVIDER_03')} />
+            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_03')} />
             <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
               {/* Info: (20250219 - Julian) 1. */}
-              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_03_01'))}</li>
+              <li>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_03_01'))}</li>
               {/* Info: (20250219 - Julian) 2. */}
-              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_03_02'))}</li>
+              <li>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_03_02'))}</li>
               {/* Info: (20250219 - Julian) 3. */}
-              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_03_03'))}</li>
+              <li>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_03_03'))}</li>
               {/* Info: (20250219 - Julian) 4. */}
-              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_03_04'))}</li>
+              <li>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_03_04'))}</li>
               {/* Info: (20250219 - Julian) 5. */}
-              <li>{formatText(t('terms:PRIVACY_POLICY.TEXT_03_05'))}</li>
+              <li>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_03_05'))}</li>
             </ol>
 
             {/* Info: (20250219 - Julian) What personal information would we collect */}
-            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY.DIVIDER_04')} />
+            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_04')} />
             <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
               {/* Info: (20250219 - Julian) 1. */}
               <li>
-                {t('terms:PRIVACY_POLICY.TEXT_04_01')}
+                {t('terms:PRIVACY_POLICY_PAGE.TEXT_04_01')}
                 <CategoriesList
                   leftList={[
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_01'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_02'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_03'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_04'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_05'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_06'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_07'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_08'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_09'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_10'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_11'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_12'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_13'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_14'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_15'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_16'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_17'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_01'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_02'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_03'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_04'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_05'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_06'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_07'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_08'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_09'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_10'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_11'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_12'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_13'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_14'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_15'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_16'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_17'),
                   ]}
                   rightList={[
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_18'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_19'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_20'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_21'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_22'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_23'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_24'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_25'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_26'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_27'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_28'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_29'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_30'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_31'),
-                    t('terms:PRIVACY_POLICY.PERSONAL_DATA_32'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_18'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_19'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_20'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_21'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_22'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_23'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_24'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_25'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_26'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_27'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_28'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_29'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_30'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_31'),
+                    t('terms:PRIVACY_POLICY_PAGE.PERSONAL_DATA_32'),
                   ]}
                 />
               </li>
               {/* Info: (20250219 - Julian) 2. */}
               <li>
-                {t('terms:PRIVACY_POLICY.TEXT_04_02')}
+                {t('terms:PRIVACY_POLICY_PAGE.TEXT_04_02')}
                 <CategoriesList
                   leftList={[
-                    t('terms:PRIVACY_POLICY.PURPOSE_01'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_02'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_03'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_04'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_05'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_06'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_07'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_08'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_09'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_10'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_11'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_12'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_13'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_14'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_15'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_16'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_17'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_18'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_01'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_02'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_03'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_04'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_05'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_06'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_07'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_08'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_09'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_10'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_11'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_12'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_13'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_14'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_15'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_16'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_17'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_18'),
                   ]}
                   rightList={[
-                    t('terms:PRIVACY_POLICY.PURPOSE_19'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_20'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_21'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_22'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_23'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_24'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_25'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_26'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_27'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_28'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_29'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_30'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_31'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_32'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_33'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_34'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_35'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_36'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_37'),
-                    t('terms:PRIVACY_POLICY.PURPOSE_38'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_19'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_20'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_21'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_22'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_23'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_24'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_25'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_26'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_27'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_28'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_29'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_30'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_31'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_32'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_33'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_34'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_35'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_36'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_37'),
+                    t('terms:PRIVACY_POLICY_PAGE.PURPOSE_38'),
                   ]}
                 />
               </li>
             </ol>
 
             {/* Info: (20250219 - Julian) What personal information would we collect */}
-            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY.DIVIDER_05')} />
+            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_05')} />
             <div className="flex flex-col gap-80px text-xl leading-10 text-landing-page-white">
-              <p>{formatText(t('terms:PRIVACY_POLICY.TEXT_05_01'))}</p>
-              <p>{formatText(t('terms:PRIVACY_POLICY.TEXT_05_02'))}</p>
+              <p>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_05_01'))}</p>
+              <p>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_05_02'))}</p>
             </div>
           </div>
 
+          {/* Info: (20250220 - Julian) Back Button */}
           <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
             <LandingButton
               type="button"
@@ -259,7 +260,7 @@ const PrivacyPolicyPageBody: React.FC = () => {
               className="mx-auto whitespace-nowrap px-60px text-center text-base font-bold"
             >
               <Image src="/icons/goback.svg" alt="go_back_icon" width={20} height={20} />
-              {t('terms:PRIVACY_POLICY.BACK_BTN')}
+              {t('terms:PRIVACY_POLICY_PAGE.BACK_BTN')}
             </LandingButton>
           </Link>
         </div>
