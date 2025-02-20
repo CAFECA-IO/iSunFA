@@ -161,6 +161,7 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
   }, [isDirty, router]);
 
   useEffect(() => {
+    if (!retcode) return;
     if (retcode === '00') {
       toastHandler({
         id: ToastId.SUBSCRIPTION_UPDATE_SUCCESS,
