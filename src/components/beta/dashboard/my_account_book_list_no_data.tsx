@@ -1,9 +1,9 @@
 import { useTranslation } from 'next-i18next';
 
 interface NoDataProps {
-  toggleCreateAccountBookModal: () => void;
+  openCreateAccountBookModal: () => void;
 }
-const MyAccountBookListNoData = ({ toggleCreateAccountBookModal }: NoDataProps) => {
+const MyAccountBookListNoData = ({ openCreateAccountBookModal }: NoDataProps) => {
   const { t } = useTranslation('dashboard');
 
   return (
@@ -15,10 +15,10 @@ const MyAccountBookListNoData = ({ toggleCreateAccountBookModal }: NoDataProps) 
         {t('dashboard:DASHBOARD.PLEASE_PROCEED_TO')}{' '}
         <button
           type="button"
-          onClick={toggleCreateAccountBookModal}
+          onClick={openCreateAccountBookModal}
           className="text-text-neutral-link underline underline-offset-4"
         >
-          {t('dashboard:DASHBOARD.CREATE_A_COMPANY')}
+          {t('dashboard:DASHBOARD.CREATE_AN_ACCOUNT_BOOK')}
         </button>
       </p>
     </div>

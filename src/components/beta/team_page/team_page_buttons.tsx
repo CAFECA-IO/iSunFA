@@ -8,9 +8,10 @@ import { useTranslation } from 'next-i18next';
 
 interface TeamPageButtonsProps {
   team: ITeam;
+  openMemberListModal: () => void;
 }
 
-const TeamPageButtons = ({ team }: TeamPageButtonsProps) => {
+const TeamPageButtons = ({ team, openMemberListModal }: TeamPageButtonsProps) => {
   const { t } = useTranslation(['team']);
   const { role } = team;
   const isOwner = role === TeamRole.OWNER;
@@ -19,7 +20,12 @@ const TeamPageButtons = ({ team }: TeamPageButtonsProps) => {
 
   return (
     <main className="flex gap-16px">
-      <Button variant="tertiary" size="small" className="text-xs leading-5">
+      <Button
+        variant="tertiary"
+        size="small"
+        className="text-xs leading-5"
+        onClick={openMemberListModal}
+      >
         <FiUser size={16} />
         <span>{t('team:TEAM_PAGE.MEMBER')}</span>
       </Button>

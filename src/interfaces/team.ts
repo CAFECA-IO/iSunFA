@@ -10,8 +10,10 @@ export enum TeamRole {
 export interface ITeamMember {
   id: string;
   name: string;
+  imageId: string;
   email: string;
   role: TeamRole;
+  editable: boolean;
 }
 
 export interface ITeam {
