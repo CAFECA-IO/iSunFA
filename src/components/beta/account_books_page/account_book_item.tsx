@@ -29,8 +29,8 @@ const AccountBookItem = ({
   const { t } = useTranslation(['account_book']);
   const { selectAccountBook, selectedAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
-
   const isCompanySelected = accountBook.company.id === selectedAccountBook?.id;
+
   const {
     targetRef: optionsDropdownRef,
     componentVisible: isOptionsDropdownOpen,
@@ -60,7 +60,7 @@ const AccountBookItem = ({
     closeOptionsDropdown();
   };
 
-  const openUploadCompanyAvatarModal = () => {
+  const openUploadCompanyPictureModal = () => {
     setAccountBookToUploadPicture(accountBook);
     closeOptionsDropdown();
   };
@@ -99,7 +99,7 @@ const AccountBookItem = ({
       key={accountBook.company.id}
       className="flex items-center gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
     >
-      <button type="button" onClick={openUploadCompanyAvatarModal} className="group relative">
+      <button type="button" onClick={openUploadCompanyPictureModal} className="group relative">
         <Image
           src={accountBook.company.imageId}
           alt={accountBook.company.name}
@@ -113,7 +113,15 @@ const AccountBookItem = ({
         </div>
       </button>
 
-      <div className="flex flex-auto items-center gap-8px">
+      <div className="flex flex-auto items-center justify-between gap-8px">
+        <Image
+          src="/icons/lock.svg"
+          alt="lock"
+          width={16}
+          height={16}
+          className={accountBook.company.isPrivate ? 'visible' : 'invisible'}
+        ></Image>
+
         <p className="max-w-170px truncate text-base font-medium text-text-neutral-solid-dark">
           {accountBook.company.name}
         </p>

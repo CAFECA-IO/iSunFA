@@ -745,6 +745,7 @@ module.exports = {
         digital: 'url("/elements/digital.png")',
         sunrise: 'url("/elements/sunrise.png")',
         'magic-ball': "url('/elements/magic_ball.png')",
+        'privacy-policy': 'url("/elements/sun_light.png")',
       },
       zIndex: {
         '-10': '-10',
@@ -1546,6 +1547,9 @@ module.exports = {
       },
       listStyleType: {
         arrow: '"‣ "',
+      },
+      listStyleImage: {
+        'blue-star': 'url("/icons/blue_star.svg")',
       },
       gridTemplateColumns: {
         'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板
