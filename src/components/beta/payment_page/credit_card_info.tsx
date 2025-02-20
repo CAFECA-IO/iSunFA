@@ -1,17 +1,17 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import { IPlan, IUserOwnedTeam } from '@/interfaces/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
-import { FiPlusCircle } from 'react-icons/fi';
+// import { FiPlusCircle } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
-import { useModalContext } from '@/contexts/modal_context';
-import { ToastType } from '@/interfaces/toastify';
-import { ToastId } from '@/constants/toast_id';
-import { ISUNFA_ROUTE } from '@/constants/url';
+// import { useModalContext } from '@/contexts/modal_context';
+// import { ToastType } from '@/interfaces/toastify';
+// import { ToastId } from '@/constants/toast_id';
+// import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaymentMethod } from '@/interfaces/payment';
-import { useRouter } from 'next/router';
+// import { useRouter } from 'next/router';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
@@ -26,18 +26,22 @@ const CreditCardInfo = ({
   team,
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
+  // Deprecated: (20250220 - Tzuhan) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setIsDirty,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
-  const { toastHandler } = useModalContext();
-  const router = useRouter();
+  // const { toastHandler } = useModalContext();
+  // const router = useRouter();
+  // Deprecated: (20250220 - Tzuhan) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
-  const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
+  // const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
 
   // Info: (20250120 - Liz) 取得信用卡 number
-  const creditCardNumber = hasCreditCardInfo ? paymentMethod[0].number : '';
+  // const creditCardNumber = hasCreditCardInfo ? paymentMethod[0].number : '';
 
   // Info: (20250120 - Liz) 取得信用卡資訊 API
   const { trigger: getCreditCardInfoAPI } = APIHandler<IPaymentMethod[]>(
@@ -71,8 +75,9 @@ const CreditCardInfo = ({
   };
 
   // Info: (20250120 - Liz) 綁定信用卡資料
-  const bindCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
+  // const bindCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
 
+  /* Info: (20250220 - Tzuhan) 為串接 HiTrust 金流測試: 會替換成跳轉至 HiTrust 金流頁面
   // Info: (20250120 - Liz) 打 API 變更團隊的訂閱方案
   const updateSubscription = async () => {
     if (!team || !plan) return;
@@ -110,6 +115,7 @@ const CreditCardInfo = ({
       setIsDirty(true);
     }
   };
+  */
 
   return (
     <section className="flex flex-auto flex-col gap-16px rounded-md bg-surface-neutral-surface-lv2 px-32px py-24px shadow-Dropshadow_XS">
@@ -117,7 +123,7 @@ const CreditCardInfo = ({
         <span className="text-lg font-semibold text-text-brand-secondary-lv3">
           {t('subscriptions:PAYMENT_PAGE.PAYMENT')}
         </span>
-
+        {/* Info: (20250220 - Tzuhan) 為串接 HiTrust 金流測試先隱藏: HiTrust 不提供綁定信用卡功能
         {hasCreditCardInfo ? (
           <div className="flex items-center gap-8px">
             <Image src="/icons/credit_card.svg" alt="credit card" width={24} height={24} />
@@ -138,7 +144,7 @@ const CreditCardInfo = ({
             <span>{t('subscriptions:PAYMENT_PAGE.ADD_CREDIT_CARD')}</span>
             <FiPlusCircle />
           </button>
-        )}
+        )} */}
       </div>
 
       <div className="h-1px bg-divider-stroke-lv-4"></div>
@@ -160,14 +166,53 @@ const CreditCardInfo = ({
         <span className="font-medium text-text-neutral-tertiary">{`* ${t('subscriptions:PAYMENT_PAGE.NOTE')}`}</span>
       </div>
 
-      <button
-        type="button"
-        className="rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-semibold text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-        onClick={updateSubscription}
-        disabled={!hasCreditCardInfo}
+      <form
+        className="w-full"
+        method="POST"
+        action="https://testtrustlink.hitrust.com.tw/TrustLink/TrxReqForJava"
+        onSubmit={() => {
+          window.onbeforeunload = null; // Info: (20250220 - Tzuhan) 移除「離開網站」的提示
+        }}
       >
-        {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
-      </button>
+        <input type="hidden" name="Type" value="Auth" />
+        <input type="hidden" name="storeid" value="62695" />
+        <input
+          type="hidden"
+          name="ordernumber"
+          value={`${team.id}${plan?.planName || ''}${isAutoRenewalEnabled}`}
+        />
+        <input type="hidden" name="amount" value={(plan?.price || 0) * 100} />
+        <input
+          type="hidden"
+          name="orderdesc"
+          value={`iSunFa-team_${team.id}-plan_${plan?.planName}-autorenew_${isAutoRenewalEnabled}-
+          time_${Math.floor(Date.now() / 1000)}`}
+        />
+        <input type="hidden" name="depositflag" value="1" /> {/* 自動請款 */}
+        <input type="hidden" name="queryflag" value="1" /> {/* 回傳交易詳情 */}
+        <input
+          type="hidden"
+          name="returnURL"
+          value={`https://isunfa.tw/users/subscriptions/${team.id}`}
+        />
+        <input type="hidden" name="merUpdateURL" value="https://isunfa.tw/api/v2/payment/update" />
+        {/* 如果用戶選擇「自動續訂」，則設定定期扣款 */}
+        {isAutoRenewalEnabled && (
+          <>
+            <input type="hidden" name="e56" value="20" /> {/* 12 期 */}
+            <input type="hidden" name="e57" value="1" /> {/* 每 1 期扣款 */}
+            <input type="hidden" name="e58" value="Y" /> {/* M = 每月扣款 */}
+          </>
+        )}
+        <button
+          type="submit"
+          className="w-full rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-semibold text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+          // onClick={updateSubscription}
+          disabled={(plan?.price || 0) <= 0}
+        >
+          {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
+        </button>
+      </form>
     </section>
   );
 };
