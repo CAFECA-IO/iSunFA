@@ -3,12 +3,14 @@ import Image from 'next/image';
 import { ITeamMember, TeamRole } from '@/interfaces/team';
 import { FiTrash2, FiSave } from 'react-icons/fi';
 import { IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { useTranslation } from 'next-i18next';
 
 interface MemberItemProps {
   member: ITeamMember;
 }
 
 const MemberItem = ({ member }: MemberItemProps) => {
+  const { t } = useTranslation(['team']);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState<boolean>(false);
   const [role, setRole] = useState<TeamRole | null>(null);
 
@@ -47,7 +49,7 @@ const MemberItem = ({ member }: MemberItemProps) => {
                 onClick={() => setIsRoleDropdownOpen((prev) => !prev)}
               >
                 <span className="px-12px py-10px text-base font-medium text-input-text-input-filled">
-                  {role ?? member.role}
+                  {t(`team:TEAM_ROLE.${role?.toUpperCase() ?? member.role.toUpperCase()}`)}
                 </span>
                 <span className="px-12px py-10px text-icon-surface-single-color-primary">
                   {isRoleDropdownOpen ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
@@ -67,7 +69,7 @@ const MemberItem = ({ member }: MemberItemProps) => {
                         }}
                         className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                       >
-                        {item}
+                        {t(`team:TEAM_ROLE.${item.toUpperCase()}`)}
                       </button>
                     ))}
                   </div>
