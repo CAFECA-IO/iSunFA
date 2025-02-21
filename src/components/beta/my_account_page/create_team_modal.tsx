@@ -209,6 +209,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
         </div>
         <div className="flex flex-wrap items-center">
           {teamMembers.map((member, index) => (
+            // Deprecated: (20250221 - Julian) remove eslint-disable
             // eslint-disable-next-line react/no-array-index-key
             <div key={index} className="">
               {member}
