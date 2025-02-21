@@ -17,12 +17,12 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
     setIsInviteMembersModalOpen(false);
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const updateInputEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputEmail(e.target.value);
     setIsEmailNotValid(false);
   };
 
-  const saveNewEmail = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const addEmailToInvite = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && inputEmail.trim()) {
       // Info: (20250221 - Liz) 簡單的 email 格式驗證
       const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputEmail);
@@ -69,8 +69,8 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
                   type="email"
                   value={inputEmail}
                   placeholder={t('team:INVITE_MEMBERS_MODAL.ENTER_EMAIL')}
-                  onChange={handleEmailChange}
-                  onKeyDown={saveNewEmail}
+                  onChange={updateInputEmail}
+                  onKeyDown={addEmailToInvite}
                   className="flex-auto bg-transparent px-12px py-10px text-base font-medium outline-none"
                 />
               </div>
