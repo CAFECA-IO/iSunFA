@@ -1,4 +1,4 @@
-import { PrismaClient, TPlanType } from '@prisma/client';
+import { PrismaClient, TeamPlanType } from '@prisma/client';
 import accounts from '@/seed_json/account_new.json';
 import companies from '@/seed_json/company.json';
 import companyKYCs from '@/seed_json/company_kyc.json';
@@ -336,9 +336,9 @@ async function createInvoice() {
 async function createTPlan() {
   await Promise.all(
     tPlans.map(async (plan) => {
-      const createdPlan = await prisma.tPlan.create({
+      const createdPlan = await prisma.teamPlan.create({
         data: {
-          type: plan.type as TPlanType,
+          type: plan.type as TeamPlanType,
           planName: plan.planName,
           price: plan.price,
           extraMemberPrice: plan.extraMemberPrice || null,
@@ -347,9 +347,9 @@ async function createTPlan() {
         },
       });
 
-      // 插入 Feature 資料
+      // Info: (20250221 - tzuhan) 插入 Feature 資料
       if (plan.features) {
-        await prisma.tPlanFeature.createMany({
+        await prisma.teamPlanFeature.createMany({
           data: plan.features.map((feature) => ({
             planId: createdPlan.id,
             featureKey: feature.featureKey,
