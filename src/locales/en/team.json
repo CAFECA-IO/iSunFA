@@ -6,20 +6,19 @@
     "CHANGE_TEAM_PICTURE": "Change team picture",
     "MEMBER": "Member"
   },
-
   "ERROR": {
     "TEAM_DATA_NOT_FOUND": "Team data not found"
   },
-
   "TEAM_ROLE": {
     "OWNER": "Owner",
     "ADMIN": "Admin",
     "EDITOR": "Editor",
     "VIEWER": "Viewer"
   },
-
   "MEMBER_LIST_MODAL": {
-    "MEMBER_LIST": "Member List"
+    "MEMBER_LIST": "Member List",
+    "MEMBERS": "members",
+    "ADD_MEMBER": "Add Member"
   },
 
   "MY_ACCOUNT_PAGE": {

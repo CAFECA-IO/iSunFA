@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
 import { TbUsersPlus } from 'react-icons/tb';
 import { useTranslation } from 'next-i18next';
-import { ITeam, ITeamMember } from '@/interfaces/team';
+import { ITeam, ITeamMember, TeamRole } from '@/interfaces/team';
 import { FAKE_TEAM_MEMBER_LIST } from '@/constants/team';
 import { Button } from '@/components/button/button';
 import MemberList from '@/components/beta/team_page/member_list';
@@ -24,6 +24,8 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
+  const isOwner = team.role === TeamRole.OWNER;
+  const isAdmin = team.role === TeamRole.ADMIN;
 
   const closeMemberListModal = () => {
     setIsMemberListModalOpen(false);
@@ -67,12 +69,14 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
           {/* // Info: (20250220 - Liz) Total Member & Add Member Button */}
           <section className="flex items-center justify-between">
             <p className="text-sm font-medium leading-5 text-text-neutral-mute">
-              {team.name.value} - {team.totalMembers} members
+              {team.name.value} - {team.totalMembers} {t('team:MEMBER_LIST_MODAL.MEMBERS')}
             </p>
-            <Button variant="tertiary" size="small" className="text-sm font-medium leading-5">
-              <TbUsersPlus size={16} />
-              <span>Add Member</span>
-            </Button>
+            {(isOwner || isAdmin) && (
+              <Button variant="tertiary" size="small" className="text-sm font-medium leading-5">
+                <TbUsersPlus size={16} />
+                <span>{t('team:MEMBER_LIST_MODAL.ADD_MEMBER')}</span>
+              </Button>
+            )}
           </section>
 
           {memberList && memberList.length > 0 && (
