@@ -133,9 +133,10 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const displayedDebit = (
     <>
       <div className="flex flex-col text-right text-hxs">
-        {debit.map((de) => (
+        {debit.map((de, index) => (
           <p
-            key={de}
+            // eslint-disable-next-line react/no-array-index-key
+            key={index}
             className={de === 0 ? 'text-text-neutral-tertiary' : 'text-text-neutral-primary'}
           >
             {numberWithCommas(de)}
@@ -149,9 +150,10 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const displayedCredit = (
     <>
       <div className="flex flex-col text-right text-hxs">
-        {credit.map((cre) => (
+        {credit.map((cre, index) => (
           <p
-            key={cre}
+            // eslint-disable-next-line react/no-array-index-key
+            key={index}
             className={cre === 0 ? 'text-text-neutral-tertiary' : 'text-text-neutral-primary'}
           >
             {numberWithCommas(cre)}

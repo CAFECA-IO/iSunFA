@@ -129,6 +129,10 @@ interface IAccountingContext {
   };
   addReverseListHandler: (lineItemId: number, item: IReverseItemUI[]) => void;
   clearReverseListHandler: () => void;
+
+  // Info: (20250221 - Julian) 重新整理傳票列表
+  flagOfRefreshVoucherList: boolean;
+  refreshVoucherListHandler: () => void;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -180,6 +184,9 @@ const initialAccountingContext: IAccountingContext = {
   reverseList: {},
   addReverseListHandler: () => {},
   clearReverseListHandler: () => {},
+
+  flagOfRefreshVoucherList: false,
+  refreshVoucherListHandler: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -234,6 +241,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }>({});
 
   const [reverseList, setReverseList] = useState<{ [key: string]: IReverseItemUI[] }>({});
+
+  const [flagOfRefreshVoucherList, setFlagOfRefreshVoucherList] = useState(false);
 
   const getAIStatusHandler = useCallback(
     (params: { companyId: number; askAIId: string } | undefined, update: boolean) => {
@@ -699,6 +708,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     setReverseList({});
   };
 
+  // Info: (20250221 - Julian) 重新整理傳票列表：改變 flag 來觸發重新整理
+  const refreshVoucherListHandler = () => {
+    setFlagOfRefreshVoucherList((prev) => !prev);
+  };
+
   const selectOCRHandler = useCallback(
     (OCR: IOCR | undefined) => {
       setSelectedOCR(OCR);
@@ -766,6 +780,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       reverseList,
       addReverseListHandler,
       clearReverseListHandler,
+
+      flagOfRefreshVoucherList,
+      refreshVoucherListHandler,
     }),
     [
       OCRList,
@@ -796,6 +813,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       reverseList,
       addReverseListHandler,
       clearReverseListHandler,
+      flagOfRefreshVoucherList,
+      refreshVoucherListHandler,
     ]
   );
 

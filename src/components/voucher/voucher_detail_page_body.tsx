@@ -10,6 +10,7 @@ import CertificateSelection from '@/components/certificate/certificate_selection
 import { Button } from '@/components/button/button';
 import { timestampToString, numberWithCommas } from '@/lib/utils/common';
 import { useModalContext } from '@/contexts/modal_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { APIName } from '@/constants/api_connection';
@@ -31,6 +32,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const { t } = useTranslation(['common', 'journal']);
   const router = useRouter();
   const { selectedAccountBook } = useUserCtx();
+  const { refreshVoucherListHandler } = useAccountingCtx();
 
   const companyId = selectedAccountBook?.id;
 
@@ -54,7 +56,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     error: deleteError,
   } = APIHandler(APIName.VOUCHER_DELETE_V2, { params });
 
-  // Info: (20250221 - Julian) Restore voucher APIs
+  // Info: (20250221 - Julian) Restore voucher API
   const { trigger: restoreVoucher, isLoading: isRestoring } = APIHandler(
     APIName.VOUCHER_RESTORE_V2,
     { params }
@@ -114,6 +116,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         content: t('journal:COMMON.RESTORE_SUCCESS_TOAST'),
         closeable: true,
       });
+      // Info: (20250221 - Julian) 重新取得傳票列表
+      refreshVoucherListHandler();
     } else {
       toastHandler({
         id: 'restore-voucher-toast',
