@@ -20,6 +20,16 @@
     "MEMBERS": "members",
     "ADD_MEMBER": "Add Member"
   },
+  "INVITE_MEMBERS_MODAL": {
+    "INVITE_MEMBERS": "Invite Members",
+    "MEMBER_EMAIL": "Member Email",
+    "ENTER_EMAIL": "Enter email",
+    "SEARCHING": "Searching",
+    "SELECTED_EMAILS": "Selected Emails",
+    "PLEASE_ENTER_A_VALID_EMAIL_ADDRESS": "Please enter a valid email address",
+    "CANCEL": "Cancel",
+    "INVITE": "Invite"
+  },
 
   "MY_ACCOUNT_PAGE": {
     "PAGE_TITLE": "My Account",
