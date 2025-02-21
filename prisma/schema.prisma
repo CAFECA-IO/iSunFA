@@ -936,6 +936,8 @@ model User {
   imageFile   File          @relation("user_image_file", fields: [imageFileId], references: [id])
   Asset       Asset[]
   UserSetting UserSetting[]
+  ownedTeams  Team[] // Info: (20250221 - tzuhan) 反向關聯，表示這個 User 可能是多個 Team 的 owner
+  memberships TeamMember[] // Info: (20250221 - tzuhan) 這個 User 可能是多個 Team 的成員
 
   @@map("user")
 }
@@ -1177,4 +1179,153 @@ model WorkRate {
   employeeProject   EmployeeProject @relation(fields: [employeeProjectId], references: [id])
 
   @@map("work_rate")
+}
+
+model TeamPlan {
+  id               Int                @id @default(autoincrement())
+  type             TeamPlanType       @unique
+  planName         String             @map("plan_name")
+  price            Int
+  extraMemberPrice Int?               @map("extra_member_price")
+  features         TeamPlanFeature[]
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  TeamSubscription TeamSubscription[]
+  TeamInvoice      TeamInvoice[]
+
+  @@map("team_plan")
+}
+
+model TeamPlanFeature {
+  id           Int      @id @default(autoincrement())
+  planId       Int      @map("plan_id")
+  plan         TeamPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  featureKey   String   @map("feature_key")
+  featureValue String   @map("feature_value")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("team_plan_feature")
+}
+
+enum TeamPlanType {
+  BEGINNER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+model Team {
+  id        Int      @id @default(autoincrement())
+  name      String
+  ownerId   Int      @map("owner_id")
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade) // 定義關聯
+  createdAt DateTime @default(now())
+
+  members      TeamMember[]
+  subscription TeamSubscription?
+
+  @@map("team")
+}
+
+model TeamMember {
+  id       Int      @id @default(autoincrement())
+  teamId   Int      @map("team_id")
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId   Int      @map("user_id")
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     TeamRole
+  joinedAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@map("team_member")
+}
+
+enum TeamRole {
+  OWNER // Info: (20250221 - tzuhan) 擁有者 (最高權限)
+  ADMIN // Info: (20250221 - tzuhan) 管理員 (可以管理成員、訂閱)
+  EDITOR // Info: (20250221 - tzuhan) 可編輯內容
+  VIEWER // Info: (20250221 - tzuhan) 只能查看
+}
+
+model TeamSubscription {
+  id     Int  @id @default(autoincrement())
+  teamId Int  @unique @map("team_id")
+  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  planId Int      @map("plan_id")
+  plan   TeamPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  autoRenewal   Boolean           @default(false)
+  startDate     DateTime
+  expiredDate   DateTime
+  paymentStatus TeamPaymentStatus
+
+  lastTransactionId Int?
+  lastTransaction   TeamPaymentTransaction?
+
+  invoices TeamInvoice[] // Info: (20250221 - tzuhan) 關聯發票
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("team_subscription")
+}
+
+enum TeamPaymentStatus {
+  PAID
+  UNPAID
+  FREE
+}
+
+model TeamPaymentTransaction {
+  id             Int              @id @default(autoincrement())
+  subscriptionId Int              @unique @map("subscription_id") // Info: (20250221 - tzuhan)  設定 `@unique`，確保 1-to-1 關聯
+  subscription   TeamSubscription @relation(fields: [subscriptionId], references: [id])
+
+  transactionId String
+  amount        Int
+  paymentMethod String
+  status        TransactionStatus
+  createdAt     DateTime          @default(now())
+
+  @@map("team_payment_transaction")
+}
+
+enum TransactionStatus {
+  SUCCESS
+  FAILED
+  PENDING
+}
+
+model TeamInvoice {
+  id             Int              @id @default(autoincrement())
+  subscriptionId Int              @map("subscription_id")
+  subscription   TeamSubscription @relation(fields: [subscriptionId], references: [id])
+
+  issuedTimestamp DateTime
+  dueTimestamp    DateTime
+
+  planId Int      @map("plan_id")
+  plan   TeamPlan @relation(fields: [planId], references: [id])
+
+  planStartDate DateTime
+  planEndDate   DateTime
+  planQuantity  Int
+  planUnitPrice Int
+  planAmount    Int
+  subtotal      Int
+  tax           Int
+  total         Int
+  amountDue     Int
+  payerName     String
+  payerAddress  String
+  payerPhone    String
+  payerTaxId    String
+  payeeName     String
+  payeeAddress  String
+  payeePhone    String
+  payeeTaxId    String
+  createdAt     DateTime @default(now())
+
+  @@map("team_invoice")
 }
