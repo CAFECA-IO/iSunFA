@@ -135,6 +135,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       <div className="flex flex-col text-right text-hxs">
         {debit.map((de, index) => (
           <p
+            // Deprecated: (20250221 - Julian) remove eslint-disable
             // eslint-disable-next-line react/no-array-index-key
             key={index}
             className={de === 0 ? 'text-text-neutral-tertiary' : 'text-text-neutral-primary'}
@@ -152,6 +153,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       <div className="flex flex-col text-right text-hxs">
         {credit.map((cre, index) => (
           <p
+            // Deprecated: (20250221 - Julian) remove eslint-disable
             // eslint-disable-next-line react/no-array-index-key
             key={index}
             className={cre === 0 ? 'text-text-neutral-tertiary' : 'text-text-neutral-primary'}
