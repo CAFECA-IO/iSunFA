@@ -14,7 +14,7 @@ const PrivacyPolicy = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>iSunFA - {t('terms:PRIVACY_POLICY.MAIN_TITLE')}</title>
+        <title>iSunFA - {t('terms:PRIVACY_POLICY_PAGE.MAIN_TITLE')}</title>
       </Head>
 
       <PrivacyPolicyPageBody />

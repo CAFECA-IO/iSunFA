@@ -1,63 +1,101 @@
-import { useTranslation } from 'next-i18next';
+import React from 'react';
 import Link from 'next/link';
+import { useTranslation } from 'next-i18next';
+import { TbArrowBack } from 'react-icons/tb';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { IoHomeOutline } from 'react-icons/io5';
-import { IoIosArrowForward } from 'react-icons/io';
+import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
+import LandingFooter from '@/components/landing_page_v2/landing_footer';
+import { LandingButton } from '@/components/landing_page_v2/landing_button';
+import ScrollToTopButton from '@/components/landing_page_v2/scroll_to_top';
+import {
+  LinearGradientText,
+  LinearTextSize,
+  TextAlign,
+} from '@/components/landing_page_v2/linear_gradient_text';
+import BlueStarList from '@/components/landing_page_v2/blue_star_list';
 
-const Breadcrumb = () => {
-  const { t } = useTranslation(['landing_page']);
+const TermsOfServicePageBody: React.FC = () => {
+  const { t } = useTranslation(['landing_page_2', 'terms']);
+
+  const formatText = (text: string) => {
+    return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          // Deprecated: (20250220 - Julian) Background
+          // eslint-disable-next-line react/no-array-index-key
+          <span key={index} className="font-bold text-text-brand-primary-lv3">
+            {part.slice(2, -2)}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
 
   return (
-    <div className="flex items-center">
-      <Link
-        href={ISUNFA_ROUTE.LANDING_PAGE}
-        className="flex items-center gap-8px px-12px py-10px hover:text-input-text-highlight"
-      >
-        <IoHomeOutline size={20} />
-        <p>{t('landing_page:LANDING_FOOTER.HOME')}</p>
-        <IoIosArrowForward size={20} />
-      </Link>
+    <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
+      {/* Info: (20250220 - Julian) Background */}
+      <div className="absolute inset-x-0 top-0 h-546px w-full bg-privacy-policy bg-contain bg-top bg-no-repeat md:h-670px lg:h-1024px"></div>
 
-      <h5 className="text-input-text-highlight">
-        {t('landing_page:LANDING_FOOTER.TERMS_OF_SERVICE')}
-      </h5>
-    </div>
-  );
-};
+      {/* Info: (20250220 - Julian) Header */}
+      <LandingNavbar />
 
-const TermsOfServicePageBody = () => {
-  const { t } = useTranslation(['landing_page', 'terms']);
+      <main className="z-10 overflow-y-auto overflow-x-hidden">
+        <div className="flex flex-col gap-100px px-150px py-100px">
+          {/* Info: (20250220 - Julian) Title */}
+          <div className="flex flex-col gap-lv-3">
+            <LinearGradientText size={LinearTextSize.XL} align={TextAlign.LEFT}>
+              {t('terms:TERMS_OF_SERVICE_PAGE.MAIN_TITLE')}
+            </LinearGradientText>
+            <p className="text-xl font-medium">{t('terms:TERMS_OF_SERVICE_PAGE.MAIN_DESC')}</p>
+          </div>
 
-  return (
-    <div>
-      <Breadcrumb />
+          {/* Info: (20250220 - Julian) Content */}
+          <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
+            <li>
+              <p>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_01_01'))}</p>
+              <p>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_01_02'))}</p>
+            </li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_02'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_03'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_04'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_05'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_06'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_07'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_08'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_09'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_10'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_11'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_12'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_13'))}</li>
+            <li>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_14'))}</li>
+            <li>
+              {formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_15'))}
+              <BlueStarList
+                listItem={[
+                  t('terms:TERMS_OF_SERVICE_PAGE.TEXT_15_LI_01'),
+                  t('terms:TERMS_OF_SERVICE_PAGE.TEXT_15_LI_02'),
+                ]}
+              />
+            </li>
+          </ol>
 
-      <main className="mb-240px mt-120px flex flex-col gap-20px px-160px text-lg font-semibold">
-        <h1 className="mb-20px text-44px font-bold text-text-brand-primary-lv3">
-          {t('landing_page:LANDING_FOOTER.TERMS_OF_SERVICE')}
-        </h1>
+          {/* Info: (20250220 - Julian) Back Button */}
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+            <LandingButton
+              type="button"
+              variant="primary"
+              className="mx-auto whitespace-nowrap px-60px text-center text-base font-bold"
+            >
+              <TbArrowBack size={28} />
+              {t('terms:TERMS_OF_SERVICE_PAGE.BACK_BTN')}
+            </LandingButton>
+          </Link>
+        </div>
 
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_01')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_02')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_03')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_04')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_05')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_06')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_07')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_08')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_09')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_10')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_11')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_12')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_13')}</p>
-        <p>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_14')}</p>
-        <p>
-          {t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_15')}
-          <ul className="list-inside list-disc indent-6">
-            <li>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_15_01')}</li>
-            <li>{t('terms:TERMS_OF_SERVICE_FOR_LANDING_PAGE.TEXT_15_02')}</li>
-          </ul>
-        </p>
+        {/* Info: (20250220 - Julian) Footer */}
+        <LandingFooter />
+        <ScrollToTopButton />
       </main>
     </div>
   );
