@@ -1178,3 +1178,34 @@ model WorkRate {
 
   @@map("work_rate")
 }
+
+model TPlan {
+  id               Int           @id @default(autoincrement()) 
+  type             TPlanType     @unique 
+  planName         String        @map("plan_name") 
+  price            Int           
+  extraMemberPrice Int?          @map("extra_member_price")  
+  features         TPlanFeature[] 
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  @@map("t_plan")
+}
+
+model TPlanFeature {
+  id           Int    @id @default(autoincrement()) 
+  planId       Int    @map("plan_id") 
+  featureKey   String @map("feature_key")
+  featureValue String @map("feature_value")  
+  plan         TPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("t_plan_feature")
+}
+
+enum TPlanType {
+  BEGINNER
+  PROFESSIONAL
+  ENTERPRISE
+}
