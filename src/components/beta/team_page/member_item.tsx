@@ -36,7 +36,9 @@ const MemberItem = ({ member }: MemberItemProps) => {
 
       <section className="flex items-center gap-16px">
         {!member.editable && (
-          <div className="text-base font-semibold text-text-neutral-primary">{member.role}</div>
+          <div className="text-base font-semibold text-text-neutral-primary">
+            {t(`team:TEAM_ROLE.${member.role.toUpperCase()}`)}
+          </div>
         )}
 
         {/* Info: (20250220 - Liz) edit team role */}
@@ -67,7 +69,8 @@ const MemberItem = ({ member }: MemberItemProps) => {
                           setRole(item);
                           setIsRoleDropdownOpen(false);
                         }}
-                        className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
+                        disabled={item === member.role}
+                        className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover disabled:pointer-events-none disabled:text-input-text-disable"
                       >
                         {t(`team:TEAM_ROLE.${item.toUpperCase()}`)}
                       </button>
