@@ -22,10 +22,10 @@
   },
   "INVITE_MEMBERS_MODAL": {
     "INVITE_MEMBERS": "邀请成员",
-    "MEMBER_EMAIL": "成员的电子邮箱",
-    "ENTER_EMAIL": "输入电子邮箱",
+    "EMAIL": "电子邮箱",
+    "ENTER_EMAIL": "输入电子邮箱来邀请成员进入团队",
     "SEARCHING": "搜索中",
-    "SELECTED_EMAILS": "已选择的电子邮箱",
+    "SEND_INVITATION_TO_THE_FOLLOWING_EMAIL_ADDRESS": "送出邀请给以下的电子邮箱",
     "PLEASE_ENTER_A_VALID_EMAIL_ADDRESS": "请输入有效的电子邮箱",
     "CANCEL": "取消",
     "INVITE": "邀请"

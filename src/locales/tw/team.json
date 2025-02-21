@@ -22,10 +22,10 @@
   },
   "INVITE_MEMBERS_MODAL": {
     "INVITE_MEMBERS": "邀請成員",
-    "MEMBER_EMAIL": "成員的電子信箱",
-    "ENTER_EMAIL": "輸入電子信箱",
+    "EMAIL": "電子信箱",
+    "ENTER_EMAIL": "輸入電子信箱來邀請成員進入團隊",
     "SEARCHING": "搜尋中",
-    "SELECTED_EMAILS": "已選擇的電子信箱",
+    "SEND_INVITATION_TO_THE_FOLLOWING_EMAIL_ADDRESS": "送出邀請給以下的電子信箱",
     "PLEASE_ENTER_A_VALID_EMAIL_ADDRESS": "請輸入有效的電子信箱",
     "CANCEL": "取消",
     "INVITE": "邀請"
