@@ -9,13 +9,13 @@ import { ITeam } from '@/interfaces/team';
 import { FAKE_TEAM_LIST } from '@/constants/team';
 
 interface CreateCompanyModalProps {
-  modalVisibilityHandler: () => void;
+  closeCreateAccountBookModal: () => void;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
   getCompanyList?: () => void;
 }
 
 const CreateAccountBookModal = ({
-  modalVisibilityHandler,
+  closeCreateAccountBookModal,
   setRefreshKey,
   getCompanyList,
 }: CreateCompanyModalProps) => {
@@ -80,7 +80,7 @@ const CreateAccountBookModal = ({
         setCompanyName('');
         setTaxId('');
         setTag(WORK_TAG.ALL);
-        modalVisibilityHandler();
+        closeCreateAccountBookModal();
 
         if (getCompanyList) getCompanyList(); // Info: (20241209 - Liz) 重新取得公司列表
 
@@ -119,7 +119,7 @@ const CreateAccountBookModal = ({
             <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
               {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
             </h1>
-            <button type="button" onClick={modalVisibilityHandler}>
+            <button type="button" onClick={closeCreateAccountBookModal}>
               <IoCloseOutline size={24} />
             </button>
           </section>
@@ -280,7 +280,7 @@ const CreateAccountBookModal = ({
             <section className="flex justify-end gap-12px">
               <button
                 type="button"
-                onClick={modalVisibilityHandler}
+                onClick={closeCreateAccountBookModal}
                 className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
               >
                 {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CANCEL')}

@@ -15,6 +15,7 @@ import UploadCompanyPictureModal from '@/components/beta/account_books_page/uplo
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { FAKE_COMPANY_AND_ROLE_LIST } from '@/constants/account_book';
+import MemberListModal from '@/components/beta/team_page/member_list_modal';
 
 interface TeamPageBodyProps {
   team: ITeam;
@@ -31,10 +32,15 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
     ICompanyAndRole | undefined
   >();
+  const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
   const isNoData = !accountBookList || accountBookList.length === 0;
 
   const closeDeleteModal = () => {
     setAccountBookToDelete(undefined);
+  };
+
+  const openMemberListModal = () => {
+    setIsMemberListModalOpen(true);
   };
 
   // ToDo: (20250219 - Liz) 取得團隊帳本清單 API (list account book by team id)
@@ -100,7 +106,7 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
     <main className="flex flex-col gap-40px">
       <div className="flex items-center">
         <TeamHeader team={team} setTeamToUploadPicture={setTeamToUploadPicture} />
-        <TeamPageButtons team={team} />
+        <TeamPageButtons team={team} openMemberListModal={openMemberListModal} />
       </div>
 
       <div className="flex items-center gap-16px">
@@ -159,6 +165,10 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
           isModalVisible={!!accountBookToDelete}
           modalVisibilityHandler={closeDeleteModal}
         />
+      )}
+
+      {isMemberListModalOpen && (
+        <MemberListModal team={team} setIsMemberListModalOpen={setIsMemberListModalOpen} />
       )}
     </main>
   );

@@ -46,6 +46,7 @@ export enum ToastId {
   UPDATE_VOUCHER_ERROR = 'toast-update-voucher-error',
   DELETE_VOUCHER_ERROR = 'toast-delete-voucher-error',
   SUBSCRIPTION_UPDATE_SUCCESS = 'toast-subscription-update-success',
+  SUBSCRIPTION_UPDATE_ERROR = 'toast-subscription-update-error',
   SUBSCRIPTION_PAYMENT_STATUS_UNPAID = 'toast-subscription-payment-status-unpaid',
   NEED_TO_SELECT_COMPANY = 'toast-need-to-select-company',
   PLAN_EXPIRED_REMINDER = 'toast-plan-expired-reminder',

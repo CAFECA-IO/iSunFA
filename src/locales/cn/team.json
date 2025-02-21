@@ -11,6 +11,17 @@
     "TEAM_DATA_NOT_FOUND": "找不到团队资料"
   },
 
+  "TEAM_ROLE": {
+    "OWNER": "拥有者",
+    "ADMIN": "管理者",
+    "EDITOR": "编辑者",
+    "VIEWER": "检视者"
+  },
+
+  "MEMBER_LIST_MODAL": {
+    "MEMBER_LIST": "成员清单"
+  },
+
   "MY_ACCOUNT_PAGE": {
     "PAGE_TITLE": "我的帐号",
     "USER_INFO_TITLE": "使用者资讯",

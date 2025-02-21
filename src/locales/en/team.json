@@ -11,6 +11,17 @@
     "TEAM_DATA_NOT_FOUND": "Team data not found"
   },
 
+  "TEAM_ROLE": {
+    "OWNER": "Owner",
+    "ADMIN": "Admin",
+    "EDITOR": "Editor",
+    "VIEWER": "Viewer"
+  },
+
+  "MEMBER_LIST_MODAL": {
+    "MEMBER_LIST": "Member List"
+  },
+
   "MY_ACCOUNT_PAGE": {
     "PAGE_TITLE": "My Account",
     "USER_INFO_TITLE": "User information",
