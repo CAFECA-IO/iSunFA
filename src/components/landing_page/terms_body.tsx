@@ -88,7 +88,7 @@ const TermsOfServicePageBody: React.FC = () => {
               className="mx-auto whitespace-nowrap px-60px text-center text-base font-bold"
             >
               <TbArrowBack size={28} />
-              {t('terms:TERMS_OF_SERVICE_PAGE.BACK_BTN')}
+              {t('common:COMMON.BACK')}
             </LandingButton>
           </Link>
         </div>

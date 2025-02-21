@@ -11,6 +11,7 @@ import Tabs from '@/components/tabs/tabs';
 import { APIName } from '@/constants/api_connection';
 import { IVoucherBeta, IVoucherListSummary, IVoucherUI } from '@/interfaces/voucher';
 import { useUserCtx } from '@/contexts/user_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -23,6 +24,7 @@ const VoucherListPageBody: React.FC = () => {
   const { t } = useTranslation('common');
   const { selectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
+  const { flagOfRefreshVoucherList } = useAccountingCtx();
 
   const [activeTab, setActiveTab] = useState<VoucherTabs>(VoucherTabs.UPLOADED);
   const [page, setPage] = useState(1);
@@ -169,6 +171,7 @@ const VoucherListPageBody: React.FC = () => {
           */
           sort={selectedSort}
           hideReversedRelated={isHideReversals} // Info: (20250210 - Julian) 隱藏沖銷分錄
+          flagOfRefresh={flagOfRefreshVoucherList}
         />
         {/* Info: (20240920 - Julian) Voucher List */}
         {displayVoucherList}

@@ -301,7 +301,6 @@
     "DELETE_MESSAGE_CONTENT": "與此傳票相關的所有資產也將被刪除。",
     "DELETE_MESSAGE_SUBMIT_BTN": "是的，刪除傳票",
     "DELETE_SUCCESS_TOAST": "傳票已刪除。",
-    "UNDO": "復原",
     "VOUCHER_NOT_FOUND": "找不到傳票，請確認網址是否正確",
     "DELETED_REVERSE_VOUCHER": "因刪除 <link>{{voucherNo}}</link> 傳票生成的反轉分錄",
     "DELETED_REVERSE_VOUCHER_1": "因刪除",
@@ -349,6 +348,9 @@
     "PAGE_TITLE": "編輯傳票"
   },
   "COMMON": {
-    "STATUS": "狀態"
+    "STATUS": "狀態",
+    "UNDO": "復原",
+    "RESTORE_SUCCESS_TOAST": "傳票已復原。",
+    "RESTORE_FAILED_TOAST": "復原傳票失敗。"
   }
 }

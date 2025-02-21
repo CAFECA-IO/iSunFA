@@ -50,7 +50,8 @@
     "CODE": "Code",
     "PARTNER_S_NAME": "Partner’s Name",
     "TAX_ID": "Tax ID",
-    "SUBMIT": "Submit"
+    "SUBMIT": "Submit",
+    "BACK": "Back"
   },
   "LOADING_MODAL": {
     "LOADING": "It is loading, please wait..."

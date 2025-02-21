@@ -586,6 +586,37 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 className={`${inputStyle.NORMAL} h-46px w-full rounded-sm border px-12px outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable`}
               />
             </div>
+            {/* Info: (20241015 - Julian) Acquisition Date */}
+            <div
+              className={`flex w-full flex-col items-start gap-y-8px ${isLandCost ? 'md:col-span-2' : ''}`}
+            >
+              <p className="font-semibold">
+                {t('asset:ADD_ASSET_MODAL.ACQUISITION_DATE')}{' '}
+                <span className="text-text-state-error">*</span>
+              </p>
+              <DatePicker
+                type={DatePickerType.TEXT_DATE}
+                period={acquisitionDate}
+                setFilteredPeriod={setAcquisitionDate}
+                btnClassName={isShowAcquisitionDateHint ? inputStyle.ERROR : ''}
+              />
+            </div>
+            {/* Info: (20241015 - Julian) Depreciation Start Date */}
+            {!isLandCost ? (
+              <div className="flex w-full flex-col items-start gap-y-8px">
+                <p className="font-semibold">
+                  {t('asset:ADD_ASSET_MODAL.DEPRECIATION_START_DATE')}{' '}
+                  <span className="text-text-state-error">*</span>
+                </p>
+                <DatePicker
+                  type={DatePickerType.TEXT_DATE}
+                  period={depreciationStartDate}
+                  setFilteredPeriod={setDepreciationStartDate}
+                  btnClassName={isShowDepreciationStartDateHint ? inputStyle.ERROR : ''}
+                  calenderClassName="right-0"
+                />
+              </div>
+            ) : null}
             {/* Info: (20241015 - Julian) Amount */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
               <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.AMOUNT')}</p>
@@ -666,37 +697,6 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 </div>
               </div>
             </div>
-            {/* Info: (20241015 - Julian) Acquisition Date */}
-            <div
-              className={`flex w-full flex-col items-start gap-y-8px ${isLandCost ? 'md:col-span-2' : ''}`}
-            >
-              <p className="font-semibold">
-                {t('asset:ADD_ASSET_MODAL.ACQUISITION_DATE')}{' '}
-                <span className="text-text-state-error">*</span>
-              </p>
-              <DatePicker
-                type={DatePickerType.TEXT_DATE}
-                period={acquisitionDate}
-                setFilteredPeriod={setAcquisitionDate}
-                btnClassName={isShowAcquisitionDateHint ? inputStyle.ERROR : ''}
-              />
-            </div>
-            {/* Info: (20241015 - Julian) Depreciation Start Date */}
-            {!isLandCost ? (
-              <div className="flex w-full flex-col items-start gap-y-8px">
-                <p className="font-semibold">
-                  {t('asset:ADD_ASSET_MODAL.DEPRECIATION_START_DATE')}{' '}
-                  <span className="text-text-state-error">*</span>
-                </p>
-                <DatePicker
-                  type={DatePickerType.TEXT_DATE}
-                  period={depreciationStartDate}
-                  setFilteredPeriod={setDepreciationStartDate}
-                  btnClassName={isShowDepreciationStartDateHint ? inputStyle.ERROR : ''}
-                  calenderClassName="right-0"
-                />
-              </div>
-            ) : null}
             {/* Info: (20241015 - Julian) Useful Life (Month) */}
             {!isLandCost ? (
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
