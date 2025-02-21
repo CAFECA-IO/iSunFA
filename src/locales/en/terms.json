@@ -144,8 +144,7 @@
     "PURPOSE_38": "181 Other business activities or consultancy services aligned with registered business items or organizational charters.",
     "DIVIDER_05": "What are 'Cookies'",
     "TEXT_05_01": "Cookies are files stored by a web server on your computer's hard drive, which can **store your browsing information and provide you with a smoother and more convenient internet experience.** To offer you the best and most personalized service, this website will place and access our Cookies on your computer.",
-    "TEXT_05_02": "**You may choose to accept or refuse Cookies.** Most browsers automatically accept Cookies, but you can refuse them by modifying your privacy settings. However, this may cause certain functions of this website to not work properly, preventing you from fully utilizing all the services provided by this website.",
-    "BACK_BTN": "Back"
+    "TEXT_05_02": "**You may choose to accept or refuse Cookies.** Most browsers automatically accept Cookies, but you can refuse them by modifying your privacy settings. However, this may cause certain functions of this website to not work properly, preventing you from fully utilizing all the services provided by this website."
   },
 
   "TERMS_OF_SERVICE_PAGE": {
@@ -168,7 +167,6 @@
     "TEXT_14": "Disclaimer: Within the scope of compliance with the laws of the Republic of China, these terms of service, and the privacy policy, users are free to use this website and related services. Any violations of laws, these terms, incorrect operations, provision of false information, infringement of others' rights, malicious actions, or intent to harm others will be unrelated to the personnel of this company. Any risks, legal responsibilities, or damages caused to the company, its personnel, or third parties **will be borne and compensated by the user.**",
     "TEXT_15": "User data backup and service interruption liability:",
     "TEXT_15_LI_01": "The company is not responsible for service interruptions caused by software or hardware issues and reserves the right to terminate support for any hardware or software without prior notice. The company has the right to update the service content and interface at any time, and users are advised to back up their data regularly to avoid damage or loss. If data is damaged or lost due to the user's failure to back it up promptly, this website will not be liable for any damages.",
-    "TEXT_15_LI_02": "All data that you provide, input, or store on the company, website, and related services may be retained for up to five years after the service is terminated, though the company is not obligated to do so.",
-    "BACK_BTN": "Back"
+    "TEXT_15_LI_02": "All data that you provide, input, or store on the company, website, and related services may be retained for up to five years after the service is terminated, though the company is not obligated to do so."
   }
 }
