@@ -136,3 +136,19 @@ export const FAKE_TEAM_MEMBER_LIST: ITeamMember[] = [
     editable: true,
   },
 ];
+
+export const FAKE_EMAIL_LIST: string[] = [
+  'alice@example.com',
+  'bob@example.com',
+  'bobby@example.com',
+  'bobbzzz@example.com',
+  'bobbzzz123@example.com',
+  'charlie@example.com',
+  'david@example.com',
+  'emma@example.com',
+  'frank@example.com',
+  'frank11@example.com',
+  'frank22@example.com',
+  'frank33@example.com',
+  'frank44@example.com',
+];
