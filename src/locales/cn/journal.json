@@ -301,11 +301,10 @@
     "DELETE_MESSAGE_CONTENT": "与此传票相关的所有资产也将被删除。",
     "DELETE_MESSAGE_SUBMIT_BTN": "是的，删除传票",
     "DELETE_SUCCESS_TOAST": "传票已删除。",
-    "UNDO": "复原",
     "VOUCHER_NOT_FOUND": "找不到传票，请确认网址是否正确",
-    "DELETED_REVERSE_VOUCHER":  "因刪除 <link>{{voucherNo}}</link> 传票生成的反转分录",
-    "DELETED_REVERSE_VOUCHER_1":  "因刪除",
-    "DELETED_REVERSE_VOUCHER_2":  "传票生成的反转分录"
+    "DELETED_REVERSE_VOUCHER": "因刪除 <link>{{voucherNo}}</link> 传票生成的反转分录",
+    "DELETED_REVERSE_VOUCHER_1": "因刪除",
+    "DELETED_REVERSE_VOUCHER_2": "传票生成的反转分录"
   },
   "LEDGER": {
     "LEDGER_PERIOD": "分类帐期间",
@@ -349,6 +348,9 @@
     "PAGE_TITLE": "编辑传票"
   },
   "COMMON": {
-    "STATUS": "状态"
+    "STATUS": "状态",
+    "UNDO": "复原",
+    "RESTORE_SUCCESS_TOAST": "传票已复原。",
+    "RESTORE_FAILED_TOAST": "复原传票失败。"
   }
 }
