@@ -15,9 +15,14 @@ import Pagination from '@/components/pagination/pagination';
 interface MemberListModalProps {
   team: ITeam;
   setIsMemberListModalOpen: Dispatch<SetStateAction<boolean>>;
+  openInviteMembersModal: () => void;
 }
 
-const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProps) => {
+const MemberListModal = ({
+  team,
+  setIsMemberListModalOpen,
+  openInviteMembersModal,
+}: MemberListModalProps) => {
   const { t } = useTranslation(['team']);
   const [memberList, setMemberList] = useState<ITeamMember[] | null>(null);
   // ToDo: (20250220 - Liz) 從 api 回傳的成員清單會有總頁數
@@ -72,7 +77,12 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
               {team.name.value} - {team.totalMembers} {t('team:MEMBER_LIST_MODAL.MEMBERS')}
             </p>
             {(isOwner || isAdmin) && (
-              <Button variant="tertiary" size="small" className="text-sm font-medium leading-5">
+              <Button
+                variant="tertiary"
+                size="small"
+                onClick={openInviteMembersModal}
+                className="text-sm font-medium leading-5"
+              >
                 <TbUsersPlus size={16} />
                 <span>{t('team:MEMBER_LIST_MODAL.ADD_MEMBER')}</span>
               </Button>

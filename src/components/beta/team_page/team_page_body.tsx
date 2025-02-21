@@ -16,6 +16,7 @@ import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { FAKE_COMPANY_AND_ROLE_LIST } from '@/constants/account_book';
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
+import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
 
 interface TeamPageBodyProps {
   team: ITeam;
@@ -33,6 +34,7 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
     ICompanyAndRole | undefined
   >();
   const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
+  const [isInviteMembersModalOpen, setIsInviteMembersModalOpen] = useState<boolean>(false);
   const isNoData = !accountBookList || accountBookList.length === 0;
 
   const closeDeleteModal = () => {
@@ -41,6 +43,10 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
 
   const openMemberListModal = () => {
     setIsMemberListModalOpen(true);
+  };
+
+  const openInviteMembersModal = () => {
+    setIsInviteMembersModalOpen(true);
   };
 
   // ToDo: (20250219 - Liz) 取得團隊帳本清單 API (list account book by team id)
@@ -168,7 +174,15 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
       )}
 
       {isMemberListModalOpen && (
-        <MemberListModal team={team} setIsMemberListModalOpen={setIsMemberListModalOpen} />
+        <MemberListModal
+          team={team}
+          setIsMemberListModalOpen={setIsMemberListModalOpen}
+          openInviteMembersModal={openInviteMembersModal}
+        />
+      )}
+
+      {isInviteMembersModalOpen && (
+        <InviteMembersModal setIsInviteMembersModalOpen={setIsInviteMembersModalOpen} />
       )}
     </main>
   );
