@@ -45,6 +45,7 @@ interface FilterSectionProps<T> {
   disableDateSearch?: boolean;
   displayTypeFilter?: boolean;
   hideReversedRelated?: boolean; // Info: (20250210 - Julian) 用於 VoucherListBody，隱藏沖銷分錄
+  flagOfRefresh?: boolean; // Info: (20250221 - Julian) 當 flagOfRefresh 變更時，重新發送 API 請求
 }
 
 const FilterSection = <T,>({
@@ -70,6 +71,7 @@ const FilterSection = <T,>({
   disableDateSearch,
   displayTypeFilter,
   hideReversedRelated,
+  flagOfRefresh,
 }: FilterSectionProps<T>) => {
   // const { t } = useTranslation(['common']);
   const { toastHandler } = useModalContext();
@@ -193,6 +195,7 @@ const FilterSection = <T,>({
     searchQuery,
     selectedSortOption,
     hideReversedRelated,
+    flagOfRefresh,
   ]);
 
   return (

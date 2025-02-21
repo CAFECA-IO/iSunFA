@@ -10,6 +10,7 @@ import CertificateSelection from '@/components/certificate/certificate_selection
 import { Button } from '@/components/button/button';
 import { timestampToString, numberWithCommas } from '@/lib/utils/common';
 import { useModalContext } from '@/contexts/modal_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { APIName } from '@/constants/api_connection';
@@ -31,6 +32,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const { t } = useTranslation(['common', 'journal']);
   const router = useRouter();
   const { selectedAccountBook } = useUserCtx();
+  const { refreshVoucherListHandler } = useAccountingCtx();
 
   const companyId = selectedAccountBook?.id;
 
@@ -53,6 +55,12 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     success: deleteSuccess,
     error: deleteError,
   } = APIHandler(APIName.VOUCHER_DELETE_V2, { params });
+
+  // Info: (20250221 - Julian) Restore voucher API
+  const { trigger: restoreVoucher, isLoading: isRestoring } = APIHandler(
+    APIName.VOUCHER_RESTORE_V2,
+    { params }
+  );
 
   const {
     voucherDate,
@@ -98,11 +106,27 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   } = payableInfo ||
     receivingInfo || { payableAmount: undefined, paidAmount: undefined, remainAmount: undefined };
 
-  // ToDo: (20241016 - Julian) Call API to undo delete voucher
-  // const undoDeleteVoucher = async () => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('Voucher restored');
-  // };
+  // Info: (20250221 - Julian) 恢復刪除的傳票
+  const undoDeleteVoucher = async () => {
+    const { success } = await restoreVoucher();
+    if (success) {
+      toastHandler({
+        id: 'restore-voucher-toast',
+        type: ToastType.SUCCESS,
+        content: t('journal:COMMON.RESTORE_SUCCESS_TOAST'),
+        closeable: true,
+      });
+      // Info: (20250221 - Julian) 重新取得傳票列表
+      refreshVoucherListHandler();
+    } else {
+      toastHandler({
+        id: 'restore-voucher-toast',
+        type: ToastType.ERROR,
+        content: t('journal:COMMON.RESTORE_FAIL_TOAST'),
+        closeable: true,
+      });
+    }
+  };
 
   const deleteClickHandler = () => {
     messageModalDataHandler({
@@ -145,25 +169,26 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
       if (deleteSuccess) {
         // Info: (20241029 - Julian) 刪除成功後，跳轉至列表頁，並顯示成功 toast
         router.push(ISUNFA_ROUTE.VOUCHER_LIST);
-        // toastHandler({
-        //   id: 'delete-voucher-toast',
-        //   type: ToastType.SUCCESS,
-        //   content: (
-        //     <div className="flex items-center justify-between">
-        //       <p className="text-text-neutral-primary">
-        //         {t('journal:VOUCHER_DETAIL_PAGE.DELETE_SUCCESS_TOAST')}
-        //       </p>
-        //       <button
-        //         type="button"
-        //         onClick={undoDeleteVoucher}
-        //         className="font-semibold text-link-text-success"
-        //       >
-        //         {t('journal:VOUCHER_DETAIL_PAGE.UNDO')}
-        //       </button>
-        //     </div>
-        //   ),
-        //   closeable: true,
-        // });
+        toastHandler({
+          id: 'delete-voucher-toast',
+          type: ToastType.SUCCESS,
+          content: (
+            <div className="flex items-center justify-between">
+              <p className="text-text-neutral-primary">
+                {t('journal:VOUCHER_DETAIL_PAGE.DELETE_SUCCESS_TOAST')}
+              </p>
+              <button
+                type="button"
+                onClick={undoDeleteVoucher}
+                disabled={isRestoring}
+                className="font-semibold text-link-text-success"
+              >
+                {t('journal:COMMON.UNDO')}
+              </button>
+            </div>
+          ),
+          closeable: true,
+        });
       } else if (deleteError) {
         toastHandler({
           id: 'delete-voucher-toast',
