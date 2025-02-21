@@ -5,13 +5,13 @@ import { FaArrowRight, FaAngleDoubleDown } from 'react-icons/fa';
 import { FaPlus } from 'react-icons/fa6';
 import { IoMailOutline } from 'react-icons/io5';
 import { RxCross2 } from 'react-icons/rx';
+import { TbArrowBackUp } from 'react-icons/tb';
 import { PLANS } from '@/constants/subscription';
 import { Button } from '@/components/button/button';
 import SubscriptionPlan from '@/components/beta/team_subscription_page/subscription_plan';
 import { APIName } from '@/constants/api_connection';
 import { IUserOwnedTeam, TPaymentStatus, TPlanType } from '@/interfaces/subscription';
 import APIHandler from '@/lib/utils/api_handler';
-import { IMember } from '@/interfaces/member';
 
 interface ICreateTeamModalProps {
   modalVisibilityHandler: () => void;
@@ -89,7 +89,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const [teamMemberInput, setTeamMemberInput] = useState<string>(''); // Info: (20250218 - Julian) input value
   // Deprecated: (20250218 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [teamMembers, setTeamMembers] = useState<IMember[]>([]);
+  const [teamMembers, setTeamMembers] = useState<string[]>([]);
 
   const [isValidEmail, setIsValidEmail] = useState<boolean>(true);
 
@@ -170,8 +170,10 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     currentStep === 1
       ? () => {
           // Info: (20250218 - Julian) 第一步即建立 Team
-          setCurrentStep(2);
+          // ToDo: (20250221 - Julian) 串接 API的時候，需要檢查是否重複建立：
+          // 第一次建立 -> create 第二次建立 -> update
           createTeam({ body: { name: teamNameInput } });
+          setCurrentStep(2);
         }
       : currentStep === 2
         ? () => {
@@ -187,6 +189,49 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
         modalVisibilityHandler
       : // Info: (20250218 - Julian) 第二步開始為 Skip，即跳到下一步
         toNextStep;
+
+  const backHandler = () => {
+    if (currentStep === 2) {
+      setCurrentStep(1); // Info: (20250221 - Julian) 回到第一步
+    } else if (currentStep === 3) {
+      setCurrentStep(2); // Info: (20250221 - Julian) 回到第二步
+    }
+  };
+
+  const memberFormBody = (
+    <div className="flex flex-col gap-8px text-sm">
+      <p className="font-semibold text-input-text-primary">
+        {t('team:CREATE_TEAM_MODAL.MEMBER_EMAIL')}
+      </p>
+      <div className="flex items-center gap-12px rounded-sm border border-input-stroke-input px-12px py-10px">
+        <div className="text-icon-surface-single-color-primary">
+          <IoMailOutline size={16} />
+        </div>
+        <div className="flex flex-wrap items-center">
+          {teamMembers.map((member, index) => (
+            // eslint-disable-next-line react/no-array-index-key
+            <div key={index} className="">
+              {member}
+            </div>
+          ))}
+        </div>
+        {/* Info: (20250221 - Julian) input */}
+        <input
+          id="member-email"
+          type="text"
+          value={teamMemberInput}
+          onChange={(e) => setTeamMemberInput(e.target.value)}
+          className="w-full bg-transparent outline-none"
+        />
+        <button type="button" className="text-icon-surface-single-color-primary">
+          <FaPlus size={20} />
+        </button>
+      </div>
+      <p className={`text-red-600 ${isValidEmail ? 'opacity-0' : 'opacity-100'}`}>
+        {t('team:CREATE_TEAM_MODAL.EMAIL_HINT')}
+      </p>
+    </div>
+  );
 
   const formBody =
     currentStep === 1 ? (
@@ -206,29 +251,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       </div>
     ) : currentStep === 2 ? (
       // Info: (20250217 - Julian) Member Email
-      <div className="flex flex-col gap-8px text-sm">
-        <p className="font-semibold text-input-text-primary">
-          {t('team:CREATE_TEAM_MODAL.MEMBER_EMAIL')}
-        </p>
-        <div className="flex items-center gap-12px rounded-sm border border-input-stroke-input px-12px py-10px">
-          <div className="text-icon-surface-single-color-primary">
-            <IoMailOutline size={16} />
-          </div>
-          <input
-            id="member-email"
-            type="text"
-            value={teamMemberInput}
-            onChange={(e) => setTeamMemberInput(e.target.value)}
-            className="w-full bg-transparent outline-none"
-          />
-          <button type="button" className="text-icon-surface-single-color-primary">
-            <FaPlus size={20} />
-          </button>
-        </div>
-        <p className={`text-red-600 ${isValidEmail ? 'opacity-0' : 'opacity-100'}`}>
-          {t('team:CREATE_TEAM_MODAL.EMAIL_HINT')}
-        </p>
-      </div>
+      memberFormBody
     ) : (
       <>
         {/* Info: (20250218 - Julian) Subscription Plan */}
@@ -254,7 +277,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div
         className={`flex flex-col items-stretch gap-lv-5 rounded-md bg-surface-neutral-surface-lv1 p-lv-7 ${
-          currentStep === 3 ? 'w-min' : 'w-400px'
+          currentStep === 3 ? 'w-min' : 'w-500px'
         }`}
       >
         {/* Info: (20250217 - Julian) Title */}
@@ -293,18 +316,26 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           )}
 
           {/* Info: (20250217 - Julian) Buttons */}
-          <div className="ml-auto flex items-center gap-24px">
-            <Button type="button" variant="secondaryBorderless" onClick={cancelOrSkip}>
-              {cancelButtonText}
-            </Button>
-            <Button
-              type="button"
-              variant="tertiary"
-              disabled={nextButtonDisabled}
-              onClick={toNextStep}
-            >
-              {nextButtonStr} <FaArrowRight />
-            </Button>
+          <div className="flex items-center justify-between">
+            {currentStep > 1 && (
+              <Button type="button" variant="secondaryBorderless" onClick={backHandler}>
+                <TbArrowBackUp size={20} />
+                {t('common:COMMON.BACK')}
+              </Button>
+            )}
+            <div className="ml-auto flex items-center gap-24px">
+              <Button type="button" variant="secondaryBorderless" onClick={cancelOrSkip}>
+                {cancelButtonText}
+              </Button>
+              <Button
+                type="button"
+                variant="tertiary"
+                disabled={nextButtonDisabled}
+                onClick={toNextStep}
+              >
+                {nextButtonStr} <FaArrowRight />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
