@@ -12,9 +12,34 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
   const [results, setResults] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+  const [isEmailNotValid, setIsEmailNotValid] = useState(false);
 
   const closeInviteMembersModal = () => {
     setIsInviteMembersModalOpen(false);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setIsEmailNotValid(false);
+  };
+
+  const saveNewEmail = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (isLoading) return;
+    setResults([]);
+    if (e.key === 'Enter' && email.trim()) {
+      // Info: (20250221 - Liz) 簡單的 email 格式驗證
+      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+      if (!isValidEmail) {
+        setIsEmailNotValid(true);
+        return;
+      }
+
+      if (!selectedEmails.includes(email)) {
+        setSelectedEmails([...selectedEmails, email]);
+        setEmail('');
+      }
+    }
   };
 
   // ToDo: (20250221 - Liz) 打 API 取得 email
@@ -57,15 +82,15 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
 
   useEffect(() => {
     if (email.length < 2) {
-      setResults([]); // 輸入少於 2 個字時清空結果
+      setResults([]); // Info: (20250221 - Liz) 輸入少於 2 個字時清空結果
       return undefined;
     }
 
     const delayDebounceFn = setTimeout(() => {
       fetchEmails(email);
-    }, 300); // 300ms 防抖
+    }, 300); // Info: (20250221 - Liz) 300ms 防抖
 
-    return () => clearTimeout(delayDebounceFn); // 清除前一次的計時器，確保只執行最新的請求
+    return () => clearTimeout(delayDebounceFn); // Info: (20250221 - Liz) 清除前一次的計時器，確保只執行最新的請求
   }, [email]);
 
   return (
@@ -98,16 +123,23 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
                   type="email"
                   value={email}
                   placeholder="Enter email"
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
+                  onKeyDown={saveNewEmail}
                   className="flex-auto bg-transparent px-12px py-10px text-base font-medium outline-none"
                 />
               </div>
 
               <p
-                className={`absolute inset-x-0 top-full text-xs font-medium text-text-state-error ${isLoading ? 'visible' : 'invisible'}`}
+                className={`absolute inset-x-0 top-full text-xs font-medium text-text-state-success ${isLoading ? 'visible' : 'invisible'}`}
               >
-                Loading...
+                Searching...
               </p>
+
+              {isEmailNotValid && (
+                <p className="absolute inset-x-0 top-full text-right text-xs font-medium text-text-state-error">
+                  Please enter a valid email address.
+                </p>
+              )}
 
               {/* Info: (20250220 - Liz) 顯示搜尋結果 */}
               {results.length > 0 && (
@@ -169,7 +201,6 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
             >
               Cancel
             </button>
-
             <button
               type="button"
               onClick={() => {}}
