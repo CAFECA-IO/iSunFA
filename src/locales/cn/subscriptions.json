@@ -129,6 +129,7 @@
     "NOTE": "您的当前方案将持续有效至下一次续订日期，本次计费周期不会提供退款。",
     "SUBSCRIBE": "订阅",
     "TOAST_SUBSCRIPTION_SUCCESS": "您已成功订阅",
+    "TOAST_SUBSCRIPTION_UPDATE_ERROR": "订阅更新失败",
     "DOWNGRADED_TO_BEGINNER_PLAN": "已降级为基础版方案",
     "MONTHLY_SUBSCRIPTION": "每月订阅",
     "SUBTOTAL": "小计",

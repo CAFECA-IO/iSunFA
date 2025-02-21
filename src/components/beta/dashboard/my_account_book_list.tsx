@@ -140,8 +140,11 @@ const MyAccountBookList = () => {
     setAccountBookToSelect(undefined);
   };
 
-  const toggleCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen((prev) => !prev);
+  const openCreateAccountBookModal = () => {
+    setIsCreateAccountBookModalOpen(true);
+  };
+  const closeCreateAccountBookModal = () => {
+    setIsCreateAccountBookModalOpen(false);
   };
 
   // Info: (20241126 - Liz) 打 API 選擇帳本(原為公司)
@@ -243,7 +246,7 @@ const MyAccountBookList = () => {
         </div>
 
         {isAccountBookListEmpty ? (
-          <MyAccountBookListNoData toggleCreateAccountBookModal={toggleCreateAccountBookModal} />
+          <MyAccountBookListNoData openCreateAccountBookModal={openCreateAccountBookModal} />
         ) : (
           <AccountBookList
             companyAndRoleList={companyAndRoleList}
@@ -262,7 +265,7 @@ const MyAccountBookList = () => {
 
         {isCreateAccountBookModalOpen && (
           <CreateAccountBookModal
-            modalVisibilityHandler={toggleCreateAccountBookModal}
+            closeCreateAccountBookModal={closeCreateAccountBookModal}
             getCompanyList={getCompanyList}
           />
         )}

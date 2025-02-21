@@ -12,8 +12,11 @@ const AccountBookSettings: React.FC<AccountBookSettingsProps> = () => {
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
   const [isAccountBookListModalOpen, setIsAccountBookListModalOpen] = useState(false);
 
-  const toggleCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen((prev) => !prev);
+  const openCreateAccountBookModal = () => {
+    setIsCreateAccountBookModalOpen(true);
+  };
+  const closeCreateAccountBookModal = () => {
+    setIsCreateAccountBookModalOpen(false);
   };
 
   const toggleAccountBookListModal = () => {
@@ -23,7 +26,7 @@ const AccountBookSettings: React.FC<AccountBookSettingsProps> = () => {
   return (
     <div className="flex flex-col">
       {isCreateAccountBookModalOpen && (
-        <CreateAccountBookModal modalVisibilityHandler={toggleCreateAccountBookModal} />
+        <CreateAccountBookModal closeCreateAccountBookModal={closeCreateAccountBookModal} />
       )}
       {isAccountBookListModalOpen && (
         <AccountBookListModal toggleModal={toggleAccountBookListModal} />
@@ -40,7 +43,7 @@ const AccountBookSettings: React.FC<AccountBookSettingsProps> = () => {
         id="settings-add-company"
         type="button"
         className="group mb-lv-7 inline-flex items-center justify-start whitespace-nowrap rounded-xs border-none font-medium text-text-neutral-link hover:text-button-text-primary-hover focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:text-button-text-disable disabled:opacity-100"
-        onClick={toggleCreateAccountBookModal}
+        onClick={openCreateAccountBookModal}
       >
         <p className="flex gap-2">
           <Image src="/icons/plus.svg" width={16} height={16} alt="notice_icon" />

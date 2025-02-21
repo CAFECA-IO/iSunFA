@@ -37,8 +37,11 @@ const AccountBooksPageBody = () => {
 
   const isNoData = accountBookList.length === 0;
 
-  const toggleCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen((prev) => !prev);
+  const openCreateAccountBookModal = () => {
+    setIsCreateAccountBookModalOpen(true);
+  };
+  const closeCreateAccountBookModal = () => {
+    setIsCreateAccountBookModalOpen(false);
   };
 
   const closeDeleteModal = () => {
@@ -101,7 +104,7 @@ const AccountBooksPageBody = () => {
         <div className="flex items-center gap-16px">
           <button
             type="button"
-            onClick={toggleCreateAccountBookModal}
+            onClick={openCreateAccountBookModal}
             className="flex items-center gap-8px rounded-xs bg-button-surface-strong-secondary px-24px py-10px text-base font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             <BsPlusLg size={20} />
@@ -139,7 +142,7 @@ const AccountBooksPageBody = () => {
       {/* // Info: (20241108 - Liz) Modals */}
       {isCreateAccountBookModalOpen && (
         <CreateAccountBookModal
-          modalVisibilityHandler={toggleCreateAccountBookModal}
+          closeCreateAccountBookModal={closeCreateAccountBookModal}
           setRefreshKey={setRefreshKey}
         />
       )}

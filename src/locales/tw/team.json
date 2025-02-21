@@ -6,9 +6,19 @@
     "CHANGE_TEAM_PICTURE": "變更團隊圖片",
     "MEMBER": "成員"
   },
-
   "ERROR": {
     "TEAM_DATA_NOT_FOUND": "找不到團隊資料"
+  },
+  "TEAM_ROLE": {
+    "OWNER": "擁有者",
+    "ADMIN": "管理者",
+    "EDITOR": "編輯者",
+    "VIEWER": "檢視者"
+  },
+  "MEMBER_LIST_MODAL": {
+    "MEMBER_LIST": "成員清單",
+    "MEMBERS": "位成員",
+    "ADD_MEMBER": "新增成員"
   },
 
   "MY_ACCOUNT_PAGE": {

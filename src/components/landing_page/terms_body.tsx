@@ -21,6 +21,7 @@ const TermsOfServicePageBody: React.FC = () => {
     return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return (
+          // Deprecated: (20250220 - Julian) Background
           // eslint-disable-next-line react/no-array-index-key
           <span key={index} className="font-bold text-text-brand-primary-lv3">
             {part.slice(2, -2)}
