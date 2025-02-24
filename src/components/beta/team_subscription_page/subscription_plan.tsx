@@ -1,8 +1,6 @@
 import Image from 'next/image';
 import { IPlan, IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
 import { FiArrowRight } from 'react-icons/fi';
-import { useRouter } from 'next/router';
-import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
@@ -15,27 +13,30 @@ interface SubscriptionPlanProps {
   team: IUserOwnedTeam;
   plan: IPlan;
   getOwnedTeam: () => Promise<void>;
+  goToPaymentHandler: () => void;
+  bordered?: boolean;
 }
 
-const SubscriptionPlan = ({ team, plan, getOwnedTeam }: SubscriptionPlanProps) => {
+const SubscriptionPlan = ({
+  team,
+  plan,
+  getOwnedTeam,
+  goToPaymentHandler,
+  bordered,
+}: SubscriptionPlanProps) => {
   const { t } = useTranslation(['subscriptions']);
   const { toastHandler } = useModalContext();
-  const router = useRouter();
   const isSelected = team.plan === plan.id;
   const isBeginner = plan.id === TPlanType.BEGINNER;
   const [isDowngradeMessageModalOpen, setIsDowngradeMessageModalOpen] = useState(false);
 
-  const goToPaymentPage = () => {
-    // Info: (20250114 - Liz) 這裡帶入 plan.id 作為 query string，用來表示使用者想要選擇的方案
-    const PAYMENT_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/payment?sp=${plan.id}`;
-    router.push(PAYMENT_PAGE);
-  };
+  const borderedStyle = bordered ? 'border border-stroke-neutral-quaternary' : '';
 
   const selectSubscriptionPlan = () => {
     if (isBeginner) {
       setIsDowngradeMessageModalOpen(true);
     } else {
-      goToPaymentPage();
+      goToPaymentHandler();
     }
   };
 
@@ -100,7 +101,7 @@ const SubscriptionPlan = ({ team, plan, getOwnedTeam }: SubscriptionPlanProps) =
 
   return (
     <section
-      className={`relative flex w-290px flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px ${isSelected ? 'border border-stroke-brand-primary' : ''}`}
+      className={`relative flex w-290px flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px ${isSelected ? 'border border-stroke-brand-primary' : borderedStyle}`}
     >
       {isSelected && (
         <Image

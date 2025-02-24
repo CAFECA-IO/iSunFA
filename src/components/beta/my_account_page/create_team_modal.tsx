@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FaArrowRight, FaAngleDoubleDown } from 'react-icons/fa';
-import { FaPlus } from 'react-icons/fa6';
 import { IoMailOutline } from 'react-icons/io5';
 import { RxCross2 } from 'react-icons/rx';
 import { TbArrowBackUp } from 'react-icons/tb';
@@ -123,6 +122,8 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     }
   };
 
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
   // Info: (20250218 - Julian) 送出 API 後，取得 Team 資訊
   useEffect(() => {
     if (createSuccess && data) {
@@ -161,9 +162,9 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   const nextButtonDisabled =
     currentStep === 1
-      ? teamNameInput === ''
+      ? teamNameInput === '' // Info: (20250224 - Julian) 第一步 Team Name 必填
       : currentStep === 2
-        ? teamMembers.length <= 0 || !isValidEmail
+        ? teamMembers.length <= 0 // Info: (20250224 - Julian) 第二步 Member Email 必填
         : true;
 
   const toNextStep =
@@ -174,6 +175,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           // 第一次建立 -> create 第二次建立 -> update
           createTeam({ body: { name: teamNameInput } });
           setCurrentStep(2);
+          emailInputRef.current?.focus();
         }
       : currentStep === 2
         ? () => {
@@ -198,35 +200,55 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     }
   };
 
+  // Info: (20250224 - Julian) 將填寫的 Email 加入清單、清空 input、focus 到 input
+  const emailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && isValidEmail) {
+      setTeamMembers([...teamMembers, teamMemberInput]);
+      setTeamMemberInput('');
+      emailInputRef.current?.focus();
+    }
+  };
+
+  const memberTags = teamMembers.map((member, index) => {
+    const removeMember = () => {
+      setTeamMembers(teamMembers.filter((_, i) => i !== index));
+    };
+
+    return (
+      <div
+        key={member}
+        className="flex items-center gap-2px rounded-xs border border-badge-stroke-secondary bg-badge-surface-base-soft p-6px font-medium text-badge-text-secondary"
+      >
+        <p>{member}</p>
+        <button type="button" onClick={removeMember}>
+          <RxCross2 size={14} />
+        </button>
+      </div>
+    );
+  });
+
   const memberFormBody = (
     <div className="flex flex-col gap-8px text-sm">
       <p className="font-semibold text-input-text-primary">
         {t('team:CREATE_TEAM_MODAL.MEMBER_EMAIL')}
       </p>
-      <div className="flex items-center gap-12px rounded-sm border border-input-stroke-input px-12px py-10px">
+      <div className="flex items-center gap-12px rounded-sm border border-input-stroke-input px-12px py-10px text-xs">
         <div className="text-icon-surface-single-color-primary">
           <IoMailOutline size={16} />
         </div>
-        <div className="flex flex-wrap items-center">
-          {teamMembers.map((member, index) => (
-            // Deprecated: (20250221 - Julian) remove eslint-disable
-            // eslint-disable-next-line react/no-array-index-key
-            <div key={index} className="">
-              {member}
-            </div>
-          ))}
+        <div className="flex flex-1 flex-wrap items-center gap-4px">
+          {memberTags}
+          {/* Info: (20250221 - Julian) input */}
+          <input
+            id="member-email"
+            type="text"
+            ref={emailInputRef}
+            value={teamMemberInput}
+            onChange={(e) => setTeamMemberInput(e.target.value)}
+            className="w-full bg-transparent outline-none"
+            onKeyDown={emailKeyDown}
+          />
         </div>
-        {/* Info: (20250221 - Julian) input */}
-        <input
-          id="member-email"
-          type="text"
-          value={teamMemberInput}
-          onChange={(e) => setTeamMemberInput(e.target.value)}
-          className="w-full bg-transparent outline-none"
-        />
-        <button type="button" className="text-icon-surface-single-color-primary">
-          <FaPlus size={20} />
-        </button>
       </div>
       <p className={`text-red-600 ${isValidEmail ? 'opacity-0' : 'opacity-100'}`}>
         {t('team:CREATE_TEAM_MODAL.EMAIL_HINT')}
@@ -264,6 +286,8 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
                 team={newTeam}
                 plan={plan}
                 getOwnedTeam={getOwnedTeam}
+                goToPaymentHandler={() => {}}
+                bordered
               />
             ))}
         </div>
