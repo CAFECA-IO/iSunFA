@@ -47,8 +47,8 @@ CREATE TABLE "team" (
     "owner_id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "about" TEXT NOT NULL DEFAULT '',
-    "profile" JSONB NOT NULL,
-    "bank_number" TEXT NOT NULL DEFAULT '',
+    "profile" TEXT NOT NULL DEFAULT '',
+    "bank_info" JSONB NOT NULL DEFAULT '{"code": "", "number": ""}',
     "created_at" INTEGER NOT NULL,
 
     CONSTRAINT "team_pkey" PRIMARY KEY ("id")
@@ -208,8 +208,8 @@ VALUES
   ((SELECT id FROM team_plan WHERE type = 'ENTERPRISE'), 'ADDITIONAL_PERKS', 'HARDWARE_SUPPORT', EXTRACT(EPOCH FROM NOW())::INT, EXTRACT(EPOCH FROM NOW())::INT);
 
 -- 🔹 1️⃣ 建立 `Team` 並設 `User` 為 `OWNER`
-INSERT INTO team (uuid, owner_id, name, about, profile, bank_number, created_at)
-SELECT uuid_generate_v4(), id, name || '''s Team', '', '{}', '', EXTRACT(EPOCH FROM NOW())::INT
+INSERT INTO team (uuid, owner_id, name, about, profile, bank_info, created_at)
+SELECT uuid_generate_v4(), id, name || '''s Team', '', '', '{"code": "", "number": ""}', EXTRACT(EPOCH FROM NOW())::INT
 FROM "user";
 
 -- 🔹 2️⃣ 在 `TeamMember` 中新增 `OWNER`

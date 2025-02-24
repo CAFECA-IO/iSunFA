@@ -1223,8 +1223,8 @@ model Team {
   owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   name           String
   about          String   @default("")
-  profile        Json     @map("profile") // text: string and link: string
-  bankNumber     String   @map("bank_number") @default("")
+  profile        String   @default("") 
+  bankInfo       Json     @map("bank_info") @default("{\"code\": \"\", \"number\": \"\"}") 
   createdAt      Int      @map("created_at")
 
   members        TeamMember[]
