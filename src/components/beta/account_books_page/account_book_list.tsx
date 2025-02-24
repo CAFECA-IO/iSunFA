@@ -1,13 +1,13 @@
 import { Dispatch, SetStateAction } from 'react';
 import AccountBookItem from '@/components/beta/account_books_page/account_book_item';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/company';
 
 interface AccountBookListProps {
-  accountBookList: ICompanyAndRole[];
-  setAccountBookToTransfer: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setAccountBookToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setAccountBookToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setAccountBookToUploadPicture: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  accountBookList: IAccountBookForUser[];
+  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
+  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
+  setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
+  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
 }
 
 const AccountBookList = ({

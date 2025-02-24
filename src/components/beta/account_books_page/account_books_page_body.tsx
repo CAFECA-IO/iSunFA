@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BsEnvelope, BsPlusLg } from 'react-icons/bs';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/company';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
@@ -25,15 +25,17 @@ const AccountBooksPageBody = () => {
   const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20241114 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
 
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
-  const [accountBookToTransfer, setAccountBookToTransfer] = useState<ICompanyAndRole | undefined>();
-  const [accountBookToEdit, setAccountBookToEdit] = useState<ICompanyAndRole | undefined>();
-  const [accountBookToDelete, setAccountBookToDelete] = useState<ICompanyAndRole | undefined>();
+  const [accountBookToTransfer, setAccountBookToTransfer] = useState<
+    IAccountBookForUser | undefined
+  >();
+  const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookForUser | undefined>();
+  const [accountBookToDelete, setAccountBookToDelete] = useState<IAccountBookForUser | undefined>();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
-    ICompanyAndRole | undefined
+    IAccountBookForUser | undefined
   >();
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  const [accountBookList, setAccountBookList] = useState<ICompanyAndRole[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookForUser[]>([]); // ToDo: (20250224 - Liz) 改用 IAccountBookForUserWithTeam[] 以便於顯示團隊名稱並且使用團隊進行帳本的分類
 
   const isNoData = accountBookList.length === 0;
 
@@ -79,7 +81,7 @@ const AccountBooksPageBody = () => {
     backBtnStr: t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL'),
   };
 
-  const handleApiResponse = (resData: IPaginatedData<ICompanyAndRole[]>) => {
+  const handleApiResponse = (resData: IPaginatedData<IAccountBookForUser[]>) => {
     setAccountBookList(resData.data);
     setTotalPage(resData.totalPages);
     setCurrentPage(resData.page);
@@ -89,7 +91,7 @@ const AccountBooksPageBody = () => {
     <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
         {userId && (
-          <FilterSection<ICompanyAndRole[]>
+          <FilterSection<IAccountBookForUser[]>
             key={refreshKey}
             disableDateSearch
             className="flex-auto"

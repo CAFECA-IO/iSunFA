@@ -6,7 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/company';
 import { ITodoCompany } from '@/interfaces/todo';
 
 const ToDoListNotLink = () => {
@@ -36,7 +36,7 @@ interface TodayTodoListProps {
 }
 
 const TodayTodoList = ({ todayTodoList }: TodayTodoListProps) => {
-  const [companyList, setCompanyList] = useState<ICompanyAndRole[]>([]);
+  const [companyList, setCompanyList] = useState<IAccountBookForUser[]>([]);
 
   // Info: (20241122 - Liz) 判斷是否有公司列表
   const isToDoListLink = companyList.length > 0;
@@ -44,7 +44,9 @@ const TodayTodoList = ({ todayTodoList }: TodayTodoListProps) => {
   const { userAuth } = useUserCtx();
 
   // Info: (20241122 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
-  const { trigger: listUserCompanyAPI } = APIHandler<ICompanyAndRole[]>(APIName.LIST_USER_COMPANY);
+  const { trigger: listUserCompanyAPI } = APIHandler<IAccountBookForUser[]>(
+    APIName.LIST_USER_COMPANY
+  );
 
   const getCompanyList = useCallback(async () => {
     if (!userAuth) return;

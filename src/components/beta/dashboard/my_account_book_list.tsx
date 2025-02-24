@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } fr
 import { useTranslation } from 'next-i18next';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/company';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -14,8 +14,8 @@ import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MyAccountBookListNoData from '@/components/beta/dashboard/my_account_book_list_no_data';
 
 interface AccountBookItemProps {
-  companyAndRole: ICompanyAndRole;
-  setAccountBookToSelect: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  companyAndRole: IAccountBookForUser;
+  setAccountBookToSelect: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
   isDisabled: boolean;
   dataIndex: number;
 }
@@ -57,8 +57,8 @@ const AccountBookItem = ({
 };
 
 interface AccountBookListProps {
-  companyAndRoleList: ICompanyAndRole[];
-  setAccountBookToSelect: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  companyAndRoleList: IAccountBookForUser[];
+  setAccountBookToSelect: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
 }
 
 const AccountBookList = ({ companyAndRoleList, setAccountBookToSelect }: AccountBookListProps) => {
@@ -127,9 +127,9 @@ const AccountBookList = ({ companyAndRoleList, setAccountBookToSelect }: Account
 const MyAccountBookList = () => {
   const { t } = useTranslation('dashboard');
   const { userAuth } = useUserCtx();
-  const [companyAndRoleList, setCompanyAndRoleList] = useState<ICompanyAndRole[]>([]);
+  const [companyAndRoleList, setCompanyAndRoleList] = useState<IAccountBookForUser[]>([]);
   const isAccountBookListEmpty = companyAndRoleList.length === 0;
-  const [accountBookToSelect, setAccountBookToSelect] = useState<ICompanyAndRole | undefined>();
+  const [accountBookToSelect, setAccountBookToSelect] = useState<IAccountBookForUser | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
 
@@ -188,7 +188,9 @@ const MyAccountBookList = () => {
   };
 
   // Info: (20241120 - Liz) 打 API 取得使用者擁有的帳本列表(原為公司) - simple version
-  const { trigger: listUserCompanyAPI } = APIHandler<ICompanyAndRole[]>(APIName.LIST_USER_COMPANY);
+  const { trigger: listUserCompanyAPI } = APIHandler<IAccountBookForUser[]>(
+    APIName.LIST_USER_COMPANY
+  );
 
   const getCompanyList = useCallback(async () => {
     if (!userAuth) return;

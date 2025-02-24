@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { IoCloseOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
-import { ICompany, ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBook, IAccountBookForUser } from '@/interfaces/company';
 import { IFileUIBeta } from '@/interfaces/file';
 import { UploadType } from '@/constants/file';
 import { APIName } from '@/constants/api_connection';
@@ -10,9 +10,9 @@ import UploadArea from '@/components/upload_area/upload_area';
 import { useUserCtx } from '@/contexts/user_context';
 
 interface UploadCompanyPictureModalProps {
-  accountBookToUploadPicture: ICompanyAndRole;
+  accountBookToUploadPicture: IAccountBookForUser;
   isModalOpen: boolean;
-  setAccountBookToUploadPicture: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
 }
 
@@ -26,7 +26,7 @@ const UploadCompanyPictureModal = ({
   const { selectedAccountBook, selectAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
-  const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<ICompany>(
+  const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<IAccountBook>(
     APIName.COMPANY_PUT_ICON
   );
 

@@ -1,4 +1,4 @@
-import { ICompany } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/company';
 
 export interface ITodo {
   id: number;
@@ -14,7 +14,7 @@ export interface ITodo {
 
 export interface ITodoCompany extends ITodo {
   id: number;
-  company: ICompany;
+  company: IAccountBook;
   createdAt: number;
   updatedAt: number;
 }

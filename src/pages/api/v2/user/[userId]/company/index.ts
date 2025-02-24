@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
@@ -137,7 +137,11 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload: ICompanyAndRole | ICompanyAndRole[] | IPaginatedData<ICompanyAndRole[]> | null;
+    payload:
+      | IAccountBookForUser
+      | IAccountBookForUser[]
+      | IPaginatedData<IAccountBookForUser[]>
+      | null;
   }>;
 } = {
   GET: (req) => withRequestValidation(APIName.LIST_USER_COMPANY, req, handleGetRequest),
@@ -147,12 +151,17 @@ const methodHandlers: {
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<
-    IResponseData<ICompanyAndRole | ICompanyAndRole[] | IPaginatedData<ICompanyAndRole[]> | null>
+    IResponseData<
+      IAccountBookForUser | IAccountBookForUser[] | IPaginatedData<IAccountBookForUser[]> | null
+    >
   >
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompanyAndRole | ICompanyAndRole[] | IPaginatedData<ICompanyAndRole[]> | null =
-    null;
+  let payload:
+    | IAccountBookForUser
+    | IAccountBookForUser[]
+    | IPaginatedData<IAccountBookForUser[]>
+    | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -167,7 +176,7 @@ export default async function handler(
     payload = null;
   } finally {
     const { httpCode, result } = formatApiResponse<
-      ICompanyAndRole | ICompanyAndRole[] | IPaginatedData<ICompanyAndRole[]> | null
+      IAccountBookForUser | IAccountBookForUser[] | IPaginatedData<IAccountBookForUser[]> | null
     >(statusMessage, payload);
     res.status(httpCode).json(result);
   }

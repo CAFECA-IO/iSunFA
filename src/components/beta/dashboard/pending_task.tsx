@@ -3,7 +3,7 @@ import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layo
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/company';
 import { APIName } from '@/constants/api_connection';
 import DonutChart from '@/components/beta/dashboard/donut_chart';
 import TaskType from '@/components/beta/dashboard/task_type';
@@ -196,11 +196,13 @@ const PendingTasks = ({ getTodoList }: PendingTasksProps) => {
 
   const { userAuth, selectedAccountBook } = useUserCtx();
   const isSelectedCompany = !!selectedAccountBook; // Info: (20250204 - Liz) 強制轉為布林值
-  const [companyAndRoleList, setCompanyAndRoleList] = useState<ICompanyAndRole[]>([]);
+  const [companyAndRoleList, setCompanyAndRoleList] = useState<IAccountBookForUser[]>([]);
   const hasCompanyList = companyAndRoleList.length > 0;
 
   // Info: (20241127 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
-  const { trigger: listUserCompanyAPI } = APIHandler<ICompanyAndRole[]>(APIName.LIST_USER_COMPANY);
+  const { trigger: listUserCompanyAPI } = APIHandler<IAccountBookForUser[]>(
+    APIName.LIST_USER_COMPANY
+  );
 
   useEffect(() => {
     const getCompanyList = async () => {

@@ -9,7 +9,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
-import { ICompany, ICompanyAndRoleDetail } from '@/interfaces/company';
+import { IAccountBook, ICompanyAndRoleDetail } from '@/interfaces/company';
 import { MessageType } from '@/interfaces/message_modal';
 import { IRole } from '@/interfaces/role';
 import APIHandler from '@/lib/utils/api_handler';
@@ -40,11 +40,11 @@ const CompanyInfoPageBody = () => {
   } = useGlobalCtx();
   const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
-  const [company, setCompany] = useState<ICompany | null>(selectedAccountBook);
+  const [company, setCompany] = useState<IAccountBook | null>(selectedAccountBook);
   const [ownerId, setOwnerId] = useState<number | null>(null);
   const [role, setRole] = useState<IRole | null>(null);
 
-  const { trigger: deleteAccountBook } = APIHandler<ICompany>(APIName.COMPANY_DELETE);
+  const { trigger: deleteAccountBook } = APIHandler<IAccountBook>(APIName.COMPANY_DELETE);
 
   const {
     data: companyData,

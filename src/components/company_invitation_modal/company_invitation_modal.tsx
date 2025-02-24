@@ -10,7 +10,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAdmin } from '@/interfaces/admin';
-import { ICompany } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/company';
 import { useTranslation } from 'next-i18next';
 
 interface ICompanyInvitationModal {
@@ -39,7 +39,7 @@ const CompanyInvitationModal = ({
 
   useEffect(() => {
     if (success && adminData) {
-      const company = adminData.company as ICompany;
+      const company = adminData.company as IAccountBook;
       // Info: (20240613 - Julian) Reset modal and redirect to dashboard
       if (company) {
         selectAccountBook(company.id);

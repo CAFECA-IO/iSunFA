@@ -2,9 +2,9 @@ import { WORK_TAG } from '@/constants/company';
 import { IRole } from '@/interfaces/role';
 import { ITeam } from '@/interfaces/team';
 
-// ToDo: (20250219 - Liz) ICompany 將被改名成 IAccountBook (因為公司已經改名成帳本)
+// ToDo: (20250219 - Liz) 原為 IAccountBook (因為公司已經改名成帳本)
 // Info: (20250219 - Liz) 新增一個屬性 isPrivate ，用來判斷是否為私人帳本，這只有 owner 可以設定。如果是公開帳本，帳本才可以被其他使用者看到
-export interface ICompany {
+export interface IAccountBook {
   id: number;
   imageId: string;
   name: string;
@@ -15,7 +15,7 @@ export interface ICompany {
   isPrivate?: boolean; // ToDo: (20250224 - Liz) 等後端 API 調整後就改為必填
 }
 
-export interface ICompanyDetail extends ICompany {
+export interface ICompanyDetail extends IAccountBook {
   ownerId: number;
   kycStatusDetail: string;
 }
@@ -25,17 +25,17 @@ export interface ICompanyAndRoleDetail {
   role: IRole;
 }
 
-// ToDo: (20250224 - Liz) ICompanyAndRole 將被改名成 IAccountBookForUser
+// ToDo: (20250224 - Liz) 原為 ICompanyAndRole
 // tag, order, role 都是使用者的個人化設定 (個人專屬的工作標籤、排序、個人角色)
 // 目前 order 跟 role 尚未用到
-export interface ICompanyAndRole {
-  company: ICompany; // IAccountBook
+export interface IAccountBookForUser {
+  company: IAccountBook;
   tag: WORK_TAG;
   order: number;
   role: IRole;
 }
 
-export interface IAccountBookForUserWithTeam extends ICompanyAndRole {
+export interface IAccountBookForUserWithTeam extends IAccountBookForUser {
   team: ITeam;
 }
 

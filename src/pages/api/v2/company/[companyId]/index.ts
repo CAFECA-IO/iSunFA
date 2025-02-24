@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { ICompany, ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBook, IAccountBookForUser } from '@/interfaces/company';
 import { formatApiResponse } from '@/lib/utils/common';
 import { deleteCompanyById } from '@/lib/utils/repo/company.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
@@ -90,12 +90,12 @@ const handlePutRequest: IHandleRequest<
   return { statusMessage, payload };
 };
 
-const handleDeleteRequest: IHandleRequest<APIName.COMPANY_DELETE, ICompany> = async ({
+const handleDeleteRequest: IHandleRequest<APIName.COMPANY_DELETE, IAccountBook> = async ({
   query,
   session,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | null = null;
+  let payload: IAccountBook | null = null;
 
   const { companyId } = query;
   const { userId } = session;
@@ -114,7 +114,7 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: ICompany | ICompanyAndRole | null }>;
+  ) => Promise<{ statusMessage: string; payload: IAccountBook | IAccountBookForUser | null }>;
 } = {
   GET: (req) => withRequestValidation(APIName.COMPANY_GET_BY_ID, req, handleGetRequest),
   PUT: (req) => withRequestValidation(APIName.COMPANY_UPDATE, req, handlePutRequest),
@@ -123,10 +123,10 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompany | ICompanyAndRole | null>>
+  res: NextApiResponse<IResponseData<IAccountBook | IAccountBookForUser | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | ICompanyAndRole | null = null;
+  let payload: IAccountBook | IAccountBookForUser | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -140,7 +140,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<ICompany | ICompanyAndRole | null>(
+    const { httpCode, result } = formatApiResponse<IAccountBook | IAccountBookForUser | null>(
       statusMessage,
       payload
     );

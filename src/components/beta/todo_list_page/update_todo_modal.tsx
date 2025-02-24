@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { ICompany, ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBook, IAccountBookForUser } from '@/interfaces/company';
 import { ITodoCompany } from '@/interfaces/todo';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -27,8 +27,8 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
   const [endTimeStamp, setEndTimeStamp] = useState<number | undefined>(todoToUpdate.endTime);
   const [note, setNote] = useState(todoToUpdate.note);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [company, setCompany] = useState<ICompany>(todoToUpdate.company);
-  const [companyAndRoleList, setCompanyAndRoleList] = useState<ICompanyAndRole[]>([]);
+  const [company, setCompany] = useState<IAccountBook>(todoToUpdate.company);
+  const [companyAndRoleList, setCompanyAndRoleList] = useState<IAccountBookForUser[]>([]);
   const [noDataForTodoName, setNoDataForTodoName] = useState(false);
   const [noDataForStartTime, setNoDataForStartTime] = useState(false);
   const [noDataForEndTime, setNoDataForEndTime] = useState(false);
@@ -41,7 +41,9 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
   const { trigger: updateTodoAPI } = APIHandler<ITodoCompany>(APIName.UPDATE_TODO);
 
   // Info: (20241120 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
-  const { trigger: listUserCompanyAPI } = APIHandler<ICompanyAndRole[]>(APIName.LIST_USER_COMPANY);
+  const { trigger: listUserCompanyAPI } = APIHandler<IAccountBookForUser[]>(
+    APIName.LIST_USER_COMPANY
+  );
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);

@@ -1,7 +1,7 @@
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/company';
 import { WORK_TAG } from '@/constants/company';
 
-export const FAKE_COMPANY_AND_ROLE_LIST: ICompanyAndRole[] = [
+export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
   {
     company: {
       id: 1,

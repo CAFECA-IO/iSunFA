@@ -2,13 +2,13 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/company';
 import { WORK_TAG } from '@/constants/company';
 
 interface ChangeTagModalProps {
-  accountBookToEdit: ICompanyAndRole;
+  accountBookToEdit: IAccountBookForUser;
   isModalOpen: boolean;
-  setAccountBookToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
 }
 

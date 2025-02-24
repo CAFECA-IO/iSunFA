@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/company';
 import { IoArrowForward, IoClose } from 'react-icons/io5';
 import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
@@ -12,11 +12,11 @@ import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface AccountBookItemProps {
-  accountBook: ICompanyAndRole;
-  setAccountBookToTransfer: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setAccountBookToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setAccountBookToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
-  setAccountBookToUploadPicture: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  accountBook: IAccountBookForUser;
+  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
+  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
+  setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
+  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
 }
 
 const AccountBookItem = ({
