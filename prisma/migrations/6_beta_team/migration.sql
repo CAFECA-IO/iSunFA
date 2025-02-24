@@ -221,8 +221,8 @@ FROM team t;
 UPDATE company c
 SET team_id = (
     SELECT t.id FROM team t
-    JOIN admin a ON a.company_id = c.id  -- 根據 admin 來找出 company 對應的 user
-    WHERE t.owner_id = a.user_id
+    LEFT JOIN admin a ON a.company_id = c.id  -- ✅ 改用 LEFT JOIN，確保 admin 不存在時不影響查詢
+    WHERE t.owner_id = COALESCE(a.user_id, t.owner_id) -- ✅ 如果 admin.user_id 是 NULL，則用 team.owner_id
     LIMIT 1
 )
 WHERE c.team_id IS NULL;
