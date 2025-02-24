@@ -1,4 +1,5 @@
-import { PrismaClient, TeamPlanType } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+// import { PrismaClient, TeamPlanType } from '@prisma/client';
 import accounts from '@/seed_json/account_new.json';
 import companies from '@/seed_json/company.json';
 import companyKYCs from '@/seed_json/company_kyc.json';
@@ -19,7 +20,7 @@ import values from '@/seed_json/value.json';
 import sales from '@/seed_json/sale.json';
 import workRates from '@/seed_json/work_rate.json';
 import plans from '@/seed_json/plan.json';
-import tPlans from '@/seed_json/t_plan.json';
+// import tPlans from '@/seed_json/t_plan.json';
 import subscriptions from '@/seed_json/subscription.json';
 import orders from '@/seed_json/order.json';
 import paymentRecords from '@/seed_json/payment_record.json';
@@ -333,6 +334,7 @@ async function createInvoice() {
   });
 }
 
+/*
 async function createTPlan() {
   await Promise.all(
     tPlans.map(async (plan) => {
@@ -342,8 +344,8 @@ async function createTPlan() {
           planName: plan.planName,
           price: plan.price,
           extraMemberPrice: plan.extraMemberPrice || null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: Math.floor(new Date().getTime() / 1000),
+          updatedAt: Math.floor(new Date().getTime() / 1000),
         },
       });
 
@@ -356,14 +358,15 @@ async function createTPlan() {
             featureValue: Array.isArray(feature.featureValue)
               ? JSON.stringify(feature.featureValue)
               : feature.featureValue,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: Math.floor(new Date().getTime() / 1000),
+            updatedAt: Math.floor(new Date().getTime() / 1000),
           })),
         });
       }
     })
   );
 }
+*/
 
 async function main() {
   try {
@@ -393,7 +396,7 @@ async function main() {
     await createEmployeeProject();
     await createWorkRate();
     await createPlan();
-    await createTPlan();
+    // await createTPlan();
     await createOrder();
     await createPaymentRecord();
     await createSubscription();
