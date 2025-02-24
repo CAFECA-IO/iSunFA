@@ -15,8 +15,7 @@ export const FAKE_TEAM_LIST: ITeam[] = [
       editable: true,
     },
     profile: {
-      value:
-        'https://static-cdn.jtvnw.net/jtv_user_pictures/44ed4bd3-5f4f-47e6-b89b-90de65386dbb-profile_banner-480.png',
+      value: 'https://isunfa.com',
       editable: true,
     },
     planType: {
@@ -43,18 +42,18 @@ export const FAKE_TEAM_LIST: ITeam[] = [
       editable: true,
     },
     profile: {
-      value: 'https://i.pinimg.com/236x/cc/48/41/cc4841ce4212d47ca59c5ec0e63f53bc.jpg',
+      value: 'https://isunfa.com',
       editable: true,
     },
     planType: {
       value: TPlanType.PROFESSIONAL,
-      editable: true,
+      editable: false,
     },
     totalMembers: 2,
     totalAccountBooks: 2,
     bankAccount: {
-      value: '12345678',
-      editable: true,
+      value: '-',
+      editable: false,
     },
   },
   {
@@ -63,25 +62,25 @@ export const FAKE_TEAM_LIST: ITeam[] = [
     role: TeamRole.VIEWER,
     name: {
       value: 'Team C',
-      editable: true,
+      editable: false,
     },
     about: {
       value: 'About Team C',
-      editable: true,
+      editable: false,
     },
     profile: {
-      value: 'https://i.pinimg.com/736x/ea/78/01/ea78014cd14a79714042729c661bd46c.jpg',
-      editable: true,
+      value: 'https://isunfa.com',
+      editable: false,
     },
     planType: {
       value: TPlanType.BEGINNER,
-      editable: true,
+      editable: false,
     },
     totalMembers: 1,
     totalAccountBooks: 1,
     bankAccount: {
-      value: '87654321',
-      editable: true,
+      value: '-',
+      editable: false,
     },
   },
 ];
