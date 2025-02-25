@@ -9,262 +9,136 @@ import { ILocalizedPaymentPlan } from '@/interfaces/payment_plan';
 
 const mockPaymentPlans: ILocalizedPaymentPlan[] = [
   {
-    locale: 'en',
-    plans: [
+    name: 'BEGINNER',
+    price: 0,
+    description: 'Free version with basic features',
+    features: [
       {
-        name: 'Beginner',
-        price: 0,
-        description: 'Free version with basic features',
-        features: [
-          {
-            name: 'storage',
-            value: '10GB',
-            description: 'Storage space',
-          },
-          {
-            name: 'ai_assistant',
-            value: 'Limited',
-            description: 'AI assistant features',
-          },
-          {
-            name: 'team_members',
-            value: '1',
-            description: 'Number of team members',
-          },
-        ],
-        remarks: '',
-        isActive: true,
-        createdAt: 1725372460,
-        updatedAt: 1725372460,
-        deletedAt: 0,
+        name: 'CLOUD_STORAGE',
+        value: '10GB',
       },
       {
-        name: 'Professional',
-        price: 899,
-        description: 'Professional version with advanced features',
-        features: [
-          {
-            name: 'storage',
-            value: '1TB',
-            description: 'Storage space',
-          },
-          {
-            name: 'ai_assistant',
-            value: 'Unlimited',
-            description: 'AI assistant features',
-          },
-          {
-            name: 'team_members',
-            value: '10',
-            description: 'Number of team members',
-          },
-        ],
-        remarks: '',
-        isActive: false,
-        createdAt: 1725372460,
-        updatedAt: 1725372460,
-        deletedAt: 0,
+        name: 'AI_ASSISTANT',
+        value: 'LIMITED',
       },
       {
-        name: 'Enterprise',
-        price: 8990,
-        description: 'Enterprise version with all features',
-        features: [
-          {
-            name: 'storage',
-            value: 'Unlimited',
-            description: 'Storage space',
-          },
-          {
-            name: 'ai_assistant',
-            value: 'Advanced functions',
-            description: 'AI assistant features with advanced functions',
-          },
-          {
-            name: 'team_members',
-            value: 'Unlimited',
-            description: 'Unlimited team members',
-          },
-        ],
-        remarks: '',
-        isActive: false,
-        createdAt: 1725372460,
-        updatedAt: 1725372460,
-        deletedAt: 0,
+        name: 'REPORT_GENERATION',
+        value: 'UNLIMITED',
+      },
+      {
+        name: 'FINANCIAL_STATEMENTS',
+        value: 'MANUAL_DOWNLOAD',
+      },
+      {
+        name: 'MATCHMAKING_PLATFORM',
+        value: 'TASK_ACCEPTANCE_ONLY',
+      },
+      {
+        name: 'TEAM_MEMBERS',
+        value: 'LIMITED_TO_1_PERSON',
+      },
+      {
+        name: 'CUSTOMER_SUPPORT',
+        value: 'LIVE_CHAT_SUPPORT',
       },
     ],
+    remarks: '',
+    isActive: true,
+    createdAt: 1725372460,
+    updatedAt: 1725372460,
+    deletedAt: 0,
   },
   {
-    locale: 'zh-TW',
-    plans: [
+    name: 'PROFESSIONAL',
+    price: 899,
+    description: 'Professional version with advanced features',
+    features: [
       {
-        name: '入門版',
-        price: 0,
-        description: '基本功能免費版本',
-        features: [
-          {
-            name: 'storage',
-            value: '10GB',
-            description: '儲存空間',
-          },
-          {
-            name: 'ai_assistant',
-            value: 'Limited',
-            description: 'AI 助手功能',
-          },
-          {
-            name: 'team_members',
-            value: '1',
-            description: '團隊成員數',
-          },
-        ],
-        remarks: '',
-        isActive: true,
-        createdAt: 1725372460,
-        updatedAt: 1725372460,
-        deletedAt: 0,
+        name: 'CLOUD_STORAGE',
+        value: '1TB',
       },
       {
-        name: '專業版',
-        price: 899,
-        description: '進階功能專業版本',
-        features: [
-          {
-            name: 'storage',
-            value: '1TB',
-            description: '儲存空間',
-          },
-          {
-            name: 'ai_assistant',
-            value: 'Unlimited',
-            description: 'AI 助手功能',
-          },
-          {
-            name: 'team_members',
-            value: '10',
-            description: '團隊成員數',
-          },
-        ],
-        remarks: '',
-        isActive: false,
-        createdAt: 1725372460,
-        updatedAt: 1725372460,
-        deletedAt: 0,
+        name: 'AI_ASSISTANT',
+        value: 'UNLIMITED_CAPACITY',
       },
       {
-        name: '企業版',
-        price: 8990,
-        description: '完整功能企業版本',
-        features: [
-          {
-            name: 'storage',
-            value: 'Unlimited',
-            description: '儲存空間',
-          },
-          {
-            name: 'ai_assistant',
-            value: 'Advanced functions',
-            description: 'AI 助手進階功能',
-          },
-          {
-            name: 'team_members',
-            value: 'Unlimited',
-            description: '無限團隊成員',
-          },
-        ],
-        remarks: '',
-        isActive: false,
-        createdAt: 1725372460,
-        updatedAt: 1725372460,
-        deletedAt: 0,
+        name: 'MATCHMAKING_PLATFORM',
+        value: 'POST_TASK_REQUIREMENTS',
+      },
+      {
+        name: 'TEAM_MEMBERS',
+        value: 'UP_TO_10_PEOPLE',
+      },
+      {
+        name: 'FINANCIAL_STATEMENTS',
+        value: 'AUTO_UPDATED',
+      },
+      {
+        name: 'TECHNICAL_SUPPORT',
+        value: 'UP_TO_24_HOURS_IN_TOTAL_4_HOURS_PER_SESSION',
+      },
+      {
+        name: 'ADDITIONAL_PERKS',
+        value: '10_ASSET_TAGGING_STICKERS',
       },
     ],
+    remarks: '',
+    isActive: false,
+    createdAt: 1725372460,
+    updatedAt: 1725372460,
+    deletedAt: 0,
   },
   {
-    locale: 'zh-CN',
-    plans: [
+    name: 'ENTERPRISE',
+    price: 8990,
+    description: 'Enterprise version with all features',
+    features: [
       {
-        name: '入门版',
-        price: 0,
-        description: '基本功能免费版本',
-        features: [
-          {
-            name: 'storage',
-            value: '10GB',
-            description: '存储空间',
-          },
-          {
-            name: 'ai_assistant',
-            value: 'Limited',
-            description: 'AI 助手功能',
-          },
-          {
-            name: 'team_members',
-            value: '1',
-            description: '团队成员数',
-          },
-        ],
-        remarks: '',
-        isActive: true,
-        createdAt: 1725372460,
-        updatedAt: 1725372460,
-        deletedAt: 0,
+        name: 'CLOUD_STORAGE',
+        value: 'UNLIMITED',
       },
       {
-        name: '专业版',
-        price: 899,
-        description: '进阶功能专业版本',
-        features: [
-          {
-            name: 'storage',
-            value: '1TB',
-            description: '存储空间',
-          },
-          {
-            name: 'ai_assistant',
-            value: 'Unlimited',
-            description: 'AI 助手功能',
-          },
-          {
-            name: 'team_members',
-            value: '10',
-            description: '团队成员数',
-          },
-        ],
-        remarks: '',
-        isActive: false,
-        createdAt: 1725372460,
-        updatedAt: 1725372460,
-        deletedAt: 0,
+        name: 'REPORT_GENERATION',
+        value: 'CUSTOMIZABLE_REPORTS',
       },
       {
-        name: '企业版',
-        price: 8990,
-        description: '完整功能企业版本',
-        features: [
-          {
-            name: 'storage',
-            value: 'Unlimited',
-            description: '存储空间',
-          },
-          {
-            name: 'ai_assistant',
-            value: 'Advanced functions',
-            description: 'AI 助手进阶功能',
-          },
-          {
-            name: 'team_members',
-            value: 'Unlimited',
-            description: '无限团队成员',
-          },
-        ],
-        remarks: '',
-        isActive: false,
-        createdAt: 1725372460,
-        updatedAt: 1725372460,
-        deletedAt: 0,
+        name: 'MATCHMAKING_PLATFORM',
+        value: 'PRIORITY_VISIBILITY',
+      },
+      {
+        name: 'TEAM_MEMBERS',
+        value: 'UNLIMITED',
+      },
+      {
+        name: 'FINANCIAL_STATEMENTS',
+        value: 'AUTO_UPDATED',
+      },
+      {
+        name: 'API_INTEGRATION',
+        value: 'SYSTEM_SUPPORT',
+      },
+      {
+        name: 'TECHNICAL_SUPPORT',
+        value: 'UP_TO_48_HOURS_IN_TOTAL_4_HOURS_PER_SESSION',
+      },
+      {
+        name: 'ADDITIONAL_PERKS',
+        value: '100_ASSET_TAGGING_STICKERS',
+      },
+      {
+        name: 'ADDITIONAL_PERKS',
+        value: 'ONLINE_AND_OFFLINE_INTEGRATION',
+      },
+      {
+        name: 'ADDITIONAL_PERKS',
+        value: 'HARDWARE_SUPPORT',
       },
     ],
+    remarks: '',
+    isActive: false,
+    createdAt: 1725372460,
+    updatedAt: 1725372460,
+    deletedAt: 0,
   },
 ];
 

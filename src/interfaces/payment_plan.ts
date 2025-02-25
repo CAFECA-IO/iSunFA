@@ -5,7 +5,6 @@
 export interface IFeature {
   name: string;
   value: string;
-  description: string;
 }
 
 export interface IPaymentPlan {
@@ -20,7 +19,4 @@ export interface IPaymentPlan {
   deletedAt: number;
 }
 
-export interface ILocalizedPaymentPlan {
-  locale: string;
-  plans: IPaymentPlan[];
-}
+export interface ILocalizedPaymentPlan extends IPaymentPlan {}
