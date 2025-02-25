@@ -224,6 +224,7 @@ model Country {
 
 model Company {
   id          Int    @id @default(autoincrement())
+  teamId      Int?   @map("team_id") // Info: (20250224 - tzuhan) 讓 company 連結到 team
   name        String
   taxId       String @map("tax_id")
   imageFileId Int    @unique @map("image_file_id")
@@ -232,6 +233,7 @@ model Company {
   updatedAt   Int    @map("updated_at")
   deletedAt   Int?   @map("deleted_at")
 
+  team        Team?  @relation(fields: [teamId], references: [id], onDelete: SetNull)
   imageFile File @relation("company_image_file", fields: [imageFileId], references: [id])
 
   admins                     Admin[]
@@ -1188,8 +1190,8 @@ model TeamPlan {
   price            Int
   extraMemberPrice Int?               @map("extra_member_price")
   features         TeamPlanFeature[]
-  createdAt        DateTime           @default(now()) @map("created_at")
-  updatedAt        DateTime           @updatedAt @map("updated_at")
+  createdAt        Int                @map("created_at")
+  updatedAt        Int                @map("updated_at")
   TeamSubscription TeamSubscription[]
   TeamInvoice      TeamInvoice[]
 
@@ -1202,8 +1204,8 @@ model TeamPlanFeature {
   plan         TeamPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
   featureKey   String   @map("feature_key")
   featureValue String   @map("feature_value")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    Int      @map("created_at")
+  updatedAt    Int      @map("updated_at")
 
   @@map("team_plan_feature")
 }
@@ -1215,14 +1217,18 @@ enum TeamPlanType {
 }
 
 model Team {
-  id        Int      @id @default(autoincrement())
-  name      String
-  ownerId   Int      @map("owner_id")
-  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade) // 定義關聯
-  createdAt DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  ownerId        Int      @map("owner_id")
+  owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name           String
+  about          String   @default("")
+  profile        String   @default("") 
+  bankInfo       Json     @map("bank_info") @default("{\"code\": \"\", \"number\": \"\"}") 
+  createdAt      Int      @map("created_at")
 
-  members      TeamMember[]
-  subscription TeamSubscription?
+  members        TeamMember[]
+  ledger         Company[]
+  subscription   TeamSubscription?
 
   @@map("team")
 }
@@ -1234,7 +1240,7 @@ model TeamMember {
   userId   Int      @map("user_id")
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   role     TeamRole
-  joinedAt DateTime @default(now())
+  joinedAt Int      @map("joined_at")
 
   @@unique([teamId, userId])
   @@map("team_member")
@@ -1255,18 +1261,18 @@ model TeamSubscription {
   planId Int      @map("plan_id")
   plan   TeamPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
-  autoRenewal   Boolean           @default(false)
-  startDate     DateTime
-  expiredDate   DateTime
-  paymentStatus TeamPaymentStatus
+  autoRenewal   Boolean    @map("auto_renewal")  @default(false)
+  startDate     Int        @map("start_date")
+  expiredDate   Int        @map("expired_date")
+  paymentStatus TeamPaymentStatus @map("payment_status")
 
-  lastTransactionId Int?
+  lastTransactionId Int? @map("last_transaction_id")
   lastTransaction   TeamPaymentTransaction?
 
   invoices TeamInvoice[] // Info: (20250221 - tzuhan) 關聯發票
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   Int    @map("created_at")
+  updatedAt   Int    @map("updated_at")
 
   @@map("team_subscription")
 }
@@ -1282,11 +1288,11 @@ model TeamPaymentTransaction {
   subscriptionId Int              @unique @map("subscription_id") // Info: (20250221 - tzuhan)  設定 `@unique`，確保 1-to-1 關聯
   subscription   TeamSubscription @relation(fields: [subscriptionId], references: [id])
 
-  transactionId String
+  transactionId String            @map("transaction_id")
   amount        Int
-  paymentMethod String
+  paymentMethod String            @map("payment_method")
   status        TransactionStatus
-  createdAt     DateTime          @default(now())
+  createdAt     Int               @map("created_at")
 
   @@map("team_payment_transaction")
 }
@@ -1302,30 +1308,30 @@ model TeamInvoice {
   subscriptionId Int              @map("subscription_id")
   subscription   TeamSubscription @relation(fields: [subscriptionId], references: [id])
 
-  issuedTimestamp DateTime
-  dueTimestamp    DateTime
+  issuedTimestamp Int              @map("issued_timestamp")
+  dueTimestamp    Int              @map("due_timestamp")
 
   planId Int      @map("plan_id")
   plan   TeamPlan @relation(fields: [planId], references: [id])
 
-  planStartDate DateTime
-  planEndDate   DateTime
-  planQuantity  Int
-  planUnitPrice Int
-  planAmount    Int
+  planStartDate Int              @map("plan_start_date")
+  planEndDate   Int              @map("plan_end_date")
+  planQuantity  Int              @map("plan_quantity")
+  planUnitPrice Int              @map("plan_unit_price")
+  planAmount    Int              @map("plan_amount")
   subtotal      Int
   tax           Int
   total         Int
-  amountDue     Int
-  payerName     String
-  payerAddress  String
-  payerPhone    String
-  payerTaxId    String
-  payeeName     String
-  payeeAddress  String
-  payeePhone    String
-  payeeTaxId    String
-  createdAt     DateTime @default(now())
+  amountDue     Int              @map("amount_due")
+  payerName     String           @map("payer_name")
+  payerAddress  String           @map("payer_address")
+  payerPhone    String           @map("payer_phone")
+  payerTaxId    String           @map("payer_tax_id")
+  payeeName     String           @map("payee_name")
+  payeeAddress  String           @map("payee_address")
+  payeePhone    String           @map("payee_phone")
+  payeeTaxId    String           @map("payee_tax_id")
+  createdAt     Int              @map("created_at")
 
   @@map("team_invoice")
 }
