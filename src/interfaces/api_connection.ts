@@ -146,7 +146,7 @@ export type IAPIName =
   | 'GET_TEAM_INVOICE_BY_ID'
   | 'GET_CREDIT_CARD_INFO'
   | 'LIST_PAYMENT_PLAN'
-  | 'ACCOUNT_BOOK_LIST_BY_USER_ID';
+  | 'LIST_ACCOUNT_BOOK_BY_USER_ID';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

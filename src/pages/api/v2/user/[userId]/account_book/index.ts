@@ -92,7 +92,7 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
 ];
 
 const handleGetRequest: IHandleRequest<
-  APIName.ACCOUNT_BOOK_LIST_BY_USER_ID,
+  APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
   IAccountBookForUserWithTeam[]
 > = async ({ query }) => {
   // TODO: (20250225 - Shirley) 實作 API
@@ -114,7 +114,7 @@ export default async function handler(
   try {
     if (req.method === 'GET') {
       const result = await withRequestValidation(
-        APIName.ACCOUNT_BOOK_LIST_BY_USER_ID,
+        APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
         req,
         handleGetRequest
       );
