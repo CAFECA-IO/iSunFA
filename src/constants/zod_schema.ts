@@ -124,6 +124,7 @@ import {
 } from '@/lib/utils/zod_schema/asset';
 import { exportLedgerPostSchema } from '@/lib/utils/zod_schema/export_ledger';
 import { subscriptionSchemas } from '@/lib/utils/zod_schema/subscription';
+import { paymentPlanListSchema } from '@/lib/utils/zod_schema/payment_plan';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -317,5 +318,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.GET_TEAM_INVOICE_BY_ID]: subscriptionSchemas.getInvoice,
   [APIName.GET_CREDIT_CARD_INFO]: subscriptionSchemas.getCreditCard,
 
-  [APIName.LIST_PAYMENT_PLAN]: nullAPISchema,
+  [APIName.LIST_PAYMENT_PLAN]: paymentPlanListSchema,
 };

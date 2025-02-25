@@ -2,29 +2,10 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-
-interface IFeature {
-  name: string;
-  value: string;
-  description: string;
-}
-
-interface IPaymentPlan {
-  name: string;
-  price: number;
-  description: string;
-  features: IFeature[];
-  remarks: string;
-  isActive: boolean;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number;
-}
-
-interface ILocalizedPaymentPlan {
-  locale: string;
-  plans: IPaymentPlan[];
-}
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
+import { IHandleRequest } from '@/interfaces/handleRequest';
+import { ILocalizedPaymentPlan } from '@/interfaces/payment_plan';
 
 const mockPaymentPlans: ILocalizedPaymentPlan[] = [
   {
@@ -287,22 +268,27 @@ const mockPaymentPlans: ILocalizedPaymentPlan[] = [
   },
 ];
 
-async function handleGetRequest() {
+const handleGetRequest: IHandleRequest<
+  APIName.LIST_PAYMENT_PLAN,
+  ILocalizedPaymentPlan[]
+> = async () => {
   const statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   const payload = mockPaymentPlans;
   return { statusMessage, payload };
-}
+};
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ILocalizedPaymentPlan[]>>
+  res: NextApiResponse<IResponseData<ILocalizedPaymentPlan[] | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ILocalizedPaymentPlan[] = [];
+  let payload: ILocalizedPaymentPlan[] | null = null;
 
   try {
     if (req.method === 'GET') {
-      ({ statusMessage, payload } = await handleGetRequest());
+      const result = await withRequestValidation(APIName.LIST_PAYMENT_PLAN, req, handleGetRequest);
+      statusMessage = result.statusMessage;
+      payload = result.payload as ILocalizedPaymentPlan[] | null;
     } else {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
@@ -310,10 +296,10 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   } finally {
-    const { httpCode, result } = formatApiResponse<ILocalizedPaymentPlan[]>(statusMessage, payload);
-    res.status(httpCode).json({
-      ...result,
-      powerby: 'iSunFA v0.9.1+19',
-    });
+    const { httpCode, result } = formatApiResponse<ILocalizedPaymentPlan[] | null>(
+      statusMessage,
+      payload
+    );
+    res.status(httpCode).json(result);
   }
 }

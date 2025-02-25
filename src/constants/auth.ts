@@ -164,5 +164,6 @@ export const AUTH_CHECK = {
   [APIName.LIST_TEAM_INVOICE]: [AuthFunctionsKeysNew.user],
   [APIName.GET_TEAM_INVOICE_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.GET_CREDIT_CARD_INFO]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_PAYMENT_PLAN]: [AuthFunctionsKeysNew.user],
   [APIName.VOUCHER_RESTORE_V2]: [AuthFunctionsKeysNew.user],
 };
