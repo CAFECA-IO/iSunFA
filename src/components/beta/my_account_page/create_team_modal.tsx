@@ -130,6 +130,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     success: createSuccess,
     data,
   } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+
   // Info: (20250224 - Julian) 開啟自動續約、關閉自動續約 API
   const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
     APIName.UPDATE_SUBSCRIPTION
@@ -174,10 +175,10 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   };
 
   // ToDo: (20250218 - Julian) Recall API call
-  const getOwnedTeam = async () => {
+  const getTeam = async () => {
     // Deprecated: (20250218 - Julian) remove eslint-disable
     // eslint-disable-next-line no-console
-    console.log('getOwnedTeam');
+    console.log('getTeam');
   };
 
   // Info: (20250224 - Julian) 打 API 開啟自動續約
@@ -189,10 +190,10 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       params: { teamId },
       body: { plan: planId, autoRenewal: true },
     });
-    // Info: (20250224 - Julian) 打完開啟自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
+    // Info: (20250224 - Julian) 打完開啟自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 Team
     if (success) {
       closeAutoRenewalModal();
-      getOwnedTeam();
+      getTeam();
     }
   };
 
@@ -205,10 +206,10 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       params: { teamId },
       body: { plan: planId, autoRenewal: false },
     });
-    // Info: (20250224 - Julian) 打完關閉自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
+    // Info: (20250224 - Julian) 打完關閉自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 Team
     if (success) {
       closeAutoRenewalModal();
-      getOwnedTeam();
+      getTeam();
     }
   };
 
@@ -246,9 +247,12 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       ? teamNameInput === '' // Info: (20250224 - Julian) 第一步 Team Name 必填
       : currentStep === 2
         ? teamMembers.length <= 0 // Info: (20250224 - Julian) 第二步 Member Email 必填
-        : true;
+        : currentStep === 3
+          ? !teamInvoice // Info: (20250224 - Julian) 第三步顯示 Invoice
+          : true;
 
-  const toTeamPage = () => window.open(`/team/${newTeam?.id}`, '_self');
+  // Info: (20250225 - Julian) 跳轉到 Team Page
+  const toTeamPage = () => window.open(`/users/team/${newTeam?.id}`, '_self');
 
   const toNextStep =
     currentStep === 1
@@ -322,7 +326,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
             key={plan.id}
             team={newTeam}
             plan={plan}
-            getOwnedTeam={getOwnedTeam}
+            getOwnedTeam={getTeam}
             goToPaymentHandler={selectPlan}
             bordered
           />
@@ -363,14 +367,6 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           modalVisibilityHandler={closeAutoRenewalModal}
         />
       )}
-
-      {/* {isConfirmLeaveModalOpen && (
-    <MessageModal
-      messageModalData={messageModalDataForLeavePage}
-      isModalVisible={!!isConfirmLeaveModalOpen}
-      modalVisibilityHandler={handleCancel}
-    />
-  )} */}
     </div>
   );
 
