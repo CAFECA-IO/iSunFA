@@ -5,9 +5,9 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { ILocalizedPaymentPlan } from '@/interfaces/payment_plan';
+import { IPaymentPlan } from '@/interfaces/payment_plan';
 
-const mockPaymentPlans: ILocalizedPaymentPlan[] = [
+const mockPaymentPlans: IPaymentPlan[] = [
   {
     name: 'BEGINNER',
     price: 0,
@@ -42,7 +42,6 @@ const mockPaymentPlans: ILocalizedPaymentPlan[] = [
         value: 'LIVE_CHAT_SUPPORT',
       },
     ],
-    remarks: '',
     isActive: true,
     createdAt: 1725372460,
     updatedAt: 1725372460,
@@ -82,7 +81,6 @@ const mockPaymentPlans: ILocalizedPaymentPlan[] = [
         value: '10_ASSET_TAGGING_STICKERS',
       },
     ],
-    remarks: '',
     isActive: false,
     createdAt: 1725372460,
     updatedAt: 1725372460,
@@ -134,7 +132,6 @@ const mockPaymentPlans: ILocalizedPaymentPlan[] = [
         value: 'HARDWARE_SUPPORT',
       },
     ],
-    remarks: '',
     isActive: false,
     createdAt: 1725372460,
     updatedAt: 1725372460,
@@ -142,10 +139,7 @@ const mockPaymentPlans: ILocalizedPaymentPlan[] = [
   },
 ];
 
-const handleGetRequest: IHandleRequest<
-  APIName.LIST_PAYMENT_PLAN,
-  ILocalizedPaymentPlan[]
-> = async () => {
+const handleGetRequest: IHandleRequest<APIName.LIST_PAYMENT_PLAN, IPaymentPlan[]> = async () => {
   const statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   const payload = mockPaymentPlans;
   return { statusMessage, payload };
@@ -153,16 +147,16 @@ const handleGetRequest: IHandleRequest<
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ILocalizedPaymentPlan[] | null>>
+  res: NextApiResponse<IResponseData<IPaymentPlan[] | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ILocalizedPaymentPlan[] | null = null;
+  let payload: IPaymentPlan[] | null = null;
 
   try {
     if (req.method === 'GET') {
       const result = await withRequestValidation(APIName.LIST_PAYMENT_PLAN, req, handleGetRequest);
       statusMessage = result.statusMessage;
-      payload = result.payload as ILocalizedPaymentPlan[] | null;
+      payload = result.payload as IPaymentPlan[] | null;
     } else {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
@@ -170,10 +164,7 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   } finally {
-    const { httpCode, result } = formatApiResponse<ILocalizedPaymentPlan[] | null>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<IPaymentPlan[] | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

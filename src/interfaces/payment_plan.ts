@@ -12,11 +12,8 @@ export interface IPaymentPlan {
   price: number;
   extraMemberPrice: number;
   features: IFeature[];
-  remarks: string;
   isActive: boolean;
   createdAt: number;
   updatedAt: number;
   deletedAt: number;
 }
-
-export interface ILocalizedPaymentPlan extends IPaymentPlan {}

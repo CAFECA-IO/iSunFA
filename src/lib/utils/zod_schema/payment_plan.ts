@@ -12,23 +12,16 @@ const featureSchema = z.object({
 const paymentPlanSchema = z.object({
   name: z.string(),
   price: z.number(),
-  description: z.string(),
+  extraMemberPrice: z.number(),
   features: z.array(featureSchema),
-  remarks: z.string(),
   isActive: z.boolean(),
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number(),
 });
 
-// Info: (20250225 - Shirley) 定義 LocalizedPaymentPlan 的 Schema
-const localizedPaymentPlanSchema = z.object({
-  locale: z.string(),
-  plans: z.array(paymentPlanSchema),
-});
-
 // Info: (20250225 - Shirley) 定義 API 回應的 Schema
-const paymentPlanResponseSchema = z.array(localizedPaymentPlanSchema);
+const paymentPlanResponseSchema = z.array(paymentPlanSchema);
 
 // Info: (20250225 - Shirley) 定義空的查詢參數 Schema（因為這個 API 不需要任何參數）
 const paymentPlanNullSchema = z.union([z.object({}), z.string()]);
@@ -46,5 +39,4 @@ export const paymentPlanListSchema = {
 // Info: (20250225 - Shirley) 導出型別
 export type IFeatureSchema = z.infer<typeof featureSchema>;
 export type IPaymentPlanSchema = z.infer<typeof paymentPlanSchema>;
-export type ILocalizedPaymentPlanSchema = z.infer<typeof localizedPaymentPlanSchema>;
 export type IPaymentPlanResponse = z.infer<typeof paymentPlanResponseSchema>;
