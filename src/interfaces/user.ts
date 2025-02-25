@@ -13,6 +13,11 @@ export interface IUser {
   deletedAt: number;
 }
 
+export interface IUserProfile extends IUser {
+  device: string;
+  ip: string;
+}
+
 /**
  * Info: (20241024 - Murky)
  * @description user entity interface for backend
