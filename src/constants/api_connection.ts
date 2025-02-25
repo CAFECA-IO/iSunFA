@@ -162,9 +162,13 @@ export enum APIName {
   REMOVE_LOGIN_DEVICE = 'REMOVE_LOGIN_DEVICE',
   LIST_TEAM = 'LIST_TEAM',
   GET_TEAM_BY_ID = 'GET_TEAM_BY_ID',
+  LIST_ACCOUNT_BOOK_BY_TEAM_ID = 'LIST_ACCOUNT_BOOK_BY_TEAM_ID',
+  LIST_MEMBER_BY_TEAM_ID = 'LIST_MEMBER_BY_TEAM_ID',
+  LIST_SUPSCRIPTION = 'LIST_SUPSCRIPTION',
+  GET_SUPSCRIPTION_BY_TEAM_ID = 'GET_SUPSCRIPTION_BY_TEAM_ID',
   UPDATE_SUBSCRIPTION = 'UPDATE_SUBSCRIPTION',
-  LIST_TEAM_INVOICE = 'LIST_TEAM_INVOICE',
-  GET_TEAM_INVOICE_BY_ID = 'GET_TEAM_INVOICE_BY_ID',
+  LIST_SUPSCRIPTION_INVOICE = 'LIST_SUPSCRIPTION_INVOICE',
+  GET_SUPSCRIPTION_INVOICE_BY_TEAM_ID = 'GET_SUPSCRIPTION_INVOICE_BY_TEAM_ID',
   GET_CREDIT_CARD_INFO = 'GET_CREDIT_CARD_INFO',
 }
 
@@ -306,9 +310,13 @@ export enum APIPath {
   REMOVE_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device/:deviceId`,
   LIST_TEAM = `${apiPrefixV2}/team`,
   GET_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
-  UPDATE_SUBSCRIPTION = `${apiPrefixV2}/team/:teamId/subscription`,
-  LIST_TEAM_INVOICE = `${apiPrefixV2}/team/:teamId/invoice`,
-  GET_TEAM_INVOICE_BY_ID = `${apiPrefixV2}/team/:teamId/invoice/:invoiceId`,
+  LIST_ACCOUNT_BOOK_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/account_book`,
+  LIST_MEMBER_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/member`,
+  LIST_SUPSCRIPTION = `${apiPrefixV2}/supscription`,
+  GET_SUPSCRIPTION_BY_TEAM_ID = `${apiPrefixV2}/supscription/:teamId`,
+  UPDATE_SUBSCRIPTION = `${apiPrefixV2}/supscription/:teamId/subscription`,
+  LIST_SUPSCRIPTION_INVOICE = `${apiPrefixV2}/supscription/:teamId/invoice`,
+  GET_SUPSCRIPTION_INVOICE_BY_TEAM_ID = `${apiPrefixV2}/supscription/:teamId/invoice/:invoiceId`,
   GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
 }
 const createConfig = ({
@@ -1012,20 +1020,40 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.GET_TEAM_BY_ID,
   }),
+  [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: createConfig({
+    name: APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_ACCOUNT_BOOK_BY_TEAM_ID,
+  }),
+  [APIName.LIST_MEMBER_BY_TEAM_ID]: createConfig({
+    name: APIName.LIST_MEMBER_BY_TEAM_ID,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_MEMBER_BY_TEAM_ID,
+  }),
+  [APIName.LIST_SUPSCRIPTION]: createConfig({
+    name: APIName.LIST_SUPSCRIPTION,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_SUPSCRIPTION,
+  }),
+  [APIName.GET_SUPSCRIPTION_BY_TEAM_ID]: createConfig({
+    name: APIName.GET_SUPSCRIPTION_BY_TEAM_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_SUPSCRIPTION_BY_TEAM_ID,
+  }),
   [APIName.UPDATE_SUBSCRIPTION]: createConfig({
     name: APIName.UPDATE_SUBSCRIPTION,
     method: HttpMethod.PUT,
     path: APIPath.UPDATE_SUBSCRIPTION,
   }),
-  [APIName.LIST_TEAM_INVOICE]: createConfig({
-    name: APIName.LIST_TEAM_INVOICE,
+  [APIName.LIST_SUPSCRIPTION_INVOICE]: createConfig({
+    name: APIName.LIST_SUPSCRIPTION_INVOICE,
     method: HttpMethod.GET,
-    path: APIPath.LIST_TEAM_INVOICE,
+    path: APIPath.LIST_SUPSCRIPTION_INVOICE,
   }),
-  [APIName.GET_TEAM_INVOICE_BY_ID]: createConfig({
-    name: APIName.GET_TEAM_INVOICE_BY_ID,
+  [APIName.GET_SUPSCRIPTION_INVOICE_BY_TEAM_ID]: createConfig({
+    name: APIName.GET_SUPSCRIPTION_INVOICE_BY_TEAM_ID,
     method: HttpMethod.GET,
-    path: APIPath.GET_TEAM_INVOICE_BY_ID,
+    path: APIPath.GET_SUPSCRIPTION_INVOICE_BY_TEAM_ID,
   }),
   [APIName.GET_CREDIT_CARD_INFO]: createConfig({
     name: APIName.GET_CREDIT_CARD_INFO,
