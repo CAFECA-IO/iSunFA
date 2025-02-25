@@ -8,6 +8,7 @@ import { getSession } from '@/lib/utils/session';
 import { FAKE_TEAM_LIST } from '@/constants/team';
 import loggerBack from '@/lib/utils/logger_back';
 import { HTTP_STATUS } from '@/constants/http';
+import { validateOutputData } from '@/lib/utils/validator';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -35,7 +36,12 @@ const handleGetRequest = async (req: NextApiRequest) => {
   );
 
   const team = FAKE_TEAM_LIST.find((t) => t.id === teamId);
-  payload = team || null;
+  const { isOutputDataValid, outputData } = validateOutputData(APIName.GET_TEAM_BY_ID, team);
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+  }
 
   const result = formatApiResponse(statusMessage, payload);
   return result;
