@@ -10,6 +10,7 @@ import { FAKE_TEAM_LIST } from '@/constants/team';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
+import { validateOutputData } from '@/lib/utils/validator';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -35,7 +36,15 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const options: IPaginatedOptions<ITeam[]> = {
     data: FAKE_TEAM_LIST.slice(0, 1),
   };
-  payload = toPaginatedData(options);
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.LIST_TEAM,
+    toPaginatedData(options)
+  );
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+  }
   const result = formatApiResponse(statusMessage, payload);
   return result;
 };
