@@ -316,4 +316,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_TEAM_INVOICE]: subscriptionSchemas.listInvoiceList,
   [APIName.GET_TEAM_INVOICE_BY_ID]: subscriptionSchemas.getInvoice,
   [APIName.GET_CREDIT_CARD_INFO]: subscriptionSchemas.getCreditCard,
+
+  [APIName.LIST_PAYMENT_PLAN]: nullAPISchema,
 };

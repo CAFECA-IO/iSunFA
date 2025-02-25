@@ -144,7 +144,8 @@ export type IAPIName =
   | 'UPDATE_SUBSCRIPTION'
   | 'LIST_TEAM_INVOICE'
   | 'GET_TEAM_INVOICE_BY_ID'
-  | 'GET_CREDIT_CARD_INFO';
+  | 'GET_CREDIT_CARD_INFO'
+  | 'LIST_PAYMENT_PLAN';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
