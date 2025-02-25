@@ -167,6 +167,7 @@ export enum APIName {
   GET_TEAM_INVOICE_BY_ID = 'GET_TEAM_INVOICE_BY_ID',
   GET_CREDIT_CARD_INFO = 'GET_CREDIT_CARD_INFO',
   LIST_PAYMENT_PLAN = 'LIST_PAYMENT_PLAN',
+  ACCOUNT_BOOK_LIST_BY_USER_ID = 'ACCOUNT_BOOK_LIST_BY_USER_ID',
 }
 
 export enum APIPath {
@@ -312,6 +313,7 @@ export enum APIPath {
   GET_TEAM_INVOICE_BY_ID = `${apiPrefixV2}/team/:teamId/invoice/:invoiceId`,
   GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
   LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
+  ACCOUNT_BOOK_LIST_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
 }
 
 const createConfig = ({
@@ -1044,5 +1046,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.LIST_PAYMENT_PLAN,
     method: HttpMethod.GET,
     path: APIPath.LIST_PAYMENT_PLAN,
+  }),
+  [APIName.ACCOUNT_BOOK_LIST_BY_USER_ID]: createConfig({
+    name: APIName.ACCOUNT_BOOK_LIST_BY_USER_ID,
+    method: HttpMethod.GET,
+    path: APIPath.ACCOUNT_BOOK_LIST_BY_USER_ID,
   }),
 };
