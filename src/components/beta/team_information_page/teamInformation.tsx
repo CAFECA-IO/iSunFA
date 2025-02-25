@@ -181,6 +181,7 @@ const TeamInformation = ({ teamInfo }: teamInfoProps) => {
           isOpen={isNameEditModalOpen}
           onClose={closeNameEditModal} // Info:(20250225 - Anna) 點擊關閉時觸發函數
           onSave={(newName) => {
+            // Todo:(20250225 - Anna) Debug
             // eslint-disable-next-line no-console
             console.log('Saved newName:', newName);
             closeNameEditModal();
@@ -195,6 +196,7 @@ const TeamInformation = ({ teamInfo }: teamInfoProps) => {
           isOpen={isDescriptionEditModalOpen}
           onClose={closeDescriptionEditModal} // Info:(20250225 - Anna) 點擊關閉時觸發函數
           onSave={(newDescription) => {
+            // Todo:(20250225 - Anna) Debug
             // eslint-disable-next-line no-console
             console.log('Saved newDescription:', newDescription);
             closeDescriptionEditModal();
@@ -209,6 +211,7 @@ const TeamInformation = ({ teamInfo }: teamInfoProps) => {
           isOpen={isProfileEditModalOpen}
           onClose={closeProfileEditModal} // Info:(20250225 - Anna) 點擊關閉時觸發函數
           onSave={(newProfile) => {
+            // Todo:(20250225 - Anna) Debug
             // eslint-disable-next-line no-console
             console.log('Saved newProfile:', newProfile);
             closeProfileEditModal();
@@ -223,6 +226,7 @@ const TeamInformation = ({ teamInfo }: teamInfoProps) => {
           isOpen={isBankAccountEditModalOpen}
           onClose={closeBankAccountEditModal} // Info:(20250225 - Anna) 點擊關閉時觸發函數
           onSave={(newBankAccount) => {
+            // Todo:(20250225 - Anna) Debug
             // eslint-disable-next-line no-console
             console.log('Saved newBankAccount:', newBankAccount);
             closeBankAccountEditModal();
