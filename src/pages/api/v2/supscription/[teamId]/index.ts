@@ -1,27 +1,25 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
+import { IUserOwnedTeam } from '@/interfaces/subscription';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
-import { ITeam } from '@/interfaces/team';
-import { FAKE_TEAM_LIST } from '@/constants/team';
+import { FAKE_OWNED_TEAMS } from '@/lib/services/subscription_service';
 
 const handleGetRequest: IHandleRequest<
-  APIName.LIST_TEAM,
-  IPaginatedData<ITeam[]> | null
-> = async () => {
+  APIName.GET_SUPSCRIPTION_BY_TEAM_ID,
+  IUserOwnedTeam | null
+> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<ITeam[]> | null = null;
+  let payload: IUserOwnedTeam | null = null;
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  const options: IPaginatedOptions<ITeam[]> = {
-    data: FAKE_TEAM_LIST.slice(0, 1),
-  };
-  payload = toPaginatedData(options);
+  const { teamId } = query;
+  const team = FAKE_OWNED_TEAMS.find((t) => t.id === teamId);
+  payload = team || null;
+
   return { statusMessage, payload };
 };
 
@@ -29,17 +27,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IPaginatedData<ITeam[]> | null }>;
+  ) => Promise<{ statusMessage: string; payload: IUserOwnedTeam | null }>;
 } = {
-  GET: (req) => withRequestValidation(APIName.LIST_TEAM, req, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.GET_SUPSCRIPTION_BY_TEAM_ID, req, handleGetRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPaginatedData<ITeam[]> | null>>
+  res: NextApiResponse<IResponseData<IUserOwnedTeam | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<ITeam[]> | null = null;
+  let payload: IUserOwnedTeam | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -53,10 +51,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IPaginatedData<ITeam[]> | null>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<IUserOwnedTeam | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

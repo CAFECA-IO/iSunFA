@@ -113,7 +113,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     trigger: createTeam,
     success: createSuccess,
     data,
-  } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+  } = APIHandler<IUserOwnedTeam>(APIName.GET_SUPSCRIPTION_BY_TEAM_ID);
 
   const formBodyRef = useRef<HTMLDivElement>(null);
   // Info: (20250219 - Julian) 根據 formBodyRef 的高度 決定是否顯示 Bounce 動畫
