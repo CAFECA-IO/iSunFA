@@ -11,7 +11,7 @@ const mockPaymentPlans: ILocalizedPaymentPlan[] = [
   {
     name: 'BEGINNER',
     price: 0,
-    description: 'Free version with basic features',
+    extraMemberPrice: 0,
     features: [
       {
         name: 'CLOUD_STORAGE',
@@ -51,7 +51,7 @@ const mockPaymentPlans: ILocalizedPaymentPlan[] = [
   {
     name: 'PROFESSIONAL',
     price: 899,
-    description: 'Professional version with advanced features',
+    extraMemberPrice: 0,
     features: [
       {
         name: 'CLOUD_STORAGE',
@@ -91,7 +91,7 @@ const mockPaymentPlans: ILocalizedPaymentPlan[] = [
   {
     name: 'ENTERPRISE',
     price: 8990,
-    description: 'Enterprise version with all features',
+    extraMemberPrice: 89,
     features: [
       {
         name: 'CLOUD_STORAGE',

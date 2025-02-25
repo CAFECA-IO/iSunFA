@@ -10,7 +10,7 @@ export interface IFeature {
 export interface IPaymentPlan {
   name: string;
   price: number;
-  description: string;
+  extraMemberPrice: number;
   features: IFeature[];
   remarks: string;
   isActive: boolean;
