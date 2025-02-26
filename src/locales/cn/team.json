@@ -56,5 +56,24 @@
     "SKIP_BTN": "暂时跳过",
     "CONTINUE_BTN": "继续",
     "CREATE_BTN": "建立团队"
+  },
+  "TEAM_INFO_PAGE": {
+    "EDIT_TEAM_NAME": "编辑团队名称",
+    "ADD_DESCRIPTION": "添加描述",
+    "ABOUT": "关于",
+    "TEAM_PROFILE": "团队简介",
+    "ADD_BANK_ACCOUNT": "新增银行帐户",
+    "BANK_ACCOUNT": "银行帐户",
+    "DESCRIPTION_PLACEHOLDER": "输入您的团队的描述",
+    "LINK": "连结",
+    "BANK_ACCOUNT_NUMBER": "银行帐户号码",
+    "TEAM_PLAN": "团队方案",
+    "TEAM_MEMBER": "团队成员",
+    "MEMBER_SINGLE": "位成员",
+    "MEMBER_PLURAL": "位成员",
+    "LEDGER_SINGLE": "本帐本",
+    "LEDGER_PLURAL": "本帐本",
+    "LIBRARIES": "图书馆",
+    "TEAM_BANK_ACCOUNT": "团队银行帐户"
   }
 }
