@@ -12,9 +12,16 @@ import PlanInfo from '@/components/beta/payment_page/plan_info';
 import PaymentInfo from '@/components/beta/payment_page/payment_info';
 import CreditCardInfo from '@/components/beta/payment_page/credit_card_info';
 import MessageModal from '@/components/message_modal/message_modal';
+import InvoiceDetail from '@/components/beta/invoice_page/invoice_detail';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
+import {
+  IPlan,
+  IUserOwnedTeam,
+  ITeamInvoice,
+  TPaymentStatus,
+  TPlanType,
+} from '@/interfaces/subscription';
 import { APIName } from '@/constants/api_connection';
-import { IPlan, IUserOwnedTeam, TPaymentStatus, TPlanType } from '@/interfaces/subscription';
 import APIHandler from '@/lib/utils/api_handler';
 
 interface ICreateTeamModalProps {
@@ -93,7 +100,10 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const [teamMemberInput, setTeamMemberInput] = useState<string>(''); // Info: (20250218 - Julian) input value
   const [teamMembers, setTeamMembers] = useState<string[]>([]);
   const [isValidEmail, setIsValidEmail] = useState<boolean>(true);
-  const [isHideArrow, setIsHideArrow] = useState<boolean>(false);
+  const [isHideArrow, setIsHideArrow] = useState<boolean>(false); // Info: (20250225 - Julian) 控制向下滾動的動畫
+  // ToDo: (20250225 - Julian) Implement API call
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [teamInvoice, setTeamInvoice] = useState<ITeamInvoice | null>(null);
 
   // ToDo: (20250218 - Julian) For testing UI
   const fakeTeam = {
@@ -114,12 +124,19 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
-  // ToDo: (20250218 - Julian) Implement API call
-  const {
-    trigger: createTeam,
-    success: createSuccess,
-    data,
-  } = APIHandler<IUserOwnedTeam>(APIName.GET_SUPSCRIPTION_BY_TEAM_ID);
+  // ToDo: (20250225 - Julian) 建立 Team API
+  const { trigger: createTeam, success: createSuccess } = APIHandler<IUserOwnedTeam>(
+    APIName.GET_TEAM_BY_ID
+  );
+
+  // ToDo: (20250225 - Julian) 更新 Team API
+  const { trigger: updateTeam, success: updateSuccess } = APIHandler<IUserOwnedTeam>(
+    APIName.GET_TEAM_BY_ID
+  );
+
+  // ToDo: (20250225 - Julian) 取得 Team API
+  const { trigger: getTeamById } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+
   // Info: (20250224 - Julian) 開啟自動續約、關閉自動續約 API
   const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
     APIName.UPDATE_SUBSCRIPTION
@@ -135,12 +152,26 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   const emailInputRef = useRef<HTMLInputElement>(null);
 
-  // Info: (20250218 - Julian) 送出 API 後，取得 Team 資訊
-  useEffect(() => {
-    if (createSuccess && data) {
-      setNewTeam(data);
+  const getTeam = async () => {
+    // Info: (20250225 - Julian) 取得 Team 資訊
+    if (newTeam?.id) {
+      getTeamById({ params: { teamId: newTeam.id } });
     }
-  }, [createSuccess]);
+  };
+
+  // Info: (20250218 - Julian) 送出 API 後，取得 Team 資訊
+  // ToDo: (20250225 - Julian) 施工中🔧
+  useEffect(() => {
+    if (createSuccess || updateSuccess) {
+      const getNewTeam = async () => {
+        const { data: team, success } = await createTeam({ body: { name: teamNameInput } });
+        if (success && team) {
+          setNewTeam(team);
+        }
+      };
+      getNewTeam();
+    }
+  }, [createSuccess, updateSuccess]);
 
   // Info: (20250218 - Julian) 檢查 Email 格式
   useEffect(() => {
@@ -163,13 +194,6 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     setTeamForAutoRenewalOff(undefined);
   };
 
-  // ToDo: (20250218 - Julian) Recall API call
-  const getOwnedTeam = async () => {
-    // Deprecated: (20250218 - Julian) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('getOwnedTeam');
-  };
-
   // Info: (20250224 - Julian) 打 API 開啟自動續約
   const turnOnAutoRenewal = async () => {
     if (!teamForAutoRenewalOn) return;
@@ -179,10 +203,10 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       params: { teamId },
       body: { plan: planId, autoRenewal: true },
     });
-    // Info: (20250224 - Julian) 打完開啟自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
+    // Info: (20250224 - Julian) 打完開啟自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 Team
     if (success) {
       closeAutoRenewalModal();
-      getOwnedTeam();
+      getTeam();
     }
   };
 
@@ -195,10 +219,10 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       params: { teamId },
       body: { plan: planId, autoRenewal: false },
     });
-    // Info: (20250224 - Julian) 打完關閉自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 userOwnedTeam
+    // Info: (20250224 - Julian) 打完關閉自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 Team
     if (success) {
       closeAutoRenewalModal();
-      getOwnedTeam();
+      getTeam();
     }
   };
 
@@ -236,25 +260,38 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       ? teamNameInput === '' // Info: (20250224 - Julian) 第一步 Team Name 必填
       : currentStep === 2
         ? teamMembers.length <= 0 // Info: (20250224 - Julian) 第二步 Member Email 必填
-        : true;
+        : currentStep === 3
+          ? !teamInvoice // Info: (20250224 - Julian) 第三步顯示 Invoice
+          : true;
+
+  // Info: (20250225 - Julian) 跳轉到 Team Page
+  const toTeamPage = () => window.open(`/users/team/${newTeam?.id}`, '_self');
+
+  // ToDo: (20250221 - Julian) 串接 API的時候，需要檢查是否重複建立：
+  const createOrUpdateTeam = async () => {
+    // Info: (20250225 - Julian) 有 newTeam 資料 -> 第二次建立 -> update
+    if (newTeam) {
+      updateTeam({ params: { teamId: newTeam?.id }, body: { name: teamNameInput } });
+    } else {
+      // Info: (20250225 - Julian) 第一次建立 -> create
+      createTeam({ body: { name: teamNameInput } });
+    }
+  };
 
   const toNextStep =
     currentStep === 1
       ? () => {
-          // Info: (20250218 - Julian) 第一步即建立 Team
-          // ToDo: (20250221 - Julian) 串接 API的時候，需要檢查是否重複建立：
-          // 第一次建立 -> create 第二次建立 -> update
-          createTeam({ body: { name: teamNameInput } });
-          setCurrentStep(2);
-          emailInputRef.current?.focus();
+          createOrUpdateTeam(); // Info: (20250225 - Julian) 建立/更新 Team
+          setCurrentStep(2); // Info: (20250225 - Julian) 第一步到第二步
+          emailInputRef.current?.focus(); // Info: (20250225 - Julian) focus 到 email input
         }
       : currentStep === 2
         ? () => {
+            // Info: (20250225 - Julian) 第二步到第三步
             setCurrentStep(3);
           }
-        : // ToDo: (20250218 - Julian) Implement API call
-          // eslint-disable-next-line no-console
-          () => console.log('Create Team!');
+        : // Info: (20250225 - Julian) 第三步到 Team Page
+          toTeamPage;
 
   const cancelOrSkip =
     currentStep === 1
@@ -301,7 +338,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   });
 
   // Info: (20250224 - Julian) 訂閱方案
-  const subscriptionBody = newTeam && (
+  const subscriptionOverview = newTeam && (
     <div className="flex justify-center gap-lv-7">
       {PLANS.map((plan) => {
         const selectPlan = () => setSelectedPlan(plan);
@@ -310,17 +347,17 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
             key={plan.id}
             team={newTeam}
             plan={plan}
-            getOwnedTeam={getOwnedTeam}
+            getOwnedTeam={getTeam}
             goToPaymentHandler={selectPlan}
             bordered
           />
         );
-      })}{' '}
+      })}
     </div>
   );
 
   // Info: (20250224 - Julian) 付款
-  const paymentBody = newTeam && selectedPlan && (
+  const paymentOverview = newTeam && selectedPlan && (
     <div className="flex min-h-600px w-900px gap-40px">
       <PlanInfo team={newTeam} plan={selectedPlan} />
 
@@ -351,16 +388,14 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           modalVisibilityHandler={closeAutoRenewalModal}
         />
       )}
-
-      {/* {isConfirmLeaveModalOpen && (
-    <MessageModal
-      messageModalData={messageModalDataForLeavePage}
-      isModalVisible={!!isConfirmLeaveModalOpen}
-      modalVisibilityHandler={handleCancel}
-    />
-  )} */}
     </div>
   );
+
+  const invoiceOverview = newTeam && teamInvoice && <InvoiceDetail invoice={teamInvoice} />;
+
+  const step3Body = selectedPlan
+    ? paymentOverview // Info: (20250225 - Julian) 有選擇方案 -> 顯示付款
+    : subscriptionOverview; // Info: (20250225 - Julian) 顯示訂閱方案
 
   const memberFormBody = (
     <div className="flex flex-col gap-8px text-sm">
@@ -410,10 +445,12 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     ) : currentStep === 2 ? (
       // Info: (20250217 - Julian) Member Email
       memberFormBody
+    ) : teamInvoice ? (
+      invoiceOverview // Info: (20250225 - Julian) 顯示 Invoice
     ) : (
       <>
-        {/* Info: (20250218 - Julian) Subscription Plan */}
-        {selectedPlan ? paymentBody : subscriptionBody}
+        {/* Info: (20250218 - Julian) Step 3 body */}
+        {step3Body}
 
         <ul className="ml-20px list-outside list-disc font-normal text-text-neutral-primary marker:text-surface-support-strong-maple">
           <li>{t('team:CREATE_TEAM_MODAL.PLAN_HINT')}</li>
@@ -465,16 +502,18 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
           {/* Info: (20250217 - Julian) Buttons */}
           <div className="flex items-center justify-between">
-            {currentStep > 1 && (
+            {currentStep > 1 && !teamInvoice && (
               <Button type="button" variant="secondaryBorderless" onClick={backHandler}>
                 <TbArrowBackUp size={20} />
                 {t('common:COMMON.BACK')}
               </Button>
             )}
             <div className="ml-auto flex items-center gap-24px">
-              <Button type="button" variant="secondaryBorderless" onClick={cancelOrSkip}>
-                {cancelButtonText}
-              </Button>
+              {!teamInvoice && (
+                <Button type="button" variant="secondaryBorderless" onClick={cancelOrSkip}>
+                  {cancelButtonText}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="tertiary"
