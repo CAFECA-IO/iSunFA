@@ -16,7 +16,7 @@ import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
-import { WORK_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/interfaces/account_book';
 import { DefaultValue } from '@/constants/default_value';
 
 export async function listAdminByCompanyId(companyId: number): Promise<

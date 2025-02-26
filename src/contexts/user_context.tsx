@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICompany, ICompanyAndRole } from '@/interfaces/company';
+import { WORK_TAG, IAccountBook, IAccountBookForUser } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
@@ -16,7 +16,6 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
-import { WORK_TAG } from '@/constants/company';
 
 interface UserContextType {
   credential: string | null;
@@ -43,8 +42,8 @@ interface UserContextType {
     tag: WORK_TAG;
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
-  selectedAccountBook: ICompany | null;
-  selectAccountBook: (companyId: number) => Promise<ICompany | null>;
+  selectedAccountBook: IAccountBook | null;
+  selectAccountBook: (companyId: number) => Promise<IAccountBook | null>;
   updateAccountBook: ({
     companyId,
     action,
@@ -53,8 +52,8 @@ interface UserContextType {
     companyId: number;
     action: string;
     tag: WORK_TAG;
-  }) => Promise<ICompanyAndRole | null>;
-  deleteAccountBook: (companyId: number) => Promise<ICompany | null>;
+  }) => Promise<IAccountBookForUser | null>;
+  deleteAccountBook: (companyId: number) => Promise<IAccountBook | null>;
   deleteAccount: () => Promise<{
     success: boolean;
     data: IUser | null;
@@ -127,7 +126,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
 
   const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
-  const [, setSelectedAccountBook, selectedAccountBookRef] = useStateRef<ICompany | null>(null);
+  const [, setSelectedAccountBook, selectedAccountBookRef] = useStateRef<IAccountBook | null>(null);
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
@@ -140,7 +139,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
   const { trigger: getStatusInfoAPI } = APIHandler<{
     user: IUser;
-    company: ICompany;
+    company: IAccountBook;
     role: IRole;
   }>(APIName.STATUS_INFO_GET);
   // Info: (20241108 - Liz) 取得系統角色列表 API
@@ -152,15 +151,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241101 - Liz) 選擇角色 API
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
   // Info: (20241104 - Liz) 建立帳本 API(原為公司)
-  const { trigger: createAccountBookAPI } = APIHandler<ICompanyAndRole>(
+  const { trigger: createAccountBookAPI } = APIHandler<IAccountBookForUser>(
     APIName.CREATE_USER_COMPANY
   );
   // Info: (20241111 - Liz) 選擇帳本 API(原為公司)
-  const { trigger: selectAccountBookAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
+  const { trigger: selectAccountBookAPI } = APIHandler<IAccountBook>(APIName.COMPANY_SELECT);
   // Info: (20241113 - Liz) 更新帳本 API(原為公司)
-  const { trigger: updateAccountBookAPI } = APIHandler<ICompanyAndRole>(APIName.COMPANY_UPDATE);
+  const { trigger: updateAccountBookAPI } = APIHandler<IAccountBookForUser>(APIName.COMPANY_UPDATE);
   // Info: (20241115 - Liz) 刪除帳本 API(原為公司)
-  const { trigger: deleteAccountBookAPI } = APIHandler<ICompany>(APIName.COMPANY_DELETE);
+  const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.COMPANY_DELETE);
   const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
   const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
 
@@ -312,7 +311,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241001 - Liz) 此函數處理公司資訊:
   // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedAccountBook)，最後回傳公司資訊。
   // 如果公司資料不存在，會將公司資訊設為 null，並回傳 null。
-  const processCompanyInfo = (company: ICompany) => {
+  const processCompanyInfo = (company: IAccountBook) => {
     if (!company || Object.keys(company).length === 0) {
       setSelectedAccountBook(null);
       return null;
@@ -350,7 +349,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241009 - Liz) 此函數是在處理 getStatusInfo 獲得的資料，包含使用者、公司、角色，並根據處理結果來決定下一步的操作:
   // 它會呼叫 processUserInfo, processCompanyInfo, 和 processRoleInfo 分別處理使用者、公司、角色資訊。
   // 依據處理結果，它會執行不同的自動導向邏輯。
-  const handleProcessData = (statusInfo: { user: IUser; company: ICompany; role: IRole }) => {
+  const handleProcessData = (statusInfo: { user: IUser; company: IAccountBook; role: IRole }) => {
     const processedUser = processUserInfo(statusInfo.user);
     const processedRole = processRoleInfo(statusInfo.role);
     const processedCompany = processCompanyInfo(statusInfo.company);

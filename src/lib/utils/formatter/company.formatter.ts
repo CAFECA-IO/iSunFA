@@ -1,5 +1,5 @@
 import { KYCStatus } from '@/constants/kyc';
-import { ICompany, ICompanyDetail, ICompanyEntity } from '@/interfaces/company';
+import { IAccountBook, ICompanyDetail, ICompanyEntity } from '@/interfaces/account_book';
 import { Admin, Company, CompanyKYC, File, Company as PrismaCompany } from '@prisma/client';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
 import { companyEntityValidator } from '@/lib/utils/zod_schema/company';
@@ -8,9 +8,9 @@ export async function formatCompanyList(
   companyList: (Company & {
     imageFile: File;
   })[]
-): Promise<ICompany[]> {
-  const formattedCompanyList: ICompany[] = companyList.map((company) => {
-    const formattedCompany: ICompany = {
+): Promise<IAccountBook[]> {
+  const formattedCompanyList: IAccountBook[] = companyList.map((company) => {
+    const formattedCompany: IAccountBook = {
       ...company,
       imageId: company.imageFile.name,
     };
@@ -24,9 +24,9 @@ export function formatCompany(
   company: Company & {
     imageFile: File | null;
   }
-): ICompany {
+): IAccountBook {
   // Info: (20240830 - Murky) To Emily and Jacky - , File update down below ,it suppose to image name
-  const formattedCompany: ICompany = {
+  const formattedCompany: IAccountBook = {
     ...company,
     imageId: company?.imageFile?.url || '',
   };

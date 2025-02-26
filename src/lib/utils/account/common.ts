@@ -1,4 +1,4 @@
-import { PUBLIC_ACCOUNT_BOOK_ID } from '@/constants/company';
+import { PUBLIC_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import {
   IAccountForSheetDisplay,
   IAccountNode,

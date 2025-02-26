@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICompany } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 import { IResponseData } from '@/interfaces/response_data';
 import { IRole } from '@/interfaces/role';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
@@ -27,7 +27,7 @@ async function checkInput(code: string, name: string, regional: string): Promise
 
 async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: Array<{ company: ICompany; role: IRole }> | null = null;
+  let payload: Array<{ company: IAccountBook; role: IRole }> | null = null;
   const session = await getSession(req);
   const { userId } = session;
 
@@ -50,7 +50,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
 async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: { company: ICompany; role: IRole } | null = null;
+  let payload: { company: IAccountBook; role: IRole } | null = null;
   const { code, name, regional } = req.body;
   const isValid = await checkInput(code, name, regional);
 
@@ -113,7 +113,10 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload: { company: ICompany; role: IRole } | Array<{ company: ICompany; role: IRole }> | null;
+    payload:
+      | { company: IAccountBook; role: IRole }
+      | Array<{ company: IAccountBook; role: IRole }>
+      | null;
   }>;
 } = {
   GET: handleGetRequest,
@@ -124,14 +127,14 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<
     IResponseData<
-      { company: ICompany; role: IRole } | Array<{ company: ICompany; role: IRole }> | null
+      { company: IAccountBook; role: IRole } | Array<{ company: IAccountBook; role: IRole }> | null
     >
   >
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload:
-    | { company: ICompany; role: IRole }
-    | Array<{ company: ICompany; role: IRole }>
+    | { company: IAccountBook; role: IRole }
+    | Array<{ company: IAccountBook; role: IRole }>
     | null = null;
 
   try {
@@ -147,7 +150,7 @@ export default async function handler(
     payload = null;
   } finally {
     const { httpCode, result } = formatApiResponse<
-      { company: ICompany; role: IRole } | Array<{ company: ICompany; role: IRole }> | null
+      { company: IAccountBook; role: IRole } | Array<{ company: IAccountBook; role: IRole }> | null
     >(statusMessage, payload);
     res.status(httpCode).json(result);
   }
