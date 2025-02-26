@@ -1,6 +1,6 @@
 import { IAdmin } from '@/interfaces/admin';
 import { Admin, Company, CompanyKYC, Role, User, UserAgreement, File } from '@prisma/client';
-import { ICompany, ICompanyAndRoleDetail } from '@/interfaces/company';
+import { IAccountBook, ICompanyAndRoleDetail } from '@/interfaces/account_book';
 import { IRole } from '@/interfaces/role';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 import { formatCompany, formatCompanyDetail } from '@/lib/utils/formatter/company.formatter';
@@ -50,7 +50,7 @@ export async function formatAdmin(
 
 export function formatCompanyAndRoleList(
   listedCompanyAndRole: Array<{ company: Company & { imageFile: File | null }; role: Role }>
-): Array<{ company: ICompany; role: IRole }> {
+): Array<{ company: IAccountBook; role: IRole }> {
   const formattedCompanyAndRoleList = listedCompanyAndRole.map((companyAndRole) => {
     const formattedCompany = formatCompany(companyAndRole.company);
     const formattedRole = companyAndRole.role;
@@ -64,7 +64,7 @@ export function formatCompanyAndRole(companyAndRole: {
   tag: string;
   order: number;
   role: Role;
-}): { company: ICompany; role: IRole; tag: string; order: number } {
+}): { company: IAccountBook; role: IRole; tag: string; order: number } {
   const formattedCompany = formatCompany(companyAndRole.company);
   const formattedRole = companyAndRole.role;
   return {

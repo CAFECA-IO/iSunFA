@@ -39,6 +39,9 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
     }
   };
 
+  // ToDo: (20250224 - Liz) 打 API 邀請成員
+  const inviteMembers = () => {};
+
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="overflow-hidden rounded-md">
@@ -120,7 +123,7 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
             </button>
             <button
               type="button"
-              onClick={() => {}}
+              onClick={inviteMembers}
               disabled={emailsToInvite.length === 0}
               className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
