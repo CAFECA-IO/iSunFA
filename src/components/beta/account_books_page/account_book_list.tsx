@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction } from 'react';
 import AccountBookItem from '@/components/beta/account_books_page/account_book_item';
-import { IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 
 interface AccountBookListProps {
   accountBookList: IAccountBookForUser[];

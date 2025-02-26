@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } fr
 import { useTranslation } from 'next-i18next';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
-import { IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';

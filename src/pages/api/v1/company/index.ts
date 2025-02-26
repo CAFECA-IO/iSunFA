@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAccountBook } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 import { IResponseData } from '@/interfaces/response_data';
 import { IRole } from '@/interfaces/role';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';

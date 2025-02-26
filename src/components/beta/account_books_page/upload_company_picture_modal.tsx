@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { IoCloseOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
-import { IAccountBook, IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBook, IAccountBookForUser } from '@/interfaces/account_book';
 import { IFileUIBeta } from '@/interfaces/file';
 import { UploadType } from '@/constants/file';
 import { APIName } from '@/constants/api_connection';

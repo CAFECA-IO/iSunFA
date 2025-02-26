@@ -1,4 +1,4 @@
-import { IAccountBook } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 import { IRole } from '@/interfaces/role';
 import { IUser } from '@/interfaces/user';
 

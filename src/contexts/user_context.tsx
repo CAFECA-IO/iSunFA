@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { IAccountBook, IAccountBookForUser } from '@/interfaces/company';
+import { WORK_TAG, IAccountBook, IAccountBookForUser } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
@@ -16,7 +16,6 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
-import { WORK_TAG } from '@/constants/company';
 
 interface UserContextType {
   credential: string | null;

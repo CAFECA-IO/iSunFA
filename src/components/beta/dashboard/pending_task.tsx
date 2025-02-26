@@ -3,7 +3,7 @@ import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layo
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
-import { IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 import { APIName } from '@/constants/api_connection';
 import DonutChart from '@/components/beta/dashboard/donut_chart';
 import TaskType from '@/components/beta/dashboard/task_type';

@@ -1,6 +1,18 @@
-import { WORK_TAG } from '@/constants/company';
 import { IRole } from '@/interfaces/role';
 import { ITeam } from '@/interfaces/team';
+
+export const PUBLIC_ACCOUNT_BOOK_ID = 1002;
+export const NO_ACCOUNT_BOOK_ID = 555;
+export const CANCEL_ACCOUNT_BOOK_ID: number = -1;
+export enum WORK_TAG {
+  ALL = 'all',
+  FINANCIAL = 'financial',
+  TAX = 'tax',
+}
+export enum ACCOUNT_BOOK_UPDATE_ACTION {
+  SET_TO_TOP = 'setToTop',
+  UPDATE_TAG = 'updateTag',
+}
 
 // Info: (20250226 - Liz) 原為 ICompany (因為公司已經改名成帳本)
 // Info: (20250226 - Liz) 新增一個屬性 isPrivate ，用來判斷是否為私人帳本，這只有 owner 可以設定。如果是公開帳本，帳本才可以被其他使用者看到

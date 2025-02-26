@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { IAccountBook } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession, setSession } from '@/lib/utils/session';

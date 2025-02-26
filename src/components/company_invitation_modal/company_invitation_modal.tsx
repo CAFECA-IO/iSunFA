@@ -10,7 +10,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAdmin } from '@/interfaces/admin';
-import { IAccountBook } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 import { useTranslation } from 'next-i18next';
 
 interface ICompanyInvitationModal {

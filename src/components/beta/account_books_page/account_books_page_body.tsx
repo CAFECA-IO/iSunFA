@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BsEnvelope, BsPlusLg } from 'react-icons/bs';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';

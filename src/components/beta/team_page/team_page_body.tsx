@@ -5,7 +5,7 @@ import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_pict
 import TeamHeader from '@/components/beta/team_page/team_header';
 import TeamPageButtons from '@/components/beta/team_page/team_page_buttons';
 import { useTranslation } from 'next-i18next';
-import { IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 import { useUserCtx } from '@/contexts/user_context';
 import NoData from '@/components/beta/account_books_page/no_data';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';

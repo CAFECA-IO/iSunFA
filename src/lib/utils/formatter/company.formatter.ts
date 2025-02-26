@@ -1,5 +1,5 @@
 import { KYCStatus } from '@/constants/kyc';
-import { IAccountBook, ICompanyDetail, ICompanyEntity } from '@/interfaces/company';
+import { IAccountBook, ICompanyDetail, ICompanyEntity } from '@/interfaces/account_book';
 import { Admin, Company, CompanyKYC, File, Company as PrismaCompany } from '@prisma/client';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
 import { companyEntityValidator } from '@/lib/utils/zod_schema/company';

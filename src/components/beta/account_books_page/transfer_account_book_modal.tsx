@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useState } from 'react';
-import { IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 import { IoCloseOutline } from 'react-icons/io5';
 import { PiShareFatBold } from 'react-icons/pi';
 import { useTranslation } from 'next-i18next';

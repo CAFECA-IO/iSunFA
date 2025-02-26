@@ -4,7 +4,7 @@ import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
-import { IAccountBook } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useTranslation } from 'next-i18next';

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Pagination from '@/components/pagination/pagination';
-import { IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';

@@ -1,4 +1,4 @@
-import { IAccountBook } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 
 export interface ITodo {
   id: number;

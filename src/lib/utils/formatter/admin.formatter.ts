@@ -1,6 +1,6 @@
 import { IAdmin } from '@/interfaces/admin';
 import { Admin, Company, CompanyKYC, Role, User, UserAgreement, File } from '@prisma/client';
-import { IAccountBook, ICompanyAndRoleDetail } from '@/interfaces/company';
+import { IAccountBook, ICompanyAndRoleDetail } from '@/interfaces/account_book';
 import { IRole } from '@/interfaces/role';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 import { formatCompany, formatCompanyDetail } from '@/lib/utils/formatter/company.formatter';

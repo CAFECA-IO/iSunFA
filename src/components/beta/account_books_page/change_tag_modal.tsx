@@ -2,8 +2,7 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountBookForUser } from '@/interfaces/company';
-import { WORK_TAG } from '@/constants/company';
+import { WORK_TAG, IAccountBookForUser } from '@/interfaces/account_book';
 
 interface ChangeTagModalProps {
   accountBookToEdit: IAccountBookForUser;

@@ -1,7 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { IAccountBook, IAccountBookForUser } from '@/interfaces/company';
+import {
+  IAccountBook,
+  IAccountBookForUser,
+  ACCOUNT_BOOK_UPDATE_ACTION,
+} from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
 import { deleteCompanyById } from '@/lib/utils/repo/company.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
@@ -15,7 +19,6 @@ import {
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
-import { ACCOUNT_BOOK_UPDATE_ACTION } from '@/constants/company';
 import { Company, Role, File } from '@prisma/client';
 
 const handleGetRequest: IHandleRequest<

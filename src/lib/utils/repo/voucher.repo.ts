@@ -1,4 +1,4 @@
-// ToDo: (20241011 - Jacky) Temporarily commnet the following code for the beta transition
+// ToDo: (20241011 - Jacky) Temporarily comment the following code for the beta transition
 import {
   getTimestampNow,
   pageToOffset,
@@ -14,7 +14,7 @@ import {
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import type { ILineItem, ILineItemEntity } from '@/interfaces/line_item';
-import { PUBLIC_ACCOUNT_BOOK_ID } from '@/constants/company';
+import { PUBLIC_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 import {
   IGetManyVoucherResponseButOne,
@@ -25,7 +25,7 @@ import {
 } from '@/interfaces/voucher';
 import { SortBy, SortOrder } from '@/constants/sort';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import type { ICompanyEntity } from '@/interfaces/company';
+import type { ICompanyEntity } from '@/interfaces/account_book';
 import type { IEventEntity } from '@/interfaces/event';
 import { IUserEntity } from '@/interfaces/user';
 import { assert } from 'console';

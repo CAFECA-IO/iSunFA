@@ -12,7 +12,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
 import { ICounterparty } from '@/interfaces/counterparty';
-import { ICompanyTaxIdAndName } from '@/interfaces/company';
+import { ICompanyTaxIdAndName } from '@/interfaces/account_book';
 
 interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
   isModalVisible: boolean;

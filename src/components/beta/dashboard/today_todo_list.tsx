@@ -6,7 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 import { ITodoCompany } from '@/interfaces/todo';
 
 const ToDoListNotLink = () => {

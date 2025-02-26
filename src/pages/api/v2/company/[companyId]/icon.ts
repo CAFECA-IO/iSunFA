@@ -9,7 +9,7 @@ import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { loggerError } from '@/lib/utils/logger_back';
 import { Company, File } from '@prisma/client';
-import { IAccountBook } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 
 const handlePutRequest: IHandleRequest<
   APIName.COMPANY_PUT_ICON,

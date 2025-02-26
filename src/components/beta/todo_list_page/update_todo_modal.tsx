@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountBook, IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBook, IAccountBookForUser } from '@/interfaces/account_book';
 import { ITodoCompany } from '@/interfaces/todo';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';

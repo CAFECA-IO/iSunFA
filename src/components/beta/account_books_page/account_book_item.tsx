@@ -1,12 +1,11 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
-import { IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBookForUser, CANCEL_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import { IoArrowForward, IoClose } from 'react-icons/io5';
 import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
 import { PiShareFatBold } from 'react-icons/pi';
 import CompanyTag from '@/components/beta/account_books_page/company_tag';
-import { CANCEL_ACCOUNT_BOOK_ID } from '@/constants/company';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';

@@ -4,7 +4,7 @@ import { ITeam } from '@/interfaces/team';
 import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_picture_modal';
 import TeamHeader from '@/components/beta/team_page/team_header';
 import { useTranslation } from 'next-i18next';
-import { IAccountBookForUser } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 import { useUserCtx } from '@/contexts/user_context';
 import NoData from '@/components/beta/account_books_page/no_data';
 import TeamInformation from '@/components/beta/team_information_page/teamInformation';

@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { IAccountBook } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
 import { setSession } from '@/lib/utils/session';
 import { withRequestValidation } from '@/lib/utils/middleware';
