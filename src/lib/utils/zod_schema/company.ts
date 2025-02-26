@@ -77,14 +77,14 @@ export const companyOutputSchema = companyPrismaSchema.strip().transform((data) 
   return output;
 });
 
-const companyRoleOutputSchema = z.object({
+export const companyRoleOutputSchema = z.object({
   company: companyOutputSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number().int(),
   role: rolePrimsaSchema,
 });
 // Info: (20241028 - Jacky) Paginated data schema
-const paginatedCompanyAndroleOutputSchema = paginatedDataSchema(companyRoleOutputSchema);
+export const paginatedCompanyAndroleOutputSchema = paginatedDataSchema(companyRoleOutputSchema);
 
 const listedCompanyAndRoleOutputSchema = z.array(companyRoleOutputSchema);
 

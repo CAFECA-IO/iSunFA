@@ -1,7 +1,9 @@
 import { TPlanType } from '@/interfaces/subscription';
 import { TeamRole } from '@/interfaces/team';
 import { z } from 'zod';
-import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { nullSchema } from '@/lib/utils/zod_schema/common';
+import { paginatedCompanyAndroleOutputSchema } from '@/lib/utils/zod_schema/company';
 
 export const TeamSchema = z.object({
   id: z.string(),
@@ -30,42 +32,55 @@ export const TeamSchema = z.object({
     editable: z.boolean(),
   }),
 });
-export const nullSchema = z.union([z.object({}), z.string(), z.undefined()]);
-export const ITeamGetQueryValidator = z.object({
+
+export const ITeamMemberSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  imageId: z.string(),
+  email: z.string(),
+  role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
+  editable: z.boolean(),
+});
+
+export const getByTeamIdSchema = z.object({
+  teamId: z.string(),
+});
+
+export const listByTeamIdQuerySchema = paginatedDataQuerySchema.extend({
   teamId: z.string(),
 });
 
 export const teamSchemas = {
   list: {
     input: {
-      querySchema: nullSchema,
-      bodySchema: nullSchema,
+      querySchema: paginatedDataQuerySchema,
+      bodySchema: z.object({}).optional(),
     },
     outputSchema: paginatedDataSchema(TeamSchema),
     frontend: nullSchema,
   },
   get: {
     input: {
-      querySchema: ITeamGetQueryValidator,
-      bodySchema: nullSchema,
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({}).optional(),
     },
     outputSchema: TeamSchema,
     frontend: nullSchema,
   },
   listAccountBook: {
     input: {
-      querySchema: nullSchema,
-      bodySchema: nullSchema,
+      querySchema: listByTeamIdQuerySchema,
+      bodySchema: z.object({}).optional(),
     },
-    outputSchema: nullSchema,
+    outputSchema: paginatedCompanyAndroleOutputSchema,
     frontend: nullSchema,
   },
   listMember: {
     input: {
-      querySchema: nullSchema,
-      bodySchema: nullSchema,
+      querySchema: listByTeamIdQuerySchema,
+      bodySchema: z.object({}).optional(),
     },
-    outputSchema: nullSchema,
+    outputSchema: paginatedDataSchema(ITeamMemberSchema),
     frontend: nullSchema,
   },
 };

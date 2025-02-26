@@ -15,15 +15,15 @@ import { FAKE_INVOICE_LIST } from '@/lib/services/subscription_service';
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
 
-  const isLogin = await checkSessionUser(session, APIName.LIST_SUPSCRIPTION_INVOICE, req);
+  const isLogin = await checkSessionUser(session, APIName.LIST_SUBSCRIPTION_INVOICE, req);
   if (!isLogin) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
   }
-  const isAuth = await checkUserAuthorization(APIName.LIST_SUPSCRIPTION_INVOICE, req, session);
+  const isAuth = await checkUserAuthorization(APIName.LIST_SUBSCRIPTION_INVOICE, req, session);
   if (!isAuth) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
-  const { query } = checkRequestData(APIName.LIST_SUPSCRIPTION_INVOICE, req, session);
+  const { query } = checkRequestData(APIName.LIST_SUBSCRIPTION_INVOICE, req, session);
   if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }

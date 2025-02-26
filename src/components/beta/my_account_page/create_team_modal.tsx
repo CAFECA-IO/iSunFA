@@ -119,7 +119,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     trigger: createTeam,
     success: createSuccess,
     data,
-  } = APIHandler<IUserOwnedTeam>(APIName.GET_SUPSCRIPTION_BY_TEAM_ID);
+  } = APIHandler<IUserOwnedTeam>(APIName.GET_SUBSCRIPTION_BY_TEAM_ID);
   // Info: (20250224 - Julian) 開啟自動續約、關閉自動續約 API
   const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
     APIName.UPDATE_SUBSCRIPTION

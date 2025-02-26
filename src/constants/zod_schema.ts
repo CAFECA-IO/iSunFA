@@ -316,11 +316,11 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: teamSchemas.listAccountBook,
   [APIName.LIST_MEMBER_BY_TEAM_ID]: teamSchemas.listMember,
 
-  [APIName.LIST_SUPSCRIPTION]: subscriptionSchemas.list,
-  [APIName.GET_SUPSCRIPTION_BY_TEAM_ID]: subscriptionSchemas.get,
+  [APIName.LIST_SUBSCRIPTION]: subscriptionSchemas.list,
+  [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: subscriptionSchemas.get,
   [APIName.UPDATE_SUBSCRIPTION]: subscriptionSchemas.update,
-  [APIName.LIST_SUPSCRIPTION_INVOICE]: subscriptionSchemas.listInvoiceList,
-  [APIName.GET_SUPSCRIPTION_INVOICE_BY_TEAM_ID]: subscriptionSchemas.getInvoice,
+  [APIName.LIST_SUBSCRIPTION_INVOICE]: subscriptionSchemas.listInvoiceList,
+  [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: subscriptionSchemas.getInvoice,
 
   [APIName.GET_CREDIT_CARD_INFO]: subscriptionSchemas.getCreditCard,
 };
