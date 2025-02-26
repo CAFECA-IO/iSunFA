@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { IoCloseOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
-import { IAccountBook, IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBook, IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { IFileUIBeta } from '@/interfaces/file';
 import { UploadType } from '@/constants/file';
 import { APIName } from '@/constants/api_connection';
@@ -10,9 +10,9 @@ import UploadArea from '@/components/upload_area/upload_area';
 import { useUserCtx } from '@/contexts/user_context';
 
 interface UploadCompanyPictureModalProps {
-  accountBookToUploadPicture: IAccountBookForUser;
+  accountBookToUploadPicture: IAccountBookForUserWithTeam;
   isModalOpen: boolean;
-  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
+  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
 }
 
