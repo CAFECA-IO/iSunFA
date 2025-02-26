@@ -11,7 +11,7 @@ import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 import { FAKE_OWNED_TEAMS } from '@/lib/services/subscription_service';
 
 const handleGetRequest: IHandleRequest<
-  APIName.LIST_SUPSCRIPTION,
+  APIName.LIST_SUBSCRIPTION,
   IPaginatedData<IUserOwnedTeam[]> | null
 > = async () => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -31,7 +31,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IPaginatedData<IUserOwnedTeam[]> | null }>;
 } = {
-  GET: (req) => withRequestValidation(APIName.LIST_SUPSCRIPTION, req, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.LIST_SUBSCRIPTION, req, handleGetRequest),
 };
 
 export default async function handler(

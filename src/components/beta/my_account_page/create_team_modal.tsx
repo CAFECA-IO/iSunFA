@@ -130,7 +130,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     trigger: createTeam,
     success: createSuccess,
     data,
-  } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+  } = APIHandler<IUserOwnedTeam>(APIName.GET_SUBSCRIPTION_BY_TEAM_ID);
 
   // ToDo: (20250225 - Julian) 更新 Team API
   const {

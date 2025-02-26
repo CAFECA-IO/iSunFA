@@ -43,3 +43,13 @@ export interface ITeam {
     editable: boolean;
   };
 }
+
+export interface IInviteMember {
+  email: string;
+  isSystemUser: boolean;
+}
+
+export interface IInviteMemberResponse {
+  invitedCount: number;
+  failedEmails: string[];
+}

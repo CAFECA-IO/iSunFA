@@ -9,7 +9,7 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { FAKE_OWNED_TEAMS } from '@/lib/services/subscription_service';
 
 const handleGetRequest: IHandleRequest<
-  APIName.GET_SUPSCRIPTION_BY_TEAM_ID,
+  APIName.GET_SUBSCRIPTION_BY_TEAM_ID,
   IUserOwnedTeam | null
 > = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -29,7 +29,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IUserOwnedTeam | null }>;
 } = {
-  GET: (req) => withRequestValidation(APIName.GET_SUPSCRIPTION_BY_TEAM_ID, req, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.GET_SUBSCRIPTION_BY_TEAM_ID, req, handleGetRequest),
 };
 
 export default async function handler(

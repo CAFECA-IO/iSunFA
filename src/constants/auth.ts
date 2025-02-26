@@ -158,16 +158,18 @@ export const AUTH_CHECK = {
   [APIName.LIST_LOGIN_DEVICE]: [AuthFunctionsKeysNew.user],
   [APIName.REMOVE_LOGIN_DEVICE]: [AuthFunctionsKeysNew.user],
 
+  [APIName.CREATE_TEAM]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_TEAM]: [AuthFunctionsKeysNew.user],
   [APIName.GET_TEAM_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_MEMBER_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.ADD_MEMBER_TO_TEAM]: [AuthFunctionsKeysNew.user],
 
-  [APIName.LIST_SUPSCRIPTION]: [AuthFunctionsKeysNew.user],
-  [APIName.GET_SUPSCRIPTION_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_SUBSCRIPTION]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_SUBSCRIPTION]: [AuthFunctionsKeysNew.user],
-  [APIName.LIST_SUPSCRIPTION_INVOICE]: [AuthFunctionsKeysNew.user],
-  [APIName.GET_SUPSCRIPTION_INVOICE_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_SUBSCRIPTION_INVOICE]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
 
   [APIName.GET_CREDIT_CARD_INFO]: [AuthFunctionsKeysNew.user],
   [APIName.VOUCHER_RESTORE_V2]: [AuthFunctionsKeysNew.user],
