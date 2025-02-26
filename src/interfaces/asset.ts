@@ -1,5 +1,5 @@
 import type { IVoucherEntity } from '@/interfaces/voucher';
-import type { ICompanyEntity } from '@/interfaces/company';
+import type { ICompanyEntity } from '@/interfaces/account_book';
 import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import { z } from 'zod';
 import {

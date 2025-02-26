@@ -1,7 +1,7 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
-import { ICompany } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
@@ -12,9 +12,9 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  const payload: { user: IUser; company: ICompany } = {
+  const payload: { user: IUser; company: IAccountBook } = {
     user: {} as IUser,
-    company: {} as ICompany,
+    company: {} as IAccountBook,
   };
 
   const session = await getSession(req);
@@ -42,17 +42,20 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: { user: IUser; company: ICompany } }>;
+  ) => Promise<{ statusMessage: string; payload: { user: IUser; company: IAccountBook } }>;
 } = {
   GET: handleGetRequest,
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<{ user: IUser; company: ICompany }>>
+  res: NextApiResponse<IResponseData<{ user: IUser; company: IAccountBook }>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: { user: IUser; company: ICompany } = { user: {} as IUser, company: {} as ICompany };
+  let payload: { user: IUser; company: IAccountBook } = {
+    user: {} as IUser,
+    company: {} as IAccountBook,
+  };
   try {
     const handleRequest = methodHandlers[req.method || ''];
     if (handleRequest) {
@@ -64,10 +67,10 @@ export default async function handler(
     const error = _error as Error;
     // ToDo: (20240828 - Jacky) Use logger to log the error
     statusMessage = error.message;
-    payload = { user: {} as IUser, company: {} as ICompany };
+    payload = { user: {} as IUser, company: {} as IAccountBook };
   } finally {
     // ToDo: (20240828 - Jacky) Use logger to log the request
-    const { httpCode, result } = formatApiResponse<{ user: IUser; company: ICompany }>(
+    const { httpCode, result } = formatApiResponse<{ user: IUser; company: IAccountBook }>(
       statusMessage,
       payload
     );

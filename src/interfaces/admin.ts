@@ -1,11 +1,11 @@
-import { ICompany } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 import { IRole } from '@/interfaces/role';
 import { IUser } from '@/interfaces/user';
 
 export interface IAdmin {
   id: number;
   user: IUser;
-  company: ICompany;
+  company: IAccountBook;
   role: IRole;
   email: string;
   status: boolean;

@@ -4,7 +4,7 @@ import { ITeam } from '@/interfaces/team';
 import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_picture_modal';
 import TeamHeader from '@/components/beta/team_page/team_header';
 import { useTranslation } from 'next-i18next';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 import { useUserCtx } from '@/contexts/user_context';
 import NoData from '@/components/beta/account_books_page/no_data';
 import TeamInformation from '@/components/beta/team_information_page/teamInformation';
@@ -31,10 +31,12 @@ const TeamInformationPageBody = ({ team }: TeamPageBodyProps) => {
   const { deleteAccountBook } = useUserCtx();
   const [teamInfo, setTeamInfo] = useState<ITeam | undefined>();
   const [teamToUploadPicture, setTeamToUploadPicture] = useState<ITeam | undefined>();
-  const [accountBookToTransfer, setAccountBookToTransfer] = useState<ICompanyAndRole | undefined>();
-  const [accountBookToDelete, setAccountBookToDelete] = useState<ICompanyAndRole | undefined>();
+  const [accountBookToTransfer, setAccountBookToTransfer] = useState<
+    IAccountBookForUser | undefined
+  >();
+  const [accountBookToDelete, setAccountBookToDelete] = useState<IAccountBookForUser | undefined>();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
-    ICompanyAndRole | undefined
+    IAccountBookForUser | undefined
   >();
   const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
   const [isInviteMembersModalOpen, setIsInviteMembersModalOpen] = useState<boolean>(false);

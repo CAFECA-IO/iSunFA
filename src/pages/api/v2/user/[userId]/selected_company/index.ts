@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { ICompany } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
 import { setSession } from '@/lib/utils/session';
 import { withRequestValidation } from '@/lib/utils/middleware';
@@ -42,17 +42,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: ICompany | null }>;
+  ) => Promise<{ statusMessage: string; payload: IAccountBook | null }>;
 } = {
   PUT: (req) => withRequestValidation(APIName.COMPANY_SELECT, req, handlePutRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompany | null>>
+  res: NextApiResponse<IResponseData<IAccountBook | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | null = null;
+  let payload: IAccountBook | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -66,7 +66,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<ICompany | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<IAccountBook | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }
