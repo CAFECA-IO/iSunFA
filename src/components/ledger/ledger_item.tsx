@@ -46,7 +46,7 @@ const LedgerItem = React.memo(
     );
 
     const linkHref = {
-      pathname: `/users/accounting/${voucherId}}`, // Info: (20241225 - Anna) 傳票詳細頁面路徑
+      pathname: `/users/accounting/${voucherId}?voucherNo=${voucherNumber}`, // Info: (20250226 - Anna) 傳票詳細頁面路徑
       query: {
         from: 'ledger', // Info: (20241225 - Anna) from=ledger 為了返回時能回到分類帳頁面
         startDate: selectedDateRange.startTimeStamp,
