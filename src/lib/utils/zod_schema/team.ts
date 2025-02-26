@@ -3,7 +3,7 @@ import { TeamRole } from '@/interfaces/team';
 import { z } from 'zod';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { nullSchema } from '@/lib/utils/zod_schema/common';
-import { paginatedCompanyAndroleOutputSchema } from '@/lib/utils/zod_schema/company';
+import { paginatedAccountBookForUserSchema } from '@/lib/utils/zod_schema/company';
 
 export const TeamSchema = z.object({
   id: z.string(),
@@ -50,14 +50,36 @@ export const listByTeamIdQuerySchema = paginatedDataQuerySchema.extend({
   teamId: z.string(),
 });
 
+export const addMemberBodySchema = z.array(z.string().email()).min(1, '至少需要邀請一名成員');
+
+export const addMemberResponseSchema = z.object({
+  invitedCount: z.number(),
+  failedEmails: z.array(z.string().email()),
+});
+
 export const teamSchemas = {
+  create: {
+    input: {
+      querySchema: nullSchema,
+      bodySchema: z.object({
+        name: z.string(),
+        members: z.array(z.string().email()).optional(),
+        planType: z.enum(Object.values(TPlanType) as [TPlanType, ...TPlanType[]]),
+        about: z.string().optional(),
+        profile: z.string().optional(),
+        bankInfo: z.object({ code: z.number(), number: z.string() }).optional(),
+      }),
+    },
+    outputSchema: TeamSchema,
+    frontend: TeamSchema,
+  },
   list: {
     input: {
       querySchema: paginatedDataQuerySchema,
       bodySchema: z.object({}).optional(),
     },
     outputSchema: paginatedDataSchema(TeamSchema),
-    frontend: nullSchema,
+    frontend: paginatedDataSchema(TeamSchema),
   },
   get: {
     input: {
@@ -65,15 +87,15 @@ export const teamSchemas = {
       bodySchema: z.object({}).optional(),
     },
     outputSchema: TeamSchema,
-    frontend: nullSchema,
+    frontend: TeamSchema,
   },
   listAccountBook: {
     input: {
       querySchema: listByTeamIdQuerySchema,
       bodySchema: z.object({}).optional(),
     },
-    outputSchema: paginatedCompanyAndroleOutputSchema,
-    frontend: nullSchema,
+    outputSchema: paginatedAccountBookForUserSchema,
+    frontend: paginatedAccountBookForUserSchema,
   },
   listMember: {
     input: {
@@ -81,6 +103,14 @@ export const teamSchemas = {
       bodySchema: z.object({}).optional(),
     },
     outputSchema: paginatedDataSchema(ITeamMemberSchema),
-    frontend: nullSchema,
+    frontend: paginatedDataSchema(ITeamMemberSchema),
+  },
+  addMember: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: addMemberBodySchema,
+    },
+    outputSchema: addMemberResponseSchema,
+    frontend: addMemberResponseSchema,
   },
 };
