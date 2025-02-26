@@ -56,13 +56,9 @@ const UserInfo: React.FC<UserInfoProps> = ({
       {isIPModalOpen && (
         <IPModal userId={userId} toggleModal={toggleIPModal} pageData={loginDevices} />
       )}
-      <Image
-        alt="avatar"
-        src={imageId}
-        width={80}
-        height={80}
-        className="rounded-full group-hover:brightness-50"
-      />
+      <div className="h-80px w-80px flex-none overflow-hidden rounded-full group-hover:brightness-50">
+        <Image alt="avatar" src={imageId} width={80} height={80} />
+      </div>
       <div>
         <div className="mb-lv-4 flex items-center gap-3 text-sm text-gray-700">
           <TbUserCircle size={16} />

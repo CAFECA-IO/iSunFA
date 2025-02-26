@@ -23,6 +23,7 @@ import {
 } from '@/interfaces/subscription';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface ICreateTeamModalProps {
   modalVisibilityHandler: () => void;
@@ -125,14 +126,21 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
   // ToDo: (20250225 - Julian) 建立 Team API
-  const { trigger: createTeam, success: createSuccess } = APIHandler<IUserOwnedTeam>(
-    APIName.GET_TEAM_BY_ID
-  );
+  const {
+    trigger: createTeam,
+    success: createSuccess,
+    data,
+  } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
 
   // ToDo: (20250225 - Julian) 更新 Team API
-  const { trigger: updateTeam, success: updateSuccess } = APIHandler<IUserOwnedTeam>(
-    APIName.GET_TEAM_BY_ID
-  );
+  const {
+    trigger: updateTeam,
+    success: updateSuccess,
+    data: updatedTeam,
+  } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+
+  // ToDo: (20250226 - Julian) 邀請成員 API
+  const { trigger: inviteMember } = APIHandler(APIName.GET_TEAM_BY_ID);
 
   // ToDo: (20250225 - Julian) 取得 Team API
   const { trigger: getTeamById } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
@@ -159,19 +167,21 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     }
   };
 
-  // Info: (20250218 - Julian) 送出 API 後，取得 Team 資訊
-  // ToDo: (20250225 - Julian) 施工中🔧
+  // Info: (20250226 - Julian) 送出 API 後，取得 Team 資訊
   useEffect(() => {
-    if (createSuccess || updateSuccess) {
-      const getNewTeam = async () => {
-        const { data: team, success } = await createTeam({ body: { name: teamNameInput } });
-        if (success && team) {
-          setNewTeam(team);
-        }
-      };
-      getNewTeam();
+    if (createSuccess && data) {
+      setNewTeam(data);
+      getTeam();
     }
-  }, [createSuccess, updateSuccess]);
+  }, [createSuccess, data]);
+
+  // Info: (20250226 - Julian) 更新 Team 資訊
+  useEffect(() => {
+    if (updateSuccess && updatedTeam) {
+      setNewTeam(updatedTeam);
+      getTeam();
+    }
+  }, [updateSuccess, updatedTeam]);
 
   // Info: (20250218 - Julian) 檢查 Email 格式
   useEffect(() => {
@@ -264,8 +274,16 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           ? !teamInvoice // Info: (20250224 - Julian) 第三步顯示 Invoice
           : true;
 
-  // Info: (20250225 - Julian) 跳轉到 Team Page
-  const toTeamPage = () => window.open(`/users/team/${newTeam?.id}`, '_self');
+  // Info: (20250225 - Julian) 送出邀請成員的 API，成功後跳轉到 Team Page
+  const doneAllSteps = async () => {
+    const { success } = await inviteMember({
+      params: { teamId: newTeam?.id },
+      body: { emails: teamMembers },
+    });
+    if (success) {
+      window.open(`${ISUNFA_ROUTE.TEAM_PAGE}/${newTeam?.id}`, '_self');
+    }
+  };
 
   // ToDo: (20250221 - Julian) 串接 API的時候，需要檢查是否重複建立：
   const createOrUpdateTeam = async () => {
@@ -290,8 +308,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
             // Info: (20250225 - Julian) 第二步到第三步
             setCurrentStep(3);
           }
-        : // Info: (20250225 - Julian) 第三步到 Team Page
-          toTeamPage;
+        : doneAllSteps; // Info: (20250226 - Julian) 完成所有步驟
 
   const cancelOrSkip =
     currentStep === 1
