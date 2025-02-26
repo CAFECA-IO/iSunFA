@@ -314,8 +314,14 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     currentStep === 1
       ? // Info: (20250218 - Julian) 第一步為 Cancel，即關閉 Modal
         modalVisibilityHandler
-      : // Info: (20250218 - Julian) 第二步開始為 Skip，即跳到下一步
-        toNextStep;
+      : // Info: (20250226 - Julian) 第二步的 Skip，應清空 teamMembers 再跳到下一步
+        currentStep === 2
+        ? () => {
+            setTeamMembers([]);
+            setCurrentStep(3);
+          }
+        : // Info: (20250226 - Julian) 第三步的 Skip，應直接跳到完成
+          doneAllSteps;
 
   const backHandler = () => {
     if (selectedPlan) {
