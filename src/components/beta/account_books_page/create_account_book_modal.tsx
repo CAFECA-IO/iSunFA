@@ -275,6 +275,37 @@ const CreateAccountBookModal = ({
                   )}
                 </div>
               </div>
+
+              {/* // Info: (20250226 - Liz) View */}
+              <div className="flex flex-col gap-8px">
+                <h4 className="font-semibold text-input-text-primary">
+                  Account Book View
+                  <span className="text-text-state-error"> *</span>
+                </h4>
+
+                <div className="flex items-center gap-40px">
+                  <label htmlFor="visibility-private" className="flex items-center gap-8px">
+                    <input
+                      id="visibility-private"
+                      type="radio"
+                      name="visibility"
+                      value="private"
+                      className=""
+                    />
+                    Public
+                  </label>
+                  <label htmlFor="visibility-private" className="flex items-center gap-8px">
+                    <input
+                      id="visibility-private"
+                      type="radio"
+                      name="visibility"
+                      value="private"
+                      className=""
+                    />
+                    Private
+                  </label>
+                </div>
+              </div>
             </section>
 
             <section className="flex justify-end gap-12px">
