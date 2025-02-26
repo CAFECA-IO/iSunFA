@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { ITeam } from '@/interfaces/team';
 import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_picture_modal';
@@ -12,7 +12,10 @@ import TransferAccountBookModal from '@/components/beta/account_books_page/trans
 import UploadCompanyPictureModal from '@/components/beta/account_books_page/upload_company_picture_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
-import { FAKE_TEAM_LIST } from '@/constants/team';
+// import { FAKE_TEAM_LIST } from '@/constants/team';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+// import { IPaginatedData } from '@/interfaces/pagination';
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
 import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
 import { useRouter } from 'next/router';
@@ -45,28 +48,33 @@ const TeamInformationPageBody = ({ team }: TeamPageBodyProps) => {
     setIsInviteMembersModalOpen(true);
   };
 
-  // ToDo: (20250219 - Liz) 取得團隊帳本清單 API (list account book by team id)
-  // const { trigger: getTeamInfoByTeamIdAPI } = APIHandler<IPaginatedData<ICompanyAndRole[]>(APIName.?);
+  // Info: (20250226 - Anna) 取得團隊 Info API
+  // Todo: (20250226 - Anna) 加上IPaginatedData
+  // const { trigger: getTeamInfoByTeamIdAPI } =
+  //   APIHandler < IPaginatedData<ITeam[]>(APIName.GET_TEAM_BY_ID);
+  const { trigger: getTeamInfoByTeamIdAPI } = APIHandler<ITeam>(APIName.GET_TEAM_BY_ID);
 
-  // ToDo: (20250219 - Liz) 打 API 取得團隊帳本清單
-  // const getTeamInfoByTeamId = useCallback(async () => {
-  //   if (!team.id) return;
-  //   setIsLoading(true);
-  //   try {
-  //     const { data: teamInfoData, success } = await getTeamInfoByTeamIdAPI({
-  //       params: { teamId: team.id },
-  //     });
-  //     if (success && teamInfoData) {
-  //       setTeamInfo(teamInfoData);
-  //     }
-  //   } catch (error) {
-  //     // Deprecated: (20250219 - Liz)
-  //     // eslint-disable-next-line no-console
-  //     console.log('取得團隊帳本清單失敗');
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // }, [team.id]);
+  // Info: (20250226 - Anna) 打 API 取得團隊 Info
+  const getTeamInfoByTeamId = useCallback(async () => {
+    if (!teamId) return;
+    // setIsLoading(true);
+    try {
+      const { data: teamInfoData, success } = await getTeamInfoByTeamIdAPI({
+        params: { teamId },
+      });
+      // eslint-disable-next-line no-console
+      console.log('API 回傳資料:', teamInfoData); // Info: (20250226 - Anna) 打印 API 回傳的資料
+      if (success && teamInfoData) {
+        setTeamInfo(teamInfoData);
+      }
+    } catch (error) {
+      // Deprecated: (20250219 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('取得團隊資訊失敗');
+    } finally {
+      // setIsLoading(false);
+    }
+  }, [teamId]);
 
   // Info: (20250219 - Liz) 打 API 刪除帳本(原為公司)
   const handleDeleteAccountBook = async () => {
@@ -100,11 +108,14 @@ const TeamInformationPageBody = ({ team }: TeamPageBodyProps) => {
   };
 
   // Deprecated: (20250219 - Liz) 目前後端尚未提供 API，先用假資料測試
+  // useEffect(() => {
+  //   if (!teamId) return; // Info:(20250224 - Anna) 確保 teamId 存在
+  //   const foundTeam = FAKE_TEAM_LIST.find((target) => target.id === teamId); // Info:(20250224 - Anna) 只取符合 teamId 的團隊
+  //   setTeamInfo(foundTeam);
+  // }, [teamId]);
+
   useEffect(() => {
-    if (!teamId) return; // Info:(20250224 - Anna) 確保 teamId 存在
-    // setTeamInfo(FAKE_TEAM_LIST);
-    const foundTeam = FAKE_TEAM_LIST.find((target) => target.id === teamId); // Info:(20250224 - Anna) 只取符合 teamId 的團隊
-    setTeamInfo(foundTeam);
+    getTeamInfoByTeamId(); // Info: (20250226 - Anna) 在 useEffect 中調用 API
   }, [teamId]);
 
   return (
