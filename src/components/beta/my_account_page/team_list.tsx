@@ -14,14 +14,14 @@ const TeamList: React.FC = () => {
   // const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Info: (20250224 - Julian) 取得使用者擁有的所有團隊 API
-  // const { trigger: getUserOwnedTeamsAPI } = APIHandler<IPaginatedData<ITeam[]>>(APIName.LIST_TEAM);
+  // const { trigger: getTeamsAPI } = APIHandler<IPaginatedData<ITeam[]>>(APIName.LIST_TEAM);
 
   // // Info: (20250224 - Julian) 打 API 取得使用者擁有的所有團隊
   // const getUserOwnedTeams = useCallback(async () => {
   //   setIsLoading(true);
 
   //   try {
-  //     const { data: ownedTeams, success } = await getUserOwnedTeamsAPI();
+  //     const { data: ownedTeams, success } = await getTeamsAPI();
 
   //     if (success && ownedTeams && ownedTeams.data) {
   //       setTeamList(ownedTeams.data);
