@@ -19,7 +19,7 @@ import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty'
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import Loader, { LoaderSize } from '@/components/loader/loader';
-import { ICompanyTaxIdAndName } from '@/interfaces/company';
+import { ICompanyTaxIdAndName } from '@/interfaces/account_book';
 
 interface ICounterpartyInputProps {
   counterparty: ICounterpartyOptional | undefined;

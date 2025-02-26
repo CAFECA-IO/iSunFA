@@ -6,7 +6,7 @@ import { IoCloseOutline } from 'react-icons/io5';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompanySetting } from '@/interfaces/company_setting';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 import { Button } from '@/components/button/button';
 import { LocaleKey } from '@/constants/normal_setting';
 import SelectCountryDropdown from '@/components/user_settings/select_country_dropdown';
@@ -18,7 +18,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface AccountBookEditModalProps {
-  companyAndRole: ICompanyAndRole;
+  companyAndRole: IAccountBookForUser;
   toggleModal: () => void;
 }
 

@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { NO_ACCOUNT_BOOK_ID } from '@/constants/company';
+import { NO_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { Prisma, Todo } from '@prisma/client';
 

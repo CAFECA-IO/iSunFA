@@ -1,7 +1,7 @@
 import { AccountType, EQUITY_TYPE_TO_CODE_MAP, EquityType } from '@/constants/account';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from '@/constants/config';
 import prisma from '@/client';
-import { PUBLIC_ACCOUNT_BOOK_ID } from '@/constants/company';
+import { PUBLIC_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import { pageToOffset, timestampInSeconds } from '@/lib/utils/common';
 import { Account, Prisma } from '@prisma/client';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';

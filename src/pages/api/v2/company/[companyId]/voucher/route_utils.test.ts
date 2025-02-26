@@ -5,7 +5,7 @@ import { CounterpartyType } from '@/constants/counterparty';
 import { EventEntityFrequency, EventEntityType } from '@/constants/event';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { IAssetEntity } from '@/interfaces/asset';
-import { ICompanyEntity } from '@/interfaces/company';
+import { ICompanyEntity } from '@/interfaces/account_book';
 import { ICounterparty } from '@/interfaces/counterparty';
 import { IEventEntity } from '@/interfaces/event';
 import { ILineItemEntity } from '@/interfaces/line_item';

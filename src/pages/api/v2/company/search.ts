@@ -7,7 +7,7 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { loggerError } from '@/lib/utils/logger_back';
-import { ICompanyTaxIdAndName } from '@/interfaces/company';
+import { ICompanyTaxIdAndName } from '@/interfaces/account_book';
 
 const handleGetRequest: IHandleRequest<
   APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID,

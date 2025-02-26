@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { ICompany, ICompanyAndRoleDetail } from '@/interfaces/company';
+import { IAccountBook, ICompanyAndRoleDetail } from '@/interfaces/account_book';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
@@ -20,7 +20,7 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | ICompanyAndRoleDetail | null = null;
+  let payload: IAccountBook | ICompanyAndRoleDetail | null = null;
 
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const session = await getSession(req);
@@ -44,7 +44,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
 async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | null = null;
+  let payload: IAccountBook | null = null;
 
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const { code, name, regional } = req.body;
@@ -75,7 +75,7 @@ async function handlePutRequest(req: NextApiRequest) {
 
 async function handleDeleteRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | null = null;
+  let payload: IAccountBook | null = null;
 
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const session = await getSession(req);
@@ -107,7 +107,7 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: ICompany | ICompanyAndRoleDetail | null }>;
+  ) => Promise<{ statusMessage: string; payload: IAccountBook | ICompanyAndRoleDetail | null }>;
 } = {
   GET: handleGetRequest,
   DELETE: handleDeleteRequest,
@@ -116,10 +116,10 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompany | ICompanyAndRoleDetail | null>>
+  res: NextApiResponse<IResponseData<IAccountBook | ICompanyAndRoleDetail | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | ICompanyAndRoleDetail | null = null;
+  let payload: IAccountBook | ICompanyAndRoleDetail | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -133,7 +133,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<ICompany | ICompanyAndRoleDetail | null>(
+    const { httpCode, result } = formatApiResponse<IAccountBook | ICompanyAndRoleDetail | null>(
       statusMessage,
       payload
     );

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/constants/company';
+import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
 import {
   nullSchema,
   zodStringToBoolean,
