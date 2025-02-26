@@ -9,14 +9,14 @@ import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookForUser } from '@/interfaces/account_book';
 import { FAKE_TEMA_ACCOUNT_BOOKS } from '@/constants/team';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<ICompanyAndRole[]> | null = null;
+  let payload: IPaginatedData<IAccountBookForUser[]> | null = null;
 
   // Info: (20250226 - Tzuhan) 驗證使用者是否登入
   const isLogin = await checkSessionUser(session, APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID, req);
@@ -48,7 +48,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const accountBooks = FAKE_TEMA_ACCOUNT_BOOKS || [];
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  const options: IPaginatedOptions<ICompanyAndRole[]> = {
+  const options: IPaginatedOptions<IAccountBookForUser[]> = {
     data: accountBooks,
     page: Number(query.page) || 1,
     pageSize: Number(query.pageSize) || 10,

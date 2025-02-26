@@ -1,7 +1,6 @@
 import { ITeam, TeamRole, ITeamMember } from '@/interfaces/team';
 import { TPlanType } from '@/interfaces/subscription';
-import { ICompanyAndRole } from '@/interfaces/company';
-import { WORK_TAG } from './company';
+import { IAccountBookForUser, WORK_TAG } from '@/interfaces/account_book';
 
 export const FAKE_TEAM_LIST: ITeam[] = [
   {
@@ -138,7 +137,7 @@ export const FAKE_TEAM_MEMBER_LIST: ITeamMember[] = [
   },
 ];
 
-export const FAKE_TEMA_ACCOUNT_BOOKS: ICompanyAndRole[] = [
+export const FAKE_TEMA_ACCOUNT_BOOKS: IAccountBookForUser[] = [
   {
     company: {
       id: 1,
