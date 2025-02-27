@@ -105,6 +105,14 @@ export const updateMemberResponseSchema = z.union([
   z.null(),
 ]);
 
+// Info: (20250227 - Shirley) 定義刪除團隊成員的回應 Schema
+export const deleteMemberResponseSchema = z.union([
+  z.object({
+    memberId: z.number(),
+  }),
+  z.null(),
+]);
+
 export const teamSchemas = {
   create: {
     input: {
@@ -180,6 +188,17 @@ export const teamSchemas = {
     outputSchema: updateMemberResponseSchema,
     frontend: updateMemberResponseSchema,
   },
+  deleteMember: {
+    input: {
+      querySchema: z.object({
+        teamId: zodStringToNumber,
+        memberId: zodStringToNumber,
+      }),
+      bodySchema: nullSchema,
+    },
+    outputSchema: deleteMemberResponseSchema,
+    frontend: deleteMemberResponseSchema,
+  },
 };
 
 // Info: (20250227 - Shirley) 導出更新團隊資訊的類型
@@ -189,3 +208,6 @@ export type IUpdateTeamResponse = z.infer<typeof updateTeamResponseSchema>;
 // Info: (20250227 - Shirley) 導出更新團隊成員角色的類型
 export type IUpdateMemberBody = z.infer<typeof updateMemberBodySchema>;
 export type IUpdateMemberResponse = z.infer<typeof updateMemberResponseSchema>;
+
+// Info: (20250227 - Shirley) 導出刪除團隊成員的類型
+export type IDeleteMemberResponse = z.infer<typeof deleteMemberResponseSchema>;

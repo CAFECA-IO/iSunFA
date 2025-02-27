@@ -1,15 +1,19 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
+import { formatApiResponse } from '@/lib/utils/common';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { IUpdateMemberBody, IUpdateMemberResponse } from '@/lib/utils/zod_schema/team';
+import {
+  IDeleteMemberResponse,
+  IUpdateMemberBody,
+  IUpdateMemberResponse,
+} from '@/lib/utils/zod_schema/team';
 
 interface IResponse {
   statusMessage: string;
-  payload: IUpdateMemberResponse | null;
+  payload: IUpdateMemberResponse | IDeleteMemberResponse | null;
 }
 
 /**
@@ -37,16 +41,39 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_MEMBER_BY_ID, IResponse['p
     email: 'default@isuncloud.com',
     name: 'Default User',
     createdAt: 1633036800,
-    updatedAt: getTimestampNow(),
+    updatedAt: Date.now() / 1000,
   };
 
   return { statusMessage: STATUS_MESSAGE.SUCCESS_UPDATE, payload };
+};
+
+/**
+ * Info: (20250227 - Shirley) 處理 DELETE 請求，刪除團隊成員，目前為 mock API
+ */
+const handleDeleteRequest: IHandleRequest<
+  APIName.DELETE_MEMBER_BY_ID,
+  IResponse['payload']
+> = async ({ query }) => {
+  const { teamId, memberId } = query;
+
+  // Info: (20250227 - Shirley) 模擬團隊或成員不存在的情況
+  if (teamId === 404 || memberId === 404) {
+    return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+  }
+
+  // Info: (20250227 - Shirley) 模擬刪除成員
+  const payload: IDeleteMemberResponse = {
+    memberId: Number(memberId),
+  };
+
+  return { statusMessage: STATUS_MESSAGE.SUCCESS_DELETE, payload };
 };
 
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
 } = {
   PUT: (req) => withRequestValidation(APIName.UPDATE_MEMBER_BY_ID, req, handlePutRequest),
+  DELETE: (req) => withRequestValidation(APIName.DELETE_MEMBER_BY_ID, req, handleDeleteRequest),
 };
 
 export default async function handler(
