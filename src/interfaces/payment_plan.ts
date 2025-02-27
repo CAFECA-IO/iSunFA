@@ -1,0 +1,19 @@
+/**
+ * Info: (20250225 - Shirley) Payment Plan 相關的介面定義
+ */
+
+export interface IFeature {
+  name: string;
+  value: string;
+}
+
+export interface IPaymentPlan {
+  name: string;
+  price: number;
+  extraMemberPrice: number;
+  features: IFeature[];
+  isActive: boolean;
+  createdAt: number;
+  updatedAt: number;
+  deletedAt: number;
+}
