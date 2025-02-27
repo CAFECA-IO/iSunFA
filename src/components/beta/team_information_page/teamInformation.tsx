@@ -7,6 +7,7 @@ import TeamNameEditModal from '@/components/beta/team_information_page/team_name
 import AboutEditModal from '@/components/beta/team_information_page/about_team_edit_modal';
 import TeamProfileEditModal from '@/components/beta/team_information_page/team_profile_edit_modal';
 import TeamBankAccountEditModal from '@/components/beta/team_information_page/bank_account_edit_modal';
+import { useRouter } from 'next/router';
 
 interface teamInfoProps {
   teamInfo: ITeam;
@@ -14,6 +15,7 @@ interface teamInfoProps {
 
 const TeamInformation = ({ teamInfo }: teamInfoProps) => {
   const { t } = useTranslation(['team']);
+  const router = useRouter();
 
   // Info:(20250225 - Anna) Team Name 彈窗狀態
   const [isNameEditModalOpen, setIsNameEditModalOpen] = useState(false);
@@ -120,7 +122,7 @@ const TeamInformation = ({ teamInfo }: teamInfoProps) => {
               variant="tertiary"
               size="defaultSquare"
               className="ml-4"
-              onClick={() => {}} // Todo:(20250224 - Anna 先留空函數，之後改為開啟彈窗
+              onClick={() => router.push('/users/subscriptions')} // Info:(20250226 - Anna) 點擊後導航
             >
               <FiEdit size={16} />
             </Button>

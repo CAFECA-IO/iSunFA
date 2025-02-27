@@ -24,11 +24,11 @@ const InvoicePage = () => {
 
   // Info: (20250117 - Liz) 取得使用者擁有的團隊資料 API (user is the owner of the team)
   const { trigger: getOwnedTeamAPI } = APIHandler<IUserOwnedTeam>(
-    APIName.GET_SUPSCRIPTION_BY_TEAM_ID
+    APIName.GET_SUBSCRIPTION_BY_TEAM_ID
   );
   // Info: (20250117 - Julian) 取得發票資料 API
   const { trigger: getInvoiceDataAPI } = APIHandler<ITeamInvoice>(
-    APIName.GET_SUPSCRIPTION_INVOICE_BY_TEAM_ID
+    APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID
   );
 
   useEffect(() => {

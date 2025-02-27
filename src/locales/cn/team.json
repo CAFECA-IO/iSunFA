@@ -74,6 +74,8 @@
     "LEDGER_SINGLE": "本帐本",
     "LEDGER_PLURAL": "本帐本",
     "LIBRARIES": "图书馆",
-    "TEAM_BANK_ACCOUNT": "团队银行帐户"
+    "TEAM_BANK_ACCOUNT": "团队银行帐户",
+    "NO_TEAM_INFORMATION_AVAILABLE": "没有团队数据",
+    "PLEASE_CREATE_NEW_TEAM": "请新增团队"
   }
 }

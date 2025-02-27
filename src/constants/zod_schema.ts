@@ -311,16 +311,18 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_LOGIN_DEVICE]: nullAPISchema,
   [APIName.REMOVE_LOGIN_DEVICE]: nullAPISchema,
 
+  [APIName.CREATE_TEAM]: teamSchemas.create,
   [APIName.LIST_TEAM]: teamSchemas.list,
   [APIName.GET_TEAM_BY_ID]: teamSchemas.get,
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: teamSchemas.listAccountBook,
   [APIName.LIST_MEMBER_BY_TEAM_ID]: teamSchemas.listMember,
+  [APIName.ADD_MEMBER_TO_TEAM]: teamSchemas.addMember,
 
-  [APIName.LIST_SUPSCRIPTION]: subscriptionSchemas.list,
-  [APIName.GET_SUPSCRIPTION_BY_TEAM_ID]: subscriptionSchemas.get,
+  [APIName.LIST_SUBSCRIPTION]: subscriptionSchemas.list,
+  [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: subscriptionSchemas.get,
   [APIName.UPDATE_SUBSCRIPTION]: subscriptionSchemas.update,
-  [APIName.LIST_SUPSCRIPTION_INVOICE]: subscriptionSchemas.listInvoiceList,
-  [APIName.GET_SUPSCRIPTION_INVOICE_BY_TEAM_ID]: subscriptionSchemas.getInvoice,
+  [APIName.LIST_SUBSCRIPTION_INVOICE]: subscriptionSchemas.listInvoiceList,
+  [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: subscriptionSchemas.getInvoice,
 
   [APIName.GET_CREDIT_CARD_INFO]: subscriptionSchemas.getCreditCard,
 };

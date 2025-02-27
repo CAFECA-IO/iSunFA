@@ -1,7 +1,9 @@
 import { TPlanType } from '@/interfaces/subscription';
 import { TeamRole } from '@/interfaces/team';
 import { z } from 'zod';
-import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { nullSchema } from '@/lib/utils/zod_schema/common';
+import { paginatedAccountBookForUserSchema } from '@/lib/utils/zod_schema/company';
 
 export const TeamSchema = z.object({
   id: z.string(),
@@ -30,42 +32,85 @@ export const TeamSchema = z.object({
     editable: z.boolean(),
   }),
 });
-export const nullSchema = z.union([z.object({}), z.string(), z.undefined()]);
-export const ITeamGetQueryValidator = z.object({
+
+export const ITeamMemberSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  imageId: z.string(),
+  email: z.string(),
+  role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
+  editable: z.boolean(),
+});
+
+export const getByTeamIdSchema = z.object({
   teamId: z.string(),
 });
 
+export const listByTeamIdQuerySchema = paginatedDataQuerySchema.extend({
+  teamId: z.string(),
+});
+
+export const addMemberBodySchema = z.array(z.string().email()).min(1, '至少需要邀請一名成員');
+
+export const addMemberResponseSchema = z.object({
+  invitedCount: z.number(),
+  failedEmails: z.array(z.string().email()),
+});
+
 export const teamSchemas = {
-  list: {
+  create: {
     input: {
       querySchema: nullSchema,
-      bodySchema: nullSchema,
+      bodySchema: z.object({
+        name: z.string(),
+        members: z.array(z.string().email()).optional(),
+        planType: z.enum(Object.values(TPlanType) as [TPlanType, ...TPlanType[]]),
+        about: z.string().optional(),
+        profile: z.string().optional(),
+        bankInfo: z.object({ code: z.number(), number: z.string() }).optional(),
+      }),
+    },
+    outputSchema: TeamSchema,
+    frontend: TeamSchema,
+  },
+  list: {
+    input: {
+      querySchema: paginatedDataQuerySchema,
+      bodySchema: z.object({}).optional(),
     },
     outputSchema: paginatedDataSchema(TeamSchema),
-    frontend: nullSchema,
+    frontend: paginatedDataSchema(TeamSchema),
   },
   get: {
     input: {
-      querySchema: ITeamGetQueryValidator,
-      bodySchema: nullSchema,
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({}).optional(),
     },
     outputSchema: TeamSchema,
-    frontend: nullSchema,
+    frontend: TeamSchema,
   },
   listAccountBook: {
     input: {
-      querySchema: nullSchema,
-      bodySchema: nullSchema,
+      querySchema: listByTeamIdQuerySchema,
+      bodySchema: z.object({}).optional(),
     },
-    outputSchema: nullSchema,
-    frontend: nullSchema,
+    outputSchema: paginatedAccountBookForUserSchema,
+    frontend: paginatedAccountBookForUserSchema,
   },
   listMember: {
     input: {
-      querySchema: nullSchema,
-      bodySchema: nullSchema,
+      querySchema: listByTeamIdQuerySchema,
+      bodySchema: z.object({}).optional(),
     },
-    outputSchema: nullSchema,
-    frontend: nullSchema,
+    outputSchema: paginatedDataSchema(ITeamMemberSchema),
+    frontend: paginatedDataSchema(ITeamMemberSchema),
+  },
+  addMember: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: addMemberBodySchema,
+    },
+    outputSchema: addMemberResponseSchema,
+    frontend: addMemberResponseSchema,
   },
 };
