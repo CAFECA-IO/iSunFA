@@ -76,13 +76,11 @@ const connectAccountBookQuerySchema = z.object({
 // Info: (20240324 - Shirley) 定義連接帳本的回應 Schema
 const connectAccountBookResponseSchema = z.object({
   accountBookId: z.number(),
-  // status: z.string(),
 });
 
 // Info: (20240324 - Shirley) 定義連接帳本的回應 Schema (包含 null 情況)
 const connectAccountBookResponseWithNullSchema = z.union([
   connectAccountBookResponseSchema,
-  // accountBookForUserSchema,
   z.null(),
 ]);
 
