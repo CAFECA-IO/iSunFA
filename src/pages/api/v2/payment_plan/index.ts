@@ -139,10 +139,21 @@ const mockPaymentPlans: IPaymentPlan[] = [
   },
 ];
 
+interface IResponse {
+  statusMessage: string;
+  payload: IPaymentPlan[] | null;
+}
+
 const handleGetRequest: IHandleRequest<APIName.LIST_PAYMENT_PLAN, IPaymentPlan[]> = async () => {
   const statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   const payload = mockPaymentPlans;
   return { statusMessage, payload };
+};
+
+const methodHandlers: {
+  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
+} = {
+  GET: (req) => withRequestValidation(APIName.LIST_PAYMENT_PLAN, req, handleGetRequest),
 };
 
 export default async function handler(
@@ -153,10 +164,9 @@ export default async function handler(
   let payload: IPaymentPlan[] | null = null;
 
   try {
-    if (req.method === 'GET') {
-      const result = await withRequestValidation(APIName.LIST_PAYMENT_PLAN, req, handleGetRequest);
-      statusMessage = result.statusMessage;
-      payload = result.payload as IPaymentPlan[] | null;
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
     } else {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }

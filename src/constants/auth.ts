@@ -161,6 +161,9 @@ export const AUTH_CHECK = {
   [APIName.CREATE_TEAM]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_TEAM]: [AuthFunctionsKeysNew.user],
   [APIName.GET_TEAM_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.UPDATE_TEAM_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.UPDATE_MEMBER_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.DELETE_MEMBER_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_MEMBER_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ADD_MEMBER_TO_TEAM]: [AuthFunctionsKeysNew.user],
@@ -174,5 +177,7 @@ export const AUTH_CHECK = {
   [APIName.GET_CREDIT_CARD_INFO]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_PAYMENT_PLAN]: [AuthFunctionsKeysNew.user],
   [APIName.VOUCHER_RESTORE_V2]: [AuthFunctionsKeysNew.user],
+
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: [AuthFunctionsKeysNew.user],
 };
