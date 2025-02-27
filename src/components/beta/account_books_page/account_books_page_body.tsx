@@ -17,7 +17,6 @@ import ChangeTagModal from '@/components/beta/account_books_page/change_tag_moda
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
 import AccountBookPrivacyModal from '@/components/beta/account_books_page/account_book_privacy_modal';
-import { FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM } from '@/constants/account_book'; // Deprecated: (20250226 - Liz) 暫時使用假資料
 
 const AccountBooksPageBody = () => {
   const { t } = useTranslation(['account_book']);
@@ -105,7 +104,7 @@ const AccountBooksPageBody = () => {
             disableDateSearch
             className="flex-auto"
             params={{ userId }}
-            apiName={APIName.LIST_USER_COMPANY}
+            apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
             onApiResponse={handleApiResponse}
             page={currentPage}
             pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
@@ -136,7 +135,7 @@ const AccountBooksPageBody = () => {
       {!isNoData && (
         <>
           <AccountBookList
-            accountBookList={FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM}
+            accountBookList={accountBookList}
             setAccountBookToTransfer={setAccountBookToTransfer}
             setAccountBookToEdit={setAccountBookToEdit}
             setAccountBookToDelete={setAccountBookToDelete}
