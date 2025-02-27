@@ -38,7 +38,6 @@ const handleGetRequest: IHandleRequest<
   // 模擬成功連接帳本
   const response: IConnectAccountBookResponse = {
     accountBookId,
-    status: 'connected',
   };
 
   // 驗證輸出資料
