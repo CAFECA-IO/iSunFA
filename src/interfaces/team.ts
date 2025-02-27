@@ -1,10 +1,10 @@
 import { TPlanType } from '@/interfaces/subscription';
 
 export enum TeamRole {
-  OWNER = 'owner',
-  ADMIN = 'admin',
-  EDITOR = 'editor',
-  VIEWER = 'viewer',
+  OWNER = 'OWNER',
+  ADMIN = 'ADMIN',
+  EDITOR = 'EDITOR',
+  VIEWER = 'VIEWER',
 }
 
 export interface ITeamMember {
@@ -55,8 +55,8 @@ export interface IInviteMemberResponse {
 }
 
 export enum LeaveStatus {
-  LEFT = 'left',
-  FAILED = 'failed',
+  LEFT = 'LEFT',
+  FAILED = 'FAILED',
 }
 
 export interface ILeaveTeam {
@@ -68,8 +68,8 @@ export interface ILeaveTeam {
 }
 
 export enum TransferStatus {
-  TRANSFER = 'transfer',
-  FAILED = 'failed',
+  TRANSFER = 'TRANSFER',
+  FAILED = 'FAILED',
 }
 
 export interface ITransferLedger {
