@@ -5,7 +5,7 @@ import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_pict
 import TeamHeader from '@/components/beta/team_page/team_header';
 import TeamPageButtons from '@/components/beta/team_page/team_page_buttons';
 import { useTranslation } from 'next-i18next';
-import { IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { useUserCtx } from '@/contexts/user_context';
 import NoData from '@/components/beta/account_books_page/no_data';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
@@ -14,7 +14,7 @@ import ChangeTagModal from '@/components/beta/account_books_page/change_tag_moda
 import UploadCompanyPictureModal from '@/components/beta/account_books_page/upload_company_picture_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
-import { FAKE_COMPANY_AND_ROLE_LIST } from '@/constants/account_book';
+import { FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM } from '@/constants/account_book';
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
 import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
 
@@ -25,15 +25,21 @@ interface TeamPageBodyProps {
 const TeamPageBody = ({ team }: TeamPageBodyProps) => {
   const { t } = useTranslation(['team']);
   const { deleteAccountBook } = useUserCtx();
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUser[] | null>(null);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[] | null>(
+    null
+  );
   const [teamToUploadPicture, setTeamToUploadPicture] = useState<ITeam | undefined>();
   const [accountBookToTransfer, setAccountBookToTransfer] = useState<
-    IAccountBookForUser | undefined
+    IAccountBookForUserWithTeam | undefined
   >();
-  const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookForUser | undefined>();
-  const [accountBookToDelete, setAccountBookToDelete] = useState<IAccountBookForUser | undefined>();
+  const [accountBookToEdit, setAccountBookToEdit] = useState<
+    IAccountBookForUserWithTeam | undefined
+  >();
+  const [accountBookToDelete, setAccountBookToDelete] = useState<
+    IAccountBookForUserWithTeam | undefined
+  >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
-    IAccountBookForUser | undefined
+    IAccountBookForUserWithTeam | undefined
   >();
   const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
   const [isInviteMembersModalOpen, setIsInviteMembersModalOpen] = useState<boolean>(false);
@@ -52,7 +58,7 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
   };
 
   // ToDo: (20250219 - Liz) 取得團隊帳本清單 API (list account book by team id)
-  // const { trigger: getAccountBookListByTeamIdAPI } = APIHandler<IPaginatedData<IAccountBookForUser[]>(APIName.?);
+  // const { trigger: getAccountBookListByTeamIdAPI } = APIHandler<IPaginatedData<IAccountBookForUserWithTeam[]>(APIName.?);
 
   // ToDo: (20250219 - Liz) 打 API 取得團隊帳本清單
   // const getAccountBookListByTeamId = useCallback(async () => {
@@ -107,7 +113,7 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
 
   // Deprecated: (20250219 - Liz) 目前後端尚未提供 API，先用假資料測試
   useEffect(() => {
-    setAccountBookList(FAKE_COMPANY_AND_ROLE_LIST);
+    setAccountBookList(FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM);
   }, []);
 
   return (
