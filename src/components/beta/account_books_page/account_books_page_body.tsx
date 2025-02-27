@@ -40,7 +40,7 @@ const AccountBooksPageBody = () => {
   >();
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]); // ToDo: (20250224 - Liz) 改用 IAccountBookForUserWithTeam[] 以便於顯示團隊名稱並且使用團隊進行帳本的分類
+  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
 
   const isNoData = accountBookList.length === 0;
 

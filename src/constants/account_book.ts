@@ -333,11 +333,11 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
       imageId: '/images/fake_team_img.svg',
       role: TeamRole.OWNER,
       name: {
-        value: 'Team C',
+        value: 'Team B',
         editable: true,
       },
       about: {
-        value: 'About Team C',
+        value: 'About Team B',
         editable: true,
       },
       profile: {
