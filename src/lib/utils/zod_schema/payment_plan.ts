@@ -4,7 +4,6 @@ import { z } from 'zod';
 const featureSchema = z.object({
   name: z.string(),
   value: z.string(),
-  description: z.string(),
 });
 
 // Info: (20250225 - Shirley) 定義 PaymentPlan 的 Schema

@@ -79,13 +79,19 @@ const connectAccountBookResponseSchema = z.object({
   status: z.string(),
 });
 
+// Info: (20240324 - Shirley) 定義連接帳本的回應 Schema (包含 null 情況)
+const connectAccountBookResponseWithNullSchema = z.union([
+  connectAccountBookResponseSchema,
+  z.null(),
+]);
+
 // Info: (20240324 - Shirley) 導出連接帳本的 Schema
 export const connectAccountBookSchema = {
   input: {
     querySchema: connectAccountBookQuerySchema,
     bodySchema: accountBookNullSchema,
   },
-  outputSchema: connectAccountBookResponseSchema,
+  outputSchema: connectAccountBookResponseWithNullSchema,
   frontend: accountBookNullSchema,
 };
 

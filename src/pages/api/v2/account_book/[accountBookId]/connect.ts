@@ -12,9 +12,13 @@ import {
   IConnectAccountBookResponse,
 } from '@/lib/utils/zod_schema/account_book';
 
+/**
+ * 處理 GET 請求的函數
+ * 連接帳本的邏輯
+ */
 const handleGetRequest: IHandleRequest<
   APIName.CONNECT_ACCOUNT_BOOK_BY_ID,
-  IConnectAccountBookResponse
+  IConnectAccountBookResponse | null
 > = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IConnectAccountBookResponse | null = null;
@@ -53,6 +57,10 @@ const handleGetRequest: IHandleRequest<
   return { statusMessage, payload };
 };
 
+/**
+ * API 處理函數
+ * 處理連接帳本的請求
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IConnectAccountBookResponse | null>>
