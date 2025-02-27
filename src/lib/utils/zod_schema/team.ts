@@ -57,6 +57,34 @@ export const addMemberResponseSchema = z.object({
   failedEmails: z.array(z.string().email()),
 });
 
+// Info: (20250227 - Shirley) 定義更新團隊資訊的 Schema
+export const updateTeamBodySchema = z.object({
+  name: z.string().optional(),
+  about: z.string().optional(),
+  profile: z.string().optional(),
+  bankInfo: z
+    .object({
+      code: z.string(),
+      account: z.string(),
+    })
+    .optional(),
+});
+
+// Info: (20250227 - Shirley) 定義更新團隊資訊的回應 Schema
+export const updateTeamResponseSchema = z.union([
+  z.object({
+    id: z.number(),
+    name: z.string(),
+    about: z.string(),
+    profile: z.string(),
+    bankInfo: z.object({
+      code: z.string(),
+      account: z.string(),
+    }),
+  }),
+  z.null(),
+]);
+
 export const teamSchemas = {
   create: {
     input: {
@@ -89,6 +117,14 @@ export const teamSchemas = {
     outputSchema: TeamSchema,
     frontend: TeamSchema,
   },
+  update: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: updateTeamBodySchema,
+    },
+    outputSchema: updateTeamResponseSchema,
+    frontend: updateTeamResponseSchema,
+  },
   listAccountBook: {
     input: {
       querySchema: listByTeamIdQuerySchema,
@@ -114,3 +150,7 @@ export const teamSchemas = {
     frontend: addMemberResponseSchema,
   },
 };
+
+// Info: (20250227 - Shirley) 導出更新團隊資訊的類型
+export type IUpdateTeamBody = z.infer<typeof updateTeamBodySchema>;
+export type IUpdateTeamResponse = z.infer<typeof updateTeamResponseSchema>;

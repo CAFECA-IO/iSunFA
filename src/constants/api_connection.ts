@@ -175,6 +175,7 @@ export enum APIName {
   LIST_PAYMENT_PLAN = 'LIST_PAYMENT_PLAN',
   LIST_ACCOUNT_BOOK_BY_USER_ID = 'LIST_ACCOUNT_BOOK_BY_USER_ID',
   CONNECT_ACCOUNT_BOOK_BY_ID = 'CONNECT_ACCOUNT_BOOK_BY_ID',
+  UPDATE_TEAM_BY_ID = 'UPDATE_TEAM_BY_ID',
 }
 
 export enum APIPath {
@@ -316,6 +317,7 @@ export enum APIPath {
   CREATE_TEAM = `${apiPrefixV2}/team`,
   LIST_TEAM = `${apiPrefixV2}/team`,
   GET_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
+  UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`, // Info: (20250227 - Shirley) 新增更新團隊資訊的 API
   LIST_ACCOUNT_BOOK_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/account_book`,
   LIST_MEMBER_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/member`,
   ADD_MEMBER_TO_TEAM = `${apiPrefixV2}/team/:teamId/member`,
@@ -1095,5 +1097,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CONNECT_ACCOUNT_BOOK_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.CONNECT_ACCOUNT_BOOK_BY_ID,
+  }),
+  [APIName.UPDATE_TEAM_BY_ID]: createConfig({
+    name: APIName.UPDATE_TEAM_BY_ID,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_TEAM_BY_ID,
   }),
 };

@@ -152,8 +152,8 @@ export type IAPIName =
   | 'GET_CREDIT_CARD_INFO'
   | 'LIST_PAYMENT_PLAN'
   | 'LIST_ACCOUNT_BOOK_BY_USER_ID'
-  | 'CONNECT_ACCOUNT_BOOK_BY_ID';
-
+  | 'CONNECT_ACCOUNT_BOOK_BY_ID'
+  | 'UPDATE_TEAM_BY_ID';
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {

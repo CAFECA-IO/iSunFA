@@ -1,70 +1,73 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-import { ITeam } from '@/interfaces/team';
+import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
-import { checkRequestData, checkSessionUser, checkUserAuthorization } from '@/lib/utils/middleware';
-import { getSession } from '@/lib/utils/session';
-import { FAKE_TEAM_LIST } from '@/constants/team';
-import loggerBack from '@/lib/utils/logger_back';
-import { HTTP_STATUS } from '@/constants/http';
-import { validateOutputData } from '@/lib/utils/validator';
+import { IHandleRequest } from '@/interfaces/handleRequest';
+import { IUpdateTeamBody, IUpdateTeamResponse } from '@/lib/utils/zod_schema/team';
 
-const handleGetRequest = async (req: NextApiRequest) => {
-  const session = await getSession(req);
-  const { userId } = session;
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITeam | null = null;
-  const isLogin = await checkSessionUser(session, APIName.GET_TEAM_BY_ID, req);
-  if (!isLogin) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-  const isAuth = await checkUserAuthorization(APIName.GET_TEAM_BY_ID, req, session);
-  if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
-  const { query } = checkRequestData(APIName.GET_TEAM_BY_ID, req, session);
-  if (query === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+interface IResponse {
+  statusMessage: string;
+  payload: IUpdateTeamResponse | null;
+}
 
-  statusMessage = STATUS_MESSAGE.SUCCESS;
+/**
+ * Info: (20250227 - Shirley) 處理 PUT 請求，更新團隊資訊，目前為 mock API
+ */
+const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IResponse['payload']> = async ({
+  query,
+  body,
+}) => {
   const { teamId } = query;
+  const teamIdNumber = Number(teamId);
+  const updateData = body as IUpdateTeamBody;
 
-  loggerBack.info(
-    `user ${userId} get Team by teamId: ${teamId} with query: ${JSON.stringify(query)}`
-  );
-
-  const team = FAKE_TEAM_LIST.find((t) => t.id === teamId);
-  const { isOutputDataValid, outputData } = validateOutputData(APIName.GET_TEAM_BY_ID, team);
-  if (!isOutputDataValid) {
-    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-  } else {
-    payload = outputData;
+  // Info: (20250227 - Shirley) 模擬團隊不存在的情況
+  if (teamIdNumber === 404) {
+    return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
   }
 
-  const result = formatApiResponse(statusMessage, payload);
-  return result;
+  // Info: (20250227 - Shirley) 模擬更新團隊資訊
+  const payload: IUpdateTeamResponse = {
+    id: teamIdNumber,
+    name: updateData.name || 'Default Team',
+    about: updateData.about || 'Default Team Description',
+    profile: updateData.profile || 'https://www.isunfa.com/profile/123',
+    bankInfo: updateData.bankInfo || {
+      code: '001',
+      account: '1234567890',
+    },
+  };
+
+  return { statusMessage: STATUS_MESSAGE.SUCCESS_UPDATE, payload };
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
-  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
-  let result;
+const methodHandlers: {
+  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
+} = {
+  PUT: (req) => withRequestValidation(APIName.UPDATE_TEAM_BY_ID, req, handlePutRequest),
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IResponse['payload']>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IResponse['payload'] = null;
 
   try {
-    switch (method) {
-      case 'GET':
-      default:
-        ({ httpCode, result } = await handleGetRequest(req));
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
-  } catch (error) {
-    const err = error as Error;
-    ({ httpCode, result } = formatApiResponse<null>(
-      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],
-      null
-    ));
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+  } finally {
+    const { httpCode, result } = formatApiResponse<IResponse['payload']>(statusMessage, payload);
+    res.status(httpCode).json(result);
   }
-
-  res.status(httpCode).json(result);
 }
