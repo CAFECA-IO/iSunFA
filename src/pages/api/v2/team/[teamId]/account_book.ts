@@ -10,7 +10,7 @@ import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
 import { IAccountBookForUser } from '@/interfaces/account_book';
-import { FAKE_TEMA_ACCOUNT_BOOKS } from '@/constants/team';
+import { FAKE_TEAM_ACCOUNT_BOOKS } from '@/constants/team';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -45,7 +45,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   );
 
   // Info: (20250226 - Tzuhan)取得該團隊的帳本列表
-  const accountBooks = FAKE_TEMA_ACCOUNT_BOOKS || [];
+  const accountBooks = FAKE_TEAM_ACCOUNT_BOOKS || [];
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
   const options: IPaginatedOptions<IAccountBookForUser[]> = {

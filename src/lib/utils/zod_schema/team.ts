@@ -1,5 +1,5 @@
 import { TPlanType } from '@/interfaces/subscription';
-import { TeamRole } from '@/interfaces/team';
+import { LeaveStatus, TeamRole, TransferStatus } from '@/interfaces/team';
 import { z } from 'zod';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { nullSchema } from '@/lib/utils/zod_schema/common';
@@ -57,6 +57,22 @@ export const addMemberResponseSchema = z.object({
   failedEmails: z.array(z.string().email()),
 });
 
+export const transferAccountBookSchema = z.object({
+  accountBookId: z.string(),
+  previousTeamId: z.string(),
+  targetTeamId: z.string(),
+  status: z.enum(Object.values(TransferStatus) as [TransferStatus, ...TransferStatus[]]),
+  transferedAt: z.number().optional(),
+});
+
+export const leaveTeamSchema = z.object({
+  teamId: z.string(),
+  userId: z.number(),
+  role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
+  status: z.enum(Object.values(LeaveStatus) as [LeaveStatus, ...LeaveStatus[]]),
+  leavedAt: z.number().optional(),
+});
+
 export const teamSchemas = {
   create: {
     input: {
@@ -112,5 +128,23 @@ export const teamSchemas = {
     },
     outputSchema: addMemberResponseSchema,
     frontend: addMemberResponseSchema,
+  },
+  leaveTeam: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({}).optional(),
+    },
+    outputSchema: leaveTeamSchema,
+    frontend: leaveTeamSchema,
+  },
+  transferAccountBook: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({
+        targetTeamId: z.string(),
+      }),
+    },
+    outputSchema: transferAccountBookSchema,
+    frontend: transferAccountBookSchema,
   },
 };

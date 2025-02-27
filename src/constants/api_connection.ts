@@ -172,6 +172,8 @@ export enum APIName {
   LIST_SUBSCRIPTION_INVOICE = 'LIST_SUBSCRIPTION_INVOICE',
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = 'GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID',
   GET_CREDIT_CARD_INFO = 'GET_CREDIT_CARD_INFO',
+  LEAVE_TEAM = 'LEAVE_TEAM',
+  TRANSFER_ACCOUNT_BOOK = 'TRANSFER_ACCOUNT_BOOK',
 }
 
 export enum APIPath {
@@ -322,6 +324,8 @@ export enum APIPath {
   LIST_SUBSCRIPTION_INVOICE = `${apiPrefixV2}/subscription/:teamId/invoice`,
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId/invoice/:invoiceId`,
   GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
+  LEAVE_TEAM = `${apiPrefixV2}/team/:teamId/leave`,
+  TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/transfer`,
 }
 const createConfig = ({
   name,
@@ -1073,5 +1077,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.VOUCHER_RESTORE_V2,
     method: HttpMethod.POST,
     path: APIPath.VOUCHER_RESTORE_V2,
+  }),
+  [APIName.LEAVE_TEAM]: createConfig({
+    name: APIName.LEAVE_TEAM,
+    method: HttpMethod.GET,
+    path: APIPath.LEAVE_TEAM,
+  }),
+  [APIName.TRANSFER_ACCOUNT_BOOK]: createConfig({
+    name: APIName.TRANSFER_ACCOUNT_BOOK,
+    method: HttpMethod.POST,
+    path: APIPath.TRANSFER_ACCOUNT_BOOK,
   }),
 };

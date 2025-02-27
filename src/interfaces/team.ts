@@ -53,3 +53,29 @@ export interface IInviteMemberResponse {
   invitedCount: number;
   failedEmails: string[];
 }
+
+export enum LeaveStatus {
+  LEFT = 'left',
+  FAILED = 'failed',
+}
+
+export interface ILeaveTeam {
+  teamId: string;
+  userId: number;
+  role: TeamRole;
+  status: LeaveStatus;
+  leavedAt?: number;
+}
+
+export enum TransferStatus {
+  TRANSFER = 'transfer',
+  FAILED = 'failed',
+}
+
+export interface ITransferLedger {
+  accountBookId: string;
+  previousTeamId: string;
+  targetTeamId: string;
+  status: TransferStatus;
+  transferedAt?: number;
+}
