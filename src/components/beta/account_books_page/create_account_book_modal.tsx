@@ -279,11 +279,10 @@ const CreateAccountBookModal = ({
                 </div>
               </div>
 
-              {/* // Info: (20250226 - Liz) Account Book View */}
+              {/* // Info: (20250226 - Liz) Account Book View (Privacy) */}
               <div className="flex flex-col gap-8px">
                 <h4 className="font-semibold text-input-text-primary">
-                  Account Book View
-                  <span className="text-text-state-error"> *</span>
+                  {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ACCOUNT_BOOK_PRIVACY')}
                 </h4>
 
                 <div className="flex items-center gap-40px">
@@ -299,7 +298,7 @@ const CreateAccountBookModal = ({
                         <span className="h-10px w-10px rounded-full bg-checkbox-surface-selected"></span>
                       )}
                     </span>
-                    Public
+                    {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.PUBLIC')}
                   </button>
 
                   <button
@@ -314,7 +313,7 @@ const CreateAccountBookModal = ({
                         <span className="h-10px w-10px rounded-full bg-checkbox-surface-selected"></span>
                       )}
                     </span>
-                    Private
+                    {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.PRIVATE')}
                   </button>
                 </div>
               </div>

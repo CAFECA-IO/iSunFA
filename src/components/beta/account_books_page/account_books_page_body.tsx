@@ -16,6 +16,7 @@ import CreateAccountBookModal from '@/components/beta/account_books_page/create_
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
+import AccountBookPrivacyModal from '@/components/beta/account_books_page/account_book_privacy_modal';
 import { FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM } from '@/constants/account_book'; // Deprecated: (20250226 - Liz) 暫時使用假資料
 
 const AccountBooksPageBody = () => {
@@ -36,6 +37,9 @@ const AccountBooksPageBody = () => {
     IAccountBookForUserWithTeam | undefined
   >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
+    IAccountBookForUserWithTeam | undefined
+  >();
+  const [accountBookToChangePrivacy, setAccountBookToChangePrivacy] = useState<
     IAccountBookForUserWithTeam | undefined
   >();
   const [totalPage, setTotalPage] = useState(1);
@@ -137,6 +141,8 @@ const AccountBooksPageBody = () => {
             setAccountBookToEdit={setAccountBookToEdit}
             setAccountBookToDelete={setAccountBookToDelete}
             setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+            setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
+            shouldGroupByTeam
           />
           <Pagination
             totalPages={totalPage}
@@ -164,7 +170,6 @@ const AccountBooksPageBody = () => {
       {accountBookToEdit && (
         <ChangeTagModal
           accountBookToEdit={accountBookToEdit}
-          isModalOpen={!!accountBookToEdit}
           setAccountBookToEdit={setAccountBookToEdit}
           setRefreshKey={setRefreshKey}
         />
@@ -173,9 +178,15 @@ const AccountBooksPageBody = () => {
       {accountBookToUploadPicture && (
         <UploadCompanyPictureModal
           accountBookToUploadPicture={accountBookToUploadPicture}
-          isModalOpen={!!accountBookToUploadPicture}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
           setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {accountBookToChangePrivacy && (
+        <AccountBookPrivacyModal
+          accountBookToChangePrivacy={accountBookToChangePrivacy}
+          setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
         />
       )}
 

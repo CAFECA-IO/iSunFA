@@ -135,7 +135,10 @@
     "CHOOSE_TEAM": "选择团队",
     "PLEASE_ENTER_THE_NAME": "请输入名称",
     "PLEASE_SELECT_A_WORK_TAG": "请选择工作标签",
-    "PLEASE_SELECT_A_TEAM": "请选择团队"
+    "PLEASE_SELECT_A_TEAM": "请选择团队",
+    "ACCOUNT_BOOK_PRIVACY": "账本隐私",
+    "PUBLIC": "公开",
+    "PRIVATE": "私人"
   },
 
   "WORK_TAG": {
