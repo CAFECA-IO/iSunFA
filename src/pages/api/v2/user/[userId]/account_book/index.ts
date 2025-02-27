@@ -5,7 +5,9 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookForUserWithTeam, WORK_TAG } from '@/interfaces/account_book';
+import { TeamRole } from '@/interfaces/team';
+import { TPlanType } from '@/interfaces/subscription';
 
 const mockAccountBooks: IAccountBookForUserWithTeam[] = [
   {
@@ -20,20 +22,42 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
       isPrivate: false,
     },
     team: {
-      id: 10000001,
-      name: "Joyce's Team A",
-      description: 'Team A for BURGER KING',
+      id: '10000001',
       imageId: 'https://example.com/images/team-a.png',
-      createdAt: 1725372460,
-      updatedAt: 1725372460,
+      role: TeamRole.OWNER,
+      name: {
+        value: "Joyce's Team A",
+        editable: true,
+      },
+      about: {
+        value: 'Team A for BURGER KING',
+        editable: true,
+      },
+      profile: {
+        value: 'https://isunfa.com',
+        editable: true,
+      },
+      planType: {
+        value: TPlanType.ENTERPRISE,
+        editable: true,
+      },
+      totalMembers: 6,
+      totalAccountBooks: 3,
+      bankAccount: {
+        value: '12345678',
+        editable: true,
+      },
     },
-    tag: 'FINANCIAL',
+    tag: WORK_TAG.FINANCIAL,
     order: 1,
     role: {
       id: 1,
       name: 'ADMIN',
       permissions: ['READ', 'WRITE', 'DELETE'],
+      createdAt: 1725372460,
+      updatedAt: 1725372460,
     },
+    isTransferring: true,
   },
   {
     company: {
@@ -47,20 +71,42 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
       isPrivate: false,
     },
     team: {
-      id: 10000001,
-      name: "Joyce's Team A",
-      description: 'Team A for BURGER QUEEN',
+      id: '10000001',
       imageId: 'https://example.com/images/team-a.png',
-      createdAt: 1725372460,
-      updatedAt: 1725372460,
+      role: TeamRole.OWNER,
+      name: {
+        value: "Joyce's Team A",
+        editable: true,
+      },
+      about: {
+        value: 'Team A for BURGER QUEEN',
+        editable: true,
+      },
+      profile: {
+        value: 'https://isunfa.com',
+        editable: true,
+      },
+      planType: {
+        value: TPlanType.ENTERPRISE,
+        editable: true,
+      },
+      totalMembers: 6,
+      totalAccountBooks: 3,
+      bankAccount: {
+        value: '12345678',
+        editable: true,
+      },
     },
-    tag: 'TAX',
+    tag: WORK_TAG.TAX,
     order: 2,
     role: {
       id: 2,
       name: 'MEMBER',
       permissions: ['READ', 'WRITE'],
+      createdAt: 1725372460,
+      updatedAt: 1725372460,
     },
+    isTransferring: false,
   },
   {
     company: {
@@ -74,20 +120,42 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
       isPrivate: true,
     },
     team: {
-      id: 10000002,
-      name: "Joyce's Team B",
-      description: 'Team B for BURGER KNIGHT',
+      id: '10000002',
       imageId: 'https://example.com/images/team-b.png',
-      createdAt: 1725372460,
-      updatedAt: 1725372460,
+      role: TeamRole.ADMIN,
+      name: {
+        value: "Joyce's Team B",
+        editable: true,
+      },
+      about: {
+        value: 'Team B for BURGER KNIGHT',
+        editable: true,
+      },
+      profile: {
+        value: 'https://isunfa.com',
+        editable: true,
+      },
+      planType: {
+        value: TPlanType.PROFESSIONAL,
+        editable: true,
+      },
+      totalMembers: 2,
+      totalAccountBooks: 2,
+      bankAccount: {
+        value: '87654321',
+        editable: true,
+      },
     },
-    tag: 'ALL',
+    tag: WORK_TAG.ALL,
     order: 3,
     role: {
       id: 1,
       name: 'ADMIN',
       permissions: ['READ', 'WRITE', 'DELETE'],
+      createdAt: 1725372460,
+      updatedAt: 1725372460,
     },
+    isTransferring: false,
   },
 ];
 

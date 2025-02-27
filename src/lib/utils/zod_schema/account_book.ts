@@ -1,19 +1,13 @@
 import { z } from 'zod';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { WORK_TAG } from '@/interfaces/account_book';
+import { TeamSchema } from '@/lib/utils/zod_schema/team';
 
 // Info: (20240324 - Shirley) 定義 Role 的 Schema
 const roleSchema = z.object({
   id: z.number(),
   name: z.string(),
   permissions: z.array(z.string()),
-});
-
-// Info: (20240324 - Shirley) 定義 Team 的 Schema
-const teamSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  description: z.string(),
-  imageId: z.string(),
   createdAt: z.number(),
   updatedAt: z.number(),
 });
@@ -27,16 +21,21 @@ const accountBookSchema = z.object({
   startDate: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
-  isPrivate: z.boolean(),
+  isPrivate: z.boolean().optional(), // ToDo: (20250224 - Liz) 等後端 API 調整後就改為必填
+});
+
+// Info: (20240324 - Shirley) 定義 AccountBookForUser 的 Schema
+const accountBookForUserSchema = z.object({
+  company: accountBookSchema,
+  tag: z.nativeEnum(WORK_TAG),
+  order: z.number(),
+  role: roleSchema,
 });
 
 // Info: (20240324 - Shirley) 定義 AccountBookForUserWithTeam 的 Schema
-const accountBookForUserWithTeamSchema = z.object({
-  company: accountBookSchema,
-  team: teamSchema,
-  tag: z.string(),
-  order: z.number(),
-  role: roleSchema,
+const accountBookForUserWithTeamSchema = accountBookForUserSchema.extend({
+  team: TeamSchema,
+  isTransferring: z.boolean(),
 });
 
 // Info: (20240324 - Shirley) 定義 API 查詢參數的 Schema
@@ -59,10 +58,3 @@ export const accountBookListSchema = {
   outputSchema: accountBookListResponseSchema,
   frontend: accountBookNullSchema,
 };
-
-// Info: (20240324 - Shirley) 導出型別
-export type IRoleSchema = z.infer<typeof roleSchema>;
-export type ITeamSchema = z.infer<typeof teamSchema>;
-export type IAccountBookSchema = z.infer<typeof accountBookSchema>;
-export type IAccountBookForUserWithTeamSchema = z.infer<typeof accountBookForUserWithTeamSchema>;
-export type IAccountBookListResponse = z.infer<typeof accountBookListResponseSchema>;
