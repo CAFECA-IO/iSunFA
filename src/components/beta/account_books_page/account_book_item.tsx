@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
-import { IAccountBookForUser, CANCEL_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
+import { IAccountBookForUserWithTeam, CANCEL_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import { IoArrowForward, IoClose } from 'react-icons/io5';
 import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
@@ -11,11 +11,11 @@ import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface AccountBookItemProps {
-  accountBook: IAccountBookForUser;
-  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
-  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
-  setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
-  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
+  accountBook: IAccountBookForUserWithTeam;
+  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
 }
 
 const AccountBookItem = ({
@@ -96,7 +96,7 @@ const AccountBookItem = ({
   return (
     <div
       key={accountBook.company.id}
-      className="flex items-center gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
+      className="flex items-center gap-120px rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 px-24px py-12px"
     >
       <button type="button" onClick={openUploadCompanyPictureModal} className="group relative">
         <Image
@@ -104,7 +104,7 @@ const AccountBookItem = ({
           alt={accountBook.company.name}
           width={60}
           height={60}
-          className="h-60px w-60px rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
+          className="h-60px w-60px rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
         ></Image>
 
         <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
