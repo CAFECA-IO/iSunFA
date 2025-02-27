@@ -172,6 +172,8 @@ export enum APIName {
   LIST_SUBSCRIPTION_INVOICE = 'LIST_SUBSCRIPTION_INVOICE',
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = 'GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID',
   GET_CREDIT_CARD_INFO = 'GET_CREDIT_CARD_INFO',
+  LIST_PAYMENT_PLAN = 'LIST_PAYMENT_PLAN',
+  LIST_ACCOUNT_BOOK_BY_USER_ID = 'LIST_ACCOUNT_BOOK_BY_USER_ID',
 }
 
 export enum APIPath {
@@ -322,7 +324,10 @@ export enum APIPath {
   LIST_SUBSCRIPTION_INVOICE = `${apiPrefixV2}/subscription/:teamId/invoice`,
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId/invoice/:invoiceId`,
   GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
+  LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
+  LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
 }
+
 const createConfig = ({
   name,
   method,
@@ -1073,5 +1078,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.VOUCHER_RESTORE_V2,
     method: HttpMethod.POST,
     path: APIPath.VOUCHER_RESTORE_V2,
+  }),
+  [APIName.LIST_PAYMENT_PLAN]: createConfig({
+    name: APIName.LIST_PAYMENT_PLAN,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_PAYMENT_PLAN,
+  }),
+  [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: createConfig({
+    name: APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_ACCOUNT_BOOK_BY_USER_ID,
   }),
 };

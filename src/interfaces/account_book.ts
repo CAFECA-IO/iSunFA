@@ -38,6 +38,7 @@ export interface IAccountBookForUser {
 
 export interface IAccountBookForUserWithTeam extends IAccountBookForUser {
   team: ITeam;
+  isTransferring: boolean;
 }
 
 // Deprecated: (20250226 - Liz) 前端已經不再使用 ICompanyDetail 等後端確認後看看是否需要刪除
