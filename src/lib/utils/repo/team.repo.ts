@@ -13,6 +13,7 @@ const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }
   sortOptions.forEach((sort) => {
     const { sortBy, sortOrder } = sort;
     switch (sortBy) {
+      case SortBy.CREATED_AT:
       case SortBy.DATE:
         orderBy.push({
           createdAt: sortOrder,
@@ -37,7 +38,7 @@ export const getTeamList = async (
     pageSize = 1,
     startDate = 0,
     endDate = DEFAULT_END_DATE,
-    sortOption = [{ sortBy: SortBy.DATE, sortOrder: SortOrder.DESC }],
+    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
     searchQuery = '',
   } = queryParams;
 
