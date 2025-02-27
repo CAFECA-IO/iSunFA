@@ -8,6 +8,14 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IAccountBookForUserWithTeam, WORK_TAG } from '@/interfaces/account_book';
 import { TeamRole } from '@/interfaces/team';
 import { TPlanType } from '@/interfaces/subscription';
+import { IPaginatedOptions } from '@/interfaces/pagination';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import loggerBack from '@/lib/utils/logger_back';
+import { validateOutputData } from '@/lib/utils/validator';
+import {
+  IAccountBookListQueryParams,
+  IAccountBookListResponse,
+} from '@/lib/utils/zod_schema/account_book';
 
 const mockAccountBooks: IAccountBookForUserWithTeam[] = [
   {
@@ -161,23 +169,49 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
 
 const handleGetRequest: IHandleRequest<
   APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
-  IAccountBookForUserWithTeam[]
+  IAccountBookListResponse
 > = async ({ query }) => {
-  // TODO: (20250225 - Shirley) 實作 API
-  // Deprecated: (20250307 - Shirley)
-  // eslint-disable-next-line no-console
-  console.log('query', query);
-  const statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-  const payload = mockAccountBooks;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAccountBookListResponse | null = null;
+
+  const { userId, page, pageSize } = query as IAccountBookListQueryParams;
+
+  loggerBack.info(`List account books by userId: ${userId} with query: ${JSON.stringify(query)}`);
+
+  // Info: (20240324 - Shirley) 取得帳本列表
+  const accountBooks = mockAccountBooks || [];
+
+  // Info: (20240324 - Shirley) 處理分頁
+  const options: IPaginatedOptions<IAccountBookForUserWithTeam[]> = {
+    data: accountBooks,
+    page,
+    pageSize,
+  };
+
+  const paginatedData = toPaginatedData(options);
+
+  // Info: (20240324 - Shirley) 驗證輸出資料
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
+    paginatedData
+  );
+
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    payload = outputData;
+  }
+
   return { statusMessage, payload };
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountBookForUserWithTeam[] | null>>
+  res: NextApiResponse<IResponseData<IAccountBookListResponse | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBookForUserWithTeam[] | null = null;
+  let payload: IAccountBookListResponse | null = null;
 
   try {
     if (req.method === 'GET') {
@@ -187,7 +221,7 @@ export default async function handler(
         handleGetRequest
       );
       statusMessage = result.statusMessage;
-      payload = result.payload as IAccountBookForUserWithTeam[] | null;
+      payload = result.payload;
     } else {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
@@ -195,7 +229,7 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   } finally {
-    const { httpCode, result } = formatApiResponse<IAccountBookForUserWithTeam[] | null>(
+    const { httpCode, result } = formatApiResponse<IAccountBookListResponse | null>(
       statusMessage,
       payload
     );

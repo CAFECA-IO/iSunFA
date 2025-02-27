@@ -1,7 +1,10 @@
 import { z } from 'zod';
-import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { WORK_TAG } from '@/interfaces/account_book';
 import { TeamSchema } from '@/lib/utils/zod_schema/team';
+import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
 // Info: (20240324 - Shirley) 定義 Role 的 Schema
 const roleSchema = z.object({
@@ -41,10 +44,12 @@ const accountBookForUserWithTeamSchema = accountBookForUserSchema.extend({
 // Info: (20240324 - Shirley) 定義 API 查詢參數的 Schema
 const accountBookListQuerySchema = z.object({
   userId: zodStringToNumber,
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
 });
 
 // Info: (20240324 - Shirley) 定義 API 回應的 Schema
-const accountBookListResponseSchema = z.array(accountBookForUserWithTeamSchema);
+const accountBookListResponseSchema = paginatedDataSchema(accountBookForUserWithTeamSchema);
 
 // Info: (20240324 - Shirley) 定義空的 body Schema
 const accountBookNullSchema = z.union([z.object({}), z.string()]);
@@ -58,3 +63,7 @@ export const accountBookListSchema = {
   outputSchema: accountBookListResponseSchema,
   frontend: accountBookNullSchema,
 };
+
+// Info: (20240324 - Shirley) 導出類型
+export type IAccountBookListQueryParams = z.infer<typeof accountBookListQuerySchema>;
+export type IAccountBookListResponse = z.infer<typeof accountBookListResponseSchema>;
