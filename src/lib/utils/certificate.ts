@@ -2,7 +2,7 @@ import { Certificate as PrismaCertificate } from '@prisma/client';
 import { ICertificateEntity } from '@/interfaces/certificate';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
-import { ICompanyEntity } from '@/interfaces/company';
+import { ICompanyEntity } from '@/interfaces/account_book';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { getTimestampNow } from '@/lib/utils/common';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';

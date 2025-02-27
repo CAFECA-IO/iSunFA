@@ -20,7 +20,7 @@ const SubscriptionsPage = () => {
 
   // Info: (20250117 - Liz) 取得使用者擁有的所有團隊 API
   const { trigger: getUserOwnedTeamsAPI } = APIHandler<IPaginatedData<IUserOwnedTeam[]>>(
-    APIName.LIST_TEAM
+    APIName.LIST_SUBSCRIPTION
   );
 
   // Info: (20250117 - Liz) 打 API 取得使用者擁有的所有團隊

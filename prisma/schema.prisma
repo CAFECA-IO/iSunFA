@@ -1218,7 +1218,6 @@ enum TeamPlanType {
 
 model Team {
   id             Int      @id @default(autoincrement())
-  uuid           String   @unique @default(uuid()) // Info: (20250224 - tzuhan) 生成唯一的 UUID
   ownerId        Int      @map("owner_id")
   owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   name           String

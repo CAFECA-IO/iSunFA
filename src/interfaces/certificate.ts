@@ -1,7 +1,7 @@
 import { type IInvoiceBetaOptional, type IInvoiceEntity } from '@/interfaces/invoice';
 import { IFileBeta, type IFileEntity } from '@/interfaces/file';
 import type { IVoucherEntity } from '@/interfaces/voucher';
-import type { ICompanyEntity } from '@/interfaces/company';
+import type { ICompanyEntity } from '@/interfaces/account_book';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import type { IUserEntity } from '@/interfaces/user';
 import type { IUserCertificateEntity } from '@/interfaces/user_certificate';

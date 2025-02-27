@@ -56,5 +56,26 @@
     "SKIP_BTN": "Skip for Now",
     "CONTINUE_BTN": "Continue",
     "CREATE_BTN": "Create Team"
+  },
+  "TEAM_INFO_PAGE": {
+    "EDIT_TEAM_NAME": "Change Team Name",
+    "ADD_DESCRIPTION": "Add a description",
+    "ABOUT": "About",
+    "TEAM_PROFILE": "Team Profile",
+    "ADD_BANK_ACCOUNT": "Add a Bank Account",
+    "BANK_ACCOUNT": "Bank Account",
+    "DESCRIPTION_PLACEHOLDER": "Enter a description for your team",
+    "LINK": "Link",
+    "BANK_ACCOUNT_NUMBER": "Bank Account number",
+    "TEAM_PLAN": "Team Plan",
+    "TEAM_MEMBER": "Team Member",
+    "MEMBER_SINGLE": "Member",
+    "MEMBER_PLURAL": "Members",
+    "LEDGER_SINGLE": "Ledger",
+    "LEDGER_PLURAL": "Ledgers",
+    "LIBRARIES": "Libraries",
+    "TEAM_BANK_ACCOUNT": "Team Bank Account",
+    "NO_TEAM_INFORMATION_AVAILABLE": "No team information available.",
+    "PLEASE_CREATE_NEW_TEAM": "Please create a new team."
   }
 }

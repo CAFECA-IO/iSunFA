@@ -24,7 +24,7 @@ import { JOURNAL_EVENT } from '@/constants/journal';
 import { parsePrismaCompanyToCompanyEntity } from '@/lib/utils/formatter/company.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
 import { IUserEntity } from '@/interfaces/user';
-import { ICompanyEntity } from '@/interfaces/company';
+import { ICompanyEntity } from '@/interfaces/account_book';
 import { calculateAssetDepreciationSerial } from '@/lib/utils/asset';
 import { IAssetEntity } from '@/interfaces/asset';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';

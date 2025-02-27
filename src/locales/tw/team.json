@@ -56,5 +56,26 @@
     "SKIP_BTN": "暫時跳過",
     "CONTINUE_BTN": "繼續",
     "CREATE_BTN": "建立團隊"
+  },
+  "TEAM_INFO_PAGE": {
+    "EDIT_TEAM_NAME": "編輯團隊名稱",
+    "ADD_DESCRIPTION": "添加描述",
+    "ABOUT": "關於",
+    "TEAM_PROFILE": "團隊簡介",
+    "ADD_BANK_ACCOUNT": "新增銀行帳戶",
+    "BANK_ACCOUNT": "銀行帳戶",
+    "DESCRIPTION_PLACEHOLDER": "輸入您的團隊的描述",
+    "LINK": "連結",
+    "BANK_ACCOUNT_NUMBER": "銀行帳戶號碼",
+    "TEAM_PLAN": "團隊方案",
+    "TEAM_MEMBER": "團隊成員",
+    "MEMBER_SINGLE": "位成員",
+    "MEMBER_PLURAL": "位成員",
+    "LEDGER_SINGLE": "本帳本",
+    "LEDGER_PLURAL": "本帳本",
+    "LIBRARIES": "圖書館",
+    "TEAM_BANK_ACCOUNT": "團隊銀行帳戶",
+    "NO_TEAM_INFORMATION_AVAILABLE": "沒有團隊資料",
+    "PLEASE_CREATE_NEW_TEAM": "請新增團隊"
   }
 }

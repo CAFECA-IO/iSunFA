@@ -1,6 +1,6 @@
 import { RiCheckboxMultipleLine, RiCoinsFill } from 'react-icons/ri';
 import { LuFileCheck } from 'react-icons/lu';
-import { WORK_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/interfaces/account_book';
 import { useTranslation } from 'next-i18next';
 
 interface WorkTagProps {

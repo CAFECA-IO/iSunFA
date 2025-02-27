@@ -1,5 +1,6 @@
 import { ITeam, TeamRole, ITeamMember } from '@/interfaces/team';
 import { TPlanType } from '@/interfaces/subscription';
+import { IAccountBookForUser, WORK_TAG } from '@/interfaces/account_book';
 
 export const FAKE_TEAM_LIST: ITeam[] = [
   {
@@ -15,8 +16,7 @@ export const FAKE_TEAM_LIST: ITeam[] = [
       editable: true,
     },
     profile: {
-      value:
-        'https://static-cdn.jtvnw.net/jtv_user_pictures/44ed4bd3-5f4f-47e6-b89b-90de65386dbb-profile_banner-480.png',
+      value: 'https://isunfa.com',
       editable: true,
     },
     planType: {
@@ -43,18 +43,18 @@ export const FAKE_TEAM_LIST: ITeam[] = [
       editable: true,
     },
     profile: {
-      value: 'https://i.pinimg.com/236x/cc/48/41/cc4841ce4212d47ca59c5ec0e63f53bc.jpg',
+      value: 'https://isunfa.com',
       editable: true,
     },
     planType: {
       value: TPlanType.PROFESSIONAL,
-      editable: true,
+      editable: false,
     },
     totalMembers: 2,
     totalAccountBooks: 2,
     bankAccount: {
-      value: '12345678',
-      editable: true,
+      value: '-',
+      editable: false,
     },
   },
   {
@@ -63,25 +63,25 @@ export const FAKE_TEAM_LIST: ITeam[] = [
     role: TeamRole.VIEWER,
     name: {
       value: 'Team C',
-      editable: true,
+      editable: false,
     },
     about: {
       value: 'About Team C',
-      editable: true,
+      editable: false,
     },
     profile: {
-      value: 'https://i.pinimg.com/736x/ea/78/01/ea78014cd14a79714042729c661bd46c.jpg',
-      editable: true,
+      value: 'https://isunfa.com',
+      editable: false,
     },
     planType: {
       value: TPlanType.BEGINNER,
-      editable: true,
+      editable: false,
     },
     totalMembers: 1,
     totalAccountBooks: 1,
     bankAccount: {
-      value: '87654321',
-      editable: true,
+      value: '-',
+      editable: false,
     },
   },
 ];
@@ -134,5 +134,71 @@ export const FAKE_TEAM_MEMBER_LIST: ITeamMember[] = [
     email: '666@gamil.com',
     role: TeamRole.VIEWER,
     editable: true,
+  },
+];
+
+export const FAKE_TEMA_ACCOUNT_BOOKS: IAccountBookForUser[] = [
+  {
+    company: {
+      id: 1,
+      imageId: '/images/company_1.svg',
+      name: 'Company A',
+      taxId: '12345678',
+      startDate: 1672531200, // 2023-01-01 (UNIX timestamp)
+      createdAt: 1672531200,
+      updatedAt: 1672617600,
+      isPrivate: false,
+    },
+    tag: WORK_TAG.ALL,
+    order: 1,
+    role: {
+      id: 1,
+      name: 'Accountant',
+      permissions: ['view_reports', 'edit_transactions'],
+      createdAt: 1672531200,
+      updatedAt: 1672617600,
+    },
+  },
+  {
+    company: {
+      id: 2,
+      imageId: '/images/company_2.svg',
+      name: 'Company B',
+      taxId: '87654321',
+      startDate: 1672531200,
+      createdAt: 1672531200,
+      updatedAt: 1672617600,
+      isPrivate: true,
+    },
+    tag: WORK_TAG.FINANCIAL,
+    order: 2,
+    role: {
+      id: 2,
+      name: 'Auditor',
+      permissions: ['view_audits', 'approve_reports'],
+      createdAt: 1672531200,
+      updatedAt: 1672617600,
+    },
+  },
+  {
+    company: {
+      id: 3,
+      imageId: '/images/company_3.svg',
+      name: 'Company C',
+      taxId: '56781234',
+      startDate: 1672531200,
+      createdAt: 1672531200,
+      updatedAt: 1672617600,
+      isPrivate: false,
+    },
+    tag: WORK_TAG.TAX,
+    order: 3,
+    role: {
+      id: 3,
+      name: 'Consultant',
+      permissions: ['manage_clients', 'generate_reports'],
+      createdAt: 1672531200,
+      updatedAt: 1672617600,
+    },
   },
 ];

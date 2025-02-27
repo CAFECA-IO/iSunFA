@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { calculateAssetEntityDepreciation, IAssetEntity } from '@/interfaces/asset';
 import type { IVoucherEntity } from '@/interfaces/voucher';
-import type { ICompanyEntity } from '@/interfaces/company';
+import type { ICompanyEntity } from '@/interfaces/account_book';
 import { Prisma, Asset as PrismaAsset } from '@prisma/client';
 import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import {

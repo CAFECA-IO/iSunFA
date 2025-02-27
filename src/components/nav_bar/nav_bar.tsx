@@ -26,7 +26,7 @@ import { TranslateFunction } from '@/interfaces/locale';
 // import Notification from '@/components/notification/notification';
 import Skeleton from '@/components/skeleton/skeleton';
 import { UploadType } from '@/constants/file';
-import { CANCEL_ACCOUNT_BOOK_ID } from '@/constants/company';
+import { CANCEL_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');

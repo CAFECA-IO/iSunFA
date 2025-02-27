@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoAdd } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { WORK_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/interfaces/account_book';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import { ITeam } from '@/interfaces/team';

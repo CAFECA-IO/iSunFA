@@ -27,7 +27,9 @@ const BillingPage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Info: (20250117 - Liz) 取得使用者擁有的團隊資料 API (user is the owner of the team)
-  const { trigger: getOwnedTeamAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+  const { trigger: getOwnedTeamAPI } = APIHandler<IUserOwnedTeam>(
+    APIName.GET_SUBSCRIPTION_BY_TEAM_ID
+  );
 
   // Info: (20250117 - Liz) 打 API 取得使用者擁有的團隊資料
   const getOwnedTeam = useCallback(async () => {

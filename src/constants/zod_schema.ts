@@ -124,6 +124,7 @@ import {
 } from '@/lib/utils/zod_schema/asset';
 import { exportLedgerPostSchema } from '@/lib/utils/zod_schema/export_ledger';
 import { subscriptionSchemas } from '@/lib/utils/zod_schema/subscription';
+import { teamSchemas } from '@/lib/utils/zod_schema/team';
 import { paymentPlanListSchema } from '@/lib/utils/zod_schema/payment_plan';
 import { accountBookListSchema } from '@/lib/utils/zod_schema/account_book';
 
@@ -312,11 +313,19 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_LOGIN_DEVICE]: nullAPISchema,
   [APIName.REMOVE_LOGIN_DEVICE]: nullAPISchema,
 
-  [APIName.LIST_TEAM]: subscriptionSchemas.list,
-  [APIName.GET_TEAM_BY_ID]: subscriptionSchemas.get,
+  [APIName.CREATE_TEAM]: teamSchemas.create,
+  [APIName.LIST_TEAM]: teamSchemas.list,
+  [APIName.GET_TEAM_BY_ID]: teamSchemas.get,
+  [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: teamSchemas.listAccountBook,
+  [APIName.LIST_MEMBER_BY_TEAM_ID]: teamSchemas.listMember,
+  [APIName.ADD_MEMBER_TO_TEAM]: teamSchemas.addMember,
+
+  [APIName.LIST_SUBSCRIPTION]: subscriptionSchemas.list,
+  [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: subscriptionSchemas.get,
   [APIName.UPDATE_SUBSCRIPTION]: subscriptionSchemas.update,
-  [APIName.LIST_TEAM_INVOICE]: subscriptionSchemas.listInvoiceList,
-  [APIName.GET_TEAM_INVOICE_BY_ID]: subscriptionSchemas.getInvoice,
+  [APIName.LIST_SUBSCRIPTION_INVOICE]: subscriptionSchemas.listInvoiceList,
+  [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: subscriptionSchemas.getInvoice,
+
   [APIName.GET_CREDIT_CARD_INFO]: subscriptionSchemas.getCreditCard,
 
   [APIName.LIST_PAYMENT_PLAN]: paymentPlanListSchema,
