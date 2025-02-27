@@ -2,7 +2,7 @@ import { TPlanType } from '@/interfaces/subscription';
 import { TeamRole } from '@/interfaces/team';
 import { z } from 'zod';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
-import { nullSchema } from '@/lib/utils/zod_schema/common';
+import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { paginatedAccountBookForUserSchema } from '@/lib/utils/zod_schema/company';
 
 export const TeamSchema = z.object({
@@ -57,6 +57,62 @@ export const addMemberResponseSchema = z.object({
   failedEmails: z.array(z.string().email()),
 });
 
+// Info: (20250227 - Shirley) 定義更新團隊資訊的 Schema
+export const updateTeamBodySchema = z.object({
+  name: z.string().optional(),
+  about: z.string().optional(),
+  profile: z.string().optional(),
+  bankInfo: z
+    .object({
+      code: z.string(),
+      account: z.string(),
+    })
+    .optional(),
+});
+
+// Info: (20250227 - Shirley) 定義更新團隊資訊的回應 Schema
+export const updateTeamResponseSchema = z.union([
+  z.object({
+    id: z.number(),
+    name: z.string(),
+    about: z.string(),
+    profile: z.string(),
+    bankInfo: z.object({
+      code: z.string(),
+      account: z.string(),
+    }),
+  }),
+  z.null(),
+]);
+
+// Info: (20250227 - Shirley) 定義更新團隊成員角色的 Schema
+export const updateMemberBodySchema = z.object({
+  role: z.nativeEnum(TeamRole),
+});
+
+// Info: (20250227 - Shirley) 定義更新團隊成員角色的回應 Schema
+export const updateMemberResponseSchema = z.union([
+  z.object({
+    id: z.number(),
+    userId: z.number(),
+    teamId: z.number(),
+    role: z.string(),
+    email: z.string(),
+    name: z.string(),
+    createdAt: z.number(),
+    updatedAt: z.number(),
+  }),
+  z.null(),
+]);
+
+// Info: (20250227 - Shirley) 定義刪除團隊成員的回應 Schema
+export const deleteMemberResponseSchema = z.union([
+  z.object({
+    memberId: z.number(),
+  }),
+  z.null(),
+]);
+
 export const teamSchemas = {
   create: {
     input: {
@@ -89,6 +145,14 @@ export const teamSchemas = {
     outputSchema: TeamSchema,
     frontend: TeamSchema,
   },
+  update: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: updateTeamBodySchema,
+    },
+    outputSchema: updateTeamResponseSchema,
+    frontend: updateTeamResponseSchema,
+  },
   listAccountBook: {
     input: {
       querySchema: listByTeamIdQuerySchema,
@@ -113,4 +177,37 @@ export const teamSchemas = {
     outputSchema: addMemberResponseSchema,
     frontend: addMemberResponseSchema,
   },
+  updateMember: {
+    input: {
+      querySchema: z.object({
+        teamId: zodStringToNumber,
+        memberId: zodStringToNumber,
+      }),
+      bodySchema: updateMemberBodySchema,
+    },
+    outputSchema: updateMemberResponseSchema,
+    frontend: updateMemberResponseSchema,
+  },
+  deleteMember: {
+    input: {
+      querySchema: z.object({
+        teamId: zodStringToNumber,
+        memberId: zodStringToNumber,
+      }),
+      bodySchema: nullSchema,
+    },
+    outputSchema: deleteMemberResponseSchema,
+    frontend: deleteMemberResponseSchema,
+  },
 };
+
+// Info: (20250227 - Shirley) 導出更新團隊資訊的類型
+export type IUpdateTeamBody = z.infer<typeof updateTeamBodySchema>;
+export type IUpdateTeamResponse = z.infer<typeof updateTeamResponseSchema>;
+
+// Info: (20250227 - Shirley) 導出更新團隊成員角色的類型
+export type IUpdateMemberBody = z.infer<typeof updateMemberBodySchema>;
+export type IUpdateMemberResponse = z.infer<typeof updateMemberResponseSchema>;
+
+// Info: (20250227 - Shirley) 導出刪除團隊成員的類型
+export type IDeleteMemberResponse = z.infer<typeof deleteMemberResponseSchema>;

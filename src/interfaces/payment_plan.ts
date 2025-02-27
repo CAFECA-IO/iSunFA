@@ -1,7 +1,3 @@
-/**
- * Info: (20250225 - Shirley) Payment Plan 相關的介面定義
- */
-
 export interface IFeature {
   name: string;
   value: string;
