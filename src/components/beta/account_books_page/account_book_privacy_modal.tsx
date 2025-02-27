@@ -9,12 +9,14 @@ interface AccountBookPrivacyModalProps {
 }
 
 const AccountBookPrivacyModal = ({
+  // Deprecated: (20250227 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   accountBookToChangePrivacy,
   setAccountBookToChangePrivacy,
 }: AccountBookPrivacyModalProps) => {
   const { t } = useTranslation(['account_book']);
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
+  // Deprecated: (20250227 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
