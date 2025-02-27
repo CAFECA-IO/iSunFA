@@ -175,4 +175,5 @@ export const AUTH_CHECK = {
   [APIName.LIST_PAYMENT_PLAN]: [AuthFunctionsKeysNew.user],
   [APIName.VOUCHER_RESTORE_V2]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: [AuthFunctionsKeysNew.user],
 };

@@ -126,7 +126,10 @@ import { exportLedgerPostSchema } from '@/lib/utils/zod_schema/export_ledger';
 import { subscriptionSchemas } from '@/lib/utils/zod_schema/subscription';
 import { teamSchemas } from '@/lib/utils/zod_schema/team';
 import { paymentPlanListSchema } from '@/lib/utils/zod_schema/payment_plan';
-import { accountBookListSchema } from '@/lib/utils/zod_schema/account_book';
+import {
+  accountBookListSchema,
+  connectAccountBookSchema,
+} from '@/lib/utils/zod_schema/account_book';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -331,4 +334,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_PAYMENT_PLAN]: paymentPlanListSchema,
 
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: accountBookListSchema,
+  [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: connectAccountBookSchema,
 };
