@@ -17,6 +17,7 @@ import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM } from '@/constants/account_book';
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
 import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
+import AccountBookPrivacyModal from '@/components/beta/account_books_page/account_book_privacy_modal';
 
 interface TeamPageBodyProps {
   team: ITeam;
@@ -39,6 +40,9 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
     IAccountBookForUserWithTeam | undefined
   >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
+    IAccountBookForUserWithTeam | undefined
+  >();
+  const [accountBookToChangePrivacy, setAccountBookToChangePrivacy] = useState<
     IAccountBookForUserWithTeam | undefined
   >();
   const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
@@ -139,6 +143,7 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
           setAccountBookToEdit={setAccountBookToEdit}
           setAccountBookToDelete={setAccountBookToDelete}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+          setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
         />
       )}
 
@@ -160,7 +165,6 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
       {accountBookToEdit && (
         <ChangeTagModal
           accountBookToEdit={accountBookToEdit}
-          isModalOpen={!!accountBookToEdit}
           setAccountBookToEdit={setAccountBookToEdit}
         />
       )}
@@ -168,7 +172,6 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
       {accountBookToUploadPicture && (
         <UploadCompanyPictureModal
           accountBookToUploadPicture={accountBookToUploadPicture}
-          isModalOpen={!!accountBookToUploadPicture}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
         />
       )}
@@ -178,6 +181,13 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
           messageModalData={messageModalData}
           isModalVisible={!!accountBookToDelete}
           modalVisibilityHandler={closeDeleteModal}
+        />
+      )}
+
+      {accountBookToChangePrivacy && (
+        <AccountBookPrivacyModal
+          accountBookToChangePrivacy={accountBookToChangePrivacy}
+          setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
         />
       )}
 

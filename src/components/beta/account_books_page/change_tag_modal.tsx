@@ -6,14 +6,12 @@ import { WORK_TAG, IAccountBookForUserWithTeam } from '@/interfaces/account_book
 
 interface ChangeTagModalProps {
   accountBookToEdit: IAccountBookForUserWithTeam;
-  isModalOpen: boolean;
   setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
 }
 
 const ChangeTagModal = ({
   accountBookToEdit,
-  isModalOpen,
   setAccountBookToEdit,
   setRefreshKey,
 }: ChangeTagModalProps) => {
@@ -72,7 +70,7 @@ const ChangeTagModal = ({
     }
   };
 
-  return isModalOpen ? (
+  return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
@@ -162,7 +160,7 @@ const ChangeTagModal = ({
         </section>
       </div>
     </main>
-  ) : null;
+  );
 };
 
 export default ChangeTagModal;
