@@ -2,7 +2,7 @@ import { TPlanType } from '@/interfaces/subscription';
 import { TeamRole } from '@/interfaces/team';
 import { z } from 'zod';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
-import { nullSchema } from '@/lib/utils/zod_schema/common';
+import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { paginatedAccountBookForUserSchema } from '@/lib/utils/zod_schema/company';
 
 export const TeamSchema = z.object({
@@ -85,6 +85,26 @@ export const updateTeamResponseSchema = z.union([
   z.null(),
 ]);
 
+// Info: (20250227 - Shirley) 定義更新團隊成員角色的 Schema
+export const updateMemberBodySchema = z.object({
+  role: z.nativeEnum(TeamRole),
+});
+
+// Info: (20250227 - Shirley) 定義更新團隊成員角色的回應 Schema
+export const updateMemberResponseSchema = z.union([
+  z.object({
+    id: z.number(),
+    userId: z.number(),
+    teamId: z.number(),
+    role: z.string(),
+    email: z.string(),
+    name: z.string(),
+    createdAt: z.number(),
+    updatedAt: z.number(),
+  }),
+  z.null(),
+]);
+
 export const teamSchemas = {
   create: {
     input: {
@@ -149,8 +169,23 @@ export const teamSchemas = {
     outputSchema: addMemberResponseSchema,
     frontend: addMemberResponseSchema,
   },
+  updateMember: {
+    input: {
+      querySchema: z.object({
+        teamId: zodStringToNumber,
+        memberId: zodStringToNumber,
+      }),
+      bodySchema: updateMemberBodySchema,
+    },
+    outputSchema: updateMemberResponseSchema,
+    frontend: updateMemberResponseSchema,
+  },
 };
 
 // Info: (20250227 - Shirley) 導出更新團隊資訊的類型
 export type IUpdateTeamBody = z.infer<typeof updateTeamBodySchema>;
 export type IUpdateTeamResponse = z.infer<typeof updateTeamResponseSchema>;
+
+// Info: (20250227 - Shirley) 導出更新團隊成員角色的類型
+export type IUpdateMemberBody = z.infer<typeof updateMemberBodySchema>;
+export type IUpdateMemberResponse = z.infer<typeof updateMemberResponseSchema>;

@@ -176,6 +176,7 @@ export enum APIName {
   LIST_ACCOUNT_BOOK_BY_USER_ID = 'LIST_ACCOUNT_BOOK_BY_USER_ID',
   CONNECT_ACCOUNT_BOOK_BY_ID = 'CONNECT_ACCOUNT_BOOK_BY_ID',
   UPDATE_TEAM_BY_ID = 'UPDATE_TEAM_BY_ID',
+  UPDATE_MEMBER_BY_ID = 'UPDATE_MEMBER_BY_ID',
 }
 
 export enum APIPath {
@@ -330,6 +331,7 @@ export enum APIPath {
   LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
   LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
   CONNECT_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/connect`,
+  UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`, // Info: (20250227 - Shirley) 新增更新團隊成員角色的 API
 }
 
 const createConfig = ({
@@ -1102,5 +1104,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.UPDATE_TEAM_BY_ID,
     method: HttpMethod.PUT,
     path: APIPath.UPDATE_TEAM_BY_ID,
+  }),
+  [APIName.UPDATE_MEMBER_BY_ID]: createConfig({
+    name: APIName.UPDATE_MEMBER_BY_ID,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_MEMBER_BY_ID,
   }),
 };
