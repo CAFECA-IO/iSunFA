@@ -5,48 +5,41 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { IUpdateTeamBody, IUpdateTeamResponse } from '@/lib/utils/zod_schema/team';
+import {
+  IConnectAccountBookQueryParams,
+  IConnectAccountBookResponse,
+} from '@/lib/utils/zod_schema/account_book';
 
 interface IResponse {
   statusMessage: string;
-  payload: IUpdateTeamResponse | null;
+  payload: IConnectAccountBookResponse | null;
 }
 
-/**
- * Info: (20250227 - Shirley) 處理 PUT 請求，更新團隊資訊，目前為 mock API
- */
-const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IResponse['payload']> = async ({
-  query,
-  body,
-}) => {
-  const { teamId } = query;
-  const teamIdNumber = Number(teamId);
-  const updateData = body as IUpdateTeamBody;
+const handleGetRequest: IHandleRequest<
+  APIName.CONNECT_ACCOUNT_BOOK_BY_ID,
+  IResponse['payload']
+> = async ({ query }) => {
+  const { accountBookId } = query as IConnectAccountBookQueryParams;
 
-  // Info: (20250227 - Shirley) 模擬團隊不存在的情況
-  if (teamIdNumber === 404) {
+  /**
+   * Info: (20250227 - Shirley) mock 連接帳本的邏輯
+   * 在實際應用中，這裡會有更複雜的邏輯，例如檢查帳本是否存在、用戶是否有權限等
+   */
+  if (accountBookId === 404) {
     return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
   }
 
-  // Info: (20250227 - Shirley) 模擬更新團隊資訊
-  const payload: IUpdateTeamResponse = {
-    id: teamIdNumber,
-    name: updateData.name || 'Default Team',
-    about: updateData.about || 'Default Team Description',
-    profile: updateData.profile || 'https://www.isunfa.com/profile/123',
-    bankInfo: updateData.bankInfo || {
-      code: '001',
-      account: '1234567890',
-    },
+  const payload: IConnectAccountBookResponse = {
+    accountBookId,
   };
 
-  return { statusMessage: STATUS_MESSAGE.SUCCESS_UPDATE, payload };
+  return { statusMessage: STATUS_MESSAGE.SUCCESS_GET, payload };
 };
 
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
 } = {
-  PUT: (req) => withRequestValidation(APIName.UPDATE_TEAM_BY_ID, req, handlePutRequest),
+  GET: (req) => withRequestValidation(APIName.CONNECT_ACCOUNT_BOOK_BY_ID, req, handleGetRequest),
 };
 
 export default async function handler(

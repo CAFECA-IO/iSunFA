@@ -125,6 +125,11 @@ import {
 import { exportLedgerPostSchema } from '@/lib/utils/zod_schema/export_ledger';
 import { subscriptionSchemas } from '@/lib/utils/zod_schema/subscription';
 import { teamSchemas } from '@/lib/utils/zod_schema/team';
+import { paymentPlanListSchema } from '@/lib/utils/zod_schema/payment_plan';
+import {
+  accountBookListSchema,
+  connectAccountBookSchema,
+} from '@/lib/utils/zod_schema/account_book';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -314,6 +319,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.CREATE_TEAM]: teamSchemas.create,
   [APIName.LIST_TEAM]: teamSchemas.list,
   [APIName.GET_TEAM_BY_ID]: teamSchemas.get,
+  [APIName.UPDATE_TEAM_BY_ID]: teamSchemas.update,
+  [APIName.UPDATE_MEMBER_BY_ID]: teamSchemas.updateMember,
+  [APIName.DELETE_MEMBER_BY_ID]: teamSchemas.deleteMember,
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: teamSchemas.listAccountBook,
   [APIName.LIST_MEMBER_BY_TEAM_ID]: teamSchemas.listMember,
   [APIName.ADD_MEMBER_TO_TEAM]: teamSchemas.addMember,
@@ -325,4 +333,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: subscriptionSchemas.getInvoice,
 
   [APIName.GET_CREDIT_CARD_INFO]: subscriptionSchemas.getCreditCard,
+
+  [APIName.LIST_PAYMENT_PLAN]: paymentPlanListSchema,
+
+  [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: accountBookListSchema,
+  [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: connectAccountBookSchema,
 };

@@ -163,6 +163,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
         editable: false,
       },
     },
+    isTransferring: false,
   },
   {
     company: {
@@ -211,6 +212,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
         editable: false,
       },
     },
+    isTransferring: false,
   },
   {
     company: {
@@ -259,6 +261,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
         editable: false,
       },
     },
+    isTransferring: false,
   },
   {
     company: {
@@ -307,6 +310,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
         editable: false,
       },
     },
+    isTransferring: false,
   },
   {
     company: {
@@ -355,5 +359,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
         editable: true,
       },
     },
+    isTransferring: false,
   },
 ];
