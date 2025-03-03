@@ -18,7 +18,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
 import { WORK_TAG } from '@/interfaces/account_book';
 import { DefaultValue } from '@/constants/default_value';
-import { listTeamsByUserId } from '@/lib/utils/repo/team.repo';
+import { listTeamsByUserId, isTeamOwner } from '@/lib/utils/repo/team.repo';
 
 export async function listAdminByCompanyId(companyId: number): Promise<
   (Admin & {
@@ -646,10 +646,16 @@ export async function createCompanyAndRole(
 }> {
   const nowTimestamp = getTimestampNow();
 
-  // TODO: (20250303 - Shirley) 需檢查提供的 teamId 是否存在、用戶是否在該 team 裡，如果 teamId
-  // Info: (20250303 - Shirley) 如果沒有提供 teamId，則獲取用戶的 team 列表
+  // Info: (20250303 - Shirley) 如果提供了 teamId，檢查用戶是否為該 team 的 owner
   let finalTeamId: number | undefined = teamId;
-  if (!finalTeamId) {
+  if (finalTeamId) {
+    const isOwner = await isTeamOwner(userId, finalTeamId);
+    if (!isOwner) {
+      // TODO: (20250303 - Shirley) 如果用戶不是該 team 的 owner，則不允許關聯 company 到該 team
+      throw new Error('User is not the owner of the team');
+    }
+  } else {
+    // Info: (20250303 - Shirley) 如果沒有提供 teamId，則獲取用戶的 team 列表
     const userTeams = await listTeamsByUserId(userId);
     if (userTeams && userTeams.length > 0) {
       // Info: (20250303 - Shirley) 使用用戶的第一個 team（通常是默認 team）

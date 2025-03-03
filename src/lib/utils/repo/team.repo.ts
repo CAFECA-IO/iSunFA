@@ -154,3 +154,22 @@ export async function listCompaniesByTeamId(teamId: number) {
 
   return companies;
 }
+
+/**
+ * Info: (20250303 - Shirley)
+ * 檢查用戶是否為 team 的 owner
+ * @param userId 用戶 ID
+ * @param teamId team ID
+ * @returns 是否為 owner
+ */
+export async function isTeamOwner(userId: number, teamId: number): Promise<boolean> {
+  const teamMember = await prisma.teamMember.findFirst({
+    where: {
+      userId,
+      teamId,
+      role: TeamRole.OWNER,
+    },
+  });
+
+  return !!teamMember;
+}
