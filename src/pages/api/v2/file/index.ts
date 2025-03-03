@@ -57,7 +57,8 @@ async function handleFileUpload(
     }
     case UploadType.COMPANY:
     case UploadType.USER:
-    case UploadType.PROJECT: {
+    case UploadType.PROJECT:
+    case UploadType.TEAM: {
       const googleBucketUrl = await uploadFile(fileForSave);
       fileUrl = googleBucketUrl;
       break;
@@ -71,7 +72,7 @@ async function handleFileUpload(
     name: fileName,
     size: fileSize,
     mimeType: fileMimeType,
-    type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
+    type: UPLOAD_TYPE_TO_FOLDER_MAP[type] || 'team',
     url: fileUrl,
     isEncrypted,
     encryptedSymmetricKey,
@@ -104,14 +105,14 @@ async function handleFileUpload(
       await updateProjectById(targetIdNum, undefined, fileId);
       break;
     }
+    case UploadType.TEAM: {
+      loggerBack.info(`Mock: Updated team ${targetIdNum} with file ID ${fileId}`);
+      break;
+    }
     case UploadType.KYC:
     case UploadType.ROOM: {
       roomManager.addFileToRoom(targetId, returnFile);
 
-      // Info: (20241121 - tzuhan)這是 FILE_UPLOAD 成功後，後端使用 pusher 的傳送 ROOM_EVENT.NEW_FILE 的範例
-      /**
-       * ROOM_EVENT.NEW_FILE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(file as IFileBeta)
-       */
       const pusher = getPusherInstance();
       pusher.trigger(`${PRIVATE_CHANNEL.ROOM}-${targetId}`, ROOM_EVENT.NEW_FILE, {
         message: JSON.stringify(returnFile),
@@ -137,7 +138,6 @@ function extractKeyAndIvFromFields(fields: formidable.Fields) {
 
   const isEncrypted = !!(keyStr && ivUnit8.length > 0);
 
-  // Info: (20241224 - Murky) PublicKey is for room searching
   const publicKeyStr = publicKey ? publicKey[0] : '';
   const jsonPublicKey: JsonWebKey | null = publicKeyStr
     ? parseJsonWebKeyFromString(publicKeyStr)
@@ -156,6 +156,27 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
   let payload: File | null = null;
 
   const { type, targetId } = query;
+
+  if (type === 'team') {
+    payload = {
+      id: 12345,
+      name: `team_picture_${targetId}.jpg`,
+      size: 123456,
+      mimeType: 'image/jpeg',
+      type: 'team',
+      url: `https://storage.googleapis.com/isunfa-images/team/team_picture_${targetId}.jpg`,
+      isEncrypted: false,
+      encryptedSymmetricKey: '',
+      iv: Buffer.from([]),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      deletedAt: null,
+    } as unknown as File;
+
+    statusMessage = STATUS_MESSAGE.CREATED;
+    loggerBack.info(`Mock: Uploaded file for team ${targetId}`);
+    return { statusMessage, payload };
+  }
 
   const parsedForm = await parseForm(req, UPLOAD_TYPE_TO_FOLDER_MAP[type]);
   const { files, fields } = parsedForm;

@@ -179,6 +179,7 @@ export enum APIName {
   UPDATE_MEMBER_BY_ID = 'UPDATE_MEMBER_BY_ID',
   DELETE_MEMBER_BY_ID = 'DELETE_MEMBER_BY_ID',
   GET_ACCOUNT_BOOK_BY_ID = 'GET_ACCOUNT_BOOK_BY_ID',
+  PUT_TEAM_ICON = 'PUT_TEAM_ICON',
 }
 
 export enum APIPath {
@@ -336,6 +337,7 @@ export enum APIPath {
   UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
   DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
   GET_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId`,
+  PUT_TEAM_ICON = `${apiPrefixV2}/team/:teamId/icon`,
 }
 
 const createConfig = ({
@@ -886,7 +888,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   [APIName.CERTIFICATE_DELETE_V2]: createConfig({
     name: APIName.CERTIFICATE_DELETE_V2,
     method: HttpMethod.DELETE,
-    path: APIPath.CERTIFICATE_PUT_V2,
+    path: APIPath.CERTIFICATE_DELETE_V2,
   }),
   [APIName.INVOICE_POST_V2]: createConfig({
     name: APIName.INVOICE_POST_V2,
@@ -1124,5 +1126,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.GET_ACCOUNT_BOOK_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.GET_ACCOUNT_BOOK_BY_ID,
+  }),
+  [APIName.PUT_TEAM_ICON]: createConfig({
+    name: APIName.PUT_TEAM_ICON,
+    method: HttpMethod.PUT,
+    path: APIPath.PUT_TEAM_ICON,
   }),
 };

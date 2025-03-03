@@ -113,6 +113,63 @@ export const deleteMemberResponseSchema = z.union([
   z.null(),
 ]);
 
+/**
+ * Info: (20250303 - Shirley)
+ * @note used in APIName.PUT_TEAM_ICON
+ */
+const teamPutIconQuerySchema = z.object({
+  teamId: zodStringToNumber,
+});
+
+const teamPutIconBodySchema = z.object({
+  fileId: z.number().int(),
+});
+
+export const teamPutIconSchema = {
+  input: {
+    querySchema: teamPutIconQuerySchema,
+    bodySchema: teamPutIconBodySchema,
+  },
+  outputSchema: z
+    .object({
+      id: z.number().int(),
+      name: z.string(),
+      imageId: z.number().int(),
+      imageFile: z.object({
+        id: z.number().int(),
+        name: z.string(),
+        size: z.number().int(),
+        mimeType: z.string(),
+        url: z.string(),
+        type: z.string(),
+        createdAt: z.number().int(),
+        updatedAt: z.number().int(),
+      }),
+      createdAt: z.number().int(),
+      updatedAt: z.number().int(),
+    })
+    .nullable(),
+  frontend: z
+    .object({
+      id: z.number().int(),
+      name: z.string(),
+      imageId: z.number().int(),
+      imageFile: z.object({
+        id: z.number().int(),
+        name: z.string(),
+        size: z.number().int(),
+        mimeType: z.string(),
+        url: z.string(),
+        type: z.string(),
+        createdAt: z.number().int(),
+        updatedAt: z.number().int(),
+      }),
+      createdAt: z.number().int(),
+      updatedAt: z.number().int(),
+    })
+    .nullable(),
+};
+
 export const teamSchemas = {
   create: {
     input: {
@@ -199,6 +256,7 @@ export const teamSchemas = {
     outputSchema: deleteMemberResponseSchema,
     frontend: deleteMemberResponseSchema,
   },
+  putIcon: teamPutIconSchema,
 };
 
 // Info: (20250227 - Shirley) 導出更新團隊資訊的類型
