@@ -2,10 +2,10 @@ import { TPlanType } from '@/interfaces/subscription';
 import { IEditable } from '@/interfaces/editable';
 
 export enum TeamRole {
-  OWNER = 'owner',
-  ADMIN = 'admin',
-  EDITOR = 'editor',
-  VIEWER = 'viewer',
+  OWNER = 'OWNER',
+  ADMIN = 'ADMIN',
+  EDITOR = 'EDITOR',
+  VIEWER = 'VIEWER',
 }
 
 export interface ITeamMember {
@@ -38,4 +38,30 @@ export interface IInviteMember {
 export interface IInviteMemberResponse {
   invitedCount: number;
   failedEmails: string[];
+}
+
+export enum LeaveStatus {
+  LEFT = 'LEFT',
+  FAILED = 'FAILED',
+}
+
+export interface ILeaveTeam {
+  teamId: string;
+  userId: number;
+  role: TeamRole;
+  status: LeaveStatus;
+  leavedAt?: number;
+}
+
+export enum TransferStatus {
+  TRANSFER = 'TRANSFER',
+  FAILED = 'FAILED',
+}
+
+export interface ITransferLedger {
+  accountBookId: string;
+  previousTeamId: string;
+  targetTeamId: string;
+  status: TransferStatus;
+  transferedAt?: number;
 }

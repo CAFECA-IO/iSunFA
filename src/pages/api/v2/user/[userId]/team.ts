@@ -6,12 +6,12 @@ import { APIName } from '@/constants/api_connection';
 import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 import { ITeam, TeamRole } from '@/interfaces/team';
-import { FAKE_TEAM_LIST } from '@/constants/team';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
 import { TPlanType } from '@/interfaces/subscription';
+import { getTeamList } from '@/lib/utils/repo/team.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -27,16 +27,11 @@ const handleGetRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   const { query } = checkRequestData(APIName.LIST_TEAM, req, session);
-  if (query === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
 
   loggerBack.info(`List Team by userId: ${userId} with query: ${JSON.stringify(query)}`);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  const options: IPaginatedOptions<ITeam[]> = {
-    data: FAKE_TEAM_LIST.slice(0, 1),
-  };
+  const options: IPaginatedOptions<ITeam[]> = await getTeamList(userId, query || undefined);
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.LIST_TEAM,
     toPaginatedData(options)
