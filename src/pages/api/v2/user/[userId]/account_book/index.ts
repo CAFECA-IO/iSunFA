@@ -175,13 +175,11 @@ const handleGetRequest: IHandleRequest<
   let payload: IAccountBookListResponse | null = null;
 
   const { userId, page, pageSize } = query as IAccountBookListQueryParams;
-
+  // TODO: (20250303 - Shirley) validate the query of userId and userId in session
   loggerBack.info(`List account books by userId: ${userId} with query: ${JSON.stringify(query)}`);
 
-  // Info: (20240324 - Shirley) 取得帳本列表
   const accountBooks = mockAccountBooks || [];
 
-  // Info: (20240324 - Shirley) 處理分頁
   const options: IPaginatedOptions<IAccountBookForUserWithTeam[]> = {
     data: accountBooks,
     page,
@@ -190,7 +188,6 @@ const handleGetRequest: IHandleRequest<
 
   const paginatedData = toPaginatedData(options);
 
-  // Info: (20240324 - Shirley) 驗證輸出資料
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
     paginatedData

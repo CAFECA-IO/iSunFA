@@ -6,7 +6,6 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
-// Info: (20240324 - Shirley) 定義 Role 的 Schema
 const roleSchema = z.object({
   id: z.number(),
   name: z.string(),
@@ -15,7 +14,6 @@ const roleSchema = z.object({
   updatedAt: z.number(),
 });
 
-// Info: (20240324 - Shirley) 定義 AccountBook 的 Schema
 const accountBookSchema = z.object({
   id: z.number(),
   imageId: z.string(),
@@ -27,7 +25,6 @@ const accountBookSchema = z.object({
   isPrivate: z.boolean().optional(), // ToDo: (20250224 - Liz) 等後端 API 調整後就改為必填
 });
 
-// Info: (20240324 - Shirley) 定義 AccountBookForUser 的 Schema
 const accountBookForUserSchema = z.object({
   company: accountBookSchema,
   tag: z.nativeEnum(WORK_TAG),
@@ -35,26 +32,21 @@ const accountBookForUserSchema = z.object({
   role: roleSchema,
 });
 
-// Info: (20240324 - Shirley) 定義 AccountBookForUserWithTeam 的 Schema
 const accountBookForUserWithTeamSchema = accountBookForUserSchema.extend({
   team: TeamSchema,
   isTransferring: z.boolean(),
 });
 
-// Info: (20240324 - Shirley) 定義 API 查詢參數的 Schema
 const accountBookListQuerySchema = z.object({
   userId: zodStringToNumber,
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
 });
 
-// Info: (20240324 - Shirley) 定義 API 回應的 Schema
 const accountBookListResponseSchema = paginatedDataSchema(accountBookForUserWithTeamSchema);
 
-// Info: (20240324 - Shirley) 定義空的 body Schema
 const accountBookNullSchema = z.union([z.object({}), z.string()]);
 
-// Info: (20240324 - Shirley) 導出 Schema
 export const accountBookListSchema = {
   input: {
     querySchema: accountBookListQuerySchema,
@@ -64,27 +56,52 @@ export const accountBookListSchema = {
   frontend: accountBookNullSchema,
 };
 
-// Info: (20240324 - Shirley) 導出類型
 export type IAccountBookListQueryParams = z.infer<typeof accountBookListQuerySchema>;
 export type IAccountBookListResponse = z.infer<typeof accountBookListResponseSchema>;
 
-// Info: (20240324 - Shirley) 定義連接帳本的查詢參數 Schema
 const connectAccountBookQuerySchema = z.object({
   accountBookId: zodStringToNumber,
 });
 
-// Info: (20240324 - Shirley) 定義連接帳本的回應 Schema
 const connectAccountBookResponseSchema = z.object({
   accountBookId: z.number(),
 });
 
-// Info: (20240324 - Shirley) 定義連接帳本的回應 Schema (包含 null 情況)
 const connectAccountBookResponseWithNullSchema = z.union([
   connectAccountBookResponseSchema,
   z.null(),
 ]);
 
-// Info: (20240324 - Shirley) 導出連接帳本的 Schema
+const countrySchema = z.object({
+  id: z.string(),
+  code: z.string(),
+  name: z.string(),
+  localeKey: z.string(),
+  currencyCode: z.string(),
+  phoneCode: z.string(),
+  phoneExample: z.string(),
+});
+
+const accountBookDetailsSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  taxId: z.string(),
+  taxSerialNumber: z.string(),
+  representativeName: z.string(),
+  country: countrySchema,
+  phoneNumber: z.string(),
+  address: z.string(),
+  startDate: z.number(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
+
+const getAccountBookResponseSchema = z.union([accountBookDetailsSchema, z.null()]);
+
+const getAccountBookQuerySchema = z.object({
+  accountBookId: zodStringToNumber,
+});
+
 export const connectAccountBookSchema = {
   input: {
     querySchema: connectAccountBookQuerySchema,
@@ -94,6 +111,18 @@ export const connectAccountBookSchema = {
   frontend: accountBookNullSchema,
 };
 
-// Info: (20240324 - Shirley) 導出連接帳本的類型
+export const getAccountBookSchema = {
+  input: {
+    querySchema: getAccountBookQuerySchema,
+    bodySchema: accountBookNullSchema,
+  },
+  outputSchema: getAccountBookResponseSchema,
+  frontend: accountBookNullSchema,
+};
+
 export type IConnectAccountBookQueryParams = z.infer<typeof connectAccountBookQuerySchema>;
 export type IConnectAccountBookResponse = z.infer<typeof connectAccountBookResponseSchema>;
+
+export type IGetAccountBookQueryParams = z.infer<typeof getAccountBookQuerySchema>;
+export type IGetAccountBookResponse = z.infer<typeof accountBookDetailsSchema>;
+export type ICountry = z.infer<typeof countrySchema>;
