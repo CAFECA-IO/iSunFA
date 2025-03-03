@@ -16,7 +16,7 @@ interface IResponse {
 }
 
 /**
- * Info: (20250227 - Shirley) 處理 GET 請求，獲取帳本詳細資訊，目前為 mock API
+ * Info: (20250303 - Shirley) 處理 GET 請求，獲取帳本詳細資訊，目前為 mock API
  */
 const handleGetRequest: IHandleRequest<
   APIName.GET_ACCOUNT_BOOK_BY_ID,
@@ -24,7 +24,7 @@ const handleGetRequest: IHandleRequest<
 > = async ({ query }) => {
   const { accountBookId } = query as IGetAccountBookQueryParams;
 
-  // Info: (20250227 - Shirley) 模擬帳本不存在的情況
+  // Info: (20250303 - Shirley) 模擬帳本不存在的情況
   if (accountBookId === 404) {
     return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
   }
@@ -47,9 +47,9 @@ const handleGetRequest: IHandleRequest<
     },
     phoneNumber: '0912345678',
     address: 'No. 1, Section 5, Xinyi Road, Xinyi District, Taipei City 110, Taiwan',
-    startDate: 1609459200, // 2021-01-01 00:00:00
-    createdAt: 1609459200, // 2021-01-01 00:00:00
-    updatedAt: 1609459200, // 2021-01-01 00:00:00
+    startDate: 1609459200,
+    createdAt: 1609459200,
+    updatedAt: 1609459200,
   };
 
   return { statusMessage: STATUS_MESSAGE.SUCCESS_GET, payload };

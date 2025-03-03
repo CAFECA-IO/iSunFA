@@ -1,6 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { IResponseData } from '@/interfaces/response_data';
+import { formatApiResponse } from '@/lib/utils/common';
+import { IHandleRequest } from '@/interfaces/handleRequest';
+import { APIName } from '@/constants/api_connection';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { loggerError } from '@/lib/utils/logger_back';
 
-/**
+/** Info: (20250303 - Shirley)
  * 開發步驟：
  * 1. 在 APIName enum 中添加 TEAM_PUT_ICON 類型
  * 2. 在 APIPath enum 中添加 TEAM_PUT_ICON 對應的路徑
@@ -12,15 +19,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
  * 8. 實作 handlePutRequest 函數，處理 PUT 請求
  */
 
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
-import { IHandleRequest } from '@/interfaces/handleRequest';
-import { APIName } from '@/constants/api_connection';
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { loggerError } from '@/lib/utils/logger_back';
-
-// 定義 Team 與 File 的關聯介面
+// Info: (20250303 - Shirley) 定義 Team 與 File 的關聯介面
 interface ITeamWithImage {
   id: number;
   name: string;
@@ -30,7 +29,7 @@ interface ITeamWithImage {
   updatedAt: number;
 }
 
-// 定義 File 介面
+// Info: (20250303 - Shirley) 定義 File 介面
 interface IFile {
   id: number;
   name: string;

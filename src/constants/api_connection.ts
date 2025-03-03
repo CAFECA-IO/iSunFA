@@ -888,7 +888,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   [APIName.CERTIFICATE_DELETE_V2]: createConfig({
     name: APIName.CERTIFICATE_DELETE_V2,
     method: HttpMethod.DELETE,
-    path: APIPath.CERTIFICATE_DELETE_V2,
+    path: APIPath.CERTIFICATE_PUT_V2,
   }),
   [APIName.INVOICE_POST_V2]: createConfig({
     name: APIName.INVOICE_POST_V2,
