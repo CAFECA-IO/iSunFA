@@ -85,9 +85,9 @@ export const updateTeamResponseSchema = z.union([
   z.null(),
 ]);
 
-// Info: (20250227 - Shirley) 定義更新團隊成員角色的 Schema
+// Info: (20250227 - Shirley) 定義更新團隊成員角色的 Schema，OWNER 不能透過更新 member 修改
 export const updateMemberBodySchema = z.object({
-  role: z.nativeEnum(TeamRole),
+  role: z.enum([TeamRole.ADMIN, TeamRole.EDITOR, TeamRole.VIEWER]),
 });
 
 // Info: (20250227 - Shirley) 定義更新團隊成員角色的回應 Schema
