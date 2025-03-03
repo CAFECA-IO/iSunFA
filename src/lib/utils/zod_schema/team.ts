@@ -125,49 +125,21 @@ const teamPutIconBodySchema = z.object({
   fileId: z.number().int(),
 });
 
+const teamPictureSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  imageId: z.string(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+});
+
 export const teamPutIconSchema = {
   input: {
     querySchema: teamPutIconQuerySchema,
     bodySchema: teamPutIconBodySchema,
   },
-  outputSchema: z
-    .object({
-      id: z.number().int(),
-      name: z.string(),
-      imageId: z.number().int(),
-      imageFile: z.object({
-        id: z.number().int(),
-        name: z.string(),
-        size: z.number().int(),
-        mimeType: z.string(),
-        url: z.string(),
-        type: z.string(),
-        createdAt: z.number().int(),
-        updatedAt: z.number().int(),
-      }),
-      createdAt: z.number().int(),
-      updatedAt: z.number().int(),
-    })
-    .nullable(),
-  frontend: z
-    .object({
-      id: z.number().int(),
-      name: z.string(),
-      imageId: z.number().int(),
-      imageFile: z.object({
-        id: z.number().int(),
-        name: z.string(),
-        size: z.number().int(),
-        mimeType: z.string(),
-        url: z.string(),
-        type: z.string(),
-        createdAt: z.number().int(),
-        updatedAt: z.number().int(),
-      }),
-      createdAt: z.number().int(),
-      updatedAt: z.number().int(),
-    })
-    .nullable(),
+  outputSchema: teamPictureSchema.nullable(),
+  frontend: teamPictureSchema,
 };
 
 export const teamSchemas = {

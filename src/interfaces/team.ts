@@ -39,3 +39,12 @@ export interface IInviteMemberResponse {
   invitedCount: number;
   failedEmails: string[];
 }
+
+// Info: (20250303 - Shirley) 定義 Team 與 File 的關聯介面
+export interface ITeamWithImage {
+  id: number;
+  name: string;
+  imageId: string;
+  createdAt: number;
+  updatedAt: number;
+}

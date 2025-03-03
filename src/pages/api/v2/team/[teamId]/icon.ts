@@ -1,11 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { loggerError } from '@/lib/utils/logger_back';
+import { ITeamWithImage } from '@/interfaces/team';
 
 /** Info: (20250303 - Shirley)
  * 開發步驟：
@@ -18,28 +19,6 @@ import { loggerError } from '@/lib/utils/logger_back';
  * 7. 使用 withRequestValidation 中間件處理授權檢查
  * 8. 實作 handlePutRequest 函數，處理 PUT 請求
  */
-
-// Info: (20250303 - Shirley) 定義 Team 與 File 的關聯介面
-interface ITeamWithImage {
-  id: number;
-  name: string;
-  imageId: number;
-  imageFile: IFile;
-  createdAt: number;
-  updatedAt: number;
-}
-
-// Info: (20250303 - Shirley) 定義 File 介面
-interface IFile {
-  id: number;
-  name: string;
-  size: number;
-  mimeType: string;
-  url: string;
-  type: string;
-  createdAt: number;
-  updatedAt: number;
-}
 
 const handlePutRequest: IHandleRequest<APIName.PUT_TEAM_ICON, ITeamWithImage> = async ({
   query,
@@ -54,26 +33,13 @@ const handlePutRequest: IHandleRequest<APIName.PUT_TEAM_ICON, ITeamWithImage> = 
   const { userId } = session;
 
   try {
-    // 注意：這是 mock 實作，實際開發時需要調用 putTeamIcon 函數
-    // const updatedTeam = await putTeamIcon({ teamId, fileId });
-
-    // 模擬成功更新 team 圖示的情況
+    // Info: (20250303 - Shirley) 模擬成功更新 team 圖示的情況
     const mockTeam: ITeamWithImage = {
       id: Number(teamId),
       name: `Team ${teamId}`,
-      imageId: Number(fileId),
-      imageFile: {
-        id: Number(fileId),
-        name: `team_picture_${fileId}.jpg`,
-        size: 123456,
-        mimeType: 'image/jpeg',
-        url: `https://storage.googleapis.com/isunfa-images/team/team_picture_${fileId}.jpg`,
-        type: 'team',
-        createdAt: new Date().getTime(),
-        updatedAt: new Date().getTime(),
-      },
-      createdAt: new Date().getTime(),
-      updatedAt: new Date().getTime(),
+      imageId: `https://storage.googleapis.com/isunfa-images/team/team_picture_${fileId}.jpg`,
+      createdAt: getTimestampNow(),
+      updatedAt: getTimestampNow(),
     };
 
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
