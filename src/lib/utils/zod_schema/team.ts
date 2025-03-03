@@ -136,10 +136,11 @@ export const teamSchemas = {
       bodySchema: z.object({
         name: z.string(),
         members: z.array(z.string().email()).optional(),
-        planType: z.enum(Object.values(TPlanType) as [TPlanType, ...TPlanType[]]),
+        planType: z.enum(Object.values(TPlanType) as [TPlanType, ...TPlanType[]]).optional(),
         about: z.string().optional(),
         profile: z.string().optional(),
         bankInfo: z.object({ code: z.number(), number: z.string() }).optional(),
+        imageFileId: z.number().optional(),
       }),
     },
     outputSchema: TeamSchema,

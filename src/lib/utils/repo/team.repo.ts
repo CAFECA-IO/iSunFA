@@ -71,6 +71,7 @@ export const getTeamList = async (
       subscription: {
         include: { plan: true }, // Info: (20250227 - tzuhan) 訂閱方案
       },
+      imageFile: true,
     },
     skip: ((page || 1) - 1) * (pageSize || 1),
     take: pageSize,
@@ -88,7 +89,7 @@ export const getTeamList = async (
 
     return {
       id: team.id.toString(),
-      imageId: team.profile,
+      imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
       role: userRole,
       name: {
         value: team.name,
@@ -125,5 +126,150 @@ export const getTeamList = async (
     totalCount,
     pageSize,
     sort: sortOption,
+  };
+};
+
+export const createTeam = async (
+  userId: number,
+  teamData: {
+    name: string;
+    members?: string[];
+    planType?: TPlanType;
+    about?: string;
+    profile?: string;
+    bankInfo?: { code: number; number: string };
+    imageFileId?: number;
+  }
+): Promise<ITeam> => {
+  // Info: (20250303 - Tzuhan) 取得對應的 planId，若未提供，則使用預設方案 (BEGINNER)
+  const plan = await prisma.teamPlan.findFirst({
+    where: { type: teamData.planType ?? TPlanType.BEGINNER },
+    select: { id: true },
+  });
+
+  if (!plan) {
+    throw new Error('Plan type not found');
+  }
+
+  const now = Math.floor(Date.now() / 1000); // Info: (20250303 - Tzuhan) 以秒為單位的 UNIX timestamp
+
+  // Info: (20250303 - Tzuhan) 建立團隊
+  const newTeam = await prisma.team.create({
+    data: {
+      ownerId: userId,
+      name: teamData.name,
+    },
+    include: {
+      members: true,
+      ledger: true,
+    },
+  });
+
+  // Info: (20250303 - Tzuhan) 建立團隊訂閱
+  await prisma.teamSubscription.create({
+    data: {
+      teamId: newTeam.id,
+      planId: plan.id,
+      autoRenewal: false,
+      startDate: now, // Info: (20250303 - Tzuhan) ✅ 以當前時間作為開始日期
+      expiredDate: now + 30 * 24 * 60 * 60, // Info: (20250303 - Tzuhan) 預設 30 天後過期
+      paymentStatus: TeamPaymentStatus.FREE,
+    },
+  });
+
+  return {
+    id: newTeam.id.toString(),
+    imageId: newTeam.profile ?? '/images/fake_team_img.svg',
+    role: TeamRole.OWNER,
+    name: {
+      value: newTeam.name,
+      editable: true,
+    },
+    about: {
+      value: newTeam.about ?? '',
+      editable: true,
+    },
+    profile: {
+      value: newTeam.profile ?? '',
+      editable: true,
+    },
+    planType: {
+      value: teamData.planType ?? TPlanType.BEGINNER,
+      editable: false,
+    },
+    totalMembers: newTeam.members.length,
+    totalAccountBooks: newTeam.ledger.length,
+    bankAccount: {
+      value: newTeam.bankInfo
+        ? `${(newTeam.bankInfo as { code: string }).code}-${(newTeam.bankInfo as { number: string }).number}`
+        : '',
+      editable: true,
+    },
+  };
+};
+
+export const getTeamByTeamId = async (teamId: number, userId: number): Promise<ITeam | null> => {
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: {
+      members: {
+        select: {
+          userId: true,
+          role: true,
+          user: {
+            select: { name: true, email: true, imageFileId: true },
+          },
+        },
+      },
+      ledger: {
+        select: { id: true },
+      },
+      subscription: {
+        include: { plan: true },
+      },
+      imageFile: {
+        select: { id: true, url: true },
+      },
+    },
+  });
+
+  if (!team) {
+    return null;
+  }
+
+  const userRole =
+    (team.members.find((member) => member.userId === userId)?.role as TeamRole) ?? TeamRole.VIEWER;
+  const planType = team.subscription
+    ? (team.subscription.plan.type as TPlanType)
+    : TPlanType.BEGINNER;
+
+  return {
+    id: team.id.toString(),
+    imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
+    role: userRole,
+    name: {
+      value: team.name,
+      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+    },
+    about: {
+      value: team.about || '',
+      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+    },
+    profile: {
+      value: team.profile || '',
+      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+    },
+    planType: {
+      value: planType,
+      editable: false,
+    },
+    totalMembers: team.members.length,
+    totalAccountBooks: team.ledger.length,
+    bankAccount: {
+      value: team.bankInfo
+        ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
+        : '',
+      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+    },
   };
 };
