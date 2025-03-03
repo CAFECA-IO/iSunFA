@@ -326,6 +326,8 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: teamSchemas.listAccountBook,
   [APIName.LIST_MEMBER_BY_TEAM_ID]: teamSchemas.listMember,
   [APIName.ADD_MEMBER_TO_TEAM]: teamSchemas.addMember,
+  [APIName.TRANSFER_ACCOUNT_BOOK]: teamSchemas.transferAccountBook,
+  [APIName.LEAVE_TEAM]: teamSchemas.leaveTeam,
 
   [APIName.LIST_SUBSCRIPTION]: subscriptionSchemas.list,
   [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: subscriptionSchemas.get,

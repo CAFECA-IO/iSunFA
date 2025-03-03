@@ -1,5 +1,5 @@
 import { TPlanType } from '@/interfaces/subscription';
-import { TeamRole } from '@/interfaces/team';
+import { LeaveStatus, TeamRole, TransferStatus } from '@/interfaces/team';
 import { z } from 'zod';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
@@ -55,6 +55,22 @@ export const addMemberBodySchema = z.array(z.string().email()).min(1, '至少需
 export const addMemberResponseSchema = z.object({
   invitedCount: z.number(),
   failedEmails: z.array(z.string().email()),
+});
+
+export const transferAccountBookSchema = z.object({
+  accountBookId: z.string(),
+  previousTeamId: z.string(),
+  targetTeamId: z.string(),
+  status: z.enum(Object.values(TransferStatus) as [TransferStatus, ...TransferStatus[]]),
+  transferedAt: z.number().optional(),
+});
+
+export const leaveTeamSchema = z.object({
+  teamId: z.string(),
+  userId: z.number(),
+  role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
+  status: z.enum(Object.values(LeaveStatus) as [LeaveStatus, ...LeaveStatus[]]),
+  leavedAt: z.number().optional(),
 });
 
 // Info: (20250227 - Shirley) 定義更新團隊資訊的 Schema
@@ -149,10 +165,11 @@ export const teamSchemas = {
       bodySchema: z.object({
         name: z.string(),
         members: z.array(z.string().email()).optional(),
-        planType: z.enum(Object.values(TPlanType) as [TPlanType, ...TPlanType[]]),
+        planType: z.enum(Object.values(TPlanType) as [TPlanType, ...TPlanType[]]).optional(),
         about: z.string().optional(),
         profile: z.string().optional(),
         bankInfo: z.object({ code: z.number(), number: z.string() }).optional(),
+        imageFileId: z.number().optional(),
       }),
     },
     outputSchema: TeamSchema,
@@ -205,6 +222,24 @@ export const teamSchemas = {
     },
     outputSchema: addMemberResponseSchema,
     frontend: addMemberResponseSchema,
+  },
+  leaveTeam: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({}).optional(),
+    },
+    outputSchema: leaveTeamSchema,
+    frontend: leaveTeamSchema,
+  },
+  transferAccountBook: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({
+        targetTeamId: z.string(),
+      }),
+    },
+    outputSchema: transferAccountBookSchema,
+    frontend: transferAccountBookSchema,
   },
   updateMember: {
     input: {
