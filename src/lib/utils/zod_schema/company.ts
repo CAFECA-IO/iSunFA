@@ -28,6 +28,7 @@ const companyPostBodySchema = z.object({
   name: z.string(),
   taxId: z.string(),
   tag: z.nativeEnum(WORK_TAG),
+  teamId: z.number().int().optional(),
 });
 
 // Info: (20241016 - Jacky) Company get schema
@@ -69,6 +70,15 @@ const companyPrismaSchema = z.object({
 });
 
 export const companyOutputSchema = companyPrismaSchema.strip().transform((data) => {
+  const { imageFile, ...rest } = data;
+  const output = {
+    ...rest,
+    imageId: imageFile.url,
+  };
+  return output;
+});
+
+export const companyOutputSchemaWithTeam = companyPrismaSchema.strip().transform((data) => {
   const { imageFile, ...rest } = data;
   const output = {
     ...rest,

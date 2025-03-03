@@ -18,6 +18,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
 import { WORK_TAG } from '@/interfaces/account_book';
 import { DefaultValue } from '@/constants/default_value';
+import { listTeamsByUserId } from '@/lib/utils/repo/team.repo';
 
 export async function listAdminByCompanyId(companyId: number): Promise<
   (Admin & {
@@ -635,7 +636,8 @@ export async function createCompanyAndRole(
   name: string,
   imageFileId: number,
   tag: WORK_TAG = WORK_TAG.ALL,
-  email?: string
+  email?: string,
+  teamId?: number
 ): Promise<{
   company: Company & { imageFile: File | null };
   role: Role;
@@ -643,6 +645,24 @@ export async function createCompanyAndRole(
   order: number;
 }> {
   const nowTimestamp = getTimestampNow();
+
+  // Info: (20250303 - Shirley) 如果沒有提供 teamId，則獲取用戶的 team 列表
+  let finalTeamId: number | undefined = teamId;
+  if (!finalTeamId) {
+    // try {
+    const userTeams = await listTeamsByUserId(userId);
+    if (userTeams && userTeams.length > 0) {
+      // Info: (20250303 - Shirley) 使用用戶的第一個 team（通常是默認 team）
+      finalTeamId = userTeams[0].teamId;
+    }
+    // } catch (error) {
+    //   loggerError({
+    //     userId: DefaultValue.USER_ID.SYSTEM,
+    //     errorType: 'getTeamsByUserId failed',
+    //     errorMessage: (error as Error).message,
+    //   });
+    // }
+  }
 
   const userConnect: Prisma.UserCreateNestedOneWithoutAdminsInput = {
     connect: {
@@ -668,22 +688,34 @@ export async function createCompanyAndRole(
     },
   };
 
+  // Info: (20250301 - Shirley) 創建 company 時關聯到 team
+  const companyCreateInput: Prisma.CompanyCreateWithoutAdminsInput = {
+    taxId,
+    name,
+    imageFile: {
+      connect: {
+        id: imageFileId,
+      },
+    },
+    createdAt: nowTimestamp,
+    updatedAt: nowTimestamp,
+    startDate: nowTimestamp,
+  };
+
+  // Info: (20250303 - Shirley) 如果找到了 team，則關聯 company 到該 team
+  if (finalTeamId) {
+    companyCreateInput.team = {
+      connect: {
+        id: finalTeamId,
+      },
+    };
+  }
+
   const newCompanyRoleList = await prisma.admin.create({
     data: {
       user: userConnect,
       company: {
-        create: {
-          taxId,
-          name,
-          imageFile: {
-            connect: {
-              id: imageFileId,
-            },
-          },
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-          startDate: nowTimestamp,
-        },
+        create: companyCreateInput,
       },
       tag,
       role: roleConnectOrCreate,
