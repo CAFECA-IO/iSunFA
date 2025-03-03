@@ -5,7 +5,7 @@ import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_pict
 import TeamHeader from '@/components/beta/team_page/team_header';
 import TeamPageButtons from '@/components/beta/team_page/team_page_buttons';
 import { useTranslation } from 'next-i18next';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookForUser, IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { useUserCtx } from '@/contexts/user_context';
 import NoData from '@/components/beta/account_books_page/no_data';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
@@ -18,6 +18,9 @@ import { FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM } from '@/constants/account_book';
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
 import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
 import AccountBookPrivacyModal from '@/components/beta/account_books_page/account_book_privacy_modal';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 interface TeamPageBodyProps {
   team: ITeam;
@@ -62,7 +65,11 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
   };
 
   // ToDo: (20250219 - Liz) 取得團隊帳本清單 API (list account book by team id)
-  // const { trigger: getAccountBookListByTeamIdAPI } = APIHandler<IPaginatedData<IAccountBookForUserWithTeam[]>(APIName.?);
+  // ToDo: (20250303 - Liz) 需要改資料格式為 <IPaginatedData<IAccountBookForUserWithTeam[]>>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { trigger: getAccountBookListByTeamIdAPI } = APIHandler<
+    IPaginatedData<IAccountBookForUser[]>
+  >(APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID);
 
   // ToDo: (20250219 - Liz) 打 API 取得團隊帳本清單
   // const getAccountBookListByTeamId = useCallback(async () => {
