@@ -5,7 +5,8 @@ import { IResponseData } from '@/interfaces/response_data';
 import { IFileBeta } from '@/interfaces/file';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
-import { uploadFile } from '@/lib/utils/google_image_upload';
+// TODO: (20250303 - Shirley) not implemented yet
+// import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
@@ -59,8 +60,12 @@ async function handleFileUpload(
     case UploadType.USER:
     case UploadType.PROJECT:
     case UploadType.TEAM: {
-      const googleBucketUrl = await uploadFile(fileForSave);
-      fileUrl = googleBucketUrl;
+      // TODO: (20250303 - Shirley) not implemented yet
+      // const googleBucketUrl = await uploadFile(fileForSave);
+      // fileUrl = googleBucketUrl;
+      // console.log('fileUrl', fileUrl);
+      // break;
+      fileUrl = `https://storage.googleapis.com/isunfa-images/team/team_picture_${targetId}.jpg`;
       break;
     }
     default:
@@ -174,6 +179,7 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
     } as unknown as File;
 
     statusMessage = STATUS_MESSAGE.CREATED;
+    // TODO: (20250303 - Shirley) not implemented yet
     loggerBack.info(`Mock: Uploaded file for team ${targetId}`);
     return { statusMessage, payload };
   }
