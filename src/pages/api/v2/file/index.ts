@@ -4,7 +4,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFileBeta } from '@/interfaces/file';
 import { parseForm } from '@/lib/utils/parse_image_form';
-import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
+import { convertStringToNumber, formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 // TODO: (20250303 - Shirley) not implemented yet
 // import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
@@ -111,6 +111,7 @@ async function handleFileUpload(
       break;
     }
     case UploadType.TEAM: {
+      // TODO: (20250303 - Shirley) not implemented yet
       loggerBack.info(`Mock: Updated team ${targetIdNum} with file ID ${fileId}`);
       break;
     }
@@ -173,8 +174,8 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
       isEncrypted: false,
       encryptedSymmetricKey: '',
       iv: Buffer.from([]),
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: getTimestampNow(),
+      updatedAt: getTimestampNow(),
       deletedAt: null,
     } as unknown as File;
 
