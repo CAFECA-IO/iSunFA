@@ -1,4 +1,5 @@
 import { TPlanType } from '@/interfaces/subscription';
+import { IEditable } from '@/interfaces/editable';
 
 export enum TeamRole {
   OWNER = 'OWNER',
@@ -20,28 +21,13 @@ export interface ITeam {
   id: string;
   imageId: string;
   role: TeamRole;
-  name: {
-    value: string;
-    editable: boolean;
-  };
-  about: {
-    value: string;
-    editable: boolean;
-  };
-  profile: {
-    value: string;
-    editable: boolean;
-  };
-  planType: {
-    value: TPlanType;
-    editable: boolean;
-  };
+  name: IEditable<string>;
+  about: IEditable<string>;
+  profile: IEditable<string>;
+  planType: IEditable<TPlanType>;
   totalMembers: number;
   totalAccountBooks: number;
-  bankAccount: {
-    value: string;
-    editable: boolean;
-  };
+  bankAccount: IEditable<string>;
 }
 
 export interface IInviteMember {

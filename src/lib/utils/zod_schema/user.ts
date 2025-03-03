@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
 import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { IUser } from '@/interfaces/user';
+import { IUser, IUserProfile } from '@/interfaces/user';
 import { UserAgreementPrismaSchema } from '@/lib/utils/zod_schema/user_agreement';
 
 const userGetQuerySchema = z.object({
@@ -43,7 +43,14 @@ export const userOutputSchema = userPrismaSchema.transform((data) => {
     updatedAt: data.updatedAt,
     deletedAt: data.deletedAt ?? 0,
   };
-  return userImpl;
+
+  const mockUserData: IUserProfile = {
+    ...userImpl,
+    device:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    ip: '211.22.118.145, 162.158.167.112',
+  };
+  return mockUserData;
 });
 
 /**
