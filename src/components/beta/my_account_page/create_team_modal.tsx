@@ -107,6 +107,10 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [teamInvoice, setTeamInvoice] = useState<ITeamInvoice | null>(null);
 
+  // Info: (20250224 - Julian) 訂閱方案，施工中🔧
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [listPaymentPlan, setListPaymentPlan] = useState<IPlan[]>([]);
+
   // Info: (20250224 - Julian) 團隊資訊
   const [newTeam, setNewTeam] = useState<IUserOwnedTeam | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<IPlan>(PLANS[0]);
@@ -114,6 +118,9 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   // Info: (20250224 - Julian) 開啟或關閉自動續約的 Modal 狀態
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
+
+  // Info: (20250303 - Julian) 取得訂閱方案清單
+  const { trigger: getPaymentPlan } = APIHandler<IPlan[]>(APIName.LIST_PAYMENT_PLAN);
 
   // Info: (20250303 - Julian) 建立 Team API
   const {
@@ -173,6 +180,17 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       paymentStatus: TPaymentStatus.FREE,
     };
   };
+
+  // Info: (20250303 - Julian) 取得訂閱方案
+  useEffect(() => {
+    const fetchPaymentPlan = async () => {
+      const { data: plans } = await getPaymentPlan();
+      if (plans) {
+        setListPaymentPlan(plans);
+      }
+    };
+    fetchPaymentPlan();
+  }, []);
 
   // Info: (20250226 - Julian) 送出 API 後，取得 Team 資訊
   useEffect(() => {
@@ -424,7 +442,8 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const invoiceOverview = newTeam && teamInvoice && <InvoiceDetail invoice={teamInvoice} />;
 
   // Info: (20250303 - Julian) 免費方案 -> 顯示訂閱方案；其他方案 -> 顯示付款
-  const step3Body = selectedPlan !== PLANS[0] ? paymentOverview : subscriptionOverview;
+  const step3Body =
+    PLANS.length > 0 && selectedPlan !== PLANS[0] ? paymentOverview : subscriptionOverview;
 
   const memberFormBody = (
     <div className="flex flex-col gap-8px text-sm">
