@@ -71,6 +71,7 @@ export const getTeamList = async (
       subscription: {
         include: { plan: true }, // Info: (20250227 - tzuhan) 訂閱方案
       },
+      imageFile: true,
     },
     skip: ((page || 1) - 1) * (pageSize || 1),
     take: pageSize,
@@ -88,7 +89,7 @@ export const getTeamList = async (
 
     return {
       id: team.id.toString(),
-      imageId: team.profile,
+      imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
       role: userRole,
       name: {
         value: team.name,
@@ -128,11 +129,6 @@ export const getTeamList = async (
   };
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getTeamById = async (teamId: string, userId: number): Promise<ITeam | null> => {
-  return null;
-};
-
 export const createTeam = async (
   userId: number,
   teamData: {
@@ -142,6 +138,7 @@ export const createTeam = async (
     about?: string;
     profile?: string;
     bankInfo?: { code: number; number: string };
+    imageFileId?: number;
   }
 ): Promise<ITeam> => {
   // Info: (20250303 - Tzuhan) 取得對應的 planId，若未提供，則使用預設方案 (BEGINNER)
@@ -161,7 +158,6 @@ export const createTeam = async (
     data: {
       ownerId: userId,
       name: teamData.name,
-      createdAt: now,
     },
     include: {
       members: true,
@@ -178,8 +174,6 @@ export const createTeam = async (
       startDate: now, // Info: (20250303 - Tzuhan) ✅ 以當前時間作為開始日期
       expiredDate: now + 30 * 24 * 60 * 60, // Info: (20250303 - Tzuhan) 預設 30 天後過期
       paymentStatus: TeamPaymentStatus.FREE,
-      createdAt: now,
-      updatedAt: now,
     },
   });
 
@@ -210,6 +204,72 @@ export const createTeam = async (
         ? `${(newTeam.bankInfo as { code: string }).code}-${(newTeam.bankInfo as { number: string }).number}`
         : '',
       editable: true,
+    },
+  };
+};
+
+export const getTeamByTeamId = async (teamId: number, userId: number): Promise<ITeam | null> => {
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: {
+      members: {
+        select: {
+          userId: true,
+          role: true,
+          user: {
+            select: { name: true, email: true, imageFileId: true },
+          },
+        },
+      },
+      ledger: {
+        select: { id: true },
+      },
+      subscription: {
+        include: { plan: true },
+      },
+      imageFile: {
+        select: { id: true, url: true },
+      },
+    },
+  });
+
+  if (!team) {
+    return null;
+  }
+
+  const userRole =
+    (team.members.find((member) => member.userId === userId)?.role as TeamRole) ?? TeamRole.VIEWER;
+  const planType = team.subscription
+    ? (team.subscription.plan.type as TPlanType)
+    : TPlanType.BEGINNER;
+
+  return {
+    id: team.id.toString(),
+    imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
+    role: userRole,
+    name: {
+      value: team.name,
+      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+    },
+    about: {
+      value: team.about || '',
+      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+    },
+    profile: {
+      value: team.profile || '',
+      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+    },
+    planType: {
+      value: planType,
+      editable: false,
+    },
+    totalMembers: team.members.length,
+    totalAccountBooks: team.ledger.length,
+    bankAccount: {
+      value: team.bankInfo
+        ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
+        : '',
+      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
     },
   };
 };

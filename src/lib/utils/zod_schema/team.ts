@@ -140,6 +140,7 @@ export const teamSchemas = {
         about: z.string().optional(),
         profile: z.string().optional(),
         bankInfo: z.object({ code: z.number(), number: z.string() }).optional(),
+        imageFileId: z.number().optional(),
       }),
     },
     outputSchema: TeamSchema,
