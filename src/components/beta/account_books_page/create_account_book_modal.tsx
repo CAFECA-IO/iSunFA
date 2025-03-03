@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoAdd } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
@@ -6,7 +6,10 @@ import { WORK_TAG } from '@/interfaces/account_book';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import { ITeam } from '@/interfaces/team';
-import { FAKE_TEAM_LIST } from '@/constants/team';
+// import { FAKE_TEAM_LIST } from '@/constants/team'; // Deprecated: (20250303 - Liz) 測試用的假資料，等 API 不使用 mock data 後可移除
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 interface CreateCompanyModalProps {
   closeCreateAccountBookModal: () => void;
@@ -26,9 +29,7 @@ const CreateAccountBookModal = ({
   const [companyName, setCompanyName] = useState<string>('');
   const [taxId, setTaxId] = useState<string>('');
   const [tag, setTag] = useState<WORK_TAG | null>(null);
-  // ToDo: (20250213 - Liz) 打 API 取得使用者的團隊清單後存入 teamList state
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [teamList, setTeamList] = useState<ITeam[] | null>(FAKE_TEAM_LIST);
+  const [teamList, setTeamList] = useState<ITeam[] | null>(null);
   const [team, setTeam] = useState<ITeam | null>(null);
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState<boolean>(false);
   const [isTeamDropdownOpen, setIsTeamDropdownOpen] = useState<boolean>(false);
@@ -37,6 +38,9 @@ const CreateAccountBookModal = ({
   const [tagError, setTagError] = useState<string | null>(null);
   const [teamError, setTeamError] = useState<string | null>(null);
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
+
+  // Info: (20250303 - Liz) 取得團隊清單 API
+  const { trigger: getTeamListAPI } = APIHandler<IPaginatedData<ITeam[]>>(APIName.LIST_TEAM);
 
   const toggleTagDropdown = () => {
     setIsTagDropdownOpen((prevState) => !prevState);
@@ -95,7 +99,9 @@ const CreateAccountBookModal = ({
           type: ToastType.ERROR,
           content: (
             <p>
-              Create company failed. Error code: {code} Error message: {errorMsg}
+              {`${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_ACCOUNT_BOOK_FAILED')}!  
+              ${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ERROR_CODE')}: ${code}
+              ${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ERROR_MESSAGE')}: ${errorMsg}`}
             </p>
           ),
           closeable: true,
@@ -112,7 +118,31 @@ const CreateAccountBookModal = ({
     }
   };
 
-  // ToDo: (20250213 - Liz) 打 API 取得使用者的團隊清單
+  // Info: (20250303 - Liz) 打 API 取得使用者的團隊清單
+  useEffect(() => {
+    const getTeamList = async () => {
+      try {
+        const { success, data } = await getTeamListAPI({
+          query: {
+            page: 1,
+            pageSize: 999,
+            sortBy: undefined,
+            sortOrder: undefined,
+          },
+        });
+
+        if (success) {
+          setTeamList(data?.data ?? []);
+        }
+      } catch (error) {
+        // Deprecated: (20250303 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('CreateAccountBookModal getTeamList error:', error);
+      }
+    };
+
+    getTeamList();
+  }, []);
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
