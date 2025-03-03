@@ -646,22 +646,15 @@ export async function createCompanyAndRole(
 }> {
   const nowTimestamp = getTimestampNow();
 
+  // TODO: (20250303 - Shirley) 需檢查提供的 teamId 是否存在、用戶是否在該 team 裡，如果 teamId
   // Info: (20250303 - Shirley) 如果沒有提供 teamId，則獲取用戶的 team 列表
   let finalTeamId: number | undefined = teamId;
   if (!finalTeamId) {
-    // try {
     const userTeams = await listTeamsByUserId(userId);
     if (userTeams && userTeams.length > 0) {
       // Info: (20250303 - Shirley) 使用用戶的第一個 team（通常是默認 team）
       finalTeamId = userTeams[0].teamId;
     }
-    // } catch (error) {
-    //   loggerError({
-    //     userId: DefaultValue.USER_ID.SYSTEM,
-    //     errorType: 'getTeamsByUserId failed',
-    //     errorMessage: (error as Error).message,
-    //   });
-    // }
   }
 
   const userConnect: Prisma.UserCreateNestedOneWithoutAdminsInput = {
