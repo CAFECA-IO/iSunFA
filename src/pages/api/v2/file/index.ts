@@ -5,8 +5,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { IFileBeta } from '@/interfaces/file';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import { convertStringToNumber, formatApiResponse, getTimestampNow } from '@/lib/utils/common';
-// TODO: (20250303 - Shirley) not implemented yet
-// import { uploadFile } from '@/lib/utils/google_image_upload';
+import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
@@ -58,7 +57,11 @@ async function handleFileUpload(
     }
     case UploadType.COMPANY:
     case UploadType.USER:
-    case UploadType.PROJECT:
+    case UploadType.PROJECT: {
+      const googleBucketUrl = await uploadFile(fileForSave);
+      fileUrl = googleBucketUrl;
+      break;
+    }
     case UploadType.TEAM: {
       // TODO: (20250303 - Shirley) not implemented yet
       // const googleBucketUrl = await uploadFile(fileForSave);
@@ -118,7 +121,10 @@ async function handleFileUpload(
     case UploadType.KYC:
     case UploadType.ROOM: {
       roomManager.addFileToRoom(targetId, returnFile);
-
+      // Info: (20241121 - tzuhan)這是 FILE_UPLOAD 成功後，後端使用 pusher 的傳送 ROOM_EVENT.NEW_FILE 的範例
+      /**
+       * ROOM_EVENT.NEW_FILE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(file as IFileBeta)
+       */
       const pusher = getPusherInstance();
       pusher.trigger(`${PRIVATE_CHANNEL.ROOM}-${targetId}`, ROOM_EVENT.NEW_FILE, {
         message: JSON.stringify(returnFile),
