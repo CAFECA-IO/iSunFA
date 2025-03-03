@@ -313,7 +313,7 @@ export enum APIPath {
   LIST_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device`,
   REMOVE_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device/:deviceId`,
   CREATE_TEAM = `${apiPrefixV2}/team`,
-  LIST_TEAM = `${apiPrefixV2}/team`,
+  LIST_TEAM = `${apiPrefixV2}/user/:userId/team`,
   GET_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
   LIST_ACCOUNT_BOOK_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/account_book`,
   LIST_MEMBER_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/member`,
