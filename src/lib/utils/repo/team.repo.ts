@@ -127,3 +127,89 @@ export const getTeamList = async (
     sort: sortOption,
   };
 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const getTeamById = async (teamId: string, userId: number): Promise<ITeam | null> => {
+  return null;
+};
+
+export const createTeam = async (
+  userId: number,
+  teamData: {
+    name: string;
+    members?: string[];
+    planType?: TPlanType;
+    about?: string;
+    profile?: string;
+    bankInfo?: { code: number; number: string };
+  }
+): Promise<ITeam> => {
+  // Info: (20250303 - Tzuhan) 取得對應的 planId，若未提供，則使用預設方案 (BEGINNER)
+  const plan = await prisma.teamPlan.findFirst({
+    where: { type: teamData.planType ?? TPlanType.BEGINNER },
+    select: { id: true },
+  });
+
+  if (!plan) {
+    throw new Error('Plan type not found');
+  }
+
+  const now = Math.floor(Date.now() / 1000); // Info: (20250303 - Tzuhan) 以秒為單位的 UNIX timestamp
+
+  // Info: (20250303 - Tzuhan) 建立團隊
+  const newTeam = await prisma.team.create({
+    data: {
+      ownerId: userId,
+      name: teamData.name,
+      createdAt: now,
+    },
+    include: {
+      members: true,
+      ledger: true,
+    },
+  });
+
+  // Info: (20250303 - Tzuhan) 建立團隊訂閱
+  await prisma.teamSubscription.create({
+    data: {
+      teamId: newTeam.id,
+      planId: plan.id,
+      autoRenewal: false,
+      startDate: now, // Info: (20250303 - Tzuhan) ✅ 以當前時間作為開始日期
+      expiredDate: now + 30 * 24 * 60 * 60, // Info: (20250303 - Tzuhan) 預設 30 天後過期
+      paymentStatus: TeamPaymentStatus.FREE,
+      createdAt: now,
+      updatedAt: now,
+    },
+  });
+
+  return {
+    id: newTeam.id.toString(),
+    imageId: newTeam.profile ?? '/images/fake_team_img.svg',
+    role: TeamRole.OWNER,
+    name: {
+      value: newTeam.name,
+      editable: true,
+    },
+    about: {
+      value: newTeam.about ?? '',
+      editable: true,
+    },
+    profile: {
+      value: newTeam.profile ?? '',
+      editable: true,
+    },
+    planType: {
+      value: teamData.planType ?? TPlanType.BEGINNER,
+      editable: false,
+    },
+    totalMembers: newTeam.members.length,
+    totalAccountBooks: newTeam.ledger.length,
+    bankAccount: {
+      value: newTeam.bankInfo
+        ? `${(newTeam.bankInfo as { code: string }).code}-${(newTeam.bankInfo as { number: string }).number}`
+        : '',
+      editable: true,
+    },
+  };
+};
