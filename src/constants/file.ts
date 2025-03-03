@@ -14,6 +14,7 @@ export enum UploadType {
   PROJECT = 'project',
   INVOICE = 'invoice',
   ROOM = 'room',
+  TEAM = 'team',
 }
 
 export enum FileDatabaseConnectionType {
@@ -25,6 +26,7 @@ export enum FileDatabaseConnectionType {
   OCR_IMAGE = 'ocrImageFile',
   USER_IMAGE = 'userImageFile',
   PROJECT_IMAGE = 'projectImageFile',
+  TEAM_IMAGE = 'teamImageFile',
 }
 
 export const UPLOAD_TYPE_TO_FOLDER_MAP = {
@@ -34,6 +36,7 @@ export const UPLOAD_TYPE_TO_FOLDER_MAP = {
   [UploadType.PROJECT]: FileFolder.TMP,
   [UploadType.INVOICE]: FileFolder.INVOICE,
   [UploadType.ROOM]: FileFolder.ROOM,
+  [UploadType.TEAM]: FileFolder.TMP,
 };
 
 export enum UploadDocumentType {

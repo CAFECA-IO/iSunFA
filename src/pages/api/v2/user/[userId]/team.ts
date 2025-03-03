@@ -3,38 +3,38 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { checkRequestData, checkSessionUser, checkUserAuthorization } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
+import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 import { ITeam } from '@/interfaces/team';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
-import { createTeam } from '@/lib/utils/repo/team.repo';
+import { getTeamList } from '@/lib/utils/repo/team.repo';
 
-const handlePostRequest = async (req: NextApiRequest) => {
+const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITeam | null = null;
-  const isLogin = await checkSessionUser(session, APIName.CREATE_TEAM, req);
+  let payload: IPaginatedData<ITeam[]> | null = null;
+  const isLogin = await checkSessionUser(session, APIName.LIST_TEAM, req);
   if (!isLogin) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
   }
-  const isAuth = await checkUserAuthorization(APIName.CREATE_TEAM, req, session);
+  const isAuth = await checkUserAuthorization(APIName.LIST_TEAM, req, session);
   if (!isAuth) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
-  const { body } = checkRequestData(APIName.CREATE_TEAM, req, session);
-  if (body === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+  const { query } = checkRequestData(APIName.LIST_TEAM, req, session);
 
-  loggerBack.info(`Create Team by userId: ${userId} with body: ${JSON.stringify(body)}`);
-
-  const createdTeam = await createTeam(userId, body);
+  loggerBack.info(`List Team by userId: ${userId} with query: ${JSON.stringify(query)}`);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
-
-  const { isOutputDataValid, outputData } = validateOutputData(APIName.CREATE_TEAM, createdTeam);
+  const options: IPaginatedOptions<ITeam[]> = await getTeamList(userId, query || undefined);
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.LIST_TEAM,
+    toPaginatedData(options)
+  );
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   } else {
@@ -51,8 +51,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     switch (method) {
-      case 'POST':
-        ({ httpCode, result } = await handlePostRequest(req));
+      case 'GET':
+        ({ httpCode, result } = await handleGetRequest(req));
         break;
       default:
         ({ httpCode, result } = formatApiResponse<null>(STATUS_MESSAGE.METHOD_NOT_ALLOWED, null));

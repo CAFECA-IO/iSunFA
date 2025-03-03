@@ -172,12 +172,16 @@ export enum APIName {
   LIST_SUBSCRIPTION_INVOICE = 'LIST_SUBSCRIPTION_INVOICE',
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = 'GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID',
   GET_CREDIT_CARD_INFO = 'GET_CREDIT_CARD_INFO',
+  LEAVE_TEAM = 'LEAVE_TEAM',
+  TRANSFER_ACCOUNT_BOOK = 'TRANSFER_ACCOUNT_BOOK',
   LIST_PAYMENT_PLAN = 'LIST_PAYMENT_PLAN',
   LIST_ACCOUNT_BOOK_BY_USER_ID = 'LIST_ACCOUNT_BOOK_BY_USER_ID',
   CONNECT_ACCOUNT_BOOK_BY_ID = 'CONNECT_ACCOUNT_BOOK_BY_ID',
   UPDATE_TEAM_BY_ID = 'UPDATE_TEAM_BY_ID',
   UPDATE_MEMBER_BY_ID = 'UPDATE_MEMBER_BY_ID',
   DELETE_MEMBER_BY_ID = 'DELETE_MEMBER_BY_ID',
+  GET_ACCOUNT_BOOK_BY_ID = 'GET_ACCOUNT_BOOK_BY_ID',
+  PUT_TEAM_ICON = 'PUT_TEAM_ICON',
 }
 
 export enum APIPath {
@@ -317,7 +321,7 @@ export enum APIPath {
   LIST_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device`,
   REMOVE_LOGIN_DEVICE = `${apiPrefixV2}/user/:userId/device/:deviceId`,
   CREATE_TEAM = `${apiPrefixV2}/team`,
-  LIST_TEAM = `${apiPrefixV2}/team`,
+  LIST_TEAM = `${apiPrefixV2}/user/:userId/team`,
   GET_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
   LIST_ACCOUNT_BOOK_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/account_book`,
   LIST_MEMBER_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/member`,
@@ -328,12 +332,16 @@ export enum APIPath {
   LIST_SUBSCRIPTION_INVOICE = `${apiPrefixV2}/subscription/:teamId/invoice`,
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId/invoice/:invoiceId`,
   GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
+  LEAVE_TEAM = `${apiPrefixV2}/team/:teamId/leave`,
+  TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/transfer`,
   LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
   LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
   CONNECT_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/connect`,
-  UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`, // Info: (20250227 - Shirley) 新增更新團隊資訊的 API
-  UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`, // Info: (20250227 - Shirley) 新增更新團隊成員角色的 API
-  DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`, // Info: (20250227 - Shirley) 新增刪除團隊成員的 API
+  UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
+  UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
+  DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
+  GET_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId`,
+  PUT_TEAM_ICON = `${apiPrefixV2}/team/:teamId/icon`,
 }
 
 const createConfig = ({
@@ -1087,6 +1095,16 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.POST,
     path: APIPath.VOUCHER_RESTORE_V2,
   }),
+  [APIName.LEAVE_TEAM]: createConfig({
+    name: APIName.LEAVE_TEAM,
+    method: HttpMethod.GET,
+    path: APIPath.LEAVE_TEAM,
+  }),
+  [APIName.TRANSFER_ACCOUNT_BOOK]: createConfig({
+    name: APIName.TRANSFER_ACCOUNT_BOOK,
+    method: HttpMethod.POST,
+    path: APIPath.TRANSFER_ACCOUNT_BOOK,
+  }),
   [APIName.LIST_PAYMENT_PLAN]: createConfig({
     name: APIName.LIST_PAYMENT_PLAN,
     method: HttpMethod.GET,
@@ -1102,6 +1120,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.CONNECT_ACCOUNT_BOOK_BY_ID,
   }),
+
   [APIName.UPDATE_TEAM_BY_ID]: createConfig({
     name: APIName.UPDATE_TEAM_BY_ID,
     method: HttpMethod.PUT,
@@ -1116,5 +1135,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.DELETE_MEMBER_BY_ID,
     method: HttpMethod.DELETE,
     path: APIPath.DELETE_MEMBER_BY_ID,
+  }),
+  [APIName.GET_ACCOUNT_BOOK_BY_ID]: createConfig({
+    name: APIName.GET_ACCOUNT_BOOK_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_ACCOUNT_BOOK_BY_ID,
+  }),
+  [APIName.PUT_TEAM_ICON]: createConfig({
+    name: APIName.PUT_TEAM_ICON,
+    method: HttpMethod.PUT,
+    path: APIPath.PUT_TEAM_ICON,
   }),
 };

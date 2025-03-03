@@ -4,7 +4,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFileBeta } from '@/interfaces/file';
 import { parseForm } from '@/lib/utils/parse_image_form';
-import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
+import { convertStringToNumber, formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { updateUserById } from '@/lib/utils/repo/user.repo';
@@ -62,6 +62,15 @@ async function handleFileUpload(
       fileUrl = googleBucketUrl;
       break;
     }
+    case UploadType.TEAM: {
+      // TODO: (20250303 - Shirley) not implemented yet
+      // const googleBucketUrl = await uploadFile(fileForSave);
+      // fileUrl = googleBucketUrl;
+      // console.log('fileUrl', fileUrl);
+      // break;
+      fileUrl = `https://storage.googleapis.com/isunfa-images/team/team_picture_${targetId}.jpg`;
+      break;
+    }
     default:
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
@@ -71,7 +80,7 @@ async function handleFileUpload(
     name: fileName,
     size: fileSize,
     mimeType: fileMimeType,
-    type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
+    type: UPLOAD_TYPE_TO_FOLDER_MAP[type] || 'team',
     url: fileUrl,
     isEncrypted,
     encryptedSymmetricKey,
@@ -104,10 +113,14 @@ async function handleFileUpload(
       await updateProjectById(targetIdNum, undefined, fileId);
       break;
     }
+    case UploadType.TEAM: {
+      // TODO: (20250303 - Shirley) not implemented yet
+      loggerBack.info(`Mock: Updated team ${targetIdNum} with file ID ${fileId}`);
+      break;
+    }
     case UploadType.KYC:
     case UploadType.ROOM: {
       roomManager.addFileToRoom(targetId, returnFile);
-
       // Info: (20241121 - tzuhan)這是 FILE_UPLOAD 成功後，後端使用 pusher 的傳送 ROOM_EVENT.NEW_FILE 的範例
       /**
        * ROOM_EVENT.NEW_FILE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(file as IFileBeta)
@@ -137,7 +150,6 @@ function extractKeyAndIvFromFields(fields: formidable.Fields) {
 
   const isEncrypted = !!(keyStr && ivUnit8.length > 0);
 
-  // Info: (20241224 - Murky) PublicKey is for room searching
   const publicKeyStr = publicKey ? publicKey[0] : '';
   const jsonPublicKey: JsonWebKey | null = publicKeyStr
     ? parseJsonWebKeyFromString(publicKeyStr)
@@ -156,6 +168,28 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
   let payload: File | null = null;
 
   const { type, targetId } = query;
+
+  if (type === 'team') {
+    payload = {
+      id: 12345,
+      name: `team_picture_${targetId}.jpg`,
+      size: 123456,
+      mimeType: 'image/jpeg',
+      type: 'team',
+      url: `https://storage.googleapis.com/isunfa-images/team/team_picture_${targetId}.jpg`,
+      isEncrypted: false,
+      encryptedSymmetricKey: '',
+      iv: Buffer.from([]),
+      createdAt: getTimestampNow(),
+      updatedAt: getTimestampNow(),
+      deletedAt: null,
+    } as unknown as File;
+
+    statusMessage = STATUS_MESSAGE.CREATED;
+    // TODO: (20250303 - Shirley) not implemented yet
+    loggerBack.info(`Mock: Uploaded file for team ${targetId}`);
+    return { statusMessage, payload };
+  }
 
   const parsedForm = await parseForm(req, UPLOAD_TYPE_TO_FOLDER_MAP[type]);
   const { files, fields } = parsedForm;

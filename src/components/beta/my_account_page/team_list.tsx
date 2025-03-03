@@ -5,8 +5,10 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import { useUserCtx } from '@/contexts/user_context';
 
 const TeamList: React.FC = () => {
+  const { userAuth } = useUserCtx();
   const [teamList, setTeamList] = useState<ITeam[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -18,7 +20,7 @@ const TeamList: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const { data: ownedTeams, success } = await getTeamsAPI();
+      const { data: ownedTeams, success } = await getTeamsAPI({ params: { userId: userAuth?.id } });
 
       if (success && ownedTeams && ownedTeams.data) {
         setTeamList(ownedTeams.data);

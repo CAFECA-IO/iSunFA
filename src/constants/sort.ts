@@ -31,6 +31,7 @@ export enum SortBy {
   ACCUMULATED_DEPRECIATION = 'AccumulatedDepreciation',
   RESIDUAL_VALUE = 'ResidualValue',
   REMAINING_LIFE = 'RemainingLife',
+  CREATED_AT = 'CreatedAt',
 
   /**
    * Info: (20241104 - Murky)
