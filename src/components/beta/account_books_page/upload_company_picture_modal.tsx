@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { IoCloseOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
-import { IAccountBook, IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBook, IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { IFileUIBeta } from '@/interfaces/file';
 import { UploadType } from '@/constants/file';
 import { APIName } from '@/constants/api_connection';
@@ -10,15 +10,13 @@ import UploadArea from '@/components/upload_area/upload_area';
 import { useUserCtx } from '@/contexts/user_context';
 
 interface UploadCompanyPictureModalProps {
-  accountBookToUploadPicture: IAccountBookForUser;
-  isModalOpen: boolean;
-  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
+  accountBookToUploadPicture: IAccountBookForUserWithTeam;
+  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
 }
 
 const UploadCompanyPictureModal = ({
   accountBookToUploadPicture,
-  isModalOpen,
   setAccountBookToUploadPicture,
   setRefreshKey,
 }: UploadCompanyPictureModalProps) => {
@@ -98,7 +96,7 @@ const UploadCompanyPictureModal = ({
     ]
   );
 
-  return isModalOpen ? (
+  return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col gap-24px rounded-lg bg-surface-neutral-surface-lv2 p-40px">
         <section className="flex items-center">
@@ -113,7 +111,7 @@ const UploadCompanyPictureModal = ({
         <UploadArea isDisabled={false} handleUpload={handleUpload} />
       </div>
     </main>
-  ) : null;
+  );
 };
 
 export default UploadCompanyPictureModal;

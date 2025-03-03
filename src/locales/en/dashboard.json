@@ -135,7 +135,10 @@
     "CHOOSE_TEAM": "Choose Team",
     "PLEASE_ENTER_THE_NAME": "Please enter the name",
     "PLEASE_SELECT_A_WORK_TAG": "Please select a work tag",
-    "PLEASE_SELECT_A_TEAM": "Please select a team"
+    "PLEASE_SELECT_A_TEAM": "Please select a team",
+    "ACCOUNT_BOOK_PRIVACY": "Account Book Privacy",
+    "PUBLIC": "Public",
+    "PRIVATE": "Private"
   },
 
   "WORK_TAG": {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BsEnvelope, BsPlusLg } from 'react-icons/bs';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
@@ -16,6 +16,7 @@ import CreateAccountBookModal from '@/components/beta/account_books_page/create_
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
+import AccountBookPrivacyModal from '@/components/beta/account_books_page/account_book_privacy_modal';
 
 const AccountBooksPageBody = () => {
   const { t } = useTranslation(['account_book']);
@@ -26,16 +27,23 @@ const AccountBooksPageBody = () => {
 
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
   const [accountBookToTransfer, setAccountBookToTransfer] = useState<
-    IAccountBookForUser | undefined
+    IAccountBookForUserWithTeam | undefined
   >();
-  const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookForUser | undefined>();
-  const [accountBookToDelete, setAccountBookToDelete] = useState<IAccountBookForUser | undefined>();
+  const [accountBookToEdit, setAccountBookToEdit] = useState<
+    IAccountBookForUserWithTeam | undefined
+  >();
+  const [accountBookToDelete, setAccountBookToDelete] = useState<
+    IAccountBookForUserWithTeam | undefined
+  >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
-    IAccountBookForUser | undefined
+    IAccountBookForUserWithTeam | undefined
+  >();
+  const [accountBookToChangePrivacy, setAccountBookToChangePrivacy] = useState<
+    IAccountBookForUserWithTeam | undefined
   >();
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUser[]>([]); // ToDo: (20250224 - Liz) 改用 IAccountBookForUserWithTeam[] 以便於顯示團隊名稱並且使用團隊進行帳本的分類
+  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
 
   const isNoData = accountBookList.length === 0;
 
@@ -81,7 +89,7 @@ const AccountBooksPageBody = () => {
     backBtnStr: t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL'),
   };
 
-  const handleApiResponse = (resData: IPaginatedData<IAccountBookForUser[]>) => {
+  const handleApiResponse = (resData: IPaginatedData<IAccountBookForUserWithTeam[]>) => {
     setAccountBookList(resData.data);
     setTotalPage(resData.totalPages);
     setCurrentPage(resData.page);
@@ -91,12 +99,12 @@ const AccountBooksPageBody = () => {
     <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
         {userId && (
-          <FilterSection<IAccountBookForUser[]>
+          <FilterSection<IAccountBookForUserWithTeam[]>
             key={refreshKey}
             disableDateSearch
             className="flex-auto"
             params={{ userId }}
-            apiName={APIName.LIST_USER_COMPANY}
+            apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
             onApiResponse={handleApiResponse}
             page={currentPage}
             pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
@@ -132,6 +140,8 @@ const AccountBooksPageBody = () => {
             setAccountBookToEdit={setAccountBookToEdit}
             setAccountBookToDelete={setAccountBookToDelete}
             setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+            setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
+            shouldGroupByTeam
           />
           <Pagination
             totalPages={totalPage}
@@ -159,7 +169,6 @@ const AccountBooksPageBody = () => {
       {accountBookToEdit && (
         <ChangeTagModal
           accountBookToEdit={accountBookToEdit}
-          isModalOpen={!!accountBookToEdit}
           setAccountBookToEdit={setAccountBookToEdit}
           setRefreshKey={setRefreshKey}
         />
@@ -168,9 +177,15 @@ const AccountBooksPageBody = () => {
       {accountBookToUploadPicture && (
         <UploadCompanyPictureModal
           accountBookToUploadPicture={accountBookToUploadPicture}
-          isModalOpen={!!accountBookToUploadPicture}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
           setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {accountBookToChangePrivacy && (
+        <AccountBookPrivacyModal
+          accountBookToChangePrivacy={accountBookToChangePrivacy}
+          setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
         />
       )}
 

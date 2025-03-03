@@ -60,5 +60,8 @@
     "CONTENT": "Transferring a ledger will move all its associated data, including company details and financial records, to another team. Ensure that the recipient team is authorized and capable of managing the transferred ledger before initiating the process.",
     "TRANSFER": "Transfer",
     "CANCEL": "Cancel"
+  },
+  "ACCOUNT_BOOK_PRIVACY_MODAL": {
+    "CHANGE_ACCOUNT_BOOK_PRIVACY": "Change Account Book Privacy"
   }
 }

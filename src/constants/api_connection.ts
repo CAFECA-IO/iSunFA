@@ -174,6 +174,12 @@ export enum APIName {
   GET_CREDIT_CARD_INFO = 'GET_CREDIT_CARD_INFO',
   LEAVE_TEAM = 'LEAVE_TEAM',
   TRANSFER_ACCOUNT_BOOK = 'TRANSFER_ACCOUNT_BOOK',
+  LIST_PAYMENT_PLAN = 'LIST_PAYMENT_PLAN',
+  LIST_ACCOUNT_BOOK_BY_USER_ID = 'LIST_ACCOUNT_BOOK_BY_USER_ID',
+  CONNECT_ACCOUNT_BOOK_BY_ID = 'CONNECT_ACCOUNT_BOOK_BY_ID',
+  UPDATE_TEAM_BY_ID = 'UPDATE_TEAM_BY_ID',
+  UPDATE_MEMBER_BY_ID = 'UPDATE_MEMBER_BY_ID',
+  DELETE_MEMBER_BY_ID = 'DELETE_MEMBER_BY_ID',
 }
 
 export enum APIPath {
@@ -326,7 +332,14 @@ export enum APIPath {
   GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
   LEAVE_TEAM = `${apiPrefixV2}/team/:teamId/leave`,
   TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/transfer`,
+  LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
+  LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
+  CONNECT_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/connect`,
+  UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`, // Info: (20250227 - Shirley) 新增更新團隊資訊的 API
+  UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`, // Info: (20250227 - Shirley) 新增更新團隊成員角色的 API
+  DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`, // Info: (20250227 - Shirley) 新增刪除團隊成員的 API
 }
+
 const createConfig = ({
   name,
   method,
@@ -1087,5 +1100,35 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.TRANSFER_ACCOUNT_BOOK,
     method: HttpMethod.POST,
     path: APIPath.TRANSFER_ACCOUNT_BOOK,
+  }),
+  [APIName.LIST_PAYMENT_PLAN]: createConfig({
+    name: APIName.LIST_PAYMENT_PLAN,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_PAYMENT_PLAN,
+  }),
+  [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: createConfig({
+    name: APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_ACCOUNT_BOOK_BY_USER_ID,
+  }),
+  [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: createConfig({
+    name: APIName.CONNECT_ACCOUNT_BOOK_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.CONNECT_ACCOUNT_BOOK_BY_ID,
+  }),
+  [APIName.UPDATE_TEAM_BY_ID]: createConfig({
+    name: APIName.UPDATE_TEAM_BY_ID,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_TEAM_BY_ID,
+  }),
+  [APIName.UPDATE_MEMBER_BY_ID]: createConfig({
+    name: APIName.UPDATE_MEMBER_BY_ID,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_MEMBER_BY_ID,
+  }),
+  [APIName.DELETE_MEMBER_BY_ID]: createConfig({
+    name: APIName.DELETE_MEMBER_BY_ID,
+    method: HttpMethod.DELETE,
+    path: APIPath.DELETE_MEMBER_BY_ID,
   }),
 };
