@@ -101,9 +101,9 @@ export const updateTeamResponseSchema = z.union([
   z.null(),
 ]);
 
-// Info: (20250227 - Shirley) 定義更新團隊成員角色的 Schema
+// Info: (20250227 - Shirley) 定義更新團隊成員角色的 Schema，OWNER 不能透過更新 member 修改
 export const updateMemberBodySchema = z.object({
-  role: z.nativeEnum(TeamRole),
+  role: z.enum([TeamRole.ADMIN, TeamRole.EDITOR, TeamRole.VIEWER]),
 });
 
 // Info: (20250227 - Shirley) 定義更新團隊成員角色的回應 Schema
@@ -128,6 +128,35 @@ export const deleteMemberResponseSchema = z.union([
   }),
   z.null(),
 ]);
+
+/**
+ * Info: (20250303 - Shirley)
+ * @note used in APIName.PUT_TEAM_ICON
+ */
+const teamPutIconQuerySchema = z.object({
+  teamId: zodStringToNumber,
+});
+
+const teamPutIconBodySchema = z.object({
+  fileId: z.number().int(),
+});
+
+const teamPictureSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  imageId: z.string(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+});
+
+export const teamPutIconSchema = {
+  input: {
+    querySchema: teamPutIconQuerySchema,
+    bodySchema: teamPutIconBodySchema,
+  },
+  outputSchema: teamPictureSchema.nullable(),
+  frontend: teamPictureSchema,
+};
 
 export const teamSchemas = {
   create: {
@@ -234,6 +263,7 @@ export const teamSchemas = {
     outputSchema: deleteMemberResponseSchema,
     frontend: deleteMemberResponseSchema,
   },
+  putIcon: teamPutIconSchema,
 };
 
 // Info: (20250227 - Shirley) 導出更新團隊資訊的類型
