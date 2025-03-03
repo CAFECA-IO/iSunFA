@@ -82,15 +82,9 @@ const AccountBookItem = ({
     try {
       const data = selectAccountBook(companyId);
 
-      if (data) {
-        // Deprecated: (20241113 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('selectAccountBook success:', data);
-      } else {
-        // Deprecated: (20241113 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('selectAccountBook failed!');
-      }
+      // Deprecated: (20241113 - Liz)
+      // eslint-disable-next-line no-console
+      if (!data) console.log('selectAccountBook failed!');
     } catch (error) {
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
@@ -98,6 +92,11 @@ const AccountBookItem = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // ToDo: (20250303 - Liz) 打 API 取消轉移帳本
+  const cancelTransfer = () => {
+    // call api to cancel transfer account book to another team
   };
 
   return (
@@ -144,7 +143,7 @@ const AccountBookItem = ({
 
           {isOptionsDropdownOpen && (
             <div className="absolute left-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS">
-              {/* // Info: (20250213 - Liz) Account Book Transfer */}
+              {/* Info: (20250213 - Liz) Account Book Transfer */}
               <button
                 type="button"
                 onClick={openAccountBookTransferModal}
@@ -154,7 +153,7 @@ const AccountBookItem = ({
                 <span>{t('account_book:ACCOUNT_BOOK_TRANSFER_MODAL.ACCOUNT_BOOK_TRANSFER')}</span>
               </button>
 
-              {/* // Info: (20250227 - Liz) Account Book Privacy */}
+              {/* Info: (20250227 - Liz) Account Book Privacy */}
               <button
                 type="button"
                 onClick={openAccountBookPrivacyModal}
@@ -166,7 +165,7 @@ const AccountBookItem = ({
                 </span>
               </button>
 
-              {/* // Info: (20250213 - Liz) Change Tag */}
+              {/* Info: (20250213 - Liz) Change Tag */}
               <button
                 type="button"
                 onClick={openChangeTagModal}
@@ -176,7 +175,7 @@ const AccountBookItem = ({
                 <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}</span>
               </button>
 
-              {/* // Info: (20250213 - Liz) Delete */}
+              {/* Info: (20250213 - Liz) Delete */}
               <button
                 type="button"
                 className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
@@ -194,39 +193,57 @@ const AccountBookItem = ({
         <CompanyTag tag={accountBook.tag} />
       </div>
 
-      <div className="flex w-120px items-center justify-end">
-        <button
-          type="button"
-          className="group relative text-button-text-secondary"
-          onClick={handleConnect}
-          disabled={isLoading}
-        >
-          {isCompanySelected ? (
-            <div className="flex items-center gap-4px rounded-xs border border-surface-state-success bg-surface-state-success px-16px py-8px group-hover:opacity-0">
-              <p className="text-sm font-medium">
-                {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.LINKED')}
-              </p>
-              <FaRegCircleCheck size={16} />
-            </div>
-          ) : (
-            <div className="flex items-center gap-4px rounded-xs border border-button-stroke-secondary px-16px py-8px hover:bg-button-surface-soft-secondary-hover">
-              <p className="text-sm font-medium">
-                {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CONNECT')}
-              </p>
-              <IoArrowForward size={16} />
-            </div>
-          )}
+      {accountBook.isTransferring && (
+        <div className="flex w-120px items-center justify-end gap-16px">
+          <p className="text-nowrap text-sm font-medium">
+            {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.WAITING_FOR_TRANSFERRING')}...
+          </p>
+          <button
+            type="button"
+            className="text-nowrap text-sm font-semibold text-link-text-primary"
+            onClick={cancelTransfer}
+          >
+            {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL')}
+          </button>
+        </div>
+      )}
 
-          {isCompanySelected && (
-            <div className="absolute inset-0 flex items-center justify-center gap-4px rounded-xs border border-surface-state-success-soft bg-surface-state-success-soft px-16px py-8px text-sm opacity-0 group-hover:opacity-100">
-              <p className="text-sm font-medium">
-                {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL')}
-              </p>
-              <IoClose size={16} />
-            </div>
-          )}
-        </button>
-      </div>
+      {/* Info: (20250303 - Liz) Connect Button */}
+      {!accountBook.isTransferring && (
+        <div className="flex w-120px items-center justify-end">
+          <button
+            type="button"
+            className="group relative text-button-text-secondary"
+            onClick={handleConnect}
+            disabled={isLoading}
+          >
+            {isCompanySelected ? (
+              <div className="flex items-center gap-4px rounded-xs border border-surface-state-success bg-surface-state-success px-16px py-8px group-hover:opacity-0">
+                <p className="text-sm font-medium">
+                  {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.LINKED')}
+                </p>
+                <FaRegCircleCheck size={16} />
+              </div>
+            ) : (
+              <div className="flex items-center gap-4px rounded-xs border border-button-stroke-secondary px-16px py-8px hover:bg-button-surface-soft-secondary-hover">
+                <p className="text-sm font-medium">
+                  {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CONNECT')}
+                </p>
+                <IoArrowForward size={16} />
+              </div>
+            )}
+
+            {isCompanySelected && (
+              <div className="absolute inset-0 flex items-center justify-center gap-4px rounded-xs border border-surface-state-success-soft bg-surface-state-success-soft px-16px py-8px text-sm opacity-0 group-hover:opacity-100">
+                <p className="text-sm font-medium">
+                  {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL')}
+                </p>
+                <IoClose size={16} />
+              </div>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
