@@ -46,7 +46,8 @@
     "CHANGE_WORK_TAG": "Change Work Tag",
     "DELETE": "Delete",
     "DELETE_MESSAGE_TITLE": "Delete the Account Book",
-    "DELETE_MESSAGE_CONTENT": "Are you sure you want to delete the account book?"
+    "DELETE_MESSAGE_CONTENT": "Are you sure you want to delete the account book?",
+    "WAITING_FOR_TRANSFERRING": "Waiting for transferring"
   },
   "DELETE": {
     "TITLE": "Delete the Account Book",

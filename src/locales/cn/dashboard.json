@@ -136,6 +136,9 @@
     "PLEASE_ENTER_THE_NAME": "请输入名称",
     "PLEASE_SELECT_A_WORK_TAG": "请选择工作标签",
     "PLEASE_SELECT_A_TEAM": "请选择团队",
+    "CREATE_ACCOUNT_BOOK_FAILED": "创建账本失败",
+    "ERROR_CODE": "错误代码",
+    "ERROR_MESSAGE": "错误信息",
     "ACCOUNT_BOOK_PRIVACY": "账本隐私",
     "PUBLIC": "公开",
     "PRIVATE": "私人"
