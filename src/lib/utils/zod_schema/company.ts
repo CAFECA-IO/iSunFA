@@ -78,6 +78,7 @@ export const companyOutputSchema = companyPrismaSchema.strip().transform((data) 
   return output;
 });
 
+// TODO: (20250303 - Shirley) 討論create account book回傳的資料格式後，修改 schema
 export const companyOutputSchemaWithTeam = companyPrismaSchema.strip().transform((data) => {
   const { imageFile, ...rest } = data;
   const output = {
