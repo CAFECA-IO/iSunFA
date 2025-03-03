@@ -18,12 +18,13 @@ import {
   IPlan,
   IUserOwnedTeam,
   ITeamInvoice,
-  TPaymentStatus,
   TPlanType,
+  TPaymentStatus,
 } from '@/interfaces/subscription';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { ITeam } from '@/interfaces/team';
 
 interface ICreateTeamModalProps {
   modalVisibilityHandler: () => void;
@@ -106,41 +107,30 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [teamInvoice, setTeamInvoice] = useState<ITeamInvoice | null>(null);
 
-  // ToDo: (20250218 - Julian) For testing UI
-  const fakeTeam = {
-    id: 0,
-    name: 'Team Name',
-    plan: TPlanType.BEGINNER,
-    enableAutoRenewal: false,
-    nextRenewalTimestamp: 0,
-    expiredTimestamp: 0,
-    paymentStatus: TPaymentStatus.PAID,
-  };
-
   // Info: (20250224 - Julian) 團隊資訊
-  const [newTeam, setNewTeam] = useState<IUserOwnedTeam | null>(fakeTeam);
-  const [selectedPlan, setSelectedPlan] = useState<IPlan | null>(null);
+  const [newTeam, setNewTeam] = useState<IUserOwnedTeam | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<IPlan>(PLANS[0]);
 
   // Info: (20250224 - Julian) 開啟或關閉自動續約的 Modal 狀態
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
-  // ToDo: (20250225 - Julian) 建立 Team API
+  // Info: (20250303 - Julian) 建立 Team API
   const {
     trigger: createTeam,
     success: createSuccess,
     data,
-  } = APIHandler<IUserOwnedTeam>(APIName.GET_SUBSCRIPTION_BY_TEAM_ID);
+  } = APIHandler<ITeam>(APIName.CREATE_TEAM);
 
-  // ToDo: (20250225 - Julian) 更新 Team API
+  // Info: (20250303 - Julian) 更新 Team API
   const {
     trigger: updateTeam,
     success: updateSuccess,
     data: updatedTeam,
-  } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+  } = APIHandler<ITeam>(APIName.UPDATE_TEAM_BY_ID);
 
   // ToDo: (20250226 - Julian) 邀請成員 API
-  const { trigger: inviteMember } = APIHandler(APIName.GET_TEAM_BY_ID);
+  const { trigger: inviteMember } = APIHandler(APIName.ADD_MEMBER_TO_TEAM);
 
   // ToDo: (20250225 - Julian) 取得 Team API
   const { trigger: getTeamById } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
@@ -160,17 +150,34 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   const emailInputRef = useRef<HTMLInputElement>(null);
 
+  // Info: (20250225 - Julian) 取得 Team 資訊
   const getTeam = async () => {
-    // Info: (20250225 - Julian) 取得 Team 資訊
     if (newTeam?.id) {
       getTeamById({ params: { teamId: newTeam.id } });
     }
   };
 
+  // Info: (20250303 - Julian) 將 Team 格式轉換成 UserOwnedTeam
+  const convertTeamToUserOwnedTeam = (team: ITeam): IUserOwnedTeam => {
+    const teamId: number = parseInt(team.id, 10);
+    const teamName: string = team.name.value;
+    const teamPlan: TPlanType = team.planType.value;
+
+    return {
+      id: teamId,
+      name: teamName,
+      plan: teamPlan,
+      enableAutoRenewal: false,
+      nextRenewalTimestamp: 0,
+      expiredTimestamp: 0,
+      paymentStatus: TPaymentStatus.FREE,
+    };
+  };
+
   // Info: (20250226 - Julian) 送出 API 後，取得 Team 資訊
   useEffect(() => {
     if (createSuccess && data) {
-      setNewTeam(data);
+      setNewTeam(convertTeamToUserOwnedTeam(data));
       getTeam();
     }
   }, [createSuccess, data]);
@@ -178,7 +185,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   // Info: (20250226 - Julian) 更新 Team 資訊
   useEffect(() => {
     if (updateSuccess && updatedTeam) {
-      setNewTeam(updatedTeam);
+      setNewTeam(convertTeamToUserOwnedTeam(updatedTeam));
       getTeam();
     }
   }, [updateSuccess, updatedTeam]);
@@ -292,7 +299,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       updateTeam({ params: { teamId: newTeam?.id }, body: { name: teamNameInput } });
     } else {
       // Info: (20250225 - Julian) 第一次建立 -> create
-      createTeam({ body: { name: teamNameInput } });
+      createTeam({ body: { name: teamNameInput, planType: TPlanType.BEGINNER } }); // Info: (20250303 - Julian) 預設方案為 Beginner
     }
   };
 
@@ -324,8 +331,8 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           doneAllSteps;
 
   const backHandler = () => {
-    if (selectedPlan) {
-      setSelectedPlan(null); // Info: (20250221 - Julian) 回到選擇方案
+    if (selectedPlan !== PLANS[0]) {
+      setSelectedPlan(PLANS[0]); // Info: (20250221 - Julian) 切換成免費方案 -> 回到選擇方案
     } else if (currentStep === 2) {
       setCurrentStep(1); // Info: (20250221 - Julian) 回到第一步
     } else if (currentStep === 3) {
@@ -392,7 +399,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           plan={selectedPlan}
           setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
           setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
-          setIsDirty={() => {}}
+          setIsDirty={() => {}} // Info: (20250303 - Julian) 不需要使用
         />
       </section>
 
@@ -416,9 +423,8 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   const invoiceOverview = newTeam && teamInvoice && <InvoiceDetail invoice={teamInvoice} />;
 
-  const step3Body = selectedPlan
-    ? paymentOverview // Info: (20250225 - Julian) 有選擇方案 -> 顯示付款
-    : subscriptionOverview; // Info: (20250225 - Julian) 顯示訂閱方案
+  // Info: (20250303 - Julian) 免費方案 -> 顯示訂閱方案；其他方案 -> 顯示付款
+  const step3Body = selectedPlan !== PLANS[0] ? paymentOverview : subscriptionOverview;
 
   const memberFormBody = (
     <div className="flex flex-col gap-8px text-sm">
