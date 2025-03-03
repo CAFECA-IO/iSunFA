@@ -39,7 +39,7 @@ const MemberListModal = ({
   // ToDo: (20250220 - Liz) 取得成員清單 API (list member by team id)
   // const { trigger: getMemberListByTeamIdAPI } = APIHandler<IPaginatedData<ITeamMember[]>>(APIName.?);
 
-  // ToDo: (20250220 - Liz) 打 api 取得成員清單
+  // ToDo: (20250220 - Liz) 打 API 取得成員清單
 
   // Deprecated: (20250220 - Liz) 目前後端尚未提供 API，先用假資料測試
   useEffect(() => {

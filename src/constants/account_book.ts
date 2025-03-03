@@ -9,6 +9,7 @@ import { TPlanType } from '@/interfaces/subscription';
 
 export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
   {
+    teamId: 'TeamUID0001',
     company: {
       id: 1,
       imageId: '/images/fake_team_img.svg',
@@ -30,6 +31,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
     tag: WORK_TAG.ALL,
   },
   {
+    teamId: 'TeamUID0002',
     company: {
       id: 2,
       imageId: '/images/fake_team_img.svg',
@@ -51,6 +53,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
     tag: WORK_TAG.FINANCIAL,
   },
   {
+    teamId: 'TeamUID0003',
     company: {
       id: 3,
       imageId: '/images/fake_team_img.svg',
@@ -72,6 +75,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
     tag: WORK_TAG.TAX,
   },
   {
+    teamId: 'TeamUID0004',
     company: {
       id: 4,
       imageId: '/images/fake_team_img.svg',
@@ -93,6 +97,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
     tag: WORK_TAG.ALL,
   },
   {
+    teamId: 'TeamUID0005',
     company: {
       id: 5,
       imageId: '/images/fake_team_img.svg',
@@ -117,6 +122,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
 
 export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[] = [
   {
+    teamId: 'TeamUID00001',
     company: {
       id: 1,
       imageId: '/images/fake_team_img.svg',
@@ -137,7 +143,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     order: 1,
     tag: WORK_TAG.ALL,
     team: {
-      id: 'TeamUID00002',
+      id: 'TeamUID0000q',
       imageId: '/images/fake_team_img.svg',
       role: TeamRole.ADMIN,
       name: {
@@ -166,6 +172,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     isTransferring: false,
   },
   {
+    teamId: 'TeamUID00002',
     company: {
       id: 2,
       imageId: '/images/fake_team_img.svg',
@@ -215,6 +222,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     isTransferring: false,
   },
   {
+    teamId: 'TeamUID00003',
     company: {
       id: 3,
       imageId: '/images/fake_team_img.svg',
@@ -264,6 +272,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     isTransferring: false,
   },
   {
+    teamId: 'TeamUID00004',
     company: {
       id: 4,
       imageId: '/images/fake_team_img.svg',
@@ -313,6 +322,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     isTransferring: true,
   },
   {
+    teamId: 'TeamUID00005',
     company: {
       id: 5,
       imageId: '/images/fake_team_img.svg',
