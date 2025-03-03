@@ -137,7 +137,7 @@ export const FAKE_TEAM_MEMBER_LIST: ITeamMember[] = [
   },
 ];
 
-export const FAKE_TEMA_ACCOUNT_BOOKS: IAccountBookForUser[] = [
+export const FAKE_TEAM_ACCOUNT_BOOKS: IAccountBookForUser[] = [
   {
     company: {
       id: 1,
