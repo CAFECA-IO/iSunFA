@@ -18,7 +18,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
 import { WORK_TAG } from '@/interfaces/account_book';
 import { DefaultValue } from '@/constants/default_value';
-import { listTeamsByUserId, isTeamOwner } from '@/lib/utils/repo/team.repo';
+import { getTeamList, isEligibleToCreateCompanyInTeam } from '@/lib/utils/repo/team.repo';
 
 export async function listAdminByCompanyId(companyId: number): Promise<
   (Admin & {
@@ -646,20 +646,23 @@ export async function createCompanyAndRole(
 }> {
   const nowTimestamp = getTimestampNow();
 
-  // Info: (20250303 - Shirley) 如果提供了 teamId，檢查用戶是否為該 team 的 owner
+  // Info: (20250303 - Shirley) 如果提供了 teamId，檢查用戶是否有權限在該 team 建立 company
   let finalTeamId: number | undefined = teamId;
   if (finalTeamId) {
-    const isOwner = await isTeamOwner(userId, finalTeamId);
-    if (!isOwner) {
-      // TODO: (20250303 - Shirley) 如果用戶不是該 team 的 owner，則不允許關聯 company 到該 team
-      throw new Error('User is not the owner of the team');
+    const hasPermission = await isEligibleToCreateCompanyInTeam(userId, finalTeamId);
+    if (!hasPermission) {
+      throw new Error('User does not have permission to create company in this team');
     }
   } else {
     // Info: (20250303 - Shirley) 如果沒有提供 teamId，則獲取用戶的 team 列表
-    const userTeams = await listTeamsByUserId(userId);
-    if (userTeams && userTeams.length > 0) {
+    const userTeams = await getTeamList(userId);
+    if (userTeams && userTeams.data.length > 0) {
       // Info: (20250303 - Shirley) 使用用戶的第一個 team（通常是默認 team）
-      finalTeamId = userTeams[0].teamId;
+      const defaultTeamId = +userTeams.data[0].id;
+      const hasPermission = await isEligibleToCreateCompanyInTeam(userId, defaultTeamId);
+      if (hasPermission) {
+        finalTeamId = defaultTeamId;
+      }
     }
   }
 

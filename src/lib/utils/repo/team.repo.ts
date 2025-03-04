@@ -177,6 +177,15 @@ export const createTeam = async (
     },
   });
 
+  await prisma.teamMember.create({
+    data: {
+      teamId: newTeam.id,
+      userId,
+      role: TeamRole.OWNER,
+      joinedAt: now,
+    },
+  });
+
   return {
     id: newTeam.id.toString(),
     imageId: newTeam.profile ?? '/images/fake_team_img.svg',
@@ -274,13 +283,6 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
   };
 };
 
-/**
- * Info: (20250303 - Shirley)
- * 為新用戶創建默認的 team
- * @param userId 用戶 ID
- * @param userName 用戶名稱
- * @returns 創建的 team
- */
 export async function createDefaultTeamForUser(userId: number, userName: string) {
   const teamName = `${userName}'s Team`;
 
@@ -289,4 +291,20 @@ export async function createDefaultTeamForUser(userId: number, userName: string)
   });
 
   return team;
+}
+
+export async function isEligibleToCreateCompanyInTeam(
+  userId: number,
+  teamId: number
+): Promise<boolean> {
+  const teamMember = await prisma.teamMember.findFirst({
+    where: {
+      userId,
+      teamId,
+      role: {
+        in: [TeamRole.OWNER, TeamRole.EDITOR, TeamRole.ADMIN],
+      },
+    },
+  });
+  return !!teamMember;
 }
