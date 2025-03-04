@@ -82,6 +82,8 @@ const handlePostRequest: IHandleRequest<
     role: Role;
     tag: string;
     order: number;
+    teamId: number;
+    // isPrivate: boolean;
   }
 > = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -90,9 +92,11 @@ const handlePostRequest: IHandleRequest<
     role: Role;
     tag: string;
     order: number;
+    teamId: number;
+    // isPrivate: boolean;
   } | null = null;
   const { userId } = query;
-  const { taxId, name, tag, teamId } = body;
+  const { taxId, name, tag, teamId, isPrivate } = body;
 
   // Info: (20250124 - Shirley) Step 1.
   const getCompany = await getCompanyAndRoleByTaxId(userId, taxId);
@@ -122,6 +126,7 @@ const handlePostRequest: IHandleRequest<
         name,
         file.id,
         tag,
+        isPrivate,
         undefined,
         teamIdParam
       );

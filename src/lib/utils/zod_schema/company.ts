@@ -28,7 +28,8 @@ const companyPostBodySchema = z.object({
   name: z.string(),
   taxId: z.string(),
   tag: z.nativeEnum(WORK_TAG),
-  teamId: z.number().int().optional(),
+  teamId: z.number().int(),
+  isPrivate: z.boolean(),
 });
 
 // Info: (20241016 - Jacky) Company get schema
@@ -64,6 +65,7 @@ const companyPrismaSchema = z.object({
   imageFile: filePrismaSchema,
   name: z.string(),
   taxId: z.string(),
+  isPrivate: z.boolean(),
   startDate: z.number().int(),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
