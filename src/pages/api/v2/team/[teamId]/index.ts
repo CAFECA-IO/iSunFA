@@ -35,7 +35,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const teamId = Number(query.teamId);
+  const { teamId } = query;
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
 

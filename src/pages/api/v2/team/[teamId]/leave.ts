@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { checkSessionUser, checkUserAuthorization } from '@/lib/utils/middleware';
+import { checkRequestData, checkSessionUser, checkUserAuthorization } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
@@ -27,13 +27,20 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   loggerBack.info(`User ${userId} is attempting to leave team ${req.query.teamId}`);
 
+  const { query } = checkRequestData(APIName.LEAVE_TEAM, req, session);
+  if (query === null || query.teamId === undefined) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const { teamId } = query;
+
   const teamMember =
     FAKE_TEAM_MEMBER_LIST[Math.floor(Math.random() * FAKE_TEAM_MEMBER_LIST.length)];
 
   if (teamMember.role === TeamRole.OWNER || teamMember.role === TeamRole.ADMIN) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
     payload = {
-      teamId: req.query.teamId as string,
+      teamId,
       userId,
       role: teamMember.role,
       status: LeaveStatus.FAILED,
@@ -41,7 +48,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   } else {
     statusMessage = STATUS_MESSAGE.SUCCESS;
     payload = {
-      teamId: req.query.teamId as string,
+      teamId,
       userId,
       role: teamMember.role,
       status: LeaveStatus.LEFT,
