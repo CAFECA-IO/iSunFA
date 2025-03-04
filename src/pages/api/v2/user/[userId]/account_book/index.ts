@@ -19,7 +19,7 @@ import {
 
 const mockAccountBooks: IAccountBookForUserWithTeam[] = [
   {
-    teamId: '10000001',
+    teamId: 10000001,
     company: {
       id: 10000001,
       imageId: 'https://example.com/images/burger-king.png',
@@ -69,7 +69,7 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
     isTransferring: true,
   },
   {
-    teamId: '10000001',
+    teamId: 10000001,
     company: {
       id: 10000002,
       imageId: 'https://example.com/images/burger-queen.png',
@@ -119,7 +119,7 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
     isTransferring: false,
   },
   {
-    teamId: '10000002',
+    teamId: 10000002,
     company: {
       id: 10000003,
       imageId: 'https://example.com/images/burger-knight.png',

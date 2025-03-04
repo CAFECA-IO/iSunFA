@@ -46,7 +46,7 @@ export enum LeaveStatus {
 }
 
 export interface ILeaveTeam {
-  teamId: string;
+  teamId: number;
   userId: number;
   role: TeamRole;
   status: LeaveStatus;
@@ -60,8 +60,8 @@ export enum TransferStatus {
 
 export interface ITransferLedger {
   accountBookId: string;
-  previousTeamId: string;
-  targetTeamId: string;
+  previousTeamId: number;
+  targetTeamId: number;
   status: TransferStatus;
   transferedAt?: number;
 }
