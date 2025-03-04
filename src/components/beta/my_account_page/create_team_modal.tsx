@@ -166,7 +166,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   // Info: (20250303 - Julian) 將 Team 格式轉換成 UserOwnedTeam
   const convertTeamToUserOwnedTeam = (team: ITeam): IUserOwnedTeam => {
-    const teamId: number = parseInt(team.id, 10);
+    const teamId: number = team.id;
     const teamName: string = team.name.value;
     const teamPlan: TPlanType = team.planType.value;
 

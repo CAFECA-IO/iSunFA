@@ -116,7 +116,11 @@ export const createTeam = async (
         ownerId: userId,
         name: teamData.name,
         imageFileId: teamData.imageFileId ?? null,
+        about: teamData.about ?? '',
+        profile: teamData.profile ?? '',
+        bankInfo: teamData.bankInfo ?? { code: '', number: '' },
         createdAt: now,
+        updatedAt: now,
       },
       include: {
         members: true,
@@ -133,40 +137,42 @@ export const createTeam = async (
       });
 
       const existingUserEmails = new Set(existingUsers.map((user) => user.email));
+      const newUserEmails = teamData.members.filter((email) => !existingUserEmails.has(email));
 
-      const newTeamMembers = existingUsers.map((user) => ({
-        teamId: newTeam.id,
-        userId: user.id,
-        role: TeamRole.EDITOR,
-        joinedAt: now,
-      }));
-
-      if (newTeamMembers.length > 0) {
-        await tx.teamMember.createMany({ data: newTeamMembers });
+      // Info: (20250304 - Tzuhan) 3.1 批量插入 `teamMember`
+      if (existingUsers.length > 0) {
+        await tx.teamMember.createMany({
+          data: existingUsers.map((user) => ({
+            teamId: newTeam.id,
+            userId: user.id,
+            role: TeamRole.EDITOR,
+            joinedAt: now,
+          })),
+          skipDuplicates: true,
+        });
       }
 
-      // Info: (20250304 - Tzuhan) 4️. 將不存在的 Email 新增到 `PendingTeamMember`
-      const pendingMembers = teamData.members
-        .filter((email) => !existingUserEmails.has(email))
-        .map((email) => ({
-          teamId: newTeam.id,
-          email,
-          createdAt: now,
-        }));
-
-      if (pendingMembers.length > 0) {
-        await tx.pendingTeamMember.createMany({ data: pendingMembers });
+      // Info: (20250304 - Tzuhan) 3.2 批量插入 `pendingTeamMember`
+      if (newUserEmails.length > 0) {
+        await tx.pendingTeamMember.createMany({
+          data: newUserEmails.map((email) => ({
+            teamId: newTeam.id,
+            email,
+            createdAt: now,
+          })),
+          skipDuplicates: true,
+        });
       }
     }
 
-    // Info: (20250304 - Tzuhan) 5️. 創建 `TeamSubscription`
+    // Info: (20250304 - Tzuhan) 54. 創建 `TeamSubscription`
     await tx.teamSubscription.create({
       data: {
         teamId: newTeam.id,
         planId: plan.id,
         autoRenewal: false,
         startDate: now,
-        expiredDate: now + 30 * 24 * 60 * 60,
+        expiredDate: now + 30 * 24 * 60 * 60, // Info: (20250304 - Tzuhan) 預設 30 天後過期
         paymentStatus: TeamPaymentStatus.FREE,
         createdAt: now,
         updatedAt: now,
