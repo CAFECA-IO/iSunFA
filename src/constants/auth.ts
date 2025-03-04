@@ -167,6 +167,8 @@ export const AUTH_CHECK = {
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_MEMBER_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ADD_MEMBER_TO_TEAM]: [AuthFunctionsKeysNew.user],
+  [APIName.LEAVE_TEAM]: [AuthFunctionsKeysNew.user],
+  [APIName.TRANSFER_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
 
   [APIName.LIST_SUBSCRIPTION]: [AuthFunctionsKeysNew.user],
   [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
@@ -180,4 +182,6 @@ export const AUTH_CHECK = {
 
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: [AuthFunctionsKeysNew.user],
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_ACCOUNT_BOOK_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.PUT_TEAM_ICON]: [AuthFunctionsKeysNew.user],
 };

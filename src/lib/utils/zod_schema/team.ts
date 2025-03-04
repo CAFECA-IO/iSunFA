@@ -1,5 +1,5 @@
 import { TPlanType } from '@/interfaces/subscription';
-import { TeamRole } from '@/interfaces/team';
+import { LeaveStatus, TeamRole, TransferStatus } from '@/interfaces/team';
 import { z } from 'zod';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
@@ -43,11 +43,11 @@ export const ITeamMemberSchema = z.object({
 });
 
 export const getByTeamIdSchema = z.object({
-  teamId: z.string(),
+  teamId: z.number(),
 });
 
 export const listByTeamIdQuerySchema = paginatedDataQuerySchema.extend({
-  teamId: z.string(),
+  teamId: z.number(),
 });
 
 export const addMemberBodySchema = z.array(z.string().email()).min(1, '至少需要邀請一名成員');
@@ -55,6 +55,22 @@ export const addMemberBodySchema = z.array(z.string().email()).min(1, '至少需
 export const addMemberResponseSchema = z.object({
   invitedCount: z.number(),
   failedEmails: z.array(z.string().email()),
+});
+
+export const transferAccountBookSchema = z.object({
+  accountBookId: z.string(),
+  previousTeamId: z.number(),
+  targetTeamId: z.number(),
+  status: z.enum(Object.values(TransferStatus) as [TransferStatus, ...TransferStatus[]]),
+  transferedAt: z.number().optional(),
+});
+
+export const leaveTeamSchema = z.object({
+  teamId: z.number(),
+  userId: z.number(),
+  role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
+  status: z.enum(Object.values(LeaveStatus) as [LeaveStatus, ...LeaveStatus[]]),
+  leavedAt: z.number().optional(),
 });
 
 // Info: (20250227 - Shirley) 定義更新團隊資訊的 Schema
@@ -85,9 +101,9 @@ export const updateTeamResponseSchema = z.union([
   z.null(),
 ]);
 
-// Info: (20250227 - Shirley) 定義更新團隊成員角色的 Schema
+// Info: (20250227 - Shirley) 定義更新團隊成員角色的 Schema，OWNER 不能透過更新 member 修改
 export const updateMemberBodySchema = z.object({
-  role: z.nativeEnum(TeamRole),
+  role: z.enum([TeamRole.ADMIN, TeamRole.EDITOR, TeamRole.VIEWER]),
 });
 
 // Info: (20250227 - Shirley) 定義更新團隊成員角色的回應 Schema
@@ -113,6 +129,35 @@ export const deleteMemberResponseSchema = z.union([
   z.null(),
 ]);
 
+/**
+ * Info: (20250303 - Shirley)
+ * @note used in APIName.PUT_TEAM_ICON
+ */
+const teamPutIconQuerySchema = z.object({
+  teamId: zodStringToNumber,
+});
+
+const teamPutIconBodySchema = z.object({
+  fileId: z.number().int(),
+});
+
+const teamPictureSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  imageId: z.string(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+});
+
+export const teamPutIconSchema = {
+  input: {
+    querySchema: teamPutIconQuerySchema,
+    bodySchema: teamPutIconBodySchema,
+  },
+  outputSchema: teamPictureSchema.nullable(),
+  frontend: teamPictureSchema,
+};
+
 export const teamSchemas = {
   create: {
     input: {
@@ -120,10 +165,11 @@ export const teamSchemas = {
       bodySchema: z.object({
         name: z.string(),
         members: z.array(z.string().email()).optional(),
-        planType: z.enum(Object.values(TPlanType) as [TPlanType, ...TPlanType[]]),
+        planType: z.enum(Object.values(TPlanType) as [TPlanType, ...TPlanType[]]).optional(),
         about: z.string().optional(),
         profile: z.string().optional(),
         bankInfo: z.object({ code: z.number(), number: z.string() }).optional(),
+        imageFileId: z.number().optional(),
       }),
     },
     outputSchema: TeamSchema,
@@ -177,6 +223,24 @@ export const teamSchemas = {
     outputSchema: addMemberResponseSchema,
     frontend: addMemberResponseSchema,
   },
+  leaveTeam: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({}).optional(),
+    },
+    outputSchema: leaveTeamSchema,
+    frontend: leaveTeamSchema,
+  },
+  transferAccountBook: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({
+        targetTeamId: z.number(),
+      }),
+    },
+    outputSchema: transferAccountBookSchema,
+    frontend: transferAccountBookSchema,
+  },
   updateMember: {
     input: {
       querySchema: z.object({
@@ -199,6 +263,7 @@ export const teamSchemas = {
     outputSchema: deleteMemberResponseSchema,
     frontend: deleteMemberResponseSchema,
   },
+  putIcon: teamPutIconSchema,
 };
 
 // Info: (20250227 - Shirley) 導出更新團隊資訊的類型

@@ -30,6 +30,7 @@ export interface IAccountBook {
 // Info: (20250226 - Liz) 原為 ICompanyAndRole
 // Info: (20250226 - Liz) tag, order, role 都是使用者的個人化設定 (個人專屬的工作標籤、排序、個人角色)，目前 order 和 role 還沒用過
 export interface IAccountBookForUser {
+  teamId: number;
   company: IAccountBook;
   tag: WORK_TAG;
   order: number;

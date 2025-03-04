@@ -28,6 +28,7 @@ const companyPostBodySchema = z.object({
   name: z.string(),
   taxId: z.string(),
   tag: z.nativeEnum(WORK_TAG),
+  teamId: z.number().int().optional(),
 });
 
 // Info: (20241016 - Jacky) Company get schema
@@ -77,7 +78,18 @@ export const companyOutputSchema = companyPrismaSchema.strip().transform((data) 
   return output;
 });
 
+// TODO: (20250303 - Shirley) 討論create account book回傳的資料格式後，修改 schema
+export const companyOutputSchemaWithTeam = companyPrismaSchema.strip().transform((data) => {
+  const { imageFile, ...rest } = data;
+  const output = {
+    ...rest,
+    imageId: imageFile.url,
+  };
+  return output;
+});
+
 export const accountBookForUserSchema = z.object({
+  teamId: z.number(),
   company: companyOutputSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number().int(),

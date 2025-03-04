@@ -92,7 +92,7 @@ const handlePostRequest: IHandleRequest<
     order: number;
   } | null = null;
   const { userId } = query;
-  const { taxId, name, tag } = body;
+  const { taxId, name, tag, teamId } = body;
 
   // Info: (20250124 - Shirley) Step 1.
   const getCompany = await getCompanyAndRoleByTaxId(userId, taxId);
@@ -115,11 +115,20 @@ const handlePostRequest: IHandleRequest<
     });
     if (file) {
       // Info: (20250124 - Shirley) Step 3.
-      const createdCompanyAndRole = await createCompanyAndRole(userId, taxId, name, file.id, tag);
+      const teamIdParam = teamId ?? undefined;
+      const result = await createCompanyAndRole(
+        userId,
+        taxId,
+        name,
+        file.id,
+        tag,
+        undefined,
+        teamIdParam
+      );
       statusMessage = STATUS_MESSAGE.CREATED;
-      payload = createdCompanyAndRole;
+      payload = result;
 
-      const companyId = createdCompanyAndRole.company.id;
+      const companyId = result.company.id;
       // Info: (20250124 - Shirley) Step 4.
       const companyKeyPair = await generateKeyPair();
       await storeKeyByCompany(companyId, companyKeyPair);

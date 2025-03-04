@@ -19,6 +19,7 @@ import {
 
 const mockAccountBooks: IAccountBookForUserWithTeam[] = [
   {
+    teamId: 10000001,
     company: {
       id: 10000001,
       imageId: 'https://example.com/images/burger-king.png',
@@ -68,6 +69,7 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
     isTransferring: true,
   },
   {
+    teamId: 10000001,
     company: {
       id: 10000002,
       imageId: 'https://example.com/images/burger-queen.png',
@@ -117,6 +119,7 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
     isTransferring: false,
   },
   {
+    teamId: 10000002,
     company: {
       id: 10000003,
       imageId: 'https://example.com/images/burger-knight.png',
@@ -175,13 +178,11 @@ const handleGetRequest: IHandleRequest<
   let payload: IAccountBookListResponse | null = null;
 
   const { userId, page, pageSize } = query as IAccountBookListQueryParams;
-
+  // TODO: (20250303 - Shirley) validate the query of userId and userId in session
   loggerBack.info(`List account books by userId: ${userId} with query: ${JSON.stringify(query)}`);
 
-  // Info: (20240324 - Shirley) 取得帳本列表
   const accountBooks = mockAccountBooks || [];
 
-  // Info: (20240324 - Shirley) 處理分頁
   const options: IPaginatedOptions<IAccountBookForUserWithTeam[]> = {
     data: accountBooks,
     page,
@@ -190,7 +191,6 @@ const handleGetRequest: IHandleRequest<
 
   const paginatedData = toPaginatedData(options);
 
-  // Info: (20240324 - Shirley) 驗證輸出資料
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
     paginatedData
