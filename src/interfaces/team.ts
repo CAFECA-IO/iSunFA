@@ -18,7 +18,7 @@ export interface ITeamMember {
 }
 
 export interface ITeam {
-  id: string;
+  id: number;
   imageId: string;
   role: TeamRole;
   name: IEditable<string>;

@@ -9,24 +9,9 @@ import { TeamPaymentStatus } from '@prisma/client';
 import { DEFAULT_END_DATE } from '@/constants/config';
 
 const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
-  const orderBy: { [key: string]: SortOrder }[] = [];
-  sortOptions.forEach((sort) => {
-    const { sortBy, sortOrder } = sort;
-    switch (sortBy) {
-      case SortBy.CREATED_AT:
-      case SortBy.DATE:
-        orderBy.push({
-          createdAt: sortOrder,
-        });
-        break;
-      default:
-        orderBy.push({
-          createdAt: SortOrder.DESC,
-        });
-        break;
-    }
-  });
-  return orderBy;
+  return sortOptions.map(({ sortBy, sortOrder }) => ({
+    createdAt: sortBy === SortBy.CREATED_AT || sortBy === SortBy.DATE ? sortOrder : SortOrder.DESC,
+  }));
 };
 
 export const getTeamList = async (
@@ -34,7 +19,7 @@ export const getTeamList = async (
   queryParams: z.infer<typeof paginatedDataQuerySchema> = {}
 ): Promise<IPaginatedOptions<ITeam[]>> => {
   const {
-    page = 1, // Info: (20250227 - tzuhan) 提供預設值
+    page = 1,
     pageSize = 1,
     startDate = 0,
     endDate = DEFAULT_END_DATE,
@@ -42,69 +27,43 @@ export const getTeamList = async (
     searchQuery = '',
   } = queryParams;
 
-  const totalCount = await prisma.team.count({
-    where: {
-      members: {
-        some: { userId }, // Info: (20250227 - tzuhan) 只查詢用戶所屬的團隊
+  const [totalCount, teams] = await prisma.$transaction([
+    prisma.team.count({
+      where: {
+        members: { some: { userId } },
+        createdAt: { gte: startDate, lte: endDate },
+        name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
       },
-      createdAt: { gte: startDate, lte: endDate },
-      name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
-    },
-  });
-
-  const totalPages = Math.ceil(totalCount / (pageSize || 1));
-
-  const teams = await prisma.team.findMany({
-    where: {
-      members: {
-        some: { userId },
+    }),
+    prisma.team.findMany({
+      where: {
+        members: { some: { userId } },
+        createdAt: { gte: startDate, lte: endDate },
+        name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
       },
-      createdAt: { gte: startDate, lte: endDate },
-      name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
-    },
-    include: {
-      members: {
-        where: { userId }, // Info: (20250227 - tzuhan) 取得當前使用者的角色
-        select: { role: true },
+      include: {
+        members: { where: { userId }, select: { id: true, role: true } },
+        ledger: true,
+        subscription: { include: { plan: true } },
+        imageFile: true,
       },
-      ledger: true, // Info: (20250227 - tzuhan) 帳本數
-      subscription: {
-        include: { plan: true }, // Info: (20250227 - tzuhan) 訂閱方案
-      },
-      imageFile: true,
-    },
-    skip: ((page || 1) - 1) * (pageSize || 1),
-    take: pageSize,
-    orderBy: createOrderByList(sortOption), // Info: (20250227 - tzuhan) 預設排序方式
-  });
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: createOrderByList(sortOption),
+    }),
+  ]);
 
-  const teamData: ITeam[] = teams.map((team) => {
-    const userRole = (team.members[0]?.role as TeamRole) || TeamRole.VIEWER; // Info: (20250227 - tzuhan) 預設為 VIEWER
-    const planType = team.subscription
-      ? (team.subscription.plan.type as TPlanType)
-      : TPlanType.BEGINNER; // Info: (20250227 - tzuhan) 預設 Beginner 計畫
-    const paymentStatus = team.subscription
-      ? team.subscription.paymentStatus
-      : TeamPaymentStatus.FREE;
-
-    return {
-      id: team.id.toString(),
+  return {
+    data: teams.map((team) => ({
+      id: team.id,
       imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
-      role: userRole,
-      name: {
-        value: team.name,
-        editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
-      },
-      about: {
-        value: team.about || '',
-        editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
-      },
-      profile: {
-        value: team.profile || '',
-        editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
-      },
+      role:
+        (team.members.find((member) => member.id === userId)?.role as TeamRole) ?? TeamRole.VIEWER,
+      name: { value: team.name, editable: team.members[0]?.role !== TeamRole.VIEWER },
+      about: { value: team.about || '', editable: team.members[0]?.role !== TeamRole.VIEWER },
+      profile: { value: team.profile || '', editable: team.members[0]?.role !== TeamRole.VIEWER },
       planType: {
-        value: planType,
+        value: (team.subscription?.plan.type as TPlanType) ?? TPlanType.BEGINNER,
         editable: false,
       },
       totalMembers: team.members.length,
@@ -113,16 +72,13 @@ export const getTeamList = async (
         value: team.bankInfo
           ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
           : '',
-        editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+        editable: team.members[0]?.role !== TeamRole.VIEWER,
       },
-      paymentStatus,
-    };
-  });
-
-  return {
-    data: teamData,
+      paymentStatus:
+        (team.subscription?.paymentStatus as TeamPaymentStatus) ?? TeamPaymentStatus.FREE,
+    })),
     page,
-    totalPages,
+    totalPages: Math.ceil(totalCount / pageSize),
     totalCount,
     pageSize,
     sort: sortOption,
@@ -141,71 +97,118 @@ export const createTeam = async (
     imageFileId?: number;
   }
 ): Promise<ITeam> => {
-  // Info: (20250303 - Tzuhan) 取得對應的 planId，若未提供，則使用預設方案 (BEGINNER)
-  const plan = await prisma.teamPlan.findFirst({
-    where: { type: teamData.planType ?? TPlanType.BEGINNER },
-    select: { id: true },
+  return prisma.$transaction(async (tx) => {
+    // Info: (20250304 - Tzuhan) 1️. 取得 `planId`
+    const plan = await tx.teamPlan.findFirst({
+      where: { type: teamData.planType ?? TPlanType.BEGINNER },
+      select: { id: true },
+    });
+
+    if (!plan) {
+      throw new Error('Plan type not found');
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+
+    // Info: (20250304 - Tzuhan) 2️. 創建團隊
+    const newTeam = await tx.team.create({
+      data: {
+        ownerId: userId,
+        name: teamData.name,
+        imageFileId: teamData.imageFileId ?? null,
+        about: teamData.about ?? '',
+        profile: teamData.profile ?? '',
+        bankInfo: teamData.bankInfo ?? { code: '', number: '' },
+        createdAt: now,
+        updatedAt: now,
+      },
+      include: {
+        members: true,
+        ledger: true,
+        imageFile: true,
+      },
+    });
+
+    // Info: (20250304 - Tzuhan) 3️. 遍歷 `members`，判斷 Email 是否存在於 `User`
+    if (teamData.members && teamData.members.length > 0) {
+      const existingUsers = await tx.user.findMany({
+        where: { email: { in: teamData.members } },
+        select: { id: true, email: true },
+      });
+
+      const existingUserEmails = new Set(existingUsers.map((user) => user.email));
+      const newUserEmails = teamData.members.filter((email) => !existingUserEmails.has(email));
+
+      // Info: (20250304 - Tzuhan) 3.1 批量插入 `teamMember`
+      if (existingUsers.length > 0) {
+        await tx.teamMember.createMany({
+          data: existingUsers.map((user) => ({
+            teamId: newTeam.id,
+            userId: user.id,
+            role: TeamRole.EDITOR,
+            joinedAt: now,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      // Info: (20250304 - Tzuhan) 3.2 批量插入 `pendingTeamMember`
+      if (newUserEmails.length > 0) {
+        await tx.pendingTeamMember.createMany({
+          data: newUserEmails.map((email) => ({
+            teamId: newTeam.id,
+            email,
+            createdAt: now,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
+    // Info: (20250304 - Tzuhan) 54. 創建 `TeamSubscription`
+    await tx.teamSubscription.create({
+      data: {
+        teamId: newTeam.id,
+        planId: plan.id,
+        autoRenewal: false,
+        startDate: now,
+        expiredDate: now + 30 * 24 * 60 * 60, // Info: (20250304 - Tzuhan) 預設 30 天後過期
+        paymentStatus: TeamPaymentStatus.FREE,
+        createdAt: now,
+        updatedAt: now,
+      },
+    });
+
+    return {
+      id: newTeam.id,
+      imageId: newTeam.imageFile?.url ?? '/images/fake_team_img.svg',
+      role: TeamRole.OWNER,
+      name: {
+        value: newTeam.name,
+        editable: true,
+      },
+      about: {
+        value: newTeam.about ?? '',
+        editable: true,
+      },
+      profile: {
+        value: newTeam.profile ?? '',
+        editable: true,
+      },
+      planType: {
+        value: teamData.planType ?? TPlanType.BEGINNER,
+        editable: false,
+      },
+      totalMembers: newTeam.members.length,
+      totalAccountBooks: newTeam.ledger.length,
+      bankAccount: {
+        value: newTeam.bankInfo
+          ? `${(newTeam.bankInfo as { code: string }).code}-${(newTeam.bankInfo as { number: string }).number}`
+          : '',
+        editable: true,
+      },
+    };
   });
-
-  if (!plan) {
-    throw new Error('Plan type not found');
-  }
-
-  const now = Math.floor(Date.now() / 1000); // Info: (20250303 - Tzuhan) 以秒為單位的 UNIX timestamp
-
-  // Info: (20250303 - Tzuhan) 建立團隊
-  const newTeam = await prisma.team.create({
-    data: {
-      ownerId: userId,
-      name: teamData.name,
-    },
-    include: {
-      members: true,
-      ledger: true,
-    },
-  });
-
-  // Info: (20250303 - Tzuhan) 建立團隊訂閱
-  await prisma.teamSubscription.create({
-    data: {
-      teamId: newTeam.id,
-      planId: plan.id,
-      autoRenewal: false,
-      startDate: now, // Info: (20250303 - Tzuhan) ✅ 以當前時間作為開始日期
-      expiredDate: now + 30 * 24 * 60 * 60, // Info: (20250303 - Tzuhan) 預設 30 天後過期
-      paymentStatus: TeamPaymentStatus.FREE,
-    },
-  });
-
-  return {
-    id: newTeam.id.toString(),
-    imageId: newTeam.profile ?? '/images/fake_team_img.svg',
-    role: TeamRole.OWNER,
-    name: {
-      value: newTeam.name,
-      editable: true,
-    },
-    about: {
-      value: newTeam.about ?? '',
-      editable: true,
-    },
-    profile: {
-      value: newTeam.profile ?? '',
-      editable: true,
-    },
-    planType: {
-      value: teamData.planType ?? TPlanType.BEGINNER,
-      editable: false,
-    },
-    totalMembers: newTeam.members.length,
-    totalAccountBooks: newTeam.ledger.length,
-    bankAccount: {
-      value: newTeam.bankInfo
-        ? `${(newTeam.bankInfo as { code: string }).code}-${(newTeam.bankInfo as { number: string }).number}`
-        : '',
-      editable: true,
-    },
-  };
 };
 
 export const getTeamByTeamId = async (teamId: number, userId: number): Promise<ITeam | null> => {
@@ -244,7 +247,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
     : TPlanType.BEGINNER;
 
   return {
-    id: team.id.toString(),
+    id: team.id,
     imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
     role: userRole,
     name: {
@@ -273,3 +276,75 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
     },
   };
 };
+
+export const addMembersToTeam = async (
+  teamId: number,
+  emails: string[]
+): Promise<{ invitedCount: number; failedEmails: string[] }> => {
+  const now = Math.floor(Date.now() / 1000);
+
+  const existingUsers = await prisma.user.findMany({
+    where: { email: { in: emails } },
+    select: { id: true, email: true },
+  });
+
+  const existingUserEmails = new Set(existingUsers.map((user) => user.email));
+  const newUserEmails = emails.filter((email) => !existingUserEmails.has(email));
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (existingUsers.length > 0) {
+        await tx.teamMember.createMany({
+          data: existingUsers.map((user) => ({
+            teamId,
+            userId: user.id,
+            role: TeamRole.EDITOR,
+            joinedAt: now,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      if (newUserEmails.length > 0) {
+        await tx.pendingTeamMember.createMany({
+          data: newUserEmails.map((email) => ({
+            teamId,
+            email,
+            createdAt: now,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    });
+  } catch (error) {
+    return { invitedCount: existingUsers.length, failedEmails: newUserEmails };
+  }
+
+  return { invitedCount: emails.length, failedEmails: [] };
+};
+
+export async function createDefaultTeamForUser(userId: number, userName: string) {
+  const teamName = `${userName}'s Team`;
+
+  const team = await createTeam(userId, {
+    name: teamName,
+  });
+
+  return team;
+}
+
+export async function isEligibleToCreateCompanyInTeam(
+  userId: number,
+  teamId: number
+): Promise<boolean> {
+  const teamMember = await prisma.teamMember.findFirst({
+    where: {
+      userId,
+      teamId,
+      role: {
+        in: [TeamRole.OWNER, TeamRole.EDITOR, TeamRole.ADMIN],
+      },
+    },
+  });
+  return !!teamMember;
+}

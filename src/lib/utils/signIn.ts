@@ -11,6 +11,7 @@ import { UserActionLogActionType } from '@/constants/user_action_log';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { DefaultValue } from '@/constants/default_value';
+import { createDefaultTeamForUser } from '@/lib/utils/repo/team.repo';
 
 export const fetchImageInfo = async (
   imageUrl: string
@@ -90,6 +91,8 @@ export const handleSignInSession = async (
       authData: account,
       imageId: file?.id ?? PUBLIC_IMAGE_ID,
     });
+
+    await createDefaultTeamForUser(createdUser.user.id, createdUser.user.name);
 
     session = await setSession(session, { userId: createdUser.user.id });
 
