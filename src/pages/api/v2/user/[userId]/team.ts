@@ -17,14 +17,9 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<ITeam[]> | null = null;
-  const isLogin = await checkSessionUser(session, APIName.LIST_TEAM, req);
-  if (!isLogin) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-  const isAuth = await checkUserAuthorization(APIName.LIST_TEAM, req, session);
-  if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
+  await checkSessionUser(session, APIName.LIST_TEAM, req);
+  await checkUserAuthorization(APIName.LIST_TEAM, req, session);
+
   const { query } = checkRequestData(APIName.LIST_TEAM, req, session);
 
   loggerBack.info(`List Team by userId: ${userId} with query: ${JSON.stringify(query)}`);

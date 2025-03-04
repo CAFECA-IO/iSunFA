@@ -26,6 +26,9 @@ export async function checkSessionUser(
   if (!session.userId || session.userId === DefaultValue.USER_ID.GUEST) {
     isLogin = false;
   }
+  if (!isLogin) {
+    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+  }
 
   return isLogin;
 }
@@ -46,6 +49,7 @@ export async function checkUserAuthorization<T extends APIName>(
       errorType: `Forbidden Access for ${apiName} in middleware.ts`,
       errorMessage: 'User is not authorized',
     });
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   return isAuth;
 }
@@ -63,6 +67,7 @@ export function checkRequestData<T extends APIName>(
       errorType: `Invalid Input Parameter for ${apiName} in middleware.ts`,
       errorMessage: req.body,
     });
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
   return { query, body };
