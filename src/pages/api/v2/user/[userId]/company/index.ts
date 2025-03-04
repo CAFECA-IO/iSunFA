@@ -119,7 +119,7 @@ const handlePostRequest: IHandleRequest<
     });
     if (file) {
       // Info: (20250124 - Shirley) Step 3.
-      const teamIdParam = teamId ?? undefined;
+      const teamIdParam = teamId;
       const result = await createCompanyAndRole(
         userId,
         taxId,
