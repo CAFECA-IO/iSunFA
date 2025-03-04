@@ -168,6 +168,7 @@
     "CANCEL": "取消",
     "SELECT": "選擇",
     "SELECT_ALL": "全選",
+    "UNSELECT_ALL": "取消全選",
     "UPLOADED": "已上傳",
     "TOTAL": "總計",
     "CERTIFICATES": "發票",

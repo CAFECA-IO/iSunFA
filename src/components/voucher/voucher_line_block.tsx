@@ -24,6 +24,8 @@ interface IVoucherLineBlockProps {
   flagOfClear: boolean; // Info: (20241104 - Julian) 判斷是否按下清除按鈕
   flagOfSubmit: boolean; // Info: (20241104 - Julian) 判斷是否按下送出按鈕
 
+  isShowReverseHint: boolean; // Info: (20250304 - Julian) 是否顯示反轉提示
+
   setIsTotalZero: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷總借貸金額是否為 0
   setIsTotalNotEqual: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷總借貸金額是否不相等
   setHaveZeroLine: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否有金額為 0 的傳票列
@@ -45,6 +47,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
   flagOfClear,
   flagOfSubmit,
+
+  isShowReverseHint,
 
   setIsTotalZero,
   setIsTotalNotEqual,
@@ -128,6 +132,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           accountIsNull={lineItem.account === null}
           amountIsZero={lineItem.amount === 0}
           amountNotEqual={totalCredit !== totalDebit}
+          isShowReverseHint={isShowReverseHint}
         />
       ))
     ) : (
@@ -156,7 +161,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       </div>
 
       {/* Info: (20240927 - Julian) Table Body */}
-      <div className="grid w-full grid-cols-13 gap-x-24px gap-y-10px">
+      <div className="grid w-full grid-cols-13 gap-x-24px gap-y-6px">
         {voucherLines}
 
         {/* Info: (20240927 - Julian) Total calculation */}

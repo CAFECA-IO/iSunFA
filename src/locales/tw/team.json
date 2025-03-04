@@ -42,7 +42,8 @@
     "ROLE_OWNER": "擁有者",
     "ROLE_ADMIN": "管理者",
     "ROLE_EDITOR": "編輯者",
-    "ROLE_VIEWER": "檢視者"
+    "ROLE_VIEWER": "檢視者",
+    "TEAM_LIST_IS_EMPTY": "目前尚未擁有任何團隊"
   },
   "CREATE_TEAM_MODAL": {
     "MODAL_TITLE": "建立團隊",

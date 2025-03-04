@@ -953,6 +953,7 @@ const VoucherEditingPageBody: React.FC<{
                 setLineItems={setLineItems}
                 flagOfClear={flagOfClear}
                 flagOfSubmit={flagOfSubmit}
+                isShowReverseHint={isShowReverseHint}
                 setIsTotalZero={setIsTotalZero}
                 setIsTotalNotEqual={setIsTotalNotEqual}
                 setHaveZeroLine={setHaveZeroLine}
