@@ -43,11 +43,11 @@ export const ITeamMemberSchema = z.object({
 });
 
 export const getByTeamIdSchema = z.object({
-  teamId: z.string(),
+  teamId: z.number(),
 });
 
 export const listByTeamIdQuerySchema = paginatedDataQuerySchema.extend({
-  teamId: z.string(),
+  teamId: z.number(),
 });
 
 export const addMemberBodySchema = z.array(z.string().email()).min(1, '至少需要邀請一名成員');
@@ -59,14 +59,14 @@ export const addMemberResponseSchema = z.object({
 
 export const transferAccountBookSchema = z.object({
   accountBookId: z.string(),
-  previousTeamId: z.string(),
-  targetTeamId: z.string(),
+  previousTeamId: z.number(),
+  targetTeamId: z.number(),
   status: z.enum(Object.values(TransferStatus) as [TransferStatus, ...TransferStatus[]]),
   transferedAt: z.number().optional(),
 });
 
 export const leaveTeamSchema = z.object({
-  teamId: z.string(),
+  teamId: z.number(),
   userId: z.number(),
   role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
   status: z.enum(Object.values(LeaveStatus) as [LeaveStatus, ...LeaveStatus[]]),
@@ -235,7 +235,7 @@ export const teamSchemas = {
     input: {
       querySchema: getByTeamIdSchema,
       bodySchema: z.object({
-        targetTeamId: z.string(),
+        targetTeamId: z.number(),
       }),
     },
     outputSchema: transferAccountBookSchema,

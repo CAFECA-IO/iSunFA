@@ -78,7 +78,7 @@ export const companyOutputSchema = companyPrismaSchema.strip().transform((data) 
 });
 
 export const accountBookForUserSchema = z.object({
-  teamId: z.string(),
+  teamId: z.number(),
   company: companyOutputSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number().int(),
