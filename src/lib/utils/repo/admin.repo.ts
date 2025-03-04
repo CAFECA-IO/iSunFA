@@ -389,6 +389,7 @@ export async function listCompanyAndRole(
     role: Role;
     tag: string;
     order: number;
+    teamId: number;
   }>;
   page: number;
   totalPages: number;
@@ -403,10 +404,11 @@ export async function listCompanyAndRole(
     role: Role;
     tag: string;
     order: number;
+    teamId: number;
   }> = [];
 
   try {
-    companyRoleList = await prisma.admin.findMany({
+    const results = await prisma.admin.findMany({
       where: {
         userId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
@@ -434,6 +436,12 @@ export async function listCompanyAndRole(
         order: true,
       },
     });
+
+    // Info: (20250303 - Shirley) 將 company.teamId 映射到外層的 teamId，保留 null 值
+    companyRoleList = results.map((item) => ({
+      ...item,
+      teamId: item.company.teamId ?? 0,
+    }));
   } catch (error) {
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
@@ -476,6 +484,7 @@ export async function listCompanyAndRoleSimple(userId: number): Promise<
     role: Role;
     tag: string;
     order: number;
+    teamId: number;
   }>
 > {
   const companyRoleList = await prisma.admin.findMany({
@@ -497,7 +506,12 @@ export async function listCompanyAndRoleSimple(userId: number): Promise<
       order: true,
     },
   });
-  return companyRoleList;
+
+  // Info: (20250303 - Shirley) 將 company.teamId 映射到外層的 teamId，保留 null 值
+  return companyRoleList.map((item) => ({
+    ...item,
+    teamId: item.company.teamId ?? 0,
+  }));
 }
 
 export async function getCompanyAndRoleByUserIdAndCompanyId(
@@ -508,15 +522,17 @@ export async function getCompanyAndRoleByUserIdAndCompanyId(
   tag: string;
   order: number;
   role: Role;
+  teamId: number;
 } | null> {
   let companyRole: {
     company: Company & { imageFile: File | null };
     tag: string;
     order: number;
     role: Role;
+    teamId: number;
   } | null = null;
   if (userId > 0 && companyId > 0) {
-    companyRole = await prisma.admin.findFirst({
+    const result = await prisma.admin.findFirst({
       where: {
         companyId,
         userId,
@@ -533,6 +549,13 @@ export async function getCompanyAndRoleByUserIdAndCompanyId(
         role: true,
       },
     });
+
+    if (result) {
+      companyRole = {
+        ...result,
+        teamId: result.company.teamId ?? 0,
+      };
+    }
   }
   return companyRole;
 }

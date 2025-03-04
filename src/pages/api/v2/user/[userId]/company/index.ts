@@ -27,6 +27,7 @@ const handleGetRequest: IHandleRequest<
       role: Role;
       tag: string;
       order: number;
+      teamId: number;
     }>
   | IPaginatedData<
       Array<{
@@ -34,6 +35,7 @@ const handleGetRequest: IHandleRequest<
         role: Role;
         tag: string;
         order: number;
+        teamId: number;
       }>
     >
 > = async ({ query }) => {
@@ -44,6 +46,7 @@ const handleGetRequest: IHandleRequest<
         role: Role;
         tag: string;
         order: number;
+        teamId: number;
       }>
     | IPaginatedData<
         Array<{
@@ -51,6 +54,7 @@ const handleGetRequest: IHandleRequest<
           role: Role;
           tag: string;
           order: number;
+          teamId: number;
         }>
       >
     | null = null;
@@ -64,6 +68,9 @@ const handleGetRequest: IHandleRequest<
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     payload = listedCompanyAndRole;
   }
+
+  // eslint-disable-next-line no-console
+  console.log('ListCompanyAPI payload', payload);
 
   return { statusMessage, payload };
 };
