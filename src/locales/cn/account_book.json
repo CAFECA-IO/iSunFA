@@ -46,7 +46,8 @@
     "CHANGE_WORK_TAG": "更改标签",
     "DELETE": "删除",
     "DELETE_MESSAGE_TITLE": "删除账本",
-    "DELETE_MESSAGE_CONTENT": "您确定要删除此账本吗？"
+    "DELETE_MESSAGE_CONTENT": "您确定要删除此账本吗？",
+    "WAITING_FOR_TRANSFERRING": "等待转移中"
   },
   "DELETE": {
     "TITLE": "删除账本",

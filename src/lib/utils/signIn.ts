@@ -56,9 +56,6 @@ export const handleSignInSession = async (
   // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
   // let Dbuser;
   // const { invitation } = (account?.params || {}) as { invitation: string };
-  // TODO: (20250303 - Shirley) 測試用
-  // eslint-disable-next-line no-console
-  console.log('signInAPI', 'account', account, 'user', user);
   const existingUser = await getUserByCredential(account.providerAccountId || user.id);
   if (!existingUser) {
     // Info: (20241127 - tzuhan) 如果用戶不存在，創建用戶
@@ -95,11 +92,9 @@ export const handleSignInSession = async (
       imageId: file?.id ?? PUBLIC_IMAGE_ID,
     });
 
-    session = await setSession(session, { userId: createdUser.user.id });
-
-    // Info: (20250303 - Shirley) 為新用戶創建默認的 team
-
     await createDefaultTeamForUser(createdUser.user.id, createdUser.user.name);
+
+    session = await setSession(session, { userId: createdUser.user.id });
 
     // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
     // Dbuser = createdUser;

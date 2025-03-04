@@ -466,6 +466,7 @@ model File {
   representativeIdCardFile    CompanyKYC?  @relation("representative_id_card_file")
   taxCertificateFile          CompanyKYC?  @relation("tax_certificate_file")
   userImageFile               User?        @relation("user_image_file")
+  teamFile                    Team?        @relation("team_image_file")
 
   @@map("file")
 }
@@ -1221,16 +1222,31 @@ model Team {
   ownerId        Int      @map("owner_id")
   owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   name           String
+  imageFileId    Int?     @unique @map("image_file_id")
   about          String   @default("")
   profile        String   @default("") 
   bankInfo       Json     @map("bank_info") @default("{\"code\": \"\", \"number\": \"\"}") 
-  createdAt      Int      @map("created_at")
+  createdAt      Int      @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
+  updatedAt      Int      @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
 
   members        TeamMember[]
   ledger         Company[]
   subscription   TeamSubscription?
+  imageFile      File?    @relation("team_image_file", fields: [imageFileId], references: [id])
+  pendingMembers PendingTeamMember[]
 
   @@map("team")
+}
+
+model PendingTeamMember {
+  id        Int    @id @default(autoincrement())
+  teamId    Int    @map("team_id")
+  email     String @map("email") @unique
+  createdAt Int      @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
+
+  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@map("pending_team_member")
 }
 
 model TeamMember {
@@ -1271,8 +1287,8 @@ model TeamSubscription {
 
   invoices TeamInvoice[] // Info: (20250221 - tzuhan) 關聯發票
 
-  createdAt   Int    @map("created_at")
-  updatedAt   Int    @map("updated_at")
+  createdAt   Int    @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
+  updatedAt   Int    @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
 
   @@map("team_subscription")
 }
@@ -1292,7 +1308,7 @@ model TeamPaymentTransaction {
   amount        Int
   paymentMethod String            @map("payment_method")
   status        TransactionStatus
-  createdAt     Int               @map("created_at")
+  createdAt     Int      @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
 
   @@map("team_payment_transaction")
 }
@@ -1331,7 +1347,7 @@ model TeamInvoice {
   payeeAddress  String           @map("payee_address")
   payeePhone    String           @map("payee_phone")
   payeeTaxId    String           @map("payee_tax_id")
-  createdAt     Int              @map("created_at")
+  createdAt     Int      @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
 
   @@map("team_invoice")
 }

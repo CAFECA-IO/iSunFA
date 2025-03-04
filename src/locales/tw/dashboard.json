@@ -136,6 +136,9 @@
     "PLEASE_ENTER_THE_NAME": "請輸入名稱",
     "PLEASE_SELECT_A_WORK_TAG": "請選擇工作標籤",
     "PLEASE_SELECT_A_TEAM": "請選擇團隊",
+    "CREATE_ACCOUNT_BOOK_FAILED": "建立帳本失敗",
+    "ERROR_CODE": "錯誤代碼",
+    "ERROR_MESSAGE": "錯誤訊息",
     "ACCOUNT_BOOK_PRIVACY": "帳本隱私權",
     "PUBLIC": "公開",
     "PRIVATE": "私人"
