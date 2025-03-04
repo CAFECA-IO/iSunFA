@@ -322,3 +322,29 @@ export const addMembersToTeam = async (
 
   return { invitedCount: emails.length, failedEmails: [] };
 };
+
+export async function createDefaultTeamForUser(userId: number, userName: string) {
+  const teamName = `${userName}'s Team`;
+
+  const team = await createTeam(userId, {
+    name: teamName,
+  });
+
+  return team;
+}
+
+export async function isEligibleToCreateCompanyInTeam(
+  userId: number,
+  teamId: number
+): Promise<boolean> {
+  const teamMember = await prisma.teamMember.findFirst({
+    where: {
+      userId,
+      teamId,
+      role: {
+        in: [TeamRole.OWNER, TeamRole.EDITOR, TeamRole.ADMIN],
+      },
+    },
+  });
+  return !!teamMember;
+}
