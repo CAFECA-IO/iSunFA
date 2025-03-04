@@ -31,6 +31,8 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
 
   const { selectedAccountBook } = useUserCtx();
 
+  const [accountTitleList, setAccountTitleList] = useState<IPaginatedAccount | null>(null);
+
   // Info: (20241121 - Julian) 會計科目 input ref
   const accountInputRef = useRef<HTMLInputElement>(null);
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -57,12 +59,7 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
     isDeleted: false, // Info: (20250102 - Julian) 只取未刪除的
   };
 
-  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
-    APIName.ACCOUNT_LIST,
-    { params: { companyId: selectedAccountBook?.id }, query: queryCondition },
-    false,
-    true
-  );
+  const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
 
   const accountString = defaultAccount
     ? `${defaultAccount?.code} ${defaultAccount?.name}`
@@ -83,13 +80,20 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
 
   // Info: (20241121 - Julian) 搜尋關鍵字時取得會計科目列表
   useEffect(() => {
-    getAccountList({
-      query: {
-        ...queryCondition,
-        searchKey: searchKeyword,
-      },
-    });
-  }, [searchKeyword]);
+    const getAccountList = async () => {
+      const { data } = await getAccountListAPI({
+        query: {
+          params: { companyId: selectedAccountBook?.id },
+          ...queryCondition,
+          searchKey: searchKeyword,
+        },
+      });
+
+      setAccountTitleList(data);
+    };
+
+    getAccountList();
+  }, [queryCondition, searchKeyword, selectedAccountBook?.id]);
 
   // Info: (20241004 - Julian) 取得會計科目列表
   useEffect(() => {
