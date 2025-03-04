@@ -180,6 +180,8 @@ export enum APIName {
   UPDATE_TEAM_BY_ID = 'UPDATE_TEAM_BY_ID',
   UPDATE_MEMBER_BY_ID = 'UPDATE_MEMBER_BY_ID',
   DELETE_MEMBER_BY_ID = 'DELETE_MEMBER_BY_ID',
+  GET_ACCOUNT_BOOK_BY_ID = 'GET_ACCOUNT_BOOK_BY_ID',
+  PUT_TEAM_ICON = 'PUT_TEAM_ICON',
 }
 
 export enum APIPath {
@@ -335,9 +337,11 @@ export enum APIPath {
   LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
   LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
   CONNECT_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/connect`,
-  UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`, // Info: (20250227 - Shirley) 新增更新團隊資訊的 API
-  UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`, // Info: (20250227 - Shirley) 新增更新團隊成員角色的 API
-  DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`, // Info: (20250227 - Shirley) 新增刪除團隊成員的 API
+  UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
+  UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
+  DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
+  GET_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId`,
+  PUT_TEAM_ICON = `${apiPrefixV2}/team/:teamId/icon`,
 }
 
 const createConfig = ({
@@ -1116,6 +1120,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.CONNECT_ACCOUNT_BOOK_BY_ID,
   }),
+
   [APIName.UPDATE_TEAM_BY_ID]: createConfig({
     name: APIName.UPDATE_TEAM_BY_ID,
     method: HttpMethod.PUT,
@@ -1130,5 +1135,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.DELETE_MEMBER_BY_ID,
     method: HttpMethod.DELETE,
     path: APIPath.DELETE_MEMBER_BY_ID,
+  }),
+  [APIName.GET_ACCOUNT_BOOK_BY_ID]: createConfig({
+    name: APIName.GET_ACCOUNT_BOOK_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_ACCOUNT_BOOK_BY_ID,
+  }),
+  [APIName.PUT_TEAM_ICON]: createConfig({
+    name: APIName.PUT_TEAM_ICON,
+    method: HttpMethod.PUT,
+    path: APIPath.PUT_TEAM_ICON,
   }),
 };
