@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 
 import FilterSection from '@/components/filter_section/filter_section';
@@ -38,11 +38,22 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
   openUploaderModal,
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
+  const [isSelectAll, setIsSelectAll] = useState(false);
+
+  useEffect(() => {
+    // Info: (20250304 - Julian) 判斷是否全選
+    setIsSelectAll(selectedIds.length === certificates.length);
+  }, [selectedIds, certificates]);
+
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen) return null;
 
   const handleSelectAll = () => {
-    setSelectedIds(certificates.map((item) => item.id));
+    if (isSelectAll) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(certificates.map((item) => item.id));
+    }
   };
 
   const handleConfirm = () => {
@@ -65,10 +76,10 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
         {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
         <button
           type="button"
-          className="absolute right-4 top-4 text-checkbox-text-primary"
+          className="absolute right-20px top-16px text-checkbox-text-primary"
           onClick={onClose}
         >
-          <RxCross1 size={32} />
+          <RxCross1 size={24} />
         </button>
         {/* Info: (20240924 - tzuhan) 模態框標題 */}
         <h2 className="flex justify-center gap-2 text-xl font-semibold">
@@ -96,7 +107,9 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
               className="text-link-text-primary hover:underline"
               onClick={handleSelectAll}
             >
-              {t('certificate:COMMON.SELECT_ALL')}
+              {isSelectAll
+                ? t('certificate:COMMON.UNSELECT_ALL')
+                : t('certificate:COMMON.SELECT_ALL')}
             </button>
           </div>
         </div>
