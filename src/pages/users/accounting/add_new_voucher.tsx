@@ -18,12 +18,10 @@ const AddNewVoucherPage: React.FC = () => {
 
   const { clearReverseListHandler } = useAccountingCtx();
 
-  // Info: (20250305 - Julian) 進入此頁面時，清除 reverseList
   useEffect(() => {
+    // Info: (20250305 - Julian) 進入此頁面時，清除 reverseList
     clearReverseListHandler();
-  }, []);
 
-  useEffect(() => {
     const storedCertificates = localStorage.getItem('selectedCertificates');
     if (storedCertificates) {
       setSelectedCertificates(JSON.parse(storedCertificates));
