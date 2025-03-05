@@ -2,6 +2,10 @@ import { useState, Dispatch, SetStateAction } from 'react';
 import { IoCloseOutline, IoMailOutline, IoClose } from 'react-icons/io5';
 import { TbUserPlus } from 'react-icons/tb';
 import { useTranslation } from 'next-i18next';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { useRouter } from 'next/router';
 
 interface InviteMembersModalProps {
   setIsInviteMembersModalOpen: Dispatch<SetStateAction<boolean>>;
@@ -9,6 +13,8 @@ interface InviteMembersModalProps {
 
 const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalProps) => {
   const { t } = useTranslation(['team']);
+  const router = useRouter();
+  const { teamId } = router.query;
   const [inputEmail, setInputEmail] = useState<string>('');
   const [emailsToInvite, setEmailsToInvite] = useState<string[]>([]);
   const [isEmailNotValid, setIsEmailNotValid] = useState<boolean>(false);
@@ -40,7 +46,16 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
   };
 
   // ToDo: (20250224 - Liz) 打 API 邀請成員
-  const inviteMembers = () => {};
+  const { trigger: inviteMemberAPI } = APIHandler(APIName.ADD_MEMBER_TO_TEAM);
+  const inviteMembers = async () => {
+    const { success } = await inviteMemberAPI({
+      params: { teamId: router?.pathname },
+      body: { emails: [inputEmail] },
+    });
+    if (success) {
+      window.open(`${ISUNFA_ROUTE.TEAM_PAGE}/${teamId}`, '_self');
+    }
+  };
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">

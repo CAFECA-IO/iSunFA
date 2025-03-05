@@ -389,6 +389,7 @@ export async function listCompanyAndRole(
     role: Role;
     tag: string;
     order: number;
+    teamId: number | null;
   }>;
   page: number;
   totalPages: number;
@@ -403,10 +404,11 @@ export async function listCompanyAndRole(
     role: Role;
     tag: string;
     order: number;
+    teamId: number | null;
   }> = [];
 
   try {
-    companyRoleList = await prisma.admin.findMany({
+    const results = await prisma.admin.findMany({
       where: {
         userId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
@@ -434,6 +436,11 @@ export async function listCompanyAndRole(
         order: true,
       },
     });
+
+    companyRoleList = results.map((item) => ({
+      ...item,
+      teamId: item.company.teamId,
+    }));
   } catch (error) {
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
@@ -476,6 +483,7 @@ export async function listCompanyAndRoleSimple(userId: number): Promise<
     role: Role;
     tag: string;
     order: number;
+    teamId: number | null;
   }>
 > {
   const companyRoleList = await prisma.admin.findMany({
@@ -497,7 +505,11 @@ export async function listCompanyAndRoleSimple(userId: number): Promise<
       order: true,
     },
   });
-  return companyRoleList;
+
+  return companyRoleList.map((item) => ({
+    ...item,
+    teamId: item.company.teamId,
+  }));
 }
 
 export async function getCompanyAndRoleByUserIdAndCompanyId(
@@ -508,15 +520,17 @@ export async function getCompanyAndRoleByUserIdAndCompanyId(
   tag: string;
   order: number;
   role: Role;
+  teamId: number | null;
 } | null> {
   let companyRole: {
     company: Company & { imageFile: File | null };
     tag: string;
     order: number;
     role: Role;
+    teamId: number | null;
   } | null = null;
   if (userId > 0 && companyId > 0) {
-    companyRole = await prisma.admin.findFirst({
+    const result = await prisma.admin.findFirst({
       where: {
         companyId,
         userId,
@@ -533,6 +547,13 @@ export async function getCompanyAndRoleByUserIdAndCompanyId(
         role: true,
       },
     });
+
+    if (result) {
+      companyRole = {
+        ...result,
+        teamId: result.company.teamId,
+      };
+    }
   }
   return companyRole;
 }
@@ -636,6 +657,7 @@ export async function createCompanyAndRole(
   name: string,
   imageFileId: number,
   tag: WORK_TAG = WORK_TAG.ALL,
+  isPrivate: boolean = true,
   email?: string,
   teamId?: number
 ): Promise<{
@@ -643,11 +665,12 @@ export async function createCompanyAndRole(
   role: Role;
   tag: string;
   order: number;
+  teamId: number | null;
 }> {
   const nowTimestamp = getTimestampNow();
 
   // Info: (20250303 - Shirley) 如果提供了 teamId，檢查用戶是否有權限在該 team 建立 company
-  let finalTeamId: number | undefined = teamId;
+  let finalTeamId: number | undefined = teamId ?? undefined;
   if (finalTeamId) {
     const hasPermission = await isEligibleToCreateCompanyInTeam(userId, finalTeamId);
     if (!hasPermission) {
@@ -699,6 +722,7 @@ export async function createCompanyAndRole(
         id: imageFileId,
       },
     },
+    isPrivate,
     createdAt: nowTimestamp,
     updatedAt: nowTimestamp,
     startDate: nowTimestamp,
@@ -739,7 +763,14 @@ export async function createCompanyAndRole(
     },
   });
 
-  return newCompanyRoleList;
+  const result = {
+    company: newCompanyRoleList.company,
+    role: newCompanyRoleList.role,
+    tag: newCompanyRoleList.tag,
+    order: newCompanyRoleList.order,
+    teamId: finalTeamId ?? null,
+  };
+  return result;
 }
 
 // ToDo: (20241017 - Jacky) Modify this function by order by companyOrder

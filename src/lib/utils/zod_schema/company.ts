@@ -28,7 +28,8 @@ const companyPostBodySchema = z.object({
   name: z.string(),
   taxId: z.string(),
   tag: z.nativeEnum(WORK_TAG),
-  teamId: z.number().int().optional(),
+  teamId: z.number().int(),
+  isPrivate: z.boolean(),
 });
 
 // Info: (20241016 - Jacky) Company get schema
@@ -64,23 +65,15 @@ const companyPrismaSchema = z.object({
   imageFile: filePrismaSchema,
   name: z.string(),
   taxId: z.string(),
+  isPrivate: z.boolean(),
+  teamId: z.number().int().nullable(),
   startDate: z.number().int(),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
 });
 
 export const companyOutputSchema = companyPrismaSchema.strip().transform((data) => {
-  const { imageFile, ...rest } = data;
-  const output = {
-    ...rest,
-    imageId: imageFile.url,
-  };
-  return output;
-});
-
-// TODO: (20250303 - Shirley) 討論create account book回傳的資料格式後，修改 schema
-export const companyOutputSchemaWithTeam = companyPrismaSchema.strip().transform((data) => {
-  const { imageFile, ...rest } = data;
+  const { imageFile, teamId, ...rest } = data;
   const output = {
     ...rest,
     imageId: imageFile.url,
@@ -89,7 +82,7 @@ export const companyOutputSchemaWithTeam = companyPrismaSchema.strip().transform
 });
 
 export const accountBookForUserSchema = z.object({
-  teamId: z.number(),
+  teamId: z.number().optional().default(0),
   company: companyOutputSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number().int(),
@@ -197,6 +190,7 @@ export const ICompanyValidator = z.object({
   imageId: z.string(),
   name: z.string(),
   taxId: z.string(),
+  teamId: z.number().int().nullable(),
   startDate: z.number().int(),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
