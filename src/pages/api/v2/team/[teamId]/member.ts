@@ -86,14 +86,14 @@ const handlePutRequest = async (req: NextApiRequest) => {
   );
 
   // Info: (20250304 - Tzuhan) 邀請成員加入團隊
-  const addedReuslt = await addMembersToTeam(teamId, body);
+  const addedResult = await addMembersToTeam(teamId, body);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
 
   // Info: (20250226 - Tzuhan) 驗證輸出資料
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.ADD_MEMBER_TO_TEAM,
-    addedReuslt
+    addedResult
   );
 
   if (!isOutputDataValid) {
