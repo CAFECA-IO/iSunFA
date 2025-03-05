@@ -18,7 +18,7 @@ const ReverseLineItem: React.FC<IReverseLineItemProps> = ({
   const { t } = useTranslation('journal');
   const { voucherNo, account, description, reverseAmount } = reverseItem;
   return (
-    <div className="col-start-1 col-end-13 flex items-center justify-between gap-4px font-medium text-text-neutral-invert">
+    <div className="col-start-1 col-end-13 flex items-center justify-between gap-4px text-sm font-medium text-text-neutral-invert">
       <button
         type="button"
         className="p-10px text-button-text-primary hover:text-button-text-primary-hover"

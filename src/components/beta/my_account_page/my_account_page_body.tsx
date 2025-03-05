@@ -60,7 +60,7 @@ const MyAccountPageBody: React.FC<MyAccountPageBodyProps> = ({ loginDevices }) =
       </div>
 
       {/* Info: (20250217 - Julian) 團隊列表 */}
-      <div className="flex flex-col gap-lv-4">
+      <div className="flex flex-col items-center gap-lv-4">
         <Button
           type="button"
           variant="tertiary"

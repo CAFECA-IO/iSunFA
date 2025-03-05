@@ -168,6 +168,7 @@
     "CANCEL": "Cancel",
     "SELECT": "Select",
     "SELECT_ALL": "Select All",
+    "UNSELECT_ALL": "Unselect All",
     "UPLOADED": "Uploaded",
     "TOTAL": "Total",
     "CERTIFICATES": "Certificates",

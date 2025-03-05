@@ -21,6 +21,7 @@ interface IVoucherLineItemProps {
   accountIsNull: boolean;
   amountNotEqual: boolean;
   amountIsZero: boolean;
+  isShowReverseHint: boolean; // Info: (20250304 - Julian) 是否顯示反轉分錄提示
 }
 
 const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
@@ -32,6 +33,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   accountIsNull,
   amountNotEqual,
   amountIsZero,
+  isShowReverseHint,
 }) => {
   const { t } = useTranslation('common');
   const { reverseList: commonReverseList, addReverseListHandler } = useAccountingCtx();
@@ -368,6 +370,41 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     });
   };
 
+  const displayedAddItem = isShowReverseHint ? (
+    // Info: (20250304 - Julian) 紅字
+    <button
+      id="add-reverse-item-button"
+      type="button"
+      className="group flex items-center gap-4px text-sm text-text-state-error-invert hover:text-text-state-error"
+      onClick={addReverseHandler}
+    >
+      <div className="p-8px">
+        <FaPlus size={16} />
+      </div>
+      <p>
+        {t('journal:VOUCHER_LINE_BLOCK.REVERSE_ITEM')}
+        <span>*</span>
+      </p>
+
+      <p className="ml-10px">{t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}</p>
+    </button>
+  ) : (
+    <button
+      id="add-reverse-item-button"
+      type="button"
+      className="group flex items-center gap-4px text-sm text-text-neutral-solid-light"
+      onClick={addReverseHandler}
+    >
+      <div className="p-8px text-button-text-primary group-hover:text-button-text-primary-hover">
+        <FaPlus size={16} />
+      </div>
+      <p>
+        {t('journal:VOUCHER_LINE_BLOCK.REVERSE_ITEM')}
+        <span className="text-text-state-error-invert">*</span>
+      </p>
+    </button>
+  );
+
   return (
     <>
       {/* Info: (20241121 - Julian) Line Item */}
@@ -444,16 +481,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
       {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示新增按鈕 */}
       {isShowReverse ? (
-        <div key={`add-reverse-item-${id}`} className="col-start-1 col-end-13">
-          <button
-            id="add-reverse-item-button"
-            type="button"
-            className="flex items-center gap-4px text-text-neutral-invert"
-            onClick={addReverseHandler}
-          >
-            <FaPlus />
-            <p>{t('journal:VOUCHER_LINE_BLOCK.REVERSE_ITEM')}</p>
-          </button>
+        <div key={`add-reverse-item-${id}`} className="col-start-1 col-end-13 h-50px">
+          {displayedAddItem}
         </div>
       ) : null}
     </>

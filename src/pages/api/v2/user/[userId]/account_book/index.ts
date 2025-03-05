@@ -34,7 +34,7 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
       isPrivate: false,
     },
     team: {
-      id: '10000001',
+      id: 10000001,
       imageId: 'https://example.com/images/team-a.png',
       role: TeamRole.OWNER,
       name: {
@@ -84,7 +84,7 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
       isPrivate: false,
     },
     team: {
-      id: '10000001',
+      id: 10000001,
       imageId: 'https://example.com/images/team-a.png',
       role: TeamRole.OWNER,
       name: {
@@ -134,7 +134,7 @@ const mockAccountBooks: IAccountBookForUserWithTeam[] = [
       isPrivate: true,
     },
     team: {
-      id: '10000002',
+      id: 10000002,
       imageId: 'https://example.com/images/team-b.png',
       role: TeamRole.ADMIN,
       name: {

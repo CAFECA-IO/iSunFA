@@ -4,7 +4,7 @@ import { IAccountBookForUser, WORK_TAG } from '@/interfaces/account_book';
 
 export const FAKE_TEAM_LIST: ITeam[] = [
   {
-    id: 'TeamUID00001',
+    id: 1,
     imageId: '/images/fake_team_img.svg',
     role: TeamRole.OWNER,
     name: {
@@ -31,7 +31,7 @@ export const FAKE_TEAM_LIST: ITeam[] = [
     },
   },
   {
-    id: 'TeamUID00002',
+    id: 2,
     imageId: '/images/fake_team_img.svg',
     role: TeamRole.ADMIN,
     name: {
@@ -58,7 +58,7 @@ export const FAKE_TEAM_LIST: ITeam[] = [
     },
   },
   {
-    id: 'TeamUID00003',
+    id: 3,
     imageId: '/images/fake_team_img.svg',
     role: TeamRole.VIEWER,
     name: {

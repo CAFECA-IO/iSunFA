@@ -42,7 +42,8 @@
     "ROLE_OWNER": "Owner",
     "ROLE_ADMIN": "Admin",
     "ROLE_EDITOR": "Editor",
-    "ROLE_VIEWER": "Viewer"
+    "ROLE_VIEWER": "Viewer",
+    "TEAM_LIST_IS_EMPTY": "You currently do not have any teams."
   },
   "CREATE_TEAM_MODAL": {
     "MODAL_TITLE": "Create a Team",
