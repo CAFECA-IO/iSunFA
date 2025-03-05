@@ -23,7 +23,7 @@ const CreateAccountBookModal = ({
   getCompanyList,
 }: CreateCompanyModalProps) => {
   const { t } = useTranslation(['dashboard']);
-  const { createAccountBook } = useUserCtx();
+  const { userAuth, createAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const [companyName, setCompanyName] = useState<string>('');
@@ -124,6 +124,7 @@ const CreateAccountBookModal = ({
     const getTeamList = async () => {
       try {
         const { success, data } = await getTeamListAPI({
+          params: { userId: userAuth?.id },
           query: {
             page: 1,
             pageSize: 999,
