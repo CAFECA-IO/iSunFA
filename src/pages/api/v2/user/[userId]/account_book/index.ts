@@ -5,174 +5,19 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-// import { IAccountBookForUserWithTeam, WORK_TAG } from '@/interfaces/account_book';
-// import { TeamRole } from '@/interfaces/team';
-// import { TPlanType } from '@/interfaces/subscription';
-// import { IPaginatedOptions } from '@/interfaces/pagination';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
-import loggerBack from '@/lib/utils/logger_back';
+import { loggerError } from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
 import {
   IAccountBookListQueryParams,
   IAccountBookListResponse,
 } from '@/lib/utils/zod_schema/account_book';
-import { listAccountBookByUserId } from '@/lib/utils/repo/account_book.repo';
+import { listAccountBookByUserId } from '@/lib/utils/repo/company.repo';
+import { DefaultValue } from '@/constants/default_value';
 /*
  * TODO: (20250305 - Shirley)
  * 改用 zod_schema/company.ts 替代 zod_schema/account_book.ts
  */
-// const mockAccountBooks: IAccountBookForUserWithTeam[] = [
-//   {
-//     teamId: 10000001,
-//     company: {
-//       id: 10000001,
-//       imageId: 'https://example.com/images/burger-king.png',
-//       name: 'BURGER KING',
-//       taxId: '12345678',
-//       startDate: 1725372460,
-//       createdAt: 1725372460,
-//       updatedAt: 1725372460,
-//       isPrivate: false,
-//     },
-//     team: {
-//       id: 10000001,
-//       imageId: 'https://example.com/images/team-a.png',
-//       role: TeamRole.OWNER,
-//       name: {
-//         value: "Joyce's Team A",
-//         editable: true,
-//       },
-//       about: {
-//         value: 'Team A for BURGER KING',
-//         editable: true,
-//       },
-//       profile: {
-//         value: 'https://isunfa.com',
-//         editable: true,
-//       },
-//       planType: {
-//         value: TPlanType.ENTERPRISE,
-//         editable: true,
-//       },
-//       totalMembers: 6,
-//       totalAccountBooks: 3,
-//       bankAccount: {
-//         value: '12345678',
-//         editable: true,
-//       },
-//     },
-//     tag: WORK_TAG.FINANCIAL,
-//     order: 1,
-//     role: {
-//       id: 1,
-//       name: 'ADMIN',
-//       permissions: ['READ', 'WRITE', 'DELETE'],
-//       createdAt: 1725372460,
-//       updatedAt: 1725372460,
-//     },
-//     isTransferring: true,
-//   },
-//   {
-//     teamId: 10000001,
-//     company: {
-//       id: 10000002,
-//       imageId: 'https://example.com/images/burger-queen.png',
-//       name: 'BURGER QUEEN',
-//       taxId: '87654321',
-//       startDate: 1725372460,
-//       createdAt: 1725372460,
-//       updatedAt: 1725372460,
-//       isPrivate: false,
-//     },
-//     team: {
-//       id: 10000001,
-//       imageId: 'https://example.com/images/team-a.png',
-//       role: TeamRole.OWNER,
-//       name: {
-//         value: "Joyce's Team A",
-//         editable: true,
-//       },
-//       about: {
-//         value: 'Team A for BURGER QUEEN',
-//         editable: true,
-//       },
-//       profile: {
-//         value: 'https://isunfa.com',
-//         editable: true,
-//       },
-//       planType: {
-//         value: TPlanType.ENTERPRISE,
-//         editable: true,
-//       },
-//       totalMembers: 6,
-//       totalAccountBooks: 3,
-//       bankAccount: {
-//         value: '12345678',
-//         editable: true,
-//       },
-//     },
-//     tag: WORK_TAG.TAX,
-//     order: 2,
-//     role: {
-//       id: 2,
-//       name: 'MEMBER',
-//       permissions: ['READ', 'WRITE'],
-//       createdAt: 1725372460,
-//       updatedAt: 1725372460,
-//     },
-//     isTransferring: false,
-//   },
-//   {
-//     teamId: 10000002,
-//     company: {
-//       id: 10000003,
-//       imageId: 'https://example.com/images/burger-knight.png',
-//       name: 'BURGER KNIGHT',
-//       taxId: '13579246',
-//       startDate: 1725372460,
-//       createdAt: 1725372460,
-//       updatedAt: 1725372460,
-//       isPrivate: true,
-//     },
-//     team: {
-//       id: 10000002,
-//       imageId: 'https://example.com/images/team-b.png',
-//       role: TeamRole.ADMIN,
-//       name: {
-//         value: "Joyce's Team B",
-//         editable: true,
-//       },
-//       about: {
-//         value: 'Team B for BURGER KNIGHT',
-//         editable: true,
-//       },
-//       profile: {
-//         value: 'https://isunfa.com',
-//         editable: true,
-//       },
-//       planType: {
-//         value: TPlanType.PROFESSIONAL,
-//         editable: true,
-//       },
-//       totalMembers: 2,
-//       totalAccountBooks: 2,
-//       bankAccount: {
-//         value: '87654321',
-//         editable: true,
-//       },
-//     },
-//     tag: WORK_TAG.ALL,
-//     order: 3,
-//     role: {
-//       id: 1,
-//       name: 'ADMIN',
-//       permissions: ['READ', 'WRITE', 'DELETE'],
-//       createdAt: 1725372460,
-//       updatedAt: 1725372460,
-//     },
-//     isTransferring: false,
-//   },
-// ];
 
 const handleGetRequest: IHandleRequest<
   APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
@@ -182,14 +27,10 @@ const handleGetRequest: IHandleRequest<
   let payload: IAccountBookListResponse | null = null;
 
   const { userId, page, pageSize } = query as IAccountBookListQueryParams;
-  // TODO: (20250303 - Shirley) validate the query of userId and userId in session
-  loggerBack.info(`List account books by userId: ${userId} with query: ${JSON.stringify(query)}`);
 
   try {
-    // 從資料庫獲取用戶的帳本列表
     const accountBooksResult = await listAccountBookByUserId(userId, page, pageSize);
 
-    // 轉換為分頁資料格式
     const paginatedData = toPaginatedData(accountBooksResult);
 
     const { isOutputDataValid, outputData } = validateOutputData(
@@ -204,7 +45,11 @@ const handleGetRequest: IHandleRequest<
       payload = outputData;
     }
   } catch (error) {
-    loggerBack.error(`Error in handleGetRequest: ${(error as Error).message}`);
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'list account books by user id failed',
+      errorMessage: (error as Error).message,
+    });
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
