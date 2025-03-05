@@ -240,7 +240,7 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
   const displayedAccountingMenu = isAccountingMenuOpen ? (
     <div
       ref={accountingRef}
-      className="absolute top-50px z-30 w-full rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-dropmenu"
+      className="absolute top-72px z-30 w-full rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-dropmenu"
     >
       <div className="flex max-h-150px flex-col overflow-y-auto">{isShowAccountingMenu}</div>
     </div>
@@ -266,7 +266,7 @@ const AccountTitleDropmenu: React.FC<IAccountTitleDropmenuProps> = ({
         ref={accountRef}
         type="button"
         onClick={accountEditingHandler}
-        className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isAccountingMenuOpen ? 'border-input-stroke-selected' : accountStyle}`}
+        className={`mt-lv-5 flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isAccountingMenuOpen ? 'border-input-stroke-selected' : accountStyle}`}
       >
         {isEditAccounting}
         <div className="h-20px w-20px">

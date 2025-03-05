@@ -144,8 +144,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
   return (
     <div className="flex flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
-      {/* Info: (20240927 - Julian) Table Header */}
-      <div className="grid w-full grid-cols-13 gap-x-24px">
+      <div className="grid w-full grid-cols-13 gap-x-lv-5">
+        {/* Info: (20240927 - Julian) Table Header */}
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
         </div>
@@ -158,10 +158,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
         <div className="col-span-3 col-start-10 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
         </div>
-      </div>
 
-      {/* Info: (20240927 - Julian) Table Body */}
-      <div className="grid w-full grid-cols-13 gap-x-24px gap-y-6px">
+        {/* Info: (20240927 - Julian) Table Body */}
         {voucherLines}
 
         {/* Info: (20240927 - Julian) Total calculation */}

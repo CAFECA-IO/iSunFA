@@ -423,7 +423,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           type="string"
           value={particulars}
           onChange={particularsInputChangeHandler}
-          className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled"
+          className="col-span-3 mt-lv-5 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled"
         />
         {/* Info: (20240927 - Julian) Debit */}
         <NumericInput
@@ -433,7 +433,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           isDecimal
           required
           hasComma
-          className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
+          className={`${amountStyle} col-span-3 mt-lv-5 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
           triggerWhenChanged={debitInputChangeHandler}
           disabled={isDebitDisabled}
         />
@@ -445,14 +445,14 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           isDecimal
           required
           hasComma
-          className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
+          className={`${amountStyle} col-span-3 mt-lv-5 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
           triggerWhenChanged={creditInputChangeHandler}
           disabled={isCreditDisabled}
         />
         {/* Info: (20240927 - Julian) Delete button */}
         <div
           id={`delete-line-item-btn-${id}`}
-          className="text-center text-stroke-neutral-invert hover:text-button-text-primary-hover"
+          className="mt-lv-5 text-center text-stroke-neutral-invert hover:text-button-text-primary-hover"
         >
           <button type="button" className="p-12px" onClick={deleteLineHandler}>
             <LuTrash2 size={22} />
@@ -481,7 +481,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
       {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示新增按鈕 */}
       {isShowReverse ? (
-        <div key={`add-reverse-item-${id}`} className="col-start-1 col-end-13 h-50px">
+        <div key={`add-reverse-item-${id}`} className="col-start-1 col-end-13">
           {displayedAddItem}
         </div>
       ) : null}
