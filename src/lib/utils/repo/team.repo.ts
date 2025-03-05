@@ -20,7 +20,7 @@ export const getTeamList = async (
 ): Promise<IPaginatedOptions<ITeam[]>> => {
   const {
     page = 1,
-    pageSize = 1,
+    pageSize = 100,
     startDate = 0,
     endDate = DEFAULT_END_DATE,
     sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
@@ -119,8 +119,6 @@ export const createTeam = async (
         about: teamData.about ?? '',
         profile: teamData.profile ?? '',
         bankInfo: teamData.bankInfo ?? { code: '', number: '' },
-        createdAt: now,
-        updatedAt: now,
       },
       include: {
         members: true,
@@ -129,7 +127,17 @@ export const createTeam = async (
       },
     });
 
-    // Info: (20250304 - Tzuhan) 3️. 遍歷 `members`，判斷 Email 是否存在於 `User`
+    // Info: (20250305 - Tzuhan) 3. 將創建者加入 `teamMember`
+    await tx.teamMember.create({
+      data: {
+        teamId: newTeam.id,
+        userId,
+        role: TeamRole.OWNER,
+        joinedAt: now,
+      },
+    });
+
+    // Info: (20250304 - Tzuhan) 4. 遍歷 `members`，判斷 Email 是否存在於 `User`
     if (teamData.members && teamData.members.length > 0) {
       const existingUsers = await tx.user.findMany({
         where: { email: { in: teamData.members } },
@@ -139,7 +147,7 @@ export const createTeam = async (
       const existingUserEmails = new Set(existingUsers.map((user) => user.email));
       const newUserEmails = teamData.members.filter((email) => !existingUserEmails.has(email));
 
-      // Info: (20250304 - Tzuhan) 3.1 批量插入 `teamMember`
+      // Info: (20250304 - Tzuhan) 4.1 批量插入 `teamMember`
       if (existingUsers.length > 0) {
         await tx.teamMember.createMany({
           data: existingUsers.map((user) => ({
@@ -152,20 +160,19 @@ export const createTeam = async (
         });
       }
 
-      // Info: (20250304 - Tzuhan) 3.2 批量插入 `pendingTeamMember`
+      // Info: (20250304 - Tzuhan) 4.2 批量插入 `pendingTeamMember`
       if (newUserEmails.length > 0) {
         await tx.pendingTeamMember.createMany({
           data: newUserEmails.map((email) => ({
             teamId: newTeam.id,
             email,
-            createdAt: now,
           })),
           skipDuplicates: true,
         });
       }
     }
 
-    // Info: (20250304 - Tzuhan) 54. 創建 `TeamSubscription`
+    // Info: (20250304 - Tzuhan) 5. 創建 `TeamSubscription`
     await tx.teamSubscription.create({
       data: {
         teamId: newTeam.id,
@@ -174,8 +181,6 @@ export const createTeam = async (
         startDate: now,
         expiredDate: now + 30 * 24 * 60 * 60, // Info: (20250304 - Tzuhan) 預設 30 天後過期
         paymentStatus: TeamPaymentStatus.FREE,
-        createdAt: now,
-        updatedAt: now,
       },
     });
 
@@ -183,23 +188,11 @@ export const createTeam = async (
       id: newTeam.id,
       imageId: newTeam.imageFile?.url ?? '/images/fake_team_img.svg',
       role: TeamRole.OWNER,
-      name: {
-        value: newTeam.name,
-        editable: true,
-      },
-      about: {
-        value: newTeam.about ?? '',
-        editable: true,
-      },
-      profile: {
-        value: newTeam.profile ?? '',
-        editable: true,
-      },
-      planType: {
-        value: teamData.planType ?? TPlanType.BEGINNER,
-        editable: false,
-      },
-      totalMembers: newTeam.members.length,
+      name: { value: newTeam.name, editable: true },
+      about: { value: newTeam.about ?? '', editable: true },
+      profile: { value: newTeam.profile ?? '', editable: true },
+      planType: { value: teamData.planType ?? TPlanType.BEGINNER, editable: false },
+      totalMembers: newTeam.members.length + 1, // Info: (20250305 - Tzuhan) 因為創建者也加入了
       totalAccountBooks: newTeam.ledger.length,
       bankAccount: {
         value: newTeam.bankInfo

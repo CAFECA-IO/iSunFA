@@ -42,7 +42,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
     previousTeamId: accountBook.teamId,
     targetTeamId: body.targetTeamId,
     status: TransferStatus.TRANSFER,
-    transferedAt: Math.floor(Date.now() / 1000),
+    transferredAt: Math.floor(Date.now() / 1000),
   };
 
   const result = formatApiResponse(statusMessage, payload);

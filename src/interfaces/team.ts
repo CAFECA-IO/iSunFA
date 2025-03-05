@@ -72,5 +72,5 @@ export interface ITransferLedger {
   previousTeamId: number;
   targetTeamId: number;
   status: TransferStatus;
-  transferedAt?: number;
+  transferredAt?: number;
 }
