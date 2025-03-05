@@ -1,18 +1,18 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 // import useOuterClick from '@/lib/hooks/use_outer_click';
-import { inputStyle } from '@/constants/display';
 import { AccountTypeBeta } from '@/constants/account';
 import { FaChevronRight, FaRegStar } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
-import { LuBookOpen } from 'react-icons/lu';
 import { RxCross2 } from 'react-icons/rx';
+import { inputStyle } from '@/constants/display';
+import { LuBookOpen } from 'react-icons/lu';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
-import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '@/components/button/button';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 interface IAccountTitleSelectorProps {
   id: number;
@@ -20,8 +20,8 @@ interface IAccountTitleSelectorProps {
   accountSelectedHandler: (account: IAccount) => void;
 
   // Info: (20241125 - Julian) 檢查
-  flagOfSubmit: boolean;
-  accountIsNull: boolean;
+  flagOfSubmit?: boolean;
+  accountIsNull?: boolean;
 }
 
 interface IAccountSelectorModalProps {

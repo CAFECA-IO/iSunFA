@@ -8,7 +8,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { FaPlus } from 'react-icons/fa6';
 import ReverseLineItem from '@/components/voucher/reverse_line_item';
 import { IAccount } from '@/interfaces/accounting_account';
-import AccountTitleSelector from '@/components/voucher/account_title_dropmenu';
+import AccountTitleSelector from '@/components/voucher/account_title_selector';
 import NumericInput from '@/components/voucher/numeric_input';
 // import { useHotkeys } from 'react-hotkeys-hook';
 
@@ -358,7 +358,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     setLineItems((prev) => prev.filter((item) => item.id !== data.id));
   };
 
-  // Info: (20241125 - Julian)
+  // Info: (20250305 - Julian) 選擇會計科目
   const accountSelectedHandler = (account: IAccount) => {
     setLineItems((prev) => {
       const duplicateList = [...prev];
