@@ -28,6 +28,7 @@ const handleGetRequest: IHandleRequest<
     tag: string;
     order: number;
     role: Role;
+    teamId: number | null;
   }
 > = async ({ query, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -36,6 +37,7 @@ const handleGetRequest: IHandleRequest<
     tag: string;
     order: number;
     role: Role;
+    teamId: number | null;
   } | null = null;
 
   const { companyId } = query;
@@ -43,6 +45,7 @@ const handleGetRequest: IHandleRequest<
   const getCompanyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(userId, companyId);
   statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   payload = getCompanyAndRole;
+
   return { statusMessage, payload };
 };
 

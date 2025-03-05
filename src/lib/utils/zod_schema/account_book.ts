@@ -1,3 +1,7 @@
+/*
+ * TODO: (20250305 - Shirley)
+ * 改用 zod_schema/company.ts 替代 zod_schema/account_book.ts
+ */
 import { z } from 'zod';
 import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { WORK_TAG } from '@/interfaces/account_book';
@@ -22,7 +26,7 @@ const accountBookSchema = z.object({
   startDate: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
-  isPrivate: z.boolean().optional(), // ToDo: (20250224 - Liz) 等後端 API 調整後就改為必填
+  isPrivate: z.boolean().optional(),
 });
 
 const accountBookForUserSchema = z.object({
