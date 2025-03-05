@@ -8,7 +8,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { FaPlus } from 'react-icons/fa6';
 import ReverseLineItem from '@/components/voucher/reverse_line_item';
 import { IAccount } from '@/interfaces/accounting_account';
-import AccountTitleDropmenu from '@/components/voucher/account_title_dropmenu';
+import AccountTitleSelector from '@/components/voucher/account_title_dropmenu';
 import NumericInput from '@/components/voucher/numeric_input';
 // import { useHotkeys } from 'react-hotkeys-hook';
 
@@ -410,7 +410,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       {/* Info: (20241121 - Julian) Line Item */}
       <>
         {/* Info: (20241125 - Julian) Accounting */}
-        <AccountTitleDropmenu
+        <AccountTitleSelector
           id={id}
           defaultAccount={lineItemAccount}
           accountSelectedHandler={accountSelectedHandler}
