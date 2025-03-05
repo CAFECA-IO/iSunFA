@@ -43,11 +43,11 @@ export const ITeamMemberSchema = z.object({
 });
 
 export const getByTeamIdSchema = z.object({
-  teamId: z.number(),
+  teamId: zodStringToNumber,
 });
 
 export const listByTeamIdQuerySchema = paginatedDataQuerySchema.extend({
-  teamId: z.number(),
+  teamId: zodStringToNumber,
 });
 
 export const addMemberBodySchema = z.array(z.string().email()).min(1, '至少需要邀請一名成員');
@@ -62,7 +62,7 @@ export const transferAccountBookSchema = z.object({
   previousTeamId: z.number(),
   targetTeamId: z.number(),
   status: z.enum(Object.values(TransferStatus) as [TransferStatus, ...TransferStatus[]]),
-  transferedAt: z.number().optional(),
+  transferredAt: z.number().optional(),
 });
 
 export const leaveTeamSchema = z.object({

@@ -22,14 +22,9 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ITeam | null = null;
-  const isLogin = await checkSessionUser(session, APIName.GET_TEAM_BY_ID, req);
-  if (!isLogin) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-  const isAuth = await checkUserAuthorization(APIName.GET_TEAM_BY_ID, req, session);
-  if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
+  await checkSessionUser(session, APIName.GET_TEAM_BY_ID, req);
+  await checkUserAuthorization(APIName.GET_TEAM_BY_ID, req, session);
+
   const { query } = checkRequestData(APIName.GET_TEAM_BY_ID, req, session);
   if (query === null || query.teamId === undefined) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
