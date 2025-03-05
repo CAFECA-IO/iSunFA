@@ -170,7 +170,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
         ...reverse,
         // Info: (20250213 - Anna) 使用 `index` 作為 `lineItemIndex`，確保每筆資料都有獨立的索引，不會互相影響
         lineItemIndex: index,
-        reverseAmount: 0,
+        reverseAmount: reverse.amount,
         isSelected: false,
       };
     });

@@ -253,6 +253,10 @@
     "LINE_ITEM_2": "請檢查會計科目是否皆已填寫",
     "LINE_ITEM_3": "請檢查是否新增至少 1 筆會計分錄"
   },
+  "ACCOUNT_SELECTOR_MODAL": {
+    "MAIN_TITLE": "會計科目",
+    "SUB_TITLE": "選擇適合的會計科目"
+  },
   "ACCOUNT_TYPE": {
     "ASSET": "資產",
     "LIABILITY": "負債",
@@ -261,7 +265,10 @@
     "COST": "成本",
     "INCOME": "收益",
     "EXPENSE": "支出",
-    "GAIN_OR_LOSS": "收益或損失"
+    "GAIN_OR_LOSS": "收益或損失",
+    "NON_OPERATING": "營業外收支",
+    "OTHER_COMPREHENSIVE_INCOME": "其他綜合損益",
+    "MY_FAVORITE": "我的最愛"
   },
   "ASSET_SECTION": {
     "TITLE": "資產",

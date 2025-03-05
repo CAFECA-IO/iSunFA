@@ -15,7 +15,7 @@ const buttonVariants = cva(
         tertiaryOutline:
           'border border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover group-hover:border-button-stroke-primary-hover group-hover:text-button-text-primary-hover disabled:text-button-text-disable disabled:border-button-stroke-disable',
         tertiaryOutlineGrey:
-          'border border-button-surface-strong-secondary text-button-surface-strong-secondary bg-button-surface-soft-secondary disabled:text-button-text-disable disabled:border-button-stroke-disable',
+          'border border-button-surface-strong-secondary text-button-surface-strong-secondary bg-button-surface-soft-secondary disabled:text-button-text-disable disabled:border-button-stroke-disable hover:bg-button-surface-soft-secondary-hover',
         secondaryOutline:
           'border border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary-hover group-hover:border-button-text-primary group-hover:text-button-text-primary-hover disabled:text-button-text-disable disabled:border-button-stroke-disable',
         tertiaryBorderless:
