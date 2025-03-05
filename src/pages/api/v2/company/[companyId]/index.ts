@@ -28,7 +28,7 @@ const handleGetRequest: IHandleRequest<
     tag: string;
     order: number;
     role: Role;
-    teamId: number;
+    teamId: number | null;
   }
 > = async ({ query, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -37,7 +37,7 @@ const handleGetRequest: IHandleRequest<
     tag: string;
     order: number;
     role: Role;
-    teamId: number;
+    teamId: number | null;
   } | null = null;
 
   const { companyId } = query;
@@ -46,8 +46,6 @@ const handleGetRequest: IHandleRequest<
   statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   payload = getCompanyAndRole;
 
-  // eslint-disable-next-line no-console
-  console.log('GetCompanyByIdAPI payload', payload);
   return { statusMessage, payload };
 };
 

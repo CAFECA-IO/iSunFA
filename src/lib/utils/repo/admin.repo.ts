@@ -389,7 +389,7 @@ export async function listCompanyAndRole(
     role: Role;
     tag: string;
     order: number;
-    teamId: number;
+    teamId: number | null;
   }>;
   page: number;
   totalPages: number;
@@ -404,7 +404,7 @@ export async function listCompanyAndRole(
     role: Role;
     tag: string;
     order: number;
-    teamId: number;
+    teamId: number | null;
   }> = [];
 
   try {
@@ -437,10 +437,9 @@ export async function listCompanyAndRole(
       },
     });
 
-    // Info: (20250303 - Shirley) 將 company.teamId 映射到外層的 teamId，保留 null 值
     companyRoleList = results.map((item) => ({
       ...item,
-      teamId: item.company.teamId ?? 0,
+      teamId: item.company.teamId,
     }));
   } catch (error) {
     loggerError({
@@ -484,7 +483,7 @@ export async function listCompanyAndRoleSimple(userId: number): Promise<
     role: Role;
     tag: string;
     order: number;
-    teamId: number;
+    teamId: number | null;
   }>
 > {
   const companyRoleList = await prisma.admin.findMany({
@@ -507,10 +506,9 @@ export async function listCompanyAndRoleSimple(userId: number): Promise<
     },
   });
 
-  // Info: (20250303 - Shirley) 將 company.teamId 映射到外層的 teamId，保留 null 值
   return companyRoleList.map((item) => ({
     ...item,
-    teamId: item.company.teamId ?? 0,
+    teamId: item.company.teamId,
   }));
 }
 
@@ -522,14 +520,14 @@ export async function getCompanyAndRoleByUserIdAndCompanyId(
   tag: string;
   order: number;
   role: Role;
-  teamId: number;
+  teamId: number | null;
 } | null> {
   let companyRole: {
     company: Company & { imageFile: File | null };
     tag: string;
     order: number;
     role: Role;
-    teamId: number;
+    teamId: number | null;
   } | null = null;
   if (userId > 0 && companyId > 0) {
     const result = await prisma.admin.findFirst({
@@ -553,7 +551,7 @@ export async function getCompanyAndRoleByUserIdAndCompanyId(
     if (result) {
       companyRole = {
         ...result,
-        teamId: result.company.teamId ?? 0,
+        teamId: result.company.teamId,
       };
     }
   }
@@ -667,13 +665,12 @@ export async function createCompanyAndRole(
   role: Role;
   tag: string;
   order: number;
-  teamId: number;
-  // isPrivate: boolean;
+  teamId: number | null;
 }> {
   const nowTimestamp = getTimestampNow();
 
   // Info: (20250303 - Shirley) 如果提供了 teamId，檢查用戶是否有權限在該 team 建立 company
-  let finalTeamId: number = teamId ?? 555;
+  let finalTeamId: number | undefined = teamId ?? undefined;
   if (finalTeamId) {
     const hasPermission = await isEligibleToCreateCompanyInTeam(userId, finalTeamId);
     if (!hasPermission) {
@@ -758,7 +755,6 @@ export async function createCompanyAndRole(
       company: {
         include: {
           imageFile: true,
-          // team: true,
         },
       },
       tag: true,
@@ -772,8 +768,7 @@ export async function createCompanyAndRole(
     role: newCompanyRoleList.role,
     tag: newCompanyRoleList.tag,
     order: newCompanyRoleList.order,
-    teamId: finalTeamId,
-    // isPrivate,
+    teamId: finalTeamId ?? null,
   };
   return result;
 }

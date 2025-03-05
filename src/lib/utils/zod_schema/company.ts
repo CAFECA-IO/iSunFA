@@ -73,7 +73,7 @@ const companyPrismaSchema = z.object({
 });
 
 export const companyOutputSchema = companyPrismaSchema.strip().transform((data) => {
-  const { imageFile, ...rest } = data;
+  const { imageFile, teamId, ...rest } = data;
   const output = {
     ...rest,
     imageId: imageFile.url,
@@ -82,7 +82,7 @@ export const companyOutputSchema = companyPrismaSchema.strip().transform((data) 
 });
 
 export const accountBookForUserSchema = z.object({
-  teamId: z.number(),
+  teamId: z.number().optional().default(0),
   company: companyOutputSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number().int(),

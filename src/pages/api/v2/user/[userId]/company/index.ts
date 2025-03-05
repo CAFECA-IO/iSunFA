@@ -27,7 +27,7 @@ const handleGetRequest: IHandleRequest<
       role: Role;
       tag: string;
       order: number;
-      teamId: number;
+      teamId: number | null;
     }>
   | IPaginatedData<
       Array<{
@@ -35,7 +35,7 @@ const handleGetRequest: IHandleRequest<
         role: Role;
         tag: string;
         order: number;
-        teamId: number;
+        teamId: number | null;
       }>
     >
 > = async ({ query }) => {
@@ -46,7 +46,7 @@ const handleGetRequest: IHandleRequest<
         role: Role;
         tag: string;
         order: number;
-        teamId: number;
+        teamId: number | null;
       }>
     | IPaginatedData<
         Array<{
@@ -54,7 +54,7 @@ const handleGetRequest: IHandleRequest<
           role: Role;
           tag: string;
           order: number;
-          teamId: number;
+          teamId: number | null;
         }>
       >
     | null = null;
@@ -68,9 +68,6 @@ const handleGetRequest: IHandleRequest<
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     payload = listedCompanyAndRole;
   }
-
-  // eslint-disable-next-line no-console
-  console.log('ListCompanyAPI payload', payload);
 
   return { statusMessage, payload };
 };
@@ -89,8 +86,7 @@ const handlePostRequest: IHandleRequest<
     role: Role;
     tag: string;
     order: number;
-    teamId: number;
-    // isPrivate: boolean;
+    teamId: number | null;
   }
 > = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -99,8 +95,7 @@ const handlePostRequest: IHandleRequest<
     role: Role;
     tag: string;
     order: number;
-    teamId: number;
-    // isPrivate: boolean;
+    teamId: number | null;
   } | null = null;
   const { userId } = query;
   const { taxId, name, tag, teamId, isPrivate } = body;
