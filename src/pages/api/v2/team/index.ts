@@ -15,14 +15,9 @@ const handlePostRequest = async (req: NextApiRequest) => {
   const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ITeam | null = null;
-  const isLogin = await checkSessionUser(session, APIName.CREATE_TEAM, req);
-  if (!isLogin) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-  const isAuth = await checkUserAuthorization(APIName.CREATE_TEAM, req, session);
-  if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
+  await checkSessionUser(session, APIName.CREATE_TEAM, req);
+  await checkUserAuthorization(APIName.CREATE_TEAM, req, session);
+
   const { body } = checkRequestData(APIName.CREATE_TEAM, req, session);
   if (body === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);

@@ -11,6 +11,7 @@ import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
 import { FAKE_TEAM_MEMBER_LIST } from '@/constants/team';
 import { IInviteMemberResponse, ITeamMember } from '@/interfaces/team';
+import { addMembersToTeam } from '@/lib/utils/repo/team.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -18,17 +19,8 @@ const handleGetRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<ITeamMember[]> | null = null;
 
-  // Info: (20250226 - Tzuhan) 驗證使用者是否登入
-  const isLogin = await checkSessionUser(session, APIName.LIST_MEMBER_BY_TEAM_ID, req);
-  if (!isLogin) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-
-  // Info: (20250226 - Tzuhan) 驗證使用者是否有權限查詢該團隊
-  const isAuth = await checkUserAuthorization(APIName.LIST_MEMBER_BY_TEAM_ID, req, session);
-  if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
+  await checkSessionUser(session, APIName.LIST_MEMBER_BY_TEAM_ID, req);
+  await checkUserAuthorization(APIName.LIST_MEMBER_BY_TEAM_ID, req, session);
 
   // Info: (20250226 - Tzuhan) 驗證請求資料
   const { query } = checkRequestData(APIName.LIST_MEMBER_BY_TEAM_ID, req, session);
@@ -76,17 +68,8 @@ const handlePutRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IInviteMemberResponse | null = null;
 
-  // Info: (20250226 - Tzuhan) 驗證使用者是否登入
-  const isLogin = await checkSessionUser(session, APIName.ADD_MEMBER_TO_TEAM, req);
-  if (!isLogin) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-
-  // Info: (20250226 - Tzuhan) 驗證使用者是否有權限查詢該團隊
-  const isAuth = await checkUserAuthorization(APIName.ADD_MEMBER_TO_TEAM, req, session);
-  if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
+  await checkSessionUser(session, APIName.ADD_MEMBER_TO_TEAM, req);
+  await checkUserAuthorization(APIName.ADD_MEMBER_TO_TEAM, req, session);
 
   // Info: (20250226 - Tzuhan) 驗證請求資料
   const { query, body } = checkRequestData(APIName.ADD_MEMBER_TO_TEAM, req, session);
@@ -102,15 +85,16 @@ const handlePutRequest = async (req: NextApiRequest) => {
     `User: ${userId} add member to team teamId: ${teamId} with query: ${JSON.stringify(query)}`
   );
 
-  // Info: (20250226 - Tzuhan) Todo: 新增成員
+  // Info: (20250304 - Tzuhan) 邀請成員加入團隊
+  const addedReuslt = await addMembersToTeam(teamId, body);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
 
   // Info: (20250226 - Tzuhan) 驗證輸出資料
-  const { isOutputDataValid, outputData } = validateOutputData(APIName.ADD_MEMBER_TO_TEAM, {
-    invitedCount: body.length,
-    failedEmails: [],
-  });
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.ADD_MEMBER_TO_TEAM,
+    addedReuslt
+  );
 
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
@@ -136,7 +120,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ({ httpCode, result } = await handlePutRequest(req));
         break;
       default:
-        ({ httpCode, result } = await handleGetRequest(req));
+        ({ httpCode, result } = formatApiResponse<null>(STATUS_MESSAGE.METHOD_NOT_ALLOWED, null));
         break;
     }
   } catch (error) {

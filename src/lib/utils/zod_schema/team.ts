@@ -6,7 +6,7 @@ import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { paginatedAccountBookForUserSchema } from '@/lib/utils/zod_schema/company';
 
 export const TeamSchema = z.object({
-  id: z.string(),
+  id: z.number(),
   imageId: z.string(),
   role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
   name: z.object({

@@ -143,7 +143,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     order: 1,
     tag: WORK_TAG.ALL,
     team: {
-      id: 'TeamUID0000q',
+      id: 1,
       imageId: '/images/fake_team_img.svg',
       role: TeamRole.ADMIN,
       name: {
@@ -193,7 +193,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     order: 2,
     tag: WORK_TAG.FINANCIAL,
     team: {
-      id: 'TeamUID00002',
+      id: 2,
       imageId: '/images/fake_team_img.svg',
       role: TeamRole.ADMIN,
       name: {
@@ -243,7 +243,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     order: 3,
     tag: WORK_TAG.TAX,
     team: {
-      id: 'TeamUID00002',
+      id: 2,
       imageId: '/images/fake_team_img.svg',
       role: TeamRole.ADMIN,
       name: {
@@ -293,7 +293,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     order: 4,
     tag: WORK_TAG.ALL,
     team: {
-      id: 'TeamUID00002',
+      id: 2,
       imageId: '/images/fake_team_img.svg',
       role: TeamRole.ADMIN,
       name: {
@@ -343,7 +343,7 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     order: 5,
     tag: WORK_TAG.FINANCIAL,
     team: {
-      id: 'TeamUID00001',
+      id: 1,
       imageId: '/images/fake_team_img.svg',
       role: TeamRole.OWNER,
       name: {

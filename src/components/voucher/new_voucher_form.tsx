@@ -291,6 +291,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   useEffect(() => {
     const isReverse = voucherLineItems.some((item) => item.isReverse);
     setIsReverseRequired(isReverse);
+    setIsShowReverseHint(false); // Info: (20250304 - Julian) 重置沖銷提示
   }, [voucherLineItems]);
 
   // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
@@ -1094,28 +1095,22 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             lineItems={aiLineItems}
           />
         ) : (
-          <>
-            {isShowReverseHint ? (
-              <p className="text-text-state-error">
-                {t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}
-              </p>
-            ) : null}
-            <div ref={voucherLineRef} className="col-span-2">
-              <VoucherLineBlock
-                lineItems={voucherLineItems}
-                setLineItems={setLineItems}
-                flagOfClear={flagOfClear}
-                flagOfSubmit={flagOfSubmit}
-                setIsTotalZero={setIsTotalZero}
-                setIsTotalNotEqual={setIsTotalNotEqual}
-                setHaveZeroLine={setHaveZeroLine}
-                setIsAccountingNull={setIsAccountingNull}
-                setIsVoucherLineEmpty={setIsVoucherLineEmpty}
-                setIsCounterpartyRequired={setIsCounterpartyRequired}
-                setIsAssetRequired={setIsAssetRequired}
-              />
-            </div>
-          </>
+          <div ref={voucherLineRef} className="col-span-2">
+            <VoucherLineBlock
+              lineItems={voucherLineItems}
+              setLineItems={setLineItems}
+              flagOfClear={flagOfClear}
+              flagOfSubmit={flagOfSubmit}
+              isShowReverseHint={isShowReverseHint}
+              setIsTotalZero={setIsTotalZero}
+              setIsTotalNotEqual={setIsTotalNotEqual}
+              setHaveZeroLine={setHaveZeroLine}
+              setIsAccountingNull={setIsAccountingNull}
+              setIsVoucherLineEmpty={setIsVoucherLineEmpty}
+              setIsCounterpartyRequired={setIsCounterpartyRequired}
+              setIsAssetRequired={setIsAssetRequired}
+            />
+          </div>
         )}
         {/* Info: (20240926 - Julian) buttons */}
         <div className="col-span-2 ml-auto flex items-center gap-12px">

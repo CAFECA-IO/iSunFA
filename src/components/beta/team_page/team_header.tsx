@@ -16,7 +16,7 @@ const TeamHeader = ({ team, setTeamToUploadPicture }: TeamHeaderProps) => {
 
   const copyTeamId = async () => {
     try {
-      await navigator.clipboard.writeText(team.id);
+      await navigator.clipboard.writeText(team.id.toString());
       setCopied(true);
     } catch (error) {
       // Deprecated: (20250218 - Liz)
