@@ -16,7 +16,10 @@ import {
   IAccountBookListQueryParams,
   IAccountBookListResponse,
 } from '@/lib/utils/zod_schema/account_book';
-
+/*
+ * TODO: (20250305 - Shirley)
+ * 改用 zod_schema/company.ts 替代 zod_schema/account_book.ts
+ */
 const mockAccountBooks: IAccountBookForUserWithTeam[] = [
   {
     teamId: 10000001,

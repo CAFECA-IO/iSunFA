@@ -27,6 +27,7 @@ const handleGetRequest: IHandleRequest<
       role: Role;
       tag: string;
       order: number;
+      teamId: number | null;
     }>
   | IPaginatedData<
       Array<{
@@ -34,6 +35,7 @@ const handleGetRequest: IHandleRequest<
         role: Role;
         tag: string;
         order: number;
+        teamId: number | null;
       }>
     >
 > = async ({ query }) => {
@@ -44,6 +46,7 @@ const handleGetRequest: IHandleRequest<
         role: Role;
         tag: string;
         order: number;
+        teamId: number | null;
       }>
     | IPaginatedData<
         Array<{
@@ -51,6 +54,7 @@ const handleGetRequest: IHandleRequest<
           role: Role;
           tag: string;
           order: number;
+          teamId: number | null;
         }>
       >
     | null = null;
@@ -82,6 +86,7 @@ const handlePostRequest: IHandleRequest<
     role: Role;
     tag: string;
     order: number;
+    teamId: number | null;
   }
 > = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -90,9 +95,10 @@ const handlePostRequest: IHandleRequest<
     role: Role;
     tag: string;
     order: number;
+    teamId: number | null;
   } | null = null;
   const { userId } = query;
-  const { taxId, name, tag, teamId } = body;
+  const { taxId, name, tag, teamId, isPrivate } = body;
 
   // Info: (20250124 - Shirley) Step 1.
   const getCompany = await getCompanyAndRoleByTaxId(userId, taxId);
@@ -115,13 +121,14 @@ const handlePostRequest: IHandleRequest<
     });
     if (file) {
       // Info: (20250124 - Shirley) Step 3.
-      const teamIdParam = teamId ?? undefined;
+      const teamIdParam = teamId;
       const result = await createCompanyAndRole(
         userId,
         taxId,
         name,
         file.id,
         tag,
+        isPrivate,
         undefined,
         teamIdParam
       );
