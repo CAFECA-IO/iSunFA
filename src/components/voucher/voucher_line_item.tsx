@@ -416,6 +416,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           accountSelectedHandler={accountSelectedHandler}
           accountIsNull={accountIsNull}
           flagOfSubmit={flagOfSubmit}
+          className="col-span-3 mt-lv-5"
         />
         {/* Info: (20240927 - Julian) Particulars */}
         <input

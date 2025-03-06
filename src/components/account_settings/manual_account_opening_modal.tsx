@@ -141,6 +141,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
         id={id}
         defaultAccount={subcategory}
         accountSelectedHandler={accountSelectedHandler}
+        className={`${cellStyle} max-w-200px border-r`}
       />
       {/* <div className={`${cellStyle} w-200px border-r`}>
         <div

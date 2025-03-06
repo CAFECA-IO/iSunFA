@@ -22,6 +22,9 @@ interface IAccountTitleSelectorProps {
   // Info: (20241125 - Julian) 檢查
   flagOfSubmit?: boolean;
   accountIsNull?: boolean;
+
+  // Info: (20250306 - Julian) 樣式
+  className?: string;
 }
 
 interface IAccountSelectorModalProps {
@@ -86,7 +89,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
   });
 
   const leftPart = (
-    <div className="flex h-450px w-330px flex-col gap-lv-4 overflow-y-auto px-lv-3 py-lv-5 pr-lv-5">
+    <div className="flex h-480px w-330px flex-col gap-lv-4 overflow-y-auto px-lv-3 py-lv-5 pr-lv-5">
       {accountTypeList.map((acc, index) => {
         const isSelected = selectedCategory === acc;
         const clickHandler = () => {
@@ -104,26 +107,27 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
             </div>
           ) : (
             // Info: (20250305 - Julian) 一般會計科目 -> 顯示編號和名稱
-            <p className="flex-1 px-12px py-8px">
+            <div className="flex-1 px-12px py-8px">
               {index} - {t(`journal:ACCOUNT_TYPE.${acc.toUpperCase()}`)}
-            </p>
+            </div>
           );
         return (
-          <div
+          <button
             key={acc}
+            type="button"
             onClick={clickHandler}
-            className={`flex items-center border-l-2px border-tabs-stroke-default text-base font-medium ${isSelected ? 'text-tabs-text-active' : 'text-tabs-text-default'} hover:cursor-pointer hover:text-tabs-text-active`}
+            className={`flex items-center border-l-2px border-tabs-stroke-default text-left text-base font-medium ${isSelected ? 'text-tabs-text-active' : 'text-tabs-text-default'} hover:text-tabs-text-active`}
           >
             {text}
             <FaChevronRight size={16} />
-          </div>
+          </button>
         );
       })}
     </div>
   );
 
   const rightPart = (
-    <div className="flex h-450px w-400px flex-col gap-lv-4 overflow-y-auto px-lv-3 py-lv-5 pl-lv-5">
+    <div className="flex h-480px w-400px flex-col gap-lv-4 overflow-y-auto px-lv-3 py-lv-5 pl-lv-5">
       {filteredAccountList.length > 0 ? (
         filteredAccountList.map((account) => {
           const clickHandler = () => {
@@ -131,13 +135,14 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
             toggleModal();
           };
           return (
-            <div
+            <button
               key={account.id}
-              className="text-tabs-text-default hover:cursor-pointer hover:text-tabs-text-hover"
+              type="button"
+              className="text-left text-tabs-text-default hover:text-tabs-text-hover"
               onClick={clickHandler}
             >
               {account.code} - {account.name}
-            </div>
+            </button>
           );
         })
       ) : (
@@ -161,7 +166,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
           <h2 className="text-xl font-bold text-card-text-primary">
             {t('journal:ACCOUNT_SELECTOR_MODAL.MAIN_TITLE')}
           </h2>
-          <p className="text-xs font-medium text-card-text-secondary">
+          <p className="text-xs font-normal text-card-text-secondary">
             {t('journal:ACCOUNT_SELECTOR_MODAL.SUB_TITLE')}
           </p>
         </div>
@@ -205,6 +210,7 @@ const AccountTitleSelector: React.FC<IAccountTitleSelectorProps> = ({
   accountSelectedHandler,
   flagOfSubmit,
   accountIsNull,
+  className = '',
 }) => {
   const { t } = useTranslation('common');
 
@@ -414,13 +420,12 @@ const AccountTitleSelector: React.FC<IAccountTitleSelectorProps> = ({
   // );
 
   return (
-    <div className="relative col-span-3">
+    <div className={`relative ${className}`}>
       <button
         id={`account-title-${id}`}
-        // ref={accountRef}
         type="button"
         onClick={accountEditingHandler}
-        className={`mt-lv-5 flex w-full items-center justify-between gap-8px divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer hover:divide-input-stroke-selected hover:border-input-stroke-selected ${isAccountSelectorOpen ? 'divide-input-stroke-selected border-input-stroke-selected text-tabs-text-active' : accountStyle}`}
+        className={`flex w-full items-center justify-between gap-8px divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer hover:divide-input-stroke-selected hover:border-input-stroke-selected ${isAccountSelectorOpen ? 'divide-input-stroke-selected border-input-stroke-selected text-tabs-text-active' : accountStyle}`}
       >
         <p className={`truncate px-12px py-10px`}>{accountString}</p>
         <div className="flex h-44px items-center justify-center px-12px py-10px">
