@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FaArrowRight, FaAngleDoubleDown } from 'react-icons/fa';
 import { IoMailOutline } from 'react-icons/io5';
+import { PiSpinner } from 'react-icons/pi';
 import { RxCross2 } from 'react-icons/rx';
 import { TbArrowBackUp } from 'react-icons/tb';
 import { PLANS } from '@/constants/subscription';
@@ -20,6 +21,7 @@ import {
   ITeamInvoice,
   TPlanType,
   TPaymentStatus,
+  TPlanPrice,
 } from '@/interfaces/subscription';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -120,7 +122,19 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
   // Info: (20250303 - Julian) 取得訂閱方案清單
-  const { trigger: getPaymentPlan } = APIHandler<IPlan[]>(APIName.LIST_PAYMENT_PLAN);
+  // ToDo: (20250303 - Julian) 等 API 調整完就可以刪掉
+  const { trigger: getPaymentPlan } = APIHandler<
+    {
+      name: string;
+      price: TPlanPrice;
+      extraMemberPrice: number;
+      features: {
+        id: string;
+        name: string;
+        value: string | string[];
+      }[];
+    }[]
+  >(APIName.LIST_PAYMENT_PLAN);
 
   // Info: (20250303 - Julian) 建立 Team API
   const {
@@ -186,7 +200,17 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     const fetchPaymentPlan = async () => {
       const { data: plans } = await getPaymentPlan();
       if (plans) {
-        setListPaymentPlan(plans);
+        // ToDo: (20250303 - Julian) 等 API 調整完就可以刪掉
+        const convertPlan: IPlan[] = plans.map((plan) => {
+          return {
+            id: plan.name as TPlanType,
+            planName: plan.name,
+            price: plan.price,
+            features: plan.features,
+            extraMemberPrice: plan.extraMemberPrice,
+          };
+        });
+        setListPaymentPlan(convertPlan);
       }
     };
     fetchPaymentPlan();
@@ -349,8 +373,8 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           doneAllSteps;
 
   const backHandler = () => {
-    if (selectedPlan !== PLANS[0]) {
-      setSelectedPlan(PLANS[0]); // Info: (20250221 - Julian) 切換成免費方案 -> 回到選擇方案
+    if (selectedPlan !== listPaymentPlan[0]) {
+      setSelectedPlan(listPaymentPlan[0]); // Info: (20250221 - Julian) 切換成免費方案 -> 回到選擇方案
     } else if (currentStep === 2) {
       setCurrentStep(1); // Info: (20250221 - Julian) 回到第一步
     } else if (currentStep === 3) {
@@ -388,19 +412,25 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   // Info: (20250224 - Julian) 訂閱方案
   const subscriptionOverview = newTeam && (
     <div className="flex justify-center gap-lv-7">
-      {PLANS.map((plan) => {
-        const selectPlan = () => setSelectedPlan(plan);
-        return (
-          <SubscriptionPlan
-            key={plan.id}
-            team={newTeam}
-            plan={plan}
-            getOwnedTeam={getTeam}
-            goToPaymentHandler={selectPlan}
-            bordered
-          />
-        );
-      })}
+      {listPaymentPlan.length > 0 ? (
+        listPaymentPlan.map((plan) => {
+          const selectPlan = () => setSelectedPlan(plan);
+          return (
+            <SubscriptionPlan
+              key={plan.id}
+              team={newTeam}
+              plan={plan}
+              getOwnedTeam={getTeam}
+              goToPaymentHandler={selectPlan}
+              bordered
+            />
+          );
+        })
+      ) : (
+        <div className="flex animate-spin flex-col items-center justify-center">
+          <PiSpinner size={24} />
+        </div>
+      )}
     </div>
   );
 
@@ -443,7 +473,9 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   // Info: (20250303 - Julian) 免費方案 -> 顯示訂閱方案；其他方案 -> 顯示付款
   const step3Body =
-    PLANS.length > 0 && selectedPlan !== PLANS[0] ? paymentOverview : subscriptionOverview;
+    listPaymentPlan.length > 0 && selectedPlan !== listPaymentPlan[0]
+      ? paymentOverview
+      : subscriptionOverview;
 
   const memberFormBody = (
     <div className="flex flex-col gap-8px text-sm">
