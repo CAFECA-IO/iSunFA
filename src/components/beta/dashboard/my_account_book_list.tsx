@@ -1,11 +1,11 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import MyAccountBookItem from '@/components/beta/dashboard/my_account_book_item';
 
 interface MyAccountBookListProps {
-  companyAndRoleList: IAccountBookForUser[];
-  setAccountBookToSelect: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
+  companyAndRoleList: IAccountBookForUserWithTeam[];
+  setAccountBookToSelect: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
 }
 
 const MyAccountBookList = ({
@@ -49,7 +49,7 @@ const MyAccountBookList = ({
     };
   }, []);
 
-  // Info: (20241216 - Liz) 當選擇公司後，將滾動條重設到最左側
+  // Info: (20241216 - Liz) 當選擇帳本後，將滾動條重設到最左側
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;

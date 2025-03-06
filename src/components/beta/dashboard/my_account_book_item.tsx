@@ -1,11 +1,11 @@
 import Image from 'next/image';
 import { Dispatch, SetStateAction } from 'react';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 
 interface MyAccountBookItemProps {
-  companyAndRole: IAccountBookForUser;
-  setAccountBookToSelect: Dispatch<SetStateAction<IAccountBookForUser | undefined>>;
+  companyAndRole: IAccountBookForUserWithTeam;
+  setAccountBookToSelect: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
   isDisabled: boolean;
   dataIndex: number;
 }

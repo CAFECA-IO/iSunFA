@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
-import { IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -12,13 +12,16 @@ import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MyAccountBookListNoData from '@/components/beta/dashboard/my_account_book_list_no_data';
 import MyAccountBookList from '@/components/beta/dashboard/my_account_book_list';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 const MyAccountBooks = () => {
   const { t } = useTranslation('dashboard');
   const { userAuth } = useUserCtx();
-  const [companyAndRoleList, setCompanyAndRoleList] = useState<IAccountBookForUser[]>([]);
+  const [companyAndRoleList, setCompanyAndRoleList] = useState<IAccountBookForUserWithTeam[]>([]);
   const isAccountBookListEmpty = companyAndRoleList.length === 0;
-  const [accountBookToSelect, setAccountBookToSelect] = useState<IAccountBookForUser | undefined>();
+  const [accountBookToSelect, setAccountBookToSelect] = useState<
+    IAccountBookForUserWithTeam | undefined
+  >();
   const [isLoading, setIsLoading] = useState(false);
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
 
@@ -76,48 +79,45 @@ const MyAccountBooks = () => {
     backBtnStr: t('dashboard:COMMON.CANCEL'),
   };
 
-  // Info: (20241120 - Liz) 打 API 取得使用者擁有的帳本列表(原為公司) - simple version
-  const { trigger: listUserCompanyAPI } = APIHandler<IAccountBookForUser[]>(
-    APIName.LIST_USER_COMPANY
-  );
+  // Info: (20250306 - Liz) 打 API 取得使用者擁有的帳本清單(原為公司)
+  const { trigger: getAccountBookListByUserIdAPI } = APIHandler<
+    IPaginatedData<IAccountBookForUserWithTeam[]>
+  >(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID);
 
   const getCompanyList = useCallback(async () => {
     if (!userAuth) return;
 
     try {
-      const {
-        data: userCompanyList,
-        success,
-        code,
-      } = await listUserCompanyAPI({
+      const { data, success, code } = await getAccountBookListByUserIdAPI({
         params: { userId: userAuth.id },
-        query: { simple: true },
+        query: { page: 1, pageSize: 999 },
       });
+      const accountBookList = data?.data ?? []; // Info: (20250306 - Liz) 取出帳本清單
 
-      if (success && userCompanyList && userCompanyList.length > 0) {
+      if (success && data && accountBookList.length > 0) {
         // Info: (20241216 - Liz) 已被選擇的帳本顯示在第一個(原為公司)
         if (selectedAccountBook) {
-          const selectedCompanyIndex = userCompanyList.findIndex(
+          const selectedCompanyIndex = accountBookList.findIndex(
             (companyAndRole) => companyAndRole.company.id === selectedAccountBook.id
           );
 
           if (selectedCompanyIndex > -1) {
-            const selectedCompanyItem = userCompanyList.splice(selectedCompanyIndex, 1);
-            userCompanyList.unshift(selectedCompanyItem[0]);
+            const selectedCompanyItem = accountBookList.splice(selectedCompanyIndex, 1);
+            accountBookList.unshift(selectedCompanyItem[0]);
           }
         }
 
-        setCompanyAndRoleList(userCompanyList);
+        setCompanyAndRoleList(accountBookList);
       } else {
-        // Info: (20241120 - Liz) 取得使用者擁有的帳本列表失敗時顯示錯誤訊息(原為公司)
+        // Info: (20241120 - Liz) 取得使用者擁有的帳本清單失敗時顯示錯誤訊息(原為公司)
         // Deprecated: (20241120 - Liz)
         // eslint-disable-next-line no-console
-        console.log('listUserCompanyAPI(Simple) failed:', code);
+        console.log('取得使用者擁有的帳本清單 failed:', code);
       }
     } catch (error) {
       // Deprecated: (20241120 - Liz)
       // eslint-disable-next-line no-console
-      console.error('listUserCompanyAPI(Simple) error:', error);
+      console.error('取得使用者擁有的帳本清單 error:', error);
     }
   }, [selectedAccountBook, userAuth]);
 
