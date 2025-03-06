@@ -427,8 +427,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
         />
         {/* Info: (20240927 - Julian) Debit */}
         <NumericInput
-          id="input-price-before-tax"
-          name="input-price-before-tax"
+          id="input-debit"
+          name="input-debit"
           value={debitInput}
           isDecimal
           required
@@ -439,8 +439,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
         />
         {/* Info: (20240927 - Julian) Credit */}
         <NumericInput
-          id="input-price-before-tax"
-          name="input-price-before-tax"
+          id="input-credit"
+          name="input-credit"
           value={creditInput}
           isDecimal
           required

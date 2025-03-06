@@ -79,6 +79,27 @@ const NumericInput = ({
     }
   };
 
+  // Info: (20250306 - Julian) 暫存輸入的值
+  let temp = '';
+  // Info: (20250306 - Julian) 處理在中文輸入法填入數字的情況
+  const convertInput = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    event.preventDefault(); // Info: (20250306 - Julian) 阻止預設事件
+    let code = ''; // Info: (20250306 - Julian) 按鍵 code
+
+    // Info: (20250306 - Julian) 如果按下的是數字鍵
+    if (event.code.indexOf('Digit') > -1) {
+      code = event.code.slice(-1); // Info: (20250306 - Julian) 取得數字鍵的值
+    }
+
+    // Info: (20250306 - Julian) 如果有取得按鍵值
+    if (code) {
+      // Info: (20250306 - Julian) 將按鍵值加入暫存
+      temp = displayValue + code;
+      // Info: (20250306 - Julian) 更新顯示值
+      handleChange({ target: { value: temp } } as React.ChangeEvent<HTMLInputElement>);
+    }
+  };
+
   // Info: (20240723 - Liz) 處理 displayValue 為空或僅為點的情況
   const handleBlur = () => {
     if (!displayValue || displayValue === '.') {
@@ -107,6 +128,7 @@ const NumericInput = ({
       onFocus={handleFocus}
       onBlur={handleBlur}
       onWheel={handleWheel}
+      onKeyDown={convertInput}
       {...props}
     />
   );
