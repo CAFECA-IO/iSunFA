@@ -93,23 +93,25 @@ model AuditReport {
   @@map("audit_report")
 }
 
+// Info: (20250306 - Tzuhan) Admin 表示 User 在 Company 內的管理身份
 model Admin {
-  id        Int     @id @default(autoincrement())
-  userId    Int     @map("user_id")
-  companyId Int     @map("company_id")
-  roleId    Int     @map("role_id")
-  email     String
-  tag       String  @default("all")
-  order     Int     @default(1)
-  status    Boolean
-  startDate Int     @map("start_date")
-  endDate   Int?    @map("end_date")
-  createdAt Int     @map("created_at")
-  updatedAt Int     @map("updated_at")
-  deletedAt Int?    @map("deleted_at")
-  company   Company @relation(fields: [companyId], references: [id])
-  role      Role    @relation(fields: [roleId], references: [id])
-  user      User    @relation(fields: [userId], references: [id])
+  id        Int     @id @default(autoincrement()) // Info: (20250306 - Tzuhan) Admin 表的唯一 ID
+  userId    Int     @map("user_id")              // Info: (20250306 - Tzuhan) 這個 Admin 對應的 User ID
+  companyId Int     @map("company_id")           // Info: (20250306 - Tzuhan) 這個 Admin 所屬的公司 ID
+  roleId    Int     @map("role_id")              // Info: (20250306 - Tzuhan) Admin 擔任的角色 (對應 Role 表)
+  email     String                                // Info: (20250306 - Tzuhan) Admin 的 Email (可用於通知)
+  tag       String  @default("all")              // Info: (20250306 - Tzuhan) Admin 的標籤 (可能用於分類)
+  order     Int     @default(1)                  // Info: (20250306 - Tzuhan) 排序順序
+  status    Boolean                              // Info: (20250306 - Tzuhan) 是否啟用這個 Admin 帳號
+  startDate Int     @map("start_date")           // Info: (20250306 - Tzuhan) Admin 的開始時間
+  endDate   Int?    @map("end_date")             // Info: (20250306 - Tzuhan) Admin 的結束時間 (如果有)
+  createdAt Int     @map("created_at")           // Info: (20250306 - Tzuhan) 創建時間
+  updatedAt Int     @map("updated_at")           // Info: (20250306 - Tzuhan) 更新時間
+  deletedAt Int?    @map("deleted_at")           // Info: (20250306 - Tzuhan) 刪除時間 (軟刪除)
+
+  company   Company @relation(fields: [companyId], references: [id]) // Info: (20250306 - Tzuhan) 關聯到公司
+  role      Role    @relation(fields: [roleId], references: [id])    // Info: (20250306 - Tzuhan) 關聯到 Role
+  user      User    @relation(fields: [userId], references: [id])    // Info: (20250306 - Tzuhan) 關聯到 User (管理者)
 
   @@map("admin")
 }

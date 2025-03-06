@@ -38,7 +38,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   );
 
   // Info: (20250226 - Tzuhan)取得該團隊的帳本列表
-  const accountBooks = await listAccountBooksByTeamId(query);
+  const accountBooks = await listAccountBooksByTeamId(userId, query);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
   // Info: (20250226 - Tzuhan)驗證輸出資料

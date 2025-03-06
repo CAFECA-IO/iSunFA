@@ -281,7 +281,6 @@ export async function listAccountBookByUserId(
 
       // Info: (20250305 - Shirley) 3. 組合成 IAccountBookForUserWithTeam 格式
       return {
-        teamId: teamId ?? 0,
         company: {
           id: admin.company.id,
           imageId: admin.company.imageFile?.url ?? '/images/fake_company_img.svg',
