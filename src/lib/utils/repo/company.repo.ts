@@ -2,13 +2,13 @@ import prisma from '@/client';
 import { Admin, Company, Prisma, File, CompanySetting } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds, pageToOffset } from '@/lib/utils/common';
 import { CompanyRoleName } from '@/constants/role';
-import { IAccountBookForUserWithTeam, WORK_TAG } from '@/interfaces/account_book';
 import { TeamRole } from '@/interfaces/team';
 import { TPlanType } from '@/interfaces/subscription';
 import { SortOrder, SortBy } from '@/constants/sort';
 import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { IPaginatedOptions } from '@/interfaces/pagination';
-import loggerBack, { loggerError } from '@/lib/utils/logger_back';
+import { IAccountBookForUserWithTeam, WORK_TAG } from '@/interfaces/account_book';
+import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 
 export async function getCompanyById(
@@ -186,18 +186,65 @@ export async function listAccountBookByUserId(
   let page = initialPage;
 
   try {
+    // Info: (20250305 - Shirley) 處理排序選項
+    const defaultSortOption = { sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC };
+    const sortOption = sortOptions && sortOptions.length > 0 ? sortOptions[0] : defaultSortOption;
+
+    // Info: (20250305 - Shirley) 根據排序選項設置 Prisma 的排序條件
+    let orderBy: Prisma.AdminOrderByWithRelationInput = { order: SortOrder.DESC };
+
+    switch (sortOption.sortBy) {
+      case SortBy.CREATED_AT:
+        orderBy = {
+          company: {
+            createdAt: sortOption.sortOrder,
+          },
+        };
+        break;
+      case SortBy.UPDATED_AT:
+        orderBy = {
+          company: {
+            updatedAt: sortOption.sortOrder,
+          },
+        };
+        break;
+      default:
+        // 預設按照 order 排序
+        orderBy = {
+          order: sortOption.sortOrder,
+        };
+        break;
+    }
+
+    // Info: (20250305 - Shirley) 構建搜索條件
+    const baseWhereCondition = {
+      userId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      company: {
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+    };
+
+    // Info: (20250305 - Shirley) 添加搜索條件
+    const searchWhereCondition = searchQuery
+      ? {
+          userId,
+          OR: [{ deletedAt: 0 }, { deletedAt: null }],
+          company: {
+            OR: [{ deletedAt: 0 }, { deletedAt: null }],
+            AND: [
+              {
+                OR: [{ name: { contains: searchQuery } }, { taxId: { contains: searchQuery } }],
+              },
+            ],
+          },
+        }
+      : baseWhereCondition;
+
     // Info: (20250305 - Shirley) 1. 獲取用戶的公司和角色資訊
     const adminResults = await prisma.admin.findMany({
-      where: {
-        userId,
-        OR: [{ deletedAt: 0 }, { deletedAt: null }],
-        company: {
-          OR: [{ deletedAt: 0 }, { deletedAt: null }],
-        },
-      },
-      orderBy: {
-        order: SortOrder.DESC,
-      },
+      where: searchWhereCondition,
+      orderBy,
       select: {
         company: {
           include: {
@@ -310,48 +357,14 @@ export async function listAccountBookByUserId(
 
     accountBooks = await Promise.all(accountBookPromises);
 
-    // Info: (20250305 - Shirley) 4. 搜索功能
+    // Info: (20250305 - Shirley) 處理團隊名稱的搜索
+    // 由於團隊名稱不在 Prisma 查詢中，需要在獲取數據後進行過濾
     if (searchQuery) {
       const lowerCaseSearchQuery = searchQuery.toLowerCase();
       accountBooks = accountBooks.filter((accountBook) => {
-        return (
-          accountBook.company.name.toLowerCase().includes(lowerCaseSearchQuery) ||
-          accountBook.company.taxId.toLowerCase().includes(lowerCaseSearchQuery) ||
-          accountBook.team?.name.value.toLowerCase().includes(lowerCaseSearchQuery)
-        );
+        // 如果已經通過公司名稱或稅號匹配，則不需要再檢查團隊名稱
+        return accountBook.team?.name.value.toLowerCase().includes(lowerCaseSearchQuery);
       });
-    }
-
-    // Info: (20250305 - Shirley) 5. 排序功能
-    if (sortOptions && sortOptions.length > 0) {
-      // 使用 reduce 替代 for...of 迴圈
-      accountBooks = sortOptions.reduce((sortedBooks, option) => {
-        const { sortBy, sortOrder } = option;
-        const isDesc = sortOrder === SortOrder.DESC;
-
-        switch (sortBy) {
-          case SortBy.CREATED_AT:
-            return sortedBooks.sort((a, b) => {
-              return isDesc
-                ? b.company.createdAt - a.company.createdAt
-                : a.company.createdAt - b.company.createdAt;
-            });
-          case SortBy.UPDATED_AT:
-            return sortedBooks.sort((a, b) => {
-              return isDesc
-                ? b.company.updatedAt - a.company.updatedAt
-                : a.company.updatedAt - b.company.updatedAt;
-            });
-          default:
-            // 預設按照 order 排序
-            return sortedBooks.sort((a, b) => {
-              return isDesc ? b.order - a.order : a.order - b.order;
-            });
-        }
-      }, accountBooks);
-    } else {
-      // 預設按照 order 排序
-      accountBooks.sort((a, b) => b.order - a.order);
     }
   } catch (error) {
     loggerError({
@@ -359,7 +372,6 @@ export async function listAccountBookByUserId(
       errorType: 'list account books by user id failed',
       errorMessage: (error as Error).message,
     });
-    loggerBack.error(`Error in listAccountBookByUserId: ${(error as Error).message}`);
   }
 
   // Info: (20250305 - Shirley) 6. 分頁處理
