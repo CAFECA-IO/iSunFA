@@ -8,7 +8,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { FaPlus } from 'react-icons/fa6';
 import ReverseLineItem from '@/components/voucher/reverse_line_item';
 import { IAccount } from '@/interfaces/accounting_account';
-import AccountTitleDropmenu from '@/components/voucher/account_title_dropmenu';
+import AccountTitleSelector from '@/components/voucher/account_title_selector';
 import NumericInput from '@/components/voucher/numeric_input';
 // import { useHotkeys } from 'react-hotkeys-hook';
 
@@ -358,7 +358,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     setLineItems((prev) => prev.filter((item) => item.id !== data.id));
   };
 
-  // Info: (20241125 - Julian)
+  // Info: (20250305 - Julian) 選擇會計科目
   const accountSelectedHandler = (account: IAccount) => {
     setLineItems((prev) => {
       const duplicateList = [...prev];
@@ -410,7 +410,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       {/* Info: (20241121 - Julian) Line Item */}
       <>
         {/* Info: (20241125 - Julian) Accounting */}
-        <AccountTitleDropmenu
+        <AccountTitleSelector
           id={id}
           defaultAccount={lineItemAccount}
           accountSelectedHandler={accountSelectedHandler}
@@ -423,7 +423,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           type="string"
           value={particulars}
           onChange={particularsInputChangeHandler}
-          className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled"
+          className="col-span-3 mt-lv-5 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled"
         />
         {/* Info: (20240927 - Julian) Debit */}
         <NumericInput
@@ -433,7 +433,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           isDecimal
           required
           hasComma
-          className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
+          className={`${amountStyle} col-span-3 mt-lv-5 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
           triggerWhenChanged={debitInputChangeHandler}
           disabled={isDebitDisabled}
         />
@@ -445,14 +445,14 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           isDecimal
           required
           hasComma
-          className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
+          className={`${amountStyle} col-span-3 mt-lv-5 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
           triggerWhenChanged={creditInputChangeHandler}
           disabled={isCreditDisabled}
         />
         {/* Info: (20240927 - Julian) Delete button */}
         <div
           id={`delete-line-item-btn-${id}`}
-          className="text-center text-stroke-neutral-invert hover:text-button-text-primary-hover"
+          className="mt-lv-5 text-center text-stroke-neutral-invert hover:text-button-text-primary-hover"
         >
           <button type="button" className="p-12px" onClick={deleteLineHandler}>
             <LuTrash2 size={22} />
@@ -481,7 +481,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
       {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示新增按鈕 */}
       {isShowReverse ? (
-        <div key={`add-reverse-item-${id}`} className="col-start-1 col-end-13 h-50px">
+        <div key={`add-reverse-item-${id}`} className="col-start-1 col-end-13">
           {displayedAddItem}
         </div>
       ) : null}

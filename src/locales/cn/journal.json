@@ -253,6 +253,10 @@
     "LINE_ITEM_2": "请检查会计科目是否皆已填写",
     "LINE_ITEM_3": "请检查是否新增至少 1 笔会计分录"
   },
+  "ACCOUNT_SELECTOR_MODAL": {
+    "MAIN_TITLE": "会计科目",
+    "SUB_TITLE": "选择适合的会计科目"
+  },
   "ACCOUNT_TYPE": {
     "ASSET": "资产",
     "LIABILITY": "负债",
@@ -261,7 +265,10 @@
     "COST": "成本",
     "INCOME": "收益",
     "EXPENSE": "支出",
-    "GAIN_OR_LOSS": "收益或损失"
+    "GAIN_OR_LOSS": "收益或损失",
+    "NON_OPERATING": "营业外收支",
+    "OTHER_COMPREHENSIVE_INCOME": "其他综合损益",
+    "MY_FAVORITE": "我的最爱"
   },
   "ASSET_SECTION": {
     "TITLE": "资产",

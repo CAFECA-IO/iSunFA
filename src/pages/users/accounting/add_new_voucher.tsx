@@ -7,14 +7,21 @@ import NewVoucherForm from '@/components/voucher/new_voucher_form';
 import Layout from '@/components/beta/layout/layout';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ICertificateUI } from '@/interfaces/certificate';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 
 const AddNewVoucherPage: React.FC = () => {
   const { t } = useTranslation('common');
+
   const [selectedCertificates, setSelectedCertificates] = useState<{
     [id: string]: ICertificateUI;
   }>({});
 
+  const { clearReverseListHandler } = useAccountingCtx();
+
   useEffect(() => {
+    // Info: (20250305 - Julian) 進入此頁面時，清除 reverseList
+    clearReverseListHandler();
+
     const storedCertificates = localStorage.getItem('selectedCertificates');
     if (storedCertificates) {
       setSelectedCertificates(JSON.parse(storedCertificates));

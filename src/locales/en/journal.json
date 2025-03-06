@@ -253,6 +253,10 @@
     "LINE_ITEM_2": "Please ensure that all accounting subjects have been filled in.",
     "LINE_ITEM_3": "Please confirm that at least one accounting entry has been added."
   },
+  "ACCOUNT_SELECTOR_MODAL": {
+    "MAIN_TITLE": "Accounting",
+    "SUB_TITLE": "Select the accounting title that fits"
+  },
   "ACCOUNT_TYPE": {
     "ASSET": "Assets",
     "LIABILITY": "Liabilities",
@@ -261,7 +265,10 @@
     "COST": "Cost",
     "INCOME": "Income",
     "EXPENSE": "Expenses",
-    "GAIN_OR_LOSS": "Gain or Loss"
+    "GAIN_OR_LOSS": "Gain or Loss",
+    "NON_OPERATING": "Non-operating Income and Expenses",
+    "OTHER_COMPREHENSIVE_INCOME": "Other Comprehensive Income",
+    "MY_FAVORITE": "My Favorite"
   },
   "ASSET_SECTION": {
     "TITLE": "Asset",
