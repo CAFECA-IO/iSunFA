@@ -208,7 +208,7 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
       )}
 
       {isInviteMembersModalOpen && (
-        <InviteMembersModal setIsInviteMembersModalOpen={setIsInviteMembersModalOpen} />
+        <InviteMembersModal team={team} setIsInviteMembersModalOpen={setIsInviteMembersModalOpen} />
       )}
     </main>
   );

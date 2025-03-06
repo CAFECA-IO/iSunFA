@@ -10,7 +10,7 @@ import Pagination from '@/components/pagination/pagination';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { SkeletonList } from '@/components/skeleton/skeleton';
+import Skeleton from '@/components/skeleton/skeleton';
 
 interface MemberListModalProps {
   team: ITeam;
@@ -42,11 +42,13 @@ const MemberListModal = ({
 
   // Info: (20250304 - Liz) 打 API 取得成員清單
   const getMemberList = useCallback(async () => {
+    if (!team) return;
+    const teamIdString = team.id.toString();
+    setIsLoading(true);
+
     try {
-      if (isLoading) return;
-      setIsLoading(true);
       const { data: memberListData, success } = await getMemberListByTeamIdAPI({
-        params: { teamId: team.id },
+        params: { teamId: teamIdString },
         query: {
           page: currentPage,
           pageSize: 10,
@@ -65,14 +67,50 @@ const MemberListModal = ({
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, getMemberListByTeamIdAPI, team.id]);
+  }, [currentPage, team]);
 
   useEffect(() => {
     getMemberList();
   }, [getMemberList]);
 
   // Info: (20250304 - Liz) 如果打 API 還在載入中，顯示載入中頁面
-  if (!isLoading) return <SkeletonList count={6} />;
+  if (isLoading) {
+    return (
+      <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
+        <div className="overflow-hidden rounded-md">
+          <div className="flex max-h-80vh min-w-480px flex-col gap-24px overflow-y-auto bg-surface-neutral-surface-lv1 p-40px">
+            {/* Info: (20250220 - Liz) Modal Title */}
+            <section className="flex items-center justify-between">
+              <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">
+                {t('team:MEMBER_LIST_MODAL.MEMBER_LIST')}
+              </h1>
+              <button type="button" onClick={closeMemberListModal}>
+                <IoCloseOutline size={24} />
+              </button>
+            </section>
+
+            {/* // Info: (20250220 - Liz) Divider */}
+            <div className="flex items-center gap-16px">
+              <div className="flex items-center gap-8px">
+                <Image src="/icons/member.svg" alt="member" width={16} height={14.29}></Image>
+                <span className="text-sm font-medium leading-5 text-divider-text-lv-1">
+                  {t('team:MEMBER_LIST_MODAL.MEMBER_LIST')}
+                </span>
+              </div>
+              <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
+            </div>
+
+            <div className="flex flex-col items-center gap-16px">
+              <Skeleton width={300} height={30} className="w-full" />
+              <Skeleton width={300} height={30} className="flex-auto" />
+              <Skeleton width={300} height={30} className="flex-auto" />
+              <Skeleton width={300} height={30} className="flex-auto" />
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">

@@ -2,12 +2,14 @@ import { useState, Dispatch, SetStateAction } from 'react';
 import { IoCloseOutline, IoMailOutline, IoClose } from 'react-icons/io5';
 import { TbUserPlus } from 'react-icons/tb';
 import { useTranslation } from 'next-i18next';
+import { ITeam } from '@/interfaces/team';
 
 interface InviteMembersModalProps {
+  team: ITeam;
   setIsInviteMembersModalOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalProps) => {
+const InviteMembersModal = ({ team, setIsInviteMembersModalOpen }: InviteMembersModalProps) => {
   const { t } = useTranslation(['team']);
   const [inputEmail, setInputEmail] = useState<string>('');
   const [emailsToInvite, setEmailsToInvite] = useState<string[]>([]);
@@ -39,7 +41,11 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
     }
   };
 
-  // ToDo: (20250224 - Liz) 打 API 邀請成員
+  // Deprecated: (20250305 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('team.id', team.id);
+
+  // ToDo: (20250224 - Liz) 打 API 邀請成員 (使用 team.id)
   const inviteMembers = () => {};
 
   return (
