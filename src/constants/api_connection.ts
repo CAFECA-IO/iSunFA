@@ -180,7 +180,7 @@ export enum APIName {
   UPDATE_TEAM_BY_ID = 'UPDATE_TEAM_BY_ID',
   UPDATE_MEMBER_BY_ID = 'UPDATE_MEMBER_BY_ID',
   DELETE_MEMBER_BY_ID = 'DELETE_MEMBER_BY_ID',
-  GET_ACCOUNT_BOOK_BY_ID = 'GET_ACCOUNT_BOOK_BY_ID',
+  GET_ACCOUNT_BOOK_INFO_BY_ID = 'GET_ACCOUNT_BOOK_INFO_BY_ID',
   PUT_TEAM_ICON = 'PUT_TEAM_ICON',
 }
 
@@ -340,7 +340,7 @@ export enum APIPath {
   UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
   UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
   DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
-  GET_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId`,
+  GET_ACCOUNT_BOOK_INFO_BY_ID = `${apiPrefixV2}/account_book_info/:accountBookId`,
   PUT_TEAM_ICON = `${apiPrefixV2}/team/:teamId/icon`,
 }
 
@@ -1141,10 +1141,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.DELETE,
     path: APIPath.DELETE_MEMBER_BY_ID,
   }),
-  [APIName.GET_ACCOUNT_BOOK_BY_ID]: createConfig({
-    name: APIName.GET_ACCOUNT_BOOK_BY_ID,
+  [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: createConfig({
+    name: APIName.GET_ACCOUNT_BOOK_INFO_BY_ID,
     method: HttpMethod.GET,
-    path: APIPath.GET_ACCOUNT_BOOK_BY_ID,
+    path: APIPath.GET_ACCOUNT_BOOK_INFO_BY_ID,
   }),
   [APIName.PUT_TEAM_ICON]: createConfig({
     name: APIName.PUT_TEAM_ICON,

@@ -30,6 +30,7 @@ const accountBookSchema = z.object({
 });
 
 const accountBookForUserSchema = z.object({
+  teamId: z.number(),
   company: accountBookSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number(),
@@ -45,6 +46,8 @@ const accountBookListQuerySchema = z.object({
   userId: zodStringToNumber,
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
+  searchQuery: z.string().optional(),
+  sortOption: z.string().optional(),
 });
 
 const accountBookListResponseSchema = paginatedDataSchema(accountBookForUserWithTeamSchema);
@@ -115,7 +118,7 @@ export const connectAccountBookSchema = {
   frontend: accountBookNullSchema,
 };
 
-export const getAccountBookSchema = {
+export const getAccountBookInfoSchema = {
   input: {
     querySchema: getAccountBookQuerySchema,
     bodySchema: accountBookNullSchema,
