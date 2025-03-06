@@ -22,7 +22,7 @@ interface IResponse {
  * Info: (20250303 - Shirley) 處理 GET 請求，獲取帳本詳細資訊，目前為 mock API
  */
 const handleGetRequest: IHandleRequest<
-  APIName.GET_ACCOUNT_BOOK_BY_ID,
+  APIName.GET_ACCOUNT_BOOK_INFO_BY_ID,
   IResponse['payload']
 > = async ({ query }) => {
   const { accountBookId } = query as IGetAccountBookQueryParams;
@@ -61,7 +61,7 @@ const handleGetRequest: IHandleRequest<
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
 } = {
-  GET: (req) => withRequestValidation(APIName.GET_ACCOUNT_BOOK_BY_ID, req, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.GET_ACCOUNT_BOOK_INFO_BY_ID, req, handleGetRequest),
 };
 
 export default async function handler(
