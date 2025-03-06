@@ -118,7 +118,7 @@ export const connectAccountBookSchema = {
   frontend: accountBookNullSchema,
 };
 
-export const getAccountBookSchema = {
+export const getAccountBookInfoSchema = {
   input: {
     querySchema: getAccountBookQuerySchema,
     bodySchema: accountBookNullSchema,
