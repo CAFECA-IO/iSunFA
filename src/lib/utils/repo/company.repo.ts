@@ -186,11 +186,12 @@ export async function listAccountBookByUserId(
   let page = initialPage;
 
   try {
-    // Info: (20250305 - Shirley) 處理排序選項
+    // Info: (20250306 - Shirley) 處理排序選項
     const defaultSortOption = { sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC };
+    // TODO: (20250306 - Shirley) 如果沒有排序選項，則使用預設排序；有多個排序選項時，目前只使用第一個，以後需要改成多重排序
     const sortOption = sortOptions && sortOptions.length > 0 ? sortOptions[0] : defaultSortOption;
 
-    // Info: (20250305 - Shirley) 根據排序選項設置 Prisma 的排序條件
+    // Info: (20250306 - Shirley) 根據排序選項設置 Prisma 的排序條件
     let orderBy: Prisma.AdminOrderByWithRelationInput = { order: SortOrder.DESC };
 
     switch (sortOption.sortBy) {
@@ -209,15 +210,15 @@ export async function listAccountBookByUserId(
         };
         break;
       default:
-        // 預設按照 order 排序
+        // Info: (20250306 - Shirley) 預設按照 order 排序
         orderBy = {
           order: sortOption.sortOrder,
         };
         break;
     }
 
-    // Info: (20250305 - Shirley) 構建搜索條件
-    const baseWhereCondition = {
+    // Info: (20250306 - Shirley) 構建查詢條件
+    let whereCondition: Prisma.AdminWhereInput = {
       userId,
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
       company: {
@@ -225,45 +226,75 @@ export async function listAccountBookByUserId(
       },
     };
 
-    // Info: (20250305 - Shirley) 添加搜索條件
-    const searchWhereCondition = searchQuery
-      ? {
-          userId,
-          OR: [{ deletedAt: 0 }, { deletedAt: null }],
-          company: {
-            OR: [{ deletedAt: 0 }, { deletedAt: null }],
-            AND: [
+    // Info: (20250306 - Shirley) 如果有搜索查詢，添加搜索條件
+    if (searchQuery) {
+      whereCondition = {
+        userId,
+        AND: [
+          { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
+          {
+            OR: [
+              // Info: (20250306 - Shirley) 搜索公司/帳本名稱
               {
-                OR: [{ name: { contains: searchQuery } }, { taxId: { contains: searchQuery } }],
+                company: {
+                  OR: [{ deletedAt: 0 }, { deletedAt: null }],
+                  name: { contains: searchQuery, mode: 'insensitive' as Prisma.QueryMode },
+                },
+              },
+              // Info: (20250306 - Shirley) 搜索公司稅號
+              {
+                company: {
+                  OR: [{ deletedAt: 0 }, { deletedAt: null }],
+                  taxId: { contains: searchQuery, mode: 'insensitive' as Prisma.QueryMode },
+                },
+              },
+              // Info: (20250306 - Shirley) 搜索角色名稱
+              {
+                role: {
+                  name: { contains: searchQuery, mode: 'insensitive' as Prisma.QueryMode },
+                },
+              },
+              // Info: (20250306 - Shirley) 搜索標籤
+              {
+                tag: { contains: searchQuery, mode: 'insensitive' as Prisma.QueryMode },
+              },
+              // Info: (20250306 - Shirley) 搜索團隊名稱
+              {
+                company: {
+                  OR: [{ deletedAt: 0 }, { deletedAt: null }],
+                  teamId: { not: null },
+                  team: {
+                    name: { contains: searchQuery, mode: 'insensitive' as Prisma.QueryMode },
+                  },
+                },
               },
             ],
           },
-        }
-      : baseWhereCondition;
+        ],
+      };
+    }
 
-    // Info: (20250305 - Shirley) 1. 獲取用戶的公司和角色資訊
+    // Info: (20250306 - Shirley) 1. 獲取用戶的公司和角色資訊
     const adminResults = await prisma.admin.findMany({
-      where: searchWhereCondition,
+      where: whereCondition,
       orderBy,
-      select: {
+      include: {
         company: {
           include: {
             imageFile: true,
           },
         },
         role: true,
-        tag: true,
-        order: true,
       },
     });
 
-    // Info: (20250305 - Shirley) 2. 獲取每個公司對應的團隊資訊
+    // Info: (20250306 - Shirley) 2. 獲取每個公司對應的團隊資訊
     const accountBookPromises = adminResults.map(async (admin) => {
       const { teamId } = admin.company;
       let teamInfo = null;
 
       if (teamId) {
-        // Info: (20250305 - Shirley) 獲取團隊資訊
+        // Info: (20250306 - Shirley) 獲取團隊資訊
         const team = await prisma.team.findUnique({
           where: { id: teamId },
           include: {
@@ -328,7 +359,7 @@ export async function listAccountBookByUserId(
         }
       }
 
-      // Info: (20250305 - Shirley) 3. 組合成 IAccountBookForUserWithTeam 格式
+      // Info: (20250306 - Shirley) 3. 組合成 IAccountBookForUserWithTeam 格式
       return {
         teamId: teamId ?? 0,
         company: {
@@ -351,21 +382,13 @@ export async function listAccountBookByUserId(
           createdAt: admin.role.createdAt,
           updatedAt: admin.role.updatedAt,
         },
-        isTransferring: false, // TODO: (20250305 - Shirley) 預設為 false，實際情況可能需要從其他地方獲取
+        isTransferring: false, // TODO: (20250306 - Shirley) 預設為 false，實際情況可能需要從其他地方獲取
       } as IAccountBookForUserWithTeam;
     });
 
     accountBooks = await Promise.all(accountBookPromises);
 
-    // Info: (20250305 - Shirley) 處理團隊名稱的搜索
-    // 由於團隊名稱不在 Prisma 查詢中，需要在獲取數據後進行過濾
-    if (searchQuery) {
-      const lowerCaseSearchQuery = searchQuery.toLowerCase();
-      accountBooks = accountBooks.filter((accountBook) => {
-        // 如果已經通過公司名稱或稅號匹配，則不需要再檢查團隊名稱
-        return accountBook.team?.name.value.toLowerCase().includes(lowerCaseSearchQuery);
-      });
-    }
+    // Info: (20250306 - Shirley) 由於所有搜索邏輯已經在 Prisma 查詢中實現，不再需要額外的過濾步驟
   } catch (error) {
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
@@ -374,7 +397,7 @@ export async function listAccountBookByUserId(
     });
   }
 
-  // Info: (20250305 - Shirley) 6. 分頁處理
+  // Info: (20250306 - Shirley) 分頁處理
   const totalCount = accountBooks.length;
   const totalPages = Math.ceil(totalCount / pageSize);
 

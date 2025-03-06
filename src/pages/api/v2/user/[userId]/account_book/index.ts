@@ -7,7 +7,6 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 import { loggerError } from '@/lib/utils/logger_back';
-import { validateOutputData } from '@/lib/utils/validator';
 import {
   IAccountBookListQueryParams,
   IAccountBookListResponse,
@@ -43,17 +42,8 @@ const handleGetRequest: IHandleRequest<
 
     const paginatedData = toPaginatedData(accountBooksResult);
 
-    const { isOutputDataValid, outputData } = validateOutputData(
-      APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
-      paginatedData
-    );
-
-    if (!isOutputDataValid) {
-      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-    } else {
-      statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-      payload = outputData;
-    }
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    payload = paginatedData;
   } catch (error) {
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
