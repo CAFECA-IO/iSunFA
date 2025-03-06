@@ -5,7 +5,7 @@ import { CompanyRoleName } from '@/constants/role';
 import { IAccountBookForUserWithTeam, WORK_TAG } from '@/interfaces/account_book';
 import { TeamRole } from '@/interfaces/team';
 import { TPlanType } from '@/interfaces/subscription';
-import { SortOrder } from '@/constants/sort';
+import { SortOrder, SortBy } from '@/constants/sort';
 import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
@@ -180,7 +180,7 @@ export async function listAccountBookByUserId(
   initialPage: number = DEFAULT_PAGE_START_AT,
   pageSize: number = DEFAULT_PAGE_LIMIT,
   searchQuery?: string,
-  sortOption?: string
+  sortOptions?: { sortBy: SortBy; sortOrder: SortOrder }[]
 ): Promise<IPaginatedOptions<IAccountBookForUserWithTeam[]>> {
   let accountBooks: IAccountBookForUserWithTeam[] = [];
   let page = initialPage;
@@ -323,22 +323,20 @@ export async function listAccountBookByUserId(
     }
 
     // Info: (20250305 - Shirley) 5. 排序功能
-    if (sortOption) {
-      const sortOptions = sortOption.split('-');
-
+    if (sortOptions && sortOptions.length > 0) {
       // 使用 reduce 替代 for...of 迴圈
       accountBooks = sortOptions.reduce((sortedBooks, option) => {
-        const [sortBy, sortOrder] = option.split(':');
-        const isDesc = sortOrder === 'desc';
+        const { sortBy, sortOrder } = option;
+        const isDesc = sortOrder === SortOrder.DESC;
 
         switch (sortBy) {
-          case 'CreatedAt':
+          case SortBy.CREATED_AT:
             return sortedBooks.sort((a, b) => {
               return isDesc
                 ? b.company.createdAt - a.company.createdAt
                 : a.company.createdAt - b.company.createdAt;
             });
-          case 'UpdatedAt':
+          case SortBy.UPDATED_AT:
             return sortedBooks.sort((a, b) => {
               return isDesc
                 ? b.company.updatedAt - a.company.updatedAt
@@ -375,23 +373,12 @@ export async function listAccountBookByUserId(
   const skip = pageToOffset(page, pageSize);
   const paginatedAccountBooks = accountBooks.slice(skip, skip + pageSize);
 
-  // Info: (20250305 - Shirley) 7. 設置排序資訊
-  const sortInfo = sortOption
-    ? sortOption.split('-').map((option) => {
-        const [sortBy, sortOrder] = option.split(':');
-        return {
-          sortBy,
-          sortOrder: sortOrder === 'desc' ? SortOrder.DESC : SortOrder.ASC,
-        };
-      })
-    : [{ sortBy: 'order', sortOrder: SortOrder.DESC }];
-
   return {
     data: paginatedAccountBooks,
     page,
     totalPages,
     totalCount,
     pageSize,
-    sort: sortInfo,
+    sort: sortOptions || [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
   };
 }
