@@ -10,7 +10,6 @@ import ReverseLineItem from '@/components/voucher/reverse_line_item';
 import { IAccount } from '@/interfaces/accounting_account';
 import AccountTitleSelector from '@/components/voucher/account_title_selector';
 import NumericInput from '@/components/voucher/numeric_input';
-// import { useHotkeys } from 'react-hotkeys-hook';
 
 interface IVoucherLineItemProps {
   id: number;
