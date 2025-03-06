@@ -19,23 +19,18 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   // Info: (20250226 - Tzuhan) 驗證使用者是否登入
   await checkSessionUser(session, APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID, req);
-
   // Info: (20250226 - Tzuhan)驗證使用者是否有權限查詢該團隊
   await checkUserAuthorization(APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID, req, session);
 
   // Info: (20250226 - Tzuhan)驗證請求資料
   const { query } = checkRequestData(APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID, req, session);
+  loggerBack.info(
+    `User: ${userId} List account books by teamId with query: ${JSON.stringify(query)}`
+  );
+
   if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
-  const { teamId } = query;
-  if (!teamId) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-
-  loggerBack.info(
-    `User: ${userId} List account books by teamId: ${teamId} with query: ${JSON.stringify(query)}`
-  );
 
   // Info: (20250226 - Tzuhan)取得該團隊的帳本列表
   const accountBooks = await listAccountBooksByTeamId(userId, query);

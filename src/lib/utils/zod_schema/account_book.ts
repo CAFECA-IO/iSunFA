@@ -3,7 +3,11 @@
  * 改用 zod_schema/company.ts 替代 zod_schema/account_book.ts
  */
 import { z } from 'zod';
-import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
+import {
+  nullSchema,
+  zodStringToNumber,
+  zodStringToNumberWithDefault,
+} from '@/lib/utils/zod_schema/common';
 import { WORK_TAG } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema, TeamSchema } from '@/lib/utils/zod_schema/team';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
@@ -127,7 +131,7 @@ export const getAccountBookSchema = {
 export const listAccountBooksByTeamIdSchema = {
   input: {
     querySchema: listByTeamIdQuerySchema,
-    bodySchema: z.object({}).optional(),
+    bodySchema: nullSchema,
   },
   outputSchema: accountBookListResponseSchema,
   frontend: accountBookListResponseSchema,
