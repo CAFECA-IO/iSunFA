@@ -2,7 +2,9 @@ import { useState, Dispatch, SetStateAction } from 'react';
 import { IoCloseOutline, IoMailOutline, IoClose } from 'react-icons/io5';
 import { TbUserPlus } from 'react-icons/tb';
 import { useTranslation } from 'next-i18next';
-import { ITeam } from '@/interfaces/team';
+import { ITeam, IInviteMemberResponse } from '@/interfaces/team';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 interface InviteMembersModalProps {
   team: ITeam;
@@ -14,6 +16,12 @@ const InviteMembersModal = ({ team, setIsInviteMembersModalOpen }: InviteMembers
   const [inputEmail, setInputEmail] = useState<string>('');
   const [emailsToInvite, setEmailsToInvite] = useState<string[]>([]);
   const [isEmailNotValid, setIsEmailNotValid] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Info: (20250306 - Liz) 邀請成員 API (add member to team)
+  const { trigger: addMemberToTeamAPI } = APIHandler<IInviteMemberResponse>(
+    APIName.ADD_MEMBER_TO_TEAM
+  );
 
   const closeInviteMembersModal = () => {
     setIsInviteMembersModalOpen(false);
@@ -41,12 +49,35 @@ const InviteMembersModal = ({ team, setIsInviteMembersModalOpen }: InviteMembers
     }
   };
 
-  // Deprecated: (20250305 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('team.id', team.id);
+  // Info: (20250306 - Liz) 打 API 邀請成員
+  const inviteMembers = async () => {
+    if (!team) return;
+    if (emailsToInvite.length === 0) return;
+    if (isLoading) return;
 
-  // ToDo: (20250224 - Liz) 打 API 邀請成員 (使用 team.id)
-  const inviteMembers = () => {};
+    setIsLoading(true);
+    try {
+      const { success } = await addMemberToTeamAPI({
+        params: { teamId: team.id.toString() },
+        body: { emails: emailsToInvite },
+      });
+
+      if (!success) throw new Error();
+      if (success) {
+        setEmailsToInvite([]);
+        closeInviteMembersModal();
+        // Deprecated: (20250306 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('邀請成員成功');
+      }
+    } catch (error) {
+      // Deprecated: (20250306 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('邀請成員失敗');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
@@ -130,7 +161,7 @@ const InviteMembersModal = ({ team, setIsInviteMembersModalOpen }: InviteMembers
             <button
               type="button"
               onClick={inviteMembers}
-              disabled={emailsToInvite.length === 0}
+              disabled={emailsToInvite.length === 0 || isLoading}
               className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
               {t('team:INVITE_MEMBERS_MODAL.INVITE')}
