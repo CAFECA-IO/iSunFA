@@ -178,7 +178,9 @@ export async function putCompanyIcon(options: { companyId: number; fileId: numbe
 export async function listAccountBookByUserId(
   userId: number,
   initialPage: number = DEFAULT_PAGE_START_AT,
-  pageSize: number = DEFAULT_PAGE_LIMIT
+  pageSize: number = DEFAULT_PAGE_LIMIT,
+  searchQuery?: string,
+  sortOption?: string
 ): Promise<IPaginatedOptions<IAccountBookForUserWithTeam[]>> {
   let accountBooks: IAccountBookForUserWithTeam[] = [];
   let page = initialPage;
@@ -307,6 +309,52 @@ export async function listAccountBookByUserId(
     });
 
     accountBooks = await Promise.all(accountBookPromises);
+
+    // Info: (20250305 - Shirley) 4. 搜索功能
+    if (searchQuery) {
+      const lowerCaseSearchQuery = searchQuery.toLowerCase();
+      accountBooks = accountBooks.filter((accountBook) => {
+        return (
+          accountBook.company.name.toLowerCase().includes(lowerCaseSearchQuery) ||
+          accountBook.company.taxId.toLowerCase().includes(lowerCaseSearchQuery) ||
+          accountBook.team?.name.value.toLowerCase().includes(lowerCaseSearchQuery)
+        );
+      });
+    }
+
+    // Info: (20250305 - Shirley) 5. 排序功能
+    if (sortOption) {
+      const sortOptions = sortOption.split('-');
+
+      // 使用 reduce 替代 for...of 迴圈
+      accountBooks = sortOptions.reduce((sortedBooks, option) => {
+        const [sortBy, sortOrder] = option.split(':');
+        const isDesc = sortOrder === 'desc';
+
+        switch (sortBy) {
+          case 'CreatedAt':
+            return sortedBooks.sort((a, b) => {
+              return isDesc
+                ? b.company.createdAt - a.company.createdAt
+                : a.company.createdAt - b.company.createdAt;
+            });
+          case 'UpdatedAt':
+            return sortedBooks.sort((a, b) => {
+              return isDesc
+                ? b.company.updatedAt - a.company.updatedAt
+                : a.company.updatedAt - b.company.updatedAt;
+            });
+          default:
+            // 預設按照 order 排序
+            return sortedBooks.sort((a, b) => {
+              return isDesc ? b.order - a.order : a.order - b.order;
+            });
+        }
+      }, accountBooks);
+    } else {
+      // 預設按照 order 排序
+      accountBooks.sort((a, b) => b.order - a.order);
+    }
   } catch (error) {
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
@@ -316,7 +364,7 @@ export async function listAccountBookByUserId(
     loggerBack.error(`Error in listAccountBookByUserId: ${(error as Error).message}`);
   }
 
-  // Info: (20250305 - Shirley) 4. 分頁處理
+  // Info: (20250305 - Shirley) 6. 分頁處理
   const totalCount = accountBooks.length;
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -327,12 +375,23 @@ export async function listAccountBookByUserId(
   const skip = pageToOffset(page, pageSize);
   const paginatedAccountBooks = accountBooks.slice(skip, skip + pageSize);
 
+  // Info: (20250305 - Shirley) 7. 設置排序資訊
+  const sortInfo = sortOption
+    ? sortOption.split('-').map((option) => {
+        const [sortBy, sortOrder] = option.split(':');
+        return {
+          sortBy,
+          sortOrder: sortOrder === 'desc' ? SortOrder.DESC : SortOrder.ASC,
+        };
+      })
+    : [{ sortBy: 'order', sortOrder: SortOrder.DESC }];
+
   return {
     data: paginatedAccountBooks,
     page,
     totalPages,
     totalCount,
     pageSize,
-    sort: [{ sortBy: 'order', sortOrder: SortOrder.DESC }],
+    sort: sortInfo,
   };
 }

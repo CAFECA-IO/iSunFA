@@ -45,6 +45,8 @@ const accountBookListQuerySchema = z.object({
   userId: zodStringToNumber,
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
+  searchQuery: z.string().optional(),
+  sortOption: z.string().optional(),
 });
 
 const accountBookListResponseSchema = paginatedDataSchema(accountBookForUserWithTeamSchema);

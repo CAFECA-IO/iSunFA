@@ -26,10 +26,16 @@ const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccountBookListResponse | null = null;
 
-  const { userId, page, pageSize } = query as IAccountBookListQueryParams;
+  const { userId, page, pageSize, searchQuery, sortOption } = query as IAccountBookListQueryParams;
 
   try {
-    const accountBooksResult = await listAccountBookByUserId(userId, page, pageSize);
+    const accountBooksResult = await listAccountBookByUserId(
+      userId,
+      page,
+      pageSize,
+      searchQuery,
+      sortOption
+    );
 
     const paginatedData = toPaginatedData(accountBooksResult);
 
