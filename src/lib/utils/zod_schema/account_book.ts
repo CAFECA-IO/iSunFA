@@ -5,7 +5,7 @@
 import { z } from 'zod';
 import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { WORK_TAG } from '@/interfaces/account_book';
-import { TeamSchema } from '@/lib/utils/zod_schema/team';
+import { listByTeamIdQuerySchema, TeamSchema } from '@/lib/utils/zod_schema/team';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
@@ -47,7 +47,7 @@ const accountBookListQuerySchema = z.object({
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
 });
 
-const accountBookListResponseSchema = paginatedDataSchema(accountBookForUserWithTeamSchema);
+export const accountBookListResponseSchema = paginatedDataSchema(accountBookForUserWithTeamSchema);
 
 const accountBookNullSchema = z.union([z.object({}), z.string()]);
 
@@ -122,6 +122,15 @@ export const getAccountBookSchema = {
   },
   outputSchema: getAccountBookResponseSchema,
   frontend: accountBookNullSchema,
+};
+
+export const listAccountBooksByTeamIdSchema = {
+  input: {
+    querySchema: listByTeamIdQuerySchema,
+    bodySchema: z.object({}).optional(),
+  },
+  outputSchema: accountBookListResponseSchema,
+  frontend: accountBookListResponseSchema,
 };
 
 export type IConnectAccountBookQueryParams = z.infer<typeof connectAccountBookQuerySchema>;

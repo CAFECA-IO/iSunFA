@@ -6,7 +6,9 @@ import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import { TeamPaymentStatus } from '@prisma/client';
-import { DEFAULT_END_DATE } from '@/constants/config';
+import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 
 const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
   return sortOptions.map(({ sortBy, sortOrder }) => ({
@@ -16,15 +18,15 @@ const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }
 
 export const getTeamList = async (
   userId: number,
-  queryParams: z.infer<typeof paginatedDataQuerySchema> = {}
+  queryParams: z.infer<typeof paginatedDataQuerySchema>
 ): Promise<IPaginatedOptions<ITeam[]>> => {
   const {
-    page = 1,
-    pageSize = 100,
-    startDate = 0,
-    endDate = DEFAULT_END_DATE,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    searchQuery,
     sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
-    searchQuery = '',
   } = queryParams;
 
   const [totalCount, teams] = await prisma.$transaction([
@@ -245,15 +247,15 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
     role: userRole,
     name: {
       value: team.name,
-      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+      editable: userRole !== TeamRole.VIEWER,
     },
     about: {
       value: team.about || '',
-      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+      editable: userRole !== TeamRole.VIEWER,
     },
     profile: {
       value: team.profile || '',
-      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+      editable: userRole !== TeamRole.VIEWER,
     },
     planType: {
       value: planType,
@@ -265,7 +267,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
       value: team.bankInfo
         ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
         : '',
-      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+      editable: userRole !== TeamRole.VIEWER,
     },
   };
 };
@@ -341,3 +343,21 @@ export async function isEligibleToCreateCompanyInTeam(
   });
   return !!teamMember;
 }
+
+export const listAccountBooksByTeamId = async (
+  queryParams: z.infer<typeof listByTeamIdQuerySchema>
+): Promise<IPaginatedOptions<IAccountBookForUserWithTeam[]>> => {
+  /**
+  const {
+    teamId,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    searchQuery,
+    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+  } = queryParams;
+   */
+  const accountBooks: IAccountBookForUserWithTeam[] = [];
+  return toPaginatedData({ ...queryParams, data: accountBooks });
+};

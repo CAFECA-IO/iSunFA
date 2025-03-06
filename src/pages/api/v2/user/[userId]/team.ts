@@ -21,11 +21,14 @@ const handleGetRequest = async (req: NextApiRequest) => {
   await checkUserAuthorization(APIName.LIST_TEAM, req, session);
 
   const { query } = checkRequestData(APIName.LIST_TEAM, req, session);
-
   loggerBack.info(`List Team by userId: ${userId} with query: ${JSON.stringify(query)}`);
 
+  if (query === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  const options: IPaginatedOptions<ITeam[]> = await getTeamList(userId, query || undefined);
+  const options: IPaginatedOptions<ITeam[]> = await getTeamList(userId, query);
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.LIST_TEAM,
     toPaginatedData(options)
