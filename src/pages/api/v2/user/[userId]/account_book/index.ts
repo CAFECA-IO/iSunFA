@@ -7,13 +7,14 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 import { loggerError } from '@/lib/utils/logger_back';
-import { validateOutputData } from '@/lib/utils/validator';
 import {
   IAccountBookListQueryParams,
   IAccountBookListResponse,
 } from '@/lib/utils/zod_schema/account_book';
 import { listAccountBookByUserId } from '@/lib/utils/repo/company.repo';
 import { DefaultValue } from '@/constants/default_value';
+import { parseSortOption } from '@/lib/utils/sort';
+import { DEFAULT_SORT_OPTIONS } from '@/constants/account_book';
 /*
  * TODO: (20250305 - Shirley)
  * 改用 zod_schema/company.ts 替代 zod_schema/account_book.ts
@@ -26,24 +27,23 @@ const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccountBookListResponse | null = null;
 
-  const { userId, page, pageSize } = query as IAccountBookListQueryParams;
+  const { userId, page, pageSize, searchQuery, sortOption } = query as IAccountBookListQueryParams;
 
   try {
-    const accountBooksResult = await listAccountBookByUserId(userId, page, pageSize);
+    const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
+
+    const accountBooksResult = await listAccountBookByUserId(
+      userId,
+      page,
+      pageSize,
+      searchQuery,
+      parsedSortOption
+    );
 
     const paginatedData = toPaginatedData(accountBooksResult);
 
-    const { isOutputDataValid, outputData } = validateOutputData(
-      APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
-      paginatedData
-    );
-
-    if (!isOutputDataValid) {
-      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-    } else {
-      statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-      payload = outputData;
-    }
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    payload = paginatedData;
   } catch (error) {
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,

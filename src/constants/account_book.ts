@@ -6,6 +6,7 @@ import {
 
 import { TeamRole } from '@/interfaces/team';
 import { TPlanType } from '@/interfaces/subscription';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
   {
@@ -362,3 +363,5 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     isTransferring: false,
   },
 ];
+
+export const DEFAULT_SORT_OPTIONS = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }];

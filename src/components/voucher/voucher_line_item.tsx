@@ -10,7 +10,6 @@ import ReverseLineItem from '@/components/voucher/reverse_line_item';
 import { IAccount } from '@/interfaces/accounting_account';
 import AccountTitleSelector from '@/components/voucher/account_title_selector';
 import NumericInput from '@/components/voucher/numeric_input';
-// import { useHotkeys } from 'react-hotkeys-hook';
 
 interface IVoucherLineItemProps {
   id: number;
@@ -416,6 +415,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           accountSelectedHandler={accountSelectedHandler}
           accountIsNull={accountIsNull}
           flagOfSubmit={flagOfSubmit}
+          className="col-span-3 mt-lv-5"
         />
         {/* Info: (20240927 - Julian) Particulars */}
         <input
@@ -427,8 +427,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
         />
         {/* Info: (20240927 - Julian) Debit */}
         <NumericInput
-          id="input-price-before-tax"
-          name="input-price-before-tax"
+          id="input-debit"
+          name="input-debit"
           value={debitInput}
           isDecimal
           required
@@ -439,8 +439,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
         />
         {/* Info: (20240927 - Julian) Credit */}
         <NumericInput
-          id="input-price-before-tax"
-          name="input-price-before-tax"
+          id="input-credit"
+          name="input-credit"
           value={creditInput}
           isDecimal
           required

@@ -144,7 +144,6 @@ const SubscriptionPlan = ({
           </div>
         )}
       </div>
-
       <button
         type="button"
         className={`flex items-center justify-center gap-8px rounded-xs px-32px py-14px ${isSelected ? 'pointer-events-none border border-stroke-brand-primary text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable' : 'bg-button-surface-strong-primary text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable'}`}
@@ -157,7 +156,6 @@ const SubscriptionPlan = ({
         </span>
         {!isSelected && <FiArrowRight size={24} />}
       </button>
-
       <ul className="flex flex-col gap-4px text-xs">
         {plan.id === TPlanType.PROFESSIONAL && (
           <li className="flex items-start gap-4px">
@@ -210,7 +208,6 @@ const SubscriptionPlan = ({
           </li>
         ))}
       </ul>
-
       {!isBeginner && (
         <p className="mt-auto flex flex-col text-xs">
           <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
@@ -221,7 +218,6 @@ const SubscriptionPlan = ({
           </span>
         </p>
       )}
-
       {isDowngradeMessageModalOpen && (
         <MessageModal
           messageModalData={downgradeMessageModal}

@@ -129,8 +129,8 @@ import { paymentPlanListSchema } from '@/lib/utils/zod_schema/payment_plan';
 import {
   accountBookListSchema,
   connectAccountBookSchema,
-  getAccountBookSchema,
   listAccountBooksByTeamIdSchema,
+  getAccountBookInfoSchema,
 } from '@/lib/utils/zod_schema/account_book';
 
 /*
@@ -342,6 +342,6 @@ export const ZOD_SCHEMA_API = {
 
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: accountBookListSchema,
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: connectAccountBookSchema,
-  [APIName.GET_ACCOUNT_BOOK_BY_ID]: getAccountBookSchema,
+  [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: getAccountBookInfoSchema,
   [APIName.PUT_TEAM_ICON]: teamSchemas.putIcon,
 };
