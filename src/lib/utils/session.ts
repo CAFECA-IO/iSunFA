@@ -235,7 +235,14 @@ export const getSession = async (req: NextApiRequest) => {
 // Info: (20250107 - Luphia) 設定用戶 session 資料
 export const setSession = async (
   sessoin: ISessionData,
-  data: { userId?: number; companyId?: number; challenge?: string; roleId?: number }
+  data: {
+    userId?: number;
+    companyId?: number;
+    challenge?: string;
+    roleId?: number;
+    teamId?: number;
+    teamRole?: string;
+  }
 ) => {
   const sessionId = parseSessionId(sessoin);
   const oldSession = (await sessionHandler.read(sessionId)) || ({} as ISessionData);

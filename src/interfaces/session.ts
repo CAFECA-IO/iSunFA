@@ -30,6 +30,8 @@ export interface ISessionData {
   roleId: number;
   actionTime: number;
   expires: number;
+  teamId: number;
+  teamRole: string;
 }
 
 export interface ISessionUpdateData {
@@ -37,4 +39,6 @@ export interface ISessionUpdateData {
   companyId?: number;
   roleId?: number;
   actionTime?: number;
+  teamId?: number;
+  teamRole?: string;
 }
