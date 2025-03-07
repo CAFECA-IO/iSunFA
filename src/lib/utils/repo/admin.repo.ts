@@ -12,7 +12,11 @@ import {
 import { CompanyRoleName } from '@/constants/role';
 import { SortOrder } from '@/constants/sort';
 import { getTimestampNow, pageToOffset, timestampInSeconds } from '@/lib/utils/common';
-import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import {
+  DEFAULT_MAX_PAGE_LIMIT,
+  DEFAULT_PAGE_LIMIT,
+  DEFAULT_PAGE_START_AT,
+} from '@/constants/config';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
@@ -678,7 +682,10 @@ export async function createCompanyAndRole(
     }
   } else {
     // Info: (20250303 - Shirley) 如果沒有提供 teamId，則獲取用戶的 team 列表
-    const userTeams = await getTeamList(userId);
+    const userTeams = await getTeamList(userId, {
+      page: DEFAULT_PAGE_START_AT,
+      pageSize: DEFAULT_MAX_PAGE_LIMIT,
+    });
     if (userTeams && userTeams.data.length > 0) {
       // Info: (20250303 - Shirley) 使用用戶的第一個 team（通常是默認 team）
       const defaultTeamId = +userTeams.data[0].id;

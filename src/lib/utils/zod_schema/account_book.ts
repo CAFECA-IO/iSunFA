@@ -3,9 +3,13 @@
  * 改用 zod_schema/company.ts 替代 zod_schema/account_book.ts
  */
 import { z } from 'zod';
-import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
+import {
+  nullSchema,
+  zodStringToNumber,
+  zodStringToNumberWithDefault,
+} from '@/lib/utils/zod_schema/common';
 import { WORK_TAG } from '@/interfaces/account_book';
-import { TeamSchema } from '@/lib/utils/zod_schema/team';
+import { listByTeamIdQuerySchema, TeamSchema } from '@/lib/utils/zod_schema/team';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
@@ -30,7 +34,6 @@ const accountBookSchema = z.object({
 });
 
 const accountBookForUserSchema = z.object({
-  teamId: z.number(),
   company: accountBookSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number(),
@@ -50,7 +53,7 @@ const accountBookListQuerySchema = z.object({
   sortOption: z.string().optional(),
 });
 
-const accountBookListResponseSchema = paginatedDataSchema(accountBookForUserWithTeamSchema);
+export const accountBookListResponseSchema = paginatedDataSchema(accountBookForUserWithTeamSchema);
 
 const accountBookNullSchema = z.union([z.object({}), z.string()]);
 
@@ -125,6 +128,15 @@ export const getAccountBookInfoSchema = {
   },
   outputSchema: getAccountBookResponseSchema,
   frontend: accountBookNullSchema,
+};
+
+export const listAccountBooksByTeamIdSchema = {
+  input: {
+    querySchema: listByTeamIdQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: accountBookListResponseSchema,
+  frontend: accountBookListResponseSchema,
 };
 
 export type IConnectAccountBookQueryParams = z.infer<typeof connectAccountBookQuerySchema>;
