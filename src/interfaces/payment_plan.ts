@@ -1,12 +1,16 @@
+import { TPlanType } from '@/interfaces/subscription';
+
 export interface IFeature {
+  id: string;
   name: string;
-  value: string;
+  value: string | string[];
 }
 
 export interface IPaymentPlan {
-  name: string;
+  id: TPlanType;
+  planName: string;
   price: number;
-  extraMemberPrice: number;
+  extraMemberPrice?: number;
   features: IFeature[];
   isActive: boolean;
   createdAt: number;
