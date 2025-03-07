@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { FaPlus, FaMinus } from 'react-icons/fa6';
 import { Button } from '@/components/button/button';
 
-const MAGNIFICATION_MAX = 250;
+const MAGNIFICATION_MAX = 500;
 const MAGNIFICATION_MIN = 100;
 
 const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: string }) => {
@@ -22,8 +22,8 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
 
   // Info: (20250307 - Julian) 圖片容器的 ref
   const imageContainerRef = useRef<HTMLDivElement>(null);
-  // Info: (20250307 - Julian) 圖片的 ref
-  const imageRef = useRef<HTMLImageElement>(null);
+  // Info: (20250307 - Julian) 圖片邊界的 ref
+  const imageWrapperRef = useRef<HTMLDivElement>(null);
 
   // Info: (20250307 - Julian) 控制縮放倍率
   const handleZoomIn = () => {
@@ -49,24 +49,6 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
   const handleMouseIn = () => setIsZoomIn(true);
   const handleMouseOut = () => setIsZoomIn(false);
 
-  // Info: (20250307 - Julian) 計算邊界範圍
-  const getBoundedPosition = (x: number, y: number) => {
-    if (!imageContainerRef.current || !imageRef.current) return { x, y };
-
-    const container = imageContainerRef.current.getBoundingClientRect();
-    const image = imageRef.current.getBoundingClientRect();
-
-    // Info: (20250307 - Julian) X 軸最大值：0 或 (圖片寬度 - 容器寬度) / 2
-    const maxX = Math.max(0, (image.width - container.width) / 2);
-    // Info: (20250307 - Julian) Y 軸最大值：0 或 (圖片高度 - 容器高度) / 2
-    const maxY = Math.max(0, (image.height - container.height) / 2);
-
-    return {
-      x: Math.min(maxX, Math.max(-maxX, x)), // Info: (20250307 - Julian) X 範圍：-maxX ~ maxX
-      y: Math.min(maxY, Math.max(-maxY, y)), // Info: (20250307 - Julian) Y 範圍：-maxY ~ maxY
-    };
-  };
-
   // Info: (20250307 - Julian) 按下滑鼠：找到游標的起始位置，開始拖曳
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault(); // Info: (20250307 - Julian) 阻止拉動圖片的預設行為
@@ -76,13 +58,32 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
 
   // Info: (20250307 - Julian) 拖曳滑鼠：計算滑鼠的移動距離，更新圖片的位置
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!dragging) return;
+    if (!dragging || !imageWrapperRef.current || !imageContainerRef.current) return;
+
+    const containerRect = imageContainerRef.current.getBoundingClientRect();
+    const wrapperRect = imageWrapperRef.current.getBoundingClientRect();
 
     // Info: (20250307 - Julian) 新的 X 軸位置：滑鼠的 X 軸位置 - 起始 X 軸位置
-    const newX = event.clientX - startPos.x;
+    let newX = event.clientX - startPos.x;
     // Info: (20250307 - Julian) 新的 Y 軸位置：滑鼠的 Y 軸位置 - 起始 Y 軸位置
-    const newY = event.clientY - startPos.y;
-    setPosition(getBoundedPosition(newX, newY));
+    let newY = event.clientY - startPos.y;
+
+    // Info: (20250307 - Julian) 限制拖曳範圍（使用 imageWrapper 作為邊界）
+    if (wrapperRect.width > containerRect.width) {
+      const minX = containerRect.width - wrapperRect.width;
+      newX = Math.min(0, Math.max(minX, newX));
+    } else {
+      newX = 0; // Info: (20250307 - Julian) 圖片比容器小時，禁止水平拖曳
+    }
+
+    if (wrapperRect.height > containerRect.height) {
+      const minY = containerRect.height - wrapperRect.height;
+      newY = Math.min(0, Math.max(minY, newY));
+    } else {
+      newY = 0; // Info: (20250307 - Julian) 圖片比容器小時，禁止垂直拖曳
+    }
+
+    setPosition({ x: newX, y: newY });
   };
 
   // Info: (20250307 - Julian) 放開滑鼠：停止拖曳
@@ -115,15 +116,27 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
     <div className="flex flex-col">
       {/* Info: (20250307 - Julian) 縮放倍率 */}
       <div className="ml-auto flex items-center gap-12px py-16px text-button-stroke-secondary">
-        <Button type="button" size="smallSquare" variant="tertiaryOutline" onClick={handleZoomIn}>
+        <Button
+          type="button"
+          size="smallSquare"
+          variant="tertiaryOutline"
+          onClick={handleZoomIn}
+          disabled={magnification === MAGNIFICATION_MAX}
+        >
           <FaPlus />
         </Button>
         <p className="text-lg font-medium">{magnification} %</p>
-        <Button type="button" size="smallSquare" variant="tertiaryOutline" onClick={handleZoomOut}>
+        <Button
+          type="button"
+          size="smallSquare"
+          variant="tertiaryOutline"
+          onClick={handleZoomOut}
+          disabled={magnification === MAGNIFICATION_MIN}
+        >
           <FaMinus />
         </Button>
       </div>
-      {/* Info: (20250307 - Julian) 圖片 */}
+      {/* Info: (20250307 - Julian) 圖片外層容器 */}
       <div
         ref={imageContainerRef}
         onMouseEnter={handleMouseIn}
@@ -134,17 +147,20 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
         className={`relative ${className} overflow-hidden ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ userSelect: 'none' }} // Info: (20250307 - Julian) 防止選取內容
       >
-        <Image
-          ref={imageRef}
-          src={imageUrl}
-          alt="certificate"
-          fill
-          objectFit="contain"
+        {/* Info: (20250307 - Julian) 拖曳邊界 */}
+        <div
+          ref={imageWrapperRef}
           style={{
-            transform: `scale(${magnification / 100}) translate(${position.x}px, ${position.y}px)`,
-            transition: dragging ? 'none' : 'transform 0.2s',
+            width: `${magnification}%`,
+            height: `${magnification}%`,
+            position: 'absolute',
+            left: `${position.x}px`,
+            top: `${position.y}px`,
           }}
-        />
+        >
+          {/* Info: (20250307 - Julian) 圖片 */}
+          <Image src={imageUrl} alt="certificate" fill objectFit="contain" />
+        </div>
       </div>
     </div>
   );
