@@ -1,5 +1,5 @@
 // import Announcement from '@/components/beta/dashboard/announcement';
-import MyAccountBookList from '@/components/beta/dashboard/my_account_book_list';
+import MyAccountBookList from '@/components/beta/dashboard/my_account_books';
 import PendingTasks from '@/components/beta/dashboard/pending_task';
 import TodayTodoList from '@/components/beta/dashboard/today_todo_list';
 import LatestNews from '@/components/beta/dashboard/latest_news';
