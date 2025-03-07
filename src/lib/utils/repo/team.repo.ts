@@ -46,7 +46,7 @@ export const getTeamList = async (
       },
       include: {
         members: { where: { userId }, select: { id: true, role: true } },
-        ledger: true,
+        accountBook: true,
         subscription: { include: { plan: true } },
         imageFile: { select: { id: true, url: true } },
       },
@@ -70,7 +70,7 @@ export const getTeamList = async (
         editable: false,
       },
       totalMembers: team.members.length,
-      totalAccountBooks: team.ledger.length,
+      totalAccountBooks: team.accountBook.length,
       bankAccount: {
         value: team.bankInfo
           ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
@@ -125,7 +125,7 @@ export const createTeam = async (
       },
       include: {
         members: true,
-        ledger: true,
+        accountBook: true,
         imageFile: true,
       },
     });
@@ -196,7 +196,7 @@ export const createTeam = async (
       profile: { value: newTeam.profile ?? '', editable: true },
       planType: { value: teamData.planType ?? TPlanType.BEGINNER, editable: false },
       totalMembers: newTeam.members.length + 1, // Info: (20250305 - Tzuhan) 因為創建者也加入了
-      totalAccountBooks: newTeam.ledger.length,
+      totalAccountBooks: newTeam.accountBook.length,
       bankAccount: {
         value: newTeam.bankInfo
           ? `${(newTeam.bankInfo as { code: string }).code}-${(newTeam.bankInfo as { number: string }).number}`
@@ -221,7 +221,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
           },
         },
       },
-      ledger: {
+      accountBook: {
         select: { id: true },
       },
       subscription: {
@@ -264,7 +264,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
       editable: false,
     },
     totalMembers: team.members.length,
-    totalAccountBooks: team.ledger.length,
+    totalAccountBooks: team.accountBook.length,
     bankAccount: {
       value: team.bankInfo
         ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
@@ -457,7 +457,7 @@ export const listAccountBooksByTeamId = async (
               where: { status: LeaveStatus.IN_TEAM },
               select: { id: true, userId: true, role: true },
             },
-            ledger: true,
+            accountBook: true,
             subscription: { include: { plan: true } },
             imageFile: { select: { id: true, url: true } },
           },
@@ -517,7 +517,7 @@ export const listAccountBooksByTeamId = async (
                 editable: false,
               },
               totalMembers: book.team.members.length || 0,
-              totalAccountBooks: book.team.ledger.length || 0,
+              totalAccountBooks: book.team.accountBook.length || 0,
               bankAccount: {
                 value: book.team.bankInfo
                   ? `${(book.team.bankInfo as { code: string }).code}-${(book.team.bankInfo as { number: string }).number}`
