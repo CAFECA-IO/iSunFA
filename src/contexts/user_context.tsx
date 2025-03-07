@@ -36,10 +36,14 @@ interface UserContextType {
     name,
     taxId,
     tag,
+    teamId,
+    isPrivate,
   }: {
     name: string;
     taxId: string;
     tag: WORK_TAG;
+    teamId: number;
+    isPrivate: boolean;
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
   selectedAccountBook: IAccountBook | null;
@@ -594,15 +598,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     name,
     taxId,
     tag,
+    teamId,
+    isPrivate,
   }: {
     name: string;
     taxId: string;
     tag: WORK_TAG;
+    teamId: number;
+    isPrivate: boolean;
   }) => {
     try {
       const { success, code, error } = await createAccountBookAPI({
         params: { userId: userAuthRef.current?.id },
-        body: { name, taxId, tag },
+        body: { name, taxId, tag, teamId, isPrivate },
       });
 
       if (!success) {

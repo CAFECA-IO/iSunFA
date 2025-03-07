@@ -79,8 +79,8 @@ const CreateAccountBookModal = ({
         name: companyName,
         taxId,
         tag,
-        // ToDo: (20250226 - Liz) 新增欄位 teamId 用來傳送團隊 ID
-        // ToDo: (20250226 - Liz) 新增欄位 isPrivate 用來傳送是否為私人帳本
+        teamId: team?.id, // ToDo: (20250226 - Liz) 新增欄位 teamId 用來傳送團隊 ID
+        isPrivate, // ToDo: (20250226 - Liz) 新增欄位 isPrivate 用來傳送是否為私人帳本
       });
 
       if (success) {
@@ -100,7 +100,7 @@ const CreateAccountBookModal = ({
           type: ToastType.ERROR,
           content: (
             <p>
-              {`${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_ACCOUNT_BOOK_FAILED')}!  
+              {`${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_ACCOUNT_BOOK_FAILED')}!
               ${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ERROR_CODE')}: ${code}
               ${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ERROR_MESSAGE')}: ${errorMsg}`}
             </p>
@@ -148,7 +148,7 @@ const CreateAccountBookModal = ({
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="overflow-hidden rounded-lg">
-        <div className="flex max-h-80vh w-400px flex-col gap-24px overflow-y-auto bg-surface-neutral-surface-lv2 p-40px">
+        <div className="flex max-h-80vh w-400px flex-col gap-24px bg-surface-neutral-surface-lv2 p-40px">
           <section className="flex items-center justify-between">
             <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
               {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
@@ -158,7 +158,7 @@ const CreateAccountBookModal = ({
             </button>
           </section>
 
-          <main className="flex flex-col gap-40px">
+          <main className="flex flex-col gap-40px overflow-y-auto">
             <section className="flex flex-col gap-40px">
               {/* // Info: (20250213 - Liz) Company Name */}
               <div className="flex flex-col gap-8px">
