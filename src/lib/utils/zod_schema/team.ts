@@ -3,7 +3,6 @@ import { LeaveStatus, TeamRole, TransferStatus } from '@/interfaces/team';
 import { z } from 'zod';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { paginatedAccountBookForUserSchema } from '@/lib/utils/zod_schema/company';
 
 export const TeamSchema = z.object({
   id: z.number(),
@@ -199,14 +198,6 @@ export const teamSchemas = {
     outputSchema: updateTeamResponseSchema,
     frontend: updateTeamResponseSchema,
   },
-  listAccountBook: {
-    input: {
-      querySchema: listByTeamIdQuerySchema,
-      bodySchema: z.object({}).optional(),
-    },
-    outputSchema: paginatedAccountBookForUserSchema,
-    frontend: paginatedAccountBookForUserSchema,
-  },
   listMember: {
     input: {
       querySchema: listByTeamIdQuerySchema,
@@ -235,6 +226,7 @@ export const teamSchemas = {
     input: {
       querySchema: getByTeamIdSchema,
       bodySchema: z.object({
+        previousTeamId: z.number(),
         targetTeamId: z.number(),
       }),
     },
