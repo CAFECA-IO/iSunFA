@@ -340,7 +340,7 @@ export enum APIPath {
   UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
   UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
   DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
-  GET_ACCOUNT_BOOK_INFO_BY_ID = `${apiPrefixV2}/account_book_info/:accountBookId`,
+  GET_ACCOUNT_BOOK_INFO_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/info`,
   PUT_TEAM_ICON = `${apiPrefixV2}/team/:teamId/icon`,
 }
 
