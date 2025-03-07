@@ -1260,9 +1260,16 @@ model TeamMember {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   role     TeamRole
   joinedAt Int      @map("joined_at")
+  leavedAt Int?     @map("leaved_at")  // Info: (20250307 - Tzuhan) 記錄離開時間（null 代表仍在 team）
+  status   LeaveStatus @default(IN_TEAM) @map("status") // Info: (20250307 - Tzuhan) 記錄用戶是否仍在 team
 
   @@unique([teamId, userId])
   @@map("team_member")
+}
+
+enum LeaveStatus {
+  IN_TEAM    // Info: (20250307 - Tzuhan) 仍在 team
+  NOT_IN_TEAM // Info: (20250307 - Tzuhan) 已離開 team
 }
 
 enum TeamRole {

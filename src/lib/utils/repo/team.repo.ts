@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { ITeam, TeamRole } from '@/interfaces/team';
+import { ILeaveTeam, ITeam, LeaveStatus, TeamRole } from '@/interfaces/team';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { z } from 'zod';
 import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
@@ -9,6 +9,7 @@ import { TeamPaymentStatus } from '@prisma/client';
 import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
   return sortOptions.map(({ sortBy, sortOrder }) => ({
@@ -488,4 +489,35 @@ export const listAccountBooksByTeamId = async (
     pageSize,
     sort: sortOption,
   });
+};
+
+export const memberLeaveTeam = async (teamId: number, userId: number): Promise<ILeaveTeam> => {
+  const teamMember = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId, userId } },
+  });
+
+  if (!teamMember) {
+    throw new Error(STATUS_MESSAGE.USER_NOT_IN_TEAM);
+  }
+
+  if (teamMember.role === TeamRole.OWNER || teamMember.role === TeamRole.ADMIN) {
+    throw new Error(STATUS_MESSAGE.ONLY_EDITOR_AND_VIEWER_CAN_LEAVE);
+  }
+
+  const leavedAt = Math.floor(Date.now() / 1000); // 以 UNIX 時間戳記記錄
+  await prisma.teamMember.update({
+    where: { teamId_userId: { teamId, userId } },
+    data: {
+      status: LeaveStatus.NOT_IN_TEAM,
+      leavedAt,
+    },
+  });
+
+  return {
+    teamId,
+    userId,
+    role: teamMember.role as TeamRole,
+    status: LeaveStatus.NOT_IN_TEAM,
+    leavedAt,
+  };
 };
