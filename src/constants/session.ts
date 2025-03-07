@@ -12,6 +12,8 @@ export const SESSION_DEVELOPER: ISessionData = {
   userId: 10000000,
   companyId: 10000000,
   roleId: 1006,
+  teamId: DefaultValue.TEAM_ID.UNKNOWN,
+  teamRole: DefaultValue.TEAM_ROLE.UNKNOWN,
   actionTime: 0,
   expires: 0,
 };
