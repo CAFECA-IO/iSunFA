@@ -23,7 +23,7 @@ const CreateAccountBookModal = ({
   getCompanyList,
 }: CreateCompanyModalProps) => {
   const { t } = useTranslation(['dashboard']);
-  const { userAuth, createAccountBook } = useUserCtx();
+  const { createAccountBook, userAuth } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const [companyName, setCompanyName] = useState<string>('');
@@ -121,15 +121,14 @@ const CreateAccountBookModal = ({
 
   // Info: (20250303 - Liz) 打 API 取得使用者的團隊清單
   useEffect(() => {
+    if (!userAuth) return;
     const getTeamList = async () => {
       try {
         const { success, data } = await getTeamListAPI({
-          params: { userId: userAuth?.id },
+          params: { userId: userAuth.id },
           query: {
             page: 1,
             pageSize: 999,
-            sortBy: undefined,
-            sortOrder: undefined,
           },
         });
 

@@ -1,16 +1,16 @@
-import { Dispatch, SetStateAction, useState, useEffect } from 'react';
+import { Dispatch, SetStateAction, useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
 import { TbUsersPlus } from 'react-icons/tb';
 import { useTranslation } from 'next-i18next';
 import { ITeam, ITeamMember, TeamRole } from '@/interfaces/team';
-import { FAKE_TEAM_MEMBER_LIST } from '@/constants/team';
 import { Button } from '@/components/button/button';
 import MemberList from '@/components/beta/team_page/member_list';
 import Pagination from '@/components/pagination/pagination';
-// import APIHandler from '@/lib/utils/api_handler'; // ToDo: (20250220 - Liz)
-// import { APIName } from '@/constants/api_connection'; // ToDo: (20250220 - Liz)
-// import { IPaginatedData } from '@/interfaces/pagination'; // ToDo: (20250220 - Liz)
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IPaginatedData } from '@/interfaces/pagination';
+import Skeleton from '@/components/skeleton/skeleton';
 
 interface MemberListModalProps {
   team: ITeam;
@@ -25,10 +25,9 @@ const MemberListModal = ({
 }: MemberListModalProps) => {
   const { t } = useTranslation(['team']);
   const [memberList, setMemberList] = useState<ITeamMember[] | null>(null);
-  // ToDo: (20250220 - Liz) 從 api 回傳的成員清單會有總頁數
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const isOwner = team.role === TeamRole.OWNER;
   const isAdmin = team.role === TeamRole.ADMIN;
 
@@ -36,15 +35,82 @@ const MemberListModal = ({
     setIsMemberListModalOpen(false);
   };
 
-  // ToDo: (20250220 - Liz) 取得成員清單 API (list member by team id)
-  // const { trigger: getMemberListByTeamIdAPI } = APIHandler<IPaginatedData<ITeamMember[]>>(APIName.?);
+  // Info: (20250304 - Liz) 取得成員清單 API (list member by team id)
+  const { trigger: getMemberListByTeamIdAPI } = APIHandler<IPaginatedData<ITeamMember[]>>(
+    APIName.LIST_MEMBER_BY_TEAM_ID
+  );
 
-  // ToDo: (20250220 - Liz) 打 API 取得成員清單
+  // Info: (20250304 - Liz) 打 API 取得成員清單
+  const getMemberList = useCallback(async () => {
+    if (!team) return;
+    const teamIdString = team.id.toString();
+    setIsLoading(true);
 
-  // Deprecated: (20250220 - Liz) 目前後端尚未提供 API，先用假資料測試
+    try {
+      const { data: memberListData, success } = await getMemberListByTeamIdAPI({
+        params: { teamId: teamIdString },
+        query: {
+          page: currentPage,
+          pageSize: 10,
+        },
+      });
+
+      if (!success) throw new Error();
+      if (success && memberListData) {
+        setMemberList(memberListData.data);
+        setTotalPage(memberListData.totalPages);
+      }
+    } catch (error) {
+      // Deprecated: (20250304 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('取得成員清單失敗');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, team]);
+
   useEffect(() => {
-    setMemberList(FAKE_TEAM_MEMBER_LIST);
-  }, []);
+    getMemberList();
+  }, [getMemberList]);
+
+  // Info: (20250304 - Liz) 如果打 API 還在載入中，顯示載入中頁面
+  if (isLoading) {
+    return (
+      <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
+        <div className="overflow-hidden rounded-md">
+          <div className="flex max-h-80vh min-w-480px flex-col gap-24px overflow-y-auto bg-surface-neutral-surface-lv1 p-40px">
+            {/* Info: (20250220 - Liz) Modal Title */}
+            <section className="flex items-center justify-between">
+              <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">
+                {t('team:MEMBER_LIST_MODAL.MEMBER_LIST')}
+              </h1>
+              <button type="button" onClick={closeMemberListModal}>
+                <IoCloseOutline size={24} />
+              </button>
+            </section>
+
+            {/* // Info: (20250220 - Liz) Divider */}
+            <div className="flex items-center gap-16px">
+              <div className="flex items-center gap-8px">
+                <Image src="/icons/member.svg" alt="member" width={16} height={14.29}></Image>
+                <span className="text-sm font-medium leading-5 text-divider-text-lv-1">
+                  {t('team:MEMBER_LIST_MODAL.MEMBER_LIST')}
+                </span>
+              </div>
+              <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
+            </div>
+
+            <div className="flex flex-col items-center gap-16px">
+              <Skeleton width={300} height={30} className="w-full" />
+              <Skeleton width={300} height={30} className="flex-auto" />
+              <Skeleton width={300} height={30} className="flex-auto" />
+              <Skeleton width={300} height={30} className="flex-auto" />
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">

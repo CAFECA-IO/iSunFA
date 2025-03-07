@@ -49,10 +49,6 @@ const TeamPage = () => {
     getTeamData();
   }, [getTeamData]);
 
-  useEffect(() => {
-    setIsLoading(false);
-  }, []);
-
   // Info: (20250303 - Liz) 如果打 API 還在載入中，顯示載入中頁面
   if (isLoading) {
     return (
