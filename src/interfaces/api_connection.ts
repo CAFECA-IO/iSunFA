@@ -158,9 +158,9 @@ export type IAPIName =
   | 'UPDATE_TEAM_BY_ID'
   | 'UPDATE_MEMBER_BY_ID'
   | 'DELETE_MEMBER_BY_ID'
-  | 'GET_ACCOUNT_BOOK_BY_ID'
   | 'PUT_TEAM_ICON'
-  | 'LIST_MEMBER_BY_TEAM_ID';
+  | 'LIST_MEMBER_BY_TEAM_ID'
+  | 'GET_ACCOUNT_BOOK_INFO_BY_ID';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
