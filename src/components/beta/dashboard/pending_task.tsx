@@ -3,11 +3,11 @@ import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layo
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
-import { IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { APIName } from '@/constants/api_connection';
 import DonutChart from '@/components/beta/dashboard/donut_chart';
 import TaskType from '@/components/beta/dashboard/task_type';
-import PendingTasksForCompany from '@/components/beta/dashboard/pending_task_for_company';
+import PendingTasksForAccountBook from '@/components/beta/dashboard/pending_task_for_company';
 import {
   IPendingTaskTotal,
   PendingTaskIconName,
@@ -16,12 +16,13 @@ import {
 } from '@/interfaces/pending_task';
 import Image from 'next/image';
 import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data';
+import { IPaginatedData } from '@/interfaces/pagination';
 
-interface CompanyListProps {
+interface AccountBookListProps {
   list: IMissingCertificate[]; // Info: (20250109 - Liz) IMissingCertificate 與 IUnpostedVoucher 相同
 }
 
-const CompanyList = ({ list }: CompanyListProps) => {
+const AccountBookList = ({ list }: AccountBookListProps) => {
   const { t } = useTranslation('dashboard');
 
   const isListNoData = list.length === 0;
@@ -165,7 +166,7 @@ const PendingTasksForAll = () => {
           </p>
         </div>
 
-        <CompanyList list={userPendingTaskTotal.missingCertificateList} />
+        <AccountBookList list={userPendingTaskTotal.missingCertificateList} />
 
         <div className="flex items-center justify-between">
           <TaskType
@@ -177,7 +178,7 @@ const PendingTasksForAll = () => {
           </p>
         </div>
 
-        <CompanyList list={userPendingTaskTotal.unpostedVoucherList} />
+        <AccountBookList list={userPendingTaskTotal.unpostedVoucherList} />
       </section>
     </section>
   );
@@ -189,55 +190,52 @@ interface PendingTasksProps {
 
 const PendingTasks = ({ getTodoList }: PendingTasksProps) => {
   /* Info: (20241018 - Liz) 元件顯示邏輯
-   * 沒有公司列表 : 顯示 PendingTaskNoData
-   * 有公司列表 且 有選擇公司 : 顯示 PendingTasksForCompany
-   * 有公司列表 且 沒有選擇公司 : 顯示 PendingTasksForAll
+   * 沒有帳本清單 : 顯示 PendingTaskNoData
+   * 有帳本清單 且 有選擇帳本 : 顯示 PendingTasksForAccountBook
+   * 有帳本清單 且 沒有選擇帳本 : 顯示 PendingTasksForAll
    */
 
   const { userAuth, selectedAccountBook } = useUserCtx();
-  const isSelectedCompany = !!selectedAccountBook; // Info: (20250204 - Liz) 強制轉為布林值
-  const [companyAndRoleList, setCompanyAndRoleList] = useState<IAccountBookForUser[]>([]);
-  const hasCompanyList = companyAndRoleList.length > 0;
+  const isSelectedAccountBook = !!selectedAccountBook; // Info: (20250204 - Liz) 強制轉為布林值
+  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
+  const hasAccountBookList = accountBookList.length > 0;
 
-  // Info: (20241127 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
-  const { trigger: listUserCompanyAPI } = APIHandler<IAccountBookForUser[]>(
-    APIName.LIST_USER_COMPANY
-  );
+  // Info: (20250306 - Liz) 打 API 取得使用者擁有的帳本清單(原為公司)
+  const { trigger: getAccountBookListByUserIdAPI } = APIHandler<
+    IPaginatedData<IAccountBookForUserWithTeam[]>
+  >(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID);
 
   useEffect(() => {
-    const getCompanyList = async () => {
+    const getAccountBookList = async () => {
       if (!userAuth) return;
 
       try {
-        const {
-          data: userCompanyList,
-          success,
-          code,
-        } = await listUserCompanyAPI({
+        const { data, success, code } = await getAccountBookListByUserIdAPI({
           params: { userId: userAuth.id },
-          query: { simple: true },
+          query: { page: 1, pageSize: 999 },
         });
+        const accountBookListData = data?.data ?? []; // Info: (20250306 - Liz) 取出帳本清單
 
-        if (success && userCompanyList && userCompanyList.length > 0) {
-          // Info: (20241127 - Liz) 取得使用者擁有的公司列表成功
-          setCompanyAndRoleList(userCompanyList);
+        if (success && accountBookListData && accountBookListData.length > 0) {
+          // Info: (20241127 - Liz) 取得使用者擁有的帳本清單成功
+          setAccountBookList(accountBookListData);
         } else {
-          // Info: (20241127 - Liz)  取得使用者擁有的公司列表失敗時顯示錯誤訊息
+          // Info: (20241127 - Liz)  取得使用者擁有的帳本清單失敗時顯示錯誤訊息
           // Deprecated: (20241127 - Liz)
           // eslint-disable-next-line no-console
-          console.log('listUserCompanyAPI(Simple) failed:', code);
+          console.log('取得使用者擁有的帳本清單 failed:', code);
         }
       } catch (error) {
         // Deprecated: (20241127 - Liz)
         // eslint-disable-next-line no-console
-        console.error('listUserCompanyAPI(Simple) error:', error);
+        console.error('取得使用者擁有的帳本清單 error:', error);
       }
     };
 
-    getCompanyList();
+    getAccountBookList();
   }, [userAuth]);
 
-  if (!hasCompanyList) {
+  if (!hasAccountBookList) {
     return (
       <DashboardCardLayout>
         <PendingTaskNoData />
@@ -245,10 +243,10 @@ const PendingTasks = ({ getTodoList }: PendingTasksProps) => {
     );
   }
 
-  if (isSelectedCompany) {
+  if (isSelectedAccountBook) {
     return (
       <DashboardCardLayout>
-        <PendingTasksForCompany getTodoList={getTodoList} />
+        <PendingTasksForAccountBook getTodoList={getTodoList} />
       </DashboardCardLayout>
     );
   }

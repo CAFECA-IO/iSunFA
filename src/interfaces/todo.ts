@@ -18,3 +18,4 @@ export interface ITodoCompany extends ITodo {
   createdAt: number;
   updatedAt: number;
 }
+// ToDo: (20250306 - Liz) 這個 interface 預計改成 ITodoAccountBook

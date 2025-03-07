@@ -340,7 +340,7 @@ export enum APIPath {
   UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
   UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
   DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
-  GET_ACCOUNT_BOOK_INFO_BY_ID = `${apiPrefixV2}/account_book_info/:accountBookId`,
+  GET_ACCOUNT_BOOK_INFO_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/info`,
   PUT_TEAM_ICON = `${apiPrefixV2}/team/:teamId/icon`,
 }
 
@@ -1054,6 +1054,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID,
     method: HttpMethod.GET,
     path: APIPath.LIST_ACCOUNT_BOOK_BY_TEAM_ID,
+  }),
+  [APIName.LIST_MEMBER_BY_TEAM_ID]: createConfig({
+    name: APIName.LIST_MEMBER_BY_TEAM_ID,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_MEMBER_BY_TEAM_ID,
   }),
   [APIName.ADD_MEMBER_TO_TEAM]: createConfig({
     name: APIName.ADD_MEMBER_TO_TEAM,

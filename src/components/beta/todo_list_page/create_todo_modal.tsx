@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoAdd } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountBook, IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBook, IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { ITodoCompany } from '@/interfaces/todo';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import DateTimePicker from '@/components/beta/todo_list_page/date_time_picker';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 interface CreateTodoModalProps {
   toggleModal: () => void;
@@ -34,7 +35,7 @@ const CreateTodoModal = ({
   const [note, setNote] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [company, setCompany] = useState<IAccountBook | undefined>(defaultCompany || undefined);
-  const [companyAndRoleList, setCompanyAndRoleList] = useState<IAccountBookForUser[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
   const [noDataForTodoName, setNoDataForTodoName] = useState(false);
   const [noDataForStartTime, setNoDataForStartTime] = useState(false);
   const [noDataForEndTime, setNoDataForEndTime] = useState(false);
@@ -46,10 +47,10 @@ const CreateTodoModal = ({
   // Info: (20241119 - Liz) 建立待辦事項 API
   const { trigger: createTodoAPI } = APIHandler<ITodoCompany>(APIName.CREATE_TODO);
 
-  // Info: (20241120 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
-  const { trigger: listUserCompanyAPI } = APIHandler<IAccountBookForUser[]>(
-    APIName.LIST_USER_COMPANY
-  );
+  // Info: (20250306 - Liz) 打 API 取得使用者擁有的帳本清單(原為公司)
+  const { trigger: getAccountBookListByUserIdAPI } = APIHandler<
+    IPaginatedData<IAccountBookForUserWithTeam[]>
+  >(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID);
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
@@ -114,36 +115,34 @@ const CreateTodoModal = ({
   };
 
   useEffect(() => {
-    const getCompanyList = async () => {
+    const getAccountBookList = async () => {
       if (!userAuth) return;
 
       try {
-        const {
-          data: userCompanyList,
-          success,
-          code,
-        } = await listUserCompanyAPI({
+        const { data, success, code } = await getAccountBookListByUserIdAPI({
           params: { userId: userAuth.id },
-          query: { simple: true },
+          query: { page: 1, pageSize: 999 },
         });
 
-        if (success && userCompanyList && userCompanyList.length > 0) {
-          // Info: (20241120 - Liz) 取得使用者擁有的公司列表成功時更新公司列表
-          setCompanyAndRoleList(userCompanyList);
+        const accountBookListData = data?.data ?? []; // Info: (20250306 - Liz) 取出帳本清單
+
+        if (success && accountBookListData && accountBookListData.length > 0) {
+          // Info: (20241120 - Liz) 取得使用者擁有的帳本清單成功時更新帳本清單
+          setAccountBookList(accountBookListData);
         } else {
-          // Info: (20241120 - Liz) 取得使用者擁有的公司列表失敗時顯示錯誤訊息
+          // Info: (20241120 - Liz) 取得使用者擁有的帳本清單失敗時顯示錯誤訊息
           // Deprecated: (20241120 - Liz)
           // eslint-disable-next-line no-console
-          console.log('listUserCompanyAPI(Simple) failed:', code);
+          console.log('取得使用者擁有的帳本清單 failed:', code);
         }
       } catch (error) {
         // Deprecated: (20241120 - Liz)
         // eslint-disable-next-line no-console
-        console.error('listUserCompanyAPI(Simple) error:', error);
+        console.error('取得使用者擁有的帳本清單 error:', error);
       }
     };
 
-    getCompanyList();
+    getAccountBookList();
   }, [userAuth]);
 
   return (
@@ -216,7 +215,7 @@ const CreateTodoModal = ({
                 {isDropdownOpen && (
                   <div className="absolute inset-x-0 top-full z-10 mt-8px">
                     <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_SM">
-                      {companyAndRoleList.map((item) => (
+                      {accountBookList.map((item) => (
                         <button
                           key={item.company.id}
                           type="button"

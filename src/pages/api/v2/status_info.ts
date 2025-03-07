@@ -10,6 +10,8 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { Company, Role, User } from '@prisma/client';
+import { getTeamByTeamId } from '@/lib/utils/repo/team.repo';
+import { ITeam } from '@/interfaces/team';
 
 const handleGetRequest: IHandleRequest<
   APIName.STATUS_INFO_GET,
@@ -17,6 +19,7 @@ const handleGetRequest: IHandleRequest<
     user: User | null;
     company: Company | null;
     role: Role | null;
+    team: ITeam | null;
   }
 > = async ({ session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -24,13 +27,15 @@ const handleGetRequest: IHandleRequest<
     user: User | null;
     company: Company | null;
     role: Role | null;
+    team: ITeam | null;
   } = {
     user: null,
     company: null,
     role: null,
+    team: null,
   };
 
-  const { userId, companyId, roleId } = session;
+  const { userId, companyId, roleId, teamId } = session;
 
   if (userId > 0) {
     const getUser = await getUserById(userId);
@@ -45,6 +50,11 @@ const handleGetRequest: IHandleRequest<
   if (roleId > 0) {
     const getRole = await getRoleById(roleId);
     payload.role = getRole;
+  }
+
+  if (teamId > 0) {
+    const getTeam = await getTeamByTeamId(teamId, userId);
+    payload.team = getTeam;
   }
 
   statusMessage = STATUS_MESSAGE.SUCCESS_GET;
@@ -72,6 +82,7 @@ export default async function handler(
     user: null,
     company: null,
     role: null,
+    team: null,
   };
 
   try {
@@ -84,7 +95,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    payload = { user: null, company: null, role: null };
+    payload = { user: null, company: null, role: null, team: null };
   } finally {
     const { httpCode, result } = formatApiResponse<IStatusInfo | null>(statusMessage, payload);
     res.status(httpCode).json(result);

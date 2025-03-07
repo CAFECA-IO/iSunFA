@@ -10,7 +10,6 @@ import { SortBy, SortOrder } from '@/constants/sort';
 
 export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
   {
-    teamId: 1,
     company: {
       id: 1,
       imageId: '/images/fake_team_img.svg',
@@ -32,7 +31,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
     tag: WORK_TAG.ALL,
   },
   {
-    teamId: 2,
     company: {
       id: 2,
       imageId: '/images/fake_team_img.svg',
@@ -54,7 +52,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
     tag: WORK_TAG.FINANCIAL,
   },
   {
-    teamId: 3,
     company: {
       id: 3,
       imageId: '/images/fake_team_img.svg',
@@ -76,7 +73,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
     tag: WORK_TAG.TAX,
   },
   {
-    teamId: 4,
     company: {
       id: 4,
       imageId: '/images/fake_team_img.svg',
@@ -98,7 +94,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
     tag: WORK_TAG.ALL,
   },
   {
-    teamId: 5,
     company: {
       id: 5,
       imageId: '/images/fake_team_img.svg',
@@ -123,7 +118,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
 
 export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[] = [
   {
-    teamId: 1,
     company: {
       id: 1,
       imageId: '/images/fake_team_img.svg',
@@ -173,7 +167,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     isTransferring: false,
   },
   {
-    teamId: 2,
     company: {
       id: 2,
       imageId: '/images/fake_team_img.svg',
@@ -223,7 +216,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     isTransferring: false,
   },
   {
-    teamId: 3,
     company: {
       id: 3,
       imageId: '/images/fake_team_img.svg',
@@ -273,7 +265,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     isTransferring: false,
   },
   {
-    teamId: 4,
     company: {
       id: 4,
       imageId: '/images/fake_team_img.svg',
@@ -323,7 +314,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
     isTransferring: true,
   },
   {
-    teamId: 5,
     company: {
       id: 5,
       imageId: '/images/fake_team_img.svg',

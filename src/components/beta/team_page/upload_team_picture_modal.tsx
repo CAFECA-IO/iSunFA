@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { IoCloseOutline } from 'react-icons/io5';
-import { ITeam } from '@/interfaces/team';
+import { ITeam, ITeamWithImage } from '@/interfaces/team';
 import UploadArea from '@/components/upload_area/upload_area';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -20,10 +20,7 @@ const UploadTeamPictureModal = ({
   const { t } = useTranslation(['team']);
   const [isLoading, setIsLoading] = useState(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
-  // ToDo: (20250218 - Liz) 等後端提供變更團隊圖片的 API 後再使用
-  //   const { trigger: uploadTeamPictureAPI } = APIHandler<?>(
-  //     APIName.?
-  //   );
+  const { trigger: uploadTeamPictureAPI } = APIHandler<ITeamWithImage>(APIName.PUT_TEAM_ICON);
 
   const closeUploadTeamPictureModal = () => {
     setTeamToUploadPicture(undefined);
@@ -40,8 +37,8 @@ const UploadTeamPictureModal = ({
         formData.append('file', file);
         const { success: uploadFileSuccess, data: fileMeta } = await uploadFileAPI({
           query: {
-            type: UploadType.COMPANY,
-            targetId: String(teamToUploadPicture.id), // ToDo: (20250218 - Liz) 等後端提供需要的 targetId 再修改
+            type: UploadType.TEAM,
+            targetId: Number(teamToUploadPicture.id), // Info: (20250304 - Liz) teamId
           },
           body: formData,
         });
@@ -53,22 +50,22 @@ const UploadTeamPictureModal = ({
           return;
         }
 
-        // ToDo: (20250218 - Liz) 打 API 更新團隊的圖片
+        // Info: (20250304 - Liz) 打 API 更新團隊的圖片
+        const { success, error } = await uploadTeamPictureAPI({
+          params: { teamId: teamToUploadPicture.id },
+          body: { fileId: fileMeta.id },
+        });
 
-        // const { success, error } = await uploadTeamPictureAPI({
-        //   params: { teamId: teamToUploadPicture.id },
-        //   body: { fileId: fileMeta.id },
-        // });
-
-        // if (!success) {
-        //   // Deprecated: (20250218 - Liz)
-        //   // eslint-disable-next-line no-console
-        //   console.error('更新團隊的圖片失敗! error message:', error?.message);
-        //   return;
-        // }
+        if (!success) {
+          // Deprecated: (20250218 - Liz)
+          // eslint-disable-next-line no-console
+          console.error('更新團隊的圖片失敗! error message:', error?.message);
+          return;
+        }
 
         closeUploadTeamPictureModal();
-        // ToDo: (20250218 - Liz) 更新畫面
+        // ToDo: (20250304 - Liz) 更新畫面(重新取得團隊資料)
+        // ToDo: (20250304 - Liz) 從父元件傳入打 API 取得團隊帳本清單的函數，等資料格式更新後再使用
       } catch (error) {
         // Deprecated: (20250218 - Liz)
         // eslint-disable-next-line no-console

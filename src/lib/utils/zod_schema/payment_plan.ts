@@ -1,16 +1,19 @@
 import { z } from 'zod';
+import { TPlanType } from '@/interfaces/subscription';
 
 // Info: (20250225 - Shirley) 定義 Feature 的 Schema
 const featureSchema = z.object({
+  id: z.string(),
   name: z.string(),
-  value: z.string(),
+  value: z.union([z.string(), z.array(z.string())]),
 });
 
 // Info: (20250225 - Shirley) 定義 PaymentPlan 的 Schema
 const paymentPlanSchema = z.object({
-  name: z.string(),
+  id: z.nativeEnum(TPlanType),
+  planName: z.string(),
   price: z.number(),
-  extraMemberPrice: z.number(),
+  extraMemberPrice: z.number().optional(),
   features: z.array(featureSchema),
   isActive: z.boolean(),
   createdAt: z.number(),
