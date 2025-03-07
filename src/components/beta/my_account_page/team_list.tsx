@@ -56,7 +56,7 @@ const TeamList: React.FC = () => {
     return <SkeletonList count={6} />;
   }
 
-  return <div className="flex flex-col gap-8px">{displayedList}</div>;
+  return <div className="flex w-full flex-col items-stretch gap-8px">{displayedList}</div>;
 };
 
 export default TeamList;
