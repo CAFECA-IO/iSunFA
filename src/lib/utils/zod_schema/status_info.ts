@@ -3,11 +3,13 @@ import { nullSchema } from '@/lib/utils/zod_schema/common';
 import { userOutputSchema } from '@/lib/utils/zod_schema/user';
 import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
 import { companyOutputSchema } from '@/lib/utils/zod_schema/company';
+import { TeamSchema } from '@/lib/utils/zod_schema/team';
 
 const statusInfoOutputSchema = z.object({
   user: userOutputSchema.nullable(),
   role: rolePrimsaSchema.nullable(),
   company: companyOutputSchema.nullable(),
+  team: TeamSchema.nullable(),
 });
 
 export const statusInfoGetSchema = {

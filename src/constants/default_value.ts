@@ -40,4 +40,10 @@ export const DefaultValue = {
   PAGE: 1,
   TOTAL_PAGES: 1,
   PAGE_SIZE: 10,
+  TEAM_ID: {
+    UNKNOWN: 0,
+  },
+  TEAM_ROLE: {
+    UNKNOWN: 'UNKNOWN',
+  },
 };
