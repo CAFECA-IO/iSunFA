@@ -761,7 +761,12 @@ export function convertToAPIFormat(
     return item;
   });
 
-  const newItems = itemsWithSubAccounts.filter((item) => item !== null);
+  // const newItems = itemsWithSubAccounts.filter((item) => item !== null);
+  // Info: (20250307 - Liz) 這行程式碼讓 npm run build 失敗，因為 TypeScript 仍然認為 newItems 的型別是 (TrialBalanceItem | null)[]，而不是 TrialBalanceItem[]
+
+  const newItems = itemsWithSubAccounts.filter((item): item is TrialBalanceItem => item !== null);
+  // Info: (20250307 - Liz) 由於 .filter() 不會自動改變陣列的型別，我們可以用 Type Predicate 讓 TypeScript 正確推斷 newItems 的型別是 TrialBalanceItem[]
+  // ToDo: (20250307 - Liz) 先暫時解這個 build error 會再與後端討論這個問題
 
   const sortedItems = sortTrialBalanceItem(newItems, sortOption);
 
