@@ -6,7 +6,9 @@ import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import { TeamPaymentStatus } from '@prisma/client';
-import { DEFAULT_END_DATE } from '@/constants/config';
+import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 
 const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
   return sortOptions.map(({ sortBy, sortOrder }) => ({
@@ -16,15 +18,15 @@ const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }
 
 export const getTeamList = async (
   userId: number,
-  queryParams: z.infer<typeof paginatedDataQuerySchema> = {}
+  queryParams: z.infer<typeof paginatedDataQuerySchema>
 ): Promise<IPaginatedOptions<ITeam[]>> => {
   const {
-    page = 1,
-    pageSize = 100,
-    startDate = 0,
-    endDate = DEFAULT_END_DATE,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    searchQuery,
     sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
-    searchQuery = '',
   } = queryParams;
 
   const [totalCount, teams] = await prisma.$transaction([
@@ -45,7 +47,7 @@ export const getTeamList = async (
         members: { where: { userId }, select: { id: true, role: true } },
         ledger: true,
         subscription: { include: { plan: true } },
-        imageFile: true,
+        imageFile: { select: { id: true, url: true } },
       },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -53,7 +55,7 @@ export const getTeamList = async (
     }),
   ]);
 
-  return {
+  return toPaginatedData({
     data: teams.map((team) => ({
       id: team.id,
       imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
@@ -82,7 +84,7 @@ export const getTeamList = async (
     totalCount,
     pageSize,
     sort: sortOption,
-  };
+  });
 };
 
 export const createTeam = async (
@@ -233,7 +235,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
     return null;
   }
 
-  const userRole =
+  const teamRole =
     (team.members.find((member) => member.userId === userId)?.role as TeamRole) ?? TeamRole.VIEWER;
   const planType = team.subscription
     ? (team.subscription.plan.type as TPlanType)
@@ -242,18 +244,18 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
   return {
     id: team.id,
     imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
-    role: userRole,
+    role: teamRole,
     name: {
       value: team.name,
-      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+      editable: teamRole !== TeamRole.VIEWER,
     },
     about: {
       value: team.about || '',
-      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+      editable: teamRole !== TeamRole.VIEWER,
     },
     profile: {
       value: team.profile || '',
-      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+      editable: teamRole !== TeamRole.VIEWER,
     },
     planType: {
       value: planType,
@@ -265,7 +267,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
       value: team.bankInfo
         ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
         : '',
-      editable: userRole === TeamRole.OWNER || userRole === TeamRole.ADMIN,
+      editable: teamRole !== TeamRole.VIEWER,
     },
   };
 };
@@ -341,3 +343,149 @@ export async function isEligibleToCreateCompanyInTeam(
   });
   return !!teamMember;
 }
+
+export const listAccountBooksByTeamId = async (
+  userId: number,
+  queryParams: z.infer<typeof listByTeamIdQuerySchema>
+): Promise<IPaginatedOptions<IAccountBookForUserWithTeam[]>> => {
+  const {
+    teamId,
+    page = 1,
+    pageSize = 10,
+    startDate = 0,
+    endDate = Math.floor(Date.now() / 1000),
+    searchQuery = '',
+    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+  } = queryParams;
+
+  // Info: (20250221 - tzuhan) 使用 Prisma Transaction 查詢總數、帳本數據、Admin 資料
+  const [totalCount, accountBooks] = await prisma.$transaction([
+    prisma.company.count({
+      where: {
+        teamId: Number(teamId),
+        createdAt: { gte: startDate, lte: endDate },
+        name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+        OR: [
+          { isPrivate: false }, // Info: (20250221 - tzuhan) 公開帳本
+          {
+            isPrivate: true,
+            team: {
+              members: {
+                some: {
+                  userId,
+                  role: { in: [TeamRole.OWNER, TeamRole.ADMIN] }, // Info: (20250221 - tzuhan) 只有 OWNER / ADMIN 可以看到
+                },
+              },
+            },
+          },
+        ],
+      },
+    }),
+    prisma.company.findMany({
+      where: {
+        teamId: Number(teamId),
+        createdAt: { gte: startDate, lte: endDate },
+        name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+        OR: [
+          { isPrivate: false }, // Info: (20250221 - tzuhan) 公開帳本
+          {
+            isPrivate: true,
+            team: {
+              members: {
+                some: {
+                  userId,
+                  role: { in: [TeamRole.OWNER, TeamRole.ADMIN] }, // Info: (20250221 - tzuhan) 只有 OWNER / ADMIN 可以看到
+                },
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        team: {
+          include: {
+            members: {
+              select: { id: true, userId: true, role: true },
+            },
+            ledger: true,
+            subscription: { include: { plan: true } },
+            imageFile: { select: { id: true, url: true } },
+          },
+        },
+        imageFile: { select: { id: true, url: true } },
+      },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: createOrderByList(sortOption),
+    }),
+  ]);
+
+  // Info: (20250306 - tzuhan) 查詢 in 資料
+  const admins = await prisma.admin.findMany({
+    where: {
+      userId,
+      companyId: { in: accountBooks.map((book) => book.id) }, // Info: (20250306 - tzuhan) 只查詢 `accountBooks` 內的 `companyId`
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+    select: {
+      companyId: true,
+      role: true,
+      tag: true,
+      order: true,
+    },
+  });
+
+  return toPaginatedData({
+    data: accountBooks.map((book) => {
+      // Info: (20250306 - Tzuhan) 找到 Admin 資料，admin 是顯示 userId 在 company 內的管理角色
+      const admin = admins.find((item) => item.companyId === book.id);
+      // Info: (20250306 - Tzuhan) 找到 TeamMember 資料，teamRole 是顯示 userId 在 team 內的角色
+      const teamRole =
+        ((book.team?.members.find((member) => member.userId === userId)?.role ??
+          TeamRole.VIEWER) as TeamRole) || TeamRole.VIEWER;
+      return {
+        company: {
+          id: book.id,
+          imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
+          name: book.name,
+          taxId: book.taxId,
+          startDate: book.startDate,
+          createdAt: book.createdAt,
+          updatedAt: book.updatedAt,
+          isPrivate: book.isPrivate ?? false,
+        },
+        team: book.team
+          ? {
+              id: book.team.id,
+              imageId: book.team.imageFile?.url ?? '/images/fake_team_img.svg',
+              role: teamRole,
+              name: { value: book.team.name, editable: teamRole !== TeamRole.VIEWER },
+              about: { value: book.team.about ?? '', editable: teamRole !== TeamRole.VIEWER },
+              profile: { value: book.team.profile ?? '', editable: teamRole !== TeamRole.VIEWER },
+              planType: {
+                value: book.team.subscription?.plan.type ?? TPlanType.BEGINNER,
+                editable: false,
+              },
+              totalMembers: book.team.members.length || 0,
+              totalAccountBooks: book.team.ledger.length || 0,
+              bankAccount: {
+                value: book.team.bankInfo
+                  ? `${(book.team.bankInfo as { code: string }).code}-${(book.team.bankInfo as { number: string }).number}`
+                  : '',
+                editable: false,
+              },
+            }
+          : null,
+        tag: admin?.tag,
+        order: admin?.order,
+        role: admin?.role,
+        isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
+      } as IAccountBookForUserWithTeam;
+    }),
+    page,
+    totalPages: Math.ceil(totalCount / pageSize),
+    totalCount,
+    pageSize,
+    sort: sortOption,
+  });
+};

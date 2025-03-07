@@ -129,6 +129,7 @@ import { paymentPlanListSchema } from '@/lib/utils/zod_schema/payment_plan';
 import {
   accountBookListSchema,
   connectAccountBookSchema,
+  listAccountBooksByTeamIdSchema,
   getAccountBookInfoSchema,
 } from '@/lib/utils/zod_schema/account_book';
 
@@ -323,7 +324,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.UPDATE_TEAM_BY_ID]: teamSchemas.update,
   [APIName.UPDATE_MEMBER_BY_ID]: teamSchemas.updateMember,
   [APIName.DELETE_MEMBER_BY_ID]: teamSchemas.deleteMember,
-  [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: teamSchemas.listAccountBook,
+  [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: listAccountBooksByTeamIdSchema,
   [APIName.LIST_MEMBER_BY_TEAM_ID]: teamSchemas.listMember,
   [APIName.ADD_MEMBER_TO_TEAM]: teamSchemas.addMember,
   [APIName.TRANSFER_ACCOUNT_BOOK]: teamSchemas.transferAccountBook,

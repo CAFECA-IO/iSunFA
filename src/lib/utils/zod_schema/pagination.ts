@@ -10,16 +10,14 @@ const SortSchema = z.object({
   sortOrder: z.string(),
 });
 
-export const paginatedDataQuerySchema = z
-  .object({
-    page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT).optional(),
-    pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT).optional(),
-    startDate: zodStringToNumberWithDefault(0).optional(),
-    endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE).optional(),
-    sortOption: zodFilterSectionSortingOptions().optional(),
-    searchQuery: z.string().optional(),
-  })
-  .partial();
+export const paginatedDataQuerySchema = z.object({
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
+  startDate: zodStringToNumberWithDefault(0).optional(),
+  endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE).optional(),
+  searchQuery: z.string().default('').optional(),
+  sortOption: zodFilterSectionSortingOptions().optional(),
+});
 
 export const paginatedDataSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({

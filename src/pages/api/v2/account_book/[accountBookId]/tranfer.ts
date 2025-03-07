@@ -6,7 +6,6 @@ import { APIName } from '@/constants/api_connection';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
-import { FAKE_TEAM_ACCOUNT_BOOKS } from '@/constants/team';
 import { ITransferLedger, TransferStatus } from '@/interfaces/team';
 
 const handlePostRequest = async (req: NextApiRequest) => {
@@ -29,9 +28,6 @@ const handlePostRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const accountBook =
-    FAKE_TEAM_ACCOUNT_BOOKS[Math.floor(Math.random() * FAKE_TEAM_ACCOUNT_BOOKS.length)];
-
   loggerBack.info(
     `Transfer Ledger by userId: ${userId} from team ${req.query.accountBookId} to ${body.targetTeamId}`
   );
@@ -39,7 +35,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   statusMessage = STATUS_MESSAGE.SUCCESS;
   payload = {
     accountBookId: req.query.accountBookId as string,
-    previousTeamId: accountBook.teamId,
+    previousTeamId: body.previousTeamId,
     targetTeamId: body.targetTeamId,
     status: TransferStatus.TRANSFER,
     transferredAt: Math.floor(Date.now() / 1000),

@@ -139,7 +139,6 @@ export const FAKE_TEAM_MEMBER_LIST: ITeamMember[] = [
 
 export const FAKE_TEAM_ACCOUNT_BOOKS: IAccountBookForUser[] = [
   {
-    teamId: 1,
     company: {
       id: 1,
       imageId: '/images/company_1.svg',
@@ -161,7 +160,6 @@ export const FAKE_TEAM_ACCOUNT_BOOKS: IAccountBookForUser[] = [
     },
   },
   {
-    teamId: 2,
     company: {
       id: 2,
       imageId: '/images/company_2.svg',
@@ -183,7 +181,6 @@ export const FAKE_TEAM_ACCOUNT_BOOKS: IAccountBookForUser[] = [
     },
   },
   {
-    teamId: 3,
     company: {
       id: 3,
       imageId: '/images/company_3.svg',

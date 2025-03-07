@@ -2,22 +2,26 @@ import { useState, Dispatch, SetStateAction } from 'react';
 import { IoCloseOutline, IoMailOutline, IoClose } from 'react-icons/io5';
 import { TbUserPlus } from 'react-icons/tb';
 import { useTranslation } from 'next-i18next';
+import { ITeam, IInviteMemberResponse } from '@/interfaces/team';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { ISUNFA_ROUTE } from '@/constants/url';
-import { useRouter } from 'next/router';
 
 interface InviteMembersModalProps {
+  team: ITeam;
   setIsInviteMembersModalOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalProps) => {
+const InviteMembersModal = ({ team, setIsInviteMembersModalOpen }: InviteMembersModalProps) => {
   const { t } = useTranslation(['team']);
-  const router = useRouter();
-  const { teamId } = router.query;
   const [inputEmail, setInputEmail] = useState<string>('');
   const [emailsToInvite, setEmailsToInvite] = useState<string[]>([]);
   const [isEmailNotValid, setIsEmailNotValid] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Info: (20250306 - Liz) 邀請成員 API (add member to team)
+  const { trigger: addMemberToTeamAPI } = APIHandler<IInviteMemberResponse>(
+    APIName.ADD_MEMBER_TO_TEAM
+  );
 
   const closeInviteMembersModal = () => {
     setIsInviteMembersModalOpen(false);
@@ -45,15 +49,33 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
     }
   };
 
-  // ToDo: (20250224 - Liz) 打 API 邀請成員
-  const { trigger: inviteMemberAPI } = APIHandler(APIName.ADD_MEMBER_TO_TEAM);
+  // Info: (20250306 - Liz) 打 API 邀請成員
   const inviteMembers = async () => {
-    const { success } = await inviteMemberAPI({
-      params: { teamId: router?.pathname },
-      body: { emails: [inputEmail] },
-    });
-    if (success) {
-      window.open(`${ISUNFA_ROUTE.TEAM_PAGE}/${teamId}`, '_self');
+    if (!team) return;
+    if (emailsToInvite.length === 0) return;
+    if (isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const { success } = await addMemberToTeamAPI({
+        params: { teamId: team.id.toString() },
+        body: { emails: emailsToInvite },
+      });
+
+      if (!success) throw new Error();
+      if (success) {
+        setEmailsToInvite([]);
+        closeInviteMembersModal();
+        // Deprecated: (20250306 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('邀請成員成功');
+      }
+    } catch (error) {
+      // Deprecated: (20250306 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('邀請成員失敗');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -139,7 +161,7 @@ const InviteMembersModal = ({ setIsInviteMembersModalOpen }: InviteMembersModalP
             <button
               type="button"
               onClick={inviteMembers}
-              disabled={emailsToInvite.length === 0}
+              disabled={emailsToInvite.length === 0 || isLoading}
               className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
               {t('team:INVITE_MEMBERS_MODAL.INVITE')}
