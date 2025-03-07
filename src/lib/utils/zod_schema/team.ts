@@ -217,7 +217,7 @@ export const teamSchemas = {
   leaveTeam: {
     input: {
       querySchema: getByTeamIdSchema,
-      bodySchema: z.object({}).optional(),
+      bodySchema: nullSchema,
     },
     outputSchema: leaveTeamSchema,
     frontend: leaveTeamSchema,
