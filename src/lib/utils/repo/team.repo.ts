@@ -1,14 +1,15 @@
 import prisma from '@/client';
-import { ITeam, TeamRole } from '@/interfaces/team';
+import { ILeaveTeam, ITeam, TeamRole, LeaveStatus } from '@/interfaces/team';
+import { TeamPaymentStatus } from '@prisma/client';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { z } from 'zod';
 import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
-import { TeamPaymentStatus } from '@prisma/client';
 import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
   return sortOptions.map(({ sortBy, sortOrder }) => ({
@@ -32,20 +33,20 @@ export const getTeamList = async (
   const [totalCount, teams] = await prisma.$transaction([
     prisma.team.count({
       where: {
-        members: { some: { userId } },
+        members: { some: { userId, status: LeaveStatus.IN_TEAM } },
         createdAt: { gte: startDate, lte: endDate },
         name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
       },
     }),
     prisma.team.findMany({
       where: {
-        members: { some: { userId } },
+        members: { some: { userId, status: LeaveStatus.IN_TEAM } },
         createdAt: { gte: startDate, lte: endDate },
         name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
       },
       include: {
         members: { where: { userId }, select: { id: true, role: true } },
-        ledger: true,
+        accountBook: true,
         subscription: { include: { plan: true } },
         imageFile: { select: { id: true, url: true } },
       },
@@ -69,7 +70,7 @@ export const getTeamList = async (
         editable: false,
       },
       totalMembers: team.members.length,
-      totalAccountBooks: team.ledger.length,
+      totalAccountBooks: team.accountBook.length,
       bankAccount: {
         value: team.bankInfo
           ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
@@ -124,7 +125,7 @@ export const createTeam = async (
       },
       include: {
         members: true,
-        ledger: true,
+        accountBook: true,
         imageFile: true,
       },
     });
@@ -195,7 +196,7 @@ export const createTeam = async (
       profile: { value: newTeam.profile ?? '', editable: true },
       planType: { value: teamData.planType ?? TPlanType.BEGINNER, editable: false },
       totalMembers: newTeam.members.length + 1, // Info: (20250305 - Tzuhan) 因為創建者也加入了
-      totalAccountBooks: newTeam.ledger.length,
+      totalAccountBooks: newTeam.accountBook.length,
       bankAccount: {
         value: newTeam.bankInfo
           ? `${(newTeam.bankInfo as { code: string }).code}-${(newTeam.bankInfo as { number: string }).number}`
@@ -211,6 +212,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
     where: { id: teamId },
     include: {
       members: {
+        where: { status: LeaveStatus.IN_TEAM },
         select: {
           userId: true,
           role: true,
@@ -219,7 +221,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
           },
         },
       },
-      ledger: {
+      accountBook: {
         select: { id: true },
       },
       subscription: {
@@ -262,7 +264,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
       editable: false,
     },
     totalMembers: team.members.length,
-    totalAccountBooks: team.ledger.length,
+    totalAccountBooks: team.accountBook.length,
     bankAccount: {
       value: team.bankInfo
         ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
@@ -283,14 +285,44 @@ export const addMembersToTeam = async (
     select: { id: true, email: true },
   });
 
+  const existingUserIds = existingUsers.map((user) => user.id);
+
   const existingUserEmails = new Set(existingUsers.map((user) => user.email));
   const newUserEmails = emails.filter((email) => !existingUserEmails.has(email));
 
   try {
     await prisma.$transaction(async (tx) => {
-      if (existingUsers.length > 0) {
+      // Info: (20250307 - Tzuhan) 1️ 找出已經在 team 但 `status = NOT_IN_TEAM` 的成員，並讓他們重新加入
+      const inactiveMembers = await tx.teamMember.findMany({
+        where: {
+          teamId,
+          userId: { in: existingUserIds },
+          status: LeaveStatus.NOT_IN_TEAM,
+        },
+        select: { userId: true },
+      });
+
+      if (inactiveMembers.length > 0) {
+        await tx.teamMember.updateMany({
+          where: {
+            teamId,
+            userId: { in: inactiveMembers.map((m) => m.userId) },
+          },
+          data: {
+            status: LeaveStatus.IN_TEAM,
+            leavedAt: null,
+          },
+        });
+      }
+
+      // Info: (20250307 - Tzuhan) 2️ 對於真正新的用戶，新增 `teamMember` 記錄
+      const newUsersToAdd = existingUsers.filter(
+        (user) => !inactiveMembers.some((m) => m.userId === user.id)
+      );
+
+      if (newUsersToAdd.length > 0) {
         await tx.teamMember.createMany({
-          data: existingUsers.map((user) => ({
+          data: newUsersToAdd.map((user) => ({
             teamId,
             userId: user.id,
             role: TeamRole.EDITOR,
@@ -300,6 +332,7 @@ export const addMembersToTeam = async (
         });
       }
 
+      // Info: (20250307 - Tzuhan) 3️ 對於 `email` 尚未註冊的用戶，新增 `pendingTeamMember`
       if (newUserEmails.length > 0) {
         await tx.pendingTeamMember.createMany({
           data: newUserEmails.map((email) => ({
@@ -366,7 +399,14 @@ export const listAccountBooksByTeamId = async (
         createdAt: { gte: startDate, lte: endDate },
         name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
         OR: [
-          { isPrivate: false }, // Info: (20250221 - tzuhan) 公開帳本
+          {
+            isPrivate: false,
+            team: {
+              members: {
+                some: { status: LeaveStatus.IN_TEAM },
+              },
+            },
+          }, // Info: (20250221 - tzuhan) 公開帳本
           {
             isPrivate: true,
             team: {
@@ -374,6 +414,7 @@ export const listAccountBooksByTeamId = async (
                 some: {
                   userId,
                   role: { in: [TeamRole.OWNER, TeamRole.ADMIN] }, // Info: (20250221 - tzuhan) 只有 OWNER / ADMIN 可以看到
+                  status: LeaveStatus.IN_TEAM,
                 },
               },
             },
@@ -387,7 +428,14 @@ export const listAccountBooksByTeamId = async (
         createdAt: { gte: startDate, lte: endDate },
         name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
         OR: [
-          { isPrivate: false }, // Info: (20250221 - tzuhan) 公開帳本
+          {
+            isPrivate: false,
+            team: {
+              members: {
+                some: { status: LeaveStatus.IN_TEAM },
+              },
+            },
+          }, // Info: (20250221 - tzuhan) 公開帳本
           {
             isPrivate: true,
             team: {
@@ -395,6 +443,7 @@ export const listAccountBooksByTeamId = async (
                 some: {
                   userId,
                   role: { in: [TeamRole.OWNER, TeamRole.ADMIN] }, // Info: (20250221 - tzuhan) 只有 OWNER / ADMIN 可以看到
+                  status: LeaveStatus.IN_TEAM,
                 },
               },
             },
@@ -405,9 +454,10 @@ export const listAccountBooksByTeamId = async (
         team: {
           include: {
             members: {
+              where: { status: LeaveStatus.IN_TEAM },
               select: { id: true, userId: true, role: true },
             },
-            ledger: true,
+            accountBook: true,
             subscription: { include: { plan: true } },
             imageFile: { select: { id: true, url: true } },
           },
@@ -467,7 +517,7 @@ export const listAccountBooksByTeamId = async (
                 editable: false,
               },
               totalMembers: book.team.members.length || 0,
-              totalAccountBooks: book.team.ledger.length || 0,
+              totalAccountBooks: book.team.accountBook.length || 0,
               bankAccount: {
                 value: book.team.bankInfo
                   ? `${(book.team.bankInfo as { code: string }).code}-${(book.team.bankInfo as { number: string }).number}`
@@ -488,4 +538,35 @@ export const listAccountBooksByTeamId = async (
     pageSize,
     sort: sortOption,
   });
+};
+
+export const memberLeaveTeam = async (teamId: number, userId: number): Promise<ILeaveTeam> => {
+  const teamMember = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId, userId } },
+  });
+
+  if (!teamMember) {
+    throw new Error(STATUS_MESSAGE.USER_NOT_IN_TEAM);
+  }
+
+  if (teamMember.role === TeamRole.OWNER || teamMember.role === TeamRole.ADMIN) {
+    throw new Error(STATUS_MESSAGE.ONLY_EDITOR_AND_VIEWER_CAN_LEAVE);
+  }
+
+  const leavedAt = Math.floor(Date.now() / 1000); // 以 UNIX 時間戳記記錄
+  await prisma.teamMember.update({
+    where: { teamId_userId: { teamId, userId } },
+    data: {
+      status: LeaveStatus.NOT_IN_TEAM,
+      leavedAt,
+    },
+  });
+
+  return {
+    teamId,
+    userId,
+    role: teamMember.role as TeamRole,
+    status: LeaveStatus.NOT_IN_TEAM,
+    leavedAt,
+  };
 };

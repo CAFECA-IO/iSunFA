@@ -50,8 +50,8 @@ export interface ITeamWithImage {
 }
 
 export enum LeaveStatus {
-  LEFT = 'LEFT',
-  FAILED = 'FAILED',
+  NOT_IN_TEAM = 'NOT_IN_TEAM',
+  IN_TEAM = 'IN_TEAM',
 }
 
 export interface ILeaveTeam {
