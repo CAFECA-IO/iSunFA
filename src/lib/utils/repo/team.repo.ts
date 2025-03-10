@@ -551,7 +551,7 @@ export const memberLeaveTeam = async (userId: number, teamId: number): Promise<I
     throw new Error('OWNER_IS_UNABLE_TO_LEAVE');
   }
 
-  const leftAt = Math.floor(Date.now() / 1000); // 以 UNIX 時間戳記記錄
+  const leftAt = Math.floor(Date.now() / 1000); // Info: (20250310 - tzuhan) 以 UNIX 時間戳記記錄
   await prisma.teamMember.update({
     where: { teamId_userId: { teamId, userId } },
     data: {
