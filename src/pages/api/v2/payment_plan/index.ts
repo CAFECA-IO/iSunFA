@@ -154,7 +154,7 @@ const mockPaymentPlans: IPaymentPlanSchema[] = [
 
 /**
  * Info: (20250310 - Shirley) 處理 GET 請求
- * 所有的檢查都會拋出錯誤，由外層的 try-catch 捕獲
+ * 所有的檢查都會拋出錯誤，由外層的 handler 捕獲
  * 1. 檢查用戶是否登入 -> UNAUTHORIZED_ACCESS
  * 2. 檢查請求數據是否有效 -> INVALID_INPUT_PARAMETER
  * 3. 檢查用戶授權 -> FORBIDDEN
@@ -196,7 +196,6 @@ export default async function handler(
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaymentPlanSchema[] | null = null;
   let session: ISessionData | null = null;
-
   const apiName = APIName.LIST_PAYMENT_PLAN;
 
   try {
@@ -238,16 +237,20 @@ export default async function handler(
       }
     }
   } finally {
-    // Info: (20250310 - Shirley) 記錄用戶行為（無論成功或失敗）
+    // Info: (20250310 - Shirley) 記錄用戶行為（只記錄已登錄的用戶），與 logUserAction in middleware.ts 一致
     if (session) {
-      try {
-        await logUserAction(session, apiName, req, statusMessage);
-      } catch (logError) {
-        loggerError({
-          userId: session.userId || DefaultValue.USER_ID.GUEST,
-          errorType: `Failed to log user action in ${apiName}`,
-          errorMessage: logError as Error,
-        });
+      const userId = session.userId || DefaultValue.USER_ID.GUEST;
+
+      if (userId !== DefaultValue.USER_ID.GUEST) {
+        try {
+          await logUserAction(session, apiName, req, statusMessage);
+        } catch (logError) {
+          loggerError({
+            userId,
+            errorType: `Failed to log user action in ${apiName}`,
+            errorMessage: logError as Error,
+          });
+        }
       }
     }
 
