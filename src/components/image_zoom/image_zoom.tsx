@@ -22,9 +22,10 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
 
   // Info: (20250307 - Julian) 圖片容器的 ref
   const imageContainerRef = useRef<HTMLDivElement>(null);
-  // Info: (20250307 - Julian) 圖片邊界的 ref
-  const imageWrapperRef = useRef<HTMLDivElement>(null);
+  // Info: (20250310 - Julian) 圖片的 ref
+  const imageRef = useRef<HTMLImageElement>(null);
 
+  // Info: (20250310 - Julian) ==================== 縮放 ====================
   // Info: (20250307 - Julian) 控制縮放倍率
   const handleZoomIn = () => {
     setMagnification((prev) => {
@@ -47,8 +48,14 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
 
   // Info: (20250307 - Julian) 滑鼠位於圖片上時才執行縮放
   const handleMouseIn = () => setIsZoomIn(true);
-  const handleMouseOut = () => setIsZoomIn(false);
+  // Info: (20250310 - Julian) 滑鼠離開圖片時，停止縮放和拖曳，並重置滾輪 deltaY
+  const handleMouseOut = () => {
+    setIsZoomIn(false);
+    setDragging(false);
+    setMouseDeltaY(0);
+  };
 
+  // Info: (20250310 - Julian) ==================== 拖曳 ====================
   // Info: (20250307 - Julian) 按下滑鼠：找到游標的起始位置，開始拖曳
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault(); // Info: (20250307 - Julian) 阻止拉動圖片的預設行為
@@ -56,39 +63,39 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
     setStartPos({ x: event.clientX - position.x, y: event.clientY - position.y });
   };
 
+  // Info: (20250310 - Julian) 計算拖曳邊界，避免圖片超出容器
+  const getBoundedPosition = (x: number, y: number) => {
+    if (!imageContainerRef.current || !imageRef.current) return { x, y };
+
+    const container = imageContainerRef.current.getBoundingClientRect();
+    const image = imageRef.current.getBoundingClientRect();
+
+    // Info: (20250310 - Julian) 圖片的最大移動範圍: (圖片寬度 - 容器寬度) / 2
+    const maxX = Math.max(0, (image.width - container.width) / 2);
+    const maxY = Math.max(0, (image.height - container.height) / 2);
+
+    return {
+      x: Math.min(maxX, Math.max(-maxX, x)), // Info: (20250310 - Julian) 限制拖曳範圍: -maxX <= x <= maxX
+      y: Math.min(maxY, Math.max(-maxY, y)), // Info: (20250310 - Julian) 限制拖曳範圍: -maxY <= y <= maxY
+    };
+  };
+
   // Info: (20250307 - Julian) 拖曳滑鼠：計算滑鼠的移動距離，更新圖片的位置
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!dragging || !imageWrapperRef.current || !imageContainerRef.current) return;
+    if (!dragging) return;
 
-    const containerRect = imageContainerRef.current.getBoundingClientRect();
-    const wrapperRect = imageWrapperRef.current.getBoundingClientRect();
+    // Info: (20250310 - Julian) 新的 X 軸位置：滑鼠的 X 軸位置 - 起始 X 軸位置
+    const newX = event.clientX - startPos.x;
+    // Info: (20250310 - Julian) 新的 Y 軸位置：滑鼠的 Y 軸位置 - 起始 Y 軸位置
+    const newY = event.clientY - startPos.y;
 
-    // Info: (20250307 - Julian) 新的 X 軸位置：滑鼠的 X 軸位置 - 起始 X 軸位置
-    let newX = event.clientX - startPos.x;
-    // Info: (20250307 - Julian) 新的 Y 軸位置：滑鼠的 Y 軸位置 - 起始 Y 軸位置
-    let newY = event.clientY - startPos.y;
-
-    // Info: (20250307 - Julian) 限制拖曳範圍（使用 imageWrapper 作為邊界）
-    if (wrapperRect.width > containerRect.width) {
-      const minX = containerRect.width - wrapperRect.width;
-      newX = Math.min(0, Math.max(minX, newX));
-    } else {
-      newX = 0; // Info: (20250307 - Julian) 圖片比容器小時，禁止水平拖曳
-    }
-
-    if (wrapperRect.height > containerRect.height) {
-      const minY = containerRect.height - wrapperRect.height;
-      newY = Math.min(0, Math.max(minY, newY));
-    } else {
-      newY = 0; // Info: (20250307 - Julian) 圖片比容器小時，禁止垂直拖曳
-    }
-
-    setPosition({ x: newX, y: newY });
+    setPosition(getBoundedPosition(newX, newY));
   };
 
   // Info: (20250307 - Julian) 放開滑鼠：停止拖曳
   const handleMouseUp = () => setDragging(false);
 
+  // Info: (20250310 - Julian) ==================== 監聽事件 ====================
   useEffect(() => {
     // Info: (20250307 - Julian) 紀錄滑鼠滾輪的 deltaY
     const handleWheel = (event: WheelEvent) => {
@@ -105,12 +112,18 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
   useEffect(() => {
     if (isZoomIn) {
       if (mouseDeltaY > 0) {
-        handleZoomOut();
+        handleZoomOut(); // Info: (20250307 - Julian) 滑鼠往下滾動，縮小圖片
       } else if (mouseDeltaY < 0) {
-        handleZoomIn();
+        handleZoomIn(); // Info: (20250307 - Julian) 滑鼠往上滾動，放大圖片
       }
     }
   }, [mouseDeltaY]);
+
+  useEffect(() => {
+    // Info: (20250310 - Julian) 縮放時，重新計算圖片的位置，避免超出範圍
+    const newPosition = getBoundedPosition(position.x, position.y);
+    setPosition(newPosition);
+  }, [magnification]);
 
   return (
     <div className="flex flex-col">
@@ -147,20 +160,21 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
         className={`relative ${className} overflow-hidden ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ userSelect: 'none' }} // Info: (20250307 - Julian) 防止選取內容
       >
-        {/* Info: (20250307 - Julian) 拖曳邊界 */}
-        <div
-          ref={imageWrapperRef}
+        {/* Info: (20250307 - Julian) 圖片 */}
+        <Image
+          ref={imageRef}
+          src={imageUrl}
+          alt="certificate"
+          fill
+          objectFit="contain"
           style={{
-            width: `${magnification}%`,
-            height: `${magnification}%`,
+            transform: `scale(${magnification / 100})`,
+            transformOrigin: 'center center',
             position: 'absolute',
             left: `${position.x}px`,
             top: `${position.y}px`,
           }}
-        >
-          {/* Info: (20250307 - Julian) 圖片 */}
-          <Image src={imageUrl} alt="certificate" fill objectFit="contain" />
-        </div>
+        />
       </div>
     </div>
   );
