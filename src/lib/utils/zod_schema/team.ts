@@ -49,7 +49,9 @@ export const listByTeamIdQuerySchema = paginatedDataQuerySchema.extend({
   teamId: zodStringToNumber,
 });
 
-export const addMemberBodySchema = z.array(z.string().email()).min(1, '至少需要邀請一名成員');
+export const addMemberBodySchema = z.object({
+  emails: z.array(z.string().email()).min(1, '至少需要邀請一名成員'),
+});
 
 export const addMemberResponseSchema = z.object({
   invitedCount: z.number(),
@@ -69,7 +71,7 @@ export const leaveTeamSchema = z.object({
   userId: z.number(),
   role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
   status: z.enum(Object.values(LeaveStatus) as [LeaveStatus, ...LeaveStatus[]]),
-  leavedAt: z.number().optional(),
+  leftAt: z.number().optional(),
 });
 
 // Info: (20250227 - Shirley) 定義更新團隊資訊的 Schema
@@ -217,7 +219,7 @@ export const teamSchemas = {
   leaveTeam: {
     input: {
       querySchema: getByTeamIdSchema,
-      bodySchema: z.object({}).optional(),
+      bodySchema: nullSchema,
     },
     outputSchema: leaveTeamSchema,
     frontend: leaveTeamSchema,
