@@ -9,7 +9,6 @@ import { TPlanType } from '@/interfaces/subscription';
 import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 
 const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
   return sortOptions.map(({ sortBy, sortOrder }) => ({
@@ -540,17 +539,16 @@ export const listAccountBooksByTeamId = async (
   });
 };
 
-export const memberLeaveTeam = async (teamId: number, userId: number): Promise<ILeaveTeam> => {
-  const teamMember = await prisma.teamMember.findUnique({
-    where: { teamId_userId: { teamId, userId } },
+export const memberLeaveTeam = async (userId: number, teamId: number): Promise<ILeaveTeam> => {
+  const teamMember = await prisma.teamMember.findFirst({
+    where: { teamId, userId },
   });
-
   if (!teamMember) {
-    throw new Error(STATUS_MESSAGE.USER_NOT_IN_TEAM);
+    throw new Error('USER_NOT_IN_TEAM');
   }
 
-  if (teamMember.role === TeamRole.OWNER || teamMember.role === TeamRole.ADMIN) {
-    throw new Error(STATUS_MESSAGE.ONLY_EDITOR_AND_VIEWER_CAN_LEAVE);
+  if (teamMember.role === TeamRole.OWNER) {
+    throw new Error('OWNER_IS_UNABLE_TO_LEAVE');
   }
 
   const leftAt = Math.floor(Date.now() / 1000); // 以 UNIX 時間戳記記錄

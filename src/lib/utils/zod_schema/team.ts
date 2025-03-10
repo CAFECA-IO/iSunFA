@@ -49,7 +49,9 @@ export const listByTeamIdQuerySchema = paginatedDataQuerySchema.extend({
   teamId: zodStringToNumber,
 });
 
-export const addMemberBodySchema = z.array(z.string().email()).min(1, '至少需要邀請一名成員');
+export const addMemberBodySchema = z.object({
+  emails: z.array(z.string().email()).min(1, '至少需要邀請一名成員'),
+});
 
 export const addMemberResponseSchema = z.object({
   invitedCount: z.number(),

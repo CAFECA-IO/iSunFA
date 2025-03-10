@@ -43,6 +43,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   } else {
     payload = outputData;
+    statusMessage = STATUS_MESSAGE.SUCCESS;
   }
 
   const result = formatApiResponse(statusMessage, payload);
@@ -60,6 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (error) {
+    loggerBack.error(`Error occurred in leave team: ${error}`);
     const err = error as Error;
     ({ httpCode, result } = formatApiResponse<null>(
       STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],

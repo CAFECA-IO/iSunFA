@@ -2,7 +2,7 @@
 CREATE TYPE "LeaveStatus" AS ENUM ('IN_TEAM', 'NOT_IN_TEAM');
 
 -- CreateEnum
-CREATE TYPE "TransferStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELED');
+CREATE TYPE "TransferStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELED', 'DECLINED', 'FAILED');
 
 -- AlterTable
 ALTER TABLE "company" ADD COLUMN     "is_transferring" BOOLEAN NOT NULL DEFAULT false;

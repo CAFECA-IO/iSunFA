@@ -91,7 +91,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
   );
 
   // Info: (20250304 - Tzuhan) 邀請成員加入團隊
-  const addedResult = await addMembersToTeam(teamId, body);
+  const addedResult = await addMembersToTeam(teamId, body.emails);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
 
