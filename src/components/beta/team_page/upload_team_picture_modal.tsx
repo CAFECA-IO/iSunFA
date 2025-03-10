@@ -11,11 +11,13 @@ import { useTranslation } from 'next-i18next';
 interface UploadTeamPictureModalProps {
   teamToUploadPicture: ITeam;
   setTeamToUploadPicture: Dispatch<SetStateAction<ITeam | undefined>>;
+  getTeamData: () => Promise<void>;
 }
 
 const UploadTeamPictureModal = ({
   teamToUploadPicture,
   setTeamToUploadPicture,
+  getTeamData,
 }: UploadTeamPictureModalProps) => {
   const { t } = useTranslation(['team']);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +53,7 @@ const UploadTeamPictureModal = ({
         }
 
         // Info: (20250304 - Liz) 打 API 更新團隊的圖片
-        const { success, error } = await uploadTeamPictureAPI({
+        const { success, data, error } = await uploadTeamPictureAPI({
           params: { teamId: teamToUploadPicture.id },
           body: { fileId: fileMeta.id },
         });
@@ -63,9 +65,13 @@ const UploadTeamPictureModal = ({
           return;
         }
 
+        // Deprecated: (20250310 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('success:', success, 'data:', data);
+
         closeUploadTeamPictureModal();
-        // ToDo: (20250304 - Liz) 更新畫面(重新取得團隊資料)
-        // ToDo: (20250304 - Liz) 從父元件傳入打 API 取得團隊帳本清單的函數，等資料格式更新後再使用
+        // Info: (20250310 - Liz) 更新畫面(重新取得團隊資料)
+        getTeamData();
       } catch (error) {
         // Deprecated: (20250218 - Liz)
         // eslint-disable-next-line no-console
