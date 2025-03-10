@@ -1240,8 +1240,8 @@ model Team {
   subscription   TeamSubscription?
   imageFile      File?               @relation("team_image_file", fields: [imageFileId], references: [id])
   pendingMembers PendingTeamMember[]
-  AccountBookTransferFromTeam AccountBookTransfer[] @relation("AccountBookTransferFromTeam")
-  AccountBookTransferToTeam AccountBookTransfer[] @relation("AccountBookTransferToTeam")
+  fromTeamId     AccountBookTransfer[] @relation("fromTeamId")
+  toTeamId       AccountBookTransfer[] @relation("toTeamId")
 
   @@map("team")
 }
@@ -1265,7 +1265,7 @@ model TeamMember {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   role     TeamRole
   joinedAt Int      @map("joined_at")
-  leavedAt Int?     @map("leaved_at")  // Info: (20250307 - Tzuhan) 記錄離開時間（null 代表仍在 team）
+  leftAt   Int?       @map("left_at")  // Info: (20250307 - Tzuhan) 記錄離開時間（null 代表仍在 team）
   status   LeaveStatus @default(IN_TEAM) @map("status") // Info: (20250307 - Tzuhan) 記錄用戶是否仍在 team
 
   @@unique([teamId, userId])
@@ -1380,17 +1380,17 @@ model AccountBookTransfer {
   toTeamId          Int     @map("to_team_id") // Info: (20250307 - Tzuhan) 轉入團隊 ID
   initiatedByUserId Int     @map("initiated_by_user_id") // Info: (20250307 - Tzuhan) 執行轉移的使用者 ID
   status            TransferStatus @default(PENDING) @map("status") // Info: (20250307 - Tzuhan) 移轉狀態
-  createdAt         Int     @map("created_at") // Info: (20250307 - Tzuhan) 轉移請求建立時間
+  createdAt         Int     @map("created_at") @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int"))// Info: (20250307 - Tzuhan) 轉移請求建立時間
   pendingAt         Int?    @map("pending_at") // Info: (20250307 - Tzuhan) 進入 PENDING 狀態的時間
   completedAt       Int?    @map("completed_at") // Info: (20250307 - Tzuhan) 轉移成功時間
   canceledAt        Int?    @map("canceled_at") // Info: (20250307 - Tzuhan) 轉移取消時間
-  updatedAt         Int     @map("updated_at") // Info: (20250307 - Tzuhan) 最後更新時間
-  note              Json?   @map("note") // Info: (20250307 - Tzuhan) 備註欄位（可存放轉移原因、備註等）
+  updatedAt         Int     @map("updated_at") @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int"))// Info: (20250307 - Tzuhan) 最後更新時間
+  note              Json?   @map("note") @default("{}")// Info: (20250307 - Tzuhan) 備註欄位（可存放轉移原因、備註等）
 
-  accountBook      Company @relation(fields: [companyId], references: [id])
-  fromTeam         Team @relation("AccountBookTransferFromTeam", fields: [fromTeamId], references: [id]) // 明確命名關聯
-  toTeam           Team @relation("AccountBookTransferToTeam", fields: [toTeamId], references: [id]) // 明確命名關聯
-  initiatedBy      User @relation(fields: [initiatedByUserId], references: [id])
+  accountBook      Company @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fromTeam         Team @relation("fromTeamId", fields: [fromTeamId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Info: (20250310 - Tzuhan) 明確命名關聯
+  toTeam           Team @relation("toTeamId", fields: [toTeamId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Info: (20250310 - Tzuhan) 明確命名關聯
+  initiatedByUser  User @relation(fields: [initiatedByUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("accountBook_transfer")
   @@unique([fromTeamId, toTeamId])

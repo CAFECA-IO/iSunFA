@@ -59,7 +59,7 @@ export interface ILeaveTeam {
   userId: number;
   role: TeamRole;
   status: LeaveStatus;
-  leavedAt?: number;
+  leftAt?: number;
 }
 
 export enum TransferStatus {

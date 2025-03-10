@@ -307,7 +307,7 @@ export async function listAccountBookByUserId(
                 },
               },
             },
-            ledger: {
+            accountBook: {
               select: { id: true },
             },
             subscription: {
@@ -348,7 +348,7 @@ export async function listAccountBookByUserId(
               editable: false,
             },
             totalMembers: team.members.length,
-            totalAccountBooks: team.ledger.length,
+            totalAccountBooks: team.accountBook.length,
             bankAccount: {
               value: team.bankInfo
                 ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`

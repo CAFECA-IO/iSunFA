@@ -69,7 +69,7 @@ export const leaveTeamSchema = z.object({
   userId: z.number(),
   role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
   status: z.enum(Object.values(LeaveStatus) as [LeaveStatus, ...LeaveStatus[]]),
-  leavedAt: z.number().optional(),
+  leftAt: z.number().optional(),
 });
 
 // Info: (20250227 - Shirley) 定義更新團隊資訊的 Schema

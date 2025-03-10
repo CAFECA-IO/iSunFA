@@ -310,7 +310,7 @@ export const addMembersToTeam = async (
           },
           data: {
             status: LeaveStatus.IN_TEAM,
-            leavedAt: null,
+            leftAt: null,
           },
         });
       }
@@ -553,12 +553,12 @@ export const memberLeaveTeam = async (teamId: number, userId: number): Promise<I
     throw new Error(STATUS_MESSAGE.ONLY_EDITOR_AND_VIEWER_CAN_LEAVE);
   }
 
-  const leavedAt = Math.floor(Date.now() / 1000); // 以 UNIX 時間戳記記錄
+  const leftAt = Math.floor(Date.now() / 1000); // 以 UNIX 時間戳記記錄
   await prisma.teamMember.update({
     where: { teamId_userId: { teamId, userId } },
     data: {
       status: LeaveStatus.NOT_IN_TEAM,
-      leavedAt,
+      leftAt,
     },
   });
 
@@ -567,6 +567,6 @@ export const memberLeaveTeam = async (teamId: number, userId: number): Promise<I
     userId,
     role: teamMember.role as TeamRole,
     status: LeaveStatus.NOT_IN_TEAM,
-    leavedAt,
+    leftAt,
   };
 };
