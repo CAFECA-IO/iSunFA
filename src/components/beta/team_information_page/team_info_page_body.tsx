@@ -74,6 +74,7 @@ const TeamInformationPageBody = ({ team }: TeamPageBodyProps) => {
         <UploadTeamPictureModal
           teamToUploadPicture={teamToUploadPicture}
           setTeamToUploadPicture={setTeamToUploadPicture}
+          getTeamData={async () => {}} // ToDo: (20250310 - Liz) 這裡要傳入取得團隊資料 API
         />
       )}
     </main>
