@@ -111,6 +111,30 @@ export async function logUserAction<T extends APIName>(
   }
 }
 
+/**
+ * Info: (20250226 - Shirley) 檢查請求數據是否有效
+ * 如果無效，拋出 INVALID_INPUT_PARAMETER 錯誤
+ */
+export function checkRequestDataValid(apiName: APIName, req: NextApiRequest) {
+  const { query, body } = validateRequestData(apiName, req);
+  if (query === null && body === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+  return { query, body };
+}
+
+/**
+ * Info: (20250226 - Shirley) 驗證輸出數據是否有效
+ * 如果無效，拋出 INVALID_OUTPUT_DATA 錯誤
+ */
+export function checkOutputDataValid<T extends APIName>(apiName: T, data: unknown) {
+  const { isOutputDataValid, outputData } = validateOutputData(apiName, data);
+  if (!isOutputDataValid) {
+    throw new Error(STATUS_MESSAGE.INVALID_OUTPUT_DATA);
+  }
+  return outputData;
+}
+
 // TODO: (20241111 - Shirley) separate middleware according to different functionality
 export async function withRequestValidation<T extends APIName, U>(
   apiName: T,

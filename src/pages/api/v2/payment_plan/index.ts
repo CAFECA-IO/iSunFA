@@ -5,11 +5,17 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import { TPlanType } from '@/interfaces/subscription';
 import { getSession } from '@/lib/utils/session';
-import { checkSessionUser, checkUserAuthorization, logUserAction } from '@/lib/utils/middleware';
-import { validateOutputData, validateRequestData } from '@/lib/utils/validator';
+import {
+  checkOutputDataValid,
+  checkRequestDataValid,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 import { IPaymentPlanSchema } from '@/lib/utils/zod_schema/payment_plan';
+import { ISessionData } from '@/interfaces/session';
 
 const mockPaymentPlans: IPaymentPlanSchema[] = [
   {
@@ -146,66 +152,41 @@ const mockPaymentPlans: IPaymentPlanSchema[] = [
   },
 ];
 
+/**
+ * Info: (20250310 - Shirley) 處理 GET 請求
+ * 所有的檢查都會拋出錯誤，由外層的 try-catch 捕獲
+ * 1. 檢查用戶是否登入 -> UNAUTHORIZED_ACCESS
+ * 2. 檢查請求數據是否有效 -> INVALID_INPUT_PARAMETER
+ * 3. 檢查用戶授權 -> FORBIDDEN
+ * 4. 獲取付款計劃數據
+ * 5. 驗證輸出數據 -> INVALID_OUTPUT_DATA
+ */
 const handleGetRequest = async (req: NextApiRequest) => {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaymentPlanSchema[] | null = null;
   const apiName = APIName.LIST_PAYMENT_PLAN;
 
-  try {
-    // Info: (20250226 - Shirley) 獲取用戶 session
-    const session = await getSession(req);
+  // Info: (20250310 - Shirley) 獲取用戶 session
+  const session = await getSession(req);
 
-    // Info: (20250226 - Shirley) 檢查用戶是否登入
-    const isLogin = await checkSessionUser(session, apiName, req);
+  // Info: (20250310 - Shirley) 檢查用戶是否登入，如果未登入會拋出 UNAUTHORIZED_ACCESS 錯誤
+  await checkSessionUser(session, apiName, req);
 
-    if (!isLogin) {
-      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-    } else {
-      // Info: (20250226 - Shirley) 驗證請求數據
-      const { query, body } = validateRequestData(apiName, req);
+  // Info: (20250310 - Shirley) 驗證請求數據，如果無效會拋出 INVALID_INPUT_PARAMETER 錯誤
+  checkRequestDataValid(apiName, req);
 
-      if (query !== null || body !== null) {
-        // Info: (20250226 - Shirley) 檢查用戶授權
-        const isAuth = await checkUserAuthorization(apiName, req, session);
+  // Info: (20250310 - Shirley) 檢查用戶授權，如果未授權會拋出 FORBIDDEN 錯誤
+  await checkUserAuthorization(apiName, req, session);
 
-        if (!isAuth) {
-          statusMessage = STATUS_MESSAGE.FORBIDDEN;
-        } else {
-          // Info: (20250226 - Shirley) 獲取付款計劃數據
-          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-          const handlerOutput = mockPaymentPlans;
+  // Info: (20250310 - Shirley) 獲取付款計劃數據
+  const paymentPlans = mockPaymentPlans;
 
-          // Info: (20250226 - Shirley) 驗證輸出數據
-          const { isOutputDataValid, outputData } = validateOutputData(apiName, handlerOutput);
+  // Info: (20250310 - Shirley) 驗證輸出數據，如果無效會拋出 INVALID_OUTPUT_DATA 錯誤
+  const validatedPayload = checkOutputDataValid(apiName, paymentPlans);
 
-          if (!isOutputDataValid) {
-            statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-          } else {
-            payload = outputData;
-          }
-        }
-      } else {
-        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
-      }
-
-      // Info: (20250226 - Shirley) 記錄用戶行為
-      await logUserAction(session, apiName, req, statusMessage);
-    }
-  } catch (error) {
-    // Info: (20250226 - Shirley) 如果處理過程中出現錯誤
-    if (error instanceof Error) {
-      statusMessage = error.message;
-    } else {
-      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-    }
-    loggerError({
-      userId: DefaultValue.USER_ID.GUEST,
-      errorType: `Handler Request Error for ${apiName} in payment_plan/index.ts`,
-      errorMessage: error as Error,
-    });
-  }
-
-  return { statusMessage, payload };
+  return {
+    statusMessage: STATUS_MESSAGE.SUCCESS_GET,
+    payload: validatedPayload,
+    session, // Info: (20250310 - Shirley) 返回 session 以便在外層記錄用戶行為
+  };
 };
 
 export default async function handler(
@@ -214,26 +195,63 @@ export default async function handler(
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaymentPlanSchema[] | null = null;
+  let session: ISessionData | null = null;
+
+  const apiName = APIName.LIST_PAYMENT_PLAN;
 
   try {
+    // Info: (20250310 - Shirley) 檢查請求方法
     if (req.method !== 'GET') {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     } else {
-      // Info: (20250226 - Shirley) 調用 handleGetRequest 處理 GET 請求
-      const { statusMessage: handlerStatusMessage, payload: handlerOutput } =
-        await handleGetRequest(req);
-      statusMessage = handlerStatusMessage;
-      payload = handlerOutput;
+      // Info: (20250310 - Shirley) 調用 handleGetRequest 處理 GET 請求
+      const result = await handleGetRequest(req);
+      statusMessage = result.statusMessage;
+      payload = result.payload;
+      session = result.session;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    statusMessage = error.message;
+  } catch (error) {
+    // Info: (20250310 - Shirley) 處理錯誤
+    if (error instanceof Error) {
+      statusMessage = error.message;
+    } else {
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    }
+
+    // Info: (20250310 - Shirley) 記錄錯誤
     loggerError({
       userId: DefaultValue.USER_ID.GUEST,
-      errorType: `Error in payment_plan/index.ts`,
-      errorMessage: error,
+      errorType: `Error in ${apiName}`,
+      errorMessage: error as Error,
     });
+
+    // Info: (20250310 - Shirley) 嘗試獲取 session 以記錄用戶行為
+    if (!session) {
+      try {
+        session = await getSession(req);
+      } catch (sessionError) {
+        loggerError({
+          userId: DefaultValue.USER_ID.GUEST,
+          errorType: `Failed to get session in ${apiName}`,
+          errorMessage: sessionError as Error,
+        });
+      }
+    }
   } finally {
+    // Info: (20250310 - Shirley) 記錄用戶行為（無論成功或失敗）
+    if (session) {
+      try {
+        await logUserAction(session, apiName, req, statusMessage);
+      } catch (logError) {
+        loggerError({
+          userId: session.userId || DefaultValue.USER_ID.GUEST,
+          errorType: `Failed to log user action in ${apiName}`,
+          errorMessage: logError as Error,
+        });
+      }
+    }
+
+    // Info: (20250310 - Shirley) 格式化 API 響應並返回
     const { httpCode, result } = formatApiResponse<IPaymentPlanSchema[] | null>(
       statusMessage,
       payload
