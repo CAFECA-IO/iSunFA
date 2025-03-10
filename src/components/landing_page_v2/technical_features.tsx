@@ -167,11 +167,11 @@ const TechnicalFeatures: React.FC = () => {
       {/* Info: (20241205 - Julian) Content */}
       <div ref={technicalRef} className="relative mt-120px lg:mt-75px">
         {/* Info: (20241223 - Julian) Background */}
-        <div className="absolute hidden h-full w-full items-center justify-center lg:flex">
+        <div className="absolute z-0 hidden h-full w-full items-center justify-center lg:flex">
           <div className="h-3/5 w-3/5 border"></div>
         </div>
         {/* Info: (20241223 - Julian) Cards */}
-        <div className="grid w-full grid-cols-1 gap-x-120px gap-y-120px lg:mt-75px lg:grid-cols-2 lg:justify-between">
+        <div className="z-10 grid w-full grid-cols-1 gap-x-120px gap-y-120px lg:mt-75px lg:grid-cols-2 lg:justify-between">
           {technicalData.map((data) => (
             <TechnicalCard
               key={data.imageAlt}
