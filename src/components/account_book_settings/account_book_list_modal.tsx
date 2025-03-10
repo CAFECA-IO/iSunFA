@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Pagination from '@/components/pagination/pagination';
-import { IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
@@ -23,10 +23,12 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUser[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedAccountBook, setSelectedCompany] = useState<IAccountBookForUser | null>(null);
+  const [selectedAccountBook, setSelectedCompany] = useState<IAccountBookForUserWithTeam | null>(
+    null
+  );
   const { userAuth } = useUserCtx();
 
   const displayedType = SortingButton({
@@ -35,13 +37,15 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
     setSortOrder: setTypeSort,
   });
 
-  const handleApiResponse = (data: IPaginatedData<IAccountBookForUser[]>) => {
+  const handleApiResponse = (
+    data: IPaginatedData<IPaginatedData<IAccountBookForUserWithTeam[]>>
+  ) => {
     setTotalCount(data.totalCount);
     setTotalPages(data.totalPages);
-    setAccountBookList(data.data);
+    setAccountBookList(data.data.data);
   };
 
-  const handleEditModal = (company: IAccountBookForUser) => {
+  const handleEditModal = (company: IAccountBookForUserWithTeam) => {
     setSelectedCompany(company);
     setIsEditModalOpen(true);
   };
@@ -64,9 +68,9 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
           </button>
         </section>
         <section className="flex flex-col gap-lv-5">
-          <FilterSection<IAccountBookForUser[]>
+          <FilterSection<IPaginatedData<IAccountBookForUserWithTeam[]>>
             className="mt-2"
-            apiName={APIName.LIST_USER_COMPANY}
+            apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
             params={{ userId: userAuth?.id }}
             onApiResponse={handleApiResponse}
             page={page}

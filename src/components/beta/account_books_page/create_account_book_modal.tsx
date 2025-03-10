@@ -14,13 +14,13 @@ import { IPaginatedData } from '@/interfaces/pagination';
 interface CreateCompanyModalProps {
   closeCreateAccountBookModal: () => void;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
-  getCompanyList?: () => void;
+  getAccountBookList?: () => void;
 }
 
 const CreateAccountBookModal = ({
   closeCreateAccountBookModal,
   setRefreshKey,
-  getCompanyList,
+  getAccountBookList,
 }: CreateCompanyModalProps) => {
   const { t } = useTranslation(['dashboard']);
   const { createAccountBook, userAuth } = useUserCtx();
@@ -84,17 +84,17 @@ const CreateAccountBookModal = ({
       });
 
       if (success) {
-        // Info: (20241114 - Liz) 新增公司成功後清空表單並關閉 modal
+        // Info: (20241114 - Liz) 新增帳本成功後清空表單並關閉 modal
         setCompanyName('');
         setTaxId('');
         setTag(WORK_TAG.ALL);
         closeCreateAccountBookModal();
 
-        if (getCompanyList) getCompanyList(); // Info: (20241209 - Liz) 重新取得公司列表
+        if (getAccountBookList) getAccountBookList(); // Info: (20241209 - Liz) 重新取得帳本清單
 
         if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the company list after creating a new company
       } else {
-        // Info: (20241114 - Liz) 新增公司失敗時顯示錯誤訊息
+        // Info: (20241114 - Liz) 新增帳本失敗時顯示錯誤訊息
         toastHandler({
           id: 'create-company-failed',
           type: ToastType.ERROR,
