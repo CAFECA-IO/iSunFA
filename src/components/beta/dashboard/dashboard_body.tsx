@@ -1,6 +1,6 @@
-// import Announcement from '@/components/beta/dashboard/announcement';
+// import Announcement from '@/components/beta/dashboard/announcement'; // ToDo: (20250310 - Liz) 暫時隱藏跑馬燈，等有功能後再顯示
 import MyAccountBookList from '@/components/beta/dashboard/my_account_books';
-import PendingTasks from '@/components/beta/dashboard/pending_task';
+import PendingTask from '@/components/beta/dashboard/pending_task';
 import TodayTodoList from '@/components/beta/dashboard/today_todo_list';
 import LatestNews from '@/components/beta/dashboard/latest_news';
 import { useEffect, useState, useCallback } from 'react';
@@ -13,7 +13,7 @@ const DashboardBody = () => {
   const { userAuth } = useUserCtx();
   const [todayTodoList, setTodayTodoList] = useState<ITodoCompany[]>([]);
 
-  // Info: (20241122 - Liz) 打 API 取得待辦事項列表
+  // Info: (20241122 - Liz) 打 API 取得待辦事項清單
   const { trigger: listUserTodoAPI } = APIHandler<ITodoCompany[]>(APIName.TODO_LIST);
 
   const getTodoList = useCallback(async () => {
@@ -48,12 +48,12 @@ const DashboardBody = () => {
       } else {
         // Deprecated: (20241121 - Liz)
         // eslint-disable-next-line no-console
-        console.log('取得待辦事項列表失敗');
+        console.log('取得待辦事項清單失敗');
       }
     } catch (error) {
       // Deprecated: (20241121 - Liz)
       // eslint-disable-next-line no-console
-      console.log('取得待辦事項列表失敗');
+      console.log('取得待辦事項清單失敗');
     }
   }, [userAuth]);
 
@@ -76,7 +76,7 @@ const DashboardBody = () => {
         <section className="flex flex-wrap items-start gap-24px">
           <LatestNews />
 
-          <PendingTasks getTodoList={getTodoList} />
+          <PendingTask getTodoList={getTodoList} />
         </section>
       </div>
     </div>
