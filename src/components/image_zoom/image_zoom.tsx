@@ -25,6 +25,7 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
   // Info: (20250310 - Julian) 圖片的 ref
   const imageRef = useRef<HTMLImageElement>(null);
 
+  // Info: (20250310 - Julian) ==================== 縮放 ====================
   // Info: (20250307 - Julian) 控制縮放倍率
   const handleZoomIn = () => {
     setMagnification((prev) => {
@@ -47,8 +48,14 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
 
   // Info: (20250307 - Julian) 滑鼠位於圖片上時才執行縮放
   const handleMouseIn = () => setIsZoomIn(true);
-  const handleMouseOut = () => setIsZoomIn(false);
+  // Info: (20250310 - Julian) 滑鼠離開圖片時，停止縮放和拖曳，並重置滾輪 deltaY
+  const handleMouseOut = () => {
+    setIsZoomIn(false);
+    setDragging(false);
+    setMouseDeltaY(0);
+  };
 
+  // Info: (20250310 - Julian) ==================== 拖曳 ====================
   // Info: (20250307 - Julian) 按下滑鼠：找到游標的起始位置，開始拖曳
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault(); // Info: (20250307 - Julian) 阻止拉動圖片的預設行為
@@ -56,9 +63,9 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
     setStartPos({ x: event.clientX - position.x, y: event.clientY - position.y });
   };
 
-  // Info: (20250307 - Julian) 拖曳滑鼠：計算滑鼠的移動距離，更新圖片的位置
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!dragging || !imageContainerRef.current || !imageRef.current) return;
+  // Info: (20250310 - Julian) 計算拖曳邊界，避免圖片超出容器
+  const getBoundedPosition = (x: number, y: number) => {
+    if (!imageContainerRef.current || !imageRef.current) return { x, y };
 
     const container = imageContainerRef.current.getBoundingClientRect();
     const image = imageRef.current.getBoundingClientRect();
@@ -67,21 +74,28 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
     const maxX = Math.max(0, (image.width - container.width) / 2);
     const maxY = Math.max(0, (image.height - container.height) / 2);
 
+    return {
+      x: Math.min(maxX, Math.max(-maxX, x)), // Info: (20250310 - Julian) 限制拖曳範圍: -maxX <= x <= maxX
+      y: Math.min(maxY, Math.max(-maxY, y)), // Info: (20250310 - Julian) 限制拖曳範圍: -maxY <= y <= maxY
+    };
+  };
+
+  // Info: (20250307 - Julian) 拖曳滑鼠：計算滑鼠的移動距離，更新圖片的位置
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!dragging) return;
+
     // Info: (20250310 - Julian) 新的 X 軸位置：滑鼠的 X 軸位置 - 起始 X 軸位置
-    let newX = event.clientX - startPos.x;
+    const newX = event.clientX - startPos.x;
     // Info: (20250310 - Julian) 新的 Y 軸位置：滑鼠的 Y 軸位置 - 起始 Y 軸位置
-    let newY = event.clientY - startPos.y;
+    const newY = event.clientY - startPos.y;
 
-    // Info: (20250310 - Julian) 限制拖曳範圍
-    newX = Math.min(maxX, Math.max(-maxX, newX));
-    newY = Math.min(maxY, Math.max(-maxY, newY));
-
-    setPosition({ x: newX, y: newY });
+    setPosition(getBoundedPosition(newX, newY));
   };
 
   // Info: (20250307 - Julian) 放開滑鼠：停止拖曳
   const handleMouseUp = () => setDragging(false);
 
+  // Info: (20250310 - Julian) ==================== 監聽事件 ====================
   useEffect(() => {
     // Info: (20250307 - Julian) 紀錄滑鼠滾輪的 deltaY
     const handleWheel = (event: WheelEvent) => {
@@ -98,12 +112,18 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
   useEffect(() => {
     if (isZoomIn) {
       if (mouseDeltaY > 0) {
-        handleZoomOut();
+        handleZoomOut(); // Info: (20250307 - Julian) 滑鼠往下滾動，縮小圖片
       } else if (mouseDeltaY < 0) {
-        handleZoomIn();
+        handleZoomIn(); // Info: (20250307 - Julian) 滑鼠往上滾動，放大圖片
       }
     }
   }, [mouseDeltaY]);
+
+  useEffect(() => {
+    // Info: (20250310 - Julian) 縮放時，重新計算圖片的位置，避免超出範圍
+    const newPosition = getBoundedPosition(position.x, position.y);
+    setPosition(newPosition);
+  }, [magnification]);
 
   return (
     <div className="flex flex-col">
@@ -153,6 +173,7 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
             position: 'absolute',
             left: `${position.x}px`,
             top: `${position.y}px`,
+            backgroundImage: `url(https://as2.ftcdn.net/v2/jpg/00/85/86/55/1000_F_85865557_7gi7BWGnxwhr4JftVW76YqSBHRDmEnUB.jpg)`,
           }}
         />
       </div>
