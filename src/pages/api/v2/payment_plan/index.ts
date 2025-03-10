@@ -2,11 +2,14 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
-import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IPaymentPlan } from '@/interfaces/payment_plan';
 import { TPlanType } from '@/interfaces/subscription';
+import { getSession } from '@/lib/utils/session';
+import { checkSessionUser, checkUserAuthorization, logUserAction } from '@/lib/utils/middleware';
+import { validateOutputData, validateRequestData } from '@/lib/utils/validator';
+import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 const mockPaymentPlans: IPaymentPlan[] = [
   {
@@ -157,21 +160,66 @@ const mockPaymentPlans: IPaymentPlan[] = [
   },
 ];
 
-interface IResponse {
-  statusMessage: string;
-  payload: IPaymentPlan[] | null;
-}
+const handleGetRequest = async (req: NextApiRequest) => {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IPaymentPlan[] | null = null;
+  const apiName = APIName.LIST_PAYMENT_PLAN;
 
-const handleGetRequest: IHandleRequest<APIName.LIST_PAYMENT_PLAN, IPaymentPlan[]> = async () => {
-  const statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-  const payload = mockPaymentPlans;
+  try {
+    // Info: (20250226 - Shirley) 獲取用戶 session
+    const session = await getSession(req);
+
+    // Info: (20250226 - Shirley) 檢查用戶是否登入
+    const isLogin = await checkSessionUser(session, apiName, req);
+
+    if (!isLogin) {
+      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+    } else {
+      // Info: (20250226 - Shirley) 驗證請求數據
+      const { query, body } = validateRequestData(apiName, req);
+
+      if (query !== null || body !== null) {
+        // Info: (20250226 - Shirley) 檢查用戶授權
+        const isAuth = await checkUserAuthorization(apiName, req, session);
+
+        if (!isAuth) {
+          statusMessage = STATUS_MESSAGE.FORBIDDEN;
+        } else {
+          // Info: (20250226 - Shirley) 獲取付款計劃數據
+          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+          const handlerOutput = mockPaymentPlans;
+
+          // Info: (20250226 - Shirley) 驗證輸出數據
+          const { isOutputDataValid, outputData } = validateOutputData(apiName, handlerOutput);
+
+          if (!isOutputDataValid) {
+            statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+          } else {
+            payload = outputData;
+          }
+        }
+      } else {
+        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+      }
+
+      // Info: (20250226 - Shirley) 記錄用戶行為
+      await logUserAction(session, apiName, req, statusMessage);
+    }
+  } catch (error) {
+    // Info: (20250226 - Shirley) 如果處理過程中出現錯誤
+    if (error instanceof Error) {
+      statusMessage = error.message;
+    } else {
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    }
+    loggerError({
+      userId: DefaultValue.USER_ID.GUEST,
+      errorType: `Handler Request Error for ${apiName} in payment_plan/index.ts`,
+      errorMessage: error as Error,
+    });
+  }
+
   return { statusMessage, payload };
-};
-
-const methodHandlers: {
-  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
-} = {
-  GET: (req) => withRequestValidation(APIName.LIST_PAYMENT_PLAN, req, handleGetRequest),
 };
 
 export default async function handler(
@@ -182,15 +230,23 @@ export default async function handler(
   let payload: IPaymentPlan[] | null = null;
 
   try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
+    if (req.method !== 'GET') {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    } else {
+      // Info: (20250226 - Shirley) 調用 handleGetRequest 處理 GET 請求
+      const { statusMessage: handlerStatusMessage, payload: handlerOutput } =
+        await handleGetRequest(req);
+      statusMessage = handlerStatusMessage;
+      payload = handlerOutput;
     }
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
+    loggerError({
+      userId: DefaultValue.USER_ID.GUEST,
+      errorType: `Error in payment_plan/index.ts`,
+      errorMessage: error,
+    });
   } finally {
     const { httpCode, result } = formatApiResponse<IPaymentPlan[] | null>(statusMessage, payload);
     res.status(httpCode).json(result);
