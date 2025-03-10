@@ -173,7 +173,6 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
             position: 'absolute',
             left: `${position.x}px`,
             top: `${position.y}px`,
-            backgroundImage: `url(https://as2.ftcdn.net/v2/jpg/00/85/86/55/1000_F_85865557_7gi7BWGnxwhr4JftVW76YqSBHRDmEnUB.jpg)`,
           }}
         />
       </div>
