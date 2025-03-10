@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
 import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { IUser, IUserProfile } from '@/interfaces/user';
+import { IUser } from '@/interfaces/user';
 import { UserAgreementPrismaSchema } from '@/lib/utils/zod_schema/user_agreement';
 
 const userGetQuerySchema = z.object({
@@ -32,8 +32,21 @@ export const userPrismaSchema = z.object({
   deletedAt: z.number().int().nullable(),
 });
 
+export const userProfileSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  email: z.string(),
+  imageId: z.string(),
+  agreementList: z.array(z.string()),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+  deletedAt: z.number().int().nullable(),
+  device: z.string(),
+  ip: z.string(),
+});
+
 export const userOutputSchema = userPrismaSchema.transform((data) => {
-  const userImpl: IUser = {
+  const userData: IUser = {
     id: data.id,
     name: data.name,
     email: data.email,
@@ -44,13 +57,7 @@ export const userOutputSchema = userPrismaSchema.transform((data) => {
     deletedAt: data.deletedAt ?? 0,
   };
 
-  const mockUserData: IUserProfile = {
-    ...userImpl,
-    device:
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-    ip: '211.22.118.145, 162.158.167.112',
-  };
-  return mockUserData;
+  return userData;
 });
 
 /**
@@ -85,7 +92,7 @@ export const userGetSchema = {
     querySchema: userGetQuerySchema,
     bodySchema: nullSchema,
   },
-  outputSchema: userOutputSchema,
+  outputSchema: userProfileSchema,
   frontend: nullSchema,
 };
 
@@ -115,3 +122,5 @@ export const userDeleteSchema = {
   outputSchema: userOutputSchema,
   frontend: nullSchema,
 };
+
+export type IUserProfile = z.infer<typeof userProfileSchema>;
