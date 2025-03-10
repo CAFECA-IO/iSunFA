@@ -9,6 +9,7 @@ import {
   checkRequestData,
   checkSessionUser,
   checkUserAuthorization,
+  logUserAction,
   withRequestValidation,
 } from '@/lib/utils/middleware';
 import { getSession } from '@/lib/utils/session';
@@ -47,6 +48,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   const result = formatApiResponse(statusMessage, payload);
+  await logUserAction(session, APIName.GET_TEAM_BY_ID, req, statusMessage);
   return result;
 };
 

@@ -3,12 +3,15 @@ import { Button } from '@/components/button/button';
 import { RxCross1 } from 'react-icons/rx';
 import { BiSave } from 'react-icons/bi';
 import { useTranslation } from 'next-i18next';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 interface AboutEditModalProps {
   isOpen: boolean;
   initialDescription: string;
   onClose: () => void;
   onSave: (newDescription: string) => void;
+  teamId: number; // Info:(20250301 - Anna) teamId 作為參數
 }
 
 const AboutEditModal: React.FC<AboutEditModalProps> = ({
@@ -16,6 +19,7 @@ const AboutEditModal: React.FC<AboutEditModalProps> = ({
   initialDescription,
   onClose,
   onSave,
+  teamId,
 }) => {
   const { t } = useTranslation(['team']);
   const [teamDescription, setTeamDescription] = useState(initialDescription);
@@ -23,6 +27,39 @@ const AboutEditModal: React.FC<AboutEditModalProps> = ({
   useEffect(() => {
     setHasChanges(teamDescription.trim() !== initialDescription.trim());
   }, [teamDescription, initialDescription]);
+
+  // Info:(20250301 - Anna) 設置 APIHandler
+  const {
+    trigger: updateTeamInfoTrigger,
+    success,
+    error: updateError, // Info:(20250301 - Anna) 更名 `error` 為 `updateError`
+  } = APIHandler(APIName.UPDATE_TEAM_BY_ID, {
+    params: { teamId },
+    body: { about: teamDescription }, // Info:(20250301 - Anna) 更新描述
+  });
+
+  // Info:(20250301 - Anna) 監聽 API 成功或失敗
+  useEffect(() => {
+    if (success) {
+      onSave(teamDescription);
+      onClose();
+    } else if (updateError) {
+      // Deprecate: (20250301 - Anna) debug
+      // eslint-disable-next-line no-console
+      console.error('Failed to update team description:', updateError);
+    }
+  }, [success, updateError, onSave, onClose, teamDescription]);
+
+  // Info:(20250301 - Anna) 提交變更
+  const updateTeamDescriptionHandler = async () => {
+    if (!hasChanges) return; // Info:(20250301 - Anna) 沒有變更就不發送請求
+    const response = await updateTeamInfoTrigger(); // Info:(20250301 - Anna) 觸發 API
+    if (response?.success) {
+      // Info:(20250301 - Anna) 確保 API 成功後才更新 UI
+      onSave(teamDescription); // Info:(20250301 - Anna) 通知父組件
+      onClose(); // Info:(20250301 - Anna) 關閉 Modal
+    }
+  };
 
   // Info:(20250225 - Anna) 若 isOpen = false，不渲染 Modal
   if (!isOpen) return null;
@@ -79,7 +116,7 @@ const AboutEditModal: React.FC<AboutEditModalProps> = ({
             variant="tertiary"
             className="flex items-center gap-1 px-4 py-2 disabled:bg-gray-300"
             disabled={!hasChanges}
-            onClick={() => onSave(teamDescription)}
+            onClick={updateTeamDescriptionHandler} // Info:(20250301 - Anna) 讓 API 先執行
           >
             {t('common:COMMON.SAVE')}
             <BiSave size={16} />

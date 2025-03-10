@@ -57,7 +57,6 @@ const TeamInformationPageBody = ({ team }: TeamPageBodyProps) => {
       <div className="flex items-center">
         <TeamHeader team={team} setTeamToUploadPicture={setTeamToUploadPicture} />
       </div>
-
       <div className="flex items-center gap-16px">
         <div className="flex items-center gap-8px">
           <Image src="/icons/open_book.svg" alt="open_book" width={16} height={15.235}></Image>
@@ -65,9 +64,10 @@ const TeamInformationPageBody = ({ team }: TeamPageBodyProps) => {
         </div>
         <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
       </div>
-
       {isNoTeamInfo && <NoTeamInfo />}
-      {!isNoTeamInfo && <TeamInformation teamInfo={teamInfo} />}
+
+      {/* Info:(20250307 - Anna) 讓子組件能直接更新 teamInfo，團隊修改後 UI 立即更新 */}
+      {!isNoTeamInfo && <TeamInformation teamInfo={teamInfo} setTeamInfo={setTeamInfo} />}
 
       {/* Info: (20250226 - Anna) Modals */}
       {teamToUploadPicture && (

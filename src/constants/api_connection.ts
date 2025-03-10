@@ -1062,7 +1062,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.ADD_MEMBER_TO_TEAM]: createConfig({
     name: APIName.ADD_MEMBER_TO_TEAM,
-    method: HttpMethod.GET,
+    method: HttpMethod.PUT,
     path: APIPath.ADD_MEMBER_TO_TEAM,
   }),
   [APIName.LIST_SUBSCRIPTION]: createConfig({

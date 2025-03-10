@@ -6,9 +6,9 @@ import { APIName } from '@/constants/api_connection';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
-import { ILeaveTeam, LeaveStatus, TeamRole } from '@/interfaces/team';
-import { FAKE_TEAM_MEMBER_LIST } from '@/constants/team';
+import { ILeaveTeam } from '@/interfaces/team';
 import { validateOutputData } from '@/lib/utils/validator';
+import { memberLeaveTeam } from '@/lib/utils/repo/team.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -34,27 +34,8 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   const { teamId } = query;
 
-  const teamMember =
-    FAKE_TEAM_MEMBER_LIST[Math.floor(Math.random() * FAKE_TEAM_MEMBER_LIST.length)];
+  payload = await memberLeaveTeam(userId, teamId);
 
-  if (teamMember.role === TeamRole.OWNER || teamMember.role === TeamRole.ADMIN) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
-    payload = {
-      teamId,
-      userId,
-      role: teamMember.role,
-      status: LeaveStatus.FAILED,
-    };
-  } else {
-    statusMessage = STATUS_MESSAGE.SUCCESS;
-    payload = {
-      teamId,
-      userId,
-      role: teamMember.role,
-      status: LeaveStatus.LEFT,
-      leavedAt: Math.floor(Date.now() / 1000),
-    };
-  }
   // Info: (20250226 - Tzuhan) 驗證輸出資料
   const { isOutputDataValid, outputData } = validateOutputData(APIName.LEAVE_TEAM, payload);
 
@@ -62,6 +43,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   } else {
     payload = outputData;
+    statusMessage = STATUS_MESSAGE.SUCCESS;
   }
 
   const result = formatApiResponse(statusMessage, payload);
@@ -79,6 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (error) {
+    loggerBack.error(`Error occurred in leave team: ${error}`);
     const err = error as Error;
     ({ httpCode, result } = formatApiResponse<null>(
       STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],

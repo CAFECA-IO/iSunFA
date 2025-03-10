@@ -1,7 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { checkRequestData, checkSessionUser, checkUserAuthorization } from '@/lib/utils/middleware';
+import {
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { getSession } from '@/lib/utils/session';
@@ -48,31 +53,34 @@ const handleGetRequest = async (req: NextApiRequest) => {
     payload = outputData;
   }
 
-  const result = formatApiResponse(statusMessage, payload);
-  return result;
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const method = req.method || 'GET';
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
+  let response;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  const session = await getSession(req);
 
   try {
     switch (method) {
       case 'GET':
-        ({ httpCode, result } = await handleGetRequest(req));
+        ({ response, statusMessage } = await handleGetRequest(req));
+        ({ httpCode, result } = response);
         break;
       default:
-        ({ httpCode, result } = formatApiResponse(STATUS_MESSAGE.METHOD_NOT_ALLOWED, null));
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
         break;
     }
   } catch (error) {
     const err = error as Error;
-    ({ httpCode, result } = formatApiResponse<null>(
-      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],
-      null
-    ));
+    statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE];
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
-
+  await logUserAction(session, APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID, req, statusMessage);
   res.status(httpCode).json(result);
 }
