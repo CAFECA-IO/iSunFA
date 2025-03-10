@@ -99,7 +99,7 @@ const TeamPage = () => {
         pageTitle={team.name.value}
         goBackUrl={ISUNFA_ROUTE.MY_ACCOUNT_PAGE}
       >
-        <TeamPageBody team={team} />
+        <TeamPageBody team={team} getTeamData={getTeamData} />
       </Layout>
     </>
   );

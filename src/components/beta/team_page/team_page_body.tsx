@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ITeam } from '@/interfaces/team';
 import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_picture_modal';
 import TeamHeader from '@/components/beta/team_page/team_header';
 import TeamPageButtons from '@/components/beta/team_page/team_page_buttons';
 import { useTranslation } from 'next-i18next';
-import { IAccountBookForUser, IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { useUserCtx } from '@/contexts/user_context';
 import NoData from '@/components/beta/account_books_page/no_data';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
@@ -14,19 +14,21 @@ import ChangeTagModal from '@/components/beta/account_books_page/change_tag_moda
 import UploadCompanyPictureModal from '@/components/beta/account_books_page/upload_company_picture_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
-import { FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM } from '@/constants/account_book';
+// import { FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM } from '@/constants/account_book'; // Deprecated: (20250310 - Liz) 測試用假資料
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
 import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
 import AccountBookPrivacyModal from '@/components/beta/account_books_page/account_book_privacy_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { SkeletonList } from '@/components/skeleton/skeleton';
 
 interface TeamPageBodyProps {
   team: ITeam;
+  getTeamData: () => Promise<void>;
 }
 
-const TeamPageBody = ({ team }: TeamPageBodyProps) => {
+const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
   const { t } = useTranslation(['team']);
   const { deleteAccountBook } = useUserCtx();
   const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[] | null>(
@@ -51,6 +53,7 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
   const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
   const [isInviteMembersModalOpen, setIsInviteMembersModalOpen] = useState<boolean>(false);
   const isNoData = !accountBookList || accountBookList.length === 0;
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const closeDeleteModal = () => {
     setAccountBookToDelete(undefined);
@@ -64,33 +67,33 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
     setIsInviteMembersModalOpen(true);
   };
 
-  // ToDo: (20250219 - Liz) 取得團隊帳本清單 API (list account book by team id)
-  // ToDo: (20250303 - Liz) 需要改資料格式為 <IPaginatedData<IAccountBookForUserWithTeam[]>>
-  // ToDo: (20250304 - Liz) 更新後請搜尋「重新取得團隊資料」去更新相關程式碼
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // Info: (20250310 - Liz) 取得團隊帳本清單 API (list account book by team id)
   const { trigger: getAccountBookListByTeamIdAPI } = APIHandler<
-    IPaginatedData<IAccountBookForUser[]>
+    IPaginatedData<IAccountBookForUserWithTeam[]>
   >(APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID);
 
-  // ToDo: (20250219 - Liz) 打 API 取得團隊帳本清單
-  // const getAccountBookListByTeamId = useCallback(async () => {
-  //   if (!team.id) return;
-  //   setIsLoading(true);
-  //   try {
-  //     const { data: accountBookListData, success } = await getAccountBookListByTeamIdAPI({
-  //       params: { teamId: team.id },
-  //     });
-  //     if (success && accountBookListData) {
-  //       setAccountBookList(accountBookListData);
-  //     }
-  //   } catch (error) {
-  //     // Deprecated: (20250219 - Liz)
-  //     // eslint-disable-next-line no-console
-  //     console.log('取得團隊帳本清單失敗');
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // }, [team.id]);
+  // Info: (20250310 - Liz) 打 API 取得團隊帳本清單
+  const getAccountBookListByTeamId = useCallback(async () => {
+    if (!team.id) return;
+    setIsLoading(true);
+    try {
+      const { data: accountBookListData, success } = await getAccountBookListByTeamIdAPI({
+        params: { teamId: team.id },
+      });
+      if (success && accountBookListData) {
+        setAccountBookList(accountBookListData.data);
+        // Deprecated: (20250310 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('取得團隊帳本清單成功:', accountBookListData.data);
+      }
+    } catch (error) {
+      // Deprecated: (20250219 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('取得團隊帳本清單失敗');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [team.id]);
 
   // Info: (20250219 - Liz) 打 API 刪除帳本(原為公司)
   const handleDeleteAccountBook = async () => {
@@ -123,10 +126,12 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
     backBtnStr: t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL'),
   };
 
-  // Deprecated: (20250219 - Liz) 目前後端尚未提供 API，先用假資料測試
   useEffect(() => {
-    setAccountBookList(FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM);
-  }, []);
+    getAccountBookListByTeamId();
+  }, [getAccountBookListByTeamId]);
+
+  // Info: (20250310 - Liz) 如果打 API 還在載入中，顯示載入中頁面
+  if (isLoading) return <SkeletonList count={6} />;
 
   return (
     <main className="flex flex-col gap-40px">
@@ -160,6 +165,7 @@ const TeamPageBody = ({ team }: TeamPageBodyProps) => {
         <UploadTeamPictureModal
           teamToUploadPicture={teamToUploadPicture}
           setTeamToUploadPicture={setTeamToUploadPicture}
+          getTeamData={getTeamData}
         />
       )}
 
