@@ -22,8 +22,8 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
 
   // Info: (20250307 - Julian) 圖片容器的 ref
   const imageContainerRef = useRef<HTMLDivElement>(null);
-  // Info: (20250307 - Julian) 圖片邊界的 ref
-  const imageWrapperRef = useRef<HTMLDivElement>(null);
+  // Info: (20250310 - Julian) 圖片的 ref
+  const imageRef = useRef<HTMLImageElement>(null);
 
   // Info: (20250307 - Julian) 控制縮放倍率
   const handleZoomIn = () => {
@@ -58,30 +58,23 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
 
   // Info: (20250307 - Julian) 拖曳滑鼠：計算滑鼠的移動距離，更新圖片的位置
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!dragging || !imageWrapperRef.current || !imageContainerRef.current) return;
+    if (!dragging || !imageContainerRef.current || !imageRef.current) return;
 
-    const containerRect = imageContainerRef.current.getBoundingClientRect();
-    const wrapperRect = imageWrapperRef.current.getBoundingClientRect();
+    const container = imageContainerRef.current.getBoundingClientRect();
+    const image = imageRef.current.getBoundingClientRect();
 
-    // Info: (20250307 - Julian) 新的 X 軸位置：滑鼠的 X 軸位置 - 起始 X 軸位置
+    // Info: (20250310 - Julian) 圖片的最大移動範圍: (圖片寬度 - 容器寬度) / 2
+    const maxX = Math.max(0, (image.width - container.width) / 2);
+    const maxY = Math.max(0, (image.height - container.height) / 2);
+
+    // Info: (20250310 - Julian) 新的 X 軸位置：滑鼠的 X 軸位置 - 起始 X 軸位置
     let newX = event.clientX - startPos.x;
-    // Info: (20250307 - Julian) 新的 Y 軸位置：滑鼠的 Y 軸位置 - 起始 Y 軸位置
+    // Info: (20250310 - Julian) 新的 Y 軸位置：滑鼠的 Y 軸位置 - 起始 Y 軸位置
     let newY = event.clientY - startPos.y;
 
-    // Info: (20250307 - Julian) 限制拖曳範圍（使用 imageWrapper 作為邊界）
-    if (wrapperRect.width > containerRect.width) {
-      const minX = containerRect.width - wrapperRect.width;
-      newX = Math.min(0, Math.max(minX, newX));
-    } else {
-      newX = 0; // Info: (20250307 - Julian) 圖片比容器小時，禁止水平拖曳
-    }
-
-    if (wrapperRect.height > containerRect.height) {
-      const minY = containerRect.height - wrapperRect.height;
-      newY = Math.min(0, Math.max(minY, newY));
-    } else {
-      newY = 0; // Info: (20250307 - Julian) 圖片比容器小時，禁止垂直拖曳
-    }
+    // Info: (20250310 - Julian) 限制拖曳範圍
+    newX = Math.min(maxX, Math.max(-maxX, newX));
+    newY = Math.min(maxY, Math.max(-maxY, newY));
 
     setPosition({ x: newX, y: newY });
   };
@@ -147,20 +140,21 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
         className={`relative ${className} overflow-hidden ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ userSelect: 'none' }} // Info: (20250307 - Julian) 防止選取內容
       >
-        {/* Info: (20250307 - Julian) 拖曳邊界 */}
-        <div
-          ref={imageWrapperRef}
+        {/* Info: (20250307 - Julian) 圖片 */}
+        <Image
+          ref={imageRef}
+          src={imageUrl}
+          alt="certificate"
+          fill
+          objectFit="contain"
           style={{
-            width: `${magnification}%`,
-            height: `${magnification}%`,
+            transform: `scale(${magnification / 100})`,
+            transformOrigin: 'center center',
             position: 'absolute',
             left: `${position.x}px`,
             top: `${position.y}px`,
           }}
-        >
-          {/* Info: (20250307 - Julian) 圖片 */}
-          <Image src={imageUrl} alt="certificate" fill objectFit="contain" />
-        </div>
+        />
       </div>
     </div>
   );
