@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ITeam, TeamRole } from '@/interfaces/team';
 import { useTranslation } from 'next-i18next';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 interface TeamPageButtonsProps {
   team: ITeam;
@@ -17,6 +19,10 @@ const TeamPageButtons = ({ team, openMemberListModal }: TeamPageButtonsProps) =>
   const isOwner = role === TeamRole.OWNER;
   const isEditor = role === TeamRole.EDITOR;
   const isViewer = role === TeamRole.VIEWER;
+  const { trigger: leaveTeam } = APIHandler(APIName.LEAVE_TEAM);
+  const leaveTeamHandler = async () => {
+    await leaveTeam({ params: { teamId: team.id } });
+  };
 
   return (
     <main className="flex gap-16px">
@@ -50,6 +56,7 @@ const TeamPageButtons = ({ team, openMemberListModal }: TeamPageButtonsProps) =>
         <button
           type="button"
           className="rounded-xs bg-button-surface-strong-secondary p-10px text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+          onClick={leaveTeamHandler}
         >
           <IoMdLogOut size={16} />
         </button>

@@ -4,14 +4,11 @@ import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import MyAccountBookItem from '@/components/beta/dashboard/my_account_book_item';
 
 interface MyAccountBookListProps {
-  companyAndRoleList: IAccountBookForUserWithTeam[];
+  accountBookList: IAccountBookForUserWithTeam[];
   setAccountBookToSelect: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
 }
 
-const MyAccountBookList = ({
-  companyAndRoleList,
-  setAccountBookToSelect,
-}: MyAccountBookListProps) => {
+const MyAccountBookList = ({ accountBookList, setAccountBookToSelect }: MyAccountBookListProps) => {
   const { selectedAccountBook } = useUserCtx();
   const containerRef = useRef<HTMLDivElement>(null);
   const [disabledCards, setDisabledCards] = useState<number[]>([]);
@@ -61,10 +58,10 @@ const MyAccountBookList = ({
 
   return (
     <div ref={containerRef} className="flex max-w-full gap-24px overflow-x-auto px-1px pb-8px">
-      {companyAndRoleList.map((companyAndRole, index) => (
+      {accountBookList.map((accountBook, index) => (
         <MyAccountBookItem
-          key={companyAndRole.company.id}
-          companyAndRole={companyAndRole}
+          key={accountBook.company.id}
+          accountBook={accountBook}
           setAccountBookToSelect={setAccountBookToSelect}
           isDisabled={disabledCards.includes(index)}
           dataIndex={index}

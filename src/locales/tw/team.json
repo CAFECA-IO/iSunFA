@@ -77,6 +77,7 @@
     "LIBRARIES": "圖書館",
     "TEAM_BANK_ACCOUNT": "團隊銀行帳戶",
     "NO_TEAM_INFORMATION_AVAILABLE": "沒有團隊資料",
-    "PLEASE_CREATE_NEW_TEAM": "請新增團隊"
+    "PLEASE_CREATE_NEW_TEAM": "請新增團隊",
+    "BANK_CODE": "銀行代碼"
   }
 }

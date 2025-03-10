@@ -77,6 +77,7 @@
     "LIBRARIES": "Libraries",
     "TEAM_BANK_ACCOUNT": "Team Bank Account",
     "NO_TEAM_INFORMATION_AVAILABLE": "No team information available.",
-    "PLEASE_CREATE_NEW_TEAM": "Please create a new team."
+    "PLEASE_CREATE_NEW_TEAM": "Please create a new team.",
+    "BANK_CODE": "Code"
   }
 }
