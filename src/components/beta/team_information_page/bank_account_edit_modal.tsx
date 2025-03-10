@@ -134,7 +134,6 @@ const TeamBankAccountEditModal: React.FC<TeamBankAccountEditModalProps> = ({
         <div className="flex w-full">
           {/* Info:(20250307 - Anna) 銀行代號下拉選單 */}
           <div className="relative">
-            {/* Info:(20250307 - Anna) BankCodeDropdown */}
             <BankCodeDropdown
               options={bankCodes}
               selectedValue={bankCode}
