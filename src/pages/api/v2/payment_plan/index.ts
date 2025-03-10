@@ -16,176 +16,88 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 import { IPaymentPlanSchema } from '@/lib/utils/zod_schema/payment_plan';
 import { ISessionData } from '@/interfaces/session';
-
-const mockPaymentPlans: IPaymentPlanSchema[] = [
-  {
-    id: TPlanType.BEGINNER,
-    planName: 'Beginner',
-    price: 0,
-    features: [
-      {
-        id: 'cloud_storage',
-        name: 'CLOUD_STORAGE',
-        value: '10GB',
-      },
-      {
-        id: 'ai_assistant',
-        name: 'AI_ASSISTANT',
-        value: 'LIMITED_CAPACITY',
-      },
-      {
-        id: 'report_generation',
-        name: 'REPORT_GENERATION',
-        value: 'UNLIMITED',
-      },
-      {
-        id: 'financial_statements',
-        name: 'FINANCIAL_STATEMENTS',
-        value: 'MANUAL_DOWNLOAD',
-      },
-      {
-        id: 'matchmaking_platform',
-        name: 'MATCHMAKING_PLATFORM',
-        value: 'TASK_ACCEPTANCE_ONLY',
-      },
-      {
-        id: 'team_members',
-        name: 'TEAM_MEMBERS',
-        value: 'LIMITED_TO_1_PERSON',
-      },
-      {
-        id: 'customer_support',
-        name: 'CUSTOMER_SUPPORT',
-        value: 'LIVE_CHAT_SUPPORT',
-      },
-    ],
-  },
-  {
-    id: TPlanType.PROFESSIONAL,
-    planName: 'Professional',
-    price: 899,
-    features: [
-      {
-        id: 'cloud_storage',
-        name: 'CLOUD_STORAGE',
-        value: '1TB',
-      },
-      {
-        id: 'ai_assistant',
-        name: 'AI_ASSISTANT',
-        value: 'UNLIMITED_CAPACITY',
-      },
-      {
-        id: 'matchmaking_platform',
-        name: 'MATCHMAKING_PLATFORM',
-        value: 'POST_TASK_REQUIREMENTS',
-      },
-      {
-        id: 'team_members',
-        name: 'TEAM_MEMBERS',
-        value: 'UP_TO_10_PEOPLE',
-      },
-      {
-        id: 'financial_statements',
-        name: 'FINANCIAL_STATEMENTS',
-        value: 'AUTO_UPDATED',
-      },
-      {
-        id: 'technical_support',
-        name: 'TECHNICAL_SUPPORT',
-        value: 'UP_TO_24_HOURS_IN_TOTAL_4_HOURS_PER_SESSION',
-      },
-      {
-        id: 'additional_perks',
-        name: 'ADDITIONAL_PERKS',
-        value: '10_ASSET_TAGGING_STICKERS',
-      },
-    ],
-  },
-  {
-    id: TPlanType.ENTERPRISE,
-    planName: 'Enterprise',
-    price: 8990,
-    extraMemberPrice: 89,
-    features: [
-      {
-        id: 'cloud_storage',
-        name: 'CLOUD_STORAGE',
-        value: 'UNLIMITED',
-      },
-      {
-        id: 'report_generation',
-        name: 'REPORT_GENERATION',
-        value: 'CUSTOMIZABLE_REPORTS',
-      },
-      {
-        id: 'matchmaking_platform',
-        name: 'MATCHMAKING_PLATFORM',
-        value: 'PRIORITY_VISIBILITY',
-      },
-      {
-        id: 'team_members',
-        name: 'TEAM_MEMBERS',
-        value: 'UNLIMITED',
-      },
-      {
-        id: 'financial_statements',
-        name: 'FINANCIAL_STATEMENTS',
-        value: 'AUTO_UPDATED',
-      },
-      {
-        id: 'api_integration',
-        name: 'API_INTEGRATION',
-        value: 'SYSTEM_SUPPORT',
-      },
-      {
-        id: 'technical_support',
-        name: 'TECHNICAL_SUPPORT',
-        value: 'UP_TO_48_HOURS_IN_TOTAL_4_HOURS_PER_SESSION',
-      },
-      {
-        id: 'additional_perks',
-        name: 'ADDITIONAL_PERKS',
-        value: ['100_ASSET_TAGGING_STICKERS', 'ONLINE_AND_OFFLINE_INTEGRATION', 'HARDWARE_SUPPORT'],
-      },
-    ],
-  },
-];
+import prisma from '@/client';
 
 /**
- * Info: (20250310 - Shirley) 處理 GET 請求
- * 所有的檢查都會拋出錯誤，由外層的 handler 捕獲
- * 1. 檢查用戶是否登入 -> UNAUTHORIZED_ACCESS
- * 2. 檢查請求數據是否有效 -> INVALID_INPUT_PARAMETER
- * 3. 檢查用戶授權 -> FORBIDDEN
- * 4. 獲取付款計劃數據
- * 5. 驗證輸出數據 -> INVALID_OUTPUT_DATA
+ * Info: (20250310 - Shirley) Handle GET request
+ * All checks will throw errors, which will be caught by the outer try-catch
+ * 1. Check if user is logged in -> UNAUTHORIZED_ACCESS
+ * 2. Check if request data is valid -> INVALID_INPUT_PARAMETER
+ * 3. Check user authorization -> FORBIDDEN
+ * 4. Get payment plan data
+ * 5. Validate output data -> INVALID_OUTPUT_DATA
  */
 const handleGetRequest = async (req: NextApiRequest) => {
   const apiName = APIName.LIST_PAYMENT_PLAN;
 
-  // Info: (20250310 - Shirley) 獲取用戶 session
+  // Info: (20250310 - Shirley) Get user session
   const session = await getSession(req);
 
-  // Info: (20250310 - Shirley) 檢查用戶是否登入，如果未登入會拋出 UNAUTHORIZED_ACCESS 錯誤
+  // Info: (20250310 - Shirley) Check if user is logged in, will throw UNAUTHORIZED_ACCESS error if not logged in
   await checkSessionUser(session, apiName, req);
 
-  // Info: (20250310 - Shirley) 驗證請求數據，如果無效會拋出 INVALID_INPUT_PARAMETER 錯誤
+  // Info: (20250310 - Shirley) Validate request data, will throw INVALID_INPUT_PARAMETER error if invalid
   checkRequestDataValid(apiName, req);
 
-  // Info: (20250310 - Shirley) 檢查用戶授權，如果未授權會拋出 FORBIDDEN 錯誤
+  // Info: (20250310 - Shirley) Check user authorization, will throw FORBIDDEN error if not authorized
   await checkUserAuthorization(apiName, req, session);
 
-  // Info: (20250310 - Shirley) 獲取付款計劃數據
-  const paymentPlans = mockPaymentPlans;
+  // Info: (20250310 - Shirley) Get payment plans from database
+  const teamPlans = await prisma.teamPlan.findMany({
+    include: {
+      features: true,
+    },
+    orderBy: {
+      price: 'asc',
+    },
+  });
 
-  // Info: (20250310 - Shirley) 驗證輸出數據，如果無效會拋出 INVALID_OUTPUT_DATA 錯誤
+  // Info: (20250310 - Shirley) Transform database data to API response format
+  const paymentPlans: IPaymentPlanSchema[] = teamPlans.map((plan) => {
+    // Info: (20250310 - Shirley) Group features by feature key
+    const featuresMap = new Map<string, { id: string; name: string; value: string | string[] }>();
+
+    plan.features.forEach((feature) => {
+      // Info: (20250310 - Shirley) If feature already exists in map, check if it's an array
+      if (featuresMap.has(feature.featureKey)) {
+        const existingFeature = featuresMap.get(feature.featureKey)!;
+
+        // Info: (20250310 - Shirley) If value is already an array, add new value
+        if (Array.isArray(existingFeature.value)) {
+          (existingFeature.value as string[]).push(feature.featureValue);
+        } else {
+          // Info: (20250310 - Shirley) Convert to array with both values
+          existingFeature.value = [existingFeature.value as string, feature.featureValue];
+        }
+      } else {
+        // Info: (20250310 - Shirley) Add new feature to map
+        featuresMap.set(feature.featureKey, {
+          id: feature.featureKey,
+          name: feature.featureKey.toUpperCase(),
+          value: feature.featureValue,
+        });
+      }
+    });
+
+    // Info: (20250310 - Shirley) Convert map to array
+    const features = Array.from(featuresMap.values());
+
+    return {
+      id: plan.type as TPlanType,
+      planName: plan.planName,
+      price: plan.price,
+      extraMemberPrice: plan.extraMemberPrice || undefined,
+      features,
+    };
+  });
+
+  // Info: (20250310 - Shirley) Validate output data, will throw INVALID_OUTPUT_DATA error if invalid
   const validatedPayload = checkOutputDataValid(apiName, paymentPlans);
 
   return {
     statusMessage: STATUS_MESSAGE.SUCCESS_GET,
     payload: validatedPayload,
-    session, // Info: (20250310 - Shirley) 返回 session 以便在外層記錄用戶行為
+    session,
   };
 };
 
@@ -199,32 +111,32 @@ export default async function handler(
   const apiName = APIName.LIST_PAYMENT_PLAN;
 
   try {
-    // Info: (20250310 - Shirley) 檢查請求方法
+    // Info: (20250310 - Shirley) Check request method
     if (req.method !== 'GET') {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     } else {
-      // Info: (20250310 - Shirley) 調用 handleGetRequest 處理 GET 請求
+      // Info: (20250310 - Shirley) Call handleGetRequest to process GET request
       const result = await handleGetRequest(req);
       statusMessage = result.statusMessage;
       payload = result.payload;
       session = result.session;
     }
   } catch (error) {
-    // Info: (20250310 - Shirley) 處理錯誤
+    // Info: (20250310 - Shirley) Handle errors
     if (error instanceof Error) {
       statusMessage = error.message;
     } else {
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
 
-    // Info: (20250310 - Shirley) 記錄錯誤
+    // Info: (20250310 - Shirley) Log error
     loggerError({
       userId: DefaultValue.USER_ID.GUEST,
       errorType: `Error in ${apiName}`,
       errorMessage: error as Error,
     });
 
-    // Info: (20250310 - Shirley) 嘗試獲取 session 以記錄用戶行為
+    // Info: (20250310 - Shirley) Try to get session to log user action
     if (!session) {
       try {
         session = await getSession(req);
@@ -237,11 +149,13 @@ export default async function handler(
       }
     }
   } finally {
-    // Info: (20250310 - Shirley) 記錄用戶行為（只記錄已登錄的用戶），與 logUserAction in middleware.ts 一致
+    // Info: (20250310 - Shirley) Log user action (only for logged-in users)
     if (session) {
       const userId = session.userId || DefaultValue.USER_ID.GUEST;
 
-      if (userId !== DefaultValue.USER_ID.GUEST) {
+      // Info: (20250310 - Shirley) Only log actions for logged-in users, not for guest users
+      // Info: (20250310 - Shirley) Reference implementation in middleware.ts logUserAction
+      if (userId !== DefaultValue.USER_ID.GUEST || apiName.toString() === 'SIGN_IN') {
         try {
           await logUserAction(session, apiName, req, statusMessage);
         } catch (logError) {
@@ -254,7 +168,7 @@ export default async function handler(
       }
     }
 
-    // Info: (20250310 - Shirley) 格式化 API 響應並返回
+    // Info: (20250310 - Shirley) Format API response and return
     const { httpCode, result } = formatApiResponse<IPaymentPlanSchema[] | null>(
       statusMessage,
       payload
