@@ -3,7 +3,6 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
-import { TPlanType } from '@/interfaces/subscription';
 import { getSession } from '@/lib/utils/session';
 import {
   checkOutputDataValid,
@@ -16,7 +15,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 import { IPaymentPlanSchema } from '@/lib/utils/zod_schema/payment_plan';
 import { ISessionData } from '@/interfaces/session';
-import prisma from '@/client';
+import { listTeamPlan } from '@/lib/utils/repo/team_plan.repo';
 
 /**
  * Info: (20250310 - Shirley) Handle GET request
@@ -42,54 +41,8 @@ const handleGetRequest = async (req: NextApiRequest) => {
   // Info: (20250310 - Shirley) Check user authorization, will throw FORBIDDEN error if not authorized
   await checkUserAuthorization(apiName, req, session);
 
-  // Info: (20250310 - Shirley) Get payment plans from database
-  const teamPlans = await prisma.teamPlan.findMany({
-    include: {
-      features: true,
-    },
-    orderBy: {
-      price: 'asc',
-    },
-  });
-
-  // Info: (20250310 - Shirley) Transform database data to API response format
-  const paymentPlans: IPaymentPlanSchema[] = teamPlans.map((plan) => {
-    // Info: (20250310 - Shirley) Group features by feature key
-    const featuresMap = new Map<string, { id: string; name: string; value: string | string[] }>();
-
-    plan.features.forEach((feature) => {
-      // Info: (20250310 - Shirley) If feature already exists in map, check if it's an array
-      if (featuresMap.has(feature.featureKey)) {
-        const existingFeature = featuresMap.get(feature.featureKey)!;
-
-        // Info: (20250310 - Shirley) If value is already an array, add new value
-        if (Array.isArray(existingFeature.value)) {
-          (existingFeature.value as string[]).push(feature.featureValue);
-        } else {
-          // Info: (20250310 - Shirley) Convert to array with both values
-          existingFeature.value = [existingFeature.value as string, feature.featureValue];
-        }
-      } else {
-        // Info: (20250310 - Shirley) Add new feature to map
-        featuresMap.set(feature.featureKey, {
-          id: feature.featureKey,
-          name: feature.featureKey.toUpperCase(),
-          value: feature.featureValue,
-        });
-      }
-    });
-
-    // Info: (20250310 - Shirley) Convert map to array
-    const features = Array.from(featuresMap.values());
-
-    return {
-      id: plan.type as TPlanType,
-      planName: plan.planName,
-      price: plan.price,
-      extraMemberPrice: plan.extraMemberPrice || undefined,
-      features,
-    };
-  });
+  // Info: (20250310 - Shirley) Get payment plans from database using repository function
+  const paymentPlans = await listTeamPlan();
 
   // Info: (20250310 - Shirley) Validate output data, will throw INVALID_OUTPUT_DATA error if invalid
   const validatedPayload = checkOutputDataValid(apiName, paymentPlans);
@@ -155,7 +108,7 @@ export default async function handler(
 
       // Info: (20250310 - Shirley) Only log actions for logged-in users, not for guest users
       // Info: (20250310 - Shirley) Reference implementation in middleware.ts logUserAction
-      if (userId !== DefaultValue.USER_ID.GUEST || apiName.toString() === 'SIGN_IN') {
+      if (userId !== DefaultValue.USER_ID.GUEST) {
         try {
           await logUserAction(session, apiName, req, statusMessage);
         } catch (logError) {
