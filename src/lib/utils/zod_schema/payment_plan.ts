@@ -15,10 +15,6 @@ const paymentPlanSchema = z.object({
   price: z.number(),
   extraMemberPrice: z.number().optional(),
   features: z.array(featureSchema),
-  isActive: z.boolean(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number(),
 });
 
 // Info: (20250225 - Shirley) 定義 API 回應的 Schema

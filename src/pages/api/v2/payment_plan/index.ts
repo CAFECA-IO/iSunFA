@@ -3,20 +3,19 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
-import { IPaymentPlan } from '@/interfaces/payment_plan';
 import { TPlanType } from '@/interfaces/subscription';
 import { getSession } from '@/lib/utils/session';
 import { checkSessionUser, checkUserAuthorization, logUserAction } from '@/lib/utils/middleware';
 import { validateOutputData, validateRequestData } from '@/lib/utils/validator';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
+import { IPaymentPlanSchema } from '@/lib/utils/zod_schema/payment_plan';
 
-const mockPaymentPlans: IPaymentPlan[] = [
+const mockPaymentPlans: IPaymentPlanSchema[] = [
   {
     id: TPlanType.BEGINNER,
     planName: 'Beginner',
     price: 0,
-    extraMemberPrice: 0,
     features: [
       {
         id: 'cloud_storage',
@@ -54,16 +53,11 @@ const mockPaymentPlans: IPaymentPlan[] = [
         value: 'LIVE_CHAT_SUPPORT',
       },
     ],
-    isActive: true,
-    createdAt: 1725372460,
-    updatedAt: 1725372460,
-    deletedAt: 0,
   },
   {
     id: TPlanType.PROFESSIONAL,
     planName: 'Professional',
     price: 899,
-    extraMemberPrice: 0,
     features: [
       {
         id: 'cloud_storage',
@@ -101,10 +95,6 @@ const mockPaymentPlans: IPaymentPlan[] = [
         value: '10_ASSET_TAGGING_STICKERS',
       },
     ],
-    isActive: false,
-    createdAt: 1725372460,
-    updatedAt: 1725372460,
-    deletedAt: 0,
   },
   {
     id: TPlanType.ENTERPRISE,
@@ -153,16 +143,12 @@ const mockPaymentPlans: IPaymentPlan[] = [
         value: ['100_ASSET_TAGGING_STICKERS', 'ONLINE_AND_OFFLINE_INTEGRATION', 'HARDWARE_SUPPORT'],
       },
     ],
-    isActive: false,
-    createdAt: 1725372460,
-    updatedAt: 1725372460,
-    deletedAt: 0,
   },
 ];
 
 const handleGetRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaymentPlan[] | null = null;
+  let payload: IPaymentPlanSchema[] | null = null;
   const apiName = APIName.LIST_PAYMENT_PLAN;
 
   try {
@@ -224,10 +210,10 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPaymentPlan[] | null>>
+  res: NextApiResponse<IResponseData<IPaymentPlanSchema[] | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaymentPlan[] | null = null;
+  let payload: IPaymentPlanSchema[] | null = null;
 
   try {
     if (req.method !== 'GET') {
@@ -248,7 +234,10 @@ export default async function handler(
       errorMessage: error,
     });
   } finally {
-    const { httpCode, result } = formatApiResponse<IPaymentPlan[] | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<IPaymentPlanSchema[] | null>(
+      statusMessage,
+      payload
+    );
     res.status(httpCode).json(result);
   }
 }
