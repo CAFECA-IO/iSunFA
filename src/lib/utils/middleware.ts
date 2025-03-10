@@ -112,7 +112,7 @@ export async function logUserAction<T extends APIName>(
 }
 
 /**
- * Info: (20250226 - Shirley) 檢查請求數據是否有效
+ * Info: (20250310 - Shirley) 檢查請求數據是否有效
  * 如果無效，拋出 INVALID_INPUT_PARAMETER 錯誤
  */
 export function checkRequestDataValid(apiName: APIName, req: NextApiRequest) {
@@ -124,7 +124,7 @@ export function checkRequestDataValid(apiName: APIName, req: NextApiRequest) {
 }
 
 /**
- * Info: (20250226 - Shirley) 驗證輸出數據是否有效
+ * Info: (20250310 - Shirley) 驗證輸出數據是否有效
  * 如果無效，拋出 INVALID_OUTPUT_DATA 錯誤
  */
 export function checkOutputDataValid<T extends APIName>(apiName: T, data: unknown) {
