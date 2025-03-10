@@ -26,44 +26,44 @@ interface PendingTaskForCompanyProps {
   getTodoList: () => Promise<void>;
 }
 
-const PendingTaskForCompany = ({ getTodoList }: PendingTaskForCompanyProps) => {
+const PendingTaskForAccountBook = ({ getTodoList }: PendingTaskForCompanyProps) => {
   const { t } = useTranslation('dashboard');
   const { selectedAccountBook } = useUserCtx();
-  const [companyPendingTask, setCompanyPendingTask] = useState<IPendingTask | null>(null);
+  const [pendingTask, setPendingTask] = useState<IPendingTask | null>(null);
   const [isCreateTodoModalOpen, setIsCreateTodoModalOpen] = useState(false);
   const [defaultTodoName, setDefaultTodoName] = useState('');
 
   const toggleCreateTodoModal = () => setIsCreateTodoModalOpen((prev) => !prev);
 
-  // Info: (20241127 - Liz) 打 API 取得使用者的待辦任務(公司)
-  const { trigger: getCompanyPendingTaskAPI } = APIHandler<IPendingTask>(
+  // Info: (20241127 - Liz) 打 API 取得使用者的待辦任務(使用者已連結帳本)
+  const { trigger: getAccountBookPendingTaskAPI } = APIHandler<IPendingTask>(
     APIName.COMPANY_PENDING_TASK_GET
   );
 
   useEffect(() => {
     if (!selectedAccountBook) return;
 
-    const getCompanyPendingTask = async () => {
+    const getAccountBookPendingTask = async () => {
       try {
-        const { data, success, code } = await getCompanyPendingTaskAPI({
+        const { data, success, code } = await getAccountBookPendingTaskAPI({
           params: { companyId: selectedAccountBook.id },
         });
 
         if (success) {
-          setCompanyPendingTask(data);
+          setPendingTask(data);
         } else {
           // Deprecated: (20241127 - Liz)
           // eslint-disable-next-line no-console
-          console.log('PendingTaskForCompany getCompanyPendingTask code:', code);
+          console.log('PendingTaskForAccountBook getAccountBookPendingTask code:', code);
         }
       } catch (error) {
         // Deprecated: (20241127 - Liz)
         // eslint-disable-next-line no-console
-        console.log('PendingTaskForCompany getCompanyPendingTask error:', error);
+        console.log('PendingTaskForAccountBook getAccountBookPendingTask error:', error);
       }
     };
 
-    getCompanyPendingTask();
+    getAccountBookPendingTask();
   }, [selectedAccountBook]);
 
   const handleAddEvent = (title: string) => {
@@ -72,22 +72,22 @@ const PendingTaskForCompany = ({ getTodoList }: PendingTaskForCompanyProps) => {
     setDefaultTodoName(translatedTodoName);
   };
 
-  if (!companyPendingTask) {
+  if (!pendingTask) {
     return <PendingTaskNoData />;
   }
 
   const isCompanyPendingTaskEmpty =
-    companyPendingTask.missingCertificate.count === 0 &&
-    companyPendingTask.unpostedVoucher.count === 0 &&
-    companyPendingTask.missingCertificatePercentage === 0 &&
-    companyPendingTask.unpostedVoucherPercentage === 0;
+    pendingTask.missingCertificate.count === 0 &&
+    pendingTask.unpostedVoucher.count === 0 &&
+    pendingTask.missingCertificatePercentage === 0 &&
+    pendingTask.unpostedVoucherPercentage === 0;
 
   if (isCompanyPendingTaskEmpty) {
     return <PendingTaskNoData />;
   }
 
-  const percentageForMissingCertificate = companyPendingTask.missingCertificatePercentage * 100;
-  const percentageForUnpostedVouchers = companyPendingTask.unpostedVoucherPercentage * 100;
+  const percentageForMissingCertificate = pendingTask.missingCertificatePercentage * 100;
+  const percentageForUnpostedVouchers = pendingTask.unpostedVoucherPercentage * 100;
 
   return (
     <section className="flex flex-col gap-24px">
@@ -115,7 +115,7 @@ const PendingTaskForCompany = ({ getTodoList }: PendingTaskForCompanyProps) => {
               href={ISUNFA_ROUTE.CERTIFICATE_LIST}
               className="text-2xl font-bold text-text-brand-secondary-lv2"
             >
-              {companyPendingTask.missingCertificate.count}
+              {pendingTask.missingCertificate.count}
             </Link>
           </div>
 
@@ -128,7 +128,7 @@ const PendingTaskForCompany = ({ getTodoList }: PendingTaskForCompanyProps) => {
               href={ISUNFA_ROUTE.ADD_NEW_VOUCHER}
               className="text-2xl font-bold text-text-brand-secondary-lv2"
             >
-              {companyPendingTask.unpostedVoucher.count}
+              {pendingTask.unpostedVoucher.count}
             </Link>
           </div>
         </div>
@@ -163,4 +163,4 @@ const PendingTaskForCompany = ({ getTodoList }: PendingTaskForCompanyProps) => {
   );
 };
 
-export default PendingTaskForCompany;
+export default PendingTaskForAccountBook;

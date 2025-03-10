@@ -126,3 +126,33 @@ export async function deleteUserActionLogForTesting(id: number): Promise<UserAct
     return null;
   }
 }
+
+/**
+ * Info: (20250310 - Shirley)
+ * @description Get the latest user action log for a user
+ * @param userId The user ID to get the latest action log for
+ * @returns The latest UserActionLog or null if not found
+ */
+export async function getLatestUserActionLogByUserId(
+  userId: number
+): Promise<UserActionLog | null> {
+  try {
+    const latestLog = await prisma.userActionLog.findFirst({
+      where: {
+        userId,
+      },
+      orderBy: {
+        actionTime: SortOrder.DESC,
+      },
+    });
+
+    return latestLog;
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get latest user action log failed',
+      errorMessage: (error as Error).message,
+    });
+    return null;
+  }
+}

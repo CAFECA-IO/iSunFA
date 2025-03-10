@@ -11,9 +11,10 @@ import { useRouter } from 'next/router';
 
 interface teamInfoProps {
   teamInfo: ITeam;
+  setTeamInfo: (team: ITeam) => void;
 }
 
-const TeamInformation = ({ teamInfo }: teamInfoProps) => {
+const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
   const { t } = useTranslation(['team']);
   const router = useRouter();
 
@@ -183,12 +184,12 @@ const TeamInformation = ({ teamInfo }: teamInfoProps) => {
           isOpen={isNameEditModalOpen}
           onClose={closeNameEditModal} // Info:(20250225 - Anna) 點擊關閉時觸發函數
           onSave={(newName) => {
-            // Todo:(20250225 - Anna) Debug
-            // eslint-disable-next-line no-console
-            console.log('Saved newName:', newName);
+            // Info:(20250307 - Anna) setTeamInfo，確保即時更新 UI。
+            setTeamInfo({ ...teamInfo, name: { ...teamInfo.name, value: newName } });
             closeNameEditModal();
           }}
           initialName={teamInfo.name.value} // Info:(20250224 - Anna) 傳入當前的 Team Name
+          teamId={teamInfo.id}
         />
       )}
 
@@ -198,12 +199,12 @@ const TeamInformation = ({ teamInfo }: teamInfoProps) => {
           isOpen={isDescriptionEditModalOpen}
           onClose={closeDescriptionEditModal} // Info:(20250225 - Anna) 點擊關閉時觸發函數
           onSave={(newDescription) => {
-            // Todo:(20250225 - Anna) Debug
-            // eslint-disable-next-line no-console
-            console.log('Saved newDescription:', newDescription);
+            // Info:(20250307 - Anna) setTeamInfo，確保即時更新 UI。
+            setTeamInfo({ ...teamInfo, about: { ...teamInfo.about, value: newDescription } });
             closeDescriptionEditModal();
           }}
           initialDescription={teamInfo.about.value} // Info:(20250224 - Anna) 傳入當前的 Team Description
+          teamId={teamInfo.id}
         />
       )}
 
@@ -213,12 +214,12 @@ const TeamInformation = ({ teamInfo }: teamInfoProps) => {
           isOpen={isProfileEditModalOpen}
           onClose={closeProfileEditModal} // Info:(20250225 - Anna) 點擊關閉時觸發函數
           onSave={(newProfile) => {
-            // Todo:(20250225 - Anna) Debug
-            // eslint-disable-next-line no-console
-            console.log('Saved newProfile:', newProfile);
+            // Info:(20250307 - Anna) setTeamInfo，確保即時更新 UI。
+            setTeamInfo({ ...teamInfo, profile: { ...teamInfo.profile, value: newProfile } });
             closeProfileEditModal();
           }}
           initialProfile={teamInfo.profile.value} // Info:(20250224 - Anna) 傳入當前的 Team Profile
+          teamId={teamInfo.id}
         />
       )}
 
@@ -228,12 +229,15 @@ const TeamInformation = ({ teamInfo }: teamInfoProps) => {
           isOpen={isBankAccountEditModalOpen}
           onClose={closeBankAccountEditModal} // Info:(20250225 - Anna) 點擊關閉時觸發函數
           onSave={(newBankAccount) => {
-            // Todo:(20250225 - Anna) Debug
-            // eslint-disable-next-line no-console
-            console.log('Saved newBankAccount:', newBankAccount);
+            // Info:(20250307 - Anna) setTeamInfo，確保即時更新 UI。
+            setTeamInfo({
+              ...teamInfo,
+              bankAccount: { ...teamInfo.bankAccount, value: newBankAccount },
+            });
             closeBankAccountEditModal();
           }}
           initialBankAccount={teamInfo.bankAccount.value} // Info:(20250224 - Anna) 傳入當前的 Team BankAccount
+          teamId={teamInfo.id}
         />
       )}
     </section>

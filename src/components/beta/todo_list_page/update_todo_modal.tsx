@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountBook, IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBook, IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { ITodoCompany } from '@/interfaces/todo';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import DateTimePicker from '@/components/beta/todo_list_page/date_time_picker';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 interface UpdateTodoModalProps {
   todoToUpdate: ITodoCompany;
@@ -27,8 +28,8 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
   const [endTimeStamp, setEndTimeStamp] = useState<number | undefined>(todoToUpdate.endTime);
   const [note, setNote] = useState(todoToUpdate.note);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [company, setCompany] = useState<IAccountBook>(todoToUpdate.company);
-  const [companyAndRoleList, setCompanyAndRoleList] = useState<IAccountBookForUser[]>([]);
+  const [accountBook, setAccountBook] = useState<IAccountBook>(todoToUpdate.company);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
   const [noDataForTodoName, setNoDataForTodoName] = useState(false);
   const [noDataForStartTime, setNoDataForStartTime] = useState(false);
   const [noDataForEndTime, setNoDataForEndTime] = useState(false);
@@ -40,10 +41,10 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
   // Info: (20241125 - Liz) 更新待辦事項 API
   const { trigger: updateTodoAPI } = APIHandler<ITodoCompany>(APIName.UPDATE_TODO);
 
-  // Info: (20241120 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
-  const { trigger: listUserCompanyAPI } = APIHandler<IAccountBookForUser[]>(
-    APIName.LIST_USER_COMPANY
-  );
+  // Info: (20250310 - Liz) 打 API 取得使用者擁有的帳本清單(原為公司)
+  const { trigger: getAccountBookListByUserIdAPI } = APIHandler<
+    IPaginatedData<IAccountBookForUserWithTeam[]>
+  >(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID);
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
@@ -75,7 +76,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
           deadline: 0, // Info: (20241219 - Liz) 之後會捨棄 deadline 欄位，先傳 0
           startTime: startTimeStamp,
           endTime: endTimeStamp,
-          companyId: company?.id,
+          companyId: accountBook.id,
           note,
         },
       });
@@ -111,28 +112,25 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
       if (!userAuth) return;
 
       try {
-        const {
-          data: userCompanyList,
-          success,
-          code,
-        } = await listUserCompanyAPI({
+        const { data, success, code } = await getAccountBookListByUserIdAPI({
           params: { userId: userAuth.id },
-          query: { simple: true },
+          query: { page: 1, pageSize: 999 },
         });
+        const accountBookListData = data?.data ?? []; // Info: (20250310 - Liz) 取出帳本清單
 
-        if (success && userCompanyList && userCompanyList.length > 0) {
-          // Info: (20241120 - Liz) 取得使用者擁有的公司列表成功時更新公司列表
-          setCompanyAndRoleList(userCompanyList);
+        if (success && accountBookListData && accountBookListData.length > 0) {
+          // Info: (20250310 - Liz) 取得使用者擁有的帳本清單成功時更新帳本清單
+          setAccountBookList(accountBookListData);
         } else {
-          // Info: (20241120 - Liz) 取得使用者擁有的公司列表失敗時顯示錯誤訊息
-          // Deprecated: (20241120 - Liz)
+          // Info: (20250310 - Liz) 取得使用者擁有的帳本清單失敗時顯示錯誤訊息
+          // Deprecated: (20250310 - Liz)
           // eslint-disable-next-line no-console
-          console.log('listUserCompanyAPI(Simple) failed:', code);
+          console.log('取得使用者擁有的帳本清單 failed:', code);
         }
       } catch (error) {
         // Deprecated: (20241120 - Liz)
         // eslint-disable-next-line no-console
-        console.error('listUserCompanyAPI(Simple) error:', error);
+        console.error('取得使用者擁有的帳本清單 error:', error);
       }
     };
 
@@ -203,7 +201,9 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
                   onClick={toggleDropdown}
                 >
                   <p className="px-12px py-10px text-base font-medium">
-                    {company?.name || t('dashboard:TODO_LIST_PAGE.SELECT_COMPANY')}
+                    {accountBook.name === 'N/A'
+                      ? t('dashboard:TODO_LIST_PAGE.SELECT_COMPANY')
+                      : accountBook.name}
                   </p>
 
                   <div className="px-12px py-10px">
@@ -214,12 +214,12 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
                 {isDropdownOpen && (
                   <div className="absolute inset-x-0 top-full z-10 mt-8px">
                     <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_SM">
-                      {companyAndRoleList.map((item) => (
+                      {accountBookList.map((item) => (
                         <button
                           key={item.company.id}
                           type="button"
                           onClick={() => {
-                            setCompany(item.company);
+                            setAccountBook(item.company);
                             toggleDropdown();
                           }}
                           className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"

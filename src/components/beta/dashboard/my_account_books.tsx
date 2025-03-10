@@ -17,8 +17,8 @@ import { IPaginatedData } from '@/interfaces/pagination';
 const MyAccountBooks = () => {
   const { t } = useTranslation('dashboard');
   const { userAuth } = useUserCtx();
-  const [companyAndRoleList, setCompanyAndRoleList] = useState<IAccountBookForUserWithTeam[]>([]);
-  const isAccountBookListEmpty = companyAndRoleList.length === 0;
+  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
+  const isAccountBookListEmpty = accountBookList.length === 0;
   const [accountBookToSelect, setAccountBookToSelect] = useState<
     IAccountBookForUserWithTeam | undefined
   >();
@@ -84,7 +84,7 @@ const MyAccountBooks = () => {
     IPaginatedData<IAccountBookForUserWithTeam[]>
   >(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID);
 
-  const getCompanyList = useCallback(async () => {
+  const getAccountBookList = useCallback(async () => {
     if (!userAuth) return;
 
     try {
@@ -92,22 +92,22 @@ const MyAccountBooks = () => {
         params: { userId: userAuth.id },
         query: { page: 1, pageSize: 999 },
       });
-      const accountBookList = data?.data ?? []; // Info: (20250306 - Liz) 取出帳本清單
+      const accountBookListData = data?.data ?? []; // Info: (20250306 - Liz) 取出帳本清單
 
-      if (success && data && accountBookList.length > 0) {
+      if (success && data && accountBookListData.length > 0) {
         // Info: (20241216 - Liz) 已被選擇的帳本顯示在第一個(原為公司)
         if (selectedAccountBook) {
-          const selectedCompanyIndex = accountBookList.findIndex(
-            (companyAndRole) => companyAndRole.company.id === selectedAccountBook.id
+          const selectedAccountBookIndex = accountBookListData.findIndex(
+            (item) => item.company.id === selectedAccountBook.id
           );
 
-          if (selectedCompanyIndex > -1) {
-            const selectedCompanyItem = accountBookList.splice(selectedCompanyIndex, 1);
-            accountBookList.unshift(selectedCompanyItem[0]);
+          if (selectedAccountBookIndex > -1) {
+            const selectedCompanyItem = accountBookListData.splice(selectedAccountBookIndex, 1);
+            accountBookListData.unshift(selectedCompanyItem[0]);
           }
         }
 
-        setCompanyAndRoleList(accountBookList);
+        setAccountBookList(accountBookListData);
       } else {
         // Info: (20241120 - Liz) 取得使用者擁有的帳本清單失敗時顯示錯誤訊息(原為公司)
         // Deprecated: (20241120 - Liz)
@@ -122,8 +122,8 @@ const MyAccountBooks = () => {
   }, [selectedAccountBook, userAuth]);
 
   useEffect(() => {
-    getCompanyList();
-  }, [getCompanyList]);
+    getAccountBookList();
+  }, [getAccountBookList]);
 
   return (
     <DashboardCardLayout>
@@ -140,7 +140,7 @@ const MyAccountBooks = () => {
           <MyAccountBookListNoData openCreateAccountBookModal={openCreateAccountBookModal} />
         ) : (
           <MyAccountBookList
-            companyAndRoleList={companyAndRoleList}
+            accountBookList={accountBookList}
             setAccountBookToSelect={setAccountBookToSelect}
           />
         )}
@@ -157,7 +157,7 @@ const MyAccountBooks = () => {
         {isCreateAccountBookModalOpen && (
           <CreateAccountBookModal
             closeCreateAccountBookModal={closeCreateAccountBookModal}
-            getCompanyList={getCompanyList}
+            getAccountBookList={getAccountBookList}
           />
         )}
       </section>
