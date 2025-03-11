@@ -23,6 +23,7 @@ import {
   EVENT_TYPE_TO_VOUCHER_TYPE_MAP,
   VOUCHER_TYPE_TO_EVENT_TYPE_MAP,
 } from '@/constants/account';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
@@ -79,12 +80,14 @@ const VoucherEditingPageBody: React.FC<{
   const temporaryAssetListByCompany = temporaryAssetList[accountBookId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { trigger: askAI, isLoading: isAskingAI } = APIHandler<{
     reason: string;
     resultId: string;
   }>(APIName.ASK_AI_V2);
 
   // Info: (20241108 - Julian) GET AI RESULT
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { trigger: getAIResult, success: analyzeSuccess } = APIHandler<IAIResultVoucher>(
     APIName.ASK_AI_RESULT_V2
   );
@@ -169,6 +172,8 @@ const VoucherEditingPageBody: React.FC<{
   const [flagOfClear, setFlagOfClear] = useState<boolean>(false);
   //  Info: (20241007 - Julian) 送出表單 flag
   const [flagOfSubmit, setFlagOfSubmit] = useState<boolean>(false);
+  // Info: (20250311 - Julian) 刷新發票 flag
+  const [flagOfRefresh, setFlagOfRefresh] = useState<boolean>(false);
 
   // Info: (20241009 - Julian) 追加項目
   const [isCounterpartyRequired, setIsCounterpartyRequired] = useState<boolean>(false);
@@ -188,7 +193,10 @@ const VoucherEditingPageBody: React.FC<{
   const [isShowReverseHint, setIsShowReverseHint] = useState<boolean>(false);
 
   // Info: (20241018 - Tzuhan) AI 分析相關 state
+  // ToDo: (20250311 - Julian) 暫時隱藏 AI 分析功能
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
   const [targetIdList, setTargetIdList] = useState<number[]>([]);
   const [resultId, setResultId] = useState<string>('');
@@ -404,7 +412,7 @@ const VoucherEditingPageBody: React.FC<{
       );
       setCertificates({ ...bindedCertificateUI, ...certificatesData });
     },
-    [selectedCertificatesUI]
+    [selectedCertificatesUI, flagOfRefresh]
   );
 
   // Info: (20241004 - Julian) Type 下拉選單
@@ -554,6 +562,7 @@ const VoucherEditingPageBody: React.FC<{
     messageModalVisibilityHandler();
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const fillUpWithAIResult = () => {
     setDate(aiDate);
     setType(aiType);
@@ -574,6 +583,7 @@ const VoucherEditingPageBody: React.FC<{
     setLineItems(aiLineItemsUI);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const retryAIHandler = () => {
     setAiState(AIState.WORKING);
     if (resultId) {
@@ -834,13 +844,16 @@ const VoucherEditingPageBody: React.FC<{
         certificates={Object.values(certificates)}
         selectedIds={selectedIds}
         setSelectedIds={setSelectedIds}
+        flagOfRefresh={flagOfRefresh}
       />
       <CertificateUploaderModal
         isOpen={openUploaderModal}
         onClose={() => setOpenUploaderModal(false)}
+        refresh={() => setFlagOfRefresh(!flagOfRefresh)}
       />
       {/* Info: (20240926 - Julian) AI analyze */}
-      <AIWorkingArea
+      {/* ToDo: (20250311 - Julian) 暫時隱藏 */}
+      {/* <AIWorkingArea
         aiState={aiState}
         analyzeSuccess={analyzeSuccess ?? false}
         setAiState={setAiState}
@@ -848,7 +861,7 @@ const VoucherEditingPageBody: React.FC<{
         retryClickHandler={retryAIHandler}
         retryDisabled={!!isAskingAI || aiState === AIState.WORKING}
         fillUpClickHandler={fillUpWithAIResult}
-      />
+      /> */}
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}
       <CertificateSelection
         selectedCertificates={selectedCertificatesUI}

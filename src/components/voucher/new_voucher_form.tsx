@@ -151,6 +151,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const [flagOfClear, setFlagOfClear] = useState<boolean>(false);
   //  Info: (20241007 - Julian) 送出表單 flag
   const [flagOfSubmit, setFlagOfSubmit] = useState<boolean>(false);
+  // Info: (20250311 - Julian) 刷新發票 flag
+  const [flagOfRefresh, setFlagOfRefresh] = useState<boolean>(false);
 
   // Info: (20241009 - Julian) 追加項目
   const [isCounterpartyRequired, setIsCounterpartyRequired] = useState<boolean>(false);
@@ -317,7 +319,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       );
       setCertificates(certificatesData);
     },
-    [selectedCertificates]
+    [selectedCertificates, flagOfRefresh]
   );
 
   // Info: (20241004 - Julian) Type 下拉選單
@@ -987,10 +989,12 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         certificates={Object.values(certificates)}
         selectedIds={selectedIds}
         setSelectedIds={setSelectedIds}
+        flagOfRefresh={flagOfRefresh}
       />
       <CertificateUploaderModal
         isOpen={openUploaderModal}
         onClose={() => setOpenUploaderModal(false)}
+        refresh={() => setFlagOfRefresh(!flagOfRefresh)}
       />
       {/* Info: (20240926 - Julian) AI analyze */}
       {/* ToDo: (20250122 - Julian) 暫時隱藏 */}

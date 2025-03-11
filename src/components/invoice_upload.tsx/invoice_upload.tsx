@@ -16,9 +16,15 @@ interface InvoiceUploadProps {
   isDisabled: boolean;
   toggleQRCode?: () => void;
   setFiles: React.Dispatch<React.SetStateAction<IFileUIBeta[]>>;
+  refresh?: () => void;
 }
 
-const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode, setFiles }) => {
+const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
+  isDisabled,
+  toggleQRCode,
+  setFiles,
+  refresh,
+}) => {
   const { t } = useTranslation(['certificate']);
   const { selectedAccountBook } = useUserCtx();
   const [publicKey, setPublicKey] = useState<CryptoKey | null>(null);
@@ -153,6 +159,10 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
               : f;
           })
         );
+
+        if (refresh) {
+          refresh(); // Info: (20250311 - Julian) 上傳成功後刷新頁面
+        }
       } catch (error) {
         handleUploadFailed(file.name, (error as Error).message);
       }
