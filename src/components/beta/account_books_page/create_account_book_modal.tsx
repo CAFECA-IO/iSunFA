@@ -143,22 +143,22 @@ const CreateAccountBookModal = ({
     };
 
     getTeamList();
-  }, []);
+  }, [userAuth]);
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="overflow-hidden rounded-lg">
-        <div className="flex max-h-80vh w-400px flex-col gap-24px bg-surface-neutral-surface-lv2 p-40px">
-          <section className="flex items-center justify-between">
-            <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-              {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
-            </h1>
-            <button type="button" onClick={closeCreateAccountBookModal}>
-              <IoCloseOutline size={24} />
-            </button>
-          </section>
+        <header className="flex items-center justify-between bg-surface-neutral-surface-lv2 px-40px pb-24px pt-40px">
+          <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
+            {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
+          </h1>
+          <button type="button" onClick={closeCreateAccountBookModal}>
+            <IoCloseOutline size={24} />
+          </button>
+        </header>
 
-          <main className="flex flex-col gap-40px overflow-y-auto">
+        <div className="flex max-h-80vh w-400px flex-col gap-24px overflow-y-auto bg-surface-neutral-surface-lv2 px-40px pb-40px">
+          <main className="flex flex-col gap-40px">
             <section className="flex flex-col gap-40px">
               {/* // Info: (20250213 - Liz) Company Name */}
               <div className="flex flex-col gap-8px">
