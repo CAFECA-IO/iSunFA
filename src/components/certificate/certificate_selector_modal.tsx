@@ -24,7 +24,6 @@ interface CertificateSelectorModalProps {
   certificates: ICertificateUI[]; // Info: (20240926 - tzuhan) 證書列表
   handleApiResponse: (data: IPaginatedData<ICertificate[]>) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
   openUploaderModal: () => void; // Info: (20240926 - tzuhan) 打開上傳模態框的回調函數
-  flagOfRefresh: boolean; // Info: (20250311 - Julian) 刷新 FilterSection
 }
 
 const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
@@ -37,7 +36,6 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
   selectedIds,
   setSelectedIds,
   openUploaderModal,
-  flagOfRefresh,
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
   const [isSelectAll, setIsSelectAll] = useState(false);
@@ -98,7 +96,6 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
           tab={InvoiceTabs.WITHOUT_VOUCHER}
           onApiResponse={handleApiResponse}
           types={Object.keys(InvoiceType)}
-          flagOfRefresh={flagOfRefresh}
         />
         <div className="mt-12px px-4">
           <div className="flex items-center justify-between">

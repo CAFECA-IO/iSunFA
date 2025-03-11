@@ -14,14 +14,9 @@ import { MessageType } from '@/interfaces/message_modal';
 interface CertificateUploaderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  refresh?: () => void;
 }
 
-const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
-  isOpen,
-  onClose,
-  refresh,
-}) => {
+const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation(['certificate', 'common']);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
@@ -159,7 +154,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
           {t('certificate:UPLOAD.CONTENT')}
         </p>
         {/* Info: (20241213 - tzuhan) 上傳組件 */}
-        <CertificateFileUpload isDisabled={false} setFiles={setFiles} refresh={refresh} />
+        <CertificateFileUpload isDisabled={false} setFiles={setFiles} />
         {/* Info: (20241213 - tzuhan) 文件列表 */}
         <div className="h-60 rounded-t-lg border border-file-uploading-stroke-outline p-4">
           <div className="h-full overflow-auto">{renderFileList()}</div>
