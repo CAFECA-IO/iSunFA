@@ -157,7 +157,7 @@ const CreateAccountBookModal = ({
           </button>
         </header>
 
-        <div className="flex max-h-80vh w-400px flex-col gap-24px overflow-y-auto bg-surface-neutral-surface-lv2 px-40px pb-40px">
+        <div className="max-h-65vh w-400px gap-24px overflow-y-auto bg-surface-neutral-surface-lv2 px-40px pb-40px">
           <main className="flex flex-col gap-40px">
             <section className="flex flex-col gap-40px">
               {/* // Info: (20250213 - Liz) Company Name */}
