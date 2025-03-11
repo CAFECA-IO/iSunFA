@@ -8,11 +8,13 @@ import {
   zodStringToNumber,
   zodStringToNumberWithDefault,
 } from '@/lib/utils/zod_schema/common';
-import { WORK_TAG } from '@/interfaces/account_book';
+import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema, TeamSchema } from '@/lib/utils/zod_schema/team';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
+import { companyOutputSchema } from '@/lib/utils/zod_schema/company';
 
 const roleSchema = z.object({
   id: z.number(),
@@ -33,14 +35,22 @@ const accountBookSchema = z.object({
   isPrivate: z.boolean().optional(),
 });
 
-const accountBookForUserSchema = z.object({
+const accountBookForUserWithoutTeamSchema = z.object({
   company: accountBookSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number(),
   role: roleSchema,
 });
 
-const accountBookForUserWithTeamSchema = accountBookForUserSchema.extend({
+export const accountBookForUserSchema = z.object({
+  teamId: z.number().optional().default(0),
+  company: companyOutputSchema,
+  tag: z.nativeEnum(WORK_TAG),
+  order: z.number().int(),
+  role: rolePrimsaSchema,
+});
+
+const accountBookForUserWithTeamSchema = accountBookForUserWithoutTeamSchema.extend({
   team: TeamSchema,
   isTransferring: z.boolean(),
 });
@@ -145,3 +155,32 @@ export type IConnectAccountBookResponse = z.infer<typeof connectAccountBookRespo
 export type IGetAccountBookQueryParams = z.infer<typeof getAccountBookQuerySchema>;
 export type IGetAccountBookResponse = z.infer<typeof accountBookDetailsSchema>;
 export type ICountry = z.infer<typeof countrySchema>;
+
+// Info: (20250310 - Shirley) 定義更新帳本的 Schema
+const updateAccountBookQuerySchema = z.object({
+  accountBookId: zodStringToNumber,
+});
+
+const updateAccountBookBodySchema = z.object({
+  action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
+  tag: z.nativeEnum(WORK_TAG).optional(),
+  isPrivate: z.boolean().optional(),
+});
+
+export const updateAccountBookSchema = {
+  input: {
+    querySchema: updateAccountBookQuerySchema,
+    bodySchema: updateAccountBookBodySchema,
+  },
+  outputSchema: accountBookForUserSchema,
+  frontend: nullSchema,
+};
+
+// export const companyPutSchema = {
+//   input: {
+//     querySchema: companyPutQuerySchema,
+//     bodySchema: companyPutBodySchema,
+//   },
+//   outputSchema: accountBookForUserSchema,
+//   frontend: nullSchema,
+// };

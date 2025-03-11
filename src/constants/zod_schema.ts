@@ -131,6 +131,7 @@ import {
   connectAccountBookSchema,
   listAccountBooksByTeamIdSchema,
   getAccountBookInfoSchema,
+  updateAccountBookSchema,
 } from '@/lib/utils/zod_schema/account_book';
 
 /*
@@ -344,4 +345,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: connectAccountBookSchema,
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: getAccountBookInfoSchema,
   [APIName.PUT_TEAM_ICON]: teamSchemas.putIcon,
+  [APIName.UPDATE_ACCOUNT_BOOK_BY_ID]: updateAccountBookSchema,
 };
