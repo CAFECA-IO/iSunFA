@@ -31,7 +31,7 @@ export interface ISessionData {
   actionTime: number;
   expires: number;
   teamId: number;
-  teamRole: string;
+  teamRole: string; // Info: (20250311 - Shirley) TeamRole
 }
 
 export interface ISessionUpdateData {

@@ -102,7 +102,7 @@ const countrySchema = z.object({
   phoneExample: z.string(),
 });
 
-const accountBookDetailsSchema = z.object({
+const accountBookInfoSchema = z.object({
   id: z.string(),
   name: z.string(),
   taxId: z.string(),
@@ -116,7 +116,7 @@ const accountBookDetailsSchema = z.object({
   updatedAt: z.number(),
 });
 
-const getAccountBookResponseSchema = z.union([accountBookDetailsSchema, z.null()]);
+const getAccountBookResponseSchema = z.union([accountBookInfoSchema, z.null()]);
 
 const getAccountBookQuerySchema = z.object({
   accountBookId: zodStringToNumber,
@@ -153,7 +153,7 @@ export type IConnectAccountBookQueryParams = z.infer<typeof connectAccountBookQu
 export type IConnectAccountBookResponse = z.infer<typeof connectAccountBookResponseSchema>;
 
 export type IGetAccountBookQueryParams = z.infer<typeof getAccountBookQuerySchema>;
-export type IGetAccountBookResponse = z.infer<typeof accountBookDetailsSchema>;
+export type IGetAccountBookResponse = z.infer<typeof accountBookInfoSchema>;
 export type ICountry = z.infer<typeof countrySchema>;
 
 // Info: (20250310 - Shirley) 定義更新帳本的 Schema
@@ -172,7 +172,7 @@ export const updateAccountBookSchema = {
     querySchema: updateAccountBookQuerySchema,
     bodySchema: updateAccountBookBodySchema,
   },
-  outputSchema: accountBookForUserSchema,
+  outputSchema: accountBookForUserSchema.nullable(),
   frontend: nullSchema,
 };
 

@@ -6,7 +6,6 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { updateCompanyVisibilityById } from '@/lib/utils/repo/company.repo';
 import {
   getAdminByCompanyIdAndUserId,
-  getAdminByCompanyIdAndUserIdAndRoleName,
   getCompanyAndRoleByUserIdAndCompanyId,
   setCompanyToTop,
   updateCompanyTagById,
@@ -15,15 +14,11 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { Company, Role, File } from '@prisma/client';
-import { CompanyRoleName } from '@/constants/role';
 import { DefaultValue } from '@/constants/default_value';
 import { getSession } from '@/lib/utils/session';
 import { loggerError } from '@/lib/utils/logger_back';
+import { TeamRole } from '@/interfaces/team';
 
-/**
- * 處理 PUT 請求，更新帳本資訊
- * Info: (20250310 - Shirley)
- */
 const handlePutRequest: IHandleRequest<
   APIName.UPDATE_ACCOUNT_BOOK_BY_ID,
   {
@@ -45,7 +40,10 @@ const handlePutRequest: IHandleRequest<
 
   const companyId = Number(query.accountBookId);
   const { action, tag, isPrivate } = body;
-  const { userId } = session;
+  const { userId, teamId, teamRole } = session;
+
+  // eslint-disable-next-line no-console
+  console.log('in accountBookUpdateAPI, teamId', teamId, 'teamRole', teamRole);
 
   switch (action) {
     case ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG: {
@@ -72,12 +70,14 @@ const handlePutRequest: IHandleRequest<
       break;
     }
     case ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_VISIBILITY: {
-      const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
-        companyId,
-        userId,
-        CompanyRoleName.OWNER
-      );
-      if (admin && isPrivate !== undefined) {
+      const companyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(userId, companyId);
+      const hasPermission =
+        companyAndRole?.company.teamId === teamId &&
+        (teamRole === TeamRole.OWNER || teamRole === TeamRole.ADMIN);
+      // eslint-disable-next-line no-console
+      console.log('in accountBookUpdateAPI, hasPermission', hasPermission);
+
+      if (hasPermission && isPrivate !== undefined) {
         await updateCompanyVisibilityById(companyId, isPrivate);
         const updatedCompanyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(
           userId,
@@ -109,10 +109,6 @@ const methodHandlers: {
   PUT: (req) => withRequestValidation(APIName.UPDATE_ACCOUNT_BOOK_BY_ID, req, handlePutRequest),
 };
 
-/**
- * 帳本 API 處理程式
- * Info: (20250310 - Shirley)
- */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAccountBookForUser | null>>
