@@ -557,7 +557,7 @@ const DatePicker = ({
         >
           {displayedPeriod}
         </p>
-        <FiCalendar size={16} />
+        <FiCalendar size={20} />
       </Button>
     ) : null;
 

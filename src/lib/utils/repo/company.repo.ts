@@ -416,3 +416,32 @@ export async function listAccountBookByUserId(
     sort: sortOptions || [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
   };
 }
+
+export async function updateCompanyVisibilityById(
+  companyId: number,
+  isPrivate: boolean
+): Promise<Company & { imageFile: File | null }> {
+  // Info: (20250310 - Shirley) 獲取當前公司資訊
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error('Company not found');
+  }
+
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+
+  // Info: (20250310 - Shirley) 切換 isPrivate 屬性
+  const updatedCompany = await prisma.company.update({
+    where: {
+      id: companyId,
+    },
+    data: {
+      isPrivate,
+      updatedAt: nowTimestamp,
+    },
+    include: {
+      imageFile: true,
+    },
+  });
+  return updatedCompany;
+}

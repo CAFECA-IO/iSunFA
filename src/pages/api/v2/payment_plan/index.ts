@@ -6,7 +6,7 @@ import { APIName } from '@/constants/api_connection';
 import { getSession } from '@/lib/utils/session';
 import {
   checkOutputDataValid,
-  checkRequestDataValid,
+  checkRequestData,
   checkSessionUser,
   checkUserAuthorization,
   logUserAction,
@@ -36,7 +36,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   await checkSessionUser(session, apiName, req);
 
   // Info: (20250310 - Shirley) Validate request data, will throw INVALID_INPUT_PARAMETER error if invalid
-  checkRequestDataValid(apiName, req);
+  checkRequestData(apiName, req, session);
 
   // Info: (20250310 - Shirley) Check user authorization, will throw FORBIDDEN error if not authorized
   await checkUserAuthorization(apiName, req, session);
