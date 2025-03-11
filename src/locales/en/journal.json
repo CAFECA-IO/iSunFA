@@ -328,7 +328,8 @@
     "EQUITY": "Equity",
     "COST": "Cost",
     "EXPENSE": "Expense",
-    "REVENUE": "Revenue"
+    "REVENUE": "Revenue",
+    "OTHERCOMPREHENSIVEINCOME": "Other Comprehensive Income"
   },
   "AI_WORKING_AREA": {
     "RESTING_CONTENT": "Please select the certificates for AI to generate the voucher for you",
