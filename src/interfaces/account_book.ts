@@ -12,6 +12,7 @@ export enum WORK_TAG {
 export enum ACCOUNT_BOOK_UPDATE_ACTION {
   SET_TO_TOP = 'setToTop',
   UPDATE_TAG = 'updateTag',
+  UPDATE_VISIBILITY = 'updateVisibility',
 }
 
 // Info: (20250226 - Liz) 原為 ICompany (因為公司已經改名成帳本)

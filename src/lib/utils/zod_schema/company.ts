@@ -44,6 +44,7 @@ const companyPutQuerySchema = z.object({
 const companyPutBodySchema = z.object({
   action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
   tag: z.nativeEnum(WORK_TAG).optional(),
+  isPrivate: z.boolean().optional(),
 });
 
 // Info: (20241016 - Jacky) Company delete schema
