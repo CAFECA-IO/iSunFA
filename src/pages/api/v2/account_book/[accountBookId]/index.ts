@@ -74,6 +74,7 @@ const handlePutRequest: IHandleRequest<
       const hasPermission =
         companyAndRole?.company.teamId === teamId &&
         (teamRole === TeamRole.OWNER || teamRole === TeamRole.ADMIN);
+
       // eslint-disable-next-line no-console
       console.log('in accountBookUpdateAPI, hasPermission', hasPermission);
 
