@@ -9,7 +9,7 @@ export const SESSION_DEVELOPER: ISessionData = {
   deviceId: DefaultValue.DEVICE_ID,
   userAgent: DefaultValue.USER_AGENT,
   ipAddress: DefaultValue.IP,
-  userId: 100000000,
+  userId: 10000000,
   companyId: 10000000,
   roleId: 1006,
   teamId: DefaultValue.TEAM_ID.UNKNOWN,
