@@ -161,7 +161,7 @@ export type IAPIName =
   | 'PUT_TEAM_ICON'
   | 'LIST_MEMBER_BY_TEAM_ID'
   | 'GET_ACCOUNT_BOOK_INFO_BY_ID'
-  | 'UPDATE_ACCOUNT_BOOK_BY_ID';
+  | 'UPDATE_ACCOUNT_BOOK';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

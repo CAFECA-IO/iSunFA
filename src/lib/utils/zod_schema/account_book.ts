@@ -1,7 +1,3 @@
-/*
- * TODO: (20250305 - Shirley)
- * 改用 zod_schema/company.ts 替代 zod_schema/account_book.ts
- */
 import { z } from 'zod';
 import {
   nullSchema,
@@ -13,7 +9,6 @@ import { listByTeamIdQuerySchema, TeamSchema } from '@/lib/utils/zod_schema/team
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
-import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
 import { companyOutputSchema } from '@/lib/utils/zod_schema/company';
 
 const roleSchema = z.object({
@@ -35,22 +30,14 @@ const accountBookSchema = z.object({
   isPrivate: z.boolean().optional(),
 });
 
-const accountBookForUserWithoutTeamSchema = z.object({
+const accountBookForUserSchema = z.object({
   company: accountBookSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number(),
   role: roleSchema,
 });
 
-export const accountBookForUserSchema = z.object({
-  teamId: z.number().optional().default(0),
-  company: companyOutputSchema,
-  tag: z.nativeEnum(WORK_TAG),
-  order: z.number().int(),
-  role: rolePrimsaSchema,
-});
-
-const accountBookForUserWithTeamSchema = accountBookForUserWithoutTeamSchema.extend({
+const accountBookForUserWithTeamSchema = accountBookForUserSchema.extend({
   team: TeamSchema,
   isTransferring: z.boolean(),
 });
@@ -63,7 +50,25 @@ const accountBookListQuerySchema = z.object({
   sortOption: z.string().optional(),
 });
 
-export const accountBookListResponseSchema = paginatedDataSchema(accountBookForUserWithTeamSchema);
+const accountBookListResponseSchema = paginatedDataSchema(accountBookForUserWithTeamSchema);
+
+const updateAccountBookQuerySchema = z.object({
+  accountBookId: zodStringToNumber,
+});
+
+const updateAccountBookBodySchema = z.object({
+  action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
+  tag: z.nativeEnum(WORK_TAG).optional(),
+  isPrivate: z.boolean().optional(),
+});
+
+const updateAccountBookResponseSchema = z.object({
+  teamId: z.number().optional().default(0),
+  company: companyOutputSchema,
+  tag: z.nativeEnum(WORK_TAG),
+  order: z.number().int(),
+  role: roleSchema,
+});
 
 const accountBookNullSchema = z.union([z.object({}), z.string()]);
 
@@ -75,9 +80,6 @@ export const accountBookListSchema = {
   outputSchema: accountBookListResponseSchema,
   frontend: accountBookNullSchema,
 };
-
-export type IAccountBookListQueryParams = z.infer<typeof accountBookListQuerySchema>;
-export type IAccountBookListResponse = z.infer<typeof accountBookListResponseSchema>;
 
 const connectAccountBookQuerySchema = z.object({
   accountBookId: zodStringToNumber,
@@ -149,6 +151,9 @@ export const listAccountBooksByTeamIdSchema = {
   frontend: accountBookListResponseSchema,
 };
 
+export type IAccountBookListQueryParams = z.infer<typeof accountBookListQuerySchema>;
+export type IAccountBookListResponse = z.infer<typeof accountBookListResponseSchema>;
+
 export type IConnectAccountBookQueryParams = z.infer<typeof connectAccountBookQuerySchema>;
 export type IConnectAccountBookResponse = z.infer<typeof connectAccountBookResponseSchema>;
 
@@ -156,31 +161,12 @@ export type IGetAccountBookQueryParams = z.infer<typeof getAccountBookQuerySchem
 export type IGetAccountBookResponse = z.infer<typeof accountBookInfoSchema>;
 export type ICountry = z.infer<typeof countrySchema>;
 
-// Info: (20250310 - Shirley) 定義更新帳本的 Schema
-const updateAccountBookQuerySchema = z.object({
-  accountBookId: zodStringToNumber,
-});
-
-const updateAccountBookBodySchema = z.object({
-  action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
-  tag: z.nativeEnum(WORK_TAG).optional(),
-  isPrivate: z.boolean().optional(),
-});
-
 export const updateAccountBookSchema = {
   input: {
     querySchema: updateAccountBookQuerySchema,
     bodySchema: updateAccountBookBodySchema,
   },
-  outputSchema: accountBookForUserSchema.nullable(),
+  // outputSchema: accountBookForUserWithTeamInfoSchema.nullable(),
+  outputSchema: updateAccountBookResponseSchema.nullable(),
   frontend: nullSchema,
 };
-
-// export const companyPutSchema = {
-//   input: {
-//     querySchema: companyPutQuerySchema,
-//     bodySchema: companyPutBodySchema,
-//   },
-//   outputSchema: accountBookForUserSchema,
-//   frontend: nullSchema,
-// };
