@@ -181,7 +181,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
   const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
-  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);

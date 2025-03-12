@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
-
 import FilterSection from '@/components/filter_section/filter_section';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { APIName } from '@/constants/api_connection';
@@ -50,23 +49,32 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
 
   const handleSelectAll = () => {
     if (isSelectAll) {
+      // Info: (20250312 - Julian) 如果已經全選，則清空 selectedIds，並重置所有 isSelected
       setSelectedIds([]);
+      handleSelect(
+        certificates.map((item) => item.id),
+        false
+      );
     } else {
+      // Info: (20250312 - Julian) 將所有發票加入 selectedIds，並且將所有 isSelected 設為 true
       setSelectedIds(certificates.map((item) => item.id));
+      handleSelect(
+        certificates.map((item) => item.id),
+        true
+      );
     }
-  };
-
-  const handleConfirm = () => {
-    handleSelect(selectedIds, true);
-    onClose();
   };
 
   const handleSelectOne = (id: number) => {
     const index = selectedIds.findIndex((item) => item === id);
     if (index === -1) {
+      // Info: (20250312 - Julian) 如果該發票還沒有被選取，則加入 selectedIds，並且將 isSelected 設為 true
       setSelectedIds([...selectedIds, id]);
+      handleSelect([id], true);
     } else {
+      // Info: (20250312 - Julian) 如果該發票已經被選取，則從 selectedIds 移除，並且將 isSelected 設為 false
       setSelectedIds(selectedIds.filter((item) => item !== id));
+      handleSelect([id], false);
     }
   };
 
@@ -134,7 +142,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
             type="button"
             variant="tertiary"
             className="gap-x-4px px-4 py-2"
-            onClick={handleConfirm}
+            onClick={onClose}
           >
             {t('common:COMMON.CONFIRM')}
           </Button>
