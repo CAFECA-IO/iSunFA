@@ -246,7 +246,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       Object.keys(updatedData).forEach((key) => {
         updatedData[key] = {
           ...updatedData[key],
-          isSelected: ids.includes(parseInt(key, 10)), // Info: (20250312 - Julian) 須轉換成數字
+          isSelected: ids.includes(Number(key)), // Info: (20250312 - Julian) 須轉換成數字
         };
       });
 
@@ -894,7 +894,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         const newCertificatesUI: { [id: string]: ICertificateUI } = {
           [newCertificate.id]: {
             ...newCertificate,
-            isSelected: false,
+            isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
             actions: !newCertificate.voucherNo
               ? [
                   CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
