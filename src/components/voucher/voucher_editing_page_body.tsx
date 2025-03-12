@@ -298,7 +298,7 @@ const VoucherEditingPageBody: React.FC<{
 
   // Info: (20241018 - Tzuhan) 選擇憑證
   const handleSelect = useCallback(
-    (ids: number[], isSelected: boolean) => {
+    (ids: number[]) => {
       // Info: (20241230 - Tzuhan) 把所有 certificates 先歸零
       const updatedCertificates = Object.values(certificates).reduce(
         (acc, item) => {
@@ -317,14 +317,13 @@ const VoucherEditingPageBody: React.FC<{
         {} as { [id: string]: ICertificateUI }
       );
 
-      // Info: (20241230 - Tzuhan) 對於呼叫 handleSelect(ids, true) => 只勾選 ids 裡頭的這些
-      // Info: (20241230 - Tzuhan) 如果呼叫 handleSelect(ids, false) => 就等於全部 false
-      ids.forEach((id) => {
-        if (updatedCertificates[id]) {
-          updatedCertificates[id].isSelected = isSelected;
+      // Info: (20250312 - Julian) 更新選擇狀態：包含在 ids 中的 isSelected 為 true，不在 ids 中的為 false
+      Object.keys(updatedCertificates).forEach((key) => {
+        if (updatedCertificates[key]) {
+          updatedCertificates[key].isSelected = ids.includes(Number(key));
         }
-        if (updatedBinded[id]) {
-          updatedBinded[id].isSelected = isSelected;
+        if (updatedBinded[key]) {
+          updatedBinded[key].isSelected = ids.includes(Number(key));
         }
       });
 
@@ -793,7 +792,7 @@ const VoucherEditingPageBody: React.FC<{
         const newCertificatesUI: { [id: string]: ICertificateUI } = {
           [newCertificate.id]: {
             ...newCertificate,
-            isSelected: false,
+            isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
             actions: !newCertificate.voucherNo
               ? [
                   CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
