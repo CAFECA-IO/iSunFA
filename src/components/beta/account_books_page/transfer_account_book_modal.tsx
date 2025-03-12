@@ -44,7 +44,10 @@ const TransferAccountBookModal = ({
     try {
       const { success } = await transferAccountBookAPI({
         params: { accountBookId: accountBookToTransfer.company.id },
-        body: { targetTeamId: transferToTeamId },
+        body: {
+          fromTeamId: accountBookToTransfer.team.id.toString(),
+          toTeamId: transferToTeamId,
+        },
       });
 
       if (!success) throw new Error('打 API 轉移帳本失敗');
