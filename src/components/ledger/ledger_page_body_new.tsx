@@ -154,7 +154,7 @@ const LedgerPageBody = () => {
       const { data: accountTitleList } = await getAccountListAPI({
         params: { companyId: selectedAccountBook.id },
         query: {
-          limit: 0, //  Info: (20250312 - Anna) 取所有數據
+          limit: 0, // Info: (20250312 - Anna) 取所有數據
           forUser: true,
           sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
           sortOrder: 'asc',
