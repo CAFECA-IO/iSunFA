@@ -46,7 +46,10 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   const [isLoading, setIsLoading] = useState(false); // Info: (20241105 - Anna) 追蹤 API 請求的加載狀態
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null); // Info: (20241105 - Anna) 追蹤之前的日期範圍
 
+  const prevCurrentPage = useRef<number>(1); // Info: (20250312 - Anna) 用 useRef 記錄上一次的 currentPage
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // Info: (20250312 - Anna) 儲存 API 回傳的總頁數
+
   const [beginningCreditSort, setBeginningCreditSort] = useState<null | SortOrder>(null);
   const [beginningDebitSort, setBeginningDebitSort] = useState<null | SortOrder>(null);
   const [midtermDebitSort, setMidtermDebitSort] = useState<null | SortOrder>(null);
@@ -95,11 +98,13 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
           prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
           prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
           hasFetchedOnce &&
-          !sort) // Info: (20250110 - Julian) 若「已經請求過一次」且「沒有排序選項」則略過請求
+          // Info: (20250110 - Julian) 若「已經請求過一次」且「沒有排序選項」則略過請求
+          !sort &&
+          // Info: (20250312 - Anna) 確保頁數不同時會發送 API
+          prevCurrentPage.current === currentPage)
       ) {
         return;
       }
-
       setIsLoading(true);
       try {
         // Info: (20241204 - Anna) 使用 trigger 手動觸發 APIHandler
@@ -108,8 +113,8 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
           query: {
             startDate: selectedDateRange.startTimeStamp,
             endDate: selectedDateRange.endTimeStamp,
-            page: 1,
-            pageSize: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
+            page: currentPage, // Info: (20250312 - Anna) 傳遞當前頁碼
+            pageSize: DEFAULT_PAGE_LIMIT, // Info: (20250312 - Anna) 限制每頁筆數
             sortOption: sort ? `${sort?.sortBy}:${sort?.sortOrder}` : undefined, // Info: (20250110 - Julian) 起始/期中/結束的借貸方金額排序
           },
         });
@@ -120,6 +125,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
           const { currencyAlias: currency, total } = parseNote(response.data.note);
           setCurrencyAlias(currency);
           setTotalData(total);
+          setTotalPages(response.data.totalPages || 1); // Info: (20250312 - Anna) 設定 `totalPages`，確保分頁正常
           setHasFetchedOnce(true); // Info: (20241204 - Anna) 標記為已成功請求
           prevSelectedDateRange.current = selectedDateRange; // Info: (20241204 - Anna) 更新前一个日期範圍
         } else {
@@ -138,6 +144,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     [
       fetchTrialBalance,
       selectedDateRange,
+      currentPage, // Info: (20250312 - Anna) 確保 currentPage 變更時會重新發送 API 請求
       hasFetchedOnce,
       beginningCreditSort,
       beginningDebitSort,
@@ -161,9 +168,16 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       selectedDateRange.startTimeStamp &&
       selectedDateRange.endTimeStamp
     ) {
+      // eslint-disable-next-line no-console
+      console.log('useEffect triggered - currentPage:', currentPage);
       fetchTrialBalanceData(); //  Info: (20241204 - Anna) 僅在日期有效時觸發請求
     }
-  }, [fetchTrialBalanceData]);
+  }, [selectedDateRange, currentPage]);
+
+  // Info: (20250312 - Anna) 當 API 請求結束後，更新 prevCurrentPage
+  useEffect(() => {
+    prevCurrentPage.current = currentPage;
+  }, [currentPage]);
 
   useEffect(() => {
     // Info: (20250110 - Julian) 排序狀態變更時重新請求資料
@@ -657,7 +671,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       <div className="mx-auto print:hidden">
         <Pagination
           currentPage={currentPage}
-          totalPages={Math.ceil(accountList.length / DEFAULT_PAGE_LIMIT)}
+          totalPages={totalPages} // Info: (20250312 - Anna) 使用 API 回傳的 `totalPages`
           setCurrentPage={setCurrentPage}
         />
       </div>
