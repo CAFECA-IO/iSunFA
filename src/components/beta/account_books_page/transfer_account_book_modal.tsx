@@ -5,7 +5,7 @@ import { PiShareFatBold } from 'react-icons/pi';
 import { useTranslation } from 'next-i18next';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ITransferLedger } from '@/interfaces/team';
+import { ITransferAccountBook } from '@/interfaces/team';
 
 interface TransferAccountBookModalProps {
   accountBookToTransfer: IAccountBookForUserWithTeam;
@@ -24,8 +24,8 @@ const TransferAccountBookModal = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Info: (20250311 - Liz) 轉移帳本 API
-  const { trigger: transferAccountBookAPI } = APIHandler<ITransferLedger>(
-    APIName.TRANSFER_ACCOUNT_BOOK
+  const { trigger: transferAccountBookAPI } = APIHandler<ITransferAccountBook>(
+    APIName.REQUEST_TRANSFER_ACCOUNT_BOOK
   );
 
   // Deprecated: (20250213 - Liz)
