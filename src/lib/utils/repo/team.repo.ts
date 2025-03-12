@@ -1,5 +1,12 @@
 import prisma from '@/client';
-import { ILeaveTeam, ITeam, TeamRole, LeaveStatus } from '@/interfaces/team';
+import {
+  ILeaveTeam,
+  ITeam,
+  TeamRole,
+  LeaveStatus,
+  ITransferAccountBook,
+  TransferStatus,
+} from '@/interfaces/team';
 import { TeamPaymentStatus } from '@prisma/client';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { z } from 'zod';
@@ -9,6 +16,12 @@ import { TPlanType } from '@/interfaces/subscription';
 import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import loggerBack from '@/lib/utils/logger_back';
+import {
+  ACCOUNT_BOOK_TRANSFER_PERMISSIONS,
+  SUBSCRIPTION_PLAN_LIMITS,
+} from '@/constants/team/permissions';
 
 const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
   return sortOptions.map(({ sortBy, sortOrder }) => ({
@@ -567,4 +580,209 @@ export const memberLeaveTeam = async (userId: number, teamId: number): Promise<I
     status: LeaveStatus.NOT_IN_TEAM,
     leftAt,
   };
+};
+
+// Info: (20250311 - Tzuhan) 發起帳本轉移
+export const requestTransferAccountBook = async (
+  userId: number,
+  accountBookId: number,
+  fromTeamId: number,
+  toTeamId: number
+): Promise<ITransferAccountBook> => {
+  loggerBack.info(
+    `User ${userId} is requesting to transfer AccountBook ${accountBookId} to Team ${toTeamId}`
+  );
+
+  // Info: (20250311 - Tzuhan) 確保用戶是 `Owner` 或 `Admin`
+  const userTeamRole = await prisma.teamMember.findFirst({
+    where: { teamId: fromTeamId, userId },
+    select: { role: true },
+  });
+
+  if (
+    !userTeamRole ||
+    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.REQUEST_TRANSFER.some(
+      (role) => role === (userTeamRole.role as TeamRole)
+    )
+  ) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  // Info: (20250311 - Tzuhan) 確保目標團隊 `toTeamId` 存在
+  const targetTeam = await prisma.team.findUnique({
+    where: { id: toTeamId },
+    include: {
+      subscription: {
+        include: { plan: true }, // Info: (20250311 - Tzuhan) 正確關聯到 TeamPlan，才能取得 planType
+      },
+    },
+  });
+
+  if (!targetTeam) {
+    throw new Error(STATUS_MESSAGE.TEAM_NOT_FOUND);
+  }
+
+  // Info: (20250311 - Tzuhan) 確保轉入團隊的 `subscription.planType` 不會超過上限
+  const isFreePlan = targetTeam.subscription?.plan?.type === TPlanType.BEGINNER;
+  const accountBookCount = await prisma.company.count({ where: { teamId: toTeamId } });
+
+  if (isFreePlan && accountBookCount >= SUBSCRIPTION_PLAN_LIMITS.FREE) {
+    throw new Error(STATUS_MESSAGE.EXCEED_FREE_PLAN_LIMIT);
+  }
+
+  // Info: (20250311 - Tzuhan) 更新帳本 `isTransferring = true`
+  await prisma.company.update({
+    where: { id: accountBookId },
+    data: { isTransferring: true },
+  });
+
+  // Info: (20250311 - Tzuhan) 建立 `accountBook_transfer` 記錄
+  await prisma.accountBookTransfer.create({
+    data: {
+      companyId: accountBookId,
+      fromTeamId,
+      toTeamId,
+      initiatedByUserId: userId,
+      status: TransferStatus.PENDING,
+    },
+  });
+
+  return {
+    accountBookId,
+    previousTeamId: fromTeamId,
+    targetTeamId: toTeamId,
+    status: TransferStatus.PENDING,
+  } as ITransferAccountBook;
+};
+
+// Info: (20250311 - Tzuhan) 取消帳本轉移
+export const cancelTransferAccountBook = async (
+  userId: number,
+  accountBookId: number
+): Promise<void> => {
+  loggerBack.info(`User ${userId} is canceling transfer for AccountBook ${accountBookId}`);
+
+  // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
+  const transfer = await prisma.accountBookTransfer.findFirst({
+    where: { companyId: accountBookId, status: TransferStatus.PENDING },
+  });
+
+  if (!transfer) {
+    throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+  }
+
+  // Info: (20250311 - Tzuhan) 確保用戶有權限取消
+  const userTeamRole = await prisma.teamMember.findFirst({
+    where: { teamId: transfer.fromTeamId, userId },
+    select: { role: true },
+  });
+
+  if (
+    !userTeamRole ||
+    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.CANCEL_TRANSFER.some(
+      (role) => role === (userTeamRole.role as TeamRole)
+    )
+  ) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
+  await prisma.$transaction([
+    prisma.accountBookTransfer.update({
+      where: { id: transfer.id },
+      data: { status: TransferStatus.CANCELED },
+    }),
+    prisma.company.update({
+      where: { id: accountBookId },
+      data: { isTransferring: false },
+    }),
+  ]);
+};
+
+// Info: (20250311 - Tzuhan) 接受帳本轉移
+export const acceptTransferAccountBook = async (
+  userId: number,
+  accountBookId: number
+): Promise<void> => {
+  loggerBack.info(`User ${userId} is accepting transfer for AccountBook ${accountBookId}`);
+
+  // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
+  const transfer = await prisma.accountBookTransfer.findFirst({
+    where: { companyId: accountBookId, status: TransferStatus.PENDING },
+  });
+
+  if (!transfer) {
+    throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+  }
+
+  // Info: (20250311 - Tzuhan) 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
+  const userTeamRole = await prisma.teamMember.findFirst({
+    where: { teamId: transfer.toTeamId, userId },
+    select: { role: true },
+  });
+
+  if (
+    !userTeamRole ||
+    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.ACCEPT_TRANSFER.some(
+      (role) => role === (userTeamRole.role as TeamRole)
+    )
+  ) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  // Info: (20250311 - Tzuhan) 更新 `company.teamId` & `accountBook_transfer` 狀態
+  await prisma.$transaction([
+    prisma.company.update({
+      where: { id: accountBookId },
+      data: { teamId: transfer.toTeamId, isTransferring: false },
+    }),
+    prisma.accountBookTransfer.update({
+      where: { id: transfer.id },
+      data: { status: TransferStatus.COMPLETED },
+    }),
+  ]);
+};
+
+// Info: (20250311 - Tzuhan) 拒絕帳本轉移
+export const declineTransferAccountBook = async (
+  userId: number,
+  accountBookId: number
+): Promise<void> => {
+  loggerBack.info(`User ${userId} is declining transfer for AccountBook ${accountBookId}`);
+
+  // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
+  const transfer = await prisma.accountBookTransfer.findFirst({
+    where: { companyId: accountBookId, status: TransferStatus.PENDING },
+  });
+
+  if (!transfer) {
+    throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+  }
+
+  // Info: (20250311 - Tzuhan) 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
+  const userTeamRole = await prisma.teamMember.findFirst({
+    where: { teamId: transfer.toTeamId, userId },
+    select: { role: true },
+  });
+
+  if (
+    !userTeamRole ||
+    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.DECLINE_TRANSFER.some(
+      (role) => role === (userTeamRole.role as TeamRole)
+    )
+  ) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
+  await prisma.$transaction([
+    prisma.accountBookTransfer.update({
+      where: { id: transfer.id },
+      data: { status: TransferStatus.DECLINED },
+    }),
+    prisma.company.update({
+      where: { id: accountBookId },
+      data: { isTransferring: false },
+    }),
+  ]);
 };
