@@ -582,7 +582,7 @@ export const memberLeaveTeam = async (userId: number, teamId: number): Promise<I
   };
 };
 
-// ✅ 發起帳本轉移
+// Info: (20250311 - Tzuhan) 發起帳本轉移
 export const requestTransferAccountBook = async (
   userId: number,
   accountBookId: number,
@@ -593,7 +593,7 @@ export const requestTransferAccountBook = async (
     `User ${userId} is requesting to transfer AccountBook ${accountBookId} to Team ${toTeamId}`
   );
 
-  // 1️⃣ 確保用戶是 `Owner` 或 `Admin`
+  // Info: (20250311 - Tzuhan) 確保用戶是 `Owner` 或 `Admin`
   const userTeamRole = await prisma.teamMember.findFirst({
     where: { teamId: fromTeamId, userId },
     select: { role: true },
@@ -608,12 +608,12 @@ export const requestTransferAccountBook = async (
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // 2️⃣ 確保目標團隊 `toTeamId` 存在
+  // Info: (20250311 - Tzuhan) 確保目標團隊 `toTeamId` 存在
   const targetTeam = await prisma.team.findUnique({
     where: { id: toTeamId },
     include: {
       subscription: {
-        include: { plan: true }, // ✅ 正確關聯到 TeamPlan，才能取得 planType
+        include: { plan: true }, // Info: (20250311 - Tzuhan) 正確關聯到 TeamPlan，才能取得 planType
       },
     },
   });
@@ -622,7 +622,7 @@ export const requestTransferAccountBook = async (
     throw new Error(STATUS_MESSAGE.TEAM_NOT_FOUND);
   }
 
-  // 3️⃣ 確保轉入團隊的 `subscription.planType` 不會超過上限
+  // Info: (20250311 - Tzuhan) 確保轉入團隊的 `subscription.planType` 不會超過上限
   const isFreePlan = targetTeam.subscription?.plan?.type === TPlanType.BEGINNER;
   const accountBookCount = await prisma.company.count({ where: { teamId: toTeamId } });
 
@@ -630,13 +630,13 @@ export const requestTransferAccountBook = async (
     throw new Error(STATUS_MESSAGE.EXCEED_FREE_PLAN_LIMIT);
   }
 
-  // 4️⃣ 更新帳本 `isTransferring = true`
+  // Info: (20250311 - Tzuhan) 更新帳本 `isTransferring = true`
   await prisma.company.update({
     where: { id: accountBookId },
     data: { isTransferring: true },
   });
 
-  // 5️⃣ 建立 `accountBook_transfer` 記錄
+  // Info: (20250311 - Tzuhan) 建立 `accountBook_transfer` 記錄
   await prisma.accountBookTransfer.create({
     data: {
       companyId: accountBookId,
@@ -655,14 +655,14 @@ export const requestTransferAccountBook = async (
   } as ITransferAccountBook;
 };
 
-// ✅ 取消帳本轉移
+// Info: (20250311 - Tzuhan) 取消帳本轉移
 export const cancelTransferAccountBook = async (
   userId: number,
   accountBookId: number
 ): Promise<void> => {
   loggerBack.info(`User ${userId} is canceling transfer for AccountBook ${accountBookId}`);
 
-  // 1️⃣ 找到帳本的 `transfer` 記錄
+  // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
   const transfer = await prisma.accountBookTransfer.findFirst({
     where: { companyId: accountBookId, status: TransferStatus.PENDING },
   });
@@ -671,7 +671,7 @@ export const cancelTransferAccountBook = async (
     throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
   }
 
-  // 2️⃣ 確保用戶有權限取消
+  // Info: (20250311 - Tzuhan) 確保用戶有權限取消
   const userTeamRole = await prisma.teamMember.findFirst({
     where: { teamId: transfer.fromTeamId, userId },
     select: { role: true },
@@ -686,7 +686,7 @@ export const cancelTransferAccountBook = async (
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // 3️⃣ 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
+  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
   await prisma.$transaction([
     prisma.accountBookTransfer.update({
       where: { id: transfer.id },
@@ -699,14 +699,14 @@ export const cancelTransferAccountBook = async (
   ]);
 };
 
-// ✅ 接受帳本轉移
+// Info: (20250311 - Tzuhan) 接受帳本轉移
 export const acceptTransferAccountBook = async (
   userId: number,
   accountBookId: number
 ): Promise<void> => {
   loggerBack.info(`User ${userId} is accepting transfer for AccountBook ${accountBookId}`);
 
-  // 1️⃣ 找到帳本的 `transfer` 記錄
+  // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
   const transfer = await prisma.accountBookTransfer.findFirst({
     where: { companyId: accountBookId, status: TransferStatus.PENDING },
   });
@@ -715,7 +715,7 @@ export const acceptTransferAccountBook = async (
     throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
   }
 
-  // 2️⃣ 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
+  // Info: (20250311 - Tzuhan) 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
   const userTeamRole = await prisma.teamMember.findFirst({
     where: { teamId: transfer.toTeamId, userId },
     select: { role: true },
@@ -730,7 +730,7 @@ export const acceptTransferAccountBook = async (
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // 3️⃣ 更新 `company.teamId` & `accountBook_transfer` 狀態
+  // Info: (20250311 - Tzuhan) 更新 `company.teamId` & `accountBook_transfer` 狀態
   await prisma.$transaction([
     prisma.company.update({
       where: { id: accountBookId },
@@ -743,14 +743,14 @@ export const acceptTransferAccountBook = async (
   ]);
 };
 
-// ✅ 拒絕帳本轉移
+// Info: (20250311 - Tzuhan) 拒絕帳本轉移
 export const declineTransferAccountBook = async (
   userId: number,
   accountBookId: number
 ): Promise<void> => {
   loggerBack.info(`User ${userId} is declining transfer for AccountBook ${accountBookId}`);
 
-  // 1️⃣ 找到帳本的 `transfer` 記錄
+  // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
   const transfer = await prisma.accountBookTransfer.findFirst({
     where: { companyId: accountBookId, status: TransferStatus.PENDING },
   });
@@ -759,7 +759,7 @@ export const declineTransferAccountBook = async (
     throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
   }
 
-  // 2️⃣ 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
+  // Info: (20250311 - Tzuhan) 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
   const userTeamRole = await prisma.teamMember.findFirst({
     where: { teamId: transfer.toTeamId, userId },
     select: { role: true },
@@ -774,7 +774,7 @@ export const declineTransferAccountBook = async (
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // 3️⃣ 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
+  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
   await prisma.$transaction([
     prisma.accountBookTransfer.update({
       where: { id: transfer.id },
