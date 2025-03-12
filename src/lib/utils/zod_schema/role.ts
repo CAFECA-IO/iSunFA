@@ -7,7 +7,7 @@ const roleListQuerySchema = z.object({
   type: z.nativeEnum(RoleType),
 });
 
-export const rolePrimsaSchema = z.object({
+export const rolePrismaSchema = z.object({
   id: z.number().int(),
   type: z.string(),
   name: z.string(),
@@ -16,7 +16,7 @@ export const rolePrimsaSchema = z.object({
   updatedAt: z.number().int(),
 });
 
-const roleOutputSchema = z.array(rolePrimsaSchema);
+const roleOutputSchema = z.array(rolePrismaSchema);
 
 export const roleListSchema = {
   input: {

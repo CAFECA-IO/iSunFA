@@ -1,12 +1,12 @@
 import Image from 'next/image';
-import React from 'react';
-
-import { ICertificateUI } from '@/interfaces/certificate';
+import React, { useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import { RxCross1 } from 'react-icons/rx';
+import { useTranslation } from 'next-i18next';
+import { ICertificateUI } from '@/interfaces/certificate';
 import { Button } from '@/components/button/button';
 // import Magnifier from '@/components/magnifier/magifier';
 import ImageZoom from '@/components/image_zoom/image_zoom';
-import { useTranslation } from 'next-i18next';
 
 interface CertificatePreviewModalProps {
   isOpen: boolean;
@@ -22,7 +22,44 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
   isOnTopOfModal,
 }) => {
   const { t } = useTranslation(['common']);
+  const printRef = useRef<HTMLImageElement>(null);
+
+  // Info: (20250311 - Julian) 列印發票
+  const handlePrint = useReactToPrint({
+    contentRef: printRef, // Info: (20250311 - Julian) 指定要列印的元素
+    documentTitle: `${certificate?.file.name}`, // Info: (20250311 - Julian) 列印的文件標題
+    onBeforePrint: async () => {
+      return Promise.resolve(); // Info: (20250311 - Julian) 確保回傳一個 Promise
+    },
+    onAfterPrint: async () => {
+      return Promise.resolve(); // Info: (20250311 - Julian) 確保回傳一個 Promise
+    },
+  });
+
+  // Info: (20250311 - Julian) 如果模態框未開啟或沒有發票資料，則不顯示模態框
   if (!isOpen || !certificate) return null;
+
+  // Info: (20250311 - Julian) 下載發票
+  const handleDownload = async () => {
+    const imageUrl = certificate.file.url;
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = certificate.file.name;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(blobUrl); // Info: (20250311 - Julian) 釋放 URL 資源
+      link.parentNode?.removeChild(link);
+    } catch (error) {
+      // Deprecated: (20250311 - Julian) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.error('Download failed:', error);
+    }
+  };
 
   return (
     <div
@@ -45,17 +82,37 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
           </div>
         </h2>
         <div className="flex justify-end gap-2 border-b border-stroke-neutral-quaternary px-4 py-3">
-          <Button type="button" variant="tertiary" className="p-2" size="defaultSquare">
-            <Image src="/elements/printer.svg" width={16} height={16} alt="elements" />
+          <Button
+            type="button"
+            variant="tertiary"
+            className="p-2"
+            size="defaultSquare"
+            onClick={() => handlePrint()}
+          >
+            <Image src="/elements/printer.svg" width={16} height={16} alt="print" />
           </Button>
-          <Button type="button" variant="tertiary" className="p-2" size="defaultSquare">
+          <Button
+            type="button"
+            variant="tertiary"
+            className="p-2"
+            size="defaultSquare"
+            onClick={handleDownload}
+          >
             <Image src="/elements/downloader.svg" alt="⬇" width={16} height={16} />
           </Button>
         </div>
-        <div className="hide-scrollbar flex justify-center overflow-scroll px-4">
+        <div className="hide-scrollbar flex justify-center overflow-hidden px-4">
           <ImageZoom
             imageUrl={certificate.file.url}
             className="max-h-700px min-h-500px min-w-600px max-w-1200px"
+          />
+          <Image
+            ref={printRef}
+            src={certificate.file.url}
+            alt="certificate"
+            fill
+            objectFit="contain"
+            className="absolute hidden print:block"
           />
           {/* <Magnifier
             className="max-h-800px min-h-500px min-w-700px max-w-1200px object-contain"

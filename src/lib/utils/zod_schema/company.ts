@@ -7,7 +7,7 @@ import {
   zodStringToNumberWithDefault,
 } from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
-import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
+import { rolePrismaSchema } from '@/lib/utils/zod_schema/role';
 import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
 import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 
@@ -44,6 +44,7 @@ const companyPutQuerySchema = z.object({
 const companyPutBodySchema = z.object({
   action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
   tag: z.nativeEnum(WORK_TAG).optional(),
+  isPrivate: z.boolean().optional(),
 });
 
 // Info: (20241016 - Jacky) Company delete schema
@@ -86,7 +87,7 @@ export const accountBookForUserSchema = z.object({
   company: companyOutputSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number().int(),
-  role: rolePrimsaSchema,
+  role: rolePrismaSchema,
 });
 // Info: (20241028 - Jacky) Paginated data schema
 export const paginatedAccountBookForUserSchema = paginatedDataSchema(accountBookForUserSchema);

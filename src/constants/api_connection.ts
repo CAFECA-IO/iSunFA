@@ -185,6 +185,7 @@ export enum APIName {
   DELETE_MEMBER_BY_ID = 'DELETE_MEMBER_BY_ID',
   GET_ACCOUNT_BOOK_INFO_BY_ID = 'GET_ACCOUNT_BOOK_INFO_BY_ID',
   PUT_TEAM_ICON = 'PUT_TEAM_ICON',
+  UPDATE_ACCOUNT_BOOK = 'UPDATE_ACCOUNT_BOOK',
 }
 
 export enum APIPath {
@@ -245,10 +246,6 @@ export enum APIPath {
   VOUCHER_LIST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
   VOUCHER_POST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
   VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
-  VOUCHER_PUT_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
-  VOUCHER_RESTORE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId/restore`,
-  REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/lineitem`,
-  VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/voucher`,
   VOUCHER_DELETE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
   VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/company/:companyId/voucher/read`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
@@ -348,6 +345,11 @@ export enum APIPath {
   DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
   GET_ACCOUNT_BOOK_INFO_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/info`,
   PUT_TEAM_ICON = `${apiPrefixV2}/team/:teamId/icon`,
+  VOUCHER_PUT_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
+  VOUCHER_RESTORE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId/restore`,
+  REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/lineitem`,
+  VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/voucher`,
+  UPDATE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId`,
 }
 
 const createConfig = ({
@@ -1171,5 +1173,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.PUT_TEAM_ICON,
     method: HttpMethod.PUT,
     path: APIPath.PUT_TEAM_ICON,
+  }),
+  [APIName.UPDATE_ACCOUNT_BOOK]: createConfig({
+    name: APIName.UPDATE_ACCOUNT_BOOK,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_ACCOUNT_BOOK,
   }),
 };

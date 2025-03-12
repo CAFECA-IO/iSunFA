@@ -80,7 +80,12 @@ const NumericInput = ({
   };
 
   // Info: (20250306 - Julian) 處理在中文輸入法下，填入數字的情況
-  const convertInput = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  function convertInput(event: React.KeyboardEvent<HTMLInputElement>) {
+    // Info: (20250311 - Julian) 如果按下 tab: 執行預設行為
+    if (event.code === 'Tab') {
+      return;
+    }
+
     event.preventDefault(); // Info: (20250306 - Julian) 阻止預設事件
 
     let temp = displayValue; // Info: (20250306 - Julian) 取得目前顯示值
@@ -89,8 +94,8 @@ const NumericInput = ({
     const input = event.currentTarget; // Info: (20250306 - Julian) 取得 input 元件
     const cursorPos = input.selectionStart ?? displayValue.length; // Info: (20250306 - Julian) 取得當前游標位置
 
-    // Info: (20250306 - Julian) 如果按下的是數字鍵
     if (event.code.indexOf('Digit') > -1) {
+      // Info: (20250306 - Julian) 如果按下的是數字鍵
       code = event.code.slice(-1); // Info: (20250306 - Julian) 取得數字鍵的值
       temp = temp.slice(0, cursorPos) + code + temp.slice(cursorPos); // Info: (20250306 - Julian) 插入數字
 
@@ -98,7 +103,6 @@ const NumericInput = ({
       handleChange({ target: { value: temp } } as React.ChangeEvent<HTMLInputElement>);
     } else if (event.code === 'Backspace' && cursorPos > 0) {
       // Info: (20250306 - Julian) 如果按下 backspace
-
       // Info: (20250306 - Julian) 刪除游標前一個字
       temp = temp.slice(0, cursorPos - 1) + temp.slice(cursorPos);
       // Info: (20250306 - Julian) 變更顯示值
@@ -113,7 +117,6 @@ const NumericInput = ({
       });
     } else if (event.code === 'Delete' && cursorPos < temp.length) {
       // Info: (20250306 - Julian) 如果按下 delete
-
       // Info: (20250306 - Julian) 刪除游標後一個字
       temp = temp.slice(0, cursorPos) + temp.slice(cursorPos + 1);
       // Info: (20250306 - Julian) 變更顯示值
@@ -139,7 +142,7 @@ const NumericInput = ({
         );
       });
     }
-  };
+  }
 
   // Info: (20240723 - Liz) 處理 displayValue 為空或僅為點的情況
   const handleBlur = () => {

@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
-import LedgerPageBody from '@/components/ledger/ledger_page_body';
+import LedgerPageBody from '@/components/ledger/ledger_page_body_new';
 import Layout from '@/components/beta/layout/layout';
 
 const LedgerPage = () => {
