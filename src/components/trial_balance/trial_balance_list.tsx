@@ -168,8 +168,6 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       selectedDateRange.startTimeStamp &&
       selectedDateRange.endTimeStamp
     ) {
-      // eslint-disable-next-line no-console
-      console.log('useEffect triggered - currentPage:', currentPage);
       fetchTrialBalanceData(); //  Info: (20241204 - Anna) 僅在日期有效時觸發請求
     }
   }, [selectedDateRange, currentPage]);
