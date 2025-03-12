@@ -23,6 +23,7 @@ import {
   EVENT_TYPE_TO_VOUCHER_TYPE_MAP,
   VOUCHER_TYPE_TO_EVENT_TYPE_MAP,
 } from '@/constants/account';
+// Deprecated: (20250311 - Julian) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
@@ -80,6 +81,7 @@ const VoucherEditingPageBody: React.FC<{
   const temporaryAssetListByCompany = temporaryAssetList[accountBookId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
+  // Deprecated: (20250311 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { trigger: askAI, isLoading: isAskingAI } = APIHandler<{
     reason: string;
@@ -87,6 +89,7 @@ const VoucherEditingPageBody: React.FC<{
   }>(APIName.ASK_AI_V2);
 
   // Info: (20241108 - Julian) GET AI RESULT
+  // Deprecated: (20250311 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { trigger: getAIResult, success: analyzeSuccess } = APIHandler<IAIResultVoucher>(
     APIName.ASK_AI_RESULT_V2
@@ -192,8 +195,10 @@ const VoucherEditingPageBody: React.FC<{
 
   // Info: (20241018 - Tzuhan) AI 分析相關 state
   // ToDo: (20250311 - Julian) 暫時隱藏 AI 分析功能
+  // Deprecated: (20250311 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
+  // Deprecated: (20250311 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
   const [targetIdList, setTargetIdList] = useState<number[]>([]);
@@ -581,6 +586,7 @@ const VoucherEditingPageBody: React.FC<{
     setLineItems(aiLineItemsUI);
   };
 
+  // Deprecated: (20250311 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const retryAIHandler = () => {
     setAiState(AIState.WORKING);
