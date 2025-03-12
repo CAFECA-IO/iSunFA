@@ -19,7 +19,7 @@ interface CertificateSelectorModalProps {
   setSelectedIds: React.Dispatch<React.SetStateAction<number[]>>;
   onClose: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
 
-  handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240926 - tzuhan) 保存數據的回調函數
+  handleSelect: (ids: number[]) => void; // Info: (20240926 - tzuhan) 保存數據的回調函數
   certificates: ICertificateUI[]; // Info: (20240926 - tzuhan) 證書列表
   handleApiResponse: (data: IPaginatedData<ICertificate[]>) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
   openUploaderModal: () => void; // Info: (20240926 - tzuhan) 打開上傳模態框的回調函數
@@ -47,34 +47,32 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen) return null;
 
+  const handleConfirm = () => {
+    // Info: (20250312 - Julian) 更新選擇狀態
+    handleSelect(selectedIds);
+
+    // Info: (20250312 - Julian) 關閉模態框
+    onClose();
+  };
+
   const handleSelectAll = () => {
     if (isSelectAll) {
-      // Info: (20250312 - Julian) 如果已經全選，則清空 selectedIds，並重置所有 isSelected
+      // Info: (20250312 - Julian) 如果已經全選，則清空 selectedIds
       setSelectedIds([]);
-      handleSelect(
-        certificates.map((item) => item.id),
-        false
-      );
     } else {
-      // Info: (20250312 - Julian) 將所有發票加入 selectedIds，並且將所有 isSelected 設為 true
+      // Info: (20250312 - Julian) 將所有發票加入 selectedIds
       setSelectedIds(certificates.map((item) => item.id));
-      handleSelect(
-        certificates.map((item) => item.id),
-        true
-      );
     }
   };
 
   const handleSelectOne = (id: number) => {
     const index = selectedIds.findIndex((item) => item === id);
     if (index === -1) {
-      // Info: (20250312 - Julian) 如果該發票還沒有被選取，則加入 selectedIds，並且將 isSelected 設為 true
+      // Info: (20250312 - Julian) 如果該發票還沒有被選取，則加入 selectedIds
       setSelectedIds([...selectedIds, id]);
-      handleSelect([id], true);
     } else {
-      // Info: (20250312 - Julian) 如果該發票已經被選取，則從 selectedIds 移除，並且將 isSelected 設為 false
+      // Info: (20250312 - Julian) 如果該發票已經被選取，則從 selectedIds 移除
       setSelectedIds(selectedIds.filter((item) => item !== id));
-      handleSelect([id], false);
     }
   };
 
@@ -142,7 +140,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
             type="button"
             variant="tertiary"
             className="gap-x-4px px-4 py-2"
-            onClick={onClose}
+            onClick={handleConfirm}
           >
             {t('common:COMMON.CONFIRM')}
           </Button>

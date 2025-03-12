@@ -239,14 +239,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241018 - Tzuhan) 選擇憑證
   const handleSelect = useCallback(
-    (ids: number[], isSelected: boolean) => {
-      const updatedData = {
-        ...certificates,
-      };
-      ids.forEach((id) => {
-        updatedData[id] = {
-          ...updatedData[id],
-          isSelected,
+    (ids: number[]) => {
+      // Info: (20250312 - Julian) 複製一份資料
+      const updatedData = { ...certificates };
+      // Info: (20250312 - Julian) 更新選擇狀態：包含在 ids 中的 isSelected 為 true，不在 ids 中的為 false
+      Object.keys(updatedData).forEach((key) => {
+        updatedData[key] = {
+          ...updatedData[key],
+          isSelected: ids.includes(parseInt(key, 10)), // Info: (20250312 - Julian) 須轉換成數字
         };
       });
 
@@ -265,7 +265,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       // Info: (20241021 - Julian) 呼叫 ask AI
       askAIAnalysis(targetIds);
     },
-    [certificates]
+    [certificates, selectedIds]
   );
 
   const handleDelete = useCallback(
