@@ -13,6 +13,7 @@ import { useRouter } from 'next/router';
 import { FaAngleDown } from 'react-icons/fa6';
 import { IoBookOutline } from 'react-icons/io5';
 import AccountSelectorModal from '@/components/ledger/account_selector_modal';
+import Pagination from '@/components/pagination/pagination';
 
 enum ReportType {
   General = 'general',
@@ -41,6 +42,11 @@ const LedgerPageBody = () => {
   const [selectedEndAccountNo, setSelectedEndAccountNo] = useState<string>('');
 
   const [ledgerData, setLedgerData] = useState<ILedgerPayload | null>(null);
+
+  // Info: (20250312 - Anna) Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
   const { trigger: fetchLedgerDataAPI, isLoading } = APIHandler<ILedgerPayload>(
@@ -104,11 +110,13 @@ const LedgerPageBody = () => {
             startAccountNo,
             endAccountNo,
             labelType: selectedReportType,
-            // page: 1,
-            pageSize: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
+            page: currentPage, // Info: (20250312 - Anna) 傳遞當前頁碼
+            pageSize: 10, // Info: (20250312 - Anna) 每頁筆數
           },
         });
         setLedgerData(data);
+        setTotalPages(data?.totalPages || 1); // Info: (20250312 - Anna) 更新總頁數
+        setTotalCount(data?.totalCount || 0); // Info: (20250312 - Anna) 更新總筆數
       };
 
       fetchLedgerData();
@@ -119,6 +127,7 @@ const LedgerPageBody = () => {
     selectedReportType,
     selectedStartAccountNo,
     selectedEndAccountNo,
+    currentPage, // Info: (20250312 - Anna) 監聽 currentPage 變化
   ]);
 
   // Info: (20250311 - Anna) 選擇起始會計科目
@@ -145,7 +154,7 @@ const LedgerPageBody = () => {
       const { data: accountTitleList } = await getAccountListAPI({
         params: { companyId: selectedAccountBook.id },
         query: {
-          limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
+          limit: 0, //  Info: (20250312 - Anna) 取所有數據
           forUser: true,
           sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
           sortOrder: 'asc',
@@ -400,6 +409,13 @@ const LedgerPageBody = () => {
           labelType={selectedReportType} // Info: (20241218 - Anna) 傳遞報表類型（general/detailed/all）
           selectedStartAccountNo={selectedStartAccountNo}
           selectedEndAccountNo={selectedEndAccountNo}
+        />
+        {/* Info: (20250312 - Anna) 分頁 UI */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
+          totalCount={totalCount}
         />
       </div>
     </div>
