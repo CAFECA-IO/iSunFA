@@ -88,6 +88,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
         case 'CANNOT_UPDATE_TO_OWNER':
         case 'CANNOT_UPDATE_OWNER_ROLE':
         case 'ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER':
+        case 'ADMIN_CANNOT_PROMOTE_TO_ADMIN':
           statusMessage = STATUS_MESSAGE.FORBIDDEN;
           break;
         default:

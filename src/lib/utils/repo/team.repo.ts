@@ -7,7 +7,11 @@ import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
-import { listByTeamIdQuerySchema, IUpdateMemberResponse, IDeleteMemberResponse } from '@/lib/utils/zod_schema/team';
+import {
+  listByTeamIdQuerySchema,
+  IUpdateMemberResponse,
+  IDeleteMemberResponse,
+} from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 
 const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
@@ -623,6 +627,11 @@ export const updateMemberById = async (
   // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，只能更新 EDITOR 和 VIEWER 角色
   if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
     throw new Error('ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER');
+  }
+
+  // Info: (20250313 - Shirley) 如果當前用戶是 ADMIN，不能將其他成員提升為 ADMIN
+  if (sessionUserTeamRole === TeamRole.ADMIN && role === TeamRole.ADMIN) {
+    throw new Error('ADMIN_CANNOT_PROMOTE_TO_ADMIN');
   }
 
   // Info: (20250312 - Shirley) 更新成員角色
