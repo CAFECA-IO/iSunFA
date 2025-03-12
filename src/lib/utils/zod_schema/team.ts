@@ -242,6 +242,7 @@ export const teamSchemas = {
   cancelTransferAccountBook: {
     input: {
       querySchema: requestTransferAccountBookQuerySchema,
+      bodySchema: nullSchema,
     },
     outputSchema: transferAccountBookSchema,
     frontend: transferAccountBookSchema,
@@ -249,6 +250,7 @@ export const teamSchemas = {
   acceptTransferAccountBook: {
     input: {
       querySchema: requestTransferAccountBookQuerySchema,
+      bodySchema: nullSchema,
     },
     outputSchema: transferAccountBookSchema,
     frontend: transferAccountBookSchema,
@@ -256,6 +258,7 @@ export const teamSchemas = {
   declineTransferAccountBook: {
     input: {
       querySchema: requestTransferAccountBookQuerySchema,
+      bodySchema: nullSchema,
     },
     outputSchema: transferAccountBookSchema,
     frontend: transferAccountBookSchema,
