@@ -55,6 +55,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
       window.URL.revokeObjectURL(blobUrl); // Info: (20250311 - Julian) 釋放 URL 資源
       link.parentNode?.removeChild(link);
     } catch (error) {
+      // Deprecated: (20250311 - Julian) remove eslint-disable
       // eslint-disable-next-line no-console
       console.error('Download failed:', error);
     }
