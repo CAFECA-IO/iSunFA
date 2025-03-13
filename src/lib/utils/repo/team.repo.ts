@@ -634,28 +634,26 @@ export const requestTransferAccountBook = async (
   }
 
   // Info: (20250311 - Tzuhan) 更新帳本 `isTransferring = true`
+  /** Info: (20250313 - Tzuhan) 目前因為通知系統還沒有做好，所以跟邀請member一樣，這邊對方都不會收到確認通知，會直接轉移成功
   await prisma.company.update({
     where: { id: accountBookId },
     data: { isTransferring: true },
   });
+  */
 
+  const record = {
+    companyId: accountBookId,
+    fromTeamId,
+    toTeamId,
+    initiatedByUserId: userId,
+    status: TransferStatus.COMPLETED, // Info: (20250313 - Tzuhan) 目前因為通知系統還沒有做好，所以直接設定為 COMPLETED
+  };
   // Info: (20250311 - Tzuhan) 建立 `accountBook_transfer` 記錄
   await prisma.accountBookTransfer.create({
-    data: {
-      companyId: accountBookId,
-      fromTeamId,
-      toTeamId,
-      initiatedByUserId: userId,
-      status: TransferStatus.PENDING,
-    },
+    data: record,
   });
 
-  return {
-    accountBookId,
-    previousTeamId: fromTeamId,
-    targetTeamId: toTeamId,
-    status: TransferStatus.PENDING,
-  } as ITransferAccountBook;
+  return { ...record, accountBookId: record.companyId } as ITransferAccountBook;
 };
 
 // Info: (20250311 - Tzuhan) 取消帳本轉移

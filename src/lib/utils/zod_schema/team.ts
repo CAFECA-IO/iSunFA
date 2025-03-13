@@ -64,8 +64,8 @@ export const requestTransferAccountBookQuerySchema = z.object({
 
 export const transferAccountBookSchema = z.object({
   accountBookId: z.number(),
-  previousTeamId: z.number(),
-  targetTeamId: z.number(),
+  fromTeamId: z.number(),
+  toTeamId: z.number(),
   status: z.enum(Object.values(TransferStatus) as [TransferStatus, ...TransferStatus[]]),
   transferredAt: z.number().optional(),
 });
@@ -232,8 +232,8 @@ export const teamSchemas = {
     input: {
       querySchema: requestTransferAccountBookQuerySchema,
       bodySchema: z.object({
-        fromTeamId: z.number(),
-        toTeamId: z.number(),
+        fromTeamId: zodStringToNumber,
+        toTeamId: zodStringToNumber,
       }),
     },
     outputSchema: transferAccountBookSchema,
