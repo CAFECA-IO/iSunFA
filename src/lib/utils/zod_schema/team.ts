@@ -232,8 +232,8 @@ export const teamSchemas = {
     input: {
       querySchema: requestTransferAccountBookQuerySchema,
       bodySchema: z.object({
-        fromTeamId: zodStringToNumber,
-        toTeamId: zodStringToNumber,
+        fromTeamId: z.number(),
+        toTeamId: z.number(),
       }),
     },
     outputSchema: transferAccountBookSchema,

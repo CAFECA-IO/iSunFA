@@ -16,7 +16,6 @@ import { TPlanType } from '@/interfaces/subscription';
 import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
 import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
@@ -599,7 +598,7 @@ export const requestTransferAccountBook = async (
   });
 
   if (!userTeamRole) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    throw new Error('FORBIDDEN');
   }
 
   const canDo = convertTeamRoleCanDo({
@@ -608,7 +607,7 @@ export const requestTransferAccountBook = async (
   });
 
   if (!(canDo as ITeamRoleCanDo).yesOrNo) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    throw new Error('FORBIDDEN');
   }
 
   // Info: (20250311 - Tzuhan) 確保目標團隊 `toTeamId` 存在
@@ -622,7 +621,7 @@ export const requestTransferAccountBook = async (
   });
 
   if (!targetTeam) {
-    throw new Error(STATUS_MESSAGE.TEAM_NOT_FOUND);
+    throw new Error('TEAM_NOT_FOUND');
   }
 
   // Info: (20250311 - Tzuhan) 確保轉入團隊的 `subscription.planType` 不會超過上限
@@ -630,7 +629,7 @@ export const requestTransferAccountBook = async (
   const accountBookCount = await prisma.company.count({ where: { teamId: toTeamId } });
 
   if (isFreePlan && accountBookCount >= SUBSCRIPTION_PLAN_LIMITS.FREE) {
-    throw new Error(STATUS_MESSAGE.EXCEED_FREE_PLAN_LIMIT);
+    throw new Error('EXCEED_FREE_PLAN_LIMIT');
   }
 
   // Info: (20250311 - Tzuhan) 更新帳本 `isTransferring = true`
@@ -669,7 +668,7 @@ export const cancelTransferAccountBook = async (
   });
 
   if (!transfer) {
-    throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
   }
 
   // Info: (20250311 - Tzuhan) 確保用戶有權限取消
@@ -679,7 +678,7 @@ export const cancelTransferAccountBook = async (
   });
 
   if (!userTeamRole) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    throw new Error('FORBIDDEN');
   }
 
   const canDo = convertTeamRoleCanDo({
@@ -688,7 +687,7 @@ export const cancelTransferAccountBook = async (
   });
 
   if (!(canDo as ITeamRoleCanDo).yesOrNo) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    throw new Error('FORBIDDEN');
   }
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
   await prisma.$transaction([
@@ -716,7 +715,7 @@ export const acceptTransferAccountBook = async (
   });
 
   if (!transfer) {
-    throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
   }
 
   // Info: (20250311 - Tzuhan) 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
@@ -726,7 +725,7 @@ export const acceptTransferAccountBook = async (
   });
 
   if (!userTeamRole) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    throw new Error('FORBIDDEN');
   }
 
   const canDo = convertTeamRoleCanDo({
@@ -735,7 +734,7 @@ export const acceptTransferAccountBook = async (
   });
 
   if (!(canDo as ITeamRoleCanDo).yesOrNo) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    throw new Error('FORBIDDEN');
   }
 
   // Info: (20250311 - Tzuhan) 更新 `company.teamId` & `accountBook_transfer` 狀態
@@ -764,7 +763,7 @@ export const declineTransferAccountBook = async (
   });
 
   if (!transfer) {
-    throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
   }
 
   // Info: (20250311 - Tzuhan) 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
@@ -774,7 +773,7 @@ export const declineTransferAccountBook = async (
   });
 
   if (!userTeamRole) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    throw new Error('FORBIDDEN');
   }
 
   const canDo = convertTeamRoleCanDo({
@@ -783,7 +782,7 @@ export const declineTransferAccountBook = async (
   });
 
   if (!(canDo as ITeamRoleCanDo).yesOrNo) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    throw new Error('FORBIDDEN');
   }
 
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
