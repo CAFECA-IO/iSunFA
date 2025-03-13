@@ -59,14 +59,14 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
 }) => {
   const { id, subcategory, isDebit, beginningAmount } = data;
 
-  // Info: (20250313 - Julian) 如果 isDebit 為 true，則將 beginningAmount 設為初始借值，否則為 undefined
-  const initialDebit = isDebit !== null ? undefined : isDebit ? beginningAmount : undefined;
+  // Info: (20250313 - Julian) 如果 isDebit 為 true，則將 beginningAmount 設為初始借值，否則為 0
+  const initialDebit = isDebit !== null ? 0 : isDebit ? beginningAmount : 0;
   // Info: (20250313 - Julian) 如果 isDebit 為 false，則將 beginningAmount 設為初始貸值，否則為 0
   const initialCredit = isDebit !== null ? 0 : isDebit ? 0 : beginningAmount;
 
   // Info: (20241112 - Julian) 設定 debit 和 credit 的金額
-  const [debit, setDebit] = useState<number | undefined>(initialDebit);
-  const [credit, setCredit] = useState<number | undefined>(initialCredit);
+  const [debit, setDebit] = useState<number>(initialDebit);
+  const [credit, setCredit] = useState<number>(initialCredit);
 
   const debitDisabled = credit !== 0;
   const creditDisabled = debit !== 0;
