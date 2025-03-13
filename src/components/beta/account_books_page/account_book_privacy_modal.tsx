@@ -1,7 +1,9 @@
 import { Dispatch, SetStateAction, useState } from 'react';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { ACCOUNT_BOOK_UPDATE_ACTION, IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { IoCloseOutline, IoSaveOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
 
 interface AccountBookPrivacyModalProps {
   accountBookToChangePrivacy: IAccountBookForUserWithTeam;
@@ -9,25 +11,48 @@ interface AccountBookPrivacyModalProps {
 }
 
 const AccountBookPrivacyModal = ({
-  // Deprecated: (20250227 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   accountBookToChangePrivacy,
   setAccountBookToChangePrivacy,
 }: AccountBookPrivacyModalProps) => {
   const { t } = useTranslation(['account_book']);
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
-  // Deprecated: (20250227 - Liz) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Info: (20250313 - Liz) 變更帳本隱私權 API
+  const { trigger: changeAccountBookPrivacyAPI } = APIHandler<IAccountBookForUserWithTeam>(
+    APIName.UPDATE_ACCOUNT_BOOK
+  );
 
   const closeAccountBookPrivacyModal = () => {
     setAccountBookToChangePrivacy(undefined);
   };
 
-  // ToDo: (20250227 - Liz) 打 API 變更帳本隱私權
-  // accountBookToChangePrivacy 提供帳本 ID 可以打 API 修改帳本隱私權
+  // Info: (20250313 - Liz) 打 API 變更帳本隱私權
   const handleSubmit = async () => {
-    //     if (isLoading) return;
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      const { success } = await changeAccountBookPrivacyAPI({
+        params: { accountBookId: accountBookToChangePrivacy.company.id },
+        body: {
+          action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_VISIBILITY,
+          isPrivate,
+        },
+      });
+
+      if (!success) {
+        // Deprecated: (20250313 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('打 API 變更帳本隱私權失敗');
+      }
+      closeAccountBookPrivacyModal();
+    } catch (error) {
+      // Deprecated: (20250313 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('打 API 變更帳本隱私權失敗', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
