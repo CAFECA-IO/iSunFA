@@ -24,14 +24,14 @@ const formatDisplayValue = (
   return hasComma ? numberWithCommas(stringValue) : stringValue;
 };
 
-const NumericInput = ({
+const NumericInput: React.FC<INumericInputProps> = ({
   value,
   setValue,
   isDecimal,
   hasComma,
   triggerWhenChanged,
   ...props
-}: INumericInputProps) => {
+}) => {
   // Info: (20240723 - Liz) displayValue 是顯示在 input 上的顯示值
   const [displayValue, setDisplayValue] = useState<string>(value ? value.toString() : '');
 
