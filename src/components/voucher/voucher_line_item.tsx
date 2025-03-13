@@ -9,7 +9,7 @@ import { FaPlus } from 'react-icons/fa6';
 import ReverseLineItem from '@/components/voucher/reverse_line_item';
 import { IAccount } from '@/interfaces/accounting_account';
 import AccountTitleSelector from '@/components/voucher/account_title_selector';
-import NumericInput from '@/components/voucher/numeric_input';
+import NumericInput from '@/components/numeric_input/numeric_input';
 
 interface IVoucherLineItemProps {
   id: number;
@@ -197,8 +197,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
   // Info: (20241007 - Julian) input state
   const [particulars, setParticulars] = useState<string>('');
-  const [debitInput, setDebitInput] = useState<number | undefined>();
-  const [creditInput, setCreditInput] = useState<number | undefined>();
+  const [debitInput, setDebitInput] = useState<number>(0);
+  const [creditInput, setCreditInput] = useState<number>(0);
 
   // Info: (20241007 - Julian) input style
   const [amountStyle, setAmountStyle] = useState<string>(inputStyle.NORMAL);
@@ -267,14 +267,14 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   useEffect(() => {
     // Info: (20241004 - Julian) Reset All State
     setParticulars('');
-    setDebitInput(undefined);
-    setCreditInput(undefined);
+    setDebitInput(0);
+    setCreditInput(0);
   }, [flagOfClear]);
 
   useEffect(() => {
     setAmountStyle(
       // Info: (20241007 - Julian) 檢查借貸金額是否為零
-      (amountIsZero && (debitInput === undefined || creditInput === undefined)) ||
+      (amountIsZero && (debitInput === 0 || creditInput === 0)) ||
         // Info: (20241007 - Julian) 檢查借貸金額是否相等
         amountNotEqual
         ? inputStyle.ERROR
@@ -288,8 +288,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   }, [debitInput, creditInput]);
 
   // Info: (20241118 - Julian) 若借方金額不為 0，則禁用貸方金額輸入；反之亦然
-  const isDebitDisabled = creditInput !== 0 && creditInput !== undefined;
-  const isCreditDisabled = debitInput !== 0 && debitInput !== undefined;
+  const isDebitDisabled = creditInput !== 0;
+  const isCreditDisabled = debitInput !== 0;
 
   const particularsInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setParticulars(e.target.value);
