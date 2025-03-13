@@ -18,10 +18,9 @@ import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
-import {
-  ACCOUNT_BOOK_TRANSFER_PERMISSIONS,
-  SUBSCRIPTION_PLAN_LIMITS,
-} from '@/constants/team/permissions';
+import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
+import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { convertTeamRoleCanDo } from '@/lib/utils/permission';
 
 const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
   return sortOptions.map(({ sortBy, sortOrder }) => ({
@@ -599,12 +598,16 @@ export const requestTransferAccountBook = async (
     select: { role: true },
   });
 
-  if (
-    !userTeamRole ||
-    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.REQUEST_TRANSFER.some(
-      (role) => role === (userTeamRole.role as TeamRole)
-    )
-  ) {
+  if (!userTeamRole) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const canDo = convertTeamRoleCanDo({
+    teamRole: userTeamRole.role as TeamRole,
+    canDo: TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
+  });
+
+  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -677,15 +680,18 @@ export const cancelTransferAccountBook = async (
     select: { role: true },
   });
 
-  if (
-    !userTeamRole ||
-    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.CANCEL_TRANSFER.some(
-      (role) => role === (userTeamRole.role as TeamRole)
-    )
-  ) {
+  if (!userTeamRole) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
+  const canDo = convertTeamRoleCanDo({
+    teamRole: userTeamRole.role as TeamRole,
+    canDo: TeamPermissionAction.CANCEL_ACCOUNT_BOOK_TRANSFER,
+  });
+
+  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
   await prisma.$transaction([
     prisma.accountBookTransfer.update({
@@ -721,12 +727,16 @@ export const acceptTransferAccountBook = async (
     select: { role: true },
   });
 
-  if (
-    !userTeamRole ||
-    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.ACCEPT_TRANSFER.some(
-      (role) => role === (userTeamRole.role as TeamRole)
-    )
-  ) {
+  if (!userTeamRole) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const canDo = convertTeamRoleCanDo({
+    teamRole: userTeamRole.role as TeamRole,
+    canDo: TeamPermissionAction.ACCEPT_ACCOUNT_BOOK_TRANSFER,
+  });
+
+  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -765,12 +775,16 @@ export const declineTransferAccountBook = async (
     select: { role: true },
   });
 
-  if (
-    !userTeamRole ||
-    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.DECLINE_TRANSFER.some(
-      (role) => role === (userTeamRole.role as TeamRole)
-    )
-  ) {
+  if (!userTeamRole) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const canDo = convertTeamRoleCanDo({
+    teamRole: userTeamRole.role as TeamRole,
+    canDo: TeamPermissionAction.DECLINE_ACCOUNT_BOOK_TRANSFER,
+  });
+
+  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
