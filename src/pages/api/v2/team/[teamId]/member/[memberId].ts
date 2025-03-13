@@ -37,7 +37,7 @@ interface IResponse {
  * 5. 驗證輸出數據 -> INVALID_OUTPUT_DATA
  */
 const handlePutRequest = async (req: NextApiRequest) => {
-  const apiName = APIName.UPDATE_MEMBER_BY_ID;
+  const apiName = APIName.UPDATE_MEMBER;
 
   // Info: (20250312 - Shirley) 獲取用戶會話
   const session = await getSession(req);
@@ -127,7 +127,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
  * 5. 驗證輸出數據 -> INVALID_OUTPUT_DATA
  */
 const handleDeleteRequest = async (req: NextApiRequest) => {
-  const apiName = APIName.DELETE_MEMBER_BY_ID;
+  const apiName = APIName.DELETE_MEMBER;
 
   // Info: (20250312 - Shirley) 獲取用戶會話
   const session = await getSession(req);
@@ -211,7 +211,7 @@ export default async function handler(
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IResponse['payload'] = null;
   let session: ISessionData | null = null;
-  let apiName: APIName = APIName.UPDATE_MEMBER_BY_ID;
+  let apiName: APIName = APIName.UPDATE_MEMBER;
 
   // Info: (20250312 - Shirley) 宣告變數以避免在 case 區塊中宣告
   let putResult: {
@@ -229,14 +229,14 @@ export default async function handler(
     // Info: (20250312 - Shirley) 檢查請求方法
     switch (req.method) {
       case 'PUT':
-        apiName = APIName.UPDATE_MEMBER_BY_ID;
+        apiName = APIName.UPDATE_MEMBER;
         putResult = await handlePutRequest(req);
         statusMessage = putResult.statusMessage;
         payload = putResult.payload;
         session = putResult.session;
         break;
       case 'DELETE':
-        apiName = APIName.DELETE_MEMBER_BY_ID;
+        apiName = APIName.DELETE_MEMBER;
         deleteResult = await handleDeleteRequest(req);
         statusMessage = deleteResult.statusMessage;
         payload = deleteResult.payload;
