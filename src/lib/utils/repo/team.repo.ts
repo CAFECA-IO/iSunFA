@@ -14,7 +14,11 @@ import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
-import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
+import {
+  listByTeamIdQuerySchema,
+  IUpdateMemberResponse,
+  IDeleteMemberResponse,
+} from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
@@ -785,4 +789,141 @@ export const declineTransferAccountBook = async (
       data: { isTransferring: false },
     }),
   ]);
+};
+
+/**
+ * Info: (20250312 - Shirley) 更新團隊成員角色
+ * @param teamId 團隊 ID
+ * @param memberId 成員 ID
+ * @param role 新角色
+ * @param sessionUserTeamRole 當前用戶在團隊中的角色
+ * @returns 更新後的成員資訊
+ */
+export const updateMemberById = async (
+  teamId: number,
+  memberId: number,
+  role: TeamRole,
+  sessionUserTeamRole: TeamRole
+): Promise<IUpdateMemberResponse> => {
+  // Info: (20250312 - Shirley) 檢查當前用戶是否有權限更新成員角色
+  if (sessionUserTeamRole !== TeamRole.OWNER && sessionUserTeamRole !== TeamRole.ADMIN) {
+    throw new Error('PERMISSION_DENIED');
+  }
+
+  // Info: (20250312 - Shirley) 檢查要更新的成員是否存在
+  const teamMember = await prisma.teamMember.findFirst({
+    where: {
+      id: memberId,
+      teamId,
+      status: LeaveStatus.IN_TEAM,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  if (!teamMember) {
+    throw new Error('MEMBER_NOT_FOUND');
+  }
+
+  // Info: (20250312 - Shirley) 不能將成員角色更新為 OWNER
+  if (role === TeamRole.OWNER) {
+    throw new Error('CANNOT_UPDATE_TO_OWNER');
+  }
+
+  // Info: (20250312 - Shirley) 檢查成員當前角色
+  if (teamMember.role === TeamRole.OWNER) {
+    throw new Error('CANNOT_UPDATE_OWNER_ROLE');
+  }
+
+  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，只能更新 EDITOR 和 VIEWER 角色
+  if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
+    throw new Error('ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER');
+  }
+
+  // Info: (20250313 - Shirley) 如果當前用戶是 ADMIN，不能將其他成員提升為 ADMIN
+  if (sessionUserTeamRole === TeamRole.ADMIN && role === TeamRole.ADMIN) {
+    throw new Error('ADMIN_CANNOT_PROMOTE_TO_ADMIN');
+  }
+
+  // Info: (20250312 - Shirley) 更新成員角色
+  const updatedAt = Math.floor(Date.now() / 1000);
+  const updatedMember = await prisma.teamMember.update({
+    where: { id: memberId },
+    data: {
+      role,
+    },
+  });
+
+  return {
+    id: updatedMember.id,
+    userId: updatedMember.userId,
+    teamId: updatedMember.teamId,
+    role: updatedMember.role,
+    email: teamMember.user.email || '',
+    name: teamMember.user.name || '',
+    createdAt: updatedMember.joinedAt,
+    updatedAt,
+  };
+};
+
+/**
+ * Info: (20250312 - Shirley) 刪除團隊成員（軟刪除）
+ * @param teamId 團隊 ID
+ * @param memberId 成員 ID
+ * @param sessionUserTeamRole 當前用戶在團隊中的角色
+ * @returns 刪除的成員 ID
+ */
+export const deleteMemberById = async (
+  teamId: number,
+  memberId: number,
+  sessionUserTeamRole: TeamRole
+): Promise<IDeleteMemberResponse> => {
+  // Info: (20250312 - Shirley) 檢查當前用戶是否有權限刪除成員
+  if (sessionUserTeamRole !== TeamRole.OWNER && sessionUserTeamRole !== TeamRole.ADMIN) {
+    throw new Error('PERMISSION_DENIED');
+  }
+
+  // Info: (20250312 - Shirley) 檢查要刪除的成員是否存在
+  const teamMember = await prisma.teamMember.findFirst({
+    where: {
+      id: memberId,
+      teamId,
+      status: LeaveStatus.IN_TEAM,
+    },
+  });
+
+  if (!teamMember) {
+    throw new Error('MEMBER_NOT_FOUND');
+  }
+
+  // Info: (20250312 - Shirley) 不能刪除 OWNER
+  if (teamMember.role === TeamRole.OWNER) {
+    throw new Error('CANNOT_DELETE_OWNER');
+  }
+
+  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，只能刪除 EDITOR 和 VIEWER 角色
+  if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
+    throw new Error('ADMIN_CANNOT_DELETE_ADMIN');
+  }
+
+  // Info: (20250312 - Shirley) 軟刪除成員（更新狀態為 NOT_IN_TEAM 並記錄離開時間）
+  const leftAt = Math.floor(Date.now() / 1000);
+  await prisma.teamMember.update({
+    where: { id: memberId },
+    data: {
+      status: LeaveStatus.NOT_IN_TEAM,
+      leftAt,
+    },
+  });
+
+  return {
+    memberId,
+  };
 };

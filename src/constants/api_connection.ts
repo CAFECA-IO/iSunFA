@@ -181,8 +181,8 @@ export enum APIName {
   LIST_ACCOUNT_BOOK_BY_USER_ID = 'LIST_ACCOUNT_BOOK_BY_USER_ID',
   CONNECT_ACCOUNT_BOOK_BY_ID = 'CONNECT_ACCOUNT_BOOK_BY_ID',
   UPDATE_TEAM_BY_ID = 'UPDATE_TEAM_BY_ID',
-  UPDATE_MEMBER_BY_ID = 'UPDATE_MEMBER_BY_ID',
-  DELETE_MEMBER_BY_ID = 'DELETE_MEMBER_BY_ID',
+  UPDATE_MEMBER = 'UPDATE_MEMBER',
+  DELETE_MEMBER = 'DELETE_MEMBER',
   GET_ACCOUNT_BOOK_INFO_BY_ID = 'GET_ACCOUNT_BOOK_INFO_BY_ID',
   PUT_TEAM_ICON = 'PUT_TEAM_ICON',
   UPDATE_ACCOUNT_BOOK = 'UPDATE_ACCOUNT_BOOK',
@@ -341,8 +341,8 @@ export enum APIPath {
   LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
   CONNECT_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/connect`,
   UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
-  UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
-  DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
+  UPDATE_MEMBER = `${apiPrefixV2}/team/:teamId/member/:memberId`,
+  DELETE_MEMBER = `${apiPrefixV2}/team/:teamId/member/:memberId`,
   GET_ACCOUNT_BOOK_INFO_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/info`,
   PUT_TEAM_ICON = `${apiPrefixV2}/team/:teamId/icon`,
   VOUCHER_PUT_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
@@ -1154,15 +1154,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.UPDATE_TEAM_BY_ID,
   }),
-  [APIName.UPDATE_MEMBER_BY_ID]: createConfig({
-    name: APIName.UPDATE_MEMBER_BY_ID,
+  [APIName.UPDATE_MEMBER]: createConfig({
+    name: APIName.UPDATE_MEMBER,
     method: HttpMethod.PUT,
-    path: APIPath.UPDATE_MEMBER_BY_ID,
+    path: APIPath.UPDATE_MEMBER,
   }),
-  [APIName.DELETE_MEMBER_BY_ID]: createConfig({
-    name: APIName.DELETE_MEMBER_BY_ID,
+  [APIName.DELETE_MEMBER]: createConfig({
+    name: APIName.DELETE_MEMBER,
     method: HttpMethod.DELETE,
-    path: APIPath.DELETE_MEMBER_BY_ID,
+    path: APIPath.DELETE_MEMBER,
   }),
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: createConfig({
     name: APIName.GET_ACCOUNT_BOOK_INFO_BY_ID,
