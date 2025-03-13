@@ -597,6 +597,14 @@ export const requestTransferAccountBook = async (
     select: { role: true },
   });
 
+  // Todo: check if accountBookId is in fromTeamId
+  const accountBook = await prisma.company.findFirst({
+    where: { id: accountBookId, teamId: fromTeamId },
+  });
+  if (!accountBook) {
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
+  }
+
   if (!userTeamRole) {
     throw new Error('FORBIDDEN');
   }
@@ -647,10 +655,17 @@ export const requestTransferAccountBook = async (
     initiatedByUserId: userId,
     status: TransferStatus.COMPLETED, // Info: (20250313 - Tzuhan) 目前因為通知系統還沒有做好，所以直接設定為 COMPLETED
   };
-  // Info: (20250311 - Tzuhan) 建立 `accountBook_transfer` 記錄
-  await prisma.accountBookTransfer.create({
-    data: record,
-  });
+  await prisma.$transaction([
+    // Info: (20250311 - Tzuhan) 建立 `accountBook_transfer` 記錄
+    prisma.accountBookTransfer.create({
+      data: record,
+    }),
+    // Info: (20250311 - Tzuhan) 更新 `company.teamId` & `company.isTransferring`
+    prisma.company.update({
+      where: { id: accountBookId },
+      data: { teamId: toTeamId, isTransferring: false },
+    }),
+  ]);
 
   return { ...record, accountBookId: record.companyId } as ITransferAccountBook;
 };
