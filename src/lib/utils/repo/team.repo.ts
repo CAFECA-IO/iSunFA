@@ -20,7 +20,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
 import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
-import { convertTeamRoleCanDo } from '@/lib/utils/permission';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 
 const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
   return sortOptions.map(({ sortBy, sortOrder }) => ({
