@@ -1,67 +1,84 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { checkRequestData, checkSessionUser, checkUserAuthorization } from '@/lib/utils/middleware';
+import {
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
-import { ITransferLedger, TransferStatus } from '@/interfaces/team';
+import { ITransferAccountBook } from '@/interfaces/team';
+import { requestTransferAccountBook } from '@/lib/utils/repo/team.repo';
+import { validateOutputData } from '@/lib/utils/validator';
 
 const handlePostRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITransferLedger | null = null;
+  let payload: ITransferAccountBook | null = null;
 
-  const isLogin = await checkSessionUser(session, APIName.TRANSFER_ACCOUNT_BOOK, req);
-  if (!isLogin) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-  const isAuth = await checkUserAuthorization(APIName.TRANSFER_ACCOUNT_BOOK, req, session);
-  if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
+  // Info: (20250311 - Tzuhan) 檢查使用者登入
+  await checkSessionUser(session, APIName.REQUEST_TRANSFER_ACCOUNT_BOOK, req);
+  await checkUserAuthorization(APIName.REQUEST_TRANSFER_ACCOUNT_BOOK, req, session);
 
-  const { body } = checkRequestData(APIName.TRANSFER_ACCOUNT_BOOK, req, session);
-  if (!body || !body.targetTeamId) {
+  // Info: (20250311 - Tzuhan) 檢查請求參數
+  const { query, body } = checkRequestData(APIName.REQUEST_TRANSFER_ACCOUNT_BOOK, req, session);
+
+  if (!query || !body) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
-
   loggerBack.info(
-    `Transfer Ledger by userId: ${userId} from team ${req.query.accountBookId} to ${body.targetTeamId}`
+    `User ${userId} is transferring accountBook ${query.accountBookId} from team ${body.fromTeamId} to ${body.toTeamId}`
   );
-
+  const transferResult = await requestTransferAccountBook(
+    userId,
+    query.accountBookId,
+    body.fromTeamId,
+    body.toTeamId
+  );
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  payload = {
-    accountBookId: req.query.accountBookId as string,
-    previousTeamId: body.previousTeamId,
-    targetTeamId: body.targetTeamId,
-    status: TransferStatus.TRANSFER,
-    transferredAt: Math.floor(Date.now() / 1000),
-  };
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.REQUEST_TRANSFER_ACCOUNT_BOOK,
+    transferResult
+  );
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+  }
 
-  const result = formatApiResponse(statusMessage, payload);
-  return result;
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const method = req.method || 'GET';
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
-
+  let response;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  const session = await getSession(req);
   try {
-    if (req.method === 'POST') {
-      ({ httpCode, result } = await handlePostRequest(req));
-    } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+    switch (method) {
+      case 'POST':
+        ({ response, statusMessage } = await handlePostRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
+        break;
     }
   } catch (error) {
     const err = error as Error;
-    ({ httpCode, result } = formatApiResponse<null>(
-      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],
-      null
-    ));
+    statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE];
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
+  await logUserAction(session, APIName.REQUEST_TRANSFER_ACCOUNT_BOOK, req, statusMessage);
 
   res.status(httpCode).json(result);
 }

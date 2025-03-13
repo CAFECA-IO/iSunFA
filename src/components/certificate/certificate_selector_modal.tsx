@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
-
 import FilterSection from '@/components/filter_section/filter_section';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { APIName } from '@/constants/api_connection';
@@ -20,7 +19,7 @@ interface CertificateSelectorModalProps {
   setSelectedIds: React.Dispatch<React.SetStateAction<number[]>>;
   onClose: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
 
-  handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240926 - tzuhan) 保存數據的回調函數
+  handleSelect: (ids: number[]) => void; // Info: (20240926 - tzuhan) 保存數據的回調函數
   certificates: ICertificateUI[]; // Info: (20240926 - tzuhan) 證書列表
   handleApiResponse: (data: IPaginatedData<ICertificate[]>) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
   openUploaderModal: () => void; // Info: (20240926 - tzuhan) 打開上傳模態框的回調函數
@@ -48,24 +47,31 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen) return null;
 
-  const handleSelectAll = () => {
-    if (isSelectAll) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(certificates.map((item) => item.id));
-    }
+  const handleConfirm = () => {
+    // Info: (20250312 - Julian) 更新選擇狀態
+    handleSelect(selectedIds);
+
+    // Info: (20250312 - Julian) 關閉模態框
+    onClose();
   };
 
-  const handleConfirm = () => {
-    handleSelect(selectedIds, true);
-    onClose();
+  const handleSelectAll = () => {
+    if (isSelectAll) {
+      // Info: (20250312 - Julian) 如果已經全選，則清空 selectedIds
+      setSelectedIds([]);
+    } else {
+      // Info: (20250312 - Julian) 將所有發票加入 selectedIds
+      setSelectedIds(certificates.map((item) => item.id));
+    }
   };
 
   const handleSelectOne = (id: number) => {
     const index = selectedIds.findIndex((item) => item === id);
     if (index === -1) {
+      // Info: (20250312 - Julian) 如果該發票還沒有被選取，則加入 selectedIds
       setSelectedIds([...selectedIds, id]);
     } else {
+      // Info: (20250312 - Julian) 如果該發票已經被選取，則從 selectedIds 移除
       setSelectedIds(selectedIds.filter((item) => item !== id));
     }
   };
