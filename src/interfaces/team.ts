@@ -67,13 +67,17 @@ export interface ILeaveTeam {
   leftAt?: number;
 }
 
+// Info: (20250311 - Tzuhan) 🌟 帳本轉移狀態
 export enum TransferStatus {
-  TRANSFER = 'TRANSFER',
-  FAILED = 'FAILED',
+  PENDING = 'PENDING', // Info: (20250311 - Tzuhan) 移轉請求中
+  COMPLETED = 'COMPLETED', // Info: (20250311 - Tzuhan) 轉移完成
+  CANCELED = 'CANCELED', // Info: (20250311 - Tzuhan) 轉移取消
+  DECLINED = 'DECLINED', // Info: (20250311 - Tzuhan) 目標團隊拒絕轉移
+  FAILED = 'FAILED', // Info: (20250311 - Tzuhan) 轉移失敗
 }
 
-export interface ITransferLedger {
-  accountBookId: string;
+export interface ITransferAccountBook {
+  accountBookId: number;
   previousTeamId: number;
   targetTeamId: number;
   status: TransferStatus;
