@@ -70,7 +70,7 @@ const UploadCompanyPictureModal = ({
         }
 
         closeUploadAccountBookCompanyPictureModal();
-        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241212 - Liz) This is a workaround to refresh the company list after creating a new company
+        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241212 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
 
         const isChangingSelectedCompany =
           selectedAccountBook?.id === accountBookToUploadPicture.company.id;

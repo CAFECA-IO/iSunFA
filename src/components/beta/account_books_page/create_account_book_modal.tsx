@@ -98,19 +98,18 @@ const CreateAccountBookModal = ({
           closeable: true,
           position: ToastPosition.TOP_CENTER,
         });
+        return;
       }
 
-      if (success) {
-        // Info: (20241114 - Liz) 新增帳本成功後清空表單並關閉 modal
-        setCompanyName('');
-        setTaxId('');
-        setTag(WORK_TAG.ALL);
-        closeCreateAccountBookModal();
+      // Info: (20241114 - Liz) 新增帳本成功後清空表單並關閉 modal
+      setCompanyName('');
+      setTaxId('');
+      setTag(WORK_TAG.ALL);
+      closeCreateAccountBookModal();
 
-        if (getAccountBookList) getAccountBookList(); // Info: (20241209 - Liz) 重新取得帳本清單
+      if (getAccountBookList) getAccountBookList(); // Info: (20241209 - Liz) 重新取得帳本清單
 
-        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the company list after creating a new company
-      }
+      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
     } catch (error) {
       // Deprecated: (20241104 - Liz)
       // eslint-disable-next-line no-console
