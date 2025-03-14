@@ -44,15 +44,19 @@ const TransferAccountBookModal = ({
     try {
       const { success } = await transferAccountBookAPI({
         params: { accountBookId: accountBookToTransfer.company.id },
-        body: { toTeamId: Number(transferToTeamId), fromTeamId: accountBookToTransfer.team.id },
+        body: {
+          fromTeamId: accountBookToTransfer.team.id,
+          toTeamId: Number(transferToTeamId),
+        },
       });
 
-      if (!success) throw new Error('打 API 轉移帳本失敗');
-
+      if (!success) {
+        // Deprecated: (20250311 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('打 API 轉移帳本失敗');
+        return;
+      }
       closeTransferAccountBookModal();
-      // Deprecated: (20250311 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('打 API 轉移帳本成功');
     } catch (error) {
       // Deprecated: (20250311 - Liz)
       // eslint-disable-next-line no-console
