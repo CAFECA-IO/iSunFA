@@ -50,7 +50,7 @@ const ChangeTagModal = ({
         setTag(WORK_TAG.ALL);
         closeChangeTagModal();
 
-        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the company list after creating a new company
+        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
 
         // Deprecated: (20241113 - Liz)
         // eslint-disable-next-line no-console

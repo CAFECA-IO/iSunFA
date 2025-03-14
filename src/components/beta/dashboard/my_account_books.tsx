@@ -25,8 +25,8 @@ const MyAccountBooks = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
 
-  // Info: (20241126 - Liz) 選擇帳本 API (原為公司)
-  const { selectAccountBook, selectedAccountBook } = useUserCtx();
+  // Info: (20241126 - Liz) 連結帳本 API (原為公司)
+  const { connectAccountBook, selectedAccountBook } = useUserCtx();
 
   const closeMessageModal = () => {
     setAccountBookToSelect(undefined);
@@ -39,15 +39,20 @@ const MyAccountBooks = () => {
     setIsCreateAccountBookModalOpen(false);
   };
 
-  // Info: (20241126 - Liz) 打 API 選擇帳本(原為公司)
-  const handleSelectAccountBook = () => {
+  // Info: (20241126 - Liz) 打 API 連結帳本(原為公司)
+  const handleSelectAccountBook = async () => {
     if (isLoading) return;
     if (!accountBookToSelect) return;
 
     setIsLoading(true);
 
     try {
-      selectAccountBook(accountBookToSelect.company.id);
+      const { success } = await connectAccountBook(accountBookToSelect.company.id);
+      if (!success) {
+        // Deprecated: (20250314 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('連結帳本失敗');
+      }
     } catch (error) {
       // Deprecated: (20241126 - Liz)
       // eslint-disable-next-line no-console

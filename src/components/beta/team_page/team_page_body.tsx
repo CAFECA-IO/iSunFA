@@ -102,13 +102,15 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
     try {
       const data = await deleteAccountBook(accountBookToDelete.company.id);
 
-      if (data) {
-        // setRefreshKey((prev) => prev + 1); // ToDo: (20250219 - Liz) 重新取得團隊帳本清單
-      } else {
+      if (!data) {
         // Deprecated: (20250219 - Liz)
         // eslint-disable-next-line no-console
         console.log('刪除帳本失敗');
+        return;
       }
+
+      getAccountBookListByTeamId(); // Info: (20250314 - Liz) 重新取得團隊帳本清單
+      closeDeleteModal();
     } catch (error) {
       // Deprecated: (20250219 - Liz)
       // eslint-disable-next-line no-console
@@ -173,6 +175,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         <TransferAccountBookModal
           accountBookToTransfer={accountBookToTransfer}
           setAccountBookToTransfer={setAccountBookToTransfer}
+          getAccountBookListByTeamId={getAccountBookListByTeamId}
         />
       )}
 
@@ -202,6 +205,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         <AccountBookPrivacyModal
           accountBookToChangePrivacy={accountBookToChangePrivacy}
           setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
+          getAccountBookListByTeamId={getAccountBookListByTeamId}
         />
       )}
 
