@@ -45,8 +45,8 @@ const TransferAccountBookModal = ({
       const { success } = await transferAccountBookAPI({
         params: { accountBookId: accountBookToTransfer.company.id },
         body: {
-          fromTeamId: accountBookToTransfer.team.id.toString(),
-          toTeamId: transferToTeamId,
+          fromTeamId: accountBookToTransfer.team.id,
+          toTeamId: Number(transferToTeamId),
         },
       });
 
