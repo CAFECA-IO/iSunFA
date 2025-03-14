@@ -44,6 +44,7 @@ const AccountBookPrivacyModal = ({
         // Deprecated: (20250313 - Liz)
         // eslint-disable-next-line no-console
         console.error('打 API 變更帳本隱私權失敗');
+        return;
       }
       closeAccountBookPrivacyModal();
     } catch (error) {

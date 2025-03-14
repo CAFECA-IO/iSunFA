@@ -50,12 +50,13 @@ const TransferAccountBookModal = ({
         },
       });
 
-      if (!success) throw new Error('打 API 轉移帳本失敗');
-
+      if (!success) {
+        // Deprecated: (20250311 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('打 API 轉移帳本失敗');
+        return;
+      }
       closeTransferAccountBookModal();
-      // Deprecated: (20250311 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('打 API 轉移帳本成功');
     } catch (error) {
       // Deprecated: (20250311 - Liz)
       // eslint-disable-next-line no-console
