@@ -28,9 +28,9 @@ const AccountBookItem = ({
   setAccountBookToChangePrivacy,
 }: AccountBookItemProps) => {
   const { t } = useTranslation(['account_book']);
-  const { selectAccountBook, selectedAccountBook } = useUserCtx();
+  const { connectAccountBook, selectedAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
-  const isCompanySelected = accountBook.company.id === selectedAccountBook?.id;
+  const isAccountBookConnected = accountBook.company.id === selectedAccountBook?.id;
 
   const {
     targetRef: optionsDropdownRef,
@@ -71,24 +71,24 @@ const AccountBookItem = ({
     closeOptionsDropdown();
   };
 
-  // Info: (20241113 - Liz) 打 API 選擇帳本 (原為公司)
+  // Info: (20241113 - Liz) 打 API 連結帳本 (原為公司)
   const handleConnect = async () => {
     if (isLoading) return;
 
     setIsLoading(true);
 
-    const companyId = isCompanySelected ? CANCEL_ACCOUNT_BOOK_ID : accountBook.company.id;
+    const accountBookId = isAccountBookConnected ? CANCEL_ACCOUNT_BOOK_ID : accountBook.company.id;
 
     try {
-      const data = selectAccountBook(companyId);
+      const { success } = await connectAccountBook(accountBookId);
 
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
-      if (!data) console.log('selectAccountBook failed!');
+      if (!success) console.log('connectAccountBook failed!');
     } catch (error) {
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
-      console.log('CompanyList handleConnect error:', error);
+      console.log('connectAccountBook error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -217,7 +217,7 @@ const AccountBookItem = ({
             onClick={handleConnect}
             disabled={isLoading}
           >
-            {isCompanySelected ? (
+            {isAccountBookConnected ? (
               <div className="flex items-center gap-4px rounded-xs border border-surface-state-success bg-surface-state-success px-16px py-8px group-hover:opacity-0">
                 <p className="text-sm font-medium">
                   {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.LINKED')}
@@ -233,7 +233,7 @@ const AccountBookItem = ({
               </div>
             )}
 
-            {isCompanySelected && (
+            {isAccountBookConnected && (
               <div className="absolute inset-0 flex items-center justify-center gap-4px rounded-xs border border-surface-state-success-soft bg-surface-state-success-soft px-16px py-8px text-sm opacity-0 group-hover:opacity-100">
                 <p className="text-sm font-medium">
                   {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL')}
