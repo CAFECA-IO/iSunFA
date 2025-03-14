@@ -78,8 +78,8 @@ export enum TransferStatus {
 
 export interface ITransferAccountBook {
   accountBookId: number;
-  previousTeamId: number;
-  targetTeamId: number;
+  fromTeamId: number;
+  toTeamId: number;
   status: TransferStatus;
   transferredAt?: number;
 }

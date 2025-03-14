@@ -64,8 +64,8 @@ export const requestTransferAccountBookQuerySchema = z.object({
 
 export const transferAccountBookSchema = z.object({
   accountBookId: z.number(),
-  previousTeamId: z.number(),
-  targetTeamId: z.number(),
+  fromTeamId: z.number(),
+  toTeamId: z.number(),
   status: z.enum(Object.values(TransferStatus) as [TransferStatus, ...TransferStatus[]]),
   transferredAt: z.number().optional(),
 });

@@ -47,7 +47,10 @@ const handlePutRequest = async (req: NextApiRequest) => {
   await checkSessionUser(session, apiName, req);
 
   // Info: (20250310 - Shirley) Validate request data, will throw INVALID_INPUT_PARAMETER error if invalid
-  checkRequestData(apiName, req, session);
+  const { query, body } = checkRequestData(apiName, req, session);
+  if (query === null || body === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
 
   // Info: (20250310 - Shirley) Check user authorization, will throw FORBIDDEN error if not authorized
   await checkUserAuthorization(apiName, req, session);
@@ -55,7 +58,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
   // Info: (20250310 - Shirley) Process account book update based on action type
   const { userId, teamId, teamRole } = session;
   const companyId = Number(req.query.accountBookId);
-  const { action, tag, isPrivate } = req.body;
+  const { action, tag, isPrivate } = body;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: {
