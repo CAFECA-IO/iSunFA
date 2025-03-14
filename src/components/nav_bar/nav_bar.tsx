@@ -38,7 +38,7 @@ const NavBar = () => {
     selectedAccountBook,
     userAuth,
     isAuthLoading,
-    selectAccountBook,
+    connectAccountBook,
   } = useUserCtx();
   const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
   const router = useRouter();
@@ -97,7 +97,7 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
-    selectAccountBook(CANCEL_ACCOUNT_BOOK_ID);
+    connectAccountBook(CANCEL_ACCOUNT_BOOK_ID);
   };
 
   const redirectTo = (target: string) => {

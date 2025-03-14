@@ -21,7 +21,7 @@ const UploadCompanyPictureModal = ({
   setRefreshKey,
 }: UploadCompanyPictureModalProps) => {
   const { t } = useTranslation(['account_book']);
-  const { selectedAccountBook, selectAccountBook } = useUserCtx();
+  const { selectedAccountBook, connectAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
   const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<IAccountBook>(
@@ -77,7 +77,7 @@ const UploadCompanyPictureModal = ({
 
         // Info: (20241212 - Liz) 如果是改變已選擇的帳本的公司圖片，就打 API 選擇該帳本以更新公司圖片
         if (isChangingSelectedCompany) {
-          selectAccountBook(accountBookToUploadPicture.company.id);
+          connectAccountBook(accountBookToUploadPicture.company.id);
         }
       } catch (error) {
         // Deprecated: (20241212 - Liz)
