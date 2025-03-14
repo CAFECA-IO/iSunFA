@@ -1,5 +1,5 @@
--- DropIndex
-DROP INDEX "accountBook_transfer_from_team_id_to_team_id_key";
+-- 安全地刪除索引，如果索引不存在則不執行
+DROP INDEX IF EXISTS "accountBook_transfer_from_team_id_to_team_id_key";
 
 -- AlterTable
 ALTER TABLE "accountBook_transfer" ALTER COLUMN "created_at" SET DEFAULT EXTRACT(EPOCH FROM NOW())::int,
