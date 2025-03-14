@@ -23,6 +23,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 // import { useReactToPrint } from 'react-to-print';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
 // import { ReportLanguagesKey } from '@/interfaces/report_language'; // Todo: (20241206 - Anna) 下個PR繼續處理
+import DownloadBalanceSheet from '@/components/balance_sheet_report_body/download_balance_sheet'; // Info: (20250313 - Anna)
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
@@ -909,6 +910,10 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         <hr className="break-before-page" />
         {TurnoverDay}
       </div>
+      {/* Info: (20250313 - Anna) */}
+      <DownloadBalanceSheet
+        reportFinancial={reportFinancial}
+      />
     </div>
   );
 };
