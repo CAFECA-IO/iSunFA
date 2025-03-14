@@ -74,6 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         break;
     }
   } catch (error) {
+    loggerBack.info(`error: ${JSON.stringify(error)}`);
     const err = error as Error;
     statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE];
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
