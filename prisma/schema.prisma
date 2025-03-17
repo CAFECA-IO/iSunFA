@@ -1248,7 +1248,7 @@ model Team {
 
 enum InviteStatus {
   PENDING    // Info: (20250307 - Tzuhan) 邀請發送中 (預設)
-  ACCEPTED   // Info: (20250307 - Tzuhan) 用戶接受邀請
+  COMPLETED  // Info: (20250307 - Tzuhan) 邀請完成
   DECLINED   // Info: (20250307 - Tzuhan) 用戶拒絕邀請
   CANCELED   // Info: (20250307 - Tzuhan) 邀請被團隊管理員取消
   FAILED     // Info: (20250307 - Tzuhan) 邀請失敗
@@ -1262,7 +1262,7 @@ model InviteTeamMember {
   createdAt    Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at") // Info: (20250314 - Tzuhan) 記錄邀請時間
   updatedAt    Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at") // Info: (20250314 - Tzuhan) 記錄狀態變更時間
   pendingAt    Int?         @map("pending_at") // Info: (20250314 - Tzuhan) 進入 PENDING 狀態的時間
-  acceptedAt   Int?         @map("accepted_at") // Info: (20250314 - Tzuhan) 接受邀請時間
+  completedAt  Int?         @map("completed_at") // Info: (20250314 - Tzuhan) 邀請完成時間
   declinedAt   Int?         @map("declined_at") // Info: (20250314 - Tzuhan) 拒絕邀請時間
   canceledAt   Int?         @map("canceled_at") // Info: (20250314 - Tzuhan) 邀請被取消時間
   note         Json?        @map("note") @default("{}") // Info: (20250314 - Tzuhan) 備註欄位（可存放拒絕原因、備註等）

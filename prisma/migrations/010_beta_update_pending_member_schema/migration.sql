@@ -5,7 +5,7 @@
 
 */
 -- CreateEnum
-CREATE TYPE "InviteStatus" AS ENUM ('PENDING', 'ACCEPTED', 'DECLINED', 'CANCELED', 'FAILED');
+CREATE TYPE "InviteStatus" AS ENUM ('PENDING', 'COMPLETED', 'DECLINED', 'CANCELED', 'FAILED');
 
 -- DropForeignKey
 ALTER TABLE "pending_team_member" DROP CONSTRAINT "pending_team_member_team_id_fkey";
