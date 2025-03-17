@@ -80,7 +80,7 @@ export const PLANS: IPlan[] = [
       {
         id: 'team_members',
         name: 'TEAM_MEMBERS',
-        value: 'UP_TO_10_PEOPLE',
+        value: 'UP_TO_3_PEOPLE',
       },
       {
         id: 'financial_statements',
@@ -91,11 +91,6 @@ export const PLANS: IPlan[] = [
         id: 'technical_support',
         name: 'TECHNICAL_SUPPORT',
         value: 'UP_TO_24_HOURS_IN_TOTAL_4_HOURS_PER_SESSION',
-      },
-      {
-        id: 'additional_perks',
-        name: 'ADDITIONAL_PERKS',
-        value: '10_ASSET_TAGGING_STICKERS',
       },
     ],
   },
@@ -122,7 +117,7 @@ export const PLANS: IPlan[] = [
       {
         id: 'team_members',
         name: 'TEAM_MEMBERS',
-        value: 'UNLIMITED',
+        value: 'UNLIMITED_MEMBER_OF_PEOPLE',
       },
       {
         id: 'financial_statements',
@@ -138,11 +133,6 @@ export const PLANS: IPlan[] = [
         id: 'technical_support',
         name: 'TECHNICAL_SUPPORT',
         value: 'UP_TO_48_HOURS_IN_TOTAL_4_HOURS_PER_SESSION',
-      },
-      {
-        id: 'additional_perks',
-        name: 'ADDITIONAL_PERKS',
-        value: ['100_ASSET_TAGGING_STICKERS', 'ONLINE_AND_OFFLINE_INTEGRATION', 'HARDWARE_SUPPORT'],
       },
     ],
   },

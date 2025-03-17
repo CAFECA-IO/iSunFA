@@ -122,7 +122,6 @@ const PricingPlan: React.FC = () => {
       },
       description: t('pricing:BEGINNER.DESCRIPTION'),
       features: [
-        { icon: null, description: t('pricing:BEGINNER.FEATURES.ESSENTIAL') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AI_UPLOADS') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AUTO_SUGGESTIONS') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.LIMIT_STORAGE') },
@@ -131,10 +130,8 @@ const PricingPlan: React.FC = () => {
           icon: '/icons/check.svg',
           description: t('pricing:BEGINNER.FEATURES.GENERATE_STATEMENTS'),
         },
-        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.CREATE_TEAMS') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AUTO_FILL_TAX') },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.ACCEPT_TASKS') },
-        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.SUPPORT_USER') },
         {
           icon: '/icons/check.svg',
           description: t('pricing:BEGINNER.FEATURES.TECHNICAL_ASSISTANCE'),
@@ -165,13 +162,15 @@ const PricingPlan: React.FC = () => {
           icon: '/icons/check.svg',
           description: t('pricing:PROFESSIONAL.FEATURES.UNLIMITED_LEDGER'),
         },
-        { icon: '/icons/check.svg', description: t('pricing:PROFESSIONAL.FEATURES.POST_REQUESTS') },
         {
           icon: '/icons/check.svg',
           description: t('pricing:PROFESSIONAL.FEATURES.AUTO_GENERATE_STATEMENTS'),
         },
-        { icon: '/icons/check.svg', description: t('pricing:PROFESSIONAL.FEATURES.ASSET_TAGS') },
-        { icon: '/icons/check.svg', description: t('pricing:PROFESSIONAL.FEATURES.SUPPORT_USERS') },
+        {
+          icon: '/icons/check.svg',
+          description: t('pricing:PROFESSIONAL.FEATURES.TEAM_MEMBERS'),
+        },
+        { icon: '/icons/check.svg', description: t('pricing:PROFESSIONAL.FEATURES.POST_REQUESTS') },
         {
           icon: '/icons/check.svg',
           description: t('pricing:PROFESSIONAL.FEATURES.TECHNICAL_ASSISTANCE'),
@@ -206,7 +205,7 @@ const PricingPlan: React.FC = () => {
           icon: '/icons/check.svg',
           description: t('pricing:ENTERPRISE.FEATURES.UNLIMITED_STORAGE'),
         },
-        { icon: '/icons/check.svg', description: t('pricing:ENTERPRISE.FEATURES.ASSET_TAGS') },
+        { icon: '/icons/check.svg', description: t('pricing:ENTERPRISE.FEATURES.TEAM_MEMBERS') },
         {
           icon: '/icons/check.svg',
           description: t('pricing:ENTERPRISE.FEATURES.SERVER_INTEGRATION'),

@@ -21,7 +21,7 @@ const PriceingPage: React.FC = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['pricing'])),
+    ...(await serverSideTranslations(locale, ['pricing', 'landing_page_v2'])),
     locale,
   },
 });
