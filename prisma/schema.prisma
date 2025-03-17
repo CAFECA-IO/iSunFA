@@ -992,6 +992,8 @@ model UserPaymentInfo {
   id            Int    @id @default(autoincrement())
   userId        Int    @map("user_id")
   token         String
+  default       Boolean @default(false)
+  info          Json?
   transactionId String @map("transaction_id")
   createdAt     Int    @map("created_at")
   updatedAt     Int    @map("updated_at")
