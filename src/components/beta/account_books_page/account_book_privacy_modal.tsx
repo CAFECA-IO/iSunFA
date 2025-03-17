@@ -8,11 +8,15 @@ import APIHandler from '@/lib/utils/api_handler';
 interface AccountBookPrivacyModalProps {
   accountBookToChangePrivacy: IAccountBookForUserWithTeam;
   setAccountBookToChangePrivacy: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  setRefreshKey?: Dispatch<React.SetStateAction<number>>;
+  getAccountBookListByTeamId?: () => Promise<void>;
 }
 
 const AccountBookPrivacyModal = ({
   accountBookToChangePrivacy,
   setAccountBookToChangePrivacy,
+  setRefreshKey,
+  getAccountBookListByTeamId,
 }: AccountBookPrivacyModalProps) => {
   const { t } = useTranslation(['account_book']);
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
@@ -47,6 +51,10 @@ const AccountBookPrivacyModal = ({
         return;
       }
       closeAccountBookPrivacyModal();
+
+      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20250314 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
+
+      if (getAccountBookListByTeamId) getAccountBookListByTeamId(); // Info: (20250314 - Liz) 重新取得團隊帳本清單
     } catch (error) {
       // Deprecated: (20250313 - Liz)
       // eslint-disable-next-line no-console

@@ -16,8 +16,8 @@ interface PendingTasksProps {
 const PendingTask = ({ getTodoList }: PendingTasksProps) => {
   /* Info: (20241018 - Liz) 元件顯示邏輯
    * 沒有帳本清單 : 顯示 PendingTaskNoData
-   * 有帳本清單 且 有選擇帳本 : 顯示 PendingTasksForAccountBook
-   * 有帳本清單 且 沒有選擇帳本 : 顯示 PendingTaskForAll
+   * 有帳本清單 且 有連結帳本 : 顯示 PendingTasksForAccountBook
+   * 有帳本清單 且 沒有連結帳本 : 顯示 PendingTaskForAll
    */
 
   const { userAuth, selectedAccountBook } = useUserCtx();

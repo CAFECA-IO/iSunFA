@@ -600,15 +600,6 @@ export const requestTransferAccountBook = async (
     where: { teamId: fromTeamId, userId },
     select: { role: true },
   });
-
-  // Todo: check if accountBookId is in fromTeamId
-  const accountBook = await prisma.company.findFirst({
-    where: { id: accountBookId, teamId: fromTeamId },
-  });
-  if (!accountBook) {
-    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
-  }
-
   if (!userTeamRole) {
     throw new Error('FORBIDDEN');
   }
@@ -620,6 +611,14 @@ export const requestTransferAccountBook = async (
 
   if (!(canDo as ITeamRoleCanDo).yesOrNo) {
     throw new Error('FORBIDDEN');
+  }
+
+  // Info: (20250314 - Tzuhan) Todo: check if accountBookId is in fromTeamId
+  const accountBook = await prisma.company.findFirst({
+    where: { id: accountBookId, teamId: fromTeamId },
+  });
+  if (!accountBook) {
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
   }
 
   // Info: (20250311 - Tzuhan) 確保目標團隊 `toTeamId` 存在
@@ -674,7 +673,7 @@ export const requestTransferAccountBook = async (
   return { ...record, accountBookId: record.companyId } as ITransferAccountBook;
 };
 
-// Info: (20250311 - Tzuhan) 取消帳本轉移
+// Info: (20250314 - Tzuhan) 取消帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const cancelTransferAccountBook = async (
   userId: number,
   accountBookId: number
@@ -687,6 +686,14 @@ export const cancelTransferAccountBook = async (
   });
 
   if (!transfer) {
+    throw new Error('TRANSFER_RECORD_NOT_FOUND');
+  } else if (transfer.status !== TransferStatus.PENDING) {
+    throw new Error(`TRANSFER_RECORD_IS_${transfer.status}`);
+  }
+  const accountBook = await prisma.company.findFirst({
+    where: { id: accountBookId, teamId: transfer.fromTeamId },
+  });
+  if (!accountBook) {
     throw new Error('ACCOUNT_BOOK_NOT_FOUND');
   }
 
@@ -721,7 +728,7 @@ export const cancelTransferAccountBook = async (
   ]);
 };
 
-// Info: (20250311 - Tzuhan) 接受帳本轉移
+// Info: (20250314 - Tzuhan) 接受帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const acceptTransferAccountBook = async (
   userId: number,
   accountBookId: number
@@ -769,7 +776,7 @@ export const acceptTransferAccountBook = async (
   ]);
 };
 
-// Info: (20250311 - Tzuhan) 拒絕帳本轉移
+// Info: (20250314 - Tzuhan) 拒絕帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const declineTransferAccountBook = async (
   userId: number,
   accountBookId: number

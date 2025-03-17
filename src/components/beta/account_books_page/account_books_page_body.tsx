@@ -65,13 +65,14 @@ const AccountBooksPageBody = () => {
     try {
       const data = await deleteAccountBook(accountBookToDelete.company.id);
 
-      if (data) {
-        setRefreshKey((prev) => prev + 1);
-      } else {
+      if (!data) {
         // Deprecated: (20241115 - Liz)
         // eslint-disable-next-line no-console
         console.log('刪除帳本失敗');
+        return;
       }
+
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       // Deprecated: (20241115 - Liz)
       // eslint-disable-next-line no-console
@@ -163,6 +164,7 @@ const AccountBooksPageBody = () => {
         <TransferAccountBookModal
           accountBookToTransfer={accountBookToTransfer}
           setAccountBookToTransfer={setAccountBookToTransfer}
+          setRefreshKey={setRefreshKey}
         />
       )}
 
@@ -186,6 +188,7 @@ const AccountBooksPageBody = () => {
         <AccountBookPrivacyModal
           accountBookToChangePrivacy={accountBookToChangePrivacy}
           setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
+          setRefreshKey={setRefreshKey}
         />
       )}
 

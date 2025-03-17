@@ -10,27 +10,24 @@ import { ITransferAccountBook } from '@/interfaces/team';
 interface TransferAccountBookModalProps {
   accountBookToTransfer: IAccountBookForUserWithTeam;
   setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  setRefreshKey?: Dispatch<React.SetStateAction<number>>;
+  getAccountBookListByTeamId?: () => Promise<void>;
 }
 
 const TransferAccountBookModal = ({
   accountBookToTransfer,
   setAccountBookToTransfer,
+  setRefreshKey,
+  getAccountBookListByTeamId,
 }: TransferAccountBookModalProps) => {
   const { t } = useTranslation(['account_book']);
-
   const [transferToTeamId, setTransferToTeamId] = useState<string>('');
-  // Deprecated: (20250213 - Liz)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Info: (20250311 - Liz) 轉移帳本 API
   const { trigger: transferAccountBookAPI } = APIHandler<ITransferAccountBook>(
     APIName.REQUEST_TRANSFER_ACCOUNT_BOOK
   );
-
-  // Deprecated: (20250213 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('accountBookToTransfer:', accountBookToTransfer);
 
   const closeTransferAccountBookModal = () => {
     setAccountBookToTransfer(undefined);
@@ -57,6 +54,10 @@ const TransferAccountBookModal = ({
         return;
       }
       closeTransferAccountBookModal();
+
+      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20250314 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
+
+      if (getAccountBookListByTeamId) getAccountBookListByTeamId(); // Info: (20250314 - Liz) 重新取得團隊帳本清單
     } catch (error) {
       // Deprecated: (20250311 - Liz)
       // eslint-disable-next-line no-console
