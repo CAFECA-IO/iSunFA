@@ -16,12 +16,12 @@ const PlanComparison: React.FC = () => {
     'LEDGER',
     'CERTIFICATE',
     'FINANCIAL_REPORTS',
-    'MATCHING_PLATFORM',
+    // 'MATCHING_PLATFORM',
     'TEAM_COLLABORATION',
     'API_INTEGRATION',
     'AUDITING',
     'CUSTOMER_SUPPORT',
-    'EXTRAS',
+    // 'EXTRAS',
     // 'AI_FEATURES',
   ];
 

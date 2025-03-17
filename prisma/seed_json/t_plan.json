@@ -22,10 +22,8 @@
       { "featureKey": "CLOUD_STORAGE", "featureValue": "1TB" },
       { "featureKey": "AI_ASSISTANT", "featureValue": "UNLIMITED_CAPACITY" },
       { "featureKey": "MATCHMAKING_PLATFORM", "featureValue": "POST_TASK_REQUIREMENTS" },
-      { "featureKey": "TEAM_MEMBERS", "featureValue": "UP_TO_10_PEOPLE" },
-      { "featureKey": "FINANCIAL_STATEMENTS", "featureValue": "AUTO_UPDATED" },
-      { "featureKey": "TECHNICAL_SUPPORT", "featureValue": "UP_TO_24_HOURS_IN_TOTAL_4_HOURS_PER_SESSION" },
-      { "featureKey": "ADDITIONAL_PERKS", "featureValue": "10_ASSET_TAGGING_STICKERS" }
+      { "featureKey": "TEAM_MEMBERS", "featureValue": "UP_TO_3_PEOPLE" },
+      { "featureKey": "FINANCIAL_STATEMENTS", "featureValue": "AUTO_UPDATED" }
     ]
   },
   {
@@ -38,9 +36,7 @@
       { "featureKey": "MATCHMAKING_PLATFORM", "featureValue": "PRIORITY_VISIBILITY" },
       { "featureKey": "TEAM_MEMBERS", "featureValue": "UNLIMITED" },
       { "featureKey": "FINANCIAL_STATEMENTS", "featureValue": "AUTO_UPDATED" },
-      { "featureKey": "API_INTEGRATION", "featureValue": "SYSTEM_SUPPORT" },
-      { "featureKey": "TECHNICAL_SUPPORT", "featureValue": "UP_TO_48_HOURS_IN_TOTAL_4_HOURS_PER_SESSION" },
-      { "featureKey": "ADDITIONAL_PERKS", "featureValue": ["100_ASSET_TAGGING_STICKERS", "ONLINE_AND_OFFLINE_INTEGRATION", "HARDWARE_SUPPORT"] }
+      { "featureKey": "API_INTEGRATION", "featureValue": "SYSTEM_SUPPORT" }
     ]
   }
 ]
