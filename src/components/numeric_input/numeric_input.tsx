@@ -24,16 +24,16 @@ const formatDisplayValue = (
   return hasComma ? numberWithCommas(stringValue) : stringValue;
 };
 
-const NumericInput = ({
+const NumericInput: React.FC<INumericInputProps> = ({
   value,
   setValue,
   isDecimal,
   hasComma,
   triggerWhenChanged,
   ...props
-}: INumericInputProps) => {
+}) => {
   // Info: (20240723 - Liz) displayValue 是顯示在 input 上的顯示值
-  const [displayValue, setDisplayValue] = useState<string>(value.toString());
+  const [displayValue, setDisplayValue] = useState<string>(value ? value.toString() : '');
 
   // Info: (20240723 - Liz) dbValue 是存入 DB 的儲存值
   const [dbValue, setDbValue] = useState<number>(value);
@@ -78,6 +78,37 @@ const NumericInput = ({
     }
   };
 
+  // Info: (20250306 - Julian) 處理在中文輸入法下，填入數字的情況
+  function convertInput(event: React.KeyboardEvent<HTMLInputElement>) {
+    // Info: (20250313 - Julian) 執行預設行為: Tab, Backspace, Delete, ArrowLeft, ArrowRight
+    if (
+      event.code === 'Tab' ||
+      event.code === 'Backspace' ||
+      event.code === 'Delete' ||
+      event.code === 'ArrowLeft' ||
+      event.code === 'ArrowRight'
+    ) {
+      return;
+    }
+
+    event.preventDefault(); // Info: (20250306 - Julian) 阻止預設事件
+
+    let temp = displayValue; // Info: (20250306 - Julian) 取得目前顯示值
+    let code = ''; // Info: (20250306 - Julian) 按鍵 code
+
+    const input = event.currentTarget; // Info: (20250306 - Julian) 取得 input 元件
+    const cursorPos = input.selectionStart ?? displayValue.length; // Info: (20250306 - Julian) 取得當前游標位置
+
+    if (event.code.indexOf('Digit') > -1) {
+      // Info: (20250306 - Julian) 如果按下的是數字鍵
+      code = event.code.slice(-1); // Info: (20250306 - Julian) 取得數字鍵的值
+      temp = temp.slice(0, cursorPos) + code + temp.slice(cursorPos); // Info: (20250306 - Julian) 插入數字
+
+      // Info: (20250306 - Julian) 變更顯示值
+      handleChange({ target: { value: temp } } as React.ChangeEvent<HTMLInputElement>);
+    }
+  }
+
   // Info: (20240723 - Liz) 處理 displayValue 為空或僅為點的情況
   const handleBlur = () => {
     if (!displayValue || displayValue === '.') {
@@ -106,6 +137,7 @@ const NumericInput = ({
       onFocus={handleFocus}
       onBlur={handleBlur}
       onWheel={handleWheel}
+      onKeyDown={convertInput}
       {...props}
     />
   );

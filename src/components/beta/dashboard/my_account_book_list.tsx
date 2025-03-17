@@ -46,7 +46,7 @@ const MyAccountBookList = ({ accountBookList, setAccountBookToSelect }: MyAccoun
     };
   }, []);
 
-  // Info: (20241216 - Liz) 當選擇帳本後，將滾動條重設到最左側
+  // Info: (20241216 - Liz) 當連結帳本後，將滾動條重設到最左側
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;

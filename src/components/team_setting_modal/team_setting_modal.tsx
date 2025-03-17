@@ -17,7 +17,7 @@ interface ITeamSettingModal {
 // ToDo: (20240822 - Julian) [Beta] i18n
 const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSettingModal) => {
   const { t } = useTranslation(['common', 'settings']);
-  const { selectedAccountBook, selectAccountBook } = useUserCtx();
+  const { selectedAccountBook, connectAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
   const [companyName, setCompanyName] = useState<string>(selectedAccountBook?.name ?? '');
 
@@ -52,7 +52,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     if (isUpdateTeamLoading) return;
 
     if (updateTeamSuccess && updatedTeam) {
-      selectAccountBook(updatedTeam.id);
+      connectAccountBook(updatedTeam.id);
     } else if (updateTeamError) {
       toastHandler({
         id: `update_team-${updateTeamCode}`,

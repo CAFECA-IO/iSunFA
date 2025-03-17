@@ -5,26 +5,21 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import {
-  IConnectAccountBookQueryParams,
-  IConnectAccountBookResponse,
-} from '@/lib/utils/zod_schema/account_book';
+import { IConnectAccountBookQueryParams } from '@/lib/utils/zod_schema/account_book';
 import { getSession, setSession } from '@/lib/utils/session';
 import { getCompanyAndRoleByUserIdAndCompanyId } from '@/lib/utils/repo/admin.repo';
 import { getTeamByTeamId } from '@/lib/utils/repo/team.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-/*
- * TODO: (20250305 - Shirley)
- * 改用 zod_schema/company.ts 替代 zod_schema/account_book.ts
- */
+import { IAccountBook } from '@/interfaces/account_book';
+
 interface IResponse {
   statusMessage: string;
-  payload: IConnectAccountBookResponse | null;
+  payload: IAccountBook | null;
 }
 
 const handleGetRequest: IHandleRequest<
   APIName.CONNECT_ACCOUNT_BOOK_BY_ID,
-  IResponse['payload']
+  IAccountBook | null
 > = async ({ query, session }) => {
   const { accountBookId } = query as IConnectAccountBookQueryParams;
   const userId = session?.userId;
@@ -36,14 +31,22 @@ const handleGetRequest: IHandleRequest<
    * 3. 設置 session 中的 companyId，之後應該改成 accountBookId
    * 4. 獲取團隊資訊並設置 session 中的 team 欄位
    */
-  // if (!userId || accountBookId === 404) {
-  //   return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
-  // }
 
   const companyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(userId, accountBookId);
   if (!companyAndRole) {
     return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
   }
+
+  const result = {
+    id: companyAndRole.company.id,
+    imageId: companyAndRole.company.imageFile?.url || '',
+    name: companyAndRole.company.name,
+    taxId: companyAndRole.company.taxId,
+    startDate: companyAndRole.company.startDate,
+    createdAt: companyAndRole.company.createdAt,
+    updatedAt: companyAndRole.company.updatedAt,
+    isPrivate: companyAndRole.company.isPrivate,
+  } as IAccountBook;
 
   await setSession(session, { companyId: accountBookId });
 
@@ -66,11 +69,7 @@ const handleGetRequest: IHandleRequest<
     loggerBack.info('未找到 teamId');
   }
 
-  const payload: IConnectAccountBookResponse = {
-    accountBookId,
-  };
-
-  return { statusMessage: STATUS_MESSAGE.SUCCESS_GET, payload };
+  return { statusMessage: STATUS_MESSAGE.SUCCESS_GET, payload: result };
 };
 
 const methodHandlers: {

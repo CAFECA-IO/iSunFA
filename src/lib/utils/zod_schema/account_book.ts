@@ -89,11 +89,6 @@ const connectAccountBookResponseSchema = z.object({
   accountBookId: z.number(),
 });
 
-const connectAccountBookResponseWithNullSchema = z.union([
-  connectAccountBookResponseSchema,
-  z.null(),
-]);
-
 const countrySchema = z.object({
   id: z.string(),
   code: z.string(),
@@ -129,7 +124,7 @@ export const connectAccountBookSchema = {
     querySchema: connectAccountBookQuerySchema,
     bodySchema: accountBookNullSchema,
   },
-  outputSchema: connectAccountBookResponseWithNullSchema,
+  outputSchema: accountBookSchema.nullable(),
   frontend: accountBookNullSchema,
 };
 
@@ -154,6 +149,8 @@ export const listAccountBooksByTeamIdSchema = {
 export type IAccountBookListQueryParams = z.infer<typeof accountBookListQuerySchema>;
 export type IAccountBookListResponse = z.infer<typeof accountBookListResponseSchema>;
 
+// Info: (20250310 - Shirley) 以下類型定義已被棄用，但保留以向後兼容
+// 新的 connectAccountBook API 回傳 IAccountBook 類型
 export type IConnectAccountBookQueryParams = z.infer<typeof connectAccountBookQuerySchema>;
 export type IConnectAccountBookResponse = z.infer<typeof connectAccountBookResponseSchema>;
 

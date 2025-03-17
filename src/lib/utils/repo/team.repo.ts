@@ -14,14 +14,16 @@ import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
-import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import loggerBack from '@/lib/utils/logger_back';
 import {
-  ACCOUNT_BOOK_TRANSFER_PERMISSIONS,
-  SUBSCRIPTION_PLAN_LIMITS,
-} from '@/constants/team/permissions';
+  listByTeamIdQuerySchema,
+  IUpdateMemberResponse,
+  IDeleteMemberResponse,
+} from '@/lib/utils/zod_schema/team';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import loggerBack from '@/lib/utils/logger_back';
+import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
+import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 
 const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
   return sortOptions.map(({ sortBy, sortOrder }) => ({
@@ -598,14 +600,25 @@ export const requestTransferAccountBook = async (
     where: { teamId: fromTeamId, userId },
     select: { role: true },
   });
+  if (!userTeamRole) {
+    throw new Error('FORBIDDEN');
+  }
 
-  if (
-    !userTeamRole ||
-    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.REQUEST_TRANSFER.some(
-      (role) => role === (userTeamRole.role as TeamRole)
-    )
-  ) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  const canDo = convertTeamRoleCanDo({
+    teamRole: userTeamRole.role as TeamRole,
+    canDo: TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
+  });
+
+  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+    throw new Error('FORBIDDEN');
+  }
+
+  // Info: (20250314 - Tzuhan) Todo: check if accountBookId is in fromTeamId
+  const accountBook = await prisma.company.findFirst({
+    where: { id: accountBookId, teamId: fromTeamId },
+  });
+  if (!accountBook) {
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
   }
 
   // Info: (20250311 - Tzuhan) 確保目標團隊 `toTeamId` 存在
@@ -619,7 +632,7 @@ export const requestTransferAccountBook = async (
   });
 
   if (!targetTeam) {
-    throw new Error(STATUS_MESSAGE.TEAM_NOT_FOUND);
+    throw new Error('TEAM_NOT_FOUND');
   }
 
   // Info: (20250311 - Tzuhan) 確保轉入團隊的 `subscription.planType` 不會超過上限
@@ -627,35 +640,40 @@ export const requestTransferAccountBook = async (
   const accountBookCount = await prisma.company.count({ where: { teamId: toTeamId } });
 
   if (isFreePlan && accountBookCount >= SUBSCRIPTION_PLAN_LIMITS.FREE) {
-    throw new Error(STATUS_MESSAGE.EXCEED_FREE_PLAN_LIMIT);
+    throw new Error('EXCEED_FREE_PLAN_LIMIT');
   }
 
   // Info: (20250311 - Tzuhan) 更新帳本 `isTransferring = true`
+  /** Info: (20250313 - Tzuhan) 目前因為通知系統還沒有做好，所以跟邀請member一樣，這邊對方都不會收到確認通知，會直接轉移成功
   await prisma.company.update({
     where: { id: accountBookId },
     data: { isTransferring: true },
   });
+  */
 
-  // Info: (20250311 - Tzuhan) 建立 `accountBook_transfer` 記錄
-  await prisma.accountBookTransfer.create({
-    data: {
-      companyId: accountBookId,
-      fromTeamId,
-      toTeamId,
-      initiatedByUserId: userId,
-      status: TransferStatus.PENDING,
-    },
-  });
+  const record = {
+    companyId: accountBookId,
+    fromTeamId,
+    toTeamId,
+    initiatedByUserId: userId,
+    status: TransferStatus.COMPLETED, // Info: (20250313 - Tzuhan) 目前因為通知系統還沒有做好，所以直接設定為 COMPLETED
+  };
+  await prisma.$transaction([
+    // Info: (20250311 - Tzuhan) 建立 `accountBook_transfer` 記錄
+    prisma.accountBookTransfer.create({
+      data: record,
+    }),
+    // Info: (20250311 - Tzuhan) 更新 `company.teamId` & `company.isTransferring`
+    prisma.company.update({
+      where: { id: accountBookId },
+      data: { teamId: toTeamId, isTransferring: false },
+    }),
+  ]);
 
-  return {
-    accountBookId,
-    previousTeamId: fromTeamId,
-    targetTeamId: toTeamId,
-    status: TransferStatus.PENDING,
-  } as ITransferAccountBook;
+  return { ...record, accountBookId: record.companyId } as ITransferAccountBook;
 };
 
-// Info: (20250311 - Tzuhan) 取消帳本轉移
+// Info: (20250314 - Tzuhan) 取消帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const cancelTransferAccountBook = async (
   userId: number,
   accountBookId: number
@@ -668,7 +686,15 @@ export const cancelTransferAccountBook = async (
   });
 
   if (!transfer) {
-    throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+    throw new Error('TRANSFER_RECORD_NOT_FOUND');
+  } else if (transfer.status !== TransferStatus.PENDING) {
+    throw new Error(`TRANSFER_RECORD_IS_${transfer.status}`);
+  }
+  const accountBook = await prisma.company.findFirst({
+    where: { id: accountBookId, teamId: transfer.fromTeamId },
+  });
+  if (!accountBook) {
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
   }
 
   // Info: (20250311 - Tzuhan) 確保用戶有權限取消
@@ -677,15 +703,18 @@ export const cancelTransferAccountBook = async (
     select: { role: true },
   });
 
-  if (
-    !userTeamRole ||
-    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.CANCEL_TRANSFER.some(
-      (role) => role === (userTeamRole.role as TeamRole)
-    )
-  ) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  if (!userTeamRole) {
+    throw new Error('FORBIDDEN');
   }
 
+  const canDo = convertTeamRoleCanDo({
+    teamRole: userTeamRole.role as TeamRole,
+    canDo: TeamPermissionAction.CANCEL_ACCOUNT_BOOK_TRANSFER,
+  });
+
+  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+    throw new Error('FORBIDDEN');
+  }
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
   await prisma.$transaction([
     prisma.accountBookTransfer.update({
@@ -699,7 +728,7 @@ export const cancelTransferAccountBook = async (
   ]);
 };
 
-// Info: (20250311 - Tzuhan) 接受帳本轉移
+// Info: (20250314 - Tzuhan) 接受帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const acceptTransferAccountBook = async (
   userId: number,
   accountBookId: number
@@ -712,7 +741,7 @@ export const acceptTransferAccountBook = async (
   });
 
   if (!transfer) {
-    throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
   }
 
   // Info: (20250311 - Tzuhan) 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
@@ -721,13 +750,17 @@ export const acceptTransferAccountBook = async (
     select: { role: true },
   });
 
-  if (
-    !userTeamRole ||
-    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.ACCEPT_TRANSFER.some(
-      (role) => role === (userTeamRole.role as TeamRole)
-    )
-  ) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  if (!userTeamRole) {
+    throw new Error('FORBIDDEN');
+  }
+
+  const canDo = convertTeamRoleCanDo({
+    teamRole: userTeamRole.role as TeamRole,
+    canDo: TeamPermissionAction.ACCEPT_ACCOUNT_BOOK_TRANSFER,
+  });
+
+  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+    throw new Error('FORBIDDEN');
   }
 
   // Info: (20250311 - Tzuhan) 更新 `company.teamId` & `accountBook_transfer` 狀態
@@ -743,7 +776,7 @@ export const acceptTransferAccountBook = async (
   ]);
 };
 
-// Info: (20250311 - Tzuhan) 拒絕帳本轉移
+// Info: (20250314 - Tzuhan) 拒絕帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const declineTransferAccountBook = async (
   userId: number,
   accountBookId: number
@@ -756,7 +789,7 @@ export const declineTransferAccountBook = async (
   });
 
   if (!transfer) {
-    throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
   }
 
   // Info: (20250311 - Tzuhan) 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
@@ -765,13 +798,17 @@ export const declineTransferAccountBook = async (
     select: { role: true },
   });
 
-  if (
-    !userTeamRole ||
-    !ACCOUNT_BOOK_TRANSFER_PERMISSIONS.DECLINE_TRANSFER.some(
-      (role) => role === (userTeamRole.role as TeamRole)
-    )
-  ) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  if (!userTeamRole) {
+    throw new Error('FORBIDDEN');
+  }
+
+  const canDo = convertTeamRoleCanDo({
+    teamRole: userTeamRole.role as TeamRole,
+    canDo: TeamPermissionAction.DECLINE_ACCOUNT_BOOK_TRANSFER,
+  });
+
+  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+    throw new Error('FORBIDDEN');
   }
 
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
@@ -785,4 +822,141 @@ export const declineTransferAccountBook = async (
       data: { isTransferring: false },
     }),
   ]);
+};
+
+/**
+ * Info: (20250312 - Shirley) 更新團隊成員角色
+ * @param teamId 團隊 ID
+ * @param memberId 成員 ID
+ * @param role 新角色
+ * @param sessionUserTeamRole 當前用戶在團隊中的角色
+ * @returns 更新後的成員資訊
+ */
+export const updateMemberById = async (
+  teamId: number,
+  memberId: number,
+  role: TeamRole,
+  sessionUserTeamRole: TeamRole
+): Promise<IUpdateMemberResponse> => {
+  // Info: (20250312 - Shirley) 檢查當前用戶是否有權限更新成員角色
+  if (sessionUserTeamRole !== TeamRole.OWNER && sessionUserTeamRole !== TeamRole.ADMIN) {
+    throw new Error('PERMISSION_DENIED');
+  }
+
+  // Info: (20250312 - Shirley) 檢查要更新的成員是否存在
+  const teamMember = await prisma.teamMember.findFirst({
+    where: {
+      id: memberId,
+      teamId,
+      status: LeaveStatus.IN_TEAM,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  if (!teamMember) {
+    throw new Error('MEMBER_NOT_FOUND');
+  }
+
+  // Info: (20250312 - Shirley) 不能將成員角色更新為 OWNER
+  if (role === TeamRole.OWNER) {
+    throw new Error('CANNOT_UPDATE_TO_OWNER');
+  }
+
+  // Info: (20250312 - Shirley) 檢查成員當前角色
+  if (teamMember.role === TeamRole.OWNER) {
+    throw new Error('CANNOT_UPDATE_OWNER_ROLE');
+  }
+
+  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，只能更新 EDITOR 和 VIEWER 角色
+  if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
+    throw new Error('ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER');
+  }
+
+  // Info: (20250313 - Shirley) 如果當前用戶是 ADMIN，不能將其他成員提升為 ADMIN
+  if (sessionUserTeamRole === TeamRole.ADMIN && role === TeamRole.ADMIN) {
+    throw new Error('ADMIN_CANNOT_PROMOTE_TO_ADMIN');
+  }
+
+  // Info: (20250312 - Shirley) 更新成員角色
+  const updatedAt = Math.floor(Date.now() / 1000);
+  const updatedMember = await prisma.teamMember.update({
+    where: { id: memberId },
+    data: {
+      role,
+    },
+  });
+
+  return {
+    id: updatedMember.id,
+    userId: updatedMember.userId,
+    teamId: updatedMember.teamId,
+    role: updatedMember.role,
+    email: teamMember.user.email || '',
+    name: teamMember.user.name || '',
+    createdAt: updatedMember.joinedAt,
+    updatedAt,
+  };
+};
+
+/**
+ * Info: (20250312 - Shirley) 刪除團隊成員（軟刪除）
+ * @param teamId 團隊 ID
+ * @param memberId 成員 ID
+ * @param sessionUserTeamRole 當前用戶在團隊中的角色
+ * @returns 刪除的成員 ID
+ */
+export const deleteMemberById = async (
+  teamId: number,
+  memberId: number,
+  sessionUserTeamRole: TeamRole
+): Promise<IDeleteMemberResponse> => {
+  // Info: (20250312 - Shirley) 檢查當前用戶是否有權限刪除成員
+  if (sessionUserTeamRole !== TeamRole.OWNER && sessionUserTeamRole !== TeamRole.ADMIN) {
+    throw new Error('PERMISSION_DENIED');
+  }
+
+  // Info: (20250312 - Shirley) 檢查要刪除的成員是否存在
+  const teamMember = await prisma.teamMember.findFirst({
+    where: {
+      id: memberId,
+      teamId,
+      status: LeaveStatus.IN_TEAM,
+    },
+  });
+
+  if (!teamMember) {
+    throw new Error('MEMBER_NOT_FOUND');
+  }
+
+  // Info: (20250312 - Shirley) 不能刪除 OWNER
+  if (teamMember.role === TeamRole.OWNER) {
+    throw new Error('CANNOT_DELETE_OWNER');
+  }
+
+  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，只能刪除 EDITOR 和 VIEWER 角色
+  if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
+    throw new Error('ADMIN_CANNOT_DELETE_ADMIN');
+  }
+
+  // Info: (20250312 - Shirley) 軟刪除成員（更新狀態為 NOT_IN_TEAM 並記錄離開時間）
+  const leftAt = Math.floor(Date.now() / 1000);
+  await prisma.teamMember.update({
+    where: { id: memberId },
+    data: {
+      status: LeaveStatus.NOT_IN_TEAM,
+      leftAt,
+    },
+  });
+
+  return {
+    memberId,
+  };
 };

@@ -52,7 +52,7 @@ const CreateAccountBookModal = ({
     setIsTagDropdownOpen(false);
   };
 
-  // ToDo: (20250303 - Liz) 打 API 建立帳本 (API 需要修改)
+  // Info: (20250312 - Liz) 打 API 建立帳本(原為公司)
   const handleSubmit = async () => {
     // Info: (20241114 - Liz) 防止重複點擊
     if (isLoading) return;
@@ -79,21 +79,11 @@ const CreateAccountBookModal = ({
         name: companyName,
         taxId,
         tag,
-        teamId: team?.id, // ToDo: (20250226 - Liz) 新增欄位 teamId 用來傳送團隊 ID
-        isPrivate, // ToDo: (20250226 - Liz) 新增欄位 isPrivate 用來傳送是否為私人帳本
+        teamId: team.id, // Info: (20250312 - Liz) 選擇團隊
+        isPrivate, // Info: (20250312 - Liz) 帳本隱私權
       });
 
-      if (success) {
-        // Info: (20241114 - Liz) 新增帳本成功後清空表單並關閉 modal
-        setCompanyName('');
-        setTaxId('');
-        setTag(WORK_TAG.ALL);
-        closeCreateAccountBookModal();
-
-        if (getAccountBookList) getAccountBookList(); // Info: (20241209 - Liz) 重新取得帳本清單
-
-        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the company list after creating a new company
-      } else {
+      if (!success) {
         // Info: (20241114 - Liz) 新增帳本失敗時顯示錯誤訊息
         toastHandler({
           id: 'create-company-failed',
@@ -108,7 +98,18 @@ const CreateAccountBookModal = ({
           closeable: true,
           position: ToastPosition.TOP_CENTER,
         });
+        return;
       }
+
+      // Info: (20241114 - Liz) 新增帳本成功後清空表單並關閉 modal
+      setCompanyName('');
+      setTaxId('');
+      setTag(WORK_TAG.ALL);
+      closeCreateAccountBookModal();
+
+      if (getAccountBookList) getAccountBookList(); // Info: (20241209 - Liz) 重新取得帳本清單
+
+      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
     } catch (error) {
       // Deprecated: (20241104 - Liz)
       // eslint-disable-next-line no-console
@@ -194,7 +195,7 @@ const CreateAccountBookModal = ({
                 />
               </div>
 
-              {/* // Info: (20250213 - Liz) Work Tag */}
+              {/* // Info: (20250213 - Liz) Work Tag 工作標籤 */}
               <div className="flex flex-col gap-8px">
                 <h4 className="font-semibold text-input-text-primary">
                   {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.WORK_TAG')}
@@ -251,7 +252,7 @@ const CreateAccountBookModal = ({
                 </div>
               </div>
 
-              {/* // Info: (20250213 - Liz) Team */}
+              {/* // Info: (20250213 - Liz) Team 選擇團隊 */}
               <div className="flex flex-col gap-8px">
                 <h4 className="font-semibold text-input-text-primary">
                   {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.TEAM')}
@@ -310,7 +311,7 @@ const CreateAccountBookModal = ({
                 </div>
               </div>
 
-              {/* // Info: (20250226 - Liz) Account Book View (Privacy) */}
+              {/* // Info: (20250226 - Liz) Account Book View (Privacy) 帳本隱私權 */}
               <div className="flex flex-col gap-8px">
                 <h4 className="font-semibold text-input-text-primary">
                   {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ACCOUNT_BOOK_PRIVACY')}

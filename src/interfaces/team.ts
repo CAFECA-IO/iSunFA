@@ -14,7 +14,7 @@ export interface ITeamMember {
   imageId: string;
   email: string;
   role: TeamRole;
-  editable: boolean;
+  editable: boolean; // Info: (20250312 - Liz) 可以編輯成員權限、可以刪除成員
 }
 
 export interface ITeam {
@@ -28,6 +28,11 @@ export interface ITeam {
   totalMembers: number;
   totalAccountBooks: number;
   bankAccount: IEditable<string>;
+  // Info: (20250312 - Liz) 以下為待討論項目
+  // isAbleToEditPrivacy: boolean;
+  // isAbleToEditPlan: boolean;
+  // isAbleToEditBankAccount: boolean; // 可以編輯就表示可以查看(共用查看權限)
+  // bankAccount: string; // 不能查看就回傳空字串
 }
 
 export interface IInviteMember {
@@ -73,8 +78,8 @@ export enum TransferStatus {
 
 export interface ITransferAccountBook {
   accountBookId: number;
-  previousTeamId: number;
-  targetTeamId: number;
+  fromTeamId: number;
+  toTeamId: number;
   status: TransferStatus;
   transferredAt?: number;
 }
