@@ -179,7 +179,7 @@ export const createTeam = async (
 
       // Info: (20250304 - Tzuhan) 4.2 批量插入 `pendingTeamMember`
       if (newUserEmails.length > 0) {
-        await tx.pendingTeamMember.createMany({
+        await tx.inviteTeamMember.createMany({
           data: newUserEmails.map((email) => ({
             teamId: newTeam.id,
             email,
@@ -348,7 +348,7 @@ export const addMembersToTeam = async (
 
       // Info: (20250307 - Tzuhan) 3️ 對於 `email` 尚未註冊的用戶，新增 `pendingTeamMember`
       if (newUserEmails.length > 0) {
-        await tx.pendingTeamMember.createMany({
+        await tx.inviteTeamMember.createMany({
           data: newUserEmails.map((email) => ({
             teamId,
             email,
