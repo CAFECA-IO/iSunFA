@@ -20,17 +20,16 @@ import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import Toggle from '@/components/toggle/toggle';
 import { useGlobalCtx } from '@/contexts/global_context';
-// import { useReactToPrint } from 'react-to-print';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
-// import { ReportLanguagesKey } from '@/interfaces/report_language'; // Todo: (20241206 - Anna) 下個PR繼續處理
-import DownloadBalanceSheet from '@/components/balance_sheet_report_body/download_balance_sheet'; // Info: (20250313 - Anna)
+import DownloadBalanceSheet from '@/components/balance_sheet_report_body/download_balance_sheet';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
   isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
   printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
   printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
-  //  selectedReportLanguage: ReportLanguagesKey; // Todo: (20241206 - Anna) 接收語言選擇 下個PR繼續處理
 }
 
 // Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
@@ -55,7 +54,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // selectedReportLanguage, // Todo: (20241206 - Anna)接收語言選擇 下個PR繼續處理
 }) => {
   const { t, i18n } = useTranslation(['reports']);
+  const downloadRef = useRef<HTMLDivElement>(null); // Info: (20250314 - Anna) downloadRef 存報表內容
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
+  const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]); // Info: (20250314 - Anna) 存放透過 html2canvas 轉換為圖片的 URL，
 
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
@@ -548,7 +549,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
         </div>
         <div className="ml-auto flex items-center gap-24px">
-          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+          <DownloadButton onClick={handleDownload} />
           <PrintButton onClick={printFn} disabled={!isChinese} />
         </div>
       </div>
@@ -881,6 +882,88 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     </div>
   );
 
+  // Info: (20250314 - Anna) 取得帳簿名稱
+  const AccountBookName = reportFinancial?.company?.name || 'Unknown-Company';
+
+  // Info: (20250314 - Anna) 設定動態檔案名稱
+  const filename = `${curDate}_${AccountBookName}_BalanceSheet.pdf`;
+
+  // Info: (20250314 - Anna) 下載 PDF 方法
+  const handleDownload = async () => {
+    if (!downloadRef.current) {
+      console.error('downloadRef.current is null!');
+      return;
+    }
+
+    // Info: (20250314 - Anna) 先讓 downloadRef 可見
+    downloadRef.current.classList.remove('hidden');
+    downloadRef.current.style.position = 'absolute';
+    downloadRef.current.style.left = '-9999px'; // Info: (20250314 - Anna) 移動到視窗外，不影響畫面
+
+    await new Promise((resolve) => setTimeout(resolve, 500)); // Info: (20250314 - Anna) 確保 DOM 渲染完成
+
+    const downloadPages = downloadRef.current.querySelectorAll('.download-page');
+    if (downloadPages.length === 0) {
+      console.error('No .download-page elements found!');
+      return;
+    }
+
+    // Info: (20250314 - Anna) 確保所有圖片載入完成後再擷取
+    const images = Array.from(downloadRef.current.querySelectorAll('img'));
+    await Promise.all(
+      images.map(
+        (img) =>
+          new Promise((resolve) => {
+            if (img.complete) resolve(true);
+            else img.onload = () => resolve(true);
+          })
+      )
+    );
+
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+    await document.fonts.ready; // Info: (20250314 - Anna) 確保字體載入完成
+    // Info: (20250314 - Anna) 使用 html2canvas 擷取每一頁
+    const canvasPromises = Array.from(downloadPages, async (page, index) => {
+      const canvas = await html2canvas(page as HTMLElement, {
+        scale: 2, // Info: (20250314 - Anna) 提高解析度
+        useCORS: true,
+        logging: true,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+
+      // Info: (20250314 - Anna) 顯示轉換後的圖片，比對 html2canvas 是否有問題
+      // const img: HTMLImageElement = document.createElement('img');
+      // img.src = imgData;
+      // img.style.border = '2px solid red'; // Info: (20250314 - Anna) 加紅框方便辨識
+      // img.style.margin = '10px';
+      // document.body.appendChild(img);
+
+      // Info: (20250314 - Anna) 插入 PDF
+      if (index === 0) {
+        pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
+      } else {
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
+      }
+
+      return imgData;
+    });
+
+    // Info: (20250314 - Anna) 產生縮圖
+    const thumbnails = await Promise.all(canvasPromises);
+    setThumbnailUrls(thumbnails.filter(Boolean) as string[]);
+
+    // Info: (20250314 - Anna) 下載後隱藏 downloadRef
+    downloadRef.current.classList.add('hidden');
+    downloadRef.current.style.position = '';
+    downloadRef.current.style.left = '';
+
+    // Info: (20250314 - Anna) 下載 PDF
+    pdf.save(filename);
+  };
+
   return (
     <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
       {displayedSelectArea()}
@@ -911,9 +994,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         {TurnoverDay}
       </div>
       {/* Info: (20250313 - Anna) */}
-      <DownloadBalanceSheet
-        reportFinancial={reportFinancial}
-      />
+      <DownloadBalanceSheet reportFinancial={reportFinancial} downloadRef={downloadRef} />
     </div>
   );
 };

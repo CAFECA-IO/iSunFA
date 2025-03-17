@@ -1,18 +1,27 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { BalanceSheetReport } from '@/interfaces/report';
 import DownloadButton from '@/components/button/download_button';
 import Pdf from 'react-to-pdf';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
+import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 
 interface DownloadBalanceSheetProps {
   reportFinancial: BalanceSheetReport | null;
+  downloadRef: React.RefObject<HTMLDivElement>;
 }
 
-const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({ reportFinancial }) => {
+const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
+  reportFinancial,
+  downloadRef,
+}) => {
   const { t } = useTranslation(['reports']);
 
-  const reportRef = useRef<HTMLDivElement>(null);
+  //  Info: (20250315 - Anna) 每次開始渲染時重置頁碼
+  const pageCountRef = useRef(1);
+
+  // Info: (20250314 - Anna)  存放轉圖片後的 URL
+  const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]);
 
   // Info: (20250314 - Anna) 將時間戳轉換為 YYYY-MM-DD
   const getFormattedDate = (timestamp: number | undefined) => {
@@ -25,39 +34,15 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({ reportFinan
   const curDateFormatted = getFormattedDate(reportFinancial?.curDate?.to);
 
   // Info: (20250314 - Anna) 前期結束日 轉換為 YYYY-MM-DD
-  //   const preDateFormatted = getFormattedDate(reportFinancial?.preDate?.to);
+  const preDateFormatted = getFormattedDate(reportFinancial?.preDate?.to);
 
-  // Info: (20250314 - Anna) 取得帳簿名稱
-  const AccountBookName = reportFinancial?.company?.name || 'Unknown-Company';
-
-  // Info: (20250314 - Anna) 設定動態檔案名稱
-  const filename = `${curDateFormatted}_${AccountBookName}_BalanceSheet.pdf`;
-
-  // Info: (20250314 - Anna) 設定 react-to-pdf 參數
-  const pdfOptions = {
-    filename,
-    page: { format: 'a4' }, // Info: (20250314 - Anna) 確保 HTML 擷取時尺寸正確
-    html2canvas: { scale: 2, windowHeight: document.documentElement.scrollHeight }, // Info: (20250314 - Anna) 動態擷取整個 div 的高度
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, // Info: (20250314 - Anna) 確保 PDF 產出時尺寸正確
-  };
-
-  // Info: (20250314 - Anna) 下載 PDF 方法
-  const handleDownload = async () => {
-    if (!reportRef.current) return;
-
-    try {
-      const pdf = await Pdf(() => reportRef.current, pdfOptions);
-      pdf.save();
-    } catch (error) {
-      // Info: (20250314 - Anna) Debug
-      // eslint-disable-next-line no-console
-      console.error('Download failed:', error);
-    }
-  };
+  //  // Info: (20250314 - Anna) 取得當前年份與前一年
+  const curYear = curDateFormatted.split('-')[0];
+  const preYear = preDateFormatted.split('-')[0];
 
   // Info: (20241112 - Anna) 動態應用分頁樣式
   const printContainerClass =
-    'mx-auto w-a4-width origin-top overflow-x-auto print:m-0  print:block  print:h-auto print:w-full print:p-0';
+    'mx-auto w-a4-width origin-top overflow-x-auto m-0  print:block  print:h-auto print:w-full p-0 download-page border border-stroke-neutral-quaternary';
   const printContentClass = 'relative h-a4-height overflow-hidden';
   // Info: (20241111 - Anna) 分割內容為多頁
 
@@ -89,6 +74,8 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({ reportFinan
           </h2>
         </div>
         <Image
+          priority={true} // Info: (20250314 - Anna) 確保提前載入
+          unoptimized={true} // Info: (20250314 - Anna) 避免 next/image 預設處理影響 html2canvas
           className="absolute right-0 top-0 z-0 mt-80px bg-transparent"
           src="/logo/watermark_logo.svg"
           alt="isunfa logo"
@@ -117,13 +104,354 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({ reportFinan
     );
   };
 
-  const renderedFooter = (page: number) => (
+  //   const renderedFooter = (page: number) => (
+  const renderedFooter = () => (
     <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
-      <p className="text-xs text-white">{page}</p>
+      {/* <p className="text-xs text-white">{page}</p> */}
+      <p className="text-xs text-white">{pageCountRef.current++}</p>
       <div className="text-base font-bold text-surface-brand-secondary">
-        <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+        <Image
+          priority={true} // Info: (20250314 - Anna) 確保提前載入
+          unoptimized={true} // Info: (20250314 - Anna) 避免 next/image 預設處理影響 html2canvas
+          width={80}
+          height={20}
+          src="/logo/white_isunfa_logo_light.svg"
+          alt="iSunFA Logo"
+        />
       </div>
     </footer>
+  );
+
+  const rowsForSummary = (items: Array<IAccountReadyForFrontend>) => {
+    const rows = items.map((item) => {
+      // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"
+      const isAllZeroOrDash =
+        (item.curPeriodAmountString === '0' || item.curPeriodAmountString === '-') &&
+        (item.curPeriodPercentageString === '0' || item.curPeriodPercentageString === '-') &&
+        (item.prePeriodAmountString === '0' || item.prePeriodAmountString === '-') &&
+        (item.prePeriodPercentageString === '0' || item.prePeriodPercentageString === '-');
+
+      if (isAllZeroOrDash) {
+        return null; // Info: (20250213 - Anna) 這一列不顯示
+      }
+
+      if (!item.code) {
+        return (
+          <tr key={item.code}>
+            <td
+              colSpan={6}
+              className="border border-stroke-neutral-quaternary p-10px text-sm font-bold"
+            >
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        <tr key={item.code}>
+          <td className="w-50px border border-stroke-neutral-quaternary p-10px text-sm">
+            {item.code}
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+            <p>{t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}</p>
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
+            {item.curPeriodPercentageString}
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
+            {item.prePeriodPercentageString}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
+  const rowsForDetail = (items: Array<IAccountReadyForFrontend>) => {
+    const rows = items.map((item) => {
+      // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"
+      const isAllZeroOrDash =
+        (item.curPeriodAmountString === '0' || item.curPeriodAmountString === '-') &&
+        (item.curPeriodPercentageString === '0' || item.curPeriodPercentageString === '-') &&
+        (item.prePeriodAmountString === '0' || item.prePeriodAmountString === '-') &&
+        (item.prePeriodPercentageString === '0' || item.prePeriodPercentageString === '-');
+
+      if (isAllZeroOrDash) {
+        return null; // Info: (20250213 - Anna) 這一列不顯示
+      }
+
+      if (!item.code) {
+        return (
+          <tr key={item.code}>
+            <td
+              colSpan={6}
+              className="border border-stroke-neutral-quaternary p-10px text-sm font-bold"
+            >
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        <React.Fragment key={item.code}>
+          <tr>
+            <td className="border border-stroke-neutral-quaternary p-10px text-sm">{item.code}</td>
+            <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+              <div className="flex items-center justify-between">
+                {t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}
+                {/* Info: (20241021 - Anna) 如果有 children 才顯示 CollapseButton
+                 {item.children &&
+                   item.children.filter(
+                     (child) =>
+                       child.curPeriodAmountString !== '-' ||
+                       child.curPeriodPercentageString !== '-' ||
+                       child.prePeriodAmountString !== '-' ||
+                       child.prePeriodPercentageString !== '-'
+                   ).length > 0 && (
+                     <CollapseButton
+                       className="print:hidden"
+                       // Info: (20241017 - Anna) 指定 item 的 code 作為參數
+                       onClick={() => toggleSubAccounts(item.code)}
+                       // Info: (20241017 - Anna) 依據每個 item 的狀態決定是否展開
+                       isCollapsed={isSubAccountsCollapsed[item.code] ?? true}
+                       buttonType="orange"
+                     />
+                   )} */}
+              </div>
+            </td>
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+              {item.curPeriodAmountString}
+            </td>
+            <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
+              {item.curPeriodPercentageString}
+            </td>
+            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+              {item.prePeriodAmountString}
+            </td>
+            <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
+              {item.prePeriodPercentageString}
+            </td>
+          </tr>
+          {/* Info: (20250314 - Anna) 新增子科目表格 */}
+          {item.children &&
+            item.children.length > 0 &&
+            item.children
+              // Info: (20241203 - Anna) 過濾掉數值為 "0" 或 "-" 的子科目
+              .filter(
+                (child) =>
+                  child.curPeriodAmountString !== '-' ||
+                  child.curPeriodPercentageString !== '-' ||
+                  child.prePeriodAmountString !== '-' ||
+                  child.prePeriodPercentageString !== '-'
+              )
+              .map((child) => (
+                <tr key={`sub-accounts-${child.code}`}>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-sm"></td>
+                  <td className="items-center border border-t-0 border-stroke-brand-secondary-soft px-10px py-3px text-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="justify-start">
+                        <span>{child.code}</span>
+                        <span className="ml-2">
+                          {t(`reports:ACCOUNTING_ACCOUNT.${child.name}`)}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                    {child.curPeriodAmountString}
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                    {child.curPeriodPercentageString}
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                    {child.prePeriodAmountString}
+                  </td>
+                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                    {child.prePeriodPercentageString}
+                  </td>
+                </tr>
+              ))}
+        </React.Fragment>
+      );
+    });
+    return rows;
+  };
+  const renderDataRow = (
+    label: string,
+    curValue: number | undefined,
+    preValue: number | undefined
+  ) => (
+    <tr>
+      <td className="border border-stroke-neutral-quaternary p-10px text-sm">{label}</td>
+      <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+        {curValue}
+      </td>
+      <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+        {preValue}
+      </td>
+    </tr>
+  );
+
+  const ItemSummary = (
+    <div id="1" className="relative overflow-y-hidden px-14px">
+      {/* Info: (20240723 - Shirley) watermark logo */}
+      <div className="relative right-0 top-16 z-0">
+        <Image
+          className="absolute right-0 top-0"
+          src="/logo/watermark_logo.svg"
+          alt="isunfa logo"
+          width={400}
+          height={300}
+        />
+      </div>
+
+      <section className="text-text-neutral-secondary">
+        {
+          <table className="relative z-1 w-full border-collapse bg-white">
+            <thead>
+              <tr className="print:hidden">
+                <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                  {t('reports:REPORTS.CODE_NUMBER')}
+                </th>
+                <th
+                  className={`w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold`}
+                >
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
+                </th>
+                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                  {curDateFormatted}
+                </th>
+                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                  %
+                </th>
+                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                  {preDateFormatted}
+                </th>
+                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                  %
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {reportFinancial &&
+                reportFinancial.general &&
+                Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
+                rowsForSummary(reportFinancial.general)}
+            </tbody>
+          </table>
+        }
+      </section>
+    </div>
+  );
+
+  const ItemDetail = (
+    <div id="2" className={`relative overflow-y-hidden px-14px print:break-before-page`}>
+      <section className="text-text-neutral-secondary">
+        {
+          <table className="w-full border-collapse bg-white">
+            <thead>
+              <tr className="print:hidden">
+                <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                  {t('reports:REPORTS.CODE_NUMBER')}
+                </th>
+                <th className="w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
+                </th>
+                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                  {curDateFormatted}
+                </th>
+                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                  %
+                </th>
+                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                  {preDateFormatted}
+                </th>
+                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                  %
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {reportFinancial &&
+                reportFinancial.general &&
+                Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
+                rowsForDetail(reportFinancial.details)}
+            </tbody>
+          </table>
+        }
+      </section>
+    </div>
+  );
+  const TurnoverDay = (
+    <div id="5" className={`relative overflow-y-hidden print:break-before-page`}>
+      <section className="mx-1 text-text-neutral-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
+          <p>{t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS')}</p>
+          <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
+        </div>
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr>
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"></th>
+              <th className="w-300px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: curYear })}
+              </th>
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: preYear })}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {renderDataRow(
+              t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS'),
+              reportFinancial?.otherInfo?.dso.curDso,
+              reportFinancial?.otherInfo?.dso.preDso
+            )}
+          </tbody>
+        </table>
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
+          <p>{t('reports:REPORTS.INVENTORY_TURNOVER_DAYS')}</p>
+          <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
+        </div>
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr>
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"></th>
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: curYear })}
+              </th>
+              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
+                {t('reports:REPORTS.YEAR_TEMPLATE', { year: preYear })}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {renderDataRow(
+              t('reports:REPORTS.INVENTORY_TURNOVER_DAYS'),
+              reportFinancial?.otherInfo?.inventoryTurnoverDays.curInventoryTurnoverDays,
+              reportFinancial?.otherInfo?.inventoryTurnoverDays.preInventoryTurnoverDays
+            )}
+          </tbody>
+        </table>
+        <div className="relative top-28rem -z-10">
+          <Image
+            className="absolute bottom-0 right-0"
+            src="/logo/watermark_logo.svg"
+            alt="isunfa logo"
+            width={450}
+            height={300}
+          />
+        </div>
+      </section>
+    </div>
   );
 
   if (!reportFinancial) {
@@ -132,14 +460,14 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({ reportFinan
 
   return (
     <>
-      <DownloadButton onClick={handleDownload} />
+      <div ref={downloadRef}>
+        {/* Info: (20250315 - Anna) 每次開始前將 `pageCountRef.current` 重置 */}
+        {(pageCountRef.current = 1)}
 
-      <div ref={reportRef} className="bg-white p-4 pb-10">
         {/* Info: (20241120 - Anna) 渲染第一塊分頁 */}
         <div
           key={`first-block-page-`}
           className={printContainerClass}
-          // style={{ pageBreakBefore: index === 0 ? 'auto' : 'always', pageBreakAfter: 'always' }}
           style={{
             pageBreakBefore: 'auto',
             pageBreakAfter: 'auto',
@@ -154,7 +482,9 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({ reportFinan
               <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
               <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
             </div>
-            {renderedFooter(1)}
+            {ItemSummary}
+            {/* {renderedFooter(1)} */}
+            {renderedFooter()}
           </div>
         </div>
 
@@ -162,7 +492,6 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({ reportFinan
         <div
           key={`second-block-page-`}
           className={printContainerClass}
-          // style={{ pageBreakBefore: 'always', pageBreakAfter: 'always' }}
           style={{
             pageBreakBefore: 'auto',
             pageBreakAfter: 'auto',
@@ -177,14 +506,15 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({ reportFinan
               <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
               <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
             </div>
-            {renderedFooter(2)}
+            {ItemDetail}
+            {/* {renderedFooter(2)} */}
+            {renderedFooter()}
           </div>
         </div>
         {/* Info: (20241120 - Anna) 渲染額外的內容 */}
         <div
           key={`additional-block-page-`}
           className={printContainerClass}
-          // style={{ pageBreakBefore: 'always', pageBreakAfter: 'always' }}
           style={{
             pageBreakBefore: 'auto',
             pageBreakAfter: 'auto',
@@ -195,16 +525,12 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({ reportFinan
             className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
           >
             {renderedHeader(false)}
-            <div className="px-12px"></div>
+            <div className="px-12px">{TurnoverDay}</div>
             {/* Info: (20241130 - Anna) 渲染 pageContent */}
-            {renderedFooter(3)}
+            {/* {renderedFooter(3)} */}
+            {renderedFooter()}
           </div>
         </div>
-      </div>
-
-      <div className="bg-white p-4 pb-10">
-        <h2 className="text-xl font-bold">DownloadBalanceSheet</h2>
-        <pre>{JSON.stringify(reportFinancial, null, 2)}</pre>
       </div>
     </>
   );
