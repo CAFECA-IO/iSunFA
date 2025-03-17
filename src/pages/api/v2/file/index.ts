@@ -4,7 +4,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFileBeta } from '@/interfaces/file';
 import { parseForm } from '@/lib/utils/parse_image_form';
-import { convertStringToNumber, formatApiResponse, getTimestampNow } from '@/lib/utils/common';
+import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { updateUserById } from '@/lib/utils/repo/user.repo';
@@ -64,11 +64,8 @@ async function handleFileUpload(
     }
     case UploadType.TEAM: {
       // TODO: (20250303 - Shirley) not implemented yet
-      // const googleBucketUrl = await uploadFile(fileForSave);
-      // fileUrl = googleBucketUrl;
-      // console.log('fileUrl', fileUrl);
-      // break;
-      fileUrl = `https://storage.googleapis.com/isunfa-images/team/team_picture_${targetId}.jpg`;
+      const googleBucketUrl = await uploadFile(fileForSave);
+      fileUrl = googleBucketUrl;
       break;
     }
     default:
@@ -168,28 +165,6 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
   let payload: File | null = null;
 
   const { type, targetId } = query;
-
-  if (type === 'team') {
-    payload = {
-      id: 12345,
-      name: `team_picture_${targetId}.jpg`,
-      size: 123456,
-      mimeType: 'image/jpeg',
-      type: 'team',
-      url: `https://storage.googleapis.com/isunfa-images/team/team_picture_${targetId}.jpg`,
-      isEncrypted: false,
-      encryptedSymmetricKey: '',
-      iv: Buffer.from([]),
-      createdAt: getTimestampNow(),
-      updatedAt: getTimestampNow(),
-      deletedAt: null,
-    } as unknown as File;
-
-    statusMessage = STATUS_MESSAGE.CREATED;
-    // TODO: (20250303 - Shirley) not implemented yet
-    loggerBack.info(`Mock: Uploaded file for team ${targetId}`);
-    return { statusMessage, payload };
-  }
 
   const parsedForm = await parseForm(req, UPLOAD_TYPE_TO_FOLDER_MAP[type]);
   const { files, fields } = parsedForm;
