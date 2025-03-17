@@ -131,7 +131,6 @@ const PricingPlan: React.FC = () => {
           description: t('pricing:BEGINNER.FEATURES.GENERATE_STATEMENTS'),
         },
         { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AUTO_FILL_TAX') },
-        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.ACCEPT_TASKS') },
         {
           icon: '/icons/check.svg',
           description: t('pricing:BEGINNER.FEATURES.TECHNICAL_ASSISTANCE'),
@@ -169,11 +168,6 @@ const PricingPlan: React.FC = () => {
         {
           icon: '/icons/check.svg',
           description: t('pricing:PROFESSIONAL.FEATURES.TEAM_MEMBERS'),
-        },
-        { icon: '/icons/check.svg', description: t('pricing:PROFESSIONAL.FEATURES.POST_REQUESTS') },
-        {
-          icon: '/icons/check.svg',
-          description: t('pricing:PROFESSIONAL.FEATURES.TECHNICAL_ASSISTANCE'),
         },
       ],
       buttonText: t('pricing:PROFESSIONAL.BUTTON_TEXT'),
@@ -214,10 +208,6 @@ const PricingPlan: React.FC = () => {
         {
           icon: '/icons/check.svg',
           description: t('pricing:ENTERPRISE.FEATURES.API_WITH_SYSTEMS'),
-        },
-        {
-          icon: '/icons/check.svg',
-          description: t('pricing:ENTERPRISE.FEATURES.TECHNICAL_ASSISTANCE'),
         },
       ],
       buttonText: t('pricing:ENTERPRISE.BUTTON_TEXT'),

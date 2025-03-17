@@ -87,11 +87,6 @@ export const PLANS: IPlan[] = [
         name: 'FINANCIAL_STATEMENTS',
         value: 'AUTO_UPDATED',
       },
-      {
-        id: 'technical_support',
-        name: 'TECHNICAL_SUPPORT',
-        value: 'UP_TO_24_HOURS_IN_TOTAL_4_HOURS_PER_SESSION',
-      },
     ],
   },
   {
@@ -120,19 +115,9 @@ export const PLANS: IPlan[] = [
         value: 'UNLIMITED_MEMBER_OF_PEOPLE',
       },
       {
-        id: 'financial_statements',
-        name: 'FINANCIAL_STATEMENTS',
-        value: 'AUTO_UPDATED',
-      },
-      {
         id: 'api_integration',
         name: 'API_INTEGRATION',
         value: 'SYSTEM_SUPPORT',
-      },
-      {
-        id: 'technical_support',
-        name: 'TECHNICAL_SUPPORT',
-        value: 'UP_TO_48_HOURS_IN_TOTAL_4_HOURS_PER_SESSION',
       },
     ],
   },
