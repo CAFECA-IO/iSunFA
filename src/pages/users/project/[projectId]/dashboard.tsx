@@ -12,7 +12,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { stageList } from '@/constants/project';
 import ProjectValueBlock from '@/components/project_value_block/project_value_block';
 import ProjectProgressBlock from '@/components/project_progress_block/project_progress_block';
-import ProjectMilestoneBlock from '@/components/project_milestone_block/project_milestone_block';
+// import ProjectMilestoneBlock from '@/components/project_milestone_block/project_milestone_block';
 import WorkingTimeRatioBlock from '@/components/working_time_ratio_block/working_time_ratio_block';
 import ProjectMonthlySalesBlock from '@/components/project_monthly_sales_block/project_monthly_sales_block';
 import { useUserCtx } from '@/contexts/user_context';
@@ -204,9 +204,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
                 <ProjectProgressBlock />
               </div>
               {/* Info: (20240614 - Julian) Project Milestone Block */}
-              <div className="md:col-span-3">
-                <ProjectMilestoneBlock />
-              </div>
+              <div className="md:col-span-3">{/* <ProjectMilestoneBlock /> */}</div>
               {/* Info: (20240614 - Julian) Project Monthly Sales Block */}
               <div className="md:col-span-2">
                 <ProjectMonthlySalesBlock />

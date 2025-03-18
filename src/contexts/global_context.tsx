@@ -17,7 +17,6 @@ import { ToastPosition, ToastType } from '@/interfaces/toastify';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useRouter } from 'next/router';
-import LoadingModal from '@/components/loading_modal/loading_modal';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
@@ -25,7 +24,6 @@ import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_mo
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { useTranslation } from 'next-i18next';
-import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 import { UploadType } from '@/constants/file';
@@ -58,19 +56,12 @@ interface IGlobalContext {
   isEmbedCodeModalVisible: boolean;
   embedCodeModalVisibilityHandler: () => void;
 
-  isLoadingModalVisible: boolean;
-  loadingModalVisibilityHandler: () => void;
-
   isSalaryBookConfirmModalVisible: boolean;
   salaryBookConfirmModalVisibilityHandler: () => void;
 
   profileUploadModalVisible: boolean;
   profileUploadModalVisibilityHandler: () => void;
   profileUploadModalDataHandler: (type: UploadType) => void;
-
-  isEditAccountTitleModalVisible: boolean;
-  editAccountTitleModalVisibilityHandler: () => void;
-  editAccountTitleDataHandler: (id: number) => void;
 
   filterOptionsForHistory: IFilterOptions;
   filterOptionsForPending: IFilterOptions;
@@ -146,8 +137,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isEmbedCodeModalVisible, setIsEmbedCodeModalVisible] = useState(false);
 
-  const [isLoadingModalVisible, setIsLoadingModalVisible] = useState(false);
-
   const [isFilterOptionsModalForHistoryVisible, setIsFilterOptionsModalForHistoryVisible] =
     useState(false);
   const [isFilterOptionsModalForPendingVisible, setIsFilterOptionsModalForPendingVisible] =
@@ -166,9 +155,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [uploadImageType, setUploadImageType] = useState<UploadType>(UploadType.USER);
 
   const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
-
-  const [isEditAccountTitleModalVisible, setIsEditAccountTitleModalVisible] = useState(false);
-  const [editAccountTitleId, setEditAccountTitleId] = useState(0);
 
   const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
 
@@ -218,10 +204,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsEmbedCodeModalVisible(!isEmbedCodeModalVisible);
   };
 
-  const loadingModalVisibilityHandler = () => {
-    setIsLoadingModalVisible(!isLoadingModalVisible);
-  };
-
   const filterOptionsModalVisibilityHandlerForHistory = () => {
     setIsFilterOptionsModalForHistoryVisible(!isFilterOptionsModalForHistoryVisible);
   };
@@ -244,14 +226,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const salaryBookConfirmModalVisibilityHandler = () => {
     setIsSalaryBookConfirmModalVisible(!isSalaryBookConfirmModalVisible);
-  };
-
-  const editAccountTitleModalVisibilityHandler = () => {
-    setIsEditAccountTitleModalVisible(!isEditAccountTitleModalVisible);
-  };
-
-  const editAccountTitleDataHandler = (id: number) => {
-    setEditAccountTitleId(id);
   };
 
   const teamSettingModalVisibilityHandler = () => {
@@ -375,13 +349,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       previewInvoiceModalDataHandler,
       isEmbedCodeModalVisible,
       embedCodeModalVisibilityHandler,
-      isLoadingModalVisible,
-      loadingModalVisibilityHandler,
       isSalaryBookConfirmModalVisible,
       salaryBookConfirmModalVisibilityHandler,
-      isEditAccountTitleModalVisible,
-      editAccountTitleModalVisibilityHandler,
-      editAccountTitleDataHandler,
 
       filterOptionsForHistory,
       filterOptionsForPending,
@@ -434,13 +403,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       previewInvoiceModalDataHandler,
       isEmbedCodeModalVisible,
       embedCodeModalVisibilityHandler,
-      isLoadingModalVisible,
-      loadingModalVisibilityHandler,
       isSalaryBookConfirmModalVisible,
       salaryBookConfirmModalVisibilityHandler,
-      isEditAccountTitleModalVisible,
-      editAccountTitleModalVisibilityHandler,
-      editAccountTitleDataHandler,
 
       filterOptionsForHistory,
       filterOptionsForPending,
@@ -526,11 +490,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={embedCodeModalVisibilityHandler}
       />
 
-      <LoadingModal
-        isModalVisible={isLoadingModalVisible}
-        modalVisibilityHandler={loadingModalVisibilityHandler}
-      />
-
       <Toast />
 
       <FilterOptionsModal
@@ -561,12 +520,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <SalaryBookConfirmModal
         isModalVisible={isSalaryBookConfirmModalVisible}
         modalVisibilityHandler={salaryBookConfirmModalVisibilityHandler}
-      />
-
-      <EditAccountTitleModal
-        isModalVisible={isEditAccountTitleModalVisible}
-        modalVisibilityHandler={editAccountTitleModalVisibilityHandler}
-        modalData={{ accountId: editAccountTitleId }}
       />
 
       <TeamSettingModal
