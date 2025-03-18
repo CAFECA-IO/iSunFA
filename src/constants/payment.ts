@@ -8,3 +8,13 @@ export enum PAYMENT_METHOD_TYPE {
   DISCOVER = 'DISCOVER',
   OTHER = 'OTHER',
 }
+
+export enum PAYMENT_GATEWAY {
+  OEN = 'OEN',
+  HITRUST = 'HITRUST',
+  STRIPE = 'STRIPE',
+  PAYPAL = 'PAYPAL',
+  LINE_PAY = 'LINE_PAY',
+  ALIPAY = 'ALIPAY',
+  WECHAT_PAY = 'WE',
+}

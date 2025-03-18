@@ -2,10 +2,12 @@ import { JSONValue } from '@/interfaces/common';
 import { IOrder } from '@/interfaces/order';
 import { UserPaymentInfo } from '@prisma/client';
 
+// Info: (20250318 - Luphia) 基本參照 UserPaymentInfo，獨 id 改為 optional
 export type IUserPaymentInfo = UserPaymentInfo;
 
 export interface IPaymentGatewayOptions {
-  devMode: boolean;
+  platform: string;
+  prodMode: boolean;
   id: string;
   secret: string;
 }
@@ -22,7 +24,7 @@ export interface IGetChargeUrlOptions {
 
 export interface IChargeWithTokenOptions {
   order: IOrder;
-  token: JSONValue;
+  token: IUserPaymentInfo;
 }
 
 export interface IPaymentGateway {

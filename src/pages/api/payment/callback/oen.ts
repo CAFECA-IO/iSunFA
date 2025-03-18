@@ -21,10 +21,25 @@ const handleGetRequest = async (req: NextApiRequest) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const success = !!query.success;
 
-  // Info: (20250114 - Luphia) 設定成功時與失敗時需要導向的前端網址
-  const redirectUrl = '/payment/callback';
-
-  const result = { httpCode: 302, result: redirectUrl };
+  // ToDo: (20250318 - Luphia) 使 window.opener 能夠知道綁定結果
+  const result = {
+    httpCode: HTTP_STATUS.OK,
+    result: `<!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Console Log Example</title>
+      </head>
+      <body>
+        <h1>Hello from Next.js API Route!</h1>
+        <script>
+          window.opener.console.log('${success}');
+        </script>
+      </body>
+    </html>
+    `,
+  };
   return result;
 };
 
@@ -46,6 +61,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Info: (20250113 - Luphia) unexpected exception, pass to global handler
   }
 
-  res.writeHead(httpCode, { Location: result });
+  res.statusCode = httpCode;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.write(result);
   res.end();
 }

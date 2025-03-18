@@ -8,6 +8,7 @@ import {
   IGetChargeUrlOptions,
   IChargeWithTokenOptions,
 } from '@/interfaces/payment_gateway';
+import { getTimestampNow } from '@/lib/utils/common';
 
 class OenPaymentGateway implements IPaymentGateway {
   private platform: string;
@@ -26,7 +27,7 @@ class OenPaymentGateway implements IPaymentGateway {
 
   constructor(options: IPaymentGatewayOptions) {
     this.platform = OEN.PLATFORM;
-    this.prodMode = !!options.devMode;
+    this.prodMode = !!options.prodMode;
     this.id = options.id;
     this.secret = options.secret;
   }
@@ -75,11 +76,48 @@ class OenPaymentGateway implements IPaymentGateway {
     return result;
   }
 
-  parseAuthorizationToken(token: JSONValue): IUserPaymentInfo {
-    const tokenData = token as Record<string, unknown>;
+  /** Info: (20250318 - Luphia) The token format
+      {
+        success: true
+        purpose: "token"
+        merchantId: "mermer"
+        transactionId: "2txQvgJNV6YpVZA5KNoxgwwdeWb"
+        message: null
+        customId: "10000001"
+        token: "2txR0HQ12YH4wiB0tH1nk2C1nEp"
+        id: "2ttQvgJNV6YpVZA5KNoxgwwdeWb"
+      }
+
+      {
+        id: number;
+        token: string;
+        transactionId: string;
+        default: boolean;
+        userId: number;
+        info: JsonValue;
+        createdAt: number;
+        updatedAt: number;
+        deletedAt: number | null;
+      }
+   */
+  parseAuthorizationToken(data: JSONValue): IUserPaymentInfo {
+    const nowInSecond = getTimestampNow();
+    const { token, customId, transactionId } = data as {
+      token: string;
+      customId: number;
+      transactionId: string;
+    };
+    // Info: (20250318 - Luphia) The "platform" field is redundant. Do not provide the "id" field when creating new data.
     const result: IUserPaymentInfo = {
-      platform: this.platform,
-      ...tokenData,
+      platfrom: this.platform,
+      token,
+      userId: customId,
+      transactionId,
+      default: true,
+      info: data,
+      createdAt: nowInSecond,
+      updatedAt: nowInSecond,
+      deletedAt: null,
     } as unknown as IUserPaymentInfo;
     return result;
   }
@@ -90,13 +128,11 @@ class OenPaymentGateway implements IPaymentGateway {
     const query = {
       merchantId: this.id,
       token: options.token,
-      amount: options.order.detail,
-      currency: options.order.detail,
-      customId: options.order.id,
+      ...options.order.detail,
     };
     /** Info: (20250317 - Luphia) the response format
-     * {"code":"S0000","data":{"id":"2rbtp5feoNkmrS5y3Ovw1LIp65w"},"message":""}
-     * The id in data is the paymentId.
+     *  {"code":"S0000","data":{"id":"2rbtp5feoNkmrS5y3Ovw1LIp65w"},"message":""}
+     *  The id in data is the paymentId.
      */
     await fetch(this.chargeUrl, {
       method: 'POST',

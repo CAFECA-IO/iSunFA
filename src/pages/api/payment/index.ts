@@ -3,6 +3,13 @@ import { HTTP_STATUS } from '@/constants/http';
 import { PAYMENT } from '@/constants/service';
 import { getSession } from '@/lib/utils/session';
 import { HttpMethod } from '@/constants/api_connection';
+import { createPaymentGateway } from '@/lib/utils/payment/factory';
+import {
+  IGetCardBindingUrlOptions,
+  IPaymentGateway,
+  IPaymentGatewayOptions,
+} from '@/interfaces/payment_gateway';
+import loggerBack from '@/lib/utils/logger_back';
 
 /* Info: (20250111 - Luphia) 導向綁定信用卡頁面
  * 1. 取得 Session 資訊
@@ -19,46 +26,30 @@ export const oenPaymentHandler = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId } = session;
 
+  // Info: (20250318 - Luphia) step 2 只要有登入 userId 即可操作
+
+  // Info: (20250318 - Luphia) step 3 沒有 input
+
   // Info: (20250113 - Luphia) step 4
-  const paymentToken = process.env.PAYMENT_TOKEN as string;
-  const paymentId = process.env.PAYMENT_ID as string;
-  /* ToDo: (20250115 - Luphia) 需區分測試環境與正式環境
-  const oenGetIdApi =
-    process.env.NODE_ENV === 'development'
-      ? 'https://payment-api.testing.oen.tw/checkout-token'
-      : 'https://payment-api.oen.tw/checkout-token';
-  const oenPaymentUrl =
-    process.env.NODE_ENV === 'development'
-      ? `https://${paymentId}.testing.oen.tw/checkout/subscription/create/`
-      : `https://${paymentId}.oen.tw/checkout/subscription/create/`;
-   */
-  const oenGetIdApi = 'https://payment-api.testing.oen.tw/checkout-token';
-  const oenPaymentUrl = `https://${paymentId}.testing.oen.tw/checkout/subscription/create/`;
-  const successUrl =
-    new URL('/api/payment/callback/oen', process.env.NEXTAUTH_URL) + '?success=true';
-  const failureUrl = new URL('/api/payment/callback/oen', process.env.NEXTAUTH_URL) + '?failure';
-  // Info: (20250114 - Luphia) POST request to get payment id with Bearer token in header and json body
-  const options = {
-    merchantId: paymentId,
-    successUrl,
-    failureUrl,
-    customId: userId,
+  const paymentGatewayOptions: IPaymentGatewayOptions = {
+    platform: PAYMENT.OEN,
+    prodMode: process.env.NODE_ENV === 'production',
+    id: process.env.PAYMENT_ID as string,
+    secret: process.env.PAYMENT_TOKEN as string,
   };
+  loggerBack.info(paymentGatewayOptions);
+  const paymentGateway = createPaymentGateway(paymentGatewayOptions) as IPaymentGateway;
 
-  const response = await fetch(oenGetIdApi, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${paymentToken}`,
-    },
-    body: JSON.stringify(options),
-  });
-
-  const oenResponse = await response.json();
-  const url = oenPaymentUrl + oenResponse.data.id;
+  const getCardBindingUrlOptions: IGetCardBindingUrlOptions = {
+    successUrl: new URL('/api/payment/callback/oen', process.env.NEXTAUTH_URL) + '?success=true',
+    failureUrl: new URL('/api/payment/callback/oen', process.env.NEXTAUTH_URL) + '?failure',
+    customId: userId?.toString(),
+  };
+  const cardBindingUrl = await paymentGateway.getCardBindingUrl(getCardBindingUrlOptions);
   const httpCode = 302;
   // Info: (20250113 - Luphia) step 7
-  const result = { httpCode, result: url };
+  const result = { httpCode, result: cardBindingUrl };
+  // Info: (20250318 - Luphia) step 8
   return result;
 };
 
