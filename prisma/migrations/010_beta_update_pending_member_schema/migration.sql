@@ -40,7 +40,7 @@ CREATE TABLE "invite_team_member" (
     "created_at" INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::int,
     "updated_at" INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::int,
     "pending_at" INTEGER,
-    "accepted_at" INTEGER,
+    "completed_at" INTEGER,
     "declined_at" INTEGER,
     "canceled_at" INTEGER,
     "note" JSONB DEFAULT '{}',

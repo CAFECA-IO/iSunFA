@@ -19,6 +19,50 @@ export async function listUser(): Promise<
   return userList;
 }
 
+/**
+ * Info: (20250318 - Tzuhan)
+ * 根據 email 查找並處理 `inviteTeamMember` 相關邀請
+ * @param userId 剛註冊成功的用戶 ID
+ * @param email 用戶的 email
+ */
+export async function handleInviteTeamMember(userId: number, email: string): Promise<void> {
+  if (!email) return;
+
+  await prisma.$transaction(async (tx) => {
+    // Info: (20250318 - Tzuhan) 查找所有 `inviteTeamMember` 還未處理的邀請
+    const invitedTeams = await tx.inviteTeamMember.findMany({
+      where: { email, status: InviteStatus.PENDING },
+      select: { teamId: true },
+    });
+
+    loggerBack.info(`invitedTeams [${invitedTeams.length}]: ${JSON.stringify(invitedTeams)}`);
+
+    if (invitedTeams.length > 0) {
+      const nowTimestamp = Math.floor(Date.now() / 1000);
+
+      // Info: (20250318 - Tzuhan) 批量將用戶加入 `teamMember`
+      await tx.teamMember.createMany({
+        data: invitedTeams.map((invite) => ({
+          teamId: invite.teamId,
+          userId,
+          role: TeamRole.EDITOR, // Info: (20250318 - Tzuhan) 預設角色
+          joinedAt: nowTimestamp,
+        })),
+        skipDuplicates: true,
+      });
+
+      // Info: (20250318 - Tzuhan) 更新 `inviteTeamMember` 為 `COMPLETED`
+      await tx.inviteTeamMember.updateMany({
+        where: { email, teamId: { in: invitedTeams.map((invite) => invite.teamId) } },
+        data: {
+          status: InviteStatus.COMPLETED,
+          completedAt: nowTimestamp,
+        },
+      });
+    }
+  });
+}
+
 export async function createUser({
   name,
   email,
@@ -61,6 +105,8 @@ export async function createUser({
           userAgreements: true,
         },
       });
+
+      loggerBack.info(`invitedTeams [${invitedTeams.length}]: ${JSON.stringify(invitedTeams)}`);
 
       if (invitedTeams.length > 0) {
         // Info: (20250317 - Tzuhan) Step 1: 批量創建 `teamMember`

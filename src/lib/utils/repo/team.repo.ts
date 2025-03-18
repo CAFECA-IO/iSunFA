@@ -526,24 +526,24 @@ export const listAccountBooksByTeamId = async (
   ]);
 
   // Info: (20250306 - tzuhan) 查詢 in 資料
-  const admins = await prisma.admin.findMany({
+  const admin = await prisma.admin.findFirst({
     where: {
-      userId,
       companyId: { in: accountBooks.map((book) => book.id) }, // Info: (20250306 - tzuhan) 只查詢 `accountBooks` 內的 `companyId`
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     select: {
       companyId: true,
+      roleId: true,
       role: true,
       tag: true,
       order: true,
     },
   });
 
+  loggerBack.info(`admin: ${JSON.stringify(admin)}`);
+
   return toPaginatedData({
     data: accountBooks.map((book) => {
-      // Info: (20250306 - Tzuhan) 找到 Admin 資料，admin 是顯示 userId 在 company 內的管理角色
-      const admin = admins.find((item) => item.companyId === book.id);
       // Info: (20250306 - Tzuhan) 找到 TeamMember 資料，teamRole 是顯示 userId 在 team 內的角色
       const teamRole =
         ((book.team?.members.find((member) => member.userId === userId)?.role ??
