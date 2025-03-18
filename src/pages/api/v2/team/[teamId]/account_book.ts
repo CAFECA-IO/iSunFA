@@ -11,7 +11,6 @@ import { APIName } from '@/constants/api_connection';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
-import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
 import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { listAccountBooksByTeamId } from '@/lib/utils/repo/team.repo';
@@ -29,9 +28,6 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   // Info: (20250226 - Tzuhan)驗證請求資料
   const { query } = checkRequestData(APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID, req, session);
-  loggerBack.info(
-    `User: ${userId} List account books by teamId with query: ${JSON.stringify(query)}`
-  );
 
   if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
