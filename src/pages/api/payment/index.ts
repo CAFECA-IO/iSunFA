@@ -9,7 +9,6 @@ import {
   IPaymentGateway,
   IPaymentGatewayOptions,
 } from '@/interfaces/payment_gateway';
-import loggerBack from '@/lib/utils/logger_back';
 
 /* Info: (20250111 - Luphia) 導向綁定信用卡頁面
  * 1. 取得 Session 資訊
@@ -37,7 +36,6 @@ export const oenPaymentHandler = async (req: NextApiRequest) => {
     id: process.env.PAYMENT_ID as string,
     secret: process.env.PAYMENT_TOKEN as string,
   };
-  loggerBack.info(paymentGatewayOptions);
   const paymentGateway = createPaymentGateway(paymentGatewayOptions) as IPaymentGateway;
 
   const getCardBindingUrlOptions: IGetCardBindingUrlOptions = {
