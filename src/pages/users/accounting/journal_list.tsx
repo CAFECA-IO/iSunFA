@@ -7,7 +7,7 @@ import { FiPlusCircle } from 'react-icons/fi';
 import { ILocale } from '@/interfaces/locale';
 import { useUserCtx } from '@/contexts/user_context';
 import NavBar from '@/components/nav_bar/nav_bar';
-import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
+// import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
 import JournalListBody from '@/components/journal_list_body/journal_list_body';
 import { Button } from '@/components/button/button';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -68,7 +68,7 @@ const JournalListPage = () => {
 
         <div className="flex w-full flex-1 flex-col overflow-x-hidden">
           {/* Info: (20240419 - Julian) Sidebar */}
-          <AccountingSidebar />
+          {/* <AccountingSidebar /> */}
           {displayedBody}
         </div>
       </div>

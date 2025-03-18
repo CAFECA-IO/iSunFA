@@ -3,7 +3,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '@/components/nav_bar/nav_bar';
 import { GetServerSideProps } from 'next';
 import ProjectSidebar from '@/components/project_sidebar/project_sidebar';
-import AddJournalBody from '@/components/add_journal_body/add_journal_body';
+// import AddJournalBody from '@/components/add_journal_body/add_journal_body';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
@@ -26,7 +26,7 @@ const ProjectJournalPage = ({ projectId }: IProjectJournalPageProps) => {
       {/* Info: (20240621 - Julian) Sidebar */}
       <ProjectSidebar projectId={projectId} />
       {/* Info: (20240621- Julian) Main */}
-      <AddJournalBody />
+      {/* <AddJournalBody /> */}
     </div>
   );
 

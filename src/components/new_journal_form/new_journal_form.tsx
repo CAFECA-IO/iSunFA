@@ -84,7 +84,7 @@ const NewJournalForm = () => {
   const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   const disabledAddNewAsset = true;
   // Info: (20240428 - Julian) get values from context
-  const { addAssetModalVisibilityHandler, confirmModalDataHandler } = useGlobalCtx();
+  const { addAssetModalVisibilityHandler /* confirmModalDataHandler */ } = useGlobalCtx();
   const { messageModalVisibilityHandler, messageModalDataHandler, confirmModalVisibilityHandler } =
     useModalContext();
   const {
@@ -211,10 +211,10 @@ const NewJournalForm = () => {
         },
         true
       );
-      confirmModalDataHandler({
-        journalId: selectedJournal.id,
-        askAIId: selectedJournal.aichResultId,
-      });
+      // confirmModalDataHandler({
+      //   journalId: selectedJournal.id,
+      //   askAIId: selectedJournal.aichResultId,
+      // });
       confirmModalVisibilityHandler();
     }
   }, [selectedAccountBook, selectedJournal, selectedOCR]);
@@ -422,10 +422,10 @@ const NewJournalForm = () => {
         },
         true
       );
-      confirmModalDataHandler({
-        journalId: updateJournalId,
-        askAIId: updateAIResult.resultStatus.resultId,
-      });
+      // confirmModalDataHandler({
+      //   journalId: updateJournalId,
+      //   askAIId: updateAIResult.resultStatus.resultId,
+      // });
       confirmModalVisibilityHandler();
     } else if (updateSuccess === false) {
       messageModalDataHandler({
@@ -458,10 +458,10 @@ const NewJournalForm = () => {
         },
         true
       );
-      confirmModalDataHandler({
-        journalId: invoice.journalId,
-        askAIId: invoice.resultStatus.resultId,
-      });
+      // confirmModalDataHandler({
+      //   journalId: invoice.journalId,
+      //   askAIId: invoice.resultStatus.resultId,
+      // });
       confirmModalVisibilityHandler();
     } else if (createSuccess === false) {
       messageModalDataHandler({

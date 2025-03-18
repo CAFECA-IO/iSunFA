@@ -5,7 +5,7 @@ import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
-import ConfirmModal from '@/components/confirm_modal/confirm_modal';
+// import ConfirmModal from '@/components/confirm_modal/confirm_modal';
 import AddAssetModal from '@/components/asset/add_asset_modal';
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
 import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
@@ -21,7 +21,7 @@ import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useRouter } from 'next/router';
 import LoadingModal from '@/components/loading_modal/loading_modal';
-import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
+// import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
 import AddProjectModal from '@/components/add_project_modal/add_project_modal';
 import { useUserCtx } from '@/contexts/user_context';
@@ -54,8 +54,8 @@ interface IGlobalContext {
   isPasskeySupportModalVisible: boolean;
   passKeySupportModalVisibilityHandler: () => void;
 
-  confirmModalData: IConfirmModal;
-  confirmModalDataHandler: (data: IConfirmModal) => void;
+  // confirmModalData: IConfirmModal;
+  // confirmModalDataHandler: (data: IConfirmModal) => void;
 
   isAddAssetModalVisible: boolean;
   addAssetModalVisibilityHandler: () => void;
@@ -150,8 +150,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isMessageModalVisible,
     messageModalVisibilityHandler,
     messageModalData,
-    isConfirmModalVisible,
-    confirmModalVisibilityHandler,
+    // isConfirmModalVisible,
+    // confirmModalVisibilityHandler,
     isAddBookmarkModalVisible,
     addBookmarkModalVisibilityHandler,
     isAddCounterPartyModalVisible,
@@ -162,7 +162,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const windowSize = useWindowSize();
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
 
-  const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
+  // const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
 
   const [isAddAssetModalVisible, setIsAddAssetModalVisible] = useState(false);
   const [defaultAssetData, setDefaultAssetData] = useState<IAssetModal>(initialAssetModal);
@@ -240,9 +240,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsPasskeySupportModalVisible(!isPasskeySupportModalVisible);
   };
 
-  const confirmModalDataHandler = (data: IConfirmModal) => {
-    setConfirmModalData(data);
-  };
+  // const confirmModalDataHandler = (data: IConfirmModal) => {
+  //   setConfirmModalData(data);
+  // };
 
   const addAssetModalVisibilityHandler = () => {
     setIsAddAssetModalVisible(!isAddAssetModalVisible);
@@ -435,8 +435,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       layoutAssertion,
       isPasskeySupportModalVisible,
       passKeySupportModalVisibilityHandler,
-      confirmModalData,
-      confirmModalDataHandler,
+      // confirmModalData,
+      // confirmModalDataHandler,
       isAddAssetModalVisible,
       addAssetModalVisibilityHandler,
       addAssetModalDataHandler,
@@ -506,8 +506,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       layoutAssertion,
       isPasskeySupportModalVisible,
       passKeySupportModalVisibilityHandler,
-      confirmModalData,
-      confirmModalDataHandler,
+      // confirmModalData,
+      // confirmModalDataHandler,
       isAddAssetModalVisible,
       addAssetModalVisibilityHandler,
       addAssetModalDataHandler,
@@ -600,11 +600,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         taxId={addCounterPartyModalData.taxId}
       />
 
-      <ConfirmModal
+      {/* <ConfirmModal
         isModalVisible={isConfirmModalVisible}
         modalVisibilityHandler={confirmModalVisibilityHandler}
         confirmData={confirmModalData}
-      />
+      /> */}
 
       <AddAssetModal
         isModalVisible={isAddAssetModalVisible}
