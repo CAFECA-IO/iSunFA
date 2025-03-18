@@ -5,34 +5,20 @@ import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
-import ConfirmModal from '@/components/confirm_modal/confirm_modal';
 import AddAssetModal from '@/components/asset/add_asset_modal';
-import CameraScanner from '@/components/camera_scanner/camera_scanner';
-import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
-import {
-  IPreviewInvoiceModal,
-  dummyPreviewInvoiceModalData,
-} from '@/interfaces/preview_invoice_modal';
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
 import { ToastPosition, ToastType } from '@/interfaces/toastify';
-import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useRouter } from 'next/router';
-import LoadingModal from '@/components/loading_modal/loading_modal';
-import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
-import AddProjectModal from '@/components/add_project_modal/add_project_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
-import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { useTranslation } from 'next-i18next';
-import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
-import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 import { UploadType } from '@/constants/file';
@@ -54,32 +40,12 @@ interface IGlobalContext {
   isPasskeySupportModalVisible: boolean;
   passKeySupportModalVisibilityHandler: () => void;
 
-  confirmModalData: IConfirmModal;
-  confirmModalDataHandler: (data: IConfirmModal) => void;
-
   isAddAssetModalVisible: boolean;
   addAssetModalVisibilityHandler: () => void;
   addAssetModalDataHandler: (defaultAssetData: IAssetModal) => void;
 
-  isCameraScannerVisible: boolean;
-  cameraScannerVisibilityHandler: () => void;
-
-  isPreviewInvoiceModalVisible: boolean;
-  previewInvoiceModalVisibilityHandler: () => void;
-  previewInvoiceModalDataHandler: (data: IPreviewInvoiceModal) => void;
-
   isEmbedCodeModalVisible: boolean;
   embedCodeModalVisibilityHandler: () => void;
-
-  isCompanyInvitationModalVisible: boolean;
-  companyInvitationModalVisibilityHandler: () => void;
-
-  isLoadingModalVisible: boolean;
-  loadingModalVisibilityHandler: () => void;
-
-  isAddProjectModalVisible: boolean;
-  addProjectModalVisibilityHandler: () => void;
-  addProjectModalDataHandler: (stage: ProjectStage) => void;
 
   isSalaryBookConfirmModalVisible: boolean;
   salaryBookConfirmModalVisibilityHandler: () => void;
@@ -87,14 +53,6 @@ interface IGlobalContext {
   profileUploadModalVisible: boolean;
   profileUploadModalVisibilityHandler: () => void;
   profileUploadModalDataHandler: (type: UploadType) => void;
-
-  isAddAccountTitleModalVisible: boolean;
-  addAccountTitleModalVisibilityHandler: () => void;
-  addAccountTitleDataHandler: (id: number) => void;
-
-  isEditAccountTitleModalVisible: boolean;
-  editAccountTitleModalVisibilityHandler: () => void;
-  editAccountTitleDataHandler: (id: number) => void;
 
   filterOptionsForHistory: IFilterOptions;
   filterOptionsForPending: IFilterOptions;
@@ -150,8 +108,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isMessageModalVisible,
     messageModalVisibilityHandler,
     messageModalData,
-    isConfirmModalVisible,
-    confirmModalVisibilityHandler,
     isAddBookmarkModalVisible,
     addBookmarkModalVisibilityHandler,
     isAddCounterPartyModalVisible,
@@ -162,23 +118,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const windowSize = useWindowSize();
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
 
-  const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
-
   const [isAddAssetModalVisible, setIsAddAssetModalVisible] = useState(false);
   const [defaultAssetData, setDefaultAssetData] = useState<IAssetModal>(initialAssetModal);
 
-  const [isCameraScannerVisible, setIsCameraScannerVisible] = useState(false);
-
-  const [isPreviewInvoiceModalVisible, setIsPreviewInvoiceModalVisible] = useState(false);
-  const [previewInvoiceModalData, setPreviewInvoiceModalData] = useState<IPreviewInvoiceModal>(
-    dummyPreviewInvoiceModalData
-  );
-
   const [isEmbedCodeModalVisible, setIsEmbedCodeModalVisible] = useState(false);
-
-  const [isCompanyInvitationModalVisible, setIsCompanyInvitationModalVisible] = useState(false);
-
-  const [isLoadingModalVisible, setIsLoadingModalVisible] = useState(false);
 
   const [isFilterOptionsModalForHistoryVisible, setIsFilterOptionsModalForHistoryVisible] =
     useState(false);
@@ -194,21 +137,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [filterOptionsForContract, setFilterOptionsForContract] =
     useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
 
-  const [isAddProjectModalVisible, setIsAddProjectModalVisible] = useState(false);
-  const [addProjectDefaultStage, setAddProjectDefaultStage] = useState<ProjectStage>(
-    ProjectStage.SELLING
-  );
-
   const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
   const [uploadImageType, setUploadImageType] = useState<UploadType>(UploadType.USER);
 
   const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
-
-  const [isAddAccountTitleModalVisible, setIsAddAccountTitleModalVisible] = useState(false);
-  const [addAccountTitleId, setAddAccountTitleId] = useState(0);
-
-  const [isEditAccountTitleModalVisible, setIsEditAccountTitleModalVisible] = useState(false);
-  const [editAccountTitleId, setEditAccountTitleId] = useState(0);
 
   const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
 
@@ -240,10 +172,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsPasskeySupportModalVisible(!isPasskeySupportModalVisible);
   };
 
-  const confirmModalDataHandler = (data: IConfirmModal) => {
-    setConfirmModalData(data);
-  };
-
   const addAssetModalVisibilityHandler = () => {
     setIsAddAssetModalVisible(!isAddAssetModalVisible);
   };
@@ -251,27 +179,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setDefaultAssetData(assetData);
   };
 
-  const cameraScannerVisibilityHandler = () => {
-    setIsCameraScannerVisible(!isCameraScannerVisible);
-  };
-
-  const previewInvoiceModalVisibilityHandler = () => {
-    setIsPreviewInvoiceModalVisible(!isPreviewInvoiceModalVisible);
-  };
-
-  const previewInvoiceModalDataHandler = (data: IPreviewInvoiceModal) => {
-    setPreviewInvoiceModalData(data);
-  };
   const embedCodeModalVisibilityHandler = () => {
     setIsEmbedCodeModalVisible(!isEmbedCodeModalVisible);
-  };
-
-  const companyInvitationModalVisibilityHandler = () => {
-    setIsCompanyInvitationModalVisible(!isCompanyInvitationModalVisible);
-  };
-
-  const loadingModalVisibilityHandler = () => {
-    setIsLoadingModalVisible(!isLoadingModalVisible);
   };
 
   const filterOptionsModalVisibilityHandlerForHistory = () => {
@@ -286,14 +195,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsFilterOptionsModalForContractVisible(!isFilterOptionsModalForContractVisible);
   };
 
-  const addProjectModalVisibilityHandler = () => {
-    setIsAddProjectModalVisible(!isAddProjectModalVisible);
-  };
-
-  const addProjectModalDataHandler = (stage: ProjectStage) => {
-    setAddProjectDefaultStage(stage);
-  };
-
   const profileUploadModalVisibilityHandler = () => {
     setProfileUploadModalVisible(!profileUploadModalVisible);
   };
@@ -304,22 +205,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const salaryBookConfirmModalVisibilityHandler = () => {
     setIsSalaryBookConfirmModalVisible(!isSalaryBookConfirmModalVisible);
-  };
-
-  const addAccountTitleModalVisibilityHandler = () => {
-    setIsAddAccountTitleModalVisible(!isAddAccountTitleModalVisible);
-  };
-
-  const addAccountTitleDataHandler = (id: number) => {
-    setAddAccountTitleId(id);
-  };
-
-  const editAccountTitleModalVisibilityHandler = () => {
-    setIsEditAccountTitleModalVisible(!isEditAccountTitleModalVisible);
-  };
-
-  const editAccountTitleDataHandler = (id: number) => {
-    setEditAccountTitleId(id);
   };
 
   const teamSettingModalVisibilityHandler = () => {
@@ -435,30 +320,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       layoutAssertion,
       isPasskeySupportModalVisible,
       passKeySupportModalVisibilityHandler,
-      confirmModalData,
-      confirmModalDataHandler,
       isAddAssetModalVisible,
       addAssetModalVisibilityHandler,
       addAssetModalDataHandler,
-      isCameraScannerVisible,
-      cameraScannerVisibilityHandler,
-      isPreviewInvoiceModalVisible,
-      previewInvoiceModalVisibilityHandler,
-      previewInvoiceModalDataHandler,
       isEmbedCodeModalVisible,
       embedCodeModalVisibilityHandler,
-      isCompanyInvitationModalVisible,
-      companyInvitationModalVisibilityHandler,
-      isLoadingModalVisible,
-      loadingModalVisibilityHandler,
       isSalaryBookConfirmModalVisible,
       salaryBookConfirmModalVisibilityHandler,
-      isAddAccountTitleModalVisible,
-      addAccountTitleModalVisibilityHandler,
-      addAccountTitleDataHandler,
-      isEditAccountTitleModalVisible,
-      editAccountTitleModalVisibilityHandler,
-      editAccountTitleDataHandler,
 
       filterOptionsForHistory,
       filterOptionsForPending,
@@ -470,9 +338,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isFilterOptionsModalForPendingVisible,
       isFilterOptionsModalForContractVisible,
       filterOptionsModalVisibilityHandler,
-      isAddProjectModalVisible,
-      addProjectModalVisibilityHandler,
-      addProjectModalDataHandler,
       profileUploadModalVisible,
       profileUploadModalVisibilityHandler,
       profileUploadModalDataHandler,
@@ -506,30 +371,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       layoutAssertion,
       isPasskeySupportModalVisible,
       passKeySupportModalVisibilityHandler,
-      confirmModalData,
-      confirmModalDataHandler,
       isAddAssetModalVisible,
       addAssetModalVisibilityHandler,
       addAssetModalDataHandler,
-      isCameraScannerVisible,
-      cameraScannerVisibilityHandler,
-      isPreviewInvoiceModalVisible,
-      previewInvoiceModalVisibilityHandler,
-      previewInvoiceModalDataHandler,
       isEmbedCodeModalVisible,
       embedCodeModalVisibilityHandler,
-      isCompanyInvitationModalVisible,
-      companyInvitationModalVisibilityHandler,
-      isLoadingModalVisible,
-      loadingModalVisibilityHandler,
       isSalaryBookConfirmModalVisible,
       salaryBookConfirmModalVisibilityHandler,
-      isAddAccountTitleModalVisible,
-      addAccountTitleModalVisibilityHandler,
-      addAccountTitleDataHandler,
-      isEditAccountTitleModalVisible,
-      editAccountTitleModalVisibilityHandler,
-      editAccountTitleDataHandler,
 
       filterOptionsForHistory,
       filterOptionsForPending,
@@ -541,9 +389,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isFilterOptionsModalForPendingVisible,
       isFilterOptionsModalForContractVisible,
       filterOptionsModalVisibilityHandler,
-      isAddProjectModalVisible,
-      addProjectModalVisibilityHandler,
-      addProjectModalDataHandler,
+
       profileUploadModalVisible,
       profileUploadModalVisibilityHandler,
       profileUploadModalDataHandler,
@@ -600,43 +446,15 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         taxId={addCounterPartyModalData.taxId}
       />
 
-      <ConfirmModal
-        isModalVisible={isConfirmModalVisible}
-        modalVisibilityHandler={confirmModalVisibilityHandler}
-        confirmData={confirmModalData}
-      />
-
       <AddAssetModal
         isModalVisible={isAddAssetModalVisible}
         modalVisibilityHandler={addAssetModalVisibilityHandler}
         defaultData={defaultAssetData}
       />
 
-      <CameraScanner
-        isModalVisible={isCameraScannerVisible}
-        modalVisibilityHandler={cameraScannerVisibilityHandler}
-      />
-
-      <PreviewInvoiceModal
-        isModalVisible={isPreviewInvoiceModalVisible}
-        modalVisibilityHandler={previewInvoiceModalVisibilityHandler}
-        previewInvoiceModalData={previewInvoiceModalData}
-      />
-
       <EmbedCodeModal
         isModalVisible={isEmbedCodeModalVisible}
         modalVisibilityHandler={embedCodeModalVisibilityHandler}
-      />
-
-      <CompanyInvitationModal
-        isModalVisible={isCompanyInvitationModalVisible}
-        modalVisibilityHandler={companyInvitationModalVisibilityHandler}
-        toastHandler={toastHandler}
-      />
-
-      <LoadingModal
-        isModalVisible={isLoadingModalVisible}
-        modalVisibilityHandler={loadingModalVisibilityHandler}
       />
 
       <Toast />
@@ -660,12 +478,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         getFilterOptions={getFilterOptionsForContract}
       />
 
-      <AddProjectModal
-        isModalVisible={isAddProjectModalVisible}
-        modalVisibilityHandler={addProjectModalVisibilityHandler}
-        defaultStage={addProjectDefaultStage}
-      />
-
       <ProfileUploadModal
         isModalVisible={profileUploadModalVisible}
         modalVisibilityHandler={profileUploadModalVisibilityHandler}
@@ -675,18 +487,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <SalaryBookConfirmModal
         isModalVisible={isSalaryBookConfirmModalVisible}
         modalVisibilityHandler={salaryBookConfirmModalVisibilityHandler}
-      />
-
-      <AddAccountTitleModal
-        isModalVisible={isAddAccountTitleModalVisible}
-        modalVisibilityHandler={addAccountTitleModalVisibilityHandler}
-        modalData={{ accountId: addAccountTitleId }}
-      />
-
-      <EditAccountTitleModal
-        isModalVisible={isEditAccountTitleModalVisible}
-        modalVisibilityHandler={editAccountTitleModalVisibilityHandler}
-        modalData={{ accountId: editAccountTitleId }}
       />
 
       <TeamSettingModal

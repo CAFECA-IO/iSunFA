@@ -216,7 +216,7 @@ const ViewAnalysisSection = ({
           <div className="mt-4 flex flex-col">
             <div className="flex gap-0">
               <div className="my-auto text-sm font-medium leading-5 tracking-normal text-text-neutral-tertiary">
-                {t('journal:JOURNAL.Token ID')}
+                {t('journal:JOURNAL.TOKEN_ID')}
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
