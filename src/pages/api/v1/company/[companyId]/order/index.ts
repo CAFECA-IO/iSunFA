@@ -5,7 +5,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { createOrder, listOrder } from '@/lib/utils/repo/order.repo';
-import { IOrder } from '@/interfaces/order';
+import { IOrder, IOrderDetail } from '@/interfaces/order';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 async function handleGetRequest(req: NextApiRequest) {
@@ -54,7 +54,8 @@ async function handlePostRequest(req: NextApiRequest) {
         statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
       } else {
         try {
-          const order = await createOrder(companyId, planId, status);
+          const detail = payload as unknown as IOrderDetail[];
+          const order = await createOrder(userId, companyId, planId, status, detail);
           statusMessage = STATUS_MESSAGE.CREATED;
           payload = order;
         } catch (error) {
