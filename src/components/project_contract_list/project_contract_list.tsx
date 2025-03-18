@@ -1,9 +1,9 @@
 import { Dispatch, SetStateAction } from 'react';
 import Image from 'next/image';
 import { IContract } from '@/interfaces/contract';
-import ContractCard from '@/components/contract_card/contract_card';
+// import ContractCard from '@/components/contract_card/contract_card';
 import Pagination from '@/components/pagination/pagination';
-import { Layout } from '@/constants/layout';
+// import { Layout } from '@/constants/layout';
 import { useTranslation } from 'next-i18next';
 
 interface IProjectContractListProps {
@@ -23,9 +23,9 @@ const ProjectContractList = ({
   const displayedContractList =
     contracts.length > 0 ? (
       <div className="flex w-full flex-col gap-20px">
-        {contracts.map((contract) => (
+        {/* {contracts.map((contract) => (
           <ContractCard key={contract.id} style={Layout.LIST} contract={contract} />
-        ))}
+        ))} */}
         <div className="mx-auto mt-50px">
           <Pagination
             currentPage={currentPage}

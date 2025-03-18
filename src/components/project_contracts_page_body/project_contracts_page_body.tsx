@@ -4,14 +4,14 @@ import { FiGrid, FiSearch } from 'react-icons/fi';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { Layout } from '@/constants/layout';
 import { default30DayPeriodInSec, SortOptions } from '@/constants/display';
-import { ContractStatus, ContractStatusWithAll } from '@/constants/contract';
+import { /* ContractStatus, */ ContractStatusWithAll } from '@/constants/contract';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { newDummyContracts } from '@/interfaces/contract';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { Button } from '@/components/button/button';
 import ProjectContractList from '@/components/project_contract_list/project_contract_list';
-import ContractStatusBlock from '@/components/contract_status_block/contract_status_block';
+// import ContractStatusBlock from '@/components/contract_status_block/contract_status_block';
 import { FilterOptionsModalType } from '@/interfaces/modals';
 import { useTranslation } from 'next-i18next';
 
@@ -19,7 +19,7 @@ const ProjectContractsPageBody = () => {
   const { t } = useTranslation(['common', 'journal']);
   const { filterOptionsModalVisibilityHandler, filterOptionsForContract } = useGlobalCtx();
 
-  const statusList = Object.values(ContractStatus);
+  // const statusList = Object.values(ContractStatus);
   const statusListWithAll = Object.values(ContractStatusWithAll);
 
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
@@ -165,9 +165,9 @@ const ProjectContractsPageBody = () => {
       />
     ) : (
       <div className="grid w-full grid-cols-1 gap-x-35px gap-y-24px md:grid-cols-2 md:grid-rows-2">
-        {statusList.map((status) => (
+        {/* {statusList.map((status) => (
           <ContractStatusBlock key={status} status={status} contracts={filteredContracts} />
-        ))}
+        ))} */}
       </div>
     );
 

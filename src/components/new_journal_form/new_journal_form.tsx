@@ -85,8 +85,10 @@ const NewJournalForm = () => {
   const disabledAddNewAsset = true;
   // Info: (20240428 - Julian) get values from context
   const { addAssetModalVisibilityHandler /* confirmModalDataHandler */ } = useGlobalCtx();
-  const { messageModalVisibilityHandler, messageModalDataHandler, confirmModalVisibilityHandler } =
-    useModalContext();
+  const {
+    messageModalVisibilityHandler,
+    messageModalDataHandler /* confirmModalVisibilityHandler */,
+  } = useModalContext();
   const {
     selectedOCR,
     selectOCRHandler,
@@ -215,7 +217,7 @@ const NewJournalForm = () => {
       //   journalId: selectedJournal.id,
       //   askAIId: selectedJournal.aichResultId,
       // });
-      confirmModalVisibilityHandler();
+      // confirmModalVisibilityHandler();
     }
   }, [selectedAccountBook, selectedJournal, selectedOCR]);
 
@@ -426,7 +428,7 @@ const NewJournalForm = () => {
       //   journalId: updateJournalId,
       //   askAIId: updateAIResult.resultStatus.resultId,
       // });
-      confirmModalVisibilityHandler();
+      // confirmModalVisibilityHandler();
     } else if (updateSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
@@ -462,7 +464,7 @@ const NewJournalForm = () => {
       //   journalId: invoice.journalId,
       //   askAIId: invoice.resultStatus.resultId,
       // });
-      confirmModalVisibilityHandler();
+      // confirmModalVisibilityHandler();
     } else if (createSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
