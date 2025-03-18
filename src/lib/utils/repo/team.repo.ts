@@ -7,7 +7,7 @@ import {
   ITransferAccountBook,
   TransferStatus,
 } from '@/interfaces/team';
-import { TeamPaymentStatus } from '@prisma/client';
+import { InviteStatus, TeamPaymentStatus } from '@prisma/client';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { z } from 'zod';
 import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
@@ -175,14 +175,35 @@ export const createTeam = async (
           })),
           skipDuplicates: true,
         });
+
+        // Info: (20250317 - Tzuhan) 記錄成功加入的用戶
+        await tx.inviteTeamMember.createMany({
+          data: existingUsers.map((user) => ({
+            teamId: newTeam.id,
+            email: user.email!,
+            status: InviteStatus.COMPLETED,
+            createdAt: now,
+            completedAt: now,
+            note: JSON.stringify({
+              reason: 'User already exists, added to team without asking',
+            }),
+          })),
+          skipDuplicates: true,
+        });
       }
 
       // Info: (20250304 - Tzuhan) 4.2 批量插入 `pendingTeamMember`
       if (newUserEmails.length > 0) {
-        await tx.pendingTeamMember.createMany({
+        await tx.inviteTeamMember.createMany({
           data: newUserEmails.map((email) => ({
             teamId: newTeam.id,
             email,
+            status: InviteStatus.PENDING,
+            createdAt: now,
+            note: JSON.stringify({
+              reason:
+                'User not exists, pending for join, when user register, will be added to team',
+            }),
           })),
           skipDuplicates: true,
         });
@@ -209,7 +230,7 @@ export const createTeam = async (
       about: { value: newTeam.about ?? '', editable: true },
       profile: { value: newTeam.profile ?? '', editable: true },
       planType: { value: teamData.planType ?? TPlanType.BEGINNER, editable: false },
-      totalMembers: newTeam.members.length + 1, // Info: (20250305 - Tzuhan) 因為創建者也加入了
+      totalMembers: newTeam.members.length + 1,
       totalAccountBooks: newTeam.accountBook.length,
       bankAccount: {
         value: newTeam.bankInfo
@@ -344,15 +365,35 @@ export const addMembersToTeam = async (
           })),
           skipDuplicates: true,
         });
+
+        // Info: (20250317 - Tzuhan) 記錄成功加入的用戶
+        await tx.inviteTeamMember.createMany({
+          data: existingUsers.map((user) => ({
+            teamId,
+            email: user.email!,
+            status: InviteStatus.COMPLETED,
+            createdAt: now,
+            completedAt: now,
+            note: JSON.stringify({
+              reason: 'User already exists, added to team without asking',
+            }),
+          })),
+          skipDuplicates: true,
+        });
       }
 
-      // Info: (20250307 - Tzuhan) 3️ 對於 `email` 尚未註冊的用戶，新增 `pendingTeamMember`
+      // Info: (20250307 - Tzuhan) 3️ 對於 `email` 尚未註冊的用戶，新增 `inviteTeamMember`
       if (newUserEmails.length > 0) {
-        await tx.pendingTeamMember.createMany({
+        await tx.inviteTeamMember.createMany({
           data: newUserEmails.map((email) => ({
             teamId,
             email,
+            status: InviteStatus.PENDING,
             createdAt: now,
+            note: JSON.stringify({
+              reason:
+                'User not exists, pending for join, when user register, will be added to team',
+            }),
           })),
           skipDuplicates: true,
         });
@@ -636,11 +677,13 @@ export const requestTransferAccountBook = async (
   }
 
   // Info: (20250311 - Tzuhan) 確保轉入團隊的 `subscription.planType` 不會超過上限
-  const isFreePlan = targetTeam.subscription?.plan?.type === TPlanType.BEGINNER;
+  const planType = targetTeam.subscription?.plan?.type || TPlanType.BEGINNER;
   const accountBookCount = await prisma.company.count({ where: { teamId: toTeamId } });
 
-  if (isFreePlan && accountBookCount >= SUBSCRIPTION_PLAN_LIMITS.FREE) {
-    throw new Error('EXCEED_FREE_PLAN_LIMIT');
+  if (
+    accountBookCount >= SUBSCRIPTION_PLAN_LIMITS[planType as keyof typeof SUBSCRIPTION_PLAN_LIMITS]
+  ) {
+    throw new Error('EXCEED_PLAN_LIMIT');
   }
 
   // Info: (20250311 - Tzuhan) 更新帳本 `isTransferring = true`
