@@ -14,7 +14,7 @@ export interface ITeamMember {
   imageId: string;
   email: string;
   role: TeamRole;
-  editable: boolean;
+  editable: boolean; // Info: (20250312 - Liz) 可以編輯成員權限、可以刪除成員
 }
 
 export interface ITeam {
@@ -28,6 +28,11 @@ export interface ITeam {
   totalMembers: number;
   totalAccountBooks: number;
   bankAccount: IEditable<string>;
+  // Info: (20250312 - Liz) 以下為待討論項目
+  // isAbleToEditPrivacy: boolean;
+  // isAbleToEditPlan: boolean;
+  // isAbleToEditBankAccount: boolean; // 可以編輯就表示可以查看(共用查看權限)
+  // bankAccount: string; // 不能查看就回傳空字串
 }
 
 export interface IInviteMember {
@@ -62,15 +67,19 @@ export interface ILeaveTeam {
   leftAt?: number;
 }
 
+// Info: (20250311 - Tzuhan) 🌟 帳本轉移狀態
 export enum TransferStatus {
-  TRANSFER = 'TRANSFER',
-  FAILED = 'FAILED',
+  PENDING = 'PENDING', // Info: (20250311 - Tzuhan) 移轉請求中
+  COMPLETED = 'COMPLETED', // Info: (20250311 - Tzuhan) 轉移完成
+  CANCELED = 'CANCELED', // Info: (20250311 - Tzuhan) 轉移取消
+  DECLINED = 'DECLINED', // Info: (20250311 - Tzuhan) 目標團隊拒絕轉移
+  FAILED = 'FAILED', // Info: (20250311 - Tzuhan) 轉移失敗
 }
 
-export interface ITransferLedger {
-  accountBookId: string;
-  previousTeamId: number;
-  targetTeamId: number;
+export interface ITransferAccountBook {
+  accountBookId: number;
+  fromTeamId: number;
+  toTeamId: number;
   status: TransferStatus;
   transferredAt?: number;
 }

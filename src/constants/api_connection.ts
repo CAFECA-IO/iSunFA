@@ -173,15 +173,19 @@ export enum APIName {
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = 'GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID',
   GET_CREDIT_CARD_INFO = 'GET_CREDIT_CARD_INFO',
   LEAVE_TEAM = 'LEAVE_TEAM',
-  TRANSFER_ACCOUNT_BOOK = 'TRANSFER_ACCOUNT_BOOK',
+  REQUEST_TRANSFER_ACCOUNT_BOOK = 'REQUEST_TRANSFER_ACCOUNT_BOOK',
+  CANCEL_TRANSFER_ACCOUNT_BOOK = 'CANCEL_TRANSFER_ACCOUNT_BOOK',
+  ACCEPT_TRANSFER_ACCOUNT_BOOK = 'ACCEPT_TRANSFER_ACCOUNT_BOOK',
+  DECLINE_TRANSFER_ACCOUNT_BOOK = 'DECLINE_TRANSFER_ACCOUNT_BOOK',
   LIST_PAYMENT_PLAN = 'LIST_PAYMENT_PLAN',
   LIST_ACCOUNT_BOOK_BY_USER_ID = 'LIST_ACCOUNT_BOOK_BY_USER_ID',
   CONNECT_ACCOUNT_BOOK_BY_ID = 'CONNECT_ACCOUNT_BOOK_BY_ID',
   UPDATE_TEAM_BY_ID = 'UPDATE_TEAM_BY_ID',
-  UPDATE_MEMBER_BY_ID = 'UPDATE_MEMBER_BY_ID',
-  DELETE_MEMBER_BY_ID = 'DELETE_MEMBER_BY_ID',
+  UPDATE_MEMBER = 'UPDATE_MEMBER',
+  DELETE_MEMBER = 'DELETE_MEMBER',
   GET_ACCOUNT_BOOK_INFO_BY_ID = 'GET_ACCOUNT_BOOK_INFO_BY_ID',
   PUT_TEAM_ICON = 'PUT_TEAM_ICON',
+  UPDATE_ACCOUNT_BOOK = 'UPDATE_ACCOUNT_BOOK',
 }
 
 export enum APIPath {
@@ -242,10 +246,6 @@ export enum APIPath {
   VOUCHER_LIST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
   VOUCHER_POST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
   VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
-  VOUCHER_PUT_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
-  VOUCHER_RESTORE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId/restore`,
-  REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/lineitem`,
-  VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/voucher`,
   VOUCHER_DELETE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
   VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/company/:companyId/voucher/read`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
@@ -333,15 +333,23 @@ export enum APIPath {
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId/invoice/:invoiceId`,
   GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
   LEAVE_TEAM = `${apiPrefixV2}/team/:teamId/leave`,
-  TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/transfer`,
+  REQUEST_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/transfer`,
+  CANCEL_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/cancel`,
+  ACCEPT_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/accept`,
+  DECLINE_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/decline`,
   LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
   LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
   CONNECT_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/connect`,
   UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
-  UPDATE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
-  DELETE_MEMBER_BY_ID = `${apiPrefixV2}/team/:teamId/member/:memberId`,
+  UPDATE_MEMBER = `${apiPrefixV2}/team/:teamId/member/:memberId`,
+  DELETE_MEMBER = `${apiPrefixV2}/team/:teamId/member/:memberId`,
   GET_ACCOUNT_BOOK_INFO_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/info`,
   PUT_TEAM_ICON = `${apiPrefixV2}/team/:teamId/icon`,
+  VOUCHER_PUT_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
+  VOUCHER_RESTORE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId/restore`,
+  REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/lineitem`,
+  VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/voucher`,
+  UPDATE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId`,
 }
 
 const createConfig = ({
@@ -1105,10 +1113,25 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.LEAVE_TEAM,
   }),
-  [APIName.TRANSFER_ACCOUNT_BOOK]: createConfig({
-    name: APIName.TRANSFER_ACCOUNT_BOOK,
+  [APIName.REQUEST_TRANSFER_ACCOUNT_BOOK]: createConfig({
+    name: APIName.REQUEST_TRANSFER_ACCOUNT_BOOK,
     method: HttpMethod.POST,
-    path: APIPath.TRANSFER_ACCOUNT_BOOK,
+    path: APIPath.REQUEST_TRANSFER_ACCOUNT_BOOK,
+  }),
+  [APIName.CANCEL_TRANSFER_ACCOUNT_BOOK]: createConfig({
+    name: APIName.CANCEL_TRANSFER_ACCOUNT_BOOK,
+    method: HttpMethod.GET,
+    path: APIPath.CANCEL_TRANSFER_ACCOUNT_BOOK,
+  }),
+  [APIName.ACCEPT_TRANSFER_ACCOUNT_BOOK]: createConfig({
+    name: APIName.ACCEPT_TRANSFER_ACCOUNT_BOOK,
+    method: HttpMethod.GET,
+    path: APIPath.ACCEPT_TRANSFER_ACCOUNT_BOOK,
+  }),
+  [APIName.DECLINE_TRANSFER_ACCOUNT_BOOK]: createConfig({
+    name: APIName.DECLINE_TRANSFER_ACCOUNT_BOOK,
+    method: HttpMethod.GET,
+    path: APIPath.DECLINE_TRANSFER_ACCOUNT_BOOK,
   }),
   [APIName.LIST_PAYMENT_PLAN]: createConfig({
     name: APIName.LIST_PAYMENT_PLAN,
@@ -1131,15 +1154,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.UPDATE_TEAM_BY_ID,
   }),
-  [APIName.UPDATE_MEMBER_BY_ID]: createConfig({
-    name: APIName.UPDATE_MEMBER_BY_ID,
+  [APIName.UPDATE_MEMBER]: createConfig({
+    name: APIName.UPDATE_MEMBER,
     method: HttpMethod.PUT,
-    path: APIPath.UPDATE_MEMBER_BY_ID,
+    path: APIPath.UPDATE_MEMBER,
   }),
-  [APIName.DELETE_MEMBER_BY_ID]: createConfig({
-    name: APIName.DELETE_MEMBER_BY_ID,
+  [APIName.DELETE_MEMBER]: createConfig({
+    name: APIName.DELETE_MEMBER,
     method: HttpMethod.DELETE,
-    path: APIPath.DELETE_MEMBER_BY_ID,
+    path: APIPath.DELETE_MEMBER,
   }),
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: createConfig({
     name: APIName.GET_ACCOUNT_BOOK_INFO_BY_ID,
@@ -1150,5 +1173,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.PUT_TEAM_ICON,
     method: HttpMethod.PUT,
     path: APIPath.PUT_TEAM_ICON,
+  }),
+  [APIName.UPDATE_ACCOUNT_BOOK]: createConfig({
+    name: APIName.UPDATE_ACCOUNT_BOOK,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_ACCOUNT_BOOK,
   }),
 };

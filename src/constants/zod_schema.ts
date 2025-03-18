@@ -131,6 +131,7 @@ import {
   connectAccountBookSchema,
   listAccountBooksByTeamIdSchema,
   getAccountBookInfoSchema,
+  updateAccountBookSchema,
 } from '@/lib/utils/zod_schema/account_book';
 
 /*
@@ -322,12 +323,15 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_TEAM]: teamSchemas.list,
   [APIName.GET_TEAM_BY_ID]: teamSchemas.get,
   [APIName.UPDATE_TEAM_BY_ID]: teamSchemas.update,
-  [APIName.UPDATE_MEMBER_BY_ID]: teamSchemas.updateMember,
-  [APIName.DELETE_MEMBER_BY_ID]: teamSchemas.deleteMember,
+  [APIName.UPDATE_MEMBER]: teamSchemas.updateMember,
+  [APIName.DELETE_MEMBER]: teamSchemas.deleteMember,
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: listAccountBooksByTeamIdSchema,
   [APIName.LIST_MEMBER_BY_TEAM_ID]: teamSchemas.listMember,
   [APIName.ADD_MEMBER_TO_TEAM]: teamSchemas.addMember,
-  [APIName.TRANSFER_ACCOUNT_BOOK]: teamSchemas.transferAccountBook,
+  [APIName.REQUEST_TRANSFER_ACCOUNT_BOOK]: teamSchemas.requestTransferAccountBook,
+  [APIName.CANCEL_TRANSFER_ACCOUNT_BOOK]: teamSchemas.cancelTransferAccountBook,
+  [APIName.ACCEPT_TRANSFER_ACCOUNT_BOOK]: teamSchemas.acceptTransferAccountBook,
+  [APIName.DECLINE_TRANSFER_ACCOUNT_BOOK]: teamSchemas.declineTransferAccountBook,
   [APIName.LEAVE_TEAM]: teamSchemas.leaveTeam,
 
   [APIName.LIST_SUBSCRIPTION]: subscriptionSchemas.list,
@@ -344,4 +348,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: connectAccountBookSchema,
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: getAccountBookInfoSchema,
   [APIName.PUT_TEAM_ICON]: teamSchemas.putIcon,
+  [APIName.UPDATE_ACCOUNT_BOOK]: updateAccountBookSchema,
 };

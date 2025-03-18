@@ -58,10 +58,14 @@ export const addMemberResponseSchema = z.object({
   failedEmails: z.array(z.string().email()),
 });
 
+export const requestTransferAccountBookQuerySchema = z.object({
+  accountBookId: zodStringToNumber,
+});
+
 export const transferAccountBookSchema = z.object({
-  accountBookId: z.string(),
-  previousTeamId: z.number(),
-  targetTeamId: z.number(),
+  accountBookId: z.number(),
+  fromTeamId: z.number(),
+  toTeamId: z.number(),
   status: z.enum(Object.values(TransferStatus) as [TransferStatus, ...TransferStatus[]]),
   transferredAt: z.number().optional(),
 });
@@ -224,13 +228,37 @@ export const teamSchemas = {
     outputSchema: leaveTeamSchema,
     frontend: leaveTeamSchema,
   },
-  transferAccountBook: {
+  requestTransferAccountBook: {
     input: {
-      querySchema: getByTeamIdSchema,
+      querySchema: requestTransferAccountBookQuerySchema,
       bodySchema: z.object({
-        previousTeamId: z.number(),
-        targetTeamId: z.number(),
+        fromTeamId: z.number(),
+        toTeamId: z.number(),
       }),
+    },
+    outputSchema: transferAccountBookSchema,
+    frontend: transferAccountBookSchema,
+  },
+  cancelTransferAccountBook: {
+    input: {
+      querySchema: requestTransferAccountBookQuerySchema,
+      bodySchema: nullSchema,
+    },
+    outputSchema: transferAccountBookSchema,
+    frontend: transferAccountBookSchema,
+  },
+  acceptTransferAccountBook: {
+    input: {
+      querySchema: requestTransferAccountBookQuerySchema,
+      bodySchema: nullSchema,
+    },
+    outputSchema: transferAccountBookSchema,
+    frontend: transferAccountBookSchema,
+  },
+  declineTransferAccountBook: {
+    input: {
+      querySchema: requestTransferAccountBookQuerySchema,
+      bodySchema: nullSchema,
     },
     outputSchema: transferAccountBookSchema,
     frontend: transferAccountBookSchema,

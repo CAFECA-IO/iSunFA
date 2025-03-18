@@ -1397,5 +1397,5 @@ model AccountBookTransfer {
   initiatedByUser  User @relation(fields: [initiatedByUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("accountBook_transfer")
-  @@unique([fromTeamId, toTeamId])
+  // @@unique([fromTeamId, toTeamId]) // Info: (20250314 - Tzuhan) remove companyId from unique constraint, because it's not necessary
 }

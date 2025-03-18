@@ -47,7 +47,7 @@ interface UserContextType {
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
   selectedAccountBook: IAccountBook | null;
-  selectAccountBook: (companyId: number) => Promise<IAccountBook | null>;
+  connectAccountBook: (companyId: number) => Promise<{ success: boolean }>;
   updateAccountBook: ({
     companyId,
     action,
@@ -101,7 +101,7 @@ export const UserContext = createContext<UserContextType>({
   createAccountBook: async () => ({ success: false, code: '', errorMsg: '' }),
 
   selectedAccountBook: null,
-  selectAccountBook: async () => null,
+  connectAccountBook: async () => ({ success: false }),
   updateAccountBook: async () => null,
   deleteAccountBook: async () => null,
   deleteAccount: async () => Promise.resolve({ success: false, data: null, code: '', error: null }),
@@ -158,8 +158,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: createAccountBookAPI } = APIHandler<IAccountBookForUser>(
     APIName.CREATE_USER_COMPANY
   );
-  // Info: (20241111 - Liz) 選擇帳本 API(原為公司)
-  const { trigger: selectAccountBookAPI } = APIHandler<IAccountBook>(APIName.COMPANY_SELECT);
+  // Info: (20241111 - Liz) 連結帳本 API(原為選擇公司)
+  const { trigger: connectAccountBookAPI } = APIHandler<IAccountBook>(
+    APIName.CONNECT_ACCOUNT_BOOK_BY_ID
+  );
   // Info: (20241113 - Liz) 更新帳本 API(原為公司)
   const { trigger: updateAccountBookAPI } = APIHandler<IAccountBookForUser>(APIName.COMPANY_UPDATE);
   // Info: (20241115 - Liz) 刪除帳本 API(原為公司)
@@ -623,21 +625,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241111 - Liz) 選擇帳本的功能(原為公司)
-  const selectAccountBook = async (companyId: number) => {
+  // Info: (20241111 - Liz) 連結帳本的功能(原為選擇公司)
+  const connectAccountBook = async (accountBookId: number) => {
     try {
-      const { success, data: userCompany } = await selectAccountBookAPI({
-        params: { userId: userAuthRef.current?.id },
-        body: { companyId },
+      const { success, data: connectedAccountBook } = await connectAccountBookAPI({
+        params: { accountBookId },
       });
 
-      if (success) {
-        setSelectedAccountBook(userCompany);
-        return userCompany;
-      }
-      return null;
+      if (!success) return { success: false };
+      setSelectedAccountBook(connectedAccountBook);
+      return { success: true };
     } catch (error) {
-      return null;
+      return { success: false };
     }
   };
 
@@ -806,7 +805,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       selectedRole: selectedRoleRef.current,
       switchRole,
       createAccountBook,
-      selectAccountBook,
+      connectAccountBook,
       updateAccountBook,
       deleteAccountBook,
       deleteAccount,

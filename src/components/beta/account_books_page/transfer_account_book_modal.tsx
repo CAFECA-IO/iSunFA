@@ -3,36 +3,68 @@ import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { IoCloseOutline } from 'react-icons/io5';
 import { PiShareFatBold } from 'react-icons/pi';
 import { useTranslation } from 'next-i18next';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { ITransferAccountBook } from '@/interfaces/team';
 
 interface TransferAccountBookModalProps {
   accountBookToTransfer: IAccountBookForUserWithTeam;
   setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  setRefreshKey?: Dispatch<React.SetStateAction<number>>;
+  getAccountBookListByTeamId?: () => Promise<void>;
 }
 
 const TransferAccountBookModal = ({
   accountBookToTransfer,
   setAccountBookToTransfer,
+  setRefreshKey,
+  getAccountBookListByTeamId,
 }: TransferAccountBookModalProps) => {
   const { t } = useTranslation(['account_book']);
-
-  // Deprecated: (20250213 - Liz)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [transferToTeamId, setTransferToTeamId] = useState<string>('');
-  // Deprecated: (20250213 - Liz)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Deprecated: (20250213 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('accountBookToTransfer:', accountBookToTransfer);
+  // Info: (20250311 - Liz) 轉移帳本 API
+  const { trigger: transferAccountBookAPI } = APIHandler<ITransferAccountBook>(
+    APIName.REQUEST_TRANSFER_ACCOUNT_BOOK
+  );
 
   const closeTransferAccountBookModal = () => {
     setAccountBookToTransfer(undefined);
   };
 
-  // ToDo: (20250214 - Liz) 打 API 轉移帳本(原為公司)
+  // Info: (20250311 - Liz) 打 API 轉移帳本(原為公司)
   const handleSubmit = async () => {
-    // if (isLoading) return;
+    if (isLoading) return;
+    setIsLoading(true);
+
+    try {
+      const { success } = await transferAccountBookAPI({
+        params: { accountBookId: accountBookToTransfer.company.id },
+        body: {
+          fromTeamId: accountBookToTransfer.team.id,
+          toTeamId: Number(transferToTeamId),
+        },
+      });
+
+      if (!success) {
+        // Deprecated: (20250311 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('打 API 轉移帳本失敗');
+        return;
+      }
+      closeTransferAccountBookModal();
+
+      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20250314 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
+
+      if (getAccountBookListByTeamId) getAccountBookListByTeamId(); // Info: (20250314 - Liz) 重新取得團隊帳本清單
+    } catch (error) {
+      // Deprecated: (20250311 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('打 API 轉移帳本失敗 error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
