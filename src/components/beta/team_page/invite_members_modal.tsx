@@ -1,5 +1,5 @@
 import { useState, Dispatch, SetStateAction } from 'react';
-import { IoCloseOutline, IoMailOutline, IoClose } from 'react-icons/io5';
+import { IoCloseOutline, IoMailOutline, IoClose, IoAdd } from 'react-icons/io5';
 import { TbUserPlus } from 'react-icons/tb';
 import { useTranslation } from 'next-i18next';
 import { ITeam, IInviteMemberResponse } from '@/interfaces/team';
@@ -32,21 +32,29 @@ const InviteMembersModal = ({ team, setIsInviteMembersModalOpen }: InviteMembers
     setIsEmailNotValid(false);
   };
 
-  const addEmailToInvite = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && inputEmail.trim()) {
-      // Info: (20250221 - Liz) 簡單的 email 格式驗證
-      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputEmail);
+  // Info: (20250318 - Liz) 新增 email 到邀請清單 (兼容 Enter 鍵與按鈕點擊)
+  const addEmailToInvite = (
+    e: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent<HTMLButtonElement>
+  ) => {
+    const isEnterKey = 'key' in e && e.key === 'Enter';
+    const isClick = e.type === 'click';
 
-      if (!isValidEmail) {
-        setIsEmailNotValid(true);
-        return;
-      }
+    if (!isEnterKey && !isClick) return;
 
-      if (!emailsToInvite.includes(inputEmail)) {
-        setEmailsToInvite([...emailsToInvite, inputEmail]);
-        setInputEmail('');
-      }
+    const trimmedEmail = inputEmail.trim();
+    if (!trimmedEmail) return;
+
+    // Info: (20250221 - Liz) 簡單的 email 格式驗證
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
+    if (!isValidEmail) {
+      setIsEmailNotValid(true);
+      return;
     }
+
+    if (emailsToInvite.includes(trimmedEmail)) return;
+
+    setEmailsToInvite([...emailsToInvite, trimmedEmail]);
+    setInputEmail('');
   };
 
   // Info: (20250306 - Liz) 打 API 邀請成員
@@ -99,20 +107,46 @@ const InviteMembersModal = ({ team, setIsInviteMembersModalOpen }: InviteMembers
               <span className="text-text-state-error"> *</span>
             </h4>
 
-            <div className="flex flex-col gap-1px">
+            <section className="flex flex-col gap-2px">
               <div className="flex items-center overflow-hidden rounded-sm border border-input-stroke-input bg-surface-neutral-surface-lv1 shadow-Dropshadow_SM">
                 <div className="px-12px py-10px">
                   <IoMailOutline size={16} />
                 </div>
 
-                <input
-                  type="email"
-                  value={inputEmail}
-                  placeholder={t('team:INVITE_MEMBERS_MODAL.ENTER_EMAIL')}
-                  onChange={updateInputEmail}
-                  onKeyDown={addEmailToInvite}
-                  className="flex-auto bg-transparent px-12px py-10px text-base font-medium outline-none"
-                />
+                <div className="flex flex-auto flex-wrap items-center justify-start gap-4px px-4px py-8px">
+                  {emailsToInvite.map((email) => {
+                    const removeEmailToInvite = () => {
+                      setEmailsToInvite(emailsToInvite.filter((item) => item !== email));
+                    };
+
+                    return (
+                      <div
+                        key={email}
+                        className="flex items-center gap-1px rounded-xs border border-badge-stroke-secondary p-6px text-badge-text-secondary"
+                      >
+                        <span className="px-4px text-xs font-medium leading-5">{email}</span>
+                        <button type="button" onClick={removeEmailToInvite}>
+                          <IoClose size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                  <input
+                    type="email"
+                    value={inputEmail}
+                    placeholder={
+                      emailsToInvite.length > 0 ? '' : t('team:INVITE_MEMBERS_MODAL.ENTER_EMAIL')
+                    }
+                    onChange={updateInputEmail}
+                    onKeyDown={addEmailToInvite}
+                    className="flex-auto bg-transparent text-base font-medium outline-none"
+                  />
+                </div>
+
+                <button type="button" className="px-12px py-10px" onClick={addEmailToInvite}>
+                  <IoAdd size={16} />
+                </button>
               </div>
 
               <p
@@ -120,35 +154,8 @@ const InviteMembersModal = ({ team, setIsInviteMembersModalOpen }: InviteMembers
               >
                 {t('team:INVITE_MEMBERS_MODAL.PLEASE_ENTER_A_VALID_EMAIL_ADDRESS')}
               </p>
-            </div>
-          </main>
-
-          {emailsToInvite.length > 0 && (
-            <section className="flex flex-auto flex-col gap-8px">
-              <h4 className="font-semibold text-input-text-primary">
-                {t('team:INVITE_MEMBERS_MODAL.SEND_INVITATION_TO_THE_FOLLOWING_EMAIL_ADDRESS')}
-              </h4>
-              <ul className="flex flex-wrap items-center gap-4px">
-                {emailsToInvite.map((email) => {
-                  const removeEmailToInvite = () => {
-                    setEmailsToInvite(emailsToInvite.filter((item) => item !== email));
-                  };
-
-                  return (
-                    <li
-                      key={email}
-                      className="flex items-center gap-1px rounded-xs border border-badge-stroke-secondary p-6px text-badge-text-secondary"
-                    >
-                      <span className="px-4px text-xs font-medium leading-5">{email}</span>
-                      <button type="button" onClick={removeEmailToInvite}>
-                        <IoClose size={14} />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
             </section>
-          )}
+          </main>
 
           <section className="flex justify-end gap-12px">
             <button
