@@ -6,11 +6,6 @@ import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import AddAssetModal from '@/components/asset/add_asset_modal';
-import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
-import {
-  IPreviewInvoiceModal,
-  dummyPreviewInvoiceModalData,
-} from '@/interfaces/preview_invoice_modal';
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
 import { ToastPosition, ToastType } from '@/interfaces/toastify';
@@ -48,10 +43,6 @@ interface IGlobalContext {
   isAddAssetModalVisible: boolean;
   addAssetModalVisibilityHandler: () => void;
   addAssetModalDataHandler: (defaultAssetData: IAssetModal) => void;
-
-  isPreviewInvoiceModalVisible: boolean;
-  previewInvoiceModalVisibilityHandler: () => void;
-  previewInvoiceModalDataHandler: (data: IPreviewInvoiceModal) => void;
 
   isEmbedCodeModalVisible: boolean;
   embedCodeModalVisibilityHandler: () => void;
@@ -130,11 +121,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isAddAssetModalVisible, setIsAddAssetModalVisible] = useState(false);
   const [defaultAssetData, setDefaultAssetData] = useState<IAssetModal>(initialAssetModal);
 
-  const [isPreviewInvoiceModalVisible, setIsPreviewInvoiceModalVisible] = useState(false);
-  const [previewInvoiceModalData, setPreviewInvoiceModalData] = useState<IPreviewInvoiceModal>(
-    dummyPreviewInvoiceModalData
-  );
-
   const [isEmbedCodeModalVisible, setIsEmbedCodeModalVisible] = useState(false);
 
   const [isFilterOptionsModalForHistoryVisible, setIsFilterOptionsModalForHistoryVisible] =
@@ -193,13 +179,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setDefaultAssetData(assetData);
   };
 
-  const previewInvoiceModalVisibilityHandler = () => {
-    setIsPreviewInvoiceModalVisible(!isPreviewInvoiceModalVisible);
-  };
-
-  const previewInvoiceModalDataHandler = (data: IPreviewInvoiceModal) => {
-    setPreviewInvoiceModalData(data);
-  };
   const embedCodeModalVisibilityHandler = () => {
     setIsEmbedCodeModalVisible(!isEmbedCodeModalVisible);
   };
@@ -344,9 +323,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isAddAssetModalVisible,
       addAssetModalVisibilityHandler,
       addAssetModalDataHandler,
-      isPreviewInvoiceModalVisible,
-      previewInvoiceModalVisibilityHandler,
-      previewInvoiceModalDataHandler,
       isEmbedCodeModalVisible,
       embedCodeModalVisibilityHandler,
       isSalaryBookConfirmModalVisible,
@@ -398,9 +374,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isAddAssetModalVisible,
       addAssetModalVisibilityHandler,
       addAssetModalDataHandler,
-      isPreviewInvoiceModalVisible,
-      previewInvoiceModalVisibilityHandler,
-      previewInvoiceModalDataHandler,
       isEmbedCodeModalVisible,
       embedCodeModalVisibilityHandler,
       isSalaryBookConfirmModalVisible,
@@ -477,12 +450,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isAddAssetModalVisible}
         modalVisibilityHandler={addAssetModalVisibilityHandler}
         defaultData={defaultAssetData}
-      />
-
-      <PreviewInvoiceModal
-        isModalVisible={isPreviewInvoiceModalVisible}
-        modalVisibilityHandler={previewInvoiceModalVisibilityHandler}
-        previewInvoiceModalData={previewInvoiceModalData}
       />
 
       <EmbedCodeModal
