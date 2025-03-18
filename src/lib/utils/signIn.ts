@@ -12,6 +12,7 @@ import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { DefaultValue } from '@/constants/default_value';
 import { createDefaultTeamForUser } from '@/lib/utils/repo/team.repo';
+import { handleInviteTeamMember } from '@/lib/utils/repo/user.repo';
 
 export const fetchImageInfo = async (
   imageUrl: string
@@ -93,6 +94,7 @@ export const handleSignInSession = async (
     });
 
     await createDefaultTeamForUser(createdUser.user.id, createdUser.user.name);
+    await handleInviteTeamMember(createdUser.user.id, createdUser.user.email ?? '');
 
     session = await setSession(session, { userId: createdUser.user.id });
 
