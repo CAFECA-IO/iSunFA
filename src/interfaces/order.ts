@@ -37,7 +37,7 @@ export interface IOrderDetail {
 }
 
 export interface IOrder {
-  id: number;
+  id?: number;
   userId: number;
   companyId: number;
   planId: number;

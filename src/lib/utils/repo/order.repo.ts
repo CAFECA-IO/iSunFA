@@ -3,7 +3,6 @@ import { SortOrder } from '@/constants/sort';
 import { IOrder, IOrderDetail } from '@/interfaces/order';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { Plan, Prisma } from '@prisma/client';
-import { InputJsonValue } from '@prisma/client/runtime/library';
 
 export async function listOrder(companyId: number): Promise<IOrder[]> {
   const listedOrder = (await prisma.order.findMany({
@@ -23,23 +22,38 @@ export async function createOrder(
   companyId: number,
   planId: number,
   status: string,
-  detail: IOrderDetail[]
+  detail: IOrderDetail
 ): Promise<IOrder> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  const orderDetail = detail as unknown as InputJsonValue;
-  const newOrder = (await prisma.order.create({
-    data: {
-      userId,
-      companyId,
-      planId,
-      status,
-      detail: orderDetail,
-      createdAt: nowTimestamp,
-      updatedAt: nowTimestamp,
+  const newOrder: IOrder = {
+    userId,
+    companyId,
+    planId,
+    status,
+    detail,
+    createdAt: nowTimestamp,
+    updatedAt: nowTimestamp,
+  };
+  const data: Prisma.OrderCreateInput = {
+    planId: newOrder.planId,
+    status: newOrder.status,
+    detail: newOrder.detail,
+    createdAt: newOrder.createdAt,
+    updatedAt: newOrder.updatedAt,
+    company: {
+      connect: {
+        id: newOrder.companyId,
+      },
     },
-  })) as unknown as IOrder;
-  return newOrder;
+    user: {
+      connect: {
+        id: newOrder.userId,
+      },
+    },
+  } as unknown as Prisma.OrderCreateInput;
+  const createResult = await prisma.order.create({ data });
+  return createResult as unknown as IOrder;
 }
 
 // Info: (20240620 - Jacky) Read
