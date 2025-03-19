@@ -18,6 +18,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 
 type ITaxTypeForFrontend =
   | number
@@ -103,8 +104,22 @@ const AccountingSettingPageBody: React.FC = () => {
       : 'zeroTax'
     : 'taxFree';
 
-  const defaultCurrency =
-    currencyList.find((currency) => currency === initialCurrency) ?? currencyList[0];
+  // Info: (20250319 - Anna) 使用 Accounting Context
+  // const [currentCurrency, setCurrentCurrency] = useState<string>(defaultCurrency);
+  const { currentCurrency, setCurrentCurrency } = useAccountingCtx();
+  const { isCurrencyLoaded } = useAccountingCtx();
+  // eslint-disable-next-line no-console
+  console.log('Current Currency in UI:', currentCurrency);
+
+  // Info: (20250319 - Anna)
+  // const defaultCurrency =
+  //   currencyList.find((currency) => currency === initialCurrency) ?? currencyList[0];
+
+  // Info: (20250319 - Anna) 顯示時，如果 `currentCurrency` 為 null，則使用 `defaultCurrency`
+  // const displayCurrency = currentCurrency || defaultCurrency;
+  const displayCurrency = isCurrencyLoaded
+    ? currentCurrency || '請設定貨幣單位' //  Info: (20250319 - Anna) 若載入完成但為空，顯示「請設定貨幣單位」
+    : '載入中…'; //  Info: (20250319 - Anna) 在載入過程中顯示
 
   // Info: (20241113 - Julian) Form State
   const [currentSalesTax, setCurrentSalesTax] = useState<ITaxTypeForFrontend>(defaultSalesTax);
@@ -113,7 +128,7 @@ const AccountingSettingPageBody: React.FC = () => {
   const [currentTaxPeriod, setCurrentTaxPeriod] = useState<ITaxPeriod>(
     initialTaxPeriod as ITaxPeriod
   );
-  const [currentCurrency, setCurrentCurrency] = useState<string>(defaultCurrency);
+
   const [fiscalPeriod, setFiscalPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [reportGenerateDay, setReportGenerateDay] = useState<number>(10);
 
@@ -174,6 +189,8 @@ const AccountingSettingPageBody: React.FC = () => {
   };
 
   const saveClickHandler = async () => {
+    // eslint-disable-next-line no-console
+    console.log('Save button clicked!'); // Info: (20250319 - Anna)
     const salesTaxRate = typeof currentSalesTax === 'number' ? currentSalesTax : 0;
     const purchaseTaxRate = typeof currentPurchaseTax === 'number' ? currentPurchaseTax : 0;
 
@@ -195,6 +212,8 @@ const AccountingSettingPageBody: React.FC = () => {
       shortcutList: [], // ToDo: (20250109 - Julian) 自訂快捷鍵功能未實作
     };
 
+    // eslint-disable-next-line no-console
+    console.log('Sending update:', body); // Info: (20250319 - Anna) 看請求發送的內容
     updateSetting({ params: { companyId: accountBookId }, body });
     // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
@@ -395,11 +414,16 @@ const AccountingSettingPageBody: React.FC = () => {
     >
       <div className="flex flex-col rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px">
         {currencyList.map((currency) => {
-          const countryClickHandler = () => setCurrentCurrency(currency);
+          // Info: (20250319 - Anna) 讓全局的 `currentCurrency` 變更
+          // const countryClickHandler = () => setCurrentCurrency(currency);
+          const countryClickHandler = (selectedCurrency: string) => {
+            setCurrentCurrency(selectedCurrency);
+          };
           return (
             <div
               key={currency}
-              onClick={countryClickHandler}
+              // onClick={countryClickHandler}
+              onClick={() => countryClickHandler(currency)} // Info: (20250319 - Anna) 傳入 `currency`
               className="flex items-center gap-12px px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-dropdown-surface-item-hover"
             >
               <Image
@@ -525,10 +549,14 @@ const AccountingSettingPageBody: React.FC = () => {
                 width={16}
                 height={16}
                 alt="currency_icon"
-                src={`/currencies/${currentCurrency.toLowerCase()}.svg`}
+                // Info: (20250319 - Anna) 改用 displayCurrency
+                // src={`/currencies/${currentCurrency.toLowerCase()}.svg`}
+                src={`/currencies/${displayCurrency.toLowerCase()}.svg`}
                 className="rounded-full"
               />
-              <div className="flex-1 text-input-text-input-filled">{currentCurrency}</div>
+              {/* Info: (20250319 - Anna) */}
+              {/* <div className="flex-1 text-input-text-input-filled">{currentCurrency}</div> */}
+              <div className="flex-1 text-input-text-input-filled">{displayCurrency}</div>
               <div
                 className={`text-icon-surface-single-color-primary ${currencyMenuVisible ? 'rotate-180' : 'rotate-0'}`}
               >
