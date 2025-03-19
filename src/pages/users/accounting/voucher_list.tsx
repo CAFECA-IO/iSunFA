@@ -5,10 +5,21 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import VoucherListPageBody from '@/components/voucher/voucher_list_page_body';
 import Layout from '@/components/beta/layout/layout';
+import { useUserCtx } from '@/contexts/user_context';
+import { TeamRole } from '@/interfaces/team';
 
 const VoucherListPage: React.FC = () => {
   const { t } = useTranslation('common');
+  const { teamRole } = useUserCtx();
 
+  // Info: (20250319 - Liz) 拒絕團隊角色 viewer 進入此頁面
+  if (teamRole === TeamRole.VIEWER) {
+    return (
+      <div className="flex h-100vh items-center justify-center">
+        <div className="text-2xl">{t('common:PERMISSION_ERROR.PERMISSION_DENIED_MESSAGE')}</div>
+      </div>
+    );
+  }
   return (
     <>
       <Head>

@@ -44,7 +44,7 @@ const AssetList: React.FC<IAssetListProps> = ({
   const { t } = useTranslation('asset');
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
   const {
     trigger: exportAsset,
@@ -146,7 +146,7 @@ const AssetList: React.FC<IAssetListProps> = ({
 
       // Info: (20241127 - Julian) 呼叫 API
       exportAsset({
-        params: { companyId: selectedAccountBook?.id },
+        params: { companyId: connectedAccountBook?.id },
         body: {
           fileType: 'csv',
           filters: {

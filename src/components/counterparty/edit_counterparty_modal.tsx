@@ -41,7 +41,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const [inputName, setInputName] = useState<string>(name || '');
   const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
 
@@ -121,7 +121,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   } = APIHandler(
     APIName.COUNTERPARTY_UPDATE,
     {
-      params: { companyId: selectedAccountBook?.id, counterpartyId },
+      params: { companyId: connectedAccountBook?.id, counterpartyId },
       body: { name: inputName, taxId: inputTaxId, type: inputType, note: inputNote },
     },
     false,
@@ -135,7 +135,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   } = APIHandler(
     APIName.COUNTERPARTY_DELETE,
     {
-      params: { companyId: selectedAccountBook?.id || 0, counterpartyId },
+      params: { companyId: connectedAccountBook?.id || 0, counterpartyId },
     },
     false,
     true
@@ -203,7 +203,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   // }) => {
   //   await APIHandler(APIName.COUNTERPARTY_UPDATE, {
   //     body: counterpartyData,
-  //     params: { companyId: selectedAccountBook?.id || 0 }, // Info: (20241105 - Anna) 如果為 null，使用一個預設值
+  //     params: { companyId: connectedAccountBook?.id || 0 }, // Info: (20241105 - Anna) 如果為 null，使用一個預設值
   //   });
   // };
 

@@ -14,7 +14,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 const CounterpartyPageBody = () => {
   const { t } = useTranslation(['search', 'common', 'settings']);
 
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { addCounterPartyModalVisibilityHandler, addCounterPartyModalDataHandler } =
     useModalContext();
 
@@ -33,13 +33,13 @@ const CounterpartyPageBody = () => {
     APIName.COUNTERPARTY_LIST
   );
   const fetchCounterpartyData = async () => {
-    if (!selectedAccountBook?.id) {
+    if (!connectedAccountBook?.id) {
       return;
     }
 
     try {
       const response = await getCounterpartyList({
-        params: { companyId: selectedAccountBook.id },
+        params: { companyId: connectedAccountBook.id },
         query: queryCondition,
       });
       const { success, data: responseData } = response;
@@ -65,7 +65,7 @@ const CounterpartyPageBody = () => {
   // Info: (20241112 - Anna) 呼叫 API 並儲存回傳資料到狀態
   useEffect(() => {
     fetchCounterpartyData();
-  }, [selectedAccountBook]);
+  }, [connectedAccountBook]);
 
   const handleSave = async () => {
     setSearchQuery(''); // Info: (20241113 - Anna) 清空搜尋條件

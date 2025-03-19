@@ -212,8 +212,8 @@ const LineChart = ({ data }: LineChartProps) => {
 const IncomeExpenseTrendChart = () => {
   const { t } = useTranslation(['alpha', 'project']);
   const { toastHandler } = useModalContext();
-  const { isAuthLoading, selectedAccountBook } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
+  const { isAuthLoading, connectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
   const originalDataRef = React.useRef(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA);
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.MONTH);
   const [data, setData] = React.useState(originalDataRef.current[selectedPeriod]);
@@ -228,7 +228,7 @@ const IncomeExpenseTrendChart = () => {
     APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD,
     {
       params: {
-        companyId: selectedAccountBook?.id,
+        companyId: connectedAccountBook?.id,
       },
       query: {
         period: selectedPeriod,
@@ -245,7 +245,7 @@ const IncomeExpenseTrendChart = () => {
     setSelectedPeriod(period);
     getProfitMarginTrendInPeriod({
       params: {
-        companyId: selectedAccountBook?.id,
+        companyId: connectedAccountBook?.id,
       },
       query: {
         period,

@@ -31,10 +31,10 @@ interface IVoucherDetailPageBodyProps {
 const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherId, voucherNo }) => {
   const { t } = useTranslation(['common', 'journal']);
   const router = useRouter();
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { refreshVoucherListHandler } = useAccountingCtx();
 
-  const companyId = selectedAccountBook?.id;
+  const companyId = connectedAccountBook?.id;
 
   const params = { companyId, voucherId };
 

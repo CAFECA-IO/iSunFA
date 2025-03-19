@@ -16,6 +16,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
+import { ITeam } from '@/interfaces/team';
 
 interface UserContextType {
   credential: string | null;
@@ -46,7 +47,9 @@ interface UserContextType {
     isPrivate: boolean;
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
-  selectedAccountBook: IAccountBook | null;
+  connectedAccountBook: IAccountBook | null;
+  team: ITeam | null;
+  teamRole: string | null;
   connectAccountBook: (companyId: number) => Promise<{ success: boolean }>;
   updateAccountBook: ({
     companyId,
@@ -100,7 +103,9 @@ export const UserContext = createContext<UserContextType>({
   switchRole: () => {},
   createAccountBook: async () => ({ success: false, code: '', errorMsg: '' }),
 
-  selectedAccountBook: null,
+  connectedAccountBook: null,
+  team: null,
+  teamRole: null,
   connectAccountBook: async () => ({ success: false }),
   updateAccountBook: async () => null,
   deleteAccountBook: async () => null,
@@ -130,7 +135,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
 
   const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
-  const [, setSelectedAccountBook, selectedAccountBookRef] = useStateRef<IAccountBook | null>(null);
+  const [, setConnectedAccountBook, connectedAccountBookRef] = useStateRef<IAccountBook | null>(
+    null
+  );
+  const [, setTeam, teamRef] = useStateRef<ITeam | null>(null);
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
@@ -145,6 +153,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     user: IUser;
     company: IAccountBook;
     role: IRole;
+    team: ITeam;
   }>(APIName.STATUS_INFO_GET);
   // Info: (20241108 - Liz) 取得系統角色列表 API
   const { trigger: systemRoleListAPI } = APIHandler<IRole[]>(APIName.ROLE_LIST);
@@ -180,7 +189,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignIn(false);
     setIsSignInError(false);
     setSelectedRole(null);
-    setSelectedAccountBook(null);
+    setConnectedAccountBook(null);
+    setTeam(null);
     clearAllItems(); // Info: (20240822 - Shirley) 清空 IndexedDB 中的數據
   };
 
@@ -240,7 +250,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241209 - Liz) 切換角色的功能
   const switchRole = () => {
     setSelectedRole(null);
-    setSelectedAccountBook(null);
+    setConnectedAccountBook(null);
+    setTeam(null);
     goToSelectRolePage();
   };
 
@@ -315,15 +326,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // ===============================================================================
 
   // Info: (20241001 - Liz) 此函數處理公司資訊:
-  // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedAccountBook)，最後回傳公司資訊。
+  // 如果公司資料存在且不為空，它會設定選定的公司 (setConnectedAccountBook)，最後回傳公司資訊。
   // 如果公司資料不存在，會將公司資訊設為 null，並回傳 null。
-  const processCompanyInfo = (company: IAccountBook) => {
+  const processAccountBookInfo = (company: IAccountBook) => {
     if (!company || Object.keys(company).length === 0) {
-      setSelectedAccountBook(null);
+      setConnectedAccountBook(null);
       return null;
     }
-    setSelectedAccountBook(company);
+    setConnectedAccountBook(company);
     return company;
+  };
+
+  // Info: (20250319 - Liz) 此函數處理團隊資訊: (團隊是指連結帳本所屬的團隊)
+  const processTeamInfo = (teamData: ITeam) => {
+    if (!teamData || Object.keys(teamData).length === 0) {
+      setTeam(null);
+      return;
+    }
+    setTeam(teamData);
   };
 
   // Info: (20241101 - Liz) 此函數處理角色資訊:
@@ -353,12 +373,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241009 - Liz) 此函數是在處理 getStatusInfo 獲得的資料，包含使用者、公司、角色，並根據處理結果來決定下一步的操作:
-  // 它會呼叫 processUserInfo, processCompanyInfo, 和 processRoleInfo 分別處理使用者、公司、角色資訊。
+  // 它會呼叫 processUserInfo, processAccountBookInfo, 和 processRoleInfo 分別處理使用者、公司、角色資訊。
   // 依據處理結果，它會執行不同的自動導向邏輯。
-  const handleProcessData = (statusInfo: { user: IUser; company: IAccountBook; role: IRole }) => {
+  const handleProcessData = (statusInfo: {
+    user: IUser;
+    company: IAccountBook;
+    role: IRole;
+    team: ITeam;
+  }) => {
     const processedUser = processUserInfo(statusInfo.user);
     const processedRole = processRoleInfo(statusInfo.role);
-    const processedCompany = processCompanyInfo(statusInfo.company);
+    const processedAccountBook = processAccountBookInfo(statusInfo.company);
+    processTeamInfo(statusInfo.team);
 
     if (!processedUser) {
       clearStates();
@@ -371,22 +397,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const hasAgreedToTermsOfService = processedUser.agreementList.includes(
       Hash.HASH_FOR_TERMS_OF_SERVICE
     );
-    // const hasAgreedToPrivacyPolicy = processedUser.agreementList.includes(
-    //   Hash.HASH_FOR_PRIVACY_POLICY
-    // );
 
     setIsAgreeTermsOfService(hasAgreedToTermsOfService);
-    // setIsAgreePrivacyPolicy(hasAgreedToPrivacyPolicy);
-    // const hasAgreedToAll = hasAgreedToTermsOfService && hasAgreedToPrivacyPolicy;
 
     if (!hasAgreedToTermsOfService) return;
-
     if (!processedRole) {
       goToSelectRolePage();
       return;
     }
-
-    if (!processedCompany) {
+    if (!processedAccountBook) {
       goToDashboard();
       return;
     }
@@ -633,7 +652,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (!success) return { success: false };
-      setSelectedAccountBook(connectedAccountBook);
+      setConnectedAccountBook(connectedAccountBook);
       return { success: true };
     } catch (error) {
       return { success: false };
@@ -673,7 +692,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (success && company) {
-        setSelectedAccountBook(null);
+        setConnectedAccountBook(null);
         return company;
       }
       return null;
@@ -810,7 +829,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       deleteAccountBook,
       deleteAccount,
       cancelDeleteAccount,
-      selectedAccountBook: selectedAccountBookRef.current,
+      connectedAccountBook: connectedAccountBookRef.current,
+      team: teamRef.current,
+      teamRole: teamRef.current?.role ?? null,
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
@@ -822,7 +843,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     [
       credentialRef.current,
       selectedRoleRef.current,
-      selectedAccountBookRef.current,
+      teamRef.current,
+      connectedAccountBookRef.current,
       errorCodeRef.current,
       isSignInErrorRef.current,
       isAuthLoadingRef.current,

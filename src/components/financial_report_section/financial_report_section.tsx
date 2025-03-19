@@ -34,7 +34,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
   const router = useRouter();
   const { t } = useTranslation(['reports']);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const {
     trigger: generateFinancialReport,
     // Info: (20240516 - Shirley) data: generatedResult,
@@ -117,10 +117,10 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       reportType: ReportType.FINANCIAL,
     };
 
-    if (selectedAccountBook) {
+    if (connectedAccountBook) {
       generateFinancialReport({
         params: {
-          companyId: selectedAccountBook.id,
+          companyId: connectedAccountBook.id,
         },
         body,
       });

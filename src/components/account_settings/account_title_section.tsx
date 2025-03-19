@@ -99,10 +99,10 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
   setIsRecallApi,
 }) => {
   const { t } = useTranslation('common');
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
-  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const {
     trigger: deleteAccount,

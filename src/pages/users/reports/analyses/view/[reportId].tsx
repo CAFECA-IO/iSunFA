@@ -40,8 +40,8 @@ const ViewAnalysisReportPage = ({
 }: IServerSideProps) => {
   const { t } = useTranslation('common');
   const { toastHandler } = useModalContext();
-  const { selectedAccountBook, isAuthLoading } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
+  const { connectedAccountBook, isAuthLoading } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
   const [reportData, setReportData] = React.useState<IReportOld>({
     reportTypesName: AnalysisReportTypesMap[reportType],
     tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
@@ -62,7 +62,7 @@ const ViewAnalysisReportPage = ({
     APIName.REPORT_GET_BY_ID,
     {
       params: {
-        params: { companyId: selectedAccountBook?.id, reportId: '1' },
+        params: { companyId: connectedAccountBook?.id, reportId: '1' },
       },
       query: { reportType, reportLanguage, startTimestamp, endTimestamp },
     },

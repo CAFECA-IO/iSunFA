@@ -20,7 +20,7 @@ interface IExportVoucherModal {
 const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportVoucherModal) => {
   const { t } = useTranslation('common');
   const { toastHandler } = useModalContext();
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
   const [selectedPeriod, setSelectedPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [fromNumber, setFromNumber] = useState<string>('');
@@ -98,7 +98,7 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
 
   const exportBtnClickHandler = async () => {
     exportVoucher({
-      params: { companyId: selectedAccountBook?.id },
+      params: { companyId: connectedAccountBook?.id },
       body: {
         fileType: 'csv',
         filters: {

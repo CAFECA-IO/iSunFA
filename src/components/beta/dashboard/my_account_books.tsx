@@ -26,7 +26,7 @@ const MyAccountBooks = () => {
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
 
   // Info: (20241126 - Liz) 連結帳本 API (原為公司)
-  const { connectAccountBook, selectedAccountBook } = useUserCtx();
+  const { connectAccountBook, connectedAccountBook } = useUserCtx();
 
   const closeMessageModal = () => {
     setAccountBookToSelect(undefined);
@@ -101,9 +101,9 @@ const MyAccountBooks = () => {
 
       if (success && data && accountBookListData.length > 0) {
         // Info: (20241216 - Liz) 已被選擇的帳本顯示在第一個(原為公司)
-        if (selectedAccountBook) {
+        if (connectedAccountBook) {
           const selectedAccountBookIndex = accountBookListData.findIndex(
-            (item) => item.company.id === selectedAccountBook.id
+            (item) => item.company.id === connectedAccountBook.id
           );
 
           if (selectedAccountBookIndex > -1) {
@@ -124,7 +124,7 @@ const MyAccountBooks = () => {
       // eslint-disable-next-line no-console
       console.error('取得使用者擁有的帳本清單 error:', error);
     }
-  }, [selectedAccountBook, userAuth]);
+  }, [connectedAccountBook, userAuth]);
 
   useEffect(() => {
     getAccountBookList();
