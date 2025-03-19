@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 
@@ -42,7 +42,7 @@ const FAQS: IFaq[] = [
   },
 ];
 
-const SubscriptionFaq: React.FC = () => {
+const SubscriptionFaq = () => {
   const { t } = useTranslation(['subscriptions']);
   const [isOpen, setIsOpen] = useState<number>();
   const openFaq = (id: number) => setIsOpen(id);
