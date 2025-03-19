@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { useState } from 'react';
-import { IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { IoChevronDown } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 
 interface IFaq {
@@ -69,12 +69,14 @@ const SubscriptionFaq = () => {
               />
 
               <h3
-                className={`flex-auto text-2xl font-semibold ${isOpen === faq.id ? 'text-accordion-surface-background-text-title-active' : 'text-accordion-surface-background-text-title'}`}
+                className={`flex-auto text-2xl font-semibold ${isOpen === faq.id ? 'text-accordion-surface-background-text-title-active' : 'text-accordion-surface-background-text-title'} transition-all duration-300 ease-in-out`}
               >
                 {t(`subscriptions:SUBSCRIPTION_FAQ.${faq.question}`)}
               </h3>
 
-              {isOpen === faq.id ? <IoChevronUp /> : <IoChevronDown />}
+              <IoChevronDown
+                className={`${isOpen === faq.id ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
+              />
             </div>
 
             <div
