@@ -276,8 +276,7 @@ const SubMenuOption = ({
   const { connectedAccountBook } = useUserCtx();
   const noSelectedCompany = !connectedAccountBook;
   const [isEmbedCodeModalOpen, setIsEmbedCodeModalOpen] = useState<boolean>(false);
-  // const { teamRole } = useUserCtx(); // ToDo: (20250319 - Liz)
-  const teamRole = TeamRole.VIEWER; // Deprecated: (20250319 - Liz) 暫時先設定 VIEWER 角色
+  const { teamRole } = useUserCtx();
 
   const toggleEmbedCodeModal = () => {
     setIsEmbedCodeModalOpen((prev) => !prev);
@@ -378,8 +377,7 @@ interface SubMenuSectionProps {
 }
 
 const SubMenuSection = ({ subMenuSection, toggleOverlay }: SubMenuSectionProps) => {
-  // const { teamRole } = useUserCtx(); // ToDo: (20250319 - Liz)
-  const teamRole = TeamRole.VIEWER; // Deprecated: (20250319 - Liz) 暫時先設定 VIEWER 角色
+  const { teamRole } = useUserCtx();
 
   const { t } = useTranslation(['layout']);
 
@@ -477,8 +475,7 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
   const { t } = useTranslation(['layout']);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(true);
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
-  // const { teamRole } = useUserCtx(); // ToDo: (20250319 - Liz)
-  const teamRole = TeamRole.VIEWER; // Deprecated: (20250319 - Liz) 暫時先設定 VIEWER 角色
+  const { teamRole } = useUserCtx();
 
   const toggleSideMenu = () => {
     setIsSideMenuOpen((prev) => !prev);

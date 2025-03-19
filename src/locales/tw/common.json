@@ -65,5 +65,8 @@
     "TWD": "新臺幣",
     "EUR": "歐元",
     "USD": "美元"
+  },
+  "PERMISSION_ERROR": {
+    "PERMISSION_DENIED_MESSAGE": "您沒有權限進入此頁面"
   }
 }
