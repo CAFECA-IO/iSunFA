@@ -12,6 +12,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
 import packageJson from '@package';
+import { TeamRole } from '@/interfaces/team';
 
 interface IDefaultMenuOption {
   title: string;
@@ -20,6 +21,7 @@ interface IDefaultMenuOption {
   iconWidth: number;
   iconHeight: number;
   disabled?: boolean;
+  hiddenForRole?: TeamRole;
 }
 
 interface IMenuOptionWithLink extends IDefaultMenuOption {
@@ -29,13 +31,14 @@ interface IMenuOptionWithLink extends IDefaultMenuOption {
 
 interface IMenuOptionWithSubMenu extends IDefaultMenuOption {
   link?: undefined;
-  subMenu: ISubMenuSubMenuSection[];
+  subMenu: ISubMenuSection[];
 }
 
 type TMenuOption = IMenuOptionWithLink | IMenuOptionWithSubMenu;
 
-interface ISubMenuSubMenuSection {
+interface ISubMenuSection {
   caption: string;
+  hiddenForRole?: TeamRole;
   subMenu: (ISubMenuOptionWithLink | ISubMenuOptionWithButton)[];
 }
 
@@ -43,6 +46,7 @@ interface IDefaultSubMenuOption {
   title: string;
   disabled?: boolean;
   needToVerifyAccountBook: boolean;
+  hiddenForRole?: TeamRole;
 }
 
 enum SubMenuOptionType {
@@ -69,6 +73,7 @@ const MENU_CONFIG: TMenuOption[] = [
     subMenu: [
       {
         caption: 'ACCOUNTING',
+        hiddenForRole: TeamRole.VIEWER,
         subMenu: [
           {
             type: SubMenuOptionType.LINK,
@@ -109,6 +114,7 @@ const MENU_CONFIG: TMenuOption[] = [
     iconSrcAlt: 'asset_management_icon',
     iconWidth: 24,
     iconHeight: 24,
+    hiddenForRole: TeamRole.VIEWER,
     subMenu: [
       {
         caption: 'ASSET',
@@ -138,6 +144,7 @@ const MENU_CONFIG: TMenuOption[] = [
     iconSrcAlt: 'reports_icon',
     iconWidth: 20.58,
     iconHeight: 23.85,
+    hiddenForRole: TeamRole.VIEWER,
     subMenu: [
       {
         caption: 'FINANCIAL_REPORT',
@@ -228,6 +235,7 @@ const MENU_CONFIG: TMenuOption[] = [
             title: 'ACCOUNTING_SETTINGS',
             link: ISUNFA_ROUTE.ACCOUNTING_SETTINGS,
             needToVerifyAccountBook: true,
+            hiddenForRole: TeamRole.VIEWER,
           },
           {
             type: SubMenuOptionType.LINK,
@@ -260,6 +268,7 @@ const SubMenuOption = ({
   link,
   disabled,
   needToVerifyAccountBook,
+  hiddenForRole,
   toggleOverlay = () => {},
 }: SubMenuOptionProps) => {
   const { t } = useTranslation(['layout']);
@@ -267,6 +276,8 @@ const SubMenuOption = ({
   const { connectedAccountBook } = useUserCtx();
   const noSelectedCompany = !connectedAccountBook;
   const [isEmbedCodeModalOpen, setIsEmbedCodeModalOpen] = useState<boolean>(false);
+  // const { teamRole } = useUserCtx(); // ToDo: (20250319 - Liz)
+  const teamRole = TeamRole.VIEWER; // Deprecated: (20250319 - Liz) 暫時先設定 VIEWER 角色
 
   const toggleEmbedCodeModal = () => {
     setIsEmbedCodeModalOpen((prev) => !prev);
@@ -322,6 +333,9 @@ const SubMenuOption = ({
     }
   };
 
+  // Info: (20250319 - Liz) 如果 hiddenForRole 符合使用者的角色，則不顯示該 subMenuOption
+  if (hiddenForRole && hiddenForRole === teamRole) return null;
+
   if (type === SubMenuOptionType.LINK) {
     return (
       <Link
@@ -359,20 +373,27 @@ const SubMenuOption = ({
 };
 
 interface SubMenuSectionProps {
-  subMenu: ISubMenuSubMenuSection;
+  subMenuSection: ISubMenuSection;
   toggleOverlay: () => void;
 }
 
-const SubMenuSection = ({ subMenu, toggleOverlay }: SubMenuSectionProps) => {
+const SubMenuSection = ({ subMenuSection, toggleOverlay }: SubMenuSectionProps) => {
+  // const { teamRole } = useUserCtx(); // ToDo: (20250319 - Liz)
+  const teamRole = TeamRole.VIEWER; // Deprecated: (20250319 - Liz) 暫時先設定 VIEWER 角色
+
   const { t } = useTranslation(['layout']);
+
+  // Info: (20250319 - Liz) 如果 subMenu 中的 hiddenForRole 符合使用者的角色，則不顯示該 subMenuSection
+  if (subMenuSection.hiddenForRole && subMenuSection.hiddenForRole === teamRole) return null;
+
   return (
     <>
       <h4 className="text-xs font-semibold uppercase tracking-widest text-text-brand-primary-lv1">
-        {t(`layout:SIDE_MENU.${subMenu.caption}`)}
+        {t(`layout:SIDE_MENU.${subMenuSection.caption}`)}
       </h4>
 
-      {subMenu.subMenu.map((item) => (
-        <SubMenuOption key={item.title} {...item} toggleOverlay={toggleOverlay} />
+      {subMenuSection.subMenu.map((option) => (
+        <SubMenuOption key={option.title} {...option} toggleOverlay={toggleOverlay} />
       ))}
     </>
   );
@@ -392,7 +413,7 @@ const SubMenu = ({ selectedMenuOption, toggleOverlay }: SubMenuProps) => {
     <div className="absolute left-full top-0 z-20 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent">
       <div className="flex flex-col gap-24px">
         {subMenu.map((item) => (
-          <SubMenuSection key={item.caption} subMenu={item} toggleOverlay={toggleOverlay} />
+          <SubMenuSection key={item.caption} subMenuSection={item} toggleOverlay={toggleOverlay} />
         ))}
       </div>
     </div>
@@ -456,6 +477,8 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
   const { t } = useTranslation(['layout']);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(true);
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
+  // const { teamRole } = useUserCtx(); // ToDo: (20250319 - Liz)
+  const teamRole = TeamRole.VIEWER; // Deprecated: (20250319 - Liz) 暫時先設定 VIEWER 角色
 
   const toggleSideMenu = () => {
     setIsSideMenuOpen((prev) => !prev);
@@ -500,9 +523,13 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
 
           {/* // Info: (20241121 - Liz) Side Menu Content */}
           <div className="flex flex-auto flex-col gap-24px">
-            {MENU_CONFIG.map((menu) => (
-              <MenuOption key={menu.title} {...menu} onClickMenuOption={onClickMenuOption} />
-            ))}
+            {MENU_CONFIG.map((menu) => {
+              // Info: (20250319 - Liz) 如果 hiddenForRole 符合使用者的角色，則不顯示該 menuOption
+              if (menu.hiddenForRole && menu.hiddenForRole === teamRole) return null;
+              return (
+                <MenuOption key={menu.title} {...menu} onClickMenuOption={onClickMenuOption} />
+              );
+            })}
           </div>
 
           {isSubMenuOpen && (
