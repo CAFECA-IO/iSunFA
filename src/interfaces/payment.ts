@@ -57,7 +57,7 @@ export interface IPaymentInfo {
   userId: number;
   token: string;
   default: boolean;
-  info: IPaymentMethod;
+  detail: IPaymentMethod;
   transactionId: string;
   createdAt: number;
   updatedAt: number;

@@ -110,7 +110,7 @@ class OenPaymentGateway implements IPaymentGateway {
       userId: Number(customId),
       transactionId,
       default: true,
-      info: paymentMethod,
+      detail: paymentMethod,
       createdAt: nowInSecond,
       updatedAt: nowInSecond,
     };

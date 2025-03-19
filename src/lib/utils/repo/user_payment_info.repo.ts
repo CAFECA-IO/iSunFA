@@ -110,7 +110,7 @@ export const getDefaultUserPaymentInfo: (userId: number) => Promise<IPaymentInfo
     token: result?.token,
     transactionId: result?.transactionId,
     default: result?.default,
-    info: paymentMethod,
+    detail: paymentMethod,
     createdAt: result?.createdAt,
     updatedAt: result?.updatedAt,
   };
@@ -122,12 +122,12 @@ export const createDefaultUserPaymentInfo: (
 ) => Promise<IPaymentInfo> = async (userPaymentInfo: IPaymentInfo) => {
   const nowInSecond = getTimestampNow();
   const { userId } = userPaymentInfo;
-  const { info } = userPaymentInfo;
+  const { detail } = userPaymentInfo;
   const paymentMethod: IPaymentMethod = {
-    type: info.type || PAYMENT_METHOD_TYPE.OTHER,
-    number: info.number || DefaultValue.PAYMENT_METHOD_NUMBER,
-    expirationDate: info.expirationDate || DefaultValue.PAYMENT_METHOD_EXPIRATION_DATE,
-    cvv: info.cvv || DefaultValue.PAYMENT_METHOD_CVV,
+    type: detail.type || PAYMENT_METHOD_TYPE.OTHER,
+    number: detail.number || DefaultValue.PAYMENT_METHOD_NUMBER,
+    expirationDate: detail.expirationDate || DefaultValue.PAYMENT_METHOD_EXPIRATION_DATE,
+    cvv: detail.cvv || DefaultValue.PAYMENT_METHOD_CVV,
   };
   // Info: (20250319 - Luphia) **check the data format carefully**
   const newPaymentInfo: IPaymentInfo = {
@@ -135,7 +135,7 @@ export const createDefaultUserPaymentInfo: (
     token: userPaymentInfo.token,
     transactionId: userPaymentInfo.transactionId,
     default: true,
-    info: paymentMethod,
+    detail: paymentMethod,
     createdAt: userPaymentInfo.createdAt || nowInSecond,
     updatedAt: nowInSecond,
   };
