@@ -38,8 +38,8 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const { counterparty, onSelect, flagOfSubmit, className, onTriggerSave } = props;
     const { t } = useTranslation(['certificate', 'common']);
 
-    const { selectedAccountBook } = useUserCtx();
-    const companyId = selectedAccountBook?.id;
+    const { connectedAccountBook } = useUserCtx();
+    const companyId = connectedAccountBook?.id;
 
     const { trigger: getCounterpartyList } = APIHandler<IPaginatedData<ICounterparty[]>>(
       APIName.COUNTERPARTY_LIST

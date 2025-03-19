@@ -28,9 +28,9 @@ const AccountBookItem = ({
   setAccountBookToChangePrivacy,
 }: AccountBookItemProps) => {
   const { t } = useTranslation(['account_book']);
-  const { connectAccountBook, selectedAccountBook } = useUserCtx();
+  const { connectAccountBook, connectedAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
-  const isAccountBookConnected = accountBook.company.id === selectedAccountBook?.id;
+  const isAccountBookConnected = accountBook.company.id === connectedAccountBook?.id;
 
   const {
     targetRef: optionsDropdownRef,

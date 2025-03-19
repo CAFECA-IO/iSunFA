@@ -15,8 +15,8 @@ const DashboardOverview = () => {
     {} as IProfitInsight
   );
   const { toastHandler } = useModalContext();
-  const { isAuthLoading, selectedAccountBook } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
+  const { isAuthLoading, connectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
   const {
     data: profitInsight,
     success: getSuccess,
@@ -26,7 +26,7 @@ const DashboardOverview = () => {
     APIName.PROFIT_GET_INSIGHT,
     {
       params: {
-        companyId: selectedAccountBook?.id,
+        companyId: connectedAccountBook?.id,
       },
     },
     hasCompanyId

@@ -42,7 +42,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   hideReversalsToggleHandler,
 }) => {
   const { t } = useTranslation('common');
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { refreshVoucherListHandler } = useAccountingCtx();
@@ -136,7 +136,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     if (!isRestoring) {
       stashedVoucherList.forEach((voucher) => {
         restoreVoucher({
-          params: { companyId: selectedAccountBook?.id, voucherId: voucher.id },
+          params: { companyId: connectedAccountBook?.id, voucherId: voucher.id },
         });
       });
     }
@@ -148,7 +148,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     if (!isDeleting) {
       selectedVoucherList.forEach((voucher) => {
         deleteVoucher({
-          params: { companyId: selectedAccountBook?.id, voucherId: voucher.id },
+          params: { companyId: connectedAccountBook?.id, voucherId: voucher.id },
         });
       });
 

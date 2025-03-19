@@ -15,11 +15,11 @@ import { useRouter } from 'next/router';
 const VoucherEditingPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
   const { t } = useTranslation('common');
 
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const router = useRouter();
   const [voucherNo, setVoucherNo] = useState<string | undefined>();
 
-  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   // Info: (20241118 - Julian) 取得 Voucher 資料
   const { trigger: getVoucherData, data: voucherData } = APIHandler<IVoucherDetailForFrontend>(

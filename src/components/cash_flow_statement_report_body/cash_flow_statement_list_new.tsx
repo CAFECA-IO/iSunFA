@@ -35,8 +35,8 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   const { t, i18n } = useTranslation('reports'); // Info: (20250108 - Anna) 使用 i18n 來獲取當前語言
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
-  const { isAuthLoading, selectedAccountBook } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
+  const { isAuthLoading, connectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
   // Info: (20241024 - Anna) 用 useRef 追蹤之前的日期範圍
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false); // Info: (20241024 - Anna) 追蹤是否已經成功請求過一次 API
@@ -96,7 +96,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     try {
       const response = await trigger({
         params: {
-          companyId: selectedAccountBook?.id,
+          companyId: connectedAccountBook?.id,
         },
         query: {
           startDate: selectedDateRange.startTimeStamp, // Info: (20241001 - Anna) 根據選擇的日期範圍傳遞參數
@@ -113,7 +113,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     } catch (error) {
       (() => {})(); // Info: (20241024 - Anna) Empty function, does nothing
     }
-  }, [hasCompanyId, selectedAccountBook?.id, selectedDateRange, trigger]);
+  }, [hasCompanyId, connectedAccountBook?.id, selectedDateRange, trigger]);
 
   // Info: (20241024 - Anna) 在 useEffect 中依賴 getCashFlowReport，當日期範圍變更時觸發 API 請求
   useEffect(() => {

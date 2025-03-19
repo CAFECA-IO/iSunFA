@@ -22,7 +22,7 @@ import { ToastType } from '@/interfaces/toastify';
 
 const VoucherListPageBody: React.FC = () => {
   const { t } = useTranslation('common');
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
   const { flagOfRefreshVoucherList } = useAccountingCtx();
 
@@ -82,7 +82,7 @@ const VoucherListPageBody: React.FC = () => {
       .filter((key) => key !== EventType.OPENING), // Info: (20250124 - Julian) 不顯示開帳
   ];
 
-  const params = { companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID };
+  const params = { companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID };
 
   const handleApiResponse = useCallback(
     (data: IPaginatedData<IVoucherBeta[]>) => {

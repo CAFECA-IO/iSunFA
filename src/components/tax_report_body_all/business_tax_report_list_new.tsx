@@ -27,7 +27,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 }) => {
   const { t } = useTranslation(['reports']);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
-  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const { isAuthLoading, connectedAccountBook } = useUserCtx();
 
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241204 - Anna) 定義需要列印內容的 ref
 
@@ -75,7 +75,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
   // Info: (20241204 - Anna) 新增 handleGenerateReport 方法 generate report
   const handleGenerateReport = async () => {
-    if (!selectedDateRange || !selectedAccountBook?.id) return;
+    if (!selectedDateRange || !connectedAccountBook?.id) return;
 
     const { startTimeStamp, endTimeStamp } = selectedDateRange;
 
@@ -86,7 +86,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
     try {
       const response = await generateFinancialReport({
-        params: { companyId: selectedAccountBook.id },
+        params: { companyId: connectedAccountBook.id },
         body: {
           type: FinancialReportTypesKey.report_401,
           reportLanguage: selectedReportLanguage,
@@ -123,7 +123,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
         success: getFRSuccess,
       } = await getFinancialReportAPI({
         params: {
-          companyId: selectedAccountBook?.id,
+          companyId: connectedAccountBook?.id,
           reportId: reportId ?? NON_EXISTING_REPORT_ID,
         },
       });
@@ -156,16 +156,16 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
   // Info: (20241204 - Anna)  監聽 reportId，觸發報告加載 get report by id
   useEffect(() => {
-    if (isAuthLoading || !selectedAccountBook || !reportId || isLoading) return;
+    if (isAuthLoading || !connectedAccountBook || !reportId || isLoading) return;
     if (isReportGenerated && !isLoading && reportId) {
       setIsLoading(true);
     }
     getFinancialReport();
-  }, [isAuthLoading, selectedAccountBook, reportId]);
+  }, [isAuthLoading, connectedAccountBook, reportId]);
 
   // Deprecated: (20241204 - Anna) 在 useEffect 中監聽 selectedDateRange
   useEffect(() => {
-    if (!selectedDateRange || !selectedAccountBook?.id) return;
+    if (!selectedDateRange || !connectedAccountBook?.id) return;
 
     const { startTimeStamp, endTimeStamp } = selectedDateRange;
 
@@ -185,7 +185,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     };
 
     generateReport();
-  }, [selectedDateRange, selectedAccountBook?.id]);
+  }, [selectedDateRange, connectedAccountBook?.id]);
 
   // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger('financialReport in reportId', financialReport)
 

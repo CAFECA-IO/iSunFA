@@ -25,7 +25,7 @@ const LedgerPageBody = () => {
   const router = useRouter();
 
   const { t } = useTranslation(['journal', 'date_picker', 'filter_section_type', 'reports']);
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
   const [selectedReportType, setSelectedReportType] = useState<ReportType>(ReportType.All);
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
@@ -76,7 +76,7 @@ const LedgerPageBody = () => {
 
   useEffect(() => {
     if (
-      selectedAccountBook?.id &&
+      connectedAccountBook?.id &&
       selectedDateRange.startTimeStamp &&
       selectedDateRange.endTimeStamp &&
       selectedReportType
@@ -89,7 +89,7 @@ const LedgerPageBody = () => {
         labelType: selectedReportType.toLowerCase(), // Info: (20241118 - Anna) 確保傳遞的是小寫的值
       };
 
-      const params = { companyId: selectedAccountBook.id };
+      const params = { companyId: connectedAccountBook.id };
 
       // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
@@ -103,7 +103,7 @@ const LedgerPageBody = () => {
         const endAccountNo = selectedEndAccountNo.split(' ')[0]; // Info: (20241117 - Liz) 取出科目編號
 
         const { data } = await fetchLedgerDataAPI({
-          params: { companyId: selectedAccountBook.id },
+          params: { companyId: connectedAccountBook.id },
           query: {
             startDate: selectedDateRange.startTimeStamp,
             endDate: selectedDateRange.endTimeStamp,
@@ -122,7 +122,7 @@ const LedgerPageBody = () => {
       fetchLedgerData();
     }
   }, [
-    selectedAccountBook,
+    connectedAccountBook,
     selectedDateRange,
     selectedReportType,
     selectedStartAccountNo,
@@ -148,11 +148,11 @@ const LedgerPageBody = () => {
 
   // Info: (20241117 - Liz) 取得會計科目列表
   useEffect(() => {
-    if (!selectedAccountBook) return;
+    if (!connectedAccountBook) return;
 
     const getAccountList = async () => {
       const { data: accountTitleList } = await getAccountListAPI({
-        params: { companyId: selectedAccountBook.id },
+        params: { companyId: connectedAccountBook.id },
         query: {
           limit: 0, // Info: (20250312 - Anna) 取所有數據
           forUser: true,
@@ -209,7 +209,7 @@ const LedgerPageBody = () => {
     };
 
     getAccountList();
-  }, [selectedAccountBook]);
+  }, [connectedAccountBook]);
 
   const handleReportTypeChange = (type: ReportType) => {
     setSelectedReportType(type);

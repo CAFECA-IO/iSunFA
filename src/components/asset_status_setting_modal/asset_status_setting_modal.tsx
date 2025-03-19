@@ -29,7 +29,7 @@ const AssetStatusSettingModal: React.FC<IAssetStatusSettingModal> = ({
   defaultStatus,
 }) => {
   const { t } = useTranslation('common');
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const {
@@ -39,7 +39,7 @@ const AssetStatusSettingModal: React.FC<IAssetStatusSettingModal> = ({
     error: updateError,
   } = APIHandler<IAssetDetails>(APIName.UPDATE_ASSET_V2, {
     params: {
-      companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
+      companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
       assetId: updateAssetId,
     },
   });

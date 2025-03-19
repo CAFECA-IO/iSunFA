@@ -134,7 +134,7 @@ const initialAccountingContext: IAccountingContext = {
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
-  const { userAuth, selectedAccountBook, isSignIn } = useUserCtx();
+  const { userAuth, connectedAccountBook, isSignIn } = useUserCtx();
   const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.ASK_AI_STATUS);
   const {
     trigger: listUnprocessedOCR,
@@ -317,10 +317,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     2. 確認儲存於 IndexedDB 的 pendingOCRList 資料格式正確，不同就清空 IndexedDB 中的數據
     3. 確認 pendingOCRList 的 userId 和 userAuth.id 相同，不同就清空 IndexedDB 中的數據
     4. 確認 pendingOCRList 的數據是否過期，過期就透過 `updateAndDeleteOldItems` 刪掉 IndexedDB 的數據，而 useState 透過 filter 刪選，避免非同步執行會有遺漏
-    5. 將 pendingOCRList 的 companyId 和 selectedAccountBook.id 相同的數據存為 `pendingOCRListFromBrowser` 給一開始的 JournalUploadArea 上傳檔案、 `pendingOCRs` 給 StepOneTab 顯示 skeleton
+    5. 將 pendingOCRList 的 companyId 和 connectedAccountBook.id 相同的數據存為 `pendingOCRListFromBrowser` 給一開始的 JournalUploadArea 上傳檔案、 `pendingOCRs` 給 StepOneTab 顯示 skeleton
    */
   const initPendingOCRList = async () => {
-    if (!userAuth?.id || !selectedAccountBook?.id) return;
+    if (!userAuth?.id || !connectedAccountBook?.id) return;
     const allItems = await getAllItems();
     const now = getTimestampNow();
 
@@ -335,7 +335,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     const pendingOCRs = validItems
       .filter(
         (item) =>
-          item.data.companyId === selectedAccountBook.id &&
+          item.data.companyId === connectedAccountBook.id &&
           now - item.data.timestamp < EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS
       )
       .map((item) => item.data);
@@ -366,17 +366,17 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   // Info: (20240827 - Shirley) 在初始化 pending ocr 之前，先清理 state 和 IndexedDB 的數據
   useEffect(() => {
-    if (isDBReady && userAuth?.id && selectedAccountBook?.id) {
+    if (isDBReady && userAuth?.id && connectedAccountBook?.id) {
       clearPendingOCRList();
       clearOCRList();
       updateAndDeleteOldItems(EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS);
       initPendingOCRList();
     }
-  }, [isDBReady, userAuth, selectedAccountBook]);
+  }, [isDBReady, userAuth, connectedAccountBook]);
 
   useEffect(() => {
     clearOCRs();
-  }, [isSignIn, selectedAccountBook]);
+  }, [isSignIn, connectedAccountBook]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;

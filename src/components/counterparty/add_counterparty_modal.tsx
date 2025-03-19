@@ -27,7 +27,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   taxId,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const [inputName, setInputName] = useState<string>('');
   const [inputTaxId, setInputTaxId] = useState<string>('');
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
@@ -264,7 +264,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       };
 
       await addCounterpartyTrigger({
-        params: { companyId: selectedAccountBook?.id },
+        params: { companyId: connectedAccountBook?.id },
         body: apiData,
       });
     }

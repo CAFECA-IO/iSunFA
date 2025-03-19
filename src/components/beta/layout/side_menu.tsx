@@ -264,8 +264,8 @@ const SubMenuOption = ({
 }: SubMenuOptionProps) => {
   const { t } = useTranslation(['layout']);
   const { toastHandler } = useModalContext();
-  const { selectedAccountBook } = useUserCtx();
-  const noSelectedCompany = !selectedAccountBook;
+  const { connectedAccountBook } = useUserCtx();
+  const noSelectedCompany = !connectedAccountBook;
   const [isEmbedCodeModalOpen, setIsEmbedCodeModalOpen] = useState<boolean>(false);
 
   const toggleEmbedCodeModal = () => {
