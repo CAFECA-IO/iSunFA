@@ -16,8 +16,11 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import { useTranslation } from 'next-i18next';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
-import { useGlobalCtx } from '@/contexts/global_context';
+// import { useGlobalCtx } from '@/contexts/global_context';
 import CashFlowA4Template from '@/components/cash_flow_statement_report_body/cash_flow_statement_a4_template';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import DownloadCashFlowStatement from '@/components/cash_flow_statement_report_body/download_cash_flow_statement';
 
 interface CashFlowStatementListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
@@ -34,7 +37,82 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
 }) => {
   const { t, i18n } = useTranslation('reports'); // Info: (20250108 - Anna) 使用 i18n 來獲取當前語言
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+
+  const downloadRef = useRef<HTMLDivElement>(null); // Info: (20250317 - Anna) downloadRef
+  const handleDownload = async () => {
+    if (!downloadRef.current) {
+      // eslint-disable-next-line no-console
+      console.error('downloadRef.current is null!');
+      return;
+    }
+
+    // Info: (20250317 - Anna) 先讓 `downloadRef` 可見，移到畫面外，不影響 UI
+    downloadRef.current.classList.remove('hidden');
+    downloadRef.current.style.position = 'absolute';
+    downloadRef.current.style.left = '-9999px';
+
+    // Info: (20250317 - Anna) 確保 DOM 渲染完成
+    await new Promise<void>((resolve) => {
+      setTimeout(() => resolve(), 500);
+    });
+
+    // Info: (20250317 - Anna) 確保所有圖片載入完成
+    const images = Array.from(downloadRef.current.querySelectorAll('img'));
+    await Promise.all(
+      images.map(
+        (img) =>
+          new Promise((resolve) => {
+            if (img.complete) resolve(true);
+            else img.onload = () => resolve(true);
+          })
+      )
+    );
+
+    // Info: (20250317 - Anna) 準備 PDF
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+    await document.fonts.ready; // 確保字體載入完成
+
+    // Info: (20250317 - Anna) 擷取 `downloadRef` 內的 `.download-page` 區塊
+    const downloadPages = downloadRef.current.querySelectorAll('.download-page');
+    if (downloadPages.length === 0) {
+      // eslint-disable-next-line no-console
+      console.error('No .download-page elements found!');
+      return;
+    }
+
+    const canvasPromises = Array.from(downloadPages, async (page, index) => {
+      const canvas = await html2canvas(page as HTMLElement, {
+        scale: 2, // 提高解析度
+        useCORS: true,
+        logging: true,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+
+      // Info: (20250317 - Anna) 插入 PDF
+      if (index === 0) {
+        pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
+      } else {
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
+      }
+
+      return imgData;
+    });
+
+    await Promise.all(canvasPromises);
+
+    // Info: (20250317 - Anna) 下載後隱藏 `downloadRef`
+    downloadRef.current.classList.add('hidden');
+    downloadRef.current.style.position = '';
+    downloadRef.current.style.left = '';
+
+    // Info: (20250317 - Anna) 下載 PDF
+    pdf.save('Cash_Flow_Statement_Report.pdf');
+  };
+
+  // const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, selectedAccountBook } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
   // Info: (20241024 - Anna) 用 useRef 追蹤之前的日期範圍
@@ -432,7 +510,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     return (
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
         <div className="ml-auto flex items-center gap-24px">
-          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+          <DownloadButton onClick={handleDownload} />
           {/* Info: (20241021 - Anna) 列印按鈕：只有中文可用 */}
           <PrintButton onClick={printFn} disabled={!isChinese} />
         </div>
@@ -777,6 +855,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         {investmentRatio}
         {freeCashFlow}
       </div>
+      <DownloadCashFlowStatement reportFinancial={reportFinancial} downloadRef={downloadRef} />
     </div>
   );
 };

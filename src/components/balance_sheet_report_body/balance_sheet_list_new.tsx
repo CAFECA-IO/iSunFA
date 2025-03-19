@@ -19,7 +19,7 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import Toggle from '@/components/toggle/toggle';
-import { useGlobalCtx } from '@/contexts/global_context';
+// import { useGlobalCtx } from '@/contexts/global_context';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
 import DownloadBalanceSheet from '@/components/balance_sheet_report_body/download_balance_sheet';
 import html2canvas from 'html2canvas';
@@ -58,7 +58,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
   const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]); // Info: (20250314 - Anna) 存放透過 html2canvas 轉換為圖片的 URL，
 
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+  // const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
@@ -891,7 +891,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // Info: (20250314 - Anna) 下載 PDF 方法
   const handleDownload = async () => {
     if (!downloadRef.current) {
-      console.error('downloadRef.current is null!');
+      // console.error('downloadRef.current is null!');
       return;
     }
 
@@ -900,11 +900,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     downloadRef.current.style.position = 'absolute';
     downloadRef.current.style.left = '-9999px'; // Info: (20250314 - Anna) 移動到視窗外，不影響畫面
 
-    await new Promise((resolve) => setTimeout(resolve, 500)); // Info: (20250314 - Anna) 確保 DOM 渲染完成
+    // Info: (20250314 - Anna) 確保 DOM 渲染完成
+    await new Promise<void>((resolve) => {
+      setTimeout(() => resolve(), 500);
+    });
 
     const downloadPages = downloadRef.current.querySelectorAll('.download-page');
     if (downloadPages.length === 0) {
-      console.error('No .download-page elements found!');
+      // console.error('No .download-page elements found!');
       return;
     }
 

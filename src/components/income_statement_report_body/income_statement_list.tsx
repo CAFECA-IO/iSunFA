@@ -8,8 +8,9 @@ import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { IDatePeriod } from '@/interfaces/date_period';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
-import { useGlobalCtx } from '@/contexts/global_context';
+// import { useGlobalCtx } from '@/contexts/global_context';
 import PrintPreview from '@/components/income_statement_report_body/print_preview';
+import DownloadPreview from '@/components/income_statement_report_body/download_preview';
 import { useReactToPrint } from 'react-to-print';
 import NoData from '@/components/income_statement_report_body/no_data';
 import Loading from '@/components/income_statement_report_body/loading';
@@ -18,17 +19,20 @@ import ItemSummary from '@/components/income_statement_report_body/item_summary'
 // import ItemDetail from '@/components/income_statement_report_body/item_detail';
 import CostRevRatio from '@/components/income_statement_report_body/cost_rev_ratio';
 import { useTranslation } from 'next-i18next';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface FilterBarProps {
   printFn: () => void;
   isChinese: boolean; // Info: (20250108 - Anna) 添加 isChinese 屬性
+  handleDownload: () => void; // Info: (20250108 - Anna) handleDownload
 }
-const FilterBar = ({ printFn, isChinese }: FilterBarProps) => {
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+const FilterBar = ({ printFn, isChinese, handleDownload }: FilterBarProps) => {
+  // const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   return (
     <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
       <div className="ml-auto flex items-center gap-24px">
-        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+        <DownloadButton onClick={handleDownload} />
         <PrintButton onClick={() => printFn()} disabled={!isChinese} />
       </div>
     </div>
@@ -54,11 +58,88 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn';
 
   const printRef = useRef<HTMLDivElement>(null);
+  const downloadRef = useRef<HTMLDivElement>(null);
 
   const printFn = useReactToPrint({
     contentRef: printRef,
     documentTitle: 'Income_Statement Report',
   });
+
+  // Info: (20250317 - Anna) handleDownload
+  const handleDownload = async () => {
+    if (!downloadRef.current) {
+      // eslint-disable-next-line no-console
+      console.error('Print reference is null!');
+      return;
+    }
+
+    // Info: (20250317 - Anna) 讓 downloadRef 可見，移到畫面外不影響 UI
+    downloadRef.current.classList.remove('hidden');
+    downloadRef.current.style.position = 'absolute';
+    downloadRef.current.style.left = '-9999px';
+
+    // Info: (20250317 - Anna) 確保 DOM 渲染完成
+    await new Promise<void>((resolve) => {
+      setTimeout(() => resolve(), 500);
+    });
+
+    // Info: (20250317 - Anna) 選取所有要下載的區塊
+    const downloadPages = downloadRef.current.querySelectorAll('.download-page');
+    if (downloadPages.length === 0) {
+      // eslint-disable-next-line no-console
+      console.error('No .download-page elements found!');
+      return;
+    }
+
+    // Info: (20250317 - Anna) 確保所有圖片載入完成
+    const images = Array.from(downloadRef.current.querySelectorAll('img'));
+    await Promise.all(
+      images.map(
+        (img) =>
+          new Promise((resolve) => {
+            if (img.complete) {
+              resolve(true);
+            } else {
+              img.addEventListener('load', () => resolve(true), { once: true });
+            }
+          })
+      )
+    );
+
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+    await document.fonts.ready; // Info: (20250317 - Anna) 確保字體載入完成
+
+    // Info: (20250317 - Anna) 逐一擷取 .download-page 並添加到 PDF
+    const canvasPromises = Array.from(downloadPages, async (page, index) => {
+      const canvas = await html2canvas(page as HTMLElement, {
+        scale: 2, // 提高解析度
+        useCORS: true,
+        logging: true,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+
+      if (index === 0) {
+        pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
+      } else {
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
+      }
+
+      return imgData;
+    });
+
+    await Promise.all(canvasPromises);
+
+    // Info: (20250317 - Anna) 確保下載後 `downloadRef` 不影響 UI
+    downloadRef.current.classList.add('hidden');
+    downloadRef.current.style.position = '';
+    downloadRef.current.style.left = '';
+
+    // 下載 PDF
+    pdf.save('Income_Statement_Report.pdf');
+  };
 
   useEffect(() => {
     if (!selectedDateRange) return;
@@ -138,7 +219,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   return (
     <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
       {/* Info: (20250108 - Anna) 傳遞 isChinese 給 FilterBar */}
-      <FilterBar printFn={printFn} isChinese={isChinese} />
+      <FilterBar printFn={printFn} isChinese={isChinese} handleDownload={handleDownload} />
       <div>
         <ItemSummary
           financialReport={financialReport}
@@ -166,6 +247,18 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
       <div className="hidden">
         <PrintPreview
           ref={printRef}
+          financialReport={financialReport}
+          formattedCurFromDate={formattedCurFromDate}
+          formattedCurToDate={formattedCurToDate}
+          formattedPreFromDate={formattedPreFromDate}
+          formattedPreToDate={formattedPreToDate}
+        />
+      </div>
+      <div>
+        <DownloadPreview
+          ref={downloadRef}
+          // className="absolute top-0"
+          // style={{ left: '-9999px' }}
           financialReport={financialReport}
           formattedCurFromDate={formattedCurFromDate}
           formattedCurToDate={formattedCurToDate}

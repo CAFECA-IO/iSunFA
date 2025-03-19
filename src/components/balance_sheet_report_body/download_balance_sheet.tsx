@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { BalanceSheetReport } from '@/interfaces/report';
-import DownloadButton from '@/components/button/download_button';
-import Pdf from 'react-to-pdf';
+// import DownloadButton from '@/components/button/download_button';
+// import Pdf from 'react-to-pdf';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
@@ -21,7 +21,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
   const pageCountRef = useRef(1);
 
   // Info: (20250314 - Anna)  存放轉圖片後的 URL
-  const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]);
+  // const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]);
 
   // Info: (20250314 - Anna) 將時間戳轉換為 YYYY-MM-DD
   const getFormattedDate = (timestamp: number | undefined) => {
@@ -460,7 +460,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
 
   return (
     <>
-      <div ref={downloadRef}>
+      <div ref={downloadRef} className="hidden">
         {/* Info: (20250315 - Anna) 每次開始前將 `pageCountRef.current` 重置 */}
         {(pageCountRef.current = 1)}
 

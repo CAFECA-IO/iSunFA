@@ -14,8 +14,10 @@ import { ReportType } from '@/constants/report';
 import Image from 'next/image';
 import DownloadButton from '@/components/button/download_button';
 import PrintButton from '@/components/button/print_button';
-import { useGlobalCtx } from '@/contexts/global_context';
+// import { useGlobalCtx } from '@/contexts/global_context';
 import { useReactToPrint } from 'react-to-print';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface BusinessTaxListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
@@ -26,7 +28,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   selectedReportLanguage,
 }) => {
   const { t } = useTranslation(['reports']);
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+  // const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, selectedAccountBook } = useUserCtx();
 
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241204 - Anna) 定義需要列印內容的 ref
@@ -42,11 +44,75 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     },
   });
 
+const handleDownload = async () => {
+  if (!printRef.current) {
+    // eslint-disable-next-line no-console
+    console.error('Print reference is null!');
+    return;
+  }
+
+  //  Info: (20250317 - Anna) 確保 DOM 完全渲染
+  await new Promise<void>((resolve) => {
+    setTimeout(() => resolve(), 500);
+  });
+
+  const downloadPages = printRef.current.querySelectorAll('.download-page');
+  if (downloadPages.length === 0) {
+    // eslint-disable-next-line no-console
+    console.error('No .download-page elements found!');
+    return;
+  }
+
+  //  Info: (20250317 - Anna) 確保所有圖片載入完成
+  const images = Array.from(printRef.current.querySelectorAll('img'));
+  await Promise.all(
+    images.map(
+      (img) =>
+        new Promise((resolve) => {
+          if (img.complete) {
+            resolve(true);
+          } else {
+            img.addEventListener('load', () => resolve(true), { once: true });
+          }
+        })
+    )
+  );
+
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+
+  await document.fonts.ready; //  Info: (20250317 - Anna) 確保字體載入完成
+
+  // Info: (20250317 - Anna) 逐頁擷取 `.download-page` 並添加到 PDF
+  const canvasPromises = Array.from(downloadPages, async (page, index) => {
+    const canvas = await html2canvas(page as HTMLElement, {
+      scale: 2,
+      useCORS: true,
+      logging: true,
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+
+    if (index === 0) {
+      pdf.addImage(imgData, 'PNG', 10, 10, 270, 190);
+    } else {
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 10, 10, 270, 190);
+    }
+
+    return imgData;
+  });
+
+  await Promise.all(canvasPromises);
+
+  //  Info: (20250317 - Anna) 下載 PDF
+  pdf.save('Business_Tax_Report.pdf');
+};
+
   const displayedSelectArea = () => {
     return (
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
         <div className="ml-auto flex items-center gap-24px">
-          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+          <DownloadButton onClick={handleDownload} />
           <PrintButton onClick={handlePrint} disabled={false} />
         </div>
       </div>
@@ -215,7 +281,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       <Skeleton width={80} height={20} />
     </div>
   ) : (
-    <div id="1" className="relative h-a4-width overflow-y-hidden bg-white">
+    <div id="1" className="download-page relative h-a4-width overflow-y-hidden bg-white">
       <header className="flex w-full justify-between">
         <table className="border-collapse border border-black text-8px">
           <tbody>
@@ -277,8 +343,8 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
               {financialReport?.content.basicInfo.currentYear ?? 'N/A'}
               {/* Info: (20240814 - Anna) 年 */}
               {t('reports:TAX_REPORT.Y')}
-              {financialReport?.content.basicInfo.startMonth ??
-                'N/A'}-{financialReport?.content.basicInfo.endMonth ?? 'N/A'}
+              {financialReport?.content.basicInfo.startMonth ?? 'N/A'}-
+              {financialReport?.content.basicInfo.endMonth ?? 'N/A'}
               {/* Info: (20240814 - Anna) 月 */}
               {t('reports:TAX_REPORT.M')}
             </p>
@@ -733,9 +799,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
             <td className="border border-black px-1 py-0">14</td>
             <td className="flex items-center text-nowrap border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 本期(月)應退稅額 */}
-              {t(
-                'reports:TAX_REPORT.REFUNDABLE_TAX'
-              )}({/* 如 */}
+              {t('reports:TAX_REPORT.REFUNDABLE_TAX')}({/* 如 */}
               {t('reports:TAX_REPORT.IF')}
               <div>
                 <span>12&gt;13</span>
@@ -1106,9 +1170,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
               {/* Info: (20240814 - Anna) 載有稅額之其他憑證 */}
               {t('reports:TAX_REPORT.OTHER_VOUCHERS')}
               <br />({/* Info: (20240814 - Anna) 包括二聯式收銀機發票 */}
-              {t(
-                'reports:TAX_REPORT.INCLUDING_CASH_REGISTER'
-              )})
+              {t('reports:TAX_REPORT.INCLUDING_CASH_REGISTER')})
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 進貨及費用 */}
