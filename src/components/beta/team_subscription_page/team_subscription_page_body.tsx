@@ -24,12 +24,12 @@ const TeamSubscriptionPageBody = ({ team, getOwnedTeam }: TeamSubscriptionPageBo
         <div className="w-24px flex-none bg-surface-brand-primary"></div>
 
         <section className="flex flex-auto items-center gap-40px bg-surface-brand-primary-5 p-24px">
-          <h2 className="text-36px font-bold text-text-brand-primary-lv1">{team.name}</h2>
+          <h2 className="text-36px font-bold text-text-brand-secondary-lv1">{team.name}</h2>
 
           <div className="w-1px self-stretch bg-surface-neutral-depth"></div>
 
           <div className="flex flex-auto flex-col items-end">
-            <p className="text-xl font-semibold capitalize leading-32px text-text-brand-secondary-lv1">
+            <p className="text-xl font-semibold capitalize leading-32px text-text-brand-primary-lv1">
               {t(`subscriptions:PLAN_NAME.${team.plan.toUpperCase()}`)}
             </p>
 
