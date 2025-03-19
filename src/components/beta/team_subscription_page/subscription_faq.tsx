@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 
@@ -25,9 +25,24 @@ const FAQS: IFaq[] = [
     question: 'FAQ3_QUESTION',
     answer: 'FAQ3_ANSWER',
   },
+  {
+    id: 4,
+    question: 'FAQ4_QUESTION',
+    answer: 'FAQ4_ANSWER',
+  },
+  {
+    id: 5,
+    question: 'FAQ5_QUESTION',
+    answer: 'FAQ5_ANSWER',
+  },
+  {
+    id: 6,
+    question: 'FAQ6_QUESTION',
+    answer: 'FAQ6_ANSWER',
+  },
 ];
 
-const SubscriptionFaq = () => {
+const SubscriptionFaq: React.FC = () => {
   const { t } = useTranslation(['subscriptions']);
   const [isOpen, setIsOpen] = useState<number>();
   const openFaq = (id: number) => setIsOpen(id);
@@ -62,11 +77,13 @@ const SubscriptionFaq = () => {
               {isOpen === faq.id ? <IoChevronUp /> : <IoChevronDown />}
             </div>
 
-            {isOpen === faq.id && (
-              <p className="px-40px pb-32px text-lg font-normal text-accordion-surface-background-text-paragraph">
+            <div
+              className={`grid overflow-hidden text-lg font-normal ${isOpen === faq.id ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'} text-accordion-surface-background-text-paragraph transition-all duration-300 ease-in-out`}
+            >
+              <p className="px-40px pb-32px">
                 {faq.answer ? t(`subscriptions:SUBSCRIPTION_FAQ.${faq.answer}`) : ''}
               </p>
-            )}
+            </div>
           </div>
         ))}
       </section>
