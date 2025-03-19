@@ -54,7 +54,7 @@ async function handlePostRequest(req: NextApiRequest) {
         statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
       } else {
         try {
-          const detail = payload as unknown as IOrderDetail[];
+          const detail = payload as unknown as IOrderDetail;
           const order = await createOrder(userId, companyId, planId, status, detail);
           statusMessage = STATUS_MESSAGE.CREATED;
           payload = order;
