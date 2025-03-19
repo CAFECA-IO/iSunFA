@@ -18,8 +18,6 @@ import {
 } from '@/lib/utils/indexed_db/ocr';
 import { isValidEncryptedDataForOCR } from '@/lib/utils/type_guard/ocr';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
-// Info: (20250319 - Anna)
-import { IAccountingSetting } from '@/interfaces/accounting_setting';
 
 interface IAccountingProvider {
   children: React.ReactNode;
@@ -90,13 +88,6 @@ interface IAccountingContext {
   // Info: (20250221 - Julian) 重新整理傳票列表
   flagOfRefreshVoucherList: boolean;
   refreshVoucherListHandler: () => void;
-
-  // Info: (20250319 - Anna) 確保幣別資料載入完成後再顯示
-  isCurrencyLoaded: boolean;
-
-  // Info: (20250319 - Anna) 管理當前貨幣狀態
-  currentCurrency: string;
-  setCurrentCurrency: (currency: string) => void;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -138,51 +129,12 @@ const initialAccountingContext: IAccountingContext = {
 
   flagOfRefreshVoucherList: false,
   refreshVoucherListHandler: () => {},
-
-  // Info: (20250319 - Anna) `isCurrencyLoaded` 預設為 `false`
-  isCurrencyLoaded: false,
-
-  currentCurrency: '', // Info: (20250319 - Anna) 預設為空，避免強制指定幣別
-  setCurrentCurrency: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const { userAuth, selectedAccountBook, isSignIn } = useUserCtx();
-
-  // Info: (20250319 - Anna) 初始值設為空，等 API 或 UI 設定
-  const [currentCurrency, setCurrentCurrency] = useState<string>('');
-  // Info: (20250319 - Anna) 追蹤是否載入完成
-  const [isCurrencyLoaded, setIsCurrencyLoaded] = useState(false);
-
-  // Info: (20250319 - Anna) 取得會計設定資料
-  const { trigger: getAccountSetting, data: accountingSetting } = APIHandler<IAccountingSetting>(
-    APIName.ACCOUNTING_SETTING_GET,
-    { params: { companyId: selectedAccountBook?.id } }
-  );
-
-  // Info: (20250319 - Anna) 在組件載入時，獲取會計設定
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('Selected Account Book ID:', selectedAccountBook?.id);
-    if (selectedAccountBook?.id) {
-      // eslint-disable-next-line no-console
-      console.log('Triggering getAccountSetting...'); // 🌟 檢查是否有觸發 API
-      getAccountSetting({ params: { companyId: selectedAccountBook.id } });
-    }
-  }, [selectedAccountBook?.id]);
-
-  // Info: (20250319 - Anna) 當 accountingSetting 變更時，更新 currentCurrency
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('Loaded currency from API:', accountingSetting?.currency);
-    if (accountingSetting?.currency) {
-      setCurrentCurrency(accountingSetting.currency);
-    }
-    setIsCurrencyLoaded(true); // Info: (20250319 - Anna) 設定為已載入
-  }, [accountingSetting]);
-
   const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.ASK_AI_STATUS);
   const {
     trigger: listUnprocessedOCR,
@@ -592,12 +544,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
       flagOfRefreshVoucherList,
       refreshVoucherListHandler,
-
-      // Info: (20250319 - Anna) 傳遞 isCurrencyLoaded & currentCurrency & setCurrentCurrency
-      isCurrencyLoaded,
-      setIsCurrencyLoaded,
-      currentCurrency,
-      setCurrentCurrency,
     }),
     [
       OCRList,
@@ -622,8 +568,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       clearReverseListHandler,
       flagOfRefreshVoucherList,
       refreshVoucherListHandler,
-      currentCurrency, // Info: (20250319 - Anna)
-      isCurrencyLoaded, // Info: (20250319 - Anna)
     ]
   );
 

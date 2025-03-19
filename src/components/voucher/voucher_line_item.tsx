@@ -35,11 +35,6 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   isShowReverseHint,
 }) => {
   const { t } = useTranslation('common');
-  // Info: (20250319 - Anna) 取得當前貨幣
-  // const { currentCurrency } = useAccountingCtx();
-  // Info: (20250319 - Anna) 只有 USD 時允許小數
-  // const isDecimalAllowed = currentCurrency === 'USD';
-  // const isDecimalAllowed = true; // Info: (20250319 - Anna) 暫時讓所有貨幣都允許小數
   const { reverseList: commonReverseList, addReverseListHandler } = useAccountingCtx();
   const { selectReverseItemsModalVisibilityHandler, selectReverseDataHandler } = useGlobalCtx();
 
@@ -436,7 +431,6 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           name="input-debit"
           value={debitInput}
           isDecimal
-          // isDecimal={isDecimalAllowed} // Info: (20250319 - Anna) 動態決定是否允許小數
           required
           hasComma
           className={`${amountStyle} col-span-3 mt-lv-5 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
@@ -449,7 +443,6 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           name="input-credit"
           value={creditInput}
           isDecimal
-          // isDecimal={isDecimalAllowed} // Info: (20250319 - Anna) 動態決定是否允許小數
           required
           hasComma
           className={`${amountStyle} col-span-3 mt-lv-5 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
