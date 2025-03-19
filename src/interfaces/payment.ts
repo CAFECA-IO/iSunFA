@@ -42,10 +42,24 @@ export interface IPaymentBeta extends IPayment {
 }
 
 export interface IPaymentMethod {
-  id: number;
+  id?: number;
   type: PAYMENT_METHOD_TYPE;
   number: string;
   expirationDate: string;
   cvv: string;
+  default?: boolean;
+}
+
+// Info: (20250318 - Luphia) 基本參照 UserPaymentInfo，獨 id 改為 optional
+export interface IPaymentInfo {
+  id?: number;
+  platform?: string;
+  userId: number;
+  token: string;
   default: boolean;
+  info: IPaymentMethod;
+  transactionId: string;
+  createdAt: number;
+  updatedAt: number;
+  deletedAt?: number;
 }

@@ -1,3 +1,4 @@
+// Deprecated: (20250319 - Luphia) No longer needed this API
 import { PAYMENT_METHOD_TYPE } from '@/constants/payment';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -6,7 +7,7 @@ import {
   BindCardBodySchema,
   mockCards,
   PaymentMethodSchema,
-} from '@/lib/utils/repo/card.repo';
+} from '@/lib/utils/repo/user_payment_info.repo';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {

@@ -1,8 +1,8 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-// import Image from 'next/image';
+import Image from 'next/image';
 import { IPlan, IUserOwnedTeam } from '@/interfaces/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
-// import { FiPlusCircle } from 'react-icons/fi';
+import { FiPlusCircle } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 // import { useModalContext } from '@/contexts/modal_context';
 // import { ToastType } from '@/interfaces/toastify';
@@ -38,10 +38,10 @@ const CreditCardInfo = ({
   const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
-  // const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
+  const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
 
   // Info: (20250120 - Liz) 取得信用卡 number
-  // const creditCardNumber = hasCreditCardInfo ? paymentMethod[0].number : '';
+  const creditCardNumber = hasCreditCardInfo ? paymentMethod[0].number : '';
 
   // Info: (20250120 - Liz) 取得信用卡資訊 API
   const { trigger: getCreditCardInfoAPI } = APIHandler<IPaymentMethod[]>(
@@ -75,7 +75,7 @@ const CreditCardInfo = ({
   };
 
   // Info: (20250120 - Liz) 綁定信用卡資料
-  // const bindCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
+  const bindCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
 
   /* Info: (20250220 - Tzuhan) 為串接 HiTrust 金流測試: 會替換成跳轉至 HiTrust 金流頁面
   // Info: (20250120 - Liz) 打 API 變更團隊的訂閱方案
@@ -123,7 +123,6 @@ const CreditCardInfo = ({
         <span className="text-lg font-semibold text-text-brand-secondary-lv3">
           {t('subscriptions:PAYMENT_PAGE.PAYMENT')}
         </span>
-        {/* Info: (20250220 - Tzuhan) 為串接 HiTrust 金流測試先隱藏: HiTrust 不提供綁定信用卡功能
         {hasCreditCardInfo ? (
           <div className="flex items-center gap-8px">
             <Image src="/icons/credit_card.svg" alt="credit card" width={24} height={24} />
@@ -144,7 +143,7 @@ const CreditCardInfo = ({
             <span>{t('subscriptions:PAYMENT_PAGE.ADD_CREDIT_CARD')}</span>
             <FiPlusCircle />
           </button>
-        )} */}
+        )}
       </div>
 
       <div className="h-1px bg-divider-stroke-lv-4"></div>

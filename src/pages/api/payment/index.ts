@@ -32,7 +32,7 @@ export const oenPaymentHandler = async (req: NextApiRequest) => {
   // Info: (20250113 - Luphia) step 4
   const paymentGatewayOptions: IPaymentGatewayOptions = {
     platform: PAYMENT.OEN,
-    prodMode: process.env.NODE_ENV === 'production',
+    prodMode: false, // process.env.NODE_ENV === 'production',
     id: process.env.PAYMENT_ID as string,
     secret: process.env.PAYMENT_TOKEN as string,
   };

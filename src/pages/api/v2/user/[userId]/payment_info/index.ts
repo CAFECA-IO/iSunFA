@@ -1,13 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { BindCardQuerySchema, getCardByUserId } from '@/lib/utils/repo/card.repo';
+import {
+  BindCardQuerySchema,
+  getDefaultUserPaymentInfo,
+} from '@/lib/utils/repo/user_payment_info.repo';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { HttpMethod } from '@/constants/api_connection';
 import { HTTP_STATUS } from '@/constants/http';
-import loggerBack from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
 import { z } from 'zod';
 import { PAYMENT_METHOD_TYPE } from '@/constants/payment';
+import loggerBack from '@/lib/utils/logger_back';
 
 // Info: (20250218 - tzuhan) 取得用戶登錄支付憑證請求格式檢驗
 export const handleGetRequestInputValiditor = z.object({
@@ -43,7 +46,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   // Info: (20250311 - Luphia) 透過 Zod Schema 驗證是否提供足夠的參數
   BindCardQuerySchema.parse({ userId: userIdNumber });
   // Info: (20250311 - Luphia) 搜尋資料庫取得用戶的支付憑證
-  const paymentInfo = await getCardByUserId(userIdNumber);
+  const paymentInfo = await getDefaultUserPaymentInfo(userIdNumber);
   const result = formatApiResponse(STATUS_MESSAGE.SUCCESS, paymentInfo);
   return result;
 };

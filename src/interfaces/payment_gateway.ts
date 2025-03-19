@@ -1,9 +1,6 @@
 import { JSONValue } from '@/interfaces/common';
 import { IOrder } from '@/interfaces/order';
-import { UserPaymentInfo } from '@prisma/client';
-
-// Info: (20250318 - Luphia) 基本參照 UserPaymentInfo，獨 id 改為 optional
-export type IUserPaymentInfo = UserPaymentInfo;
+import { IPaymentInfo } from '@/interfaces/payment';
 
 export interface IPaymentGatewayOptions {
   platform: string;
@@ -24,13 +21,13 @@ export interface IGetChargeUrlOptions {
 
 export interface IChargeWithTokenOptions {
   order: IOrder;
-  token: IUserPaymentInfo;
+  token: IPaymentInfo;
 }
 
 export interface IPaymentGateway {
   getPlatform(): string;
   getCardBindingUrl(options: IGetCardBindingUrlOptions): Promise<string>;
   getChargeUrl(options: IGetChargeUrlOptions): Promise<string>;
-  parseAuthorizationToken(token: JSONValue): IUserPaymentInfo;
-  chargeWithToken(options: IChargeWithTokenOptions): Promise<void>;
+  parseAuthorizationToken(token: JSONValue): IPaymentInfo;
+  chargeWithToken(options: IChargeWithTokenOptions): Promise<boolean>;
 }

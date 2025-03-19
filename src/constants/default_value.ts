@@ -46,4 +46,7 @@ export const DefaultValue = {
   TEAM_ROLE: {
     UNKNOWN: 'UNKNOWN',
   },
+  PAYMENT_METHOD_NUMBER: '**** **** **** ****',
+  PAYMENT_METHOD_EXPIRATION_DATE: '**/**',
+  PAYMENT_METHOD_CVV: '***',
 };

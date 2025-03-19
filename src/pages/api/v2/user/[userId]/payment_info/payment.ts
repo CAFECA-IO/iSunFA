@@ -5,7 +5,7 @@ import {
   planPrices,
   TeamInvoiceSchema,
   mockInvoices,
-} from '@/lib/utils/repo/card.repo';
+} from '@/lib/utils/repo/user_payment_info.repo';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { TPlanType } from '@/interfaces/subscription';
