@@ -679,7 +679,7 @@ model Order {
   companyId Int    @map("company_id")
   planId    Int    @map("plan_id")
   status    String
-  detail    Json
+  detail    Json?
   createdAt Int    @map("created_at")
   updatedAt Int    @map("updated_at")
   deletedAt Int?   @map("deleted_at")
