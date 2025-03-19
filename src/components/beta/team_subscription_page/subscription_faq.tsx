@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { useState } from 'react';
-import { IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { IoChevronDown } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 
 interface IFaq {
@@ -24,6 +24,21 @@ const FAQS: IFaq[] = [
     id: 3,
     question: 'FAQ3_QUESTION',
     answer: 'FAQ3_ANSWER',
+  },
+  {
+    id: 4,
+    question: 'FAQ4_QUESTION',
+    answer: 'FAQ4_ANSWER',
+  },
+  {
+    id: 5,
+    question: 'FAQ5_QUESTION',
+    answer: 'FAQ5_ANSWER',
+  },
+  {
+    id: 6,
+    question: 'FAQ6_QUESTION',
+    answer: 'FAQ6_ANSWER',
   },
 ];
 
@@ -54,19 +69,23 @@ const SubscriptionFaq = () => {
               />
 
               <h3
-                className={`flex-auto text-2xl font-semibold ${isOpen === faq.id ? 'text-accordion-surface-background-text-title-active' : 'text-accordion-surface-background-text-title'}`}
+                className={`flex-auto text-2xl font-semibold ${isOpen === faq.id ? 'text-accordion-surface-background-text-title-active' : 'text-accordion-surface-background-text-title'} transition-all duration-300 ease-in-out`}
               >
                 {t(`subscriptions:SUBSCRIPTION_FAQ.${faq.question}`)}
               </h3>
 
-              {isOpen === faq.id ? <IoChevronUp /> : <IoChevronDown />}
+              <IoChevronDown
+                className={`${isOpen === faq.id ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
+              />
             </div>
 
-            {isOpen === faq.id && (
-              <p className="px-40px pb-32px text-lg font-normal text-accordion-surface-background-text-paragraph">
+            <div
+              className={`grid overflow-hidden text-lg font-normal ${isOpen === faq.id ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'} text-accordion-surface-background-text-paragraph transition-all duration-300 ease-in-out`}
+            >
+              <p className="px-40px pb-32px">
                 {faq.answer ? t(`subscriptions:SUBSCRIPTION_FAQ.${faq.answer}`) : ''}
               </p>
-            )}
+            </div>
           </div>
         ))}
       </section>
