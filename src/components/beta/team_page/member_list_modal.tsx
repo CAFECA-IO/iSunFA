@@ -159,7 +159,7 @@ const MemberListModal = ({
 
             {memberList && memberList.length > 0 && (
               <>
-                <MemberList memberList={memberList} />
+                <MemberList memberList={memberList} team={team} />
                 <Pagination
                   totalPages={totalPage}
                   currentPage={currentPage}

@@ -1,25 +1,60 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { ITeamMember, TeamRole } from '@/interfaces/team';
+import { ITeam, ITeamMember, TeamRole } from '@/interfaces/team';
 import { FiTrash2, FiSave } from 'react-icons/fi';
 import { IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 interface MemberItemProps {
   member: ITeamMember;
+  team: ITeam;
 }
 
-const MemberItem = ({ member }: MemberItemProps) => {
+const MemberItem = ({ member, team }: MemberItemProps) => {
   const { t } = useTranslation(['team']);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState<boolean>(false);
   const [role, setRole] = useState<TeamRole | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isEditable, setIsEditable] = useState<boolean>(false);
   const [isDeletable, setIsDeletable] = useState<boolean>(false);
   const [canAlterRoles, setCanAlterRoles] = useState<TeamRole[]>([]);
   const { teamRole } = useUserCtx();
+
+  // Info: (20250320 - Liz) 刪除成員 API
+  const { trigger: deleteMemberAPI } = APIHandler<{
+    memberId: string;
+  }>(APIName.DELETE_MEMBER);
+
+  const deleteMember = async () => {
+    if (!member.id || !team.id || isDeleting) return;
+    setIsDeleting(true);
+
+    try {
+      const { success } = await deleteMemberAPI({
+        params: {
+          teamId: team.id,
+          memberId: member.id,
+        },
+      });
+
+      if (!success) {
+        // Deprecated: (20250320 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('刪除成員失敗!');
+      }
+    } catch (error) {
+      // Deprecated: (20250320 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('刪除成員失敗:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!teamRole) return;
@@ -118,7 +153,12 @@ const MemberItem = ({ member }: MemberItemProps) => {
 
         {/* Info: (20250220 - Liz) delete member */}
         {isDeletable && (
-          <button type="button" className="text-icon-surface-single-color-primary">
+          <button
+            type="button"
+            className="text-icon-surface-single-color-primary disabled:cursor-not-allowed disabled:text-button-text-disable"
+            disabled={isDeleting}
+            onClick={deleteMember}
+          >
             <FiTrash2 size={16} />
           </button>
         )}
