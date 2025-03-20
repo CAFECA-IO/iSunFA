@@ -20,8 +20,14 @@ const formatDisplayValue = (
     const intValue = parseInt(stringValue, 10);
     stringValue = Number.isNaN(intValue) ? '0' : intValue.toString();
   }
+  // Info: (20250319 - Anna) 小數時，只對整數部分加逗號
+  if (hasComma) {
+    const [integerPart, decimalPart] = stringValue.split('.');
+    const formattedInteger = numberWithCommas(integerPart);
+    return decimalPart !== undefined ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+  }
 
-  return hasComma ? numberWithCommas(stringValue) : stringValue;
+  return stringValue;
 };
 
 const NumericInput: React.FC<INumericInputProps> = ({
@@ -32,8 +38,10 @@ const NumericInput: React.FC<INumericInputProps> = ({
   triggerWhenChanged,
   ...props
 }) => {
-  // Info: (20240723 - Liz) displayValue 是顯示在 input 上的顯示值
-  const [displayValue, setDisplayValue] = useState<string>(value ? value.toString() : '');
+  // Info: (20250319 - Anna) displayValue 是顯示在 input 上的顯示值
+  const [displayValue, setDisplayValue] = useState<string>(
+    formatDisplayValue(value, isDecimal, hasComma)
+  );
 
   // Info: (20240723 - Liz) dbValue 是存入 DB 的儲存值
   const [dbValue, setDbValue] = useState<number>(value);
@@ -52,9 +60,15 @@ const NumericInput: React.FC<INumericInputProps> = ({
     // Info: (20240723 - Liz) 整理輸入的值
     const sanitizedValue =
       inputValue
-        .replace(/^0+/, '') // 移除開頭的零
+        .replace(/^0+(\d)/, '$1') // Info: (20250319 - Anna) 避免 01，但允許 0.1
         .replace(/[^0-9.]/g, '') // 移除非數字和小數點字符
         .replace(/(\..*)\./g, '$1') || '0'; // 只允許一個小數點
+
+    // Info: (20250319 - Anna) 允許輸入 `.`，但顯示 `0.`
+    if (sanitizedValue === '.') {
+      setDisplayValue('0.');
+      return;
+    }
 
     // Info: (20240723 - Liz) 轉換成數值 (整數或浮點數) 為了存入 DB
     const numericValue = isDecimal
@@ -102,16 +116,25 @@ const NumericInput: React.FC<INumericInputProps> = ({
     if (event.code.indexOf('Digit') > -1) {
       // Info: (20250306 - Julian) 如果按下的是數字鍵
       code = event.code.slice(-1); // Info: (20250306 - Julian) 取得數字鍵的值
+      // Info: (20250319 - Anna) 允許輸入小數點，但只能輸入一次
+    } else if (event.key === '.' && !displayValue.includes('.')) {
+      code = '.';
+    }
+    if (code) {
       temp = temp.slice(0, cursorPos) + code + temp.slice(cursorPos); // Info: (20250306 - Julian) 插入數字
 
       // Info: (20250306 - Julian) 變更顯示值
       handleChange({ target: { value: temp } } as React.ChangeEvent<HTMLInputElement>);
     }
+    // Info: (20250319 - Anna) 如果按下的是數字鍵，將 code 設為數字
+    if (event.code.indexOf('Digit') > -1) {
+      code = event.code.slice(-1);
+    }
   }
 
-  // Info: (20240723 - Liz) 處理 displayValue 為空或僅為點的情況
+  // Info: (20250319 - Anna) 處理 displayValue 為空的情況
   const handleBlur = () => {
-    if (!displayValue || displayValue === '.') {
+    if (!displayValue) {
       setDisplayValue('0');
       setDbValue(0);
     }
