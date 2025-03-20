@@ -20,8 +20,8 @@ const PendingTask = ({ getTodoList }: PendingTasksProps) => {
    * 有帳本清單 且 沒有連結帳本 : 顯示 PendingTaskForAll
    */
 
-  const { userAuth, selectedAccountBook } = useUserCtx();
-  const isSelectedAccountBook = !!selectedAccountBook; // Info: (20250204 - Liz) 強制轉為布林值
+  const { userAuth, connectedAccountBook } = useUserCtx();
+  const isSelectedAccountBook = !!connectedAccountBook; // Info: (20250204 - Liz) 強制轉為布林值
   const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
   const hasAccountBookList = accountBookList.length > 0;
 

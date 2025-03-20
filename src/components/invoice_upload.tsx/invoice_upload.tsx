@@ -20,7 +20,7 @@ interface InvoiceUploadProps {
 
 const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode, setFiles }) => {
   const { t } = useTranslation(['certificate']);
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const [publicKey, setPublicKey] = useState<CryptoKey | null>(null);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
@@ -48,7 +48,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
       let key = publicKey;
       if (!key) {
         const { success, data } = await fetchPublicKey({
-          params: { companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
+          params: { companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
         });
         if (!success || !data) {
           throw new Error(t('certificate:UPLOAD.FAILED'));
@@ -111,10 +111,10 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
         );
 
         const { success, data: fileMeta } = await uploadFileAPI({
-          params: { companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
+          params: { companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
           query: {
             type: UploadType.INVOICE,
-            targetId: String(selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID),
+            targetId: String(connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID),
           },
           body: formData,
         });
@@ -133,7 +133,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
         );
 
         const { success: successCreated, data: certificate } = await createCertificateAPI({
-          params: { companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
+          params: { companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
           body: { fileIds: [fileMeta.id] }, // Info: (20241126 - Murky) @tsuhan 這邊已經可以使用批次上傳, 但是我不知道怎麼改，所以先放在array
         });
         if (!successCreated || !certificate) {
@@ -157,7 +157,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
         handleUploadFailed(file.name, (error as Error).message);
       }
     },
-    [selectedAccountBook?.id, handleUploadFailed, setFiles, t, uploadFileAPI]
+    [connectedAccountBook?.id, handleUploadFailed, setFiles, t, uploadFileAPI]
   );
 
   return (

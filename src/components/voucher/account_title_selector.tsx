@@ -36,7 +36,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
   accountSelectedHandler,
 }) => {
   const { t } = useTranslation('common');
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
   // Info: (20250306 - Julian) 搜尋欄 ref
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -63,7 +63,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
 
   const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { companyId: selectedAccountBook?.id }, query: queryCondition },
+    { params: { companyId: connectedAccountBook?.id }, query: queryCondition },
     false,
     true
   );

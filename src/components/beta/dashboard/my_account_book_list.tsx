@@ -9,7 +9,7 @@ interface MyAccountBookListProps {
 }
 
 const MyAccountBookList = ({ accountBookList, setAccountBookToSelect }: MyAccountBookListProps) => {
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const containerRef = useRef<HTMLDivElement>(null);
   const [disabledCards, setDisabledCards] = useState<number[]>([]);
 
@@ -51,10 +51,10 @@ const MyAccountBookList = ({ accountBookList, setAccountBookToSelect }: MyAccoun
     const container = containerRef.current;
     if (!container) return;
 
-    if (selectedAccountBook) {
+    if (connectedAccountBook) {
       container.scrollTo({ left: 0, behavior: 'smooth' });
     }
-  }, [selectedAccountBook]);
+  }, [connectedAccountBook]);
 
   return (
     <div ref={containerRef} className="flex max-w-full gap-24px overflow-x-auto px-1px pb-8px">

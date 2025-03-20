@@ -142,7 +142,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
 }) => {
   const { t } = useTranslation('common');
 
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const initialManualAccountOpeningList = [
@@ -165,7 +165,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   const [totalDebit, setTotalDebit] = useState<number>(0);
   const [totalCredit, setTotalCredit] = useState<number>(0);
 
-  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const totalStyle =
     totalDebit === totalCredit ? 'text-text-state-success' : 'text-text-state-error';

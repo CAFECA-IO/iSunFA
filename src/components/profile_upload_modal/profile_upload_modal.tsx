@@ -29,7 +29,7 @@ const ProfileUploadModal = ({
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
 
-  const { selectedAccountBook, userAuth } = useUserCtx();
+  const { connectedAccountBook, userAuth } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   // Info: (20240801 - Julian) 上傳圖片 API
@@ -108,7 +108,7 @@ const ProfileUploadModal = ({
     switch (uploadType) {
       // Info: (20240801 - Julian) 上傳公司圖片
       case UploadType.COMPANY: {
-        const companyId = selectedAccountBook?.id ?? NON_EXISTING_ACCOUNT_BOOK_ID;
+        const companyId = connectedAccountBook?.id ?? NON_EXISTING_ACCOUNT_BOOK_ID;
         targetId = companyId.toString();
 
         formData.append('file', uploadedImage as File);
@@ -135,7 +135,7 @@ const ProfileUploadModal = ({
     // Info: (20240801 - Julian) call API
     await uploadImage({
       params: {
-        companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
+        companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
       },
       query: {
         type: uploadType,

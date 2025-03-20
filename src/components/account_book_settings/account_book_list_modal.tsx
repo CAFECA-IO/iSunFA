@@ -26,7 +26,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedAccountBook, setSelectedCompany] = useState<IAccountBookForUserWithTeam | null>(
+  const [connectedAccountBook, setSelectedCompany] = useState<IAccountBookForUserWithTeam | null>(
     null
   );
   const { userAuth } = useUserCtx();
@@ -52,9 +52,9 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      {isEditModalOpen && selectedAccountBook && (
+      {isEditModalOpen && connectedAccountBook && (
         <AccountBookEditModal
-          companyAndRole={selectedAccountBook}
+          companyAndRole={connectedAccountBook}
           toggleModal={() => setIsEditModalOpen((prev) => !prev)}
         />
       )}

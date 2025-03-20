@@ -15,9 +15,9 @@ import { IPaginatedAccount } from '@/interfaces/accounting_account';
 
 const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('asset');
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
-  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const params = { companyId: accountBookId };
   // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 

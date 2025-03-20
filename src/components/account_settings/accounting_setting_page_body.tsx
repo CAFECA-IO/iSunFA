@@ -41,9 +41,9 @@ const AccountingSettingPageBody: React.FC = () => {
     manualAccountOpeningModalVisibilityHandler,
   } = useGlobalCtx();
   const { toastHandler } = useModalContext();
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
-  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const currencyList = ['TWD', 'USD'];
 
   // Info: (20241113 - Julian) 取得會計設定資料

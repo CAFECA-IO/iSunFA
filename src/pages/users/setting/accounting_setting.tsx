@@ -5,10 +5,21 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Layout from '@/components/beta/layout/layout';
 import AccountingSettingPageBody from '@/components/account_settings/accounting_setting_page_body';
+import { useUserCtx } from '@/contexts/user_context';
+import { TeamRole } from '@/interfaces/team';
 
 const AccountingSettingPage: React.FC = () => {
   const { t } = useTranslation(['settings']);
+  const { teamRole } = useUserCtx();
 
+  // Info: (20250319 - Liz) 拒絕團隊角色 viewer 進入此頁面
+  if (teamRole === TeamRole.VIEWER) {
+    return (
+      <div className="flex h-100vh items-center justify-center">
+        <div className="text-2xl">{t('common:PERMISSION_ERROR.PERMISSION_DENIED_MESSAGE')}</div>
+      </div>
+    );
+  }
   return (
     <>
       <Head>

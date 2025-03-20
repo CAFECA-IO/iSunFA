@@ -14,10 +14,10 @@ interface ITaxReportBodyAllProps {
 
 const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
   const { t } = useTranslation(['reports']);
-  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const { isAuthLoading, connectedAccountBook } = useUserCtx();
   // Info: (20240814 - Anna) 使用 useState 定義 report401 變量的狀態，並將其類型設為 TaxReport401 | null
 
-  // const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id; // Deprecated: (20241129 - Liz)
+  // const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id; // Deprecated: (20241129 - Liz)
 
   // Deprecated: (20241129 - Liz)
   // const {
@@ -30,7 +30,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
   //   APIName.REPORT_GET_BY_ID,
   //   {
   //     params: {
-  //       companyId: selectedAccountBook?.id,
+  //       companyId: connectedAccountBook?.id,
   //       reportId: reportId ?? NON_EXISTING_REPORT_ID,
   //     },
   //   },
@@ -45,7 +45,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
   );
 
   useEffect(() => {
-    if (isAuthLoading || !selectedAccountBook) return;
+    if (isAuthLoading || !connectedAccountBook) return;
     if (isLoading) return;
     setIsLoading(true);
 
@@ -57,7 +57,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           success: getFRSuccess,
         } = await getFinancialReportAPI({
           params: {
-            companyId: selectedAccountBook.id,
+            companyId: connectedAccountBook.id,
             reportId: reportId ?? NON_EXISTING_REPORT_ID,
           },
         });
@@ -84,7 +84,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
     console.log('in useEffect and calling getFinancialReport_in TaxReportBodyAll');
-  }, [isAuthLoading, reportId, selectedAccountBook]);
+  }, [isAuthLoading, reportId, connectedAccountBook]);
 
   // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger('financialReport in reportId', financialReport)
 

@@ -26,7 +26,7 @@ interface IEmbedCodeModal {
 
 const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
   const { t } = useTranslation(['common', 'reports']);
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
   // Info: (20241127 - Anna) 追蹤是否點擊了生成按鈕
   const [isGenerateClicked, setIsGenerateClicked] = useState(false);
@@ -119,7 +119,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           message: 'We received your application. The report will be ready in a few minutes.',
           request: {
             params: {
-              companyId: selectedAccountBook?.id,
+              companyId: connectedAccountBook?.id,
             },
             body: {
               type: FinancialReportTypesKeyReportSheetTypeMapping[type],
@@ -170,7 +170,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       return;
     }
 
-    if (selectedAccountBook) {
+    if (connectedAccountBook) {
       const iframeCodes: string[] = [];
 
       // Info: (20241213 - Anna) 設置序號初始值
@@ -188,7 +188,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
           try {
             const report = await generateFinancialReport({
-              params: { companyId: selectedAccountBook.id },
+              params: { companyId: connectedAccountBook.id },
               body,
             });
 
