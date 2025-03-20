@@ -116,8 +116,8 @@ const NumericInput: React.FC<INumericInputProps> = ({
     if (event.code.indexOf('Digit') > -1) {
       // Info: (20250306 - Julian) 如果按下的是數字鍵
       code = event.code.slice(-1);
+      // Info: (20250319 - Anna) 允許輸入小數點，但只能輸入一次
     } else if (event.key === '.' && !displayValue.includes('.')) {
-      // 允許輸入小數點，但只能輸入一次
       code = '.';
     }
     if (code) {
