@@ -121,8 +121,8 @@ const NumericInput: React.FC<INumericInputProps> = ({
       code = '.';
     }
     if (code) {
-      // Info: (20250306 - Julian) 取得數字鍵的值
       temp = temp.slice(0, cursorPos) + code + temp.slice(cursorPos); // Info: (20250306 - Julian) 插入數字
+
       // Info: (20250306 - Julian) 變更顯示值
       handleChange({ target: { value: temp } } as React.ChangeEvent<HTMLInputElement>);
     }
