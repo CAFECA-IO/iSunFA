@@ -16,7 +16,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
-import { ITeam } from '@/interfaces/team';
+import { ITeam, TeamRole } from '@/interfaces/team';
 
 interface UserContextType {
   credential: string | null;
@@ -49,7 +49,7 @@ interface UserContextType {
 
   connectedAccountBook: IAccountBook | null;
   team: ITeam | null;
-  teamRole: string | null;
+  teamRole: TeamRole | null;
   connectAccountBook: (companyId: number) => Promise<{ success: boolean }>;
   updateAccountBook: ({
     companyId,

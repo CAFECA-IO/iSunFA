@@ -1,18 +1,118 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { ITeamMember, TeamRole } from '@/interfaces/team';
+import { ITeam, ITeamMember, TeamRole } from '@/interfaces/team';
 import { FiTrash2, FiSave } from 'react-icons/fi';
 import { IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
+import { useUserCtx } from '@/contexts/user_context';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IMember } from '@/interfaces/member';
 
 interface MemberItemProps {
   member: ITeamMember;
+  team: ITeam;
 }
 
-const MemberItem = ({ member }: MemberItemProps) => {
+const MemberItem = ({ member, team }: MemberItemProps) => {
   const { t } = useTranslation(['team']);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState<boolean>(false);
   const [role, setRole] = useState<TeamRole | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [isEditable, setIsEditable] = useState<boolean>(false);
+  const [isDeletable, setIsDeletable] = useState<boolean>(false);
+  const [canAlterRoles, setCanAlterRoles] = useState<TeamRole[]>([]);
+  const { teamRole } = useUserCtx();
+
+  // Info: (20250320 - Liz) 刪除成員 API
+  const { trigger: deleteMemberAPI } = APIHandler<{
+    memberId: string;
+  }>(APIName.DELETE_MEMBER);
+
+  // Info: (20250320 - Liz) 更新成員角色 API
+  const { trigger: updateMemberRoleAPI } = APIHandler<IMember>(APIName.UPDATE_MEMBER);
+
+  // Info: (20250320 - Liz) 刪除成員
+  const deleteMember = async () => {
+    if (!member.id || !team.id || isDeleting) return;
+    setIsDeleting(true);
+
+    try {
+      const { success } = await deleteMemberAPI({
+        params: {
+          teamId: team.id,
+          memberId: member.id,
+        },
+      });
+
+      if (!success) {
+        // Deprecated: (20250320 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('刪除成員失敗!');
+      }
+    } catch (error) {
+      // Deprecated: (20250320 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('刪除成員失敗:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Info: (20250320 - Liz) 更新成員角色
+  const updateMemberRole = async () => {
+    if (!member.id || !team.id || !role || isUpdating) return;
+    setIsUpdating(true);
+
+    try {
+      const { success } = await updateMemberRoleAPI({
+        params: {
+          teamId: team.id,
+          memberId: member.id,
+        },
+        body: {
+          role,
+        },
+      });
+
+      if (!success) {
+        // Deprecated: (20250320 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('更新成員角色失敗!');
+      }
+    } catch (error) {
+      // Deprecated: (20250320 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('更新成員角色失敗:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!teamRole) return;
+
+    // Info: (20250320 - Liz) 取得使用者可以變更的角色
+    const result = convertTeamRoleCanDo({
+      teamRole,
+      canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
+    });
+
+    if ('canAlter' in result) {
+      setCanAlterRoles(result.canAlter);
+
+      // Info: (20250320 - Liz) 判斷使用者是否有權限編輯成員角色以顯示下拉選單 (有編輯成員的權限並且有其他角色可以選擇)
+      const canEditThisRole = result.canAlter.includes(member.role);
+      const hasOtherRoleToChange = result.canAlter.some((item) => item !== member.role);
+      setIsEditable(canEditThisRole && hasOtherRoleToChange);
+
+      // Info: (20250320 - Liz) 判斷使用者是否有權限刪除成員 (有編輯成員的權限)
+      setIsDeletable(canEditThisRole);
+    }
+  }, [member.role, teamRole]);
 
   return (
     <main className="flex items-center gap-80px">
@@ -35,14 +135,14 @@ const MemberItem = ({ member }: MemberItemProps) => {
       </section>
 
       <section className="flex items-center gap-16px">
-        {!member.editable && (
+        {!isEditable && (
           <div className="text-base font-semibold text-text-neutral-primary">
             {t(`team:TEAM_ROLE.${member.role.toUpperCase()}`)}
           </div>
         )}
 
         {/* Info: (20250220 - Liz) edit team role */}
-        {member.editable && (
+        {isEditable && (
           <div className="flex items-center gap-4px">
             <section className="relative">
               <button
@@ -51,7 +151,7 @@ const MemberItem = ({ member }: MemberItemProps) => {
                 onClick={() => setIsRoleDropdownOpen((prev) => !prev)}
               >
                 <span className="px-12px py-10px text-base font-medium text-input-text-input-filled">
-                  {t(`team:TEAM_ROLE.${role?.toUpperCase() ?? member.role.toUpperCase()}`)}
+                  {t(`team:TEAM_ROLE.${(role || member.role).toUpperCase()}`)}
                 </span>
                 <span className="px-12px py-10px text-icon-surface-single-color-primary">
                   {isRoleDropdownOpen ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
@@ -61,7 +161,7 @@ const MemberItem = ({ member }: MemberItemProps) => {
               {isRoleDropdownOpen && (
                 <div className="absolute inset-x-0 top-full z-10 mt-8px">
                   <div className="mb-20px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                    {Object.values(TeamRole).map((item) => (
+                    {canAlterRoles.map((item) => (
                       <button
                         key={item}
                         type="button"
@@ -69,7 +169,6 @@ const MemberItem = ({ member }: MemberItemProps) => {
                           setRole(item);
                           setIsRoleDropdownOpen(false);
                         }}
-                        disabled={item === member.role}
                         className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover disabled:pointer-events-none disabled:text-input-text-disable"
                       >
                         {t(`team:TEAM_ROLE.${item.toUpperCase()}`)}
@@ -81,7 +180,7 @@ const MemberItem = ({ member }: MemberItemProps) => {
             </section>
 
             {role && (
-              <button type="button" className="text-text-state-success">
+              <button type="button" className="text-text-state-success" onClick={updateMemberRole}>
                 <FiSave size={16} />
               </button>
             )}
@@ -89,8 +188,13 @@ const MemberItem = ({ member }: MemberItemProps) => {
         )}
 
         {/* Info: (20250220 - Liz) delete member */}
-        {member.editable && (
-          <button type="button" className="text-icon-surface-single-color-primary">
+        {isDeletable && (
+          <button
+            type="button"
+            className="text-icon-surface-single-color-primary disabled:cursor-not-allowed disabled:text-button-text-disable"
+            disabled={isDeleting}
+            onClick={deleteMember}
+          >
             <FiTrash2 size={16} />
           </button>
         )}
