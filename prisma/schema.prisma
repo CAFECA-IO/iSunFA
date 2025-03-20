@@ -675,9 +675,11 @@ model Ocr {
 
 model Order {
   id        Int    @id @default(autoincrement())
+  userId    Int    @map("user_id")
   companyId Int    @map("company_id")
   planId    Int    @map("plan_id")
   status    String
+  detail    Json?
   createdAt Int    @map("created_at")
   updatedAt Int    @map("updated_at")
   deletedAt Int?   @map("deleted_at")
@@ -992,6 +994,8 @@ model UserPaymentInfo {
   id            Int    @id @default(autoincrement())
   userId        Int    @map("user_id")
   token         String
+  default       Boolean @default(false)
+  detail          Json?
   transactionId String @map("transaction_id")
   createdAt     Int    @map("created_at")
   updatedAt     Int    @map("updated_at")
