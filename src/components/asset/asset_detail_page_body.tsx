@@ -32,9 +32,9 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     addAssetModalDataHandler,
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
-  const companyId = selectedAccountBook?.id;
+  const companyId = connectedAccountBook?.id;
 
   const params = { companyId, assetId };
 

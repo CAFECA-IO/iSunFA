@@ -206,8 +206,8 @@ const LaborCostChart = () => {
   const [series, setSeries] = useState<number[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const { toastHandler } = useModalContext();
-  const { isAuthLoading, selectedAccountBook } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
+  const { isAuthLoading, connectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
   const {
     trigger: getLaborCostChartData,
     data: laborCostData,
@@ -218,7 +218,7 @@ const LaborCostChart = () => {
     APIName.LABOR_COST_CHART,
     {
       params: {
-        companyId: selectedAccountBook?.id,
+        companyId: connectedAccountBook?.id,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
@@ -272,7 +272,7 @@ const LaborCostChart = () => {
     if (!hasCompanyId) return;
     getLaborCostChartData({
       params: {
-        companyId: selectedAccountBook?.id,
+        companyId: connectedAccountBook?.id,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),

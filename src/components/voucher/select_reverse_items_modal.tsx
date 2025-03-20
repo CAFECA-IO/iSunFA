@@ -117,10 +117,10 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 }) => {
   const { t } = useTranslation(['common', 'journal']);
   const { addReverseListHandler } = useAccountingCtx();
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
   const params = {
-    companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
+    companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
     accountId: modalData.account?.id,
   };
 

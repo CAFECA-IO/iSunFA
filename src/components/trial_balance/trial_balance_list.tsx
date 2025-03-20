@@ -31,8 +31,8 @@ interface TrialBalanceListProps {
 }
 
 const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }) => {
-  const { selectedAccountBook } = useUserCtx();
-  const companyId = selectedAccountBook?.id; // Info: (20241204 - Anna) 提取 companyId
+  const { connectedAccountBook } = useUserCtx();
+  const companyId = connectedAccountBook?.id; // Info: (20241204 - Anna) 提取 companyId
   const { t } = useTranslation(['reports', 'date_picker', 'common']);
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 

@@ -16,8 +16,8 @@ const MyAccountBookItem = ({
   isDisabled,
   dataIndex,
 }: MyAccountBookItemProps) => {
-  const { selectedAccountBook } = useUserCtx();
-  const isCompanySelected = accountBook.company.id === selectedAccountBook?.id;
+  const { connectedAccountBook } = useUserCtx();
+  const isCompanySelected = accountBook.company.id === connectedAccountBook?.id;
 
   const openMessageModal = () => {
     if (!isDisabled && !isCompanySelected) {

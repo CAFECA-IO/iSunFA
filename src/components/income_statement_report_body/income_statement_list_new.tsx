@@ -84,7 +84,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   console.log('isPrinting:', isPrinting);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
-  const { isAuthLoading, selectedAccountBook } = useUserCtx();
+  const { isAuthLoading, connectedAccountBook } = useUserCtx();
   // Info: (20241001 - Anna) 管理表格摺疊狀態
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
   const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
@@ -95,7 +95,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   const toggleDetailTable = () => {
     setIsDetailCollapsed(!isDetailCollapsed);
   };
-  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
+  const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
 
   const [isGetReportAPILoading, setIsGetReportAPILoading] = useState<boolean>(false);
   const [isGetReportAPISuccess, setIsGetReportAPISuccess] = useState<boolean>(false);
@@ -122,7 +122,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
       try {
         const { success, data, code } = await getReportAPI({
           params: {
-            companyId: selectedAccountBook?.id,
+            companyId: connectedAccountBook?.id,
           },
           query: {
             startDate: selectedDateRange.startTimeStamp,
@@ -153,7 +153,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
     };
 
     getIncomeStatementReport();
-  }, [hasCompanyId, hasFetchedOnce, selectedAccountBook?.id, selectedDateRange]);
+  }, [hasCompanyId, hasFetchedOnce, connectedAccountBook?.id, selectedDateRange]);
 
   if (!hasFetchedOnce && !isGetReportAPILoading) {
     return <NoData />;

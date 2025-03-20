@@ -22,9 +22,9 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   modalVisibilityHandler,
 }) => {
   const { t } = useTranslation('common');
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
-  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const queryCondition = {
     limit: 9999, // Info: (20241212 - Julian) 全部取出

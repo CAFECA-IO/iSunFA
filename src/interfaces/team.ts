@@ -28,11 +28,6 @@ export interface ITeam {
   totalMembers: number;
   totalAccountBooks: number;
   bankAccount: IEditable<string>;
-  // Info: (20250312 - Liz) 以下為待討論項目
-  // isAbleToEditPrivacy: boolean;
-  // isAbleToEditPlan: boolean;
-  // isAbleToEditBankAccount: boolean; // 可以編輯就表示可以查看(共用查看權限)
-  // bankAccount: string; // 不能查看就回傳空字串
 }
 
 export interface IInviteMember {

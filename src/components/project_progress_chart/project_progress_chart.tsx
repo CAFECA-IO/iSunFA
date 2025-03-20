@@ -171,8 +171,8 @@ const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 const ProjectProgressChart = () => {
   const { layoutAssertion } = useGlobalCtx();
   const { toastHandler } = useModalContext();
-  const { isAuthLoading, selectedAccountBook } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
+  const { isAuthLoading, connectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
   const { t } = useTranslation(['alpha', 'project']);
 
   // TODO: (20240618 - Shirley) [Beta] 改成 company startDate
@@ -200,7 +200,7 @@ const ProjectProgressChart = () => {
     APIName.PROJECT_LIST_PROGRESS,
     {
       params: {
-        companyId: selectedAccountBook?.id,
+        companyId: connectedAccountBook?.id,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
@@ -252,7 +252,7 @@ const ProjectProgressChart = () => {
     if (!hasCompanyId) return;
     listProjectProgress({
       params: {
-        companyId: selectedAccountBook?.id,
+        companyId: connectedAccountBook?.id,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),

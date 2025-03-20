@@ -65,5 +65,8 @@
     "TWD": "TWD",
     "EUR": "EUR",
     "USD": "USD"
+  },
+  "PERMISSION_ERROR": {
+    "PERMISSION_DENIED_MESSAGE": "You do not have permission to access this page"
   }
 }

@@ -16,7 +16,7 @@ import { TransactionStatus } from '@/constants/account';
 
 const PayableReceivableVoucherPageBody: React.FC = () => {
   const { t } = useTranslation('common');
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
   const [activeTab, setActiveTab] = useState(PayableReceivableTabs.PAYMENT);
   const [page, setPage] = useState(1);
@@ -76,7 +76,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
   );
 
-  const params = { companyId: selectedAccountBook?.id };
+  const params = { companyId: connectedAccountBook?.id };
 
   const handleApiResponse = (data: IPaginatedData<IVoucherBeta[]>) => {
     const note = JSON.parse(data.note ?? '{}') as IVoucherListSummary;
