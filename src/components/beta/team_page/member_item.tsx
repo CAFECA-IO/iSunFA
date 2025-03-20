@@ -9,6 +9,7 @@ import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { IMember } from '@/interfaces/member';
 
 interface MemberItemProps {
   member: ITeamMember;
@@ -20,6 +21,7 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState<boolean>(false);
   const [role, setRole] = useState<TeamRole | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [isEditable, setIsEditable] = useState<boolean>(false);
   const [isDeletable, setIsDeletable] = useState<boolean>(false);
   const [canAlterRoles, setCanAlterRoles] = useState<TeamRole[]>([]);
@@ -30,6 +32,10 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
     memberId: string;
   }>(APIName.DELETE_MEMBER);
 
+  // Info: (20250320 - Liz) 更新成員角色 API
+  const { trigger: updateMemberRoleAPI } = APIHandler<IMember>(APIName.UPDATE_MEMBER);
+
+  // Info: (20250320 - Liz) 刪除成員
   const deleteMember = async () => {
     if (!member.id || !team.id || isDeleting) return;
     setIsDeleting(true);
@@ -53,6 +59,36 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
       console.error('刪除成員失敗:', error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // Info: (20250320 - Liz) 更新成員角色
+  const updateMemberRole = async () => {
+    if (!member.id || !team.id || !role || isUpdating) return;
+    setIsUpdating(true);
+
+    try {
+      const { success } = await updateMemberRoleAPI({
+        params: {
+          teamId: team.id,
+          memberId: member.id,
+        },
+        body: {
+          role,
+        },
+      });
+
+      if (!success) {
+        // Deprecated: (20250320 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('更新成員角色失敗!');
+      }
+    } catch (error) {
+      // Deprecated: (20250320 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('更新成員角色失敗:', error);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -144,7 +180,7 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
             </section>
 
             {role && (
-              <button type="button" className="text-text-state-success">
+              <button type="button" className="text-text-state-success" onClick={updateMemberRole}>
                 <FiSave size={16} />
               </button>
             )}
