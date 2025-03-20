@@ -32,4 +32,4 @@ ALTER COLUMN "updated_at" SET DEFAULT EXTRACT(EPOCH FROM NOW())::int;
 
 -- AlterTable
 ALTER TABLE "user_payment_info" ADD COLUMN     "default" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "info" JSONB;
+ADD COLUMN     "detail" JSONB;
