@@ -8,7 +8,7 @@ import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { ILeaveTeam } from '@/interfaces/team';
 import { validateOutputData } from '@/lib/utils/validator';
-import { memberLeaveTeam } from '@/lib/utils/repo/team.repo';
+import { memberLeaveTeam } from '@/lib/utils/repo/team_member.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);

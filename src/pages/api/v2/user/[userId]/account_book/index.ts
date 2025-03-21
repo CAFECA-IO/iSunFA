@@ -15,10 +15,6 @@ import { listAccountBookByUserId } from '@/lib/utils/repo/company.repo';
 import { DefaultValue } from '@/constants/default_value';
 import { parseSortOption } from '@/lib/utils/sort';
 import { DEFAULT_SORT_OPTIONS } from '@/constants/account_book';
-/*
- * TODO: (20250305 - Shirley)
- * 改用 zod_schema/company.ts 替代 zod_schema/account_book.ts
- */
 
 const handleGetRequest: IHandleRequest<
   APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,

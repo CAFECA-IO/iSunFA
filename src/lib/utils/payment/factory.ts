@@ -1,6 +1,7 @@
 import { PAYMENT_GATEWAY } from '@/constants/payment';
 import OenPaymentGateway from '@/lib/utils/payment/oen';
 import { IPaymentGateway, IPaymentGatewayOptions } from '@/interfaces/payment_gateway';
+import HitrustPaymentGateway from '@/lib/utils/payment/hitrust';
 
 // Info: (20250318 - Luphia) Create payment gateway instance.
 export const createPaymentGateway = (options: IPaymentGatewayOptions): IPaymentGateway => {
@@ -9,6 +10,9 @@ export const createPaymentGateway = (options: IPaymentGatewayOptions): IPaymentG
   switch (platform) {
     case PAYMENT_GATEWAY.OEN:
       paymentGateway = new OenPaymentGateway(options);
+      break;
+    case PAYMENT_GATEWAY.HITRUST:
+      paymentGateway = new HitrustPaymentGateway(options);
       break;
     default:
       throw new Error(`Unsupported payment gateway: ${platform}`);

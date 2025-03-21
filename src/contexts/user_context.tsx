@@ -90,6 +90,9 @@ interface UserContextType {
   handleUserAgree: (hash: Hash) => Promise<boolean>;
   authenticateUser: (selectProvider: Provider, props: ILoginPageProps) => Promise<void>;
   handleAppleSignIn: () => void;
+
+  bindingResult: boolean | null;
+  handleBindingResult: (bindingResult: boolean | null) => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -128,6 +131,9 @@ export const UserContext = createContext<UserContextType>({
   handleUserAgree: async () => false,
   authenticateUser: async () => {},
   handleAppleSignIn: () => {},
+
+  bindingResult: false,
+  handleBindingResult: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -148,6 +154,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
+
+  const [, setBindingResult, bindingResultRef] = useStateRef<boolean | null>(null);
 
   const isRouteChanging = useRef(false);
 
@@ -188,6 +196,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
   const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
+
+  // Info: (20250321 - Julian) 從第三方金流獲取綁定信用卡的結果
+  const handleBindingResult = (bindingResult: boolean | null) => {
+    setBindingResult(bindingResult);
+  };
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -846,6 +859,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       handleUserAgree,
       authenticateUser,
       handleAppleSignIn,
+
+      bindingResult: bindingResultRef.current,
+      handleBindingResult,
     }),
     [
       credentialRef.current,
@@ -857,6 +873,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthLoadingRef.current,
       router.pathname,
       userAuthRef.current,
+      bindingResultRef.current,
     ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
