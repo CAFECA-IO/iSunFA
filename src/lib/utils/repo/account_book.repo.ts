@@ -21,12 +21,13 @@ export async function isEligibleToCreateAccountBookInTeam(
     where: {
       userId,
       teamId,
-      role: {
-        in: [TeamRole.OWNER, TeamRole.EDITOR, TeamRole.ADMIN],
-      },
     },
   });
-  return !!teamMember;
+  const canDo: ITeamRoleCanDo = convertTeamRoleCanDo({
+    teamRole: teamMember?.role as TeamRole,
+    canDo: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
+  }) as ITeamRoleCanDo;
+  return canDo.yesOrNo;
 }
 
 export const listAccountBooksByTeamId = async (
@@ -48,11 +49,12 @@ export const listAccountBooksByTeamId = async (
     prisma.company.count({
       where: {
         teamId: Number(teamId),
-        createdAt: { gte: startDate, lte: endDate },
         name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+        createdAt: { gte: startDate, lte: endDate },
+        AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
         OR: [
           {
-            isPrivate: false,
+            // isPrivate: false, // Info: (20250321 - Tzuhan) this property is no longer used
             team: {
               members: {
                 some: { status: LeaveStatus.IN_TEAM },
@@ -60,7 +62,7 @@ export const listAccountBooksByTeamId = async (
             },
           }, // Info: (20250221 - tzuhan) 公開帳本
           {
-            isPrivate: true,
+            // isPrivate: true,
             team: {
               members: {
                 some: {
@@ -77,11 +79,12 @@ export const listAccountBooksByTeamId = async (
     prisma.company.findMany({
       where: {
         teamId: Number(teamId),
-        createdAt: { gte: startDate, lte: endDate },
         name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+        createdAt: { gte: startDate, lte: endDate },
+        AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
         OR: [
           {
-            isPrivate: false,
+            // isPrivate: false,
             team: {
               members: {
                 some: { status: LeaveStatus.IN_TEAM },
@@ -89,7 +92,7 @@ export const listAccountBooksByTeamId = async (
             },
           }, // Info: (20250221 - tzuhan) 公開帳本
           {
-            isPrivate: true,
+            // isPrivate: true,
             team: {
               members: {
                 some: {

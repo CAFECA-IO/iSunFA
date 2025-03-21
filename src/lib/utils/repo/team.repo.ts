@@ -8,6 +8,7 @@ import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 import { createOrderByList } from '@/lib/utils/sort';
+import { MAX_TEAM_LIMIT } from '@/interfaces/permissions';
 
 export const getTeamList = async (
   userId: number,
@@ -92,8 +93,17 @@ export const createTeam = async (
     imageFileId?: number;
   }
 ): Promise<ITeam> => {
+  // Info: (20250321 - Tzuhan) 1️. 檢查該用戶已擁有的團隊數量
   return prisma.$transaction(async (tx) => {
-    // Info: (20250304 - Tzuhan) 1️. 取得 `planId`
+    const teamCount = await tx.team.count({
+      where: { ownerId: userId },
+    });
+
+    if (teamCount >= MAX_TEAM_LIMIT) {
+      throw new Error('USER_TEAM_LIMIT_REACHED'); // Info: (20250321 - Tzuhan) 超過 3 個團隊，阻止創建
+    }
+
+    // Info: (20250304 - Tzuhan) 2. 取得 `planId`
     const plan = await tx.teamPlan.findFirst({
       where: { type: teamData.planType ?? TPlanType.BEGINNER },
       select: { id: true },
@@ -105,7 +115,7 @@ export const createTeam = async (
 
     const now = Math.floor(Date.now() / 1000);
 
-    // Info: (20250304 - Tzuhan) 2️. 創建團隊
+    // Info: (20250304 - Tzuhan) 3. 創建團隊
     const newTeam = await tx.team.create({
       data: {
         ownerId: userId,
@@ -122,7 +132,7 @@ export const createTeam = async (
       },
     });
 
-    // Info: (20250305 - Tzuhan) 3. 將創建者加入 `teamMember`
+    // Info: (20250305 - Tzuhan) 4. 將創建者加入 `teamMember`
     await tx.teamMember.create({
       data: {
         teamId: newTeam.id,
@@ -132,7 +142,7 @@ export const createTeam = async (
       },
     });
 
-    // Info: (20250304 - Tzuhan) 4. 遍歷 `members`，判斷 Email 是否存在於 `User`
+    // Info: (20250304 - Tzuhan) 5. 遍歷 `members`，判斷 Email 是否存在於 `User`
     if (teamData.members && teamData.members.length > 0) {
       const existingUsers = await tx.user.findMany({
         where: { email: { in: teamData.members } },
@@ -142,7 +152,7 @@ export const createTeam = async (
       const existingUserEmails = new Set(existingUsers.map((user) => user.email));
       const newUserEmails = teamData.members.filter((email) => !existingUserEmails.has(email));
 
-      // Info: (20250304 - Tzuhan) 4.1 批量插入 `teamMember`
+      // Info: (20250304 - Tzuhan) 5.1 批量插入 `teamMember`
       if (existingUsers.length > 0) {
         await tx.teamMember.createMany({
           data: existingUsers.map((user) => ({
@@ -170,7 +180,7 @@ export const createTeam = async (
         });
       }
 
-      // Info: (20250304 - Tzuhan) 4.2 批量插入 `pendingTeamMember`
+      // Info: (20250304 - Tzuhan) 5.2 批量插入 `pendingTeamMember`
       if (newUserEmails.length > 0) {
         await tx.inviteTeamMember.createMany({
           data: newUserEmails.map((email) => ({
@@ -188,7 +198,7 @@ export const createTeam = async (
       }
     }
 
-    // Info: (20250304 - Tzuhan) 5. 創建 `TeamSubscription`
+    // Info: (20250304 - Tzuhan) 6. 創建 `TeamSubscription`
     await tx.teamSubscription.create({
       data: {
         teamId: newTeam.id,
@@ -221,6 +231,12 @@ export const createTeam = async (
 };
 
 export const getTeamByTeamId = async (teamId: number, userId: number): Promise<ITeam | null> => {
+  const teamMember = await prisma.teamMember.findFirst({
+    where: { teamId, userId },
+  });
+  if (!teamMember) {
+    throw new Error('USER_NOT_IN_TEAM');
+  }
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     include: {
@@ -247,7 +263,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
   });
 
   if (!team) {
-    return null;
+    throw new Error('TEAM_NOT_FOUND');
   }
 
   const teamRole =
