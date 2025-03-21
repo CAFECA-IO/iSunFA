@@ -36,19 +36,6 @@ const handleGetRequest: IHandleRequest<
       parsedSortOption
     );
 
-    // const filteredAccountBooks = {
-    //   ...accountBooksResult,
-    //   data: accountBooksResult.data.map((accountBook) => {
-    //     const { isPrivate, ...companyWithoutIsPrivate } = accountBook.company;
-
-    //     return {
-    //       ...accountBook,
-    //       company: companyWithoutIsPrivate,
-    //     };
-    //   }),
-    // };
-
-    // const paginatedData = toPaginatedData(filteredAccountBooks);
     const paginatedData = toPaginatedData(accountBooksResult);
 
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;

@@ -2,7 +2,7 @@ import prisma from '@/client';
 import { Admin, Company, Prisma, File, CompanySetting } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds, pageToOffset } from '@/lib/utils/common';
 import { CompanyRoleName } from '@/constants/role';
-import { TeamRole } from '@/interfaces/team';
+import { TeamRole, LeaveStatus } from '@/interfaces/team';
 import { TPlanType } from '@/interfaces/subscription';
 import { SortOrder, SortBy } from '@/constants/sort';
 import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
@@ -369,6 +369,7 @@ export async function listAccountBookByUserId(
           startDate: admin.company.startDate,
           createdAt: admin.company.createdAt,
           updatedAt: admin.company.updatedAt,
+          isPrivate: admin.company.isPrivate,
         },
         team: teamInfo,
         tag: admin.tag as WORK_TAG,
@@ -380,11 +381,187 @@ export async function listAccountBookByUserId(
           createdAt: admin.role.createdAt,
           updatedAt: admin.role.updatedAt,
         },
-        isTransferring: false, // TODO: (20250306 - Shirley) 預設為 false，實際情況可能需要從其他地方獲取
+        isTransferring: admin.company.isTransferring || false, // Info: (20250306 - Shirley) 使用數據庫中的 isTransferring 值
       } as IAccountBookForUserWithTeam;
     });
 
-    accountBooks = await Promise.all(accountBookPromises);
+    // Info: (20230506 - Shirley) 4. 獲取用戶所屬團隊的帳本
+    // Info: (20230506 - Shirley) 找出用戶加入的所有團隊
+    const userTeams = await prisma.teamMember.findMany({
+      where: {
+        userId,
+        status: LeaveStatus.IN_TEAM,
+      },
+      select: {
+        teamId: true,
+        role: true,
+        team: true,
+      },
+    });
+
+    // Info: (20230506 - Shirley) 對每個團隊，獲取用戶可以存取的帳本
+    const teamAccountBookPromises = userTeams.map(async (teamMember) => {
+      const teamRole = teamMember.role as TeamRole;
+
+      // Info: (20230506 - Shirley) 根據用戶在團隊中的角色，獲取可存取的帳本
+      // Info: (20230506 - Shirley) Owner 和 Admin 可以查看團隊中的所有帳本(包括私有帳本)
+      // Info: (20230506 - Shirley) Editor 和 Viewer 只能查看公開帳本
+      const teamAccountBooks = await prisma.company.findMany({
+        where: {
+          teamId: teamMember.teamId,
+          OR: [{ deletedAt: 0 }, { deletedAt: null }],
+          AND: [
+            searchQuery
+              ? {
+                  OR: [
+                    { name: { contains: searchQuery, mode: 'insensitive' as Prisma.QueryMode } },
+                    { taxId: { contains: searchQuery, mode: 'insensitive' as Prisma.QueryMode } },
+                  ],
+                }
+              : {},
+            {
+              OR: [
+                { isPrivate: false }, // Info: (20230506 - Shirley) 所有用戶都可以看到公開帳本
+                {
+                  isPrivate: true,
+                  AND: [
+                    {
+                      // Info: (20230506 - Shirley) Owner 和 Admin 可以看到私有帳本
+                      team: {
+                        members: {
+                          some: {
+                            userId,
+                            role: { in: [TeamRole.OWNER, TeamRole.ADMIN] },
+                            status: LeaveStatus.IN_TEAM,
+                          },
+                        },
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        include: {
+          imageFile: true,
+          team: {
+            include: {
+              members: {
+                where: { status: LeaveStatus.IN_TEAM },
+                select: { userId: true, role: true },
+              },
+              accountBook: {
+                select: { id: true },
+              },
+              subscription: {
+                include: { plan: true },
+              },
+              imageFile: {
+                select: { id: true, url: true },
+              },
+            },
+          },
+        },
+      });
+
+      // Info: (20230506 - Shirley) 將團隊帳本轉換為 IAccountBookForUserWithTeam 格式
+      return Promise.all(
+        teamAccountBooks.map(async (book) => {
+          // Info: (20230506 - Shirley) 檢查這個帳本是否已經包含在用戶的直接關聯帳本中
+          const adminRecord = await prisma.admin.findFirst({
+            where: {
+              userId,
+              companyId: book.id,
+              OR: [{ deletedAt: 0 }, { deletedAt: null }],
+            },
+            include: {
+              role: true,
+            },
+          });
+
+          // Info: (20230506 - Shirley) 如果用戶與該帳本已有直接關聯，則跳過
+          if (adminRecord) {
+            return null;
+          }
+
+          const planType = book.team?.subscription
+            ? (book.team.subscription.plan.type as TPlanType)
+            : TPlanType.BEGINNER;
+
+          const teamInfo = book.team
+            ? {
+                id: book.team.id,
+                imageId: book.team.imageFile?.url ?? '/images/fake_team_img.svg',
+                role: teamRole,
+                name: {
+                  value: book.team.name,
+                  editable: teamRole === TeamRole.OWNER || teamRole === TeamRole.ADMIN,
+                },
+                about: {
+                  value: book.team.about || '',
+                  editable: teamRole === TeamRole.OWNER || teamRole === TeamRole.ADMIN,
+                },
+                profile: {
+                  value: book.team.profile || '',
+                  editable: teamRole === TeamRole.OWNER || teamRole === TeamRole.ADMIN,
+                },
+                planType: {
+                  value: planType,
+                  editable: false,
+                },
+                totalMembers: book.team.members.length,
+                totalAccountBooks: book.team.accountBook.length,
+                bankAccount: {
+                  value: book.team.bankInfo
+                    ? `${(book.team.bankInfo as { code: string }).code}-${
+                        (book.team.bankInfo as { number: string }).number
+                      }`
+                    : '',
+                  editable: teamRole === TeamRole.OWNER || teamRole === TeamRole.ADMIN,
+                },
+              }
+            : null;
+
+          return {
+            company: {
+              id: book.id,
+              imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
+              name: book.name,
+              taxId: book.taxId,
+              startDate: book.startDate,
+              createdAt: book.createdAt,
+              updatedAt: book.updatedAt,
+              isPrivate: book.isPrivate,
+            },
+            team: teamInfo,
+            tag: WORK_TAG.ALL, // Info: (20230506 - Shirley) 團隊帳本默認使用 ALL 標籤
+            order: 0, // Info: (20230506 - Shirley) 團隊帳本默認排序為 0
+            role: {
+              // Info: (20230506 - Shirley) 用戶在團隊中的角色對應到帳本的角色
+              id: 0, // Info: (20230506 - Shirley) 非直接關聯的角色，使用預設值
+              name: teamRole,
+              permissions: [], // Info: (20230506 - Shirley) 使用空權限列表，後續可根據團隊角色映射
+              createdAt: 0,
+              updatedAt: 0,
+            },
+            isTransferring: book.isTransferring || false,
+          } as IAccountBookForUserWithTeam;
+        })
+      );
+    });
+
+    // Info: (20230506 - Shirley) 執行所有 Promise 並合併結果
+    const directAccountBooks = await Promise.all(accountBookPromises);
+    const teamAccountBooksArrays = await Promise.all(teamAccountBookPromises);
+
+    // Info: (20230506 - Shirley) 扁平化團隊帳本數組並過濾掉 null 值
+    const teamAccountBooks = teamAccountBooksArrays
+      .flat()
+      .filter((book): book is IAccountBookForUserWithTeam => book !== null);
+
+    // Info: (20230506 - Shirley) 合併直接關聯帳本和團隊帳本
+    accountBooks = [...directAccountBooks, ...teamAccountBooks];
 
     // Info: (20250306 - Shirley) 由於所有搜索邏輯已經在 Prisma 查詢中實現，不再需要額外的過濾步驟
   } catch (error) {
