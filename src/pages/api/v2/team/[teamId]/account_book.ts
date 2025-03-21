@@ -13,7 +13,7 @@ import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
 import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
-import { listAccountBooksByTeamId } from '@/lib/utils/repo/team.repo';
+import { listAccountBooksByTeamId } from '@/lib/utils/repo/account_book.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);

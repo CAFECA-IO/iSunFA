@@ -22,7 +22,8 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
 import { WORK_TAG } from '@/interfaces/account_book';
 import { DefaultValue } from '@/constants/default_value';
-import { getTeamList, isEligibleToCreateCompanyInTeam } from '@/lib/utils/repo/team.repo';
+import { getTeamList } from '@/lib/utils/repo/team.repo';
+import { isEligibleToCreateAccountBookInTeam } from '@/lib/utils/repo/account_book.repo';
 
 export async function listAdminByCompanyId(companyId: number): Promise<
   (Admin & {
@@ -676,7 +677,7 @@ export async function createCompanyAndRole(
   // Info: (20250303 - Shirley) 如果提供了 teamId，檢查用戶是否有權限在該 team 建立 company
   let finalTeamId: number | undefined = teamId ?? undefined;
   if (finalTeamId) {
-    const hasPermission = await isEligibleToCreateCompanyInTeam(userId, finalTeamId);
+    const hasPermission = await isEligibleToCreateAccountBookInTeam(userId, finalTeamId);
     if (!hasPermission) {
       throw new Error('User does not have permission to create company in this team');
     }
@@ -689,7 +690,7 @@ export async function createCompanyAndRole(
     if (userTeams && userTeams.data.length > 0) {
       // Info: (20250303 - Shirley) 使用用戶的第一個 team（通常是默認 team）
       const defaultTeamId = +userTeams.data[0].id;
-      const hasPermission = await isEligibleToCreateCompanyInTeam(userId, defaultTeamId);
+      const hasPermission = await isEligibleToCreateAccountBookInTeam(userId, defaultTeamId);
       if (hasPermission) {
         finalTeamId = defaultTeamId;
       }

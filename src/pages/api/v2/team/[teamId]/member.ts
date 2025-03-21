@@ -8,15 +8,13 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
-import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { IPaginatedData } from '@/interfaces/pagination';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
-import { FAKE_TEAM_MEMBER_LIST } from '@/constants/team';
 import { IInviteMemberResponse, ITeamMember } from '@/interfaces/team';
-import { addMembersToTeam } from '@/lib/utils/repo/team.repo';
+import { addMembersToTeam, listTeamMemberByTeamId } from '@/lib/utils/repo/team_member.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -42,19 +40,14 @@ const handleGetRequest = async (req: NextApiRequest) => {
   );
 
   // Info: (20250226 - Tzuhan) 取得該團隊的成員列表
-  const accountBooks = FAKE_TEAM_MEMBER_LIST || [];
+  const teamMembers = listTeamMemberByTeamId(teamId, query);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  const options: IPaginatedOptions<ITeamMember[]> = {
-    data: accountBooks,
-    page: Number(query.page) || 1,
-    pageSize: Number(query.pageSize) || 10,
-  };
 
   // Info: (20250226 - Tzuhan) 驗證輸出資料
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.LIST_MEMBER_BY_TEAM_ID,
-    toPaginatedData(options)
+    teamMembers
   );
 
   if (!isOutputDataValid) {
