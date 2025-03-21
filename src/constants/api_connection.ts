@@ -6,6 +6,8 @@ const apiPrefix = `/api/${apiVersion}`;
 const apiVersionV2 = 'v2';
 const apiPrefixV2 = `/api/${apiVersionV2}`;
 
+const apiPayment = `/api/payment`;
+
 const initialInput: IAPIInput = {
   header: {},
   body: {},
@@ -186,6 +188,10 @@ export enum APIName {
   GET_ACCOUNT_BOOK_INFO_BY_ID = 'GET_ACCOUNT_BOOK_INFO_BY_ID',
   PUT_TEAM_ICON = 'PUT_TEAM_ICON',
   UPDATE_ACCOUNT_BOOK = 'UPDATE_ACCOUNT_BOOK',
+  USER_PAYMENT_METHOD_LIST = 'USER_PAYMETHOD_LIST',
+  USER_PAYMENT_METHOD_CHARGE = 'USER_PAYMETHOD_CHARGE',
+  PAYMENT_METHOD_REGISTER_REDIRECT = 'PAYMENT_METHOD_REGISTER_REDIRECT',
+  PAYMENT_METHOD_REGISTER_CALLBACK_OEN = 'PAYMENT_METHOD_REGISTER_CALLBACK',
 }
 
 export enum APIPath {
@@ -350,6 +356,10 @@ export enum APIPath {
   REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/lineitem`,
   VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/voucher`,
   UPDATE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId`,
+  USER_PAYMENT_METHOD_LIST = `${apiPrefixV2}/user/:userId/payment_method`,
+  USER_PAYMENT_METHOD_CHARGE = `${apiPrefixV2}/user/:userId/payment_method/:paymentMethodId/charge`,
+  PAYMENT_METHOD_REGISTER_REDIRECT = `${apiPayment}/`,
+  PAYMENT_METHOD_REGISTER_CALLBACK_OEN = `${apiPayment}/callback/oen`,
 }
 
 const createConfig = ({
