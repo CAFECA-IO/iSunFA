@@ -85,6 +85,9 @@ interface UserContextType {
   handleUserAgree: (hash: Hash) => Promise<boolean>;
   authenticateUser: (selectProvider: Provider, props: ILoginPageProps) => Promise<void>;
   handleAppleSignIn: () => void;
+
+  bindingResult: boolean;
+  handleBindingResult: (bindingResult: boolean) => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -123,6 +126,9 @@ export const UserContext = createContext<UserContextType>({
   handleUserAgree: async () => false,
   authenticateUser: async () => {},
   handleAppleSignIn: () => {},
+
+  bindingResult: false,
+  handleBindingResult: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -143,6 +149,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
+
+  const [, setBindingResult, bindingResultRef] = useStateRef<boolean>(false);
 
   const isRouteChanging = useRef(false);
 
@@ -177,6 +185,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.COMPANY_DELETE);
   const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
   const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
+
+  // Info: (20250321 - Julian) 從第三方金流獲取綁定信用卡的結果
+  const handleBindingResult = (bindingResult: boolean) => {
+    setBindingResult(bindingResult);
+  };
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -839,6 +852,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       handleUserAgree,
       authenticateUser,
       handleAppleSignIn,
+
+      bindingResult: bindingResultRef.current,
+      handleBindingResult,
     }),
     [
       credentialRef.current,

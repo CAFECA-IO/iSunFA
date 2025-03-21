@@ -12,6 +12,7 @@ import { PLANS } from '@/constants/subscription';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import { useUserCtx } from '@/contexts/user_context';
 
 const PaymentPage = () => {
   const { t } = useTranslation(['subscriptions']);
@@ -19,6 +20,8 @@ const PaymentPage = () => {
   const { teamId, sp } = router.query;
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
   const spString = sp ? (Array.isArray(sp) ? sp[0] : sp) : '';
+
+  const { handleBindingResult } = useUserCtx();
 
   // Info: (20250114 - Liz) 找出 spString 所對應的 plan 資料
   const planFromUrl = PLANS.find((p) => p.id === spString);
@@ -56,6 +59,27 @@ const PaymentPage = () => {
   useEffect(() => {
     getOwnedTeam();
   }, [getOwnedTeam]);
+
+  // Info: (20250321 - Julian) 接收來自第三方金流的訊息
+  useEffect(() => {
+    const receiveMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
+      if (event.data) {
+        handleBindingResult(event.data);
+      } else {
+        handleBindingResult(false);
+      }
+    };
+
+    window.addEventListener('message', receiveMessage);
+
+    return () => {
+      window.removeEventListener('message', receiveMessage);
+    };
+  }, []);
 
   // Info: (20250117 - Liz) 如果打 API 還在載入中，顯示載入中頁面
   if (isLoading) {

@@ -30,7 +30,8 @@ const generateResponseTemplate = (success: boolean) => `
     <body>
       <h1>Binding Result: '${success}'</h1>
       <script>
-        window.opener.console.log('${success}');
+        window.opener.postMessage('${success}', window.location.origin);
+        window.close();
       </script>
     </body>
   </html>
