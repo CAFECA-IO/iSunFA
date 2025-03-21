@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { ITeam, ITeamMember, TeamRole } from '@/interfaces/team';
 import { FiTrash2, FiSave } from 'react-icons/fi';
@@ -21,9 +21,6 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
   const [role, setRole] = useState<TeamRole | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
-  const [isEditable, setIsEditable] = useState<boolean>(false);
-  const [isDeletable, setIsDeletable] = useState<boolean>(false);
-  const [canAlterRoles, setCanAlterRoles] = useState<TeamRole[]>([]);
   const teamRole = team.role; // Info: (20250321 - Liz) 使用者在此團隊的角色
 
   // Info: (20250320 - Liz) 刪除成員 API
@@ -91,27 +88,16 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
     }
   };
 
-  useEffect(() => {
-    if (!teamRole) return;
-
-    // Info: (20250320 - Liz) 取得使用者可以變更的角色
-    const result = convertTeamRoleCanDo({
-      teamRole,
-      canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
-    });
-
-    if ('canAlter' in result) {
-      setCanAlterRoles(result.canAlter);
-
-      // Info: (20250320 - Liz) 判斷使用者是否有權限編輯成員角色以顯示下拉選單 (有編輯成員的權限並且有其他角色可以選擇)
-      const canEditThisRole = result.canAlter.includes(member.role);
-      const hasOtherRoleToChange = result.canAlter.some((item) => item !== member.role);
-      setIsEditable(canEditThisRole && hasOtherRoleToChange);
-
-      // Info: (20250320 - Liz) 判斷使用者是否有權限刪除成員 (有編輯成員的權限)
-      setIsDeletable(canEditThisRole);
-    }
-  }, [member.role, teamRole]);
+  const result = convertTeamRoleCanDo({
+    teamRole,
+    canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
+  });
+  const canAlterRoles = 'canAlter' in result ? result.canAlter : [];
+  const canEditThisRole = 'canAlter' in result && result.canAlter.includes(member.role);
+  const hasOtherRoleToChange =
+    'canAlter' in result && result.canAlter.some((item) => item !== member.role);
+  const isEditable = canEditThisRole && hasOtherRoleToChange;
+  const isDeletable = canEditThisRole;
 
   return (
     <main className="flex items-center gap-80px">
