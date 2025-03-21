@@ -7,6 +7,7 @@ import { useTranslation } from 'next-i18next';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaymentMethod } from '@/interfaces/payment';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
@@ -26,6 +27,7 @@ const CreditCardInfo = ({
   setIsDirty,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
+  const { bindingResult } = useUserCtx();
   // const { toastHandler } = useModalContext();
   // const router = useRouter();
   // Deprecated: (20250220 - Tzuhan) remove eslint-disable
@@ -58,6 +60,12 @@ const CreditCardInfo = ({
     getCreditCardInfo();
     window.getCreditCardInfo = getCreditCardInfo; // Info: (20250120 - Liz) 後端需求，將 getCreditCardInfo 掛載到全域的 window 物件上
   }, []);
+
+  useEffect(() => {
+    // deprecated: (20250321 - Julian) For testing purpose
+    // eslint-disable-next-line no-console
+    console.log('Binding Result:', bindingResult);
+  }, [bindingResult]);
 
   const isAutoRenewalEnabled = team.enableAutoRenewal;
 
