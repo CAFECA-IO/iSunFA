@@ -27,7 +27,6 @@ const accountBookSchema = z.object({
   startDate: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
-  isPrivate: z.boolean().optional(),
 });
 
 const accountBookForUserSchema = z.object({
@@ -59,7 +58,6 @@ const updateAccountBookQuerySchema = z.object({
 const updateAccountBookBodySchema = z.object({
   action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
   tag: z.nativeEnum(WORK_TAG).optional(),
-  isPrivate: z.boolean().optional(),
 });
 
 const updateAccountBookResponseSchema = z.object({
@@ -163,7 +161,6 @@ export const updateAccountBookSchema = {
     querySchema: updateAccountBookQuerySchema,
     bodySchema: updateAccountBookBodySchema,
   },
-  // outputSchema: accountBookForUserWithTeamInfoSchema.nullable(),
   outputSchema: updateAccountBookResponseSchema.nullable(),
   frontend: nullSchema,
 };

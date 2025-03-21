@@ -98,7 +98,7 @@ const handlePostRequest: IHandleRequest<
     teamId: number | null;
   } | null = null;
   const { userId } = query;
-  const { taxId, name, tag, teamId, isPrivate } = body;
+  const { taxId, name, tag, teamId } = body;
 
   // Info: (20250124 - Shirley) Step 1.
   const getCompany = await getCompanyAndRoleByTaxId(userId, taxId);
@@ -128,7 +128,6 @@ const handlePostRequest: IHandleRequest<
         name,
         file.id,
         tag,
-        isPrivate,
         undefined,
         teamIdParam
       );

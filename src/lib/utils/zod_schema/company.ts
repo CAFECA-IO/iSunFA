@@ -29,7 +29,6 @@ const companyPostBodySchema = z.object({
   taxId: z.string(),
   tag: z.nativeEnum(WORK_TAG),
   teamId: z.number().int(),
-  isPrivate: z.boolean(),
 });
 
 // Info: (20241016 - Jacky) Company get schema
@@ -44,7 +43,6 @@ const companyPutQuerySchema = z.object({
 const companyPutBodySchema = z.object({
   action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
   tag: z.nativeEnum(WORK_TAG).optional(),
-  isPrivate: z.boolean().optional(),
 });
 
 // Info: (20241016 - Jacky) Company delete schema
@@ -74,7 +72,7 @@ const companyPrismaSchema = z.object({
 });
 
 export const companyOutputSchema = companyPrismaSchema.strip().transform((data) => {
-  const { imageFile, teamId, ...rest } = data;
+  const { imageFile, teamId, isPrivate, ...rest } = data;
   const output = {
     ...rest,
     imageId: imageFile.url,
