@@ -4,7 +4,6 @@ import { ITeam, ITeamMember, TeamRole } from '@/interfaces/team';
 import { FiTrash2, FiSave } from 'react-icons/fi';
 import { IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
-import { useUserCtx } from '@/contexts/user_context';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import APIHandler from '@/lib/utils/api_handler';
@@ -25,7 +24,7 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
   const [isEditable, setIsEditable] = useState<boolean>(false);
   const [isDeletable, setIsDeletable] = useState<boolean>(false);
   const [canAlterRoles, setCanAlterRoles] = useState<TeamRole[]>([]);
-  const { teamRole } = useUserCtx();
+  const teamRole = team.role; // Info: (20250321 - Liz) 使用者在此團隊的角色
 
   // Info: (20250320 - Liz) 刪除成員 API
   const { trigger: deleteMemberAPI } = APIHandler<{
