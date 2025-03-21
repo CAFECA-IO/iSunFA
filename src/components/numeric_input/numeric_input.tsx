@@ -113,22 +113,23 @@ const NumericInput: React.FC<INumericInputProps> = ({
     const input = event.currentTarget; // Info: (20250306 - Julian) 取得 input 元件
     const cursorPos = input.selectionStart ?? displayValue.length; // Info: (20250306 - Julian) 取得當前游標位置
 
-    if (event.code.indexOf('Digit') > -1) {
-      // Info: (20250306 - Julian) 如果按下的是數字鍵
-      code = event.code.slice(-1); // Info: (20250306 - Julian) 取得數字鍵的值
+    // Info: (20250321 - Julian) 數字鍵正規表達式：digit0 ~ digit9, numpad0 ~ numpad9
+    const regex = /^(Digit|Numpad)[0-9]$/;
+
+    // Info: (20250306 - Julian) 如果按下的是數字鍵
+    if (regex.test(event.code)) {
+      code = event.code.replace(/\D/g, ''); // Info: (20250321 - Julian) 取得數字 (去掉前面的字符)
       // Info: (20250319 - Anna) 允許輸入小數點，但只能輸入一次
-    } else if (event.key === '.' && !displayValue.includes('.')) {
+    } else if ((event.key === '.' || event.code === 'Period') && !displayValue.includes('.')) {
       code = '.';
     }
+
+    // Info: (20250306 - Julian) 插入數字
     if (code) {
-      temp = temp.slice(0, cursorPos) + code + temp.slice(cursorPos); // Info: (20250306 - Julian) 插入數字
+      temp = temp.slice(0, cursorPos) + code + temp.slice(cursorPos);
 
       // Info: (20250306 - Julian) 變更顯示值
       handleChange({ target: { value: temp } } as React.ChangeEvent<HTMLInputElement>);
-    }
-    // Info: (20250319 - Anna) 如果按下的是數字鍵，將 code 設為數字
-    if (event.code.indexOf('Digit') > -1) {
-      code = event.code.slice(-1);
     }
   }
 

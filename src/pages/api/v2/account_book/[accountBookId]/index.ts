@@ -3,10 +3,8 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IAccountBookForUser, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
-import { updateCompanyVisibilityById } from '@/lib/utils/repo/company.repo';
 import {
   getAdminByCompanyIdAndUserId,
-  getCompanyAndRoleByUserIdAndCompanyId,
   setCompanyToTop,
   updateCompanyTagById,
 } from '@/lib/utils/repo/admin.repo';
@@ -22,7 +20,6 @@ import { Company, Role, File } from '@prisma/client';
 import { DefaultValue } from '@/constants/default_value';
 import { getSession } from '@/lib/utils/session';
 import { loggerError } from '@/lib/utils/logger_back';
-import { TeamRole } from '@/interfaces/team';
 import { ISessionData } from '@/interfaces/session';
 
 /**
@@ -55,10 +52,11 @@ const handlePutRequest = async (req: NextApiRequest) => {
   // Info: (20250310 - Shirley) Check user authorization, will throw FORBIDDEN error if not authorized
   await checkUserAuthorization(apiName, req, session);
 
-  // Info: (20250310 - Shirley) Process account book update based on action type
-  const { userId, teamId, teamRole } = session;
+  // TODO: (20250310 - Shirley) Process account book update based on action type
+  // const { userId, teamRole, teamId } = session;
+  const { userId } = session;
   const companyId = Number(req.query.accountBookId);
-  const { action, tag, isPrivate } = body;
+  const { action, tag } = body;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: {
@@ -92,27 +90,6 @@ const handlePutRequest = async (req: NextApiRequest) => {
           ...updatedCompanyAndRole,
           teamId: updatedCompanyAndRole.company.teamId,
         };
-      }
-      break;
-    }
-    // Info: (20250310 - Shirley) Update account book visibility
-    case ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_VISIBILITY: {
-      const companyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(userId, companyId);
-      const hasPermission =
-        companyAndRole?.company.teamId === teamId &&
-        (teamRole === TeamRole.OWNER || teamRole === TeamRole.ADMIN);
-      if (hasPermission && isPrivate !== undefined) {
-        await updateCompanyVisibilityById(companyId, isPrivate);
-        const updatedCompanyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(
-          userId,
-          companyId
-        );
-        if (updatedCompanyAndRole) {
-          statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-          payload = updatedCompanyAndRole;
-        }
-      } else {
-        statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
       }
       break;
     }

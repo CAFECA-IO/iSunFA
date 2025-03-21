@@ -7,12 +7,11 @@ import {
   ACCOUNT_BOOK_UPDATE_ACTION,
 } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
-import { deleteCompanyById, updateCompanyVisibilityById } from '@/lib/utils/repo/company.repo';
+import { deleteCompanyById } from '@/lib/utils/repo/company.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
 import {
   deleteAdminListByCompanyId,
   getAdminByCompanyIdAndUserId,
-  getAdminByCompanyIdAndUserIdAndRoleName,
   getCompanyAndRoleByUserIdAndCompanyId,
   setCompanyToTop,
   updateCompanyTagById,
@@ -21,7 +20,6 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { Company, Role, File } from '@prisma/client';
-import { CompanyRoleName } from '@/constants/role';
 
 const handleGetRequest: IHandleRequest<
   APIName.COMPANY_GET_BY_ID,
@@ -71,7 +69,7 @@ const handlePutRequest: IHandleRequest<
   } | null = null;
 
   const { companyId } = query;
-  const { action, tag, isPrivate } = body;
+  const { action, tag } = body;
   const { userId } = session;
   switch (action) {
     case ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG: {
@@ -94,27 +92,6 @@ const handlePutRequest: IHandleRequest<
           ...updatedCompanyAndRole,
           teamId: updatedCompanyAndRole.company.teamId,
         };
-      }
-      break;
-    }
-    case ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_VISIBILITY: {
-      const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
-        companyId,
-        userId,
-        CompanyRoleName.OWNER
-      );
-      if (admin && isPrivate !== undefined) {
-        await updateCompanyVisibilityById(companyId, isPrivate);
-        const updatedCompanyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(
-          userId,
-          companyId
-        );
-        if (updatedCompanyAndRole) {
-          statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-          payload = updatedCompanyAndRole;
-        }
-      } else {
-        statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
       }
       break;
     }

@@ -662,7 +662,6 @@ export async function createCompanyAndRole(
   name: string,
   imageFileId: number,
   tag: WORK_TAG = WORK_TAG.ALL,
-  isPrivate: boolean = true,
   email?: string,
   teamId?: number
 ): Promise<{
@@ -730,7 +729,6 @@ export async function createCompanyAndRole(
         id: imageFileId,
       },
     },
-    isPrivate,
     createdAt: nowTimestamp,
     updatedAt: nowTimestamp,
     startDate: nowTimestamp,

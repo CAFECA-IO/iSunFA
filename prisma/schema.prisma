@@ -610,7 +610,7 @@ model KYCRole {
 
 model LineItem {
   id          Int     @id @default(autoincrement())
-  amount      Int
+  amount      Float
   description String
   debit       Boolean
   accountId   Int     @map("account_id")
