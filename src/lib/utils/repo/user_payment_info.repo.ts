@@ -80,41 +80,56 @@ export const TeamInvoiceSchema = z.object({
   amountDue: z.number(),
 });
 
-// Info: (20250319 - Luphia) 取得用戶支付資訊
-export const getDefaultUserPaymentInfo: (userId: number) => Promise<IPaymentInfo | null> = async (
+// Info: (20250319 - Luphia) 列出用戶完整支付方法
+export const listUserPaymentInfo: (userId: number) => Promise<IPaymentInfo[]> = async (
   userId: number
 ) => {
-  if (!userId) return null;
-  const result = await prisma.userPaymentInfo.findFirst({
+  if (!userId) return [];
+  const query = {
     where: {
       userId,
-      default: true,
       deletedAt: null,
     },
-  });
-  if (!result) return null;
+    orderBy: {
+      default: Prisma.SortOrder.desc,
+    },
+  };
+  const result = await prisma.userPaymentInfo.findMany(query);
+  if (!result) return [];
   // Info: (20250319 - Luphia) 轉換回傳資訊為 IPaymentMethod，number 只保留末四碼，其餘轉換為 *，cvv 也轉換為 *
-  const { info } = result as unknown as { info: IPaymentMethod };
-  const paymentMethod: IPaymentMethod = {
-    id: result.id,
-    type: info.type,
-    number: `${DefaultValue.PAYMENT_METHOD_NUMBER.slice(0, -4)} ${info.number.slice(-4)}`,
-    expirationDate: info.expirationDate,
-    cvv: DefaultValue.PAYMENT_METHOD_CVV,
-    default: result.default,
-  };
-  // Info: (20250319 - Luphia) 轉換回傳資訊為 IUserPaymentInfo
-  const paymentInfo: IPaymentInfo = {
-    id: result?.id,
-    userId: result?.userId,
-    token: result?.token,
-    transactionId: result?.transactionId,
-    default: result?.default,
-    detail: paymentMethod,
-    createdAt: result?.createdAt,
-    updatedAt: result?.updatedAt,
-  };
-  return paymentInfo;
+  const paymentInfoList: IPaymentInfo[] = result.map((item) => {
+    const { detail } = item as unknown as IPaymentInfo;
+    const paymentMethod: IPaymentMethod = {
+      id: item.id,
+      type: detail.type,
+      number: `${DefaultValue.PAYMENT_METHOD_NUMBER.slice(0, -4)} ${detail.number.slice(-4)}`,
+      expirationDate: detail.expirationDate,
+      cvv: DefaultValue.PAYMENT_METHOD_CVV,
+      default: item.default,
+    };
+    // Info: (20250319 - Luphia) 轉換回傳資訊為 IUserPaymentInfo
+    const paymentInfo: IPaymentInfo = {
+      id: item.id,
+      userId: item.userId,
+      token: item.token,
+      transactionId: item.transactionId,
+      default: item.default,
+      detail: paymentMethod,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    };
+    return paymentInfo;
+  });
+  return paymentInfoList;
+};
+
+// Info: (20250319 - Luphia) 列出用戶支付方法摘要資訊
+export const listUserPaymentMethod: (userId: number) => Promise<IPaymentMethod[]> = async (
+  userId: number
+) => {
+  const paymentInfoList = await listUserPaymentInfo(userId);
+  const paymentMethodList: IPaymentMethod[] = paymentInfoList.map((item) => item.detail);
+  return paymentMethodList;
 };
 
 export const createDefaultUserPaymentInfo: (
