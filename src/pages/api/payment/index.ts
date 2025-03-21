@@ -1,14 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { HTTP_STATUS } from '@/constants/http';
 import { PAYMENT } from '@/constants/service';
 import { getSession } from '@/lib/utils/session';
-import { HttpMethod } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { createPaymentGateway } from '@/lib/utils/payment/factory';
 import {
   IGetCardBindingUrlOptions,
   IPaymentGateway,
   IPaymentGatewayOptions,
 } from '@/interfaces/payment_gateway';
+import { logUserAction } from '@/lib/utils/middleware';
+import { formatApiResponse } from '@/lib/utils/common';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import loggerBack from '@/lib/utils/logger_back';
 
 /* Info: (20250111 - Luphia) 導向綁定信用卡頁面
  * 1. 取得 Session 資訊
@@ -56,8 +59,10 @@ export const oenPaymentHandler = async (req: NextApiRequest) => {
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const method = req.method || HttpMethod.GET;
-  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  const session = await getSession(req);
+  let httpCode;
   let result;
+  let statusMessage;
   let paymentHandler;
   const paymentService = process.env.PAYMENT_SERVICE;
 
@@ -72,11 +77,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case HttpMethod.GET:
       default:
         ({ httpCode, result } = await paymentHandler(req));
+        res.writeHead(httpCode, { Location: result });
     }
   } catch (error) {
-    // Info: (20250113 - Luphia) unexpected exception, pass to global handler
+    loggerBack.error(error);
+    const err = error as Error;
+    statusMessage =
+      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
+      STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    ({ httpCode, result } = formatApiResponse(statusMessage, {}));
+    res.status(httpCode).json(result);
   }
-
-  res.writeHead(httpCode, { Location: result });
+  await logUserAction(
+    session,
+    APIName.PAYMENT_METHOD_REGISTER_REDIRECT,
+    req,
+    statusMessage as string
+  );
   res.end();
 }
