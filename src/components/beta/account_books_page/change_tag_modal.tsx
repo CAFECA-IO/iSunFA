@@ -2,7 +2,11 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-import { WORK_TAG, IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import {
+  WORK_TAG,
+  IAccountBookForUserWithTeam,
+  ACCOUNT_BOOK_UPDATE_ACTION,
+} from '@/interfaces/account_book';
 
 interface ChangeTagModalProps {
   accountBookToEdit: IAccountBookForUserWithTeam;
@@ -39,27 +43,24 @@ const ChangeTagModal = ({
     setIsLoading(true);
 
     try {
-      const data = await updateAccountBook({
-        companyId: accountBookToEdit.company.id,
-        action: 'updateTag',
+      const success = await updateAccountBook({
+        accountBookId: accountBookToEdit.company.id.toString(),
+        action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG,
         tag,
       });
 
-      if (data) {
-        // Info: (20241113 - Liz) 更新公司成功後清空表單並關閉 modal
-        setTag(WORK_TAG.ALL);
-        closeChangeTagModal();
-
-        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
-
-        // Deprecated: (20241113 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('打 API 變更標籤成功, api return data:', data);
-      } else {
+      if (!success) {
         // Deprecated: (20241113 - Liz)
         // eslint-disable-next-line no-console
         console.log('變更公司標籤失敗');
+        return;
       }
+
+      // Info: (20241113 - Liz) 更新公司成功後清空表單並關閉 modal
+      setTag(WORK_TAG.ALL);
+      closeChangeTagModal();
+
+      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
     } catch (error) {
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console

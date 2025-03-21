@@ -5,7 +5,12 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { WORK_TAG, IAccountBook, IAccountBookForUser } from '@/interfaces/account_book';
+import {
+  WORK_TAG,
+  IAccountBook,
+  IAccountBookForUser,
+  IResponseUpdateAccountBook,
+} from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
@@ -38,28 +43,28 @@ interface UserContextType {
     taxId,
     tag,
     teamId,
-    isPrivate,
   }: {
     name: string;
     taxId: string;
     tag: WORK_TAG;
     teamId: number;
-    isPrivate: boolean;
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
   connectedAccountBook: IAccountBook | null;
   team: ITeam | null;
   teamRole: TeamRole | null;
   connectAccountBook: (companyId: number) => Promise<{ success: boolean }>;
+
   updateAccountBook: ({
-    companyId,
+    accountBookId,
     action,
     tag,
   }: {
-    companyId: number;
+    accountBookId: string;
     action: string;
     tag: WORK_TAG;
-  }) => Promise<IAccountBookForUser | null>;
+  }) => Promise<{ success: boolean }>;
+
   deleteAccountBook: (companyId: number) => Promise<IAccountBook | null>;
   deleteAccount: () => Promise<{
     success: boolean;
@@ -110,7 +115,7 @@ export const UserContext = createContext<UserContextType>({
   team: null,
   teamRole: null,
   connectAccountBook: async () => ({ success: false }),
-  updateAccountBook: async () => null,
+  updateAccountBook: async () => ({ success: false }),
   deleteAccountBook: async () => null,
   deleteAccount: async () => Promise.resolve({ success: false, data: null, code: '', error: null }),
   cancelDeleteAccount: async () =>
@@ -171,18 +176,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: createRoleAPI } = APIHandler<IUserRole>(APIName.USER_CREATE_ROLE);
   // Info: (20241101 - Liz) 選擇角色 API
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
-  // Info: (20241104 - Liz) 建立帳本 API(原為公司)
+
+  // Info: (20241104 - Liz) 建立帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
   const { trigger: createAccountBookAPI } = APIHandler<IAccountBookForUser>(
     APIName.CREATE_USER_COMPANY
   );
+
   // Info: (20241111 - Liz) 連結帳本 API(原為選擇公司)
   const { trigger: connectAccountBookAPI } = APIHandler<IAccountBook>(
     APIName.CONNECT_ACCOUNT_BOOK_BY_ID
   );
   // Info: (20241113 - Liz) 更新帳本 API(原為公司)
-  const { trigger: updateAccountBookAPI } = APIHandler<IAccountBookForUser>(APIName.COMPANY_UPDATE);
-  // Info: (20241115 - Liz) 刪除帳本 API(原為公司)
+  const { trigger: updateAccountBookAPI } = APIHandler<IResponseUpdateAccountBook>(
+    APIName.UPDATE_ACCOUNT_BOOK
+  );
+
+  // Info: (20241115 - Liz) 刪除帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
   const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.COMPANY_DELETE);
+
   const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
   const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
 
@@ -633,18 +644,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     taxId,
     tag,
     teamId,
-    isPrivate,
   }: {
     name: string;
     taxId: string;
     tag: WORK_TAG;
     teamId: number;
-    isPrivate: boolean;
   }) => {
     try {
       const { success, code, error } = await createAccountBookAPI({
         params: { userId: userAuthRef.current?.id },
-        body: { name, taxId, tag, teamId, isPrivate },
+        body: { name, taxId, tag, teamId },
       });
 
       if (!success) {
@@ -672,28 +681,26 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241113 - Liz) 更新帳本的功能(原為公司) - 變更標籤
+  // Info: (20241113 - Liz) 更新帳本的功能(原為公司) - 變更工作標籤
   const updateAccountBook = async ({
-    companyId,
+    accountBookId,
     action,
     tag,
   }: {
-    companyId: number;
+    accountBookId: string;
     action: string;
     tag: WORK_TAG;
   }) => {
     try {
-      const { success, data: companyAndRole } = await updateAccountBookAPI({
-        params: { companyId },
+      const { success } = await updateAccountBookAPI({
+        params: { accountBookId },
         body: { action, tag },
       });
 
-      if (success && companyAndRole) {
-        return companyAndRole;
-      }
-      return null;
+      if (!success) return { success: false };
+      return { success: true };
     } catch (error) {
-      return null;
+      return { success: false };
     }
   };
 

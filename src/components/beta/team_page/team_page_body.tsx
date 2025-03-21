@@ -16,7 +16,6 @@ import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
 import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
-import AccountBookPrivacyModal from '@/components/beta/account_books_page/account_book_privacy_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -44,9 +43,6 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
     IAccountBookForUserWithTeam | undefined
   >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
-    IAccountBookForUserWithTeam | undefined
-  >();
-  const [accountBookToChangePrivacy, setAccountBookToChangePrivacy] = useState<
     IAccountBookForUserWithTeam | undefined
   >();
   const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
@@ -79,12 +75,15 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
       const { data: accountBookListData, success } = await getAccountBookListByTeamIdAPI({
         params: { teamId: team.id },
       });
-      if (success && accountBookListData) {
-        setAccountBookList(accountBookListData.data);
-        // Deprecated: (20250310 - Liz)
+
+      if (!success || !accountBookListData) {
+        // Deprecated: (20250219 - Liz)
         // eslint-disable-next-line no-console
-        console.log('取得團隊帳本清單成功:', accountBookListData.data);
+        console.log('取得團隊帳本清單失敗');
+        return;
       }
+
+      setAccountBookList(accountBookListData.data);
     } catch (error) {
       // Deprecated: (20250219 - Liz)
       // eslint-disable-next-line no-console
@@ -157,7 +156,6 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
           setAccountBookToEdit={setAccountBookToEdit}
           setAccountBookToDelete={setAccountBookToDelete}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
-          setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
         />
       )}
 
@@ -197,14 +195,6 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
           messageModalData={messageModalData}
           isModalVisible={!!accountBookToDelete}
           modalVisibilityHandler={closeDeleteModal}
-        />
-      )}
-
-      {accountBookToChangePrivacy && (
-        <AccountBookPrivacyModal
-          accountBookToChangePrivacy={accountBookToChangePrivacy}
-          setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
-          getAccountBookListByTeamId={getAccountBookListByTeamId}
         />
       )}
 
