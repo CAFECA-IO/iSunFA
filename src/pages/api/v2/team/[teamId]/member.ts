@@ -40,14 +40,14 @@ const handleGetRequest = async (req: NextApiRequest) => {
   );
 
   // Info: (20250226 - Tzuhan) 取得該團隊的成員列表
-  const teamMembers = listTeamMemberByTeamId(teamId, query);
+  const paginatedTeamMembers = await listTeamMemberByTeamId(teamId, query);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
 
   // Info: (20250226 - Tzuhan) 驗證輸出資料
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.LIST_MEMBER_BY_TEAM_ID,
-    teamMembers
+    paginatedTeamMembers
   );
 
   if (!isOutputDataValid) {

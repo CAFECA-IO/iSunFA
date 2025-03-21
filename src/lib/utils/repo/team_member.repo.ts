@@ -277,71 +277,63 @@ export const deleteMemberById = async (
 /**
  * Info: (20250321 - Tzuhan) 取得指定團隊的所有成員
  * @param teamId 團隊 ID
- * @returns 該團隊所有成員的基本資訊
+ * @param queryParams 分頁、搜尋等參數
+ * @returns 符合 ITeamMemberSchema 的成員列表（分頁）
  */
 export const listTeamMemberByTeamId = async (
   teamId: number,
   queryParams: z.infer<typeof paginatedDataQuerySchema>
 ): Promise<IPaginatedData<ITeamMember[]>> => {
-  const { page, pageSize, startDate, endDate, searchQuery } = queryParams;
+  const { page, pageSize } = queryParams;
 
-  // Info: (20250321 - Tzuhan) 取得總成員數
+  // Info: (20250321 - Tzuhan) 計算總成員數量
   const totalCount = await prisma.teamMember.count({
-    where: {
-      teamId,
-      joinedAt: { gte: startDate, lte: endDate },
-      status: LeaveStatus.IN_TEAM,
-      user: {
-        name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
-      },
-    },
+    where: { teamId, status: LeaveStatus.IN_TEAM },
   });
 
-  // Info: (20250321 - Tzuhan) 查詢成員資訊
+  // Info: (20250321 - Tzuhan) 取得成員列表
   const teamMembers = await prisma.teamMember.findMany({
-    where: {
-      teamId,
-      joinedAt: { gte: startDate, lte: endDate },
-      status: LeaveStatus.IN_TEAM,
-      user: {
-        name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
-      },
-    },
+    where: { teamId, status: LeaveStatus.IN_TEAM },
     include: {
       user: {
         select: {
           id: true,
           email: true,
           name: true,
-          imageFile: { select: { url: true } }, // Info: (20250321 - Tzuhan) 確保 imageId 是 string
+          imageFile: { select: { url: true } },
         },
       },
     },
-    orderBy: { joinedAt: SortOrder.ASC }, //
+    orderBy: { joinedAt: SortOrder.ASC },
     skip: (page - 1) * pageSize,
     take: pageSize,
   });
 
-  return toPaginatedData({
+  // Info: (20250321 - Tzuhan) **確保 `teamMembers` 是同步陣列**
+  const formattedMembers: ITeamMember[] = teamMembers.map((member) => ({
+    id: String(member.id),
+    name: member.user.name || '',
+    email: member.user.email || '',
+    imageId: member.user.imageFile?.url ?? '',
+    role: member.role as TeamRole,
+    editable: Boolean(
+      (
+        convertTeamRoleCanDo({
+          teamRole: member.role as TeamRole,
+          canDo: TeamPermissionAction.LEAVE_TEAM,
+        }) as ITeamRoleCanDo
+      )?.yesOrNo
+    ),
+  }));
+
+  // Info: (20250321 - Tzuhan) **確保 `toPaginatedData` 不是 `Promise`**
+  const paginatedResult = toPaginatedData({
     page,
     pageSize,
     totalPages: Math.ceil(totalCount / pageSize),
     totalCount,
-    data: teamMembers.map(
-      (member) =>
-        ({
-          id: String(member.id),
-          name: member.user.name || '',
-          email: member.user.email || '',
-          imageId: member.user.imageFile?.url ?? '',
-          role: member.role as TeamRole,
-          editable: (
-            convertTeamRoleCanDo({
-              teamRole: member.role as TeamRole,
-              canDo: TeamPermissionAction.LEAVE_TEAM,
-            }) as ITeamRoleCanDo
-          )?.yesOrNo, // Info: (20250321 - Tzuhan) OWNER 不能被修改
-        }) as ITeamMember
-    ),
+    data: formattedMembers, // Info: (20250321 - Tzuhan) 確保這裡是同步 `ITeamMember[]`
   });
+
+  return paginatedResult; // Info: (20250321 - Tzuhan) 直接返回，避免 `Promise<IPaginatedData<ITeamMember>>`
 };
