@@ -1,35 +1,14 @@
 import prisma from '@/client';
-import {
-  ILeaveTeam,
-  ITeam,
-  TeamRole,
-  LeaveStatus,
-  ITransferAccountBook,
-  TransferStatus,
-} from '@/interfaces/team';
+import { ITeam, TeamRole, LeaveStatus } from '@/interfaces/team';
 import { InviteStatus, TeamPaymentStatus } from '@prisma/client';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { z } from 'zod';
 import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
-import {
-  listByTeamIdQuerySchema,
-  IUpdateMemberResponse,
-  IDeleteMemberResponse,
-} from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
-import loggerBack from '@/lib/utils/logger_back';
-import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
-import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
-import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-
-const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
-  return sortOptions.map(({ sortBy, sortOrder }) => ({
-    createdAt: sortBy === SortBy.CREATED_AT || sortBy === SortBy.DATE ? sortOrder : SortOrder.DESC,
-  }));
-};
+import { createOrderByList } from '@/lib/utils/sort';
+import { MAX_TEAM_LIMIT } from '@/interfaces/permissions';
 
 export const getTeamList = async (
   userId: number,
@@ -114,8 +93,17 @@ export const createTeam = async (
     imageFileId?: number;
   }
 ): Promise<ITeam> => {
+  // Info: (20250321 - Tzuhan) 1️. 檢查該用戶已擁有的團隊數量
   return prisma.$transaction(async (tx) => {
-    // Info: (20250304 - Tzuhan) 1️. 取得 `planId`
+    const teamCount = await tx.team.count({
+      where: { ownerId: userId },
+    });
+
+    if (teamCount >= MAX_TEAM_LIMIT) {
+      throw new Error('USER_TEAM_LIMIT_REACHED'); // Info: (20250321 - Tzuhan) 超過 3 個團隊，阻止創建
+    }
+
+    // Info: (20250304 - Tzuhan) 2. 取得 `planId`
     const plan = await tx.teamPlan.findFirst({
       where: { type: teamData.planType ?? TPlanType.BEGINNER },
       select: { id: true },
@@ -127,7 +115,7 @@ export const createTeam = async (
 
     const now = Math.floor(Date.now() / 1000);
 
-    // Info: (20250304 - Tzuhan) 2️. 創建團隊
+    // Info: (20250304 - Tzuhan) 3. 創建團隊
     const newTeam = await tx.team.create({
       data: {
         ownerId: userId,
@@ -144,7 +132,7 @@ export const createTeam = async (
       },
     });
 
-    // Info: (20250305 - Tzuhan) 3. 將創建者加入 `teamMember`
+    // Info: (20250305 - Tzuhan) 4. 將創建者加入 `teamMember`
     await tx.teamMember.create({
       data: {
         teamId: newTeam.id,
@@ -154,7 +142,7 @@ export const createTeam = async (
       },
     });
 
-    // Info: (20250304 - Tzuhan) 4. 遍歷 `members`，判斷 Email 是否存在於 `User`
+    // Info: (20250304 - Tzuhan) 5. 遍歷 `members`，判斷 Email 是否存在於 `User`
     if (teamData.members && teamData.members.length > 0) {
       const existingUsers = await tx.user.findMany({
         where: { email: { in: teamData.members } },
@@ -164,7 +152,7 @@ export const createTeam = async (
       const existingUserEmails = new Set(existingUsers.map((user) => user.email));
       const newUserEmails = teamData.members.filter((email) => !existingUserEmails.has(email));
 
-      // Info: (20250304 - Tzuhan) 4.1 批量插入 `teamMember`
+      // Info: (20250304 - Tzuhan) 5.1 批量插入 `teamMember`
       if (existingUsers.length > 0) {
         await tx.teamMember.createMany({
           data: existingUsers.map((user) => ({
@@ -192,7 +180,7 @@ export const createTeam = async (
         });
       }
 
-      // Info: (20250304 - Tzuhan) 4.2 批量插入 `pendingTeamMember`
+      // Info: (20250304 - Tzuhan) 5.2 批量插入 `pendingTeamMember`
       if (newUserEmails.length > 0) {
         await tx.inviteTeamMember.createMany({
           data: newUserEmails.map((email) => ({
@@ -210,7 +198,7 @@ export const createTeam = async (
       }
     }
 
-    // Info: (20250304 - Tzuhan) 5. 創建 `TeamSubscription`
+    // Info: (20250304 - Tzuhan) 6. 創建 `TeamSubscription`
     await tx.teamSubscription.create({
       data: {
         teamId: newTeam.id,
@@ -243,6 +231,12 @@ export const createTeam = async (
 };
 
 export const getTeamByTeamId = async (teamId: number, userId: number): Promise<ITeam | null> => {
+  const teamMember = await prisma.teamMember.findFirst({
+    where: { teamId, userId },
+  });
+  if (!teamMember) {
+    throw new Error('USER_NOT_IN_TEAM');
+  }
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     include: {
@@ -269,7 +263,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
   });
 
   if (!team) {
-    return null;
+    throw new Error('TEAM_NOT_FOUND');
   }
 
   const teamRole =
@@ -309,103 +303,6 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
   };
 };
 
-export const addMembersToTeam = async (
-  teamId: number,
-  emails: string[]
-): Promise<{ invitedCount: number; failedEmails: string[] }> => {
-  const now = Math.floor(Date.now() / 1000);
-
-  const existingUsers = await prisma.user.findMany({
-    where: { email: { in: emails } },
-    select: { id: true, email: true },
-  });
-
-  const existingUserIds = existingUsers.map((user) => user.id);
-
-  const existingUserEmails = new Set(existingUsers.map((user) => user.email));
-  const newUserEmails = emails.filter((email) => !existingUserEmails.has(email));
-
-  try {
-    await prisma.$transaction(async (tx) => {
-      // Info: (20250307 - Tzuhan) 1️ 找出已經在 team 但 `status = NOT_IN_TEAM` 的成員，並讓他們重新加入
-      const inactiveMembers = await tx.teamMember.findMany({
-        where: {
-          teamId,
-          userId: { in: existingUserIds },
-          status: LeaveStatus.NOT_IN_TEAM,
-        },
-        select: { userId: true },
-      });
-
-      if (inactiveMembers.length > 0) {
-        await tx.teamMember.updateMany({
-          where: {
-            teamId,
-            userId: { in: inactiveMembers.map((m) => m.userId) },
-          },
-          data: {
-            status: LeaveStatus.IN_TEAM,
-            leftAt: null,
-          },
-        });
-      }
-
-      // Info: (20250307 - Tzuhan) 2️ 對於真正新的用戶，新增 `teamMember` 記錄
-      const newUsersToAdd = existingUsers.filter(
-        (user) => !inactiveMembers.some((m) => m.userId === user.id)
-      );
-
-      if (newUsersToAdd.length > 0) {
-        await tx.teamMember.createMany({
-          data: newUsersToAdd.map((user) => ({
-            teamId,
-            userId: user.id,
-            role: TeamRole.EDITOR,
-            joinedAt: now,
-          })),
-          skipDuplicates: true,
-        });
-
-        // Info: (20250317 - Tzuhan) 記錄成功加入的用戶
-        await tx.inviteTeamMember.createMany({
-          data: existingUsers.map((user) => ({
-            teamId,
-            email: user.email!,
-            status: InviteStatus.COMPLETED,
-            createdAt: now,
-            completedAt: now,
-            note: JSON.stringify({
-              reason: 'User already exists, added to team without asking',
-            }),
-          })),
-          skipDuplicates: true,
-        });
-      }
-
-      // Info: (20250307 - Tzuhan) 3️ 對於 `email` 尚未註冊的用戶，新增 `inviteTeamMember`
-      if (newUserEmails.length > 0) {
-        await tx.inviteTeamMember.createMany({
-          data: newUserEmails.map((email) => ({
-            teamId,
-            email,
-            status: InviteStatus.PENDING,
-            createdAt: now,
-            note: JSON.stringify({
-              reason:
-                'User not exists, pending for join, when user register, will be added to team',
-            }),
-          })),
-          skipDuplicates: true,
-        });
-      }
-    });
-  } catch (error) {
-    return { invitedCount: existingUsers.length, failedEmails: newUserEmails };
-  }
-
-  return { invitedCount: emails.length, failedEmails: [] };
-};
-
 export async function createDefaultTeamForUser(userId: number, userName: string) {
   const teamName = `${userName}'s Team`;
 
@@ -415,591 +312,3 @@ export async function createDefaultTeamForUser(userId: number, userName: string)
 
   return team;
 }
-
-export async function isEligibleToCreateCompanyInTeam(
-  userId: number,
-  teamId: number
-): Promise<boolean> {
-  const teamMember = await prisma.teamMember.findFirst({
-    where: {
-      userId,
-      teamId,
-      role: {
-        in: [TeamRole.OWNER, TeamRole.EDITOR, TeamRole.ADMIN],
-      },
-    },
-  });
-  return !!teamMember;
-}
-
-export const listAccountBooksByTeamId = async (
-  userId: number,
-  queryParams: z.infer<typeof listByTeamIdQuerySchema>
-): Promise<IPaginatedOptions<IAccountBookForUserWithTeam[]>> => {
-  const {
-    teamId,
-    page = 1,
-    pageSize = 10,
-    startDate = 0,
-    endDate = Math.floor(Date.now() / 1000),
-    searchQuery = '',
-    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
-  } = queryParams;
-
-  // Info: (20250221 - tzuhan) 使用 Prisma Transaction 查詢總數、帳本數據、Admin 資料
-  const [totalCount, accountBooks] = await prisma.$transaction([
-    prisma.company.count({
-      where: {
-        teamId: Number(teamId),
-        createdAt: { gte: startDate, lte: endDate },
-        name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
-        OR: [
-          {
-            isPrivate: false,
-            team: {
-              members: {
-                some: { status: LeaveStatus.IN_TEAM },
-              },
-            },
-          }, // Info: (20250221 - tzuhan) 公開帳本
-          {
-            isPrivate: true,
-            team: {
-              members: {
-                some: {
-                  userId,
-                  role: { in: [TeamRole.OWNER, TeamRole.ADMIN] }, // Info: (20250221 - tzuhan) 只有 OWNER / ADMIN 可以看到
-                  status: LeaveStatus.IN_TEAM,
-                },
-              },
-            },
-          },
-        ],
-      },
-    }),
-    prisma.company.findMany({
-      where: {
-        teamId: Number(teamId),
-        createdAt: { gte: startDate, lte: endDate },
-        name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
-        OR: [
-          {
-            isPrivate: false,
-            team: {
-              members: {
-                some: { status: LeaveStatus.IN_TEAM },
-              },
-            },
-          }, // Info: (20250221 - tzuhan) 公開帳本
-          {
-            isPrivate: true,
-            team: {
-              members: {
-                some: {
-                  userId,
-                  role: { in: [TeamRole.OWNER, TeamRole.ADMIN] }, // Info: (20250221 - tzuhan) 只有 OWNER / ADMIN 可以看到
-                  status: LeaveStatus.IN_TEAM,
-                },
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        team: {
-          include: {
-            members: {
-              where: { status: LeaveStatus.IN_TEAM },
-              select: { id: true, userId: true, role: true },
-            },
-            accountBook: true,
-            subscription: { include: { plan: true } },
-            imageFile: { select: { id: true, url: true } },
-          },
-        },
-        imageFile: { select: { id: true, url: true } },
-      },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      orderBy: createOrderByList(sortOption),
-    }),
-  ]);
-
-  // Info: (20250306 - tzuhan) 查詢 in 資料
-  const admin = await prisma.admin.findFirst({
-    where: {
-      companyId: { in: accountBooks.map((book) => book.id) }, // Info: (20250306 - tzuhan) 只查詢 `accountBooks` 內的 `companyId`
-      OR: [{ deletedAt: 0 }, { deletedAt: null }],
-    },
-    select: {
-      companyId: true,
-      roleId: true,
-      role: true,
-      tag: true,
-      order: true,
-    },
-  });
-
-  loggerBack.info(`admin: ${JSON.stringify(admin)}`);
-
-  return toPaginatedData({
-    data: accountBooks.map((book) => {
-      // Info: (20250306 - Tzuhan) 找到 TeamMember 資料，teamRole 是顯示 userId 在 team 內的角色
-      const teamRole =
-        ((book.team?.members.find((member) => member.userId === userId)?.role ??
-          TeamRole.VIEWER) as TeamRole) || TeamRole.VIEWER;
-      return {
-        company: {
-          id: book.id,
-          imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
-          name: book.name,
-          taxId: book.taxId,
-          startDate: book.startDate,
-          createdAt: book.createdAt,
-          updatedAt: book.updatedAt,
-          isPrivate: book.isPrivate ?? false,
-        },
-        team: book.team
-          ? {
-              id: book.team.id,
-              imageId: book.team.imageFile?.url ?? '/images/fake_team_img.svg',
-              role: teamRole,
-              name: { value: book.team.name, editable: teamRole !== TeamRole.VIEWER },
-              about: { value: book.team.about ?? '', editable: teamRole !== TeamRole.VIEWER },
-              profile: { value: book.team.profile ?? '', editable: teamRole !== TeamRole.VIEWER },
-              planType: {
-                value: book.team.subscription?.plan.type ?? TPlanType.BEGINNER,
-                editable: false,
-              },
-              totalMembers: book.team.members.length || 0,
-              totalAccountBooks: book.team.accountBook.length || 0,
-              bankAccount: {
-                value: book.team.bankInfo
-                  ? `${(book.team.bankInfo as { code: string }).code}-${(book.team.bankInfo as { number: string }).number}`
-                  : '',
-                editable: false,
-              },
-            }
-          : null,
-        tag: admin?.tag,
-        order: admin?.order,
-        role: admin?.role,
-        isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
-      } as IAccountBookForUserWithTeam;
-    }),
-    page,
-    totalPages: Math.ceil(totalCount / pageSize),
-    totalCount,
-    pageSize,
-    sort: sortOption,
-  });
-};
-
-export const memberLeaveTeam = async (userId: number, teamId: number): Promise<ILeaveTeam> => {
-  const teamMember = await prisma.teamMember.findFirst({
-    where: { teamId, userId },
-  });
-  if (!teamMember) {
-    throw new Error('USER_NOT_IN_TEAM');
-  }
-
-  if (teamMember.role === TeamRole.OWNER) {
-    throw new Error('OWNER_IS_UNABLE_TO_LEAVE');
-  }
-
-  const leftAt = Math.floor(Date.now() / 1000); // Info: (20250310 - tzuhan) 以 UNIX 時間戳記記錄
-  await prisma.teamMember.update({
-    where: { teamId_userId: { teamId, userId } },
-    data: {
-      status: LeaveStatus.NOT_IN_TEAM,
-      leftAt,
-    },
-  });
-
-  return {
-    teamId,
-    userId,
-    role: teamMember.role as TeamRole,
-    status: LeaveStatus.NOT_IN_TEAM,
-    leftAt,
-  };
-};
-
-// Info: (20250311 - Tzuhan) 發起帳本轉移
-export const requestTransferAccountBook = async (
-  userId: number,
-  accountBookId: number,
-  fromTeamId: number,
-  toTeamId: number
-): Promise<ITransferAccountBook> => {
-  loggerBack.info(
-    `User ${userId} is requesting to transfer AccountBook ${accountBookId} to Team ${toTeamId}`
-  );
-
-  // Info: (20250311 - Tzuhan) 確保用戶是 `Owner` 或 `Admin`
-  const userTeamRole = await prisma.teamMember.findFirst({
-    where: { teamId: fromTeamId, userId },
-    select: { role: true },
-  });
-  if (!userTeamRole) {
-    throw new Error('FORBIDDEN');
-  }
-
-  const canDo = convertTeamRoleCanDo({
-    teamRole: userTeamRole.role as TeamRole,
-    canDo: TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
-  });
-
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
-    throw new Error('FORBIDDEN');
-  }
-
-  // Info: (20250314 - Tzuhan) Todo: check if accountBookId is in fromTeamId
-  const accountBook = await prisma.company.findFirst({
-    where: { id: accountBookId, teamId: fromTeamId },
-  });
-  if (!accountBook) {
-    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
-  }
-
-  // Info: (20250311 - Tzuhan) 確保目標團隊 `toTeamId` 存在
-  const targetTeam = await prisma.team.findUnique({
-    where: { id: toTeamId },
-    include: {
-      subscription: {
-        include: { plan: true }, // Info: (20250311 - Tzuhan) 正確關聯到 TeamPlan，才能取得 planType
-      },
-    },
-  });
-
-  if (!targetTeam) {
-    throw new Error('TEAM_NOT_FOUND');
-  }
-
-  // Info: (20250311 - Tzuhan) 確保轉入團隊的 `subscription.planType` 不會超過上限
-  const planType = targetTeam.subscription?.plan?.type || TPlanType.BEGINNER;
-  const accountBookCount = await prisma.company.count({ where: { teamId: toTeamId } });
-
-  if (
-    accountBookCount >= SUBSCRIPTION_PLAN_LIMITS[planType as keyof typeof SUBSCRIPTION_PLAN_LIMITS]
-  ) {
-    throw new Error('EXCEED_PLAN_LIMIT');
-  }
-
-  // Info: (20250311 - Tzuhan) 更新帳本 `isTransferring = true`
-  /** Info: (20250313 - Tzuhan) 目前因為通知系統還沒有做好，所以跟邀請member一樣，這邊對方都不會收到確認通知，會直接轉移成功
-  await prisma.company.update({
-    where: { id: accountBookId },
-    data: { isTransferring: true },
-  });
-  */
-
-  const record = {
-    companyId: accountBookId,
-    fromTeamId,
-    toTeamId,
-    initiatedByUserId: userId,
-    status: TransferStatus.COMPLETED, // Info: (20250313 - Tzuhan) 目前因為通知系統還沒有做好，所以直接設定為 COMPLETED
-  };
-  await prisma.$transaction([
-    // Info: (20250311 - Tzuhan) 建立 `accountBook_transfer` 記錄
-    prisma.accountBookTransfer.create({
-      data: record,
-    }),
-    // Info: (20250311 - Tzuhan) 更新 `company.teamId` & `company.isTransferring`
-    prisma.company.update({
-      where: { id: accountBookId },
-      data: { teamId: toTeamId, isTransferring: false },
-    }),
-  ]);
-
-  return { ...record, accountBookId: record.companyId } as ITransferAccountBook;
-};
-
-// Info: (20250314 - Tzuhan) 取消帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
-export const cancelTransferAccountBook = async (
-  userId: number,
-  accountBookId: number
-): Promise<void> => {
-  loggerBack.info(`User ${userId} is canceling transfer for AccountBook ${accountBookId}`);
-
-  // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
-  const transfer = await prisma.accountBookTransfer.findFirst({
-    where: { companyId: accountBookId, status: TransferStatus.PENDING },
-  });
-
-  if (!transfer) {
-    throw new Error('TRANSFER_RECORD_NOT_FOUND');
-  } else if (transfer.status !== TransferStatus.PENDING) {
-    throw new Error(`TRANSFER_RECORD_IS_${transfer.status}`);
-  }
-  const accountBook = await prisma.company.findFirst({
-    where: { id: accountBookId, teamId: transfer.fromTeamId },
-  });
-  if (!accountBook) {
-    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
-  }
-
-  // Info: (20250311 - Tzuhan) 確保用戶有權限取消
-  const userTeamRole = await prisma.teamMember.findFirst({
-    where: { teamId: transfer.fromTeamId, userId },
-    select: { role: true },
-  });
-
-  if (!userTeamRole) {
-    throw new Error('FORBIDDEN');
-  }
-
-  const canDo = convertTeamRoleCanDo({
-    teamRole: userTeamRole.role as TeamRole,
-    canDo: TeamPermissionAction.CANCEL_ACCOUNT_BOOK_TRANSFER,
-  });
-
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
-    throw new Error('FORBIDDEN');
-  }
-  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
-  await prisma.$transaction([
-    prisma.accountBookTransfer.update({
-      where: { id: transfer.id },
-      data: { status: TransferStatus.CANCELED },
-    }),
-    prisma.company.update({
-      where: { id: accountBookId },
-      data: { isTransferring: false },
-    }),
-  ]);
-};
-
-// Info: (20250314 - Tzuhan) 接受帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
-export const acceptTransferAccountBook = async (
-  userId: number,
-  accountBookId: number
-): Promise<void> => {
-  loggerBack.info(`User ${userId} is accepting transfer for AccountBook ${accountBookId}`);
-
-  // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
-  const transfer = await prisma.accountBookTransfer.findFirst({
-    where: { companyId: accountBookId, status: TransferStatus.PENDING },
-  });
-
-  if (!transfer) {
-    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
-  }
-
-  // Info: (20250311 - Tzuhan) 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
-  const userTeamRole = await prisma.teamMember.findFirst({
-    where: { teamId: transfer.toTeamId, userId },
-    select: { role: true },
-  });
-
-  if (!userTeamRole) {
-    throw new Error('FORBIDDEN');
-  }
-
-  const canDo = convertTeamRoleCanDo({
-    teamRole: userTeamRole.role as TeamRole,
-    canDo: TeamPermissionAction.ACCEPT_ACCOUNT_BOOK_TRANSFER,
-  });
-
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
-    throw new Error('FORBIDDEN');
-  }
-
-  // Info: (20250311 - Tzuhan) 更新 `company.teamId` & `accountBook_transfer` 狀態
-  await prisma.$transaction([
-    prisma.company.update({
-      where: { id: accountBookId },
-      data: { teamId: transfer.toTeamId, isTransferring: false },
-    }),
-    prisma.accountBookTransfer.update({
-      where: { id: transfer.id },
-      data: { status: TransferStatus.COMPLETED },
-    }),
-  ]);
-};
-
-// Info: (20250314 - Tzuhan) 拒絕帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
-export const declineTransferAccountBook = async (
-  userId: number,
-  accountBookId: number
-): Promise<void> => {
-  loggerBack.info(`User ${userId} is declining transfer for AccountBook ${accountBookId}`);
-
-  // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
-  const transfer = await prisma.accountBookTransfer.findFirst({
-    where: { companyId: accountBookId, status: TransferStatus.PENDING },
-  });
-
-  if (!transfer) {
-    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
-  }
-
-  // Info: (20250311 - Tzuhan) 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
-  const userTeamRole = await prisma.teamMember.findFirst({
-    where: { teamId: transfer.toTeamId, userId },
-    select: { role: true },
-  });
-
-  if (!userTeamRole) {
-    throw new Error('FORBIDDEN');
-  }
-
-  const canDo = convertTeamRoleCanDo({
-    teamRole: userTeamRole.role as TeamRole,
-    canDo: TeamPermissionAction.DECLINE_ACCOUNT_BOOK_TRANSFER,
-  });
-
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
-    throw new Error('FORBIDDEN');
-  }
-
-  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
-  await prisma.$transaction([
-    prisma.accountBookTransfer.update({
-      where: { id: transfer.id },
-      data: { status: TransferStatus.DECLINED },
-    }),
-    prisma.company.update({
-      where: { id: accountBookId },
-      data: { isTransferring: false },
-    }),
-  ]);
-};
-
-/**
- * Info: (20250312 - Shirley) 更新團隊成員角色
- * @param teamId 團隊 ID
- * @param memberId 成員 ID
- * @param role 新角色
- * @param sessionUserTeamRole 當前用戶在團隊中的角色
- * @returns 更新後的成員資訊
- */
-export const updateMemberById = async (
-  teamId: number,
-  memberId: number,
-  role: TeamRole,
-  sessionUserTeamRole: TeamRole
-): Promise<IUpdateMemberResponse> => {
-  // Info: (20250312 - Shirley) 檢查當前用戶是否有權限更新成員角色
-  if (sessionUserTeamRole !== TeamRole.OWNER && sessionUserTeamRole !== TeamRole.ADMIN) {
-    throw new Error('PERMISSION_DENIED');
-  }
-
-  // Info: (20250312 - Shirley) 檢查要更新的成員是否存在
-  const teamMember = await prisma.teamMember.findFirst({
-    where: {
-      id: memberId,
-      teamId,
-      status: LeaveStatus.IN_TEAM,
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-    },
-  });
-
-  if (!teamMember) {
-    throw new Error('MEMBER_NOT_FOUND');
-  }
-
-  // Info: (20250312 - Shirley) 不能將成員角色更新為 OWNER
-  if (role === TeamRole.OWNER) {
-    throw new Error('CANNOT_UPDATE_TO_OWNER');
-  }
-
-  // Info: (20250312 - Shirley) 檢查成員當前角色
-  if (teamMember.role === TeamRole.OWNER) {
-    throw new Error('CANNOT_UPDATE_OWNER_ROLE');
-  }
-
-  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，只能更新 EDITOR 和 VIEWER 角色
-  if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER');
-  }
-
-  // Info: (20250313 - Shirley) 如果當前用戶是 ADMIN，不能將其他成員提升為 ADMIN
-  if (sessionUserTeamRole === TeamRole.ADMIN && role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_PROMOTE_TO_ADMIN');
-  }
-
-  // Info: (20250312 - Shirley) 更新成員角色
-  const updatedAt = Math.floor(Date.now() / 1000);
-  const updatedMember = await prisma.teamMember.update({
-    where: { id: memberId },
-    data: {
-      role,
-    },
-  });
-
-  return {
-    id: updatedMember.id,
-    userId: updatedMember.userId,
-    teamId: updatedMember.teamId,
-    role: updatedMember.role,
-    email: teamMember.user.email || '',
-    name: teamMember.user.name || '',
-    createdAt: updatedMember.joinedAt,
-    updatedAt,
-  };
-};
-
-/**
- * Info: (20250312 - Shirley) 刪除團隊成員（軟刪除）
- * @param teamId 團隊 ID
- * @param memberId 成員 ID
- * @param sessionUserTeamRole 當前用戶在團隊中的角色
- * @returns 刪除的成員 ID
- */
-export const deleteMemberById = async (
-  teamId: number,
-  memberId: number,
-  sessionUserTeamRole: TeamRole
-): Promise<IDeleteMemberResponse> => {
-  // Info: (20250312 - Shirley) 檢查當前用戶是否有權限刪除成員
-  if (sessionUserTeamRole !== TeamRole.OWNER && sessionUserTeamRole !== TeamRole.ADMIN) {
-    throw new Error('PERMISSION_DENIED');
-  }
-
-  // Info: (20250312 - Shirley) 檢查要刪除的成員是否存在
-  const teamMember = await prisma.teamMember.findFirst({
-    where: {
-      id: memberId,
-      teamId,
-      status: LeaveStatus.IN_TEAM,
-    },
-  });
-
-  if (!teamMember) {
-    throw new Error('MEMBER_NOT_FOUND');
-  }
-
-  // Info: (20250312 - Shirley) 不能刪除 OWNER
-  if (teamMember.role === TeamRole.OWNER) {
-    throw new Error('CANNOT_DELETE_OWNER');
-  }
-
-  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，只能刪除 EDITOR 和 VIEWER 角色
-  if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_DELETE_ADMIN');
-  }
-
-  // Info: (20250312 - Shirley) 軟刪除成員（更新狀態為 NOT_IN_TEAM 並記錄離開時間）
-  const leftAt = Math.floor(Date.now() / 1000);
-  await prisma.teamMember.update({
-    where: { id: memberId },
-    data: {
-      status: LeaveStatus.NOT_IN_TEAM,
-      leftAt,
-    },
-  });
-
-  return {
-    memberId,
-  };
-};

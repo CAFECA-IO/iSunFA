@@ -1,5 +1,7 @@
 import { TeamRole } from '@/interfaces/team';
 
+export const MAX_TEAM_LIMIT = 3; // Info: (20250321 - Tzuhan) 團隊數量限制
+
 export enum TeamPermissionAction {
   // Info: (20250313 - Tzuhan) 團隊操作權限
   INVITE_MEMBER = 'INVITE_MEMBER', // Info: (20250320 - Liz) 邀請成員

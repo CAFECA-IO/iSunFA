@@ -8,24 +8,24 @@ import { IFileUIBeta } from '@/interfaces/file';
 import { UploadType } from '@/constants/file';
 import { useTranslation } from 'next-i18next';
 
-interface UploadTeamPictureModalProps {
-  teamToUploadPicture: ITeam;
-  setTeamToUploadPicture: Dispatch<SetStateAction<ITeam | undefined>>;
+interface UploadTeamImageModalProps {
+  teamToChangeImage: ITeam;
+  setTeamToChangeImage: Dispatch<SetStateAction<ITeam | undefined>>;
   getTeamData: () => Promise<void>;
 }
 
-const UploadTeamPictureModal = ({
-  teamToUploadPicture,
-  setTeamToUploadPicture,
+const UploadTeamImageModal = ({
+  teamToChangeImage,
+  setTeamToChangeImage,
   getTeamData,
-}: UploadTeamPictureModalProps) => {
+}: UploadTeamImageModalProps) => {
   const { t } = useTranslation(['team']);
   const [isLoading, setIsLoading] = useState(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
   const { trigger: uploadTeamPictureAPI } = APIHandler<ITeamWithImage>(APIName.PUT_TEAM_ICON);
 
   const closeUploadTeamPictureModal = () => {
-    setTeamToUploadPicture(undefined);
+    setTeamToChangeImage(undefined);
   };
 
   const handleUpload = useCallback(
@@ -40,7 +40,7 @@ const UploadTeamPictureModal = ({
         const { success: uploadFileSuccess, data: fileMeta } = await uploadFileAPI({
           query: {
             type: UploadType.TEAM,
-            targetId: Number(teamToUploadPicture.id), // Info: (20250304 - Liz) teamId
+            targetId: Number(teamToChangeImage.id), // Info: (20250304 - Liz) teamId
           },
           body: formData,
         });
@@ -54,7 +54,7 @@ const UploadTeamPictureModal = ({
 
         // Info: (20250304 - Liz) 打 API 更新團隊的圖片
         const { success, data, error } = await uploadTeamPictureAPI({
-          params: { teamId: teamToUploadPicture.id },
+          params: { teamId: teamToChangeImage.id },
           body: { fileId: fileMeta.id },
         });
 
@@ -101,4 +101,4 @@ const UploadTeamPictureModal = ({
   );
 };
 
-export default UploadTeamPictureModal;
+export default UploadTeamImageModal;

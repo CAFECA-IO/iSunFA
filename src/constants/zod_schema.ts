@@ -349,4 +349,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: getAccountBookInfoSchema,
   [APIName.PUT_TEAM_ICON]: teamSchemas.putIcon,
   [APIName.UPDATE_ACCOUNT_BOOK]: updateAccountBookSchema,
+
+  [APIName.USER_PAYMENT_METHOD_LIST]: nullAPISchema,
+  [APIName.USER_PAYMENT_METHOD_CHARGE]: nullAPISchema,
+  [APIName.PAYMENT_METHOD_REGISTER_REDIRECT]: nullAPISchema,
+  [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: nullAPISchema,
 };

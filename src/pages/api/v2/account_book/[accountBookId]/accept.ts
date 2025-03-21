@@ -12,7 +12,7 @@ import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { ITransferAccountBook } from '@/interfaces/team';
-import { acceptTransferAccountBook } from '@/lib/utils/repo/team.repo';
+import { acceptTransferAccountBook } from '@/lib/utils/repo/account_book.repo';
 import { validateOutputData } from '@/lib/utils/validator';
 
 const handleGetRequest = async (req: NextApiRequest) => {

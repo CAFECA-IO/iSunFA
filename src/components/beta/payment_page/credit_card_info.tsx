@@ -4,15 +4,10 @@ import { IPlan, IUserOwnedTeam } from '@/interfaces/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { FiPlusCircle } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
-// import { useModalContext } from '@/contexts/modal_context';
-// import { ToastType } from '@/interfaces/toastify';
-// import { ToastId } from '@/constants/toast_id';
-// import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaymentMethod } from '@/interfaces/payment';
 import { useUserCtx } from '@/contexts/user_context';
-// import { useRouter } from 'next/router';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
@@ -131,7 +126,7 @@ const CreditCardInfo = ({
         <span className="text-lg font-semibold text-text-brand-secondary-lv3">
           {t('subscriptions:PAYMENT_PAGE.PAYMENT')}
         </span>
-        {hasCreditCardInfo ? (
+        {hasCreditCardInfo && plan ? (
           <div className="flex items-center gap-8px">
             <Image src="/icons/credit_card.svg" alt="credit card" width={24} height={24} />
             <span className="text-lg font-semibold text-text-neutral-primary">
@@ -172,54 +167,6 @@ const CreditCardInfo = ({
         </span>
         <span className="font-medium text-text-neutral-tertiary">{`* ${t('subscriptions:PAYMENT_PAGE.NOTE')}`}</span>
       </div>
-
-      <form
-        className="w-full"
-        method="POST"
-        action="https://testtrustlink.hitrust.com.tw/TrustLink/TrxReqForJava"
-        onSubmit={() => {
-          window.onbeforeunload = null; // Info: (20250220 - Tzuhan) 移除「離開網站」的提示
-        }}
-      >
-        <input type="hidden" name="Type" value="Auth" />
-        <input type="hidden" name="storeid" value="62695" />
-        <input
-          type="hidden"
-          name="ordernumber"
-          value={`${team.id}${plan?.planName || ''}${isAutoRenewalEnabled}`}
-        />
-        <input type="hidden" name="amount" value={(plan?.price || 0) * 100} />
-        <input
-          type="hidden"
-          name="orderdesc"
-          value={`iSunFa-team_${team.id}-plan_${plan?.planName}-autorenew_${isAutoRenewalEnabled}-
-          time_${Math.floor(Date.now() / 1000)}`}
-        />
-        <input type="hidden" name="depositflag" value="1" /> {/* 自動請款 */}
-        <input type="hidden" name="queryflag" value="1" /> {/* 回傳交易詳情 */}
-        <input
-          type="hidden"
-          name="returnURL"
-          value={`https://isunfa.tw/users/subscriptions/${team.id}`}
-        />
-        <input type="hidden" name="merUpdateURL" value="https://isunfa.tw/api/v2/payment/update" />
-        {/* 如果用戶選擇「自動續訂」，則設定定期扣款 */}
-        {isAutoRenewalEnabled && (
-          <>
-            <input type="hidden" name="e56" value="20" /> {/* 12 期 */}
-            <input type="hidden" name="e57" value="1" /> {/* 每 1 期扣款 */}
-            <input type="hidden" name="e58" value="Y" /> {/* M = 每月扣款 */}
-          </>
-        )}
-        <button
-          type="submit"
-          className="w-full rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-semibold text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-          // onClick={updateSubscription}
-          disabled={(plan?.price || 0) <= 0}
-        >
-          {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
-        </button>
-      </form>
     </section>
   );
 };

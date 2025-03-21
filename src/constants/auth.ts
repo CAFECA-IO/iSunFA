@@ -15,6 +15,7 @@ export const AUTH_WHITELIST = {
   [APIName.ROOM_GET_PUBLIC_KEY_BY_ID]: { query: {} },
   [APIName.STATUS_INFO_GET]: { query: {} },
   [APIName.REPORT_GET_BY_ID]: { query: {} },
+  [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: { query: {} },
 };
 
 // ToDo: (20241111 - Jacky) Add more auth functions
@@ -188,4 +189,9 @@ export const AUTH_CHECK = {
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.PUT_TEAM_ICON]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
+
+  [APIName.USER_PAYMENT_METHOD_LIST]: [AuthFunctionsKeysNew.user],
+  [APIName.USER_PAYMENT_METHOD_CHARGE]: [AuthFunctionsKeysNew.user],
+  [APIName.PAYMENT_METHOD_REGISTER_REDIRECT]: [AuthFunctionsKeysNew.user],
+  [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: [AuthFunctionsKeysNew.user],
 };
