@@ -419,28 +419,6 @@ export async function listAccountBookByUserId(
                   ],
                 }
               : {},
-            {
-              OR: [
-                { isPrivate: false }, // Info: (20230506 - Shirley) 所有用戶都可以看到公開帳本
-                {
-                  isPrivate: true,
-                  AND: [
-                    {
-                      // Info: (20230506 - Shirley) Owner 和 Admin 可以看到私有帳本
-                      team: {
-                        members: {
-                          some: {
-                            userId,
-                            role: { in: [TeamRole.OWNER, TeamRole.ADMIN] },
-                            status: LeaveStatus.IN_TEAM,
-                          },
-                        },
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
           ],
         },
         include: {
