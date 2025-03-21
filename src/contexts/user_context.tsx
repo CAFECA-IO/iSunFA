@@ -86,8 +86,8 @@ interface UserContextType {
   authenticateUser: (selectProvider: Provider, props: ILoginPageProps) => Promise<void>;
   handleAppleSignIn: () => void;
 
-  bindingResult: boolean;
-  handleBindingResult: (bindingResult: boolean) => void;
+  bindingResult: boolean | null;
+  handleBindingResult: (bindingResult: boolean | null) => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -150,7 +150,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
 
-  const [, setBindingResult, bindingResultRef] = useStateRef<boolean>(false);
+  const [, setBindingResult, bindingResultRef] = useStateRef<boolean | null>(null);
 
   const isRouteChanging = useRef(false);
 
@@ -187,7 +187,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
 
   // Info: (20250321 - Julian) 從第三方金流獲取綁定信用卡的結果
-  const handleBindingResult = (bindingResult: boolean) => {
+  const handleBindingResult = (bindingResult: boolean | null) => {
     setBindingResult(bindingResult);
   };
 
@@ -866,6 +866,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthLoadingRef.current,
       router.pathname,
       userAuthRef.current,
+      bindingResultRef.current,
     ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

@@ -68,9 +68,9 @@ const PaymentPage = () => {
       }
 
       if (event.data) {
-        handleBindingResult(event.data);
+        handleBindingResult(event.data === 'true');
       } else {
-        handleBindingResult(false);
+        handleBindingResult(null);
       }
     };
 
