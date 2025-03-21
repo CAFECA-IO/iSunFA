@@ -16,7 +16,7 @@ import {
 } from '@/lib/utils/zod_schema/team';
 import { getSession } from '@/lib/utils/session';
 import { TeamRole } from '@/interfaces/team';
-import { updateMemberById, deleteMemberById } from '@/lib/utils/repo/team.repo';
+import { updateMemberById, deleteMemberById } from '@/lib/utils/repo/team_member.repo';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 import { ISessionData } from '@/interfaces/session';

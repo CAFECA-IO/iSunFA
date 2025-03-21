@@ -30,3 +30,9 @@ export function parseSortOption(
     return defaultSortOption;
   }
 }
+
+export const createOrderByList = (sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) => {
+  return sortOptions.map(({ sortBy, sortOrder }) => ({
+    createdAt: sortBy === SortBy.CREATED_AT || sortBy === SortBy.DATE ? sortOrder : SortOrder.DESC,
+  }));
+};
