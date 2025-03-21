@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ITeam } from '@/interfaces/team';
-import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_picture_modal';
+import UploadTeamImageModal from '@/components/beta/team_page/upload_team_image_modal';
 import TeamHeader from '@/components/beta/team_page/team_header';
 import TeamPageButtons from '@/components/beta/team_page/team_page_buttons';
 import { useTranslation } from 'next-i18next';
@@ -33,7 +33,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
   const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[] | null>(
     null
   );
-  const [teamToUploadPicture, setTeamToUploadPicture] = useState<ITeam | undefined>();
+  const [teamToChangeImage, setTeamToChangeImage] = useState<ITeam | undefined>();
   const [accountBookToTransfer, setAccountBookToTransfer] = useState<
     IAccountBookForUserWithTeam | undefined
   >();
@@ -137,7 +137,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
   return (
     <main className="flex flex-col gap-40px">
       <div className="flex items-center">
-        <TeamHeader team={team} setTeamToUploadPicture={setTeamToUploadPicture} />
+        <TeamHeader team={team} setTeamToChangeImage={setTeamToChangeImage} />
         <TeamPageButtons team={team} openMemberListModal={openMemberListModal} />
       </div>
 
@@ -162,10 +162,10 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
       )}
 
       {/* // Info: (20250218 - Liz) Modals */}
-      {teamToUploadPicture && (
-        <UploadTeamPictureModal
-          teamToUploadPicture={teamToUploadPicture}
-          setTeamToUploadPicture={setTeamToUploadPicture}
+      {teamToChangeImage && (
+        <UploadTeamImageModal
+          teamToChangeImage={teamToChangeImage}
+          setTeamToChangeImage={setTeamToChangeImage}
           getTeamData={getTeamData}
         />
       )}
