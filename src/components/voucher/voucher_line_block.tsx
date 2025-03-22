@@ -92,14 +92,10 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       return item.debit === true ? acc.plus(amount) : acc;
     }, new BigNumber(0));
 
-    console.log(`借方合計: ${debitTotal.toString()}`);
-
     const creditTotal = lineItems.reduce((acc, item) => {
       const amount = new BigNumber(item.amount);
       return item.debit === false ? acc.plus(amount) : acc;
     }, new BigNumber(0));
-
-    console.log(`貸方合計: ${creditTotal.toString()}`);
 
     // Info: (20241004 - Julian) 檢查是否有未填的數字的傳票列
     const zeroLine = lineItems.some((item) => item.amount === 0 || item.debit === null);
