@@ -71,8 +71,12 @@ const NumericInput: React.FC<INumericInputProps> = ({
       return;
     }
 
-    // Info: (20250321 - Anna) 使用 BigNumber.js 確保數字精度，並處理 NaN 的情況
-    let validNumericValue = new BigNumber(sanitizedValue);
+    // Info: (20250321 - Anna) 使用 BigNumber.js 確保數字精度
+    let validNumericValue = isDecimal
+      ? new BigNumber(sanitizedValue) // Info: (20250321 - Anna) 小數轉 BigNumber
+      : new BigNumber(parseInt(sanitizedValue || '0', 10)); // Info: (20250321 - Anna) 整數轉 int，避免變小數 123 ➝ 123.0
+
+    // Info: (20250321 - Anna) 處理 NaN 的情況
     if (validNumericValue.isNaN()) {
       validNumericValue = new BigNumber(0);
     }
