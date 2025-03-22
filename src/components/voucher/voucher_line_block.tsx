@@ -16,6 +16,7 @@ import { inputStyle } from '@/constants/display';
 import { LuTrash2 } from 'react-icons/lu';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 import { useHotkeys } from 'react-hotkeys-hook';
+import BigNumber from 'bignumber.js';
 
 interface IVoucherLineBlockProps {
   lineItems: ILineItemUI[];
@@ -85,13 +86,21 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
   // Info: (20241004 - Julian) 傳票列條件
   useEffect(() => {
-    // Info: (20241004 - Julian) 計算總借貸金額
+    // Info: (20250321 - Anna) 計算總借貸金額
     const debitTotal = lineItems.reduce((acc, item) => {
-      return item.debit === true ? acc + item.amount : acc;
-    }, 0);
+      const amount = new BigNumber(item.amount);
+      return item.debit === true ? acc.plus(amount) : acc;
+    }, new BigNumber(0));
+
+    console.log(`借方合計: ${debitTotal.toString()}`);
+
     const creditTotal = lineItems.reduce((acc, item) => {
-      return item.debit === false ? acc + item.amount : acc;
-    }, 0);
+      const amount = new BigNumber(item.amount);
+      return item.debit === false ? acc.plus(amount) : acc;
+    }, new BigNumber(0));
+
+    console.log(`貸方合計: ${creditTotal.toString()}`);
+
     // Info: (20241004 - Julian) 檢查是否有未填的數字的傳票列
     const zeroLine = lineItems.some((item) => item.amount === 0 || item.debit === null);
     // Info: (20241004 - Julian) 檢查是否有未選擇的會計科目
@@ -107,11 +116,15 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       return AccountCodesOfAsset.includes(item.account?.code || '');
     });
 
-    setTotalDebit(debitTotal);
-    setTotalCredit(creditTotal);
+    // Info: (20250319 - Anna) BigNumber ➝ number：setState 用原生數字
+    setTotalDebit(debitTotal.toNumber());
+    setTotalCredit(creditTotal.toNumber());
 
-    setIsTotalZero(debitTotal === 0 && creditTotal === 0);
-    setIsTotalNotEqual(debitTotal !== creditTotal);
+    // Info: (20250319 - Anna) 判斷總借貸金額是否為 0
+    setIsTotalZero(debitTotal.isZero() && creditTotal.isZero());
+
+    // Info: (20250319 - Anna) 判斷總借貸金額是否相等
+    setIsTotalNotEqual(!debitTotal.eq(creditTotal));
     setHaveZeroLine(zeroLine);
     setIsAccountingNull(accountingNull);
     setIsVoucherLineEmpty(lineItems.length === 0);

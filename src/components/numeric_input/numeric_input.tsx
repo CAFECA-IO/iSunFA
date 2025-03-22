@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { numberWithCommas } from '@/lib/utils/common';
+import BigNumber from 'bignumber.js';
 
 interface INumericInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value: number;
@@ -70,25 +71,25 @@ const NumericInput: React.FC<INumericInputProps> = ({
       return;
     }
 
-    // Info: (20240723 - Liz) 轉換成數值 (整數或浮點數) 為了存入 DB
-    const numericValue = isDecimal
-      ? parseFloat(sanitizedValue) // 如果解析失敗，會是 NaN
-      : parseInt(sanitizedValue, 10); // 如果解析失敗，會是 NaN
-
-    // Info: (20240723 - Liz) 處理 NaN 的情況
-    const validNumericValue = Number.isNaN(numericValue) ? 0 : numericValue;
+    // Info: (20250321 - Anna) 使用 BigNumber.js 確保數字精度，並處理 NaN 的情況
+    let validNumericValue = new BigNumber(sanitizedValue);
+    if (validNumericValue.isNaN()) {
+      validNumericValue = new BigNumber(0);
+    }
 
     // Info: (20240723 - Liz) 根據 isDecimal 和 hasComma 的值來決定顯示值的格式
     const formattedDisplayValue = formatDisplayValue(sanitizedValue, isDecimal, hasComma);
 
     // Info: (20240723 - Liz) 更新儲存值
-    setDbValue(validNumericValue);
+    // Info: (20250319 - Anna) BigNumber ➝ number：setState 用原生數字
+    setDbValue(validNumericValue.toNumber());
 
     // Info: (20240723 - Liz) 更新顯示值
     setDisplayValue(formattedDisplayValue);
 
     if (triggerWhenChanged) {
-      triggerWhenChanged(validNumericValue, event);
+      // Info: (20250319 - Anna) BigNumber ➝ number：callback 傳原生數字
+      triggerWhenChanged(validNumericValue.toNumber(), event);
     }
   };
 
