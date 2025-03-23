@@ -42,6 +42,11 @@ export interface IAccountBookForUserWithTeam extends IAccountBookForUser {
   isTransferring: boolean;
 }
 
+// Info: (20250321 - Liz) 更新帳本資訊的 payload 回傳格式
+export interface IResponseUpdateAccountBook extends IAccountBookForUser {
+  teamId: number;
+}
+
 // Deprecated: (20250226 - Liz) 前端已經不再使用 ICompanyDetail 等後端確認後看看是否需要刪除
 export interface ICompanyDetail extends IAccountBook {
   ownerId: number;

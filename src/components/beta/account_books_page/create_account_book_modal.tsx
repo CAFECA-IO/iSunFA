@@ -6,7 +6,6 @@ import { WORK_TAG } from '@/interfaces/account_book';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import { ITeam } from '@/interfaces/team';
-// import { FAKE_TEAM_LIST } from '@/constants/team'; // Deprecated: (20250303 - Liz) 測試用的假資料，等 API 不使用 mock data 後可移除
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -37,7 +36,6 @@ const CreateAccountBookModal = ({
   const [companyNameError, setCompanyNameError] = useState<string | null>(null);
   const [tagError, setTagError] = useState<string | null>(null);
   const [teamError, setTeamError] = useState<string | null>(null);
-  const [isPrivate, setIsPrivate] = useState<boolean>(false);
 
   // Info: (20250303 - Liz) 取得團隊清單 API
   const { trigger: getTeamListAPI } = APIHandler<IPaginatedData<ITeam[]>>(APIName.LIST_TEAM);
@@ -80,7 +78,6 @@ const CreateAccountBookModal = ({
         taxId,
         tag,
         teamId: team.id, // Info: (20250312 - Liz) 選擇團隊
-        isPrivate, // Info: (20250312 - Liz) 帳本隱私權
       });
 
       if (!success) {
@@ -308,45 +305,6 @@ const CreateAccountBookModal = ({
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* // Info: (20250226 - Liz) Account Book View (Privacy) 帳本隱私權 */}
-              <div className="flex flex-col gap-8px">
-                <h4 className="font-semibold text-input-text-primary">
-                  {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ACCOUNT_BOOK_PRIVACY')}
-                </h4>
-
-                <div className="flex items-center gap-40px">
-                  <button
-                    type="button"
-                    className={`group flex items-center gap-8px ${!isPrivate && 'pointer-events-none'}`}
-                    onClick={() => setIsPrivate(false)}
-                  >
-                    <span
-                      className={`flex h-16px w-16px items-center justify-center rounded-full border border-checkbox-stroke-unselected bg-checkbox-surface-unselected disabled:border-checkbox-stroke-disable disabled:bg-checkbox-surface-disable group-hover:border-checkbox-stroke-unselected group-hover:bg-checkbox-surface-hover`}
-                    >
-                      {!isPrivate && (
-                        <span className="h-10px w-10px rounded-full bg-checkbox-surface-selected"></span>
-                      )}
-                    </span>
-                    {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.PUBLIC')}
-                  </button>
-
-                  <button
-                    type="button"
-                    className={`group flex items-center gap-8px ${isPrivate && 'pointer-events-none'}`}
-                    onClick={() => setIsPrivate(true)}
-                  >
-                    <span
-                      className={`flex h-16px w-16px items-center justify-center rounded-full border border-checkbox-stroke-unselected bg-checkbox-surface-unselected disabled:border-checkbox-stroke-disable disabled:bg-checkbox-surface-disable group-hover:border-checkbox-stroke-unselected group-hover:bg-checkbox-surface-hover`}
-                    >
-                      {isPrivate && (
-                        <span className="h-10px w-10px rounded-full bg-checkbox-surface-selected"></span>
-                      )}
-                    </span>
-                    {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.PRIVATE')}
-                  </button>
                 </div>
               </div>
             </section>

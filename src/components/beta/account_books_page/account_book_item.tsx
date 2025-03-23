@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { IAccountBookForUserWithTeam, CANCEL_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import { IoArrowForward, IoClose } from 'react-icons/io5';
 import { FaRegCircleCheck } from 'react-icons/fa6';
-import { FiEdit2, FiTag, FiTrash2, FiUnlock } from 'react-icons/fi';
+import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
 import { PiShareFatBold } from 'react-icons/pi';
 import CompanyTag from '@/components/beta/account_books_page/company_tag';
 import { useTranslation } from 'next-i18next';
@@ -16,7 +16,6 @@ interface AccountBookItemProps {
   setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
   setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
   setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
-  setAccountBookToChangePrivacy: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
 }
 
 const AccountBookItem = ({
@@ -25,7 +24,6 @@ const AccountBookItem = ({
   setAccountBookToEdit,
   setAccountBookToDelete,
   setAccountBookToUploadPicture,
-  setAccountBookToChangePrivacy,
 }: AccountBookItemProps) => {
   const { t } = useTranslation(['account_book']);
   const { connectAccountBook, connectedAccountBook } = useUserCtx();
@@ -48,11 +46,6 @@ const AccountBookItem = ({
 
   const openAccountBookTransferModal = () => {
     setAccountBookToTransfer(accountBook);
-    closeOptionsDropdown();
-  };
-
-  const openAccountBookPrivacyModal = () => {
-    setAccountBookToChangePrivacy(accountBook);
     closeOptionsDropdown();
   };
 
@@ -119,14 +112,6 @@ const AccountBookItem = ({
       </button>
 
       <div className="flex flex-auto items-center justify-between gap-8px">
-        <Image
-          src="/icons/lock.svg"
-          alt="lock"
-          width={16}
-          height={16}
-          className={accountBook.company.isPrivate ? 'visible' : 'invisible'}
-        ></Image>
-
         <p className="max-w-170px truncate text-base font-medium text-text-neutral-solid-dark">
           {accountBook.company.name}
         </p>
@@ -151,18 +136,6 @@ const AccountBookItem = ({
               >
                 <PiShareFatBold size={16} className="text-icon-surface-single-color-primary" />
                 <span>{t('account_book:ACCOUNT_BOOK_TRANSFER_MODAL.ACCOUNT_BOOK_TRANSFER')}</span>
-              </button>
-
-              {/* Info: (20250227 - Liz) Account Book Privacy */}
-              <button
-                type="button"
-                onClick={openAccountBookPrivacyModal}
-                className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
-              >
-                <FiUnlock size={16} className="text-icon-surface-single-color-primary" />
-                <span>
-                  {t('account_book:ACCOUNT_BOOK_PRIVACY_MODAL.CHANGE_ACCOUNT_BOOK_PRIVACY')}
-                </span>
               </button>
 
               {/* Info: (20250213 - Liz) Change Tag */}

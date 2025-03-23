@@ -147,7 +147,6 @@ export const FAKE_TEAM_ACCOUNT_BOOKS: IAccountBookForUser[] = [
       startDate: 1672531200, // 2023-01-01 (UNIX timestamp)
       createdAt: 1672531200,
       updatedAt: 1672617600,
-      isPrivate: false,
     },
     tag: WORK_TAG.ALL,
     order: 1,
@@ -168,7 +167,6 @@ export const FAKE_TEAM_ACCOUNT_BOOKS: IAccountBookForUser[] = [
       startDate: 1672531200,
       createdAt: 1672531200,
       updatedAt: 1672617600,
-      isPrivate: true,
     },
     tag: WORK_TAG.FINANCIAL,
     order: 2,
@@ -189,7 +187,6 @@ export const FAKE_TEAM_ACCOUNT_BOOKS: IAccountBookForUser[] = [
       startDate: 1672531200,
       createdAt: 1672531200,
       updatedAt: 1672617600,
-      isPrivate: false,
     },
     tag: WORK_TAG.TAX,
     order: 3,

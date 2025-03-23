@@ -18,7 +18,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
-      isPrivate: true,
     },
     role: {
       id: 1,
@@ -39,7 +38,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
-      isPrivate: true,
     },
     role: {
       id: 2,
@@ -60,7 +58,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
-      isPrivate: false,
     },
     role: {
       id: 3,
@@ -81,7 +78,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
-      isPrivate: true,
     },
     role: {
       id: 4,
@@ -102,7 +98,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST: IAccountBookForUser[] = [
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
-      isPrivate: true,
     },
     role: {
       id: 5,
@@ -126,7 +121,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
-      isPrivate: true,
     },
     role: {
       id: 1,
@@ -175,7 +169,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
-      isPrivate: true,
     },
     role: {
       id: 2,
@@ -224,7 +217,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
-      isPrivate: false,
     },
     role: {
       id: 3,
@@ -273,7 +265,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
-      isPrivate: true,
     },
     role: {
       id: 4,
@@ -322,7 +313,6 @@ export const FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM: IAccountBookForUserWithTeam[]
       startDate: 1234567890,
       createdAt: 1234567890,
       updatedAt: 1234567890,
-      isPrivate: true,
     },
     role: {
       id: 5,

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ITeam } from '@/interfaces/team';
-import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_picture_modal';
+import UploadTeamImageModal from '@/components/beta/team_page/upload_team_image_modal';
 import TeamHeader from '@/components/beta/team_page/team_header';
 import TeamPageButtons from '@/components/beta/team_page/team_page_buttons';
 import { useTranslation } from 'next-i18next';
@@ -14,10 +14,8 @@ import ChangeTagModal from '@/components/beta/account_books_page/change_tag_moda
 import UploadCompanyPictureModal from '@/components/beta/account_books_page/upload_company_picture_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
-// import { FAKE_COMPANY_AND_ROLE_LIST_WITH_TEAM } from '@/constants/account_book'; // Deprecated: (20250310 - Liz) 測試用假資料
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
 import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
-import AccountBookPrivacyModal from '@/components/beta/account_books_page/account_book_privacy_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -34,7 +32,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
   const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[] | null>(
     null
   );
-  const [teamToUploadPicture, setTeamToUploadPicture] = useState<ITeam | undefined>();
+  const [teamToChangeImage, setTeamToChangeImage] = useState<ITeam | undefined>();
   const [accountBookToTransfer, setAccountBookToTransfer] = useState<
     IAccountBookForUserWithTeam | undefined
   >();
@@ -45,9 +43,6 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
     IAccountBookForUserWithTeam | undefined
   >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
-    IAccountBookForUserWithTeam | undefined
-  >();
-  const [accountBookToChangePrivacy, setAccountBookToChangePrivacy] = useState<
     IAccountBookForUserWithTeam | undefined
   >();
   const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
@@ -80,12 +75,15 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
       const { data: accountBookListData, success } = await getAccountBookListByTeamIdAPI({
         params: { teamId: team.id },
       });
-      if (success && accountBookListData) {
-        setAccountBookList(accountBookListData.data);
-        // Deprecated: (20250310 - Liz)
+
+      if (!success || !accountBookListData) {
+        // Deprecated: (20250219 - Liz)
         // eslint-disable-next-line no-console
-        console.log('取得團隊帳本清單成功:', accountBookListData.data);
+        console.log('取得團隊帳本清單失敗');
+        return;
       }
+
+      setAccountBookList(accountBookListData.data);
     } catch (error) {
       // Deprecated: (20250219 - Liz)
       // eslint-disable-next-line no-console
@@ -138,7 +136,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
   return (
     <main className="flex flex-col gap-40px">
       <div className="flex items-center">
-        <TeamHeader team={team} setTeamToUploadPicture={setTeamToUploadPicture} />
+        <TeamHeader team={team} setTeamToChangeImage={setTeamToChangeImage} />
         <TeamPageButtons team={team} openMemberListModal={openMemberListModal} />
       </div>
 
@@ -158,15 +156,14 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
           setAccountBookToEdit={setAccountBookToEdit}
           setAccountBookToDelete={setAccountBookToDelete}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
-          setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
         />
       )}
 
       {/* // Info: (20250218 - Liz) Modals */}
-      {teamToUploadPicture && (
-        <UploadTeamPictureModal
-          teamToUploadPicture={teamToUploadPicture}
-          setTeamToUploadPicture={setTeamToUploadPicture}
+      {teamToChangeImage && (
+        <UploadTeamImageModal
+          teamToChangeImage={teamToChangeImage}
+          setTeamToChangeImage={setTeamToChangeImage}
           getTeamData={getTeamData}
         />
       )}
@@ -198,14 +195,6 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
           messageModalData={messageModalData}
           isModalVisible={!!accountBookToDelete}
           modalVisibilityHandler={closeDeleteModal}
-        />
-      )}
-
-      {accountBookToChangePrivacy && (
-        <AccountBookPrivacyModal
-          accountBookToChangePrivacy={accountBookToChangePrivacy}
-          setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
-          getAccountBookListByTeamId={getAccountBookListByTeamId}
         />
       )}
 

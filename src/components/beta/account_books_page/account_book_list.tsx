@@ -9,7 +9,6 @@ interface AccountBookListProps {
   setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
   setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
   setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
-  setAccountBookToChangePrivacy: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
   shouldGroupByTeam?: boolean;
 }
 
@@ -19,7 +18,6 @@ const AccountBookList = ({
   setAccountBookToEdit,
   setAccountBookToDelete,
   setAccountBookToUploadPicture,
-  setAccountBookToChangePrivacy,
   shouldGroupByTeam = false, // Info: (20250227 - Liz) 預設不把帳本依照 team 分組
 }: AccountBookListProps) => {
   const groupedByTeam = shouldGroupByTeam
@@ -61,7 +59,6 @@ const AccountBookList = ({
                 setAccountBookToEdit={setAccountBookToEdit}
                 setAccountBookToDelete={setAccountBookToDelete}
                 setAccountBookToUploadPicture={setAccountBookToUploadPicture}
-                setAccountBookToChangePrivacy={setAccountBookToChangePrivacy}
               />
             ))}
           </div>

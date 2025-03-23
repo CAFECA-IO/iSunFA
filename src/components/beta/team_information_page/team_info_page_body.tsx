@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { ITeam } from '@/interfaces/team';
-import UploadTeamPictureModal from '@/components/beta/team_page/upload_team_picture_modal';
+import UploadTeamImageModal from '@/components/beta/team_page/upload_team_image_modal';
 import TeamHeader from '@/components/beta/team_page/team_header';
 import { useTranslation } from 'next-i18next';
 import NoTeamInfo from '@/components/beta/team_information_page/no_team_info';
@@ -20,7 +20,7 @@ const TeamInformationPageBody = ({ team }: TeamPageBodyProps) => {
   const { teamId } = router.query; // Info:(20250224 - Anna) 取得網址的 teamId
   const [teamInfo, setTeamInfo] = useState<ITeam | undefined>();
   const hasFetched = useRef(false); // Info:(20250226 - Anna) 使用 useRef 避免 API 被執行兩次
-  const [teamToUploadPicture, setTeamToUploadPicture] = useState<ITeam | undefined>();
+  const [teamToChangeImage, setTeamToChangeImage] = useState<ITeam | undefined>();
   const isNoTeamInfo = !teamInfo;
 
   // Info: (20250226 - Anna) 取得團隊 Info API
@@ -55,7 +55,7 @@ const TeamInformationPageBody = ({ team }: TeamPageBodyProps) => {
   return (
     <main className="flex flex-col gap-40px">
       <div className="flex items-center">
-        <TeamHeader team={team} setTeamToUploadPicture={setTeamToUploadPicture} />
+        <TeamHeader team={team} setTeamToChangeImage={setTeamToChangeImage} />
       </div>
       <div className="flex items-center gap-16px">
         <div className="flex items-center gap-8px">
@@ -70,10 +70,10 @@ const TeamInformationPageBody = ({ team }: TeamPageBodyProps) => {
       {!isNoTeamInfo && <TeamInformation teamInfo={teamInfo} setTeamInfo={setTeamInfo} />}
 
       {/* Info: (20250226 - Anna) Modals */}
-      {teamToUploadPicture && (
-        <UploadTeamPictureModal
-          teamToUploadPicture={teamToUploadPicture}
-          setTeamToUploadPicture={setTeamToUploadPicture}
+      {teamToChangeImage && (
+        <UploadTeamImageModal
+          teamToChangeImage={teamToChangeImage}
+          setTeamToChangeImage={setTeamToChangeImage}
           getTeamData={async () => {}} // ToDo: (20250310 - Liz) 這裡要傳入取得團隊資料 API
         />
       )}

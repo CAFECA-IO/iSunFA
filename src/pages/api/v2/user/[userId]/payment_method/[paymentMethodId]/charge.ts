@@ -9,12 +9,13 @@ import {
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { TPlanType } from '@/interfaces/subscription';
+import { APIName, HttpMethod } from '@/constants/api_connection';
+import loggerBack from '@/lib/utils/logger_back';
+import { getSession } from '@/lib/utils/session';
+import { logUserAction } from '@/lib/utils/middleware';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: STATUS_MESSAGE.METHOD_NOT_ALLOWED });
-  }
-
+export const handlePostRequest = (req: NextApiRequest) => {
+  let result;
   try {
     // Info: (20250218 - tzuhan) 驗證 URL 參數
     const { userId } = PaymentQuerySchema.parse(req.query);
@@ -65,12 +66,38 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     mockInvoices[userId] = invoice;
 
-    const result = formatApiResponse(STATUS_MESSAGE.SUCCESS, validatedPayload);
-
-    return res.status(result.httpCode).json(result.result);
+    result = formatApiResponse(STATUS_MESSAGE.SUCCESS, validatedPayload);
   } catch (error) {
-    return res
-      .status(400)
-      .json({ success: false, message: STATUS_MESSAGE.INVALID_INPUT_TYPE, error });
+    result = formatApiResponse((error as Error).message, {});
   }
+  return result;
+};
+
+// Info: (20250311 - Luphia) API Route Handler 根據 Method 呼叫對應的流程
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const method = req.method || HttpMethod.GET;
+  const session = await getSession(req);
+  let httpCode;
+  let result;
+  let statusMessage;
+
+  try {
+    switch (method) {
+      case HttpMethod.POST:
+        ({ httpCode, result } = await handlePostRequest(req));
+        break;
+      default:
+        throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+    }
+  } catch (error) {
+    loggerBack.error(error);
+    const err = error as Error;
+    statusMessage =
+      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
+      STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    ({ httpCode, result } = formatApiResponse(statusMessage, {}));
+  }
+  await logUserAction(session, APIName.USER_PAYMENT_METHOD_LIST, req, statusMessage as string);
+
+  return res.status(httpCode).json(result);
 }

@@ -4,15 +4,24 @@ import { TbCopyCheckFilled, TbCopy } from 'react-icons/tb';
 import { FiEdit2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { ITeam } from '@/interfaces/team';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface TeamHeaderProps {
   team: ITeam;
-  setTeamToUploadPicture: Dispatch<SetStateAction<ITeam | undefined>>;
+  setTeamToChangeImage: Dispatch<SetStateAction<ITeam | undefined>>;
 }
 
-const TeamHeader = ({ team, setTeamToUploadPicture }: TeamHeaderProps) => {
+const TeamHeader = ({ team, setTeamToChangeImage }: TeamHeaderProps) => {
   const { t } = useTranslation(['team']);
   const [copied, setCopied] = useState<boolean>(false);
+
+  const result = convertTeamRoleCanDo({
+    teamRole: team.role,
+    canDo: TeamPermissionAction.MODIFY_IMAGE,
+  });
+
+  const yesOrNo = 'yesOrNo' in result ? result.yesOrNo : false;
 
   const copyTeamId = async () => {
     try {
@@ -34,7 +43,12 @@ const TeamHeader = ({ team, setTeamToUploadPicture }: TeamHeaderProps) => {
 
   return (
     <section className="flex flex-auto items-center gap-8px">
-      <button type="button" className="group relative" onClick={() => setTeamToUploadPicture(team)}>
+      <button
+        type="button"
+        className="group relative"
+        onClick={() => setTeamToChangeImage(team)}
+        disabled={!yesOrNo}
+      >
         <Image
           src={team.imageId}
           width={60}
@@ -43,9 +57,11 @@ const TeamHeader = ({ team, setTeamToUploadPicture }: TeamHeaderProps) => {
           className="h-60px w-60px rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
         ></Image>
 
-        <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
-          <FiEdit2 size={24} />
-        </div>
+        {yesOrNo && (
+          <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
+            <FiEdit2 size={24} />
+          </div>
+        )}
       </button>
 
       <h1 className="text-44px font-bold text-text-neutral-primary">{team.name.value}</h1>
