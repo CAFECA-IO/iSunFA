@@ -1,3 +1,4 @@
+// Deprecated: (20250324 - Liz) 這好像是 Alpha 版本的元件
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/button/button';
 import { useModalContext } from '@/contexts/modal_context';

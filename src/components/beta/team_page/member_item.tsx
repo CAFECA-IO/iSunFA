@@ -13,9 +13,10 @@ import { IMember } from '@/interfaces/member';
 interface MemberItemProps {
   member: ITeamMember;
   team: ITeam;
+  getMemberList: () => Promise<void>;
 }
 
-const MemberItem = ({ member, team }: MemberItemProps) => {
+const MemberItem = ({ member, team, getMemberList }: MemberItemProps) => {
   const { t } = useTranslation(['team']);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState<boolean>(false);
   const [role, setRole] = useState<TeamRole | null>(null);
@@ -49,6 +50,7 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
         // eslint-disable-next-line no-console
         console.error('刪除成員失敗!');
       }
+      getMemberList();
     } catch (error) {
       // Deprecated: (20250320 - Liz)
       // eslint-disable-next-line no-console
@@ -79,6 +81,7 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
         // eslint-disable-next-line no-console
         console.error('更新成員角色失敗!');
       }
+      getMemberList();
     } catch (error) {
       // Deprecated: (20250320 - Liz)
       // eslint-disable-next-line no-console
