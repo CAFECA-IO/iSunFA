@@ -46,6 +46,19 @@ interface FilterSectionProps<T> {
   displayTypeFilter?: boolean;
   hideReversedRelated?: boolean; // Info: (20250210 - Julian) 用於 VoucherListBody，隱藏沖銷分錄
   flagOfRefresh?: boolean; // Info: (20250221 - Julian) 當 flagOfRefresh 變更時，重新發送 API 請求
+
+  // Info: (20250324 - Anna) 篩選條件（類型、日期、關鍵字）改變時，可透過此 prop 回傳給父層
+  onFilterChange?: (filters: {
+    type?: string;
+    startDate?: number;
+    endDate?: number;
+    keyword?: string;
+  }) => void;
+  initialStartDate?: number;
+  initialEndDate?: number;
+  initialType?: string;
+  initialKeyword?: string;
+  initialPage?: number;
 }
 
 const FilterSection = <T,>({
@@ -72,20 +85,33 @@ const FilterSection = <T,>({
   displayTypeFilter,
   hideReversedRelated,
   flagOfRefresh,
+  onFilterChange,
+  initialStartDate,
+  initialEndDate,
+  initialType,
+  initialKeyword,
+  initialPage,
 }: FilterSectionProps<T>) => {
   // const { t } = useTranslation(['common']);
   const { toastHandler } = useModalContext();
+
+  // Info: (20250324 - Anna) 以 initialPage 優先，沒有的話就用外層的 page 值
+  const currentPage = initialPage ?? page;
+
   const [selectedType, setSelectedType] = useState<string | undefined>(
-    types.length > 0 ? types[0] : undefined
+    // Info: (20250324 - Anna) 類型篩選的初始值
+    initialType ?? (types.length > 0 ? types[0] : undefined)
   );
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(
     statuses.length > 0 ? statuses[0] : undefined
   );
+  // Info: (20250324 - Anna) 日期範圍，優先使用初始值，沒有就預設為 0
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
-    startTimeStamp: 0,
-    endTimeStamp: 0,
+    startTimeStamp: initialStartDate ?? 0,
+    endTimeStamp: initialEndDate ?? 0,
   });
-  const [searchQuery, setSearchQuery] = useState<string | undefined>();
+  // Info: (20250324 - Anna) 初始化搜尋關鍵字，優先使用從父層傳入的 initialKeyword
+  const [searchQuery, setSearchQuery] = useState<string | undefined>(initialKeyword);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedSortOption, setSelectedSortOption] = useState<
     | {
@@ -94,6 +120,11 @@ const FilterSection = <T,>({
       }
     | undefined
   >(sort ? { by: sort.by, order: sort.order } : undefined);
+
+  // Info: (20250324 - Anna) 判斷是否為初次載入（無初始篩選條件）
+  const [isInitialized] = useState(() => {
+    return !(initialStartDate || initialEndDate || initialType || initialKeyword);
+  });
 
   // Info: (20241022 - tzuhan) @Murky, <...> 裡面是 CERTIFICATE_LIST_V2 API 需要的回傳資料格式
   const { trigger } = APIHandler<IPaginatedData<T>>(apiName);
@@ -115,7 +146,7 @@ const FilterSection = <T,>({
         params,
         query: {
           // Info: (20241025 - tzuhan) @Shirley, @Murky 這裡是共同處理 List all assets / get all certificate / get all voucher / list news / list reports 的地方，需要協助確認query格式，特別幫我注意一下sortOption，需要修改可以提
-          page,
+          page: currentPage,
           pageSize,
           tab,
           type: selectedType,
@@ -184,6 +215,15 @@ const FilterSection = <T,>({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       fetchData();
+      // Info: (20250324 - Anna) 將篩選條件回傳給父層
+      if (onFilterChange) {
+        onFilterChange({
+          startDate: selectedDateRange.startTimeStamp || undefined,
+          endDate: selectedDateRange.endTimeStamp || undefined,
+          type: selectedType,
+          keyword: searchQuery,
+        });
+      }
     }
   }, [
     page,
@@ -196,6 +236,7 @@ const FilterSection = <T,>({
     selectedSortOption,
     hideReversedRelated,
     flagOfRefresh,
+    isInitialized, // Info: (20250324 - Anna) 初始篩選條件條件載入完成後，發送第一次 API 請求
   ]);
 
   return (

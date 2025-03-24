@@ -9,6 +9,7 @@ import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
+import { updateTeamIcon } from '@/lib/utils/repo/team.repo';
 import formidable from 'formidable';
 import loggerBack from '@/lib/utils/logger_back';
 import { createFile } from '@/lib/utils/repo/file.repo';
@@ -57,13 +58,8 @@ async function handleFileUpload(
     }
     case UploadType.COMPANY:
     case UploadType.USER:
-    case UploadType.PROJECT: {
-      const googleBucketUrl = await uploadFile(fileForSave);
-      fileUrl = googleBucketUrl;
-      break;
-    }
+    case UploadType.PROJECT:
     case UploadType.TEAM: {
-      // TODO: (20250303 - Shirley) not implemented yet
       const googleBucketUrl = await uploadFile(fileForSave);
       fileUrl = googleBucketUrl;
       break;
@@ -111,8 +107,7 @@ async function handleFileUpload(
       break;
     }
     case UploadType.TEAM: {
-      // TODO: (20250303 - Shirley) not implemented yet
-      loggerBack.info(`Mock: Updated team ${targetIdNum} with file ID ${fileId}`);
+      await updateTeamIcon(targetIdNum, fileId);
       break;
     }
     case UploadType.KYC:
