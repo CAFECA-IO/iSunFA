@@ -97,13 +97,17 @@ export const handleSignInSession = async (
     await createDefaultTeamForUser(createdUser.user.id, createdUser.user.name);
     await handleInviteTeamMember(createdUser.user.id, createdUser.user.email ?? '');
 
-    // Info: (20250324 - Shirley) 獲取用戶所屬的所有團隊及其角色
+    // Info: (20250516 - Shirley) 獲取用戶所屬的所有團隊及其角色
     const userTeams = await getUserTeams(createdUser.user.id);
 
     session = await setSession(session, {
       userId: createdUser.user.id,
-      team: userTeams,
+      teams: userTeams,
     });
+
+    const sessionGot = await getSession(req);
+    // eslint-disable-next-line no-console
+    console.log('sessionGot', sessionGot);
 
     // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
     // Dbuser = createdUser;
@@ -112,12 +116,12 @@ export const handleSignInSession = async (
     // Dbuser = getUser;
     // ToDo: (20241121 - Jacky) Delete User from DB if deletedAt + 7 days is less than current date
 
-    // Info: (20250324 - Shirley) 獲取用戶所屬的所有團隊及其角色
+    // Info: (20250516 - Shirley) 獲取用戶所屬的所有團隊及其角色
     const userTeams = await getUserTeams(existingUser.user.id);
 
     session = await setSession(session, {
       userId: existingUser.user.id,
-      team: userTeams,
+      teams: userTeams,
     });
   }
   const log = {

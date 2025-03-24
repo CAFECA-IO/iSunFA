@@ -242,7 +242,7 @@ export const setSession = async (
     roleId?: number;
     teamId?: number;
     teamRole?: string;
-    team?: { teamId: number; teamRole: string }[];
+    teams?: { id: number; role: string }[];
   }
 ) => {
   const sessionId = parseSessionId(sessoin);

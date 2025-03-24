@@ -10,23 +10,23 @@ export const SESSION_DEVELOPER: ISessionData = {
   deviceId: DefaultValue.DEVICE_ID,
   userAgent: DefaultValue.USER_AGENT,
   ipAddress: DefaultValue.IP,
-  userId: 10000000,
-  companyId: 10000000,
+  userId: 10000003,
+  companyId: 10000003,
   roleId: 1006,
-  teamId: 1,
+  teamId: 6,
   teamRole: TeamRole.OWNER,
-  team: [
+  teams: [
     {
-      teamId: 2,
-      teamRole: TeamRole.OWNER,
+      id: 2,
+      role: TeamRole.OWNER,
     },
     {
-      teamId: 3,
-      teamRole: TeamRole.OWNER,
+      id: 3,
+      role: TeamRole.OWNER,
     },
     {
-      teamId: 6,
-      teamRole: TeamRole.OWNER,
+      id: 6,
+      role: TeamRole.OWNER,
     },
   ],
   actionTime: 0,

@@ -38,7 +38,7 @@ const handleGetRequest: IHandleRequest<
     teams: [],
   };
 
-  const { userId, companyId, roleId, teamId, team } = session;
+  const { userId, companyId, roleId, teamId, teams } = session;
 
   if (userId > 0) {
     const getUser = await getUserById(userId);
@@ -60,17 +60,17 @@ const handleGetRequest: IHandleRequest<
     payload.team = getTeam;
   }
 
-  if (team && team.length > 0) {
+  if (teams && teams.length > 0) {
     const teamsData: ITeam[] = [];
     await Promise.all(
-      team.map(async (t) => {
+      teams.map(async (t: { id: number; role: string }) => {
         try {
-          const teamData = await getTeamByTeamId(t.teamId, userId);
+          const teamData = await getTeamByTeamId(t.id, userId);
           if (teamData) {
             teamsData.push(teamData);
           }
         } catch (error) {
-          // Info: (20250324 - Shirley) do nothing
+          // Info: (20250517 - Shirley) 忽略获取单个团队失败的错误，确保其他团队仍能正常处理
         }
       })
     );

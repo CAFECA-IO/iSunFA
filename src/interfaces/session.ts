@@ -32,10 +32,10 @@ export interface ISessionData {
   expires: number;
   teamId: number;
   teamRole: string; // Info: (20250311 - Shirley) TeamRole
-  team?: {
-    // Info: (20250324 - Shirley) Store all teams and roles user belongs to
-    teamId: number;
-    teamRole: string;
+  teams: {
+    // Info: (20250517 - Shirley) 用戶所屬的所有團隊及其角色
+    id: number;
+    role: string;
   }[];
 }
 
@@ -46,9 +46,9 @@ export interface ISessionUpdateData {
   actionTime?: number;
   teamId?: number;
   teamRole?: string;
-  team?: {
-    // Info: (20250324 - Shirley) Store all teams and roles user belongs to
-    teamId: number;
-    teamRole: string;
+  teams?: {
+    // Info: (20250517 - Shirley) 用戶所屬的所有團隊及其角色
+    id: number;
+    role: string;
   }[];
 }
