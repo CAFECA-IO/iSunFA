@@ -141,7 +141,9 @@
     "MONTHLY_SUBSCRIPTION": "每月訂閱",
     "SUBTOTAL": "小計",
     "TAX": "稅金",
-    "TOTAL_PRICE": "總金額"
+    "TOTAL_PRICE": "總金額",
+    "TOAST_GET_CREDIT_CARD_INFO_FAILED": "信用卡新增失敗，請再試一次",
+    "TOAST_GET_CREDIT_CARD_INFO_SUCCESS": "信用卡新增成功！"
   },
 
   "BILLING_PAGE": {
