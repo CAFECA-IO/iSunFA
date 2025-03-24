@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect } from 'react';
 import Image from 'next/image';
 import { IPlan, IUserOwnedTeam } from '@/interfaces/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
@@ -29,15 +29,14 @@ const CreditCardInfo = ({
   setIsDirty,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
-  const { bindingResult, userAuth } = useUserCtx();
+  const { bindingResult, userAuth, paymentMethod, handlePaymentMethod } = useUserCtx();
   const { toastHandler } = useModalContext();
-  const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
   const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
 
   // Info: (20250120 - Liz) 取得信用卡 number
-  const creditCardNumber = hasCreditCardInfo ? paymentMethod[0].number : '';
+  const creditCardNumber = hasCreditCardInfo ? paymentMethod[paymentMethod.length - 1].number : '';
 
   // Info: (20250120 - Liz) 取得信用卡資訊 API
   const { trigger: getCreditCardInfoAPI } = APIHandler<IPaymentMethod[]>(
@@ -45,23 +44,17 @@ const CreditCardInfo = ({
   );
 
   // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state
-  useEffect(() => {
-    if (!(userAuth && bindingResult)) return;
+  const getCreditCardInfo = async () => {
+    if (!userAuth) return;
 
-    const getCreditCardInfo = async () => {
+    try {
       const { success, data } = await getCreditCardInfoAPI({
         params: { userId: userAuth.id },
       });
 
       if (success) {
-        // Info: (20250324 - Julian) 設定信用卡資料到 paymentMethod state，並顯示成功訊息
-        setPaymentMethod(data);
-        toastHandler({
-          id: 'GET_CREDIT_CARD_INFO_SUCCESS',
-          type: ToastType.SUCCESS,
-          content: t('subscriptions:PAYMENT_PAGE.TOAST_GET_CREDIT_CARD_INFO_SUCCESS'),
-          closeable: true,
-        });
+        // Info: (20250324 - Julian) 設定信用卡資料到 paymentMethod state
+        handlePaymentMethod(data);
       } else {
         toastHandler({
           id: 'GET_CREDIT_CARD_INFO_FAILED',
@@ -70,8 +63,18 @@ const CreditCardInfo = ({
           closeable: true,
         });
       }
-    };
+    } catch (error) {
+      // Info: (20250324 - Julian) 顯示錯誤訊息
+      toastHandler({
+        id: 'GET_CREDIT_CARD_INFO_FAILED',
+        type: ToastType.ERROR,
+        content: t('subscriptions:PAYMENT_PAGE.TOAST_GET_CREDIT_CARD_INFO_FAILED'),
+        closeable: true,
+      });
+    }
+  };
 
+  useEffect(() => {
     getCreditCardInfo();
     window.getCreditCardInfo = getCreditCardInfo; // Info: (20250120 - Liz) 後端需求，將 getCreditCardInfo 掛載到全域的 window 物件上
   }, [bindingResult]);
