@@ -14,9 +14,23 @@ interface IVoucherItemProps {
   voucher: IVoucherUI;
   selectHandler: (id: number) => void;
   isCheckBoxOpen: boolean; // Info: (20241022 - Julian) checkbox 是否顯示
+  selectedStartDate?: number;
+  selectedEndDate?: number;
+  selectedType?: string;
+  keyword?: string;
+  currentPage?: number;
 }
 
-const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCheckBoxOpen }) => {
+const VoucherItem: React.FC<IVoucherItemProps> = ({
+  voucher,
+  selectHandler,
+  isCheckBoxOpen,
+  selectedStartDate,
+  selectedEndDate,
+  selectedType,
+  keyword,
+  currentPage,
+}) => {
   const { t } = useTranslation('common');
 
   const {
@@ -230,7 +244,18 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     </div>
   ) : (
     <Link
-      href={`/users/accounting/${voucher.id}?voucherNo=${voucherNo}`}
+      href={{
+        pathname: `/users/accounting/${voucher.id}`,
+        query: {
+          voucherNo,
+          from: 'voucher_item', // Info: (20250324 - Anna) from=voucher_item 為了返回時能回到傳票清單頁面，並且保留篩選條件
+          ...(selectedStartDate && { startDate: selectedStartDate }),
+          ...(selectedEndDate && { endDate: selectedEndDate }),
+          ...(selectedType && { type: selectedType }),
+          ...(keyword && { keyword }),
+          ...(currentPage && { page: currentPage }),
+        },
+      }}
       className="table-row font-medium odd:bg-surface-neutral-surface-lv2 even:bg-surface-neutral-surface-lv1 hover:cursor-pointer hover:bg-surface-brand-primary-10"
     >
       {content}
