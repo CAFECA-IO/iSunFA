@@ -240,8 +240,8 @@ export const setSession = async (
     companyId?: number;
     challenge?: string;
     roleId?: number;
-    teamId?: number;
-    teamRole?: string;
+    teamId?: number; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
+    teamRole?: string; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
     teams?: { id: number; role: string }[];
   }
 ) => {

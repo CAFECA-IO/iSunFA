@@ -38,7 +38,7 @@ const handleGetRequest: IHandleRequest<
     teams: [],
   };
 
-  const { userId, companyId, roleId, teamId, teams } = session;
+  const { userId, companyId, roleId, teamId, teams } = session; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
 
   if (userId > 0) {
     const getUser = await getUserById(userId);
@@ -56,6 +56,7 @@ const handleGetRequest: IHandleRequest<
   }
 
   if (teamId > 0) {
+    // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
     const getTeam = await getTeamByTeamId(teamId, userId);
     payload.team = getTeam;
   }
