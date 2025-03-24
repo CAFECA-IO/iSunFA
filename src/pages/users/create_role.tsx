@@ -36,6 +36,7 @@ const CreateRolePage = () => {
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
   const [isAbleToGoBack, setIsAbleToGoBack] = useState<boolean>(false);
   const [isAnimationShowing, setIsAnimationShowing] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const togglePreviewModal = () => {
     setIsPreviewModalVisible((prev) => !prev);
@@ -67,6 +68,8 @@ const CreateRolePage = () => {
         // Deprecated: (20241108 - Liz)
         // eslint-disable-next-line no-console
         console.log('Failed to fetch or compute roles:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -96,7 +99,7 @@ const CreateRolePage = () => {
 
       {isAnimationShowing && <LoginAnimation setIsAnimationShowing={setIsAnimationShowing} />}
 
-      {!isAnimationShowing && (
+      {!isAnimationShowing && !isLoading && (
         <main className="relative flex h-screen flex-col overflow-hidden">
           {isAbleToGoBack && (
             <Link
