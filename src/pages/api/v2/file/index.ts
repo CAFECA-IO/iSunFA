@@ -9,6 +9,7 @@ import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
+import { updateTeamIcon } from '@/lib/utils/repo/team.repo';
 import formidable from 'formidable';
 import loggerBack from '@/lib/utils/logger_back';
 import { createFile } from '@/lib/utils/repo/file.repo';
@@ -22,7 +23,6 @@ import { getPusherInstance } from '@/lib/utils/pusher';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
 import { parseJsonWebKeyFromString } from '@/lib/utils/formatter/json_web_key.formatter';
 import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
-import prisma from '@/client';
 
 export const config = {
   api: {
@@ -107,12 +107,7 @@ async function handleFileUpload(
       break;
     }
     case UploadType.TEAM: {
-      // Info: (20250303 - Shirley) Update team with the uploaded image ID
-      await prisma.team.update({
-        where: { id: targetIdNum },
-        data: { imageFileId: fileId },
-      });
-      loggerBack.info(`Updated team ${targetIdNum} with file ID ${fileId}`);
+      await updateTeamIcon(targetIdNum, fileId);
       break;
     }
     case UploadType.KYC:

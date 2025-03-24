@@ -315,7 +315,7 @@ export async function createDefaultTeamForUser(userId: number, userName: string)
 
 /**
  * Updates the team's icon with the provided file ID
- * Info: (20250324 - Shirley) Similar to putCompanyIcon, this function connects a file to a team
+ * Info: (20250303 - Shirley) Similar to putCompanyIcon, this function connects a file to a team
  * @param options Object containing teamId and fileId
  * @returns The updated team with the image file included
  */
@@ -341,4 +341,19 @@ export async function putTeamIcon(options: { teamId: number; fileId: number }) {
   });
 
   return updatedTeam;
+}
+
+/**
+ * Updates the team's icon in the file upload process
+ * Info: (20250303 - Shirley) This function is called during file upload to update team's icon
+ * @param teamId The ID of the team to update
+ * @param fileId The ID of the uploaded file
+ * @returns The updated team
+ */
+export async function updateTeamIcon(teamId: number, fileId: number) {
+  const team = await prisma.team.update({
+    where: { id: teamId },
+    data: { imageFileId: fileId },
+  });
+  return team;
 }
