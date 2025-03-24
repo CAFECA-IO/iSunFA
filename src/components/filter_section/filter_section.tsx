@@ -146,7 +146,6 @@ const FilterSection = <T,>({
         params,
         query: {
           // Info: (20241025 - tzuhan) @Shirley, @Murky 這裡是共同處理 List all assets / get all certificate / get all voucher / list news / list reports 的地方，需要協助確認query格式，特別幫我注意一下sortOption，需要修改可以提
-          // page,
           page: currentPage,
           pageSize,
           tab,
