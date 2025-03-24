@@ -71,7 +71,7 @@ const handleGetRequest: IHandleRequest<
             teamsData.push(teamData);
           }
         } catch (error) {
-          // Info: (20250517 - Shirley) 忽略获取单个团队失败的错误，确保其他团队仍能正常处理
+          // Info: (20250324 - Shirley) do nothing
         }
       })
     );

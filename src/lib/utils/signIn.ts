@@ -97,7 +97,7 @@ export const handleSignInSession = async (
     await createDefaultTeamForUser(createdUser.user.id, createdUser.user.name);
     await handleInviteTeamMember(createdUser.user.id, createdUser.user.email ?? '');
 
-    // Info: (20250516 - Shirley) 獲取用戶所屬的所有團隊及其角色
+    // Info: (20250324 - Shirley) 獲取用戶所屬的所有團隊及其角色
     const userTeams = await getUserTeams(createdUser.user.id);
 
     session = await setSession(session, {
@@ -112,7 +112,7 @@ export const handleSignInSession = async (
     // Dbuser = getUser;
     // ToDo: (20241121 - Jacky) Delete User from DB if deletedAt + 7 days is less than current date
 
-    // Info: (20250516 - Shirley) 獲取用戶所屬的所有團隊及其角色
+    // Info: (20250324 - Shirley) 獲取用戶所屬的所有團隊及其角色
     const userTeams = await getUserTeams(existingUser.user.id);
 
     session = await setSession(session, {

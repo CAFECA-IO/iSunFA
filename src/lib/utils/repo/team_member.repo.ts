@@ -339,7 +339,7 @@ export const listTeamMemberByTeamId = async (
 };
 
 /**
- * Info: (20250516 - Shirley) 獲取用戶所屬的所有團隊及其角色
+ * Info: (20250324 - Shirley) 獲取用戶所屬的所有團隊及其角色
  * @param userId 用戶 ID
  * @returns 包含用戶所屬團隊 ID 和角色的陣列
  */

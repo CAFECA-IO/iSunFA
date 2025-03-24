@@ -9,7 +9,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { ITeamWithImage } from '@/interfaces/team';
 import { putTeamIcon } from '@/lib/utils/repo/team.repo';
 
-/** Info: (20250303 - Shirley)
+/** Info: (20250324 - Shirley)
  * 開發步驟：
  * 1. 在 APIName enum 中添加 TEAM_PUT_ICON 類型
  * 2. 在 APIPath enum 中添加 TEAM_PUT_ICON 對應的路徑
@@ -34,10 +34,10 @@ const handlePutRequest: IHandleRequest<APIName.PUT_TEAM_ICON, ITeamWithImage> = 
   const { userId } = session;
 
   try {
-    // Info: (20250303 - Shirley) 使用 putTeamIcon 函數更新團隊圖標
+    // Info: (20250324 - Shirley) 使用 putTeamIcon 函數更新團隊圖標
     const updatedTeam = await putTeamIcon({ teamId: Number(teamId), fileId: Number(fileId) });
 
-    // Info: (20250303 - Shirley) 將數據轉換為 ITeamWithImage 格式
+    // Info: (20250324 - Shirley) 將數據轉換為 ITeamWithImage 格式
     const teamWithImage: ITeamWithImage = {
       id: updatedTeam.id,
       name: updatedTeam.name,
