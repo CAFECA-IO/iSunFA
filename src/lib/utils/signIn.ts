@@ -105,10 +105,6 @@ export const handleSignInSession = async (
       teams: userTeams,
     });
 
-    const sessionGot = await getSession(req);
-    // eslint-disable-next-line no-console
-    console.log('sessionGot', sessionGot);
-
     // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
     // Dbuser = createdUser;
   } else {
