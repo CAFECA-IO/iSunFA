@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect } from 'react';
 import Image from 'next/image';
 import { IPlan, IUserOwnedTeam } from '@/interfaces/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
@@ -8,6 +8,9 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaymentMethod } from '@/interfaces/payment';
 import { useUserCtx } from '@/contexts/user_context';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
+import { Button } from '@/components/button/button';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
@@ -27,44 +30,56 @@ const CreditCardInfo = ({
   setIsDirty,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
-  const { bindingResult } = useUserCtx();
-  // const { toastHandler } = useModalContext();
-  // const router = useRouter();
-  // Deprecated: (20250220 - Tzuhan) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
+  const { bindingResult, userAuth, paymentMethod, handlePaymentMethod } = useUserCtx();
+  const { toastHandler } = useModalContext();
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
   const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
 
   // Info: (20250120 - Liz) 取得信用卡 number
-  const creditCardNumber = hasCreditCardInfo ? paymentMethod[0].number : '';
+  const creditCardNumber = hasCreditCardInfo ? paymentMethod[paymentMethod.length - 1].number : '';
 
   // Info: (20250120 - Liz) 取得信用卡資訊 API
   const { trigger: getCreditCardInfoAPI } = APIHandler<IPaymentMethod[]>(
-    APIName.GET_CREDIT_CARD_INFO
+    APIName.USER_PAYMENT_METHOD_LIST
   );
 
+  const { trigger: updateSubscriptionAPI } = APIHandler(APIName.USER_PAYMENT_METHOD_CHARGE);
+
   // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state
-  useEffect(() => {
-    const getCreditCardInfo = async () => {
+  const getCreditCardInfo = async () => {
+    if (!userAuth) return;
+
+    try {
       const { success, data } = await getCreditCardInfoAPI({
-        params: { teamId: team.id },
+        params: { userId: userAuth.id },
       });
 
       if (success) {
-        setPaymentMethod(data);
+        // Info: (20250324 - Julian) 設定信用卡資料到 paymentMethod state
+        handlePaymentMethod(data);
+      } else {
+        toastHandler({
+          id: 'GET_CREDIT_CARD_INFO_FAILED',
+          type: ToastType.ERROR,
+          content: t('subscriptions:PAYMENT_PAGE.TOAST_GET_CREDIT_CARD_INFO_FAILED'),
+          closeable: true,
+        });
       }
-    };
-
-    getCreditCardInfo();
-    window.getCreditCardInfo = getCreditCardInfo; // Info: (20250120 - Liz) 後端需求，將 getCreditCardInfo 掛載到全域的 window 物件上
-  }, []);
+    } catch (error) {
+      // Info: (20250324 - Julian) 顯示錯誤訊息
+      toastHandler({
+        id: 'GET_CREDIT_CARD_INFO_FAILED',
+        type: ToastType.ERROR,
+        content: t('subscriptions:PAYMENT_PAGE.TOAST_GET_CREDIT_CARD_INFO_FAILED'),
+        closeable: true,
+      });
+    }
+  };
 
   useEffect(() => {
-    // deprecated: (20250321 - Julian) For testing purpose
-    // eslint-disable-next-line no-console
-    console.log('Binding Result:', bindingResult);
+    getCreditCardInfo();
+    window.getCreditCardInfo = getCreditCardInfo; // Info: (20250120 - Liz) 後端需求，將 getCreditCardInfo 掛載到全域的 window 物件上
   }, [bindingResult]);
 
   const isAutoRenewalEnabled = team.enableAutoRenewal;
@@ -79,6 +94,43 @@ const CreditCardInfo = ({
 
   // Info: (20250120 - Liz) 綁定信用卡資料
   const bindCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
+
+  // Info: (20250324 - Julian) 更新訂閱方案
+  const updateSubscription = async () => {
+    if (!(userAuth && paymentMethod)) return;
+
+    try {
+      const { success } = await updateSubscriptionAPI({
+        params: {
+          userId: userAuth.id,
+          paymentMethodId: paymentMethod[paymentMethod.length - 1].id,
+        },
+      });
+
+      if (success) {
+        toastHandler({
+          id: 'UPDATE_SUBSCRIPTION_SUCCESS',
+          type: ToastType.SUCCESS,
+          content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_SUCCESS'),
+          closeable: true,
+        });
+      } else {
+        toastHandler({
+          id: 'UPDATE_SUBSCRIPTION_FAILED',
+          type: ToastType.ERROR,
+          content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_UPDATE_ERROR'),
+          closeable: true,
+        });
+      }
+    } catch (error) {
+      toastHandler({
+        id: 'UPDATE_SUBSCRIPTION_FAILED',
+        type: ToastType.ERROR,
+        content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_UPDATE_ERROR'),
+        closeable: true,
+      });
+    }
+  };
 
   /* Info: (20250220 - Tzuhan) 為串接 HiTrust 金流測試: 會替換成跳轉至 HiTrust 金流頁面
   // Info: (20250120 - Liz) 打 API 變更團隊的訂閱方案
@@ -167,6 +219,10 @@ const CreditCardInfo = ({
         </span>
         <span className="font-medium text-text-neutral-tertiary">{`* ${t('subscriptions:PAYMENT_PAGE.NOTE')}`}</span>
       </div>
+
+      <Button type="button" variant="default" size="large" onClick={updateSubscription}>
+        {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
+      </Button>
     </section>
   );
 };
