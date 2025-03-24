@@ -28,7 +28,6 @@ export interface ISessionData {
   userId: number;
   companyId: number;
   roleId: number;
-  tagId: number;
   teamId: number; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
   teamRole: string; // Info: (20250311 - Shirley) TeamRole // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
   actionTime: number;
@@ -45,7 +44,6 @@ export interface ISessionUpdateData {
   companyId?: number;
   roleId?: number;
   actionTime?: number;
-  tagId?: number;
   teamId?: number; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
   teamRole?: string; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
   teams?: {

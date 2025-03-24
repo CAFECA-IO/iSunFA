@@ -10,7 +10,7 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { Company, Role, User } from '@prisma/client';
-import { getTeamByTeamId } from '@/lib/utils/repo/team.repo';
+import { getTeamByTeamId, getTeamsByUserIdAndTeamIds } from '@/lib/utils/repo/team.repo';
 import { ITeam } from '@/interfaces/team';
 
 const handleGetRequest: IHandleRequest<
@@ -62,21 +62,13 @@ const handleGetRequest: IHandleRequest<
   }
 
   if (teams && teams.length > 0) {
-    const teamsData: ITeam[] = [];
-    await Promise.all(
-      teams.map(async (t: { id: number; role: string }) => {
-        try {
-          const teamData = await getTeamByTeamId(t.id, userId);
-          if (teamData) {
-            teamsData.push(teamData);
-          }
-        } catch (error) {
-          // Info: (20250324 - Shirley) do nothing
-        }
-      })
-    );
-
-    payload.teams = teamsData;
+    try {
+      const teamIds = teams.map((t) => t.id);
+      payload.teams = await getTeamsByUserIdAndTeamIds(userId, teamIds);
+    } catch (error) {
+      // Info: (20250626 - Shirley) 如果獲取團隊數據失敗，返回空數組
+      payload.teams = [];
+    }
   }
 
   statusMessage = STATUS_MESSAGE.SUCCESS_GET;

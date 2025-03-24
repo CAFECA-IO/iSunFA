@@ -314,8 +314,8 @@ export async function createDefaultTeamForUser(userId: number, userName: string)
 }
 
 /**
+ * Info: (20250324 - Shirley) Similar to putCompanyIcon, this function connects a file to a team
  * Updates the team's icon with the provided file ID
- * Info: (20250303 - Shirley) Similar to putCompanyIcon, this function connects a file to a team
  * @param options Object containing teamId and fileId
  * @returns The updated team with the image file included
  */
@@ -344,8 +344,8 @@ export async function putTeamIcon(options: { teamId: number; fileId: number }) {
 }
 
 /**
+ * Info: (20250324 - Shirley) This function is called during file upload to update team's icon
  * Updates the team's icon in the file upload process
- * Info: (20250303 - Shirley) This function is called during file upload to update team's icon
  * @param teamId The ID of the team to update
  * @param fileId The ID of the uploaded file
  * @returns The updated team
@@ -357,3 +357,82 @@ export async function updateTeamIcon(teamId: number, fileId: number) {
   });
   return team;
 }
+
+/**
+ * Info: (20250324 - Shirley) 根據用戶 ID 和團隊 ID 列表獲取多個團隊信息
+ * @param userId 用戶 ID
+ * @param teamIds 團隊 ID 列表
+ * @returns 團隊信息列表
+ */
+export const getTeamsByUserIdAndTeamIds = async (
+  userId: number,
+  teamIds: number[]
+): Promise<ITeam[]> => {
+  if (!teamIds.length) return [];
+
+  // Info: (20250324 - Shirley) 獲取用戶在指定團隊中的成員資格
+  const teamMembers = await prisma.teamMember.findMany({
+    where: {
+      userId,
+      teamId: { in: teamIds },
+      status: LeaveStatus.IN_TEAM,
+    },
+  });
+
+  // Info: (20250324 - Shirley) 如果用戶不是任何團隊的成員，返回空數組
+  if (!teamMembers.length) return [];
+
+  // Info: (20250324 - Shirley) 創建團隊 ID 到成員角色的映射
+  const teamMemberRoleMap = new Map(teamMembers.map((member) => [member.teamId, member.role]));
+
+  // Info: (20250324 - Shirley) 只獲取用戶是成員的團隊
+  const validTeamIds = teamMembers.map((member) => member.teamId);
+
+  // Info: (20250324 - Shirley) 查詢這些團隊的詳細信息
+  const teams = await prisma.team.findMany({
+    where: { id: { in: validTeamIds } },
+    include: {
+      members: {
+        where: { status: LeaveStatus.IN_TEAM },
+        select: {
+          userId: true,
+          role: true,
+          user: {
+            select: { name: true, email: true, imageFileId: true },
+          },
+        },
+      },
+      accountBook: true,
+      subscription: { include: { plan: true } },
+      imageFile: { select: { id: true, url: true } },
+    },
+  });
+
+  // Info: (20250324 - Shirley) 轉換為 ITeam 格式
+  return teams.map((team) => {
+    const teamRole = (teamMemberRoleMap.get(team.id) as TeamRole) || TeamRole.VIEWER;
+
+    return {
+      id: team.id,
+      imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
+      role: teamRole,
+      name: { value: team.name, editable: teamRole !== TeamRole.VIEWER },
+      about: { value: team.about || '', editable: teamRole !== TeamRole.VIEWER },
+      profile: { value: team.profile || '', editable: teamRole !== TeamRole.VIEWER },
+      planType: {
+        value: (team.subscription?.plan.type as TPlanType) ?? TPlanType.BEGINNER,
+        editable: false,
+      },
+      totalMembers: team.members.length,
+      totalAccountBooks: team.accountBook.length,
+      bankAccount: {
+        value: team.bankInfo
+          ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
+          : '',
+        editable: teamRole !== TeamRole.VIEWER,
+      },
+      paymentStatus:
+        (team.subscription?.paymentStatus as TeamPaymentStatus) ?? TeamPaymentStatus.FREE,
+    };
+  });
+};
