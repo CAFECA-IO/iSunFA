@@ -337,3 +337,28 @@ export const listTeamMemberByTeamId = async (
 
   return paginatedResult; // Info: (20250321 - Tzuhan) 直接返回，避免 `Promise<IPaginatedData<ITeamMember>>`
 };
+
+/**
+ * Info: (20250324 - Shirley) 獲取用戶所屬的所有團隊及其角色
+ * @param userId 用戶 ID
+ * @returns 包含用戶所屬團隊 ID 和角色的陣列
+ */
+export const getUserTeams = async (
+  userId: number
+): Promise<{ teamId: number; teamRole: string }[]> => {
+  const teamMembers = await prisma.teamMember.findMany({
+    where: {
+      userId,
+      status: LeaveStatus.IN_TEAM,
+    },
+    select: {
+      teamId: true,
+      role: true,
+    },
+  });
+
+  return teamMembers.map((member) => ({
+    teamId: member.teamId,
+    teamRole: member.role,
+  }));
+};

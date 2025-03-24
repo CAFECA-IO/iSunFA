@@ -242,12 +242,14 @@ export const setSession = async (
     roleId?: number;
     teamId?: number;
     teamRole?: string;
+    team?: { teamId: number; teamRole: string }[];
   }
 ) => {
   const sessionId = parseSessionId(sessoin);
   const oldSession = (await sessionHandler.read(sessionId)) || ({} as ISessionData);
   const newSession = { ...oldSession, ...data };
   const resultSession = await sessionHandler.update(sessionId, newSession);
+
   return resultSession;
 };
 

@@ -20,6 +20,7 @@ const handleGetRequest: IHandleRequest<
     company: Company | null;
     role: Role | null;
     team: ITeam | null;
+    teams: ITeam[] | null;
   }
 > = async ({ session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -28,14 +29,16 @@ const handleGetRequest: IHandleRequest<
     company: Company | null;
     role: Role | null;
     team: ITeam | null;
+    teams: ITeam[] | null;
   } = {
     user: null,
     company: null,
     role: null,
     team: null,
+    teams: [],
   };
 
-  const { userId, companyId, roleId, teamId } = session;
+  const { userId, companyId, roleId, teamId, team } = session;
 
   if (userId > 0) {
     const getUser = await getUserById(userId);
@@ -55,6 +58,24 @@ const handleGetRequest: IHandleRequest<
   if (teamId > 0) {
     const getTeam = await getTeamByTeamId(teamId, userId);
     payload.team = getTeam;
+  }
+
+  if (team && team.length > 0) {
+    const teamsData: ITeam[] = [];
+    await Promise.all(
+      team.map(async (t) => {
+        try {
+          const teamData = await getTeamByTeamId(t.teamId, userId);
+          if (teamData) {
+            teamsData.push(teamData);
+          }
+        } catch (error) {
+          // Info: (20250324 - Shirley) do nothing
+        }
+      })
+    );
+
+    payload.teams = teamsData;
   }
 
   statusMessage = STATUS_MESSAGE.SUCCESS_GET;
@@ -83,6 +104,7 @@ export default async function handler(
     company: null,
     role: null,
     team: null,
+    teams: [],
   };
 
   try {
@@ -95,7 +117,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    payload = { user: null, company: null, role: null, team: null };
+    payload = { user: null, company: null, role: null, team: null, teams: [] };
   } finally {
     const { httpCode, result } = formatApiResponse<IStatusInfo | null>(statusMessage, payload);
     res.status(httpCode).json(result);
