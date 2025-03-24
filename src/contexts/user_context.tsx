@@ -215,6 +215,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSelectedRole(null);
     setConnectedAccountBook(null);
     setTeam(null);
+    setBindingResult(null);
     clearAllItems(); // Info: (20240822 - Shirley) 清空 IndexedDB 中的數據
   };
 

@@ -337,7 +337,7 @@ export enum APIPath {
   UPDATE_SUBSCRIPTION = `${apiPrefixV2}/subscription/:teamId/subscription`,
   LIST_SUBSCRIPTION_INVOICE = `${apiPrefixV2}/subscription/:teamId/invoice`,
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId/invoice/:invoiceId`,
-  GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
+  GET_CREDIT_CARD_INFO = `${apiPrefixV2}/user/:userId/payment_method`,
   LEAVE_TEAM = `${apiPrefixV2}/team/:teamId/leave`,
   REQUEST_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/transfer`,
   CANCEL_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/cancel`,

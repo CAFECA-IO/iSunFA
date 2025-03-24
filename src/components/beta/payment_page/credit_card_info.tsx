@@ -8,6 +8,8 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaymentMethod } from '@/interfaces/payment';
 import { useUserCtx } from '@/contexts/user_context';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
@@ -27,11 +29,8 @@ const CreditCardInfo = ({
   setIsDirty,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
-  const { bindingResult } = useUserCtx();
-  // const { toastHandler } = useModalContext();
-  // const router = useRouter();
-  // Deprecated: (20250220 - Tzuhan) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { bindingResult, userAuth } = useUserCtx();
+  const { toastHandler } = useModalContext();
   const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod[] | null>(null);
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
@@ -47,24 +46,34 @@ const CreditCardInfo = ({
 
   // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state
   useEffect(() => {
+    if (!(userAuth && bindingResult)) return;
+
     const getCreditCardInfo = async () => {
       const { success, data } = await getCreditCardInfoAPI({
-        params: { teamId: team.id },
+        params: { userId: userAuth.id },
       });
 
       if (success) {
+        // Info: (20250324 - Julian) 設定信用卡資料到 paymentMethod state，並顯示成功訊息
         setPaymentMethod(data);
+        toastHandler({
+          id: 'GET_CREDIT_CARD_INFO_SUCCESS',
+          type: ToastType.SUCCESS,
+          content: t('subscriptions:PAYMENT_PAGE.TOAST_GET_CREDIT_CARD_INFO_SUCCESS'),
+          closeable: true,
+        });
+      } else {
+        toastHandler({
+          id: 'GET_CREDIT_CARD_INFO_FAILED',
+          type: ToastType.ERROR,
+          content: t('subscriptions:PAYMENT_PAGE.TOAST_GET_CREDIT_CARD_INFO_FAILED'),
+          closeable: true,
+        });
       }
     };
 
     getCreditCardInfo();
     window.getCreditCardInfo = getCreditCardInfo; // Info: (20250120 - Liz) 後端需求，將 getCreditCardInfo 掛載到全域的 window 物件上
-  }, []);
-
-  useEffect(() => {
-    // deprecated: (20250321 - Julian) For testing purpose
-    // eslint-disable-next-line no-console
-    console.log('Binding Result:', bindingResult);
   }, [bindingResult]);
 
   const isAutoRenewalEnabled = team.enableAutoRenewal;
