@@ -19,7 +19,7 @@ interface IResponse {
 }
 
 /**
- * Info: (20250303 - Shirley) 處理 GET 請求，獲取帳本詳細資訊，目前為 mock API
+ * Info: (20250324 - Shirley) 處理 GET 請求，獲取帳本詳細資訊，目前為 mock API
  */
 const handleGetRequest: IHandleRequest<
   APIName.GET_ACCOUNT_BOOK_INFO_BY_ID,
@@ -27,7 +27,7 @@ const handleGetRequest: IHandleRequest<
 > = async ({ query }) => {
   const { accountBookId } = query as IGetAccountBookQueryParams;
 
-  // Info: (20250303 - Shirley) 模擬帳本不存在的情況
+  // Info: (20250324 - Shirley) 模擬帳本不存在的情況
   if (accountBookId === 404) {
     return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
   }

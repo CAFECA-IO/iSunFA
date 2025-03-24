@@ -10,7 +10,7 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { Company, Role, User } from '@prisma/client';
-import { getTeamByTeamId } from '@/lib/utils/repo/team.repo';
+import { getTeamByTeamId, getTeamsByUserIdAndTeamIds } from '@/lib/utils/repo/team.repo';
 import { ITeam } from '@/interfaces/team';
 
 const handleGetRequest: IHandleRequest<
@@ -20,6 +20,7 @@ const handleGetRequest: IHandleRequest<
     company: Company | null;
     role: Role | null;
     team: ITeam | null;
+    teams: ITeam[] | null;
   }
 > = async ({ session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -28,14 +29,16 @@ const handleGetRequest: IHandleRequest<
     company: Company | null;
     role: Role | null;
     team: ITeam | null;
+    teams: ITeam[] | null;
   } = {
     user: null,
     company: null,
     role: null,
     team: null,
+    teams: [],
   };
 
-  const { userId, companyId, roleId, teamId } = session;
+  const { userId, companyId, roleId, teamId, teams } = session; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
 
   if (userId > 0) {
     const getUser = await getUserById(userId);
@@ -53,8 +56,19 @@ const handleGetRequest: IHandleRequest<
   }
 
   if (teamId > 0) {
+    // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
     const getTeam = await getTeamByTeamId(teamId, userId);
     payload.team = getTeam;
+  }
+
+  if (teams && teams.length > 0) {
+    try {
+      const teamIds = teams.map((t) => t.id);
+      payload.teams = await getTeamsByUserIdAndTeamIds(userId, teamIds);
+    } catch (error) {
+      // Info: (20250626 - Shirley) 如果獲取團隊數據失敗，返回空數組
+      payload.teams = [];
+    }
   }
 
   statusMessage = STATUS_MESSAGE.SUCCESS_GET;
@@ -83,6 +97,7 @@ export default async function handler(
     company: null,
     role: null,
     team: null,
+    teams: [],
   };
 
   try {
@@ -95,7 +110,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    payload = { user: null, company: null, role: null, team: null };
+    payload = { user: null, company: null, role: null, team: null, teams: [] };
   } finally {
     const { httpCode, result } = formatApiResponse<IStatusInfo | null>(statusMessage, payload);
     res.status(httpCode).json(result);
