@@ -10,6 +10,7 @@ import { IPaymentMethod } from '@/interfaces/payment';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
+import { Button } from '@/components/button/button';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
@@ -40,8 +41,10 @@ const CreditCardInfo = ({
 
   // Info: (20250120 - Liz) 取得信用卡資訊 API
   const { trigger: getCreditCardInfoAPI } = APIHandler<IPaymentMethod[]>(
-    APIName.GET_CREDIT_CARD_INFO
+    APIName.USER_PAYMENT_METHOD_LIST
   );
+
+  const { trigger: updateSubscriptionAPI } = APIHandler(APIName.USER_PAYMENT_METHOD_CHARGE);
 
   // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state
   const getCreditCardInfo = async () => {
@@ -91,6 +94,43 @@ const CreditCardInfo = ({
 
   // Info: (20250120 - Liz) 綁定信用卡資料
   const bindCreditCard = () => window.open('/api/payment'); // Info: (20250115 - Julian) 連接到第三方金流頁面
+
+  // Info: (20250324 - Julian) 更新訂閱方案
+  const updateSubscription = async () => {
+    if (!(userAuth && paymentMethod)) return;
+
+    try {
+      const { success } = await updateSubscriptionAPI({
+        params: {
+          userId: userAuth.id,
+          paymentMethodId: paymentMethod[paymentMethod.length - 1].id,
+        },
+      });
+
+      if (success) {
+        toastHandler({
+          id: 'UPDATE_SUBSCRIPTION_SUCCESS',
+          type: ToastType.SUCCESS,
+          content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_SUCCESS'),
+          closeable: true,
+        });
+      } else {
+        toastHandler({
+          id: 'UPDATE_SUBSCRIPTION_FAILED',
+          type: ToastType.ERROR,
+          content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_UPDATE_ERROR'),
+          closeable: true,
+        });
+      }
+    } catch (error) {
+      toastHandler({
+        id: 'UPDATE_SUBSCRIPTION_FAILED',
+        type: ToastType.ERROR,
+        content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_UPDATE_ERROR'),
+        closeable: true,
+      });
+    }
+  };
 
   /* Info: (20250220 - Tzuhan) 為串接 HiTrust 金流測試: 會替換成跳轉至 HiTrust 金流頁面
   // Info: (20250120 - Liz) 打 API 變更團隊的訂閱方案
@@ -179,6 +219,10 @@ const CreditCardInfo = ({
         </span>
         <span className="font-medium text-text-neutral-tertiary">{`* ${t('subscriptions:PAYMENT_PAGE.NOTE')}`}</span>
       </div>
+
+      <Button type="button" variant="default" size="large" onClick={updateSubscription}>
+        {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
+      </Button>
     </section>
   );
 };

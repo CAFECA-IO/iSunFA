@@ -188,8 +188,8 @@ export enum APIName {
   GET_ACCOUNT_BOOK_INFO_BY_ID = 'GET_ACCOUNT_BOOK_INFO_BY_ID',
   PUT_TEAM_ICON = 'PUT_TEAM_ICON',
   UPDATE_ACCOUNT_BOOK = 'UPDATE_ACCOUNT_BOOK',
-  USER_PAYMENT_METHOD_LIST = 'USER_PAYMETHOD_LIST',
-  USER_PAYMENT_METHOD_CHARGE = 'USER_PAYMETHOD_CHARGE',
+  USER_PAYMENT_METHOD_LIST = 'USER_PAYMENT_METHOD_LIST',
+  USER_PAYMENT_METHOD_CHARGE = 'USER_PAYMENT_METHOD_CHARGE',
   PAYMENT_METHOD_REGISTER_REDIRECT = 'PAYMENT_METHOD_REGISTER_REDIRECT',
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = 'PAYMENT_METHOD_REGISTER_CALLBACK',
 }
@@ -337,7 +337,7 @@ export enum APIPath {
   UPDATE_SUBSCRIPTION = `${apiPrefixV2}/subscription/:teamId/subscription`,
   LIST_SUBSCRIPTION_INVOICE = `${apiPrefixV2}/subscription/:teamId/invoice`,
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId/invoice/:invoiceId`,
-  GET_CREDIT_CARD_INFO = `${apiPrefixV2}/user/:userId/payment_method`,
+  GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
   LEAVE_TEAM = `${apiPrefixV2}/team/:teamId/leave`,
   REQUEST_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/transfer`,
   CANCEL_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/cancel`,
@@ -1188,5 +1188,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.UPDATE_ACCOUNT_BOOK,
     method: HttpMethod.PUT,
     path: APIPath.UPDATE_ACCOUNT_BOOK,
+  }),
+  [APIName.USER_PAYMENT_METHOD_LIST]: createConfig({
+    name: APIName.USER_PAYMENT_METHOD_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.USER_PAYMENT_METHOD_LIST,
+  }),
+  [APIName.USER_PAYMENT_METHOD_CHARGE]: createConfig({
+    name: APIName.USER_PAYMENT_METHOD_CHARGE,
+    method: HttpMethod.POST,
+    path: APIPath.USER_PAYMENT_METHOD_CHARGE,
   }),
 };
