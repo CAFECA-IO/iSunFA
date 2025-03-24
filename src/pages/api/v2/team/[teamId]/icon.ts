@@ -1,12 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
+import { formatApiResponse } from '@/lib/utils/common';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { loggerError } from '@/lib/utils/logger_back';
 import { ITeamWithImage } from '@/interfaces/team';
+import { putTeamIcon } from '@/lib/utils/repo/team.repo';
 
 /** Info: (20250303 - Shirley)
  * 開發步驟：
@@ -33,17 +34,20 @@ const handlePutRequest: IHandleRequest<APIName.PUT_TEAM_ICON, ITeamWithImage> = 
   const { userId } = session;
 
   try {
-    // Info: (20250303 - Shirley) 模擬成功更新 team 圖示的情況
-    const mockTeam: ITeamWithImage = {
-      id: Number(teamId),
-      name: `Team ${teamId}`,
-      imageId: `https://storage.googleapis.com/isunfa-images/team/team_picture_${fileId}.jpg`,
-      createdAt: getTimestampNow(),
-      updatedAt: getTimestampNow(),
+    // Info: (20250303 - Shirley) 使用 putTeamIcon 函數更新團隊圖標
+    const updatedTeam = await putTeamIcon({ teamId: Number(teamId), fileId: Number(fileId) });
+
+    // Info: (20250303 - Shirley) 將數據轉換為 ITeamWithImage 格式
+    const teamWithImage: ITeamWithImage = {
+      id: updatedTeam.id,
+      name: updatedTeam.name,
+      imageId: updatedTeam.imageFile?.url || '',
+      createdAt: updatedTeam.createdAt,
+      updatedAt: updatedTeam.updatedAt,
     };
 
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    payload = mockTeam;
+    payload = teamWithImage;
   } catch (_error) {
     const error = _error as Error;
     loggerError({

@@ -22,6 +22,7 @@ import { getPusherInstance } from '@/lib/utils/pusher';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
 import { parseJsonWebKeyFromString } from '@/lib/utils/formatter/json_web_key.formatter';
 import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
+import prisma from '@/client';
 
 export const config = {
   api: {
@@ -57,13 +58,8 @@ async function handleFileUpload(
     }
     case UploadType.COMPANY:
     case UploadType.USER:
-    case UploadType.PROJECT: {
-      const googleBucketUrl = await uploadFile(fileForSave);
-      fileUrl = googleBucketUrl;
-      break;
-    }
+    case UploadType.PROJECT:
     case UploadType.TEAM: {
-      // TODO: (20250303 - Shirley) not implemented yet
       const googleBucketUrl = await uploadFile(fileForSave);
       fileUrl = googleBucketUrl;
       break;
@@ -111,8 +107,12 @@ async function handleFileUpload(
       break;
     }
     case UploadType.TEAM: {
-      // TODO: (20250303 - Shirley) not implemented yet
-      loggerBack.info(`Mock: Updated team ${targetIdNum} with file ID ${fileId}`);
+      // Info: (20250303 - Shirley) Update team with the uploaded image ID
+      await prisma.team.update({
+        where: { id: targetIdNum },
+        data: { imageFileId: fileId },
+      });
+      loggerBack.info(`Updated team ${targetIdNum} with file ID ${fileId}`);
       break;
     }
     case UploadType.KYC:
