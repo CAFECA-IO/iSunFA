@@ -5,6 +5,7 @@ import {
   LinearTextSize,
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
+import Divider from '@/components/landing_page/divider';
 
 const PlanComparison: React.FC = () => {
   const { t } = useTranslation('pricing');
@@ -26,6 +27,21 @@ const PlanComparison: React.FC = () => {
   ];
 
   const plans = ['BEGINNER', 'PROFESSIONAL', 'ENTERPRISE'];
+
+  const formatText = (text: string) => {
+    return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          // Deprecated: (20250325 - Luphia) remove eslint-disable
+          // eslint-disable-next-line react/no-array-index-key
+          <span key={index} className="font-bold text-text-brand-primary-lv3">
+            {part.slice(2, -2)}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
 
   return (
     <div className="flex flex-col items-center gap-80px px-4 py-120px md:px-12 lg:px-24">
@@ -73,6 +89,38 @@ const PlanComparison: React.FC = () => {
           <p>{t('pricing:CONTACT.TITLE')}</p>
         </LinearGradientText>
         <p className="text-base">{t('pricing:CONTACT.SUBTITLE')}</p>
+      </div>
+
+      {/* Subscription Plan Refund Policy */}
+      <div className="flex flex-col items-stretch gap-80px pb-300px tracking-wide">
+        <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
+          {t('REFUND.TITLE')}
+        </LinearGradientText>
+
+        <div className="flex flex-col gap-40px">
+          <Divider text={t('REFUND.CANCELLATION_DIVIDER')} />
+          <ul className="ml-24px flex list-disc flex-col gap-20px text-xl leading-10 text-landing-page-white">
+            <li>{t('REFUND.CANCELLATION_1')}</li>
+            <li>{t('REFUND.CANCELLATION_2')}</li>
+          </ul>
+        </div>
+
+        <div className="flex flex-col gap-40px">
+          <Divider text={t('REFUND.REFUND_DIVIDER')} />
+          <ul className="ml-24px flex list-disc flex-col gap-20px text-xl leading-10 text-landing-page-white">
+            <li>{formatText(t('REFUND.REFUND_1'))}</li>
+            <li>{formatText(t('REFUND.REFUND_2'))}</li>
+            <li>{formatText(t('REFUND.REFUND_3'))}</li>
+          </ul>
+        </div>
+
+        <div className="flex flex-col gap-40px">
+          <Divider text={t('REFUND.SPECIAL_DIVIDER')} />
+          <ul className="ml-24px flex list-disc flex-col gap-20px text-xl leading-10 text-landing-page-white">
+            <li>{formatText(t('REFUND.SPECIAL_1'))}</li>
+            <li>{formatText(t('REFUND.SPECIAL_2'))}</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
