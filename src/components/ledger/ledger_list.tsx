@@ -263,7 +263,6 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
           {formatNumber(total.totalCreditAmount)}
         </div>
       </div>
-
     </div>
   );
 };

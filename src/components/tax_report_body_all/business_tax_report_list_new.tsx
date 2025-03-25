@@ -1531,7 +1531,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   return (
     <div>
       {displayedSelectArea()}
-      <div className={`mx-auto w-a4-height origin-top overflow-x-auto`} ref={printRef}>
+      <div className="mx-auto w-a4-height origin-top overflow-x-auto" ref={printRef}>
         {page1}
       </div>
     </div>
