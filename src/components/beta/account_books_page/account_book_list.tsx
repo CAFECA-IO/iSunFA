@@ -1,14 +1,14 @@
 import { Dispatch, SetStateAction } from 'react';
 import Image from 'next/image';
 import AccountBookItem from '@/components/beta/account_books_page/account_book_item';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 
 interface AccountBookListProps {
-  accountBookList: IAccountBookForUserWithTeam[];
-  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
-  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
-  setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
-  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  accountBookList: IAccountBookWithTeam[];
+  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+  setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   shouldGroupByTeam?: boolean;
 }
 
@@ -22,7 +22,7 @@ const AccountBookList = ({
 }: AccountBookListProps) => {
   const groupedByTeam = shouldGroupByTeam
     ? accountBookList.reduce<
-        Record<string, { teamName: string; accountBooks: IAccountBookForUserWithTeam[] }>
+        Record<string, { teamName: string; accountBooks: IAccountBookWithTeam[] }>
       >((acc, accountBook) => {
         const teamId = accountBook.team.id;
         const teamNameValue = accountBook.team.name.value;
@@ -53,7 +53,7 @@ const AccountBookList = ({
           <div className="flex flex-auto flex-col gap-8px">
             {accountBooks.map((accountBook) => (
               <AccountBookItem
-                key={accountBook.company.id}
+                key={accountBook.id}
                 accountBook={accountBook}
                 setAccountBookToTransfer={setAccountBookToTransfer}
                 setAccountBookToEdit={setAccountBookToEdit}

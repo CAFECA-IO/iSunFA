@@ -7,7 +7,6 @@ import Introduction from '@/components/beta/create_role/introduction';
 import RoleCards from '@/components/beta/create_role/role_cards';
 import PreviewModal from '@/components/beta/create_role/preview_modal';
 import { useUserCtx } from '@/contexts/user_context';
-import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { PiArrowUUpLeftBold } from 'react-icons/pi';
 import Link from 'next/link';
@@ -16,12 +15,12 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import LoginAnimation from '@/components/login/login_animation';
 import { RoleName } from '@/constants/role';
 
-const findUnusedRoles = (systemRoles: IRole[], userRoles: IUserRole[]): IRole[] => {
+const findUnusedRoles = (systemRoles: RoleName[], userRoles: IUserRole[]): RoleName[] => {
   // Info: (20241122 - Liz) 將 userRoles 中的角色 ID 建立為一個 Set
-  const userRoleIds = new Set(userRoles.map((userRole) => userRole.role.id));
+  const userRoleIds = new Set(userRoles.map((userRole) => userRole.roleName));
 
   // Info: (20241122 - Liz) 從 systemRoles 中篩選出尚未被 userRoles 使用的角色
-  return systemRoles.filter((role) => !userRoleIds.has(role.id));
+  return systemRoles.filter((role) => !userRoleIds.has(role));
 };
 
 const CreateRolePage = () => {
@@ -31,8 +30,8 @@ const CreateRolePage = () => {
   // Info: (20241108 - Liz) 畫面顯示的角色
   const [showingRole, setShowingRole] = useState<string>('');
   // Info: (20241108 - Liz) 使用者選擇的角色 ID
-  const [selectedRoleId, setSelectedRoleId] = useState<number>(0);
-  const [unusedSystemRoles, setUnusedSystemRoles] = useState<IRole[]>([]);
+  const [selectedRoleId, setSelectedRoleId] = useState<RoleName>(RoleName.BOOKKEEPER);
+  const [unusedSystemRoles, setUnusedSystemRoles] = useState<RoleName[]>([]);
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
   const [isAbleToGoBack, setIsAbleToGoBack] = useState<boolean>(false);
   const [isAnimationShowing, setIsAnimationShowing] = useState<boolean>(false);

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { RoleName } from '@/constants/role';
-import { IRole } from '@/interfaces/role';
 import { useTranslation } from 'next-i18next';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 
@@ -22,18 +21,16 @@ const ROLES_IMAGE = [
 ];
 
 interface RoleCardProps {
-  roleId: number;
-  roleName: string;
+  roleName: RoleName;
   imageSrc: string;
   isDisabled: boolean;
   showingRole: string;
   setShowingRole: React.Dispatch<React.SetStateAction<string>>;
-  setSelectedRoleId: React.Dispatch<React.SetStateAction<number>>;
+  setSelectedRoleId: React.Dispatch<React.SetStateAction<RoleName>>;
 }
 
 const RoleCard = ({
   roleName,
-  roleId,
   imageSrc,
   isDisabled,
   showingRole,
@@ -47,7 +44,7 @@ const RoleCard = ({
 
   const handleClick = () => {
     setShowingRole(roleName);
-    setSelectedRoleId(roleId);
+    setSelectedRoleId(roleName);
   };
 
   const notAvailable = roleName === RoleName.ENTERPRISE; // ToDo: (20250207 - Liz) 因為企業版角色介紹的設計尚未確定，所以暫時將企業版角色的卡片設為不可選擇
@@ -78,10 +75,10 @@ const RoleCard = ({
 };
 
 interface RoleCardsProps {
-  roleList: IRole[];
+  roleList: RoleName[];
   showingRole: string;
   setShowingRole: React.Dispatch<React.SetStateAction<string>>;
-  setSelectedRoleId: React.Dispatch<React.SetStateAction<number>>;
+  setSelectedRoleId: React.Dispatch<React.SetStateAction<RoleName>>;
 }
 
 const RoleCards = ({
@@ -166,13 +163,12 @@ const RoleCards = ({
       >
         {roleList.map((role, index) => {
           const imageSrc =
-            ROLES_IMAGE.find((rolesImage) => rolesImage.roleName === role.name)?.imageSrc ?? '';
+            ROLES_IMAGE.find((rolesImage) => rolesImage.roleName === role)?.imageSrc ?? '';
 
           return (
             <RoleCard
-              key={role.id}
-              roleId={role.id}
-              roleName={role.name}
+              key={role}
+              roleName={role}
               imageSrc={imageSrc}
               showingRole={showingRole}
               setShowingRole={setShowingRole}

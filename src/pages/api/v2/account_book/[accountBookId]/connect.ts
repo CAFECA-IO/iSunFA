@@ -7,7 +7,6 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IConnectAccountBookQueryParams } from '@/lib/utils/zod_schema/account_book';
 import { getSession, setSession } from '@/lib/utils/session';
-import { getCompanyAndRoleByUserIdAndCompanyId } from '@/lib/utils/repo/admin.repo';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { getTeamByTeamId } from '@/lib/utils/repo/team.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';

@@ -6,7 +6,6 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
-import { getCompanyByUserIdAndCompanyId } from '@/lib/utils/repo/admin.repo';
 import { countMissingCertificate } from '@/lib/utils/repo/certificate.repo';
 import { countUnpostedVoucher } from '@/lib/utils/repo/voucher.repo';
 

@@ -4,7 +4,7 @@ import { IPaginatedOptions } from '@/interfaces/pagination';
 import { z } from 'zod';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam, WORK_TAG } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination';
 import loggerBack from '@/lib/utils/logger_back';
@@ -33,7 +33,7 @@ export async function isEligibleToCreateAccountBookInTeam(
 export const listAccountBooksByTeamId = async (
   userId: number,
   queryParams: z.infer<typeof listByTeamIdQuerySchema>
-): Promise<IPaginatedOptions<IAccountBookForUserWithTeam[]>> => {
+): Promise<IPaginatedOptions<IAccountBookWithTeam[]>> => {
   const {
     teamId,
     page = 1,
@@ -44,7 +44,7 @@ export const listAccountBooksByTeamId = async (
     sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
   } = queryParams;
 
-  // Info: (20250221 - tzuhan) 使用 Prisma Transaction 查詢總數、帳本數據、Admin 資料
+  // Info: (20250221 - tzuhan) 使用 Prisma Transaction 查詢總數、帳本數據
   const [totalCount, accountBooks] = await prisma.$transaction([
     prisma.company.count({
       where: {
@@ -54,20 +54,18 @@ export const listAccountBooksByTeamId = async (
         AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
         OR: [
           {
-            // isPrivate: false, // Info: (20250321 - Tzuhan) this property is no longer used
             team: {
               members: {
                 some: { status: LeaveStatus.IN_TEAM },
               },
             },
-          }, // Info: (20250221 - tzuhan) 公開帳本
+          },
           {
-            // isPrivate: true,
             team: {
               members: {
                 some: {
                   userId,
-                  role: { in: [TeamRole.OWNER, TeamRole.ADMIN] }, // Info: (20250221 - tzuhan) 只有 OWNER / ADMIN 可以看到
+                  role: { in: [TeamRole.OWNER, TeamRole.ADMIN] },
                   status: LeaveStatus.IN_TEAM,
                 },
               },
@@ -84,20 +82,18 @@ export const listAccountBooksByTeamId = async (
         AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
         OR: [
           {
-            // isPrivate: false,
             team: {
               members: {
                 some: { status: LeaveStatus.IN_TEAM },
               },
             },
-          }, // Info: (20250221 - tzuhan) 公開帳本
+          },
           {
-            // isPrivate: true,
             team: {
               members: {
                 some: {
                   userId,
-                  role: { in: [TeamRole.OWNER, TeamRole.ADMIN] }, // Info: (20250221 - tzuhan) 只有 OWNER / ADMIN 可以看到
+                  role: { in: [TeamRole.OWNER, TeamRole.ADMIN] },
                   status: LeaveStatus.IN_TEAM,
                 },
               },
@@ -110,7 +106,7 @@ export const listAccountBooksByTeamId = async (
           include: {
             members: {
               where: { status: LeaveStatus.IN_TEAM },
-              select: { id: true, userId: true, role: true },
+              select: { id: true, userId: true, role: true }, // ✅ 取得 accountBookRole
             },
             accountBook: true,
             subscription: { include: { plan: true } },
@@ -125,40 +121,22 @@ export const listAccountBooksByTeamId = async (
     }),
   ]);
 
-  // Info: (20250306 - tzuhan) 查詢 in 資料
-  const admin = await prisma.admin.findFirst({
-    where: {
-      companyId: { in: accountBooks.map((book) => book.id) }, // Info: (20250306 - tzuhan) 只查詢 `accountBooks` 內的 `companyId`
-      OR: [{ deletedAt: 0 }, { deletedAt: null }],
-    },
-    select: {
-      companyId: true,
-      roleId: true,
-      role: true,
-      tag: true,
-      order: true,
-    },
-  });
-
-  loggerBack.info(`admin: ${JSON.stringify(admin)}`);
-
   return toPaginatedData({
     data: accountBooks.map((book) => {
-      // Info: (20250306 - Tzuhan) 找到 TeamMember 資料，teamRole 是顯示 userId 在 team 內的角色
-      const teamRole =
-        ((book.team?.members.find((member) => member.userId === userId)?.role ??
-          TeamRole.VIEWER) as TeamRole) || TeamRole.VIEWER;
+      // ✅ (20250324 - Tzuhan) 修正 teamRole 取得方式
+      const teamMember = book.team?.members.find((member) => member.userId === userId);
+      const teamRole = (teamMember?.role ?? TeamRole.VIEWER) as TeamRole;
+
       return {
-        company: {
-          id: book.id,
-          imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
-          name: book.name,
-          taxId: book.taxId,
-          startDate: book.startDate,
-          createdAt: book.createdAt,
-          updatedAt: book.updatedAt,
-          isPrivate: book.isPrivate ?? false,
-        },
+        id: book.id,
+        imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
+        name: book.name,
+        taxId: book.taxId,
+        startDate: book.startDate,
+        createdAt: book.createdAt,
+        updatedAt: book.updatedAt,
+        isPrivate: book.isPrivate ?? false,
+        tag: book.tag as WORK_TAG, // ✅ (20250324 - Tzuhan) 直接取用 tag
         team: book.team
           ? {
               id: book.team.id,
@@ -181,11 +159,8 @@ export const listAccountBooksByTeamId = async (
               },
             }
           : null,
-        tag: admin?.tag,
-        order: admin?.order,
-        role: admin?.role,
         isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
-      } as IAccountBookForUserWithTeam;
+      } as IAccountBookWithTeam;
     }),
     page,
     totalPages: Math.ceil(totalCount / pageSize),

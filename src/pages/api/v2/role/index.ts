@@ -5,16 +5,17 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { Role } from '@prisma/client';
-import { listRole } from '@/lib/utils/repo/role.repo';
-import { IRole } from '@/interfaces/role';
+// import { listRole } from '@/lib/utils/repo/role.repo';
+import { RoleName } from '@prisma/client';
+import loggerBack from '@/lib/utils/logger_back';
 
-const handleGetRequest: IHandleRequest<APIName.ROLE_LIST, Role[]> = async ({ query }) => {
+const handleGetRequest: IHandleRequest<APIName.ROLE_LIST, RoleName[]> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: Role[] | null = null;
+  let payload: RoleName[] | null = null;
   const { type } = query;
+  loggerBack.info(`[API] ${APIName.ROLE_LIST} - type: ${type}`);
   // Info: (20250207 - Luphia) Remove 1007 (Accountant) role from the list
-  const listedUserRole = (await listRole(type)).filter((role) => role.id !== 1007);
+  const listedUserRole = Object.values(RoleName).filter((role) => role !== RoleName.ACCOUNTANT);
 
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
   payload = listedUserRole;
@@ -26,17 +27,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IRole[] | null }>;
+  ) => Promise<{ statusMessage: string; payload: RoleName[] | null }>;
 } = {
   GET: (req) => withRequestValidation(APIName.ROLE_LIST, req, handleGetRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IRole[] | null>>
+  res: NextApiResponse<IResponseData<RoleName[] | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IRole[] | null = null;
+  let payload: RoleName[] | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -50,7 +51,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IRole[] | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<RoleName[] | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

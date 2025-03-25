@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BsEnvelope, BsPlusLg } from 'react-icons/bs';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
@@ -26,20 +26,18 @@ const AccountBooksPageBody = () => {
 
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
   const [accountBookToTransfer, setAccountBookToTransfer] = useState<
-    IAccountBookForUserWithTeam | undefined
+    IAccountBookWithTeam | undefined
   >();
-  const [accountBookToEdit, setAccountBookToEdit] = useState<
-    IAccountBookForUserWithTeam | undefined
-  >();
+  const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookWithTeam | undefined>();
   const [accountBookToDelete, setAccountBookToDelete] = useState<
-    IAccountBookForUserWithTeam | undefined
+    IAccountBookWithTeam | undefined
   >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
-    IAccountBookForUserWithTeam | undefined
+    IAccountBookWithTeam | undefined
   >();
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
 
   const isNoData = accountBookList.length === 0;
 
@@ -59,7 +57,7 @@ const AccountBooksPageBody = () => {
     if (!accountBookToDelete) return;
 
     try {
-      const data = await deleteAccountBook(accountBookToDelete.company.id);
+      const data = await deleteAccountBook(accountBookToDelete.id);
 
       if (!data) {
         // Deprecated: (20241115 - Liz)
@@ -86,7 +84,7 @@ const AccountBooksPageBody = () => {
     backBtnStr: t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL'),
   };
 
-  const handleApiResponse = (resData: IPaginatedData<IAccountBookForUserWithTeam[]>) => {
+  const handleApiResponse = (resData: IPaginatedData<IAccountBookWithTeam[]>) => {
     setAccountBookList(resData.data);
     setTotalPage(resData.totalPages);
     setCurrentPage(resData.page);
@@ -96,7 +94,7 @@ const AccountBooksPageBody = () => {
     <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
         {userId && (
-          <FilterSection<IAccountBookForUserWithTeam[]>
+          <FilterSection<IAccountBookWithTeam[]>
             key={refreshKey}
             disableDateSearch
             className="flex-auto"

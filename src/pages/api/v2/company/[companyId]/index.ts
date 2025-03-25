@@ -1,44 +1,20 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import {
-  IAccountBook,
-  IAccountBookForUser,
-  ACCOUNT_BOOK_UPDATE_ACTION,
-} from '@/interfaces/account_book';
+import { IAccountBook, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
 import { deleteCompanyById } from '@/lib/utils/repo/company.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
-import {
-  deleteAdminListByCompanyId,
-  getAdminByCompanyIdAndUserId,
-  getCompanyAndRoleByUserIdAndCompanyId,
-  setCompanyToTop,
-  updateCompanyTagById,
-} from '@/lib/utils/repo/admin.repo';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
-import { Company, Role, File } from '@prisma/client';
 
-const handleGetRequest: IHandleRequest<
-  APIName.COMPANY_GET_BY_ID,
-  {
-    company: Company & { imageFile: File | null };
-    tag: string;
-    order: number;
-    role: Role;
-    teamId: number | null;
-  }
-> = async ({ query, session }) => {
+const handleGetRequest: IHandleRequest<APIName.COMPANY_GET_BY_ID, IAccountBook> = async ({
+  query,
+  session,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: {
-    company: Company & { imageFile: File | null };
-    tag: string;
-    order: number;
-    role: Role;
-    teamId: number | null;
-  } | null = null;
+  let payload: IAccountBook | null = null;
 
   const { companyId } = query;
   const { userId } = session;
@@ -49,24 +25,13 @@ const handleGetRequest: IHandleRequest<
   return { statusMessage, payload };
 };
 
-const handlePutRequest: IHandleRequest<
-  APIName.COMPANY_UPDATE,
-  {
-    company: Company & { imageFile: File | null };
-    tag: string;
-    order: number;
-    role: Role;
-    teamId: number | null;
-  }
-> = async ({ query, body, session }) => {
+const handlePutRequest: IHandleRequest<APIName.COMPANY_UPDATE, IAccountBook> = async ({
+  query,
+  body,
+  session,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: {
-    company: Company & { imageFile: File | null };
-    tag: string;
-    order: number;
-    role: Role;
-    teamId: number | null;
-  } | null = null;
+  let payload: IAccountBook | null = null;
 
   const { companyId } = query;
   const { action, tag } = body;
@@ -76,17 +41,6 @@ const handlePutRequest: IHandleRequest<
       const admin = await getAdminByCompanyIdAndUserId(userId, companyId);
       if (admin && tag) {
         const updatedCompanyAndRole = await updateCompanyTagById(admin.id, tag);
-        statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-        payload = {
-          ...updatedCompanyAndRole,
-          teamId: updatedCompanyAndRole.company.teamId,
-        };
-      }
-      break;
-    }
-    case ACCOUNT_BOOK_UPDATE_ACTION.SET_TO_TOP: {
-      const updatedCompanyAndRole = await setCompanyToTop(userId, companyId);
-      if (updatedCompanyAndRole) {
         statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
         payload = {
           ...updatedCompanyAndRole,
@@ -136,10 +90,10 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountBook | IAccountBookForUser | null>>
+  res: NextApiResponse<IResponseData<IAccountBook | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBook | IAccountBookForUser | null = null;
+  let payload: IAccountBook | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];

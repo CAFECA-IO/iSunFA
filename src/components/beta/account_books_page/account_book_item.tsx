@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
-import { IAccountBookForUserWithTeam, CANCEL_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
+import { IAccountBookWithTeam, CANCEL_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import { IoArrowForward, IoClose } from 'react-icons/io5';
 import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiEdit2, FiTag, FiTrash2 } from 'react-icons/fi';
@@ -11,11 +11,11 @@ import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface AccountBookItemProps {
-  accountBook: IAccountBookForUserWithTeam;
-  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
-  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
-  setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
-  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  accountBook: IAccountBookWithTeam;
+  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+  setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
 }
 
 const AccountBookItem = ({
@@ -28,7 +28,7 @@ const AccountBookItem = ({
   const { t } = useTranslation(['account_book']);
   const { connectAccountBook, connectedAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
-  const isAccountBookConnected = accountBook.company.id === connectedAccountBook?.id;
+  const isAccountBookConnected = accountBook.id === connectedAccountBook?.id;
 
   const {
     targetRef: optionsDropdownRef,
@@ -70,7 +70,7 @@ const AccountBookItem = ({
 
     setIsLoading(true);
 
-    const accountBookId = isAccountBookConnected ? CANCEL_ACCOUNT_BOOK_ID : accountBook.company.id;
+    const accountBookId = isAccountBookConnected ? CANCEL_ACCOUNT_BOOK_ID : accountBook.id;
 
     try {
       const { success } = await connectAccountBook(accountBookId);
@@ -94,13 +94,13 @@ const AccountBookItem = ({
 
   return (
     <div
-      key={accountBook.company.id}
+      key={accountBook.id}
       className="flex items-center gap-120px rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 px-24px py-12px"
     >
       <button type="button" onClick={openUploadCompanyPictureModal} className="group relative">
         <Image
-          src={accountBook.company.imageId}
-          alt={accountBook.company.name}
+          src={accountBook.imageId}
+          alt={accountBook.name}
           width={60}
           height={60}
           className="h-60px w-60px rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
@@ -113,7 +113,7 @@ const AccountBookItem = ({
 
       <div className="flex flex-auto items-center justify-between gap-8px">
         <p className="max-w-170px truncate text-base font-medium text-text-neutral-solid-dark">
-          {accountBook.company.name}
+          {accountBook.name}
         </p>
 
         <div className="relative flex items-center" ref={optionsDropdownRef}>

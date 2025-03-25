@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBook } from '@/interfaces/account_book';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
@@ -11,53 +11,14 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import {
-  createCompanyAndRole,
-  getCompanyAndRoleByTaxId,
-  listCompanyAndRole,
-  listCompanyAndRoleSimple,
-} from '@/lib/utils/repo/admin.repo';
-import { Company, Role, File } from '@prisma/client';
 import { createAccountingSetting } from '@/lib/utils/repo/accounting_setting.repo';
 
 const handleGetRequest: IHandleRequest<
   APIName.LIST_USER_COMPANY,
-  | Array<{
-      company: Company & { imageFile: File | null };
-      role: Role;
-      tag: string;
-      order: number;
-      teamId: number | null;
-    }>
-  | IPaginatedData<
-      Array<{
-        company: Company & { imageFile: File | null };
-        role: Role;
-        tag: string;
-        order: number;
-        teamId: number | null;
-      }>
-    >
+  Array<IAccountBook> | IPaginatedData<Array<IAccountBook>>
 > = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload:
-    | Array<{
-        company: Company & { imageFile: File | null };
-        role: Role;
-        tag: string;
-        order: number;
-        teamId: number | null;
-      }>
-    | IPaginatedData<
-        Array<{
-          company: Company & { imageFile: File | null };
-          role: Role;
-          tag: string;
-          order: number;
-          teamId: number | null;
-        }>
-      >
-    | null = null;
+  let payload: Array<IAccountBook> | IPaginatedData<Array<IAccountBook>> | null = null;
   const { simple, userId, pageSize, page, searchQuery } = query;
   if (simple) {
     const listedCompanyAndRole = await listCompanyAndRoleSimple(userId);
@@ -79,24 +40,12 @@ const handleGetRequest: IHandleRequest<
  * 4. 建立帳本公私鑰對用於加解密
  * 5. 建立公司設定
  */
-const handlePostRequest: IHandleRequest<
-  APIName.CREATE_USER_COMPANY,
-  {
-    company: Company & { imageFile: File | null };
-    role: Role;
-    tag: string;
-    order: number;
-    teamId: number | null;
-  }
-> = async ({ query, body }) => {
+const handlePostRequest: IHandleRequest<APIName.CREATE_USER_COMPANY, IAccountBook> = async ({
+  query,
+  body,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: {
-    company: Company & { imageFile: File | null };
-    role: Role;
-    tag: string;
-    order: number;
-    teamId: number | null;
-  } | null = null;
+  let payload: IAccountBook | null = null;
   const { userId } = query;
   const { taxId, name, tag, teamId } = body;
 
@@ -152,11 +101,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload:
-      | IAccountBookForUser
-      | IAccountBookForUser[]
-      | IPaginatedData<IAccountBookForUser[]>
-      | null;
+    payload: IAccountBook | IAccountBook[] | IPaginatedData<IAccountBook[]> | null;
   }>;
 } = {
   GET: (req) => withRequestValidation(APIName.LIST_USER_COMPANY, req, handleGetRequest),
@@ -166,17 +111,11 @@ const methodHandlers: {
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<
-    IResponseData<
-      IAccountBookForUser | IAccountBookForUser[] | IPaginatedData<IAccountBookForUser[]> | null
-    >
+    IResponseData<IAccountBook | IAccountBook[] | IPaginatedData<IAccountBook[]> | null>
   >
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload:
-    | IAccountBookForUser
-    | IAccountBookForUser[]
-    | IPaginatedData<IAccountBookForUser[]>
-    | null = null;
+  let payload: IAccountBook | IAccountBook[] | IPaginatedData<IAccountBook[]> | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -191,7 +130,7 @@ export default async function handler(
     payload = null;
   } finally {
     const { httpCode, result } = formatApiResponse<
-      IAccountBookForUser | IAccountBookForUser[] | IPaginatedData<IAccountBookForUser[]> | null
+      IAccountBook | IAccountBook[] | IPaginatedData<IAccountBook[]> | null
     >(statusMessage, payload);
     res.status(httpCode).json(result);
   }

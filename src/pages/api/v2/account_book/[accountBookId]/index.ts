@@ -1,13 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { IAccountBookForUser, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
+import { IAccountBook, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
-import {
-  getAdminByCompanyIdAndUserId,
-  setCompanyToTop,
-  updateCompanyTagById,
-} from '@/lib/utils/repo/admin.repo';
 import { APIName } from '@/constants/api_connection';
 import {
   checkOutputDataValid,
@@ -16,7 +11,6 @@ import {
   checkUserAuthorization,
   logUserAction,
 } from '@/lib/utils/middleware';
-import { Company, Role, File } from '@prisma/client';
 import { DefaultValue } from '@/constants/default_value';
 import { getSession } from '@/lib/utils/session';
 import { loggerError } from '@/lib/utils/logger_back';
@@ -59,13 +53,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
   const { action, tag } = body;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: {
-    company: Company & { imageFile: File | null };
-    tag: string;
-    order: number;
-    role: Role;
-    teamId: number | null;
-  } | null = null;
+  let payload: IAccountBook | null = null;
 
   switch (action) {
     // Info: (20250310 - Shirley) Update account book tag
@@ -110,10 +98,10 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountBookForUser | null>>
+  res: NextApiResponse<IResponseData<IAccountBook | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBookForUser | null = null;
+  let payload: IAccountBook | null = null;
   let session: ISessionData | null = null;
   const apiName = APIName.UPDATE_ACCOUNT_BOOK;
 
@@ -175,10 +163,7 @@ export default async function handler(
     }
 
     // Info: (20250310 - Shirley) Format API response and return
-    const { httpCode, result } = formatApiResponse<IAccountBookForUser | null>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<IAccountBook | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

@@ -5,12 +5,7 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import {
-  WORK_TAG,
-  IAccountBook,
-  IAccountBookForUser,
-  IResponseUpdateAccountBook,
-} from '@/interfaces/account_book';
+import { WORK_TAG, IAccountBook } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
@@ -19,9 +14,9 @@ import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
-import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { ITeam, TeamRole } from '@/interfaces/team';
+import { RoleName } from '@/constants/role';
 
 interface UserContextType {
   credential: string | null;
@@ -31,10 +26,10 @@ interface UserContextType {
   isSignIn: boolean;
   isAgreeTermsOfService: boolean;
   isSignInError: boolean;
-  createRole: (roleId: number) => Promise<IUserRole | null>;
-  selectRole: (roleId: number) => Promise<IUserRole | null>;
+  createRole: (roleId: RoleName) => Promise<IUserRole | null>;
+  selectRole: (roleId: RoleName) => Promise<IUserRole | null>;
   getUserRoleList: () => Promise<IUserRole[] | null>;
-  getSystemRoleList: () => Promise<IRole[] | null>;
+  getSystemRoleList: () => Promise<RoleName[] | null>;
   selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
   switchRole: () => void;
 
@@ -165,11 +160,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: getStatusInfoAPI } = APIHandler<{
     user: IUser;
     company: IAccountBook;
-    role: IRole;
+    role: IUserRole;
     team: ITeam;
   }>(APIName.STATUS_INFO_GET);
   // Info: (20241108 - Liz) 取得系統角色列表 API
-  const { trigger: systemRoleListAPI } = APIHandler<IRole[]>(APIName.ROLE_LIST);
+  const { trigger: systemRoleListAPI } = APIHandler<RoleName[]>(APIName.ROLE_LIST);
   // Info: (20241104 - Liz) 取得使用者角色列表 API
   const { trigger: userRoleListAPI } = APIHandler<IUserRole[]>(APIName.USER_ROLE_LIST);
   // Info: (20241104 - Liz) 建立角色 API
@@ -178,18 +173,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
 
   // Info: (20241104 - Liz) 建立帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
-  const { trigger: createAccountBookAPI } = APIHandler<IAccountBookForUser>(
-    APIName.CREATE_USER_COMPANY
-  );
+  const { trigger: createAccountBookAPI } = APIHandler<IAccountBook>(APIName.CREATE_USER_COMPANY);
 
   // Info: (20241111 - Liz) 連結帳本 API(原為選擇公司)
   const { trigger: connectAccountBookAPI } = APIHandler<IAccountBook>(
     APIName.CONNECT_ACCOUNT_BOOK_BY_ID
   );
   // Info: (20241113 - Liz) 更新帳本 API(原為公司)
-  const { trigger: updateAccountBookAPI } = APIHandler<IResponseUpdateAccountBook>(
-    APIName.UPDATE_ACCOUNT_BOOK
-  );
+  const { trigger: updateAccountBookAPI } = APIHandler<IAccountBook>(APIName.UPDATE_ACCOUNT_BOOK);
 
   // Info: (20241115 - Liz) 刪除帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
   const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.COMPANY_DELETE);
@@ -371,12 +362,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241101 - Liz) 此函數處理角色資訊:
-  const processRoleInfo = (role: IRole) => {
+  const processRoleInfo = (role: IUserRole) => {
     if (!role || Object.keys(role).length === 0) {
       setSelectedRole(null);
       return null;
     }
-    setSelectedRole(role.name);
+    setSelectedRole(role.roleName);
     return role;
   };
 
@@ -402,7 +393,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const handleProcessData = (statusInfo: {
     user: IUser;
     company: IAccountBook;
-    role: IRole;
+    role: IUserRole;
     team: ITeam;
   }) => {
     const processedUser = processUserInfo(statusInfo.user);
@@ -557,7 +548,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241029 - Liz) 建立角色的功能
-  const createRole = async (roleId: number) => {
+  const createRole = async (roleId: RoleName) => {
     // Deprecated: (20241108 - Liz)
     // eslint-disable-next-line no-console
     console.log('call createRole, roleId:', roleId);
@@ -586,7 +577,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241101 - Liz) 選擇角色的功能
-  const selectRole = async (roleId: number) => {
+  const selectRole = async (roleId: RoleName) => {
     try {
       const { success, data: userRole } = await selectRoleAPI({
         params: { userId: userAuthRef.current?.id },
@@ -594,7 +585,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (success && userRole) {
-        setSelectedRole(userRole.role.name);
+        setSelectedRole(userRole.roleName);
         return userRole;
       }
 
