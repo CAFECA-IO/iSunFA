@@ -48,7 +48,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     return (
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
         <div className="ml-auto flex items-center gap-16px">
-          <Button type="button" variant="tertiary" className="h-36px">
+          <Button type="button" variant="tertiary" className="h-36px" disabled>
             <p>{t('reports:REPORTS.EXPORT_TAX_FILING_FILE')}</p>
             <TiExport />
           </Button>
