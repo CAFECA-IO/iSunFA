@@ -22,6 +22,7 @@ import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { ITeam, TeamRole } from '@/interfaces/team';
+import { IPaymentMethod } from '@/interfaces/payment';
 
 interface UserContextType {
   credential: string | null;
@@ -93,6 +94,9 @@ interface UserContextType {
 
   bindingResult: boolean | null;
   handleBindingResult: (bindingResult: boolean | null) => void;
+
+  paymentMethod: IPaymentMethod[] | null;
+  handlePaymentMethod: (paymentMethod: IPaymentMethod[] | null) => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -134,6 +138,9 @@ export const UserContext = createContext<UserContextType>({
 
   bindingResult: false,
   handleBindingResult: () => {},
+
+  paymentMethod: null,
+  handlePaymentMethod: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -156,6 +163,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
 
   const [, setBindingResult, bindingResultRef] = useStateRef<boolean | null>(null);
+  const [, setPaymentMethod, paymentMethodRef] = useStateRef<IPaymentMethod[] | null>(null);
 
   const isRouteChanging = useRef(false);
 
@@ -202,6 +210,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setBindingResult(bindingResult);
   };
 
+  // Info: (20250324 - Julian) 從第三方金流獲取信用卡資訊
+  const handlePaymentMethod = (paymentMethod: IPaymentMethod[] | null) => {
+    setPaymentMethod(paymentMethod);
+  };
+
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
   };
@@ -215,6 +228,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSelectedRole(null);
     setConnectedAccountBook(null);
     setTeam(null);
+    setBindingResult(null);
     clearAllItems(); // Info: (20240822 - Shirley) 清空 IndexedDB 中的數據
   };
 
@@ -862,6 +876,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       bindingResult: bindingResultRef.current,
       handleBindingResult,
+
+      paymentMethod: paymentMethodRef.current,
+      handlePaymentMethod,
     }),
     [
       credentialRef.current,
@@ -874,6 +891,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       router.pathname,
       userAuthRef.current,
       bindingResultRef.current,
+      paymentMethodRef.current,
     ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

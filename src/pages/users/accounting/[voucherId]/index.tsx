@@ -40,6 +40,18 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
       setGoBackUrl(`${ISUNFA_ROUTE.LEDGER}?${queryString}`);
     }
 
+    // Info: (20250324 - Anna) 檢查 URL 查詢參數是否包含voucher_item
+    if (from === FromWhere.VOUCHER_ITEM) {
+      const queryString = new URLSearchParams({
+        startDate: String(startDate),
+        endDate: String(endDate),
+        type: String(router.query.type ?? ''),
+        keyword: String(router.query.keyword ?? ''),
+        page: String(router.query.page ?? '1'),
+      }).toString();
+      setGoBackUrl(`${ISUNFA_ROUTE.VOUCHER_LIST}?${queryString}`);
+    }
+
     // Info: (20250124 - Julian) 檢查 URL 查詢參數是否包含from=ARandAP
     if (from === FromWhere.ARandAP) {
       setGoBackUrl(`${ISUNFA_ROUTE.PAYABLE_RECEIVABLE_LIST}`);

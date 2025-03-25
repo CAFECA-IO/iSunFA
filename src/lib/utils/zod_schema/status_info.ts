@@ -10,6 +10,7 @@ const statusInfoOutputSchema = z.object({
   role: rolePrismaSchema.nullable(),
   company: companyOutputSchema.nullable(),
   team: TeamSchema.nullable(),
+  teams: z.array(TeamSchema).nullable(),
 });
 
 export const statusInfoGetSchema = {
