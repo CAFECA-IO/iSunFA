@@ -717,7 +717,7 @@ export async function findUserAccountBook(
       },
     };
 
-    // Info: (20250401 - Shirley) Return the formatted account book data
+    // Info: (20250325 - Shirley) Return the formatted account book data
     return {
       company: {
         id: accountBook.id,
@@ -729,10 +729,10 @@ export async function findUserAccountBook(
         updatedAt: accountBook.updatedAt,
         isPrivate: accountBook.isPrivate ?? false,
       },
-      tag: WORK_TAG.ALL, // Default tag
-      order: 0, // Default order
+      tag: WORK_TAG.ALL, // Info: (20250325 - Shirley) Default tag
+      order: 0, // Info: (20250325 - Shirley) Default order
       role: {
-        // Create a default role object based on team role
+        // Info: (20250325 - Shirley) Create a default role object based on team role
         id: 0,
         name: userRole,
         permissions: [],
