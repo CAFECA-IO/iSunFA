@@ -123,5 +123,18 @@
   "CONTACT": {
     "TITLE": "For more information",
     "SUBTITLE": "Customer Support Hours: Weekdays, 9:00 AM - 6:00 PM"
+  },
+  "REFUND": {
+    "TITLE": "Subscription Plan Refund Policy",
+    "CANCELLATION_DIVIDER": "Subscription Cancellation",
+    "CANCELLATION_1": "Users can cancel their subscription at any time. The subscription will remain active until the end of the current billing cycle, and no further charges will be applied.",
+    "CANCELLATION_2": "Once canceled, users will no longer have access to the premium features of the plan unless they resubscribe.",
+    "REFUND_DIVIDER": "Refund Policy",
+    "REFUND_1": "All subscription plans are **billed on a monthly basis**, and **refunds are generally not provided** once a subscription is successfully processed.",
+    "REFUND_2": "If a **system error** results in **duplicate charges**, users may contact customer support for a refund. Upon verification, the excess amount will be refunded.",
+    "REFUND_3": "If a user **accidentally subscribes for the first time**, they may request a refund within **24 hours of purchase**, subject to review and approval.",
+    "SPECIAL_DIVIDER": "Special Circumstances",
+    "SPECIAL_1": "If a **platform service disruption** (e.g., server downtime, login issues, or subscription access failure) prevents users from using their subscription, compensation may be provided upon customer support verification. This may include subscription extensions, discount vouchers, or partial refunds.",
+    "SPECIAL_2": "If a user’s account is suspended due to **violations of the terms of use** (such as account abuse, fraud, or improper sharing of the subscription), no refunds will be issued, and additional penalties may apply."
   }
 }
