@@ -27,6 +27,8 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ITeam } from '@/interfaces/team';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
 
 interface ICreateTeamModalProps {
   modalVisibilityHandler: () => void;
@@ -98,6 +100,7 @@ const CreateTeamStepper: React.FC<{ currentStep: number }> = ({ currentStep }) =
 
 const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandler }) => {
   const { t } = useTranslation(['team', 'common']);
+  const { toastHandler } = useModalContext();
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [teamNameInput, setTeamNameInput] = useState<string>('');
@@ -137,18 +140,10 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   >(APIName.LIST_PAYMENT_PLAN);
 
   // Info: (20250303 - Julian) 建立 Team API
-  const {
-    trigger: createTeam,
-    success: createSuccess,
-    data,
-  } = APIHandler<ITeam>(APIName.CREATE_TEAM);
+  const { trigger: createTeam } = APIHandler<ITeam>(APIName.CREATE_TEAM);
 
   // Info: (20250303 - Julian) 更新 Team API
-  const {
-    trigger: updateTeam,
-    success: updateSuccess,
-    data: updatedTeam,
-  } = APIHandler<ITeam>(APIName.UPDATE_TEAM_BY_ID);
+  const { trigger: updateTeam } = APIHandler<ITeam>(APIName.UPDATE_TEAM_BY_ID);
 
   // ToDo: (20250226 - Julian) 邀請成員 API
   const { trigger: inviteMember } = APIHandler(APIName.ADD_MEMBER_TO_TEAM);
@@ -215,22 +210,6 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     };
     fetchPaymentPlan();
   }, []);
-
-  // Info: (20250226 - Julian) 送出 API 後，取得 Team 資訊
-  useEffect(() => {
-    if (createSuccess && data) {
-      setNewTeam(convertTeamToUserOwnedTeam(data));
-      getTeam();
-    }
-  }, [createSuccess, data]);
-
-  // Info: (20250226 - Julian) 更新 Team 資訊
-  useEffect(() => {
-    if (updateSuccess && updatedTeam) {
-      setNewTeam(convertTeamToUserOwnedTeam(updatedTeam));
-      getTeam();
-    }
-  }, [updateSuccess, updatedTeam]);
 
   // Info: (20250218 - Julian) 檢查 Email 格式
   useEffect(() => {
@@ -338,20 +317,57 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const createOrUpdateTeam = async () => {
     // Info: (20250225 - Julian) 有 newTeam 資料 -> 第二次建立 -> update
     if (newTeam) {
-      updateTeam({ params: { teamId: newTeam?.id }, body: { name: teamNameInput } });
+      const { success, data } = await updateTeam({
+        params: { teamId: newTeam?.id },
+        body: { name: teamNameInput },
+      });
+
+      if (success && data) {
+        // Info: (20250325 - Julian) 如果更新成功，重新取得 Team 資訊
+        setNewTeam(convertTeamToUserOwnedTeam(data));
+        getTeam();
+        setCurrentStep(2); // Info: (20250225 - Julian) 第一步到第二步
+        emailInputRef.current?.focus(); // Info: (20250225 - Julian) focus 到 email input
+      } else {
+        // Info: (20250325 - Julian) 更新失敗
+        toastHandler({
+          id: 'update-team-fail',
+          type: ToastType.ERROR,
+          content:
+            // ToDo: (20250325 - Julian) 根據 error code 顯示錯誤訊息
+            'Update team fail, please try again',
+          closeable: true,
+        });
+      }
     } else {
       // Info: (20250225 - Julian) 第一次建立 -> create
-      createTeam({ body: { name: teamNameInput, planType: TPlanType.BEGINNER } }); // Info: (20250303 - Julian) 預設方案為 Beginner
+      const { success, data } = await createTeam({
+        body: { name: teamNameInput, planType: TPlanType.BEGINNER },
+      }); // Info: (20250303 - Julian) 預設方案為 Beginner
+
+      if (success && data) {
+        // Info: (20250325 - Julian) 如果建立成功，取得 Team 資訊
+        setNewTeam(convertTeamToUserOwnedTeam(data));
+        getTeam();
+        setCurrentStep(2); // Info: (20250225 - Julian) 第一步到第二步
+        emailInputRef.current?.focus(); // Info: (20250225 - Julian) focus 到 email input
+      } else {
+        // Info: (20250325 - Julian) 更新失敗
+        toastHandler({
+          id: 'create-team-fail',
+          type: ToastType.ERROR,
+          content:
+            // ToDo: (20250325 - Julian) 根據 error code 顯示錯誤訊息
+            'Create team fail, please try again',
+          closeable: true,
+        });
+      }
     }
   };
 
   const toNextStep =
     currentStep === 1
-      ? () => {
-          createOrUpdateTeam(); // Info: (20250225 - Julian) 建立/更新 Team
-          setCurrentStep(2); // Info: (20250225 - Julian) 第一步到第二步
-          emailInputRef.current?.focus(); // Info: (20250225 - Julian) focus 到 email input
-        }
+      ? createOrUpdateTeam // Info: (20250225 - Julian) 建立/更新 Team
       : currentStep === 2
         ? () => {
             // Info: (20250225 - Julian) 第二步到第三步
