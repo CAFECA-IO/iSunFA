@@ -10,6 +10,7 @@ import {
   IAccountBook,
   IAccountBookForUser,
   IResponseUpdateAccountBook,
+  IAccountBookForUserWithTeam,
 } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
@@ -156,7 +157,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setConnectedAccountBook, connectedAccountBookRef] = useStateRef<IAccountBook | null>(
     null
   );
-  const [, setTeam, teamRef] = useStateRef<ITeam | null>(null);
+  const [, setTeam, teamRef] = useStateRef<ITeam | null>(null); // Info: (20250325 - Liz) 已連結帳本的所屬團隊
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
@@ -172,9 +173,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
   const { trigger: getStatusInfoAPI } = APIHandler<{
     user: IUser;
-    company: IAccountBook;
+    company: IAccountBookForUserWithTeam;
     role: IRole;
-    team: ITeam;
+    teams: ITeam[]; // Info: (20250325 - Liz) 目前尚未使用到團隊清單
   }>(APIName.STATUS_INFO_GET);
   // Info: (20241108 - Liz) 取得系統角色列表 API
   const { trigger: systemRoleListAPI } = APIHandler<IRole[]>(APIName.ROLE_LIST);
@@ -198,7 +199,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: updateAccountBookAPI } = APIHandler<IResponseUpdateAccountBook>(
     APIName.UPDATE_ACCOUNT_BOOK
   );
-
   // Info: (20241115 - Liz) 刪除帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
   const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.COMPANY_DELETE);
 
@@ -366,22 +366,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241001 - Liz) 此函數處理公司資訊:
   // 如果公司資料存在且不為空，它會設定選定的公司 (setConnectedAccountBook)，最後回傳公司資訊。
   // 如果公司資料不存在，會將公司資訊設為 null，並回傳 null。
-  const processAccountBookInfo = (company: IAccountBook) => {
+  const processAccountBookInfo = (company: IAccountBookForUserWithTeam) => {
     if (!company || Object.keys(company).length === 0) {
       setConnectedAccountBook(null);
+      setTeam(null);
       return null;
     }
-    setConnectedAccountBook(company);
+    setConnectedAccountBook(company.company);
+    setTeam(company.team);
     return company;
-  };
-
-  // Info: (20250319 - Liz) 此函數處理團隊資訊: (團隊是指連結帳本所屬的團隊)
-  const processTeamInfo = (teamData: ITeam) => {
-    if (!teamData || Object.keys(teamData).length === 0) {
-      setTeam(null);
-      return;
-    }
-    setTeam(teamData);
   };
 
   // Info: (20241101 - Liz) 此函數處理角色資訊:
@@ -415,14 +408,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // 依據處理結果，它會執行不同的自動導向邏輯。
   const handleProcessData = (statusInfo: {
     user: IUser;
-    company: IAccountBook;
+    company: IAccountBookForUserWithTeam;
     role: IRole;
-    team: ITeam;
+    teams: ITeam[]; // Info: (20250325 - Liz) 目前尚未使用到團隊清單
   }) => {
     const processedUser = processUserInfo(statusInfo.user);
     const processedRole = processRoleInfo(statusInfo.role);
     const processedAccountBook = processAccountBookInfo(statusInfo.company);
-    processTeamInfo(statusInfo.team);
 
     if (!processedUser) {
       clearStates();
@@ -683,12 +675,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241111 - Liz) 連結帳本的功能(原為選擇公司)
   const connectAccountBook = async (accountBookId: number) => {
     try {
-      const { success, data: connectedAccountBook } = await connectAccountBookAPI({
+      const { success, data } = await connectAccountBookAPI({
         params: { accountBookId },
       });
 
       if (!success) return { success: false };
-      setConnectedAccountBook(connectedAccountBook);
+      setConnectedAccountBook(data);
       return { success: true };
     } catch (error) {
       return { success: false };
