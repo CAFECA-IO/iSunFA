@@ -36,7 +36,7 @@ const accountBookForUserSchema = z.object({
   role: roleSchema,
 });
 
-const accountBookForUserWithTeamSchema = accountBookForUserSchema.extend({
+export const accountBookForUserWithTeamSchema = accountBookForUserSchema.extend({
   team: TeamSchema,
   isTransferring: z.boolean(),
 });
