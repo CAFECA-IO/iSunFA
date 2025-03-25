@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { TbArrowBack } from 'react-icons/tb';
@@ -14,19 +13,7 @@ import {
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
 import BlueStarList from '@/components/landing_page_v2/blue_star_list';
-
-// Info: (20250220 - Julian) 分隔線
-const PrivacyPolicyDivider: React.FC<{ text: string }> = ({ text }) => {
-  return (
-    <div className="flex w-full items-center gap-lv-4">
-      <div className="flex items-center gap-8px">
-        <Image src="/icons/annoncement-megaphone.svg" alt="megaphone_icon" width={24} height={24} />
-        <p className="text-sm font-medium">{text}</p>
-      </div>
-      <hr className="flex-1 border-landing-page-white" />
-    </div>
-  );
-};
+import Divider from '@/components/landing_page/divider';
 
 // Info: (20250220 - Julian) 分類列表
 const CategoriesList: React.FC<{ leftList: string[]; rightList: string[] }> = ({
@@ -91,13 +78,13 @@ const PrivacyPolicyPageBody: React.FC = () => {
           {/* Info: (20250219 - Julian) Content */}
           <div className="flex flex-col gap-80px tracking-wide">
             {/* Info: (20250219 - Julian) Where does this policy apply */}
-            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_01')} />
+            <Divider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_01')} />
             <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
               <li>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_01'))}</li>
             </ol>
 
             {/* Info: (20250219 - Julian) How might my personal information would be used */}
-            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_02')} />
+            <Divider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_02')} />
             <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
               {/* Info: (20250219 - Julian) 1. */}
               <li>
@@ -125,7 +112,7 @@ const PrivacyPolicyPageBody: React.FC = () => {
             </ol>
 
             {/* Info: (20250219 - Julian) How can I manage my personal information */}
-            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_03')} />
+            <Divider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_03')} />
             <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
               {/* Info: (20250219 - Julian) 1. */}
               <li>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_03_01'))}</li>
@@ -140,7 +127,7 @@ const PrivacyPolicyPageBody: React.FC = () => {
             </ol>
 
             {/* Info: (20250219 - Julian) What personal information would we collect */}
-            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_04')} />
+            <Divider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_04')} />
             <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
               {/* Info: (20250219 - Julian) 1. */}
               <li>
@@ -235,7 +222,7 @@ const PrivacyPolicyPageBody: React.FC = () => {
             </ol>
 
             {/* Info: (20250219 - Julian) What personal information would we collect */}
-            <PrivacyPolicyDivider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_05')} />
+            <Divider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_05')} />
             <div className="flex flex-col gap-80px text-xl leading-10 text-landing-page-white">
               <p>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_05_01'))}</p>
               <p>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_05_02'))}</p>
