@@ -366,6 +366,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241001 - Liz) 此函數處理公司資訊:
   // 如果公司資料存在且不為空，它會設定選定的公司 (setConnectedAccountBook)，最後回傳公司資訊。
   // 如果公司資料不存在，會將公司資訊設為 null，並回傳 null。
+  // ToDo: (20250325 - Liz) teamRole 之後要改成由 company 提供!!!!
   const processAccountBookInfo = (company: IAccountBook) => {
     if (!company || Object.keys(company).length === 0) {
       setConnectedAccountBook(null);
@@ -376,6 +377,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20250319 - Liz) 此函數處理團隊資訊: (團隊是指連結帳本所屬的團隊)
+  // ToDo: (20250325 - Liz) teamRole 之後要改成由 company 提供 (往上看) 所以這裡會刪除
   const processTeamInfo = (teamData: ITeam) => {
     if (!teamData || Object.keys(teamData).length === 0) {
       setTeam(null);
@@ -417,7 +419,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     user: IUser;
     company: IAccountBook;
     role: IRole;
-    team: ITeam;
+    team: ITeam; // ToDo: (20250325 - Liz) 之後會拿掉，因為 team 會由 company 提供
   }) => {
     const processedUser = processUserInfo(statusInfo.user);
     const processedRole = processRoleInfo(statusInfo.role);
