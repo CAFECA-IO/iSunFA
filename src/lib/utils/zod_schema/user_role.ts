@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { rolePrismaSchema } from '@/lib/utils/zod_schema/role';
+import { RoleName, RoleType } from '@/constants/role';
 
 // Info: (20241029 - Jacky) UserRole null schema
 const userRoleNullSchema = z.union([z.object({}), z.string()]);
@@ -28,10 +28,11 @@ const userRoleSelectBodySchema = z.object({
   roleId: z.number().int(),
 });
 
-const userRoleOutputSchema = z.object({
+export const userRoleOutputSchema = z.object({
   id: z.number().int(),
   userId: z.number().int(),
-  role: rolePrismaSchema,
+  roleName: z.enum(Object.keys(RoleName) as [string, ...string[]]),
+  type: z.enum(Object.keys(RoleType) as [string, ...string[]]),
   lastLoginAt: z.number().int(),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),

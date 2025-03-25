@@ -15,7 +15,6 @@ import UploadCompanyPictureModal from '@/components/beta/account_books_page/uplo
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
-import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -42,7 +41,6 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
     IAccountBookWithTeam | undefined
   >();
   const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
-  const [isInviteMembersModalOpen, setIsInviteMembersModalOpen] = useState<boolean>(false);
   const isNoData = !accountBookList || accountBookList.length === 0;
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -52,10 +50,6 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
 
   const openMemberListModal = () => {
     setIsMemberListModalOpen(true);
-  };
-
-  const openInviteMembersModal = () => {
-    setIsInviteMembersModalOpen(true);
   };
 
   // Info: (20250310 - Liz) 取得團隊帳本清單 API (list account book by team id)
@@ -155,7 +149,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         />
       )}
 
-      {/* // Info: (20250218 - Liz) Modals */}
+      {/* Info: (20250218 - Liz) Modals */}
       {teamToChangeImage && (
         <UploadTeamImageModal
           teamToChangeImage={teamToChangeImage}
@@ -195,15 +189,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
       )}
 
       {isMemberListModalOpen && (
-        <MemberListModal
-          team={team}
-          setIsMemberListModalOpen={setIsMemberListModalOpen}
-          openInviteMembersModal={openInviteMembersModal}
-        />
-      )}
-
-      {isInviteMembersModalOpen && (
-        <InviteMembersModal team={team} setIsInviteMembersModalOpen={setIsInviteMembersModalOpen} />
+        <MemberListModal team={team} setIsMemberListModalOpen={setIsMemberListModalOpen} />
       )}
     </main>
   );

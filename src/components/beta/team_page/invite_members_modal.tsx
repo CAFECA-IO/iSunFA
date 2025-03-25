@@ -9,9 +9,14 @@ import { APIName } from '@/constants/api_connection';
 interface InviteMembersModalProps {
   team: ITeam;
   setIsInviteMembersModalOpen: Dispatch<SetStateAction<boolean>>;
+  getMemberList: () => Promise<void>;
 }
 
-const InviteMembersModal = ({ team, setIsInviteMembersModalOpen }: InviteMembersModalProps) => {
+const InviteMembersModal = ({
+  team,
+  setIsInviteMembersModalOpen,
+  getMemberList,
+}: InviteMembersModalProps) => {
   const { t } = useTranslation(['team']);
   const [inputEmail, setInputEmail] = useState<string>('');
   const [emailsToInvite, setEmailsToInvite] = useState<string[]>([]);
@@ -71,13 +76,14 @@ const InviteMembersModal = ({ team, setIsInviteMembersModalOpen }: InviteMembers
       });
 
       if (!success) throw new Error();
-      if (success) {
-        setEmailsToInvite([]);
-        closeInviteMembersModal();
-        // Deprecated: (20250306 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('邀請成員成功');
-      }
+
+      setEmailsToInvite([]);
+      closeInviteMembersModal();
+      getMemberList();
+
+      // Deprecated: (20250306 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('邀請成員成功');
     } catch (error) {
       // Deprecated: (20250306 - Liz)
       // eslint-disable-next-line no-console
