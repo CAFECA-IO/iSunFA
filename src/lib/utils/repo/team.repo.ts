@@ -436,3 +436,67 @@ export const getTeamsByUserIdAndTeamIds = async (
     };
   });
 };
+
+/**
+ * Info: (20250325 - Shirley) 更新團隊信息
+ * @param teamId 團隊 ID
+ * @param updateData 更新的團隊數據
+ * @returns 更新後的團隊信息
+ */
+export const updateTeamById = async (
+  teamId: number,
+  updateData: {
+    name?: string;
+    about?: string;
+    profile?: string;
+    bankInfo?: { code: string; account: string };
+  }
+): Promise<{
+  id: number;
+  name: string;
+  about: string;
+  profile: string;
+  bankInfo: { code: string; account: string } | null;
+} | null> => {
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+  });
+
+  if (!team) {
+    throw new Error('TEAM_NOT_FOUND');
+  }
+
+  // Info: (20250325 - Shirley) 將 bankInfo 轉換為資料庫格式
+  const bankInfoDb = updateData.bankInfo
+    ? {
+        code: updateData.bankInfo.code,
+        number: updateData.bankInfo.account,
+      }
+    : undefined;
+
+  // Info: (20250325 - Shirley) 更新團隊數據
+  const updatedTeam = await prisma.team.update({
+    where: { id: teamId },
+    data: {
+      name: updateData.name ?? undefined,
+      about: updateData.about ?? undefined,
+      profile: updateData.profile ?? undefined,
+      bankInfo: bankInfoDb,
+      updatedAt: Math.floor(Date.now() / 1000),
+    },
+  });
+
+  // Info: (20250325 - Shirley) 轉換回應格式
+  return {
+    id: updatedTeam.id,
+    name: updatedTeam.name,
+    about: updatedTeam.about || '',
+    profile: updatedTeam.profile || '',
+    bankInfo: updatedTeam.bankInfo
+      ? {
+          code: (updatedTeam.bankInfo as { code: string }).code,
+          account: (updatedTeam.bankInfo as { number: string }).number,
+        }
+      : null,
+  };
+};

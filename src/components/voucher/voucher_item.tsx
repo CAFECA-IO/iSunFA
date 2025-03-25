@@ -19,6 +19,7 @@ interface IVoucherItemProps {
   selectedType?: string;
   keyword?: string;
   currentPage?: number;
+  fullVoucherList: IVoucherUI[];
 }
 
 const VoucherItem: React.FC<IVoucherItemProps> = ({
@@ -30,6 +31,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({
   selectedType,
   keyword,
   currentPage,
+  fullVoucherList,
 }) => {
   const { t } = useTranslation('common');
 
@@ -89,17 +91,21 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({
     <div className="flex flex-col">
       {note && <p className="text-hxs text-text-neutral-primary">{note}</p>}
       {deletedReverseVouchers.length > 0 &&
-        deletedReverseVouchers.map((deletedReverseVoucher) => (
-          <p key={deletedReverseVoucher.id} className="text-hxs text-text-neutral-primary">
-            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_1')}
-            <Link
-              href={`/users/accounting/${deletedReverseVoucher.id}?voucherNo=${deletedReverseVoucher.voucherNo}`}
-              className="px-1 text-link-text-primary"
-            >
-              {deletedReverseVoucher.voucherNo}
-            </Link>
-            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_2')}
-            {/* <Trans
+        deletedReverseVouchers.map((deletedReverseVoucher) => {
+          // Info: (20250325 - Anna) 多一個判斷條件，只有當Link的那個voucherId，有屬性deletedAt，才要顯示「因刪除...傳票生成的反轉分錄」
+          const matchedVoucher = fullVoucherList.find((v) => v.id === deletedReverseVoucher.id);
+          if (matchedVoucher?.deletedAt) {
+            return (
+              <p key={deletedReverseVoucher.id} className="text-hxs text-text-neutral-primary">
+                {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_1')}
+                <Link
+                  href={`/users/accounting/${deletedReverseVoucher.id}?voucherNo=${deletedReverseVoucher.voucherNo}`}
+                  className="px-1 text-link-text-primary"
+                >
+                  {deletedReverseVoucher.voucherNo}
+                </Link>
+                {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_2')}
+                {/* <Trans
               i18nKey="journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER"
               values={{ voucherNo: deletedReverseVoucher.voucherNo }}
               components={{
@@ -111,8 +117,23 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({
                 ),
               }}
             /> */}
-          </p>
-        ))}
+              </p>
+            );
+          } else {
+            // Info: (20250325 - Anna)：沒有 deletedAt 沖銷(正常收付款的沖銷)
+            return (
+              <p key={deletedReverseVoucher.id} className="text-hxs text-text-neutral-primary">
+                {t('journal:VOUCHER.REVERSE')}
+                <Link
+                  href={`/users/accounting/${deletedReverseVoucher.id}?voucherNo=${deletedReverseVoucher.voucherNo}`}
+                  className="px-1 text-link-text-primary"
+                >
+                  {deletedReverseVoucher.voucherNo}
+                </Link>
+              </p>
+            );
+          }
+        })}
       {!note && deletedReverseVouchers.length === 0 && (
         <p className="text-hxs text-text-neutral-primary">-</p>
       )}
