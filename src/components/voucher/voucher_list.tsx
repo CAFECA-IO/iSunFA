@@ -415,6 +415,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         selectedType={selectedType}
         keyword={keyword}
         currentPage={currentPage}
+        fullVoucherList={uiVoucherList}
       />
     );
   });
