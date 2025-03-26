@@ -13,7 +13,7 @@ export const SESSION_DEVELOPER: ISessionData = {
   userId: 10000000,
   companyId: 10000000,
   roleId: 1006,
-  teamId: 6, // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
+  teamId: 2, // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
   teamRole: TeamRole.OWNER, // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
   teams: [
     {
@@ -21,7 +21,7 @@ export const SESSION_DEVELOPER: ISessionData = {
       role: TeamRole.OWNER,
     },
     {
-      id: 5,
+      id: 2,
       role: TeamRole.OWNER,
     },
     {
