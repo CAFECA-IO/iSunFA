@@ -537,26 +537,16 @@ export async function getAccountBookForUserWithTeam(
     // Info: (20250329 - Shirley) Since we're not using admin table anymore, we need default values for tag and order
     // These will be determined by business requirements or replaced in the future
     return {
-      company: {
-        id: accountBook.id,
-        imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
-        name: accountBook.name,
-        taxId: accountBook.taxId,
-        startDate: accountBook.startDate,
-        createdAt: accountBook.createdAt,
-        updatedAt: accountBook.updatedAt,
-        isPrivate: accountBook.isPrivate ?? false,
-      },
+      id: accountBook.id,
+      imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      name: accountBook.name,
+      taxId: accountBook.taxId,
+      startDate: accountBook.startDate,
+      createdAt: accountBook.createdAt,
+      updatedAt: accountBook.updatedAt,
+      isPrivate: accountBook.isPrivate ?? false,
+      teamId,
       tag: WORK_TAG.ALL, // Default tag
-      order: 0, // Default order
-      role: {
-        // Create a default role object
-        id: 0,
-        name: userRole,
-        permissions: [],
-        createdAt: 0,
-        updatedAt: 0,
-      },
       team: teamInfo,
       isTransferring: accountBook.isTransferring ?? false,
     };
@@ -694,26 +684,17 @@ export async function findUserAccountBook(
 
     // Info: (20250325 - Shirley) Return the formatted account book data
     return {
-      company: {
-        id: accountBook.id,
-        imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
-        name: accountBook.name,
-        taxId: accountBook.taxId,
-        startDate: accountBook.startDate,
-        createdAt: accountBook.createdAt,
-        updatedAt: accountBook.updatedAt,
-        isPrivate: accountBook.isPrivate ?? false,
-      },
+      id: accountBook.id,
+      imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      name: accountBook.name,
+      taxId: accountBook.taxId,
+      startDate: accountBook.startDate,
+      createdAt: accountBook.createdAt,
+      updatedAt: accountBook.updatedAt,
+      isPrivate: accountBook.isPrivate ?? false,
+      teamId: team.id,
       tag: WORK_TAG.ALL, // Info: (20250325 - Shirley) Default tag
-      order: 0, // Info: (20250325 - Shirley) Default order
-      role: {
-        // Info: (20250325 - Shirley) Create a default role object based on team role
-        id: 0,
-        name: userRole,
-        permissions: [],
-        createdAt: 0,
-        updatedAt: 0,
-      },
+
       team: teamInfo,
       isTransferring: accountBook.isTransferring ?? false,
     };
