@@ -64,6 +64,11 @@ const AccountBookItem = ({
     canDo: TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
   });
 
+  const cancelTransferPermission = convertTeamRoleCanDo({
+    teamRole,
+    canDo: TeamPermissionAction.CANCEL_ACCOUNT_BOOK_TRANSFER,
+  });
+
   const canDelete =
     TeamRoleCanDoKey.YES_OR_NO in deletePermission ? deletePermission.yesOrNo : false;
   const canEditTag =
@@ -74,6 +79,11 @@ const AccountBookItem = ({
       : false;
 
   const hasPermission = canDelete || canEditTag || canRequestTransfer;
+
+  const canCancelTransfer =
+    TeamRoleCanDoKey.YES_OR_NO in cancelTransferPermission
+      ? cancelTransferPermission.yesOrNo
+      : false;
 
   const toggleOptionsDropdown = () => {
     setIsOptionsDropdownOpen((prev) => !prev);
@@ -240,28 +250,33 @@ const AccountBookItem = ({
         </div>
       </section>
 
+      {/* Info: (20250326 - Liz) Work Tag */}
       <div className="flex w-90px justify-center">
         <CompanyTag tag={accountBook.tag} />
       </div>
 
+      {/* Info: (20250326 - Liz) Transferring */}
       {!accountBook.isTransferring && (
-        <div className="flex w-140px items-center justify-center gap-16px">
+        <section className="flex w-140px items-center justify-center gap-16px">
           <p className="text-nowrap text-sm font-medium">
             {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.WAITING_FOR_TRANSFERRING')}...
           </p>
-          <button
-            type="button"
-            className="text-nowrap text-sm font-semibold text-link-text-primary"
-            onClick={cancelTransfer}
-          >
-            {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL')}
-          </button>
-        </div>
+
+          {canCancelTransfer && (
+            <button
+              type="button"
+              className="text-nowrap text-sm font-semibold text-link-text-primary"
+              onClick={cancelTransfer}
+            >
+              {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL')}
+            </button>
+          )}
+        </section>
       )}
 
       {/* Info: (20250303 - Liz) Connect Button */}
       {!accountBook.isTransferring && (
-        <div className="flex w-120px items-center justify-end">
+        <section className="flex w-120px items-center justify-end">
           <button
             type="button"
             className="group relative text-button-text-secondary"
@@ -293,7 +308,7 @@ const AccountBookItem = ({
               </div>
             )}
           </button>
-        </div>
+        </section>
       )}
     </div>
   );
