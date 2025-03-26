@@ -18,6 +18,7 @@ interface CreditCardInfoProps {
   setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setIsDirty: Dispatch<SetStateAction<boolean>>;
+  updateSubscriptionHandler?: () => void; // Info: (20250326 - Julian) 新增團隊的流程需要自定義的訂閱 handler
 }
 
 const CreditCardInfo = ({
@@ -28,6 +29,7 @@ const CreditCardInfo = ({
   // Deprecated: (20250220 - Tzuhan) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setIsDirty,
+  updateSubscriptionHandler,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
   const { bindingResult, userAuth, paymentMethod, handlePaymentMethod } = useUserCtx();
@@ -132,6 +134,8 @@ const CreditCardInfo = ({
     }
   };
 
+  const subscriptionHandler = updateSubscriptionHandler || updateSubscription;
+
   /* Info: (20250220 - Tzuhan) 為串接 HiTrust 金流測試: 會替換成跳轉至 HiTrust 金流頁面
   // Info: (20250120 - Liz) 打 API 變更團隊的訂閱方案
   const updateSubscription = async () => {
@@ -220,7 +224,7 @@ const CreditCardInfo = ({
         <span className="font-medium text-text-neutral-tertiary">{`* ${t('subscriptions:PAYMENT_PAGE.NOTE')}`}</span>
       </div>
 
-      <Button type="button" variant="default" size="large" onClick={updateSubscription}>
+      <Button type="button" variant="default" size="large" onClick={subscriptionHandler}>
         {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
       </Button>
     </section>

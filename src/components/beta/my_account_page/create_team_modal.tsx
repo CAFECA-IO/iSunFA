@@ -15,19 +15,13 @@ import CreditCardInfo from '@/components/beta/payment_page/credit_card_info';
 import MessageModal from '@/components/message_modal/message_modal';
 import InvoiceDetail from '@/components/beta/invoice_page/invoice_detail';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
-import {
-  IPlan,
-  IUserOwnedTeam,
-  ITeamInvoice,
-  TPlanType,
-  TPaymentStatus,
-  TPlanPrice,
-} from '@/interfaces/subscription';
+import { IPlan, IUserOwnedTeam, ITeamInvoice, TPaymentStatus } from '@/interfaces/subscription';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ITeam } from '@/interfaces/team';
 import { useModalContext } from '@/contexts/modal_context';
+import { useUserCtx } from '@/contexts/user_context';
 import { ToastType } from '@/interfaces/toastify';
 
 interface ICreateTeamModalProps {
@@ -101,6 +95,7 @@ const CreateTeamStepper: React.FC<{ currentStep: number }> = ({ currentStep }) =
 const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandler }) => {
   const { t } = useTranslation(['team', 'common']);
   const { toastHandler } = useModalContext();
+  const { userAuth, paymentMethod } = useUserCtx();
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [teamNameInput, setTeamNameInput] = useState<string>('');
@@ -112,49 +107,36 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [teamInvoice, setTeamInvoice] = useState<ITeamInvoice | null>(null);
 
-  // Info: (20250224 - Julian) 訂閱方案，施工中🔧
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // Info: (20250224 - Julian) 訂閱方案
   const [listPaymentPlan, setListPaymentPlan] = useState<IPlan[]>([]);
 
   // Info: (20250224 - Julian) 團隊資訊
-  const [newTeam, setNewTeam] = useState<IUserOwnedTeam | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<IPlan>(PLANS[0]);
 
   // Info: (20250224 - Julian) 開啟或關閉自動續約的 Modal 狀態
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
+  const isBeginnerPlan = selectedPlan.id === 'BEGINNER';
+
   // Info: (20250303 - Julian) 取得訂閱方案清單
   // ToDo: (20250303 - Julian) 等 API 調整完就可以刪掉
-  const { trigger: getPaymentPlan } = APIHandler<
-    {
-      name: string;
-      price: TPlanPrice;
-      extraMemberPrice: number;
-      features: {
-        id: string;
-        name: string;
-        value: string | string[];
-      }[];
-    }[]
-  >(APIName.LIST_PAYMENT_PLAN);
+  const { trigger: getPaymentPlan } = APIHandler<IPlan[]>(APIName.LIST_PAYMENT_PLAN);
 
   // Info: (20250303 - Julian) 建立 Team API
   const { trigger: createTeam } = APIHandler<ITeam>(APIName.CREATE_TEAM);
 
-  // Info: (20250303 - Julian) 更新 Team API
-  const { trigger: updateTeam } = APIHandler<ITeam>(APIName.UPDATE_TEAM_BY_ID);
-
-  // ToDo: (20250226 - Julian) 邀請成員 API
+  // Info: (20250226 - Julian) 邀請成員 API
   const { trigger: inviteMember } = APIHandler(APIName.ADD_MEMBER_TO_TEAM);
-
-  // ToDo: (20250225 - Julian) 取得 Team API
-  const { trigger: getTeamById } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
 
   // Info: (20250224 - Julian) 開啟自動續約、關閉自動續約 API
   const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
     APIName.UPDATE_SUBSCRIPTION
   );
+
+  // Info: (20250326 - Julian) 訂閱方案
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { trigger: subscribe } = APIHandler(APIName.USER_PAYMENT_METHOD_CHARGE);
 
   const formBodyRef = useRef<HTMLDivElement>(null);
   // Info: (20250219 - Julian) 根據 formBodyRef 的高度 決定是否顯示 Bounce 動畫
@@ -166,48 +148,26 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   const emailInputRef = useRef<HTMLInputElement>(null);
 
-  // Info: (20250225 - Julian) 取得 Team 資訊
-  const getTeam = async () => {
-    if (newTeam?.id) {
-      getTeamById({ params: { teamId: newTeam.id } });
+  // Info: (20250326 - Julian) Team Placeholder: 由於 Team 還沒正式建立，所以用這個作為 UI 顯示
+  const teamInfo: IUserOwnedTeam = {
+    id: 0,
+    name: teamNameInput,
+    plan: selectedPlan.id,
+    enableAutoRenewal: false,
+    nextRenewalTimestamp: 0,
+    expiredTimestamp: 0,
+    paymentStatus: TPaymentStatus.FREE,
+  };
+
+  // Info: (20250325 - Julian) 從 API 取得訂閱方案
+  const fetchPaymentPlan = async () => {
+    const { data: plans } = await getPaymentPlan();
+    if (plans) {
+      setListPaymentPlan(plans);
     }
   };
 
-  // Info: (20250303 - Julian) 將 Team 格式轉換成 UserOwnedTeam
-  const convertTeamToUserOwnedTeam = (team: ITeam): IUserOwnedTeam => {
-    const teamId: number = team.id;
-    const teamName: string = team.name.value;
-    const teamPlan: TPlanType = team.planType.value;
-
-    return {
-      id: teamId,
-      name: teamName,
-      plan: teamPlan,
-      enableAutoRenewal: false,
-      nextRenewalTimestamp: 0,
-      expiredTimestamp: 0,
-      paymentStatus: TPaymentStatus.FREE,
-    };
-  };
-
-  // Info: (20250303 - Julian) 取得訂閱方案
   useEffect(() => {
-    const fetchPaymentPlan = async () => {
-      const { data: plans } = await getPaymentPlan();
-      if (plans) {
-        // ToDo: (20250303 - Julian) 等 API 調整完就可以刪掉
-        const convertPlan: IPlan[] = plans.map((plan) => {
-          return {
-            id: plan.name as TPlanType,
-            planName: plan.name,
-            price: plan.price,
-            features: plan.features,
-            extraMemberPrice: plan.extraMemberPrice,
-          };
-        });
-        setListPaymentPlan(convertPlan);
-      }
-    };
     fetchPaymentPlan();
   }, []);
 
@@ -241,10 +201,9 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       params: { teamId },
       body: { plan: planId, autoRenewal: true },
     });
-    // Info: (20250224 - Julian) 打完開啟自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 Team
+    // Info: (20250224 - Julian) 打完開啟自動續約的 API 成功後，關閉 Modal
     if (success) {
       closeAutoRenewalModal();
-      getTeam();
     }
   };
 
@@ -257,10 +216,9 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       params: { teamId },
       body: { plan: planId, autoRenewal: false },
     });
-    // Info: (20250224 - Julian) 打完關閉自動續約的 API 成功後，關閉 Modal，並且重新打 API 取得最新的 Team
+    // Info: (20250224 - Julian) 打完關閉自動續約的 API 成功後，關閉 Modal
     if (success) {
       closeAutoRenewalModal();
-      getTeam();
     }
   };
 
@@ -299,94 +257,104 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       : currentStep === 2
         ? teamMembers.length <= 0 // Info: (20250224 - Julian) 第二步 Member Email 必填
         : currentStep === 3
-          ? !teamInvoice // Info: (20250224 - Julian) 第三步顯示 Invoice
+          ? !isBeginnerPlan // Info: (20250224 - Julian) 第三步如果選擇付費方案，則須進行到付款
           : true;
 
-  // Info: (20250225 - Julian) 送出邀請成員的 API，成功後跳轉到 Team Page
-  const doneAllSteps = async () => {
-    const { success } = await inviteMember({
-      params: { teamId: newTeam?.id },
-      body: { emails: teamMembers },
+  // deprecated: (20250326 - Julian) for testing
+  const printResult = () => {
+    // eslint-disable-next-line no-console
+    console.log('createTeamBody:', {
+      name: teamNameInput,
+      members: teamMembers,
+      planType: selectedPlan,
     });
-    if (success) {
-      window.open(`${ISUNFA_ROUTE.TEAM_PAGE}/${newTeam?.id}`, '_self');
-    }
   };
 
-  // ToDo: (20250221 - Julian) 串接 API的時候，需要檢查是否重複建立：
-  const createOrUpdateTeam = async () => {
-    // Info: (20250225 - Julian) 有 newTeam 資料 -> 第二次建立 -> update
-    if (newTeam) {
-      const { success, data } = await updateTeam({
-        params: { teamId: newTeam?.id },
-        body: { name: teamNameInput },
-      });
+  // Info: (20250325 - Julian) 建立團隊
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const createTeamHandler = async () => {
+    const { success, data, error } = await createTeam({
+      body: {
+        name: teamNameInput,
+        members: teamMembers,
+        planType: selectedPlan,
+      },
+    });
 
-      if (success && data) {
-        // Info: (20250325 - Julian) 如果更新成功，重新取得 Team 資訊
-        setNewTeam(convertTeamToUserOwnedTeam(data));
-        getTeam();
-        setCurrentStep(2); // Info: (20250225 - Julian) 第一步到第二步
-        emailInputRef.current?.focus(); // Info: (20250225 - Julian) focus 到 email input
-      } else {
-        // Info: (20250325 - Julian) 更新失敗
+    if (success && data) {
+      // Info: (20250326 - Julian) 建立成功：跳轉到團隊首頁，並且邀請成員
+      window.open(`${ISUNFA_ROUTE.TEAM_PAGE}/${data.id}`, '_self');
+      const { error: invitedError } = await inviteMember({
+        params: { teamId: data.id },
+        body: { emails: teamMembers },
+      });
+      if (invitedError) {
+        // Info: (20250326 - Julian) 邀請成員失敗：顯示錯誤訊息
         toastHandler({
-          id: 'update-team-fail',
+          id: 'invite-member-fail',
           type: ToastType.ERROR,
-          content:
-            // ToDo: (20250325 - Julian) 根據 error code 顯示錯誤訊息
-            'Update team fail, please try again',
+          content: `Invite member failed: ${invitedError?.message}`,
           closeable: true,
         });
       }
     } else {
-      // Info: (20250225 - Julian) 第一次建立 -> create
-      const { success, data } = await createTeam({
-        body: { name: teamNameInput, planType: TPlanType.BEGINNER },
-      }); // Info: (20250303 - Julian) 預設方案為 Beginner
-
-      if (success && data) {
-        // Info: (20250325 - Julian) 如果建立成功，取得 Team 資訊
-        setNewTeam(convertTeamToUserOwnedTeam(data));
-        getTeam();
-        setCurrentStep(2); // Info: (20250225 - Julian) 第一步到第二步
-        emailInputRef.current?.focus(); // Info: (20250225 - Julian) focus 到 email input
-      } else {
-        // Info: (20250325 - Julian) 更新失敗
-        toastHandler({
-          id: 'create-team-fail',
-          type: ToastType.ERROR,
-          content:
-            // ToDo: (20250325 - Julian) 根據 error code 顯示錯誤訊息
-            'Create team fail, please try again',
-          closeable: true,
-        });
-      }
+      // Info: (20250326 - Julian) 建立失敗：顯示錯誤訊息
+      toastHandler({
+        id: 'create-team-fail',
+        type: ToastType.ERROR,
+        content: `Create team failed: ${error?.message}`,
+        closeable: true,
+      });
     }
+  };
+
+  // Info: (20250326 - Julian) 選擇付費方案時，建立團隊的處理
+  const updateSubscriptionHandler = async () => {
+    if (!(userAuth && paymentMethod)) return;
+
+    // const { success, data, error } = await createTeam({
+    //   body: {
+    //     name: teamNameInput,
+    //     members: teamMembers,
+    //     planType: selectedPlan,
+    //   },
+    // });
+
+    // const { success } = await subscribe({
+    //   params: {
+    //     userId: userAuth.id,
+    //     paymentMethodId: paymentMethod[paymentMethod.length - 1].id,
+    //   },
+    // });
+
+    // ToDo: (20250326 - Julian) 流程需要確認
+    // 目前的想法：建立 Beginner 團隊 -> 綁卡 -> 訂閱 -> 修改團隊方案 -> 邀請成員
+
+    // eslint-disable-next-line no-console
+    console.log('body:', {
+      name: teamNameInput,
+      members: teamMembers,
+      planType: selectedPlan,
+    });
   };
 
   const toNextStep =
     currentStep === 1
-      ? createOrUpdateTeam // Info: (20250225 - Julian) 建立/更新 Team
+      ? // Info: (20250325 - Julian) 第一步到第二步
+        () => setCurrentStep(2)
       : currentStep === 2
-        ? () => {
-            // Info: (20250225 - Julian) 第二步到第三步
-            setCurrentStep(3);
-          }
-        : doneAllSteps; // Info: (20250226 - Julian) 完成所有步驟
+        ? () => setCurrentStep(3) // Info: (20250225 - Julian) 第二步到第三步
+        : printResult; // Info: (20250326 - Julian) 完成所有步驟 -> 建立團隊
 
   const cancelOrSkip =
     currentStep === 1
       ? // Info: (20250218 - Julian) 第一步為 Cancel，即關閉 Modal
         modalVisibilityHandler
       : // Info: (20250226 - Julian) 第二步的 Skip，應清空 teamMembers 再跳到下一步
-        currentStep === 2
-        ? () => {
-            setTeamMembers([]);
-            setCurrentStep(3);
-          }
-        : // Info: (20250226 - Julian) 第三步的 Skip，應直接跳到完成
-          doneAllSteps;
+        () => {
+          setTeamMembers([]);
+          setCurrentStep(3);
+        };
 
   const backHandler = () => {
     if (selectedPlan !== listPaymentPlan[0]) {
@@ -398,12 +366,27 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     }
   };
 
+  // Info: (20250326 - Julian) 如果填好名字，按 Enter 可以直接進入下一步
+  const nameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && teamNameInput !== '') {
+      setCurrentStep(2);
+    }
+  };
+
   // Info: (20250224 - Julian) 將填寫的 Email 加入清單、清空 input、focus 到 input
   const emailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && isValidEmail) {
+    if (e.key === 'Enter' && isValidEmail && teamMemberInput !== '') {
       setTeamMembers([...teamMembers, teamMemberInput]);
       setTeamMemberInput('');
       emailInputRef.current?.focus();
+    }
+  };
+
+  // Info: (20250325 - Julian) 焦點離開後，檢查是否為有效 Email，是的話加入清單
+  const emailBlur = () => {
+    if (isValidEmail && teamMemberInput !== '') {
+      setTeamMembers([...teamMembers, teamMemberInput]);
+      setTeamMemberInput('');
     }
   };
 
@@ -426,7 +409,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   });
 
   // Info: (20250224 - Julian) 訂閱方案
-  const subscriptionOverview = newTeam && (
+  const subscriptionOverview = (
     <div className="flex justify-center gap-lv-7">
       {listPaymentPlan.length > 0 ? (
         listPaymentPlan.map((plan) => {
@@ -434,9 +417,9 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           return (
             <SubscriptionPlan
               key={plan.id}
-              team={newTeam}
+              team={teamInfo}
               plan={plan}
-              getOwnedTeam={getTeam}
+              getOwnedTeam={async () => {}} // Info: (20250326 - Julian) 這裡不會用到
               goToPaymentHandler={selectPlan}
               bordered
             />
@@ -444,26 +427,27 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
         })
       ) : (
         <div className="flex animate-spin flex-col items-center justify-center">
-          <PiSpinner size={24} />
+          <PiSpinner size={96} />
         </div>
       )}
     </div>
   );
 
   // Info: (20250224 - Julian) 付款
-  const paymentOverview = newTeam && selectedPlan && (
+  const paymentOverview = (
     <div className="flex min-h-600px w-900px gap-40px">
-      <PlanInfo team={newTeam} plan={selectedPlan} />
+      <PlanInfo team={teamInfo} plan={selectedPlan} />
 
       <section className="flex flex-auto flex-col gap-24px">
         <PaymentInfo plan={selectedPlan} />
 
         <CreditCardInfo
-          team={newTeam}
+          team={teamInfo}
           plan={selectedPlan}
           setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
           setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
           setIsDirty={() => {}} // Info: (20250303 - Julian) 不需要使用
+          updateSubscriptionHandler={updateSubscriptionHandler}
         />
       </section>
 
@@ -485,13 +469,10 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     </div>
   );
 
-  const invoiceOverview = newTeam && teamInvoice && <InvoiceDetail invoice={teamInvoice} />;
+  const invoiceOverview = teamInvoice && <InvoiceDetail invoice={teamInvoice} />;
 
   // Info: (20250303 - Julian) 免費方案 -> 顯示訂閱方案；其他方案 -> 顯示付款
-  const step3Body =
-    listPaymentPlan.length > 0 && selectedPlan !== listPaymentPlan[0]
-      ? paymentOverview
-      : subscriptionOverview;
+  const step3Body = isBeginnerPlan ? subscriptionOverview : paymentOverview;
 
   const memberFormBody = (
     <div className="flex flex-col gap-8px text-sm">
@@ -513,6 +494,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
             onChange={(e) => setTeamMemberInput(e.target.value)}
             className="w-full bg-transparent outline-none"
             onKeyDown={emailKeyDown}
+            onBlur={emailBlur}
           />
         </div>
       </div>
@@ -534,6 +516,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           type="text"
           value={teamNameInput}
           onChange={(e) => setTeamNameInput(e.target.value)}
+          onKeyDown={nameKeyDown}
           className="rounded-sm border border-input-stroke-input px-12px py-10px placeholder:text-input-text-input-placeholder"
           placeholder={t('team:CREATE_TEAM_MODAL.TEAM_NAME')}
         />
@@ -605,7 +588,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
               </Button>
             )}
             <div className="ml-auto flex items-center gap-24px">
-              {!teamInvoice && (
+              {currentStep < 3 && (
                 <Button type="button" variant="secondaryBorderless" onClick={cancelOrSkip}>
                   {cancelButtonText}
                 </Button>
