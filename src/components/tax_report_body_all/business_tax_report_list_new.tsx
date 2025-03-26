@@ -67,6 +67,8 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       return;
     }
 
+    // Info: (20250326 - Anna) jsPDF 是類別，但命名為小寫，需關閉 eslint new-cap
+    // eslint-disable-next-line new-cap
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
 
     // Info: (20250326 - Anna) 逐頁擷取 `.download-page` 並添加到 PDF
@@ -272,6 +274,8 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       <Skeleton width={80} height={20} />
     </div>
   ) : (
+    /* Info: (20250326 - Anna) download-page 是自定義 class，用於轉 PDF 時選取每一頁，需關掉 tailwindcss/no-custom-classname */
+    /* eslint-disable-next-line tailwindcss/no-custom-classname */
     <div id="1" className="download-page relative overflow-y-hidden bg-white">
       <header className="flex w-full justify-between">
         <table className="border-collapse border border-black text-8px">
