@@ -63,7 +63,8 @@
     "CASH_INFLOWS_FROM_OPERATING": "Cash Inflows from Operating Activities",
     "PROPERTY_PLANT_EQUIPMENT": "Property, Plant, and Equipment",
     "EXPENDITURES_ON_INTANGIBLE_ASSETS": "Expenditures on Intangible Assets",
-    "AVAILABLE_CASH_FLOW": "Free Cash Flow"
+    "AVAILABLE_CASH_FLOW": "Free Cash Flow",
+    "EXPORT_TAX_FILING_FILE": "Export Tax Filing File"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "Latest",
