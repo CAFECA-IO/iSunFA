@@ -256,9 +256,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
       ? teamNameInput === '' // Info: (20250224 - Julian) 第一步 Team Name 必填
       : currentStep === 2
         ? teamMembers.length <= 0 // Info: (20250224 - Julian) 第二步 Member Email 必填
-        : currentStep === 3
-          ? !isBeginnerPlan // Info: (20250224 - Julian) 第三步如果選擇付費方案，則須進行到付款
-          : true;
+        : currentStep !== 3; // Info: (20250326 - Julian) 第三步不需要檢查
 
   // deprecated: (20250326 - Julian) for testing
   const printResult = () => {
@@ -270,72 +268,88 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     });
   };
 
-  // Info: (20250325 - Julian) 建立團隊
+  // Info: (20250325 - Julian) 建立團隊步驟：建立團隊 -> 邀請成員 -> 升級訂閱方案
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const createTeamHandler = async () => {
-    const { success, data, error } = await createTeam({
-      body: {
-        name: teamNameInput,
-        members: teamMembers,
-        planType: selectedPlan,
-      },
-    });
-
-    if (success && data) {
-      // Info: (20250326 - Julian) 建立成功：跳轉到團隊首頁，並且邀請成員
-      window.open(`${ISUNFA_ROUTE.TEAM_PAGE}/${data.id}`, '_self');
-      const { error: invitedError } = await inviteMember({
-        params: { teamId: data.id },
-        body: { emails: teamMembers },
+    try {
+      const { success, data, error } = await createTeam({
+        body: {
+          name: teamNameInput,
+          members: teamMembers,
+          planType: selectedPlan,
+        },
       });
-      if (invitedError) {
-        // Info: (20250326 - Julian) 邀請成員失敗：顯示錯誤訊息
+
+      // Info: (20250326 - Julian) 建立團隊成功 -> 邀請成員和升級訂閱方案
+      if (success && data) {
+        // Info: (20250326 - Julian) 有填寫成員 Email 才 inviteMember
+        if (teamMembers.length > 0) {
+          // Info: (20250326 - Julian) 邀請成員
+          const { error: invitedError } = await inviteMember({
+            params: { teamId: data.id },
+            body: { emails: teamMembers },
+          });
+
+          // Info: (20250326 - Julian) 邀請成員失敗：顯示錯誤訊息
+          if (invitedError) {
+            toastHandler({
+              id: 'invite-member-fail',
+              type: ToastType.ERROR,
+              content: `Invite member failed: ${invitedError?.message}`,
+              closeable: true,
+            });
+          }
+        }
+
+        // Info: (20250326 - Julian) 選擇免費方案的話，不需要升級訂閱方案
+        if (!isBeginnerPlan && userAuth && paymentMethod) {
+          // Info: (20250326 - Julian) 升級訂閱方案
+          const { error: subscriptionError } = await subscribe({
+            params: {
+              userId: userAuth.id,
+              paymentMethodId: paymentMethod[paymentMethod.length - 1].id,
+            },
+          });
+
+          // Info: (20250326 - Julian) 升級訂閱方案失敗：顯示錯誤訊息
+          if (subscriptionError) {
+            toastHandler({
+              id: 'subscribe-fail',
+              type: ToastType.ERROR,
+              content: `Subscribe failed: ${subscriptionError?.message}`,
+              closeable: true,
+            });
+          }
+        }
+
+        // Info: (20250326 - Julian) 全部步驟完成：顯示成功訊息，5 秒後跳轉到團隊頁面
         toastHandler({
-          id: 'invite-member-fail',
+          id: 'create-team-success',
+          type: ToastType.SUCCESS,
+          content: 'Create team success',
+          closeable: true,
+        });
+        setTimeout(() => {
+          window.open(`${ISUNFA_ROUTE.TEAM_PAGE}/${data.id}`, '_self');
+        }, 5000);
+      } else {
+        // Info: (20250326 - Julian) 建立失敗：顯示錯誤訊息
+        toastHandler({
+          id: 'create-team-fail',
           type: ToastType.ERROR,
-          content: `Invite member failed: ${invitedError?.message}`,
+          content: `Create team failed: ${error?.message}`,
           closeable: true,
         });
       }
-    } else {
-      // Info: (20250326 - Julian) 建立失敗：顯示錯誤訊息
+    } catch (error) {
+      // Info: (20250326 - Julian) 捕捉錯誤，並顯示錯誤訊息
       toastHandler({
         id: 'create-team-fail',
         type: ToastType.ERROR,
-        content: `Create team failed: ${error?.message}`,
+        content: `Create team failed: ${error}`,
         closeable: true,
       });
     }
-  };
-
-  // Info: (20250326 - Julian) 選擇付費方案時，建立團隊的處理
-  const updateSubscriptionHandler = async () => {
-    if (!(userAuth && paymentMethod)) return;
-
-    // const { success, data, error } = await createTeam({
-    //   body: {
-    //     name: teamNameInput,
-    //     members: teamMembers,
-    //     planType: selectedPlan,
-    //   },
-    // });
-
-    // const { success } = await subscribe({
-    //   params: {
-    //     userId: userAuth.id,
-    //     paymentMethodId: paymentMethod[paymentMethod.length - 1].id,
-    //   },
-    // });
-
-    // ToDo: (20250326 - Julian) 流程需要確認
-    // 目前的想法：建立 Beginner 團隊 -> 綁卡 -> 訂閱 -> 修改團隊方案 -> 邀請成員
-
-    // eslint-disable-next-line no-console
-    console.log('body:', {
-      name: teamNameInput,
-      members: teamMembers,
-      planType: selectedPlan,
-    });
   };
 
   const toNextStep =
@@ -447,7 +461,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
           setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
           setIsDirty={() => {}} // Info: (20250303 - Julian) 不需要使用
-          updateSubscriptionHandler={updateSubscriptionHandler}
+          isHideSubscribeButton // Info: (20250326 - Julian) 不需要顯示訂閱按鈕
         />
       </section>
 
