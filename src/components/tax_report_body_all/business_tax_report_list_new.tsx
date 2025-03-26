@@ -790,8 +790,8 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
             <td className="border border-black px-1 py-0">14</td>
             <td className="flex items-center text-nowrap border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 本期(月)應退稅額 */}
-              {t('reports:TAX_REPORT.REFUNDABLE_TAX')}({/* 如 */}
-              {t('reports:TAX_REPORT.IF')}
+              {/* Info: (20240814 - Anna) 如 */}
+              {t('reports:TAX_REPORT.REFUNDABLE_TAX')}({t('reports:TAX_REPORT.IF')}
               <div>
                 <span>12&gt;13</span>
                 <br />
