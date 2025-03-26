@@ -256,7 +256,7 @@ const AccountBookItem = ({
       </div>
 
       {/* Info: (20250326 - Liz) Transferring */}
-      {!accountBook.isTransferring && (
+      {accountBook.isTransferring && (
         <section className="flex w-140px items-center justify-center gap-16px">
           <p className="text-nowrap text-sm font-medium">
             {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.WAITING_FOR_TRANSFERRING')}...
