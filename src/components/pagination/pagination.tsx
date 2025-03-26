@@ -43,6 +43,9 @@ const Pagination = forwardRef(
     const [, setTargetPage, targetPageRef] = useStateRef<number | string>('');
     const router = useRouter();
     const [isInputFocused, setIsInputFocused] = useState(false);
+    // Deprecated: (20250326 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('targetPageRef.current:', targetPageRef.current);
 
     // Info: (20240712 - Shirley) 從 URL 獲取初始頁碼
     useEffect(() => {
@@ -171,6 +174,16 @@ const Pagination = forwardRef(
       </Button>
     );
 
+    const onFocus = () => {
+      setIsInputFocused(true);
+      setTargetPage('');
+    };
+
+    const onBlur = () => {
+      setIsInputFocused(false);
+      setTargetPage(currentPage);
+    };
+
     const displayPageInput = (
       <input
         name="page"
@@ -181,8 +194,8 @@ const Pagination = forwardRef(
         value={targetPageRef.current}
         onChange={pageChangeHandler}
         onKeyDown={handleKeyDown}
-        onFocus={() => setIsInputFocused(true)}
-        onBlur={() => setIsInputFocused(false)}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className="h-44px w-44px rounded border border-input-stroke-input bg-transparent text-center text-sm font-semibold text-date-picker-text-input-placeholder outline-none placeholder:text-date-picker-text-input-placeholder disabled:border-input-stroke-input"
       />
     );
