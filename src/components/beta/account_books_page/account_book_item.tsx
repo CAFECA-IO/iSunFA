@@ -14,7 +14,6 @@ import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ITransferAccountBook } from '@/interfaces/team';
-import { useRouter } from 'next/router';
 
 interface AccountBookItemProps {
   accountBook: IAccountBookForUserWithTeam;
@@ -22,6 +21,7 @@ interface AccountBookItemProps {
   setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
   setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
   setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const AccountBookItem = ({
@@ -30,9 +30,9 @@ const AccountBookItem = ({
   setAccountBookToEdit,
   setAccountBookToDelete,
   setAccountBookToUploadPicture,
+  setRefreshKey,
 }: AccountBookItemProps) => {
   const { t } = useTranslation(['account_book']);
-  const router = useRouter();
   const { connectAccountBook, connectedAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
   const isAccountBookConnected = accountBook.company.id === connectedAccountBook?.id;
@@ -69,6 +69,11 @@ const AccountBookItem = ({
     canDo: TeamPermissionAction.CANCEL_ACCOUNT_BOOK_TRANSFER,
   });
 
+  const modifyImagePermission = convertTeamRoleCanDo({
+    teamRole,
+    canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
+  });
+
   const canDelete =
     TeamRoleCanDoKey.YES_OR_NO in deletePermission ? deletePermission.yesOrNo : false;
   const canEditTag =
@@ -84,6 +89,9 @@ const AccountBookItem = ({
     TeamRoleCanDoKey.YES_OR_NO in cancelTransferPermission
       ? cancelTransferPermission.yesOrNo
       : false;
+
+  const canModifyImage =
+    TeamRoleCanDoKey.YES_OR_NO in modifyImagePermission ? modifyImagePermission.yesOrNo : false;
 
   const toggleOptionsDropdown = () => {
     setIsOptionsDropdownOpen((prev) => !prev);
@@ -154,7 +162,7 @@ const AccountBookItem = ({
         return;
       }
 
-      router.reload(); // Info: (20250326 - Liz) 原本會用 setRefreshKey={setRefreshKey} 來更新帳本清單，但不確定是否會影響分頁功能(url是否會不一致等問題)且這支 api 目前沒有機會使用(目前轉移功能就是直接轉移)未來會嘗試用別的方式確認，目前先重新載入頁面來觸發重新取得帳本清單
+      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20250326 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
     } catch (error) {
       // Deprecated: (20250326 - Liz)
       // eslint-disable-next-line no-console
@@ -171,7 +179,12 @@ const AccountBookItem = ({
     >
       {/* Info: (20250326 - Liz) Account Book Image & Name */}
       <section className="flex w-300px flex-auto items-center gap-24px">
-        <button type="button" onClick={openUploadCompanyPictureModal} className="group relative">
+        <button
+          type="button"
+          onClick={openUploadCompanyPictureModal}
+          className="group relative"
+          disabled={!canModifyImage}
+        >
           <Image
             src={accountBook.company.imageId}
             alt={accountBook.company.name}
@@ -180,9 +193,11 @@ const AccountBookItem = ({
             className="h-60px w-60px rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
           ></Image>
 
-          <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
-            <FiEdit2 size={24} />
-          </div>
+          {canModifyImage && (
+            <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
+              <FiEdit2 size={24} />
+            </div>
+          )}
         </button>
 
         <div className="flex items-center justify-between gap-8px">

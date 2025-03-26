@@ -181,6 +181,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         <UploadCompanyPictureModal
           accountBookToUploadPicture={accountBookToUploadPicture}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+          getAccountBookListByTeamId={getAccountBookListByTeamId}
         />
       )}
 
