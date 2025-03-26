@@ -43,9 +43,6 @@ const Pagination = forwardRef(
     const [, setTargetPage, targetPageRef] = useStateRef<number | string>('');
     const router = useRouter();
     const [isInputFocused, setIsInputFocused] = useState(false);
-    // Deprecated: (20250326 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('targetPageRef.current:', targetPageRef.current);
 
     // Info: (20240712 - Shirley) 從 URL 獲取初始頁碼
     useEffect(() => {
@@ -174,11 +171,11 @@ const Pagination = forwardRef(
       </Button>
     );
 
+    // Info: (20250326 - Liz) 輸入框的 onFocus 和 onBlur 事件處理函數: 用來顯示/隱藏 placeholder
     const onFocus = () => {
       setIsInputFocused(true);
       setTargetPage('');
     };
-
     const onBlur = () => {
       setIsInputFocused(false);
       setTargetPage(currentPage);
