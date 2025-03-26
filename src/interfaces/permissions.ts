@@ -56,3 +56,8 @@ export interface IAlterTeamRole {
   teamRole: TeamRole;
   canAlter: TeamRole[];
 }
+
+export enum TeamRoleCanDoKey {
+  YES_OR_NO = 'yesOrNo',
+  CAN_ALTER = 'canAlter',
+}

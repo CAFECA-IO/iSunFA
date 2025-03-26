@@ -5,7 +5,7 @@ import { FiEdit2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { ITeam } from '@/interfaces/team';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 
 interface TeamHeaderProps {
   team: ITeam;
@@ -21,7 +21,7 @@ const TeamHeader = ({ team, setTeamToChangeImage }: TeamHeaderProps) => {
     canDo: TeamPermissionAction.MODIFY_IMAGE,
   });
 
-  const yesOrNo = 'yesOrNo' in result ? result.yesOrNo : false;
+  const yesOrNo = TeamRoleCanDoKey.YES_OR_NO in result ? result.yesOrNo : false;
 
   const copyTeamId = async () => {
     try {

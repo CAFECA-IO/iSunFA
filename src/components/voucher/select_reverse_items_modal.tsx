@@ -37,6 +37,11 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
   const { voucherId, voucherNo, account, description, amount, isSelected, reverseAmount } =
     reverseData;
 
+  // Info: (20250326 - Anna) 初始化 displayAmount：將 reverseAmount 加上千分位符號，用來顯示在 input 上
+  const [displayAmount, setDisplayAmount] = useState<string>(
+    numberWithCommas(reverseAmount.toString())
+  );
+
   const accountCode = account?.code ?? '';
   const accountName = account?.name ?? '';
 
@@ -49,9 +54,16 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
     const numValue = Number.isNaN(num) ? 0 : num;
     // Info: (20241105 - Julian) 金額範圍限制 0 ~ amount
     const valueInRange = numValue < 0 ? 0 : numValue > amount ? amount : numValue;
+    // Info: (20250326 - Anna) 顯示值加上千分位
+    setDisplayAmount(numberWithCommas(e.target.value));
     // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
     amountChangeHandler(voucherId, reverseData.lineItemIndex, valueInRange);
   };
+
+  // Info: (20250326 - Anna) 當 reverseAmount 改變，同步更新顯示值 displayAmount
+  useEffect(() => {
+    setDisplayAmount(numberWithCommas(reverseAmount.toString()));
+  }, [reverseAmount]);
 
   return (
     <>
@@ -89,7 +101,8 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
           <input
             type="string"
             className="w-0 flex-1 bg-transparent px-12px py-10px text-right outline-none"
-            value={reverseAmount}
+            // Info: (20250326 - Anna) 傳入有千分位符號的顯示值(displayAmount)
+            value={displayAmount}
             placeholder="0"
             onChange={reverseAmountChangeHandler}
             disabled={!isSelected}
