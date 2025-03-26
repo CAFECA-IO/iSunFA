@@ -10,7 +10,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 
 interface AccountBookItemProps {
   accountBook: IAccountBookForUserWithTeam;
@@ -54,10 +54,14 @@ const AccountBookItem = ({
     canDo: TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
   });
 
-  const canDelete = 'yesOrNo' in deletePermission ? deletePermission.yesOrNo : false;
-  const canEditTag = 'yesOrNo' in editTagPermission ? editTagPermission.yesOrNo : false;
+  const canDelete =
+    TeamRoleCanDoKey.YES_OR_NO in deletePermission ? deletePermission.yesOrNo : false;
+  const canEditTag =
+    TeamRoleCanDoKey.YES_OR_NO in editTagPermission ? editTagPermission.yesOrNo : false;
   const canRequestTransfer =
-    'yesOrNo' in requestTransferPermission ? requestTransferPermission.yesOrNo : false;
+    TeamRoleCanDoKey.YES_OR_NO in requestTransferPermission
+      ? requestTransferPermission.yesOrNo
+      : false;
 
   const hasPermission = canDelete || canEditTag || canRequestTransfer;
 
