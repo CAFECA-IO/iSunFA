@@ -13,26 +13,6 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { createAccountingSetting } from '@/lib/utils/repo/accounting_setting.repo';
 
-const handleGetRequest: IHandleRequest<
-  APIName.LIST_USER_COMPANY,
-  Array<IAccountBook> | IPaginatedData<Array<IAccountBook>>
-> = async ({ query }) => {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: Array<IAccountBook> | IPaginatedData<Array<IAccountBook>> | null = null;
-  const { simple, userId, pageSize, page, searchQuery } = query;
-  if (simple) {
-    const listedCompanyAndRole = await listCompanyAndRoleSimple(userId);
-    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    payload = listedCompanyAndRole;
-  } else {
-    const listedCompanyAndRole = await listCompanyAndRole(userId, page, pageSize, searchQuery);
-    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    payload = listedCompanyAndRole;
-  }
-
-  return { statusMessage, payload };
-};
-
 /* Info: (20250124 - Shirley) 建立帳本
  * 1. 搜尋是帳號下是否有相同統編的公司帳本，若有則取消創建
  * 2. 建立公司帳本 icon
@@ -104,7 +84,6 @@ const methodHandlers: {
     payload: IAccountBook | IAccountBook[] | IPaginatedData<IAccountBook[]> | null;
   }>;
 } = {
-  GET: (req) => withRequestValidation(APIName.LIST_USER_COMPANY, req, handleGetRequest),
   POST: (req) => withRequestValidation(APIName.CREATE_USER_COMPANY, req, handlePostRequest),
 };
 

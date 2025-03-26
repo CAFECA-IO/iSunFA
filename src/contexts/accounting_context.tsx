@@ -36,8 +36,6 @@ export const accountTitleMap: AccountTitleMap = {
 
 interface IAccountingContext {
   OCRList: IOCR[];
-  OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
-  updateOCRListHandler: (companyId: number | undefined, update: boolean) => void;
   addOCRHandler: (
     aichId: string,
     imageName: string,
@@ -92,8 +90,6 @@ interface IAccountingContext {
 
 const initialAccountingContext: IAccountingContext = {
   OCRList: [],
-  OCRListStatus: { listSuccess: undefined, listCode: undefined },
-  updateOCRListHandler: () => {},
   addOCRHandler: () => {},
   deleteOCRHandler: () => {},
   addPendingOCRHandler: () => {},
@@ -136,24 +132,8 @@ export const AccountingContext = createContext<IAccountingContext>(initialAccoun
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const { userAuth, connectedAccountBook, isSignIn } = useUserCtx();
   const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.ASK_AI_STATUS);
-  const {
-    trigger: listUnprocessedOCR,
-    error: listError,
-    success: listSuccess,
-    code: listCode,
-  } = APIHandler<IOCR[]>(APIName.OCR_LIST);
 
-  const [OCRListParams, setOCRListParams] = useState<
-    { companyId: number; update: boolean } | undefined
-  >(undefined);
   const [OCRList, setOCRList] = useState<IOCR[]>([]);
-  const [OCRListStatus, setOCRLisStatus] = useState<{
-    listSuccess: boolean | undefined;
-    listCode: string | undefined;
-  }>({
-    listSuccess: undefined,
-    listCode: undefined,
-  });
 
   const [selectedOCR, setSelectedOCR] = useState<IOCR | undefined>(undefined);
   const [selectedJournal, setSelectedJournal] = useState<IJournal | undefined>(undefined);
@@ -169,7 +149,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [pendingOCRList, setPendingOCRList] = useState<IOCRItem[]>([]);
   const [isDBReady, setIsDBReady] = useState(false);
   const [pendingOCRListFromBrowser, setPendingOCRListFromBrowser] = useState<IOCRItem[]>([]);
-  const [unprocessedOCRs, setUnprocessedOCRs] = useState<IOCR[]>([]);
 
   const [temporaryAssetList, setTemporaryAssetList] = useState<{
     [key: string]: IAssetPostOutput[];
@@ -210,15 +189,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       setIntervalId(null);
     }
   }, [stopAskAI, intervalId]);
-
-  const updateOCRListHandler = (companyId: number | undefined, update: boolean) => {
-    if (companyId) {
-      setOCRListParams({
-        companyId,
-        update,
-      });
-    }
-  };
 
   // Info: (20240820 - Shirley) 新增一個合併 OCR 列表的函數
   const mergeOCRLists = useCallback((upcomingList: IOCR[], currentList: IOCR[]) => {
@@ -356,7 +326,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const clearOCRs = () => {
     setPendingOCRList([]);
     setPendingOCRListFromBrowser([]);
-    setUnprocessedOCRs([]);
     setOCRList([]);
   };
 
@@ -377,49 +346,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   useEffect(() => {
     clearOCRs();
   }, [isSignIn, connectedAccountBook]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-
-    if (OCRListParams && OCRListParams.update) {
-      interval = setInterval(async () => {
-        try {
-          const response = await listUnprocessedOCR({
-            params: {
-              companyId: OCRListParams.companyId,
-            },
-          });
-          if (response?.data) {
-            setUnprocessedOCRs(response.data);
-          }
-        } catch (error) {
-          clearInterval(interval);
-        }
-      }, 2000);
-    }
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [OCRListParams]);
-
-  useEffect(() => {
-    if (OCRListStatus.listSuccess !== listSuccess || OCRListStatus.listCode !== listCode) {
-      setOCRLisStatus({
-        listSuccess,
-        listCode,
-      });
-    }
-
-    if (listSuccess) {
-      setOCRList((prevList) => mergeOCRLists(unprocessedOCRs, prevList));
-      setPendingOCRList((prevList) => excludeUploadIdentifier(unprocessedOCRs, prevList));
-    }
-
-    if (listSuccess === false) {
-      setOCRListParams((prev) => (prev ? { ...prev, update: false } : prev));
-    }
-  }, [listSuccess, listError, listCode, unprocessedOCRs]);
 
   const setInvoiceIdHandler = useCallback(
     (id: string | undefined) => setInvoiceId(id),
@@ -505,8 +431,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const value = useMemo(
     () => ({
       OCRList,
-      OCRListStatus,
-      updateOCRListHandler,
       addOCRHandler,
       deleteOCRHandler,
       addPendingOCRHandler,
@@ -547,7 +471,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }),
     [
       OCRList,
-      OCRListStatus,
       AIStatus,
       invoiceId,
       voucherId,

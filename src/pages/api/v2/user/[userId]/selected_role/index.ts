@@ -5,10 +5,9 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { getUserRoleByUserAndRoleId, updateUserRoleLoginAt } from '@/lib/utils/repo/user_role.repo';
+import { getUserRoleById, updateUserRoleLoginAt } from '@/lib/utils/repo/user_role.repo';
 import { setSession } from '@/lib/utils/session';
 import { UserRole } from '@prisma/client';
-import { IUserRole } from '@/interfaces/user_role';
 
 const handlePutRequest: IHandleRequest<APIName.USER_SELECT_ROLE, UserRole> = async ({
   query,
@@ -19,11 +18,11 @@ const handlePutRequest: IHandleRequest<APIName.USER_SELECT_ROLE, UserRole> = asy
   let payload: UserRole | null = null;
   const { userId } = query;
   const { roleId } = body;
-  const userRole = await getUserRoleByUserAndRoleId(userId, roleId);
+  const userRole = await getUserRoleById(roleId, userId);
 
   if (userRole) {
     statusMessage = STATUS_MESSAGE.SUCCESS;
-    setSession(session, { roleId: userRole.roleId });
+    setSession(session, { roleId: userRole.id });
     await updateUserRoleLoginAt(userRole.id);
     payload = userRole;
   } else {
@@ -37,17 +36,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IUserRole | null }>;
+  ) => Promise<{ statusMessage: string; payload: UserRole | null }>;
 } = {
   PUT: (req) => withRequestValidation(APIName.USER_SELECT_ROLE, req, handlePutRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IUserRole | null>>
+  res: NextApiResponse<IResponseData<UserRole | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IUserRole | null = null;
+  let payload: UserRole | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -61,7 +60,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IUserRole | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<UserRole | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

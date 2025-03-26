@@ -19,19 +19,14 @@ import {
 } from '@/lib/utils/zod_schema/certificate';
 import {
   companyDeleteSchema,
-  companyGetByIdSchema,
-  companyListSchema,
   companyPostSchema,
   companyPutIconSchema,
   companyPutSchema,
   companySearchSchema,
-  companySelectSchema,
 } from '@/lib/utils/zod_schema/company';
-import { invoiceRequestValidators } from '@/lib/utils/zod_schema/invoice';
 import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
 import { kycRequestValidators } from '@/lib/utils/zod_schema/kyc';
 import { newsGetByIdSchema, newsListSchema, newsPostSchema } from '@/lib/utils/zod_schema/news';
-import { ocrRequestValidators } from '@/lib/utils/zod_schema/ocr';
 import {
   companyPendingTaskSchema,
   userPendingTaskSchema,
@@ -148,17 +143,10 @@ import {
 // ToDo: (20241204 - Luphia) unknown for zod schema
 export const API_ZOD_SCHEMA = {
   // Info: (20241016 - Jacky) V1 Validators
-  [APIName.INVOICE_CREATE]: invoiceRequestValidators.POST,
-  [APIName.INVOICE_GET_BY_ID]: invoiceRequestValidators.GET_ONE,
-  [APIName.INVOICE_UPDATE]: invoiceRequestValidators.PUT,
   [APIName.JOURNAL_DELETE]: journalRequestValidators.DELETE,
   [APIName.JOURNAL_GET_BY_ID]: journalRequestValidators.GET_ONE,
   [APIName.JOURNAL_LIST]: journalRequestValidators.GET_LIST,
   [APIName.KYC_UPLOAD]: kycRequestValidators.POST,
-  [APIName.OCR_DELETE]: ocrRequestValidators.DELETE,
-  [APIName.OCR_LIST]: ocrRequestValidators.GET_LIST,
-  [APIName.OCR_RESULT_GET_BY_ID]: ocrRequestValidators.GET_ONE,
-  [APIName.OCR_UPLOAD]: ocrRequestValidators.POST,
   [APIName.VOUCHER_CREATE]: voucherRequestValidatorsV1.POST,
   [APIName.VOUCHER_UPDATE]: voucherRequestValidatorsV1.PUT,
   [APIName.ZOD_EXAMPLE]: zodExampleValidators.GET_ONE,
@@ -179,10 +167,7 @@ export const API_ZOD_SCHEMA = {
 
 // Info: (20241112 - Jacky) Cannot add type Record<APIName, ZodAPISchema> , because Record will make infer type to any
 export const ZOD_SCHEMA_API = {
-  [APIName.LIST_USER_COMPANY]: companyListSchema,
   [APIName.CREATE_USER_COMPANY]: companyPostSchema,
-  [APIName.COMPANY_SELECT]: companySelectSchema,
-  [APIName.COMPANY_GET_BY_ID]: companyGetByIdSchema,
   [APIName.COMPANY_UPDATE]: companyPutSchema,
   [APIName.COMPANY_DELETE]: companyDeleteSchema,
   [APIName.COMPANY_PUT_ICON]: companyPutIconSchema,
@@ -241,10 +226,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_UPDATE]: userPutSchema,
   [APIName.USER_DELETION_UPDATE]: userDeletionPutSchema,
   [APIName.USER_DELETE]: userDeleteSchema,
-  [APIName.COMPANY_ADD]: nullAPISchema,
-  [APIName.COMPANY_GET]: nullAPISchema,
   [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: companySearchSchema,
-  [APIName.COMPANY_ADD_BY_INVITATION_CODE]: nullAPISchema,
   [APIName.CERTIFICATE_PUT_V2]: nullAPISchema,
   [APIName.INVOICE_POST_V2]: invoicePostV2Schema,
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
@@ -259,13 +241,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.ASSET_MANAGEMENT_ADD]: nullAPISchema,
   [APIName.ASSET_MANAGEMENT_GET_BY_ID]: nullAPISchema,
   [APIName.ASSET_MANAGEMENT_UPDATE]: nullAPISchema,
-  [APIName.OCR_UPLOAD]: nullAPISchema,
-  [APIName.OCR_DELETE]: nullAPISchema,
-  [APIName.OCR_RESULT_GET_BY_ID]: nullAPISchema,
-  [APIName.OCR_LIST]: nullAPISchema,
-  [APIName.INVOICE_CREATE]: nullAPISchema,
-  [APIName.INVOICE_UPDATE]: nullAPISchema,
-  [APIName.INVOICE_GET_BY_ID]: nullAPISchema,
   [APIName.IMAGE_GET_BY_ID]: imageGetSchema,
   [APIName.ASK_AI_STATUS]: nullAPISchema,
   [APIName.ASK_AI_RESULT]: nullAPISchema,
@@ -287,9 +262,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.FILE_DELETE]: fileDeleteSchema,
   [APIName.FILE_GET]: fileGetSchema,
   [APIName.FILE_PUT_V2]: filePutSchema,
-  [APIName.ROLE_GET_BY_ID]: nullAPISchema,
-  [APIName.ROLE_DELETE]: nullAPISchema,
-  [APIName.ROLE_UPDATE]: nullAPISchema,
   [APIName.KYC_UPLOAD]: nullAPISchema,
   [APIName.ACCOUNT_GET_BY_ID]: nullAPISchema,
   [APIName.CREATE_NEW_SUB_ACCOUNT]: accountPostV2Schema,

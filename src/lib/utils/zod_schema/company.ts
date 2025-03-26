@@ -1,23 +1,7 @@
 import { z } from 'zod';
 import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
-import {
-  nullSchema,
-  zodStringToBoolean,
-  zodStringToNumber,
-  zodStringToNumberWithDefault,
-} from '@/lib/utils/zod_schema/common';
-import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
-import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
-
-// Info: (20241016 - Jacky) Company list schema
-const companyListQuerySchema = z.object({
-  userId: zodStringToNumber,
-  simple: zodStringToBoolean.optional(),
-  searchQuery: z.string().optional(),
-  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
-  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
-});
 
 // Info: (20241016 - Jacky) Company post schema
 const companyPostQuerySchema = z.object({
@@ -28,11 +12,6 @@ const companyPostBodySchema = z.object({
   taxId: z.string(),
   tag: z.nativeEnum(WORK_TAG),
   teamId: z.number().int(),
-});
-
-// Info: (20241016 - Jacky) Company get schema
-const companyGetByIdQuerySchema = z.object({
-  companyId: zodStringToNumber,
 });
 
 // Info: (20241016 - Jacky) Company put schema
@@ -49,15 +28,6 @@ const companyDeleteQuerySchema = z.object({
   companyId: zodStringToNumber,
 });
 
-// Info: (20241015 - Jacky) Company select schema
-const companySelectQuerySchema = z.object({
-  userId: zodStringToNumber,
-});
-
-const companySelectBodySchema = z.object({
-  companyId: z.number().int(),
-});
-
 export const companyOutputSchema = z.object({
   id: z.number().int(),
   imageFile: filePrismaSchema,
@@ -72,28 +42,10 @@ export const companyOutputSchema = z.object({
   tag: z.nativeEnum(WORK_TAG),
 });
 
-export const companyListSchema = {
-  input: {
-    querySchema: companyListQuerySchema,
-    bodySchema: nullSchema,
-  },
-  outputSchema: z.union([paginatedDataSchema(companyOutputSchema), z.array(companyOutputSchema)]),
-  frontend: nullSchema,
-};
-
 export const companyPostSchema = {
   input: {
     querySchema: companyPostQuerySchema,
     bodySchema: companyPostBodySchema,
-  },
-  outputSchema: companyOutputSchema.nullable(),
-  frontend: nullSchema,
-};
-
-export const companyGetByIdSchema = {
-  input: {
-    querySchema: companyGetByIdQuerySchema,
-    bodySchema: nullSchema,
   },
   outputSchema: companyOutputSchema.nullable(),
   frontend: nullSchema,
@@ -112,15 +64,6 @@ export const companyDeleteSchema = {
   input: {
     querySchema: companyDeleteQuerySchema,
     bodySchema: nullSchema,
-  },
-  outputSchema: companyOutputSchema.nullable(),
-  frontend: nullSchema,
-};
-
-export const companySelectSchema = {
-  input: {
-    querySchema: companySelectQuerySchema,
-    bodySchema: companySelectBodySchema,
   },
   outputSchema: companyOutputSchema.nullable(),
   frontend: nullSchema,
