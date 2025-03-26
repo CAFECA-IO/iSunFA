@@ -7,6 +7,5 @@ export interface IStatusInfo {
   user: IUser | null;
   company: IAccountBook | null;
   role: IUserRole | null;
-  team: ITeam | null;
   teams: ITeam[] | null;
 }

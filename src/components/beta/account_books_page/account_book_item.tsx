@@ -9,6 +9,8 @@ import CompanyTag from '@/components/beta/account_books_page/company_tag';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 
 interface AccountBookItemProps {
   accountBook: IAccountBookWithTeam;
@@ -29,12 +31,39 @@ const AccountBookItem = ({
   const { connectAccountBook, connectedAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
   const isAccountBookConnected = accountBook.id === connectedAccountBook?.id;
+  const teamRole = accountBook.team.role;
 
   const {
     targetRef: optionsDropdownRef,
     componentVisible: isOptionsDropdownOpen,
     setComponentVisible: setIsOptionsDropdownOpen,
   } = useOuterClick<HTMLDivElement>(false);
+
+  const deletePermission = convertTeamRoleCanDo({
+    teamRole,
+    canDo: TeamPermissionAction.DELETE_ACCOUNT_BOOK,
+  });
+
+  const editTagPermission = convertTeamRoleCanDo({
+    teamRole,
+    canDo: TeamPermissionAction.MODIFY_TAG,
+  });
+
+  const requestTransferPermission = convertTeamRoleCanDo({
+    teamRole,
+    canDo: TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
+  });
+
+  const canDelete =
+    TeamRoleCanDoKey.YES_OR_NO in deletePermission ? deletePermission.yesOrNo : false;
+  const canEditTag =
+    TeamRoleCanDoKey.YES_OR_NO in editTagPermission ? editTagPermission.yesOrNo : false;
+  const canRequestTransfer =
+    TeamRoleCanDoKey.YES_OR_NO in requestTransferPermission
+      ? requestTransferPermission.yesOrNo
+      : false;
+
+  const hasPermission = canDelete || canEditTag || canRequestTransfer;
 
   const toggleOptionsDropdown = () => {
     setIsOptionsDropdownOpen((prev) => !prev);
@@ -116,50 +145,60 @@ const AccountBookItem = ({
           {accountBook.name}
         </p>
 
-        <div className="relative flex items-center" ref={optionsDropdownRef}>
-          <button type="button" onClick={toggleOptionsDropdown}>
-            <Image
-              src="/icons/square_mouse_pointer.svg"
-              width={16}
-              height={16}
-              alt="square_mouse_pointer"
-            />
-          </button>
+        {hasPermission && (
+          <div className="relative flex items-center" ref={optionsDropdownRef}>
+            <button type="button" onClick={toggleOptionsDropdown}>
+              <Image
+                src="/icons/square_mouse_pointer.svg"
+                width={16}
+                height={16}
+                alt="square_mouse_pointer"
+              />
+            </button>
 
-          {isOptionsDropdownOpen && (
-            <div className="absolute left-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS">
-              {/* Info: (20250213 - Liz) Account Book Transfer */}
-              <button
-                type="button"
-                onClick={openAccountBookTransferModal}
-                className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
-              >
-                <PiShareFatBold size={16} className="text-icon-surface-single-color-primary" />
-                <span>{t('account_book:ACCOUNT_BOOK_TRANSFER_MODAL.ACCOUNT_BOOK_TRANSFER')}</span>
-              </button>
+            {isOptionsDropdownOpen && (
+              <div className="absolute left-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS">
+                {/* Info: (20250213 - Liz) Account Book Transfer */}
+                {canRequestTransfer && (
+                  <button
+                    type="button"
+                    onClick={openAccountBookTransferModal}
+                    className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+                  >
+                    <PiShareFatBold size={16} className="text-icon-surface-single-color-primary" />
+                    <span>
+                      {t('account_book:ACCOUNT_BOOK_TRANSFER_MODAL.ACCOUNT_BOOK_TRANSFER')}
+                    </span>
+                  </button>
+                )}
 
-              {/* Info: (20250213 - Liz) Change Tag */}
-              <button
-                type="button"
-                onClick={openChangeTagModal}
-                className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
-              >
-                <FiTag size={16} className="text-icon-surface-single-color-primary" />
-                <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}</span>
-              </button>
+                {/* Info: (20250213 - Liz) Change Tag */}
+                {canEditTag && (
+                  <button
+                    type="button"
+                    onClick={openChangeTagModal}
+                    className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+                  >
+                    <FiTag size={16} className="text-icon-surface-single-color-primary" />
+                    <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}</span>
+                  </button>
+                )}
 
-              {/* Info: (20250213 - Liz) Delete */}
-              <button
-                type="button"
-                className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
-                onClick={openDeleteCompanyModal}
-              >
-                <FiTrash2 size={16} className="text-icon-surface-single-color-primary" />
-                <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.DELETE')}</span>
-              </button>
-            </div>
-          )}
-        </div>
+                {/* Info: (20250213 - Liz) Delete */}
+                {canDelete && (
+                  <button
+                    type="button"
+                    className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+                    onClick={openDeleteCompanyModal}
+                  >
+                    <FiTrash2 size={16} className="text-icon-surface-single-color-primary" />
+                    <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.DELETE')}</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex w-90px justify-center">

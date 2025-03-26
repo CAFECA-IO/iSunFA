@@ -1,5 +1,11 @@
 import prisma from '@/client';
-import { TeamRole, LeaveStatus, ITransferAccountBook, TransferStatus } from '@/interfaces/team';
+import {
+  TeamRole,
+  LeaveStatus,
+  ITransferAccountBook,
+  TransferStatus,
+  ITeam,
+} from '@/interfaces/team';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { z } from 'zod';
 import { SortBy, SortOrder } from '@/constants/sort';
@@ -411,3 +417,314 @@ export const declineTransferAccountBook = async (
     }),
   ]);
 };
+
+/**
+ * Info: (20250329 - Shirley) This function fetches complete IAccountBookWithTeam data in one query
+ * for the status_info API. It retrieves the account book, user role, team info, and other necessary data
+ * using Prisma's relation capabilities to minimize database queries.
+ * @param userId The ID of the user
+ * @param companyId The ID of the company/account book
+ * @param teamId The ID of the team the account book belongs to
+ * @returns A promise resolving to IAccountBookWithTeam object or null if not found
+ */
+export async function getAccountBookForUserWithTeam(
+  userId: number,
+  companyId: number,
+  teamId: number
+): Promise<IAccountBookWithTeam | null> {
+  if (userId <= 0 || companyId <= 0 || teamId <= 0) {
+    return null;
+  }
+
+  try {
+    // Info: (20250329 - Shirley) Check if user is a member of the team
+    const teamMember = await prisma.teamMember.findFirst({
+      where: {
+        userId,
+        teamId,
+        status: LeaveStatus.IN_TEAM,
+      },
+      select: {
+        role: true,
+      },
+    });
+
+    // Info: (20250329 - Shirley) If user is not a member of the team, return null
+    if (!teamMember) {
+      return null;
+    }
+
+    // Info: (20250329 - Shirley) Get the company/account book that belongs to the team
+    const accountBook = await prisma.company.findFirst({
+      where: {
+        id: companyId,
+        teamId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      include: {
+        imageFile: true,
+      },
+    });
+
+    // Info: (20250329 - Shirley) If the account book doesn't exist or doesn't belong to the team, return null
+    if (!accountBook) {
+      return null;
+    }
+
+    // Info: (20250329 - Shirley) Get team information
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: {
+        members: {
+          where: { status: LeaveStatus.IN_TEAM },
+          select: { id: true, userId: true, role: true },
+        },
+        accountBook: {
+          select: { id: true },
+        },
+        subscription: {
+          include: { plan: true },
+        },
+        imageFile: {
+          select: { id: true, url: true },
+        },
+      },
+    });
+
+    if (!team) {
+      return null;
+    }
+
+    // Info: (20250329 - Shirley) Get user's role in the team
+    const userRole = (teamMember.role as TeamRole) || TeamRole.VIEWER;
+
+    // Info: (20250329 - Shirley) Get team's plan type
+    const planType = team.subscription
+      ? (team.subscription.plan.type as TPlanType)
+      : TPlanType.BEGINNER;
+
+    // Info: (20250329 - Shirley) Transform data to ITeam format
+    const teamInfo: ITeam = {
+      id: team.id,
+      imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
+      role: userRole,
+      name: {
+        value: team.name,
+        editable: userRole !== TeamRole.VIEWER,
+      },
+      about: {
+        value: team.about || '',
+        editable: userRole !== TeamRole.VIEWER,
+      },
+      profile: {
+        value: team.profile || '',
+        editable: userRole !== TeamRole.VIEWER,
+      },
+      planType: {
+        value: planType,
+        editable: false,
+      },
+      totalMembers: team.members.length,
+      totalAccountBooks: team.accountBook.length,
+      bankAccount: {
+        value: team.bankInfo
+          ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
+          : '',
+        editable: userRole !== TeamRole.VIEWER,
+      },
+    };
+
+    // Info: (20250329 - Shirley) Since we're not using admin table anymore, we need default values for tag and order
+    // These will be determined by business requirements or replaced in the future
+    return {
+      company: {
+        id: accountBook.id,
+        imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+        name: accountBook.name,
+        taxId: accountBook.taxId,
+        startDate: accountBook.startDate,
+        createdAt: accountBook.createdAt,
+        updatedAt: accountBook.updatedAt,
+        isPrivate: accountBook.isPrivate ?? false,
+      },
+      tag: WORK_TAG.ALL, // Default tag
+      order: 0, // Default order
+      role: {
+        // Create a default role object
+        id: 0,
+        name: userRole,
+        permissions: [],
+        createdAt: 0,
+        updatedAt: 0,
+      },
+      team: teamInfo,
+      isTransferring: accountBook.isTransferring ?? false,
+    };
+  } catch (error) {
+    loggerBack.error({
+      error,
+      userId,
+      companyId,
+      teamId,
+      message: 'Failed to get AccountBookForUserWithTeam',
+    });
+    return null;
+  }
+}
+
+/**
+ * Info: (20250401 - Shirley) This function efficiently finds a user's account book by companyId
+ * across all teams the user is a member of. It uses Prisma's relational queries to minimize
+ * database access.
+ * @param userId The ID of the user
+ * @param companyId The ID of the company/account book
+ * @param teamIds Optional array of team IDs to search within (if known)
+ * @returns A promise resolving to IAccountBookWithTeam object or null if not found
+ */
+export async function findUserAccountBook(
+  userId: number,
+  companyId: number,
+  teamIds?: number[]
+): Promise<IAccountBookWithTeam | null> {
+  if (userId <= 0 || companyId <= 0) {
+    return null;
+  }
+
+  try {
+    // Info: (20250401 - Shirley) Start by finding the specific account book
+    const accountBook = await prisma.company.findFirst({
+      where: {
+        id: companyId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+        // Info: (20250401 - Shirley) Only include account books from teams where user is a member
+        team: {
+          members: {
+            some: {
+              userId,
+              status: LeaveStatus.IN_TEAM,
+            },
+          },
+          // Info: (20250401 - Shirley) If teamIds are provided, further filter by those teams
+          ...(teamIds && teamIds.length > 0 ? { id: { in: teamIds } } : {}),
+        },
+      },
+      include: {
+        imageFile: true,
+        team: {
+          include: {
+            members: {
+              where: {
+                userId,
+                status: LeaveStatus.IN_TEAM,
+              },
+              select: {
+                role: true,
+              },
+            },
+            subscription: {
+              include: { plan: true },
+            },
+            imageFile: {
+              select: { id: true, url: true },
+            },
+          },
+        },
+      },
+    });
+
+    // Info: (20250401 - Shirley) If no account book found or it's not associated with a team, return null
+    if (!accountBook || !accountBook.team) {
+      return null;
+    }
+
+    const { team } = accountBook;
+    // Info: (20250401 - Shirley) We should have exactly one matching team member since we filtered by userId
+    const userRole = team.members.length > 0 ? (team.members[0].role as TeamRole) : TeamRole.VIEWER;
+
+    const planType = team.subscription
+      ? (team.subscription.plan.type as TPlanType)
+      : TPlanType.BEGINNER;
+
+    // Info: (20250401 - Shirley) Count the total account books in this team in a separate query
+    const totalAccountBooks = await prisma.company.count({
+      where: {
+        teamId: team.id,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+    });
+
+    // Info: (20250401 - Shirley) Count total members in this team
+    const totalMembers = await prisma.teamMember.count({
+      where: {
+        teamId: team.id,
+        status: LeaveStatus.IN_TEAM,
+      },
+    });
+
+    // Info: (20250401 - Shirley) Transform data to ITeam format
+    const teamInfo: ITeam = {
+      id: team.id,
+      imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
+      role: userRole,
+      name: {
+        value: team.name,
+        editable: userRole !== TeamRole.VIEWER,
+      },
+      about: {
+        value: team.about || '',
+        editable: userRole !== TeamRole.VIEWER,
+      },
+      profile: {
+        value: team.profile || '',
+        editable: userRole !== TeamRole.VIEWER,
+      },
+      planType: {
+        value: planType,
+        editable: false,
+      },
+      totalMembers,
+      totalAccountBooks,
+      bankAccount: {
+        value: team.bankInfo
+          ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
+          : '',
+        editable: userRole !== TeamRole.VIEWER,
+      },
+    };
+
+    // Info: (20250325 - Shirley) Return the formatted account book data
+    return {
+      company: {
+        id: accountBook.id,
+        imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+        name: accountBook.name,
+        taxId: accountBook.taxId,
+        startDate: accountBook.startDate,
+        createdAt: accountBook.createdAt,
+        updatedAt: accountBook.updatedAt,
+        isPrivate: accountBook.isPrivate ?? false,
+      },
+      tag: WORK_TAG.ALL, // Info: (20250325 - Shirley) Default tag
+      order: 0, // Info: (20250325 - Shirley) Default order
+      role: {
+        // Info: (20250325 - Shirley) Create a default role object based on team role
+        id: 0,
+        name: userRole,
+        permissions: [],
+        createdAt: 0,
+        updatedAt: 0,
+      },
+      team: teamInfo,
+      isTransferring: accountBook.isTransferring ?? false,
+    };
+  } catch (error) {
+    loggerBack.error({
+      error,
+      userId,
+      companyId,
+      teamIds,
+      message: 'Failed to find user account book',
+    });
+    return null;
+  }
+}

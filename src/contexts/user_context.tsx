@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { WORK_TAG, IAccountBook } from '@/interfaces/account_book';
+import { WORK_TAG, IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
@@ -151,7 +151,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setConnectedAccountBook, connectedAccountBookRef] = useStateRef<IAccountBook | null>(
     null
   );
-  const [, setTeam, teamRef] = useStateRef<ITeam | null>(null);
+  const [, setTeam, teamRef] = useStateRef<ITeam | null>(null); // Info: (20250325 - Liz) 已連結帳本的所屬團隊
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
@@ -167,9 +167,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
   const { trigger: getStatusInfoAPI } = APIHandler<{
     user: IUser;
-    company: IAccountBook;
+    company: IAccountBookWithTeam;
     role: IUserRole;
-    team: ITeam;
+    teams: ITeam[]; // Info: (20250325 - Liz) 目前尚未使用到團隊清單
   }>(APIName.STATUS_INFO_GET);
   // Info: (20241108 - Liz) 取得系統角色列表 API
   const { trigger: systemRoleListAPI } = APIHandler<RoleName[]>(APIName.ROLE_LIST);
@@ -357,22 +357,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241001 - Liz) 此函數處理公司資訊:
   // 如果公司資料存在且不為空，它會設定選定的公司 (setConnectedAccountBook)，最後回傳公司資訊。
   // 如果公司資料不存在，會將公司資訊設為 null，並回傳 null。
-  const processAccountBookInfo = (company: IAccountBook) => {
+  const processAccountBookInfo = (company: IAccountBookWithTeam) => {
     if (!company || Object.keys(company).length === 0) {
       setConnectedAccountBook(null);
+      setTeam(null);
       return null;
     }
     setConnectedAccountBook(company);
+    setTeam(company.team);
     return company;
-  };
-
-  // Info: (20250319 - Liz) 此函數處理團隊資訊: (團隊是指連結帳本所屬的團隊)
-  const processTeamInfo = (teamData: ITeam) => {
-    if (!teamData || Object.keys(teamData).length === 0) {
-      setTeam(null);
-      return;
-    }
-    setTeam(teamData);
   };
 
   // Info: (20241101 - Liz) 此函數處理角色資訊:
@@ -406,14 +399,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // 依據處理結果，它會執行不同的自動導向邏輯。
   const handleProcessData = (statusInfo: {
     user: IUser;
-    company: IAccountBook;
+    company: IAccountBookWithTeam;
     role: IUserRole;
-    team: ITeam;
+    teams: ITeam[]; // Info: (20250325 - Liz) 目前尚未使用到團隊清單
   }) => {
     const processedUser = processUserInfo(statusInfo.user);
     const processedRole = processRoleInfo(statusInfo.role);
     const processedAccountBook = processAccountBookInfo(statusInfo.company);
-    processTeamInfo(statusInfo.team);
 
     if (!processedUser) {
       clearStates();
@@ -674,12 +666,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241111 - Liz) 連結帳本的功能(原為選擇公司)
   const connectAccountBook = async (accountBookId: number) => {
     try {
-      const { success, data: connectedAccountBook } = await connectAccountBookAPI({
+      const { success, data } = await connectAccountBookAPI({
         params: { accountBookId },
       });
 
       if (!success) return { success: false };
-      setConnectedAccountBook(connectedAccountBook);
+      setConnectedAccountBook(data);
       return { success: true };
     } catch (error) {
       return { success: false };

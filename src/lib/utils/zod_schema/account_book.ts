@@ -18,7 +18,7 @@ const accountBookSchema = z.object({
   updatedAt: z.number(),
 });
 
-const accountBookWithTeamSchema = companyOutputSchema.extend({
+export const accountBookWithTeamSchema = companyOutputSchema.extend({
   team: TeamSchema,
   isTransferring: z.boolean(),
 });

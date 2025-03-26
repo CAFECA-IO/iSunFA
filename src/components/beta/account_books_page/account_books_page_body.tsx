@@ -87,7 +87,9 @@ const AccountBooksPageBody = () => {
   const handleApiResponse = (resData: IPaginatedData<IAccountBookWithTeam[]>) => {
     setAccountBookList(resData.data);
     setTotalPage(resData.totalPages);
-    setCurrentPage(resData.page);
+
+    // Info: (20250325 - Liz) 只有當 API 回傳的 page 與 currentPage 不同時才更新
+    if (resData.page !== currentPage) setCurrentPage(resData.page);
   };
 
   return (
