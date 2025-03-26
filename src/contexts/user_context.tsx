@@ -78,10 +78,6 @@ interface UserContextType {
   errorCode: string | null;
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
-  checkIsRegistered: () => Promise<{
-    isRegistered: boolean;
-    credentials: PublicKeyCredential | null;
-  }>;
 
   handleUserAgree: (hash: Hash) => Promise<boolean>;
   authenticateUser: (selectProvider: Provider, props: ILoginPageProps) => Promise<void>;
@@ -123,9 +119,6 @@ export const UserContext = createContext<UserContextType>({
   errorCode: null,
   toggleIsSignInError: () => {},
   isAuthLoading: false,
-  checkIsRegistered: async () => {
-    return { isRegistered: false, credentials: null };
-  },
 
   handleUserAgree: async () => false,
   authenticateUser: async () => {},
@@ -163,7 +156,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const isRouteChanging = useRef(false);
 
   const { trigger: signoutAPI } = APIHandler<string>(APIName.SIGN_OUT);
-  const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
   const { trigger: getStatusInfoAPI } = APIHandler<{
     user: IUser;
@@ -282,42 +274,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setConnectedAccountBook(null);
     setTeam(null);
     goToSelectRolePage();
-  };
-
-  const checkIsRegistered = async (): Promise<{
-    isRegistered: boolean;
-    credentials: PublicKeyCredential | null;
-  }> => {
-    // Info: (20240730 - Tzuhan) 生成挑戰
-    const { data: newChallengeBase64, success, code } = await createChallengeAPI();
-
-    if (!success || !newChallengeBase64) {
-      throw new Error(code);
-    }
-
-    // Info: (20240730 - Tzuhan) 將 base64 轉換成 Uint8Array
-    const newChallenge = Uint8Array.from(atob(newChallengeBase64), (c) => c.charCodeAt(0));
-
-    // Info: (20240730 - Tzuhan) 檢查是否已有綁定的憑證
-    const credentials = (await navigator.credentials.get({
-      publicKey: {
-        challenge: newChallenge, // Info: (20240730 - Tzuhan)  使用生成的挑戰
-        allowCredentials: [], // Info: (20240730 - Tzuhan)  查詢已綁定的憑證
-        timeout: 60000,
-        userVerification: 'required',
-      },
-    })) as PublicKeyCredential;
-
-    if (credentials) {
-      return {
-        isRegistered: true,
-        credentials,
-      };
-    }
-    return {
-      isRegistered: false,
-      credentials: null,
-    };
   };
 
   const signOut = async () => {
@@ -852,7 +808,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
-      checkIsRegistered,
       handleUserAgree,
       authenticateUser,
       handleAppleSignIn,

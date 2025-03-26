@@ -58,7 +58,6 @@ import {
   voucherPostSchema,
   voucherPostValidatorV2,
   voucherPutSchema,
-  voucherRequestValidatorsV1,
   voucherWasReadValidatorV2,
   voucherRestoreSchema,
 } from '@/lib/utils/zod_schema/voucher';
@@ -143,12 +142,8 @@ import {
 // ToDo: (20241204 - Luphia) unknown for zod schema
 export const API_ZOD_SCHEMA = {
   // Info: (20241016 - Jacky) V1 Validators
-  [APIName.JOURNAL_DELETE]: journalRequestValidators.DELETE,
-  [APIName.JOURNAL_GET_BY_ID]: journalRequestValidators.GET_ONE,
   [APIName.JOURNAL_LIST]: journalRequestValidators.GET_LIST,
   [APIName.KYC_UPLOAD]: kycRequestValidators.POST,
-  [APIName.VOUCHER_CREATE]: voucherRequestValidatorsV1.POST,
-  [APIName.VOUCHER_UPDATE]: voucherRequestValidatorsV1.PUT,
   [APIName.ZOD_EXAMPLE]: zodExampleValidators.GET_ONE,
 
   // Info: (20241016 - Jacky) V2 Validators
@@ -219,7 +214,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.FILE_EXPORT]: assetExportSchema, // ToDo: (20241112 - Luphia) need to define the schema for file export
 
   [APIName.AGREE_TO_TERMS]: UserAgreementPostSchema,
-  [APIName.CREATE_CHALLENGE]: nullAPISchema,
   [APIName.EMAIL]: nullAPISchema,
   [APIName.USER_LIST]: userListSchema,
   [APIName.USER_GET_BY_ID]: userGetSchema,
@@ -231,27 +225,11 @@ export const ZOD_SCHEMA_API = {
   [APIName.INVOICE_POST_V2]: invoicePostV2Schema,
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
   [APIName.CERTIFICATE_DELETE_V2]: nullAPISchema,
-  [APIName.PROFIT_GET_INSIGHT]: nullAPISchema,
-  [APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD]: nullAPISchema,
-  [APIName.LABOR_COST_CHART]: nullAPISchema,
-  [APIName.PROFIT_GET_TREND_IN_PERIOD]: nullAPISchema,
-  [APIName.PROJECT_LIST_PROGRESS]: nullAPISchema,
-  [APIName.PROJECT_LIST_PROFIT_COMPARISON]: nullAPISchema,
-  [APIName.ASSET_MANAGEMENT_LIST]: nullAPISchema,
-  [APIName.ASSET_MANAGEMENT_ADD]: nullAPISchema,
-  [APIName.ASSET_MANAGEMENT_GET_BY_ID]: nullAPISchema,
-  [APIName.ASSET_MANAGEMENT_UPDATE]: nullAPISchema,
   [APIName.IMAGE_GET_BY_ID]: imageGetSchema,
   [APIName.ASK_AI_STATUS]: nullAPISchema,
-  [APIName.ASK_AI_RESULT]: nullAPISchema,
   [APIName.ASK_AI_V2]: askAiPostSchema,
-  [APIName.VOUCHER_CREATE]: nullAPISchema,
-  [APIName.VOUCHER_UPDATE]: nullAPISchema,
   [APIName.VOUCHER_WAS_READ_V2]: nullAPISchema,
-  [APIName.JOURNAL_GET_BY_ID]: nullAPISchema,
   [APIName.JOURNAL_LIST]: nullAPISchema,
-  // [APIName.JOURNAL_UPDATE]: nullAPISchema, // Info: (20240723 - Tzuhan)
-  [APIName.JOURNAL_DELETE]: nullAPISchema,
   [APIName.REPORT_LIST]: nullAPISchema,
   [APIName.REPORT_GET_BY_ID]: getPublicReportSchemaV2,
   [APIName.REPORT_GET_V2]: nullAPISchema,
@@ -260,6 +238,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.ACCOUNT_LIST]: accountGetV2Schema,
   [APIName.FILE_UPLOAD]: filePostSchema,
   [APIName.FILE_DELETE]: fileDeleteSchema,
+  [APIName.FILE_DELETE_V2]: fileDeleteSchema,
   [APIName.FILE_GET]: fileGetSchema,
   [APIName.FILE_PUT_V2]: filePutSchema,
   [APIName.KYC_UPLOAD]: nullAPISchema,
@@ -267,11 +246,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.CREATE_NEW_SUB_ACCOUNT]: accountPostV2Schema,
   [APIName.UPDATE_ACCOUNT_INFO_BY_ID]: nullAPISchema,
   [APIName.DELETE_ACCOUNT_BY_ID]: nullAPISchema,
-  [APIName.TRANSFER_OWNER]: nullAPISchema,
-  [APIName.PROJECT_LIST]: nullAPISchema,
-  [APIName.CREATE_PROJECT]: nullAPISchema,
-  [APIName.GET_PROJECT_BY_ID]: nullAPISchema,
-  [APIName.UPDATE_PROJECT_BY_ID]: nullAPISchema,
   [APIName.PUBLIC_KEY_GET]: nullAPISchema,
   [APIName.ZOD_EXAMPLE]: nullAPISchema, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: nullAPISchema,
