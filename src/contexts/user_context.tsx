@@ -147,6 +147,12 @@ export const UserContext = createContext<UserContextType>({
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const EXPIRATION_TIME = 1000 * 60 * 60 * 1; // Info: (20240822) 1 hours
+  const EXCLUDED_PATHS = [
+    ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
+    ISUNFA_ROUTE.MY_ACCOUNT_PAGE,
+    ISUNFA_ROUTE.TEAM_PAGE,
+    ISUNFA_ROUTE.GENERAL_SETTINGS,
+  ];
 
   const [, setIsSignIn, isSignInRef] = useStateRef(false);
   const [, setCredential, credentialRef] = useStateRef<string | null>(null);
@@ -264,6 +270,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20241111 - Liz) 前往儀表板
   const goToDashboard = () => {
+    if (EXCLUDED_PATHS.some((path) => router.pathname.startsWith(path))) return;
+
     router.push(ISUNFA_ROUTE.DASHBOARD);
 
     // Deprecated: (20241111 - Liz)
