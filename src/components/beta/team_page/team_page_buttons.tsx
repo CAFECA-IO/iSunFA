@@ -9,7 +9,7 @@ import { useTranslation } from 'next-i18next';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 
 interface TeamPageButtonsProps {
   team: ITeam;
@@ -25,7 +25,7 @@ const TeamPageButtons = ({ team, openMemberListModal }: TeamPageButtonsProps) =>
     canDo: TeamPermissionAction.LEAVE_TEAM,
   });
 
-  const yesOrNo = 'yesOrNo' in result ? result.yesOrNo : false;
+  const yesOrNo = TeamRoleCanDoKey.YES_OR_NO in result ? result.yesOrNo : false;
 
   // Info: (20250321 - Liz) 離開團隊 API
   const { trigger: leaveTeamAPI } = APIHandler<ILeaveTeam>(APIName.LEAVE_TEAM);
