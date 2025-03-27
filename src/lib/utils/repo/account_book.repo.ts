@@ -44,6 +44,27 @@ export async function isEligibleToCreateAccountBookInTeam(
   return canDo.yesOrNo;
 }
 
+export const getAccountBookById = async (id: number): Promise<IAccountBook | null> => {
+  let result: IAccountBook | null = null;
+  const accountBook = await prisma.company.findUnique({
+    where: {
+      id,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+    include: {
+      imageFile: true, // Info: (20250327 - Tzuhan) 這裡才會拿到 imageFile.url
+    },
+  });
+  if (accountBook) {
+    result = {
+      ...accountBook,
+      imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      tag: accountBook.tag as WORK_TAG,
+    };
+  }
+  return result;
+};
+
 export const getAccountBookByNameAndTaxId = async (
   teamId: number,
   taxId: string

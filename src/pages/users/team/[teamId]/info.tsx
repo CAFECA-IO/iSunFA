@@ -9,9 +9,9 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 // import APIHandler from '@/lib/utils/api_handler'; // ToDo: (20250218 - Liz)
 // import { APIName } from '@/constants/api_connection'; // ToDo: (20250218 - Liz)
 import { SkeletonList } from '@/components/skeleton/skeleton';
-import { ITeam } from '@/interfaces/team';
-import { FAKE_TEAM_LIST } from '@/constants/team';
+import { ITeam, TeamRole } from '@/interfaces/team';
 import TeamInformationPageBody from '@/components/beta/team_information_page/team_info_page_body';
+import { TPlanType } from '@/interfaces/subscription';
 
 const TeamInfoPage = () => {
   const { t } = useTranslation(['team']);
@@ -55,7 +55,33 @@ const TeamInfoPage = () => {
   // Deprecated: (20250218 - Liz) 目前後端尚未提供 API，先用假資料測試
   useEffect(() => {
     setIsLoading(false);
-    setTeam(FAKE_TEAM_LIST[0]);
+    setTeam({
+      id: 1,
+      imageId: '/images/fake_team_img.svg',
+      role: TeamRole.OWNER,
+      name: {
+        value: 'Team A',
+        editable: true,
+      },
+      about: {
+        value: 'About Team A',
+        editable: true,
+      },
+      profile: {
+        value: 'https://isunfa.com',
+        editable: true,
+      },
+      planType: {
+        value: TPlanType.ENTERPRISE,
+        editable: true,
+      },
+      totalMembers: 6,
+      totalAccountBooks: 3,
+      bankAccount: {
+        value: '12345678',
+        editable: true,
+      },
+    });
   }, []);
 
   // ToDo: (20250218 - Liz) 如果打 API 還在載入中，顯示載入中頁面
@@ -70,6 +96,7 @@ const TeamInfoPage = () => {
   }
 
   // ToDo: (20250218 - Liz) 如果 team 資料不存在，顯示錯誤頁面
+  // Info: (20250327 - Tzuhan) 已經移除 FAKE_TEAM_LISTs
   if (!team) {
     return (
       <Layout
