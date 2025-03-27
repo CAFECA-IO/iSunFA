@@ -162,7 +162,7 @@ export const API_ZOD_SCHEMA = {
 
 // Info: (20241112 - Jacky) Cannot add type Record<APIName, ZodAPISchema> , because Record will make infer type to any
 export const ZOD_SCHEMA_API = {
-  [APIName.CREATE_USER_COMPANY]: companyPostSchema,
+  [APIName.USER_CREATE_ACCOUNT_BOOK]: companyPostSchema,
   [APIName.COMPANY_UPDATE]: companyPutSchema,
   [APIName.COMPANY_DELETE]: companyDeleteSchema,
   [APIName.COMPANY_PUT_ICON]: companyPutIconSchema,

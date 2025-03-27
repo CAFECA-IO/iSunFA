@@ -12,9 +12,9 @@ export enum ACCOUNT_BOOK_ROLE {
 }
 
 export enum WORK_TAG {
-  ALL = 'all',
-  FINANCIAL = 'financial',
-  TAX = 'tax',
+  ALL = 'ALL',
+  FINANCIAL = 'FINANCIAL',
+  TAX = 'TAX',
 }
 
 export enum ACCOUNT_BOOK_UPDATE_ACTION {

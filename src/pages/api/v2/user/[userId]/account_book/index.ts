@@ -1,84 +1,118 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
-import { IHandleRequest } from '@/interfaces/handleRequest';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
-import { loggerError } from '@/lib/utils/logger_back';
 import {
-  IAccountBookListQueryParams,
-  IAccountBookListResponse,
-} from '@/lib/utils/zod_schema/account_book';
-import { listAccountBookByUserId } from '@/lib/utils/repo/company.repo';
-import { DefaultValue } from '@/constants/default_value';
-import { parseSortOption } from '@/lib/utils/sort';
-import { DEFAULT_SORT_OPTIONS } from '@/constants/account_book';
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
+import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { getSession } from '@/lib/utils/session';
+import { HTTP_STATUS } from '@/constants/http';
+import loggerBack from '@/lib/utils/logger_back';
+import { validateOutputData } from '@/lib/utils/validator';
+import { createAccountBook, listAccountBookByUserId } from '@/lib/utils/repo/account_book.repo';
+import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
 
-const handleGetRequest: IHandleRequest<
-  APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
-  IAccountBookListResponse
-> = async ({ query }) => {
+const handleGetRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBookListResponse | null = null;
+  let payload: IPaginatedData<IAccountBookWithTeam[]> | null = null;
+  await checkSessionUser(session, APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req);
+  await checkUserAuthorization(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req, session);
 
-  const { userId, page, pageSize, searchQuery, sortOption } = query as IAccountBookListQueryParams;
+  const { query } = checkRequestData(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req, session);
+  loggerBack.info(`List Team by userId: ${userId} with query: ${JSON.stringify(query)}`);
 
-  try {
-    const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
-
-    const accountBooksResult = await listAccountBookByUserId(
-      userId,
-      page,
-      pageSize,
-      searchQuery,
-      parsedSortOption
-    );
-
-    const paginatedData = toPaginatedData(accountBooksResult);
-
-    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-    payload = paginatedData;
-  } catch (error) {
-    loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
-      errorType: 'list account books by user id failed',
-      errorMessage: (error as Error).message,
-    });
-    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  if (query === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  return { statusMessage, payload };
+  statusMessage = STATUS_MESSAGE.SUCCESS;
+  const options: IPaginatedOptions<IAccountBookWithTeam[]> = await listAccountBookByUserId(
+    userId,
+    query
+  );
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
+    toPaginatedData(options)
+  );
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+  }
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountBookListResponse | null>>
-) {
+const handlePostRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBookListResponse | null = null;
+  let payload: IAccountBook | null = null;
+  await checkSessionUser(session, APIName.USER_CREATE_ACCOUNT_BOOK, req);
+  await checkUserAuthorization(APIName.USER_CREATE_ACCOUNT_BOOK, req, session);
+
+  const { body } = checkRequestData(APIName.USER_CREATE_ACCOUNT_BOOK, req, session);
+  loggerBack.info(`List Team by userId: ${userId} with body: ${JSON.stringify(body)}`);
+
+  if (body === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  statusMessage = STATUS_MESSAGE.SUCCESS;
+  const accountBook = await createAccountBook(userId, body);
+
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.USER_CREATE_ACCOUNT_BOOK,
+    accountBook
+  );
+
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+  }
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
+};
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const method = req.method || 'GET';
+  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  let result;
+  let response;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let apiName: APIName = APIName.LIST_ACCOUNT_BOOK_BY_USER_ID;
+  const session = await getSession(req);
 
   try {
-    if (req.method === 'GET') {
-      const result = await withRequestValidation(
-        APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
-        req,
-        handleGetRequest
-      );
-      statusMessage = result.statusMessage;
-      payload = result.payload;
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    switch (method) {
+      case 'GET':
+        apiName = APIName.LIST_ACCOUNT_BOOK_BY_USER_ID;
+        ({ response, statusMessage } = await handleGetRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      case 'POST':
+        apiName = APIName.USER_CREATE_ACCOUNT_BOOK;
+        ({ response, statusMessage } = await handlePostRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
+        break;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    statusMessage = error.message;
-  } finally {
-    const { httpCode, result } = formatApiResponse<IAccountBookListResponse | null>(
-      statusMessage,
-      payload
-    );
-    res.status(httpCode).json(result);
+  } catch (error) {
+    const err = error as Error;
+    statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE];
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
+  await logUserAction(session, apiName, req, statusMessage);
+  res.status(httpCode).json(result);
 }

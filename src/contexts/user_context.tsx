@@ -179,7 +179,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
 
   // Info: (20241104 - Liz) 建立帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
-  const { trigger: createAccountBookAPI } = APIHandler<IAccountBook>(APIName.CREATE_USER_COMPANY);
+  const { trigger: createAccountBookAPI } = APIHandler<IAccountBook>(
+    APIName.USER_CREATE_ACCOUNT_BOOK
+  );
 
   // Info: (20241111 - Liz) 連結帳本 API(原為選擇公司)
   const { trigger: connectAccountBookAPI } = APIHandler<IAccountBook>(
