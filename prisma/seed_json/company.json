@@ -2,6 +2,7 @@
   {
     "id": 1000,
     "teamId": 1,
+    "tag": "ALL",
     "name": "Test Company",
     "taxId": "TEST123",
     "imageFileId": 1000,
@@ -12,6 +13,7 @@
   {
     "id": 1001,
     "teamId": 1,
+    "tag": "ALL",
     "name": "Trial Company",
     "taxId": "TRIAL123",
     "imageFileId": 1001,
@@ -22,6 +24,7 @@
   {
     "id": 1002,
     "teamId": 1,
+    "tag": "ALL",
     "name": "Public_Company",
     "taxId": "1",
     "imageFileId": 1002,
@@ -32,6 +35,7 @@
   {
     "id": 8867,
     "teamId": 2,
+    "tag": "ALL",
     "name": "CNN",
     "taxId": "202406111752",
     "imageFileId": 1003,
