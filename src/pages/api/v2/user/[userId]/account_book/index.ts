@@ -55,10 +55,10 @@ const handlePostRequest = async (req: NextApiRequest) => {
   const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccountBook | null = null;
-  await checkSessionUser(session, APIName.USER_CREATE_ACCOUNT_BOOK, req);
-  await checkUserAuthorization(APIName.USER_CREATE_ACCOUNT_BOOK, req, session);
+  await checkSessionUser(session, APIName.CREATE_ACCOUNT_BOOK, req);
+  await checkUserAuthorization(APIName.CREATE_ACCOUNT_BOOK, req, session);
 
-  const { body } = checkRequestData(APIName.USER_CREATE_ACCOUNT_BOOK, req, session);
+  const { body } = checkRequestData(APIName.CREATE_ACCOUNT_BOOK, req, session);
   loggerBack.info(`List Team by userId: ${userId} with body: ${JSON.stringify(body)}`);
 
   if (body === null) {
@@ -69,7 +69,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   const accountBook = await createAccountBook(userId, body);
 
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.USER_CREATE_ACCOUNT_BOOK,
+    APIName.CREATE_ACCOUNT_BOOK,
     accountBook
   );
 
@@ -99,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ({ httpCode, result } = response);
         break;
       case 'POST':
-        apiName = APIName.USER_CREATE_ACCOUNT_BOOK;
+        apiName = APIName.CREATE_ACCOUNT_BOOK;
         ({ response, statusMessage } = await handlePostRequest(req));
         ({ httpCode, result } = response);
         break;

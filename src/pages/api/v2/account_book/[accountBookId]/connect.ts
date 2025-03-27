@@ -10,7 +10,7 @@ import { getSession, setSession } from '@/lib/utils/session';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { getTeamByTeamId } from '@/lib/utils/repo/team.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import { IAccountBook } from '@/interfaces/account_book';
+import { IAccountBook, WORK_TAG } from '@/interfaces/account_book';
 import { LeaveStatus } from '@/interfaces/team';
 import prisma from '@/client'; // 使用已有的 prisma 客戶端
 
@@ -51,10 +51,7 @@ const handleGetRequest: IHandleRequest<
   let companyAndRole = null;
 
   // Info: (20250507 - Shirley) 途徑一: 檢查用戶是否為帳本的直接管理員
-  companyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(userId, accountBookId);
-  if (companyAndRole) {
-    hasAccess = true;
-  } else if (company.teamId) {
+  if (company.teamId) {
     // Info: (20250507 - Shirley) 途徑二: 如果帳本屬於團隊，檢查用戶是否為團隊成員
     const isTeamMember = await prisma.teamMember.findFirst({
       where: {
@@ -75,7 +72,7 @@ const handleGetRequest: IHandleRequest<
           name: isTeamMember.role,
           permissions: [],
         },
-        tag: 'ALL',
+        tag: WORK_TAG.ALL,
         order: 0,
       };
     }

@@ -20,7 +20,7 @@ export const AUTH_WHITELIST = {
 
 // ToDo: (20241111 - Jacky) Add more auth functions
 export const AUTH_CHECK = {
-  [APIName.USER_CREATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
+  [APIName.CREATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: [AuthFunctionsKeysNew.user],
