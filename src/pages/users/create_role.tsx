@@ -30,10 +30,10 @@ const CreateRolePage = () => {
   // Info: (20241108 - Liz) 畫面顯示的角色
   const [showingRole, setShowingRole] = useState<string>('');
   // Info: (20241108 - Liz) 使用者選擇的角色 ID
-  const [selectedRoleId, setSelectedRoleId] = useState<RoleName>(RoleName.BOOKKEEPER);
+  const [selectedRoleName, setSelectedRoleName] = useState<RoleName>(RoleName.BOOKKEEPER);
   const [unusedSystemRoles, setUnusedSystemRoles] = useState<RoleName[]>([]);
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
-  const [isAbleToGoBack, setIsAbleToGoBack] = useState<boolean>(false);
+  const [hasAnyUserRole, setIsAbleToGoBack] = useState<boolean>(false);
   const [isAnimationShowing, setIsAnimationShowing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -100,7 +100,7 @@ const CreateRolePage = () => {
 
       {!isAnimationShowing && !isLoading && (
         <main className="relative flex h-screen flex-col overflow-hidden">
-          {isAbleToGoBack && (
+          {hasAnyUserRole && (
             <Link
               href={ISUNFA_ROUTE.SELECT_ROLE}
               className="group absolute z-1 ml-40px mt-30px flex items-center gap-8px hover:text-button-text-primary-hover"
@@ -160,7 +160,7 @@ const CreateRolePage = () => {
           {/* Info: (20250206 - Liz) 介紹區塊 */}
           <Introduction
             showingRole={showingRole}
-            selectedRoleId={selectedRoleId}
+            selectedRoleName={selectedRoleName}
             togglePreviewModal={togglePreviewModal}
           />
 
@@ -169,7 +169,7 @@ const CreateRolePage = () => {
             roleList={unusedSystemRoles}
             showingRole={showingRole}
             setShowingRole={setShowingRole}
-            setSelectedRoleId={setSelectedRoleId}
+            setSelectedRoleName={setSelectedRoleName}
           />
 
           {isPreviewModalVisible && <PreviewModal togglePreviewModal={togglePreviewModal} />}

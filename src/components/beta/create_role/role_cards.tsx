@@ -26,7 +26,7 @@ interface RoleCardProps {
   isDisabled: boolean;
   showingRole: string;
   setShowingRole: React.Dispatch<React.SetStateAction<string>>;
-  setSelectedRoleId: React.Dispatch<React.SetStateAction<RoleName>>;
+  setSelectedRoleName: React.Dispatch<React.SetStateAction<RoleName>>;
 }
 
 const RoleCard = ({
@@ -35,7 +35,7 @@ const RoleCard = ({
   isDisabled,
   showingRole,
   setShowingRole,
-  setSelectedRoleId,
+  setSelectedRoleName,
 }: RoleCardProps) => {
   const { t } = useTranslation('dashboard');
   const translatedRoleName = t(`dashboard:ROLE.${roleName.toUpperCase().replace(/ /g, '_')}`);
@@ -44,7 +44,7 @@ const RoleCard = ({
 
   const handleClick = () => {
     setShowingRole(roleName);
-    setSelectedRoleId(roleName);
+    setSelectedRoleName(roleName);
   };
 
   const notAvailable = roleName === RoleName.ENTERPRISE; // ToDo: (20250207 - Liz) 因為企業版角色介紹的設計尚未確定，所以暫時將企業版角色的卡片設為不可選擇
@@ -78,14 +78,14 @@ interface RoleCardsProps {
   roleList: RoleName[];
   showingRole: string;
   setShowingRole: React.Dispatch<React.SetStateAction<string>>;
-  setSelectedRoleId: React.Dispatch<React.SetStateAction<RoleName>>;
+  setSelectedRoleName: React.Dispatch<React.SetStateAction<RoleName>>;
 }
 
 const RoleCards = ({
   roleList,
   showingRole,
   setShowingRole,
-  setSelectedRoleId,
+  setSelectedRoleName,
 }: RoleCardsProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [disabledCards, setDisabledCards] = useState<number[]>([]);
@@ -172,7 +172,7 @@ const RoleCards = ({
               imageSrc={imageSrc}
               showingRole={showingRole}
               setShowingRole={setShowingRole}
-              setSelectedRoleId={setSelectedRoleId}
+              setSelectedRoleName={setSelectedRoleName}
               isDisabled={disabledCards.includes(index)}
             />
           );

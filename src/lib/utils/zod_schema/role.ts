@@ -7,7 +7,7 @@ const roleListQuerySchema = z.object({
   type: z.nativeEnum(RoleType),
 });
 
-const roleOutputSchema = Object.values(RoleName) as [RoleName, ...RoleName[]];
+const roleOutputSchema = z.array(z.nativeEnum(RoleName));
 
 export const roleListSchema = {
   input: {

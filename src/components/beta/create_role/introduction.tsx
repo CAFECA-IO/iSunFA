@@ -9,12 +9,12 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IntroductionProps {
-  selectedRoleId: RoleName;
+  selectedRoleName: RoleName;
   showingRole: string;
   togglePreviewModal: () => void;
 }
 interface ButtonsProps {
-  selectedRoleId: RoleName;
+  selectedRoleName: RoleName;
   togglePreviewModal: () => void;
 }
 interface BookkeeperIntroductionProps {
@@ -39,7 +39,7 @@ const DefaultIntroduction: React.FC = () => {
   );
 };
 
-const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
+const Buttons = ({ selectedRoleName, togglePreviewModal }: ButtonsProps) => {
   const { t } = useTranslation('dashboard');
   const { createRole, selectRole } = useUserCtx();
   const router = useRouter();
@@ -49,7 +49,7 @@ const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
     setIsLoading(true);
 
     try {
-      const userRole = await createRole(selectedRoleId);
+      const userRole = await createRole(selectedRoleName);
 
       if (!userRole) {
         // Deprecated: (20241107 - Liz)
@@ -168,18 +168,18 @@ const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntro
   );
 };
 
-const Introduction = ({ selectedRoleId, showingRole, togglePreviewModal }: IntroductionProps) => {
+const Introduction = ({ selectedRoleName, showingRole, togglePreviewModal }: IntroductionProps) => {
   return (
     <main className="flex flex-auto">
       {!showingRole && <DefaultIntroduction />}
       {showingRole === RoleName.BOOKKEEPER && (
         <BookkeeperIntroduction>
-          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleId={selectedRoleId} />
+          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleName={selectedRoleName} />
         </BookkeeperIntroduction>
       )}
       {showingRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
         <EducationalTrialVersionIntroduction>
-          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleId={selectedRoleId} />
+          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleName={selectedRoleName} />
         </EducationalTrialVersionIntroduction>
       )}
     </main>
