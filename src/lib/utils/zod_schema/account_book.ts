@@ -9,6 +9,7 @@ import { companyOutputSchema } from '@/lib/utils/zod_schema/company';
 
 const accountBookSchema = z.object({
   id: z.number(),
+  teamId: z.number(),
   imageId: z.string(),
   name: z.string(),
   taxId: z.string(),
@@ -16,6 +17,7 @@ const accountBookSchema = z.object({
   startDate: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
+  isPrivate: z.boolean().optional(),
 });
 
 export const accountBookWithTeamSchema = companyOutputSchema.extend({

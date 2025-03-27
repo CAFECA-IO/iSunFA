@@ -1,5 +1,4 @@
-import { RoleName } from '@/constants/role';
-import { RoleType } from '@prisma/client';
+import { RoleName, RoleType } from '@/constants/role';
 
 export interface IUserRole {
   id: number;

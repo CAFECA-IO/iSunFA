@@ -7,27 +7,29 @@ import { IStatusInfo } from '@/interfaces/status_info';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
-import { User, UserRole } from '@prisma/client';
 import { getTeamsByUserIdAndTeamIds } from '@/lib/utils/repo/team.repo';
 import { ITeam } from '@/interfaces/team';
 import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { findUserAccountBook } from '@/lib/utils/repo/account_book.repo';
 import { getUserRoleById } from '@/lib/utils/repo/user_role.repo';
+import { RoleName, RoleType } from '@/constants/role';
+import { IUserRole } from '@/interfaces/user_role';
+import { IUser } from '@/interfaces/user';
 
 const handleGetRequest: IHandleRequest<
   APIName.STATUS_INFO_GET,
   {
-    user: User | null;
+    user: IUser | null;
     company: IAccountBookWithTeam | null;
-    role: UserRole | null;
+    role: IUserRole | null;
     teams: ITeam[] | null;
   }
 > = async ({ session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   const payload: {
-    user: User | null;
+    user: IUser | null;
     company: IAccountBookWithTeam | null;
-    role: UserRole | null;
+    role: IUserRole | null;
     teams: ITeam[] | null;
   } = {
     user: null,
@@ -39,8 +41,16 @@ const handleGetRequest: IHandleRequest<
   const { userId, companyId, roleId, teams } = session; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
 
   if (userId > 0) {
-    const getUser = await getUserById(userId);
-    payload.user = getUser;
+    const userFromDB = await getUserById(userId);
+    if (userFromDB) {
+      payload.user = {
+        ...userFromDB,
+        imageId: userFromDB?.imageFile?.url ?? '',
+        agreementList: userFromDB.userAgreements.map((ua) => ua.agreementHash),
+        email: userFromDB?.email ?? '',
+        deletedAt: userFromDB?.deletedAt ?? 0,
+      };
+    }
   }
 
   if (companyId > 0 && userId > 0) {
@@ -53,8 +63,15 @@ const handleGetRequest: IHandleRequest<
   }
 
   if (roleId > 0) {
-    const getUserRole = await getUserRoleById(roleId, userId);
-    payload.role = getUserRole;
+    const userRoleFromDB = await getUserRoleById(roleId, userId);
+    payload.role = userRoleFromDB
+      ? {
+          ...userRoleFromDB,
+          type: RoleType[userRoleFromDB.type as keyof typeof RoleType],
+          roleName: RoleName[userRoleFromDB.roleName as keyof typeof RoleName],
+          deletedAt: userRoleFromDB.deletedAt ?? 0,
+        }
+      : null;
   }
 
   if (teams && teams.length > 0) {

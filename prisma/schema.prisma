@@ -1046,6 +1046,7 @@ enum RoleName {
 enum RoleType {
   SYSTEM
   COMPANY
+  USER
 }
 
 model UserRole {
