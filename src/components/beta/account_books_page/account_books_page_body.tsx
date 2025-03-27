@@ -137,6 +137,7 @@ const AccountBooksPageBody = () => {
             setAccountBookToEdit={setAccountBookToEdit}
             setAccountBookToDelete={setAccountBookToDelete}
             setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+            setRefreshKey={setRefreshKey}
             shouldGroupByTeam
           />
           <Pagination

@@ -8,18 +8,25 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import {
   IGetAccountBookQueryParams,
   IGetAccountBookResponse,
+  ICountry,
 } from '@/lib/utils/zod_schema/account_book';
-/*
- * TODO: (20250305 - Shirley)
- * 改用 zod_schema/company.ts 替代 zod_schema/account_book.ts
- */
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import {
+  getCompanySettingByCompanyId,
+  createCompanySetting,
+} from '@/lib/utils/repo/company_setting.repo';
+import { getCountryByLocaleKey, getCountryByCode } from '@/lib/utils/repo/country.repo';
+import { loggerError } from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
+
 interface IResponse {
   statusMessage: string;
   payload: IGetAccountBookResponse | null;
 }
 
 /**
- * Info: (20250324 - Shirley) 處理 GET 請求，獲取帳本詳細資訊，目前為 mock API
+ * Info: (20250524 - Shirley) 處理 GET 請求，獲取帳本詳細資訊
+ * 如果沒有 company_setting 記錄，則創建一個空白記錄
  */
 const handleGetRequest: IHandleRequest<
   APIName.GET_ACCOUNT_BOOK_INFO_BY_ID,
@@ -27,35 +34,85 @@ const handleGetRequest: IHandleRequest<
 > = async ({ query }) => {
   const { accountBookId } = query as IGetAccountBookQueryParams;
 
-  // Info: (20250324 - Shirley) 模擬帳本不存在的情況
-  if (accountBookId === 404) {
-    return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+  try {
+    // Info: (20250326 - Shirley) 根據 accountBookId 獲取公司資訊
+    const company = await getCompanyById(accountBookId);
+    if (!company) {
+      return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+    }
+
+    // Info: (20250326 - Shirley) 獲取公司設定資訊
+    let companySetting = await getCompanySettingByCompanyId(accountBookId);
+
+    // Info: (20250326 - Shirley) 如果沒有公司設定記錄，創建一個空白記錄
+    if (!companySetting) {
+      companySetting = await createCompanySetting(accountBookId);
+      if (!companySetting) {
+        loggerError({
+          userId: DefaultValue.USER_ID.SYSTEM,
+          errorType: 'create empty company setting failed',
+          errorMessage: `Cannot create company setting for accountBookId: ${accountBookId}`,
+        });
+        return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
+      }
+    }
+
+    // Info: (20250326 - Shirley) 獲取國家資訊
+    const countryCode = companySetting.countryCode || 'tw';
+    const countryLocaleKey = companySetting.country || 'tw';
+
+    // Info: (20250326 - Shirley) 首先嘗試通過 localeKey 獲取國家資訊，如果沒有再嘗試通過 code 獲取
+    let dbCountry = await getCountryByLocaleKey(countryLocaleKey);
+
+    if (!dbCountry) {
+      dbCountry = await getCountryByCode(countryCode);
+    }
+
+    // Info: (20250326 - Shirley) 構建國家資訊
+    const country: ICountry = dbCountry
+      ? {
+          id: String(dbCountry.id),
+          code: dbCountry.code,
+          name: dbCountry.name,
+          localeKey: dbCountry.localeKey,
+          currencyCode: dbCountry.currencyCode,
+          phoneCode: dbCountry.phoneCode,
+          phoneExample: dbCountry.phoneExample,
+        }
+      : {
+          id: String(companySetting.id),
+          code: countryCode,
+          name: 'Taiwan', // Info: (20250326 - Shirley) 預設為台灣
+          localeKey: countryLocaleKey,
+          currencyCode: 'TWD', // Info: (20250326 - Shirley) 預設貨幣代碼
+          phoneCode: '+886', // Info: (20250326 - Shirley) 預設電話國碼
+          phoneExample: '0902345678', // Info: (20250326 - Shirley) 預設電話範例
+        };
+
+    // Info: (20250326 - Shirley) 構建回應資料
+    const payload: IGetAccountBookResponse = {
+      id: String(accountBookId),
+      name: company.name,
+      taxId: company.taxId,
+      taxSerialNumber: companySetting.taxSerialNumber || '',
+      representativeName: companySetting.representativeName || '',
+      country,
+      phoneNumber: companySetting.phone || '',
+      address: companySetting.address || '',
+      startDate: company.startDate,
+      createdAt: company.createdAt,
+      updatedAt: company.updatedAt,
+    };
+
+    return { statusMessage: STATUS_MESSAGE.SUCCESS_GET, payload };
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get account book info failed',
+      errorMessage: (error as Error).message,
+    });
+    return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
   }
-
-  // Info: (20250227 - Shirley) 模擬獲取帳本詳細資訊
-  const payload: IGetAccountBookResponse = {
-    id: accountBookId.toString(),
-    name: 'Account Book Name',
-    taxId: '1234567890',
-    taxSerialNumber: '1234567890',
-    representativeName: 'Representative Name',
-    country: {
-      id: '123456',
-      code: 'tw',
-      name: 'Taiwan',
-      localeKey: 'tw',
-      currencyCode: 'TWD',
-      phoneCode: '+886',
-      phoneExample: '0912345678',
-    },
-    phoneNumber: '0912345678',
-    address: 'No. 1, Section 5, Xinyi Road, Xinyi District, Taipei City 110, Taiwan',
-    startDate: 1609459200,
-    createdAt: 1609459200,
-    updatedAt: 1609459200,
-  };
-
-  return { statusMessage: STATUS_MESSAGE.SUCCESS_GET, payload };
 };
 
 const methodHandlers: {

@@ -13,12 +13,14 @@ interface UploadCompanyPictureModalProps {
   accountBookToUploadPicture: IAccountBookWithTeam;
   setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
+  getAccountBookListByTeamId?: () => Promise<void>;
 }
 
 const UploadCompanyPictureModal = ({
   accountBookToUploadPicture,
   setAccountBookToUploadPicture,
   setRefreshKey,
+  getAccountBookListByTeamId,
 }: UploadCompanyPictureModalProps) => {
   const { t } = useTranslation(['account_book']);
   const { connectedAccountBook, connectAccountBook } = useUserCtx();
@@ -71,6 +73,8 @@ const UploadCompanyPictureModal = ({
 
         closeUploadAccountBookCompanyPictureModal();
         if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241212 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
+
+        if (getAccountBookListByTeamId) getAccountBookListByTeamId(); // Info: (20250326 - Liz) 重新取得團隊帳本清單
 
         const isChangingSelectedCompany =
           connectedAccountBook?.id === accountBookToUploadPicture.id;

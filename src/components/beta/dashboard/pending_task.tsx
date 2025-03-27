@@ -4,7 +4,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { APIName } from '@/constants/api_connection';
-import PendingTasksForAccountBook from '@/components/beta/dashboard/pending_task_for_account_book';
+import PendingTaskForAccountBook from '@/components/beta/dashboard/pending_task_for_account_book';
 import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data';
 import { IPaginatedData } from '@/interfaces/pagination';
 import PendingTaskForAll from '@/components/beta/dashboard/pending_task_for_all';
@@ -16,7 +16,7 @@ interface PendingTasksProps {
 const PendingTask = ({ getTodoList }: PendingTasksProps) => {
   /* Info: (20241018 - Liz) 元件顯示邏輯
    * 沒有帳本清單 : 顯示 PendingTaskNoData
-   * 有帳本清單 且 有連結帳本 : 顯示 PendingTasksForAccountBook
+   * 有帳本清單 且 有連結帳本 : 顯示 PendingTaskForAccountBook
    * 有帳本清單 且 沒有連結帳本 : 顯示 PendingTaskForAll
    */
 
@@ -71,7 +71,7 @@ const PendingTask = ({ getTodoList }: PendingTasksProps) => {
   if (isSelectedAccountBook) {
     return (
       <DashboardCardLayout>
-        <PendingTasksForAccountBook getTodoList={getTodoList} />
+        <PendingTaskForAccountBook getTodoList={getTodoList} />
       </DashboardCardLayout>
     );
   }
