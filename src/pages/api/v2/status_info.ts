@@ -12,7 +12,6 @@ import { ITeam } from '@/interfaces/team';
 import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { findUserAccountBook } from '@/lib/utils/repo/account_book.repo';
 import { getUserRoleById } from '@/lib/utils/repo/user_role.repo';
-import { RoleName, RoleType } from '@/constants/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { IUser } from '@/interfaces/user';
 
@@ -63,15 +62,8 @@ const handleGetRequest: IHandleRequest<
   }
 
   if (roleId > 0) {
-    const userRoleFromDB = await getUserRoleById(roleId, userId);
-    payload.role = userRoleFromDB
-      ? {
-          ...userRoleFromDB,
-          type: RoleType[userRoleFromDB.type as keyof typeof RoleType],
-          roleName: RoleName[userRoleFromDB.roleName as keyof typeof RoleName],
-          deletedAt: userRoleFromDB.deletedAt ?? 0,
-        }
-      : null;
+    const userRole = await getUserRoleById(roleId);
+    payload.role = userRole;
   }
 
   if (teams && teams.length > 0) {

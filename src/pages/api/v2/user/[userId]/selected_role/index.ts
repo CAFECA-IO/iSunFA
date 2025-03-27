@@ -5,25 +5,24 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { getUserRoleById, updateUserRoleLoginAt } from '@/lib/utils/repo/user_role.repo';
+import { updateUserLastLoginAt } from '@/lib/utils/repo/user_role.repo';
 import { setSession } from '@/lib/utils/session';
-import { UserRole } from '@prisma/client';
+import { IUserRole } from '@/interfaces/user_role';
 
-const handlePutRequest: IHandleRequest<APIName.USER_SELECT_ROLE, UserRole> = async ({
+const handlePutRequest: IHandleRequest<APIName.USER_SELECT_ROLE, IUserRole> = async ({
   query,
   session,
   body,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: UserRole | null = null;
+  let payload: IUserRole | null = null;
   const { userId } = query;
-  const { roleId } = body;
-  const userRole = await getUserRoleById(roleId, userId);
+  const { roleName } = body;
 
+  const userRole = await updateUserLastLoginAt({ userId, roleName });
   if (userRole) {
     statusMessage = STATUS_MESSAGE.SUCCESS;
     setSession(session, { roleId: userRole.id });
-    await updateUserRoleLoginAt(userRole.id);
     payload = userRole;
   } else {
     statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
@@ -36,17 +35,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: UserRole | null }>;
+  ) => Promise<{ statusMessage: string; payload: IUserRole | null }>;
 } = {
   PUT: (req) => withRequestValidation(APIName.USER_SELECT_ROLE, req, handlePutRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<UserRole | null>>
+  res: NextApiResponse<IResponseData<IUserRole | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: UserRole | null = null;
+  let payload: IUserRole | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -60,7 +59,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<UserRole | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<IUserRole | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

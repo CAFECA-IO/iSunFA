@@ -518,15 +518,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241029 - Liz) 建立角色的功能
-  const createRole = async (roleId: RoleName) => {
+  const createRole = async (roleName: RoleName) => {
     // Deprecated: (20241108 - Liz)
     // eslint-disable-next-line no-console
-    console.log('call createRole, roleId:', roleId);
+    console.log('call createRole, roleName:', roleName);
 
     try {
       const { success, data: userRole } = await createRoleAPI({
         params: { userId: userAuthRef.current?.id },
-        body: { roleId },
+        body: { roleName },
       });
 
       // Info: (20241029 - Liz) 檢查建立角色的成功狀態

@@ -15,7 +15,7 @@ const userRoleListQuerySchema = z.object({
 
 // Info: (20241015 - Jacky) UserRole post schema
 const userRolePostBodySchema = z.object({
-  roleId: z.number().int(),
+  roleName: z.nativeEnum(RoleName),
 });
 
 // Info: (20241015 - Jacky) UserRole select query schema
@@ -25,7 +25,7 @@ const userRoleSelectQuerySchema = z.object({
 
 // Info: (20241111 - Jacky) UserRole select body schema
 const userRoleSelectBodySchema = z.object({
-  roleId: z.number().int(),
+  roleName: z.nativeEnum(RoleName),
 });
 
 export const userRoleOutputSchema = z.object({
