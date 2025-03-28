@@ -29,7 +29,7 @@ import { ITeam } from '@/interfaces/team';
 import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { ToastType } from '@/interfaces/toastify';
-import { KeyboardEventCode } from '@/constants/keyboard_event_code';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 interface ICreateTeamModalProps {
   modalVisibilityHandler: () => void;
@@ -389,14 +389,14 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   // Info: (20250326 - Julian) 如果填好名字，按 Enter 可以直接進入下一步
   const nameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === KeyboardEventCode.ENTER && teamNameInput !== '') {
+    if (e.key === KEYBOARD_EVENT_CODE.ENTER && teamNameInput !== '') {
       setCurrentStep(2);
     }
   };
 
   // Info: (20250224 - Julian) 將填寫的 Email 加入清單、清空 input、focus 到 input
   const emailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === KeyboardEventCode.ENTER && isValidEmail && teamMemberInput !== '') {
+    if (e.key === KEYBOARD_EVENT_CODE.ENTER && isValidEmail && teamMemberInput !== '') {
       setTeamMembers([...teamMembers, teamMemberInput]);
       setTeamMemberInput('');
       emailInputRef.current?.focus();
