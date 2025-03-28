@@ -39,9 +39,11 @@ CREATE TABLE "role_feature" (
 UPDATE "company" c
 SET
   "user_id" = a."user_id",
-  "tag" = a."tag"::"Tag"
+  "tag" = UPPER(a."tag")::"Tag"
 FROM "admin" a
-WHERE a."company_id" = c."id" AND a."tag" = 'owner';
+WHERE a."company_id" = c."id"
+  AND a."tag" IS NOT NULL
+  AND UPPER(a."tag") IN ('ALL', 'FINANCIAL', 'TAX');
 
 UPDATE "company" SET "user_id" = 555 WHERE "user_id" IS NULL;
 UPDATE "company" SET "tag" = 'ALL' WHERE "tag" IS NULL;
