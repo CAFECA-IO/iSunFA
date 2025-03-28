@@ -19,6 +19,22 @@ export interface IInvoice {
   payment: IPayment;
 }
 
+// Info: (20250328 - Luphia) 記錄團隊訂閱發票，包含訂單與付費紀錄，並補上稅金資訊、發票號碼
+export interface ITeamInvoice {
+  id?: number;
+  invoiceNo: string;
+  teamId: number;
+  teamOrderId: number;
+  teamPaymentTransaction: number;
+  cancelled: boolean;
+  currency: CurrencyType;
+  amount: number;
+  tax: number;
+  total: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface IInvoiceBeta {
   id: number;
   isComplete: boolean;

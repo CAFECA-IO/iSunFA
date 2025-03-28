@@ -312,3 +312,10 @@ export async function createDefaultTeamForUser(userId: number, userName: string)
 
   return team;
 }
+
+export const countTeamMembersById = async (teamId: number): Promise<number> => {
+  const teamMembersCount = prisma.teamMember.count({
+    where: { teamId, leftAt: null },
+  });
+  return teamMembersCount;
+};
