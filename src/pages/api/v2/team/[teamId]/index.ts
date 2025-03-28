@@ -71,15 +71,15 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
 
   try {
     // Info: (20250328 - Shirley) 從 session 取得用戶在團隊中的角色
-    const userInTeam = teams?.find((team) => team.id === teamIdNumber);
+    const teamInfo = teams?.find((team) => team.id === teamIdNumber);
 
     // Info: (20250328 - Shirley) 檢查用戶是否在團隊中
-    if (!userInTeam) {
+    if (!teamInfo) {
       loggerBack.warn(`User ${userId} is not in team ${teamIdNumber}`);
       return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
     }
 
-    const userRole = userInTeam.role as TeamRole;
+    const userRole = teamInfo.role as TeamRole;
 
     // Info: (20250328 - Shirley) 檢查用戶是否有修改團隊資訊的權限
     // 使用 permission 機制檢查基本修改權限

@@ -18,6 +18,9 @@ import {
 import { getCountryByLocaleKey, getCountryByCode } from '@/lib/utils/repo/country.repo';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
+import { TeamPermissionAction, ITeamRoleCanDo, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
 
 interface IResponse {
   statusMessage: string;
@@ -31,7 +34,8 @@ interface IResponse {
 const handleGetRequest: IHandleRequest<
   APIName.GET_ACCOUNT_BOOK_INFO_BY_ID,
   IResponse['payload']
-> = async ({ query }) => {
+> = async ({ query, session }) => {
+  const { userId } = session;
   const { accountBookId } = query as IGetAccountBookQueryParams;
 
   try {
@@ -41,7 +45,52 @@ const handleGetRequest: IHandleRequest<
       return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
     }
 
-    // Info: (20250326 - Shirley) 獲取公司設定資訊
+    // Info: (20250326 - Shirley) 獲取帳本所屬的團隊
+    const { teamId } = company;
+    if (!teamId) {
+      loggerError({
+        userId,
+        errorType: 'get account book info failed',
+        errorMessage: `Account book ${accountBookId} does not belong to any team`,
+      });
+      return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+    }
+
+    // Info: (20250326 - Shirley) 檢查用戶是否有權限查看此帳本
+    // 從 session 中獲取團隊信息
+    const teamInfo = session.teams?.find((team) => team.id === teamId);
+
+    // 如果用戶不在團隊中，則拒絕訪問
+    if (!teamInfo) {
+      loggerError({
+        userId,
+        errorType: 'permission denied',
+        errorMessage: `User ${userId} is not a member of team ${teamId}`,
+      });
+      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+    }
+
+    // 根據帳本是否為私有來檢查不同的權限
+    const userRole = teamInfo.role as TeamRole;
+
+    // 帳本不分公開跟私有，團隊成員都可查看
+    const canViewResult = convertTeamRoleCanDo({
+      teamRole: userRole,
+      canDo: TeamPermissionAction.VIEW_PUBLIC_ACCOUNT_BOOK,
+    });
+
+    const canView =
+      TeamRoleCanDoKey.YES_OR_NO in canViewResult && (canViewResult as ITeamRoleCanDo).yesOrNo;
+
+    if (!canView) {
+      loggerError({
+        userId,
+        errorType: 'permission denied',
+        errorMessage: `User ${userId} with role ${userRole} does not have permission to view account book ${accountBookId}`,
+      });
+      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+    }
+
     let companySetting = await getCompanySettingByCompanyId(accountBookId);
 
     // Info: (20250326 - Shirley) 如果沒有公司設定記錄，創建一個空白記錄
@@ -49,7 +98,7 @@ const handleGetRequest: IHandleRequest<
       companySetting = await createCompanySetting(accountBookId);
       if (!companySetting) {
         loggerError({
-          userId: DefaultValue.USER_ID.SYSTEM,
+          userId,
           errorType: 'create empty company setting failed',
           errorMessage: `Cannot create company setting for accountBookId: ${accountBookId}`,
         });
@@ -107,7 +156,7 @@ const handleGetRequest: IHandleRequest<
     return { statusMessage: STATUS_MESSAGE.SUCCESS_GET, payload };
   } catch (error) {
     loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
+      userId: session.userId || DefaultValue.USER_ID.SYSTEM,
       errorType: 'get account book info failed',
       errorMessage: (error as Error).message,
     });
