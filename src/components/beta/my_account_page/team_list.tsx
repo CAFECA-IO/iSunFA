@@ -35,7 +35,7 @@ const TeamList: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [userAuth?.id]);
 
   useEffect(() => {
     getUserOwnedTeams();
