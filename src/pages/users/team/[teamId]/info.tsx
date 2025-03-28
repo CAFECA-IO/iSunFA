@@ -9,9 +9,8 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { SkeletonList } from '@/components/skeleton/skeleton';
-import { ITeam, TeamRole } from '@/interfaces/team';
+import { ITeam } from '@/interfaces/team';
 import TeamInformationPageBody from '@/components/beta/team_information_page/team_info_page_body';
-import { TPlanType } from '@/interfaces/subscription';
 
 const TeamInfoPage = () => {
   const { t } = useTranslation(['team']);
