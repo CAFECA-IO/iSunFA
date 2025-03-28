@@ -19,6 +19,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { findUnusedRoles } from '@/lib/utils/role';
 import { toConstantCase } from '@/lib/utils/common';
 import UserRole from '@/components/beta/select_role/user_role';
+import Loader from '@/components/loader/loader';
 
 // Info: (20241029 - Liz) 用來對照 Role 的 Icon
 const USER_ROLES_ICON = [
@@ -81,6 +82,9 @@ const SelectRolePage = () => {
     componentVisible: isMenuVisible,
     setComponentVisible: setIsMenuVisible,
   } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20250328 - Liz) 如果打 API 還在載入中，顯示載入中頁面
+  if (isLoading) return <Loader />;
 
   return (
     <>
