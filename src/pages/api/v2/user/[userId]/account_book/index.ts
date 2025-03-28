@@ -58,11 +58,16 @@ const handlePostRequest = async (req: NextApiRequest) => {
   await checkSessionUser(session, APIName.CREATE_ACCOUNT_BOOK, req);
   await checkUserAuthorization(APIName.CREATE_ACCOUNT_BOOK, req, session);
 
-  const { body } = checkRequestData(APIName.CREATE_ACCOUNT_BOOK, req, session);
-  loggerBack.info(`Create accountBook by userId: ${userId} with body: ${JSON.stringify(body)}`);
+  const { query, body } = checkRequestData(APIName.CREATE_ACCOUNT_BOOK, req, session);
+  loggerBack.info(
+    `Create accountBook by userId: ${userId} with query: ${JSON.stringify(query)} & body: ${JSON.stringify(body)}`
+  );
 
-  if (body === null) {
+  if (query === null || body === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+  if (query.userId !== userId) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
