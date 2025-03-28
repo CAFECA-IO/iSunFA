@@ -8,7 +8,9 @@
     "imageFileId": 1000,
     "startDate": 1717751006,
     "createdAt": 1717751006,
-    "updatedAt": 1717751006
+    "updatedAt": 1717751006,
+    "isPrivate": false,
+    "isTransferring": false
   },
   {
     "id": 1001,
@@ -19,7 +21,9 @@
     "imageFileId": 1001,
     "startDate": 1717751006,
     "createdAt": 1717751006,
-    "updatedAt": 1717751006
+    "updatedAt": 1717751006,
+    "isPrivate": false,
+    "isTransferring": false
   },
   {
     "id": 1002,
@@ -30,7 +34,9 @@
     "imageFileId": 1002,
     "startDate": 1717751006,
     "createdAt": 1717751006,
-    "updatedAt": 1717751006
+    "updatedAt": 1717751006,
+    "isPrivate": false,
+    "isTransferring": false
   },
   {
     "id": 8867,
@@ -41,6 +47,8 @@
     "imageFileId": 1003,
     "startDate": 1717751006,
     "createdAt": 1717751006,
-    "updatedAt": 1717751006
+    "updatedAt": 1717751006,
+    "isPrivate": false,
+    "isTransferring": false
   }
 ]

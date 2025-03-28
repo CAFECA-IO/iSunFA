@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Tag } from '@prisma/client';
 // import { PrismaClient, TeamPlanType } from '@prisma/client';
 import accounts from '@/seed_json/account_new.json';
 import companies from '@/seed_json/company.json';
@@ -110,7 +110,10 @@ async function createAccount() {
 
 async function createCompany() {
   await prisma.company.createMany({
-    data: companies,
+    data: companies.map((company) => ({
+      ...company,
+      tag: company.tag as Tag,
+    })),
   });
 }
 
