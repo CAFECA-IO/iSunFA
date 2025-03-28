@@ -56,8 +56,8 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
   // Info:(20250328 - Julian) 是否顯示編輯按鈕
   const visibleEditButton = teamInfo.role === TeamRole.OWNER || teamInfo.role === TeamRole.ADMIN;
 
-  // Info:(20250328 - Julian) 是否顯示編輯按鈕銀行帳戶
-  const visibleEditBankAccountButton = teamInfo.role === TeamRole.OWNER;
+  // Info:(20250328 - Julian) 是否顯示 1.編輯訂閱方案按鈕 2.編輯銀行帳戶按鈕
+  const visibleSubscribeButton = teamInfo.role === TeamRole.OWNER;
 
   // Info:(20250225 - Anna) Team Name 彈窗狀態
   const [isNameEditModalOpen, setIsNameEditModalOpen] = useState(false);
@@ -157,18 +157,18 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
           {t('team:TEAM_INFO_PAGE.TEAM_PLAN')}
         </div>
         <div className="text-right">
-          <span className="rounded-full bg-navy-blue-500 px-3 py-2 text-sm font-semibold text-white">
-            {teamInfo.planType.value}
+          <span className="rounded-full bg-badge-surface-strong-secondary px-3 py-2 text-sm font-semibold text-badge-text-invert">
+            {t(`subscriptions:PLAN_NAME.${teamInfo.planType.value}`)}
           </span>
           {/* Info:(20250224 - Anna) 如果 editable 為 true，顯示編輯按鈕 */}
-          {teamInfo.planType.editable && (
+          {teamInfo.planType.editable && visibleSubscribeButton && (
             <Button
               type="button"
               variant="tertiary"
               size="defaultSquare"
               className="ml-4"
               disabled={!canModifyPlan}
-              onClick={() => router.push('/users/subscriptions')} // Info:(20250226 - Anna) 點擊後導航
+              onClick={() => router.push(`/users/subscriptions/${teamInfo.id}`)} // Info:(20250226 - Anna) 點擊後導航
             >
               <FiEdit size={16} />
             </Button>
@@ -199,7 +199,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
           )}
         </div>
 
-        {visibleEditBankAccountButton && (
+        {visibleSubscribeButton && (
           <>
             <div className="flex h-11 items-center text-left font-semibold text-neutral-300">
               {t('team:TEAM_INFO_PAGE.TEAM_BANK_ACCOUNT')}
