@@ -35,10 +35,10 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
     setSortOrder: setTypeSort,
   });
 
-  const handleApiResponse = (data: IPaginatedData<IPaginatedData<IAccountBookWithTeam[]>>) => {
+  const handleApiResponse = (data: IPaginatedData<IAccountBookWithTeam[]>) => {
     setTotalCount(data.totalCount);
     setTotalPages(data.totalPages);
-    setAccountBookList(data.data.data);
+    setAccountBookList(data.data);
   };
 
   const handleEditModal = (company: IAccountBookWithTeam) => {
@@ -64,7 +64,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
           </button>
         </section>
         <section className="flex flex-col gap-lv-5">
-          <FilterSection<IPaginatedData<IAccountBookWithTeam[]>>
+          <FilterSection<IAccountBookWithTeam[]>
             className="mt-2"
             apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
             params={{ userId: userAuth?.id }}

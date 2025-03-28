@@ -16,6 +16,7 @@ import CreateAccountBookModal from '@/components/beta/account_books_page/create_
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 const AccountBooksPageBody = () => {
   const { t } = useTranslation(['account_book']);
@@ -105,6 +106,7 @@ const AccountBooksPageBody = () => {
             onApiResponse={handleApiResponse}
             page={currentPage}
             pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
+            sort={{ by: SortBy.CREATED_AT, order: SortOrder.DESC }}
           />
         )}
 
