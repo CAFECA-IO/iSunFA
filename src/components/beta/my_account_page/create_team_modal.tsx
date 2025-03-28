@@ -15,7 +15,13 @@ import CreditCardInfo from '@/components/beta/payment_page/credit_card_info';
 import MessageModal from '@/components/message_modal/message_modal';
 import InvoiceDetail from '@/components/beta/invoice_page/invoice_detail';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
-import { IPlan, IUserOwnedTeam, ITeamInvoice, TPaymentStatus } from '@/interfaces/subscription';
+import {
+  IPlan,
+  IUserOwnedTeam,
+  ITeamInvoice,
+  TPaymentStatus,
+  TPlanType,
+} from '@/interfaces/subscription';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -23,6 +29,7 @@ import { ITeam } from '@/interfaces/team';
 import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { ToastType } from '@/interfaces/toastify';
+import { KeyboardEventCode } from '@/constants/keyboard_event_code';
 
 interface ICreateTeamModalProps {
   modalVisibilityHandler: () => void;
@@ -117,7 +124,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
-  const isBeginnerPlan = selectedPlan.id === 'BEGINNER';
+  const isBeginnerPlan = selectedPlan.id === TPlanType.BEGINNER;
 
   // Info: (20250303 - Julian) 取得訂閱方案清單
   // ToDo: (20250303 - Julian) 等 API 調整完就可以刪掉
@@ -382,14 +389,14 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   // Info: (20250326 - Julian) 如果填好名字，按 Enter 可以直接進入下一步
   const nameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && teamNameInput !== '') {
+    if (e.key === KeyboardEventCode.ENTER && teamNameInput !== '') {
       setCurrentStep(2);
     }
   };
 
   // Info: (20250224 - Julian) 將填寫的 Email 加入清單、清空 input、focus 到 input
   const emailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && isValidEmail && teamMemberInput !== '') {
+    if (e.key === KeyboardEventCode.ENTER && isValidEmail && teamMemberInput !== '') {
       setTeamMembers([...teamMembers, teamMemberInput]);
       setTeamMemberInput('');
       emailInputRef.current?.focus();

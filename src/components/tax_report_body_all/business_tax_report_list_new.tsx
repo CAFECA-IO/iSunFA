@@ -19,7 +19,6 @@ import { Button } from '@/components/button/button';
 import { TiExport } from 'react-icons/ti';
 import { jsPDF } from 'jspdf';
 // Info: (20250326 - Anna) 使用 html2canvas@^1.4.1 時，轉成 PDF 出現文字位移偏下，改使用較穩定的 html2canvas@^1.0.0-alpha.12
-// eslint-disable-next-line import/no-unresolved
 import html2canvas from 'html2canvas_v1alpha';
 
 interface BusinessTaxListProps {
