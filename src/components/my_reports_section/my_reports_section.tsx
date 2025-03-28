@@ -29,6 +29,7 @@ import { IPaginatedReport, IReport, MOCK_TOTAL_PAGES } from '@/interfaces/report
 import { ReportStatusType } from '@/constants/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { cn } from '@/lib/utils/common';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 const MyReportsSection = () => {
   const { t } = useTranslation(['common', 'reports']);
@@ -356,7 +357,7 @@ const MyReportsSection = () => {
         value={searchPendingQuery}
         onChange={pendingInputChangeHandler}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+          if (e.key === KEYBOARD_EVENT_CODE.ENTER && !e.nativeEvent.isComposing) {
             getPendingReports({ searchPendingQuery });
           }
         }}
@@ -591,7 +592,7 @@ const MyReportsSection = () => {
         value={searchHistoryQuery}
         onChange={historyInputChangeHandler}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+          if (e.key === KEYBOARD_EVENT_CODE.ENTER && !e.nativeEvent.isComposing) {
             getGeneratedReports({ searchHistoryQuery });
           }
         }}

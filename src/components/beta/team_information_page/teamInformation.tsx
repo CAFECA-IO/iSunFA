@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { ITeam } from '@/interfaces/team';
-import { Button } from '@/components/button/button';
+import { useRouter } from 'next/router';
 import { FiEdit } from 'react-icons/fi';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { ITeam, TeamRole } from '@/interfaces/team';
+import { Button } from '@/components/button/button';
 import TeamNameEditModal from '@/components/beta/team_information_page/team_name_edit_modal';
 import AboutEditModal from '@/components/beta/team_information_page/about_team_edit_modal';
 import TeamProfileEditModal from '@/components/beta/team_information_page/team_profile_edit_modal';
 import TeamBankAccountEditModal from '@/components/beta/team_information_page/bank_account_edit_modal';
-import { useRouter } from 'next/router';
 
 interface teamInfoProps {
   teamInfo: ITeam;
@@ -17,6 +19,42 @@ interface teamInfoProps {
 const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
   const { t } = useTranslation(['team']);
   const router = useRouter();
+
+  // Info:(20250328 - Julian) 按鈕權限
+  const modifyName = convertTeamRoleCanDo({
+    teamRole: teamInfo.role,
+    canDo: TeamPermissionAction.MODIFY_NAME,
+  });
+  const modifyAbout = convertTeamRoleCanDo({
+    teamRole: teamInfo.role,
+    canDo: TeamPermissionAction.MODIFY_ABOUT,
+  });
+  const modifyProfile = convertTeamRoleCanDo({
+    teamRole: teamInfo.role,
+    canDo: TeamPermissionAction.MODIFY_PROFILE,
+  });
+  const modifyPlan = convertTeamRoleCanDo({
+    teamRole: teamInfo.role,
+    canDo: TeamPermissionAction.MODIFY_PLAN,
+  });
+  const modifyBankAccount = convertTeamRoleCanDo({
+    teamRole: teamInfo.role,
+    canDo: TeamPermissionAction.MODIFY_BANK_ACCOUNT,
+  });
+
+  const canModifyName = TeamRoleCanDoKey.YES_OR_NO in modifyName ? modifyName.yesOrNo : false;
+  const canModifyAbout = TeamRoleCanDoKey.YES_OR_NO in modifyAbout ? modifyAbout.yesOrNo : false;
+  const canModifyProfile =
+    TeamRoleCanDoKey.YES_OR_NO in modifyProfile ? modifyProfile.yesOrNo : false;
+  const canModifyPlan = TeamRoleCanDoKey.YES_OR_NO in modifyPlan ? modifyPlan.yesOrNo : false;
+  const canModifyBankAccount =
+    TeamRoleCanDoKey.YES_OR_NO in modifyBankAccount ? modifyBankAccount.yesOrNo : false;
+
+  // Info:(20250328 - Julian) 是否顯示編輯按鈕
+  const visibleEditButton = teamInfo.role === TeamRole.OWNER || teamInfo.role === TeamRole.ADMIN;
+
+  // Info:(20250328 - Julian) 是否顯示 1.編輯訂閱方案按鈕 2.編輯銀行帳戶按鈕
+  const visibleSubscribeButton = teamInfo.role === TeamRole.OWNER;
 
   // Info:(20250225 - Anna) Team Name 彈窗狀態
   const [isNameEditModalOpen, setIsNameEditModalOpen] = useState(false);
@@ -51,12 +89,13 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
         <div className="text-right font-semibold text-neutral-600">
           {teamInfo.name.value}
           {/* Info:(20250224 - Anna) 如果 editable 為 true，顯示編輯按鈕 */}
-          {teamInfo.name.editable && (
+          {teamInfo.name.editable && visibleEditButton && (
             <Button
               type="button"
               variant="tertiary"
               size="defaultSquare"
               className="ml-4"
+              disabled={!canModifyName}
               onClick={openNameEditModal}
             >
               <FiEdit size={16} />
@@ -70,12 +109,13 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
         <div className="text-right font-semibold text-neutral-600">
           {teamInfo.about.value}
           {/* Info:(20250224 - Anna) 如果 editable 為 true，顯示編輯按鈕 */}
-          {teamInfo.about.editable && (
+          {teamInfo.about.editable && visibleEditButton && (
             <Button
               type="button"
               variant="tertiary"
               size="defaultSquare"
               className="ml-4"
+              disabled={!canModifyAbout}
               onClick={openDescriptionEditModal}
             >
               <FiEdit size={16} />
@@ -96,12 +136,13 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
             {teamInfo.profile.value}
           </a>
           {/* Info:(20250224 - Anna) 如果 editable 為 true，顯示編輯按鈕 */}
-          {teamInfo.profile.editable && (
+          {teamInfo.profile.editable && visibleEditButton && (
             <Button
               type="button"
               variant="tertiary"
               size="defaultSquare"
               className="ml-4"
+              disabled={!canModifyProfile}
               onClick={openProfileEditModal}
             >
               <FiEdit size={16} />
@@ -113,17 +154,18 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
           {t('team:TEAM_INFO_PAGE.TEAM_PLAN')}
         </div>
         <div className="text-right">
-          <span className="rounded-full bg-navy-blue-500 px-3 py-2 text-sm font-semibold text-white">
-            {teamInfo.planType.value}
+          <span className="rounded-full bg-badge-surface-strong-secondary px-3 py-2 text-sm font-semibold text-badge-text-invert">
+            {t(`subscriptions:PLAN_NAME.${teamInfo.planType.value}`)}
           </span>
           {/* Info:(20250224 - Anna) 如果 editable 為 true，顯示編輯按鈕 */}
-          {teamInfo.planType.editable && (
+          {teamInfo.planType.editable && visibleSubscribeButton && (
             <Button
               type="button"
               variant="tertiary"
               size="defaultSquare"
               className="ml-4"
-              onClick={() => router.push('/users/subscriptions')} // Info:(20250226 - Anna) 點擊後導航
+              disabled={!canModifyPlan}
+              onClick={() => router.push(`/users/subscriptions/${teamInfo.id}`)} // Info:(20250226 - Anna) 點擊後導航
             >
               <FiEdit size={16} />
             </Button>
@@ -154,7 +196,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
           )}
         </div>
 
-        {teamInfo.bankAccount.value !== '-' && (
+        {visibleSubscribeButton && (
           <>
             <div className="flex h-11 items-center text-left font-semibold text-neutral-300">
               {t('team:TEAM_INFO_PAGE.TEAM_BANK_ACCOUNT')}
@@ -168,6 +210,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
                   variant="tertiary"
                   size="defaultSquare"
                   className="ml-4"
+                  disabled={!canModifyBankAccount}
                   onClick={openBankAccountEditModal}
                 >
                   <FiEdit size={16} />

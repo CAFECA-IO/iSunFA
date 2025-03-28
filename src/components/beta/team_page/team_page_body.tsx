@@ -136,8 +136,8 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
 
       <div className="flex items-center gap-16px">
         <div className="flex items-center gap-8px">
-          <Image src="/icons/open_book.svg" alt="open_book" width={16} height={15.235}></Image>
-          <span>{t('team:TEAM_PAGE.LIBRARY')}</span>
+          <Image src="/icons/team_info.svg" alt="team_info" width={16} height={16} />
+          <span>{t('team:TEAM_PAGE.INFORMATION')}</span>
         </div>
         <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
       </div>
