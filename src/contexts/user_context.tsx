@@ -601,6 +601,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20241101 - Liz) 選擇角色的功能
   const selectRole = async (roleId: number) => {
+    // Deprecated: (20250328 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('userAuthRef.current?.id:', userAuthRef.current?.id, 'roleId:', roleId);
+
     try {
       const { success, data: userRole } = await selectRoleAPI({
         params: { userId: userAuthRef.current?.id },
