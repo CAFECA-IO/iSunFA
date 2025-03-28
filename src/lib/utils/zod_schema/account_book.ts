@@ -3,13 +3,13 @@ import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION, ACCOUNT_BOOK_ROLE } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema, TeamSchema } from '@/lib/utils/zod_schema/team';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
-import { companyOutputSchema } from '@/lib/utils/zod_schema/company';
 
 // Info: (2025) `roleSchema` 不再需要，因為 `role` 已經改為 `accountBookRole`
 
-const accountBookSchema = z.object({
+export const accountBookSchema = z.object({
   id: z.number(),
-  teamId: z.number(),
+  teamId: z.number().default(0),
+  userId: z.number().default(555),
   imageId: z.string(),
   name: z.string(),
   taxId: z.string(),
@@ -20,7 +20,7 @@ const accountBookSchema = z.object({
   isPrivate: z.boolean().optional(),
 });
 
-export const accountBookWithTeamSchema = companyOutputSchema.extend({
+export const accountBookWithTeamSchema = accountBookSchema.extend({
   team: TeamSchema,
   isTransferring: z.boolean(),
 });
@@ -35,6 +35,26 @@ const updateAccountBookQuerySchema = z.object({
   accountBookId: zodStringToNumber,
 });
 
+const accountBookCreateQuerySchema = z.object({
+  userId: zodStringToNumber,
+});
+
+const accountBookCreateBodySchema = z.object({
+  name: z.string(),
+  taxId: z.string(),
+  tag: z.nativeEnum(WORK_TAG),
+  teamId: z.number().int(),
+});
+
+export const accountBookCreateSchema = {
+  input: {
+    querySchema: accountBookCreateQuerySchema,
+    bodySchema: accountBookCreateBodySchema,
+  },
+  outputSchema: accountBookSchema.nullable(),
+  frontend: nullSchema,
+};
+
 const updateAccountBookBodySchema = z.object({
   action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
   tag: z.nativeEnum(WORK_TAG).optional(),
@@ -42,7 +62,7 @@ const updateAccountBookBodySchema = z.object({
 
 const updateAccountBookResponseSchema = z.object({
   teamId: z.number().optional().default(0),
-  company: companyOutputSchema,
+  company: accountBookSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number().int(),
   accountBookRole: z.nativeEnum(ACCOUNT_BOOK_ROLE), // Info: (2025) 改為 `accountBookRole`

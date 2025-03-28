@@ -233,6 +233,7 @@ enum Tag {
 model Company {
   id          Int     @id @default(autoincrement())
   teamId      Int     @map("team_id") // Info: (20250224 - tzuhan) 讓 company 連結到 team
+  userId      Int     @map("user_id")
   name        String
   taxId       String  @map("tax_id")
   imageFileId Int     @unique @map("image_file_id")
@@ -245,6 +246,7 @@ model Company {
   tag         Tag     @default(ALL) // Info: (20250324 - tzuhan) 公司標籤
 
   team      Team  @relation(fields: [teamId], references: [id])
+  user      User  @relation(fields: [userId], references: [id])
   imageFile File  @relation("company_image_file", fields: [imageFileId], references: [id])
 
   // admins                     Admin[]
@@ -951,14 +953,15 @@ model User {
   userVouchers      UserVoucher[]
   Voucher           Voucher[]
 
-  imageFile   File          @relation("user_image_file", fields: [imageFileId], references: [id])
-  Asset       Asset[]
-  UserSetting UserSetting[]
-  ownedTeams  Team[] // Info: (20250221 - tzuhan) 反向關聯，表示這個 User 可能是多個 Team 的 owner
-  memberships TeamMember[] // Info: (20250221 - tzuhan) 這個 User 可能是多個 Team 的成員
+  imageFile           File          @relation("user_image_file", fields: [imageFileId], references: [id])
+  Asset               Asset[]
+  UserSetting         UserSetting[]
+  ownedTeams          Team[] // Info: (20250221 - tzuhan) 反向關聯，表示這個 User 可能是多個 Team 的 owner
+  memberships         TeamMember[] // Info: (20250221 - tzuhan) 這個 User 可能是多個 Team 的成員
+  AccountBookTransfer AccountBookTransfer[]
+  accountBook         Company[]
 
   @@map("user")
-  AccountBookTransfer AccountBookTransfer[]
 }
 
 model UserAgreement {
@@ -1040,6 +1043,7 @@ enum RoleName {
   BOOKKEEPER
   EDUCATIONAL_TRIAL_VERSION
   ENTERPRISE
+  TEST
 }
 
 // Info: (20250325 - Tzuhan) `RoleType` 用來區分系統角色與公司角色，這是之前的設計，保留應該可以用來開測試帳號

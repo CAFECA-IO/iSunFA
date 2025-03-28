@@ -147,6 +147,7 @@ export const createAccountBook = async (
     const createdAccountBook = await prisma.company.create({
       data: {
         teamId,
+        userId,
         name,
         taxId,
         imageFileId: file.id,
@@ -804,6 +805,7 @@ export async function getAccountBookForUserWithTeam(
     // These will be determined by business requirements or replaced in the future
     return {
       id: accountBook.id,
+      userId: accountBook.userId,
       imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
       name: accountBook.name,
       taxId: accountBook.taxId,
@@ -951,6 +953,7 @@ export async function findUserAccountBook(
     // Info: (20250325 - Shirley) Return the formatted account book data
     return {
       id: accountBook.id,
+      userId: accountBook.userId,
       imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
       name: accountBook.name,
       taxId: accountBook.taxId,

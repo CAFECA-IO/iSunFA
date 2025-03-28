@@ -8,6 +8,7 @@ import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
 import { RoleName as PrismaRoleName } from '@prisma/client';
 import { RoleName } from '@/constants/role';
+import loggerBack from '@/lib/utils/logger_back';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -15,8 +16,13 @@ const handleGetRequest = async (req: NextApiRequest) => {
   let payload: RoleName[] | null = null;
   await checkSessionUser(session, APIName.ROLE_LIST, req);
   await checkUserAuthorization(APIName.ROLE_LIST, req, session);
+  const { type } = req.query;
 
-  const roleList = Object.values(PrismaRoleName).map((r) => RoleName[r as keyof typeof RoleName]);
+  const roleList = Object.values(PrismaRoleName)
+    .map((r) => RoleName[r as keyof typeof RoleName])
+    .filter((r) => !!r);
+
+  loggerBack.info(`request role list: ${JSON.stringify(roleList)} with type: ${type}`);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
 

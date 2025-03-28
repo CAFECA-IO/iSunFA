@@ -84,8 +84,9 @@ const handleGetRequest: IHandleRequest<
     return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
   }
 
-  const result = {
+  const result: IAccountBook = {
     id: company.id,
+    userId: company.userId || 555,
     imageId: company.imageFile?.url || '',
     name: company.name,
     taxId: company.taxId,
@@ -93,7 +94,9 @@ const handleGetRequest: IHandleRequest<
     createdAt: company.createdAt,
     updatedAt: company.updatedAt,
     isPrivate: company.isPrivate,
-  } as IAccountBook;
+    teamId: company.teamId,
+    tag: company.tag as WORK_TAG,
+  };
 
   await setSession(session, { companyId: accountBookId });
 

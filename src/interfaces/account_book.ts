@@ -26,6 +26,7 @@ export enum ACCOUNT_BOOK_UPDATE_ACTION {
 export interface IAccountBook {
   id: number;
   teamId: number;
+  userId: number;
   imageId: string;
   name: string;
   taxId: string;

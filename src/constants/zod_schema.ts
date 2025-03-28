@@ -19,7 +19,6 @@ import {
 } from '@/lib/utils/zod_schema/certificate';
 import {
   companyDeleteSchema,
-  companyPostSchema,
   companyPutIconSchema,
   companyPutSchema,
   companySearchSchema,
@@ -121,6 +120,7 @@ import { subscriptionSchemas } from '@/lib/utils/zod_schema/subscription';
 import { teamSchemas } from '@/lib/utils/zod_schema/team';
 import { paymentPlanListSchema } from '@/lib/utils/zod_schema/payment_plan';
 import {
+  accountBookCreateSchema,
   accountBookListSchema,
   connectAccountBookSchema,
   listAccountBooksByTeamIdSchema,
@@ -162,9 +162,11 @@ export const API_ZOD_SCHEMA = {
 
 // Info: (20241112 - Jacky) Cannot add type Record<APIName, ZodAPISchema> , because Record will make infer type to any
 export const ZOD_SCHEMA_API = {
-  [APIName.CREATE_ACCOUNT_BOOK]: companyPostSchema,
+  [APIName.CREATE_ACCOUNT_BOOK]: accountBookCreateSchema,
   [APIName.COMPANY_UPDATE]: companyPutSchema,
   [APIName.COMPANY_DELETE]: companyDeleteSchema,
+  [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: companySearchSchema,
+  [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
   [APIName.COMPANY_PUT_ICON]: companyPutIconSchema,
   [APIName.COMPANY_SETTING_GET]: companySettingGetSchema,
   [APIName.COMPANY_SETTING_UPDATE]: companySettingPutSchema,
@@ -174,7 +176,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.COUNTERPARTY_UPDATE]: counterpartyPutSchema,
   [APIName.COUNTERPARTY_DELETE]: counterpartyDeleteSchema,
   [APIName.USER_PENDING_TASK_GET]: userPendingTaskSchema,
-  [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
   [APIName.USER_ROLE_LIST]: userRoleListSchema,
   [APIName.USER_SELECT_ROLE]: userRoleSelectSchema,
   [APIName.USER_CREATE_ROLE]: userRolePostSchema,
@@ -220,7 +221,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_UPDATE]: userPutSchema,
   [APIName.USER_DELETION_UPDATE]: userDeletionPutSchema,
   [APIName.USER_DELETE]: userDeleteSchema,
-  [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: companySearchSchema,
   [APIName.CERTIFICATE_PUT_V2]: nullAPISchema,
   [APIName.INVOICE_POST_V2]: invoicePostV2Schema,
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,

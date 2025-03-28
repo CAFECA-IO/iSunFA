@@ -26,7 +26,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   await checkUserAuthorization(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req, session);
 
   const { query } = checkRequestData(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req, session);
-  loggerBack.info(`List Team by userId: ${userId} with query: ${JSON.stringify(query)}`);
+  loggerBack.info(`List accountBook by userId: ${userId} with query: ${JSON.stringify(query)}`);
 
   if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
@@ -59,7 +59,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   await checkUserAuthorization(APIName.CREATE_ACCOUNT_BOOK, req, session);
 
   const { body } = checkRequestData(APIName.CREATE_ACCOUNT_BOOK, req, session);
-  loggerBack.info(`List Team by userId: ${userId} with body: ${JSON.stringify(body)}`);
+  loggerBack.info(`Create accountBook by userId: ${userId} with body: ${JSON.stringify(body)}`);
 
   if (body === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);

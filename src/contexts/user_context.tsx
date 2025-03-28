@@ -27,8 +27,8 @@ interface UserContextType {
   isSignIn: boolean;
   isAgreeTermsOfService: boolean;
   isSignInError: boolean;
-  createRole: (roleId: RoleName) => Promise<IUserRole | null>;
-  selectRole: (roleId: RoleName) => Promise<IUserRole | null>;
+  createRole: (roleName: RoleName) => Promise<IUserRole | null>;
+  selectRole: (roleName: RoleName) => Promise<IUserRole | null>;
   getUserRoleList: () => Promise<IUserRole[] | null>;
   getSystemRoleList: () => Promise<RoleName[] | null>;
   selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
@@ -547,11 +547,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241101 - Liz) 選擇角色的功能
-  const selectRole = async (roleId: RoleName) => {
+  const selectRole = async (roleName: RoleName) => {
     try {
       const { success, data: userRole } = await selectRoleAPI({
         params: { userId: userAuthRef.current?.id },
-        body: { roleId },
+        body: { roleName },
       });
 
       if (success && userRole) {
