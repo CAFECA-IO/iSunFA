@@ -1,109 +1,124 @@
 import prisma from '@/client';
-import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
-import { Prisma, Role, UserRole } from '@prisma/client';
+import { getTimestampNow } from '@/lib/utils/common';
+import { RoleName, RoleType } from '@/constants/role';
+import { IUserRole } from '@/interfaces/user_role';
+import { SortOrder } from '@/constants/sort';
 
-// Info: (20241015 - Jacky) Create
-export async function createUserRole(
-  userId: number,
-  roleId: number
-): Promise<UserRole & { role: Role }> {
-  const now = Date.now();
-  const nowTimestamp = timestampInSeconds(now);
-  const newUserRole = await prisma.userRole.create({
-    data: {
-      userId,
-      roleId,
-      createdAt: nowTimestamp,
-      updatedAt: nowTimestamp,
-    },
-    include: {
-      role: true,
-    },
-  });
-  return newUserRole;
-}
+export const getUserRoleById = async (roleId: number): Promise<IUserRole | null> => {
+  let result: IUserRole | null = null;
+  if (roleId > 0) {
+    const userRole = await prisma.userRole.findUnique({
+      where: { id: roleId },
+    });
+    if (userRole) {
+      result = {
+        ...userRole,
+        roleName: userRole.roleName as RoleName,
+        type: userRole.type as RoleType,
+        deletedAt: undefined,
+      };
+    }
+  }
+  return result;
+};
 
-// Info: (20241015 - Jacky) List
-export async function listUserRole(userId: number): Promise<(UserRole & { role: Role })[]> {
-  const listedUserRoles = await prisma.userRole.findMany({
+// Info: (20250327 - Tzuhan) 取得指定使用者的所有角色清單
+export const getUserRoleListByUserId = async (userId: number): Promise<IUserRole[]> => {
+  const userRoleFromDB = await prisma.userRole.findMany({
     where: {
       userId,
-      OR: [{ deletedAt: 0 }, { deletedAt: null }],
-    },
-    include: {
-      role: true,
-    },
-  });
-
-  return listedUserRoles;
-}
-
-export async function getUserRoleByUserAndRoleId(
-  userId: number,
-  roleId: number
-): Promise<(UserRole & { role: Role }) | null> {
-  const userRole = await prisma.userRole.findFirst({
-    where: {
-      userId,
-      roleId,
-      OR: [{ deletedAt: 0 }, { deletedAt: null }],
-    },
-    include: {
-      role: true,
-    },
-  });
-
-  return userRole;
-}
-
-export async function updateUserRoleLoginAt(id: number): Promise<UserRole & { role: Role }> {
-  const nowInSecond = getTimestampNow();
-
-  const updatedUserRole = await prisma.userRole.update({
-    where: {
-      id,
       deletedAt: null,
     },
-    data: {
-      updatedAt: nowInSecond,
-      lastLoginAt: nowInSecond,
-    },
-    include: {
-      role: true,
+    orderBy: {
+      lastLoginAt: SortOrder.DESC,
     },
   });
-  return updatedUserRole;
-}
+  return userRoleFromDB.map((userRole) => ({
+    ...userRole,
+    roleName: userRole.roleName as RoleName,
+    type: userRole.type as RoleType,
+    deletedAt: undefined,
+  }));
+};
 
-export async function deleteUserRole(id: number): Promise<UserRole & { role: Role }> {
-  const nowInSecond = getTimestampNow();
+// Info: (20250327 - Tzuhan) 建立使用者角色（若尚未存在）
+export const createUserRoleIfNotExists = async (params: {
+  userId: number;
+  roleName: RoleName;
+}): Promise<IUserRole | null> => {
+  const { userId, roleName } = params;
 
-  const deletedUserRole = await prisma.userRole.update({
+  // Info: (20250327 - Tzuhan) 先檢查是否已存在此角色
+  const existing = await prisma.userRole.findFirst({
     where: {
-      id,
+      userId,
+      roleName,
       deletedAt: null,
     },
-    data: {
-      updatedAt: nowInSecond,
-      deletedAt: nowInSecond,
-    },
-    include: {
-      role: true,
-    },
   });
 
-  return deletedUserRole;
-}
+  if (existing) return null;
 
-// Info: (20241015 - Jacky) Real delete for testing
-export async function deleteUserRoleForTesting(id: number): Promise<UserRole> {
-  const where: Prisma.UserRoleWhereUniqueInput = {
-    id,
+  // Info: (20250327 - Tzuhan) 取得對應角色的 type（若有邏輯需要可補全）
+  const roleType = RoleType.USER; // Info: (20250327 - Tzuhan) 或其他類型判斷邏輯
+
+  const now = getTimestampNow();
+
+  const createdUserRole = await prisma.userRole.create({
+    data: {
+      userId,
+      roleName,
+      type: roleType,
+      createdAt: now,
+      updatedAt: now,
+      lastLoginAt: now,
+    },
+  });
+  return {
+    ...createdUserRole,
+    roleName,
+    type: roleType,
+    deletedAt: undefined,
   };
+};
 
-  const deletedUserRole = await prisma.userRole.delete({
-    where,
-  });
+// Info: (20250327 - Tzuhan) 更新登入時間（選擇角色時觸發）
+export const updateUserLastLoginAt = async (params: {
+  userId: number;
+  roleName: RoleName;
+}): Promise<IUserRole | null> => {
+  const { userId, roleName } = params;
 
-  return deletedUserRole;
-}
+  const now = getTimestampNow();
+
+  const selectedUserRole = await prisma.userRole
+    .updateMany({
+      where: {
+        userId,
+        roleName,
+        deletedAt: null,
+      },
+      data: {
+        lastLoginAt: now,
+        updatedAt: now,
+      },
+    })
+    .then(async () => {
+      return prisma.userRole.findFirst({
+        where: {
+          userId,
+          roleName,
+          deletedAt: null,
+        },
+      });
+    });
+
+  return selectedUserRole
+    ? {
+        ...selectedUserRole,
+        roleName,
+        type: selectedUserRole.type as RoleType,
+        deletedAt: undefined,
+      }
+    : selectedUserRole;
+};

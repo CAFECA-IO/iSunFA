@@ -9,12 +9,12 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IntroductionProps {
-  selectedRoleId: number;
+  selectedRoleName: RoleName;
   showingRole: string;
   togglePreviewModal: () => void;
 }
 interface ButtonsProps {
-  selectedRoleId: number;
+  selectedRoleName: RoleName;
   togglePreviewModal: () => void;
 }
 interface BookkeeperIntroductionProps {
@@ -39,7 +39,7 @@ const DefaultIntroduction: React.FC = () => {
   );
 };
 
-const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
+const Buttons = ({ selectedRoleName, togglePreviewModal }: ButtonsProps) => {
   const { t } = useTranslation('dashboard');
   const { createRole, selectRole } = useUserCtx();
   const router = useRouter();
@@ -49,9 +49,9 @@ const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
     setIsLoading(true);
 
     try {
-      const userRole = await createRole(selectedRoleId);
+      const userRole = await createRole(selectedRoleName);
 
-      if (!userRole || !userRole.role || !userRole.role.id) {
+      if (!userRole) {
         // Deprecated: (20241107 - Liz)
         // eslint-disable-next-line no-console
         console.log('角色建立失敗: 無效的 userRole 或 role ID', userRole);
@@ -59,13 +59,13 @@ const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
       }
 
       // Info: (20241107 - Liz) 角色建立成功，執行選擇角色的操作
-      const res = await selectRole(userRole.role.id);
+      const res = await selectRole(userRole.roleName);
 
       // Info: (20241107 - Liz) 檢查選擇角色是否成功，失敗則顯示錯誤訊息
       if (!res) {
         // Deprecated: (20241107 - Liz)
         // eslint-disable-next-line no-console
-        console.log('選擇角色失敗 userRole.role.id', userRole.role.id);
+        console.log('選擇角色失敗 userRole.role.id', userRole.roleName);
         return;
       }
 
@@ -168,18 +168,18 @@ const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntro
   );
 };
 
-const Introduction = ({ selectedRoleId, showingRole, togglePreviewModal }: IntroductionProps) => {
+const Introduction = ({ selectedRoleName, showingRole, togglePreviewModal }: IntroductionProps) => {
   return (
     <main className="flex flex-auto">
       {!showingRole && <DefaultIntroduction />}
       {showingRole === RoleName.BOOKKEEPER && (
         <BookkeeperIntroduction>
-          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleId={selectedRoleId} />
+          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleName={selectedRoleName} />
         </BookkeeperIntroduction>
       )}
       {showingRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
         <EducationalTrialVersionIntroduction>
-          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleId={selectedRoleId} />
+          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleName={selectedRoleName} />
         </EducationalTrialVersionIntroduction>
       )}
     </main>

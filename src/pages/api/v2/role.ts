@@ -1,54 +1,37 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import {
-  checkRequestData,
-  checkSessionUser,
-  checkUserAuthorization,
-  logUserAction,
-} from '@/lib/utils/middleware';
+import { checkSessionUser, checkUserAuthorization, logUserAction } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
-import { IPaginatedOptions } from '@/interfaces/pagination';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
-import { IAccountBookWithTeam } from '@/interfaces/account_book';
-import { listAccountBooksByTeamId } from '@/lib/utils/repo/account_book.repo';
+import { RoleName as PrismaRoleName } from '@prisma/client';
+import { RoleName } from '@/constants/role';
+import loggerBack from '@/lib/utils/logger_back';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
-  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedOptions<IAccountBookWithTeam[]> | null = null;
+  let payload: RoleName[] | null = null;
+  await checkSessionUser(session, APIName.ROLE_LIST, req);
+  await checkUserAuthorization(APIName.ROLE_LIST, req, session);
+  const { type } = req.query;
 
-  // Info: (20250226 - Tzuhan) 驗證使用者是否登入
-  await checkSessionUser(session, APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID, req);
-  // Info: (20250226 - Tzuhan)驗證使用者是否有權限查詢該團隊
-  await checkUserAuthorization(APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID, req, session);
+  const roleList = Object.values(PrismaRoleName)
+    .map((r) => RoleName[r as keyof typeof RoleName])
+    .filter((r) => !!r);
 
-  // Info: (20250226 - Tzuhan)驗證請求資料
-  const { query } = checkRequestData(APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID, req, session);
-
-  if (query === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-
-  // Info: (20250226 - Tzuhan)取得該團隊的帳本列表
-  const accountBooks = await listAccountBooksByTeamId(userId, query);
+  loggerBack.info(`request role list: ${JSON.stringify(roleList)} with type: ${type}`);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  // Info: (20250226 - Tzuhan)驗證輸出資料
-  const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID,
-    accountBooks
-  );
 
+  const { isOutputDataValid, outputData } = validateOutputData(APIName.ROLE_LIST, roleList);
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   } else {
     payload = outputData;
   }
-
   const response = formatApiResponse(statusMessage, payload);
   return { response, statusMessage };
 };
@@ -77,6 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE];
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
-  await logUserAction(session, APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID, req, statusMessage);
+  await logUserAction(session, APIName.ROLE_LIST, req, statusMessage);
+
   res.status(httpCode).json(result);
 }

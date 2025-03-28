@@ -47,7 +47,7 @@ const handlePutRequest: IHandleRequest<APIName.FILE_PUT_V2, File> = async ({ que
   return { statusMessage, payload };
 };
 
-const handleDeleteRequest: IHandleRequest<APIName.FILE_DELETE, File> = async ({ query }) => {
+const handleDeleteRequest: IHandleRequest<APIName.FILE_DELETE_V2, File> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: File | null = null;
 
@@ -83,7 +83,7 @@ const methodHandlers: {
   ) => Promise<{ statusMessage: string; payload: IFileBeta | null }>;
 } = {
   GET: (req) => withRequestValidation(APIName.FILE_GET, req, handleGetRequest),
-  DELETE: (req) => withRequestValidation(APIName.FILE_DELETE, req, handleDeleteRequest),
+  DELETE: (req) => withRequestValidation(APIName.FILE_DELETE_V2, req, handleDeleteRequest),
   PUT: (req) => withRequestValidation(APIName.FILE_PUT_V2, req, handlePutRequest),
 };
 

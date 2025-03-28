@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Pagination from '@/components/pagination/pagination';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
@@ -23,12 +23,10 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [connectedAccountBook, setSelectedCompany] = useState<IAccountBookForUserWithTeam | null>(
-    null
-  );
+  const [connectedAccountBook, setSelectedCompany] = useState<IAccountBookWithTeam | null>(null);
   const { userAuth } = useUserCtx();
 
   const displayedType = SortingButton({
@@ -37,13 +35,13 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
     setSortOrder: setTypeSort,
   });
 
-  const handleApiResponse = (data: IPaginatedData<IAccountBookForUserWithTeam[]>) => {
+  const handleApiResponse = (data: IPaginatedData<IAccountBookWithTeam[]>) => {
     setTotalCount(data.totalCount);
     setTotalPages(data.totalPages);
     setAccountBookList(data.data);
   };
 
-  const handleEditModal = (company: IAccountBookForUserWithTeam) => {
+  const handleEditModal = (company: IAccountBookWithTeam) => {
     setSelectedCompany(company);
     setIsEditModalOpen(true);
   };
@@ -52,7 +50,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       {isEditModalOpen && connectedAccountBook && (
         <AccountBookEditModal
-          companyAndRole={connectedAccountBook}
+          company={connectedAccountBook}
           toggleModal={() => setIsEditModalOpen((prev) => !prev)}
         />
       )}
@@ -66,7 +64,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
           </button>
         </section>
         <section className="flex flex-col gap-lv-5">
-          <FilterSection<IAccountBookForUserWithTeam[]>
+          <FilterSection<IAccountBookWithTeam[]>
             className="mt-2"
             apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
             params={{ userId: userAuth?.id }}
@@ -111,13 +109,13 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
                 {accountBookList.map((accountBook, index) => (
                   <div
                     className="group table-row h-72px text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10"
-                    key={`${accountBook.company.taxId}-${index + 1}`}
+                    key={`${accountBook.taxId}-${index + 1}`}
                   >
                     <div className="relative table-cell text-center align-middle">
-                      <div className="text-text-neutral-primary">{accountBook.company.name}</div>
+                      <div className="text-text-neutral-primary">{accountBook.name}</div>
                     </div>
                     <div className="relative table-cell text-center align-middle">
-                      <div className="text-text-neutral-tertiary">{accountBook.company.taxId}</div>
+                      <div className="text-text-neutral-tertiary">{accountBook.taxId}</div>
                     </div>
                     <div className="relative table-cell"></div>
                     <div className="relative table-cell justify-center align-middle">

@@ -65,6 +65,7 @@ const TeamInfoPage = () => {
   }
 
   // ToDo: (20250218 - Liz) 如果 team 資料不存在，顯示錯誤頁面
+  // Info: (20250327 - Tzuhan) 已經移除 FAKE_TEAM_LISTs
   if (!team) {
     return (
       <Layout

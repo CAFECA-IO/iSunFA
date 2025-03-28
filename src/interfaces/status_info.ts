@@ -1,11 +1,11 @@
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
-import { IRole } from '@/interfaces/role';
+import { IAccountBook } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { ITeam } from '@/interfaces/team';
+import { IUserRole } from './user_role';
 
 export interface IStatusInfo {
   user: IUser | null;
-  company: IAccountBookForUserWithTeam | null;
-  role: IRole | null;
+  company: IAccountBook | null;
+  role: IUserRole | null;
   teams: ITeam[] | null;
 }

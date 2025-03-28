@@ -6,7 +6,7 @@ import { IoCloseOutline } from 'react-icons/io5';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompanySetting } from '@/interfaces/company_setting';
-import { IAccountBookForUser } from '@/interfaces/account_book';
+import { IAccountBook } from '@/interfaces/account_book';
 import { Button } from '@/components/button/button';
 import { LocaleKey } from '@/constants/normal_setting';
 import SelectCountryDropdown from '@/components/user_settings/select_country_dropdown';
@@ -18,14 +18,11 @@ import { MessageType } from '@/interfaces/message_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface AccountBookEditModalProps {
-  companyAndRole: IAccountBookForUser;
+  company: IAccountBook;
   toggleModal: () => void;
 }
 
-const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
-  companyAndRole,
-  toggleModal,
-}) => {
+const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, toggleModal }) => {
   const { t } = useTranslation(['settings', 'common', 'account_book']);
   const router = useRouter();
   const [companyName, setCompanyName] = React.useState('');
@@ -46,11 +43,11 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (companyAndRole) {
+    if (company) {
       try {
         const res = await updateAccountBookSettingAPI({
           params: {
-            companyId: companyAndRole.company.id,
+            companyId: company.id,
           },
           body: {
             companyName,
@@ -86,11 +83,11 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
   };
 
   const procedureOfDelete = () => {
-    if (!companyAndRole) return;
+    if (!company) return;
     messageModalVisibilityHandler();
     deleteAccountBookAPI({
       params: {
-        companyId: companyAndRole.company.id,
+        companyId: company.id,
       },
     });
 
@@ -98,7 +95,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
   };
 
   const deleteCompanyClickHandler = () => {
-    if (!companyAndRole) return;
+    if (!company) return;
     messageModalDataHandler({
       messageType: MessageType.WARNING,
       title: t('account_book:DELETE.TITLE'),
@@ -111,10 +108,10 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
   };
 
   const getCompanySetting = async () => {
-    if (companyAndRole) {
+    if (company) {
       try {
         const res = await getCompanySettingAPI({
-          params: { companyId: companyAndRole.company.id },
+          params: { companyId: company.id },
         });
         const { success, data } = res;
         if (success && data) {
@@ -151,7 +148,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
             <p>{t('account_book:EDIT.BACK')}</p>
           </Button>
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {companyAndRole.company.name}
+            {company.name}
           </h1>
           <Button variant="secondaryBorderless" className="p-0" onClick={toggleModal}>
             <IoCloseOutline size={24} />

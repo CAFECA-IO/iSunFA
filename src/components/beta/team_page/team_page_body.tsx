@@ -5,7 +5,7 @@ import UploadTeamImageModal from '@/components/beta/team_page/upload_team_image_
 import TeamHeader from '@/components/beta/team_page/team_header';
 import TeamPageButtons from '@/components/beta/team_page/team_page_buttons';
 import { useTranslation } from 'next-i18next';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { useUserCtx } from '@/contexts/user_context';
 import NoData from '@/components/beta/account_books_page/no_data';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
@@ -28,21 +28,17 @@ interface TeamPageBodyProps {
 const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
   const { t } = useTranslation(['team']);
   const { deleteAccountBook } = useUserCtx();
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[] | null>(
-    null
-  );
+  const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[] | null>(null);
   const [teamToChangeImage, setTeamToChangeImage] = useState<ITeam | undefined>();
   const [accountBookToTransfer, setAccountBookToTransfer] = useState<
-    IAccountBookForUserWithTeam | undefined
+    IAccountBookWithTeam | undefined
   >();
-  const [accountBookToEdit, setAccountBookToEdit] = useState<
-    IAccountBookForUserWithTeam | undefined
-  >();
+  const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookWithTeam | undefined>();
   const [accountBookToDelete, setAccountBookToDelete] = useState<
-    IAccountBookForUserWithTeam | undefined
+    IAccountBookWithTeam | undefined
   >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
-    IAccountBookForUserWithTeam | undefined
+    IAccountBookWithTeam | undefined
   >();
   const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
   const isNoData = !accountBookList || accountBookList.length === 0;
@@ -58,7 +54,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
 
   // Info: (20250310 - Liz) 取得團隊帳本清單 API (list account book by team id)
   const { trigger: getAccountBookListByTeamIdAPI } = APIHandler<
-    IPaginatedData<IAccountBookForUserWithTeam[]>
+    IPaginatedData<IAccountBookWithTeam[]>
   >(APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID);
 
   // Info: (20250310 - Liz) 打 API 取得團隊帳本清單
@@ -92,7 +88,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
     if (!accountBookToDelete) return;
 
     try {
-      const data = await deleteAccountBook(accountBookToDelete.company.id);
+      const data = await deleteAccountBook(accountBookToDelete.id);
 
       if (!data) {
         // Deprecated: (20250219 - Liz)

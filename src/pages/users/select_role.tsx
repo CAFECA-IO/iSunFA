@@ -15,13 +15,11 @@ import { RoleName } from '@/constants/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { IRole } from '@/interfaces/role';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface UserRoleProps {
-  name: string;
-  roleId: number;
+  roleId: RoleName;
   roleIconSrc: string;
   roleIconAlt: string;
   avatar: string;
@@ -42,14 +40,7 @@ const USER_ROLES_ICON = [
   },
 ];
 
-const UserRole = ({
-  name,
-  roleId,
-  roleIconSrc,
-  roleIconAlt,
-  avatar,
-  lastLoginAt,
-}: UserRoleProps) => {
+const UserRole = ({ roleId, roleIconSrc, roleIconAlt, avatar, lastLoginAt }: UserRoleProps) => {
   const { t } = useTranslation(['dashboard']);
   const router = useRouter();
   const { selectRole } = useUserCtx();
@@ -94,7 +85,7 @@ const UserRole = ({
       </div>
 
       <h2 className="text-32px font-bold text-text-neutral-primary">
-        {t(`dashboard:ROLE.${name.toUpperCase().replace(/\s+/g, '_')}`)}
+        {t(`dashboard:ROLE.${roleId.toString().toUpperCase().replace(/\s+/g, '_')}`)}
       </h2>
 
       <Image
@@ -125,12 +116,12 @@ const UserRole = ({
   );
 };
 
-const findUnusedRoles = (systemRoles: IRole[], userRoles: IUserRole[]): IRole[] => {
+const findUnusedRoles = (systemRoles: RoleName[], userRoles: IUserRole[]): RoleName[] => {
   // Info: (20241122 - Liz) 將 userRoles 中的角色 ID 建立為一個 Set
-  const userRoleIds = new Set(userRoles.map((userRole) => userRole.role.id));
+  const userRoleIds = new Set(userRoles.map((userRole) => userRole.roleName));
 
   // Info: (20241122 - Liz) 從 systemRoles 中篩選出尚未被 userRoles 使用的角色
-  return systemRoles.filter((role) => !userRoleIds.has(role.id));
+  return systemRoles.filter((role) => !userRoleIds.has(role));
 };
 
 const SelectRolePage = () => {
@@ -235,13 +226,12 @@ const SelectRolePage = () => {
         {!isLoading && (
           <section className="flex items-center justify-center gap-40px">
             {userRoleList.map((userRole) => {
-              const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.role.name);
+              const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.roleName);
 
               return (
                 <UserRole
                   key={userRole.id}
-                  name={userRole.role.name}
-                  roleId={userRole.role.id}
+                  roleId={userRole.roleName}
                   roleIconSrc={roleIcon?.roleIconSrc ?? ''}
                   roleIconAlt={roleIcon?.roleIconAlt ?? ''}
                   avatar={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
