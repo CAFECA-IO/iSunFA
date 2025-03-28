@@ -183,9 +183,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     role: IRole;
     teams: ITeam[]; // Info: (20250325 - Liz) 目前尚未使用到團隊清單
   }>(APIName.STATUS_INFO_GET);
-  // Info: (20241108 - Liz) 取得系統角色列表 API
+  // Info: (20241108 - Liz) 取得系統角色清單 API
   const { trigger: systemRoleListAPI } = APIHandler<IRole[]>(APIName.ROLE_LIST);
-  // Info: (20241104 - Liz) 取得使用者角色列表 API
+  // Info: (20241104 - Liz) 取得使用者建立的所有角色
   const { trigger: userRoleListAPI } = APIHandler<IUserRole[]>(APIName.USER_ROLE_LIST);
   // Info: (20241104 - Liz) 建立角色 API
   const { trigger: createRoleAPI } = APIHandler<IUserRole>(APIName.USER_CREATE_ROLE);
@@ -618,7 +618,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241108 - Liz) 取得系統角色列表
+  // Info: (20241108 - Liz) 取得系統角色清單
   const getSystemRoleList = async () => {
     try {
       const { data: systemRoleList, success } = await systemRoleListAPI({
@@ -634,7 +634,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241025 - Liz) 取得使用者擁有的所有角色
+  // Info: (20241025 - Liz) 取得使用者建立的所有角色
   const getUserRoleList = async () => {
     try {
       const { data: userRoleList, success } = await userRoleListAPI({

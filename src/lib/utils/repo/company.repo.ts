@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { Admin, Company, Prisma, File, CompanySetting } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds, pageToOffset } from '@/lib/utils/common';
-import { CompanyRoleName } from '@/constants/role';
+import { CompanyRoleName } from '@/interfaces/role';
 import { TeamRole, LeaveStatus } from '@/interfaces/team';
 import { TPlanType } from '@/interfaces/subscription';
 import { SortOrder, SortBy } from '@/constants/sort';

@@ -9,7 +9,7 @@ import {
   User,
   UserAgreement,
 } from '@prisma/client';
-import { CompanyRoleName } from '@/constants/role';
+import { CompanyRoleName } from '@/interfaces/role';
 import { SortOrder } from '@/constants/sort';
 import { getTimestampNow, pageToOffset, timestampInSeconds } from '@/lib/utils/common';
 import {

@@ -11,11 +11,10 @@ import I18n from '@/components/i18n/i18n';
 import { useUserCtx } from '@/contexts/user_context';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { DEFAULT_AVATAR_URL } from '@/constants/display';
-import { RoleName } from '@/constants/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { IRole } from '@/interfaces/role';
+import { IRole, RoleName } from '@/interfaces/role';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 

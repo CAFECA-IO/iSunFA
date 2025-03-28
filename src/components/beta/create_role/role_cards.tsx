@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
-import { RoleName } from '@/constants/role';
-import { IRole } from '@/interfaces/role';
-import { useTranslation } from 'next-i18next';
+import { RoleName, IRole } from '@/interfaces/role';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
+import RoleCard from '@/components/beta/create_role/role_card';
+import { toConstantCase } from '@/lib/utils/common';
 
 // Info: (20241007 - Liz) 每個角色對應的圖片
 const ROLES_IMAGE = [
@@ -21,73 +20,17 @@ const ROLES_IMAGE = [
   },
 ];
 
-interface RoleCardProps {
-  roleId: number;
-  roleName: string;
-  imageSrc: string;
-  isDisabled: boolean;
-  showingRole: string;
-  setShowingRole: React.Dispatch<React.SetStateAction<string>>;
-  setSelectedRoleId: React.Dispatch<React.SetStateAction<number>>;
-}
-
-const RoleCard = ({
-  roleName,
-  roleId,
-  imageSrc,
-  isDisabled,
-  showingRole,
-  setShowingRole,
-  setSelectedRoleId,
-}: RoleCardProps) => {
-  const { t } = useTranslation('dashboard');
-  const translatedRoleName = t(`dashboard:ROLE.${roleName.toUpperCase().replace(/ /g, '_')}`);
-
-  const isRoleSelected = showingRole === roleName;
-
-  const handleClick = () => {
-    setShowingRole(roleName);
-    setSelectedRoleId(roleId);
-  };
-
-  const notAvailable = roleName === RoleName.ENTERPRISE; // ToDo: (20250207 - Liz) 因為企業版角色介紹的設計尚未確定，所以暫時將企業版角色的卡片設為不可選擇
-
-  return (
-    <div className="px-60px pb-56px pt-36px">
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={isDisabled || notAvailable}
-        className={`relative flex h-120px w-240px skew-x-20 items-center rounded-sm text-text-neutral-primary shadow-Dropshadow_XS disabled:pointer-events-none disabled:opacity-50 screen1280:w-360px ${isRoleSelected ? 'border-2 border-stroke-brand-primary bg-surface-brand-primary-30' : 'bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10'}`}
-      >
-        <p
-          className={`-skew-x-20 pl-110px text-center font-bold screen1280:w-300px screen1280:pl-100px ${roleName === RoleName.EDUCATIONAL_TRIAL_VERSION ? 'pl-100px laptop:text-lg screen1280:text-28px' : 'laptop:text-xl screen1280:text-32px'}`}
-        >
-          {translatedRoleName}
-        </p>
-        <Image
-          src={imageSrc}
-          alt="role_image"
-          width={48}
-          height={48}
-          className={`absolute -left-50px -top-30px w-160px -skew-x-20 rounded-full ${showingRole === roleName ? 'border-4 border-stroke-brand-primary' : ''}`}
-        />
-      </button>
-    </div>
-  );
-};
-
 interface RoleCardsProps {
   roleList: IRole[];
-  showingRole: string;
-  setShowingRole: React.Dispatch<React.SetStateAction<string>>;
+  displayedRole: string;
+  setDisplayedRole: React.Dispatch<React.SetStateAction<string>>;
   setSelectedRoleId: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const RoleCards = ({
   roleList,
-  showingRole,
-  setShowingRole,
+  displayedRole,
+  setDisplayedRole,
   setSelectedRoleId,
 }: RoleCardsProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -165,17 +108,19 @@ const RoleCards = ({
         className="hide-scrollbar mx-60px flex max-w-fit gap-20px overflow-x-auto"
       >
         {roleList.map((role, index) => {
+          const roleNameToConstantCase = toConstantCase(role.name); // Info: (20250328 - Liz) 將角色名稱轉換為常數格式
+
           const imageSrc =
-            ROLES_IMAGE.find((rolesImage) => rolesImage.roleName === role.name)?.imageSrc ?? '';
+            ROLES_IMAGE.find((rolesImage) => rolesImage.roleName === roleNameToConstantCase)
+              ?.imageSrc ?? '';
 
           return (
             <RoleCard
               key={role.id}
-              roleId={role.id}
-              roleName={role.name}
+              role={role}
               imageSrc={imageSrc}
-              showingRole={showingRole}
-              setShowingRole={setShowingRole}
+              displayedRole={displayedRole}
+              setDisplayedRole={setDisplayedRole}
               setSelectedRoleId={setSelectedRoleId}
               isDisabled={disabledCards.includes(index)}
             />

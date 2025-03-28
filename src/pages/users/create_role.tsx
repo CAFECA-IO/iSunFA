@@ -7,15 +7,16 @@ import Introduction from '@/components/beta/create_role/introduction';
 import RoleCards from '@/components/beta/create_role/role_cards';
 import PreviewModal from '@/components/beta/create_role/preview_modal';
 import { useUserCtx } from '@/contexts/user_context';
-import { IRole } from '@/interfaces/role';
+import { IRole, RoleName } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { PiArrowUUpLeftBold } from 'react-icons/pi';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import LoginAnimation from '@/components/login/login_animation';
-import { RoleName } from '@/constants/role';
+import { toConstantCase } from '@/lib/utils/common';
 
+// Info: (20250328 - Liz) 篩選出尚未被使用的角色
 const findUnusedRoles = (systemRoles: IRole[], userRoles: IUserRole[]): IRole[] => {
   // Info: (20241122 - Liz) 將 userRoles 中的角色 ID 建立為一個 Set
   const userRoleIds = new Set(userRoles.map((userRole) => userRole.role.id));
@@ -29,7 +30,14 @@ const CreateRolePage = () => {
   const { getSystemRoleList, getUserRoleList } = useUserCtx();
 
   // Info: (20241108 - Liz) 畫面顯示的角色
-  const [showingRole, setShowingRole] = useState<string>('');
+  const [displayedRole, setDisplayedRole] = useState<string>('');
+  const isRoleDisplayed = !!displayedRole; // Info: (20250328 - Liz) 是否有正在顯示的角色
+  const displayedRoleToConstantCase = toConstantCase(displayedRole); // Info: (20250328 - Liz) 將角色名稱轉換為常數格式
+  const isBookkeeperDisplayed = displayedRoleToConstantCase === RoleName.BOOKKEEPER;
+  const isEducationalTrialVersionDisplayed =
+    displayedRoleToConstantCase === RoleName.EDUCATIONAL_TRIAL_VERSION;
+  const isEnterpriseDisplayed = displayedRoleToConstantCase === RoleName.ENTERPRISE;
+
   // Info: (20241108 - Liz) 使用者選擇的角色 ID
   const [selectedRoleId, setSelectedRoleId] = useState<number>(0);
   const [unusedSystemRoles, setUnusedSystemRoles] = useState<IRole[]>([]);
@@ -117,7 +125,7 @@ const CreateRolePage = () => {
           )}
 
           {/* Info: (20250206 - Liz) 背景圖片 */}
-          {!showingRole && (
+          {!isRoleDisplayed && (
             <Image
               src="/images/select_role_bg.svg"
               alt="default_introduction"
@@ -127,7 +135,7 @@ const CreateRolePage = () => {
             ></Image>
           )}
 
-          {showingRole === RoleName.BOOKKEEPER && (
+          {isBookkeeperDisplayed && (
             <Image
               src="/images/bookkeeper_bg.svg"
               alt="bookkeeper_introduction"
@@ -137,7 +145,7 @@ const CreateRolePage = () => {
             ></Image>
           )}
 
-          {showingRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
+          {isEducationalTrialVersionDisplayed && (
             <Image
               src="/images/educational_bg.svg"
               alt="educational_trial_version"
@@ -147,7 +155,7 @@ const CreateRolePage = () => {
             ></Image>
           )}
 
-          {showingRole === RoleName.ENTERPRISE && (
+          {isEnterpriseDisplayed && (
             // ToDo: (20250206 - Liz) 企業角色的背景圖片尚未設計，有之後再替換
             <Image
               src="/images/educational_bg.svg"
@@ -160,7 +168,7 @@ const CreateRolePage = () => {
 
           {/* Info: (20250206 - Liz) 介紹區塊 */}
           <Introduction
-            showingRole={showingRole}
+            displayedRole={displayedRole}
             selectedRoleId={selectedRoleId}
             togglePreviewModal={togglePreviewModal}
           />
@@ -168,8 +176,8 @@ const CreateRolePage = () => {
           {/* Info: (20250206 - Liz) 切換按鈕 */}
           <RoleCards
             roleList={unusedSystemRoles}
-            showingRole={showingRole}
-            setShowingRole={setShowingRole}
+            displayedRole={displayedRole}
+            setDisplayedRole={setDisplayedRole}
             setSelectedRoleId={setSelectedRoleId}
           />
 

@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { CompanyRoleName } from '@/constants/role';
+import { CompanyRoleName } from '@/interfaces/role';
 import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function transferOwnership(

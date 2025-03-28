@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { FiArrowRight } from 'react-icons/fi';
 import { PiFilmStrip } from 'react-icons/pi';
-import { RoleName } from '@/constants/role';
+import { RoleName } from '@/interfaces/role';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { toConstantCase } from '@/lib/utils/common';
 
 interface IntroductionProps {
   selectedRoleId: number;
-  showingRole: string;
+  displayedRole: string;
   togglePreviewModal: () => void;
 }
 interface ButtonsProps {
@@ -24,7 +25,7 @@ interface EducationalTrialVersionIntroductionProps {
   children: React.ReactNode;
 }
 
-const DefaultIntroduction: React.FC = () => {
+const DefaultIntroduction = () => {
   const { t } = useTranslation('dashboard');
 
   return (
@@ -103,7 +104,7 @@ const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
   );
 };
 
-const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({ children }) => {
+const BookkeeperIntroduction = ({ children }: BookkeeperIntroductionProps) => {
   const { t } = useTranslation('dashboard');
 
   return (
@@ -133,9 +134,9 @@ const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({ childre
   );
 };
 
-const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntroductionProps> = ({
+const EducationalTrialVersionIntroduction = ({
   children,
-}) => {
+}: EducationalTrialVersionIntroductionProps) => {
   const { t } = useTranslation('dashboard');
 
   return (
@@ -168,16 +169,18 @@ const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntro
   );
 };
 
-const Introduction = ({ selectedRoleId, showingRole, togglePreviewModal }: IntroductionProps) => {
+const Introduction = ({ selectedRoleId, displayedRole, togglePreviewModal }: IntroductionProps) => {
+  const displayedRoleToConstantCase = toConstantCase(displayedRole); // Info: (20250328 - Liz) 將角色名稱轉換為常數格式
+
   return (
     <main className="flex flex-auto">
-      {!showingRole && <DefaultIntroduction />}
-      {showingRole === RoleName.BOOKKEEPER && (
+      {!displayedRole && <DefaultIntroduction />}
+      {displayedRoleToConstantCase === RoleName.BOOKKEEPER && (
         <BookkeeperIntroduction>
           <Buttons togglePreviewModal={togglePreviewModal} selectedRoleId={selectedRoleId} />
         </BookkeeperIntroduction>
       )}
-      {showingRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
+      {displayedRoleToConstantCase === RoleName.EDUCATIONAL_TRIAL_VERSION && (
         <EducationalTrialVersionIntroduction>
           <Buttons togglePreviewModal={togglePreviewModal} selectedRoleId={selectedRoleId} />
         </EducationalTrialVersionIntroduction>

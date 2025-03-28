@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { Role } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
-import { RoleType } from '@/constants/role';
+import { RoleType } from '@/interfaces/role';
 
 export const createRole = async (
   data: Omit<Role, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>

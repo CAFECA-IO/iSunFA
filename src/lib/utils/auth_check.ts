@@ -9,7 +9,7 @@ import {
 } from '@/lib/utils/repo/admin.repo';
 import { AllRequiredParams, AuthFunctions, AuthFunctionsKeys } from '@/interfaces/auth';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
-import { CompanyRoleName } from '@/constants/role';
+import { CompanyRoleName } from '@/interfaces/role';
 import { getUserById } from '@/lib/utils/repo/user.repo';
 
 export async function checkUser(params: { userId: number }) {

@@ -901,6 +901,7 @@ export const simplifyFileName = (name: string): string => {
 // Info: (20250212 - Liz) 將字串轉換為常數命名法
 export const toConstantCase = (str: string): string => {
   return str
+    .trim() // 移除前後空白
     .replace(/([a-z])([A-Z])/g, '$1_$2') // 處理 camelCase
     .split(/[\s-_]+/) // 拆分空格、破折號 `-`、底線 `_`
     .join('_') // 重新用 `_` 組合

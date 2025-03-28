@@ -1,5 +1,5 @@
 import { NextApiRequest } from 'next';
-import { CompanyRoleName } from '@/constants/role';
+import { CompanyRoleName } from '@/interfaces/role';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import {
   getAdminByCompanyIdAndUserId,
