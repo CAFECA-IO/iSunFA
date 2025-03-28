@@ -50,9 +50,6 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
   const canModifyBankAccount =
     TeamRoleCanDoKey.YES_OR_NO in modifyBankAccount ? modifyBankAccount.yesOrNo : false;
 
-  // eslint-disable-next-line no-console
-  console.log('team role:', teamInfo.role);
-
   // Info:(20250328 - Julian) 是否顯示編輯按鈕
   const visibleEditButton = teamInfo.role === TeamRole.OWNER || teamInfo.role === TeamRole.ADMIN;
 
