@@ -9,10 +9,10 @@ import FilterSection from '@/components/filter_section/filter_section';
 import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
 import SortingButton from '@/components/voucher/sorting_button';
-import { SortOrder } from '@/constants/sort';
 import WorkTag from '@/components/account_book_settings/work_tag';
 import AccountBookEditModal from '@/components/account_book_settings/account_book_edit_modal';
 import { useUserCtx } from '@/contexts/user_context';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 interface AccountBookListModalProps {
   toggleModal: () => void;
@@ -31,6 +31,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   );
   const { userAuth } = useUserCtx();
 
+  // ToDo: (20250328 - Liz) 根據工作標籤排序功能尚未實作
   const displayedType = SortingButton({
     string: t('account_book:INFO.WORK_TAG'),
     sortOrder: typeSort,
@@ -74,6 +75,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
             page={page}
             pageSize={DEFAULT_PAGE_LIMIT}
             disableDateSearch
+            sort={{ by: SortBy.CREATED_AT, order: SortOrder.DESC }}
           />
           <div id="company-settings-list" className="flex items-center gap-4">
             <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
