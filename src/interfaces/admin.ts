@@ -1,5 +1,5 @@
 import { IUser } from '@/interfaces/user';
-import { IUserRole } from './user_role';
+import { IUserRole } from '@/interfaces/user_role';
 
 export interface IAdmin {
   id: number;
