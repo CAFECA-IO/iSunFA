@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { FiEdit } from 'react-icons/fi';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
-import { ITeam } from '@/interfaces/team';
+import { ITeam, TeamRole } from '@/interfaces/team';
 import { Button } from '@/components/button/button';
 import TeamNameEditModal from '@/components/beta/team_information_page/team_name_edit_modal';
 import AboutEditModal from '@/components/beta/team_information_page/about_team_edit_modal';
@@ -50,6 +50,15 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
   const canModifyBankAccount =
     TeamRoleCanDoKey.YES_OR_NO in modifyBankAccount ? modifyBankAccount.yesOrNo : false;
 
+  // eslint-disable-next-line no-console
+  console.log('team role:', teamInfo.role);
+
+  // Info:(20250328 - Julian) 是否顯示編輯按鈕
+  const visibleEditButton = teamInfo.role === TeamRole.OWNER || teamInfo.role === TeamRole.ADMIN;
+
+  // Info:(20250328 - Julian) 是否顯示編輯按鈕銀行帳戶
+  const visibleEditBankAccountButton = teamInfo.role === TeamRole.OWNER;
+
   // Info:(20250225 - Anna) Team Name 彈窗狀態
   const [isNameEditModalOpen, setIsNameEditModalOpen] = useState(false);
   // Info:(20250225 - Anna) 開關 Team Name 彈窗的函數
@@ -83,7 +92,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
         <div className="text-right font-semibold text-neutral-600">
           {teamInfo.name.value}
           {/* Info:(20250224 - Anna) 如果 editable 為 true，顯示編輯按鈕 */}
-          {teamInfo.name.editable && (
+          {teamInfo.name.editable && visibleEditButton && (
             <Button
               type="button"
               variant="tertiary"
@@ -103,7 +112,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
         <div className="text-right font-semibold text-neutral-600">
           {teamInfo.about.value}
           {/* Info:(20250224 - Anna) 如果 editable 為 true，顯示編輯按鈕 */}
-          {teamInfo.about.editable && (
+          {teamInfo.about.editable && visibleEditButton && (
             <Button
               type="button"
               variant="tertiary"
@@ -130,7 +139,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
             {teamInfo.profile.value}
           </a>
           {/* Info:(20250224 - Anna) 如果 editable 為 true，顯示編輯按鈕 */}
-          {teamInfo.profile.editable && (
+          {teamInfo.profile.editable && visibleEditButton && (
             <Button
               type="button"
               variant="tertiary"
@@ -190,7 +199,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
           )}
         </div>
 
-        {teamInfo.bankAccount.value !== '-' && (
+        {visibleEditBankAccountButton && (
           <>
             <div className="flex h-11 items-center text-left font-semibold text-neutral-300">
               {t('team:TEAM_INFO_PAGE.TEAM_BANK_ACCOUNT')}
