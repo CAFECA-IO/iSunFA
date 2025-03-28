@@ -1,13 +1,13 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/beta/layout/layout';
 import { ISUNFA_ROUTE } from '@/constants/url';
-// import APIHandler from '@/lib/utils/api_handler'; // ToDo: (20250218 - Liz)
-// import { APIName } from '@/constants/api_connection'; // ToDo: (20250218 - Liz)
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { ITeam, TeamRole } from '@/interfaces/team';
 import TeamInformationPageBody from '@/components/beta/team_information_page/team_info_page_body';
@@ -15,74 +15,44 @@ import { TPlanType } from '@/interfaces/subscription';
 
 const TeamInfoPage = () => {
   const { t } = useTranslation(['team']);
+  const hasFetched = useRef(false); // Info:(20250226 - Anna) 使用 useRef 避免 API 被執行兩次
+
   const router = useRouter();
   const { teamId } = router.query;
-  const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
+
   const [team, setTeam] = useState<ITeam | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Deprecated: (20250218 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('teamIdString', teamIdString);
+  // Info: (20250226 - Anna) 取得團隊 Info API
+  const { trigger: getTeamInfoByTeamIdAPI } = APIHandler<ITeam>(APIName.GET_TEAM_BY_ID);
 
-  // ToDo: (20250218 - Liz) 取得團隊資料 API
-  // const { trigger: getTeamDataAPI } = APIHandler<ITeam>(APIName.?);
+  // Info: (20250226 - Anna) 打 API 取得團隊 Info
+  const getTeamInfoByTeamId = useCallback(async () => {
+    setIsLoading(true);
+    if (!teamId || hasFetched.current) return; // Info:(20250226 - Anna) 確保 API 只打一次
+    hasFetched.current = true; // Info:(20250226 - Anna) 標記已執行過 API
 
-  // ToDo: (20250218 - Liz) 打 API 取得團隊資料
-  // const getTeamData = useCallback(async () => {
-  //   if (!teamIdString) return;
-  //   setIsLoading(true);
-  //   try {
-  //     const { data: teamData, success } = await getTeamDataAPI({
-  //       params: { teamId: teamIdString },
-  //     });
-  //     if (success && teamData) {
-  //       setTeam(teamData);
-  //     }
-  //   } catch (error) {
-  //     // Deprecated: (20250218 - Liz)
-  //     // eslint-disable-next-line no-console
-  //     console.log('取得團隊資料失敗');
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // }, [teamIdString]);
-
-  // useEffect(() => {
-  //   getTeamData();
-  // }, [getTeamData]);
-
-  // Deprecated: (20250218 - Liz) 目前後端尚未提供 API，先用假資料測試
-  useEffect(() => {
-    setIsLoading(false);
-    setTeam({
-      id: 1,
-      imageId: '/images/fake_team_img.svg',
-      role: TeamRole.OWNER,
-      name: {
-        value: 'Team A',
-        editable: true,
-      },
-      about: {
-        value: 'About Team A',
-        editable: true,
-      },
-      profile: {
-        value: 'https://isunfa.com',
-        editable: true,
-      },
-      planType: {
-        value: TPlanType.ENTERPRISE,
-        editable: true,
-      },
-      totalMembers: 6,
-      totalAccountBooks: 3,
-      bankAccount: {
-        value: '12345678',
-        editable: true,
-      },
-    });
+    try {
+      const { data: teamInfoData, success } = await getTeamInfoByTeamIdAPI({
+        params: { teamId },
+      });
+      // Info: (20250226 - Anna) 打印 API 回傳的資料（Debug）
+      // eslint-disable-next-line no-console
+      console.log('API 回傳資料:', teamInfoData);
+      if (success && teamInfoData) {
+        setTeam(teamInfoData);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      // Deprecated: (20250226 - Anna) 打印錯誤訊息（Debug）
+      // eslint-disable-next-line no-console
+      console.log('取得團隊資訊失敗');
+    }
   }, []);
+
+  useEffect(() => {
+    getTeamInfoByTeamId(); // Info: (20250226 - Anna) 在 useEffect 中調用 API
+  }, [teamId]);
 
   // ToDo: (20250218 - Liz) 如果打 API 還在載入中，顯示載入中頁面
   if (isLoading) {
@@ -135,7 +105,7 @@ const TeamInfoPage = () => {
         pageTitle={team.name.value}
         goBackUrl={ISUNFA_ROUTE.MY_ACCOUNT_PAGE}
       >
-        <TeamInformationPageBody team={team} />
+        <TeamInformationPageBody team={team} setTeam={setTeam} />
       </Layout>
     </>
   );
