@@ -7,33 +7,23 @@ import Introduction from '@/components/beta/create_role/introduction';
 import RoleCards from '@/components/beta/create_role/role_cards';
 import PreviewModal from '@/components/beta/create_role/preview_modal';
 import { useUserCtx } from '@/contexts/user_context';
-import { IUserRole } from '@/interfaces/user_role';
+import { RoleName } from '@/constants/role';
 import { PiArrowUUpLeftBold } from 'react-icons/pi';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import LoginAnimation from '@/components/login/login_animation';
-import { RoleName } from '@/constants/role';
-
-const findUnusedRoles = (systemRoles: RoleName[], userRoles: IUserRole[]): RoleName[] => {
-  // Info: (20241122 - Liz) 將 userRoles 中的角色 ID 建立為一個 Set
-  const userRoleIds = new Set(userRoles.map((userRole) => userRole.roleName));
-
-  // Info: (20241122 - Liz) 從 systemRoles 中篩選出尚未被 userRoles 使用的角色
-  return systemRoles.filter((role) => !userRoleIds.has(role));
-};
+import { findUnusedRoles } from '@/lib/utils/role';
 
 const CreateRolePage = () => {
   const { t } = useTranslation(['dashboard']);
   const { getSystemRoleList, getUserRoleList } = useUserCtx();
 
   // Info: (20241108 - Liz) 畫面顯示的角色
-  const [showingRole, setShowingRole] = useState<string>('');
-  // Info: (20241108 - Liz) 使用者選擇的角色 ID
-  const [selectedRoleName, setSelectedRoleName] = useState<RoleName>(RoleName.BOOKKEEPER);
-  const [unusedSystemRoles, setUnusedSystemRoles] = useState<RoleName[]>([]);
+  const [displayedRole, setDisplayedRole] = useState<RoleName | undefined>(undefined);
+  const [uncreatedRoles, setUncreatedRoles] = useState<RoleName[]>([]);
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
-  const [hasAnyUserRole, setIsAbleToGoBack] = useState<boolean>(false);
+  const [isAbleToGoBack, setIsAbleToGoBack] = useState<boolean>(false);
   const [isAnimationShowing, setIsAnimationShowing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -57,7 +47,7 @@ const CreateRolePage = () => {
 
         if (systemRoles && userRoles) {
           const unusedRoles = findUnusedRoles(systemRoles, userRoles);
-          setUnusedSystemRoles(unusedRoles);
+          setUncreatedRoles(unusedRoles);
         }
 
         if (userRoles && userRoles.length > 0) {
@@ -100,7 +90,7 @@ const CreateRolePage = () => {
 
       {!isAnimationShowing && !isLoading && (
         <main className="relative flex h-screen flex-col overflow-hidden">
-          {hasAnyUserRole && (
+          {isAbleToGoBack && (
             <Link
               href={ISUNFA_ROUTE.SELECT_ROLE}
               className="group absolute z-1 ml-40px mt-30px flex items-center gap-8px hover:text-button-text-primary-hover"
@@ -116,7 +106,7 @@ const CreateRolePage = () => {
           )}
 
           {/* Info: (20250206 - Liz) 背景圖片 */}
-          {!showingRole && (
+          {!displayedRole && (
             <Image
               src="/images/select_role_bg.svg"
               alt="default_introduction"
@@ -126,7 +116,7 @@ const CreateRolePage = () => {
             ></Image>
           )}
 
-          {showingRole === RoleName.BOOKKEEPER && (
+          {displayedRole === RoleName.BOOKKEEPER && (
             <Image
               src="/images/bookkeeper_bg.svg"
               alt="bookkeeper_introduction"
@@ -136,7 +126,7 @@ const CreateRolePage = () => {
             ></Image>
           )}
 
-          {showingRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
+          {displayedRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
             <Image
               src="/images/educational_bg.svg"
               alt="educational_trial_version"
@@ -146,7 +136,7 @@ const CreateRolePage = () => {
             ></Image>
           )}
 
-          {showingRole === RoleName.ENTERPRISE && (
+          {displayedRole === RoleName.ENTERPRISE && (
             // ToDo: (20250206 - Liz) 企業角色的背景圖片尚未設計，有之後再替換
             <Image
               src="/images/educational_bg.svg"
@@ -157,21 +147,17 @@ const CreateRolePage = () => {
             ></Image>
           )}
 
-          {/* Info: (20250206 - Liz) 介紹區塊 */}
-          <Introduction
-            showingRole={showingRole}
-            selectedRoleName={selectedRoleName}
-            togglePreviewModal={togglePreviewModal}
-          />
+          {/* Info: (20250206 - Liz) 角色介紹區塊 */}
+          <Introduction displayedRole={displayedRole} togglePreviewModal={togglePreviewModal} />
 
-          {/* Info: (20250206 - Liz) 切換按鈕 */}
+          {/* Info: (20250206 - Liz) 切換角色介紹按鈕 */}
           <RoleCards
-            roleList={unusedSystemRoles}
-            showingRole={showingRole}
-            setShowingRole={setShowingRole}
-            setSelectedRoleName={setSelectedRoleName}
+            uncreatedRoles={uncreatedRoles}
+            displayedRole={displayedRole}
+            setDisplayedRole={setDisplayedRole}
           />
 
+          {/* Info: (20250329 - Liz) Modal */}
           {isPreviewModalVisible && <PreviewModal togglePreviewModal={togglePreviewModal} />}
         </main>
       )}

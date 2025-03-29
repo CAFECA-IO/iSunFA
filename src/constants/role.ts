@@ -1,4 +1,12 @@
-// Info: (20241107 - Liz) 角色 id 的概念，用來區分不同的角色，但與後端給的 Role id 不同
+// Deprecated: (20250328 - Liz) 預計刪除 IRole
+export interface IRole {
+  id: number;
+  name: string;
+  permissions: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
 export enum RoleName {
   BOOKKEEPER = 'BOOKKEEPER',
   EDUCATIONAL_TRIAL_VERSION = 'EDUCATIONAL_TRIAL_VERSION',
@@ -16,6 +24,7 @@ export enum CompanyRoleName {
   TEST = 'Test',
 }
 
+// Info: (20250328 - Liz) RoleType 由原先的 Capital Case 改為 CONSTANT_CASE
 export enum RoleType {
   COMPANY = 'COMPANY',
   USER = 'USER',

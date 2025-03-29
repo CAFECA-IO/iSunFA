@@ -12,12 +12,14 @@ interface ChangeTagModalProps {
   accountBookToEdit: IAccountBookWithTeam;
   setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
+  getAccountBookListByTeamId?: () => Promise<void>;
 }
 
 const ChangeTagModal = ({
   accountBookToEdit,
   setAccountBookToEdit,
   setRefreshKey,
+  getAccountBookListByTeamId,
 }: ChangeTagModalProps) => {
   const { t } = useTranslation(['account_book']);
   const { updateAccountBook } = useUserCtx();
@@ -61,6 +63,8 @@ const ChangeTagModal = ({
       closeChangeTagModal();
 
       if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
+
+      if (getAccountBookListByTeamId) await getAccountBookListByTeamId();
     } catch (error) {
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console

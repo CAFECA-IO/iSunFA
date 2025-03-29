@@ -170,6 +170,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         <ChangeTagModal
           accountBookToEdit={accountBookToEdit}
           setAccountBookToEdit={setAccountBookToEdit}
+          getAccountBookListByTeamId={getAccountBookListByTeamId}
         />
       )}
 

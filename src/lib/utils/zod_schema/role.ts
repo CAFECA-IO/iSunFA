@@ -1,5 +1,5 @@
-import { RoleType, RoleName } from '@/constants/role';
 import { z } from 'zod';
+import { RoleType, RoleName } from '@/constants/role';
 
 const roleNullSchema = z.union([z.object({}), z.string()]);
 
