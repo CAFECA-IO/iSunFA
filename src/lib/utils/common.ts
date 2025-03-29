@@ -107,21 +107,21 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
   const monthString = MONTH_LIST[monthIndex];
 
   return {
-    date: dateString, // e.g. 2021-01-01
-    dateOfLastYear: dateOfLastYearString, // e.g. 2020-01-01
-    day: `${dayString}`, // e.g. 01
-    tomorrow: tomorrowString, // e.g. 2021-01-02
-    month: `${month}`.padStart(2, '0'), // e.g. 01
-    monthString: `${monthString}`, // e.g. January (with i18n)
-    monthShortName: `${monthNameShort}`, // e.g. Jan.
-    monthFullName: `${monthName}`, // e.g. January
-    monthAndDay: `${monthNameShort} ${day}`, // e.g. Jan. 01
-    year: `${year}`, // e.g. 2021
-    lastYear: `${year - 1}`, // e.g. 2020
-    lastYearDate: `${monthName} ${day}, ${year - 1}`, // e.g. Jan. 01, 2020
-    dateFormatInUS: `${monthName} ${day}, ${year}`, // e.g. Jan. 01, 2021
-    dateFormatForForm: `${monthNameShort} ${day}, ${year}`, // e.g. Jan. 01, 2021
-    time: `${hour}:${minute}:${second}`, // e.g. 00:00:00
+    date: dateString, // Info: (20240417 - Jacky) e.g. 2021-01-01
+    dateOfLastYear: dateOfLastYearString, // Info: (20240417 - Jacky) e.g. 2020-01-01
+    day: `${dayString}`, // Info: (20240417 - Jacky) e.g. 01
+    tomorrow: tomorrowString, // Info: (20240417 - Jacky) e.g. 2021-01-02
+    month: `${month}`.padStart(2, '0'), // Info: (20240417 - Jacky) e.g. 01
+    monthString: `${monthString}`, // Info: (20240417 - Jacky) e.g. January (with i18n)
+    monthShortName: `${monthNameShort}`, // Info: (20240417 - Jacky) e.g. Jan.
+    monthFullName: `${monthName}`, // Info: (20240417 - Jacky) e.g. January
+    monthAndDay: `${monthNameShort} ${day}`, // Info: (20240417 - Jacky) e.g. Jan. 01
+    year: `${year}`, // Info: (20240417 - Jacky) e.g. 2021
+    lastYear: `${year - 1}`, // Info: (20240417 - Jacky) e.g. 2020
+    lastYearDate: `${monthName} ${day}, ${year - 1}`, // Info: (20240417 - Jacky) e.g. Jan. 01, 2020
+    dateFormatInUS: `${monthName} ${day}, ${year}`, // Info: (20240417 - Jacky) e.g. Jan. 01, 2021
+    dateFormatForForm: `${monthNameShort} ${day}, ${year}`, // Info: (20240417 - Jacky) e.g. Jan. 01, 2021
+    time: `${hour}:${minute}:${second}`, // Info: (20240417 - Jacky) e.g. 00:00:00
   };
 };
 
@@ -151,18 +151,18 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
 function rocYearToAD(rocYear: string, separator: string): string {
   let modifiedRocYear = rocYear;
   if (rocYear.split(separator)[0].length < 4) {
-    // Info: Murky (20240425) 民國年
+    // Info: (20240425 - Murky) 民國年
     const year = parseInt(rocYear.split(separator)[0], 10) + 1911;
     modifiedRocYear = `${year}-${rocYear.split(separator)[1]}-${rocYear.split(separator)[2]}`;
   }
   return modifiedRocYear;
 }
 /**
- * Info: Murky (20240425) - Helper function to convert date strings to timestamps
+ * Info: (20240425 - Murky) Helper function to convert date strings to timestamps
  * will return timestamp of current if input is not valid
  */
 export const convertDateToTimestamp = (dateStr: string | number): number => {
-  // Info: Murky (20240425) 檢查是否為有效的日期字串
+  // Info: (20240425 - Murky) 檢查是否為有效的日期字串
   const defaultDateTimestamp = new Date().getTime();
   if (!dateStr) {
     return defaultDateTimestamp;
@@ -182,7 +182,7 @@ export const convertDateToTimestamp = (dateStr: string | number): number => {
   const date = new Date(modifiedDateStr);
   const timestamp = date.getTime();
 
-  // Info: Murky (20240425) 檢查生成的日期是否有效
+  // Info: (20240425 - Murky) 檢查生成的日期是否有效
   if (Number.isNaN(timestamp)) {
     return defaultDateTimestamp;
   }
@@ -190,7 +190,7 @@ export const convertDateToTimestamp = (dateStr: string | number): number => {
   return timestamp;
 };
 
-// Info: Murky (20240425) - Helper function to remove special char from numbers and convert to number type
+// Info: (20240425 - Murky) Helper function to remove special char from numbers and convert to number type
 export const cleanNumber = (numberStr: unknown): number => {
   if (!numberStr) {
     return 0;
@@ -522,9 +522,11 @@ export function calculateWorkingHours(startDate: number, endDate: number) {
   const end = new Date(endDate * 1000);
   let totalWorkingHours = 0;
 
-  // Info: (20230829 - Anna) 遍歷每一天
-  // Info: (20230829 - Anna) 使用 let date = new Date(start) 創建一個新的 Date 物件，在迴圈中不會影響到原始的 start
-  // Info: (20230829 - Anna) date.setDate(date.getDate() + 1) 會將日期增加一天
+  /**
+   * Info: (20230829 - Anna) 遍歷每一天
+   * 使用 let date = new Date(start) 創建一個新的 Date 物件，在迴圈中不會影響到原始的 start
+   * date.setDate(date.getDate() + 1) 會將日期增加一天
+   */
   for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
     const day = date.getDay();
     // Info: (20230829 - Anna) 如果是工作日（週一到週五）
