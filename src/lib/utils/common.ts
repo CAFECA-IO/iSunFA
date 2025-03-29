@@ -151,16 +151,18 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
 function rocYearToAD(rocYear: string, separator: string): string {
   let modifiedRocYear = rocYear;
   if (rocYear.split(separator)[0].length < 4) {
-    // Info 民國年
+    // Info: Murky (20240425) 民國年
     const year = parseInt(rocYear.split(separator)[0], 10) + 1911;
     modifiedRocYear = `${year}-${rocYear.split(separator)[1]}-${rocYear.split(separator)[2]}`;
   }
   return modifiedRocYear;
 }
-// Info Murky (20240425) - Helper function to convert date strings to timestamps
-// will return timestamp of current if input is not valid
+/**
+ * Info: Murky (20240425) - Helper function to convert date strings to timestamps
+ * will return timestamp of current if input is not valid
+ */
 export const convertDateToTimestamp = (dateStr: string | number): number => {
-  // 檢查是否為有效的日期字串
+  // Info: Murky (20240425) 檢查是否為有效的日期字串
   const defaultDateTimestamp = new Date().getTime();
   if (!dateStr) {
     return defaultDateTimestamp;
@@ -180,7 +182,7 @@ export const convertDateToTimestamp = (dateStr: string | number): number => {
   const date = new Date(modifiedDateStr);
   const timestamp = date.getTime();
 
-  // 檢查生成的日期是否有效
+  // Info: Murky (20240425) 檢查生成的日期是否有效
   if (Number.isNaN(timestamp)) {
     return defaultDateTimestamp;
   }
@@ -188,7 +190,7 @@ export const convertDateToTimestamp = (dateStr: string | number): number => {
   return timestamp;
 };
 
-// Info Murky (20240425) - Helper function to remove special char from numbers and convert to number type
+// Info: Murky (20240425) - Helper function to remove special char from numbers and convert to number type
 export const cleanNumber = (numberStr: unknown): number => {
   if (!numberStr) {
     return 0;
@@ -331,12 +333,12 @@ export function eventTypeToVoucherType(eventType: EventType): VoucherType {
   return EVENT_TYPE_TO_VOUCHER_TYPE_MAP[eventType];
 }
 
-// Info Murky (20240505): type guards can input any type and return a boolean
+// Info: (20240505 - Murky) type guards can input any type and return a boolean
 export function isStringNumber(value: unknown): value is string {
   return typeof value === 'string' && !Number.isNaN(Number(value));
 }
 
-// is {[key: string]: number}
+// Info: (20240505 - Murky) is {[key: string]: number}
 export function isStringNumberPair(value: unknown): value is { [key: string]: string } {
   if (typeof value !== 'object' || value === null) {
     return false;
@@ -362,7 +364,7 @@ export function transformBytesToFileSizeString(bytes: number): string {
 }
 
 /**
- * Info: (20240816 Murky): Transform file size string to bytes, file size string format should be like '1.00 MB'
+ * Info: (20240816 Murky) Transform file size string to bytes, file size string format should be like '1.00 MB'
  * @param sizeString
  * @returns
  */
@@ -385,7 +387,7 @@ export function transformFileSizeStringToBytes(sizeString: string): number {
   return Math.round(bytes);
 }
 
-// page, limit to offset
+// Info: (20240816 Murky) page, limit to offset
 export function pageToOffset(
   page: number = DEFAULT_PAGE_START_AT,
   limit: number = DEFAULT_PAGE_LIMIT
@@ -515,17 +517,17 @@ export function getTimestampNow() {
 }
 
 export function calculateWorkingHours(startDate: number, endDate: number) {
-  // 將秒轉換為毫秒
+  // Info: (20230829 - Anna) 將秒轉換為毫秒
   const start = new Date(startDate * 1000);
   const end = new Date(endDate * 1000);
   let totalWorkingHours = 0;
 
-  // 遍歷每一天
-  // 使用 let date = new Date(start) 創建一個新的 Date 物件，在迴圈中不會影響到原始的 start
-  // date.setDate(date.getDate() + 1) 會將日期增加一天
+  // Info: (20230829 - Anna) 遍歷每一天
+  // Info: (20230829 - Anna) 使用 let date = new Date(start) 創建一個新的 Date 物件，在迴圈中不會影響到原始的 start
+  // Info: (20230829 - Anna) date.setDate(date.getDate() + 1) 會將日期增加一天
   for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
     const day = date.getDay();
-    // 如果是工作日（週一到週五）
+    // Info: (20230829 - Anna) 如果是工作日（週一到週五）
     if (day >= 1 && day <= 5) {
       totalWorkingHours += 8;
     }
@@ -634,8 +636,10 @@ export function getEnumValue<T extends object>(enumObj: T, value: string): T[key
     : undefined;
 }
 
-// Info: (20240808 - Shirley) 節流函數
-// Info: (20240830 - Anna) 為了拿掉next-line function-paren-newline註解所以改寫，再加上prettier-ignore，請Prettier不要格式化
+/** 
+ * Info: (20240808 - Shirley) 節流函數
+ * 為了拿掉next-line function-paren-newline註解所以改寫，再加上prettier-ignore，請 Prettier 不要格式化
+ */
 // prettier-ignore
 export function throttle<F extends (
 ...args: unknown[]) => unknown>(
@@ -901,9 +905,9 @@ export const simplifyFileName = (name: string): string => {
 // Info: (20250212 - Liz) 將字串轉換為常數命名法
 export const toConstantCase = (str: string): string => {
   return str
-    .trim() // 移除前後空白
-    .replace(/([a-z])([A-Z])/g, '$1_$2') // 處理 camelCase
-    .split(/[\s-_]+/) // 拆分空格、破折號 `-`、底線 `_`
-    .join('_') // 重新用 `_` 組合
+    .trim() // Info: (20250212 - Liz) 移除前後空白
+    .replace(/([a-z])([A-Z])/g, '$1_$2') // Info: (20250212 - Liz) 處理 camelCase
+    .split(/[\s-_]+/) // Info: (20250212 - Liz) 拆分空格、破折號 `-`、底線 `_`
+    .join('_') // Info: (20250212 - Liz) 重新用 `_` 組合
     .toUpperCase();
 };
