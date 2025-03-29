@@ -190,6 +190,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
   const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
 
+  // Info: (20250329 - Liz) 取得團隊資訊 API
+  const { trigger: getTeamAPI } = APIHandler<ITeam>(APIName.GET_TEAM_BY_ID);
+
   // Info: (20250321 - Julian) 從第三方金流獲取綁定信用卡的結果
   const handleBindingResult = (bindingResult: boolean | null) => {
     setBindingResult(bindingResult);
@@ -637,9 +640,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         params: { accountBookId },
       });
 
-      if (!success) return { success: false };
+      if (!success || !data) return { success: false };
       setConnectedAccountBook(data);
-      // setTeam(data.);
+
+      // Info: (20250329 - Liz) 打 API 取得團隊資訊
+      const { success: getTeamSuccess, data: team } = await getTeamAPI({
+        params: { teamId: data.teamId },
+      });
+      if (!getTeamSuccess || !team) return { success: false };
+      // Deprecated: (20250329 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('connectAccountBook 取得團隊資訊成功: team', team);
+      setTeam(team);
       return { success: true };
     } catch (error) {
       return { success: false };
