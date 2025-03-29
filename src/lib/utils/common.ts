@@ -125,8 +125,8 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
   };
 };
 
-/** Info: (20240419 - Shirley) 回傳這個月第一天跟今天的 timestamp in seconds
- *
+/**
+ * Info: (20240419 - Shirley) 回傳這個月第一天跟今天的 timestamp in seconds
  * @returns {startTimeStamp: number, endTimeStamp: number} - The start and present time of the current month in seconds
  */
 export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeStamp: number } => {
@@ -638,7 +638,7 @@ export function getEnumValue<T extends object>(enumObj: T, value: string): T[key
     : undefined;
 }
 
-/** 
+/**
  * Info: (20240808 - Shirley) 節流函數
  * 為了拿掉next-line function-paren-newline註解所以改寫，再加上prettier-ignore，請 Prettier 不要格式化
  */
@@ -795,9 +795,9 @@ export function getLastDatesOfMonthsBetweenDates({
   return result;
 }
 
-/** Info: (20241108 - Shirley)
+/**
+ * Info: (20241108 - Shirley)
  * 將給定的 timestamp 和 時區偏移轉換為新的 timestamp。
- *
  * @param timestamp - 原始的時間戳（秒）
  * @param timezone - 時區偏移，例如 '+0800', '-0530'
  * @returns 轉換後的時間戳（秒）
@@ -831,9 +831,9 @@ export const convertTimestampWithTimezone = (timestamp: number, timezone: string
   return adjustedTimestamp;
 };
 
-/** Info: (20241108 - Shirley)
+/**
+ * Info: (20241108 - Shirley)
  * 將給定的 timestamp 和時區偏移轉換為指定格式的日期字串。
- *
  * @param timestamp - 原始的時間戳（秒）
  * @param timezone - 時區偏移，例如 '+0800', '-0530'
  * @param format - 日期格式，例如 'YYYY-MM-DD', 'YYYY/MM/DD', 'DD-MM-YYYY'
