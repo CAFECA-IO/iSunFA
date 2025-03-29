@@ -1,11 +1,11 @@
 import Image from 'next/image';
 import { Dispatch, SetStateAction } from 'react';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 
 interface MyAccountBookItemProps {
-  accountBook: IAccountBookForUserWithTeam;
-  setAccountBookToSelect: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  accountBook: IAccountBookWithTeam;
+  setAccountBookToSelect: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   isDisabled: boolean;
   dataIndex: number;
 }
@@ -17,7 +17,7 @@ const MyAccountBookItem = ({
   dataIndex,
 }: MyAccountBookItemProps) => {
   const { connectedAccountBook } = useUserCtx();
-  const isCompanySelected = accountBook.company.id === connectedAccountBook?.id;
+  const isCompanySelected = accountBook.id === connectedAccountBook?.id;
 
   const openMessageModal = () => {
     if (!isDisabled && !isCompanySelected) {
@@ -28,20 +28,20 @@ const MyAccountBookItem = ({
   return (
     <button
       data-index={dataIndex}
-      key={accountBook.company.id}
+      key={accountBook.id}
       type="button"
       onClick={openMessageModal}
       disabled={isCompanySelected || isDisabled}
       className={`flex h-120px w-120px flex-none flex-col items-center justify-center gap-8px overflow-hidden rounded-sm border-2 px-8px py-12px ${isCompanySelected ? 'border-stroke-neutral-quaternary bg-surface-brand-primary-30' : ''} ${isDisabled ? 'border-stroke-neutral-quaternary bg-surface-neutral-main-background opacity-70' : ''} ${!isCompanySelected && !isDisabled ? 'border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10' : ''} `}
     >
       <Image
-        src={accountBook.company.imageId}
-        alt={accountBook.company.name}
+        src={accountBook.imageId}
+        alt={accountBook.name}
         width={60}
         height={60}
         className="h-60px w-60px rounded-sm bg-surface-neutral-surface-lv2 object-contain"
       ></Image>
-      <p className="w-full truncate">{accountBook.company.name}</p>
+      <p className="w-full truncate">{accountBook.name}</p>
     </button>
   );
 };

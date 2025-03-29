@@ -4,7 +4,6 @@ import { NextApiRequest } from 'next';
 
 export enum AuthFunctionsKeys {
   user = 'user',
-  admin = 'admin',
   owner = 'owner',
   superAdmin = 'superAdmin',
   CompanyAdminMatch = 'CompanyAdminMatch',
@@ -17,7 +16,6 @@ export type AuthFunctionsNew = {
 
 export interface AuthFunctions {
   [AuthFunctionsKeys.user]: (params: { userId: number }) => Promise<boolean>;
-  [AuthFunctionsKeys.admin]: (params: { userId: number; companyId: number }) => Promise<boolean>;
   [AuthFunctionsKeys.owner]: (params: { userId: number; companyId: number }) => Promise<boolean>;
   [AuthFunctionsKeys.superAdmin]: (params: {
     userId: number;

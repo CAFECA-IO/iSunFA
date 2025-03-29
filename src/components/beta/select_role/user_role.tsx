@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { FiArrowRight } from 'react-icons/fi';
 import { IUserRole } from '@/interfaces/user_role';
-import { toConstantCase } from '@/lib/utils/common';
 
 interface UserRoleProps {
   userRole: IUserRole;
@@ -21,24 +20,27 @@ const UserRole = ({ userRole, roleIconSrc, roleIconAlt, avatar, lastLoginAt }: U
   const router = useRouter();
   const { selectRole } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
-  const userRoleName = toConstantCase(userRole.role.name);
 
-  const handleSelectRole = async () => {
+  const selectUserRole = async () => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
       // Info: (20241009 - Liz) 呼叫 selectRole 並等待結果
-      const data = await selectRole(userRole.role.id);
+      const { success } = await selectRole(userRole.roleName);
 
-      if (data) {
-        // Info: (20241107 - Liz) 選擇角色成功後，導向到儀表板
-        router.push(ISUNFA_ROUTE.DASHBOARD);
+      if (!success) {
+        // Deprecated: (20250329 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('selectUserRole error (選擇角色失敗):', success);
       }
+
+      // Info: (20241107 - Liz) 選擇角色成功後，導向到儀表板
+      router.push(ISUNFA_ROUTE.DASHBOARD);
     } catch (error) {
       // Deprecated: (20241107 - Liz)
       // eslint-disable-next-line no-console
-      console.log('handleSelectRole error (選擇角色失敗):', error);
+      console.log('selectUserRole error (選擇角色失敗):', error);
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +64,7 @@ const UserRole = ({ userRole, roleIconSrc, roleIconAlt, avatar, lastLoginAt }: U
       </div>
 
       <h2 className="text-32px font-bold text-text-neutral-primary">
-        {t(`dashboard:ROLE.${userRoleName}`)}
+        {t(`dashboard:ROLE.${userRole.roleName}`)}
       </h2>
 
       <Image
@@ -83,7 +85,7 @@ const UserRole = ({ userRole, roleIconSrc, roleIconAlt, avatar, lastLoginAt }: U
       <button
         type="button"
         className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-        onClick={handleSelectRole}
+        onClick={selectUserRole}
         disabled={isLoading}
       >
         <p>{t('dashboard:COMMON.START')}</p>

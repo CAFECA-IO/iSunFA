@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { RoleName, IRole } from '@/interfaces/role';
+import { RoleName } from '@/constants/role';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import RoleCard from '@/components/beta/create_role/role_card';
-import { toConstantCase } from '@/lib/utils/common';
 
 // Info: (20241007 - Liz) 每個角色對應的圖片
 const ROLES_IMAGE = [
@@ -21,18 +20,12 @@ const ROLES_IMAGE = [
 ];
 
 interface RoleCardsProps {
-  roleList: IRole[];
-  displayedRole: string;
-  setDisplayedRole: React.Dispatch<React.SetStateAction<string>>;
-  setSelectedRoleId: React.Dispatch<React.SetStateAction<number>>;
+  uncreatedRoles: RoleName[];
+  displayedRole: RoleName | undefined;
+  setDisplayedRole: React.Dispatch<React.SetStateAction<RoleName | undefined>>;
 }
 
-const RoleCards = ({
-  roleList,
-  displayedRole,
-  setDisplayedRole,
-  setSelectedRoleId,
-}: RoleCardsProps) => {
+const RoleCards = ({ uncreatedRoles, displayedRole, setDisplayedRole }: RoleCardsProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [disabledCards, setDisabledCards] = useState<number[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
@@ -107,21 +100,17 @@ const RoleCards = ({
         ref={containerRef}
         className="hide-scrollbar mx-60px flex max-w-fit gap-20px overflow-x-auto"
       >
-        {roleList.map((role, index) => {
-          const roleNameToConstantCase = toConstantCase(role.name); // Info: (20250328 - Liz) 將角色名稱轉換為常數格式
-
+        {uncreatedRoles.map((uncreatedRole, index) => {
           const imageSrc =
-            ROLES_IMAGE.find((rolesImage) => rolesImage.roleName === roleNameToConstantCase)
-              ?.imageSrc ?? '';
+            ROLES_IMAGE.find((rolesImage) => rolesImage.roleName === uncreatedRole)?.imageSrc ?? '';
 
           return (
             <RoleCard
-              key={role.id}
-              role={role}
+              key={uncreatedRole}
+              uncreatedRole={uncreatedRole}
               imageSrc={imageSrc}
               displayedRole={displayedRole}
               setDisplayedRole={setDisplayedRole}
-              setSelectedRoleId={setSelectedRoleId}
               isDisabled={disabledCards.includes(index)}
             />
           );

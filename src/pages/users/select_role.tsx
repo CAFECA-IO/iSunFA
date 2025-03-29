@@ -13,11 +13,10 @@ import { DEFAULT_AVATAR_URL } from '@/constants/display';
 import { IUserRole } from '@/interfaces/user_role';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { RoleName } from '@/interfaces/role';
+import { RoleName } from '@/constants/role';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { findUnusedRoles } from '@/lib/utils/role';
-import { toConstantCase } from '@/lib/utils/common';
 import UserRole from '@/components/beta/select_role/user_role';
 import Loader from '@/components/loader/loader';
 
@@ -134,8 +133,7 @@ const SelectRolePage = () => {
         {!isLoading && (
           <section className="flex items-center justify-center gap-40px">
             {userRoleList.map((userRole) => {
-              const userRoleName = toConstantCase(userRole.role.name);
-              const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRoleName);
+              const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.roleName);
 
               return (
                 <UserRole

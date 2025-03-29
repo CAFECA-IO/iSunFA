@@ -1,11 +1,5 @@
 import { NextApiRequest } from 'next';
-import { CompanyRoleName } from '@/interfaces/role';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
-import {
-  getAdminByCompanyIdAndUserId,
-  getAdminByCompanyIdAndUserIdAndRoleName,
-  getAdminById,
-} from '@/lib/utils/repo/admin.repo';
 import { AuthFunctionsNew } from '@/interfaces/auth';
 import { AUTH_CHECK, AUTH_WHITELIST } from '@/constants/auth';
 import { getUserById } from '@/lib/utils/repo/user.repo';
@@ -35,11 +29,7 @@ export async function checkUserAdmin(session: ISessionData, req: NextApiRequest)
   const reqCompanyId = bodyCompanyId || queryCompanyId;
   const queryUserIdNumber = convertStringToNumber(queryUserId);
   const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  let isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
-  if (isAuth) {
-    const admin = await getAdminByCompanyIdAndUserId(session.userId, session.companyId);
-    isAuth = !!admin;
-  }
+  const isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
 
   return isAuth;
 }
@@ -50,15 +40,7 @@ export async function checkUserCompanyOwner(session: ISessionData, req: NextApiR
   const reqCompanyId = bodyCompanyId || queryCompanyId;
   const queryUserIdNumber = convertStringToNumber(queryUserId);
   const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  let isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
-  if (isAuth) {
-    const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
-      session.companyId,
-      session.userId,
-      CompanyRoleName.OWNER
-    );
-    isAuth = !!admin;
-  }
+  const isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
 
   return isAuth;
 }
@@ -69,30 +51,17 @@ export async function checkUserCompanySuperAdmin(session: ISessionData, req: Nex
   const reqCompanyId = bodyCompanyId || queryCompanyId;
   const queryUserIdNumber = convertStringToNumber(queryUserId);
   const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  let isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
-  if (isAuth) {
-    const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
-      session.companyId,
-      session.userId,
-      CompanyRoleName.SUPER_ADMIN
-    );
-    isAuth = !!admin;
-  }
+  const isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
 
   return isAuth;
 }
 
 export async function checkCompanyAdminMatch(session: ISessionData, req: NextApiRequest) {
-  const { adminId: queryAdminId, companyId: queryCompanyId } = req.query;
+  const { companyId: queryCompanyId } = req.query;
   const { companyId: bodyCompanyId } = req.body;
   const reqCompanyId = bodyCompanyId || queryCompanyId;
-  const queryAdminIdNumber = convertStringToNumber(queryAdminId);
   const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  let isAuth = session.companyId === reqCompanyIdNumber;
-  if (isAuth) {
-    const admin = await getAdminById(queryAdminIdNumber);
-    isAuth = !!admin && admin.companyId === reqCompanyIdNumber;
-  }
+  const isAuth = session.companyId === reqCompanyIdNumber;
 
   return isAuth;
 }

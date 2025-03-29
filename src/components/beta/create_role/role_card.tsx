@@ -1,35 +1,30 @@
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
-import { IRole, RoleName } from '@/interfaces/role';
-import { toConstantCase } from '@/lib/utils/common';
+import { RoleName } from '@/constants/role';
 
 interface RoleCardProps {
-  role: IRole;
+  uncreatedRole: RoleName;
   imageSrc: string;
   isDisabled: boolean;
-  displayedRole: string;
-  setDisplayedRole: React.Dispatch<React.SetStateAction<string>>;
-  setSelectedRoleId: React.Dispatch<React.SetStateAction<number>>;
+  displayedRole: RoleName | undefined;
+  setDisplayedRole: React.Dispatch<React.SetStateAction<RoleName | undefined>>;
 }
 
 const RoleCard = ({
-  role,
+  uncreatedRole,
   imageSrc,
   isDisabled,
   displayedRole,
   setDisplayedRole,
-  setSelectedRoleId,
 }: RoleCardProps) => {
   const { t } = useTranslation('dashboard');
-  const isRoleSelected = displayedRole === role.name;
-  const roleNameToConstantCase = toConstantCase(role.name); // Info: (20250328 - Liz) 將角色名稱轉換為常數格式
+  const isRoleSelected = displayedRole === uncreatedRole;
 
-  const isEnterprise = roleNameToConstantCase === RoleName.ENTERPRISE; // Info: (20250207 - Liz) 因為企業版角色介紹的設計尚未確定，所以暫時將企業版角色的卡片設為不可選擇
-  const isEducationalTrialVersion = roleNameToConstantCase === RoleName.EDUCATIONAL_TRIAL_VERSION; // Info: (20250328 - Liz) 樣式特殊
+  const isEnterprise = uncreatedRole === RoleName.ENTERPRISE; // Info: (20250207 - Liz) 因為企業版角色介紹的設計尚未確定，所以暫時將企業版角色的卡片設為不可選擇
+  const isEducationalTrialVersion = uncreatedRole === RoleName.EDUCATIONAL_TRIAL_VERSION; // Info: (20250328 - Liz) 樣式特殊
 
   const handleClick = () => {
-    setDisplayedRole(role.name);
-    setSelectedRoleId(role.id);
+    setDisplayedRole(uncreatedRole);
   };
 
   return (
@@ -43,14 +38,14 @@ const RoleCard = ({
         <p
           className={`-skew-x-20 pl-110px text-center font-bold screen1280:w-300px screen1280:pl-100px ${isEducationalTrialVersion ? 'pl-100px laptop:text-lg screen1280:text-28px' : 'laptop:text-xl screen1280:text-32px'}`}
         >
-          {t(`dashboard:ROLE.${roleNameToConstantCase}`)}
+          {t(`dashboard:ROLE.${uncreatedRole}`)}
         </p>
         <Image
           src={imageSrc}
           alt="role_image"
           width={48}
           height={48}
-          className={`absolute -left-50px -top-30px w-160px -skew-x-20 rounded-full ${displayedRole === role.name ? 'border-4 border-stroke-brand-primary' : ''}`}
+          className={`absolute -left-50px -top-30px w-160px -skew-x-20 rounded-full ${displayedRole === uncreatedRole ? 'border-4 border-stroke-brand-primary' : ''}`}
         />
       </button>
     </div>
