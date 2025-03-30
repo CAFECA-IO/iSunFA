@@ -4,14 +4,12 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFile } from '@/interfaces/file';
 import { getSession } from '@/lib/utils/session';
-import { checkAuthorization } from '@/lib/utils/auth_check';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 import formidable from 'formidable';
 import { isEnumValue } from '@/lib/utils/type_guard/common';
 import loggerBack from '@/lib/utils/logger_back';
@@ -32,14 +30,10 @@ async function authorizeUser(
 ): Promise<boolean> {
   let isAuthorized: boolean;
 
-  if (type === UploadType.USER) {
-    isAuthorized = await checkAuthorization([AuthFunctionsKeys.user], { userId });
+  if (type === UploadType.USER && userId > 0 && companyId && companyId > 0) {
+    isAuthorized = true;
   } else {
-    const company = companyId ?? 0;
-    isAuthorized = await checkAuthorization([AuthFunctionsKeys.admin], {
-      userId,
-      companyId: company,
-    });
+    isAuthorized = false;
   }
 
   return isAuthorized;

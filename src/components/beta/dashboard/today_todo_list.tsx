@@ -6,7 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IAccountBookForUser, IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { ITodoCompany } from '@/interfaces/todo';
 import { IPaginatedData } from '@/interfaces/pagination';
 
@@ -37,7 +37,7 @@ interface TodayTodoListProps {
 }
 
 const TodayTodoList = ({ todayTodoList }: TodayTodoListProps) => {
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUser[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBook[]>([]);
 
   // Info: (20241122 - Liz) 判斷是否有帳本清單
   const isToDoListLink = accountBookList.length > 0;
@@ -46,7 +46,7 @@ const TodayTodoList = ({ todayTodoList }: TodayTodoListProps) => {
 
   // Info: (20250306 - Liz) 打 API 取得使用者擁有的帳本清單(原為公司)
   const { trigger: getAccountBookListByUserIdAPI } = APIHandler<
-    IPaginatedData<IAccountBookForUserWithTeam[]>
+    IPaginatedData<IAccountBookWithTeam[]>
   >(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID);
 
   const getAccountBookList = useCallback(async () => {

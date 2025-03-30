@@ -1,8 +1,4 @@
-import { EventType } from '@/constants/account';
-import { IZodValidator } from '@/interfaces/zod_validator';
-import { z, ZodRawShape } from 'zod';
-import { iPaymentValidator } from '@/lib/utils/zod_schema/payment';
-import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { z } from 'zod';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 import { ICounterpartyValidator } from '@/lib/utils/zod_schema/counterparty';
@@ -50,75 +46,6 @@ export const IInvoiceBetaValidatorOptional = z.object({
   updatedAt: z.number().optional(),
   // name: z.string().describe('name of invoice, not in IInvoiceBeta right now'),
 });
-
-const iInvoiceValidator = z.object({
-  journalId: z.number().nullable(),
-  date: z.number(), // Info: (20240522 - Murky) timestamp
-  eventType: z.nativeEnum(EventType),
-  paymentReason: z.string(),
-  description: z.string(),
-  vendorOrSupplier: z.string(),
-  projectId: z.number().nullable(),
-  project: z.string().nullable(),
-  contractId: z.number().nullable(),
-  contract: z.string().nullable(),
-  payment: iPaymentValidator,
-});
-
-const invoiceCreateQueryValidator = z.object({});
-
-const invoiceCreateBodyValidator = z.object({
-  ocrId: z.number().optional(),
-  invoice: iInvoiceValidator,
-});
-
-const invoiceCreateValidator: IZodValidator<
-  (typeof invoiceCreateQueryValidator)['shape'],
-  (typeof invoiceCreateBodyValidator)['shape']
-> = {
-  // Info: (20240911 - Murky) GET /ocr
-  query: invoiceCreateQueryValidator,
-  body: invoiceCreateBodyValidator,
-};
-
-const invoiceUpdateQueryValidator = z.object({});
-const invoiceUpdateBodyValidator = z.object({
-  invoice: iInvoiceValidator,
-});
-
-const invoiceUpdateValidator: IZodValidator<
-  (typeof invoiceUpdateQueryValidator)['shape'],
-  (typeof invoiceUpdateBodyValidator)['shape']
-> = {
-  query: invoiceUpdateQueryValidator,
-  body: invoiceUpdateBodyValidator,
-};
-
-const invoiceGetOneQueryValidator = z.object({
-  invoiceId: zodStringToNumber,
-});
-
-const invoiceGetOneBodyValidator = z.object({});
-
-const invoiceGetOneValidator: IZodValidator<
-  (typeof invoiceGetOneQueryValidator)['shape'],
-  (typeof invoiceGetOneBodyValidator)['shape']
-> = {
-  query: invoiceGetOneQueryValidator,
-  body: invoiceGetOneBodyValidator,
-};
-
-/**
- * Info: (20241025 - Murky)
- * Use this to put in zod.schema to be used in middleware
- */
-export const invoiceRequestValidators: {
-  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
-} = {
-  GET_ONE: invoiceGetOneValidator,
-  PUT: invoiceUpdateValidator,
-  POST: invoiceCreateValidator,
-};
 
 /**
  * Info: (20241025 - Murky)

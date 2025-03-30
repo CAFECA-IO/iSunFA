@@ -7,11 +7,10 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IConnectAccountBookQueryParams } from '@/lib/utils/zod_schema/account_book';
 import { getSession, setSession } from '@/lib/utils/session';
-import { getCompanyAndRoleByUserIdAndCompanyId } from '@/lib/utils/repo/admin.repo';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { getTeamByTeamId } from '@/lib/utils/repo/team.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import { IAccountBook } from '@/interfaces/account_book';
+import { IAccountBook, WORK_TAG } from '@/interfaces/account_book';
 import { LeaveStatus } from '@/interfaces/team';
 import prisma from '@/client'; // 使用已有的 prisma 客戶端
 
@@ -52,10 +51,7 @@ const handleGetRequest: IHandleRequest<
   let companyAndRole = null;
 
   // Info: (20250507 - Shirley) 途徑一: 檢查用戶是否為帳本的直接管理員
-  companyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(userId, accountBookId);
-  if (companyAndRole) {
-    hasAccess = true;
-  } else if (company.teamId) {
+  if (company.teamId) {
     // Info: (20250507 - Shirley) 途徑二: 如果帳本屬於團隊，檢查用戶是否為團隊成員
     const isTeamMember = await prisma.teamMember.findFirst({
       where: {
@@ -76,7 +72,7 @@ const handleGetRequest: IHandleRequest<
           name: isTeamMember.role,
           permissions: [],
         },
-        tag: 'ALL',
+        tag: WORK_TAG.ALL,
         order: 0,
       };
     }
@@ -88,8 +84,9 @@ const handleGetRequest: IHandleRequest<
     return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
   }
 
-  const result = {
+  const result: IAccountBook = {
     id: company.id,
+    userId: company.userId || 555,
     imageId: company.imageFile?.url || '',
     name: company.name,
     taxId: company.taxId,
@@ -97,7 +94,9 @@ const handleGetRequest: IHandleRequest<
     createdAt: company.createdAt,
     updatedAt: company.updatedAt,
     isPrivate: company.isPrivate,
-  } as IAccountBook;
+    teamId: company.teamId,
+    tag: company.tag as WORK_TAG,
+  };
 
   await setSession(session, { companyId: accountBookId });
 

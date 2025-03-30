@@ -11,6 +11,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import AccountTitleSection from '@/components/account_settings/account_title_section';
 import AddNewTitleSection from '@/components/account_settings/add_new_title_section';
 import { TitleFormType } from '@/constants/accounting_setting';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 interface IAccountingTitleSettingModalProps {
   isModalVisible: boolean;
@@ -62,7 +63,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   // Info: (20250214 - Julian) 按鍵事件
   const handleSearchWordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Info: (20241108 - Julian) 按下 Enter 鍵才執行搜尋
-    if (e.key === 'Enter') {
+    if (e.key === KEYBOARD_EVENT_CODE.ENTER) {
       getAccountList({
         params: { companyId: accountBookId },
         query: { ...queryCondition, searchKey: searchWord },

@@ -5,7 +5,7 @@ import UploadTeamImageModal from '@/components/beta/team_page/upload_team_image_
 import TeamHeader from '@/components/beta/team_page/team_header';
 import TeamPageButtons from '@/components/beta/team_page/team_page_buttons';
 import { useTranslation } from 'next-i18next';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { useUserCtx } from '@/contexts/user_context';
 import NoData from '@/components/beta/account_books_page/no_data';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
@@ -15,7 +15,6 @@ import UploadCompanyPictureModal from '@/components/beta/account_books_page/uplo
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
-import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -29,24 +28,19 @@ interface TeamPageBodyProps {
 const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
   const { t } = useTranslation(['team']);
   const { deleteAccountBook } = useUserCtx();
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[] | null>(
-    null
-  );
+  const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[] | null>(null);
   const [teamToChangeImage, setTeamToChangeImage] = useState<ITeam | undefined>();
   const [accountBookToTransfer, setAccountBookToTransfer] = useState<
-    IAccountBookForUserWithTeam | undefined
+    IAccountBookWithTeam | undefined
   >();
-  const [accountBookToEdit, setAccountBookToEdit] = useState<
-    IAccountBookForUserWithTeam | undefined
-  >();
+  const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookWithTeam | undefined>();
   const [accountBookToDelete, setAccountBookToDelete] = useState<
-    IAccountBookForUserWithTeam | undefined
+    IAccountBookWithTeam | undefined
   >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
-    IAccountBookForUserWithTeam | undefined
+    IAccountBookWithTeam | undefined
   >();
   const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
-  const [isInviteMembersModalOpen, setIsInviteMembersModalOpen] = useState<boolean>(false);
   const isNoData = !accountBookList || accountBookList.length === 0;
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -58,13 +52,9 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
     setIsMemberListModalOpen(true);
   };
 
-  const openInviteMembersModal = () => {
-    setIsInviteMembersModalOpen(true);
-  };
-
   // Info: (20250310 - Liz) 取得團隊帳本清單 API (list account book by team id)
   const { trigger: getAccountBookListByTeamIdAPI } = APIHandler<
-    IPaginatedData<IAccountBookForUserWithTeam[]>
+    IPaginatedData<IAccountBookWithTeam[]>
   >(APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID);
 
   // Info: (20250310 - Liz) 打 API 取得團隊帳本清單
@@ -98,7 +88,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
     if (!accountBookToDelete) return;
 
     try {
-      const data = await deleteAccountBook(accountBookToDelete.company.id);
+      const data = await deleteAccountBook(accountBookToDelete.id);
 
       if (!data) {
         // Deprecated: (20250219 - Liz)
@@ -142,8 +132,8 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
 
       <div className="flex items-center gap-16px">
         <div className="flex items-center gap-8px">
-          <Image src="/icons/open_book.svg" alt="open_book" width={16} height={15.235}></Image>
-          <span>{t('team:TEAM_PAGE.LIBRARY')}</span>
+          <Image src="/icons/team_info.svg" alt="team_info" width={16} height={16} />
+          <span>{t('team:TEAM_PAGE.INFORMATION')}</span>
         </div>
         <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
       </div>
@@ -159,7 +149,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         />
       )}
 
-      {/* // Info: (20250218 - Liz) Modals */}
+      {/* Info: (20250218 - Liz) Modals */}
       {teamToChangeImage && (
         <UploadTeamImageModal
           teamToChangeImage={teamToChangeImage}
@@ -180,6 +170,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         <ChangeTagModal
           accountBookToEdit={accountBookToEdit}
           setAccountBookToEdit={setAccountBookToEdit}
+          getAccountBookListByTeamId={getAccountBookListByTeamId}
         />
       )}
 
@@ -187,6 +178,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         <UploadCompanyPictureModal
           accountBookToUploadPicture={accountBookToUploadPicture}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+          getAccountBookListByTeamId={getAccountBookListByTeamId}
         />
       )}
 
@@ -199,15 +191,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
       )}
 
       {isMemberListModalOpen && (
-        <MemberListModal
-          team={team}
-          setIsMemberListModalOpen={setIsMemberListModalOpen}
-          openInviteMembersModal={openInviteMembersModal}
-        />
-      )}
-
-      {isInviteMembersModalOpen && (
-        <InviteMembersModal team={team} setIsInviteMembersModalOpen={setIsInviteMembersModalOpen} />
+        <MemberListModal team={team} setIsMemberListModalOpen={setIsMemberListModalOpen} />
       )}
     </main>
   );

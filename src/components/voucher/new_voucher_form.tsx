@@ -50,6 +50,7 @@ import { AI_TYPE } from '@/constants/aich';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
 import { ToastId } from '@/constants/toast_id';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -1126,7 +1127,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             id="voucher-save-button"
             type="submit"
             onKeyDown={(e) => {
-              if (e.key === 'Enter') e.preventDefault();
+              if (e.key === KEYBOARD_EVENT_CODE.ENTER) e.preventDefault();
             }}
             disabled={isCreating} // Info: (20241120 - Julian) 防止重複送出
           >

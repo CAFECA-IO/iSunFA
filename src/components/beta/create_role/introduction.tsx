@@ -8,64 +8,40 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
-interface IntroductionProps {
-  selectedRoleId: number;
-  showingRole: string;
+interface SetupButtonsProps {
+  displayedRole: RoleName | undefined;
   togglePreviewModal: () => void;
 }
-interface ButtonsProps {
-  selectedRoleId: number;
-  togglePreviewModal: () => void;
-}
-interface BookkeeperIntroductionProps {
-  children: React.ReactNode;
-}
-interface EducationalTrialVersionIntroductionProps {
-  children: React.ReactNode;
-}
 
-const DefaultIntroduction: React.FC = () => {
-  const { t } = useTranslation('dashboard');
-
-  return (
-    <section className="flex flex-col gap-40px pl-60px pt-70px">
-      <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
-        {t('dashboard:CREATE_ROLE_PAGE.SELECT_YOUR_ROLE')}
-      </h1>
-      <p className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
-        {t('dashboard:CREATE_ROLE_PAGE.DEFAULT_INTRODUCTION')}
-      </p>
-    </section>
-  );
-};
-
-const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
+// Info: (20250329 - Liz) 建立角色按鈕、預覽影片按鈕
+const SetupButtons = ({ displayedRole, togglePreviewModal }: SetupButtonsProps) => {
   const { t } = useTranslation('dashboard');
   const { createRole, selectRole } = useUserCtx();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleCreateAndSelectRole = async () => {
+  const createAndSelectRole = async () => {
+    if (!displayedRole) return;
     setIsLoading(true);
 
     try {
-      const userRole = await createRole(selectedRoleId);
+      const { success: createSuccess, userRole } = await createRole(displayedRole);
 
-      if (!userRole || !userRole.role || !userRole.role.id) {
-        // Deprecated: (20241107 - Liz)
+      if (!createSuccess || !userRole) {
+        // Deprecated: (20250329 - Liz)
         // eslint-disable-next-line no-console
-        console.log('角色建立失敗: 無效的 userRole 或 role ID', userRole);
+        console.log('角色建立失敗');
         return;
       }
 
       // Info: (20241107 - Liz) 角色建立成功，執行選擇角色的操作
-      const res = await selectRole(userRole.role.id);
+      const { success: selectSuccess } = await selectRole(userRole.roleName);
 
       // Info: (20241107 - Liz) 檢查選擇角色是否成功，失敗則顯示錯誤訊息
-      if (!res) {
+      if (!selectSuccess) {
         // Deprecated: (20241107 - Liz)
         // eslint-disable-next-line no-console
-        console.log('選擇角色失敗 userRole.role.id', userRole.role.id);
+        console.log('選擇角色失敗');
         return;
       }
 
@@ -93,7 +69,7 @@ const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
       <button
         type="button"
         className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-        onClick={handleCreateAndSelectRole}
+        onClick={createAndSelectRole}
         disabled={isLoading}
       >
         <p>{t('dashboard:COMMON.START')}</p>
@@ -103,7 +79,28 @@ const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
   );
 };
 
-const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({ children }) => {
+// Info: (20250329 - Liz) 預設介紹
+const DefaultIntro = () => {
+  const { t } = useTranslation('dashboard');
+
+  return (
+    <section className="flex flex-col gap-40px pl-60px pt-70px">
+      <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
+        {t('dashboard:CREATE_ROLE_PAGE.SELECT_YOUR_ROLE')}
+      </h1>
+      <p className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
+        {t('dashboard:CREATE_ROLE_PAGE.DEFAULT_INTRODUCTION')}
+      </p>
+    </section>
+  );
+};
+
+interface BookkeeperIntroProps {
+  children: React.ReactNode;
+}
+
+// Info: (20250329 - Liz) 記帳士角色介紹
+const BookkeeperIntro = ({ children }: BookkeeperIntroProps) => {
   const { t } = useTranslation('dashboard');
 
   return (
@@ -133,9 +130,12 @@ const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({ childre
   );
 };
 
-const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntroductionProps> = ({
-  children,
-}) => {
+interface EducationalTrialVersionIntroProps {
+  children: React.ReactNode;
+}
+
+// Info: (20250329 - Liz) 教育試用版角色介紹
+const EducationalTrialVersionIntro = ({ children }: EducationalTrialVersionIntroProps) => {
   const { t } = useTranslation('dashboard');
 
   return (
@@ -168,19 +168,24 @@ const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntro
   );
 };
 
-const Introduction = ({ selectedRoleId, showingRole, togglePreviewModal }: IntroductionProps) => {
+interface IntroductionProps {
+  displayedRole: RoleName | undefined;
+  togglePreviewModal: () => void;
+}
+
+const Introduction = ({ displayedRole, togglePreviewModal }: IntroductionProps) => {
   return (
     <main className="flex flex-auto">
-      {!showingRole && <DefaultIntroduction />}
-      {showingRole === RoleName.BOOKKEEPER && (
-        <BookkeeperIntroduction>
-          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleId={selectedRoleId} />
-        </BookkeeperIntroduction>
+      {!displayedRole && <DefaultIntro />}
+      {displayedRole === RoleName.BOOKKEEPER && (
+        <BookkeeperIntro>
+          <SetupButtons togglePreviewModal={togglePreviewModal} displayedRole={displayedRole} />
+        </BookkeeperIntro>
       )}
-      {showingRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
-        <EducationalTrialVersionIntroduction>
-          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleId={selectedRoleId} />
-        </EducationalTrialVersionIntroduction>
+      {displayedRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
+        <EducationalTrialVersionIntro>
+          <SetupButtons togglePreviewModal={togglePreviewModal} displayedRole={displayedRole} />
+        </EducationalTrialVersionIntro>
       )}
     </main>
   );

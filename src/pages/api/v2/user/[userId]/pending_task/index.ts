@@ -6,23 +6,23 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
-import { listCompanyByUserId } from '@/lib/utils/repo/admin.repo';
 import { countMissingCertificate } from '@/lib/utils/repo/certificate.repo';
 import { countUnpostedVoucher } from '@/lib/utils/repo/voucher.repo';
+import { listAccountBookByUserId } from '@/lib/utils/repo/account_book.repo';
 
 export async function getTotalPendingTaskForUser(userId: number): Promise<IPendingTaskTotal> {
   // Info: (20241018 - Jacky) 獲取用戶擁有的所有公司
-  const listedCompany = await listCompanyByUserId(userId);
+  const listedCompany = await listAccountBookByUserId(userId, {});
 
   // Info: (20241018 - Jacky) 使用 Promise.all 同時計算每個公司的數據
   const results = await Promise.all(
-    listedCompany.map(async ({ company }) => {
+    listedCompany.data.map(async (company) => {
       const [certificateWithoutVoucherCount, voucherWithNoCertificateCount] = await Promise.all([
         countUnpostedVoucher(company.id),
         countMissingCertificate(company.id),
       ]);
 
-      const imageUrl = company.imageFile.url;
+      const imageUrl = company.imageId;
 
       return {
         missingCertificate: {

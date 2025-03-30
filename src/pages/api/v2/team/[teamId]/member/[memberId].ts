@@ -64,7 +64,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
   }
 
   // Info: (20250312 - Shirley) 從 session 中獲取 teamRole
-  const teamRole = (session.teamRole as TeamRole) || TeamRole.VIEWER;
+  const teamRole = (session.teamRole as TeamRole) || TeamRole.VIEWER; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUpdateMemberResponse | null = null;
@@ -153,7 +153,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   }
 
   // Info: (20250312 - Shirley) 從 session 中獲取 teamRole
-  const teamRole = (session.teamRole as TeamRole) || TeamRole.VIEWER;
+  const teamRole = (session.teamRole as TeamRole) || TeamRole.VIEWER; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IDeleteMemberResponse | null = null;

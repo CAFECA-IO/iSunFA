@@ -5,7 +5,7 @@ import { FiTrash2, FiSave } from 'react-icons/fi';
 import { IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IMember } from '@/interfaces/member';
@@ -13,9 +13,10 @@ import { IMember } from '@/interfaces/member';
 interface MemberItemProps {
   member: ITeamMember;
   team: ITeam;
+  getMemberList: () => Promise<void>;
 }
 
-const MemberItem = ({ member, team }: MemberItemProps) => {
+const MemberItem = ({ member, team, getMemberList }: MemberItemProps) => {
   const { t } = useTranslation(['team']);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState<boolean>(false);
   const [role, setRole] = useState<TeamRole | null>(null);
@@ -49,6 +50,7 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
         // eslint-disable-next-line no-console
         console.error('刪除成員失敗!');
       }
+      getMemberList();
     } catch (error) {
       // Deprecated: (20250320 - Liz)
       // eslint-disable-next-line no-console
@@ -79,6 +81,7 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
         // eslint-disable-next-line no-console
         console.error('更新成員角色失敗!');
       }
+      getMemberList();
     } catch (error) {
       // Deprecated: (20250320 - Liz)
       // eslint-disable-next-line no-console
@@ -92,10 +95,11 @@ const MemberItem = ({ member, team }: MemberItemProps) => {
     teamRole,
     canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
   });
-  const canAlterRoles = 'canAlter' in result ? result.canAlter : [];
-  const canEditThisRole = 'canAlter' in result && result.canAlter.includes(member.role);
+  const canAlterRoles = TeamRoleCanDoKey.CAN_ALTER in result ? result.canAlter : [];
+  const canEditThisRole =
+    TeamRoleCanDoKey.CAN_ALTER in result && result.canAlter.includes(member.role);
   const hasOtherRoleToChange =
-    'canAlter' in result && result.canAlter.some((item) => item !== member.role);
+    TeamRoleCanDoKey.CAN_ALTER in result && result.canAlter.some((item) => item !== member.role);
   const isEditable = canEditThisRole && hasOtherRoleToChange;
   const isDeletable = canEditThisRole;
 

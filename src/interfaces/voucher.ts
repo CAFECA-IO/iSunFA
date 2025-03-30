@@ -159,6 +159,7 @@ export interface IVoucherDetailForFrontend {
 export enum FromWhere {
   LEDGER = 'ledger',
   ARandAP = 'ARandAP',
+  VOUCHER_ITEM = 'voucher_item',
 }
 
 export const defaultVoucherDetail: IVoucherDetailForFrontend = {

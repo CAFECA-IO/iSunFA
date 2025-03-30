@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -17,10 +17,10 @@ import { IPaginatedData } from '@/interfaces/pagination';
 const MyAccountBooks = () => {
   const { t } = useTranslation('dashboard');
   const { userAuth } = useUserCtx();
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
   const isAccountBookListEmpty = accountBookList.length === 0;
   const [accountBookToSelect, setAccountBookToSelect] = useState<
-    IAccountBookForUserWithTeam | undefined
+    IAccountBookWithTeam | undefined
   >();
   const [isLoading, setIsLoading] = useState(false);
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
@@ -47,7 +47,7 @@ const MyAccountBooks = () => {
     setIsLoading(true);
 
     try {
-      const { success } = await connectAccountBook(accountBookToSelect.company.id);
+      const { success } = await connectAccountBook(accountBookToSelect.id);
       if (!success) {
         // Deprecated: (20250314 - Liz)
         // eslint-disable-next-line no-console
@@ -72,9 +72,7 @@ const MyAccountBooks = () => {
           {t('dashboard:DASHBOARD.SURE')}
         </p>
         <br />
-        <p className="font-semibold text-text-neutral-primary">
-          {accountBookToSelect?.company.name}
-        </p>
+        <p className="font-semibold text-text-neutral-primary">{accountBookToSelect?.name}</p>
       </div>
     ),
     submitBtnStr: t('dashboard:DASHBOARD.CHOOSE'),
@@ -86,7 +84,7 @@ const MyAccountBooks = () => {
 
   // Info: (20250306 - Liz) 打 API 取得使用者擁有的帳本清單(原為公司)
   const { trigger: getAccountBookListByUserIdAPI } = APIHandler<
-    IPaginatedData<IAccountBookForUserWithTeam[]>
+    IPaginatedData<IAccountBookWithTeam[]>
   >(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID);
 
   const getAccountBookList = useCallback(async () => {
@@ -103,7 +101,7 @@ const MyAccountBooks = () => {
         // Info: (20241216 - Liz) 已被選擇的帳本顯示在第一個(原為公司)
         if (connectedAccountBook) {
           const selectedAccountBookIndex = accountBookListData.findIndex(
-            (item) => item.company.id === connectedAccountBook.id
+            (item) => item.id === connectedAccountBook.id
           );
 
           if (selectedAccountBookIndex > -1) {

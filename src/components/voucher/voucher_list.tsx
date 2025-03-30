@@ -28,6 +28,11 @@ interface IVoucherListProps {
   setDateSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
   isHideReversals: boolean;
   hideReversalsToggleHandler: () => void;
+  selectedStartDate?: number;
+  selectedEndDate?: number;
+  selectedType?: string;
+  keyword?: string;
+  currentPage?: number;
 }
 
 const VoucherList: React.FC<IVoucherListProps> = ({
@@ -40,6 +45,11 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   setDateSort,
   isHideReversals,
   hideReversalsToggleHandler,
+  selectedStartDate,
+  selectedEndDate,
+  selectedType,
+  keyword,
+  currentPage,
 }) => {
   const { t } = useTranslation('common');
   const { connectedAccountBook } = useUserCtx();
@@ -400,6 +410,12 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         voucher={voucher}
         selectHandler={selectHandler}
         isCheckBoxOpen={isCheckBoxOpen}
+        selectedStartDate={selectedStartDate}
+        selectedEndDate={selectedEndDate}
+        selectedType={selectedType}
+        keyword={keyword}
+        currentPage={currentPage}
+        fullVoucherList={uiVoucherList}
       />
     );
   });

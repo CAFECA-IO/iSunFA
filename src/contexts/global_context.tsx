@@ -20,7 +20,7 @@ import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { useTranslation } from 'next-i18next';
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
-import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
+import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal'; // Deprecated: (20250324 - Liz) 這好像是 Alpha 版本的元件
 import { UploadType } from '@/constants/file';
 import { useModalContext } from '@/contexts/modal_context';
 import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher_modal';

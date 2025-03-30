@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { APIName } from '@/constants/api_connection';
-import PendingTasksForAccountBook from '@/components/beta/dashboard/pending_task_for_account_book';
+import PendingTaskForAccountBook from '@/components/beta/dashboard/pending_task_for_account_book';
 import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data';
 import { IPaginatedData } from '@/interfaces/pagination';
 import PendingTaskForAll from '@/components/beta/dashboard/pending_task_for_all';
@@ -16,18 +16,18 @@ interface PendingTasksProps {
 const PendingTask = ({ getTodoList }: PendingTasksProps) => {
   /* Info: (20241018 - Liz) 元件顯示邏輯
    * 沒有帳本清單 : 顯示 PendingTaskNoData
-   * 有帳本清單 且 有連結帳本 : 顯示 PendingTasksForAccountBook
+   * 有帳本清單 且 有連結帳本 : 顯示 PendingTaskForAccountBook
    * 有帳本清單 且 沒有連結帳本 : 顯示 PendingTaskForAll
    */
 
   const { userAuth, connectedAccountBook } = useUserCtx();
   const isSelectedAccountBook = !!connectedAccountBook; // Info: (20250204 - Liz) 強制轉為布林值
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
   const hasAccountBookList = accountBookList.length > 0;
 
   // Info: (20250306 - Liz) 打 API 取得使用者擁有的帳本清單(原為公司)
   const { trigger: getAccountBookListByUserIdAPI } = APIHandler<
-    IPaginatedData<IAccountBookForUserWithTeam[]>
+    IPaginatedData<IAccountBookWithTeam[]>
   >(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID);
 
   useEffect(() => {
@@ -71,7 +71,7 @@ const PendingTask = ({ getTodoList }: PendingTasksProps) => {
   if (isSelectedAccountBook) {
     return (
       <DashboardCardLayout>
-        <PendingTasksForAccountBook getTodoList={getTodoList} />
+        <PendingTaskForAccountBook getTodoList={getTodoList} />
       </DashboardCardLayout>
     );
   }

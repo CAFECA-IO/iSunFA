@@ -141,7 +141,9 @@
     "MONTHLY_SUBSCRIPTION": "Monthly Subscription",
     "SUBTOTAL": "Subtotal",
     "TAX": "Tax",
-    "TOTAL_PRICE": "Total Price"
+    "TOTAL_PRICE": "Total Price",
+    "TOAST_GET_CREDIT_CARD_INFO_FAILED": "Credit card information failed to add, please try again.",
+    "TOAST_GET_CREDIT_CARD_INFO_SUCCESS": "Credit card information added successfully!"
   },
 
   "BILLING_PAGE": {

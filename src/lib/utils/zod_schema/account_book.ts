@@ -1,59 +1,59 @@
 import { z } from 'zod';
-import {
-  nullSchema,
-  zodStringToNumber,
-  zodStringToNumberWithDefault,
-} from '@/lib/utils/zod_schema/common';
-import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
+import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION, ACCOUNT_BOOK_ROLE } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema, TeamSchema } from '@/lib/utils/zod_schema/team';
-import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
-import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
-import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
-import { companyOutputSchema } from '@/lib/utils/zod_schema/company';
+import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
-const roleSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  permissions: z.array(z.string()),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-});
+// Info: (2025) `roleSchema` 不再需要，因為 `role` 已經改為 `accountBookRole`
 
-const accountBookSchema = z.object({
+export const accountBookSchema = z.object({
   id: z.number(),
+  teamId: z.number().default(0),
+  userId: z.number().default(555),
   imageId: z.string(),
   name: z.string(),
   taxId: z.string(),
+  tag: z.nativeEnum(WORK_TAG), // Info: (2025) 新增 `tag`，對應 `IAccountBook`
   startDate: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
+  isPrivate: z.boolean().optional(),
 });
 
-const accountBookForUserSchema = z.object({
-  company: accountBookSchema,
-  tag: z.nativeEnum(WORK_TAG),
-  order: z.number(),
-  role: roleSchema,
-});
-
-const accountBookForUserWithTeamSchema = accountBookForUserSchema.extend({
+export const accountBookWithTeamSchema = accountBookSchema.extend({
   team: TeamSchema,
   isTransferring: z.boolean(),
 });
 
-const accountBookListQuerySchema = z.object({
+export const accountBookListQuerySchema = paginatedDataQuerySchema.extend({
   userId: zodStringToNumber,
-  page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
-  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
-  searchQuery: z.string().optional(),
-  sortOption: z.string().optional(),
 });
 
-const accountBookListResponseSchema = paginatedDataSchema(accountBookForUserWithTeamSchema);
+const accountBookListResponseSchema = paginatedDataSchema(accountBookWithTeamSchema);
 
 const updateAccountBookQuerySchema = z.object({
   accountBookId: zodStringToNumber,
 });
+
+const accountBookCreateQuerySchema = z.object({
+  userId: zodStringToNumber,
+});
+
+const accountBookCreateBodySchema = z.object({
+  name: z.string(),
+  taxId: z.string(),
+  tag: z.nativeEnum(WORK_TAG),
+  teamId: z.number().int(),
+});
+
+export const accountBookCreateSchema = {
+  input: {
+    querySchema: accountBookCreateQuerySchema,
+    bodySchema: accountBookCreateBodySchema,
+  },
+  outputSchema: accountBookSchema.nullable(),
+  frontend: nullSchema,
+};
 
 const updateAccountBookBodySchema = z.object({
   action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
@@ -62,10 +62,10 @@ const updateAccountBookBodySchema = z.object({
 
 const updateAccountBookResponseSchema = z.object({
   teamId: z.number().optional().default(0),
-  company: companyOutputSchema,
+  company: accountBookSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number().int(),
-  role: roleSchema,
+  accountBookRole: z.nativeEnum(ACCOUNT_BOOK_ROLE), // Info: (2025) 改為 `accountBookRole`
 });
 
 const accountBookNullSchema = z.union([z.object({}), z.string()]);

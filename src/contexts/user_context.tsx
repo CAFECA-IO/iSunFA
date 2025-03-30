@@ -5,12 +5,7 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import {
-  WORK_TAG,
-  IAccountBook,
-  IAccountBookForUser,
-  IResponseUpdateAccountBook,
-} from '@/interfaces/account_book';
+import { WORK_TAG, IAccountBook } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
@@ -19,9 +14,11 @@ import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
-import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { ITeam, TeamRole } from '@/interfaces/team';
+import { RoleName } from '@/constants/role';
+import { IPaymentMethod } from '@/interfaces/payment';
+import { IStatusInfo } from '@/interfaces/status_info';
 
 interface UserContextType {
   credential: string | null;
@@ -31,10 +28,10 @@ interface UserContextType {
   isSignIn: boolean;
   isAgreeTermsOfService: boolean;
   isSignInError: boolean;
-  createRole: (roleId: number) => Promise<IUserRole | null>;
-  selectRole: (roleId: number) => Promise<IUserRole | null>;
+  createRole: (roleName: RoleName) => Promise<{ success: boolean; userRole: IUserRole | null }>;
+  selectRole: (roleName: RoleName) => Promise<{ success: boolean }>;
   getUserRoleList: () => Promise<IUserRole[] | null>;
-  getSystemRoleList: () => Promise<IRole[] | null>;
+  getSystemRoleList: () => Promise<RoleName[] | null>;
   selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
   switchRole: () => void;
 
@@ -82,10 +79,6 @@ interface UserContextType {
   errorCode: string | null;
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
-  checkIsRegistered: () => Promise<{
-    isRegistered: boolean;
-    credentials: PublicKeyCredential | null;
-  }>;
 
   handleUserAgree: (hash: Hash) => Promise<boolean>;
   authenticateUser: (selectProvider: Provider, props: ILoginPageProps) => Promise<void>;
@@ -93,6 +86,9 @@ interface UserContextType {
 
   bindingResult: boolean | null;
   handleBindingResult: (bindingResult: boolean | null) => void;
+
+  paymentMethod: IPaymentMethod[] | null;
+  handlePaymentMethod: (paymentMethod: IPaymentMethod[] | null) => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -103,8 +99,8 @@ export const UserContext = createContext<UserContextType>({
   isSignIn: false,
   isAgreeTermsOfService: false,
   isSignInError: false,
-  createRole: async () => null,
-  selectRole: async () => null,
+  createRole: async () => ({ success: false, userRole: null }),
+  selectRole: async () => ({ success: false }),
   getUserRoleList: async () => null,
   getSystemRoleList: async () => null,
   selectedRole: null,
@@ -124,9 +120,6 @@ export const UserContext = createContext<UserContextType>({
   errorCode: null,
   toggleIsSignInError: () => {},
   isAuthLoading: false,
-  checkIsRegistered: async () => {
-    return { isRegistered: false, credentials: null };
-  },
 
   handleUserAgree: async () => false,
   authenticateUser: async () => {},
@@ -134,11 +127,20 @@ export const UserContext = createContext<UserContextType>({
 
   bindingResult: false,
   handleBindingResult: () => {},
+
+  paymentMethod: null,
+  handlePaymentMethod: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const EXPIRATION_TIME = 1000 * 60 * 60 * 1; // Info: (20240822) 1 hours
+  const EXCLUDED_PATHS = [
+    ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
+    ISUNFA_ROUTE.MY_ACCOUNT_PAGE,
+    ISUNFA_ROUTE.TEAM_PAGE,
+    ISUNFA_ROUTE.GENERAL_SETTINGS,
+  ];
 
   const [, setIsSignIn, isSignInRef] = useStateRef(false);
   const [, setCredential, credentialRef] = useStateRef<string | null>(null);
@@ -149,28 +151,23 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setConnectedAccountBook, connectedAccountBookRef] = useStateRef<IAccountBook | null>(
     null
   );
-  const [, setTeam, teamRef] = useStateRef<ITeam | null>(null);
+  const [, setTeam, teamRef] = useStateRef<ITeam | null>(null); // Info: (20250325 - Liz) 已連結帳本的所屬團隊
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
 
   const [, setBindingResult, bindingResultRef] = useStateRef<boolean | null>(null);
+  const [, setPaymentMethod, paymentMethodRef] = useStateRef<IPaymentMethod[] | null>(null);
 
   const isRouteChanging = useRef(false);
 
   const { trigger: signoutAPI } = APIHandler<string>(APIName.SIGN_OUT);
-  const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
-  const { trigger: getStatusInfoAPI } = APIHandler<{
-    user: IUser;
-    company: IAccountBook;
-    role: IRole;
-    team: ITeam;
-  }>(APIName.STATUS_INFO_GET);
-  // Info: (20241108 - Liz) 取得系統角色列表 API
-  const { trigger: systemRoleListAPI } = APIHandler<IRole[]>(APIName.ROLE_LIST);
-  // Info: (20241104 - Liz) 取得使用者角色列表 API
+  const { trigger: getStatusInfoAPI } = APIHandler<IStatusInfo>(APIName.STATUS_INFO_GET);
+  // Info: (20241108 - Liz) 取得系統角色清單 API
+  const { trigger: systemRoleListAPI } = APIHandler<RoleName[]>(APIName.ROLE_LIST);
+  // Info: (20241104 - Liz) 取得使用者建立的所有角色
   const { trigger: userRoleListAPI } = APIHandler<IUserRole[]>(APIName.USER_ROLE_LIST);
   // Info: (20241104 - Liz) 建立角色 API
   const { trigger: createRoleAPI } = APIHandler<IUserRole>(APIName.USER_CREATE_ROLE);
@@ -178,18 +175,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
 
   // Info: (20241104 - Liz) 建立帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
-  const { trigger: createAccountBookAPI } = APIHandler<IAccountBookForUser>(
-    APIName.CREATE_USER_COMPANY
-  );
+  const { trigger: createAccountBookAPI } = APIHandler<IAccountBook>(APIName.CREATE_ACCOUNT_BOOK);
 
   // Info: (20241111 - Liz) 連結帳本 API(原為選擇公司)
   const { trigger: connectAccountBookAPI } = APIHandler<IAccountBook>(
     APIName.CONNECT_ACCOUNT_BOOK_BY_ID
   );
   // Info: (20241113 - Liz) 更新帳本 API(原為公司)
-  const { trigger: updateAccountBookAPI } = APIHandler<IResponseUpdateAccountBook>(
-    APIName.UPDATE_ACCOUNT_BOOK
-  );
+  const { trigger: updateAccountBookAPI } = APIHandler<IAccountBook>(APIName.UPDATE_ACCOUNT_BOOK);
 
   // Info: (20241115 - Liz) 刪除帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
   const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.COMPANY_DELETE);
@@ -197,9 +190,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
   const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
 
+  // Info: (20250329 - Liz) 取得團隊資訊 API
+  const { trigger: getTeamAPI } = APIHandler<ITeam>(APIName.GET_TEAM_BY_ID);
+
   // Info: (20250321 - Julian) 從第三方金流獲取綁定信用卡的結果
   const handleBindingResult = (bindingResult: boolean | null) => {
     setBindingResult(bindingResult);
+  };
+
+  // Info: (20250324 - Julian) 從第三方金流獲取信用卡資訊
+  const handlePaymentMethod = (paymentMethod: IPaymentMethod[] | null) => {
+    setPaymentMethod(paymentMethod);
   };
 
   const toggleIsSignInError = () => {
@@ -215,6 +216,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSelectedRole(null);
     setConnectedAccountBook(null);
     setTeam(null);
+    setBindingResult(null);
     clearAllItems(); // Info: (20240822 - Shirley) 清空 IndexedDB 中的數據
   };
 
@@ -250,6 +252,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20241111 - Liz) 前往儀表板
   const goToDashboard = () => {
+    if (EXCLUDED_PATHS.some((path) => router.pathname.startsWith(path))) return;
+
     router.push(ISUNFA_ROUTE.DASHBOARD);
 
     // Deprecated: (20241111 - Liz)
@@ -279,42 +283,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     goToSelectRolePage();
   };
 
-  const checkIsRegistered = async (): Promise<{
-    isRegistered: boolean;
-    credentials: PublicKeyCredential | null;
-  }> => {
-    // Info: (20240730 - Tzuhan) 生成挑戰
-    const { data: newChallengeBase64, success, code } = await createChallengeAPI();
-
-    if (!success || !newChallengeBase64) {
-      throw new Error(code);
-    }
-
-    // Info: (20240730 - Tzuhan) 將 base64 轉換成 Uint8Array
-    const newChallenge = Uint8Array.from(atob(newChallengeBase64), (c) => c.charCodeAt(0));
-
-    // Info: (20240730 - Tzuhan) 檢查是否已有綁定的憑證
-    const credentials = (await navigator.credentials.get({
-      publicKey: {
-        challenge: newChallenge, // Info: (20240730 - Tzuhan)  使用生成的挑戰
-        allowCredentials: [], // Info: (20240730 - Tzuhan)  查詢已綁定的憑證
-        timeout: 60000,
-        userVerification: 'required',
-      },
-    })) as PublicKeyCredential;
-
-    if (credentials) {
-      return {
-        isRegistered: true,
-        credentials,
-      };
-    }
-    return {
-      isRegistered: false,
-      credentials: null,
-    };
-  };
-
   const signOut = async () => {
     // Deprecated: (20241111 - Liz)
     // eslint-disable-next-line no-console
@@ -340,6 +308,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const hasLocalStorageData = userId && expiredAt;
     const isSessionExpired = expiredAt && Date.now() >= Number(expiredAt);
 
+    // Deprecated: (20250329 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('userId:', userId, 'expiredAt:', expiredAt, 'isSessionExpired:', isSessionExpired);
+
     if (isSessionExpired) {
       signOut();
       return false;
@@ -352,31 +324,33 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241001 - Liz) 此函數處理公司資訊:
   // 如果公司資料存在且不為空，它會設定選定的公司 (setConnectedAccountBook)，最後回傳公司資訊。
   // 如果公司資料不存在，會將公司資訊設為 null，並回傳 null。
-  const processAccountBookInfo = (company: IAccountBook) => {
-    if (!company || Object.keys(company).length === 0) {
+  const processAccountBookInfo = (accountBook: IStatusInfo['company']) => {
+    if (!accountBook || Object.keys(accountBook).length === 0) {
       setConnectedAccountBook(null);
       return null;
     }
-    setConnectedAccountBook(company);
-    return company;
+    setConnectedAccountBook(accountBook);
+    return accountBook;
   };
 
-  // Info: (20250319 - Liz) 此函數處理團隊資訊: (團隊是指連結帳本所屬的團隊)
-  const processTeamInfo = (teamData: ITeam) => {
-    if (!teamData || Object.keys(teamData).length === 0) {
-      setTeam(null);
-      return;
-    }
-    setTeam(teamData);
+  const processTeamsInfo = ({
+    teams,
+    teamId,
+  }: {
+    teams: IStatusInfo['teams'];
+    teamId: IAccountBook['teamId'] | null;
+  }) => {
+    const team = teams?.find((t) => t.id === teamId) ?? null;
+    setTeam(team);
   };
 
   // Info: (20241101 - Liz) 此函數處理角色資訊:
-  const processRoleInfo = (role: IRole) => {
+  const processRoleInfo = (role: IStatusInfo['role']) => {
     if (!role || Object.keys(role).length === 0) {
       setSelectedRole(null);
       return null;
     }
-    setSelectedRole(role.name);
+    setSelectedRole(role.roleName);
     return role;
   };
 
@@ -384,7 +358,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // 如果使用者資料不存在，會回傳 null。
   // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入，
   // 並且將使用者的 userId 和過期時間儲存在 localStorage 中，最後回傳使用者資訊。
-  const processUserInfo = (user: IUser) => {
+  const processUserInfo = (user: IStatusInfo['user']) => {
     if (!user || Object.keys(user).length === 0) return null;
 
     setUserAuth(user);
@@ -399,23 +373,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241009 - Liz) 此函數是在處理 getStatusInfo 獲得的資料，包含使用者、公司、角色，並根據處理結果來決定下一步的操作:
   // 它會呼叫 processUserInfo, processAccountBookInfo, 和 processRoleInfo 分別處理使用者、公司、角色資訊。
   // 依據處理結果，它會執行不同的自動導向邏輯。
-  const handleProcessData = (statusInfo: {
-    user: IUser;
-    company: IAccountBook;
-    role: IRole;
-    team: ITeam;
-  }) => {
+  const handleProcessData = (statusInfo: IStatusInfo) => {
     const processedUser = processUserInfo(statusInfo.user);
-    const processedRole = processRoleInfo(statusInfo.role);
-    const processedAccountBook = processAccountBookInfo(statusInfo.company);
-    processTeamInfo(statusInfo.team);
-
     if (!processedUser) {
       clearStates();
       clearLocalStorage();
       goToLoginPage();
       return;
     }
+
+    const processedRole = processRoleInfo(statusInfo.role);
+    const processedAccountBook = processAccountBookInfo(statusInfo.company);
+    processTeamsInfo({
+      teamId: statusInfo.company?.teamId ?? null,
+      teams: statusInfo.teams,
+    });
 
     // Info: (20241117 - Liz) 檢查是否已經同意服務條款和隱私政策
     const hasAgreedToTermsOfService = processedUser.agreementList.includes(
@@ -443,6 +415,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // 如果獲取資料失敗，它會執行未登入的處理邏輯: 清除狀態、導向登入頁面、設定登入錯誤狀態、設定錯誤代碼。
   // 最後，它會將載入狀態設為完成。
   const getStatusInfo = useCallback(async () => {
+    if (router.pathname === ISUNFA_ROUTE.LANDING_PAGE) return; // Info: (20250329 - Liz) 在首頁不獲取使用者資料
+
     if (!isProfileFetchNeeded()) {
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
@@ -557,15 +531,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241029 - Liz) 建立角色的功能
-  const createRole = async (roleId: number) => {
-    // Deprecated: (20241108 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('call createRole, roleId:', roleId);
-
+  const createRole = async (roleName: RoleName) => {
     try {
       const { success, data: userRole } = await createRoleAPI({
         params: { userId: userAuthRef.current?.id },
-        body: { roleId },
+        body: { roleName },
       });
 
       // Info: (20241029 - Liz) 檢查建立角色的成功狀態
@@ -573,38 +543,35 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         // Deprecated: (20241111 - Liz)
         // eslint-disable-next-line no-console
         console.log('打 USER_CREATE_ROLE 成功, userRole:', userRole);
-        return userRole;
+        return { success, userRole };
       }
 
       // Info: (20241107 - Liz) 建立失敗回傳 null
-      return null;
+      return { success: false, userRole: null };
     } catch (error) {
-      // Info: (20241107 - Liz) 例外發生視為建立失敗回傳 null
-      // console.error('Error creating role:', error);
-      return null;
+      return { success: false, userRole: null };
     }
   };
 
   // Info: (20241101 - Liz) 選擇角色的功能
-  const selectRole = async (roleId: number) => {
+  const selectRole = async (roleName: RoleName) => {
     try {
       const { success, data: userRole } = await selectRoleAPI({
         params: { userId: userAuthRef.current?.id },
-        body: { roleId },
+        body: { roleName },
       });
 
       if (success && userRole) {
-        setSelectedRole(userRole.role.name);
-        return userRole;
+        setSelectedRole(userRole.roleName);
+        return { success };
       }
-
-      return null;
+      return { success: false };
     } catch (error) {
-      return null;
+      return { success: false };
     }
   };
 
-  // Info: (20241108 - Liz) 取得系統角色列表
+  // Info: (20241108 - Liz) 取得系統角色清單
   const getSystemRoleList = async () => {
     try {
       const { data: systemRoleList, success } = await systemRoleListAPI({
@@ -620,7 +587,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241025 - Liz) 取得使用者擁有的所有角色
+  // Info: (20241025 - Liz) 取得使用者建立的所有角色
   const getUserRoleList = async () => {
     try {
       const { data: userRoleList, success } = await userRoleListAPI({
@@ -669,12 +636,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241111 - Liz) 連結帳本的功能(原為選擇公司)
   const connectAccountBook = async (accountBookId: number) => {
     try {
-      const { success, data: connectedAccountBook } = await connectAccountBookAPI({
+      const { success, data } = await connectAccountBookAPI({
         params: { accountBookId },
       });
 
-      if (!success) return { success: false };
-      setConnectedAccountBook(connectedAccountBook);
+      if (!success || !data) return { success: false };
+      setConnectedAccountBook(data);
+
+      // Info: (20250329 - Liz) 打 API 取得團隊資訊
+      const { success: getTeamSuccess, data: team } = await getTeamAPI({
+        params: { teamId: data.teamId },
+      });
+      if (!getTeamSuccess || !team) return { success: false };
+      // Deprecated: (20250329 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('connectAccountBook 取得團隊資訊成功: team', team);
+      setTeam(team);
       return { success: true };
     } catch (error) {
       return { success: false };
@@ -855,13 +832,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
-      checkIsRegistered,
       handleUserAgree,
       authenticateUser,
       handleAppleSignIn,
 
       bindingResult: bindingResultRef.current,
       handleBindingResult,
+
+      paymentMethod: paymentMethodRef.current,
+      handlePaymentMethod,
     }),
     [
       credentialRef.current,
@@ -874,6 +853,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       router.pathname,
       userAuthRef.current,
       bindingResultRef.current,
+      paymentMethodRef.current,
     ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
