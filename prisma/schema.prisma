@@ -1004,6 +1004,8 @@ model UserPaymentInfo {
 
   user User @relation(fields: [userId], references: [id])
 
+  TeamPaymentTransaction TeamPaymentTransaction[]
+
   @@map("user_payment_info")
 }
 
@@ -1205,7 +1207,6 @@ model TeamPlan {
   createdAt        Int                @map("created_at")
   updatedAt        Int                @map("updated_at")
   TeamSubscription TeamSubscription[]
-  TeamInvoice      TeamInvoice[]
 
   @@map("team_plan")
 }
@@ -1309,24 +1310,14 @@ enum TeamRole {
 model TeamSubscription {
   id     Int  @id @default(autoincrement())
   teamId Int  @unique @map("team_id")
-  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  planId Int      @map("plan_id")
-  plan   TeamPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
-
-  autoRenewal   Boolean           @default(false) @map("auto_renewal")
+  planType TeamPlanType      @map("plan_type")
   startDate     Int               @map("start_date")
   expiredDate   Int               @map("expired_date")
-  paymentStatus TeamPaymentStatus @map("payment_status")
-
-  lastTransactionId Int?                    @map("last_transaction_id")
-  lastTransaction   TeamPaymentTransaction?
-
-  invoices TeamInvoice[] // Info: (20250221 - tzuhan) 關聯發票
-
   createdAt Int @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
   updatedAt Int @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
 
+  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  plan   TeamPlan @relation(fields: [planType], references: [type], onDelete: Cascade)
   @@map("team_subscription")
 }
 
@@ -1351,6 +1342,8 @@ model TeamOrder {
   team    Team    @relation(fields: [teamId], references: [id])
 
   orderDetails TeamOrderDetail[]
+  TeamPaymentTransaction TeamPaymentTransaction[]
+  TeamInvoice TeamInvoice[]
 
   @@map("team_order")
 }
@@ -1373,53 +1366,52 @@ model TeamOrderDetail {
 
 model TeamPaymentTransaction {
   id             Int              @id @default(autoincrement())
-  subscriptionId Int              @unique @map("subscription_id") // Info: (20250221 - tzuhan)  設定 `@unique`，確保 1-to-1 關聯
-  subscription   TeamSubscription @relation(fields: [subscriptionId], references: [id])
-
-  transactionId String            @map("transaction_id")
-  amount        Int
-  paymentMethod String            @map("payment_method")
+  teamOrderId    Int              @map("team_order_id")
+  amount         Int
+  currency       String
+  paymentGateway String           @map("payment_gateway")
+  userPaymentInfoId Int            @map("user_payment_info_id")
+  paymentGetwayRecordId String? @map("payment_getway_record_id")
   status        TransactionStatus
   createdAt     Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
+  updatedAt     Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
 
-  @@map("team_payment_transaction")
+  teamOrder      TeamOrder        @relation(fields: [teamOrderId], references: [id])
+  userPaymentInfo UserPaymentInfo @relation(fields: [userPaymentInfoId], references: [id])
+
+  TeamInvoice TeamInvoice[]
+
+  @@map("team_payment_transaction")  
 }
 
 enum TransactionStatus {
   SUCCESS
   FAILED
   PENDING
+  REFUNDED
 }
 
 model TeamInvoice {
   id             Int              @id @default(autoincrement())
-  subscriptionId Int              @map("subscription_id")
-  subscription   TeamSubscription @relation(fields: [subscriptionId], references: [id])
-
-  issuedTimestamp Int @map("issued_timestamp")
-  dueTimestamp    Int @map("due_timestamp")
-
-  planId Int      @map("plan_id")
-  plan   TeamPlan @relation(fields: [planId], references: [id])
-
-  planStartDate Int    @map("plan_start_date")
-  planEndDate   Int    @map("plan_end_date")
-  planQuantity  Int    @map("plan_quantity")
-  planUnitPrice Int    @map("plan_unit_price")
-  planAmount    Int    @map("plan_amount")
-  subtotal      Int
-  tax           Int
-  total         Int
-  amountDue     Int    @map("amount_due")
-  payerName     String @map("payer_name")
-  payerAddress  String @map("payer_address")
-  payerPhone    String @map("payer_phone")
-  payerTaxId    String @map("payer_tax_id")
-  payeeName     String @map("payee_name")
-  payeeAddress  String @map("payee_address")
-  payeePhone    String @map("payee_phone")
-  payeeTaxId    String @map("payee_tax_id")
+  teamOrderId    Int              @map("team_order_id")
+  teamPaymentTransactionId Int @map("team_payment_transaction_id")
+  invoiceCode    String           @map("invoice_code")
+  price          Int
+  tax            Int
+  total          Int
+  currency       String
+  payerId        String?          @map("payer_id")
+  payerName      String?          @map("payer_name")
+  payerEmail     String?          @map("payer_email")
+  payerAddress   String?          @map("payer_address")
+  payerPhone     String?          @map("payer_phone")
+  status         String           @map("status")
+  issuedAt      Int    @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("issued_at")
   createdAt     Int    @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
+  updatedAt     Int    @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
+
+  teamOrder      TeamOrder        @relation(fields: [teamOrderId], references: [id])
+  teamPaymentTransaction TeamPaymentTransaction @relation(fields: [teamPaymentTransactionId], references: [id])
 
   @@map("team_invoice")
 }

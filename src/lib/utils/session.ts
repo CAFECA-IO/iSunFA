@@ -12,10 +12,10 @@ import path from 'path';
 import { DefaultValue } from '@/constants/default_value';
 import { parseSessionId } from '@/lib/utils/parser/session';
 import { getCurrentTimestamp } from '@/lib/utils/common';
-import { sessionDataToLoginDevice } from '@/lib/utils/formatter/login_device';
-import { sessionOptionToSession } from '@/lib/utils/formatter/session';
+import { sessionDataToLoginDevice } from '@/lib/utils/formatter/login_device.formatter';
+import { sessionOptionToSession } from '@/lib/utils/formatter/session.formatter';
 import { ALWAYS_LOGIN, SESSION_DEVELOPER } from '@/constants/session';
-import { checkAbnormalDevice } from '@/lib/utils/analyzer/security';
+import { checkAbnormalDevice } from '@/lib/utils/analyzer/security.analyzer';
 
 // ToDo: (20250108 - Luphia) encrypt string
 // Deprecated: (20250108 - Luphia) remove eslint-disable

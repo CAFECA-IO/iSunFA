@@ -6,7 +6,7 @@ import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import loggerBack from '@/lib/utils/logger_back';
 import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
 import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';

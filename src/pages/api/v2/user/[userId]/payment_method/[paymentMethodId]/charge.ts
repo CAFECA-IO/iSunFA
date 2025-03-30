@@ -2,20 +2,27 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import {
   PaymentQuerySchema,
   PaymentBodySchema,
-  TeamInvoiceSchema,
-  mockInvoices,
   getUserPaymentInfoById,
 } from '@/lib/utils/repo/user_payment_info.repo';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { TPlanType } from '@/interfaces/subscription';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import loggerBack from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
 import { logUserAction } from '@/lib/utils/middleware';
-import { countTeamMembersById } from '@/lib/utils/repo/team.repo';
-import { getTeamPlanByType } from '@/lib/utils/repo/team_plan.repo';
-import { DefaultValue } from '@/constants/default_value';
+import { generateTeamInvoice } from '@/lib/utils/generator/team_invoice.generator';
+import { createPaymentGateway } from '@/lib/utils/payment/factory';
+import { IPaymentInfo, ITeamInvoice } from '@/interfaces/payment';
+import { IChargeWithTokenOptions } from '@/interfaces/payment_gateway';
+import { getUserById } from '@/lib/utils/repo/user.repo';
+import { IUser } from '@/interfaces/user';
+import { ITeamOrder } from '@/interfaces/order';
+import { generateTeamPaymentTransaction } from '@/lib/utils/generator/team_payment_transaction.generator';
+import { createTeamPaymentTransaction } from '@/lib/utils/repo/team_payment_transaction.repo';
+import { generateTeamOrder } from '@/lib/utils/generator/team_order.generator';
+import { createTeamInvoice } from '@/lib/utils/repo/team_invoice.repo';
+import { generateTeamSubscription } from '@/lib/utils/generator/team_subscription.generator';
+import { createTeamSubscription } from '@/lib/utils/repo/team_subscription.repo';
 
 /** Info: (20250326 - Luphia) 訂閱支付細節
     team_plan 團隊方案
@@ -48,63 +55,53 @@ export const handlePostRequest = async (req: NextApiRequest) => {
   try {
     // Info: (20250218 - tzuhan) 驗證 URL 參數
     const { userId, paymentMethodId } = PaymentQuerySchema.parse(req.query);
-
     //  Info: (20250218 - tzuhan) 驗證請求 Body
-    const { planType, teamId } = PaymentBodySchema.parse(req.body);
+    const { teamPlanType, teamId } = PaymentBodySchema.parse(req.body);
 
-    const teamPlan = await getTeamPlanByType(planType);
-    const teamMembersCount = await countTeamMembersById(teamId);
-    // Info: (20250326 - Luphia) paymentMethod 隸屬於 userPaymentInfo，共用 id 作為 key
-    const paymentMethod = await getUserPaymentInfoById(paymentMethodId);
-
-    const basicPrice = teamPlan.price;
-    const basicMemberCount = DefaultValue.BASIC_MEMBER_COUNT; // ToDo: (20250326 - Luphia) 這個數字應該要從 team_plan 取得，無法取得才使用預設值
-    const extraMemberPrice = teamPlan.extraMemberPrice || 0;
-
-    const unitPrice = planPrices[planId];
-    const quantity = 1; //  Info: (20250218 - tzuhan) 假設數量固定為 1
-    const totalPrice = unitPrice * quantity;
-    const tax = Math.round(totalPrice * 0.05); //  Info: (20250218 - tzuhan) 假設稅率 5%
-    const subtotal = totalPrice - tax;
-    const issuedTimestamp = Date.now();
-    const dueTimestamp = issuedTimestamp + 30 * 24 * 60 * 60 * 1000; //  Info: (20250218 - tzuhan) 到期日 +30 天
-
-    const invoice = {
-      id: Date.now(), //  Info: (20250218 - tzuhan) 模擬發票 ID
-      teamId: 3, //  Info: (20250218 - tzuhan) 假設綁定的團隊 ID
-      status: true, //  Info: (20250218 - tzuhan) 模擬付款成功
-      issuedTimestamp,
-      dueTimestamp,
-      planId: planType as TPlanType,
-      planStartTimestamp: issuedTimestamp,
-      planEndTimestamp: dueTimestamp,
-      planQuantity: quantity,
-      planUnitPrice: unitPrice,
-      planAmount: totalPrice,
-      payer: {
-        name: 'John Doe',
-        address: '1234 Main St',
-        phone: '123-456-7890',
-        taxId: '123456789',
-      },
-      payee: {
-        name: 'Jane Doe',
-        address: '5678 Elm St',
-        phone: '098-765-4321',
-        taxId: '987654321',
-      },
-      subtotal,
-      tax,
-      total: totalPrice,
-      amountDue: 0, //  Info: (20250218 - tzuhan) 假設一次付清
+    const order: ITeamOrder = await generateTeamOrder({
+      userId,
+      teamId,
+      teamPlanType,
+      quantity: 1,
+    });
+    const userPaymentInfo: IPaymentInfo | null = await getUserPaymentInfoById(paymentMethodId);
+    const user = (await getUserById(userId)) as unknown as IUser;
+    if (!userPaymentInfo || !user || userPaymentInfo.userId !== userId) throw new Error(STATUS_MESSAGE.INVALID_PAYMENT_METHOD);
+    const paymentGateway = createPaymentGateway();
+    const chargeOption: IChargeWithTokenOptions = {
+      order,
+      user,
+      token: userPaymentInfo,
     };
+    const paymentGetwayRecordId = await paymentGateway.chargeWithToken(chargeOption);
+    // Info: (20250328 - Luphia) 根據扣款的結果建立 team_payment_transaction 並儲存
+    // ToDo: (20250330 - Luphia) 使用 DB Transaction
+    const paymentGatewayName = paymentGateway.getPlatform();
+    const teamPaymentTransactionData = await generateTeamPaymentTransaction(
+      order,
+      userPaymentInfo,
+      paymentGatewayName,
+      paymentGetwayRecordId
+    );
+    const teamPaymentTransaction = await createTeamPaymentTransaction(teamPaymentTransactionData);
 
-    //  Info: (20250218 - tzuhan) 確保發票符合 Schema
-    const validatedPayload = TeamInvoiceSchema.parse(invoice);
+    // Info: (20250328 - Luphia) 根據扣款的結果建立 team_invoice 並儲存
+    // ToDo: (20250330 - Luphia) 使用 DB Transaction
+    const teamInvoiceData: ITeamInvoice = await generateTeamInvoice(
+      order,
+      teamPaymentTransaction,
+      user
+    );
+    const teamInvoice = await createTeamInvoice(teamInvoiceData);
 
-    mockInvoices[userId] = invoice;
+    // Info: (20250330 - Luphia) 根據扣款的結果建立 team_subscription 並儲存
+    // ToDo: (20250330 - Luphia) 使用 DB Transaction
+    const teamSubscriptionData = await generateTeamSubscription(teamId, teamPlanType);
+    const teamSubscription = await createTeamSubscription(teamSubscriptionData);
 
-    result = formatApiResponse(STATUS_MESSAGE.SUCCESS, validatedPayload);
+    const resultData = { teamInvoice, teamSubscription };
+
+    result = formatApiResponse(STATUS_MESSAGE.SUCCESS, resultData);
   } catch (error) {
     result = formatApiResponse((error as Error).message, {});
   }

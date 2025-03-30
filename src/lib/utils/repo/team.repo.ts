@@ -1,12 +1,12 @@
 import prisma from '@/client';
 import { ITeam, TeamRole, LeaveStatus } from '@/interfaces/team';
-import { InviteStatus, TeamPaymentStatus } from '@prisma/client';
+import { InviteStatus } from '@prisma/client';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { z } from 'zod';
 import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { createOrderByList } from '@/lib/utils/sort';
 import { MAX_TEAM_LIMIT } from '@/interfaces/permissions';
 
@@ -70,8 +70,8 @@ export const getTeamList = async (
           : '',
         editable: team.members[0]?.role !== TeamRole.VIEWER,
       },
-      paymentStatus:
-        (team.subscription?.paymentStatus as TeamPaymentStatus) ?? TeamPaymentStatus.FREE,
+      // ToDo: (20250330 - Luphia) 需從團隊訂閱狀態取得資料
+      paymentStatus: TPlanType.BEGINNER,
     })),
     page,
     totalPages: Math.ceil(totalCount / pageSize),
@@ -198,17 +198,7 @@ export const createTeam = async (
       }
     }
 
-    // Info: (20250304 - Tzuhan) 6. 創建 `TeamSubscription`
-    await tx.teamSubscription.create({
-      data: {
-        teamId: newTeam.id,
-        planId: plan.id,
-        autoRenewal: false,
-        startDate: now,
-        expiredDate: now + 30 * 24 * 60 * 60, // Info: (20250304 - Tzuhan) 預設 30 天後過期
-        paymentStatus: TeamPaymentStatus.FREE,
-      },
-    });
+    // ToDo: (20250304 - Tzuhan) 6. 創建試用期 `TeamSubscription`
 
     return {
       id: newTeam.id,

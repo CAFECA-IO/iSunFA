@@ -1,3 +1,5 @@
+import { CurrencyType } from '@/constants/currency';
+
 /** Info: (20250318 - Luphia) The order information for Oen.
  *  {
  *    "merchantId": "mermer",
@@ -18,7 +20,6 @@
  *  }
  */
 export interface IOrderOen {
-  merchantId: string;
   amount: number;
   currency: string;
   orderId: string;
@@ -64,7 +65,7 @@ export interface ITeamOrder {
   status: string;
   amount: number;
   details: ITeamOrderDetail[];
-  currency: string;
+  currency: CurrencyType;
   createdAt: number;
   updatedAt: number;
   deletedAt?: number;

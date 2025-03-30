@@ -5,7 +5,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { loggerError } from '@/lib/utils/logger_back';
 import {
   IAccountBookListQueryParams,

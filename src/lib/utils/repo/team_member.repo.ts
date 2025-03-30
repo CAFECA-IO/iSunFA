@@ -8,7 +8,7 @@ import { SortOrder } from '@/constants/sort';
 import { z } from 'zod';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 
 export const addMembersToTeam = async (
   teamId: number,

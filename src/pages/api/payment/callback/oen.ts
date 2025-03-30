@@ -5,7 +5,6 @@ import { createPaymentGateway } from '@/lib/utils/payment/factory';
 import { createDefaultUserPaymentInfo } from '@/lib/utils/repo/user_payment_info.repo';
 import { z } from 'zod';
 import { IPaymentGateway } from '@/interfaces/payment_gateway';
-import { PAYMENT } from '@/constants/service';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import loggerBack from '@/lib/utils/logger_back';
@@ -94,13 +93,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
     const { data } = validatedBody;
 
     if (success && data) {
-      const paymentGatewayOptions = {
-        platform: PAYMENT.OEN,
-        prodMode: false, // process.env.NODE_ENV === 'production',
-        id: process.env.PAYMENT_ID as string,
-        secret: process.env.PAYMENT_TOKEN as string,
-      };
-      const paymentGateway: IPaymentGateway = createPaymentGateway(paymentGatewayOptions);
+      const paymentGateway: IPaymentGateway = createPaymentGateway();
       paymentInfo = paymentGateway.parseAuthorizationToken(data);
     } else {
       success = false;

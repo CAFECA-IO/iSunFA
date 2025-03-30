@@ -232,10 +232,10 @@ export const getCodeByMessage = (statusMessage: string) => {
     code = STATUS_CODE[statusMessage as keyof typeof STATUS_CODE];
     message = statusMessage;
   } else if (/prisma/i.test(statusMessage)) {
-    code = STATUS_CODE[STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_PRISMA_ERROR];
+    code = STATUS_CODE.INTERNAL_SERVICE_ERROR_PRISMA_ERROR;
     message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_PRISMA_ERROR;
   } else {
-    code = STATUS_CODE[STATUS_MESSAGE.INTERNAL_SERVICE_ERROR];
+    code = STATUS_CODE.INTERNAL_SERVICE_ERROR;
     message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
   return { code, message };

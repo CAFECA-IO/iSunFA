@@ -7,7 +7,7 @@ import { APIName } from '@/constants/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { FAKE_OWNED_TEAMS } from '@/lib/services/subscription_service';
 
 const handleGetRequest: IHandleRequest<

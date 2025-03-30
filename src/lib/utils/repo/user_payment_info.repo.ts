@@ -30,7 +30,7 @@ export const PaymentQuerySchema = z.object({
 });
 
 export const PaymentBodySchema = z.object({
-  planId: z.nativeEnum(TPlanType),
+  teamPlanType: z.nativeEnum(TPlanType),
   teamId: z.number(),
 });
 
@@ -83,9 +83,9 @@ export const TeamInvoiceSchema = z.object({
 });
 
 // Info: (20250326 - Luphia) 取得用戶支付方法
-export const getUserPaymentInfoById: (
+export const getUserPaymentInfoById: (id: number) => Promise<IPaymentInfo | null> = async (
   id: number
-) => Promise<IPaymentInfo | null> = async (id: number) => {
+) => {
   let paymentInfo: IPaymentInfo | null = null;
   const query = {
     where: {
@@ -104,7 +104,7 @@ export const getUserPaymentInfoById: (
       detail: result.detail as unknown as IPaymentMethod,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
-    }
+    };
   }
   return paymentInfo;
 };

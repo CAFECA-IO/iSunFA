@@ -3,11 +3,7 @@ import { PAYMENT } from '@/constants/service';
 import { getSession } from '@/lib/utils/session';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import { createPaymentGateway } from '@/lib/utils/payment/factory';
-import {
-  IGetCardBindingUrlOptions,
-  IPaymentGateway,
-  IPaymentGatewayOptions,
-} from '@/interfaces/payment_gateway';
+import { IGetCardBindingUrlOptions, IPaymentGateway } from '@/interfaces/payment_gateway';
 import { logUserAction } from '@/lib/utils/middleware';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -33,13 +29,7 @@ export const oenPaymentHandler = async (req: NextApiRequest) => {
   // Info: (20250318 - Luphia) step 3 沒有 input
 
   // Info: (20250113 - Luphia) step 4
-  const paymentGatewayOptions: IPaymentGatewayOptions = {
-    platform: PAYMENT.OEN,
-    prodMode: false, // process.env.NODE_ENV === 'production',
-    id: process.env.PAYMENT_ID as string,
-    secret: process.env.PAYMENT_TOKEN as string,
-  };
-  const paymentGateway = createPaymentGateway(paymentGatewayOptions) as IPaymentGateway;
+  const paymentGateway = createPaymentGateway() as IPaymentGateway;
 
   const getCardBindingUrlOptions: IGetCardBindingUrlOptions = {
     successUrl: new URL('/api/payment/callback/oen', process.env.NEXTAUTH_URL) + '?success=true',

@@ -25,7 +25,7 @@ export interface ITeamInvoice {
   invoiceNo: string;
   teamId: number;
   teamOrderId: number;
-  teamPaymentTransaction: number;
+  teamPaymentTransactionId: number;
   cancelled: boolean;
   currency: CurrencyType;
   amount: number;
