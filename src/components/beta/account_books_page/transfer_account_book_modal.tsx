@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useState } from 'react';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { IoCloseOutline } from 'react-icons/io5';
 import { PiShareFatBold } from 'react-icons/pi';
 import { useTranslation } from 'next-i18next';
@@ -8,8 +8,8 @@ import APIHandler from '@/lib/utils/api_handler';
 import { ITransferAccountBook } from '@/interfaces/team';
 
 interface TransferAccountBookModalProps {
-  accountBookToTransfer: IAccountBookForUserWithTeam;
-  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  accountBookToTransfer: IAccountBookWithTeam;
+  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: Dispatch<React.SetStateAction<number>>;
   getAccountBookListByTeamId?: () => Promise<void>;
 }
@@ -40,7 +40,7 @@ const TransferAccountBookModal = ({
 
     try {
       const { success } = await transferAccountBookAPI({
-        params: { accountBookId: accountBookToTransfer.company.id },
+        params: { accountBookId: accountBookToTransfer.id },
         body: {
           fromTeamId: accountBookToTransfer.team.id,
           toTeamId: Number(transferToTeamId),

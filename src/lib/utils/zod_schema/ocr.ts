@@ -1,21 +1,6 @@
 import { ocrTypes } from '@/constants/ocr';
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { z, ZodRawShape } from 'zod';
-
-const ocrListQueryValidator = z.object({
-  ocrType: z.nativeEnum(ocrTypes).or(z.undefined()),
-});
-
-const ocrListBodyValidator = z.object({});
-
-export const ocrListValidator: IZodValidator<
-  (typeof ocrListQueryValidator)['shape'],
-  (typeof ocrListBodyValidator)['shape']
-> = {
-  // Info: (20240911 - Murky) GET /ocr
-  query: ocrListQueryValidator,
-  body: ocrListBodyValidator,
-};
+import { z } from 'zod';
 
 const ocrUploadQueryValidator = z.object({});
 const ocrUploadBodyValidator = z.object({
@@ -59,13 +44,4 @@ export const ocrDeleteValidator: IZodValidator<
 > = {
   query: ocrDeleteQueryValidator,
   body: ocrDeleteBodyValidator,
-};
-
-export const ocrRequestValidators: {
-  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
-} = {
-  GET_LIST: ocrListValidator,
-  POST: ocrUploadValidator,
-  GET_ONE: ocrResultGetOneValidator,
-  DELETE: ocrDeleteValidator,
 };

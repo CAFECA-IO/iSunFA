@@ -7,7 +7,7 @@ import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 export const TeamSchema = z.object({
   id: z.number(),
   imageId: z.string(),
-  role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
+  role: z.nativeEnum(TeamRole),
   name: z.object({
     value: z.string(),
     editable: z.boolean(),
@@ -21,7 +21,7 @@ export const TeamSchema = z.object({
     editable: z.boolean(),
   }),
   planType: z.object({
-    value: z.enum(Object.values(TPlanType) as [TPlanType, ...TPlanType[]]),
+    value: z.nativeEnum(TPlanType),
     editable: z.boolean(),
   }),
   totalMembers: z.number(),

@@ -92,29 +92,29 @@ model AuditReport {
 
   @@map("audit_report")
 }
-
+// Deprecated: (20250324 - Tzuhan) 棄用，改用 Team、TeamMember 裡面新增欄位來取代
 // Info: (20250306 - Tzuhan) Admin 表示 User 在 Company 內的管理身份
-model Admin {
-  id        Int     @id @default(autoincrement()) // Info: (20250306 - Tzuhan) Admin 表的唯一 ID
-  userId    Int     @map("user_id")              // Info: (20250306 - Tzuhan) 這個 Admin 對應的 User ID
-  companyId Int     @map("company_id")           // Info: (20250306 - Tzuhan) 這個 Admin 所屬的公司 ID
-  roleId    Int     @map("role_id")              // Info: (20250306 - Tzuhan) Admin 擔任的角色 (對應 Role 表)
-  email     String                                // Info: (20250306 - Tzuhan) Admin 的 Email (可用於通知)
-  tag       String  @default("all")              // Info: (20250306 - Tzuhan) Admin 的標籤 (可能用於分類)
-  order     Int     @default(1)                  // Info: (20250306 - Tzuhan) 排序順序
-  status    Boolean                              // Info: (20250306 - Tzuhan) 是否啟用這個 Admin 帳號
-  startDate Int     @map("start_date")           // Info: (20250306 - Tzuhan) Admin 的開始時間
-  endDate   Int?    @map("end_date")             // Info: (20250306 - Tzuhan) Admin 的結束時間 (如果有)
-  createdAt Int     @map("created_at")           // Info: (20250306 - Tzuhan) 創建時間
-  updatedAt Int     @map("updated_at")           // Info: (20250306 - Tzuhan) 更新時間
-  deletedAt Int?    @map("deleted_at")           // Info: (20250306 - Tzuhan) 刪除時間 (軟刪除)
+// model Admin {
+//   id        Int     @id @default(autoincrement()) // Info: (20250306 - Tzuhan) Admin 表的唯一 ID
+//   userId    Int     @map("user_id")              // Info: (20250306 - Tzuhan) 這個 Admin 對應的 User ID
+//   companyId Int     @map("company_id")           // Info: (20250306 - Tzuhan) 這個 Admin 所屬的公司 ID
+//   roleId    Int     @map("role_id")              // Info: (20250306 - Tzuhan) Admin 擔任的角色 (對應 Role 表)
+//   email     String                                // Info: (20250306 - Tzuhan) Admin 的 Email (可用於通知)
+//   tag       String  @default("all")              // Info: (20250306 - Tzuhan) Admin 的標籤 (可能用於分類)
+//   order     Int     @default(1)                  // Info: (20250306 - Tzuhan) 排序順序
+//   status    Boolean                              // Info: (20250306 - Tzuhan) 是否啟用這個 Admin 帳號
+//   startDate Int     @map("start_date")           // Info: (20250306 - Tzuhan) Admin 的開始時間
+//   endDate   Int?    @map("end_date")             // Info: (20250306 - Tzuhan) Admin 的結束時間 (如果有)
+//   createdAt Int     @map("created_at")           // Info: (20250306 - Tzuhan) 創建時間
+//   updatedAt Int     @map("updated_at")           // Info: (20250306 - Tzuhan) 更新時間
+//   deletedAt Int?    @map("deleted_at")           // Info: (20250306 - Tzuhan) 刪除時間 (軟刪除)
 
-  company   Company @relation(fields: [companyId], references: [id]) // Info: (20250306 - Tzuhan) 關聯到公司
-  role      Role    @relation(fields: [roleId], references: [id])    // Info: (20250306 - Tzuhan) 關聯到 Role
-  user      User    @relation(fields: [userId], references: [id])    // Info: (20250306 - Tzuhan) 關聯到 User (管理者)
+//   company   Company @relation(fields: [companyId], references: [id]) // Info: (20250306 - Tzuhan) 關聯到公司
+//   role      Role    @relation(fields: [roleId], references: [id])    // Info: (20250306 - Tzuhan) 關聯到 Role
+//   user      User    @relation(fields: [userId], references: [id])    // Info: (20250306 - Tzuhan) 關聯到 User (管理者)
 
-  @@map("admin")
-}
+//   @@map("admin")
+// }
 
 model Authentication {
   id           Int    @id @default(autoincrement())
@@ -224,9 +224,16 @@ model Country {
   @@map("country")
 }
 
+enum Tag {
+  ALL
+  FINANCIAL
+  TAX
+}
+
 model Company {
   id          Int     @id @default(autoincrement())
-  teamId      Int?    @map("team_id") // Info: (20250224 - tzuhan) 讓 company 連結到 team
+  teamId      Int     @map("team_id") // Info: (20250224 - tzuhan) 讓 company 連結到 team
+  userId      Int     @map("user_id")
   name        String
   taxId       String  @map("tax_id")
   imageFileId Int     @unique @map("image_file_id")
@@ -236,11 +243,13 @@ model Company {
   deletedAt   Int?    @map("deleted_at")
   isPrivate   Boolean @default(true) @map("is_private")
   isTransferring Boolean @default(false) @map("is_transferring")
+  tag         Tag     @default(ALL) // Info: (20250324 - tzuhan) 公司標籤
 
-  team      Team? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  team      Team  @relation(fields: [teamId], references: [id])
+  user      User  @relation(fields: [userId], references: [id])
   imageFile File  @relation("company_image_file", fields: [imageFileId], references: [id])
 
-  admins                     Admin[]
+  // admins                     Admin[]
   accountingSettings         AccountingSetting[]
   assets                     Asset[]
   accounts                   Account[]
@@ -252,7 +261,7 @@ model Company {
   certificates               Certificate[]
   departments                Department[]
   employees                  Employee[]
-  invitations                Invitation[]
+  // invitations                Invitation[]
   incomeExpenses             IncomeExpense[]
   journals                   Journal[]
   orders                     Order[]
@@ -523,25 +532,26 @@ model InvoiceVoucherJournal {
   @@map("invoice_voucher_journal")
 }
 
-model Invitation {
-  id            Int     @id @default(autoincrement())
-  companyId     Int     @map("company_id")
-  roleId        Int     @map("role_id")
-  createdUserId Int     @map("created_user_id")
-  code          String  @unique
-  email         String
-  phone         String?
-  hasUsed       Boolean @map("has_used")
-  expiredAt     Int     @map("expired_at")
-  createdAt     Int     @map("created_at")
-  updatedAt     Int     @map("updated_at")
-  deletedAt     Int?    @map("deleted_at")
-  company       Company @relation(fields: [companyId], references: [id])
-  createdUser   User    @relation(fields: [createdUserId], references: [id])
-  role          Role    @relation(fields: [roleId], references: [id])
+// Deprecated: (20250324 - Tzuhan) `Invitation` 移除，已由 `InviteTeamMember` 取代
+// model Invitation {
+//   id            Int     @id @default(autoincrement())
+//   companyId     Int     @map("company_id")
+//   roleId        Int     @map("role_id")
+//   createdUserId Int     @map("created_user_id")
+//   code          String  @unique
+//   email         String
+//   phone         String?
+//   hasUsed       Boolean @map("has_used")
+//   expiredAt     Int     @map("expired_at")
+//   createdAt     Int     @map("created_at")
+//   updatedAt     Int     @map("updated_at")
+//   deletedAt     Int?    @map("deleted_at")
+//   company       Company @relation(fields: [companyId], references: [id])
+//   createdUser   User    @relation(fields: [createdUserId], references: [id])
+//   role          Role    @relation(fields: [roleId], references: [id])
 
-  @@map("invitation")
-}
+//   @@map("invitation")
+// }
 
 model IncomeExpense {
   id        Int      @id @default(autoincrement())
@@ -603,7 +613,6 @@ model KYCRole {
   user              User @relation(fields: [userId], references: [id])
   personalIdFile    File @relation("kyc_personal_id_file", fields: [personalIdFileId], references: [id])
   certificationFile File @relation("kyc_certification_file", fields: [certificationFileId], references: [id])
-  role              Role @relation(fields: [roleId], references: [id])
 
   @@map("kyc_role")
 }
@@ -778,21 +787,22 @@ model Plan {
   @@map("plan")
 }
 
-model Role {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
-  type        String       @default("system") // Info: (20241104 - Jacky) system, company
-  permissions String[]
-  createdAt   Int          @map("created_at")
-  updatedAt   Int          @map("updated_at")
-  deletedAt   Int?         @map("deleted_at")
-  admins      Admin[]
-  invitations Invitation[]
-  userRoles   UserRole[]
-  KYCRole     KYCRole[]
+// Deprecated: (20250325 - Tzuhan) 整合進 `UserRole`
+// model Role {
+//   id          Int          @id @default(autoincrement())
+//   name        String       @unique
+//   type        String       @default("system") // Info: (20241104 - Jacky) system, company
+//   permissions String[]
+//   createdAt   Int          @map("created_at")
+//   updatedAt   Int          @map("updated_at")
+//   deletedAt   Int?         @map("deleted_at")
+//   admins      Admin[]
+//   invitations Invitation[]
+//   userRoles   UserRole[]
+//   KYCRole     KYCRole[]
 
-  @@map("role")
-}
+//   @@map("role")
+// }
 
 model Report {
   id                     Int           @id @default(autoincrement())
@@ -929,10 +939,10 @@ model User {
   updatedAt   Int     @map("updated_at")
   deletedAt   Int?    @map("deleted_at")
 
-  admins            Admin[]
+  // admins            Admin[]
   authentications   Authentication[]
   certificates      Certificate[]
-  invitations       Invitation[]
+  // invitations       Invitation[]
   kycRoles          KYCRole[]
   userAgreements    UserAgreement[]
   userActionLogs    UserActionLog[]
@@ -943,14 +953,15 @@ model User {
   userVouchers      UserVoucher[]
   Voucher           Voucher[]
 
-  imageFile   File          @relation("user_image_file", fields: [imageFileId], references: [id])
-  Asset       Asset[]
-  UserSetting UserSetting[]
-  ownedTeams  Team[] // Info: (20250221 - tzuhan) 反向關聯，表示這個 User 可能是多個 Team 的 owner
-  memberships TeamMember[] // Info: (20250221 - tzuhan) 這個 User 可能是多個 Team 的成員
+  imageFile           File          @relation("user_image_file", fields: [imageFileId], references: [id])
+  Asset               Asset[]
+  UserSetting         UserSetting[]
+  ownedTeams          Team[] // Info: (20250221 - tzuhan) 反向關聯，表示這個 User 可能是多個 Team 的 owner
+  memberships         TeamMember[] // Info: (20250221 - tzuhan) 這個 User 可能是多個 Team 的成員
+  AccountBookTransfer AccountBookTransfer[]
+  accountBook         Company[]
 
   @@map("user")
-  AccountBookTransfer AccountBookTransfer[]
 }
 
 model UserAgreement {
@@ -1027,19 +1038,46 @@ model UserSetting {
   @@map("user_setting")
 }
 
+enum RoleName {
+  ACCOUNTANT
+  BOOKKEEPER
+  EDUCATIONAL_TRIAL_VERSION
+  ENTERPRISE
+  TEST
+}
+
+// Info: (20250325 - Tzuhan) `RoleType` 用來區分系統角色與公司角色，這是之前的設計，保留應該可以用來開測試帳號
+enum RoleType {
+  SYSTEM
+  COMPANY
+  USER
+}
+
 model UserRole {
   id          Int  @id @default(autoincrement())
   userId      Int  @map("user_id")
-  roleId      Int  @map("role_id")
+  roleName    RoleName @map("role_name")
+  type        RoleType
   lastLoginAt Int  @default(0) @map("last_login_at")
   createdAt   Int  @map("created_at")
   updatedAt   Int  @map("updated_at")
   deletedAt   Int? @map("deleted_at")
 
   user User @relation(fields: [userId], references: [id])
-  role Role @relation(fields: [roleId], references: [id])
 
   @@map("user_role")
+}
+
+model RoleFeature {
+  id            Int       @id @default(autoincrement())
+  roleName      RoleName  @map("role_name") // Info: (20250325 - Tzuhan) 直接存 `RoleName`，不關聯 `Role`
+  featureKey    String    @map("feature_key") // Info: (20250325 - Tzuhan) 權限名稱（e.g., MANAGE_ACCOUNTS）
+  featureValue  String    @map("feature_value") // Info: (20250325 - Tzuhan) 權限細節（e.g., "true"/"false" 或 JSON）
+
+  createdAt     Int       @map("created_at")
+  updatedAt     Int       @map("updated_at")
+
+  @@map("role_feature")
 }
 
 model UserCertificate {
@@ -1278,15 +1316,15 @@ model InviteTeamMember {
 
 
 model TeamMember {
-  id       Int      @id @default(autoincrement())
-  teamId   Int      @map("team_id")
-  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId   Int      @map("user_id")
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role     TeamRole
-  joinedAt Int      @map("joined_at")
-  leftAt   Int?       @map("left_at")  // Info: (20250307 - Tzuhan) 記錄離開時間（null 代表仍在 team）
-  status   LeaveStatus @default(IN_TEAM) @map("status") // Info: (20250307 - Tzuhan) 記錄用戶是否仍在 team
+  id                Int               @id @default(autoincrement())
+  teamId            Int               @map("team_id")
+  team              Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId            Int               @map("user_id")
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role              TeamRole
+  joinedAt          Int               @map("joined_at")
+  leftAt            Int?              @map("left_at")  // Info: (20250307 - Tzuhan) 記錄離開時間（null 代表仍在 team）
+  status            LeaveStatus       @default(IN_TEAM) @map("status") // Info: (20250307 - Tzuhan) 記錄用戶是否仍在 team
 
   @@unique([teamId, userId])
   @@map("team_member")

@@ -1,11 +1,11 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import MyAccountBookItem from '@/components/beta/dashboard/my_account_book_item';
 
 interface MyAccountBookListProps {
-  accountBookList: IAccountBookForUserWithTeam[];
-  setAccountBookToSelect: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  accountBookList: IAccountBookWithTeam[];
+  setAccountBookToSelect: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
 }
 
 const MyAccountBookList = ({ accountBookList, setAccountBookToSelect }: MyAccountBookListProps) => {
@@ -60,7 +60,7 @@ const MyAccountBookList = ({ accountBookList, setAccountBookToSelect }: MyAccoun
     <div ref={containerRef} className="flex max-w-full gap-24px overflow-x-auto px-1px pb-8px">
       {accountBookList.map((accountBook, index) => (
         <MyAccountBookItem
-          key={accountBook.company.id}
+          key={accountBook.id}
           accountBook={accountBook}
           setAccountBookToSelect={setAccountBookToSelect}
           isDisabled={disabledCards.includes(index)}

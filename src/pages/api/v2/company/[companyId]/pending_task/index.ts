@@ -6,9 +6,9 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
-import { getCompanyByUserIdAndCompanyId } from '@/lib/utils/repo/admin.repo';
 import { countMissingCertificate } from '@/lib/utils/repo/certificate.repo';
 import { countUnpostedVoucher } from '@/lib/utils/repo/voucher.repo';
+import { getAccountBookById } from '@/lib/utils/repo/account_book.repo';
 
 export async function getPendingTaskByCompanyId(
   userId: number,
@@ -16,7 +16,7 @@ export async function getPendingTaskByCompanyId(
 ): Promise<IPendingTask | null> {
   let pendingTask: IPendingTask | null = null;
 
-  const company = await getCompanyByUserIdAndCompanyId(userId, companyId);
+  const company = await getAccountBookById(companyId);
   if (company) {
     const [missingCertificateCount, unpostedVoucherCount] = await Promise.all([
       countMissingCertificate(companyId),
@@ -39,7 +39,7 @@ export async function getPendingTaskByCompanyId(
       missingCertificatePercentage = 1 - unpostedVoucherPercentage;
     }
 
-    const imageUrl = company.imageFile.url;
+    const imageUrl = company.imageId;
     pendingTask = {
       companyId,
       missingCertificate: {

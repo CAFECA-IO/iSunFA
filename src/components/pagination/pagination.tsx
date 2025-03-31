@@ -15,6 +15,7 @@ import { RxTrackPrevious, RxTrackNext } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
 import useStateRef from 'react-usestateref';
 import { Button } from '@/components/button/button';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 export interface IPaginationProps {
   className?: string;
@@ -107,7 +108,7 @@ const Pagination = forwardRef(
 
     // Info: (20240419 - Julian) 按下 Enter 鍵後，輸入頁數
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter' && targetPageRef.current !== currentPage) {
+      if (e.key === KEYBOARD_EVENT_CODE.ENTER && targetPageRef.current !== currentPage) {
         if (typeof targetPageRef.current === 'number') changePage(targetPageRef.current);
       }
     };

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoAdd } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountBook, IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { ITodoCompany } from '@/interfaces/todo';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -35,7 +35,7 @@ const CreateTodoModal = ({
   const [note, setNote] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [company, setCompany] = useState<IAccountBook | undefined>(defaultCompany || undefined);
-  const [accountBookList, setAccountBookList] = useState<IAccountBookForUserWithTeam[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
   const [noDataForTodoName, setNoDataForTodoName] = useState(false);
   const [noDataForStartTime, setNoDataForStartTime] = useState(false);
   const [noDataForEndTime, setNoDataForEndTime] = useState(false);
@@ -49,7 +49,7 @@ const CreateTodoModal = ({
 
   // Info: (20250306 - Liz) 打 API 取得使用者擁有的帳本清單(原為公司)
   const { trigger: getAccountBookListByUserIdAPI } = APIHandler<
-    IPaginatedData<IAccountBookForUserWithTeam[]>
+    IPaginatedData<IAccountBookWithTeam[]>
   >(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID);
 
   const toggleDropdown = () => {
@@ -218,15 +218,15 @@ const CreateTodoModal = ({
                       <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_SM">
                         {accountBookList.map((item) => (
                           <button
-                            key={item.company.id}
+                            key={item.id}
                             type="button"
                             onClick={() => {
-                              setCompany(item.company);
+                              setCompany(item);
                               toggleDropdown();
                             }}
                             className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                           >
-                            {item.company.name}
+                            {item.name}
                           </button>
                         ))}
                       </div>

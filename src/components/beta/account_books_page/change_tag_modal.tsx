@@ -4,20 +4,22 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import {
   WORK_TAG,
-  IAccountBookForUserWithTeam,
+  IAccountBookWithTeam,
   ACCOUNT_BOOK_UPDATE_ACTION,
 } from '@/interfaces/account_book';
 
 interface ChangeTagModalProps {
-  accountBookToEdit: IAccountBookForUserWithTeam;
-  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookForUserWithTeam | undefined>>;
+  accountBookToEdit: IAccountBookWithTeam;
+  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
+  getAccountBookListByTeamId?: () => Promise<void>;
 }
 
 const ChangeTagModal = ({
   accountBookToEdit,
   setAccountBookToEdit,
   setRefreshKey,
+  getAccountBookListByTeamId,
 }: ChangeTagModalProps) => {
   const { t } = useTranslation(['account_book']);
   const { updateAccountBook } = useUserCtx();
@@ -44,7 +46,7 @@ const ChangeTagModal = ({
 
     try {
       const success = await updateAccountBook({
-        accountBookId: accountBookToEdit.company.id.toString(),
+        accountBookId: accountBookToEdit.id.toString(),
         action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG,
         tag,
       });
@@ -61,6 +63,8 @@ const ChangeTagModal = ({
       closeChangeTagModal();
 
       if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
+
+      if (getAccountBookListByTeamId) await getAccountBookListByTeamId();
     } catch (error) {
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
@@ -94,7 +98,7 @@ const ChangeTagModal = ({
               type="text"
               placeholder="Enter number"
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-              value={accountBookToEdit.company.name}
+              value={accountBookToEdit.name}
             />
           </div>
 

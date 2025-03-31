@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { companyOutputSchema, ICompanyValidator } from '@/lib/utils/zod_schema/company';
+import { ICompanyValidator } from '@/lib/utils/zod_schema/company';
 import {
   getTimestampNow,
   getTimestampOfLastSecondOfDate,
   timestampInMilliSeconds,
   timestampInSeconds,
 } from '@/lib/utils/common';
+import { accountBookSchema } from '@/lib/utils/zod_schema/account_book';
 
 // Info: (20241029 - Jacky) Todo null schema
 const todoNullSchema = z.union([z.object({}), z.string()]);
@@ -106,7 +107,7 @@ const todoOutputSchema = z
     updatedAt: z.number().int(),
     userTodoCompanies: z.array(
       z.object({
-        company: companyOutputSchema,
+        company: accountBookSchema,
       })
     ),
   })

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { numberWithCommas } from '@/lib/utils/common';
 import BigNumber from 'bignumber.js';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 interface INumericInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value: number;
@@ -101,11 +102,11 @@ const NumericInput: React.FC<INumericInputProps> = ({
   function convertInput(event: React.KeyboardEvent<HTMLInputElement>) {
     // Info: (20250313 - Julian) 執行預設行為: Tab, Backspace, Delete, ArrowLeft, ArrowRight
     if (
-      event.code === 'Tab' ||
-      event.code === 'Backspace' ||
-      event.code === 'Delete' ||
-      event.code === 'ArrowLeft' ||
-      event.code === 'ArrowRight'
+      event.code === KEYBOARD_EVENT_CODE.TAB ||
+      event.code === KEYBOARD_EVENT_CODE.BACKSPACE ||
+      event.code === KEYBOARD_EVENT_CODE.DELETE ||
+      event.code === KEYBOARD_EVENT_CODE.ARROW_LEFT ||
+      event.code === KEYBOARD_EVENT_CODE.ARROW_RIGHT
     ) {
       return;
     }
@@ -125,7 +126,10 @@ const NumericInput: React.FC<INumericInputProps> = ({
     if (regex.test(event.code)) {
       code = event.code.replace(/\D/g, ''); // Info: (20250321 - Julian) 取得數字 (去掉前面的字符)
       // Info: (20250319 - Anna) 允許輸入小數點，但只能輸入一次
-    } else if ((event.key === '.' || event.code === 'Period') && !displayValue.includes('.')) {
+    } else if (
+      (event.key === '.' || event.code === KEYBOARD_EVENT_CODE.PERIOD) &&
+      !displayValue.includes('.')
+    ) {
       code = '.';
     }
 

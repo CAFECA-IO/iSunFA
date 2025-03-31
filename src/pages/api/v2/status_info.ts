@@ -3,31 +3,32 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getUserById } from '@/lib/utils/repo/user.repo';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getRoleById } from '@/lib/utils/repo/role.repo';
 import { IStatusInfo } from '@/interfaces/status_info';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
-import { Role, User } from '@prisma/client';
 import { getTeamsByUserIdAndTeamIds } from '@/lib/utils/repo/team.repo';
 import { ITeam } from '@/interfaces/team';
-import { IAccountBookForUserWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { findUserAccountBook } from '@/lib/utils/repo/account_book.repo';
+import { getUserRoleById } from '@/lib/utils/repo/user_role.repo';
+import { IUserRole } from '@/interfaces/user_role';
+import { IUser } from '@/interfaces/user';
 
 const handleGetRequest: IHandleRequest<
   APIName.STATUS_INFO_GET,
   {
-    user: User | null;
-    company: IAccountBookForUserWithTeam | null;
-    role: Role | null;
+    user: IUser | null;
+    company: IAccountBookWithTeam | null;
+    role: IUserRole | null;
     teams: ITeam[] | null;
   }
 > = async ({ session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   const payload: {
-    user: User | null;
-    company: IAccountBookForUserWithTeam | null;
-    role: Role | null;
+    user: IUser | null;
+    company: IAccountBookWithTeam | null;
+    role: IUserRole | null;
     teams: ITeam[] | null;
   } = {
     user: null,
@@ -39,8 +40,16 @@ const handleGetRequest: IHandleRequest<
   const { userId, companyId, roleId, teams } = session; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
 
   if (userId > 0) {
-    const getUser = await getUserById(userId);
-    payload.user = getUser;
+    const userFromDB = await getUserById(userId);
+    if (userFromDB) {
+      payload.user = {
+        ...userFromDB,
+        imageId: userFromDB?.imageFile?.url ?? '',
+        agreementList: userFromDB.userAgreements.map((ua) => ua.agreementHash),
+        email: userFromDB?.email ?? '',
+        deletedAt: userFromDB?.deletedAt ?? 0,
+      };
+    }
   }
 
   if (companyId > 0 && userId > 0) {
@@ -53,8 +62,8 @@ const handleGetRequest: IHandleRequest<
   }
 
   if (roleId > 0) {
-    const getRole = await getRoleById(roleId);
-    payload.role = getRole;
+    const userRole = await getUserRoleById(roleId);
+    payload.role = userRole;
   }
 
   if (teams && teams.length > 0) {

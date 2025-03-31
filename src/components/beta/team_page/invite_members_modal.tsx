@@ -5,6 +5,7 @@ import { useTranslation } from 'next-i18next';
 import { ITeam, IInviteMemberResponse } from '@/interfaces/team';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 interface InviteMembersModalProps {
   team: ITeam;
@@ -41,7 +42,7 @@ const InviteMembersModal = ({
   const addEmailToInvite = (
     e: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent<HTMLButtonElement>
   ) => {
-    const isEnterKey = 'key' in e && e.key === 'Enter';
+    const isEnterKey = 'key' in e && e.key === KEYBOARD_EVENT_CODE.ENTER;
     const isClick = e.type === 'click';
 
     if (!isEnterKey && !isClick) return;
