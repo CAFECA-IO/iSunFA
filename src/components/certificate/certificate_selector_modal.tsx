@@ -40,8 +40,9 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
   const [isSelectAll, setIsSelectAll] = useState(false);
 
   useEffect(() => {
-    // Info: (20250304 - Julian) 判斷是否全選
-    setIsSelectAll(selectedIds.length === certificates.length);
+    // Info: (20250331- Julian) 判斷是否全選
+    const selectedAll = certificates.length === selectedIds.length && certificates.length > 0;
+    setIsSelectAll(selectedAll);
   }, [selectedIds, certificates]);
 
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
@@ -110,8 +111,9 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
             </div>
             <button
               type="button"
-              className="text-link-text-primary hover:underline"
+              className="text-link-text-primary enabled:hover:underline disabled:text-link-text-disable"
               onClick={handleSelectAll}
+              disabled={certificates.length === 0} // Info: (20250331 - Julian) 如果沒有發票，則不能全選
             >
               {isSelectAll
                 ? t('certificate:COMMON.UNSELECT_ALL')
