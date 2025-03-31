@@ -9,6 +9,7 @@ import { TPlanType } from '@/interfaces/subscription';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { createOrderByList } from '@/lib/utils/sort';
 import { MAX_TEAM_LIMIT } from '@/interfaces/permissions';
+import { getTimestampNow } from '@/lib/utils/common';
 
 export const getTeamList = async (
   userId: number,
@@ -22,6 +23,8 @@ export const getTeamList = async (
     searchQuery,
     sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
   } = queryParams;
+
+  const nowInSecond = getTimestampNow();
 
   const [totalCount, teams] = await prisma.$transaction([
     prisma.team.count({
@@ -40,7 +43,17 @@ export const getTeamList = async (
       include: {
         members: { where: { userId }, select: { id: true, role: true } },
         accountBook: true,
-        subscriptions: { include: { plan: true } },
+        subscriptions: {
+          where: {
+            startDate: {
+              lte: nowInSecond,
+            },
+            expiredDate: {
+              gt: nowInSecond,
+            },
+          },
+          include: { plan: true },
+        },
         imageFile: { select: { id: true, url: true } },
       },
       skip: (page - 1) * pageSize,
@@ -227,6 +240,9 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
   if (!teamMember) {
     throw new Error('USER_NOT_IN_TEAM');
   }
+
+  const nowInSecond = getTimestampNow();
+
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     include: {
@@ -244,6 +260,14 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
         select: { id: true },
       },
       subscriptions: {
+        where: {
+          startDate: {
+            lte: nowInSecond,
+          },
+          expiredDate: {
+            gt: nowInSecond,
+          },
+        },
         include: { plan: true },
       },
       imageFile: {

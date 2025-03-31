@@ -227,6 +227,8 @@ export const listAccountBookByUserId = async (
     },
   });
 
+  const nowInSecond = getTimestampNow();
+
   // Info: (20250337 - Tzuhan) 取得帳本資訊，包含所屬 Team
   const accountBooks = await prisma.company.findMany({
     where: {
@@ -243,7 +245,17 @@ export const listAccountBookByUserId = async (
             select: { id: true, userId: true, role: true },
           },
           accountBook: true,
-          subscriptions: { include: { plan: true } },
+          subscriptions: {
+            where: {
+              startDate: {
+                lte: nowInSecond,
+              },
+              expiredDate: {
+                gt: nowInSecond,
+              },
+            },
+            include: { plan: true },
+          },
           imageFile: { select: { id: true, url: true } },
         },
       },
@@ -316,6 +328,7 @@ export const listAccountBooksByTeamId = async (
     searchQuery = '',
     sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
   } = queryParams;
+  const nowInSecond = getTimestampNow();
 
   // Info: (20250221 - tzuhan) 使用 Prisma Transaction 查詢總數、帳本數據
   const [totalCount, accountBooks] = await prisma.$transaction([
@@ -382,7 +395,17 @@ export const listAccountBooksByTeamId = async (
               select: { id: true, userId: true, role: true }, // ✅ 取得 accountBookRole
             },
             accountBook: true,
-            subscriptions: { include: { plan: true } },
+            subscriptions: {
+              where: {
+                startDate: {
+                  lte: nowInSecond,
+                },
+                expiredDate: {
+                  gt: nowInSecond,
+                },
+              },
+              include: { plan: true },
+            },
             imageFile: { select: { id: true, url: true } },
           },
         },
@@ -480,12 +503,22 @@ export const requestTransferAccountBook = async (
     throw new Error('ACCOUNT_BOOK_NOT_FOUND');
   }
 
+  const nowInSecond = getTimestampNow();
+
   // Info: (20250311 - Tzuhan) 確保目標團隊 `toTeamId` 存在
   const targetTeam = await prisma.team.findUnique({
     where: { id: toTeamId },
     include: {
       subscriptions: {
-        include: { plan: true }, // Info: (20250311 - Tzuhan) 正確關聯到 TeamPlan，才能取得 planType
+        where: {
+          startDate: {
+            lte: nowInSecond,
+          },
+          expiredDate: {
+            gt: nowInSecond,
+          },
+        },
+        include: { plan: true },
       },
     },
   });
@@ -495,7 +528,7 @@ export const requestTransferAccountBook = async (
   }
 
   // Info: (20250311 - Tzuhan) 確保轉入團隊的 `subscription.planType` 不會超過上限
-  const planType = targetTeam.subscriptions[0]?.plan?.type || TPlanType.BEGINNER;
+  const planType = targetTeam.subscriptions[0]?.plan.type || TPlanType.BEGINNER;
   const accountBookCount = await prisma.company.count({ where: { teamId: toTeamId } });
 
   if (
@@ -738,6 +771,8 @@ export async function getAccountBookForUserWithTeam(
       return null;
     }
 
+    const nowInSecond = getTimestampNow();
+
     // Info: (20250329 - Shirley) Get team information
     const team = await prisma.team.findUnique({
       where: { id: teamId },
@@ -750,6 +785,14 @@ export async function getAccountBookForUserWithTeam(
           select: { id: true },
         },
         subscriptions: {
+          where: {
+            startDate: {
+              lte: nowInSecond,
+            },
+            expiredDate: {
+              gt: nowInSecond,
+            },
+          },
           include: { plan: true },
         },
         imageFile: {
@@ -848,6 +891,8 @@ export async function findUserAccountBook(
     return null;
   }
 
+  const nowInSecond = getTimestampNow();
+
   try {
     // Info: (20250401 - Shirley) Start by finding the specific account book
     const accountBook = await prisma.company.findFirst({
@@ -880,6 +925,14 @@ export async function findUserAccountBook(
               },
             },
             subscriptions: {
+              where: {
+                startDate: {
+                  lte: nowInSecond,
+                },
+                expiredDate: {
+                  gt: nowInSecond,
+                },
+              },
               include: { plan: true },
             },
             imageFile: {
