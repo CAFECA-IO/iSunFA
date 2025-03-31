@@ -18,6 +18,7 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import AccountTitleSelector from '@/components/voucher/account_title_selector';
 import { EVENT_TYPE } from '@/constants/account';
+import { ToastId } from '@/constants/toast_id';
 
 interface IManualAccountOpeningModalProps {
   isModalVisible: boolean;
@@ -237,7 +238,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       if (createVoucherSuccess) {
         // Info: (20241115 - Julian) 如果開帳成功，則提示成功訊息
         toastHandler({
-          id: 'manual-account-opening-success',
+          id: ToastId.MANUAL_ACCOUNT_OPENING_SUCCESS,
           type: ToastType.SUCCESS,
           content: t('settings:MANUAL_ACCOUNT_OPENING_MODAL.TOAST_OPENING_SUCCESS'),
           closeable: true,
@@ -246,7 +247,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       } else if (createVoucherError) {
         // Info: (20241115 - Julian) 如果開帳失敗，則提示錯誤訊息
         toastHandler({
-          id: 'manual-account-opening-error',
+          id: ToastId.MANUAL_ACCOUNT_OPENING_ERROR,
           type: ToastType.ERROR,
           content: t('settings:MANUAL_ACCOUNT_OPENING_MODAL.TOAST_OPENING_FAIL'),
           closeable: true,

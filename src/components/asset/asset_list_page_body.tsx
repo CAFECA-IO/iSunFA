@@ -3,6 +3,7 @@ import { useTranslation } from 'next-i18next';
 import AssetList from '@/components/asset/asset_list';
 import FilterSection from '@/components/filter_section/filter_section';
 import Pagination from '@/components/pagination/pagination';
+import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
@@ -12,10 +13,13 @@ import { IAssetItem } from '@/interfaces/asset';
 import { IPaginatedData } from '@/interfaces/pagination';
 import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedAccount } from '@/interfaces/accounting_account';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('asset');
   const { connectedAccountBook } = useUserCtx();
+  const { toastHandler } = useModalContext();
 
   const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const params = { companyId: accountBookId };
@@ -70,31 +74,34 @@ const AssetListPageBody: React.FC = () => {
   ]);
 
   // Info: (20241024 - Julian) 取得資產類別列表
-  useEffect(() => {
-    const getAccountList = async () => {
-      try {
-        const { data: accountData, success } = await getAccountListAPI({
-          params,
-          query: { limit: 9999 }, // Info: (20250122 - Julian) 一次取得全部
-        });
+  const getAccountList = async () => {
+    try {
+      const { data: accountData, success } = await getAccountListAPI({
+        params,
+        query: { limit: 9999 }, // Info: (20250122 - Julian) 一次取得全部
+      });
 
-        if (success && accountData) {
-          const accountList = accountData.data;
+      if (success && accountData) {
+        const accountList = accountData.data;
 
-          const assetTypeList = accountList
-            .filter((account) => AccountCodesOfAsset.includes(account.code))
-            .map((account) => account.code);
-          setAssetTypeOptions([AssetEntityType.ALL, ...assetTypeList]);
-        }
-      } catch (error) {
-        // Deprecated: (20241024 - Julian)
-        // eslint-disable-next-line no-console
-        console.log('取得資產類別列表失敗');
+        const assetTypeList = accountList
+          .filter((account) => AccountCodesOfAsset.includes(account.code))
+          .map((account) => account.code);
+        setAssetTypeOptions([AssetEntityType.ALL, ...assetTypeList]);
       }
-    };
+    } catch (error) {
+      toastHandler({
+        id: ToastId.GET_ACCOUNT_LIST_ERROR,
+        type: ToastType.ERROR,
+        content: t('asset:ASSET.TOAST_GET_ACCOUNT_LIST_FAILED'),
+        closeable: true,
+      });
+    }
+  };
 
+  useEffect(() => {
     getAccountList();
-  }, [params]);
+  }, []);
 
   // Info: (20241024 - Julian) 資產狀態列表
   const assetStatusList = Object.values(AssetStatus);
@@ -118,10 +125,6 @@ const AssetListPageBody: React.FC = () => {
           statuses={[AssetStatus.ALL, ...assetStatusList]}
           page={currentPage}
           pageSize={DEFAULT_PAGE_LIMIT}
-          /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
-          dateSort={dateSort}
-          otherSorts={otherSorts}
-          */
           sort={selectedSort}
         />
         {/* Info: (20240925 - Julian) Asset List */}
