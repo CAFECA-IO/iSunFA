@@ -1,5 +1,7 @@
 import { PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import { PAYMENT_METHOD_TYPE } from '@/constants/payment';
+import { TRANSACTION_STATUS } from '@/constants/transaction';
+import { TPlanType } from '@/interfaces/subscription';
 
 /** Info: (20240823 - Jacky) Represents a payment.
  *
@@ -62,4 +64,48 @@ export interface IPaymentInfo {
   createdAt: number;
   updatedAt: number;
   deletedAt?: number;
+}
+
+// Info: (20250330 - Luphia) 用戶信用卡扣款紀錄
+export interface ITeamPaymentTransaction {
+  id?: number;
+  teamOrderId: number;
+  userPaymentInfoId: number;
+  amount: number;
+  currency: string;
+  paymentGateway: string;
+  paymentGetwayRecordId?: string;
+  status: TRANSACTION_STATUS;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ITeamInvoice {
+  id?: number;
+  teamOrderId: number;
+  teamPaymentTransactionId: number;
+  invoiceCode: string;
+  price: number;
+  tax: number;
+  total: number;
+  currency: string;
+  payerId?: string;
+  payerName?: string;
+  payerEmail?: string;
+  payerAddress?: string;
+  payerPhone?: string;
+  status: string;
+  issuedAt: number;
+  createdAt: number;
+  updatedAt?: number;
+}
+
+export interface ITeamSubscription {
+  id?: number;
+  teamId: number;
+  planType: TPlanType;
+  startDate: number;
+  expiredDate: number;
+  createdAt: number;
+  updatedAt: number;
 }
