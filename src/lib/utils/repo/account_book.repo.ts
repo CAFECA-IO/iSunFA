@@ -243,7 +243,7 @@ export const listAccountBookByUserId = async (
             select: { id: true, userId: true, role: true },
           },
           accountBook: true,
-          subscription: { include: { plan: true } },
+          subscriptions: { include: { plan: true } },
           imageFile: { select: { id: true, url: true } },
         },
       },
@@ -279,7 +279,7 @@ export const listAccountBookByUserId = async (
               about: { value: book.team.about ?? '', editable: teamRole !== TeamRole.VIEWER },
               profile: { value: book.team.profile ?? '', editable: teamRole !== TeamRole.VIEWER },
               planType: {
-                value: book.team.subscription?.plan.type ?? TPlanType.BEGINNER,
+                value: book.team.subscriptions[0]?.plan.type ?? TPlanType.BEGINNER,
                 editable: false,
               },
               totalMembers: book.team.members.length || 0,
@@ -382,7 +382,7 @@ export const listAccountBooksByTeamId = async (
               select: { id: true, userId: true, role: true }, // ✅ 取得 accountBookRole
             },
             accountBook: true,
-            subscription: { include: { plan: true } },
+            subscriptions: { include: { plan: true } },
             imageFile: { select: { id: true, url: true } },
           },
         },
@@ -419,7 +419,7 @@ export const listAccountBooksByTeamId = async (
               about: { value: book.team.about ?? '', editable: teamRole !== TeamRole.VIEWER },
               profile: { value: book.team.profile ?? '', editable: teamRole !== TeamRole.VIEWER },
               planType: {
-                value: book.team.subscription?.plan.type ?? TPlanType.BEGINNER,
+                value: book.team.subscriptions[0]?.plan.type ?? TPlanType.BEGINNER,
                 editable: false,
               },
               totalMembers: book.team.members.length || 0,
@@ -484,7 +484,7 @@ export const requestTransferAccountBook = async (
   const targetTeam = await prisma.team.findUnique({
     where: { id: toTeamId },
     include: {
-      subscription: {
+      subscriptions: {
         include: { plan: true }, // Info: (20250311 - Tzuhan) 正確關聯到 TeamPlan，才能取得 planType
       },
     },
@@ -495,7 +495,7 @@ export const requestTransferAccountBook = async (
   }
 
   // Info: (20250311 - Tzuhan) 確保轉入團隊的 `subscription.planType` 不會超過上限
-  const planType = targetTeam.subscription?.plan?.type || TPlanType.BEGINNER;
+  const planType = targetTeam.subscriptions[0]?.plan?.type || TPlanType.BEGINNER;
   const accountBookCount = await prisma.company.count({ where: { teamId: toTeamId } });
 
   if (
@@ -749,7 +749,7 @@ export async function getAccountBookForUserWithTeam(
         accountBook: {
           select: { id: true },
         },
-        subscription: {
+        subscriptions: {
           include: { plan: true },
         },
         imageFile: {
@@ -766,8 +766,8 @@ export async function getAccountBookForUserWithTeam(
     const userRole = (teamMember.role as TeamRole) || TeamRole.VIEWER;
 
     // Info: (20250329 - Shirley) Get team's plan type
-    const planType = team.subscription
-      ? (team.subscription.plan.type as TPlanType)
+    const planType = team.subscriptions[0]
+      ? (team.subscriptions[0].plan.type as TPlanType)
       : TPlanType.BEGINNER;
 
     // Info: (20250329 - Shirley) Transform data to ITeam format
@@ -879,7 +879,7 @@ export async function findUserAccountBook(
                 role: true,
               },
             },
-            subscription: {
+            subscriptions: {
               include: { plan: true },
             },
             imageFile: {
@@ -899,8 +899,8 @@ export async function findUserAccountBook(
     // Info: (20250401 - Shirley) We should have exactly one matching team member since we filtered by userId
     const userRole = team.members.length > 0 ? (team.members[0].role as TeamRole) : TeamRole.VIEWER;
 
-    const planType = team.subscription
-      ? (team.subscription.plan.type as TPlanType)
+    const planType = team.subscriptions[0]
+      ? (team.subscriptions[0].plan.type as TPlanType)
       : TPlanType.BEGINNER;
 
     // Info: (20250401 - Shirley) Count the total account books in this team in a separate query

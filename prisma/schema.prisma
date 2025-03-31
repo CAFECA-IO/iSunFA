@@ -1283,7 +1283,7 @@ model Team {
   members        TeamMember[]
   TeamOrder      TeamOrder[]
   accountBook    Company[]
-  subscription   TeamSubscription?
+  subscriptions  TeamSubscription[]
   imageFile      File?                 @relation("team_image_file", fields: [imageFileId], references: [id])
   pendingMembers InviteTeamMember[]
   fromTeamId     AccountBookTransfer[] @relation("fromTeamId")
@@ -1347,8 +1347,8 @@ enum TeamRole {
 
 model TeamSubscription {
   id          Int          @id @default(autoincrement())
-  teamId      Int          @unique @map("team_id")
-  planType    TeamPlanType @map("plan_type")
+  teamId      Int          @map("team_id")
+  planType    TeamPlanType @default(PROFESSIONAL) @map("plan_type")
   startDate   Int          @map("start_date")
   expiredDate Int          @map("expired_date")
   createdAt   Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
