@@ -57,10 +57,10 @@ const handleGetRequest: IHandleRequest<
     }
 
     // Info: (20250326 - Shirley) 檢查用戶是否有權限查看此帳本
-    // 從 session 中獲取團隊信息
+    // Info: (20250326 - Shirley) 從 session 中獲取團隊信息
     const teamInfo = session.teams?.find((team) => team.id === teamId);
 
-    // 如果用戶不在團隊中，則拒絕訪問
+    // Info: (20250326 - Shirley) 如果用戶不在團隊中，則拒絕訪問
     if (!teamInfo) {
       loggerError({
         userId,
@@ -70,10 +70,10 @@ const handleGetRequest: IHandleRequest<
       return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
     }
 
-    // 根據帳本是否為私有來檢查不同的權限
+    // Info: (20250326 - Shirley) 根據帳本是否為私有來檢查不同的權限
     const userRole = teamInfo.role as TeamRole;
 
-    // 帳本不分公開跟私有，團隊成員都可查看
+    // Info: (20250326 - Shirley) 帳本不分公開跟私有，團隊成員都可查看
     const canViewResult = convertTeamRoleCanDo({
       teamRole: userRole,
       canDo: TeamPermissionAction.VIEW_PUBLIC_ACCOUNT_BOOK,
