@@ -18,7 +18,8 @@
     "EXPORT_ASSET_LIST_WARNING_CONTENT": "Please select at least one asset to export.",
     "TOAST_EXPORT_SUCCESS": "Asset exported successfully.",
     "TOAST_EXPORT_FAILED": "Failed to export asset, please try again later.",
-    "OK_BTN": "OK"
+    "OK_BTN": "OK",
+    "TOAST_GET_ACCOUNT_LIST_FAILED": "Failed to get asset type list."
   },
   "STATUS_SETTING_MODAL": {
     "TITLE": "Status Setting",

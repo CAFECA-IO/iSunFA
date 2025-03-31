@@ -52,4 +52,5 @@ export enum ToastId {
   PLAN_EXPIRED_REMINDER = 'toast-plan-expired-reminder',
   DOWNGRADE_TO_BEGINNER_PLAN = 'toast-downgrade-to-beginner-plan',
   ACCOUNT_BOOK_NEEDED = 'toast-account-book-needed',
+  GET_ACCOUNT_LIST_ERROR = 'toast-get-account-list-error',
 }
