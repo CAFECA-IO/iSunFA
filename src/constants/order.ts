@@ -1,0 +1,14 @@
+export enum ORDER_STATUS {
+  PENDING = 'PENDING',
+  PAID = 'PAID',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED',
+  FAILED = 'FAILED',
+}
+
+export enum ORDER_UNIT {
+  MONTH = 'MONTH',
+  YEAR = 'TEAR',
+}
+
+export const EXTRA_MEMBBER = 'EXTRA_MEMBER';

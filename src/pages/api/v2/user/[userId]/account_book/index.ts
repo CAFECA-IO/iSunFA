@@ -9,7 +9,7 @@ import {
 } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
