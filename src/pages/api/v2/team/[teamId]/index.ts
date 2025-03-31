@@ -82,7 +82,7 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
     const userRole = teamInfo.role as TeamRole;
 
     // Info: (20250328 - Shirley) 檢查用戶是否有修改團隊資訊的權限
-    // 使用 permission 機制檢查基本修改權限
+    // Info: (20250328 - Shirley) 使用 permission 機制檢查基本修改權限
     const canModifyNameResult = convertTeamRoleCanDo({
       teamRole: userRole,
       canDo: TeamPermissionAction.MODIFY_NAME,
@@ -98,7 +98,7 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
       canDo: TeamPermissionAction.MODIFY_PROFILE,
     });
 
-    // 檢查 yesOrNo 屬性是否存在在結果中以確定是 ITeamRoleCanDo 類型
+    // Info: (20250328 - Shirley) 檢查 yesOrNo 屬性是否存在在結果中以確定是 ITeamRoleCanDo 類型
     const canModifyName =
       TeamRoleCanDoKey.YES_OR_NO in canModifyNameResult &&
       (canModifyNameResult as ITeamRoleCanDo).yesOrNo;
