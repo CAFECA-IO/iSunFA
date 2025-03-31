@@ -13,6 +13,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface IAssetListProps {
   assetList: IAssetItem[];
@@ -184,7 +185,7 @@ const AssetList: React.FC<IAssetListProps> = ({
       // Info: (20241127 - Julian) 顯示失敗 Toast
       if (!success) {
         toastHandler({
-          id: 'export-asset-error',
+          id: ToastId.EXPORT_ASSET_ERROR,
           type: ToastType.ERROR,
           content: t('asset:ASSET.TOAST_EXPORT_FAILED'),
           closeable: true,
@@ -192,7 +193,7 @@ const AssetList: React.FC<IAssetListProps> = ({
       } else {
         // Info: (20241127 - Julian) 顯示成功 Toast ，下載檔案並關閉 Modal
         toastHandler({
-          id: 'export-asset-success',
+          id: ToastId.EXPORT_ASSET_SUCCESS,
           type: ToastType.SUCCESS,
           content: t('asset:ASSET.TOAST_EXPORT_SUCCESS'),
           closeable: true,

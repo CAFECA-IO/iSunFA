@@ -53,4 +53,12 @@ export enum ToastId {
   DOWNGRADE_TO_BEGINNER_PLAN = 'toast-downgrade-to-beginner-plan',
   ACCOUNT_BOOK_NEEDED = 'toast-account-book-needed',
   GET_ACCOUNT_LIST_ERROR = 'toast-get-account-list-error',
+  MANUAL_ACCOUNT_OPENING_SUCCESS = 'toast-manual-account-opening-success',
+  MANUAL_ACCOUNT_OPENING_ERROR = 'toast-manual-account-opening-error',
+  EXPORT_ASSET_SUCCESS = 'toast-export-asset-success',
+  EXPORT_ASSET_ERROR = 'toast-export-asset-error',
+  EXPORT_VOUCHER_SUCCESS = 'toast-export-voucher-success',
+  EXPORT_VOUCHER_ERROR = 'toast-export-voucher-error',
+  UPDATE_ASSET_STATUS_SUCCESS = 'toast-update-asset-status-success',
+  UPDATE_ASSET_STATUS_ERROR = 'toast-update-asset-status-error',
 }
