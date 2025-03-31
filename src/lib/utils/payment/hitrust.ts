@@ -7,7 +7,7 @@ import {
   IChargeWithTokenOptions,
 } from '@/interfaces/payment_gateway';
 import { IPaymentInfo } from '@/interfaces/payment';
-import { PAYMENT_METHOD_TYPE } from '@/constants/payment';
+import { PAYMENT_GATEWAY, PAYMENT_METHOD_TYPE } from '@/constants/payment';
 import { DefaultValue } from '@/constants/default_value';
 import { getTimestampNow } from '@/lib/utils/common';
 import { JSONValue } from '@/interfaces/common';
@@ -62,7 +62,7 @@ import { JSONValue } from '@/interfaces/common';
 //   </form>
 
 class HitrustPaymentGateway implements IPaymentGateway {
-  private platform: string = HITRUST.PLATFORM;
+  private platform: PAYMENT_GATEWAY = HITRUST.PLATFORM;
 
   private requestUrl!: string;
 
@@ -88,7 +88,7 @@ class HitrustPaymentGateway implements IPaymentGateway {
    * Hitrust 使用表單提交，因此 `chargeWithToken()` **不適用**，丟出錯誤
    * */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  chargeWithToken(options: IChargeWithTokenOptions): Promise<boolean> {
+  chargeWithToken(options: IChargeWithTokenOptions): Promise<string | undefined> {
     throw new Error(`Method not implemented. url: ${this.chargeUrl}`);
   }
 
@@ -99,7 +99,7 @@ class HitrustPaymentGateway implements IPaymentGateway {
     this.merUpdateUrl = env.MER_UPDATE_URL;
   }
 
-  getPlatform(): string {
+  getPlatform(): PAYMENT_GATEWAY {
     return this.platform;
   }
 

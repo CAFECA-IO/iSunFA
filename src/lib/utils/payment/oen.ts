@@ -9,11 +9,12 @@ import {
   IChargeWithTokenOptions,
 } from '@/interfaces/payment_gateway';
 import { getTimestampNow } from '@/lib/utils/common';
-import { PAYMENT_METHOD_TYPE } from '@/constants/payment';
+import { PAYMENT_GATEWAY, PAYMENT_METHOD_TYPE } from '@/constants/payment';
 import { DefaultValue } from '@/constants/default_value';
+import { teamOrderToOrderOen } from '@/lib/utils/formatter/order.formatter';
 
 class OenPaymentGateway implements IPaymentGateway {
-  private platform: string;
+  private platform: PAYMENT_GATEWAY;
 
   private handshakeUrl: string = '';
 
@@ -40,7 +41,7 @@ class OenPaymentGateway implements IPaymentGateway {
     this.chargeUrl = isProd ? OEN.URLS.PROD.CHARGE_URL : OEN.URLS.DEV.CHARGE_URL;
   }
 
-  getPlatform(): string {
+  getPlatform(): PAYMENT_GATEWAY {
     return this.platform;
   }
 
@@ -152,13 +153,14 @@ class OenPaymentGateway implements IPaymentGateway {
    *    "message": ""
    *  }
    */
-  async chargeWithToken(options: IChargeWithTokenOptions): Promise<boolean> {
+  async chargeWithToken(options: IChargeWithTokenOptions): Promise<string | undefined> {
     // ToDo: (20250317 - Luphia) Charge the user with the token.
     const token = this.secret;
+    const order = teamOrderToOrderOen(options.order, options.user);
     const query = {
       merchantId: this.id,
       token: options.token,
-      ...options.order.detail,
+      ...order,
     };
     /** Info: (20250317 - Luphia) the response format
      *  {"code":"S0000","data":{"id":"2rbtp5feoNkmrS5y3Ovw1LIp65w"},"message":""}
@@ -174,7 +176,8 @@ class OenPaymentGateway implements IPaymentGateway {
     });
     const responseData = await response.json();
     const success = responseData.code.startsWith('S');
-    return success;
+    const result = success ? responseData.data.id : undefined;
+    return result;
   }
 }
 
