@@ -527,8 +527,6 @@ export const requestTransferAccountBook = async (
     throw new Error('TEAM_NOT_FOUND');
   }
 
-  const lastPlan = targetTeam.subscription?.plan;
-
   // Info: (20250311 - Tzuhan) 確保轉入團隊的 `subscription.planType` 不會超過上限
   const planType = targetTeam.subscriptions[0]?.plan.type || TPlanType.BEGINNER;
   const accountBookCount = await prisma.company.count({ where: { teamId: toTeamId } });
