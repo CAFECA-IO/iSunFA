@@ -92,6 +92,7 @@ model AuditReport {
 
   @@map("audit_report")
 }
+
 // Deprecated: (20250324 - Tzuhan) 棄用，改用 Team、TeamMember 裡面新增欄位來取代
 // Info: (20250306 - Tzuhan) Admin 表示 User 在 Company 內的管理身份
 // model Admin {
@@ -231,23 +232,23 @@ enum Tag {
 }
 
 model Company {
-  id          Int     @id @default(autoincrement())
-  teamId      Int     @map("team_id") // Info: (20250224 - tzuhan) 讓 company 連結到 team
-  userId      Int     @map("user_id")
-  name        String
-  taxId       String  @map("tax_id")
-  imageFileId Int     @unique @map("image_file_id")
-  startDate   Int     @map("start_date")
-  createdAt   Int     @map("created_at")
-  updatedAt   Int     @map("updated_at")
-  deletedAt   Int?    @map("deleted_at")
-  isPrivate   Boolean @default(true) @map("is_private")
+  id             Int     @id @default(autoincrement())
+  teamId         Int     @map("team_id") // Info: (20250224 - tzuhan) 讓 company 連結到 team
+  userId         Int     @map("user_id")
+  name           String
+  taxId          String  @map("tax_id")
+  imageFileId    Int     @unique @map("image_file_id")
+  startDate      Int     @map("start_date")
+  createdAt      Int     @map("created_at")
+  updatedAt      Int     @map("updated_at")
+  deletedAt      Int?    @map("deleted_at")
+  isPrivate      Boolean @default(true) @map("is_private")
   isTransferring Boolean @default(false) @map("is_transferring")
-  tag         Tag     @default(ALL) // Info: (20250324 - tzuhan) 公司標籤
+  tag            Tag     @default(ALL) // Info: (20250324 - tzuhan) 公司標籤
 
-  team      Team  @relation(fields: [teamId], references: [id])
-  user      User  @relation(fields: [userId], references: [id])
-  imageFile File  @relation("company_image_file", fields: [imageFileId], references: [id])
+  team      Team @relation(fields: [teamId], references: [id])
+  user      User @relation(fields: [userId], references: [id])
+  imageFile File @relation("company_image_file", fields: [imageFileId], references: [id])
 
   // admins                     Admin[]
   accountingSettings         AccountingSetting[]
@@ -938,22 +939,22 @@ model User {
   createdAt   Int     @map("created_at")
   updatedAt   Int     @map("updated_at")
   deletedAt   Int?    @map("deleted_at")
-  
-  imageFile   File          @relation("user_image_file", fields: [imageFileId], references: [id])
+
+  imageFile File @relation("user_image_file", fields: [imageFileId], references: [id])
 
   // admins            Admin[]
-  authentications   Authentication[]
-  certificates      Certificate[]
+  authentications     Authentication[]
+  certificates        Certificate[]
   // invitations       Invitation[]
-  kycRoles          KYCRole[]
-  userAgreements    UserAgreement[]
-  userActionLogs    UserActionLog[]
-  userCertificates  UserCertificate[]
-  userPaymentInfo   UserPaymentInfo[]
-  userRoles         UserRole[]
-  userTodoCompanies UserTodoCompany[]
-  userVouchers      UserVoucher[]
-  Voucher           Voucher[]
+  kycRoles            KYCRole[]
+  userAgreements      UserAgreement[]
+  userActionLogs      UserActionLog[]
+  userCertificates    UserCertificate[]
+  userPaymentInfo     UserPaymentInfo[]
+  userRoles           UserRole[]
+  userTodoCompanies   UserTodoCompany[]
+  userVouchers        UserVoucher[]
+  Voucher             Voucher[]
   Asset               Asset[]
   UserSetting         UserSetting[]
   ownedTeams          Team[] // Info: (20250221 - tzuhan) 反向關聯，表示這個 User 可能是多個 Team 的 owner
@@ -1003,15 +1004,15 @@ model UserActionLog {
 }
 
 model UserPaymentInfo {
-  id            Int    @id @default(autoincrement())
-  userId        Int    @map("user_id")
+  id            Int     @id @default(autoincrement())
+  userId        Int     @map("user_id")
   token         String
   default       Boolean @default(false)
-  detail          Json?
-  transactionId String @map("transaction_id")
-  createdAt     Int    @map("created_at")
-  updatedAt     Int    @map("updated_at")
-  deletedAt     Int?   @map("deleted_at")
+  detail        Json?
+  transactionId String  @map("transaction_id")
+  createdAt     Int     @map("created_at")
+  updatedAt     Int     @map("updated_at")
+  deletedAt     Int?    @map("deleted_at")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -1057,14 +1058,14 @@ enum RoleType {
 }
 
 model UserRole {
-  id          Int  @id @default(autoincrement())
-  userId      Int  @map("user_id")
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
   roleName    RoleName @map("role_name")
   type        RoleType
-  lastLoginAt Int  @default(0) @map("last_login_at")
-  createdAt   Int  @map("created_at")
-  updatedAt   Int  @map("updated_at")
-  deletedAt   Int? @map("deleted_at")
+  lastLoginAt Int      @default(0) @map("last_login_at")
+  createdAt   Int      @map("created_at")
+  updatedAt   Int      @map("updated_at")
+  deletedAt   Int?     @map("deleted_at")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -1072,13 +1073,13 @@ model UserRole {
 }
 
 model RoleFeature {
-  id            Int       @id @default(autoincrement())
-  roleName      RoleName  @map("role_name") // Info: (20250325 - Tzuhan) 直接存 `RoleName`，不關聯 `Role`
-  featureKey    String    @map("feature_key") // Info: (20250325 - Tzuhan) 權限名稱（e.g., MANAGE_ACCOUNTS）
-  featureValue  String    @map("feature_value") // Info: (20250325 - Tzuhan) 權限細節（e.g., "true"/"false" 或 JSON）
+  id           Int      @id @default(autoincrement())
+  roleName     RoleName @map("role_name") // Info: (20250325 - Tzuhan) 直接存 `RoleName`，不關聯 `Role`
+  featureKey   String   @map("feature_key") // Info: (20250325 - Tzuhan) 權限名稱（e.g., MANAGE_ACCOUNTS）
+  featureValue String   @map("feature_value") // Info: (20250325 - Tzuhan) 權限細節（e.g., "true"/"false" 或 JSON）
 
-  createdAt     Int       @map("created_at")
-  updatedAt     Int       @map("updated_at")
+  createdAt Int @map("created_at")
+  updatedAt Int @map("updated_at")
 
   @@map("role_feature")
 }
@@ -1282,8 +1283,8 @@ model Team {
   members        TeamMember[]
   TeamOrder      TeamOrder[]
   accountBook    Company[]
-  subscription   TeamSubscription[]
-  imageFile      File?               @relation("team_image_file", fields: [imageFileId], references: [id])
+  subscriptions  TeamSubscription[]
+  imageFile      File?                 @relation("team_image_file", fields: [imageFileId], references: [id])
   pendingMembers InviteTeamMember[]
   fromTeamId     AccountBookTransfer[] @relation("fromTeamId")
   toTeamId       AccountBookTransfer[] @relation("toTeamId")
@@ -1292,49 +1293,48 @@ model Team {
 }
 
 enum InviteStatus {
-  PENDING    // Info: (20250307 - Tzuhan) 邀請發送中 (預設)
-  COMPLETED  // Info: (20250307 - Tzuhan) 邀請完成
-  DECLINED   // Info: (20250307 - Tzuhan) 用戶拒絕邀請
-  CANCELED   // Info: (20250307 - Tzuhan) 邀請被團隊管理員取消
-  FAILED     // Info: (20250307 - Tzuhan) 邀請失敗
+  PENDING // Info: (20250307 - Tzuhan) 邀請發送中 (預設)
+  COMPLETED // Info: (20250307 - Tzuhan) 邀請完成
+  DECLINED // Info: (20250307 - Tzuhan) 用戶拒絕邀請
+  CANCELED // Info: (20250307 - Tzuhan) 邀請被團隊管理員取消
+  FAILED // Info: (20250307 - Tzuhan) 邀請失敗
 }
 
 model InviteTeamMember {
-  id           Int          @id @default(autoincrement())
-  teamId       Int          @map("team_id")
-  email        String       @unique @map("email")
-  status       InviteStatus @default(PENDING) @map("status") // Info: (20250314 - Tzuhan) 新增邀請狀態
-  createdAt    Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at") // Info: (20250314 - Tzuhan) 記錄邀請時間
-  updatedAt    Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at") // Info: (20250314 - Tzuhan) 記錄狀態變更時間
-  pendingAt    Int?         @map("pending_at") // Info: (20250314 - Tzuhan) 進入 PENDING 狀態的時間
-  completedAt  Int?         @map("completed_at") // Info: (20250314 - Tzuhan) 邀請完成時間
-  declinedAt   Int?         @map("declined_at") // Info: (20250314 - Tzuhan) 拒絕邀請時間
-  canceledAt   Int?         @map("canceled_at") // Info: (20250314 - Tzuhan) 邀請被取消時間
-  note         Json?        @map("note") @default("{}") // Info: (20250314 - Tzuhan) 備註欄位（可存放拒絕原因、備註等）
+  id          Int          @id @default(autoincrement())
+  teamId      Int          @map("team_id")
+  email       String       @unique @map("email")
+  status      InviteStatus @default(PENDING) @map("status") // Info: (20250314 - Tzuhan) 新增邀請狀態
+  createdAt   Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at") // Info: (20250314 - Tzuhan) 記錄邀請時間
+  updatedAt   Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at") // Info: (20250314 - Tzuhan) 記錄狀態變更時間
+  pendingAt   Int?         @map("pending_at") // Info: (20250314 - Tzuhan) 進入 PENDING 狀態的時間
+  completedAt Int?         @map("completed_at") // Info: (20250314 - Tzuhan) 邀請完成時間
+  declinedAt  Int?         @map("declined_at") // Info: (20250314 - Tzuhan) 拒絕邀請時間
+  canceledAt  Int?         @map("canceled_at") // Info: (20250314 - Tzuhan) 邀請被取消時間
+  note        Json?        @default("{}") @map("note") // Info: (20250314 - Tzuhan) 備註欄位（可存放拒絕原因、備註等）
 
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@map("invite_team_member")
 }
 
-
 model TeamMember {
-  id                Int               @id @default(autoincrement())
-  teamId            Int               @map("team_id")
-  team              Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId            Int               @map("user_id")
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role              TeamRole
-  joinedAt          Int               @map("joined_at")
-  leftAt            Int?              @map("left_at")  // Info: (20250307 - Tzuhan) 記錄離開時間（null 代表仍在 team）
-  status            LeaveStatus       @default(IN_TEAM) @map("status") // Info: (20250307 - Tzuhan) 記錄用戶是否仍在 team
+  id       Int         @id @default(autoincrement())
+  teamId   Int         @map("team_id")
+  team     Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId   Int         @map("user_id")
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     TeamRole
+  joinedAt Int         @map("joined_at")
+  leftAt   Int?        @map("left_at") // Info: (20250307 - Tzuhan) 記錄離開時間（null 代表仍在 team）
+  status   LeaveStatus @default(IN_TEAM) @map("status") // Info: (20250307 - Tzuhan) 記錄用戶是否仍在 team
 
   @@unique([teamId, userId])
   @@map("team_member")
 }
 
 enum LeaveStatus {
-  IN_TEAM    // Info: (20250307 - Tzuhan) 仍在 team
+  IN_TEAM // Info: (20250307 - Tzuhan) 仍在 team
   NOT_IN_TEAM // Info: (20250307 - Tzuhan) 已離開 team
 }
 
@@ -1346,16 +1346,17 @@ enum TeamRole {
 }
 
 model TeamSubscription {
-  id     Int  @id @default(autoincrement())
-  teamId Int  @unique @map("team_id")
-  planType TeamPlanType      @map("plan_type")
-  startDate     Int               @map("start_date")
-  expiredDate   Int               @map("expired_date")
-  createdAt Int @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
-  updatedAt Int @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
+  id          Int          @id @default(autoincrement())
+  teamId      Int          @map("team_id")
+  planType    TeamPlanType @default(PROFESSIONAL) @map("plan_type")
+  startDate   Int          @map("start_date")
+  expiredDate Int          @map("expired_date")
+  createdAt   Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
+  updatedAt   Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
 
-  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  plan   TeamPlan @relation(fields: [planType], references: [type], onDelete: Cascade)
+  team Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  plan TeamPlan @relation(fields: [planType], references: [type], onDelete: Cascade)
+
   @@map("team_subscription")
 }
 
@@ -1376,26 +1377,26 @@ model TeamOrder {
   updatedAt Int    @map("updated_at")
   deletedAt Int?   @map("deleted_at")
 
-  user    User    @relation(fields: [userId], references: [id])
-  team    Team    @relation(fields: [teamId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
 
-  orderDetails TeamOrderDetail[]
+  orderDetails           TeamOrderDetail[]
   TeamPaymentTransaction TeamPaymentTransaction[]
-  TeamInvoice TeamInvoice[]
+  TeamInvoice            TeamInvoice[]
 
   @@map("team_order")
 }
 
 model TeamOrderDetail {
-  id        Int    @id @default(autoincrement())
-  orderId   Int    @map("order_id")
-  productId Int    @map("product_id")
+  id          Int    @id @default(autoincrement())
+  orderId     Int    @map("order_id")
+  productId   Int    @map("product_id")
   productName String @map("product_name")
-  unit      String
-  unitPrice Int    @map("unit_price")
-  quantity  Int
-  currency  String
-  amount   Int
+  unit        String
+  unitPrice   Int    @map("unit_price")
+  quantity    Int
+  currency    String
+  amount      Int
 
   TeamOrder TeamOrder @relation(fields: [orderId], references: [id])
 
@@ -1403,23 +1404,23 @@ model TeamOrderDetail {
 }
 
 model TeamPaymentTransaction {
-  id             Int              @id @default(autoincrement())
-  teamOrderId    Int              @map("team_order_id")
-  amount         Int
-  currency       String
-  paymentGateway String           @map("payment_gateway")
-  userPaymentInfoId Int            @map("user_payment_info_id")
-  paymentGetwayRecordId String? @map("payment_getway_record_id")
-  status        TransactionStatus
-  createdAt     Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
-  updatedAt     Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
+  id                    Int               @id @default(autoincrement())
+  teamOrderId           Int               @map("team_order_id")
+  amount                Int
+  currency              String
+  paymentGateway        String            @map("payment_gateway")
+  userPaymentInfoId     Int               @map("user_payment_info_id")
+  paymentGetwayRecordId String?           @map("payment_getway_record_id")
+  status                TransactionStatus
+  createdAt             Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
+  updatedAt             Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
 
-  teamOrder      TeamOrder        @relation(fields: [teamOrderId], references: [id])
+  teamOrder       TeamOrder       @relation(fields: [teamOrderId], references: [id])
   userPaymentInfo UserPaymentInfo @relation(fields: [userPaymentInfoId], references: [id])
 
   TeamInvoice TeamInvoice[]
 
-  @@map("team_payment_transaction")  
+  @@map("team_payment_transaction")
 }
 
 enum TransactionStatus {
@@ -1430,57 +1431,57 @@ enum TransactionStatus {
 }
 
 model TeamInvoice {
-  id             Int              @id @default(autoincrement())
-  teamOrderId    Int              @map("team_order_id")
-  teamPaymentTransactionId Int @map("team_payment_transaction_id")
-  invoiceCode    String           @map("invoice_code")
-  price          Int
-  tax            Int
-  total          Int
-  currency       String
-  payerId        String?          @map("payer_id")
-  payerName      String?          @map("payer_name")
-  payerEmail     String?          @map("payer_email")
-  payerAddress   String?          @map("payer_address")
-  payerPhone     String?          @map("payer_phone")
-  status         String           @map("status")
-  issuedAt      Int    @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("issued_at")
-  createdAt     Int    @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
-  updatedAt     Int    @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
+  id                       Int     @id @default(autoincrement())
+  teamOrderId              Int     @map("team_order_id")
+  teamPaymentTransactionId Int     @map("team_payment_transaction_id")
+  invoiceCode              String  @map("invoice_code")
+  price                    Int
+  tax                      Int
+  total                    Int
+  currency                 String
+  payerId                  String? @map("payer_id")
+  payerName                String? @map("payer_name")
+  payerEmail               String? @map("payer_email")
+  payerAddress             String? @map("payer_address")
+  payerPhone               String? @map("payer_phone")
+  status                   String  @map("status")
+  issuedAt                 Int     @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("issued_at")
+  createdAt                Int     @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
+  updatedAt                Int     @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
 
-  teamOrder      TeamOrder        @relation(fields: [teamOrderId], references: [id])
+  teamOrder              TeamOrder              @relation(fields: [teamOrderId], references: [id])
   teamPaymentTransaction TeamPaymentTransaction @relation(fields: [teamPaymentTransactionId], references: [id])
 
   @@map("team_invoice")
 }
 
 enum TransferStatus {
-  PENDING    // Info: (20250307 - Tzuhan) 移轉進行中
-  COMPLETED  // Info: (20250307 - Tzuhan) 移轉完成
-  CANCELED   // Info: (20250307 - Tzuhan) 原團隊取消移轉
-  DECLINED   // Info: (20250307 - Tzuhan) 目標團隊拒絕移轉
+  PENDING // Info: (20250307 - Tzuhan) 移轉進行中
+  COMPLETED // Info: (20250307 - Tzuhan) 移轉完成
+  CANCELED // Info: (20250307 - Tzuhan) 原團隊取消移轉
+  DECLINED // Info: (20250307 - Tzuhan) 目標團隊拒絕移轉
   FAILED
 }
 
 model AccountBookTransfer {
-  id                Int     @id @default(autoincrement())
-  companyId         Int     @map("company_id") // Info: (20250307 - Tzuhan) 被轉移的帳本 ID
-  fromTeamId        Int     @map("from_team_id") // Info: (20250307 - Tzuhan) 轉出團隊 ID
-  toTeamId          Int     @map("to_team_id") // Info: (20250307 - Tzuhan) 轉入團隊 ID
-  initiatedByUserId Int     @map("initiated_by_user_id") // Info: (20250307 - Tzuhan) 執行轉移的使用者 ID
+  id                Int            @id @default(autoincrement())
+  companyId         Int            @map("company_id") // Info: (20250307 - Tzuhan) 被轉移的帳本 ID
+  fromTeamId        Int            @map("from_team_id") // Info: (20250307 - Tzuhan) 轉出團隊 ID
+  toTeamId          Int            @map("to_team_id") // Info: (20250307 - Tzuhan) 轉入團隊 ID
+  initiatedByUserId Int            @map("initiated_by_user_id") // Info: (20250307 - Tzuhan) 執行轉移的使用者 ID
   status            TransferStatus @default(PENDING) @map("status") // Info: (20250307 - Tzuhan) 移轉狀態
-  createdAt         Int     @map("created_at") @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int"))// Info: (20250307 - Tzuhan) 轉移請求建立時間
-  pendingAt         Int?    @map("pending_at") // Info: (20250307 - Tzuhan) 進入 PENDING 狀態的時間
-  completedAt       Int?    @map("completed_at") // Info: (20250307 - Tzuhan) 轉移成功時間
-  canceledAt        Int?    @map("canceled_at") // Info: (20250307 - Tzuhan) 轉移取消時間
-  updatedAt         Int     @map("updated_at") @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int"))// Info: (20250307 - Tzuhan) 最後更新時間
-  note              Json?   @map("note") @default("{}")// Info: (20250307 - Tzuhan) 備註欄位（可存放轉移原因、備註等）
+  createdAt         Int            @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at") // Info: (20250307 - Tzuhan) 轉移請求建立時間
+  pendingAt         Int?           @map("pending_at") // Info: (20250307 - Tzuhan) 進入 PENDING 狀態的時間
+  completedAt       Int?           @map("completed_at") // Info: (20250307 - Tzuhan) 轉移成功時間
+  canceledAt        Int?           @map("canceled_at") // Info: (20250307 - Tzuhan) 轉移取消時間
+  updatedAt         Int            @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at") // Info: (20250307 - Tzuhan) 最後更新時間
+  note              Json?          @default("{}") @map("note") // Info: (20250307 - Tzuhan) 備註欄位（可存放轉移原因、備註等）
 
-  accountBook      Company @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  fromTeam         Team @relation("fromTeamId", fields: [fromTeamId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Info: (20250310 - Tzuhan) 明確命名關聯
-  toTeam           Team @relation("toTeamId", fields: [toTeamId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Info: (20250310 - Tzuhan) 明確命名關聯
-  initiatedByUser  User @relation(fields: [initiatedByUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  accountBook     Company @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fromTeam        Team    @relation("fromTeamId", fields: [fromTeamId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Info: (20250310 - Tzuhan) 明確命名關聯
+  toTeam          Team    @relation("toTeamId", fields: [toTeamId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Info: (20250310 - Tzuhan) 明確命名關聯
+  initiatedByUser User    @relation(fields: [initiatedByUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  // @@unique([fromTeamId, toTeamId]) // Info: (20250314 - Tzuhan) remove companyId from unique constraint, because it's not necessary
 
   @@map("accountBook_transfer")
-  // @@unique([fromTeamId, toTeamId]) // Info: (20250314 - Tzuhan) remove companyId from unique constraint, because it's not necessary
 }
