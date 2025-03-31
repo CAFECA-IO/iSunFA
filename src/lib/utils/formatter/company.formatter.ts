@@ -1,6 +1,5 @@
-import { KYCStatus } from '@/constants/kyc';
-import { IAccountBook, ICompanyDetail, ICompanyEntity } from '@/interfaces/account_book';
-import { Admin, Company, CompanyKYC, File, Company as PrismaCompany } from '@prisma/client';
+import { IAccountBook, ICompanyEntity, WORK_TAG } from '@/interfaces/account_book';
+import { Company, File, Company as PrismaCompany } from '@prisma/client';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
 import { companyEntityValidator } from '@/lib/utils/zod_schema/company';
 
@@ -12,6 +11,7 @@ export async function formatCompanyList(
   const formattedCompanyList: IAccountBook[] = companyList.map((company) => {
     const formattedCompany: IAccountBook = {
       ...company,
+      tag: company.tag as WORK_TAG,
       imageId: company.imageFile.name,
     };
     return formattedCompany;
@@ -28,27 +28,10 @@ export function formatCompany(
   // Info: (20240830 - Murky) To Emily and Jacky - , File update down below ,it suppose to image name
   const formattedCompany: IAccountBook = {
     ...company,
+    tag: company.tag as WORK_TAG,
     imageId: company?.imageFile?.url || '',
   };
   return formattedCompany;
-}
-
-export function formatCompanyDetail(
-  company: Company & {
-    admins: Admin[];
-    companyKYCs: CompanyKYC[];
-    imageFile: File | null;
-  }
-): ICompanyDetail {
-  const { admins, companyKYCs, ...companyWithoutAdmins } = company;
-
-  const formattedCompanyDetail: ICompanyDetail = {
-    ...companyWithoutAdmins,
-    imageId: company?.imageFile?.url || '',
-    ownerId: admins[0]?.userId ?? 0,
-    kycStatusDetail: companyKYCs[0]?.status ?? KYCStatus.NOT_STARTED,
-  };
-  return formattedCompanyDetail;
 }
 
 /**

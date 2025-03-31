@@ -9,7 +9,6 @@ import {
   isAccountType,
   isEquityType,
 } from '@/lib/utils/type_guard/account';
-import { checkAuthorization } from '@/lib/utils/auth_check';
 import {
   findFirstAccountInPrisma,
   findLatestSubAccountInPrisma,
@@ -20,7 +19,7 @@ import { ReportSheetType } from '@/constants/report';
 import { convertStringToReportSheetType, isReportSheetType } from '@/lib/utils/type_guard/report';
 import { getSession } from '@/lib/utils/session';
 import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_factory';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
+
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
@@ -218,10 +217,6 @@ export async function handlePostRequest(req: NextApiRequest) {
   const { accountId, name } = req.body;
   if (!userId) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-  if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   const { companyIdNumber, accountIdNumber } = formatCompanyIdAccountId(companyId, accountId);
   const parentAccount = await findFirstAccountInPrisma(accountIdNumber, companyIdNumber);

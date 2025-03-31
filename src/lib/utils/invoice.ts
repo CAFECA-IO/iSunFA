@@ -4,6 +4,8 @@ import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/cons
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { CurrencyType } from '@/constants/currency';
 import { getTimestampNow } from '@/lib/utils/common';
+import { ITeamOrder } from '@/interfaces/order';
+import { ITeamPaymentTransaction } from '@/interfaces/payment';
 
 export function calculateTaxAmount(amount: number, taxRate: number): number {
   let taxRateInDecimal = taxRate;
@@ -63,4 +65,42 @@ export function initInvoiceEntity(
   };
 
   return invoiceEntity;
+}
+
+export interface ITeamInvoice {
+  id?: number;
+  teamOrderId: number;
+  teamPaymentTansactionId: number;
+  invoiceCode: string;
+  price: number;
+  tax: number;
+  total: number;
+  currency: CurrencyType;
+  payerId?: string;
+  payerName?: string;
+  payerEmail?: string;
+  payerAddress?: string;
+  payerPhone?: string;
+  status: string;
+  issuedAt: number;
+  createdAt: number;
+}
+
+export interface ITeamInvoiceDetail {
+  id?: number;
+  teamOrder: ITeamOrder;
+  teamPaymentTransaction: ITeamPaymentTransaction;
+  invoiceCode: string;
+  price: number;
+  tax: number;
+  total: number;
+  currency: CurrencyType;
+  payerId?: string;
+  payerName?: string;
+  payerEmail?: string;
+  payerAddress?: string;
+  payerPhone?: string;
+  status: string;
+  issuedAt: number;
+  createdAt: number;
 }

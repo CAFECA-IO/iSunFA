@@ -6,8 +6,6 @@ import { getUserById } from '@/lib/utils/repo/user.repo';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSession } from '@/lib/utils/session';
-import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { createUserAgreement } from '@/lib/utils/repo/user_agreement.repo';
 
 async function checkInput(agreementHash: string): Promise<boolean> {
@@ -27,19 +25,14 @@ async function handlePostRequest(req: NextApiRequest) {
     if (!userId) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
     } else {
-      const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
-      if (!isAuth) {
-        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      await createUserAgreement(userId, agreementHash);
+      const getUser = await getUserById(userId);
+      if (!getUser) {
+        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
       } else {
-        await createUserAgreement(userId, agreementHash);
-        const getUser = await getUserById(userId);
-        if (!getUser) {
-          statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-        } else {
-          const user = formatUser(getUser);
-          statusMessage = STATUS_MESSAGE.CREATED;
-          payload = user;
-        }
+        const user = formatUser(getUser);
+        statusMessage = STATUS_MESSAGE.CREATED;
+        payload = user;
       }
     }
   }

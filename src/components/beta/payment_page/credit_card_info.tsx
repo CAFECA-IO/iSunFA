@@ -18,6 +18,7 @@ interface CreditCardInfoProps {
   setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setIsDirty: Dispatch<SetStateAction<boolean>>;
+  isHideSubscribeButton?: boolean;
 }
 
 const CreditCardInfo = ({
@@ -28,6 +29,7 @@ const CreditCardInfo = ({
   // Deprecated: (20250220 - Tzuhan) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setIsDirty,
+  isHideSubscribeButton,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
   const { bindingResult, userAuth, paymentMethod, handlePaymentMethod } = useUserCtx();
@@ -220,9 +222,12 @@ const CreditCardInfo = ({
         <span className="font-medium text-text-neutral-tertiary">{`* ${t('subscriptions:PAYMENT_PAGE.NOTE')}`}</span>
       </div>
 
-      <Button type="button" variant="default" size="large" onClick={updateSubscription}>
-        {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
-      </Button>
+      {/* Info: (20250326 - Julian) 在 CreateTeamModal 不需要顯示按鈕 */}
+      {!isHideSubscribeButton && (
+        <Button type="button" variant="default" size="large" onClick={updateSubscription}>
+          {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
+        </Button>
+      )}
     </section>
   );
 };

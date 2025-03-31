@@ -3,8 +3,6 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
-import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { exportPublicKey, getPublicKeyByCompany } from '@/lib/utils/crypto';
 import loggerBack from '@/lib/utils/logger_back';
 
@@ -18,21 +16,16 @@ async function handleGetRequest(req: NextApiRequest) {
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-    } else {
-      try {
-        const publicCryptoKey = await getPublicKeyByCompany(companyId);
-        if (publicCryptoKey) {
-          payload = await exportPublicKey(publicCryptoKey);
-          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-        } else {
-          statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-        }
-      } catch (error) {
-        loggerBack.error(error);
+    try {
+      const publicCryptoKey = await getPublicKeyByCompany(companyId);
+      if (publicCryptoKey) {
+        payload = await exportPublicKey(publicCryptoKey);
+        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+      } else {
+        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
       }
+    } catch (error) {
+      loggerBack.error(error);
     }
   }
 

@@ -26,10 +26,12 @@ export const BindCardBodySchema = z.object({
 // Info: (20250218 - tzuhan) 付款 API 請求
 export const PaymentQuerySchema = z.object({
   userId: z.number(),
+  paymentInfoId: z.number(),
 });
 
 export const PaymentBodySchema = z.object({
-  planId: z.nativeEnum(TPlanType),
+  teamPlanType: z.nativeEnum(TPlanType),
+  teamId: z.number(),
 });
 
 // Info: (20250218 - tzuhan) 已綁定信用卡資訊，具備 user_payment_info id
@@ -79,6 +81,33 @@ export const TeamInvoiceSchema = z.object({
   total: z.number(),
   amountDue: z.number(),
 });
+
+// Info: (20250326 - Luphia) 取得用戶支付方法
+export const getUserPaymentInfoById: (id: number) => Promise<IPaymentInfo | null> = async (
+  id: number
+) => {
+  let paymentInfo: IPaymentInfo | null = null;
+  const query = {
+    where: {
+      id,
+      deletedAt: null,
+    },
+  };
+  const result = await prisma.userPaymentInfo.findFirst(query);
+  if (result) {
+    paymentInfo = {
+      id: result.id,
+      userId: result.userId,
+      token: result.token,
+      transactionId: result.transactionId,
+      default: result.default,
+      detail: result.detail as unknown as IPaymentMethod,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+    };
+  }
+  return paymentInfo;
+};
 
 // Info: (20250319 - Luphia) 列出用戶完整支付方法
 export const listUserPaymentInfo: (userId: number) => Promise<IPaymentInfo[]> = async (
@@ -194,25 +223,6 @@ export const createDefaultUserPaymentInfo: (
     });
 
   return result as unknown as IPaymentInfo;
-};
-
-// Info: (20250218 - tzuhan) Mock 方案價格
-export const planPrices: Record<string, number> = {
-  beginner: 0,
-  professional: 899,
-  enterprise: 8990,
-};
-
-// Info: (20250218 - tzuhan) Mock 信用卡資料
-export const mockCards: Record<number, IPaymentMethod> = {
-  1001: {
-    id: 1,
-    type: PAYMENT_METHOD_TYPE.MASTER,
-    number: '**** **** **** 1234',
-    expirationDate: '12/25',
-    cvv: '123',
-    default: true,
-  },
 };
 
 export const mockInvoices: Record<number, ITeamInvoice> = {

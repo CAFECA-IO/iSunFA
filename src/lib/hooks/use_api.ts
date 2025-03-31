@@ -133,11 +133,11 @@ const useAPI = <Data>(
       } catch (e) {
         handleError(e as Error);
         setSuccess(false);
-        setCode(STATUS_CODE[STATUS_MESSAGE.INTERNAL_SERVICE_ERROR]);
+        setCode(STATUS_CODE.INTERNAL_SERVICE_ERROR);
         return {
           success: false,
           data: null,
-          code: STATUS_CODE[STATUS_MESSAGE.INTERNAL_SERVICE_ERROR],
+          code: STATUS_CODE.INTERNAL_SERVICE_ERROR,
           error: e as Error,
         };
       } finally {

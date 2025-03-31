@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
 import { TbUsersPlus } from 'react-icons/tb';
 import { useTranslation } from 'next-i18next';
-import { ITeam, ITeamMember, TeamRole } from '@/interfaces/team';
+import { ITeam, ITeamMember } from '@/interfaces/team';
 import { Button } from '@/components/button/button';
 import MemberList from '@/components/beta/team_page/member_list';
 import Pagination from '@/components/pagination/pagination';
@@ -12,6 +12,8 @@ import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import Skeleton from '@/components/skeleton/skeleton';
 import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 
 interface MemberListModalProps {
   team: ITeam;
@@ -25,8 +27,14 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const isOwner = team.role === TeamRole.OWNER;
-  const isAdmin = team.role === TeamRole.ADMIN;
+
+  const invitePermission = convertTeamRoleCanDo({
+    teamRole: team.role,
+    canDo: TeamPermissionAction.INVITE_MEMBER,
+  });
+
+  const canInviteMember =
+    TeamRoleCanDoKey.YES_OR_NO in invitePermission ? invitePermission.yesOrNo : false;
 
   const closeMemberListModal = () => {
     setIsMemberListModalOpen(false);
@@ -144,7 +152,7 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
               <p className="text-sm font-medium leading-5 text-text-neutral-mute">
                 {team.name.value} - {team.totalMembers} {t('team:MEMBER_LIST_MODAL.MEMBERS')}
               </p>
-              {(isOwner || isAdmin) && (
+              {canInviteMember && (
                 <Button
                   variant="tertiary"
                   size="small"
@@ -172,7 +180,7 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
       </div>
 
       {/* Info: (20250324 - Liz) Modals */}
-      {isInviteMembersModalOpen && (
+      {isInviteMembersModalOpen && canInviteMember && (
         <InviteMembersModal
           team={team}
           setIsInviteMembersModalOpen={setIsInviteMembersModalOpen}

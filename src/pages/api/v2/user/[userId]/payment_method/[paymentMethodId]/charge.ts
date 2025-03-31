@@ -2,71 +2,114 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import {
   PaymentQuerySchema,
   PaymentBodySchema,
-  planPrices,
-  TeamInvoiceSchema,
-  mockInvoices,
+  getUserPaymentInfoById,
 } from '@/lib/utils/repo/user_payment_info.repo';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { TPlanType } from '@/interfaces/subscription';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import loggerBack from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
 import { logUserAction } from '@/lib/utils/middleware';
+import { generateTeamInvoice } from '@/lib/utils/generator/team_invoice.generator';
+import { createPaymentGateway } from '@/lib/utils/payment/factory';
+import { IPaymentInfo, ITeamInvoice, ITeamSubscription } from '@/interfaces/payment';
+import { IChargeWithTokenOptions } from '@/interfaces/payment_gateway';
+import { getUserById } from '@/lib/utils/repo/user.repo';
+import { IUser } from '@/interfaces/user';
+import { ITeamOrder } from '@/interfaces/order';
+import { generateTeamPaymentTransaction } from '@/lib/utils/generator/team_payment_transaction.generator';
+import { createTeamPaymentTransaction } from '@/lib/utils/repo/team_payment_transaction.repo';
+import { generateTeamOrder } from '@/lib/utils/generator/team_order.generator';
+import { createTeamInvoice } from '@/lib/utils/repo/team_invoice.repo';
+import { generateTeamSubscription } from '@/lib/utils/generator/team_subscription.generator';
+import { createTeamSubscription } from '@/lib/utils/repo/team_subscription.repo';
+import { TRANSACTION_STATUS } from '@/constants/transaction';
 
-export const handlePostRequest = (req: NextApiRequest) => {
+/** Info: (20250326 - Luphia) 訂閱支付細節
+    team_plan 團隊方案
+    team_payment_transaction 收款紀錄 team_payment_transaction.repo
+    team_invoice 發票 team_invoice.repo
+    team_subscription 訂閱方案 team_subscription.repo
+    planType 訂閱方案
+    teamId 團隊 ID
+    userId 使用者 ID
+    paymentMethodId 支付方式 ID
+
+    相關資料表
+    TeamPlan          訂閱方案
+    TeamOrder         訂單
+    TeamOrderDetail   訂單品項
+    UserPaymentInfo   用戶信用卡
+    TeamPaymentTransaction   團隊付款紀錄
+    TeamInvoice       團隊收據
+    TeamSubscription  團隊訂閱紀錄
+
+    訂閱流程
+    1. 用戶選取訂閱方案建立訂單與訂單品項
+    2. 用戶建立信用卡資料
+    3. 用戶針對訂單付款並記錄付款結果
+    4. 若付款成功則建立收據與團隊訂閱紀錄
+ */
+
+export const handlePostRequest = async (req: NextApiRequest) => {
   let result;
   try {
     // Info: (20250218 - tzuhan) 驗證 URL 參數
-    const { userId } = PaymentQuerySchema.parse(req.query);
-
+    const { userId, paymentInfoId } = PaymentQuerySchema.parse(req.query);
     //  Info: (20250218 - tzuhan) 驗證請求 Body
-    const { planId } = PaymentBodySchema.parse(req.body);
+    const { teamPlanType, teamId } = PaymentBodySchema.parse(req.body);
 
-    const unitPrice = planPrices[planId];
-    const quantity = 1; //  Info: (20250218 - tzuhan) 假設數量固定為 1
-    const totalPrice = unitPrice * quantity;
-    const tax = Math.round(totalPrice * 0.05); //  Info: (20250218 - tzuhan) 假設稅率 5%
-    const subtotal = totalPrice - tax;
-    const issuedTimestamp = Date.now();
-    const dueTimestamp = issuedTimestamp + 30 * 24 * 60 * 60 * 1000; //  Info: (20250218 - tzuhan) 到期日 +30 天
+    // ToDo: (20250331 - Luphia) 檢驗用戶是否屬於該團隊，避免替不相干團隊付費訂閱
 
-    const invoice = {
-      id: Date.now(), //  Info: (20250218 - tzuhan) 模擬發票 ID
-      teamId: 3, //  Info: (20250218 - tzuhan) 假設綁定的團隊 ID
-      status: true, //  Info: (20250218 - tzuhan) 模擬付款成功
-      issuedTimestamp,
-      dueTimestamp,
-      planId: planId as TPlanType,
-      planStartTimestamp: issuedTimestamp,
-      planEndTimestamp: dueTimestamp,
-      planQuantity: quantity,
-      planUnitPrice: unitPrice,
-      planAmount: totalPrice,
-      payer: {
-        name: 'John Doe',
-        address: '1234 Main St',
-        phone: '123-456-7890',
-        taxId: '123456789',
-      },
-      payee: {
-        name: 'Jane Doe',
-        address: '5678 Elm St',
-        phone: '098-765-4321',
-        taxId: '987654321',
-      },
-      subtotal,
-      tax,
-      total: totalPrice,
-      amountDue: 0, //  Info: (20250218 - tzuhan) 假設一次付清
+    const order: ITeamOrder = await generateTeamOrder({
+      userId,
+      teamId,
+      teamPlanType,
+      quantity: 1,
+    });
+    const userPaymentInfo: IPaymentInfo | null = await getUserPaymentInfoById(paymentInfoId);
+    const user = (await getUserById(userId)) as unknown as IUser;
+    if (!userPaymentInfo || !user || userPaymentInfo.userId !== userId) throw new Error(STATUS_MESSAGE.INVALID_PAYMENT_METHOD);
+    const paymentGateway = createPaymentGateway();
+    const chargeOption: IChargeWithTokenOptions = {
+      order,
+      user,
+      token: userPaymentInfo,
     };
+    const paymentGetwayRecordId = await paymentGateway.chargeWithToken(chargeOption);
+    // Info: (20250328 - Luphia) 根據扣款的結果建立 team_payment_transaction 並儲存
+    // ToDo: (20250330 - Luphia) 使用 DB Transaction
+    const paymentGatewayName = paymentGateway.getPlatform();
+    const teamPaymentTransactionData = await generateTeamPaymentTransaction(
+      order,
+      userPaymentInfo,
+      paymentGatewayName,
+      paymentGetwayRecordId
+    );
+    const teamPaymentTransaction = await createTeamPaymentTransaction(teamPaymentTransactionData);
+    const resultData: { teamInvoice?: ITeamInvoice; teamSubscription?: ITeamSubscription } = {};
 
-    //  Info: (20250218 - tzuhan) 確保發票符合 Schema
-    const validatedPayload = TeamInvoiceSchema.parse(invoice);
+    if (teamPaymentTransaction.status === TRANSACTION_STATUS.SUCCESS) {
+      // Info: (20250328 - Luphia) 根據扣款的結果建立 team_invoice 並儲存
+      // ToDo: (20250330 - Luphia) 使用 DB Transaction
+      const teamInvoiceData: ITeamInvoice = await generateTeamInvoice(
+        order,
+        teamPaymentTransaction,
+        user
+      );
+      const teamInvoice = await createTeamInvoice(teamInvoiceData);
+      resultData.teamInvoice = teamInvoice;
 
-    mockInvoices[userId] = invoice;
-
-    result = formatApiResponse(STATUS_MESSAGE.SUCCESS, validatedPayload);
+      // Info: (20250330 - Luphia) 根據扣款的結果建立 team_subscription 並儲存
+      // ToDo: (20250330 - Luphia) 使用 DB Transaction
+      const teamSubscriptionData = await generateTeamSubscription(teamId, teamPlanType);
+      const teamSubscription = await createTeamSubscription(teamSubscriptionData);
+      resultData.teamSubscription = teamSubscription;
+      result = formatApiResponse(STATUS_MESSAGE.SUCCESS, resultData);
+    } else {
+      // Info: (20250328 - Luphia) 付款失敗，回傳錯誤訊息
+      result = formatApiResponse(STATUS_MESSAGE.PAYMENT_FAILED_TO_COMPLETE, {});
+    }
   } catch (error) {
     result = formatApiResponse((error as Error).message, {});
   }
@@ -97,7 +140,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     ({ httpCode, result } = formatApiResponse(statusMessage, {}));
   }
-  await logUserAction(session, APIName.USER_PAYMENT_METHOD_LIST, req, statusMessage as string);
+  await logUserAction(session, APIName.USER_PAYMENT_METHOD_CHARGE, req, statusMessage as string);
 
   return res.status(httpCode).json(result);
 }

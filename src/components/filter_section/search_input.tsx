@@ -1,6 +1,7 @@
 import React from 'react';
 import { FiSearch } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 interface SearchInputProps {
   searchQuery: string | undefined;
@@ -19,8 +20,8 @@ const SearchInput: React.FC<SearchInputProps> = ({ searchQuery, onSearchChange }
           placeholder={t('search:COMMON.SEARCH')}
           defaultValue={searchQuery}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-              onSearchChange(e.currentTarget.value);
+            if (e.key === KEYBOARD_EVENT_CODE.ENTER && !e.nativeEvent.isComposing) {
+              onSearchChange(e.currentTarget.value.toLowerCase()); // Info: (20250331 - Julian) 將搜尋字串轉為小寫
             }
           }}
         />

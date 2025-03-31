@@ -6,8 +6,6 @@ import { getUserById, updateUserById } from '@/lib/utils/repo/user.repo';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSession } from '@/lib/utils/session';
-import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 async function checkInput(userId: string, name: string, email: string): Promise<boolean> {
   const isValid = !!userId && !!name && !!email;
@@ -24,20 +22,13 @@ async function handleGetRequest(req: NextApiRequest) {
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const isAuth = await checkAuthorization([AuthFunctionsKeys.user], {
-      userId,
-    });
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    const getUser = await getUserById(userId);
+    if (!getUser) {
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
     } else {
-      const getUser = await getUserById(userId);
-      if (!getUser) {
-        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-      } else {
-        const user = formatUser(getUser);
-        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-        payload = user;
-      }
+      const user = formatUser(getUser);
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+      payload = user;
     }
   }
 
@@ -61,22 +52,15 @@ async function handlePutRequest(req: NextApiRequest) {
     if (!userId) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
     } else {
-      const isAuth = await checkAuthorization([AuthFunctionsKeys.user], {
-        userId,
-      });
-      if (!isAuth) {
-        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      const userIdNum = convertStringToNumber(queryUserId);
+      const getUser = await getUserById(userIdNum);
+      if (!getUser) {
+        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
       } else {
-        const userIdNum = convertStringToNumber(queryUserId);
-        const getUser = await getUserById(userIdNum);
-        if (!getUser) {
-          statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-        } else {
-          const updatedUser = await updateUserById(userIdNum, name, email, imageId);
-          const user = formatUser(updatedUser);
-          statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-          payload = user;
-        }
+        const updatedUser = await updateUserById(userIdNum, name, email, imageId);
+        const user = formatUser(updatedUser);
+        statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+        payload = user;
       }
     }
   }

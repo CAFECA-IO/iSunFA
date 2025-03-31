@@ -1,40 +1,8 @@
 import { z } from 'zod';
 import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
-import {
-  nullSchema,
-  zodStringToBoolean,
-  zodStringToNumber,
-  zodStringToNumberWithDefault,
-} from '@/lib/utils/zod_schema/common';
-import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
-import { rolePrismaSchema } from '@/lib/utils/zod_schema/role';
-import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
-import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
-
-// Info: (20241016 - Jacky) Company list schema
-const companyListQuerySchema = z.object({
-  userId: zodStringToNumber,
-  simple: zodStringToBoolean.optional(),
-  searchQuery: z.string().optional(),
-  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
-  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
-});
-
-// Info: (20241016 - Jacky) Company post schema
-const companyPostQuerySchema = z.object({
-  userId: zodStringToNumber,
-});
-const companyPostBodySchema = z.object({
-  name: z.string(),
-  taxId: z.string(),
-  tag: z.nativeEnum(WORK_TAG),
-  teamId: z.number().int(),
-});
-
-// Info: (20241016 - Jacky) Company get schema
-const companyGetByIdQuerySchema = z.object({
-  companyId: zodStringToNumber,
-});
+import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
+// import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
+import { accountBookSchema } from './account_book';
 
 // Info: (20241016 - Jacky) Company put schema
 const companyPutQuerySchema = z.object({
@@ -50,81 +18,30 @@ const companyDeleteQuerySchema = z.object({
   companyId: zodStringToNumber,
 });
 
-// Info: (20241015 - Jacky) Company select schema
-const companySelectQuerySchema = z.object({
-  userId: zodStringToNumber,
-});
-
-const companySelectBodySchema = z.object({
-  companyId: z.number().int(),
-});
-
-const companyPrismaSchema = z.object({
+/**
+ * Deprecated: (20250327 - Tzuhan) replaced by accountBookSchema
+export const companyOutputSchema = z.object({
   id: z.number().int(),
-  imageFile: filePrismaSchema,
+  teamId: z.number().default(0),
+  userId: z.number().default(555),
+  imageId: z.string(),
   name: z.string(),
   taxId: z.string(),
-  isPrivate: z.boolean(),
-  teamId: z.number().int().nullable(),
+  tag: z.nativeEnum(WORK_TAG),
   startDate: z.number().int(),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
+  isPrivate: z.boolean(),
+  imageFile: filePrismaSchema,
 });
-
-export const companyOutputSchema = companyPrismaSchema.strip().transform((data) => {
-  const { imageFile, teamId, isPrivate, ...rest } = data;
-  const output = {
-    ...rest,
-    imageId: imageFile.url,
-  };
-  return output;
-});
-
-export const accountBookForUserSchema = z.object({
-  teamId: z.number().optional().default(0),
-  company: companyOutputSchema,
-  tag: z.nativeEnum(WORK_TAG),
-  order: z.number().int(),
-  role: rolePrismaSchema,
-});
-// Info: (20241028 - Jacky) Paginated data schema
-export const paginatedAccountBookForUserSchema = paginatedDataSchema(accountBookForUserSchema);
-
-const listedAccountBookForUserSchema = z.array(accountBookForUserSchema);
-
-export const companyListSchema = {
-  input: {
-    querySchema: companyListQuerySchema,
-    bodySchema: nullSchema,
-  },
-  outputSchema: z.union([paginatedAccountBookForUserSchema, listedAccountBookForUserSchema]),
-  frontend: nullSchema,
-};
-
-export const companyPostSchema = {
-  input: {
-    querySchema: companyPostQuerySchema,
-    bodySchema: companyPostBodySchema,
-  },
-  outputSchema: accountBookForUserSchema.nullable(),
-  frontend: nullSchema,
-};
-
-export const companyGetByIdSchema = {
-  input: {
-    querySchema: companyGetByIdQuerySchema,
-    bodySchema: nullSchema,
-  },
-  outputSchema: accountBookForUserSchema.nullable(),
-  frontend: nullSchema,
-};
+ */
 
 export const companyPutSchema = {
   input: {
     querySchema: companyPutQuerySchema,
     bodySchema: companyPutBodySchema,
   },
-  outputSchema: accountBookForUserSchema,
+  outputSchema: accountBookSchema,
   frontend: nullSchema,
 };
 
@@ -133,16 +50,7 @@ export const companyDeleteSchema = {
     querySchema: companyDeleteQuerySchema,
     bodySchema: nullSchema,
   },
-  outputSchema: companyOutputSchema.nullable(),
-  frontend: nullSchema,
-};
-
-export const companySelectSchema = {
-  input: {
-    querySchema: companySelectQuerySchema,
-    bodySchema: companySelectBodySchema,
-  },
-  outputSchema: companyOutputSchema.nullable(),
+  outputSchema: accountBookSchema.nullable(),
   frontend: nullSchema,
 };
 
@@ -213,6 +121,6 @@ export const companyPutIconSchema = {
     querySchema: companyPutIconQuerySchema,
     bodySchema: companyPutIconBodySchema,
   },
-  outputSchema: companyOutputSchema.nullable(),
-  frontend: companyOutputSchema.nullable(),
+  outputSchema: accountBookSchema.nullable(),
+  frontend: accountBookSchema.nullable(),
 };

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { rolePrismaSchema } from '@/lib/utils/zod_schema/role';
+import { RoleName, RoleType } from '@/constants/role';
 
 // Info: (20241029 - Jacky) UserRole null schema
 const userRoleNullSchema = z.union([z.object({}), z.string()]);
@@ -15,7 +15,7 @@ const userRoleListQuerySchema = z.object({
 
 // Info: (20241015 - Jacky) UserRole post schema
 const userRolePostBodySchema = z.object({
-  roleId: z.number().int(),
+  roleName: z.nativeEnum(RoleName),
 });
 
 // Info: (20241015 - Jacky) UserRole select query schema
@@ -25,16 +25,18 @@ const userRoleSelectQuerySchema = z.object({
 
 // Info: (20241111 - Jacky) UserRole select body schema
 const userRoleSelectBodySchema = z.object({
-  roleId: z.number().int(),
+  roleName: z.nativeEnum(RoleName),
 });
 
-const userRoleOutputSchema = z.object({
+export const userRoleOutputSchema = z.object({
   id: z.number().int(),
   userId: z.number().int(),
-  role: rolePrismaSchema,
+  roleName: z.nativeEnum(RoleName),
+  type: z.nativeEnum(RoleType),
   lastLoginAt: z.number().int(),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
+  deletedAt: z.number().int().optional(),
 });
 
 const userRoleListOutputSchema = z.array(userRoleOutputSchema);

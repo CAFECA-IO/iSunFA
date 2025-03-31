@@ -3,7 +3,6 @@ import { IAccount } from '@/interfaces/accounting_account';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamNumeric } from '@/lib/utils/common';
-import { checkAuthorization } from '@/lib/utils/auth_check';
 import { formatAccount } from '@/lib/utils/formatter/account.formatter';
 import {
   findFirstAccountInPrisma,
@@ -11,7 +10,6 @@ import {
   softDeleteAccountInPrisma,
 } from '@/lib/utils/repo/account.repo';
 import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 function formatParams(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
@@ -34,10 +32,6 @@ async function getCompanyIdAccountId(req: NextApiRequest) {
   const { userId, companyId } = session;
   if (!userId) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-  if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   const { accountId } = req.query;
   const { accountIdNumber, companyIdNumber } = formatParams(companyId, accountId);

@@ -1,4 +1,6 @@
-const PLATFORM = 'HITRUST';
+import { PAYMENT_GATEWAY } from '@/constants/payment';
+
+const PLATFORM = PAYMENT_GATEWAY.HITRUST;
 const URLS = {
   DEV: {
     HANDSHAKE_URL: '',

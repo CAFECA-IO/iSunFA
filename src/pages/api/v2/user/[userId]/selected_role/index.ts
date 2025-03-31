@@ -5,26 +5,24 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { getUserRoleByUserAndRoleId, updateUserRoleLoginAt } from '@/lib/utils/repo/user_role.repo';
+import { updateUserLastLoginAt } from '@/lib/utils/repo/user_role.repo';
 import { setSession } from '@/lib/utils/session';
-import { UserRole } from '@prisma/client';
 import { IUserRole } from '@/interfaces/user_role';
 
-const handlePutRequest: IHandleRequest<APIName.USER_SELECT_ROLE, UserRole> = async ({
+const handlePutRequest: IHandleRequest<APIName.USER_SELECT_ROLE, IUserRole> = async ({
   query,
   session,
   body,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: UserRole | null = null;
+  let payload: IUserRole | null = null;
   const { userId } = query;
-  const { roleId } = body;
-  const userRole = await getUserRoleByUserAndRoleId(userId, roleId);
+  const { roleName } = body;
 
+  const userRole = await updateUserLastLoginAt({ userId, roleName });
   if (userRole) {
     statusMessage = STATUS_MESSAGE.SUCCESS;
-    setSession(session, { roleId: userRole.roleId });
-    await updateUserRoleLoginAt(userRole.id);
+    setSession(session, { roleId: userRole.id });
     payload = userRole;
   } else {
     statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
