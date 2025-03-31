@@ -746,6 +746,7 @@ module.exports = {
         sunrise: 'url("/elements/sunrise.png")',
         'magic-ball': "url('/elements/magic_ball.png')",
         'privacy-policy': 'url("/elements/sun_light.png")',
+        'join-us': 'url("/elements/join_us_bg.png")',
       },
       zIndex: {
         '-10': '-10',
