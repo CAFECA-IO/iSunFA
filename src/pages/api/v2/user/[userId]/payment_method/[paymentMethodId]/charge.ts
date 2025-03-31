@@ -12,7 +12,7 @@ import { getSession } from '@/lib/utils/session';
 import { logUserAction } from '@/lib/utils/middleware';
 import { generateTeamInvoice } from '@/lib/utils/generator/team_invoice.generator';
 import { createPaymentGateway } from '@/lib/utils/payment/factory';
-import { IPaymentInfo, ITeamInvoice } from '@/interfaces/payment';
+import { IPaymentInfo, ITeamInvoice, ITeamSubscription } from '@/interfaces/payment';
 import { IChargeWithTokenOptions } from '@/interfaces/payment_gateway';
 import { getUserById } from '@/lib/utils/repo/user.repo';
 import { IUser } from '@/interfaces/user';
@@ -23,6 +23,7 @@ import { generateTeamOrder } from '@/lib/utils/generator/team_order.generator';
 import { createTeamInvoice } from '@/lib/utils/repo/team_invoice.repo';
 import { generateTeamSubscription } from '@/lib/utils/generator/team_subscription.generator';
 import { createTeamSubscription } from '@/lib/utils/repo/team_subscription.repo';
+import { TRANSACTION_STATUS } from '@/constants/transaction';
 
 /** Info: (20250326 - Luphia) 訂閱支付細節
     team_plan 團隊方案
@@ -54,9 +55,11 @@ export const handlePostRequest = async (req: NextApiRequest) => {
   let result;
   try {
     // Info: (20250218 - tzuhan) 驗證 URL 參數
-    const { userId, paymentMethodId } = PaymentQuerySchema.parse(req.query);
+    const { userId, paymentInfoId } = PaymentQuerySchema.parse(req.query);
     //  Info: (20250218 - tzuhan) 驗證請求 Body
     const { teamPlanType, teamId } = PaymentBodySchema.parse(req.body);
+
+    // ToDo: (20250331 - Luphia) 檢驗用戶是否屬於該團隊，避免替不相干團隊付費訂閱
 
     const order: ITeamOrder = await generateTeamOrder({
       userId,
@@ -64,7 +67,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
       teamPlanType,
       quantity: 1,
     });
-    const userPaymentInfo: IPaymentInfo | null = await getUserPaymentInfoById(paymentMethodId);
+    const userPaymentInfo: IPaymentInfo | null = await getUserPaymentInfoById(paymentInfoId);
     const user = (await getUserById(userId)) as unknown as IUser;
     if (!userPaymentInfo || !user || userPaymentInfo.userId !== userId) throw new Error(STATUS_MESSAGE.INVALID_PAYMENT_METHOD);
     const paymentGateway = createPaymentGateway();
@@ -84,24 +87,29 @@ export const handlePostRequest = async (req: NextApiRequest) => {
       paymentGetwayRecordId
     );
     const teamPaymentTransaction = await createTeamPaymentTransaction(teamPaymentTransactionData);
+    const resultData: { teamInvoice?: ITeamInvoice; teamSubscription?: ITeamSubscription } = {};
 
-    // Info: (20250328 - Luphia) 根據扣款的結果建立 team_invoice 並儲存
-    // ToDo: (20250330 - Luphia) 使用 DB Transaction
-    const teamInvoiceData: ITeamInvoice = await generateTeamInvoice(
-      order,
-      teamPaymentTransaction,
-      user
-    );
-    const teamInvoice = await createTeamInvoice(teamInvoiceData);
+    if (teamPaymentTransaction.status === TRANSACTION_STATUS.SUCCESS) {
+      // Info: (20250328 - Luphia) 根據扣款的結果建立 team_invoice 並儲存
+      // ToDo: (20250330 - Luphia) 使用 DB Transaction
+      const teamInvoiceData: ITeamInvoice = await generateTeamInvoice(
+        order,
+        teamPaymentTransaction,
+        user
+      );
+      const teamInvoice = await createTeamInvoice(teamInvoiceData);
+      resultData.teamInvoice = teamInvoice;
 
-    // Info: (20250330 - Luphia) 根據扣款的結果建立 team_subscription 並儲存
-    // ToDo: (20250330 - Luphia) 使用 DB Transaction
-    const teamSubscriptionData = await generateTeamSubscription(teamId, teamPlanType);
-    const teamSubscription = await createTeamSubscription(teamSubscriptionData);
-
-    const resultData = { teamInvoice, teamSubscription };
-
-    result = formatApiResponse(STATUS_MESSAGE.SUCCESS, resultData);
+      // Info: (20250330 - Luphia) 根據扣款的結果建立 team_subscription 並儲存
+      // ToDo: (20250330 - Luphia) 使用 DB Transaction
+      const teamSubscriptionData = await generateTeamSubscription(teamId, teamPlanType);
+      const teamSubscription = await createTeamSubscription(teamSubscriptionData);
+      resultData.teamSubscription = teamSubscription;
+      result = formatApiResponse(STATUS_MESSAGE.SUCCESS, resultData);
+    } else {
+      // Info: (20250328 - Luphia) 付款失敗，回傳錯誤訊息
+      result = formatApiResponse(STATUS_MESSAGE.PAYMENT_FAILED_TO_COMPLETE, {});
+    }
   } catch (error) {
     result = formatApiResponse((error as Error).message, {});
   }
