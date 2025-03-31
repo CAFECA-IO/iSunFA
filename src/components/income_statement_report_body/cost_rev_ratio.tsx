@@ -52,15 +52,15 @@ const CostRevRatio = ({
           <thead>
             <tr>
               <th
-                className={`w-77px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold`}
+                className={`w-1/12 whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold`}
               >
                 {t('reports:REPORTS.CODE_NUMBER')}
               </th>
-              <th className="w-530px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+              <th className="w-5/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="w-335px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
+                className="w-3/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -70,7 +70,7 @@ const CostRevRatio = ({
                 )}
               </th>
               <th
-                className="w-335px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
+                className="w-3/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -277,14 +277,14 @@ const CostRevRatio = ({
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-77px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+              <th className="w-1/12 whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.CODE_NUMBER')}
               </th>
-              <th className="w-530px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+              <th className="w-5/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
               </th>
               <th
-                className="w-335px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
+                className="w-3/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -294,7 +294,7 @@ const CostRevRatio = ({
                 )}
               </th>
               <th
-                className="w-335px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
+                className="w-3/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {financialReport && financialReport.company && (
@@ -369,9 +369,7 @@ const CostRevRatio = ({
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-neutral-quaternary p-10px text-end`}
                   >
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(
-                      2
-                    )}%
+                    {revenueToRD.ratio.curRatio.toFixed(2)}%
                   </td>
                   <td
                     className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-neutral-quaternary p-10px text-end`}

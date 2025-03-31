@@ -4,28 +4,28 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 
- export const createRenderedFooter = () => {
-   let currentPage = 1;
-   return () => {
-     const page = currentPage;
-     currentPage += 1;
-     return (
-       <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
-         <p className="text-xs text-white">{page}</p>
-         <div className="text-base font-bold text-surface-brand-secondary">
-           <Image
-             priority
-             unoptimized
-             width={80}
-             height={20}
-             src="/logo/white_isunfa_logo_light.svg"
-             alt="iSunFA Logo"
-           />
-         </div>
-       </footer>
-     );
-   };
- };
+export const createRenderedFooter = () => {
+  let currentPage = 1;
+  return () => {
+    const page = currentPage;
+    currentPage += 1;
+    return (
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
+        <p className="text-xs text-white">{page}</p>
+        <div className="text-base font-bold text-surface-brand-secondary">
+          <Image
+            priority
+            unoptimized
+            width={80}
+            height={20}
+            src="/logo/white_isunfa_logo_light.svg"
+            alt="iSunFA Logo"
+          />
+        </div>
+      </footer>
+    );
+  };
+};
 
 interface DownloadBalanceSheetProps {
   reportFinancial: BalanceSheetReport | null;
@@ -138,7 +138,9 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
 
       if (!item.code) {
         return (
+          // Todo: (20250331 - Anna) 這裡的 key 需要改成 item.name
           <tr key={item.code}>
+            {/* <tr key={`group-${item.name}-${index}`}> */}
             <td
               colSpan={6}
               className="border border-stroke-neutral-quaternary p-10px text-sm font-bold"
@@ -190,7 +192,9 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
 
       if (!item.code) {
         return (
+          // Todo: (20250331 - Anna) 這裡的 key 需要改成 item.name
           <tr key={item.code}>
+            {/* <tr key={`group-${item.name}-${index}`}> */}
             <td
               colSpan={6}
               className="border border-stroke-neutral-quaternary p-10px text-sm font-bold"
@@ -223,7 +227,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
               {item.prePeriodPercentageString}
             </td>
           </tr>
-          {/* Info: (20250314 - Anna) 新增子科目表格 */}
+          {/* Info: (20250314 - Anna) 子科目表格 */}
           {item.children &&
             item.children.length > 0 &&
             item.children
@@ -283,6 +287,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
     </tr>
   );
 
+  // Todo: (20250331 - Anna) id 可拿掉
   const ItemSummary = (
     <div id="1" className="relative overflow-y-hidden px-14px">
       {/* Info: (20240723 - Shirley) watermark logo */}
@@ -323,18 +328,21 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
                 </th>
               </tr>
             </thead>
-            <tbody>
+            {/* <tbody>
               {reportFinancial &&
                 reportFinancial.general &&
                 Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
                 rowsForSummary(reportFinancial.general)}
-            </tbody>
+            </tbody> */}
+            {/* Todo: (20250331 - Anna)  Object.prototype.hasOwnProperty 可拿掉 */}
+            <tbody>{reportFinancial?.general && rowsForSummary(reportFinancial.general)}</tbody>
           </table>
         }
       </section>
     </div>
   );
 
+  // Todo: (20250331 - Anna) id 可拿掉
   const ItemDetail = (
     <div id="2" className={`relative overflow-y-hidden px-14px print:break-before-page`}>
       <section className="text-text-neutral-secondary">
@@ -362,17 +370,20 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
                 </th>
               </tr>
             </thead>
-            <tbody>
+            {/* Todo: (20250331 - Anna)  Object.prototype.hasOwnProperty 可拿掉 */}
+            {/* <tbody>
               {reportFinancial &&
                 reportFinancial.general &&
                 Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
                 rowsForDetail(reportFinancial.details)}
-            </tbody>
+            </tbody> */}
+            <tbody>{reportFinancial?.details && rowsForDetail(reportFinancial.details)}</tbody>
           </table>
         }
       </section>
     </div>
   );
+  // Todo: (20250331 - Anna) id 可拿掉
   const TurnoverDay = (
     <div id="5" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
@@ -445,6 +456,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
     <div ref={downloadRef} className="hidden">
       {/* Info: (20241120 - Anna) 渲染第一塊分頁 */}
       <div
+        // Todo: (20241120 - Anna) key 可拿掉
         key={`first-block-page-`}
         className={printContainerClass}
         style={{
@@ -453,6 +465,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
         }}
       >
         <div
+          // Todo: (20241120 - Anna) id 可拿掉
           id={`first-block-page-`}
           className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
         >
@@ -465,8 +478,8 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
           {renderedFooter()}
         </div>
       </div>
-
       {/* Info: (20241120 - Anna) 渲染第二塊分頁 */}
+      {/* Todo: (20241120 - Anna) key 可拿掉 */}
       <div
         key={`second-block-page-`}
         className={printContainerClass}
@@ -476,6 +489,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
         }}
       >
         <div
+          // Todo: (20241120 - Anna) id 可拿掉
           id={`second-block-page-`}
           className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
         >
@@ -489,6 +503,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
         </div>
       </div>
       {/* Info: (20241120 - Anna) 渲染額外的內容 */}
+      {/* Todo: (20241120 - Anna) key 可拿掉 */}
       <div
         key={`additional-block-page-`}
         className={printContainerClass}
@@ -498,6 +513,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
         }}
       >
         <div
+          // Todo: (20241120 - Anna) id 可拿掉
           id={`additional-block-page-`}
           className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
         >

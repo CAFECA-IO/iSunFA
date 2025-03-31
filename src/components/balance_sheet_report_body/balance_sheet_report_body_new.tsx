@@ -29,7 +29,7 @@ const BalanceSheetPageBody = () => {
 
   const filename = `Balance_Sheet.pdf`;
 
-  // Info: (20250327 - Anna)
+  // Info: (20250327 - Anna) pageCountRef 存放頁數
   const pageCountRef = useRef(1);
 
   // Info: (20250327 - Anna) 下載
