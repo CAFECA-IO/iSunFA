@@ -89,7 +89,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
       return { statusMessage, payload, session };
     }
 
-    // 獲取團隊下的帳本數量
+    // Info: (20250331 - Shirley) 獲取團隊下的帳本數量
     const accountBookCount = await prisma.company.count({
       where: {
         teamId,
@@ -99,15 +99,15 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
     const lastSubscription = team.subscription;
 
-    // 獲取團隊的訂閱計劃，如果找不到對應的計劃類型，默認使用 FREE 計劃
+    // Info: (20250331 - Shirley) 獲取團隊的訂閱計劃，如果找不到對應的計劃類型，默認使用 FREE 計劃
     const planType = lastSubscription?.plan?.type || 'BEGINNER';
 
-    // 根據計劃類型確定帳本數量限制
+    // Info: (20250331 - Shirley) 根據計劃類型確定帳本數量限制
     const limitsByType = SUBSCRIPTION_PLAN_LIMITS as Record<string, number>;
 
     const accountBookLimit = limitsByType[planType] || limitsByType.BEGINNER;
 
-    // 檢查是否超過帳本數量限制
+    // Info: (20250331 - Shirley) 檢查是否超過帳本數量限制
     if (accountBookCount >= accountBookLimit) {
       statusMessage = STATUS_MESSAGE.EXCEED_PLAN_LIMIT;
       return { statusMessage, payload, session };
