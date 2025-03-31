@@ -1,14 +1,15 @@
 import prisma from '@/client';
 import { ITeam, TeamRole, LeaveStatus } from '@/interfaces/team';
-import { InviteStatus, TeamPaymentStatus } from '@prisma/client';
+import { InviteStatus } from '@prisma/client';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { z } from 'zod';
 import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { createOrderByList } from '@/lib/utils/sort';
 import { MAX_TEAM_LIMIT } from '@/interfaces/permissions';
+import { getTimestampNow } from '@/lib/utils/common';
 
 export const getTeamList = async (
   userId: number,
@@ -22,6 +23,8 @@ export const getTeamList = async (
     searchQuery,
     sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
   } = queryParams;
+
+  const nowInSecond = getTimestampNow();
 
   const [totalCount, teams] = await prisma.$transaction([
     prisma.team.count({
@@ -40,7 +43,17 @@ export const getTeamList = async (
       include: {
         members: { where: { userId }, select: { id: true, role: true } },
         accountBook: true,
-        subscription: { include: { plan: true } },
+        subscriptions: {
+          where: {
+            startDate: {
+              lte: nowInSecond,
+            },
+            expiredDate: {
+              gt: nowInSecond,
+            },
+          },
+          include: { plan: true },
+        },
         imageFile: { select: { id: true, url: true } },
       },
       skip: (page - 1) * pageSize,
@@ -59,7 +72,7 @@ export const getTeamList = async (
       about: { value: team.about || '', editable: team.members[0]?.role !== TeamRole.VIEWER },
       profile: { value: team.profile || '', editable: team.members[0]?.role !== TeamRole.VIEWER },
       planType: {
-        value: (team.subscription?.plan.type as TPlanType) ?? TPlanType.BEGINNER,
+        value: (team.subscriptions[0]?.plan.type as TPlanType) ?? TPlanType.BEGINNER,
         editable: false,
       },
       totalMembers: team.members.length,
@@ -70,8 +83,8 @@ export const getTeamList = async (
           : '',
         editable: team.members[0]?.role !== TeamRole.VIEWER,
       },
-      paymentStatus:
-        (team.subscription?.paymentStatus as TeamPaymentStatus) ?? TeamPaymentStatus.FREE,
+      // ToDo: (20250330 - Luphia) 需從團隊訂閱狀態取得資料
+      paymentStatus: TPlanType.BEGINNER,
     })),
     page,
     totalPages: Math.ceil(totalCount / pageSize),
@@ -198,17 +211,7 @@ export const createTeam = async (
       }
     }
 
-    // Info: (20250304 - Tzuhan) 6. 創建 `TeamSubscription`
-    await tx.teamSubscription.create({
-      data: {
-        teamId: newTeam.id,
-        planId: plan.id,
-        autoRenewal: false,
-        startDate: now,
-        expiredDate: now + 30 * 24 * 60 * 60, // Info: (20250304 - Tzuhan) 預設 30 天後過期
-        paymentStatus: TeamPaymentStatus.FREE,
-      },
-    });
+    // ToDo: (20250304 - Tzuhan) 6. 創建試用期 `TeamSubscription`
 
     return {
       id: newTeam.id,
@@ -237,6 +240,9 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
   if (!teamMember) {
     throw new Error('USER_NOT_IN_TEAM');
   }
+
+  const nowInSecond = getTimestampNow();
+
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     include: {
@@ -253,7 +259,15 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
       accountBook: {
         select: { id: true },
       },
-      subscription: {
+      subscriptions: {
+        where: {
+          startDate: {
+            lte: nowInSecond,
+          },
+          expiredDate: {
+            gt: nowInSecond,
+          },
+        },
         include: { plan: true },
       },
       imageFile: {
@@ -268,8 +282,8 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
 
   const teamRole =
     (team.members.find((member) => member.userId === userId)?.role as TeamRole) ?? TeamRole.VIEWER;
-  const planType = team.subscription
-    ? (team.subscription.plan.type as TPlanType)
+  const planType = team.subscriptions[0]
+    ? (team.subscriptions[0].plan.type as TPlanType)
     : TPlanType.BEGINNER;
 
   return {
@@ -312,6 +326,13 @@ export async function createDefaultTeamForUser(userId: number, userName: string)
 
   return team;
 }
+
+export const countTeamMembersById = async (teamId: number): Promise<number> => {
+  const teamMembersCount = prisma.teamMember.count({
+    where: { teamId, leftAt: null },
+  });
+  return teamMembersCount;
+};
 
 /**
  * Info: (20250324 - Shirley) Similar to putCompanyIcon, this function connects a file to a team
@@ -403,7 +424,7 @@ export const getTeamsByUserIdAndTeamIds = async (
         },
       },
       accountBook: true,
-      subscription: { include: { plan: true } },
+      subscriptions: { include: { plan: true } },
       imageFile: { select: { id: true, url: true } },
     },
   });
@@ -420,7 +441,7 @@ export const getTeamsByUserIdAndTeamIds = async (
       about: { value: team.about || '', editable: teamRole !== TeamRole.VIEWER },
       profile: { value: team.profile || '', editable: teamRole !== TeamRole.VIEWER },
       planType: {
-        value: (team.subscription?.plan.type as TPlanType) ?? TPlanType.BEGINNER,
+        value: (team.subscriptions[0]?.plan.type as TPlanType) ?? TPlanType.BEGINNER,
         editable: false,
       },
       totalMembers: team.members.length,
@@ -431,8 +452,8 @@ export const getTeamsByUserIdAndTeamIds = async (
           : '',
         editable: teamRole !== TeamRole.VIEWER,
       },
-      paymentStatus:
-        (team.subscription?.paymentStatus as TeamPaymentStatus) ?? TeamPaymentStatus.FREE,
+      // ToDo: (20250330 - Luphia) 需從團隊訂閱狀態取得資料
+      paymentStatus: TPlanType.BEGINNER,
     };
   });
 };

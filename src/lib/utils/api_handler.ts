@@ -38,7 +38,7 @@ function APIHandler<Data>(
   const response = apiConfig.useWorker ? workerResponse : apiResponse;
 
   const { code } = response;
-  if (code === STATUS_CODE[STATUS_MESSAGE.UNAUTHORIZED_ACCESS]) {
+  if (code === STATUS_CODE.UNAUTHORIZED_ACCESS) {
     eventManager.emit(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
   }
 

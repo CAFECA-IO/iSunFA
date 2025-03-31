@@ -1,6 +1,8 @@
+import { PAYMENT_GATEWAY } from '@/constants/payment';
 import { JSONValue } from '@/interfaces/common';
-import { IOrder } from '@/interfaces/order';
+import { ITeamOrder } from '@/interfaces/order';
 import { IPaymentInfo } from '@/interfaces/payment';
+import { IUser } from '@/interfaces/user';
 
 export interface IPaymentGatewayOptions {
   platform: string;
@@ -16,18 +18,19 @@ export interface IGetCardBindingUrlOptions {
 }
 
 export interface IGetChargeUrlOptions {
-  order: IOrder;
+  order: ITeamOrder;
 }
 
 export interface IChargeWithTokenOptions {
-  order: IOrder;
+  order: ITeamOrder;
+  user: IUser;
   token: IPaymentInfo;
 }
 
 export interface IPaymentGateway {
-  getPlatform(): string;
+  getPlatform(): PAYMENT_GATEWAY;
   getCardBindingUrl(options: IGetCardBindingUrlOptions): Promise<string>;
   getChargeUrl(options: IGetChargeUrlOptions): Promise<string>;
   parseAuthorizationToken(token: JSONValue): IPaymentInfo;
-  chargeWithToken(options: IChargeWithTokenOptions): Promise<boolean>;
+  chargeWithToken(options: IChargeWithTokenOptions): Promise<string | undefined>;
 }

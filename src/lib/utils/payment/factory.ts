@@ -2,9 +2,18 @@ import { PAYMENT_GATEWAY } from '@/constants/payment';
 import OenPaymentGateway from '@/lib/utils/payment/oen';
 import { IPaymentGateway, IPaymentGatewayOptions } from '@/interfaces/payment_gateway';
 import HitrustPaymentGateway from '@/lib/utils/payment/hitrust';
+import { PAYMENT } from '@/constants/service';
+
+const paymentGatewayOptions: IPaymentGatewayOptions = {
+  platform: PAYMENT.OEN,
+  prodMode: false, // process.env.NODE_ENV === 'production',
+  id: process.env.PAYMENT_ID as string,
+  secret: process.env.PAYMENT_TOKEN as string,
+};
 
 // Info: (20250318 - Luphia) Create payment gateway instance.
-export const createPaymentGateway = (options: IPaymentGatewayOptions): IPaymentGateway => {
+export const createPaymentGateway = (): IPaymentGateway => {
+  const options = paymentGatewayOptions;
   const { platform } = options;
   let paymentGateway;
   switch (platform) {
