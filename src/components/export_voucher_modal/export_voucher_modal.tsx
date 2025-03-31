@@ -11,6 +11,7 @@ import { Button } from '@/components/button/button';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface IExportVoucherModal {
   isModalVisible: boolean;
@@ -47,7 +48,7 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
       // Info: (20241126 - Julian) 顯示失敗 Toast
       if (!success) {
         toastHandler({
-          id: 'export-voucher-error',
+          id: ToastId.EXPORT_VOUCHER_ERROR,
           type: ToastType.ERROR,
           content: t('journal:VOUCHER.TOAST_EXPORT_FAILED'),
           closeable: true,
@@ -55,7 +56,7 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
       } else {
         // Info: (20241126 - Julian) 顯示成功 Toast ，下載檔案並關閉 Modal
         toastHandler({
-          id: 'export-voucher-success',
+          id: ToastId.EXPORT_VOUCHER_SUCCESS,
           type: ToastType.SUCCESS,
           content: t('journal:VOUCHER.TOAST_EXPORT_SUCCESS'),
           closeable: true,
