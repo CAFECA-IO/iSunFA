@@ -1282,7 +1282,7 @@ model Team {
   members        TeamMember[]
   TeamOrder      TeamOrder[]
   accountBook    Company[]
-  subscription   TeamSubscription?
+  subscription   TeamSubscription[]
   imageFile      File?               @relation("team_image_file", fields: [imageFileId], references: [id])
   pendingMembers InviteTeamMember[]
   fromTeamId     AccountBookTransfer[] @relation("fromTeamId")

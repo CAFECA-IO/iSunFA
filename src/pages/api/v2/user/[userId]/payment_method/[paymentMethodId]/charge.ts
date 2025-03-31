@@ -39,7 +39,7 @@ import { createTeamSubscription } from '@/lib/utils/repo/team_subscription.repo'
     TeamOrder         訂單
     TeamOrderDetail   訂單品項
     UserPaymentInfo   用戶信用卡
-    TeamTransaction   團隊付款紀錄
+    TeamPaymentTransaction   團隊付款紀錄
     TeamInvoice       團隊收據
     TeamSubscription  團隊訂閱紀錄
 

@@ -230,8 +230,12 @@ export const cleanBoolean = (booleanStr: unknown): boolean => {
 export const getCodeByMessage = (statusMessage: string) => {
   let code: string;
   let message: string;
-  if (statusMessage in STATUS_CODE) {
-    code = STATUS_CODE[statusMessage as keyof typeof STATUS_CODE];
+  const keys = Object.keys(STATUS_MESSAGE);
+  const foundKey = keys.find(
+    (key) => STATUS_MESSAGE[key as keyof typeof STATUS_MESSAGE] === statusMessage
+  ) as keyof typeof STATUS_CODE;
+  if (foundKey) {
+    code = STATUS_CODE[foundKey];
     message = statusMessage;
   } else if (/prisma/i.test(statusMessage)) {
     code = STATUS_CODE.INTERNAL_SERVICE_ERROR_PRISMA_ERROR;
