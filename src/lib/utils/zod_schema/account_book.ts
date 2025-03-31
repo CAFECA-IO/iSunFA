@@ -178,7 +178,7 @@ export const createAccountBookSchema = {
     querySchema: nullSchema,
     bodySchema: createAccountBookBodySchema,
   },
-  outputSchema: accountBookForUserSchema.nullable(),
+  outputSchema: accountBookSchema.nullable(),
   frontend: nullSchema,
 };
 

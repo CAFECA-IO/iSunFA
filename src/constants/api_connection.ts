@@ -156,7 +156,7 @@ export enum APIName {
   USER_PAYMENT_METHOD_CHARGE = 'USER_PAYMENT_METHOD_CHARGE',
   PAYMENT_METHOD_REGISTER_REDIRECT = 'PAYMENT_METHOD_REGISTER_REDIRECT',
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = 'PAYMENT_METHOD_REGISTER_CALLBACK',
-  CREATE_ACCOUNT_BOOK = 'CREATE_ACCOUNT_BOOK',
+  ACCOUNT_BOOK_CREATE = 'ACCOUNT_BOOK_CREATE',
 }
 
 export enum APIPath {
@@ -292,7 +292,7 @@ export enum APIPath {
   USER_PAYMENT_METHOD_CHARGE = `${apiPrefixV2}/user/:userId/payment_method/:paymentMethodId/charge`,
   PAYMENT_METHOD_REGISTER_REDIRECT = `${apiPayment}/`,
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = `${apiPayment}/callback/oen`,
-  CREATE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book`,
+  ACCOUNT_BOOK_CREATE = `${apiPrefixV2}/account_book`,
 }
 
 const createConfig = ({
@@ -961,9 +961,9 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.POST,
     path: APIPath.USER_PAYMENT_METHOD_CHARGE,
   }),
-  [APIName.CREATE_ACCOUNT_BOOK]: createConfig({
-    name: APIName.CREATE_ACCOUNT_BOOK,
+  [APIName.ACCOUNT_BOOK_CREATE]: createConfig({
+    name: APIName.ACCOUNT_BOOK_CREATE,
     method: HttpMethod.POST,
-    path: APIPath.CREATE_ACCOUNT_BOOK,
+    path: APIPath.ACCOUNT_BOOK_CREATE,
   }),
 };

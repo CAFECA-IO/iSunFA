@@ -1,15 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAccountBookForUser, WORK_TAG } from '@/interfaces/account_book';
+import { IAccountBook, WORK_TAG } from '@/interfaces/account_book';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
-import { generateIcon } from '@/lib/utils/generate_user_icon';
-import { generateKeyPair, storeKeyByCompany } from '@/lib/utils/crypto';
-import { createFile } from '@/lib/utils/repo/file.repo';
-import { FileFolder } from '@/constants/file';
+import { formatApiResponse } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
-import { createCompanyAndRole, getCompanyAndRoleByTaxId } from '@/lib/utils/repo/admin.repo';
-import { createAccountingSetting } from '@/lib/utils/repo/accounting_setting.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
@@ -26,6 +20,7 @@ import {
 } from '@/lib/utils/middleware';
 import { validateOutputData } from '@/lib/utils/validator';
 import { ISessionData } from '@/interfaces/session';
+import { createAccountBook } from '@/lib/utils/repo/account_book.repo';
 
 /**
  * Info: (20250328 - Shirley) 處理 POST 請求，建立帳本
@@ -37,7 +32,7 @@ import { ISessionData } from '@/interfaces/session';
  * 5. 驗證輸出數據 -> INVALID_OUTPUT_DATA
  */
 const handlePostRequest = async (req: NextApiRequest) => {
-  const apiName = APIName.CREATE_ACCOUNT_BOOK;
+  const apiName = APIName.ACCOUNT_BOOK_CREATE;
 
   // Info: (20250328 - Shirley) 獲取用戶會話
   const session = await getSession(req);
@@ -58,7 +53,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   const { userId } = session;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBookForUser | null = null;
+  let payload: IAccountBook | null = null;
 
   try {
     // Info: (20250328 - Shirley) Step 1. 檢查用戶在團隊中的權限
@@ -118,60 +113,26 @@ const handlePostRequest = async (req: NextApiRequest) => {
       return { statusMessage, payload, session };
     }
 
-    // Info: (20250328 - Shirley) Step 3. 檢查是否有相同統編的公司帳本
-    const getCompany = await getCompanyAndRoleByTaxId(userId, taxId);
-    if (getCompany) {
-      statusMessage = STATUS_MESSAGE.DUPLICATE_COMPANY;
-      return { statusMessage, payload, session };
+    // Info: (20250328 - Shirley) Step 3. 使用 createAccountBook 函數創建帳本
+    try {
+      payload = await createAccountBook(userId, {
+        name,
+        taxId,
+        tag: tag as WORK_TAG,
+        teamId,
+      });
+
+      statusMessage = STATUS_MESSAGE.CREATED;
+    } catch (error) {
+      if ((error as Error).message === 'DUPLICATE_ACCOUNT_BOOK') {
+        statusMessage = STATUS_MESSAGE.DUPLICATE_ACCOUNT_BOOK;
+      } else if ((error as Error).message === 'ACCOUNT_BOOK_LIMIT_REACHED') {
+        statusMessage = STATUS_MESSAGE.ACCOUNT_BOOK_LIMIT_REACHED;
+      } else {
+        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      }
+      return { statusMessage, payload: null, session };
     }
-
-    // Info: (20250328 - Shirley) Step 4. 建立公司帳本 icon
-    const companyIcon = await generateIcon(name);
-    const nowInSecond = getTimestampNow();
-    const imageName = name + '_icon' + nowInSecond;
-    const file = await createFile({
-      name: imageName,
-      size: companyIcon.size,
-      mimeType: companyIcon.mimeType,
-      type: FileFolder.TMP,
-      url: companyIcon.iconUrl,
-      isEncrypted: false,
-      encryptedSymmetricKey: '',
-    });
-
-    if (!file) {
-      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-      return { statusMessage, payload, session };
-    }
-
-    // Info: (20250328 - Shirley) Step 5. 建立帳本關係
-    const result = await createCompanyAndRole(userId, taxId, name, file.id, tag, undefined, teamId);
-
-    const companyId = result.company.id;
-
-    // Info: (20250328 - Shirley) Step 6. 建立帳本公私鑰對
-    const companyKeyPair = await generateKeyPair();
-    await storeKeyByCompany(companyId, companyKeyPair);
-
-    // Info: (20250328 - Shirley) Step 7. 建立公司設定
-    await createAccountingSetting(companyId);
-
-    // 從結果中提取所需資料，構建 API 響應
-    payload = {
-      company: {
-        id: result.company.id,
-        imageId: file.url || '',
-        name: result.company.name,
-        taxId: result.company.taxId,
-        startDate: result.company.startDate,
-        createdAt: result.company.createdAt,
-        updatedAt: result.company.updatedAt,
-        isPrivate: result.company.isPrivate || false,
-      },
-      role: result.role,
-      tag: (Object.values(WORK_TAG).includes(tag as WORK_TAG) ? tag : WORK_TAG.ALL) as WORK_TAG,
-      order: result.order,
-    };
 
     // Info: (20250328 - Shirley) 驗證輸出數據
     const validatedData = validateOutputData(apiName, payload);
@@ -198,17 +159,17 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountBookForUser | null>>
+  res: NextApiResponse<IResponseData<IAccountBook | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBookForUser | null = null;
+  let payload: IAccountBook | null = null;
   let session: ISessionData | null = null;
-  const apiName: APIName = APIName.CREATE_ACCOUNT_BOOK;
+  const apiName: APIName = APIName.ACCOUNT_BOOK_CREATE;
 
   // Info: (20250328 - Shirley) 宣告變數以避免在 case 區塊中宣告
   let postResult: {
     statusMessage: string;
-    payload: IAccountBookForUser | null;
+    payload: IAccountBook | null;
     session: ISessionData | null;
   };
 
@@ -272,10 +233,7 @@ export default async function handler(
     }
 
     // Info: (20250328 - Shirley) 格式化 API 響應並返回
-    const { httpCode, result } = formatApiResponse<IAccountBookForUser | null>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<IAccountBook | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

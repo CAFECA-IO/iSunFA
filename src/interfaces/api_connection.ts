@@ -133,7 +133,7 @@ export type IAPIName =
   | 'UPDATE_ACCOUNT_BOOK'
   | 'USER_PAYMENT_METHOD_LIST'
   | 'USER_PAYMENT_METHOD_CHARGE'
-  | 'CREATE_ACCOUNT_BOOK';
+  | 'ACCOUNT_BOOK_CREATE';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
