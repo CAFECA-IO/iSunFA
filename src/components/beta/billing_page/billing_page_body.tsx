@@ -84,7 +84,7 @@ const BillingPageBody = ({ team, getOwnedTeam }: BillingPageBodyProps) => {
 
   // Info: (20250116 - Anna) 初始化 APIHandler
   const { trigger: getInvoiceList } = APIHandler<IPaginatedData<ITeamInvoice[]>>(
-    APIName.LIST_SUBSCRIPTION_INVOICE
+    APIName.LIST_TEAM_INVOICE
   );
 
   // Info: (20250120 - Anna) 排序函數

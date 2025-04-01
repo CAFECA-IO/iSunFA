@@ -8,27 +8,24 @@ import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { ITeamInvoice } from '@/interfaces/subscription';
 import { checkRequestData, checkSessionUser, checkUserAuthorization } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
-// Deprecated: (20250122 - Luphia) remove eslint-disable
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { FAKE_INVOICE_LIST } from '@/lib/services/subscription_service';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
 
-  const isLogin = await checkSessionUser(session, APIName.LIST_SUBSCRIPTION_INVOICE, req);
+  const isLogin = await checkSessionUser(session, APIName.LIST_TEAM_INVOICE, req);
   if (!isLogin) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
   }
-  const isAuth = await checkUserAuthorization(APIName.LIST_SUBSCRIPTION_INVOICE, req, session);
+  const isAuth = await checkUserAuthorization(APIName.LIST_TEAM_INVOICE, req, session);
   if (!isAuth) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
-  const { query } = checkRequestData(APIName.LIST_SUBSCRIPTION_INVOICE, req, session);
+  const { query } = checkRequestData(APIName.LIST_TEAM_INVOICE, req, session);
   if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
   const options: IPaginatedOptions<ITeamInvoice[]> = {
-    data: [], // FAKE_INVOICE_LIST,
+    data: [],
   };
 
   const payload: IPaginatedData<ITeamInvoice[]> = toPaginatedData(options);

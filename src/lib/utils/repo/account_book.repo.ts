@@ -65,7 +65,7 @@ export const getAccountBookById = async (id: number): Promise<IAccountBook | nul
   return result;
 };
 
-export const getAccountBookByNameAndTaxId = async (
+export const getAccountBookByNameAndTeamId = async (
   teamId: number,
   taxId: string
 ): Promise<IAccountBook | null> => {
@@ -108,7 +108,7 @@ export const createAccountBook = async (
   loggerBack.info(`User ${userId} is creating a new AccountBook in Team ${teamId}`);
 
   // Info: (20250124 - Shirley) Step 1.
-  const accountBookIfExist = await getAccountBookByNameAndTaxId(teamId, taxId);
+  const accountBookIfExist = await getAccountBookByNameAndTeamId(teamId, taxId);
   if (accountBookIfExist) {
     throw new Error('DUPLICATE_ACCOUNT_BOOK');
   } else {
@@ -1031,3 +1031,85 @@ export async function findUserAccountBook(
     return null;
   }
 }
+
+export const updateAccountBook = async (
+  userId: number,
+  accountBookId: number,
+  body: {
+    name?: string;
+    tag?: WORK_TAG;
+    taxId?: string;
+    teamId?: number;
+  }
+): Promise<IAccountBook | null> => {
+  let result: IAccountBook | null = null;
+  const { name, tag, taxId, teamId } = body;
+
+  const accountBook = await prisma.company.findFirst({
+    where: {
+      id: accountBookId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+  });
+  if (!accountBook) {
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
+  }
+
+  const updatedAccountBook = await prisma.company.update({
+    where: { id: accountBookId },
+    data: {
+      name,
+      tag,
+      taxId,
+      teamId,
+      updatedAt: getTimestampNow(),
+    },
+    include: {
+      imageFile: true, // Info: (20250327 - Tzuhan) 這裡才會拿到 imageFile.url
+    },
+  });
+
+  if (updatedAccountBook) {
+    result = {
+      ...updatedAccountBook,
+      imageId: updatedAccountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      tag: updatedAccountBook.tag as WORK_TAG,
+    };
+  }
+  return result;
+};
+
+export const deleteAccountBook = async (accountBookId: number): Promise<IAccountBook | null> => {
+  let result: IAccountBook | null = null;
+
+  const accountBook = await prisma.company.findFirst({
+    where: {
+      id: accountBookId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+  });
+  if (!accountBook) {
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
+  }
+  const nowInSecond = getTimestampNow();
+
+  const updatedAccountBook = await prisma.company.update({
+    where: { id: accountBookId },
+    data: {
+      deletedAt: nowInSecond,
+      updatedAt: nowInSecond,
+    },
+    include: {
+      imageFile: true,
+    },
+  });
+
+  if (updatedAccountBook) {
+    result = {
+      ...updatedAccountBook,
+      imageId: updatedAccountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      tag: updatedAccountBook.tag as WORK_TAG,
+    };
+  }
+  return result;
+};
