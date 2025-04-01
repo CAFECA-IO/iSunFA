@@ -5,7 +5,7 @@ import { getSession, listDevice } from '@/lib/utils/session';
 import { ILoginDevice } from '@/interfaces/login_device';
 import { HTTP_STATUS } from '@/constants/http';
 import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
-import { toPaginatedData } from '@/lib/utils/formatter/pagination';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 
 /* Info: (20250111 - Luphia) 列出用戶所有登入裝置
  * 1. 取得 Session 資訊

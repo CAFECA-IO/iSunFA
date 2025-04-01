@@ -14,6 +14,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface IAssetStatusSettingModal {
   isModalVisible: boolean;
@@ -78,14 +79,14 @@ const AssetStatusSettingModal: React.FC<IAssetStatusSettingModal> = ({
         // Info: (20241028 - Julian) 關閉 Modal 並顯示成功 Toast
         modalVisibilityHandler();
         toastHandler({
-          id: 'update-status-success',
+          id: ToastId.UPDATE_ASSET_STATUS_SUCCESS,
           type: ToastType.SUCCESS,
           content: t('asset:STATUS_SETTING_MODAL.UPDATE_STATUS_SUCCESS_TOAST'),
           closeable: true,
         });
       } else if (updateError) {
         toastHandler({
-          id: 'update-status-error',
+          id: ToastId.UPDATE_ASSET_STATUS_ERROR,
           type: ToastType.ERROR,
           content: t('asset:ADD_ASSET_MODAL.TOAST_ERROR'),
           closeable: true,

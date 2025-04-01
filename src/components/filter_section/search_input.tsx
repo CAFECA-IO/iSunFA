@@ -21,7 +21,7 @@ const SearchInput: React.FC<SearchInputProps> = ({ searchQuery, onSearchChange }
           defaultValue={searchQuery}
           onKeyDown={(e) => {
             if (e.key === KEYBOARD_EVENT_CODE.ENTER && !e.nativeEvent.isComposing) {
-              onSearchChange(e.currentTarget.value);
+              onSearchChange(e.currentTarget.value.toLowerCase()); // Info: (20250331 - Julian) 將搜尋字串轉為小寫
             }
           }}
         />

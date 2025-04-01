@@ -1,5 +1,4 @@
 import { ICertificateUI } from '@/interfaces/certificate';
-// import Image from 'next/image';
 import CertificateSelectorThumbnail from '@/components/certificate/certificate_selector_thumbnail';
 import { FaPlus } from 'react-icons/fa6';
 import { useEffect, useState } from 'react';
@@ -47,13 +46,6 @@ const CertificateSelectionPanel: React.FC<CertificateSelectionPanelProps> = ({
                 className="text-stroke-neutral-tertiary group-hover:text-stroke-brand-primary"
                 size={24}
               />
-              {/* <Image
-                src="/elements/plus.svg"
-                alt="plus"
-                width={24}
-                height={24}
-                className="text-stroke-neutral-tertiary group-hover:text-stroke-brand-primary" // Info: (20240927 - tzuhan) shadow-crossBtn 沒有辦法符合設計稿
-              /> */}
             </button>
           </div>
           {certificatesReOrdered.map((certificate) => (
