@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
@@ -9,12 +9,29 @@ import {
   LinearTextSize,
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
+import JobFilterSection from '@/components/join_us/filter_section';
+import { dummyJobList } from '@/interfaces/job';
+
+enum SortOrder {
+  Newest = 'newest',
+  Oldest = 'oldest',
+}
 
 const JoinUsPageBody: React.FC = () => {
   const { t } = useTranslation(['landing_page']);
 
-  const vacancyList = Array.from({ length: 10 }, (_, index) => (
-    <div key={index} className="h-220px w-full rounded-xl bg-white"></div>
+  // Deprecated: (20250331 - Julian) 施工中
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [jobList, setJobList] = useState(dummyJobList);
+
+  const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.Newest);
+
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === SortOrder.Newest ? SortOrder.Oldest : SortOrder.Newest);
+  };
+
+  const vacancyList = jobList.map((job) => (
+    <div key={job.id} className="h-220px w-full rounded-xl bg-white"></div>
   ));
 
   return (
@@ -28,33 +45,29 @@ const JoinUsPageBody: React.FC = () => {
       <main className="z-10 overflow-y-auto overflow-x-hidden">
         <div className="flex w-full flex-col items-stretch gap-100px px-150px py-100px">
           {/* Info: (20250331 - Julian) Title */}
-          <div className="flex w-500px flex-col gap-lv-3">
+          <div className="flex w-450px flex-col gap-lv-3">
             <LinearGradientText size={LinearTextSize.LG} align={TextAlign.LEFT}>
-              {t('Be part of our Team')}
+              {t('hiring:JOIN_US_PAGE.MAIN_TITLE')}
             </LinearGradientText>
-            <p className="text-lg font-medium">
-              {t('Tech has no limits, neither do we ! Join us now!')}
-            </p>
+            <p className="text-lg font-medium">{t('hiring:JOIN_US_PAGE.MAIN_DESCRIPTION')}</p>
           </div>
 
           {/* Info: (20250331 - Julian) Filter Section */}
-          <div className="flex items-center gap-lv-7">
-            <div className="h-60px w-200px rounded-sm bg-white"></div>
-            <div className="h-60px w-200px rounded-sm bg-white"></div>
-            <div className="h-60px flex-1 rounded-full bg-white"></div>
-          </div>
+          <JobFilterSection />
 
           <div className="flex flex-col gap-24px">
             {/* Info: (20250331 - Julian) Sort Order */}
             <div className="flex items-center justify-between">
               {/* Info: (20250331 - Julian) Available Position */}
               <p className="text-lg font-medium text-white">
-                {t('Available Position:')}{' '}
-                <span className="font-semibold text-text-brand-primary-lv3">10</span>
+                {t('hiring:JOIN_US_PAGE.AVAILABLE_POSITION')}{' '}
+                <span className="font-semibold text-text-brand-primary-lv3">{jobList.length}</span>
               </p>
               {/* Info: (20250331 - Julian) Sort Order */}
-              <button type="button" className="flex items-center gap-8px">
-                <p className="text-lg font-medium">Newest - Oldest</p>
+              <button type="button" onClick={toggleSortOrder} className="flex items-center gap-8px">
+                <p className="text-lg font-medium capitalize">
+                  {t(`hiring:SORT.${sortOrder.toUpperCase()}`)}
+                </p>
                 <Image
                   src="/icons/sort-descending.svg"
                   alt="Sort Descending"
