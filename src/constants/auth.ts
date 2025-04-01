@@ -136,10 +136,10 @@ export const AUTH_CHECK = {
   [APIName.ACCEPT_TRANSFER_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.DECLINE_TRANSFER_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
 
-  [APIName.LIST_SUBSCRIPTION]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_TEAM_SUBSCRIPTION]: [AuthFunctionsKeysNew.user],
   [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_SUBSCRIPTION]: [AuthFunctionsKeysNew.user],
-  [APIName.LIST_SUBSCRIPTION_INVOICE]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_TEAM_INVOICE]: [AuthFunctionsKeysNew.user],
   [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
 
   [APIName.GET_CREDIT_CARD_INFO]: [AuthFunctionsKeysNew.user],

@@ -1360,12 +1360,6 @@ model TeamSubscription {
   @@map("team_subscription")
 }
 
-enum TeamPaymentStatus {
-  PAID
-  UNPAID
-  FREE
-}
-
 model TeamOrder {
   id        Int    @id @default(autoincrement())
   userId    Int    @map("user_id")

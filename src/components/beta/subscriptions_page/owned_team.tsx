@@ -93,7 +93,7 @@ const OwnedTeam = ({
                   </div>
                 ))}
 
-              {team.paymentStatus === TPaymentStatus.UNPAID && (
+              {team.paymentStatus === TPaymentStatus.PAYMENT_FAILED && (
                 <div>
                   <div className="flex items-center gap-8px">
                     <p className="text-2xl font-semibold text-text-state-error">
