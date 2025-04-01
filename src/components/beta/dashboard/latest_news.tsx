@@ -60,7 +60,7 @@ const LatestNews = () => {
           <MoreLink href={ISUNFA_ROUTE.LATEST_NEWS_PAGE} />
         </section>
 
-        {/* // Info: (20241126 - Liz) Tab */}
+        {/* Info: (20241126 - Liz) Tab */}
         <TabsForLatestNews activeTab={type} setActiveTab={setType} />
 
         {isNoData ? (
