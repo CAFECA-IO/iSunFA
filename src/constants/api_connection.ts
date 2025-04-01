@@ -132,10 +132,10 @@ export enum APIName {
   LIST_ACCOUNT_BOOK_BY_TEAM_ID = 'LIST_ACCOUNT_BOOK_BY_TEAM_ID',
   LIST_MEMBER_BY_TEAM_ID = 'LIST_MEMBER_BY_TEAM_ID',
   ADD_MEMBER_TO_TEAM = 'ADD_MEMBER_TO_TEAM',
-  LIST_SUBSCRIPTION = 'LIST_SUBSCRIPTION',
+  LIST_TEAM_SUBSCRIPTION = 'LIST_TEAM_SUBSCRIPTION',
   GET_SUBSCRIPTION_BY_TEAM_ID = 'GET_SUBSCRIPTION_BY_TEAM_ID',
   UPDATE_SUBSCRIPTION = 'UPDATE_SUBSCRIPTION',
-  LIST_SUBSCRIPTION_INVOICE = 'LIST_SUBSCRIPTION_INVOICE',
+  LIST_TEAM_INVOICE = 'LIST_TEAM_INVOICE',
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = 'GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID',
   GET_CREDIT_CARD_INFO = 'GET_CREDIT_CARD_INFO',
   LEAVE_TEAM = 'LEAVE_TEAM',
@@ -263,10 +263,10 @@ export enum APIPath {
   LIST_ACCOUNT_BOOK_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/account_book`,
   LIST_MEMBER_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/member`,
   ADD_MEMBER_TO_TEAM = `${apiPrefixV2}/team/:teamId/member`,
-  LIST_SUBSCRIPTION = `${apiPrefixV2}/subscription`,
+  LIST_TEAM_SUBSCRIPTION = `${apiPrefixV2}/subscription`,
   GET_SUBSCRIPTION_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId`,
   UPDATE_SUBSCRIPTION = `${apiPrefixV2}/subscription/:teamId/subscription`,
-  LIST_SUBSCRIPTION_INVOICE = `${apiPrefixV2}/subscription/:teamId/invoice`,
+  LIST_TEAM_INVOICE = `${apiPrefixV2}/subscription/:teamId/invoice`,
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId/invoice/:invoiceId`,
   GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
   LEAVE_TEAM = `${apiPrefixV2}/team/:teamId/leave`,
@@ -843,10 +843,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.ADD_MEMBER_TO_TEAM,
   }),
-  [APIName.LIST_SUBSCRIPTION]: createConfig({
-    name: APIName.LIST_SUBSCRIPTION,
+  [APIName.LIST_TEAM_SUBSCRIPTION]: createConfig({
+    name: APIName.LIST_TEAM_SUBSCRIPTION,
     method: HttpMethod.GET,
-    path: APIPath.LIST_SUBSCRIPTION,
+    path: APIPath.LIST_TEAM_SUBSCRIPTION,
   }),
   [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: createConfig({
     name: APIName.GET_SUBSCRIPTION_BY_TEAM_ID,
@@ -858,10 +858,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.UPDATE_SUBSCRIPTION,
   }),
-  [APIName.LIST_SUBSCRIPTION_INVOICE]: createConfig({
-    name: APIName.LIST_SUBSCRIPTION_INVOICE,
+  [APIName.LIST_TEAM_INVOICE]: createConfig({
+    name: APIName.LIST_TEAM_INVOICE,
     method: HttpMethod.GET,
-    path: APIPath.LIST_SUBSCRIPTION_INVOICE,
+    path: APIPath.LIST_TEAM_INVOICE,
   }),
   [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: createConfig({
     name: APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID,

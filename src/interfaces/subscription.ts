@@ -12,12 +12,6 @@ export interface ISubscription {
 
 // Info: (20241230 - Liz) 以下是 Beta 版本新增的 interface
 
-export enum TPlanType {
-  BEGINNER = 'BEGINNER',
-  PROFESSIONAL = 'PROFESSIONAL',
-  ENTERPRISE = 'ENTERPRISE',
-}
-
 export enum TPlanPrice {
   BEGINNER_PRICE = 0,
   PROFESSIONAL_PRICE = 899,
@@ -31,6 +25,12 @@ interface IPlanFeature {
   value: string | string[];
 }
 
+export enum TPlanType {
+  BEGINNER = 'BEGINNER',
+  PROFESSIONAL = 'PROFESSIONAL',
+  ENTERPRISE = 'ENTERPRISE',
+}
+
 export interface IPlan {
   id: TPlanType;
   planName: string;
@@ -41,8 +41,9 @@ export interface IPlan {
 
 export enum TPaymentStatus {
   PAID = 'PAID', // Info: (20250110 - Liz) 已付款
-  UNPAID = 'UNPAID', // Info: (20250110 - Liz) 未付款
+  PAYMENT_FAILED = 'PAYMENT_FAILED', // ~Info: (20250110 - Liz) 未付款~ Info: (20250401 - Tzuhan) 改為付款失敗
   FREE = 'FREE', // Info: (20250110 - Liz) 免費所以不用付款
+  TRIAL = 'TRIAL', // Info: (20250401 - Tzuhan) 試用中
 }
 
 // Info: (20250214 - Liz) 使用者擁有的團隊 (使用者為團隊的擁有者 owner)

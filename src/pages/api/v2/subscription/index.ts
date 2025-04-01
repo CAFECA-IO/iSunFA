@@ -8,19 +8,20 @@ import { IResponseData } from '@/interfaces/response_data';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
-import { FAKE_OWNED_TEAMS } from '@/lib/services/subscription_service';
+import { listTeamSubscription } from '@/lib/utils/repo/team_subscription.repo';
+import { getSession } from '@/lib/utils/session';
 
 const handleGetRequest: IHandleRequest<
-  APIName.LIST_SUBSCRIPTION,
+  APIName.LIST_TEAM_SUBSCRIPTION,
   IPaginatedData<IUserOwnedTeam[]> | null
-> = async () => {
+> = async ({ req }) => {
+  const session = await getSession(req);
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<IUserOwnedTeam[]> | null = null;
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  const options: IPaginatedOptions<IUserOwnedTeam[]> = {
-    data: FAKE_OWNED_TEAMS.slice(0, 1),
-  };
+  const options: IPaginatedOptions<IUserOwnedTeam[]> = await listTeamSubscription(userId);
   payload = toPaginatedData(options);
   return { statusMessage, payload };
 };
@@ -31,7 +32,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IPaginatedData<IUserOwnedTeam[]> | null }>;
 } = {
-  GET: (req) => withRequestValidation(APIName.LIST_SUBSCRIPTION, req, handleGetRequest),
+  GET: (req) => withRequestValidation(APIName.LIST_TEAM_SUBSCRIPTION, req, handleGetRequest),
 };
 
 export default async function handler(

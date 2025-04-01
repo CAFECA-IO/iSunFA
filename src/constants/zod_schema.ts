@@ -280,10 +280,10 @@ export const ZOD_SCHEMA_API = {
   [APIName.DECLINE_TRANSFER_ACCOUNT_BOOK]: teamSchemas.declineTransferAccountBook,
   [APIName.LEAVE_TEAM]: teamSchemas.leaveTeam,
 
-  [APIName.LIST_SUBSCRIPTION]: subscriptionSchemas.list,
+  [APIName.LIST_TEAM_SUBSCRIPTION]: subscriptionSchemas.list,
   [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: subscriptionSchemas.get,
   [APIName.UPDATE_SUBSCRIPTION]: subscriptionSchemas.update,
-  [APIName.LIST_SUBSCRIPTION_INVOICE]: subscriptionSchemas.listInvoiceList,
+  [APIName.LIST_TEAM_INVOICE]: subscriptionSchemas.listInvoiceList,
   [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: subscriptionSchemas.getInvoice,
 
   [APIName.GET_CREDIT_CARD_INFO]: subscriptionSchemas.getCreditCard,
