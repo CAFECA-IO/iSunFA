@@ -31,7 +31,7 @@ export const accountBookListQuerySchema = paginatedDataQuerySchema.extend({
 
 const accountBookListResponseSchema = paginatedDataSchema(accountBookWithTeamSchema);
 
-const updateAccountBookQuerySchema = z.object({
+const accountBookIdQuerySchema = z.object({
   accountBookId: zodStringToNumber,
 });
 
@@ -158,9 +158,18 @@ export type ICountry = z.infer<typeof countrySchema>;
 
 export const updateAccountBookSchema = {
   input: {
-    querySchema: updateAccountBookQuerySchema,
+    querySchema: accountBookIdQuerySchema,
     bodySchema: updateAccountBookBodySchema,
   },
   outputSchema: updateAccountBookResponseSchema.nullable(),
+  frontend: nullSchema,
+};
+
+export const deleteAccountBookSchema = {
+  input: {
+    querySchema: accountBookIdQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: accountBookSchema.nullable(),
   frontend: nullSchema,
 };

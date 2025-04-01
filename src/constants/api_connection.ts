@@ -87,7 +87,7 @@ export enum APIName {
   USER_SELECT_ROLE = 'USER_SELECT_ROLE',
   CREATE_ACCOUNT_BOOK = 'CREATE_ACCOUNT_BOOK',
   COMPANY_UPDATE = 'COMPANY_UPDATE',
-  COMPANY_DELETE = 'COMPANY_DELETE',
+  DELETE_ACCOUNT_BOOK = 'DELETE_ACCOUNT_BOOK',
   ROLE_LIST = 'ROLE_LIST',
   NEWS_LIST = 'NEWS_LIST',
   CREATE_NEWS = 'CREATE_NEWS',
@@ -218,7 +218,7 @@ export enum APIPath {
   USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/selected_role`,
   CREATE_ACCOUNT_BOOK = `${apiPrefixV2}/user/:userId/account_book`,
   COMPANY_UPDATE = `${apiPrefixV2}/company/:companyId`,
-  COMPANY_DELETE = `${apiPrefixV2}/company/:companyId`,
+  DELETE_ACCOUNT_BOOK = `${apiPrefixV2}/company/:companyId`,
   ROLE_LIST = `${apiPrefixV2}/role`,
   NEWS_LIST = `${apiPrefixV2}/news`,
   CREATE_NEWS = `${apiPrefixV2}/news`,
@@ -477,10 +477,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.COMPANY_UPDATE,
   }),
-  [APIName.COMPANY_DELETE]: createConfig({
-    name: APIName.COMPANY_DELETE,
+  [APIName.DELETE_ACCOUNT_BOOK]: createConfig({
+    name: APIName.DELETE_ACCOUNT_BOOK,
     method: HttpMethod.DELETE,
-    path: APIPath.COMPANY_DELETE,
+    path: APIPath.DELETE_ACCOUNT_BOOK,
   }),
   [APIName.COMPANY_SETTING_GET]: createConfig({
     name: APIName.COMPANY_SETTING_GET,
