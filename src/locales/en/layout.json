@@ -32,7 +32,7 @@
     "CLIENTS_SUPPLIERS_MANAGEMENT": "Clients/Suppliers Management",
     "BACK_TO_DASHBOARD": "Back to Dashboard",
     "CURRENT_ACCOUNT_BOOK": "Current Account Book",
-    "CHOOSE_AN_ACCOUNT_BOOK": "Choose an Account Book"
+    "SELECT_ACCOUNT_BOOK": "Select Account Book"
   },
 
   "TOAST": {

@@ -32,7 +32,7 @@
     "CLIENTS_SUPPLIERS_MANAGEMENT": "客戶/供應商",
     "BACK_TO_DASHBOARD": "回到儀表板",
     "CURRENT_ACCOUNT_BOOK": "目前連結帳本",
-    "CHOOSE_AN_ACCOUNT_BOOK": "請選擇一個帳本"
+    "SELECT_ACCOUNT_BOOK": "請連結帳本"
   },
 
   "TOAST": {

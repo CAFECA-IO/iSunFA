@@ -32,7 +32,7 @@
     "CLIENTS_SUPPLIERS_MANAGEMENT": "客户/供应商",
     "BACK_TO_DASHBOARD": "回到仪表板",
     "CURRENT_ACCOUNT_BOOK": "目前连结帐本",
-    "CHOOSE_AN_ACCOUNT_BOOK": "请选择一个帐本"
+    "SELECT_ACCOUNT_BOOK": "请连结帐本"
   },
 
   "TOAST": {

@@ -551,9 +551,9 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
                 {!hasConnectedAccountBook && (
                   <Link
                     href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE}
-                    className="text-start text-base font-semibold leading-7 text-link-text-primary"
+                    className="text-start text-lg font-semibold text-link-text-primary"
                   >
-                    {t('layout:SIDE_MENU.CHOOSE_AN_ACCOUNT_BOOK')}
+                    {t('layout:SIDE_MENU.SELECT_ACCOUNT_BOOK')}
                   </Link>
                 )}
               </div>
