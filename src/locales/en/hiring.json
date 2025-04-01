@@ -1,0 +1,20 @@
+{
+  "JOIN_US_PAGE": {
+    "HEAD_TITLE": "Join Us",
+    "MAIN_TITLE": "Be part of our Team",
+    "MAIN_DESCRIPTION": "Tech has no limits, neither do we ! Join us now!",
+    "AVAILABLE_POSITION": "Available Position:",
+    "SEARCH_PLACEHOLDER": "Job title, location, key words"
+  },
+  "JOB_TYPE": {
+    "ALL": "All"
+  },
+  "LOCATION": {
+    "ALL": "All",
+    "LOCATION": "Location"
+  },
+  "SORT": {
+    "NEWEST": "Newest",
+    "OLDEST": "Oldest"
+  }
+}

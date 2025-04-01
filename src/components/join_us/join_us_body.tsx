@@ -12,6 +12,11 @@ import {
 import JobFilterSection from '@/components/join_us/filter_section';
 import { dummyJobList } from '@/interfaces/job';
 
+enum SortOrder {
+  Newest = 'newest',
+  Oldest = 'oldest',
+}
+
 const JoinUsPageBody: React.FC = () => {
   const { t } = useTranslation(['landing_page']);
 
@@ -19,8 +24,14 @@ const JoinUsPageBody: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [jobList, setJobList] = useState(dummyJobList);
 
-  const vacancyList = Array.from({ length: jobList.length }, (_, index) => (
-    <div key={index} className="h-220px w-full rounded-xl bg-white"></div>
+  const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.Newest);
+
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === SortOrder.Newest ? SortOrder.Oldest : SortOrder.Newest);
+  };
+
+  const vacancyList = jobList.map((job) => (
+    <div key={job.id} className="h-220px w-full rounded-xl bg-white"></div>
   ));
 
   return (
@@ -34,13 +45,11 @@ const JoinUsPageBody: React.FC = () => {
       <main className="z-10 overflow-y-auto overflow-x-hidden">
         <div className="flex w-full flex-col items-stretch gap-100px px-150px py-100px">
           {/* Info: (20250331 - Julian) Title */}
-          <div className="flex w-500px flex-col gap-lv-3">
+          <div className="flex w-450px flex-col gap-lv-3">
             <LinearGradientText size={LinearTextSize.LG} align={TextAlign.LEFT}>
-              {t('Be part of our Team')}
+              {t('hiring:JOIN_US_PAGE.MAIN_TITLE')}
             </LinearGradientText>
-            <p className="text-lg font-medium">
-              {t('Tech has no limits, neither do we ! Join us now!')}
-            </p>
+            <p className="text-lg font-medium">{t('hiring:JOIN_US_PAGE.MAIN_DESCRIPTION')}</p>
           </div>
 
           {/* Info: (20250331 - Julian) Filter Section */}
@@ -51,12 +60,14 @@ const JoinUsPageBody: React.FC = () => {
             <div className="flex items-center justify-between">
               {/* Info: (20250331 - Julian) Available Position */}
               <p className="text-lg font-medium text-white">
-                {t('Available Position:')}{' '}
+                {t('hiring:JOIN_US_PAGE.AVAILABLE_POSITION')}{' '}
                 <span className="font-semibold text-text-brand-primary-lv3">{jobList.length}</span>
               </p>
               {/* Info: (20250331 - Julian) Sort Order */}
-              <button type="button" className="flex items-center gap-8px">
-                <p className="text-lg font-medium">Newest - Oldest</p>
+              <button type="button" onClick={toggleSortOrder} className="flex items-center gap-8px">
+                <p className="text-lg font-medium capitalize">
+                  {t(`hiring:SORT.${sortOrder.toUpperCase()}`)}
+                </p>
                 <Image
                   src="/icons/sort-descending.svg"
                   alt="Sort Descending"

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-import useOuterClick from '@/lib/hooks/use_outer_click';
+import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 
 const JobFilterSection: React.FC = () => {
+  const { t } = useTranslation(['hiring']);
+
   const typeOptions = ['All', 'Full Time', 'Part Time', 'Internship', 'Remote', 'My Favorite'];
   const locationOptions = ['All', 'Taipei, TW', 'Kaohsiung, TW', 'New York, US'];
 
@@ -46,7 +49,7 @@ const JobFilterSection: React.FC = () => {
             }}
             className="px-24px py-8px text-left hover:text-landing-page-orange"
           >
-            {type}
+            {t(`hiring:JOB_TYPE.${type.toUpperCase()}`)}
           </button>
         ))}
       </div>
@@ -80,7 +83,7 @@ const JobFilterSection: React.FC = () => {
   return (
     <div className="flex items-center gap-lv-7">
       {/* deprecated: (20250401 - Julian) For debug */}
-      <div className="absolute top-450px flex items-center gap-20px">
+      <div className="absolute top-450px hidden items-center gap-20px">
         Filter:
         <p className="text-lime-300">{selectedType !== 'All' ? `Type: ${selectedType}` : ''}</p>
         <p className="text-rose-300">
@@ -96,7 +99,7 @@ const JobFilterSection: React.FC = () => {
           className="relative flex h-60px w-200px items-center gap-8px rounded-sm border border-white bg-landing-page-black3 px-24px shadow-job backdrop-blur-md hover:border-landing-page-orange hover:text-landing-page-orange"
           onClick={toggleType}
         >
-          <p className="flex-1 text-left">{selectedType}</p>
+          <p className="flex-1 text-left">{t(`hiring:JOB_TYPE.${selectedType.toUpperCase()}`)}</p>
           <FaChevronDown
             size={16}
             className={`${isTypeOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
@@ -115,7 +118,7 @@ const JobFilterSection: React.FC = () => {
         >
           <div className="flex flex-1 items-center gap-8px text-left">
             <Image src="/icons/location_pin.svg" alt="Location_Pin" width={20} height={20} />
-            <p>{selectedLocation === 'All' ? 'Location' : selectedLocation}</p>
+            <p>{selectedLocation === 'All' ? t('hiring:LOCATION.LOCATION') : selectedLocation}</p>
           </div>
 
           <FaChevronDown
@@ -132,7 +135,7 @@ const JobFilterSection: React.FC = () => {
         <input
           type="text"
           className="flex-1 bg-transparent outline-none placeholder:text-landing-page-gray placeholder:opacity-50"
-          placeholder="Job title, location, key words"
+          placeholder={t('hiring:JOIN_US_PAGE.SEARCH_PLACEHOLDER')}
           value={searchKeyword}
           onChange={changeSearchKeyword}
         />
