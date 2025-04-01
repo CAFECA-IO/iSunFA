@@ -22,7 +22,7 @@ export const AUTH_WHITELIST = {
 export const AUTH_CHECK = {
   [APIName.CREATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_UPDATE]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_DELETE]: [AuthFunctionsKeysNew.user],
+  [APIName.DELETE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_SETTING_GET]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_PUT_ICON]: [AuthFunctionsKeysNew.user],
