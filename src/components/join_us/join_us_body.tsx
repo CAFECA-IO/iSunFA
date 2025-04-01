@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
@@ -9,11 +9,17 @@ import {
   LinearTextSize,
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
+import JobFilterSection from '@/components/join_us/filter_section';
+import { dummyJobList } from '@/interfaces/job';
 
 const JoinUsPageBody: React.FC = () => {
   const { t } = useTranslation(['landing_page']);
 
-  const vacancyList = Array.from({ length: 10 }, (_, index) => (
+  // Deprecated: (20250331 - Julian) 施工中
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [jobList, setJobList] = useState(dummyJobList);
+
+  const vacancyList = Array.from({ length: jobList.length }, (_, index) => (
     <div key={index} className="h-220px w-full rounded-xl bg-white"></div>
   ));
 
@@ -38,11 +44,7 @@ const JoinUsPageBody: React.FC = () => {
           </div>
 
           {/* Info: (20250331 - Julian) Filter Section */}
-          <div className="flex items-center gap-lv-7">
-            <div className="h-60px w-200px rounded-sm bg-white"></div>
-            <div className="h-60px w-200px rounded-sm bg-white"></div>
-            <div className="h-60px flex-1 rounded-full bg-white"></div>
-          </div>
+          <JobFilterSection />
 
           <div className="flex flex-col gap-24px">
             {/* Info: (20250331 - Julian) Sort Order */}
@@ -50,7 +52,7 @@ const JoinUsPageBody: React.FC = () => {
               {/* Info: (20250331 - Julian) Available Position */}
               <p className="text-lg font-medium text-white">
                 {t('Available Position:')}{' '}
-                <span className="font-semibold text-text-brand-primary-lv3">10</span>
+                <span className="font-semibold text-text-brand-primary-lv3">{jobList.length}</span>
               </p>
               {/* Info: (20250331 - Julian) Sort Order */}
               <button type="button" className="flex items-center gap-8px">
