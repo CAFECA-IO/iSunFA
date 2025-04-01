@@ -18,10 +18,10 @@ const LatestNews = () => {
 
   const isNoData = newsList.length === 0;
 
-  // Info: (20241126 - Liz) 打 API 取得最新消息列表
+  // Info: (20241126 - Liz) 打 API 取得最新消息清單
   const { trigger: getNewsListAPI } = APIHandler<INews[]>(APIName.NEWS_LIST);
 
-  // Info: (20241126 - Liz) 取得最新消息列表 (根據不同的 type)
+  // Info: (20241126 - Liz) 取得最新消息清單 (根據不同的 type)
   useEffect(() => {
     const getNewsList = async () => {
       try {
