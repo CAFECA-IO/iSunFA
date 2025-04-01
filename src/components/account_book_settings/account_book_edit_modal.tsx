@@ -18,18 +18,21 @@ import { MessageType } from '@/interfaces/message_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface AccountBookEditModalProps {
-  company: IAccountBook;
+  accountBook: IAccountBook;
   toggleModal: () => void;
 }
 
-const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, toggleModal }) => {
+const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
+  accountBook,
+  toggleModal,
+}) => {
   const { t } = useTranslation(['settings', 'common', 'account_book']);
   const router = useRouter();
-  const [companyName, setCompanyName] = React.useState('');
+  const [accountBookName, setCompanyName] = React.useState('');
   const [businessTaxId, setBusinessTaxId] = React.useState('');
   const [taxSerialNumber, setTaxSerialNumber] = React.useState('');
   const [representativeName, setRepresentativeName] = React.useState('');
-  const [companyAddress, setCompanyAddress] = React.useState('');
+  const [accountBookAddress, setCompanyAddress] = React.useState('');
   const [country, setCountry] = React.useState<LocaleKey>(LocaleKey.en);
   const [countryCode, setCountryCode] = React.useState<LocaleKey>(LocaleKey.en);
   const [phoneNumber, setPhoneNumber] = React.useState<string | undefined>('');
@@ -39,22 +42,22 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, to
     APIName.COMPANY_SETTING_GET
   );
   const { trigger: updateAccountBookSettingAPI } = APIHandler(APIName.COMPANY_SETTING_UPDATE);
-  const { trigger: deleteAccountBookAPI } = APIHandler(APIName.COMPANY_DELETE);
+  const { trigger: deleteAccountBookAPI } = APIHandler(APIName.DELETE_ACCOUNT_BOOK);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (company) {
+    if (accountBook) {
       try {
         const res = await updateAccountBookSettingAPI({
           params: {
-            companyId: company.id,
+            accountBookId: accountBook.id,
           },
           body: {
-            companyName,
-            companyTaxId: businessTaxId,
+            accountBookName,
+            accountBookTaxId: businessTaxId,
             taxSerialNumber,
             representativeName,
-            address: companyAddress,
+            address: accountBookAddress,
             country,
             countryCode,
             phone: phoneNumber,
@@ -83,11 +86,11 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, to
   };
 
   const procedureOfDelete = () => {
-    if (!company) return;
+    if (!accountBook) return;
     messageModalVisibilityHandler();
     deleteAccountBookAPI({
       params: {
-        companyId: company.id,
+        accountBookId: accountBook.id,
       },
     });
 
@@ -95,7 +98,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, to
   };
 
   const deleteCompanyClickHandler = () => {
-    if (!company) return;
+    if (!accountBook) return;
     messageModalDataHandler({
       messageType: MessageType.WARNING,
       title: t('account_book:DELETE.TITLE'),
@@ -108,10 +111,10 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, to
   };
 
   const getCompanySetting = async () => {
-    if (company) {
+    if (accountBook) {
       try {
         const res = await getCompanySettingAPI({
-          params: { companyId: company.id },
+          params: { accountBookId: accountBook.id },
         });
         const { success, data } = res;
         if (success && data) {
@@ -148,7 +151,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, to
             <p>{t('account_book:EDIT.BACK')}</p>
           </Button>
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {company.name}
+            {accountBook.name}
           </h1>
           <Button variant="secondaryBorderless" className="p-0" onClick={toggleModal}>
             <IoCloseOutline size={24} />
@@ -176,9 +179,9 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, to
                 {t('account_book:EDIT.COMPANY_NAME')}
               </p>
               <input
-                id="company-name-input"
+                id="accountBook-name-input"
                 type="text"
-                value={companyName}
+                value={accountBookName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder={t('account_book:PLACEHOLDER.ENTER_NAME')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
@@ -189,7 +192,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, to
                 {t('account_book:EDIT.BUSINESS_TAX_ID')}
               </p>
               <input
-                id="company-tax-id-input"
+                id="accountBook-tax-id-input"
                 type="text"
                 value={businessTaxId}
                 onChange={(e) => setBusinessTaxId(e.target.value)}
@@ -202,7 +205,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, to
                 {t('account_book:EDIT.TAX_SERIAL_NUMBER')}
               </p>
               <input
-                id="company-tax-serial-number-input"
+                id="accountBook-tax-serial-number-input"
                 type="text"
                 value={taxSerialNumber}
                 onChange={(e) => setTaxSerialNumber(e.target.value)}
@@ -217,7 +220,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, to
                 {t('account_book:EDIT.COMPANY_REPRESENTATIVE_NAME')}
               </p>
               <input
-                id="company-representative-name-input"
+                id="accountBook-representative-name-input"
                 type="text"
                 value={representativeName}
                 onChange={(e) => setRepresentativeName(e.target.value)}
@@ -239,9 +242,9 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, to
                 {t('account_book:EDIT.COMPANY_ADDRESS')}
               </p>
               <input
-                id="company-address-input"
+                id="accountBook-address-input"
                 type="text"
-                value={companyAddress}
+                value={accountBookAddress}
                 onChange={(e) => setCompanyAddress(e.target.value)}
                 placeholder={t('account_book:PLACEHOLDER.ENTER_FULL_ADDRESS')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
@@ -250,7 +253,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({ company, to
           </div>
           <div className="grid grid-cols-1 gap-lv-7">
             <Button
-              id="settings-remove-company"
+              id="settings-remove-accountBook"
               type="button"
               variant="errorBorderless"
               className="justify-start p-0"
