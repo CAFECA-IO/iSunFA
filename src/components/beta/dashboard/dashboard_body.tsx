@@ -1,4 +1,4 @@
-// import Announcement from '@/components/beta/dashboard/announcement'; // ToDo: (20250310 - Liz) 暫時隱藏跑馬燈，等有功能後再顯示
+// import Announcement from '@/components/beta/dashboard/announcement'; // ToDo: (20250310 - Liz) 目前沒有跑馬燈功能，故先隱藏
 import MyAccountBookList from '@/components/beta/dashboard/my_account_books';
 import PendingTask from '@/components/beta/dashboard/pending_task';
 import TodayTodoList from '@/components/beta/dashboard/today_todo_list';
@@ -62,20 +62,18 @@ const DashboardBody = () => {
   }, [getTodoList]);
 
   return (
-    <div className="space-y-40px">
-      {/* ToDo: (20250122 - Julian) 暫時隱藏 */}
+    <div className="flex w-100% flex-col gap-40px">
+      {/* ToDo: (20250401 - Liz) 目前沒有跑馬燈功能，故先隱藏 */}
       {/* <Announcement /> */}
+      <MyAccountBookList />
 
-      <div className="flex flex-col gap-24px">
-        <section className="flex flex-wrap items-start gap-24px">
+      <div className="flex flex-wrap gap-24px">
+        <section className="flex flex-auto flex-col gap-24px">
           <TodayTodoList todayTodoList={todayTodoList} />
-
-          <MyAccountBookList />
+          <LatestNews />
         </section>
 
-        <section className="flex flex-wrap items-start gap-24px">
-          <LatestNews />
-
+        <section className="flex flex-auto">
           <PendingTask getTodoList={getTodoList} />
         </section>
       </div>

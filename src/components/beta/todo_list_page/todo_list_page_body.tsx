@@ -52,7 +52,7 @@ const TodoListPageBody = () => {
   // Info: (20241125 - Liz) 刪除待辦事項 API
   const { trigger: deleteTodoAPI } = APIHandler<ITodoCompany>(APIName.DELETE_TODO);
 
-  // Info: (20241121 - Liz) 打 API 取得待辦事項列表
+  // Info: (20241121 - Liz) 打 API 取得待辦事項清單
   const { trigger: listUserTodoAPI } = APIHandler<ITodoCompany[]>(APIName.TODO_LIST);
 
   const getTodoList = useCallback(async () => {
@@ -68,12 +68,12 @@ const TodoListPageBody = () => {
       } else {
         // Deprecated: (20241121 - Liz)
         // eslint-disable-next-line no-console
-        console.log('取得待辦事項列表失敗');
+        console.log('取得待辦事項清單失敗');
       }
     } catch (error) {
       // Deprecated: (20241121 - Liz)
       // eslint-disable-next-line no-console
-      console.log('取得待辦事項列表失敗');
+      console.log('取得待辦事項清單失敗');
     }
   }, [userId]);
 
