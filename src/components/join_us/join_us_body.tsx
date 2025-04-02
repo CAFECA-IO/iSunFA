@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
@@ -41,7 +41,7 @@ const JoinUsPageBody: React.FC = () => {
 
       // Info: (20250402 - Julian) Location filter
       if (location !== 'all') {
-        return job.location === location;
+        return job.location.toLowerCase() === location;
       }
 
       // Info: (20250402 - Julian) Keyword filter
@@ -62,24 +62,34 @@ const JoinUsPageBody: React.FC = () => {
     setFilteredJobList(newJobList);
   };
 
-  useEffect(() => {
-    // Info: (20250402 - Julian) filteredJobList 會隨著 jobList 的更新
-    setFilteredJobList(jobList);
-  }, [jobList]);
-
   const toggleSortOrder = () => {
+    // Info: (20250402 - Julian) 切換排序方式
     setSortOrder(sortOrder === SortOrder.Newest ? SortOrder.Oldest : SortOrder.Newest);
 
-    const sortedJobList = jobList.sort((a, b) => {
-      if (sortOrder === SortOrder.Newest) {
-        return a.date - b.date; // Info: (20250402 - Julian) Sort by newest
-      }
-      return b.date - a.date; // Info: (20250402 - Julian) Sort by oldest
+    // Info: (20250402 - Julian) 更新 jobList 和 filteredJobList
+    setJobList((prev) => {
+      const sortedJobList = prev.sort((a, b) => {
+        if (sortOrder === SortOrder.Newest) {
+          return a.date - b.date; // Info: (20250402 - Julian) Sort by newest
+        }
+        return b.date - a.date; // Info: (20250402 - Julian) Sort by oldest
+      });
+      return sortedJobList;
     });
-    setJobList(sortedJobList);
+
+    setFilteredJobList((prev) => {
+      const sortedFilterList = prev.sort((a, b) => {
+        if (sortOrder === SortOrder.Newest) {
+          return a.date - b.date; // Info: (20250402 - Julian) Sort by newest
+        }
+        return b.date - a.date; // Info: (20250402 - Julian) Sort by oldest
+      });
+      return sortedFilterList;
+    });
   };
 
   const toggleFavorite = (jobId: number) => {
+    // Info: (20250402 - Julian) 更新 jobList 和 filteredJobList
     setJobList((prev) => {
       const newJobList = prev.map((item) => {
         // Info: (20250402 - Julian) 找到對應的 job id，將 isFavorite 反轉
@@ -89,6 +99,17 @@ const JoinUsPageBody: React.FC = () => {
         return item;
       });
       return newJobList;
+    });
+
+    setFilteredJobList((prev) => {
+      const newFilterList = prev.map((item) => {
+        // Info: (20250402 - Julian) 找到對應的 job id，將 isFavorite 反轉
+        if (item.id === jobId) {
+          return { ...item, isFavorite: !item.isFavorite };
+        }
+        return item;
+      });
+      return newFilterList;
     });
   };
 

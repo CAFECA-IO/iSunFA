@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import { timestampToString } from '@/lib/utils/common';
 import { IJob } from '@/interfaces/job';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
@@ -11,6 +12,8 @@ interface IVacancyItem {
 }
 
 const VacancyItem: React.FC<IVacancyItem> = ({ job, isFavorite, toggleFavorite }) => {
+  const { t } = useTranslation(['hiring']);
+
   const { title, location, date, description } = job;
   const dateStr = timestampToString(date).dateWithSlash;
 
@@ -73,13 +76,13 @@ const VacancyItem: React.FC<IVacancyItem> = ({ job, isFavorite, toggleFavorite }
           {favoriteStar}
         </div>
         <LandingButton variant="primary" className="font-bold">
-          Apply Now
+          {t('hiring:JOIN_US_PAGE.APPLY_NOW_BTN')}
         </LandingButton>
       </div>
 
       <div className="flex flex-col gap-16px">
         <div className="flex items-center gap-40px text-lg font-semibold text-surface-brand-primary">
-          <p>{location}</p> <p>{dateStr}</p>
+          <p>{t(`hiring:LOCATION.${location.toUpperCase()}`)}</p> <p>{dateStr}</p>
         </div>
         <div className="line-clamp-3 text-lg text-landing-page-gray">{description}</div>
       </div>

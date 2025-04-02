@@ -4,6 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 interface IJobFilterSectionProps {
   filterJobs: (type: string, location: string, keyword: string) => void;
@@ -25,7 +26,7 @@ const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ filterJobs }) => {
       selectedLocation.toLowerCase(),
       searchKeyword.toLowerCase()
     );
-  }, [selectedType, selectedLocation, searchKeyword]);
+  }, [selectedType, selectedLocation]);
 
   const {
     targetRef: typeRef,
@@ -41,8 +42,20 @@ const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ filterJobs }) => {
 
   const toggleType = () => setTypeOpen(!isTypeOpen);
   const toggleLocation = () => setLocationOpen(!isLocationOpen);
-  const changeSearchKeyword = (e: React.ChangeEvent<HTMLInputElement>) =>
+
+  const changeSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);
+  };
+  const keyDownHandler = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Info: (20250402 - Julian) 按下 Enter 鍵才觸發搜尋
+    if (e.key === KEYBOARD_EVENT_CODE.ENTER) {
+      filterJobs(
+        selectedType.toLowerCase(),
+        selectedLocation.toLowerCase(),
+        searchKeyword.toLowerCase()
+      );
+    }
+  };
 
   const typeDropdown = (
     <div
@@ -155,7 +168,8 @@ const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ filterJobs }) => {
           className="flex-1 bg-transparent outline-none placeholder:text-landing-page-gray placeholder:opacity-50"
           placeholder={t('hiring:JOIN_US_PAGE.SEARCH_PLACEHOLDER')}
           value={searchKeyword}
-          onChange={changeSearchKeyword}
+          onChange={changeSearchInput}
+          onKeyDown={keyDownHandler}
         />
         <FiSearch size={24} />
       </div>
