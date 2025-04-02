@@ -146,8 +146,8 @@ export async function listTeamSubscription(
   };
 }
 
-export async function listTeamInvoice(userId: number): Promise<ITeamInvoice[]> {
-  const ownerTeams = await prisma.teamMember.findMany({
+export async function listTeamTransaction(userId: number): Promise<ITeamInvoice[]> {
+  const teamMembers = await prisma.teamMember.findMany({
     where: {
       userId,
       role: TeamRole.OWNER,
@@ -155,56 +155,86 @@ export async function listTeamInvoice(userId: number): Promise<ITeamInvoice[]> {
     },
     select: {
       teamId: true,
-    },
-  });
-
-  const teamIds = ownerTeams.map((m) => m.teamId);
-
-  const invoices = await prisma.teamInvoice.findMany({
-    where: {
-      teamOrder: {
-        teamId: { in: teamIds },
-      },
-    },
-    include: {
-      teamOrder: {
-        include: {
-          orderDetails: true,
+      team: {
+        select: {
+          subscriptions: {
+            orderBy: { expiredDate: SortOrder.DESC },
+            take: 1,
+          },
+          TeamOrder: {
+            select: {
+              id: true,
+              teamId: true,
+              orderDetails: true,
+              TeamPaymentTransaction: {
+                include: {
+                  TeamInvoice: true,
+                  userPaymentInfo: {
+                    select: {
+                      user: {
+                        select: {
+                          name: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
   });
 
-  return invoices.map((invoice) => {
-    const detail = invoice.teamOrder.orderDetails[0]; // Info: (20250401 - Tzuhan) 假設每張發票對應一項訂閱產品
-    return {
-      id: invoice.id,
-      teamId: invoice.teamOrder.teamId,
-      status: invoice.status === 'SUCCESS', // Info: (20250401 - Tzuhan) 目前不確定 DB 發票狀態的定義（schema 上是 string），這邊假設是 'SUCCESS' 代表付款成功
-      issuedTimestamp: invoice.issuedAt,
-      dueTimestamp: invoice.issuedAt, // Info: (20250401 - Tzuhan) 根據我們定義的邏輯為開立日
-      planId: detail?.productName as TPlanType,
-      planStartTimestamp: 0, // Info: (20250401 - Tzuhan) 如果資料中有開始時間，可補上
-      planEndTimestamp: 0, // Info: (20250401 - Tzuhan) 如果資料中有結束時間，可補上
-      planQuantity: detail?.quantity ?? 1,
-      planUnitPrice: detail?.unitPrice ?? 0,
-      planAmount: detail?.amount ?? 0,
-      payer: {
-        name: invoice.payerName ?? '',
-        address: invoice.payerAddress ?? '',
-        phone: invoice.payerPhone ?? '',
-        taxId: invoice.payerId ?? '',
-      },
-      payee: {
-        name: 'ISunFa Co., Ltd.', // Info: (20250401 - Tzuhan) 這個要在跟 Luphia 確認
-        address: 'Taipei, Taiwan',
-        phone: '+886-2-12345678',
-        taxId: '12345678',
-      },
-      subtotal: invoice.price,
-      tax: invoice.tax,
-      total: invoice.total,
-      amountDue: invoice.total, // Info: (20250401 - Tzuhan) 目前無付款紀錄可扣除，可調整
-    };
+  const invoices: ITeamInvoice[] = [];
+
+  teamMembers.forEach(({ teamId, team }) => {
+    const subscription = team.subscriptions?.[0];
+    const planStartTimestamp = subscription?.startDate ?? 0;
+    const planEndTimestamp = subscription?.expiredDate ?? 0;
+
+    team.TeamOrder.forEach((order) => {
+      const transaction = order.TeamPaymentTransaction?.[0];
+      const invoice = transaction?.TeamInvoice?.[0];
+      const detail = order.orderDetails?.[0];
+
+      if (!transaction || !detail) return;
+
+      invoices.push({
+        id: invoice?.id ?? transaction.id,
+        teamId,
+        status: invoice?.status === 'SUCCESS', // Info: (20250401 - Tzuhan) 目前不確定 DB 發票狀態的定義（schema 上是 string），這邊假設是 'SUCCESS' 代表付款成功
+        issuedTimestamp: invoice?.issuedAt ?? transaction.createdAt,
+        dueTimestamp: invoice?.issuedAt ?? transaction.createdAt,
+
+        planId: detail.productName as TPlanType,
+        planStartTimestamp,
+        planEndTimestamp,
+        planQuantity: detail.quantity ?? 1,
+        planUnitPrice: detail.unitPrice ?? 0,
+        planAmount: detail.amount ?? 0,
+
+        payer: {
+          name: invoice?.payerName ?? transaction.userPaymentInfo?.user?.name ?? '—',
+          address: invoice?.payerAddress ?? '—',
+          phone: invoice?.payerPhone ?? '—',
+          taxId: invoice?.payerId ?? '—',
+        },
+        payee: {
+          name: 'iSunFa Inc.', // Info: (20250401 - Tzuhan) 這個要在跟 Luphia 確認
+          address: 'Taipei, Taiwan',
+          phone: '+886-2-12345678',
+          taxId: '12345678',
+        },
+
+        subtotal: invoice?.price ?? detail.amount ?? 0,
+        tax: invoice?.tax ?? 0,
+        total: invoice?.total ?? detail.amount ?? 0,
+        amountDue: invoice?.total ?? detail.amount ?? 0,
+      });
+    });
   });
+
+  return invoices;
 }
