@@ -1,19 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
-const JobFilterSection: React.FC = () => {
+interface IJobFilterSectionProps {
+  filterJobs: (type: string, location: string, keyword: string) => void;
+}
+
+const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ filterJobs }) => {
   const { t } = useTranslation(['hiring']);
 
-  const typeOptions = ['All', 'Full Time', 'Part Time', 'Internship', 'Remote', 'My Favorite'];
-  const locationOptions = ['All', 'Taipei, TW', 'Kaohsiung, TW', 'New York, US'];
+  const typeOptions = ['All', 'My Favorite'];
+  const locationOptions = ['All', 'Taipei'];
 
   const [selectedType, setSelectedType] = useState('All');
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [searchKeyword, setSearchKeyword] = useState('');
+
+  useEffect(() => {
+    filterJobs(
+      selectedType.toLowerCase(),
+      selectedLocation.toLowerCase(),
+      searchKeyword.toLowerCase()
+    );
+  }, [selectedType, selectedLocation]);
 
   const {
     targetRef: typeRef,
@@ -29,14 +42,26 @@ const JobFilterSection: React.FC = () => {
 
   const toggleType = () => setTypeOpen(!isTypeOpen);
   const toggleLocation = () => setLocationOpen(!isLocationOpen);
-  const changeSearchKeyword = (e: React.ChangeEvent<HTMLInputElement>) =>
+
+  const changeSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);
+  };
+  const keyDownHandler = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Info: (20250402 - Julian) 按下 Enter 鍵才觸發搜尋
+    if (e.key === KEYBOARD_EVENT_CODE.ENTER) {
+      filterJobs(
+        selectedType.toLowerCase(),
+        selectedLocation.toLowerCase(),
+        searchKeyword.toLowerCase()
+      );
+    }
+  };
 
   const typeDropdown = (
     <div
       className={`${
         isTypeOpen ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'
-      } absolute top-80px grid w-full grid-cols-1 overflow-hidden rounded-sm border border-white bg-landing-page-black3 shadow-job backdrop-blur-md transition-all duration-300 ease-in-out`}
+      } absolute top-80px z-10 grid w-full grid-cols-1 overflow-hidden rounded-sm border border-white bg-landing-page-black3 shadow-job backdrop-blur-md transition-all duration-300 ease-in-out`}
     >
       <div className="flex flex-col">
         {typeOptions.map((type) => (
@@ -49,7 +74,7 @@ const JobFilterSection: React.FC = () => {
             }}
             className="px-24px py-8px text-left hover:text-landing-page-orange"
           >
-            {t(`hiring:JOB_TYPE.${type.toUpperCase()}`)}
+            {t(`hiring:JOB_TYPE.${type.replaceAll(' ', '_').toUpperCase()}`)}
           </button>
         ))}
       </div>
@@ -60,7 +85,7 @@ const JobFilterSection: React.FC = () => {
     <div
       className={`${
         isLocationOpen ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'
-      } absolute top-80px grid w-full grid-cols-1 overflow-hidden rounded-sm border border-white bg-landing-page-black3 shadow-job backdrop-blur-md transition-all duration-300 ease-in-out`}
+      } absolute top-80px z-10 grid w-full grid-cols-1 overflow-hidden rounded-sm border border-white bg-landing-page-black3 shadow-job backdrop-blur-md transition-all duration-300 ease-in-out`}
     >
       <div className="flex flex-col">
         {locationOptions.map((location) => (
@@ -73,7 +98,7 @@ const JobFilterSection: React.FC = () => {
             }}
             className="px-24px py-8px text-left hover:text-landing-page-orange"
           >
-            {location}
+            {t(`hiring:LOCATION.${location.toUpperCase()}`)}
           </button>
         ))}
       </div>
@@ -99,7 +124,9 @@ const JobFilterSection: React.FC = () => {
           className="relative flex h-60px w-200px items-center gap-8px rounded-sm border border-white bg-landing-page-black3 px-24px shadow-job backdrop-blur-md hover:border-landing-page-orange hover:text-landing-page-orange"
           onClick={toggleType}
         >
-          <p className="flex-1 text-left">{t(`hiring:JOB_TYPE.${selectedType.toUpperCase()}`)}</p>
+          <p className="flex-1 text-left">
+            {t(`hiring:JOB_TYPE.${selectedType.replaceAll(' ', '_').toUpperCase()}`)}
+          </p>
           <FaChevronDown
             size={16}
             className={`${isTypeOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
@@ -118,7 +145,11 @@ const JobFilterSection: React.FC = () => {
         >
           <div className="flex flex-1 items-center gap-8px text-left">
             <Image src="/icons/location_pin.svg" alt="Location_Pin" width={20} height={20} />
-            <p>{selectedLocation === 'All' ? t('hiring:LOCATION.LOCATION') : selectedLocation}</p>
+            <p>
+              {selectedLocation === 'All'
+                ? t('hiring:LOCATION.LOCATION')
+                : t(`hiring:LOCATION.${selectedLocation.toUpperCase()}`)}
+            </p>
           </div>
 
           <FaChevronDown
@@ -137,7 +168,8 @@ const JobFilterSection: React.FC = () => {
           className="flex-1 bg-transparent outline-none placeholder:text-landing-page-gray placeholder:opacity-50"
           placeholder={t('hiring:JOIN_US_PAGE.SEARCH_PLACEHOLDER')}
           value={searchKeyword}
-          onChange={changeSearchKeyword}
+          onChange={changeSearchInput}
+          onKeyDown={keyDownHandler}
         />
         <FiSearch size={24} />
       </div>

@@ -4,14 +4,17 @@
     "MAIN_TITLE": "Be part of our Team",
     "MAIN_DESCRIPTION": "Tech has no limits, neither do we ! Join us now!",
     "AVAILABLE_POSITION": "Available Position:",
-    "SEARCH_PLACEHOLDER": "Job title, location, key words"
+    "SEARCH_PLACEHOLDER": "Job title, location, key words",
+    "APPLY_NOW_BTN": "Apply Now"
   },
   "JOB_TYPE": {
-    "ALL": "All"
+    "ALL": "All",
+    "MY_FAVORITE": "My Favorite"
   },
   "LOCATION": {
     "ALL": "All",
-    "LOCATION": "Location"
+    "LOCATION": "Location",
+    "TAIPEI": "Taipei, TW"
   },
   "SORT": {
     "NEWEST": "Newest",
