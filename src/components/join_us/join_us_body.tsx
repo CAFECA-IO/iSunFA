@@ -10,7 +10,7 @@ import {
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
 import JobFilterSection from '@/components/join_us/filter_section';
-import { IJob, dummyJobList } from '@/interfaces/job';
+import { IJobDetail, dummyJobList } from '@/interfaces/job';
 import VacancyItem from '@/components/join_us/vacancy_item';
 
 enum SortOrder {
@@ -21,17 +21,41 @@ enum SortOrder {
 const JoinUsPageBody: React.FC = () => {
   const { t } = useTranslation(['landing_page']);
 
-  // Deprecated: (20250331 - Julian) 施工中
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [jobList, setJobList] = useState<IJob[]>(dummyJobList);
+  // Info: (20250402 - Julian) 初始清單
+  const [jobList, setJobList] = useState<IJobDetail[]>(dummyJobList);
+  // Info: (20250402 - Julian) 過濾後的清單
+  const [filteredJobList, setFilteredJobList] = useState<IJobDetail[]>(jobList);
+  // Info: (20250402 - Julian) 收藏清單
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
   const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.Newest);
 
   const toggleSortOrder = () => {
     setSortOrder(sortOrder === SortOrder.Newest ? SortOrder.Oldest : SortOrder.Newest);
+
+    const sortedJobList = jobList.sort((a, b) => {
+      if (sortOrder === SortOrder.Newest) {
+        return a.date - b.date; // Info: (20250402 - Julian) Sort by newest
+      }
+      return b.date - a.date; // Info: (20250402 - Julian) Sort by oldest
+    });
+    setJobList(sortedJobList);
   };
 
-  const vacancyList = jobList.map((job) => <VacancyItem key={job.id} {...job} />);
+  const vacancyList = filteredJobList.map((job) => {
+    const isFavorite = favoriteIds.includes(job.id);
+    const toggleFavorite = () => {
+      if (isFavorite) {
+        setFavoriteIds(favoriteIds.filter((id) => id !== job.id));
+      } else {
+        setFavoriteIds([...favoriteIds, job.id]);
+      }
+    };
+
+    const vacancy = { ...job, isFavorite };
+
+    return <VacancyItem key={job.id} job={vacancy} toggleFavorite={toggleFavorite} />;
+  });
 
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
@@ -52,7 +76,7 @@ const JoinUsPageBody: React.FC = () => {
           </div>
 
           {/* Info: (20250331 - Julian) Filter Section */}
-          <JobFilterSection />
+          <JobFilterSection jobList={jobList} setJobList={setFilteredJobList} />
 
           <div className="flex flex-col gap-24px">
             {/* Info: (20250331 - Julian) Sort Order */}
@@ -60,7 +84,9 @@ const JoinUsPageBody: React.FC = () => {
               {/* Info: (20250331 - Julian) Available Position */}
               <p className="text-lg font-medium text-white">
                 {t('hiring:JOIN_US_PAGE.AVAILABLE_POSITION')}{' '}
-                <span className="font-semibold text-text-brand-primary-lv3">{jobList.length}</span>
+                <span className="font-semibold text-text-brand-primary-lv3">
+                  {filteredJobList.length}
+                </span>
               </p>
               {/* Info: (20250331 - Julian) Sort Order */}
               <button

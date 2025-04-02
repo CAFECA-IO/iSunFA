@@ -7,11 +7,13 @@
     "SEARCH_PLACEHOLDER": "Job title, location, key words"
   },
   "JOB_TYPE": {
-    "ALL": "All"
+    "ALL": "All",
+    "MY_FAVORITE": "My Favorite"
   },
   "LOCATION": {
     "ALL": "All",
-    "LOCATION": "Location"
+    "LOCATION": "Location",
+    "TAIPEI": "Taipei, TW"
   },
   "SORT": {
     "NEWEST": "Newest",

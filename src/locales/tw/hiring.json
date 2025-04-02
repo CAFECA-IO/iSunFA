@@ -7,11 +7,13 @@
     "SEARCH_PLACEHOLDER": "查詢職位名稱、地點、關鍵字"
   },
   "JOB_TYPE": {
-    "ALL": "全部"
+    "ALL": "全部",
+    "MY_FAVORITE": "我的最愛"
   },
   "LOCATION": {
     "ALL": "全部",
-    "LOCATION": "地點"
+    "LOCATION": "地點",
+    "TAIPEI": "台北市"
   },
   "SORT": {
     "NEWEST": "最新",

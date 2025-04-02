@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { timestampToString } from '@/lib/utils/common';
 import { IJob } from '@/interfaces/job';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 
-const VacancyItem: React.FC<IJob> = ({ title, location, date, description }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
+interface IVacancyItem {
+  job: IJob;
+  toggleFavorite: () => void;
+}
 
+const VacancyItem: React.FC<IVacancyItem> = ({ job, toggleFavorite }) => {
+  const { title, location, date, description, isFavorite } = job;
   const dateStr = timestampToString(date).dateWithSlash;
-
-  const toggleFavorite = () => setIsFavorite(!isFavorite);
 
   const favoriteStar = (
     <button type="button" onClick={toggleFavorite} className="group">

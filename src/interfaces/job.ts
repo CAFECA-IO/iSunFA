@@ -4,6 +4,7 @@ export interface IJob {
   location: string;
   date: number;
   description: string;
+  isFavorite: boolean;
 }
 
 export interface IJobDetail extends IJob {
@@ -16,8 +17,8 @@ export const dummyJobList: IJobDetail[] = [
   {
     id: 1,
     title: 'Front-end Developer',
-    location: 'Taipei, TW',
-    date: 1743473634,
+    location: 'Taipei',
+    date: 1743533087,
     description: `As a Frontend Engineer, you'll design, develop, and optimize user interfaces for web and mobile applications. You'll work with modern frameworks (e.g., React, Vue, Angular) to build seamless, responsive, and high-performing experiences. Collaborating with designers and backend developers, you'll ensure smooth functionality, maintain code quality, and enhance user interactions. Strong proficiency in HTML, CSS, JavaScript, and UI/UX principles is essential.`,
     jobResponsibilities: [
       'Develop and maintain responsive, user-friendly web interfaces.',
@@ -45,5 +46,40 @@ export const dummyJobList: IJobDetail[] = [
       'Performance optimization and accessibility best practices.',
       'Experience with CI/CD and testing frameworks.',
     ],
+    isFavorite: false,
+  },
+  {
+    id: 2,
+    title: 'Back-end Developer',
+    location: 'Taipei',
+    date: 1743473634,
+    description: `As a Backend Engineer, you'll design, develop, and maintain server-side logic for web and mobile applications. You'll work with databases, APIs, and cloud services to build scalable, secure, and efficient systems. Collaborating with frontend developers and DevOps engineers, you'll ensure smooth functionality, maintain code quality, and optimize performance. Strong proficiency in Node.js, Python, Java, or Go is essential.`,
+    jobResponsibilities: [
+      'Design, develop, and maintain server-side logic and APIs.',
+      'Collaborate with frontend developers to integrate user interfaces with server-side systems.',
+      'Optimize applications for speed, scalability, and security.',
+      'Ensure data integrity, reliability, and performance.',
+      'Write clean, maintainable, and scalable code using modern frameworks (Express, Django, Spring).',
+      'Debug and troubleshoot backend issues to enhance system performance.',
+    ],
+    requirements: [
+      'Proficiency in Node.js, Python, Java, or Go.',
+      'Experience with backend frameworks (Express, Django, Spring).',
+      'Strong understanding of databases, APIs, and cloud services.',
+      'Familiarity with RESTful APIs and microservices architecture.',
+      'Ability to debug, test, and optimize server-side applications.',
+      'Strong problem-solving skills and attention to detail.',
+      'Experience with version control (Git) and backend build tools.',
+    ],
+    extraSkills: [
+      'Experience with TypeScript for scalable code.',
+      'Knowledge of Web3, AI, or AR/VR technologies.',
+      'Familiarity with GraphQL, Docker, or Kubernetes.',
+      'Understanding of frontend basics (HTML, CSS, JavaScript).',
+      'Performance optimization and security best practices.',
+      'Experience with CI/CD and testing frameworks.',
+      'DevOps skills for deployment and monitoring.',
+    ],
+    isFavorite: false,
   },
 ];
