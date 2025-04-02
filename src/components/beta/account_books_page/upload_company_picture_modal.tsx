@@ -64,10 +64,6 @@ const UploadCompanyPictureModal = ({
           body: { fileId: fileMeta.id },
         });
 
-        // Deprecated: (20250402 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('fileId:', fileMeta.id);
-
         if (!success) {
           // Deprecated: (20241212 - Liz)
           // eslint-disable-next-line no-console
