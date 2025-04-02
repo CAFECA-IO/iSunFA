@@ -14,10 +14,10 @@ import {
   IUpdateMemberBody,
   IUpdateMemberResponse,
 } from '@/lib/utils/zod_schema/team';
-import { getSession } from '@/lib/utils/session';
+import { getSession, updateTeamMemberSession } from '@/lib/utils/session';
 import { TeamRole } from '@/interfaces/team';
 import { updateMemberById, deleteMemberById } from '@/lib/utils/repo/team_member.repo';
-import { loggerError } from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 import { ISessionData } from '@/interfaces/session';
 import { validateOutputData } from '@/lib/utils/validator';
@@ -92,8 +92,37 @@ const handlePutRequest = async (req: NextApiRequest) => {
   let payload: IUpdateMemberResponse | null = null;
 
   try {
-    // Info: (20250312 - Shirley) 更新成員角色
+    // Info: (20250401 - Shirley) 更新成員角色
     const updatedMember = await updateMemberById(teamId, memberId, updateData.role, userRole);
+
+    if (updatedMember) {
+      // Info: (20250401 - Shirley) 更新成員的 session 資料
+      try {
+        loggerBack.info({
+          message: 'Updating team member session',
+          userId: updatedMember.userId,
+          teamId,
+          role: updateData.role,
+        });
+
+        await updateTeamMemberSession(updatedMember.userId, teamId, updateData.role);
+
+        loggerBack.info({
+          message: 'Successfully updated team member session',
+          userId: updatedMember.userId,
+          teamId,
+          role: updateData.role,
+        });
+      } catch (error) {
+        loggerBack.warn({
+          message: 'Failed to update team member session',
+          error,
+          userId: updatedMember.userId,
+          teamId,
+          role: updateData.role,
+        });
+      }
+    }
 
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
     payload = updatedMember;
@@ -196,8 +225,34 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   let payload: IDeleteMemberResponse | null = null;
 
   try {
-    // Info: (20250312 - Shirley) 刪除成員（軟刪除）
+    // Info: (20250401 - Shirley) 刪除成員（軟刪除）
     const deletedMember = await deleteMemberById(teamId, memberId, userRole);
+
+    if (deletedMember) {
+      // Info: (20250401 - Shirley) 更新成員的 session 資料
+      try {
+        loggerBack.info({
+          message: 'Updating team member session after deletion',
+          memberId: deletedMember.memberId,
+          teamId,
+        });
+
+        await updateTeamMemberSession(deletedMember.memberId, teamId, null);
+
+        loggerBack.info({
+          message: 'Successfully updated team member session after deletion',
+          memberId: deletedMember.memberId,
+          teamId,
+        });
+      } catch (error) {
+        loggerBack.warn({
+          message: 'Failed to update team member session after deletion',
+          error,
+          memberId: deletedMember.memberId,
+          teamId,
+        });
+      }
+    }
 
     statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
     payload = deletedMember;
