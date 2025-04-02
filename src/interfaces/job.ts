@@ -4,6 +4,9 @@ export interface IJob {
   location: string;
   date: number;
   description: string;
+}
+
+export interface IJobUI extends IJobDetail {
   isFavorite: boolean;
 }
 
@@ -46,7 +49,6 @@ export const dummyJobList: IJobDetail[] = [
       'Performance optimization and accessibility best practices.',
       'Experience with CI/CD and testing frameworks.',
     ],
-    isFavorite: false,
   },
   {
     id: 2,
@@ -80,6 +82,5 @@ export const dummyJobList: IJobDetail[] = [
       'Experience with CI/CD and testing frameworks.',
       'DevOps skills for deployment and monitoring.',
     ],
-    isFavorite: false,
   },
 ];

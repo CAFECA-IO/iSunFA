@@ -6,11 +6,12 @@ import { LandingButton } from '@/components/landing_page_v2/landing_button';
 
 interface IVacancyItem {
   job: IJob;
+  isFavorite: boolean;
   toggleFavorite: () => void;
 }
 
-const VacancyItem: React.FC<IVacancyItem> = ({ job, toggleFavorite }) => {
-  const { title, location, date, description, isFavorite } = job;
+const VacancyItem: React.FC<IVacancyItem> = ({ job, isFavorite, toggleFavorite }) => {
+  const { title, location, date, description } = job;
   const dateStr = timestampToString(date).dateWithSlash;
 
   const favoriteStar = (

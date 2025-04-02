@@ -4,14 +4,12 @@ import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { IJobDetail } from '@/interfaces/job';
 
 interface IJobFilterSectionProps {
-  jobList: IJobDetail[];
-  setJobList: React.Dispatch<React.SetStateAction<IJobDetail[]>>;
+  filterJobs: (type: string, location: string, keyword: string) => void;
 }
 
-const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ jobList, setJobList }) => {
+const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ filterJobs }) => {
   const { t } = useTranslation(['hiring']);
 
   const typeOptions = ['All', 'My Favorite'];
@@ -22,26 +20,11 @@ const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ jobList, setJobLis
   const [searchKeyword, setSearchKeyword] = useState('');
 
   useEffect(() => {
-    const filteredJobList = jobList.filter((job) => {
-      if (selectedType !== 'All') {
-        return job.isFavorite;
-      } else if (selectedLocation !== 'All') {
-        return job.location === selectedLocation;
-      } else if (searchKeyword !== '') {
-        const keyWord = searchKeyword.toLowerCase();
-        const isMatched =
-          job.title.toLowerCase().includes(keyWord) ||
-          job.description.toLowerCase().includes(keyWord) ||
-          job.jobResponsibilities.join(' ').toLowerCase().includes(keyWord) ||
-          job.requirements.join(' ').toLowerCase().includes(keyWord) ||
-          job.extraSkills.join(' ').toLowerCase().includes(keyWord);
-        return isMatched;
-      } else {
-        return true; // Info: (20250402 - Julian) Return all jobs
-      }
-    });
-
-    setJobList(filteredJobList);
+    filterJobs(
+      selectedType.toLowerCase(),
+      selectedLocation.toLowerCase(),
+      searchKeyword.toLowerCase()
+    );
   }, [selectedType, selectedLocation, searchKeyword]);
 
   const {

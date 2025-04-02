@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
@@ -10,7 +10,7 @@ import {
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
 import JobFilterSection from '@/components/join_us/filter_section';
-import { IJobDetail, dummyJobList } from '@/interfaces/job';
+import { dummyJobList, IJobUI } from '@/interfaces/job';
 import VacancyItem from '@/components/join_us/vacancy_item';
 
 enum SortOrder {
@@ -21,14 +21,51 @@ enum SortOrder {
 const JoinUsPageBody: React.FC = () => {
   const { t } = useTranslation(['landing_page']);
 
-  // Info: (20250402 - Julian) 初始清單
-  const [jobList, setJobList] = useState<IJobDetail[]>(dummyJobList);
-  // Info: (20250402 - Julian) 過濾後的清單
-  const [filteredJobList, setFilteredJobList] = useState<IJobDetail[]>(jobList);
-  // Info: (20250402 - Julian) 收藏清單
-  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const defaultJobList: IJobUI[] = dummyJobList.map((job) => {
+    return { ...job, isFavorite: false };
+  });
 
+  // Info: (20250402 - Julian) 初始清單
+  const [jobList, setJobList] = useState<IJobUI[]>(defaultJobList);
+  // Info: (20250402 - Julian) 過濾後的清單
+  const [filteredJobList, setFilteredJobList] = useState<IJobUI[]>(defaultJobList);
+  // Info: (20250402 - Julian) 排序方式
   const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.Newest);
+
+  const filterJobs = (type: string, location: string, keyword: string) => {
+    const newJobList = jobList.filter((job) => {
+      // Info: (20250402 - Julian) Type filter: 不是 all 就是 我的最愛
+      if (type !== 'all') {
+        return job.isFavorite;
+      }
+
+      // Info: (20250402 - Julian) Location filter
+      if (location !== 'all') {
+        return job.location === location;
+      }
+
+      // Info: (20250402 - Julian) Keyword filter
+      if (keyword !== '') {
+        const isMatched =
+          job.title.toLowerCase().includes(keyword) ||
+          job.description.toLowerCase().includes(keyword) ||
+          job.jobResponsibilities.join(' ').toLowerCase().includes(keyword) ||
+          job.requirements.join(' ').toLowerCase().includes(keyword) ||
+          job.extraSkills.join(' ').toLowerCase().includes(keyword);
+
+        return isMatched;
+      }
+
+      return true; // Info: (20250402 - Julian) Return all jobs
+    });
+
+    setFilteredJobList(newJobList);
+  };
+
+  useEffect(() => {
+    // Info: (20250402 - Julian) filteredJobList 會隨著 jobList 的更新
+    setFilteredJobList(jobList);
+  }, [jobList]);
 
   const toggleSortOrder = () => {
     setSortOrder(sortOrder === SortOrder.Newest ? SortOrder.Oldest : SortOrder.Newest);
@@ -42,20 +79,27 @@ const JoinUsPageBody: React.FC = () => {
     setJobList(sortedJobList);
   };
 
-  const vacancyList = filteredJobList.map((job) => {
-    const isFavorite = favoriteIds.includes(job.id);
-    const toggleFavorite = () => {
-      if (isFavorite) {
-        setFavoriteIds(favoriteIds.filter((id) => id !== job.id));
-      } else {
-        setFavoriteIds([...favoriteIds, job.id]);
-      }
-    };
+  const toggleFavorite = (jobId: number) => {
+    setJobList((prev) => {
+      const newJobList = prev.map((item) => {
+        // Info: (20250402 - Julian) 找到對應的 job id，將 isFavorite 反轉
+        if (item.id === jobId) {
+          return { ...item, isFavorite: !item.isFavorite };
+        }
+        return item;
+      });
+      return newJobList;
+    });
+  };
 
-    const vacancy = { ...job, isFavorite };
-
-    return <VacancyItem key={job.id} job={vacancy} toggleFavorite={toggleFavorite} />;
-  });
+  const vacancyList = filteredJobList.map((job) => (
+    <VacancyItem
+      key={job.id}
+      job={job}
+      isFavorite={job.isFavorite}
+      toggleFavorite={() => toggleFavorite(job.id)}
+    />
+  ));
 
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
@@ -76,7 +120,7 @@ const JoinUsPageBody: React.FC = () => {
           </div>
 
           {/* Info: (20250331 - Julian) Filter Section */}
-          <JobFilterSection jobList={jobList} setJobList={setFilteredJobList} />
+          <JobFilterSection filterJobs={filterJobs} />
 
           <div className="flex flex-col gap-24px">
             {/* Info: (20250331 - Julian) Sort Order */}
