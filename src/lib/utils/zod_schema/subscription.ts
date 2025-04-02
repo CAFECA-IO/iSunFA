@@ -10,11 +10,11 @@ import { TPaymentStatus, TPlanType } from '@/interfaces/subscription';
 export const ISubscriptionItemValidator = z.object({
   id: z.number(),
   name: z.string(),
-  plan: z.enum([TPlanType.BEGINNER, TPlanType.PROFESSIONAL, TPlanType.ENTERPRISE]),
+  plan: z.nativeEnum(TPlanType),
   enableAutoRenewal: z.boolean(),
   nextRenewalTimestamp: z.number(),
   expiredTimestamp: z.number(),
-  paymentStatus: z.enum([TPaymentStatus.PAID, TPaymentStatus.PAYMENT_FAILED, TPaymentStatus.FREE]),
+  paymentStatus: z.nativeEnum(TPaymentStatus),
 });
 
 /**
@@ -26,7 +26,7 @@ export const ISubscriptionPutQueryValidator = z.object({
 });
 
 export const ISubscriptionPutBodyValidator = z.object({
-  plan: z.enum([TPlanType.BEGINNER, TPlanType.PROFESSIONAL, TPlanType.ENTERPRISE]).optional(),
+  plan: z.nativeEnum(TPlanType).optional(),
   autoRenew: z.boolean().optional(),
 });
 
@@ -42,7 +42,7 @@ export const IInvoiceDetailValidator = z.object({
   status: z.boolean(),
   issuedTimestamp: z.number(),
   dueTimestamp: z.number(),
-  planId: z.enum([TPlanType.BEGINNER, TPlanType.PROFESSIONAL, TPlanType.ENTERPRISE]),
+  planId: z.nativeEnum(TPlanType),
   planStartTimestamp: z.number(),
   planEndTimestamp: z.number(),
   planQuantity: z.number(),
@@ -103,7 +103,7 @@ export const subscriptionSchemas = {
         teamId: zodStringToNumber,
         page: zodStringToNumber.optional(),
         pageSize: zodStringToNumber.optional(),
-        plan: z.enum([TPlanType.BEGINNER, TPlanType.PROFESSIONAL, TPlanType.ENTERPRISE]).optional(),
+        plan: z.nativeEnum(TPlanType).optional(),
         status: zodStringToBoolean.optional(),
         startDate: zodStringToNumber.optional(),
         endDate: zodStringToNumber.optional(),

@@ -146,7 +146,14 @@ export async function listTeamSubscription(
   };
 }
 
-export async function listTeamTransaction(userId: number): Promise<ITeamInvoice[]> {
+export async function listTeamTransaction(
+  userId: number,
+  page: number = 1,
+  pageSize: number = 10
+): Promise<IPaginatedOptions<ITeamInvoice[]>> {
+  const skip = (page - 1) * pageSize;
+  const take = pageSize;
+
   const teamMembers = await prisma.teamMember.findMany({
     where: {
       userId,
@@ -185,6 +192,8 @@ export async function listTeamTransaction(userId: number): Promise<ITeamInvoice[
         },
       },
     },
+    skip,
+    take,
   });
 
   const invoices: ITeamInvoice[] = [];
@@ -236,5 +245,86 @@ export async function listTeamTransaction(userId: number): Promise<ITeamInvoice[
     });
   });
 
-  return invoices;
+  const totalCount = await prisma.teamMember.count({
+    where: {
+      userId,
+      role: 'OWNER',
+      status: 'IN_TEAM',
+    },
+  });
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  return {
+    data: invoices,
+    page,
+    totalPages,
+    totalCount,
+    pageSize,
+  };
+}
+
+export async function getSubscriptionByTeamId(
+  userId: number,
+  teamId: number
+): Promise<IUserOwnedTeam | null> {
+  const team = await prisma.team.findFirst({
+    where: {
+      id: teamId,
+      members: {
+        some: {
+          userId,
+          role: TeamRole.OWNER,
+          status: LeaveStatus.IN_TEAM,
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      subscriptions: {
+        orderBy: { createdAt: SortOrder.DESC },
+        take: 1,
+        include: { plan: true },
+      },
+      TeamOrder: {
+        orderBy: { createdAt: SortOrder.DESC },
+        take: 1,
+        include: {
+          TeamPaymentTransaction: {
+            include: { TeamInvoice: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!team) return null;
+
+  const latestSub = team.subscriptions[0];
+  const latestOrder = team.TeamOrder[0];
+  const latestTxn = latestOrder?.TeamPaymentTransaction[0];
+  const hasInvoice = latestTxn?.TeamInvoice?.length > 0;
+
+  let paymentStatus: TPaymentStatus = TPaymentStatus.FREE;
+  if (latestSub) {
+    if (!latestTxn) {
+      paymentStatus = TPaymentStatus.TRIAL;
+    } else {
+      paymentStatus = hasInvoice ? TPaymentStatus.PAID : TPaymentStatus.PAYMENT_FAILED;
+    }
+  }
+  if (latestOrder?.status === 'CANCELED') {
+    paymentStatus = TPaymentStatus.PAYMENT_FAILED;
+  }
+
+  return {
+    id: team.id,
+    name: team.name,
+    plan: (latestSub?.planType as TPlanType) || TPlanType.BEGINNER,
+    enableAutoRenewal: true,
+    expiredTimestamp: latestSub?.expiredDate ?? 0,
+    nextRenewalTimestamp: latestSub?.expiredDate ?? 0,
+    paymentStatus,
+  };
 }
