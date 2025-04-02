@@ -14,7 +14,7 @@ export const ISubscriptionItemValidator = z.object({
   enableAutoRenewal: z.boolean(),
   nextRenewalTimestamp: z.number(),
   expiredTimestamp: z.number(),
-  paymentStatus: z.enum([TPaymentStatus.PAID, TPaymentStatus.UNPAID, TPaymentStatus.FREE]),
+  paymentStatus: z.enum([TPaymentStatus.PAID, TPaymentStatus.PAYMENT_FAILED, TPaymentStatus.FREE]),
 });
 
 /**

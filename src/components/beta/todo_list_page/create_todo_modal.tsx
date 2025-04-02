@@ -88,7 +88,7 @@ const CreateTodoModal = ({
       });
 
       if (success) {
-        // Info: (20241119 - Liz) 新增待辦事項成功後關閉 Modal、重新取得待辦事項列表
+        // Info: (20241119 - Liz) 新增待辦事項成功後關閉 Modal、重新取得待辦事項清單
         closeModal();
         if (getTodoList) await getTodoList();
 

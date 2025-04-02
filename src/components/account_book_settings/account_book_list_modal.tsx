@@ -51,7 +51,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       {isEditModalOpen && connectedAccountBook && (
         <AccountBookEditModal
-          company={connectedAccountBook}
+          accountBook={connectedAccountBook}
           toggleModal={() => setIsEditModalOpen((prev) => !prev)}
         />
       )}

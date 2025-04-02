@@ -194,7 +194,7 @@ export const FAKE_OWNED_TEAMS: IUserOwnedTeam[] = [
     enableAutoRenewal: true,
     nextRenewalTimestamp: 1737268546000,
     expiredTimestamp: 1737268546000,
-    paymentStatus: TPaymentStatus.UNPAID,
+    paymentStatus: TPaymentStatus.PAYMENT_FAILED,
   },
   {
     id: 3,

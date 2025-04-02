@@ -30,7 +30,9 @@
     "ACCOUNT_BOOK_SETTINGS": "Account Book Settings",
     "ACCOUNTING_SETTINGS": "Accounting Settings",
     "CLIENTS_SUPPLIERS_MANAGEMENT": "Clients/Suppliers Management",
-    "BACK_TO_DASHBOARD": "Back to Dashboard"
+    "BACK_TO_DASHBOARD": "Back to Dashboard",
+    "CURRENT_ACCOUNT_BOOK": "Current Account Book",
+    "SELECT_ACCOUNT_BOOK": "Select Account Book"
   },
 
   "TOAST": {
