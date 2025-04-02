@@ -15,7 +15,6 @@ import { useRouter } from 'next/router';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
-import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { useTranslation } from 'next-i18next';
@@ -108,8 +107,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isMessageModalVisible,
     messageModalVisibilityHandler,
     messageModalData,
-    isAddBookmarkModalVisible,
-    addBookmarkModalVisibilityHandler,
     isAddCounterPartyModalVisible,
     addCounterPartyModalVisibilityHandler,
     addCounterPartyModalData,
@@ -424,11 +421,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <PasskeySupportModal
         isModalVisible={isPasskeySupportModalVisible}
         modalVisibilityHandler={passKeySupportModalVisibilityHandler}
-      />
-
-      <EditBookmarkModal
-        isModalVisible={isAddBookmarkModalVisible}
-        modalVisibilityHandler={addBookmarkModalVisibilityHandler}
       />
 
       <MessageModal
