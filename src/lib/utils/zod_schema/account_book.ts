@@ -173,3 +173,22 @@ export const deleteAccountBookSchema = {
   outputSchema: accountBookSchema.nullable(),
   frontend: nullSchema,
 };
+
+// Info: (20250329 - Shirley) 創建帳本 Schema
+const createAccountBookBodySchema = z.object({
+  teamId: z.number().int(),
+  name: z.string(),
+  taxId: z.string(),
+  tag: z.nativeEnum(WORK_TAG),
+});
+
+export const createAccountBookSchema = {
+  input: {
+    querySchema: nullSchema,
+    bodySchema: createAccountBookBodySchema,
+  },
+  outputSchema: accountBookSchema.nullable(),
+  frontend: nullSchema,
+};
+
+export type ICreateAccountBookBody = z.infer<typeof createAccountBookBodySchema>;
