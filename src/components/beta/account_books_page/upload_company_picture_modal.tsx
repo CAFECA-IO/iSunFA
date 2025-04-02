@@ -60,9 +60,13 @@ const UploadCompanyPictureModal = ({
 
         // Info: (20241212 - Liz) 打 API 更新帳本的公司圖片
         const { success, error } = await uploadAccountBookCompanyPictureAPI({
-          params: { Id: accountBookToUploadPicture.id }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將Id 修改成 accountBookId
+          params: { companyId: accountBookToUploadPicture.id },
           body: { fileId: fileMeta.id },
         });
+
+        // Deprecated: (20250402 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('fileId:', fileMeta.id);
 
         if (!success) {
           // Deprecated: (20241212 - Liz)
