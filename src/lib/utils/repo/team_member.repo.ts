@@ -396,3 +396,24 @@ export const getUserRoleInTeam = async (
 
   return teamMember ? (teamMember.role as TeamRole) : null;
 };
+
+/**
+ * Info: (20250428 - Shirley) 檢查用戶是否為特定團隊的成員
+ * @param userId 用戶 ID
+ * @param teamId 團隊 ID
+ * @returns 如果用戶是團隊成員則返回 true，否則返回 false
+ */
+export const isUserTeamMember = async (userId: number, teamId: number): Promise<boolean> => {
+  const teamMember = await prisma.teamMember.findFirst({
+    where: {
+      userId,
+      teamId,
+      status: LeaveStatus.IN_TEAM,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return !!teamMember;
+};
