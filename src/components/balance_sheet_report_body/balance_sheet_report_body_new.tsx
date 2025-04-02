@@ -4,8 +4,7 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import { IDatePeriod } from '@/interfaces/date_period';
 import { useTranslation } from 'next-i18next';
 import { useReactToPrint } from 'react-to-print';
-// Info: (20250327 - Anna) 使用 html2canvas@^1.4.1 時，轉成 PDF 出現文字位移偏下，改使用較穩定的 html2canvas@^1.0.0-alpha.12
-import html2canvas from 'html2canvas_v1alpha';
+import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
 // Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
@@ -37,6 +36,38 @@ const BalanceSheetPageBody = () => {
     pageCountRef.current = 1; // // Info: (20250327 - Anna) reset 頁數
 
     if (!downloadRef.current) return;
+
+    //  Info: (20250401 - Anna) 插入修正樣式
+    const style = document.createElement('style');
+    style.innerHTML = `
+  /* Info: (20250401 - Anna) 表格 */
+  .download-page td,
+  .download-page th {
+    padding-top: 0 !important;
+  }
+
+  /* Info: (20250401 - Anna) 子科目 */
+  .download-page .child-code-name-wrapper {
+    padding-bottom: 8px !important;
+  }
+
+  /* Info: (20250401 - Anna) 子科目名稱允許換行 */
+  .download-page .child-name {
+    white-space: normal !important;
+  }
+
+  /* Info: (20250401 - Anna) Balance Sheet (header) 調整底部間距 */
+  .download-page h2 {
+    padding-bottom: 6px !important;
+  }
+
+  /* Info: (20250401 - Anna) 大標題與表格間距 */
+  .download-page .download-header-label {
+    padding-bottom: 8px !important;
+  }
+`;
+
+    document.head.appendChild(style);
 
     //  Info: (20250327 - Anna) 顯示下載內容讓 html2canvas 擷取，移到畫面外避免干擾
     downloadRef.current.classList.remove('hidden');
@@ -96,6 +127,7 @@ const BalanceSheetPageBody = () => {
         scale: 2,
         useCORS: true,
         logging: true, // Info: (20250327 - Anna) 「顯示除錯訊息」到 console
+        // windowWidth: page.scrollWidth, // 🌟
       });
 
       // Info: (20250327 - Anna) 轉成 PNG 格式
@@ -109,6 +141,9 @@ const BalanceSheetPageBody = () => {
         pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
       }
     }
+
+    // Info: (20250401 - Anna) 移除修正樣式
+    style.remove();
 
     // Info: (20250327 - Anna) 隱藏下載用的內容
     downloadRef.current.classList.add('hidden');

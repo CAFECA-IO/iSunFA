@@ -4,8 +4,8 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 
+let currentPage = 1;
 export const createRenderedFooter = () => {
-  let currentPage = 1;
   return () => {
     const page = currentPage;
     currentPage += 1;
@@ -36,9 +36,19 @@ interface DownloadBalanceSheetProps {
 const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
   reportFinancial,
   downloadRef,
-  // pageCountRef,
 }) => {
   const { t } = useTranslation(['reports']);
+  // Info: (20250401 - Anna) 每次渲染前先把頁碼重置為 1
+  currentPage = 1;
+
+  // Info: (20250401 - Anna) 建立工具函式，將 rows 平均分成每頁最多 10 列
+  const paginateRows = (rows: React.ReactNode[], pageSize = 10): React.ReactNode[][] => {
+    const paginated: React.ReactNode[][] = [];
+    for (let i = 0; i < rows.length; i += pageSize) {
+      paginated.push(rows.slice(i, i + pageSize));
+    }
+    return paginated.filter((page) => page.length > 0);
+  };
 
   const renderedFooter = createRenderedFooter();
 
@@ -177,24 +187,22 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
     return rows;
   };
 
+  // Info: (20250401 - Anna)
   const rowsForDetail = (items: Array<IAccountReadyForFrontend>) => {
-    const rows = items.map((item) => {
-      // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"
+    const rows: React.ReactNode[] = [];
+
+    items.forEach((item) => {
       const isAllZeroOrDash =
         (item.curPeriodAmountString === '0' || item.curPeriodAmountString === '-') &&
         (item.curPeriodPercentageString === '0' || item.curPeriodPercentageString === '-') &&
         (item.prePeriodAmountString === '0' || item.prePeriodAmountString === '-') &&
         (item.prePeriodPercentageString === '0' || item.prePeriodPercentageString === '-');
 
-      if (isAllZeroOrDash) {
-        return null; // Info: (20250213 - Anna) 這一列不顯示
-      }
+      if (isAllZeroOrDash) return; // Info: (20250401 - Anna) 用 return 跳過這一筆
 
       if (!item.code) {
-        return (
-          // Todo: (20250331 - Anna) 這裡的 key 需要改成 item.name
-          <tr key={item.code}>
-            {/* <tr key={`group-${item.name}-${index}`}> */}
+        rows.push(
+          <tr key={`group-${item.name}`}>
             <td
               colSpan={6}
               className="border border-stroke-neutral-quaternary p-10px text-sm font-bold"
@@ -203,74 +211,76 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
             </td>
           </tr>
         );
+        return;
       }
 
-      return (
-        <React.Fragment key={item.code}>
-          <tr>
-            <td className="border border-stroke-neutral-quaternary p-10px text-sm">{item.code}</td>
-            <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-              <div className="flex items-center justify-between">
-                {t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}
-              </div>
-            </td>
-            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-              {item.curPeriodAmountString}
-            </td>
-            <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
-              {item.curPeriodPercentageString}
-            </td>
-            <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-              {item.prePeriodAmountString}
-            </td>
-            <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
-              {item.prePeriodPercentageString}
-            </td>
-          </tr>
-          {/* Info: (20250314 - Anna) 子科目表格 */}
-          {item.children &&
-            item.children.length > 0 &&
-            item.children
-              // Info: (20241203 - Anna) 過濾掉數值為 "0" 或 "-" 的子科目
-              .filter(
-                (child) =>
-                  child.curPeriodAmountString !== '-' ||
-                  child.curPeriodPercentageString !== '-' ||
-                  child.prePeriodAmountString !== '-' ||
-                  child.prePeriodPercentageString !== '-'
-              )
-              .map((child) => (
-                <tr key={`sub-accounts-${child.code}`}>
-                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-sm"></td>
-                  <td className="items-center border border-t-0 border-stroke-brand-secondary-soft px-10px py-3px text-sm">
-                    <div className="flex items-center justify-between">
-                      <div className="justify-start">
-                        <span>{child.code}</span>
-                        <span className="ml-2">
-                          {t(`reports:ACCOUNTING_ACCOUNT.${child.name}`)}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                    {child.curPeriodAmountString}
-                  </td>
-                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                    {child.curPeriodPercentageString}
-                  </td>
-                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                    {child.prePeriodAmountString}
-                  </td>
-                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                    {child.prePeriodPercentageString}
-                  </td>
-                </tr>
-              ))}
-        </React.Fragment>
+      // Info: (20250401 - Anna) 主科目 row
+      rows.push(
+        <tr key={item.code}>
+          <td className="border border-stroke-neutral-quaternary p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+            <div className="flex items-center justify-between">
+              {t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}
+            </div>
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
+            {item.curPeriodPercentageString}
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
+            {item.prePeriodPercentageString}
+          </td>
+        </tr>
       );
+
+      // Info: (20250401 - Anna) 子科目 rows
+      item.children
+        ?.filter(
+          (child) =>
+            child.curPeriodAmountString !== '-' ||
+            child.curPeriodPercentageString !== '-' ||
+            child.prePeriodAmountString !== '-' ||
+            child.prePeriodPercentageString !== '-'
+        )
+        .forEach((child) => {
+          rows.push(
+            <tr key={`sub-accounts-${child.code}`}>
+              <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-sm"></td>
+              <td className="items-center border border-t-0 border-stroke-brand-secondary-soft px-10px py-3px text-sm">
+                <div className="flex items-center justify-between">
+                  <div className="child-code-name-wrapper justify-start">
+                    <span className="child-code">{child.code}</span>
+                    <span className="child-name ml-2">
+                      {t(`reports:ACCOUNTING_ACCOUNT.${child.name}`)}
+                    </span>
+                  </div>
+                </div>
+              </td>
+              <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                {child.curPeriodAmountString}
+              </td>
+              <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                {child.curPeriodPercentageString}
+              </td>
+              <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                {child.prePeriodAmountString}
+              </td>
+              <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                {child.prePeriodPercentageString}
+              </td>
+            </tr>
+          );
+        });
     });
+
     return rows;
   };
+
   const renderDataRow = (
     label: string,
     curValue: number | undefined,
@@ -289,101 +299,120 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
 
   // Todo: (20250331 - Anna) id 可拿掉
   const ItemSummary = (
-    <div id="1" className="relative overflow-y-hidden px-14px">
-      {/* Info: (20240723 - Shirley) watermark logo */}
-      <div className="relative right-0 top-16 z-0">
-        <Image
-          className="absolute right-0 top-0"
-          src="/logo/watermark_logo.svg"
-          alt="isunfa logo"
-          width={400}
-          height={300}
-        />
+    <>
+      <div id="1" className="relative overflow-y-hidden px-14px">
+        {/* Info: (20240723 - Shirley) watermark logo */}
+        <div className="relative right-0 top-16 z-0">
+          <Image
+            className="absolute right-0 top-0"
+            src="/logo/watermark_logo.svg"
+            alt="isunfa logo"
+            width={400}
+            height={300}
+          />
+        </div>
+
+        <section className="text-text-neutral-secondary">
+          {
+            <table className="relative z-1 w-full border-collapse bg-white">
+              <thead>
+                <tr className="print:hidden">
+                  <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                    {t('reports:REPORTS.CODE_NUMBER')}
+                  </th>
+                  <th
+                    className={`w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold`}
+                  >
+                    {t('reports:REPORTS.ACCOUNTING_ITEMS')}
+                  </th>
+                  <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                    {curDateFormatted}
+                  </th>
+                  <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                    %
+                  </th>
+                  <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                    {preDateFormatted}
+                  </th>
+                  <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                    %
+                  </th>
+                </tr>
+              </thead>
+              {/* Info: (20250401 - Anna) */}
+              <tbody>
+                {reportFinancial?.general &&
+                  paginateRows(rowsForSummary(reportFinancial.general)).map((pageRows, index) => (
+                    <React.Fragment key={`summary-page-${pageRows.map((row, i) => i).join('-')}`}>
+                      {pageRows}
+                      {/* Info: (20250401 - Anna) 強制分頁：html2canvas 將此 div 當作分頁標記 */}
+                      {index !== 0 && <tr className="break-after-page" />}
+                    </React.Fragment>
+                  ))}
+              </tbody>
+            </table>
+          }
+        </section>
       </div>
-
-      <section className="text-text-neutral-secondary">
-        {
-          <table className="relative z-1 w-full border-collapse bg-white">
-            <thead>
-              <tr className="print:hidden">
-                <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-                  {t('reports:REPORTS.CODE_NUMBER')}
-                </th>
-                <th
-                  className={`w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold`}
-                >
-                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
-                </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  {curDateFormatted}
-                </th>
-                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  %
-                </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  {preDateFormatted}
-                </th>
-                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  %
-                </th>
-              </tr>
-            </thead>
-            {/* <tbody>
-              {reportFinancial &&
-                reportFinancial.general &&
-                Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
-                rowsForSummary(reportFinancial.general)}
-            </tbody> */}
-            {/* Todo: (20250331 - Anna)  Object.prototype.hasOwnProperty 可拿掉 */}
-            <tbody>{reportFinancial?.general && rowsForSummary(reportFinancial.general)}</tbody>
-          </table>
-        }
-      </section>
-    </div>
+      {renderedFooter()}
+    </>
   );
 
-  // Todo: (20250331 - Anna) id 可拿掉
-  const ItemDetail = (
-    <div id="2" className={`relative overflow-y-hidden px-14px print:break-before-page`}>
-      <section className="text-text-neutral-secondary">
-        {
-          <table className="w-full border-collapse bg-white">
-            <thead>
-              <tr className="print:hidden">
-                <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-                  {t('reports:REPORTS.CODE_NUMBER')}
-                </th>
-                <th className="w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
-                </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  {curDateFormatted}
-                </th>
-                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  %
-                </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  {preDateFormatted}
-                </th>
-                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  %
-                </th>
-              </tr>
-            </thead>
-            {/* Todo: (20250331 - Anna)  Object.prototype.hasOwnProperty 可拿掉 */}
-            {/* <tbody>
-              {reportFinancial &&
-                reportFinancial.general &&
-                Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
-                rowsForDetail(reportFinancial.details)}
-            </tbody> */}
-            <tbody>{reportFinancial?.details && rowsForDetail(reportFinancial.details)}</tbody>
-          </table>
-        }
-      </section>
-    </div>
-  );
-  // Todo: (20250331 - Anna) id 可拿掉
+  // Info: (20250401 - Anna) 只做一次分頁
+  const detailPages = reportFinancial?.details
+    ? paginateRows(rowsForDetail(reportFinancial.details))
+    : [];
+
+  const ItemDetail = detailPages.map((pageRows) => {
+    const pageKey = pageRows
+      .map((row) => (React.isValidElement(row) && row.key ? row.key : 'unknown'))
+      .join('-');
+
+    const footer = renderedFooter(); // Info: (20250401 - Anna) 確保頁碼遞增正確
+
+    return (
+      <div key={`detail-page-${pageKey}`} className={printContainerClass}>
+        <div className={`${printContentClass} relative h-a4-height overflow-y-hidden`}>
+          {renderedHeader(false)}
+          <div className="download-header-label mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
+            <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
+            <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          </div>
+          <div className={`relative overflow-y-hidden px-14px print:break-before-page`}>
+            <section className="text-text-neutral-secondary">
+              <table className="w-full border-collapse bg-white">
+                <thead>
+                  <tr className="print:hidden">
+                    <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                      {t('reports:REPORTS.CODE_NUMBER')}
+                    </th>
+                    <th className="w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                      {t('reports:REPORTS.ACCOUNTING_ITEMS')}
+                    </th>
+                    <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      {curDateFormatted}
+                    </th>
+                    <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      %
+                    </th>
+                    <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      {preDateFormatted}
+                    </th>
+                    <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      %
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>{pageRows}</tbody>
+              </table>
+            </section>
+          </div>
+          {footer}
+        </div>
+      </div>
+    );
+  });
+
   const TurnoverDay = (
     <div id="5" className={`relative overflow-y-hidden print:break-before-page`}>
       <section className="mx-1 text-text-neutral-secondary">
@@ -470,38 +499,16 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
           className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
         >
           {renderedHeader(true)}
-          <div className="relative z-10 mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
+          <div className="download-header-label relative z-10 mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
             <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
           </div>
           {ItemSummary}
-          {renderedFooter()}
         </div>
       </div>
-      {/* Info: (20241120 - Anna) 渲染第二塊分頁 */}
-      {/* Todo: (20241120 - Anna) key 可拿掉 */}
-      <div
-        key={`second-block-page-`}
-        className={printContainerClass}
-        style={{
-          pageBreakBefore: 'auto',
-          pageBreakAfter: 'auto',
-        }}
-      >
-        <div
-          // Todo: (20241120 - Anna) id 可拿掉
-          id={`second-block-page-`}
-          className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
-        >
-          {renderedHeader(false)}
-          <div className="mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
-            <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-            <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
-          </div>
-          {ItemDetail}
-          {renderedFooter()}
-        </div>
-      </div>
+      {/* Info: (20250401 - Anna) 渲染第二塊分頁 */}
+      {ItemDetail}
+
       {/* Info: (20241120 - Anna) 渲染額外的內容 */}
       {/* Todo: (20241120 - Anna) key 可拿掉 */}
       <div
