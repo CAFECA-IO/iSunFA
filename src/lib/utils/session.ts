@@ -301,6 +301,7 @@ export async function updateTeamMemberSession(
     const sessions = Array.from(sessionHandlerInstance.data.values());
     const userSessions = sessions.filter((session) => session.userId === userId);
 
+    // Deprecated: (20250416 - Shirley) 移除 log
     loggerBack.info({
       message: 'Updating team member session',
       userId,
@@ -317,6 +318,7 @@ export async function updateTeamMemberSession(
         if (role === null) {
           // Info: (20250402 - Shirley) 移除用戶
           updatedTeams = teams.filter((team) => team.id !== teamId);
+          // Deprecated: (20250416 - Shirley) 移除 log
           loggerBack.info({
             message: 'Removing team from user session',
             userId,
@@ -330,6 +332,7 @@ export async function updateTeamMemberSession(
           if (existingTeamIndex === -1) {
             // Info: (20250402 - Shirley) 用戶不在團隊中，新增團隊資訊
             updatedTeams = [...teams, { id: teamId, role }];
+            // Deprecated: (20250416 - Shirley) 移除 log
             loggerBack.info({
               message: 'Adding team to user session',
               userId,
@@ -340,6 +343,7 @@ export async function updateTeamMemberSession(
           } else {
             // Info: (20250402 - Shirley) 用戶已在團隊中，更新角色
             updatedTeams = teams.map((team) => (team.id === teamId ? { ...team, role } : team));
+            // Deprecated: (20250416 - Shirley) 移除 log
             loggerBack.info({
               message: 'Updating user role in team session',
               userId,
@@ -355,7 +359,7 @@ export async function updateTeamMemberSession(
           ...session,
           teams: updatedTeams,
         });
-
+        // Deprecated: (20250416 - Shirley) 移除 log
         loggerBack.info({
           message: 'Session updated successfully',
           userId,
@@ -369,6 +373,7 @@ export async function updateTeamMemberSession(
       })
     );
   } catch (error) {
+    // Deprecated: (20250416 - Shirley) 移除 log
     loggerBack.warn({
       message: 'Failed to update team member session',
       error,
