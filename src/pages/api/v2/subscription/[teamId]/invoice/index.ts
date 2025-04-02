@@ -8,10 +8,11 @@ import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { ITeamInvoice } from '@/interfaces/subscription';
 import { checkRequestData, checkSessionUser, checkUserAuthorization } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
+import { listTeamTransaction } from '@/lib/utils/repo/team_subscription.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
-
+  const { userId } = session;
   const isLogin = await checkSessionUser(session, APIName.LIST_TEAM_INVOICE, req);
   if (!isLogin) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
@@ -24,9 +25,8 @@ const handleGetRequest = async (req: NextApiRequest) => {
   if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
-  const options: IPaginatedOptions<ITeamInvoice[]> = {
-    data: [],
-  };
+
+  const options: IPaginatedOptions<ITeamInvoice[]> = await listTeamTransaction(userId);
 
   const payload: IPaginatedData<ITeamInvoice[]> = toPaginatedData(options);
   const result = formatApiResponse(STATUS_MESSAGE.SUCCESS, payload);

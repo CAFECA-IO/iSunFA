@@ -3,17 +3,18 @@ import { ITeam, TeamRole, LeaveStatus } from '@/interfaces/team';
 import { InviteStatus } from '@prisma/client';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { z } from 'zod';
-import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { createOrderByList } from '@/lib/utils/sort';
-import { MAX_TEAM_LIMIT } from '@/interfaces/permissions';
+import { ITeamRoleCanDo, MAX_TEAM_LIMIT, TeamPermissionAction } from '@/interfaces/permissions';
 import { getTimestampNow } from '@/lib/utils/common';
+import { listTeamQuerySchema } from '@/lib/utils/zod_schema/team';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 
 export const getTeamList = async (
   userId: number,
-  queryParams: z.infer<typeof paginatedDataQuerySchema>
+  queryParams: z.infer<typeof listTeamQuerySchema>
 ): Promise<IPaginatedOptions<ITeam[]>> => {
   const {
     page,
@@ -22,6 +23,7 @@ export const getTeamList = async (
     endDate,
     searchQuery,
     sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+    canCreateAccountBookOnly = false,
   } = queryParams;
 
   const nowInSecond = getTimestampNow();
@@ -45,12 +47,8 @@ export const getTeamList = async (
         accountBook: true,
         subscriptions: {
           where: {
-            startDate: {
-              lte: nowInSecond,
-            },
-            expiredDate: {
-              gt: nowInSecond,
-            },
+            startDate: { lte: nowInSecond },
+            expiredDate: { gt: nowInSecond },
           },
           include: { plan: true },
         },
@@ -62,30 +60,45 @@ export const getTeamList = async (
     }),
   ]);
 
+  const teamData = teams
+    .map((team) => {
+      const role = (team.members[0]?.role as TeamRole) ?? TeamRole.VIEWER;
+      const permissionCheck = convertTeamRoleCanDo({
+        teamRole: role,
+        canDo: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
+      });
+
+      const hasPermission = (permissionCheck as ITeamRoleCanDo).yesOrNo === true;
+
+      if (canCreateAccountBookOnly && !hasPermission) return null;
+
+      return {
+        id: team.id,
+        imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
+        role,
+        name: { value: team.name, editable: role !== TeamRole.VIEWER },
+        about: { value: team.about || '', editable: role !== TeamRole.VIEWER },
+        profile: { value: team.profile || '', editable: role !== TeamRole.VIEWER },
+        planType: {
+          value: (team.subscriptions[0]?.plan.type as TPlanType) ?? TPlanType.BEGINNER,
+          editable: false,
+        },
+        totalMembers: team.members.length,
+        totalAccountBooks: team.accountBook.length,
+        bankAccount: {
+          value: team.bankInfo
+            ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
+            : '',
+          editable: role !== TeamRole.VIEWER,
+        },
+        // ToDo: (20250330 - Luphia) 需從團隊訂閱狀態取得資料
+        paymentStatus: TPlanType.BEGINNER,
+      };
+    })
+    .filter((team): team is NonNullable<typeof team> => team !== null);
+
   return toPaginatedData({
-    data: teams.map((team) => ({
-      id: team.id,
-      imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
-      role:
-        (team.members.find((member) => member.id === userId)?.role as TeamRole) ?? TeamRole.VIEWER,
-      name: { value: team.name, editable: team.members[0]?.role !== TeamRole.VIEWER },
-      about: { value: team.about || '', editable: team.members[0]?.role !== TeamRole.VIEWER },
-      profile: { value: team.profile || '', editable: team.members[0]?.role !== TeamRole.VIEWER },
-      planType: {
-        value: (team.subscriptions[0]?.plan.type as TPlanType) ?? TPlanType.BEGINNER,
-        editable: false,
-      },
-      totalMembers: team.members.length,
-      totalAccountBooks: team.accountBook.length,
-      bankAccount: {
-        value: team.bankInfo
-          ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
-          : '',
-        editable: team.members[0]?.role !== TeamRole.VIEWER,
-      },
-      // ToDo: (20250330 - Luphia) 需從團隊訂閱狀態取得資料
-      paymentStatus: TPlanType.BEGINNER,
-    })),
+    data: teamData,
     page,
     totalPages: Math.ceil(totalCount / pageSize),
     totalCount,

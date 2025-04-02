@@ -8,6 +8,7 @@ import {
   timestampInSeconds,
 } from '@/lib/utils/common';
 import { accountBookSchema } from '@/lib/utils/zod_schema/account_book';
+import loggerBack from '@/lib/utils/logger_back';
 
 // Info: (20241029 - Jacky) Todo null schema
 const todoNullSchema = z.union([z.object({}), z.string()]);
@@ -107,11 +108,16 @@ const todoOutputSchema = z
     updatedAt: z.number().int(),
     userTodoCompanies: z.array(
       z.object({
-        company: accountBookSchema,
+        company: accountBookSchema.extend({
+          imageFile: z.object({
+            url: z.string().optional(),
+          }),
+        }),
       })
     ),
   })
   .transform((data) => {
+    loggerBack.info(`todoOutputSchema: ${JSON.stringify(data)}`);
     const { userTodoCompanies, startTime, endTime, ...rest } = data;
     const { company } = userTodoCompanies[0];
     const startTimeInMilliseconds = timestampInMilliSeconds(startTime);
@@ -121,7 +127,10 @@ const todoOutputSchema = z
       ...rest,
       startTime: startTimeInMilliseconds,
       endTime: endTimeInMilliseconds,
-      company,
+      company: {
+        ...company,
+        imageId: company.imageFile?.url ?? '',
+      },
     };
   });
 

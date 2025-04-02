@@ -64,6 +64,7 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
   if (timestamp === 0 || timestamp === undefined || timestamp === null) {
     return {
       date: '-',
+      dateWithSlash: '-',
       dateOfLastYear: '-',
       day: '-',
       tomorrow: '-',
@@ -108,6 +109,7 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
 
   return {
     date: dateString, // Info: (20240417 - Jacky) e.g. 2021-01-01
+    dateWithSlash: dateString.replace(/-/g, '/'), // Info: (20250402 - Julian) e.g. 2021/01/01
     dateOfLastYear: dateOfLastYearString, // Info: (20240417 - Jacky) e.g. 2020-01-01
     day: `${dayString}`, // Info: (20240417 - Jacky) e.g. 01
     tomorrow: tomorrowString, // Info: (20240417 - Jacky) e.g. 2021-01-02

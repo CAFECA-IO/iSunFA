@@ -10,7 +10,8 @@ import {
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
 import JobFilterSection from '@/components/join_us/filter_section';
-import { dummyJobList } from '@/interfaces/job';
+import { dummyJobList, IJobUI } from '@/interfaces/job';
+import VacancyItem from '@/components/join_us/vacancy_item';
 
 enum SortOrder {
   Newest = 'newest',
@@ -20,18 +21,105 @@ enum SortOrder {
 const JoinUsPageBody: React.FC = () => {
   const { t } = useTranslation(['landing_page']);
 
-  // Deprecated: (20250331 - Julian) 施工中
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [jobList, setJobList] = useState(dummyJobList);
+  const defaultJobList: IJobUI[] = dummyJobList.map((job) => {
+    return { ...job, isFavorite: false };
+  });
 
+  // Info: (20250402 - Julian) 初始清單
+  const [jobList, setJobList] = useState<IJobUI[]>(defaultJobList);
+  // Info: (20250402 - Julian) 過濾後的清單
+  const [filteredJobList, setFilteredJobList] = useState<IJobUI[]>(defaultJobList);
+  // Info: (20250402 - Julian) 排序方式
   const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.Newest);
 
-  const toggleSortOrder = () => {
-    setSortOrder(sortOrder === SortOrder.Newest ? SortOrder.Oldest : SortOrder.Newest);
+  const filterJobs = (type: string, location: string, keyword: string) => {
+    const newJobList = jobList.filter((job) => {
+      // Info: (20250402 - Julian) Type filter: 不是 all 就是 我的最愛
+      if (type !== 'all') {
+        return job.isFavorite;
+      }
+
+      // Info: (20250402 - Julian) Location filter
+      if (location !== 'all') {
+        return job.location.toLowerCase() === location;
+      }
+
+      // Info: (20250402 - Julian) Keyword filter
+      if (keyword !== '') {
+        const isMatched =
+          job.title.toLowerCase().includes(keyword) ||
+          job.description.toLowerCase().includes(keyword) ||
+          job.jobResponsibilities.join(' ').toLowerCase().includes(keyword) ||
+          job.requirements.join(' ').toLowerCase().includes(keyword) ||
+          job.extraSkills.join(' ').toLowerCase().includes(keyword);
+
+        return isMatched;
+      }
+
+      return true; // Info: (20250402 - Julian) Return all jobs
+    });
+
+    setFilteredJobList(newJobList);
   };
 
-  const vacancyList = jobList.map((job) => (
-    <div key={job.id} className="h-220px w-full rounded-xl bg-white"></div>
+  const toggleSortOrder = () => {
+    // Info: (20250402 - Julian) 切換排序方式
+    setSortOrder(sortOrder === SortOrder.Newest ? SortOrder.Oldest : SortOrder.Newest);
+
+    // Info: (20250402 - Julian) 更新 jobList 和 filteredJobList
+    setJobList((prev) => {
+      const sortedJobList = prev.sort((a, b) => {
+        if (sortOrder === SortOrder.Newest) {
+          return a.date - b.date; // Info: (20250402 - Julian) Sort by newest
+        }
+        return b.date - a.date; // Info: (20250402 - Julian) Sort by oldest
+      });
+      return sortedJobList;
+    });
+
+    setFilteredJobList((prev) => {
+      const sortedFilterList = prev.sort((a, b) => {
+        if (sortOrder === SortOrder.Newest) {
+          return a.date - b.date; // Info: (20250402 - Julian) Sort by newest
+        }
+        return b.date - a.date; // Info: (20250402 - Julian) Sort by oldest
+      });
+      return sortedFilterList;
+    });
+  };
+
+  const toggleFavorite = (jobId: number) => {
+    // Info: (20250402 - Julian) 更新 jobList 和 filteredJobList
+    setJobList((prev) => {
+      const newJobList = prev.map((item) => {
+        // Info: (20250402 - Julian) 找到對應的 job id，將 isFavorite 反轉
+        if (item.id === jobId) {
+          return { ...item, isFavorite: !item.isFavorite };
+        }
+        return item;
+      });
+      return newJobList;
+    });
+
+    setFilteredJobList((prev) => {
+      const newFilterList = prev.map((item) => {
+        // Info: (20250402 - Julian) 找到對應的 job id，將 isFavorite 反轉
+        if (item.id === jobId) {
+          return { ...item, isFavorite: !item.isFavorite };
+        }
+        return item;
+      });
+      return newFilterList;
+    });
+  };
+
+  const vacancyList = filteredJobList.map((job) => (
+    <VacancyItem
+      key={job.id}
+      job={job}
+      isFavorite={job.isFavorite}
+      toggleFavorite={() => toggleFavorite(job.id)}
+    />
   ));
 
   return (
@@ -53,7 +141,7 @@ const JoinUsPageBody: React.FC = () => {
           </div>
 
           {/* Info: (20250331 - Julian) Filter Section */}
-          <JobFilterSection />
+          <JobFilterSection filterJobs={filterJobs} />
 
           <div className="flex flex-col gap-24px">
             {/* Info: (20250331 - Julian) Sort Order */}
@@ -61,10 +149,16 @@ const JoinUsPageBody: React.FC = () => {
               {/* Info: (20250331 - Julian) Available Position */}
               <p className="text-lg font-medium text-white">
                 {t('hiring:JOIN_US_PAGE.AVAILABLE_POSITION')}{' '}
-                <span className="font-semibold text-text-brand-primary-lv3">{jobList.length}</span>
+                <span className="font-semibold text-text-brand-primary-lv3">
+                  {filteredJobList.length}
+                </span>
               </p>
               {/* Info: (20250331 - Julian) Sort Order */}
-              <button type="button" onClick={toggleSortOrder} className="flex items-center gap-8px">
+              <button
+                type="button"
+                onClick={toggleSortOrder}
+                className="flex items-center gap-8px hover:text-surface-brand-primary"
+              >
                 <p className="text-lg font-medium capitalize">
                   {t(`hiring:SORT.${sortOrder.toUpperCase()}`)}
                 </p>

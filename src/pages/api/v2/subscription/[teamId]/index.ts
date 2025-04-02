@@ -6,18 +6,21 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { FAKE_OWNED_TEAMS } from '@/lib/services/subscription_service';
+import { getSubscriptionByTeamId } from '@/lib/utils/repo/team_subscription.repo';
+import { getSession } from '@/lib/utils/session';
 
 const handleGetRequest: IHandleRequest<
   APIName.GET_SUBSCRIPTION_BY_TEAM_ID,
   IUserOwnedTeam | null
-> = async ({ query }) => {
+> = async ({ query, req }) => {
+  const session = await getSession(req);
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUserOwnedTeam | null = null;
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
   const { teamId } = query;
-  const team = FAKE_OWNED_TEAMS.find((t) => t.id === teamId);
+  const team = await getSubscriptionByTeamId(userId, teamId);
   payload = team || null;
 
   return { statusMessage, payload };
