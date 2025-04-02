@@ -6,7 +6,7 @@ import { useTranslation } from 'next-i18next';
 import JoinUsPageBody from '@/components/join_us/join_us_body';
 
 const JoinUsPage: React.FC = () => {
-  const { t } = useTranslation(['landing_page']);
+  const { t } = useTranslation(['hiring']);
 
   return (
     <>
@@ -14,7 +14,7 @@ const JoinUsPage: React.FC = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>iSunFA - {t('Join Us')}</title>
+        <title>iSunFA - {t('hiring:JOIN_US_PAGE.HEAD_TITLE')}</title>
       </Head>
 
       <JoinUsPageBody />
@@ -24,7 +24,7 @@ const JoinUsPage: React.FC = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['landing_page_v2', 'terms', 'common'])),
+    ...(await serverSideTranslations(locale, ['landing_page_v2', 'hiring', 'common'])),
   },
 });
 

@@ -84,7 +84,7 @@ const BillingPageBody = ({ team, getOwnedTeam }: BillingPageBodyProps) => {
 
   // Info: (20250116 - Anna) 初始化 APIHandler
   const { trigger: getInvoiceList } = APIHandler<IPaginatedData<ITeamInvoice[]>>(
-    APIName.LIST_SUBSCRIPTION_INVOICE
+    APIName.LIST_TEAM_INVOICE
   );
 
   // Info: (20250120 - Anna) 排序函數
@@ -120,7 +120,7 @@ const BillingPageBody = ({ team, getOwnedTeam }: BillingPageBodyProps) => {
     [amountSort, billingDateSort, invoiceIDSort]
   );
 
-  // Info: (20250122 - Liz) 打 API 取得發票列表
+  // Info: (20250122 - Liz) 打 API 取得發票清單
   useEffect(() => {
     if (!team) return;
 
@@ -138,7 +138,7 @@ const BillingPageBody = ({ team, getOwnedTeam }: BillingPageBodyProps) => {
           searchQuery: searchQuery || undefined, // Info: (20250116 - Anna) 如果 searchQuery 是空字串，則設為 undefined
         };
 
-        // Info: (20250121 - Liz) 打 API 取得發票列表(根據查詢參數)
+        // Info: (20250121 - Liz) 打 API 取得發票清單(根據查詢參數)
         const response = await getInvoiceList({
           params: {
             teamId: team.id,
@@ -154,7 +154,7 @@ const BillingPageBody = ({ team, getOwnedTeam }: BillingPageBodyProps) => {
         } else {
           // Deprecated: (20250120 - Anna)
           // eslint-disable-next-line no-console
-          console.error('取得發票列表失敗:', response.error || `API 錯誤碼: ${response.code}`);
+          console.error('取得發票清單失敗:', response.error || `API 錯誤碼: ${response.code}`);
         }
       } catch (error) {
         // Deprecated: (20250120 - Anna)

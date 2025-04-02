@@ -1,0 +1,20 @@
+{
+  "JOIN_US_PAGE": {
+    "HEAD_TITLE": "加入我們",
+    "MAIN_TITLE": "成為我們團隊的一員",
+    "MAIN_DESCRIPTION": "科技無限，我們也無限！立即加入我們！",
+    "AVAILABLE_POSITION": "空缺職位：",
+    "SEARCH_PLACEHOLDER": "查詢職位名稱、地點、關鍵字"
+  },
+  "JOB_TYPE": {
+    "ALL": "全部"
+  },
+  "LOCATION": {
+    "ALL": "全部",
+    "LOCATION": "地點"
+  },
+  "SORT": {
+    "NEWEST": "最新",
+    "OLDEST": "最舊"
+  }
+}

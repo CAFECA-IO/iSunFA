@@ -18,7 +18,6 @@ import {
   certificateMultiDeleteSchema,
 } from '@/lib/utils/zod_schema/certificate';
 import {
-  companyDeleteSchema,
   companyPutIconSchema,
   companyPutSchema,
   companySearchSchema,
@@ -126,6 +125,7 @@ import {
   listAccountBooksByTeamIdSchema,
   getAccountBookInfoSchema,
   updateAccountBookSchema,
+  deleteAccountBookSchema,
 } from '@/lib/utils/zod_schema/account_book';
 
 /*
@@ -164,7 +164,7 @@ export const API_ZOD_SCHEMA = {
 export const ZOD_SCHEMA_API = {
   [APIName.CREATE_ACCOUNT_BOOK]: accountBookCreateSchema,
   [APIName.COMPANY_UPDATE]: companyPutSchema,
-  [APIName.COMPANY_DELETE]: companyDeleteSchema,
+  [APIName.DELETE_ACCOUNT_BOOK]: deleteAccountBookSchema,
   [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: companySearchSchema,
   [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
   [APIName.COMPANY_PUT_ICON]: companyPutIconSchema,
@@ -280,10 +280,10 @@ export const ZOD_SCHEMA_API = {
   [APIName.DECLINE_TRANSFER_ACCOUNT_BOOK]: teamSchemas.declineTransferAccountBook,
   [APIName.LEAVE_TEAM]: teamSchemas.leaveTeam,
 
-  [APIName.LIST_SUBSCRIPTION]: subscriptionSchemas.list,
+  [APIName.LIST_TEAM_SUBSCRIPTION]: subscriptionSchemas.list,
   [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: subscriptionSchemas.get,
   [APIName.UPDATE_SUBSCRIPTION]: subscriptionSchemas.update,
-  [APIName.LIST_SUBSCRIPTION_INVOICE]: subscriptionSchemas.listInvoiceList,
+  [APIName.LIST_TEAM_INVOICE]: subscriptionSchemas.listInvoiceList,
   [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: subscriptionSchemas.getInvoice,
 
   [APIName.GET_CREDIT_CARD_INFO]: subscriptionSchemas.getCreditCard,

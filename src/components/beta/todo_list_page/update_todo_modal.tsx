@@ -83,7 +83,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
 
       if (success && updatedTodo) {
         setTodoToUpdate(undefined); // Info: (20241125 - Liz) 關閉 modal
-        getTodoList(); // Info: (20241125 - Liz) 重新取得待辦事項列表
+        getTodoList(); // Info: (20241125 - Liz) 重新取得待辦事項清單
 
         // Deprecated: (20241125 - Liz)
         // eslint-disable-next-line no-console

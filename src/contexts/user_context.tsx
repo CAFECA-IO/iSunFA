@@ -185,7 +185,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: updateAccountBookAPI } = APIHandler<IAccountBook>(APIName.UPDATE_ACCOUNT_BOOK);
 
   // Info: (20241115 - Liz) 刪除帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
-  const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.COMPANY_DELETE);
+  const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.DELETE_ACCOUNT_BOOK);
 
   const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
   const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
