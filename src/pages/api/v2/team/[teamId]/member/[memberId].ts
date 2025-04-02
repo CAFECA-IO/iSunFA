@@ -352,12 +352,12 @@ export default async function handler(
     return;
   }
 
-  // Info: (20250312 - Shirley) 記錄用戶操作
+  // Info: (20250402 - Shirley) 記錄用戶操作
   if (session) {
     await logUserAction(session, apiName, req, statusMessage);
   }
 
-  // Info: (20250312 - Shirley) 返回響應
+  // Info: (20250402 - Shirley) 返回響應
   const response = formatApiResponse<IResponse['payload']>(statusMessage, payload);
   httpCode = response.httpCode;
   result = response.result;

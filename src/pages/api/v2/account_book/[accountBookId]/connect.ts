@@ -50,7 +50,7 @@ const handleGetRequest: IHandleRequest<
   // Info: (20250402 - Shirley) 途徑一: 檢查用戶是否為帳本的直接管理員
   if (company.teamId) {
     // Info: (20250402 - Shirley) 途徑二: 如果帳本屬於團隊，檢查用戶是否為團隊成員
-    // Info: (20250428 - Shirley) 使用 repo 函數替代直接的 Prisma 查詢
+    // Info: (20250402 - Shirley) 使用 repo 函數替代直接的 Prisma 查詢
     hasAccess = await isUserTeamMember(userId, company.teamId);
   }
 
