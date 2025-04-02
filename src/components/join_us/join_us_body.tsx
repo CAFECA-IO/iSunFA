@@ -10,7 +10,8 @@ import {
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
 import JobFilterSection from '@/components/join_us/filter_section';
-import { dummyJobList } from '@/interfaces/job';
+import { IJob, dummyJobList } from '@/interfaces/job';
+import VacancyItem from '@/components/join_us/vacancy_item';
 
 enum SortOrder {
   Newest = 'newest',
@@ -22,7 +23,7 @@ const JoinUsPageBody: React.FC = () => {
 
   // Deprecated: (20250331 - Julian) 施工中
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [jobList, setJobList] = useState(dummyJobList);
+  const [jobList, setJobList] = useState<IJob[]>(dummyJobList);
 
   const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.Newest);
 
@@ -30,9 +31,7 @@ const JoinUsPageBody: React.FC = () => {
     setSortOrder(sortOrder === SortOrder.Newest ? SortOrder.Oldest : SortOrder.Newest);
   };
 
-  const vacancyList = jobList.map((job) => (
-    <div key={job.id} className="h-220px w-full rounded-xl bg-white"></div>
-  ));
+  const vacancyList = jobList.map((job) => <VacancyItem key={job.id} {...job} />);
 
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
@@ -64,7 +63,11 @@ const JoinUsPageBody: React.FC = () => {
                 <span className="font-semibold text-text-brand-primary-lv3">{jobList.length}</span>
               </p>
               {/* Info: (20250331 - Julian) Sort Order */}
-              <button type="button" onClick={toggleSortOrder} className="flex items-center gap-8px">
+              <button
+                type="button"
+                onClick={toggleSortOrder}
+                className="flex items-center gap-8px hover:text-surface-brand-primary"
+              >
                 <p className="text-lg font-medium capitalize">
                   {t(`hiring:SORT.${sortOrder.toUpperCase()}`)}
                 </p>
