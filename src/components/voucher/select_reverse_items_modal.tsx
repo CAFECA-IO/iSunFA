@@ -293,53 +293,59 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 
           {/* Info: (20241104 - Julian) Table */}
           <div className="flex w-full flex-1 flex-col overflow-hidden rounded-md border border-stroke-neutral-quaternary">
-            {/* Info: (20241104 - Julian) summary */}
-            <div className="flex items-center justify-between bg-surface-neutral-main-background px-16px py-8px font-medium">
-              {/* Info: (20241104 - Julian) Select */}
-              <p className="text-text-neutral-secondary">
-                ({t('journal:REVERSE_MODAL.SELECT')} {selectCount}/{totalItems})
-              </p>
-              {/* Info: (20241104 - Julian) Total reverse amount */}
-              <p className="text-text-neutral-secondary">
-                {t('journal:REVERSE_MODAL.TOTAL_REVERSE_AMOUNT')}:{' '}
-                <span className="text-text-neutral-primary">
-                  {numberWithCommas(totalReverseAmount)}
-                </span>{' '}
-                {t('common:CURRENCY_ALIAS.TWD')}
-              </p>
-            </div>
-            <div className="flex flex-1 flex-col items-center px-16px py-8px text-sm">
-              {/* Info: (20241104 - Julian) Table header */}
-              <div className="grid w-full grid-cols-14 gap-8px border-b border-divider-stroke-lv-4 pb-4px text-text-neutral-tertiary">
-                {/* Info: (20241104 - Julian) Checkbox */}
-                <div className="col-start-1 col-end-2">
-                  <input
-                    type="checkbox"
-                    className={checkboxStyle}
-                    checked={isSelectedAll}
-                    onChange={checkAllHandler}
-                    disabled={totalItems === 0} // Info: (20241212 - Julian) 無 reverse item 時，全選無效
-                  />
-                </div>
-                {/* Info: (20241104 - Julian) Voucher No */}
-                <div className="col-start-2 col-end-4">{t('journal:REVERSE_MODAL.VOUCHER_NO')}</div>
-                {/* Info: (20241104 - Julian) Accounting */}
-                <div className="col-start-4 col-end-7">{t('journal:REVERSE_MODAL.ACCOUNTING')}</div>
-                {/* Info: (20241104 - Julian) Particulars */}
-                <div className="col-start-7 col-end-9">
-                  {t('journal:REVERSE_MODAL.PARTICULARS')}
-                </div>
-                {/* Info: (20241104 - Julian) Amount */}
-                <div className="col-start-9 col-end-11">{t('journal:REVERSE_MODAL.AMOUNT')}</div>
-                {/* Info: (20241104 - Julian) Reverse Amount */}
-                <div className="col-start-11 col-end-15 text-right">
-                  {t('journal:REVERSE_MODAL.REVERSE_AMOUNT')}
-                </div>
+            <div className="max-h-300px overflow-y-auto">
+              {/* Info: (20241104 - Julian) summary */}
+              <div className="flex items-center justify-between bg-surface-neutral-main-background px-16px py-8px font-medium">
+                {/* Info: (20241104 - Julian) Select */}
+                <p className="text-text-neutral-secondary">
+                  ({t('journal:REVERSE_MODAL.SELECT')} {selectCount}/{totalItems})
+                </p>
+                {/* Info: (20241104 - Julian) Total reverse amount */}
+                <p className="text-text-neutral-secondary">
+                  {t('journal:REVERSE_MODAL.TOTAL_REVERSE_AMOUNT')}:{' '}
+                  <span className="text-text-neutral-primary">
+                    {numberWithCommas(totalReverseAmount)}
+                  </span>{' '}
+                  {t('common:CURRENCY_ALIAS.TWD')}
+                </p>
               </div>
+              <div className="flex flex-1 flex-col items-center px-16px py-8px text-sm">
+                {/* Info: (20241104 - Julian) Table header */}
+                <div className="grid w-full grid-cols-14 gap-8px border-b border-divider-stroke-lv-4 pb-4px text-text-neutral-tertiary">
+                  {/* Info: (20241104 - Julian) Checkbox */}
+                  <div className="col-start-1 col-end-2">
+                    <input
+                      type="checkbox"
+                      className={checkboxStyle}
+                      checked={isSelectedAll}
+                      onChange={checkAllHandler}
+                      disabled={totalItems === 0} // Info: (20241212 - Julian) 無 reverse item 時，全選無效
+                    />
+                  </div>
+                  {/* Info: (20241104 - Julian) Voucher No */}
+                  <div className="col-start-2 col-end-4">
+                    {t('journal:REVERSE_MODAL.VOUCHER_NO')}
+                  </div>
+                  {/* Info: (20241104 - Julian) Accounting */}
+                  <div className="col-start-4 col-end-7">
+                    {t('journal:REVERSE_MODAL.ACCOUNTING')}
+                  </div>
+                  {/* Info: (20241104 - Julian) Particulars */}
+                  <div className="col-start-7 col-end-9">
+                    {t('journal:REVERSE_MODAL.PARTICULARS')}
+                  </div>
+                  {/* Info: (20241104 - Julian) Amount */}
+                  <div className="col-start-9 col-end-11">{t('journal:REVERSE_MODAL.AMOUNT')}</div>
+                  {/* Info: (20241104 - Julian) Reverse Amount */}
+                  <div className="col-start-11 col-end-15 text-right">
+                    {t('journal:REVERSE_MODAL.REVERSE_AMOUNT')}
+                  </div>
+                </div>
 
-              {/* Info: (20241104 - Julian) Table body */}
-              <div className="grid w-full grid-cols-14 items-center gap-x-8px gap-y-4px overflow-y-auto py-4px text-text-neutral-primary">
-                {reverseList}
+                {/* Info: (20241104 - Julian) Table body */}
+                <div className="grid w-full grid-cols-14 items-center gap-x-8px gap-y-4px overflow-y-auto py-4px text-text-neutral-primary">
+                  {reverseList}
+                </div>
               </div>
             </div>
           </div>
