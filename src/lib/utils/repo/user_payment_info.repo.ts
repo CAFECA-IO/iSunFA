@@ -37,7 +37,7 @@ export const PaymentBodySchema = z.object({
 // Info: (20250218 - tzuhan) 已綁定信用卡資訊，具備 user_payment_info id
 export const PaymentMethodSchema = z.object({
   id: z.number(),
-  type: z.enum(Object.keys(PAYMENT_METHOD_TYPE) as [string, ...string[]]),
+  type: z.nativeEnum(PAYMENT_METHOD_TYPE),
   number: z.string(),
   expirationDate: z.string(),
   cvv: z.string(),
@@ -68,7 +68,7 @@ export const TeamInvoiceSchema = z.object({
   status: z.boolean(),
   issuedTimestamp: z.number(),
   dueTimestamp: z.number(),
-  planId: z.enum(Object.keys(TPlanType) as [string, ...string[]]),
+  planId: z.nativeEnum(TPlanType),
   planStartTimestamp: z.number(),
   planEndTimestamp: z.number(),
   planQuantity: z.number(),
