@@ -7,8 +7,6 @@ import { APIName } from '@/constants/api_connection';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
-import prisma from '@/client';
-import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
 import { DefaultValue } from '@/constants/default_value';
@@ -20,7 +18,7 @@ import {
 } from '@/lib/utils/middleware';
 import { validateOutputData } from '@/lib/utils/validator';
 import { ISessionData } from '@/interfaces/session';
-import { createAccountBook } from '@/lib/utils/repo/account_book.repo';
+import { createAccountBook, checkTeamAccountBookLimit } from '@/lib/utils/repo/account_book.repo';
 
 /**
  * Info: (20250328 - Shirley) 處理 POST 請求，建立帳本
@@ -75,40 +73,8 @@ const handlePostRequest = async (req: NextApiRequest) => {
     }
 
     // Info: (20250328 - Shirley) Step 2. 檢查團隊訂閱方案的帳本數量限制
-    const team = await prisma.team.findUnique({
-      where: { id: teamId },
-      include: {
-        subscription: {
-          include: { plan: true },
-        },
-      },
-    });
-
-    if (!team) {
-      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-      return { statusMessage, payload, session };
-    }
-
-    // Info: (20250331 - Shirley) 獲取團隊下的帳本數量
-    const accountBookCount = await prisma.company.count({
-      where: {
-        teamId,
-        OR: [{ deletedAt: 0 }, { deletedAt: null }],
-      },
-    });
-
-    const lastSubscription = team.subscription;
-
-    // Info: (20250331 - Shirley) 獲取團隊的訂閱計劃，如果找不到對應的計劃類型，默認使用 FREE 計劃
-    const planType = lastSubscription?.plan?.type || 'BEGINNER';
-
-    // Info: (20250331 - Shirley) 根據計劃類型確定帳本數量限制
-    const limitsByType = SUBSCRIPTION_PLAN_LIMITS as Record<string, number>;
-
-    const accountBookLimit = limitsByType[planType] || limitsByType.BEGINNER;
-
-    // Info: (20250331 - Shirley) 檢查是否超過帳本數量限制
-    if (accountBookCount >= accountBookLimit) {
+    const isExceedLimit = await checkTeamAccountBookLimit(teamId);
+    if (isExceedLimit) {
       statusMessage = STATUS_MESSAGE.EXCEED_PLAN_LIMIT;
       return { statusMessage, payload, session };
     }

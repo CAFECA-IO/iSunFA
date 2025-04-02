@@ -27,6 +27,58 @@ import { getTeamList } from '@/lib/utils/repo/team.repo';
 import { DEFAULT_MAX_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { createAccountingSetting } from '@/lib/utils/repo/accounting_setting.repo';
 
+/**
+ * Info: (20250402 - Shirley) 檢查團隊的帳本數量是否超過限制
+ * @param teamId 團隊 ID
+ * @returns 如果超過限制則返回 true，否則返回 false
+ */
+export const checkTeamAccountBookLimit = async (teamId: number): Promise<boolean> => {
+  // Info: (20250402 - Shirley) 獲取當前時間戳記（秒）
+  const nowInSecond = getTimestampNow();
+
+  // Info: (20250402 - Shirley) 獲取團隊資訊和訂閱計劃
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: {
+      subscriptions: {
+        where: {
+          startDate: {
+            lte: nowInSecond,
+          },
+          expiredDate: {
+            gt: nowInSecond,
+          },
+        },
+        include: { plan: true },
+      },
+    },
+  });
+
+  if (!team) {
+    throw new Error('RESOURCE_NOT_FOUND');
+  }
+
+  // Info: (20250402 - Shirley) 獲取團隊下的帳本數量
+  const accountBookCount = await prisma.company.count({
+    where: {
+      teamId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+  });
+
+  const lastSubscription = team.subscriptions[0];
+
+  // Info: (20250402 - Shirley) 獲取團隊的訂閱計劃，如果找不到對應的計劃類型，默認使用 BEGINNER 計劃
+  const planType = lastSubscription?.plan?.type || 'BEGINNER';
+
+  // Info: (20250402 - Shirley) 根據計劃類型確定帳本數量限制
+  const limitsByType = SUBSCRIPTION_PLAN_LIMITS as Record<string, number>;
+  const accountBookLimit = limitsByType[planType] || limitsByType.BEGINNER;
+
+  // Info: (20250402 - Shirley) 檢查是否超過帳本數量限制
+  return accountBookCount >= accountBookLimit;
+};
+
 export async function isEligibleToCreateAccountBookInTeam(
   userId: number,
   teamId: number
