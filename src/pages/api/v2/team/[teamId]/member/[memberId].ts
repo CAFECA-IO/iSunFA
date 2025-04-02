@@ -21,6 +21,8 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 import { ISessionData } from '@/interfaces/session';
 import { validateOutputData } from '@/lib/utils/validator';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 
 interface IResponse {
   statusMessage: string;
@@ -63,15 +65,35 @@ const handlePutRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  // Info: (20250312 - Shirley) 從 session 中獲取 teamRole
-  const teamRole = (session.teamRole as TeamRole) || TeamRole.VIEWER; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
+  // Info: (20250312 - Shirley) 從 session.teams 中獲取用戶在團隊中的角色
+  const userTeam = session.teams?.find((team) => team.id === teamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const userRole = userTeam.role as TeamRole;
+
+  // Info: (20250312 - Shirley) 檢查用戶是否有權限更新成員角色
+  const canChangeRoleResult = convertTeamRoleCanDo({
+    teamRole: userRole,
+    canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
+  });
+
+  if (TeamRoleCanDoKey.CAN_ALTER in canChangeRoleResult) {
+    const canAlterRoles = canChangeRoleResult.canAlter;
+    if (!canAlterRoles.includes(updateData.role)) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+  } else {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUpdateMemberResponse | null = null;
 
   try {
     // Info: (20250312 - Shirley) 更新成員角色
-    const updatedMember = await updateMemberById(teamId, memberId, updateData.role, teamRole);
+    const updatedMember = await updateMemberById(teamId, memberId, updateData.role, userRole);
 
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
     payload = updatedMember;
@@ -152,15 +174,30 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  // Info: (20250312 - Shirley) 從 session 中獲取 teamRole
-  const teamRole = (session.teamRole as TeamRole) || TeamRole.VIEWER; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
+  // Info: (20250312 - Shirley) 從 session.teams 中獲取用戶在團隊中的角色
+  const userTeam = session.teams?.find((team) => team.id === teamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const userRole = userTeam.role as TeamRole;
+
+  // Info: (20250312 - Shirley) 檢查用戶是否有權限刪除成員
+  const canChangeRoleResult = convertTeamRoleCanDo({
+    teamRole: userRole,
+    canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
+  });
+
+  if (!(TeamRoleCanDoKey.CAN_ALTER in canChangeRoleResult)) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IDeleteMemberResponse | null = null;
 
   try {
     // Info: (20250312 - Shirley) 刪除成員（軟刪除）
-    const deletedMember = await deleteMemberById(teamId, memberId, teamRole);
+    const deletedMember = await deleteMemberById(teamId, memberId, userRole);
 
     statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
     payload = deletedMember;
@@ -212,6 +249,8 @@ export default async function handler(
   let payload: IResponse['payload'] = null;
   let session: ISessionData | null = null;
   let apiName: APIName = APIName.UPDATE_MEMBER;
+  let httpCode: number;
+  let result: IResponseData<IResponse['payload']>;
 
   // Info: (20250312 - Shirley) 宣告變數以避免在 case 區塊中宣告
   let putResult: {
@@ -247,53 +286,25 @@ export default async function handler(
         break;
     }
   } catch (error) {
-    // Info: (20250312 - Shirley) 處理錯誤
-    if (error instanceof Error) {
-      statusMessage = error.message;
-    } else {
-      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-    }
-
-    // Info: (20250312 - Shirley) 記錄錯誤
-    loggerError({
-      userId: DefaultValue.USER_ID.GUEST,
-      errorType: `Error in ${apiName}`,
-      errorMessage: error as Error,
-    });
-
-    // Info: (20250312 - Shirley) 嘗試獲取會話以記錄用戶操作
-    if (!session) {
-      try {
-        session = await getSession(req);
-      } catch (sessionError) {
-        loggerError({
-          userId: DefaultValue.USER_ID.GUEST,
-          errorType: `Failed to get session in ${apiName}`,
-          errorMessage: sessionError as Error,
-        });
-      }
-    }
-  } finally {
-    // Info: (20250312 - Shirley) 記錄用戶操作（僅針對已登錄用戶）
-    if (session) {
-      const userId = session.userId || DefaultValue.USER_ID.GUEST;
-
-      // Info: (20250312 - Shirley) 僅記錄已登錄用戶的操作，不記錄訪客用戶的操作
-      if (userId !== DefaultValue.USER_ID.GUEST) {
-        try {
-          await logUserAction(session, apiName, req, statusMessage);
-        } catch (logError) {
-          loggerError({
-            userId,
-            errorType: `Failed to log user action in ${apiName}`,
-            errorMessage: logError as Error,
-          });
-        }
-      }
-    }
-
-    // Info: (20250312 - Shirley) 格式化 API 響應並返回
-    const { httpCode, result } = formatApiResponse<IResponse['payload']>(statusMessage, payload);
+    const err = error as Error;
+    statusMessage =
+      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
+      STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    const response = formatApiResponse<null>(statusMessage, null);
+    httpCode = response.httpCode;
+    result = response.result as IResponseData<IResponse['payload']>;
     res.status(httpCode).json(result);
+    return;
   }
+
+  // Info: (20250312 - Shirley) 記錄用戶操作
+  if (session) {
+    await logUserAction(session, apiName, req, statusMessage);
+  }
+
+  // Info: (20250312 - Shirley) 返回響應
+  const response = formatApiResponse<IResponse['payload']>(statusMessage, payload);
+  httpCode = response.httpCode;
+  result = response.result;
+  res.status(httpCode).json(result);
 }
