@@ -18,8 +18,7 @@ import { useReactToPrint } from 'react-to-print';
 import { Button } from '@/components/button/button';
 import { TiExport } from 'react-icons/ti';
 import { jsPDF } from 'jspdf';
-// Info: (20250326 - Anna) 使用 html2canvas@^1.4.1 時，轉成 PDF 出現文字位移偏下，改使用較穩定的 html2canvas@^1.0.0-alpha.12
-import html2canvas from 'html2canvas_v1alpha';
+import html2canvas from 'html2canvas';
 
 interface BusinessTaxListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
@@ -54,6 +53,28 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       return;
     }
 
+    // Info: (20250401 - Anna) 插入修正樣式，避免文字向下偏移
+    const style = document.createElement('style');
+    style.innerHTML = `
+  .download-page td {
+    vertical-align: top !important;
+  }
+
+  .download-page h1,
+  .download-page p,
+  .download-page span {
+    vertical-align: top !important;
+    margin-top: -5px;
+    padding-bottom: 5px;
+  }
+
+  .download-page p span {
+    padding-top: 5px;
+  }
+`;
+
+    document.head.appendChild(style); // Info: (20250401 - Anna) 加入樣式
+
     // Info: (20250326 - Anna) 等待 0.5 秒，DOM 完全渲染，再執行之後的程式碼
     await new Promise<void>((resolve) => {
       setTimeout(() => resolve(), 500);
@@ -61,9 +82,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
     const downloadPages = printRef.current.querySelectorAll('.download-page');
     if (downloadPages.length === 0) {
-      // Info: (20250326 - Anna) Debug
-      // eslint-disable-next-line no-console
-      console.error('No .download-page elements found!');
       return;
     }
 
@@ -92,6 +110,8 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     });
 
     await Promise.all(canvasPromises);
+
+    style.remove(); // Info: (20250401 - Anna) 移除修正樣式，避免影響畫面
 
     // Info: (20250326 - Anna) 下載 PDF
     pdf.save('Business_Tax_Report.pdf');
@@ -316,10 +336,8 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
               {t('reports:TAX_REPORT.MINISTRY_OF_FINANCE')}
             </span>
             <span>
-              {''}
               {/* Info: (20240814 - Anna) 北區 */}
               {t('reports:TAX_REPORT.NORTH_DISTRICT')}
-              {''}
             </span>
             <span>
               {/* Info: (20240814 - Anna) 國稅局營業人銷售額與稅額申報書(401) */}
@@ -397,360 +415,494 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
           <tr>
             <td className="text-nowrap border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 負責人姓名 */}
-              {t('reports:TAX_REPORT.NAME_OF_RESPONSIBLE_PERSON')}
+              <p>{t('reports:TAX_REPORT.NAME_OF_RESPONSIBLE_PERSON')}</p>
             </td>
             <td className="border border-black px-1 py-0">
-              {financialReport?.content.basicInfo.personInCharge ?? 'N/A'}
+              <p>{financialReport?.content.basicInfo.personInCharge ?? 'N/A'}</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 營業地址 */}
-              {t('reports:TAX_REPORT.BUSINESS_ADDRESS')}
+              <p>{t('reports:TAX_REPORT.BUSINESS_ADDRESS')}</p>
             </td>
             <td className="border border-black px-1 py-0" colSpan={9}>
-              {financialReport?.content.basicInfo.businessAddress ?? 'N/A'}
+              <p>{financialReport?.content.basicInfo.businessAddress ?? 'N/A'}</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 使用發票份數 */}
-              {t('reports:TAX_REPORT.NUMBER_OF_USED_INVOICES')}
+              <p>{t('reports:TAX_REPORT.NUMBER_OF_USED_INVOICES')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.basicInfo.usedInvoiceCount !== undefined &&
-              financialReport?.content.basicInfo.usedInvoiceCount !== null
-                ? formatNumber(financialReport.content.basicInfo.usedInvoiceCount)
-                : 'N/A'}
-              {/* Info: (20240814 - Anna) 份 */}
-              {t('reports:TAX_REPORT.COPIES')}
+              <p>
+                <span>
+                  {financialReport?.content.basicInfo.usedInvoiceCount !== undefined &&
+                  financialReport?.content.basicInfo.usedInvoiceCount !== null
+                    ? formatNumber(financialReport.content.basicInfo.usedInvoiceCount)
+                    : 'N/A'}
+                </span>
+                {/* Info: (20240814 - Anna) 份 */}
+                <span>{t('reports:TAX_REPORT.COPIES')}</span>
+              </p>
             </td>
           </tr>
           <tr>
             <td className="border border-black px-1 py-0 text-center" rowSpan={10}>
               {/* Info: (20240814 - Anna) 銷項 */}
-              {t('reports:TAX_REPORT.OUTPUT')}
+              <p>{t('reports:TAX_REPORT.OUTPUT')}</p>
             </td>
             <td className="border-b border-l border-t border-black px-1 py-0" rowSpan={2}>
               {/* Info: (20240814 - Anna) 項目 */}
-              {t('reports:TAX_REPORT.ITEMS')}
+              <p>{t('reports:TAX_REPORT.ITEMS')}</p>
             </td>
             <td className="border-b border-r border-t border-black px-1 py-0" rowSpan={2}>
               {/* Info: (20240814 - Anna) 區分 */}
-              {t('reports:TAX_REPORT.DISTINGUISHMENT')}
+              <p>{t('reports:TAX_REPORT.DISTINGUISHMENT')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={4}>
               {/* Info: (20240814 - Anna) 應稅 */}
-              {t('reports:TAX_REPORT.TAXABLE')}
+              <p>{t('reports:TAX_REPORT.TAXABLE')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-center" rowSpan={2} colSpan={2}>
               {/* Info: (20240814 - Anna) 零稅率銷售額 */}
-              {t('reports:TAX_REPORT.ZERO_TAX_RATE_SALES_AMOUNT')}
+              <p>{t('reports:TAX_REPORT.ZERO_TAX_RATE_SALES_AMOUNT')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-center" rowSpan={10}>
               {/* Info: (20240814 - Anna) 稅額 */}
-              {t('reports:TAX_REPORT.TAX')}
-              <br />
+              <p>{t('reports:TAX_REPORT.TAX')}</p>
               {/* Info: (20240814 - Anna) 計算 */}
-              {t('reports:TAX_REPORT.CALCULATION')}
+              <p>{t('reports:TAX_REPORT.CALCULATION')}</p>
             </td>
             <td className="border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 代號 */}
-              {t('reports:TAX_REPORT.CODE_NUMBER')}
+              <p>{t('reports:TAX_REPORT.CODE_NUMBER')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={2}>
               {/* Info: (20240814 - Anna) 項目 */}
-              {t('reports:TAX_REPORT.ITEMS')}
+              <p> {t('reports:TAX_REPORT.ITEMS')}</p>
             </td>
             <td className="border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 稅額 */}
-              {t('reports:TAX_REPORT.TAX')}
+              <p>{t('reports:TAX_REPORT.TAX')}</p>
             </td>
           </tr>
           <tr>
             <td className="border border-black px-1 py-0 text-center" colSpan={2}>
               {/* Info: (20240814 - Anna) 銷售額 */}
-              {t('reports:TAX_REPORT.SALES_AMOUNT')}
+              <p>{t('reports:TAX_REPORT.SALES_AMOUNT')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={2}>
               {/* Info: (20240814 - Anna) 稅額 */}
-              {t('reports:TAX_REPORT.TAX')}
+              <p> {t('reports:TAX_REPORT.TAX')}</p>
             </td>
-            <td className="border border-black px-1 py-0">1</td>
+            <td className="border border-black px-1 py-0">
+              <p>1</p>
+            </td>
             <td className="border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 本期(月)銷項稅額合計 */}
-              {t('reports:TAX_REPORT.TOTAL_OUTPUT_TAX')}
+              <p>{t('reports:TAX_REPORT.TOTAL_OUTPUT_TAX')}</p>
             </td>
-            <td className="w-8% border border-black px-1 py-0">② 101</td>
+            <td className="w-8% border border-black px-1 py-0">
+              <p>② 101</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.taxCalculation.outputTax !== undefined &&
-              financialReport?.content.taxCalculation.outputTax !== null
-                ? formatNumber(financialReport?.content.taxCalculation.outputTax)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.taxCalculation.outputTax !== undefined &&
+                financialReport?.content.taxCalculation.outputTax !== null
+                  ? formatNumber(financialReport?.content.taxCalculation.outputTax)
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="border border-black px-1 py-0" colSpan={2}>
               {/* Info: (20240814 - Anna) 三聯式發票、電子計算機發票 */}
-              {t('reports:TAX_REPORT.TRIPLICATE_UNIFORM_INVOICE')}
+              <p>{t('reports:TAX_REPORT.TRIPLICATE_UNIFORM_INVOICE')}</p>
             </td>
-            <td className="border border-black px-1 py-0">1</td>
-            <td className="w-8% border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.triplicateAndElectronic.sales !==
-                undefined &&
-              financialReport?.content.sales.breakdown.triplicateAndElectronic.sales !== null
-                ? formatNumber(
-                    financialReport?.content.sales.breakdown.triplicateAndElectronic.sales
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0">
+              <p>1</p>
             </td>
-            <td className="border border-black px-1 py-0">2</td>
             <td className="w-8% border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.triplicateAndElectronic.tax !== undefined &&
-              financialReport?.content.sales.breakdown.triplicateAndElectronic.tax !== null
-                ? formatNumber(financialReport?.content.sales.breakdown.triplicateAndElectronic.tax)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.triplicateAndElectronic.sales !==
+                  undefined &&
+                financialReport?.content.sales.breakdown.triplicateAndElectronic.sales !== null
+                  ? formatNumber(
+                      financialReport?.content.sales.breakdown.triplicateAndElectronic.sales
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0">
+              <p>2</p>
+            </td>
+            <td className="w-8% border border-black px-1 py-0 text-right">
+              <p>
+                {financialReport?.content.sales.breakdown.triplicateAndElectronic.tax !==
+                  undefined &&
+                financialReport?.content.sales.breakdown.triplicateAndElectronic.tax !== null
+                  ? formatNumber(
+                      financialReport?.content.sales.breakdown.triplicateAndElectronic.tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
             <td
               className="w-8% justify-between border border-black px-1 py-0 text-right"
               colSpan={2}
             >
-              3
-              {financialReport?.content.sales.breakdown.triplicateAndElectronic.zeroTax !==
-                undefined &&
-              financialReport?.content.sales.breakdown.triplicateAndElectronic.zeroTax !== null
-                ? formatNumber(
-                    financialReport?.content.sales.breakdown.triplicateAndElectronic.zeroTax
-                  )
-                : 'N/A'}{' '}
-              ({/* Info: (20240814 - Anna) 非經海關出口應附證明文件者 */})
-              {t('reports:TAX_REPORT.EXPORT_NOT_THROUGH_CUSTOMS_EVIDENCE_REQUIRED')}
+              <p className="flex justify-between">
+                <span>3</span>
+                <span>
+                  {financialReport?.content.sales.breakdown.triplicateAndElectronic.zeroTax !==
+                    undefined &&
+                  financialReport?.content.sales.breakdown.triplicateAndElectronic.zeroTax !== null
+                    ? formatNumber(
+                        financialReport?.content.sales.breakdown.triplicateAndElectronic.zeroTax
+                      )
+                    : 'N/A'}
+                </span>
+                {/* Info: (20240814 - Anna) 非經海關出口應附證明文件者 */}
+                <span>
+                  ({t('reports:TAX_REPORT.EXPORT_NOT_THROUGH_CUSTOMS_EVIDENCE_REQUIRED')})
+                </span>
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">7</td>
+            <td className="border border-black px-1 py-0">
+              <p>7</p>
+            </td>
             <td className="border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 得扣抵進項稅額合計 */}
-              {t('reports:TAX_REPORT.TOTAL_DEDUCTIBLE_INPUT_TAX')}
+              <p>{t('reports:TAX_REPORT.TOTAL_DEDUCTIBLE_INPUT_TAX')}</p>
             </td>
-            <td className="border border-black px-1 py-0">⑨+⑩ 107</td>
+            <td className="border border-black px-1 py-0">
+              <p>⑨+⑩ 107</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.taxCalculation.deductibleInputTax !== undefined &&
-              financialReport?.content.taxCalculation.deductibleInputTax !== null
-                ? formatNumber(financialReport?.content.taxCalculation.deductibleInputTax)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.taxCalculation.deductibleInputTax !== undefined &&
+                financialReport?.content.taxCalculation.deductibleInputTax !== null
+                  ? formatNumber(financialReport?.content.taxCalculation.deductibleInputTax)
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="border border-black px-1 py-0" colSpan={2}>
               {/* Info: (20240814 - Anna) 收銀機發票(三聯式)及電子發票 */}
-              {t('reports:TAX_REPORT.CASH_REGISTER_UNIFORM_INVOICE')}
+              <p> {t('reports:TAX_REPORT.CASH_REGISTER_UNIFORM_INVOICE')}</p>
             </td>
-            <td className="border border-black px-1 py-0">5</td>
+            <td className="border border-black px-1 py-0">
+              <p>5</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.cashRegisterTriplicate.sales !==
-                undefined &&
-              financialReport?.content.sales.breakdown.cashRegisterTriplicate.sales !== null
-                ? formatNumber(
-                    financialReport?.content.sales.breakdown.cashRegisterTriplicate.sales
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.cashRegisterTriplicate.sales !==
+                  undefined &&
+                financialReport?.content.sales.breakdown.cashRegisterTriplicate.sales !== null
+                  ? formatNumber(
+                      financialReport?.content.sales.breakdown.cashRegisterTriplicate.sales
+                    )
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">6</td>
+            <td className="border border-black px-1 py-0">
+              <p>6</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.cashRegisterTriplicate.tax !== undefined &&
-              financialReport?.content.sales.breakdown.cashRegisterTriplicate.tax !== null
-                ? formatNumber(financialReport?.content.sales.breakdown.cashRegisterTriplicate.tax)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.cashRegisterTriplicate.tax !==
+                  undefined &&
+                financialReport?.content.sales.breakdown.cashRegisterTriplicate.tax !== null
+                  ? formatNumber(
+                      financialReport?.content.sales.breakdown.cashRegisterTriplicate.tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">7</td>
+            <td className="border border-black px-1 py-0">
+              <p>7</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.cashRegisterTriplicate.zeroTax !==
-                undefined &&
-              financialReport?.content.sales.breakdown.cashRegisterTriplicate.zeroTax !== null
-                ? formatNumber(
-                    financialReport?.content.sales.breakdown.cashRegisterTriplicate.zeroTax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.cashRegisterTriplicate.zeroTax !==
+                  undefined &&
+                financialReport?.content.sales.breakdown.cashRegisterTriplicate.zeroTax !== null
+                  ? formatNumber(
+                      financialReport?.content.sales.breakdown.cashRegisterTriplicate.zeroTax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">8</td>
+            <td className="border border-black px-1 py-0">
+              <p>8</p>
+            </td>
             <td className="border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 上期(月)累積留抵稅額 */}
-              {t('reports:TAX_REPORT.BUSINESS_TAX_PAYABLE')}
+              <p> {t('reports:TAX_REPORT.BUSINESS_TAX_PAYABLE')}</p>
             </td>
-            <td className="border border-black px-1 py-0">108</td>
+            <td className="border border-black px-1 py-0">
+              <p>108</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.taxCalculation.previousPeriodOffset !== undefined &&
-              financialReport?.content.taxCalculation.previousPeriodOffset !== null
-                ? formatNumber(financialReport?.content.taxCalculation.previousPeriodOffset)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.taxCalculation.previousPeriodOffset !== undefined &&
+                financialReport?.content.taxCalculation.previousPeriodOffset !== null
+                  ? formatNumber(financialReport?.content.taxCalculation.previousPeriodOffset)
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="border border-black px-1 py-0" colSpan={2}>
               {/* Info: (20240814 - Anna) 二聯式發票、收銀機發票(二聯式) */}
-              {t('reports:TAX_REPORT.DUPLICATE_UNIFORM_INVOICE')}
+              <p>{t('reports:TAX_REPORT.DUPLICATE_UNIFORM_INVOICE')}</p>
             </td>
-            <td className="border border-black px-1 py-0">9</td>
-            <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.duplicateAndCashRegister.sales !==
-                undefined &&
-              financialReport?.content.sales.breakdown.duplicateAndCashRegister.sales !== null
-                ? formatNumber(
-                    financialReport?.content.sales.breakdown.duplicateAndCashRegister.sales
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0">
+              <p>9</p>
             </td>
-            <td className="border border-black px-1 py-0">10</td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.duplicateAndCashRegister.tax !==
-                undefined &&
-              financialReport?.content.sales.breakdown.duplicateAndCashRegister.tax !== null
-                ? formatNumber(
-                    financialReport?.content.sales.breakdown.duplicateAndCashRegister.tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.duplicateAndCashRegister.sales !==
+                  undefined &&
+                financialReport?.content.sales.breakdown.duplicateAndCashRegister.sales !== null
+                  ? formatNumber(
+                      financialReport?.content.sales.breakdown.duplicateAndCashRegister.sales
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0">
+              <p>10</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right">
+              <p>
+                {financialReport?.content.sales.breakdown.duplicateAndCashRegister.tax !==
+                  undefined &&
+                financialReport?.content.sales.breakdown.duplicateAndCashRegister.tax !== null
+                  ? formatNumber(
+                      financialReport?.content.sales.breakdown.duplicateAndCashRegister.tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
             <td className="justify-between border border-black px-1 py-0" colSpan={2}>
-              11{' '}
-              {financialReport?.content.sales.breakdown.duplicateAndCashRegister.zeroTax !==
-                undefined &&
-              financialReport?.content.sales.breakdown.duplicateAndCashRegister.zeroTax !== null
-                ? formatNumber(
-                    financialReport?.content.sales.breakdown.duplicateAndCashRegister.zeroTax
-                  )
-                : 'N/A'}{' '}
-              ({/* Info: (20240814 - Anna) 經海關出口免附證明文件者 */})
-              {t('reports:TAX_REPORT.EXPORT_THROUGH_CUSTOMS')}
+              <p className="flex justify-between">
+                <span>11</span>
+                <span>
+                  {financialReport?.content.sales.breakdown.duplicateAndCashRegister.zeroTax !==
+                    undefined &&
+                  financialReport?.content.sales.breakdown.duplicateAndCashRegister.zeroTax !== null
+                    ? formatNumber(
+                        financialReport?.content.sales.breakdown.duplicateAndCashRegister.zeroTax
+                      )
+                    : 'N/A'}
+                </span>
+                {/* Info: (20240814 - Anna) 經海關出口免附證明文件者 */}
+                <span>({t('reports:TAX_REPORT.EXPORT_THROUGH_CUSTOMS')})</span>
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">10</td>
+            <td className="border border-black px-1 py-0">
+              <p>10</p>
+            </td>
             <td className="border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 小計 */}
-              {t('reports:TAX_REPORT.SUBTOTAL')}
-              (7+8)
+              <p>
+                <span>{t('reports:TAX_REPORT.SUBTOTAL')}</span>
+                <span>(7+8)</span>
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">110</td>
+            <td className="border border-black px-1 py-0">
+              <p>110</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.taxCalculation.subtotal !== undefined &&
-              financialReport?.content.taxCalculation.subtotal !== null
-                ? formatNumber(financialReport?.content.taxCalculation.subtotal)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.taxCalculation.subtotal !== undefined &&
+                financialReport?.content.taxCalculation.subtotal !== null
+                  ? formatNumber(financialReport?.content.taxCalculation.subtotal)
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="border border-black px-1 py-0" colSpan={2}>
               {/* Info: (20240814 - Anna) 免用發票 */}
-              {t('reports:TAX_REPORT.EXEMPTION_OF_UNIFORM_INVOICE')}
+              <p>{t('reports:TAX_REPORT.EXEMPTION_OF_UNIFORM_INVOICE')}</p>
             </td>
-            <td className="border border-black px-1 py-0">13</td>
+            <td className="border border-black px-1 py-0">
+              <p>13</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.invoiceExempt.sales !== undefined &&
-              financialReport?.content.sales.breakdown.invoiceExempt.sales !== null
-                ? formatNumber(financialReport?.content.sales.breakdown.invoiceExempt.sales)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.invoiceExempt.sales !== undefined &&
+                financialReport?.content.sales.breakdown.invoiceExempt.sales !== null
+                  ? formatNumber(financialReport?.content.sales.breakdown.invoiceExempt.sales)
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">14</td>
+            <td className="border border-black px-1 py-0">
+              <p>14</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.invoiceExempt.tax !== undefined &&
-              financialReport?.content.sales.breakdown.invoiceExempt.tax !== null
-                ? formatNumber(financialReport?.content.sales.breakdown.invoiceExempt.tax)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.invoiceExempt.tax !== undefined &&
+                financialReport?.content.sales.breakdown.invoiceExempt.tax !== null
+                  ? formatNumber(financialReport?.content.sales.breakdown.invoiceExempt.tax)
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">15</td>
+            <td className="border border-black px-1 py-0">
+              <p>15</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.invoiceExempt.zeroTax !== undefined &&
-              financialReport?.content.sales.breakdown.invoiceExempt.zeroTax !== null
-                ? formatNumber(financialReport?.content.sales.breakdown.invoiceExempt.zeroTax)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.invoiceExempt.zeroTax !== undefined &&
+                financialReport?.content.sales.breakdown.invoiceExempt.zeroTax !== null
+                  ? formatNumber(financialReport?.content.sales.breakdown.invoiceExempt.zeroTax)
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">11</td>
+            <td className="border border-black px-1 py-0">
+              <p>11</p>
+            </td>
             <td className="border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 本期(月)應實繳稅額 */}
-              {t('reports:TAX_REPORT.TAX_PAYABLE_FOR_CURRENT_PERIOD')}
-              (1-10)
+              <p>
+                <span> {t('reports:TAX_REPORT.TAX_PAYABLE_FOR_CURRENT_PERIOD')}</span>
+                <span>(1-10)</span>
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">111</td>
+            <td className="border border-black px-1 py-0">
+              <p>111</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.taxCalculation.currentPeriodTaxPayable !== undefined &&
-              financialReport?.content.taxCalculation.currentPeriodTaxPayable !== null
-                ? formatNumber(financialReport?.content.taxCalculation.currentPeriodTaxPayable)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.taxCalculation.currentPeriodTaxPayable !== undefined &&
+                financialReport?.content.taxCalculation.currentPeriodTaxPayable !== null
+                  ? formatNumber(financialReport?.content.taxCalculation.currentPeriodTaxPayable)
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="border border-black px-1 py-0" colSpan={2}>
               {/* Info: (20240814 - Anna) 減:退回及折讓 */}
-              {t('reports:TAX_REPORT.LESS_SALES_RETURN_AND_ALLOWANCE')}
+              <p>{t('reports:TAX_REPORT.LESS_SALES_RETURN_AND_ALLOWANCE')}</p>
             </td>
-            <td className="border border-black px-1 py-0">17</td>
+            <td className="border border-black px-1 py-0">
+              <p>17</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.returnsAndAllowances.sales !== undefined &&
-              financialReport?.content.sales.breakdown.returnsAndAllowances.sales !== null
-                ? formatNumber(financialReport?.content.sales.breakdown.returnsAndAllowances.sales)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.returnsAndAllowances.sales !==
+                  undefined &&
+                financialReport?.content.sales.breakdown.returnsAndAllowances.sales !== null
+                  ? formatNumber(
+                      financialReport?.content.sales.breakdown.returnsAndAllowances.sales
+                    )
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">18</td>
+            <td className="border border-black px-1 py-0">
+              <p>18</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.returnsAndAllowances.tax !== undefined &&
-              financialReport?.content.sales.breakdown.returnsAndAllowances.tax !== null
-                ? formatNumber(financialReport?.content.sales.breakdown.returnsAndAllowances.tax)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.returnsAndAllowances.tax !== undefined &&
+                financialReport?.content.sales.breakdown.returnsAndAllowances.tax !== null
+                  ? formatNumber(financialReport?.content.sales.breakdown.returnsAndAllowances.tax)
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">19</td>
+            <td className="border border-black px-1 py-0">
+              <p>19</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.returnsAndAllowances.zeroTax !==
-                undefined &&
-              financialReport?.content.sales.breakdown.returnsAndAllowances.zeroTax !== null
-                ? formatNumber(
-                    financialReport?.content.sales.breakdown.returnsAndAllowances.zeroTax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.returnsAndAllowances.zeroTax !==
+                  undefined &&
+                financialReport?.content.sales.breakdown.returnsAndAllowances.zeroTax !== null
+                  ? formatNumber(
+                      financialReport?.content.sales.breakdown.returnsAndAllowances.zeroTax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">12</td>
+            <td className="border border-black px-1 py-0">
+              <p>12</p>
+            </td>
             <td className="border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 本期(月)申報留抵稅額 */}
-              {t('reports:TAX_REPORT.FILING_OFFSET_AGAINST')}
-              (10-1)
+              <p>
+                <span>{t('reports:TAX_REPORT.FILING_OFFSET_AGAINST')}</span>
+                <span>(10-1)</span>
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">112</td>
+            <td className="border border-black px-1 py-0">
+              <p>112</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.taxCalculation.currentPeriodFilingOffset !== undefined &&
-              financialReport?.content.taxCalculation.currentPeriodFilingOffset !== null
-                ? formatNumber(financialReport?.content.taxCalculation.currentPeriodFilingOffset)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.taxCalculation.currentPeriodFilingOffset !== undefined &&
+                financialReport?.content.taxCalculation.currentPeriodFilingOffset !== null
+                  ? formatNumber(financialReport?.content.taxCalculation.currentPeriodFilingOffset)
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="border border-black px-1 py-0" colSpan={2}>
               {/* Info: (20240814 - Anna) 合計 */}
-              {t('reports:TAX_REPORT.TOTAL')}
+              <p>{t('reports:TAX_REPORT.TOTAL')}</p>
             </td>
-            <td className="border border-black px-1 py-0">21①</td>
+            <td className="border border-black px-1 py-0">
+              <p>21①</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.total.sales !== undefined &&
-              financialReport?.content.sales.breakdown.total.sales !== null
-                ? formatNumber(financialReport?.content.sales.breakdown.total.sales)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.total.sales !== undefined &&
+                financialReport?.content.sales.breakdown.total.sales !== null
+                  ? formatNumber(financialReport?.content.sales.breakdown.total.sales)
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">22②</td>
+            <td className="border border-black px-1 py-0">
+              <p>22②</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.total.tax !== undefined &&
-              financialReport?.content.sales.breakdown.total.tax !== null
-                ? formatNumber(financialReport?.content.sales.breakdown.total.tax)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.total.tax !== undefined &&
+                financialReport?.content.sales.breakdown.total.tax !== null
+                  ? formatNumber(financialReport?.content.sales.breakdown.total.tax)
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">23③</td>
+            <td className="border border-black px-1 py-0">
+              <p>23③</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.sales.breakdown.total.zeroTax !== undefined &&
-              financialReport?.content.sales.breakdown.total.zeroTax !== null
-                ? formatNumber(financialReport?.content.sales.breakdown.total.zeroTax)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.sales.breakdown.total.zeroTax !== undefined &&
+                financialReport?.content.sales.breakdown.total.zeroTax !== null
+                  ? formatNumber(financialReport?.content.sales.breakdown.total.zeroTax)
+                  : 'N/A'}
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">13</td>
+            <td className="border border-black px-1 py-0">
+              <p>13</p>
+            </td>
             <td className="border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 得退稅限額合計 */}
-              {t('reports:TAX_REPORT.CEILING_OF_REFUND')}
+              <p>{t('reports:TAX_REPORT.CEILING_OF_REFUND')}</p>
             </td>
-            <td className="border border-black px-1 py-0">③×5%+⑩ 113</td>
+            <td className="border border-black px-1 py-0">
+              <p>③×5%+⑩ 113</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.taxCalculation.refundCeiling !== undefined &&
-              financialReport?.content.taxCalculation.refundCeiling !== null
-                ? formatNumber(financialReport?.content.taxCalculation.refundCeiling)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.taxCalculation.refundCeiling !== undefined &&
+                financialReport?.content.taxCalculation.refundCeiling !== null
+                  ? formatNumber(financialReport?.content.taxCalculation.refundCeiling)
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
@@ -795,70 +947,84 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
             <td className="flex items-center text-nowrap border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 本期(月)應退稅額 */}
               {/* Info: (20240814 - Anna) 如 */}
-              {t('reports:TAX_REPORT.REFUNDABLE_TAX')}({t('reports:TAX_REPORT.IF')}
-              <div>
+              <p>
+                {t('reports:TAX_REPORT.REFUNDABLE_TAX')}({t('reports:TAX_REPORT.IF')}
+              </p>
+              <p>
                 <span>12&gt;13</span>
                 <br />
                 <span>13&gt;12</span>
-              </div>
+              </p>
               {/* Info: (20240814 - Anna) 則為 */}
-              {t('reports:TAX_REPORT.THEN')}
-              <div>
+              <p> {t('reports:TAX_REPORT.THEN')}</p>
+              <p>
                 <span>13</span>
                 <br />
                 <span>12</span>
-              </div>
+              </p>
               )
             </td>
-            <td className="border border-black px-1 py-0">114</td>
+            <td className="border border-black px-1 py-0">
+              <p>114</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.taxCalculation.currentPeriodRefundableTax !== undefined &&
-              financialReport?.content.taxCalculation.currentPeriodRefundableTax !== null
-                ? formatNumber(financialReport?.content.taxCalculation.currentPeriodRefundableTax)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.taxCalculation.currentPeriodRefundableTax !== undefined &&
+                financialReport?.content.taxCalculation.currentPeriodRefundableTax !== null
+                  ? formatNumber(financialReport?.content.taxCalculation.currentPeriodRefundableTax)
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
-            <td className="border border-black px-1 py-0">15</td>
+            <td className="border border-black px-1 py-0">
+              <p>15</p>
+            </td>
             <td className="border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 本期(月)累積留抵稅額 */}
-              {t('reports:TAX_REPORT.ACCUMULATED_OFFSET_AGAINST')}
-              (12-14)
+              <p>
+                <span>{t('reports:TAX_REPORT.ACCUMULATED_OFFSET_AGAINST')}</span>
+                <span>(12-14)</span>
+              </p>
             </td>
-            <td className="border border-black px-1 py-0">115</td>
+            <td className="border border-black px-1 py-0">
+              <p>115</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right">
-              {financialReport?.content.taxCalculation.currentPeriodAccumulatedOffset !==
-                undefined &&
-              financialReport?.content.taxCalculation.currentPeriodAccumulatedOffset !== null
-                ? formatNumber(
-                    financialReport?.content.taxCalculation.currentPeriodAccumulatedOffset
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.taxCalculation.currentPeriodAccumulatedOffset !==
+                  undefined &&
+                financialReport?.content.taxCalculation.currentPeriodAccumulatedOffset !== null
+                  ? formatNumber(
+                      financialReport?.content.taxCalculation.currentPeriodAccumulatedOffset
+                    )
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="border border-black px-1 py-0 text-center" rowSpan={16}>
               {/* Info: (20240814 - Anna) 進項 */}
-              {t('reports:TAX_REPORT.INPUT')}
+              <p>{t('reports:TAX_REPORT.INPUT')}</p>
             </td>
             <td className="border-b border-l border-t border-black px-1 py-0" rowSpan={2}>
               {/* Info: (20240814 - Anna) 項目 */}
-              {t('reports:TAX_REPORT.ITEMS')}
+              <p> {t('reports:TAX_REPORT.ITEMS')}</p>
             </td>
             <td className="border-b border-r border-t border-black px-1 py-0" rowSpan={2}>
               {/* Info: (20240814 - Anna) 區分 */}
-              {t('reports:TAX_REPORT.DISTINGUISHMENT')}
+              <p>{t('reports:TAX_REPORT.DISTINGUISHMENT')}</p>
             </td>
             <td
               className="border-b border-r border-t border-black px-1 py-0 text-center"
               colSpan={6}
             >
               {/* Info: (20240814 - Anna) 得扣抵進項稅額 */}
-              {t('reports:TAX_REPORT.DEDUCTIBLE_INPUT_TAX')}
+              <p>{t('reports:TAX_REPORT.DEDUCTIBLE_INPUT_TAX')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-center" rowSpan={2} colSpan={3}>
               {/* Info: (20240814 - Anna) 本期(月)應退稅額處理方式 */}
-              {t('reports:TAX_REPORT.WAY_TO_RECEIVE_REFUND')}
+              <p>{t('reports:TAX_REPORT.WAY_TO_RECEIVE_REFUND')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={2}>
               <div className="flex flex-nowrap items-center gap-1">
@@ -873,11 +1039,11 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
           <tr>
             <td className="border border-black px-1 py-0 text-center" colSpan={3}>
               {/* Info: (20240814 - Anna) 金額 */}
-              {t('reports:TAX_REPORT.AMOUNT')}
+              <p>{t('reports:TAX_REPORT.AMOUNT')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={3}>
               {/* Info: (20240814 - Anna) 稅額 */}
-              {t('reports:TAX_REPORT.TAX')}
+              <p>{t('reports:TAX_REPORT.TAX')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={2}>
               <div className="flex flex-nowrap items-center gap-1">
@@ -893,52 +1059,57 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
             <td className="text-nowrap border border-black px-1 py-0 text-start" rowSpan={2}>
               <div className="flex w-full justify-between">
                 <div className="flex w-full justify-between">
-                  <span>
+                  <p>
                     {/* Info: (20240814 - Anna) 統一發票扣抵聯 */}
                     {t('reports:TAX_REPORT.DEDUCTION_COPY_OF_UNIFORM_INVOICE')}
-                    <br />({/* Info: (20240814 - Anna) 包括一般稅額計算之電子計算機發票扣抵聯 */})
-                    {t('reports:TAX_REPORT.INCLUDING_COMPUTER_UNIFORM_INVOICE')}
-                  </span>
+                    <br />
+                    {/* Info: (20240814 - Anna) 包括一般稅額計算之電子計算機發票扣抵聯 */}(
+                    {t('reports:TAX_REPORT.INCLUDING_COMPUTER_UNIFORM_INVOICE')})
+                  </p>
                 </div>
               </div>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 進貨及費用 */}
-              {t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              <p>{t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">28</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
-                .amount ?? 'N/A'} */}
-              {financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
-                .amount !== undefined &&
-              financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
-                .amount !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
-                      .amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>28</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">29</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax ??
-                'N/A'} */}
-              {financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax !==
-                undefined &&
-              financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax !==
-                null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
+                  .amount !== undefined &&
+                financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
+                  .amount !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
+                        .amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>29</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
+                  .tax !== undefined &&
+                financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases.tax !==
+                  null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.uniformInvoice.generalPurchases
+                        .tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
             <td className="border border-black px-1 py-0 text-center" rowSpan={2} colSpan={3}>
               {/* Info: (20240814 - Anna) 保稅區營業人按進口報關程序銷售貨物至我國 */}
-              {t('reports:TAX_REPORT.SOLD_BY_A_BONDED_ZONE')}
-              <br />
+              <p>{t('reports:TAX_REPORT.SOLD_BY_A_BONDED_ZONE')}</p>
               {/* Info: (20240814 - Anna) 境內課稅區之免開立統一發票銷售額 */}
-              {t('reports:TAX_REPORT.TO_A_TAXABLE_ZONE')}
+              <p>{t('reports:TAX_REPORT.TO_A_TAXABLE_ZONE')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-center" rowSpan={2} colSpan={2}>
               <div className="flex justify-between">
@@ -957,105 +1128,126 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 固定資產 */}
-              {t('reports:TAX_REPORT.FIXED_ASSETS')}
+              <p>{t('reports:TAX_REPORT.FIXED_ASSETS')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">30</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount ??
-                'N/A'} */}
-              {financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount !==
-                undefined &&
-              financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount !==
-                null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>30</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">31</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax !==
-                undefined &&
-              financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount !==
+                  undefined &&
+                financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount !==
+                  null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>31</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax !==
+                  undefined &&
+                financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-start" rowSpan={2}>
               {/* Info: (20240814 - Anna) 三聯式收銀機發票扣抵聯 */}
-              {t('reports:TAX_REPORT.DEDUCTION_COPY_OF_CASH_REGISTER_UNIFORM_INVOICE')}
-              <br />
+              <p>{t('reports:TAX_REPORT.DEDUCTION_COPY_OF_CASH_REGISTER_UNIFORM_INVOICE')}</p>
               {/* Info: (20240814 - Anna) 及一般稅額計算之電子發票 */}
-              {t('reports:TAX_REPORT.ELECTRONIC_INVOICE')}
+              <p>{t('reports:TAX_REPORT.ELECTRONIC_INVOICE')}</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 進貨及費用 */}
-              {t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              <p>{t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">32</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
-                .generalPurchases.amount !== undefined &&
-              financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
-                .generalPurchases.amount !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
-                      .generalPurchases.amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>32</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">33</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
-                .generalPurchases.tax !== undefined &&
-              financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
-                .generalPurchases.tax !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
-                      .generalPurchases.tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
+                  .generalPurchases.amount !== undefined &&
+                financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
+                  .generalPurchases.amount !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
+                        .generalPurchases.amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>33</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
+                  .generalPurchases.tax !== undefined &&
+                financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
+                  .generalPurchases.tax !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
+                        .generalPurchases.tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={3}>
               {/* Info: (20240814 - Anna) 申報單位蓋章處(統一發票專用章) */}
-              {t('reports:TAX_REPORT.UNIQUE_UNIFORM_INVOICE_CHOP')}
+              <p>{t('reports:TAX_REPORT.UNIQUE_UNIFORM_INVOICE_CHOP')}</p>
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={2}>
               {/* Info: (20240814 - Anna) 核收機關及人員蓋章處 */}
-              {t('reports:TAX_REPORT.STAMP_OF_TAX_AUTHORITY')}
+              <p>{t('reports:TAX_REPORT.STAMP_OF_TAX_AUTHORITY')}</p>
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 固定資產 */}
-              {t('reports:TAX_REPORT.FIXED_ASSETS')}
+              <p>{t('reports:TAX_REPORT.FIXED_ASSETS')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">34</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
-                .amount !== undefined &&
-              financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
-                .amount !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
-                      .fixedAssets.amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>34</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">35</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
-                .tax !== undefined &&
-              financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
-                .tax !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
-                      .fixedAssets.tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
+                  .amount !== undefined &&
+                financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
+                  .amount !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
+                        .fixedAssets.amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>35</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
+                  .tax !== undefined &&
+                financialReport?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
+                  .tax !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.cashRegisterAndElectronic
+                        .fixedAssets.tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
             <td className="border border-black px-1 py-0 text-left" rowSpan={9} colSpan={3}>
               <p>
@@ -1163,256 +1355,315 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-start" rowSpan={2}>
               {/* Info: (20240814 - Anna) 載有稅額之其他憑證 */}
-              {t('reports:TAX_REPORT.OTHER_VOUCHERS')}
-              <br />({/* Info: (20240814 - Anna) 包括二聯式收銀機發票 */}
-              {t('reports:TAX_REPORT.INCLUDING_CASH_REGISTER')})
+              <p> {t('reports:TAX_REPORT.OTHER_VOUCHERS')}</p>
+              {/* Info: (20240814 - Anna) 包括二聯式收銀機發票 */}
+              <p>({t('reports:TAX_REPORT.INCLUDING_CASH_REGISTER')})</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 進貨及費用 */}
-              {t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              <p> {t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">36</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
-                .amount !== undefined &&
-              financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
-                .amount !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.otherTaxableVouchers
-                      .generalPurchases.amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>36</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">37</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
-                .tax !== undefined &&
-              financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
-                .tax !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.otherTaxableVouchers
-                      .generalPurchases.tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
+                  .amount !== undefined &&
+                financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
+                  .amount !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.otherTaxableVouchers
+                        .generalPurchases.amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>37</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
+                  .tax !== undefined &&
+                financialReport?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
+                  .tax !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.otherTaxableVouchers
+                        .generalPurchases.tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 固定資產 */}
-              {t('reports:TAX_REPORT.FIXED_ASSETS')}
+              <p>{t('reports:TAX_REPORT.FIXED_ASSETS')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">38</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
-                .amount !== undefined &&
-              financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
-                .amount !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
-                      .amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>38</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">39</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets.tax !==
-                undefined &&
-              financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets.tax !==
-                null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
-                      .tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
+                  .amount !== undefined &&
+                financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
+                  .amount !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
+                        .amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>39</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
+                  .tax !== undefined &&
+                financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
+                  .tax !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
+                        .tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-start" rowSpan={2}>
               {/* Info: (20240814 - Anna) 海關代徵營業稅繳納證扣抵聯 */}
-              {t('reports:TAX_REPORT.CERTIFICATE_OF_PAYMENT_BY_CUSTOMS')}
+              <p>{t('reports:TAX_REPORT.CERTIFICATE_OF_PAYMENT_BY_CUSTOMS')}</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 進貨及費用 */}
-              {t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              <p>{t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">78</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
-                .amount !== undefined &&
-              financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
-                .amount !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
-                      .amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>78</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">79</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
-                .tax !== undefined &&
-              financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
-                .tax !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
-                      .tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
+                  .amount !== undefined &&
+                financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
+                  .amount !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.customsDutyPayment
+                        .generalPurchases.amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>79</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
+                  .tax !== undefined &&
+                financialReport?.content.purchases.breakdown.customsDutyPayment.generalPurchases
+                  .tax !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.customsDutyPayment
+                        .generalPurchases.tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 固定資產 */}
-              {t('reports:TAX_REPORT.FIXED_ASSETS')}
+              <p>{t('reports:TAX_REPORT.FIXED_ASSETS')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">80</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets
-                .amount !== undefined &&
-              financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets.amount !==
-                null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets
-                      .amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>80</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">81</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax !==
-                undefined &&
-              financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax !==
-                null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets
+                  .amount !== undefined &&
+                financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets
+                  .amount !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets
+                        .amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>81</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax !==
+                  undefined &&
+                financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax !==
+                  null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.customsDutyPayment.fixedAssets
+                        .tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-start" rowSpan={2}>
               {/* Info: (20240814 - Anna) 減 :退出、折讓及海關退還 */}
-              {t('reports:TAX_REPORT.DEDUCTION_COPY_OF_CERTIFICATE_OF_PAYMENT')}
-              <br />
+              <p>{t('reports:TAX_REPORT.DEDUCTION_COPY_OF_CERTIFICATE_OF_PAYMENT')}</p>
               {/* Info: (20240814 - Anna) 溢繳稅款 */}
-              {t('reports:TAX_REPORT.FOR_BUSINESS_TAX_COLLECTED_BY_CUSTOMS')}
+              <p>{t('reports:TAX_REPORT.FOR_BUSINESS_TAX_COLLECTED_BY_CUSTOMS')}</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 進貨及費用 */}
-              {t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              <p>{t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">40</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
-                .amount !== undefined &&
-              financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
-                .amount !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.returnsAndAllowances
-                      .generalPurchases.amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>40</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">41</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
-                .tax ?? 'N/A'} */}
-              {financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
-                .tax !== undefined &&
-              financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
-                .tax !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.returnsAndAllowances
-                      .generalPurchases.tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
+                  .amount !== undefined &&
+                financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
+                  .amount !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.returnsAndAllowances
+                        .generalPurchases.amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>41</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {' '}
+                {financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
+                  .tax !== undefined &&
+                financialReport?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
+                  .tax !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.returnsAndAllowances
+                        .generalPurchases.tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 固定資產 */}
-              {t('reports:TAX_REPORT.FIXED_ASSETS')}
+              <p>{t('reports:TAX_REPORT.FIXED_ASSETS')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">42</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
-                .amount ?? 'N/A'} */}
-              {financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
-                .amount !== undefined &&
-              financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
-                .amount !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
-                      .amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>42</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">43</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets.tax ??
-                'N/A'} */}
-              {financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets.tax !==
-                undefined &&
-              financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets.tax !==
-                null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
-                      .tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
+                  .amount !== undefined &&
+                financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
+                  .amount !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
+                        .amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>43</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
+                  .tax !== undefined &&
+                financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
+                  .tax !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
+                        .tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-start" rowSpan={2}>
               {/* Info: (20240814 - Anna) 合計 */}
-              {t('reports:TAX_REPORT.TOTAL')}
+              <p>{t('reports:TAX_REPORT.TOTAL')}</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 進貨及費用 */}
-              {t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              <p> {t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">44</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.total.generalPurchases.amount !==
-                undefined &&
-              financialReport?.content.purchases.breakdown.total.generalPurchases.amount !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.total.generalPurchases.amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>44</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">45⑨</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.total.generalPurchases.tax !==
-                undefined &&
-              financialReport?.content.purchases.breakdown.total.generalPurchases.tax !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.total.generalPurchases.tax
-                  )
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.total.generalPurchases.amount !==
+                  undefined &&
+                financialReport?.content.purchases.breakdown.total.generalPurchases.amount !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.total.generalPurchases.amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>45⑨</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {financialReport?.content.purchases.breakdown.total.generalPurchases.tax !==
+                  undefined &&
+                financialReport?.content.purchases.breakdown.total.generalPurchases.tax !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.total.generalPurchases.tax
+                    )
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 固定資產 */}
-              {t('reports:TAX_REPORT.FIXED_ASSETS')}
+              <p>{t('reports:TAX_REPORT.FIXED_ASSETS')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">46</td>
-            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.total.fixedAssets.amount !==
-                undefined &&
-              financialReport?.content.purchases.breakdown.total.fixedAssets.amount !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.breakdown.total.fixedAssets.amount
-                  )
-                : 'N/A'}
+            <td className="border border-black px-1 py-0 text-center">
+              <p>46</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">47⑩</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {financialReport?.content.purchases.breakdown.total.fixedAssets.tax !== undefined &&
-              financialReport?.content.purchases.breakdown.total.fixedAssets.tax !== null
-                ? formatNumber(financialReport?.content.purchases.breakdown.total.fixedAssets.tax)
-                : 'N/A'}
+              <p>
+                {financialReport?.content.purchases.breakdown.total.fixedAssets.amount !==
+                  undefined &&
+                financialReport?.content.purchases.breakdown.total.fixedAssets.amount !== null
+                  ? formatNumber(
+                      financialReport?.content.purchases.breakdown.total.fixedAssets.amount
+                    )
+                  : 'N/A'}
+              </p>
+            </td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>47⑩</p>
+            </td>
+            <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              <p>
+                {financialReport?.content.purchases.breakdown.total.fixedAssets.tax !== undefined &&
+                financialReport?.content.purchases.breakdown.total.fixedAssets.tax !== null
+                  ? formatNumber(financialReport?.content.purchases.breakdown.total.fixedAssets.tax)
+                  : 'N/A'}
+              </p>
             </td>
           </tr>
           <tr>
@@ -1427,132 +1678,173 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 進貨及費用 */}
-              {t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              <p>{t('reports:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">48</td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>48</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right" colSpan={5}>
-              {financialReport?.content.purchases.totalWithNonDeductible.generalPurchases !==
-                undefined &&
-              financialReport?.content.purchases.totalWithNonDeductible.generalPurchases !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.totalWithNonDeductible.generalPurchases
-                  )
-                : 'N/A'}
-              {/* Info: (20240814 - Anna) 元 */}
-              {t('reports:TAX_REPORT.NTD')}
+              <p>
+                <span>
+                  {financialReport?.content.purchases.totalWithNonDeductible.generalPurchases !==
+                    undefined &&
+                  financialReport?.content.purchases.totalWithNonDeductible.generalPurchases !==
+                    null
+                    ? formatNumber(
+                        financialReport?.content.purchases.totalWithNonDeductible.generalPurchases
+                      )
+                    : 'N/A'}
+                </span>
+                {/* Info: (20240814 - Anna) 元 */}
+                <span>{t('reports:TAX_REPORT.NTD')}</span>
+              </p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center" rowSpan={2}>
               {/* Info: (20240814 - Anna) 申辦情形 */}
-              {t('reports:TAX_REPORT.FILING_STATUS')}
+              <p>{t('reports:TAX_REPORT.FILING_STATUS')}</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center" rowSpan={2}>
               {/* Info: (20240814 - Anna) 姓名 */}
-              {t('reports:TAX_REPORT.NAME')}
+              <p>{t('reports:TAX_REPORT.NAME')}</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center" rowSpan={2}>
               {/* Info: (20240814 - Anna) 身分證統一編號 */}
-              {t('reports:TAX_REPORT.ID_NUMBER')}
+              <p>{t('reports:TAX_REPORT.ID_NUMBER')}</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center" rowSpan={2}>
               {/* Info: (20240814 - Anna) 電話 */}
-              {t('reports:TAX_REPORT.TELEPHONE_NUMBER')}
+              <p>{t('reports:TAX_REPORT.TELEPHONE_NUMBER')}</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center" rowSpan={2}>
               {/* Info: (20240814 - Anna) 登錄文(字)號 */}
-              {t('reports:TAX_REPORT.LOGIN_NUMBER')}
+              <p>{t('reports:TAX_REPORT.LOGIN_NUMBER')}</p>
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 固定資產 */}
-              {t('reports:TAX_REPORT.FIXED_ASSETS')}
+              <p>{t('reports:TAX_REPORT.FIXED_ASSETS')}</p>
             </td>
-            <td className="border border-black px-1 py-0 text-center">49</td>
+            <td className="border border-black px-1 py-0 text-center">
+              <p>49</p>
+            </td>
             <td className="border border-black px-1 py-0 text-right" colSpan={5}>
-              {financialReport?.content.purchases.totalWithNonDeductible.fixedAssets !==
-                undefined &&
-              financialReport?.content.purchases.totalWithNonDeductible.fixedAssets !== null
-                ? formatNumber(
-                    financialReport?.content.purchases.totalWithNonDeductible.fixedAssets
-                  )
-                : 'N/A'}
-              {/* Info: (20240814 - Anna) 元 */}
-              {t('reports:TAX_REPORT.NTD')}
+              <p>
+                <span>
+                  {' '}
+                  {financialReport?.content.purchases.totalWithNonDeductible.fixedAssets !==
+                    undefined &&
+                  financialReport?.content.purchases.totalWithNonDeductible.fixedAssets !== null
+                    ? formatNumber(
+                        financialReport?.content.purchases.totalWithNonDeductible.fixedAssets
+                      )
+                    : 'N/A'}
+                </span>
+                {/* Info: (20240814 - Anna) 元 */}
+                <span>{t('reports:TAX_REPORT.NTD')}</span>
+              </p>
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center" colSpan={2}>
               {/* Info: (20240814 - Anna) 進口免稅貨物 */}
-              {t('reports:TAX_REPORT.IMPORTATION_OF_TAX_EXEMPTED_GOODS')}
+              <p> {t('reports:TAX_REPORT.IMPORTATION_OF_TAX_EXEMPTED_GOODS')}</p>
             </td>
-            <td className="text-nowrap border border-black px-1 py-0 text-center">73</td>
+            <td className="text-nowrap border border-black px-1 py-0 text-center">
+              <p>73</p>
+            </td>
             <td className="text-nowrap border border-black px-1 py-0 text-end" colSpan={6}>
-              {financialReport?.content.imports.taxExemptGoods !== undefined &&
-              financialReport?.content.imports.taxExemptGoods !== null
-                ? formatNumber(financialReport?.content.imports.taxExemptGoods)
-                : 'N/A'}
-              {/* Info: (20240814 - Anna) 元 */}
-              {t('reports:TAX_REPORT.NTD')}
+              <p>
+                <span>
+                  {financialReport?.content.imports.taxExemptGoods !== undefined &&
+                  financialReport?.content.imports.taxExemptGoods !== null
+                    ? formatNumber(financialReport?.content.imports.taxExemptGoods)
+                    : 'N/A'}
+                </span>
+                {/* Info: (20240814 - Anna) 元 */}
+                <span>{t('reports:TAX_REPORT.NTD')}</span>
+              </p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 自行申報 */}
-              {t('reports:TAX_REPORT.SELF_FILING')}
+              <p> {t('reports:TAX_REPORT.SELF_FILING')}</p>
             </td>
-            <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
-            <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
-            <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
-            <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
+            <td className="text-nowrap border border-black px-1 py-0 text-center">
+              <p></p>
+            </td>
+            <td className="text-nowrap border border-black px-1 py-0 text-center">
+              <p></p>
+            </td>
+            <td className="text-nowrap border border-black px-1 py-0 text-center">
+              <p></p>
+            </td>
+            <td className="text-nowrap border border-black px-1 py-0 text-center">
+              <p></p>
+            </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center" colSpan={2}>
               {/* Info: (20240814 - Anna) 購買國外勞務 */}
-              {t('reports:TAX_REPORT.PURCHASE_OF_FOREIGN_SERVICES')}
+              <p>{t('reports:TAX_REPORT.PURCHASE_OF_FOREIGN_SERVICES')}</p>
             </td>
-            <td className="text-nowrap border border-black px-1 py-0 text-center">74</td>
+            <td className="text-nowrap border border-black px-1 py-0 text-center">
+              <p>74</p>
+            </td>
             <td className="text-nowrap border border-black px-1 py-0 text-end" colSpan={6}>
-              {financialReport?.content.imports.foreignServices !== undefined &&
-              financialReport?.content.imports.foreignServices !== null
-                ? formatNumber(financialReport?.content.imports.foreignServices)
-                : 'N/A'}
-              {/* Info: (20240814 - Anna) 元 */}
-              {t('reports:TAX_REPORT.NTD')}
+              <p>
+                <span>
+                  {financialReport?.content.imports.foreignServices !== undefined &&
+                  financialReport?.content.imports.foreignServices !== null
+                    ? formatNumber(financialReport?.content.imports.foreignServices)
+                    : 'N/A'}
+                </span>
+                {/* Info: (20240814 - Anna) 元 */}
+                <span>{t('reports:TAX_REPORT.NTD')}</span>
+              </p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 委任申報 */}
-              {t('reports:TAX_REPORT.FILING_BY_AGENT')}
+              <p>{t('reports:TAX_REPORT.FILING_BY_AGENT')}</p>
             </td>
-            <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
-            <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
-            <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
-            <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
+            <td className="text-nowrap border border-black px-1 py-0 text-center">
+              <p></p>
+            </td>
+            <td className="text-nowrap border border-black px-1 py-0 text-center">
+              <p></p>
+            </td>
+            <td className="text-nowrap border border-black px-1 py-0 text-center">
+              <p></p>
+            </td>
+            <td className="text-nowrap border border-black px-1 py-0 text-center">
+              <p></p>
+            </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 說明 */}
-              {t('reports:TAX_REPORT.REMARKS')}
+              <p>{t('reports:TAX_REPORT.REMARKS')}</p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-start" colSpan={13}>
               <p>
                 {/* Info: (20240814 - Anna) 一、 本申報書適用專營應稅及零稅率之營業人填報。 */}
-                {t('reports:TAX_REPORT.REMARKS_1')}
+                <p>{t('reports:TAX_REPORT.REMARKS_1')}</p>
               </p>
               <p>
                 {/* Info: (20240814 - Anna) 二、
                 如營業人申報當期(月)之銷售額包括有免稅、特種稅額計算銷售額者，請改用(403)申報書申報。 */}
-                {t('reports:TAX_REPORT.REMARKS_2')}
+                <p>{t('reports:TAX_REPORT.REMARKS_2')}</p>
               </p>
               <p>
                 {/* Info: (20240814 - Anna) 三、
                 營業人如有依財政部108年11月15日台財稅字第10804629000號令規定進行一次性移轉訂價調整申報營業稅，除跨境受控交易為進口貨物外，請另填報「營業稅一次性移轉訂價調整聲明書」並檢附相關證明文件，併 */}
-                {t('reports:TAX_REPORT.REMARKS_3')}
-                <br />
+                <p>{t('reports:TAX_REPORT.REMARKS_3')}</p>
                 {/* Info: (20240814 - Anna) 同會計年度最後一期營業稅申報。 */}
-                {t('reports:TAX_REPORT.REMARKS_3_1')}
+                <p>{t('reports:TAX_REPORT.REMARKS_3_1')}</p>
               </p>
               <p>
                 {/* Info: (20240814 - Anna) 四、
                 納稅者如有依納稅者權利保護法第7條第8項但書規定，為重要事項陳述者，請另填報「營業稅聲明事項表」並檢附相關證明文件。 */}
-                {t('reports:TAX_REPORT.REMARKS_4')}
+                <p>{t('reports:TAX_REPORT.REMARKS_4')}</p>
               </p>
             </td>
           </tr>
