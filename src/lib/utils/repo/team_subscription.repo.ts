@@ -146,8 +146,15 @@ export async function listTeamSubscription(
   };
 }
 
-export async function listTeamInvoice(userId: number): Promise<ITeamInvoice[]> {
-  const ownerTeams = await prisma.teamMember.findMany({
+export async function listTeamTransaction(
+  userId: number,
+  page: number = 1,
+  pageSize: number = 10
+): Promise<IPaginatedOptions<ITeamInvoice[]>> {
+  const skip = (page - 1) * pageSize;
+  const take = pageSize;
+
+  const teamMembers = await prisma.teamMember.findMany({
     where: {
       userId,
       role: TeamRole.OWNER,
@@ -155,56 +162,169 @@ export async function listTeamInvoice(userId: number): Promise<ITeamInvoice[]> {
     },
     select: {
       teamId: true,
+      team: {
+        select: {
+          subscriptions: {
+            orderBy: { expiredDate: SortOrder.DESC },
+            take: 1,
+          },
+          TeamOrder: {
+            select: {
+              id: true,
+              teamId: true,
+              orderDetails: true,
+              TeamPaymentTransaction: {
+                include: {
+                  TeamInvoice: true,
+                  userPaymentInfo: {
+                    select: {
+                      user: {
+                        select: {
+                          name: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    skip,
+    take,
+  });
+
+  const invoices: ITeamInvoice[] = [];
+
+  teamMembers.forEach(({ teamId, team }) => {
+    const subscription = team.subscriptions?.[0];
+    const planStartTimestamp = subscription?.startDate ?? 0;
+    const planEndTimestamp = subscription?.expiredDate ?? 0;
+
+    team.TeamOrder.forEach((order) => {
+      const transaction = order.TeamPaymentTransaction?.[0];
+      const invoice = transaction?.TeamInvoice?.[0];
+      const detail = order.orderDetails?.[0];
+
+      if (!transaction || !detail) return;
+
+      invoices.push({
+        id: invoice?.id ?? transaction.id,
+        teamId,
+        status: invoice?.status === 'SUCCESS', // Info: (20250401 - Tzuhan) 目前不確定 DB 發票狀態的定義（schema 上是 string），這邊假設是 'SUCCESS' 代表付款成功
+        issuedTimestamp: invoice?.issuedAt ?? transaction.createdAt,
+        dueTimestamp: invoice?.issuedAt ?? transaction.createdAt,
+
+        planId: detail.productName as TPlanType,
+        planStartTimestamp,
+        planEndTimestamp,
+        planQuantity: detail.quantity ?? 1,
+        planUnitPrice: detail.unitPrice ?? 0,
+        planAmount: detail.amount ?? 0,
+
+        payer: {
+          name: invoice?.payerName ?? transaction.userPaymentInfo?.user?.name ?? '—',
+          address: invoice?.payerAddress ?? '—',
+          phone: invoice?.payerPhone ?? '—',
+          taxId: invoice?.payerId ?? '—',
+        },
+        payee: {
+          name: 'iSunFa Inc.', // Info: (20250401 - Tzuhan) 這個要在跟 Luphia 確認
+          address: 'Taipei, Taiwan',
+          phone: '+886-2-12345678',
+          taxId: '12345678',
+        },
+
+        subtotal: invoice?.price ?? detail.amount ?? 0,
+        tax: invoice?.tax ?? 0,
+        total: invoice?.total ?? detail.amount ?? 0,
+        amountDue: invoice?.total ?? detail.amount ?? 0,
+      });
+    });
+  });
+
+  const totalCount = await prisma.teamMember.count({
+    where: {
+      userId,
+      role: 'OWNER',
+      status: 'IN_TEAM',
     },
   });
 
-  const teamIds = ownerTeams.map((m) => m.teamId);
+  const totalPages = Math.ceil(totalCount / pageSize);
 
-  const invoices = await prisma.teamInvoice.findMany({
+  return {
+    data: invoices,
+    page,
+    totalPages,
+    totalCount,
+    pageSize,
+  };
+}
+
+export async function getSubscriptionByTeamId(
+  userId: number,
+  teamId: number
+): Promise<IUserOwnedTeam | null> {
+  const team = await prisma.team.findFirst({
     where: {
-      teamOrder: {
-        teamId: { in: teamIds },
+      id: teamId,
+      members: {
+        some: {
+          userId,
+          role: TeamRole.OWNER,
+          status: LeaveStatus.IN_TEAM,
+        },
       },
     },
-    include: {
-      teamOrder: {
+    select: {
+      id: true,
+      name: true,
+      subscriptions: {
+        orderBy: { createdAt: SortOrder.DESC },
+        take: 1,
+        include: { plan: true },
+      },
+      TeamOrder: {
+        orderBy: { createdAt: SortOrder.DESC },
+        take: 1,
         include: {
-          orderDetails: true,
+          TeamPaymentTransaction: {
+            include: { TeamInvoice: true },
+          },
         },
       },
     },
   });
 
-  return invoices.map((invoice) => {
-    const detail = invoice.teamOrder.orderDetails[0]; // Info: (20250401 - Tzuhan) 假設每張發票對應一項訂閱產品
-    return {
-      id: invoice.id,
-      teamId: invoice.teamOrder.teamId,
-      status: invoice.status === 'SUCCESS', // Info: (20250401 - Tzuhan) 目前不確定 DB 發票狀態的定義（schema 上是 string），這邊假設是 'SUCCESS' 代表付款成功
-      issuedTimestamp: invoice.issuedAt,
-      dueTimestamp: invoice.issuedAt, // Info: (20250401 - Tzuhan) 根據我們定義的邏輯為開立日
-      planId: detail?.productName as TPlanType,
-      planStartTimestamp: 0, // Info: (20250401 - Tzuhan) 如果資料中有開始時間，可補上
-      planEndTimestamp: 0, // Info: (20250401 - Tzuhan) 如果資料中有結束時間，可補上
-      planQuantity: detail?.quantity ?? 1,
-      planUnitPrice: detail?.unitPrice ?? 0,
-      planAmount: detail?.amount ?? 0,
-      payer: {
-        name: invoice.payerName ?? '',
-        address: invoice.payerAddress ?? '',
-        phone: invoice.payerPhone ?? '',
-        taxId: invoice.payerId ?? '',
-      },
-      payee: {
-        name: 'ISunFa Co., Ltd.', // Info: (20250401 - Tzuhan) 這個要在跟 Luphia 確認
-        address: 'Taipei, Taiwan',
-        phone: '+886-2-12345678',
-        taxId: '12345678',
-      },
-      subtotal: invoice.price,
-      tax: invoice.tax,
-      total: invoice.total,
-      amountDue: invoice.total, // Info: (20250401 - Tzuhan) 目前無付款紀錄可扣除，可調整
-    };
-  });
+  if (!team) return null;
+
+  const latestSub = team.subscriptions[0];
+  const latestOrder = team.TeamOrder[0];
+  const latestTxn = latestOrder?.TeamPaymentTransaction[0];
+  const hasInvoice = latestTxn?.TeamInvoice?.length > 0;
+
+  let paymentStatus: TPaymentStatus = TPaymentStatus.FREE;
+  if (latestSub) {
+    if (!latestTxn) {
+      paymentStatus = TPaymentStatus.TRIAL;
+    } else {
+      paymentStatus = hasInvoice ? TPaymentStatus.PAID : TPaymentStatus.PAYMENT_FAILED;
+    }
+  }
+  if (latestOrder?.status === 'CANCELED') {
+    paymentStatus = TPaymentStatus.PAYMENT_FAILED;
+  }
+
+  return {
+    id: team.id,
+    name: team.name,
+    plan: (latestSub?.planType as TPlanType) || TPlanType.BEGINNER,
+    enableAutoRenewal: true,
+    expiredTimestamp: latestSub?.expiredDate ?? 0,
+    nextRenewalTimestamp: latestSub?.expiredDate ?? 0,
+    paymentStatus,
+  };
 }

@@ -125,6 +125,7 @@ const CreateAccountBookModal = ({
         const { success, data } = await getTeamListAPI({
           params: { userId: userAuth.id },
           query: {
+            canCreateAccountBookOnly: true,
             page: 1,
             pageSize: 999,
           },

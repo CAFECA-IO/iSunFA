@@ -151,11 +151,6 @@ export const updateMemberById = async (
   role: TeamRole,
   sessionUserTeamRole: TeamRole
 ): Promise<IUpdateMemberResponse> => {
-  // Info: (20250312 - Shirley) 檢查當前用戶是否有權限更新成員角色
-  if (sessionUserTeamRole !== TeamRole.OWNER && sessionUserTeamRole !== TeamRole.ADMIN) {
-    throw new Error('PERMISSION_DENIED');
-  }
-
   // Info: (20250312 - Shirley) 檢查要更新的成員是否存在
   const teamMember = await prisma.teamMember.findFirst({
     where: {
@@ -178,44 +173,53 @@ export const updateMemberById = async (
     throw new Error('MEMBER_NOT_FOUND');
   }
 
-  // Info: (20250312 - Shirley) 不能將成員角色更新為 OWNER
+  // Info: (20250312 - Shirley) 不能將成員更新為 OWNER
   if (role === TeamRole.OWNER) {
     throw new Error('CANNOT_UPDATE_TO_OWNER');
   }
 
-  // Info: (20250312 - Shirley) 檢查成員當前角色
+  // Info: (20250312 - Shirley) 不能更新 OWNER 的角色
   if (teamMember.role === TeamRole.OWNER) {
     throw new Error('CANNOT_UPDATE_OWNER_ROLE');
   }
 
-  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，只能更新 EDITOR 和 VIEWER 角色
-  if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER');
+  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，不能更新其他 ADMIN 或 OWNER 的角色
+  if (sessionUserTeamRole === TeamRole.ADMIN) {
+    if (
+      (teamMember.role as TeamRole) === TeamRole.ADMIN ||
+      (teamMember.role as TeamRole) === TeamRole.OWNER
+    ) {
+      throw new Error('ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER');
+    }
+    // Info: (20250312 - Shirley) ADMIN 不能將成員提升為 ADMIN
+    if (role === TeamRole.ADMIN) {
+      throw new Error('ADMIN_CANNOT_PROMOTE_TO_ADMIN');
+    }
   }
 
-  // Info: (20250313 - Shirley) 如果當前用戶是 ADMIN，不能將其他成員提升為 ADMIN
-  if (sessionUserTeamRole === TeamRole.ADMIN && role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_PROMOTE_TO_ADMIN');
-  }
-
-  // Info: (20250312 - Shirley) 更新成員角色
-  const updatedAt = Math.floor(Date.now() / 1000);
   const updatedMember = await prisma.teamMember.update({
     where: { id: memberId },
-    data: {
-      role,
+    data: { role },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
     },
   });
 
   return {
     id: updatedMember.id,
-    userId: updatedMember.userId,
-    teamId: updatedMember.teamId,
+    userId: updatedMember.user.id,
+    teamId,
     role: updatedMember.role,
-    email: teamMember.user.email || '',
-    name: teamMember.user.name || '',
-    createdAt: updatedMember.joinedAt,
-    updatedAt,
+    email: updatedMember.user.email || '',
+    name: updatedMember.user.name || '',
+    createdAt: Math.floor(Date.now() / 1000),
+    updatedAt: Math.floor(Date.now() / 1000),
   };
 };
 
@@ -224,7 +228,7 @@ export const updateMemberById = async (
  * @param teamId 團隊 ID
  * @param memberId 成員 ID
  * @param sessionUserTeamRole 當前用戶在團隊中的角色
- * @returns 刪除的成員 ID
+ * @returns 被刪除的成員 ID
  */
 export const deleteMemberById = async (
   teamId: number,
@@ -243,6 +247,15 @@ export const deleteMemberById = async (
       teamId,
       status: LeaveStatus.IN_TEAM,
     },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
   });
 
   if (!teamMember) {
@@ -254,14 +267,13 @@ export const deleteMemberById = async (
     throw new Error('CANNOT_DELETE_OWNER');
   }
 
-  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，只能刪除 EDITOR 和 VIEWER 角色
+  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，不能刪除其他 ADMIN
   if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
     throw new Error('ADMIN_CANNOT_DELETE_ADMIN');
   }
 
-  // Info: (20250312 - Shirley) 軟刪除成員（更新狀態為 NOT_IN_TEAM 並記錄離開時間）
   const leftAt = Math.floor(Date.now() / 1000);
-  await prisma.teamMember.update({
+  const deletedMember = await prisma.teamMember.update({
     where: { id: memberId },
     data: {
       status: LeaveStatus.NOT_IN_TEAM,
@@ -270,7 +282,7 @@ export const deleteMemberById = async (
   });
 
   return {
-    memberId,
+    memberId: deletedMember.id,
   };
 };
 
@@ -383,4 +395,25 @@ export const getUserRoleInTeam = async (
   });
 
   return teamMember ? (teamMember.role as TeamRole) : null;
+};
+
+/**
+ * Info: (20250428 - Shirley) 檢查用戶是否為特定團隊的成員
+ * @param userId 用戶 ID
+ * @param teamId 團隊 ID
+ * @returns 如果用戶是團隊成員則返回 true，否則返回 false
+ */
+export const isUserTeamMember = async (userId: number, teamId: number): Promise<boolean> => {
+  const teamMember = await prisma.teamMember.findFirst({
+    where: {
+      userId,
+      teamId,
+      status: LeaveStatus.IN_TEAM,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return !!teamMember;
 };

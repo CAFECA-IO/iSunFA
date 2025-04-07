@@ -14,6 +14,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
 import packageJson from '@package';
 import { TeamRole } from '@/interfaces/team';
+import { useDashboardCtx } from '@/contexts/dashboard_context';
 
 interface IDefaultMenuOption {
   title: string;
@@ -474,18 +475,14 @@ interface SideMenuProps {
 const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
   const { version } = packageJson;
   const { t } = useTranslation(['layout']);
-  const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(true);
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
+  const { isSideMenuOpen, toggleSideMenu } = useDashboardCtx();
   const { teamRole, connectedAccountBook } = useUserCtx();
 
   const hasConnectedAccountBook = !!connectedAccountBook;
   const userAvatarSrc = hasConnectedAccountBook
     ? connectedAccountBook.imageId
     : '/images/default_account_book_image.svg';
-
-  const toggleSideMenu = () => {
-    setIsSideMenuOpen((prev) => !prev);
-  };
 
   const {
     targetRef: subMenuTargetRef,
