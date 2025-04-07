@@ -154,6 +154,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
         useCORS: true,
         logging: true, // Info: (20250327 - Anna) 「顯示除錯訊息」到 console
       }).catch((err) => {
+        // Info: (20250327 - Anna) Debug
         // eslint-disable-next-line no-console
         console.error('html2canvas 擷取錯誤:', err);
         return null;
@@ -265,7 +266,6 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   return (
     <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
       {/* Info: (20250108 - Anna) 傳遞 isChinese 給 FilterBar */}
-      {/* Info: (20250328 - Anna) */}
       <FilterBar printFn={printFn} isChinese={isChinese} downloadFn={handleDownload} />
       <div>
         <ItemSummary

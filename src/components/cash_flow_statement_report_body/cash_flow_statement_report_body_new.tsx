@@ -31,7 +31,7 @@ const CashFlowStatementPageBody = () => {
 
       // Info: (20250327 - Anna) 下載
       const handleDownload = async () => {
-        pageCountRef.current = 1; // // Info: (20250327 - Anna) reset 頁數
+        pageCountRef.current = 1; // Info: (20250327 - Anna) reset 頁數
 
         if (!downloadRef.current) return;
 

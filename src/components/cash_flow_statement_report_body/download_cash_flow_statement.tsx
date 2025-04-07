@@ -34,12 +34,12 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
 
   // Info: (20250318 - Anna) 取得當年度
   const curYear = reportFinancial?.curDate?.to
-    ? String(new Date(reportFinancial.curDate.to * 1000).getFullYear()) // ✅ 轉換為字串
+    ? String(new Date(reportFinancial.curDate.to * 1000).getFullYear()) // Info: (20250318 - Anna) 轉換為字串
     : 'N/A';
 
   // Info: (20250318 - Anna) 取得前年度
   const preYear = reportFinancial?.preDate?.to
-    ? String(new Date(reportFinancial.preDate.to * 1000).getFullYear()) // ✅ 轉換為字串
+    ? String(new Date(reportFinancial.preDate.to * 1000).getFullYear()) // Info: (20250318 - Anna) 轉換為字串
     : 'N/A';
 
   // Info: (20241112 - Anna) 動態應用分頁樣式
@@ -254,7 +254,6 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
             {table}
           </section>
           {renderedFooter(ItemSummaryPages.length + pageIndex + 1)}
-          {/* Info: (20250401 - Anna) Fixed */}
         </div>
       </div>
     );
@@ -415,8 +414,8 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
         >
           {renderedHeader(false)}
           <div className="text-sm">{freeCashFlow}</div>
-          {renderedFooter(ItemSummaryPages.length + ItemDetail.length + 1)}
           {/* Info: (20250401 - Anna) 動態計算頁碼 */}
+          {renderedFooter(ItemSummaryPages.length + ItemDetail.length + 1)}
         </div>
       </div>
     </div>

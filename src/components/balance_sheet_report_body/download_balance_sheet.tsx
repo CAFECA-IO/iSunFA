@@ -64,7 +64,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
   // Info: (20250314 - Anna) 前期結束日 轉換為 YYYY-MM-DD
   const preDateFormatted = getFormattedDate(reportFinancial?.preDate?.to);
 
-  //  // Info: (20250314 - Anna) 取得當前年份與前一年
+  // Info: (20250314 - Anna) 取得當前年份與前一年
   const curYear = curDateFormatted.split('-')[0];
   const preYear = preDateFormatted.split('-')[0];
 
@@ -72,7 +72,6 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
   const printContainerClass =
     'mx-auto w-a4-width origin-top overflow-x-auto m-0  print:block  print:h-auto print:w-full p-0 download-page border border-stroke-neutral-quaternary';
   const printContentClass = 'relative h-a4-height overflow-hidden';
-  // Info: (20241111 - Anna) 分割內容為多頁
 
   // Info: (20241112 - Anna) 將頁眉封裝成函數，並使用 `isFirstPage` 參數區分不同頁面
   const renderedHeader = (isFirstPage: boolean) => {
@@ -508,8 +507,6 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
         }}
       >
         <div
-          // Todo: (20241120 - Anna) id 可拿掉
-          id={`additional-block-page-`}
           className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
         >
           {renderedHeader(false)}

@@ -82,9 +82,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
     const downloadPages = printRef.current.querySelectorAll('.download-page');
     if (downloadPages.length === 0) {
-      // Info: (20250326 - Anna) Debug
-      // eslint-disable-next-line no-console
-      console.error('No .download-page elements found!');
       style.remove(); // Info: (20250401 - Anna) 移除樣式
       return;
     }
