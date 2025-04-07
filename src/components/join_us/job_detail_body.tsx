@@ -15,7 +15,8 @@ interface IJobDetailBodyProps {
 }
 
 const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
-  const { title, location, date, description, jobResponsibilities, requirements } = jobData;
+  const { title, location, date, description, jobResponsibilities, requirements, extraSkills } =
+    jobData;
   const dateString = timestampToString(date).dateWithSlash;
 
   const resList = jobResponsibilities.map((item) => (
@@ -25,6 +26,12 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
   ));
 
   const reqList = requirements.map((item) => (
+    <li key={item} className="text-lg leading-10">
+      {item}
+    </li>
+  ));
+
+  const extraList = extraSkills.map((item) => (
     <li key={item} className="text-lg leading-10">
       {item}
     </li>
@@ -71,8 +78,24 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
               <h2 className="text-36px font-bold text-text-brand-primary-lv3">
                 What Makes You a Great Fit
               </h2>
-              <ul className="list-inside list-disc">{reqList}</ul>
+              <ul className="flex list-inside list-disc list-image-orange-check flex-col gap-4px">
+                {reqList}
+              </ul>
             </div>
+            {/* Info: (20250407 - Julian) Extra Power You Bring */}
+            <div className="flex flex-col gap-40px">
+              <h2 className="text-36px font-bold text-text-brand-primary-lv3">
+                Extra Power You Bring
+              </h2>
+              <ul className="flex list-inside list-disc list-image-orange-plus flex-col gap-4px">
+                {extraList}
+              </ul>
+            </div>
+          </div>
+
+          {/* Info: (20250407 - Julian) Job Footer */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center"></div>
           </div>
         </div>
 

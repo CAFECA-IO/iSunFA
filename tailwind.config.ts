@@ -1559,6 +1559,8 @@ module.exports = {
       },
       listStyleImage: {
         'blue-star': 'url("/icons/blue_star.svg")',
+        'orange-check': 'url("/icons/check_mark.svg")',
+        'orange-plus': 'url("/icons/plus_mark.svg")',
       },
       gridTemplateColumns: {
         'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板

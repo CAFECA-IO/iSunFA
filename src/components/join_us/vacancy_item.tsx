@@ -4,6 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { timestampToString } from '@/lib/utils/common';
 import { IJob } from '@/interfaces/job';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
+import FavoriteButton from '@/components/join_us/favorite_button';
 
 interface IVacancyItem {
   job: IJob;
@@ -16,26 +17,6 @@ const VacancyItem: React.FC<IVacancyItem> = ({ job, isFavorite, toggleFavorite }
 
   const { title, location, date, description } = job;
   const dateStr = timestampToString(date).dateWithSlash;
-
-  const favoriteStar = (
-    <button type="button" onClick={toggleFavorite} className="group">
-      {isFavorite ? (
-        <Image src="/icons/star_active.svg" width={32} height={32} alt="star_active" />
-      ) : (
-        <div className="relative">
-          <Image src="/icons/star_default.svg" width={32} height={32} alt="star_default" />
-          <Image
-            src="/icons/star_hover.svg"
-            width={32}
-            height={32}
-            alt="star_default"
-            // Info: (20250402 - Julian) Hover Icon
-            className="absolute top-0 z-10 hidden group-hover:block"
-          />
-        </div>
-      )}
-    </button>
-  );
 
   return (
     <div className="relative flex w-full flex-col gap-40px rounded-xl border border-white bg-landing-nav px-60px py-40px shadow-landing-nav backdrop-blur-md">
@@ -73,7 +54,7 @@ const VacancyItem: React.FC<IVacancyItem> = ({ job, isFavorite, toggleFavorite }
         <div className="flex items-center gap-20px text-36px font-bold text-white">
           <p>{title}</p>
           {/* Info: (20250402 - Julian) Favorite Button */}
-          {favoriteStar}
+          <FavoriteButton isActive={isFavorite} clickHandler={toggleFavorite} />
         </div>
         <LandingButton variant="primary" className="font-bold">
           {t('hiring:JOIN_US_PAGE.APPLY_NOW_BTN')}
