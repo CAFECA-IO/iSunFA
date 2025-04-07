@@ -64,6 +64,8 @@ export const ISUNFA_ROUTE = {
   UPLOAD: `mobile_upload`,
 
   ACCOUNTING_SETTINGS: '/users/setting/accounting_setting',
+
+  JOIN_US: '/join_us',
 };
 
 export const EXTERNAL_API = {
