@@ -27,12 +27,9 @@ interface FilterBarProps {
   isChinese: boolean; // Info: (20250108 - Anna) 添加 isChinese 屬性
 }
 const FilterBar = ({ printFn, isChinese, downloadFn }: FilterBarProps) => {
-  // eslint-disable-next-line no-console
-  console.log('🧩 FilterBar 收到的 downloadFn:', downloadFn);
   return (
     <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
       <div className="ml-auto flex items-center gap-24px">
-        {/* Info: (20250328 - Anna) */}
         <DownloadButton onClick={downloadFn} />
         <PrintButton onClick={() => printFn()} disabled={!isChinese} />
       </div>
@@ -59,10 +56,8 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn';
 
   const printRef = useRef<HTMLDivElement>(null);
-  // Info: (20250328 - Anna)
   const downloadRef = useRef<HTMLDivElement>(null);
 
-  // Info: (20250328 - Anna)
   const filename = `Income_Statement.pdf`;
 
   const printFn = useReactToPrint({
@@ -71,23 +66,9 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   });
 
   const handleDownload = async () => {
-    // eslint-disable-next-line no-console
-    console.log('🔥 handleDownload 被呼叫了');
-    // pageCountRef.current = 1; // // Info: (20250327 - Anna) reset 頁數
-
     if (!downloadRef.current) {
-      // eslint-disable-next-line no-console
-      console.error('❌ downloadRef is null');
       return;
     }
-
-    // eslint-disable-next-line no-console
-    console.log('🕵️‍♀️ downloadRef.current:', downloadRef.current);
-    // eslint-disable-next-line no-console
-    console.log(
-      '🧱 downloadRef.current.innerHTML (preview):',
-      downloadRef.current?.innerHTML.slice(0, 300)
-    );
 
     //  Info: (20250401 - Anna) 插入修正樣式
     const style = document.createElement('style');
@@ -155,11 +136,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
     await wait(150);
 
     const downloadPages = downloadRef.current.querySelectorAll('.download-page');
-    // eslint-disable-next-line no-console
-    console.log('📄 抓到 downloadPages 數量:', downloadPages.length); // 🌟
     if (!downloadPages.length) {
-      // eslint-disable-next-line no-console
-      console.error('❌ 沒有抓到 .download-page 元素');
       return;
     }
 
@@ -178,20 +155,13 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
         logging: true, // Info: (20250327 - Anna) 「顯示除錯訊息」到 console
       }).catch((err) => {
         // eslint-disable-next-line no-console
-        console.error('❌ html2canvas 擷取錯誤:', err);
+        console.error('html2canvas 擷取錯誤:', err);
         return null;
       });
 
       if (!canvas) {
-        // eslint-disable-next-line no-console
-        console.error(`❌ 第 ${i + 1} 頁 canvas 是 null，停止下載流程`);
         return;
       }
-
-      // eslint-disable-next-line no-console
-      console.log(`🎨 canvas size: ${canvas.width} x ${canvas.height}`);
-      // eslint-disable-next-line no-console
-      console.log(`🎨 canvas toDataURL size: ${canvas.toDataURL().length}`);
 
       // Info: (20250327 - Anna) 轉成 PNG 格式
       const imgData = canvas.toDataURL('image/png');
@@ -214,11 +184,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
     downloadRef.current.style.left = '';
 
     // Info: (20250327 - Anna) 下載 PDF
-    // eslint-disable-next-line no-console
-    console.log('📥 嘗試呼叫 pdf.save()');
     pdf.save(filename);
-    // eslint-disable-next-line no-console
-    console.log('✅ pdf.save() 已執行');
   };
 
   useEffect(() => {
@@ -296,11 +262,6 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   const formattedPreFromDate = format(preDateFrom, 'yyyy-MM-dd');
   const formattedPreToDate = format(preDateTo, 'yyyy-MM-dd');
 
-  // eslint-disable-next-line no-console
-  console.log('📄 downloadRef 即將 render');
-  // eslint-disable-next-line no-console
-  console.log('📄 financialReport:', financialReport);
-
   return (
     <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
       {/* Info: (20250108 - Anna) 傳遞 isChinese 給 FilterBar */}
@@ -344,7 +305,6 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
       <DownloadPreview
         ref={downloadRef}
         className="hidden w-a4-width"
-        // style={{ left: '-9999px' }}
         financialReport={financialReport}
         formattedCurFromDate={formattedCurFromDate}
         formattedCurToDate={formattedCurToDate}

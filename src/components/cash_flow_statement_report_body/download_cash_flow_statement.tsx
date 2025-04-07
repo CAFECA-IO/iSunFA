@@ -1,7 +1,6 @@
 import React from 'react';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import { useTranslation } from 'next-i18next';
-// import Image from 'next/image';
 
 interface DownloadCashFlowStatementProps {
   reportFinancial: CashFlowStatementReport | null;
@@ -114,16 +113,16 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     </footer>
   );
 
-  // 1️⃣ 計算 ItemSummary 佔的頁數
+  // Info: (20250401 - Anna)  計算 ItemSummary 佔的頁數
   const renderTable = (data: FinancialReportItem[]) => {
-    if (!data || data.length === 0) return []; // ✅ 確保回傳陣列
+    if (!data || data.length === 0) return []; // Info: (20250401 - Anna) 確保回傳陣列
 
-    // 1️⃣ 過濾掉 `curPeriodAmount` 和 `prePeriodAmount` 都為 0 的數據
+    // Info: (20250401 - Anna) 過濾掉 `curPeriodAmount` 和 `prePeriodAmount` 都為 0 的數據
     const filteredData = data.filter(
       (value) => !(Number(value.curPeriodAmount) === 0 && Number(value.prePeriodAmount) === 0)
     );
 
-    // 2️⃣ 確保 `code` 唯一
+    // Info: (20250401 - Anna)確保 `code` 唯一
     const uniqueData: FinancialReportItem[] = [];
     const seenCodes = new Set();
 
@@ -134,11 +133,11 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
       }
     });
 
-    // 3️⃣ 設定每頁 10 行
+    // Info: (20250401 - Anna) 設定每頁 10 行
     const rowsPerPage = 10;
     const totalPages = Math.ceil(uniqueData.length / rowsPerPage);
 
-    // ✅ 確保回傳的是 `table` 陣列，而不是數字
+    // Info: (20250401 - Anna) 確保回傳的是 `table` 陣列，而不是數字
     return Array.from({ length: totalPages }, (_, pageIndex) => {
       const pageRows = uniqueData.slice(pageIndex * rowsPerPage, (pageIndex + 1) * rowsPerPage);
 
@@ -146,7 +145,7 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
 
       return (
         <table
-          key={`table-${pageKey}`} // ✅ 使用 `pageIndex` 確保 key 穩定
+          key={`table-${pageKey}`} // Info: (20250401 - Anna) 使用 `pageIndex` 確保 key 穩定
           className="relative z-1 w-full border-collapse bg-white"
           style={{ pageBreakBefore: pageIndex === 0 ? 'auto' : 'always' }}
         >
@@ -197,13 +196,13 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     });
   };
 
-  const ItemSummaryPages = renderTable(reportFinancial?.general || []); // ✅ 確保回傳 `table[]` 陣列
+  const ItemSummaryPages = renderTable(reportFinancial?.general || []); // Info: (20250401 - Anna) 確保回傳 `table[]` 陣列
   const ItemSummary = ItemSummaryPages.map((table) => {
-    const tableKey = crypto.randomUUID(); // ✅ Generate a stable unique key
+    const tableKey = crypto.randomUUID(); // Info: (20250401 - Anna) Generate a stable unique key
 
     return (
       <div
-        key={tableKey} // ✅ Use a unique key
+        key={tableKey} // Info: (20250401 - Anna) Use a unique key
         className={`${printContainerClass} download-page border border-stroke-neutral-quaternary`}
         style={{
           pageBreakBefore: 'auto',
@@ -211,7 +210,7 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
         }}
       >
         <div
-          id={`summary-page-${tableKey}`} // ✅ Use the unique key for ID as well
+          id={`summary-page-${tableKey}`} // Info: (20250401 - Anna) Use the unique key for ID as well
           className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
         >
           {renderedHeader(true)}
@@ -220,10 +219,10 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
               <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
               <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
             </div>
-            {table} {/* ✅ Render the table content */}
+            {table} {/* Info: (20250401 - Anna) Render the table content */}
           </section>
           {renderedFooter(ItemSummaryPages.indexOf(table) + 1)}{' '}
-          {/* ✅ Ensure correct page numbering */}
+          {/* Info: (20250401 - Anna) Ensure correct page numbering */}
         </div>
       </div>
     );
@@ -235,7 +234,7 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     const tableKey = table?.key ?? crypto.randomUUID();
     return (
       <div
-        key={tableKey} // ✅ 直接用 pageIndex 來確保 key 唯一
+        key={tableKey} // Info: (20250401 - Anna) 直接用 pageIndex 來確保 key 唯一
         className={`${printContainerClass} download-page border border-stroke-neutral-quaternary`}
         style={{
           pageBreakBefore: 'auto',
@@ -254,9 +253,8 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
             </div>
             {table}
           </section>
-          {/* {renderedFooter(pageIndex + 2)} ✅ 確保頁碼遞增 */}
-          {/* {renderedFooter(ItemSummaryPages + pageIndex + 1)} ✅ ItemSummary 最後一頁 + 1 */}
-          {renderedFooter(ItemSummaryPages.length + pageIndex + 1)} {/* ✅ Fixed */}
+          {renderedFooter(ItemSummaryPages.length + pageIndex + 1)}
+          {/* Info: (20250401 - Anna) Fixed */}
         </div>
       </div>
     );
@@ -394,56 +392,15 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     return <p>No data available for download.</p>;
   }
 
-  //   return (
-  //     <div ref={downloadRef}>
-  //       {/* ✅ 第一頁 */}
-  //       <div
-  //         key="first-block-page"
-  //         className={`${printContainerClass} download-page border border-stroke-neutral-quaternary`}
-  //         style={{ pageBreakBefore: 'auto', pageBreakAfter: 'auto' }}
-  //       >
-  //         <div
-  //           id="first-block-page"
-  //           className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
-  //         >
-  //           {renderedHeader(true)}
-  //           {ItemSummary}
-  //           {renderedFooter(1)}
-  //         </div>
-  //       </div>
-
-  //       {/* ✅ 第二頁開始，每頁遞增 */}
-  //       {ItemDetail}
-
-  //       {/* Info: (20241120 - Anna) 渲染額外的內容 */}
-  //       <div
-  //         key={`additional-block-page-`}
-  //         className={printContainerClass}
-  //         style={{
-  //           pageBreakBefore: 'auto',
-  //           pageBreakAfter: 'auto',
-  //         }}
-  //       >
-  //         <div
-  //           id={`additional-block-page-`}
-  //           className={`${printContentClass} download-page relative h-a4-height overflow-y-hidden border border-stroke-neutral-quaternary`}
-  //         >
-  //           {renderedHeader(false)}
-  //           <div className="text-sm">{freeCashFlow}</div>
-  //           {renderedFooter(ItemDetail.length + 2)} {/* 動態計算 `freeCashFlow` 頁碼 */}
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
   return (
     <div ref={downloadRef} className="hidden">
-      {/* ✅ `ItemSummary` 分頁，每頁 10 行 */}
+      {/* Info: (20250401 - Anna) `ItemSummary` 分頁，每頁 10 行 */}
       {ItemSummary}
 
-      {/* ✅ `ItemDetail` 分頁，每頁 10 行，從 `ItemSummary` 最後一頁 +1 開始 */}
+      {/* Info: (20250401 - Anna) `ItemDetail` 分頁，每頁 10 行，從 `ItemSummary` 最後一頁 +1 開始 */}
       {ItemDetail}
 
-      {/* ✅ `freeCashFlow`，頁碼從 `ItemDetail` 最後一頁 +1 */}
+      {/* Info: (20250401 - Anna) `freeCashFlow`，頁碼從 `ItemDetail` 最後一頁 +1 */}
       <div
         key="additional-block-page"
         className={printContainerClass}
@@ -458,7 +415,8 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
         >
           {renderedHeader(false)}
           <div className="text-sm">{freeCashFlow}</div>
-          {renderedFooter(ItemSummaryPages.length + ItemDetail.length + 1)} {/* ✅ 動態計算頁碼 */}
+          {renderedFooter(ItemSummaryPages.length + ItemDetail.length + 1)}
+          {/* Info: (20250401 - Anna) 動態計算頁碼 */}
         </div>
       </div>
     </div>

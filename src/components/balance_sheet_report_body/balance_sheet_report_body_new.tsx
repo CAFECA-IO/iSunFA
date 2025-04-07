@@ -127,7 +127,6 @@ const BalanceSheetPageBody = () => {
         scale: 2,
         useCORS: true,
         logging: true, // Info: (20250327 - Anna) 「顯示除錯訊息」到 console
-        // windowWidth: page.scrollWidth, // 🌟
       });
 
       // Info: (20250327 - Anna) 轉成 PNG 格式
@@ -240,7 +239,6 @@ const BalanceSheetPageBody = () => {
           downloadRef={downloadRef} // Info: (20250327 - Anna) 傳遞下載區域 Ref
           printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數
           downloadFn={handleDownload} // Info: (20250327 - Anna) 傳遞下載函數
-          // pageCountRef={pageCountRef} // Info: (20250327 - Anna) 傳遞頁數 Ref
         />
       </div>
     </div>

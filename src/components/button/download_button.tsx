@@ -10,13 +10,7 @@ interface DownloadButtonProps {
 const DownloadButton: React.FC<DownloadButtonProps> = ({ onClick, disabled }) => {
   return (
     <Button
-    //  Info: (20250401 - Anna)
-      // onClick={onClick}
-      onClick={() => {
-        // eslint-disable-next-line no-console
-        console.log('🟢 DownloadButton clicked');
-        onClick();
-      }}
+      onClick={onClick}
       disabled={disabled}
       variant={'tertiary'}
       size={'defaultSquare'}

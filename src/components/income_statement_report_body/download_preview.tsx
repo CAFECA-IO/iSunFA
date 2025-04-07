@@ -1,5 +1,4 @@
 import React from 'react';
-// import Image from 'next/image';
 import { FinancialReport } from '@/interfaces/report';
 import PrintCostRevRatio from '@/components/income_statement_report_body/print_cost_rev_ratio';
 import { format } from 'date-fns';
@@ -151,17 +150,12 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
 
     const totalPagesForSummary = groupedGeneral.length;
 
-    // eslint-disable-next-line no-console
-    console.log('🧩 DownloadPreview render 中，groupedGeneral.length:', groupedGeneral.length);
     return (
-      // <div ref={ref} className={className} style={style}>
       <div ref={ref} className={className}>
         {
           // Print ItemSummary
           groupedGeneral.map((group, index) => (
             <div
-              // Todo: (20250331 - Anna) 這個key好嗎
-              key={group[0].name + group[0].code}
               style={{
                 breakBefore: 'page',
                 breakAfter: 'page',
@@ -238,8 +232,6 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
               </section>
 
               <footer
-                // Todo: (20250331 - Anna) 這個key好嗎
-                key={group[0].name + group[0].code + group[0].accountId}
                 className="absolute bottom-0 left-0 right-0 z-1 flex items-center justify-between bg-surface-brand-secondary p-10px"
               >
                 <p className="text-xs text-white">{index + 1}</p>
