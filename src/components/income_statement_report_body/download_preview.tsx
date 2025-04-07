@@ -153,7 +153,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
     return (
       <div ref={ref} className={className}>
         {
-          // Print ItemSummary
+          // Info: (20250214 - Anna) Print ItemSummary
           groupedGeneral.map((group, index) => (
             <div
               style={{
@@ -231,9 +231,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
                 </table>
               </section>
 
-              <footer
-                className="absolute bottom-0 left-0 right-0 z-1 flex items-center justify-between bg-surface-brand-secondary p-10px"
-              >
+              <footer className="absolute bottom-0 left-0 right-0 z-1 flex items-center justify-between bg-surface-brand-secondary p-10px">
                 <p className="text-xs text-white">{index + 1}</p>
                 <div className="text-base font-bold text-surface-brand-secondary">
                   <img

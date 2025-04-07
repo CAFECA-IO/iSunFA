@@ -511,7 +511,6 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
         >
           {renderedHeader(false)}
           <div className="px-12px">{TurnoverDay}</div>
-          {/* Info: (20241130 - Anna) 渲染 pageContent */}
           {renderedFooter()}
         </div>
       </div>

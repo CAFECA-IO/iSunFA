@@ -82,7 +82,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
     const downloadPages = printRef.current.querySelectorAll('.download-page');
     if (downloadPages.length === 0) {
-      style.remove(); // Info: (20250401 - Anna) 移除樣式
       return;
     }
 
@@ -1586,7 +1585,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
             </td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
               <p>
-                {' '}
                 {financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
                   .tax !== undefined &&
                 financialReport?.content.purchases.breakdown.returnsAndAllowances.fixedAssets
