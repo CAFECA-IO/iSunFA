@@ -221,8 +221,8 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
             </div>
             {table} {/* Info: (20250401 - Anna) Render the table content */}
           </section>
-          {renderedFooter(ItemSummaryPages.indexOf(table) + 1)}{' '}
           {/* Info: (20250401 - Anna) Ensure correct page numbering */}
+          {renderedFooter(ItemSummaryPages.indexOf(table) + 1)}
         </div>
       </div>
     );
