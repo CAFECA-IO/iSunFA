@@ -17,8 +17,7 @@ import ItemSummary from '@/components/income_statement_report_body/item_summary'
 // import ItemDetail from '@/components/income_statement_report_body/item_detail';
 import CostRevRatio from '@/components/income_statement_report_body/cost_rev_ratio';
 import { useTranslation } from 'next-i18next';
-// Info: (20250327 - Anna) 使用 html2canvas@^1.4.1 時，轉成 PDF 出現文字位移偏下，改使用較穩定的 html2canvas@^1.0.0-alpha.12
-import html2canvas from 'html2canvas_v1alpha';
+import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import DownloadPreview from '@/components/income_statement_report_body/download_preview';
 
@@ -28,6 +27,8 @@ interface FilterBarProps {
   isChinese: boolean; // Info: (20250108 - Anna) 添加 isChinese 屬性
 }
 const FilterBar = ({ printFn, isChinese, downloadFn }: FilterBarProps) => {
+  // eslint-disable-next-line no-console
+  console.log('🧩 FilterBar 收到的 downloadFn:', downloadFn);
   return (
     <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
       <div className="ml-auto flex items-center gap-24px">
@@ -69,211 +70,156 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
     documentTitle: 'Income_Statement',
   });
 
-  // Info: (20250327 - Anna) 下載
-  // const handleDownload = async () => {
-  //   // pageCountRef.current = 1; // // Info: (20250327 - Anna) reset 頁數
-  //   // eslint-disable-next-line no-console
-  //   console.log('[Download] printRef', printRef.current);
-  //   // if (!downloadRef.current) return;
-  //   if (!printRef.current || !containerRef.current) {
-  //     // eslint-disable-next-line no-console
-  //     console.log('!printRef.current || !containerRef.current');
-  //     return;
-  //   }
+  const handleDownload = async () => {
+    // eslint-disable-next-line no-console
+    console.log('🔥 handleDownload 被呼叫了');
+    // pageCountRef.current = 1; // // Info: (20250327 - Anna) reset 頁數
 
-  //   // eslint-disable-next-line no-console
-  //   console.log('Hi');
-  //   //  Info: (20250327 - Anna) 顯示下載內容讓 html2canvas 擷取，移到畫面外避免干擾
-  //   // downloadRef.current.classList.remove('hidden');
-  //   // downloadRef.current.style.position = 'absolute';
-  //   // downloadRef.current.style.left = '-9999px';
-  //   //  printRef.current.classList.remove('hidden');
-  //   //  printRef.current.style.position = 'absolute';
-  //   //  printRef.current.style.left = '-9999px';
-  //   containerRef.current.classList.remove('hidden');
-  //   containerRef.current.style.position = 'absolute';
-  //   containerRef.current.style.left = '-9999px';
+    if (!downloadRef.current) {
+      // eslint-disable-next-line no-console
+      console.error('❌ downloadRef is null');
+      return;
+    }
 
-  //   // Info: (20250328 - Anna) 強制重排
-  //   // containerRef.current.getBoundingClientRect();
+    // eslint-disable-next-line no-console
+    console.log('🕵️‍♀️ downloadRef.current:', downloadRef.current);
+    // eslint-disable-next-line no-console
+    console.log(
+      '🧱 downloadRef.current.innerHTML (preview):',
+      downloadRef.current?.innerHTML.slice(0, 300)
+    );
 
-  //   // Info: (20250327 - Anna) 強制瀏覽器執行「重新排版 (reflow)」，預防 classList.remove('hidden') 還沒生效導致 html2canvas 擷取不到內容
-  //   // downloadRef.current?.getBoundingClientRect();
-  //   // printRef.current?.getBoundingClientRect();
+    //  Info: (20250401 - Anna) 插入修正樣式
+    const style = document.createElement('style');
+    style.innerHTML = `
+  /* Info: (20250401 - Anna) 表格 */
+  .download-page td,
+  .download-page th {
+    padding-top: 0 !important;
+  }
 
-  //   // Info: (20250327 - Anna) 等所有圖片載入，確保 html2canvas 可以擷取圖片內容
-  //   // const images = Array.from(downloadRef.current.querySelectorAll('img'));
-  //   const images = Array.from(printRef.current.querySelectorAll('img'));
-  //   await Promise.all(
-  //     images.map((imgElement) => {
-  //       const img = imgElement; // Info: (20250327 - Anna)新變數，避免直接操作參數
-  //       return new Promise((resolve) => {
-  //         if (img.complete) {
-  //           resolve(true); // Info: (20250327 - Anna) 圖片已完成載入流程（無論成功或失敗），立即 resolve
-  //         } else {
-  //           img.onload = () => resolve(true); // Info: (20250327 - Anna) 尚未載入完成，監聽 onload 成功事件
-  //           img.onerror = () => resolve(true); // Info: (20250327 - Anna) 尚未載入完成，監聽 onerror 失敗事件，依然 resolve 避免卡住
-  //         }
-  //       });
-  //     })
-  //   );
 
-  //   // Info: (20250327 - Anna) 等待所有字體（包含系統字體）完成解析與載入。
-  //   await document.fonts.ready;
+  /* Info: (20250401 - Anna) Income Statement (header) 調整底部間距 */
+  .download-page h2 {
+    padding-bottom: 6px !important;
+  }
 
-  //   // Info: (20250327 - Anna) 雙重 requestAnimationFrame：等待兩次繪製週期，確保樣式與 DOM 完整渲染，避免 html2canvas 抓到第一頁空白
-  //   await new Promise<void>((resolve) => {
-  //     requestAnimationFrame(() => {
-  //       requestAnimationFrame(() => resolve());
-  //     });
-  //   });
+  /* Info: (20250401 - Anna) 大標題與表格間距 */
+  .download-page .download-header-label {
+    padding-bottom: 8px !important;
+  }
+`;
 
-  //   // Info: (20250327 - Anna) 額外延遲（150ms）確保樣式穩定下來
-  //   const wait = (ms: number) =>
-  //     new Promise<void>((resolve) => {
-  //       setTimeout(resolve, ms);
-  //     });
+    document.head.appendChild(style);
 
-  //   await wait(150);
+    //  Info: (20250327 - Anna) 顯示下載內容讓 html2canvas 擷取，移到畫面外避免干擾
+    downloadRef.current.classList.remove('hidden');
+    downloadRef.current.style.position = 'absolute';
+    downloadRef.current.style.left = '-9999px';
 
-  //   // const downloadPages = downloadRef.current.querySelectorAll('.download-page');
-  //   const downloadPages = printRef.current.querySelectorAll('.download-page');
-  //   // eslint-disable-next-line no-console
-  //   console.log('[Download] downloadPages.length:', downloadPages.length);
-  //   if (!downloadPages.length) {
-  //     // eslint-disable-next-line no-console
-  //     console.log('[Download] ❌ No .download-page found inside printRef');
-  //     return;
-  //   }
+    // Info: (20250327 - Anna) 強制瀏覽器執行「重新排版 (reflow)」，預防 classList.remove('hidden') 還沒生效導致 html2canvas 擷取不到內容
+    downloadRef.current?.getBoundingClientRect();
 
-  //   // Info: (20250327 - Anna) jsPDF 是類別，但命名為小寫，需關閉 eslint new-cap
-  //   // eslint-disable-next-line new-cap
-  //   const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-
-  //   // Info: (20250327 - Anna) 把 div 用 html2canvas 轉成圖片
-  //   for (let i = 0; i < downloadPages.length; i += 1) {
-  //     const page = downloadPages[i];
-  //     // Info: (20250327 - Anna) 為了逐頁轉圖並依序加入 PDF，需保留 await；略過 ESLint 提示
-  //     // eslint-disable-next-line no-await-in-loop
-  //     const canvas = await html2canvas(page as HTMLElement, {
-  //       scale: 2,
-  //       useCORS: true,
-  //       logging: true, // Info: (20250327 - Anna) 「顯示除錯訊息」到 console
-  //     });
-
-  //     // Info: (20250327 - Anna) 轉成 PNG 格式
-  //     const imgData = canvas.toDataURL('image/png');
-
-  //     if (i === 0) {
-  //       // Info: (20250327 - Anna) 放入 PDF
-  //       pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
-  //     } else {
-  //       pdf.addPage();
-  //       pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
-  //     }
-  //   }
-
-  //   // Info: (20250327 - Anna) 隱藏下載用的內容
-  //   // downloadRef.current.classList.add('hidden');
-  //   // downloadRef.current.style.position = '';
-  //   // downloadRef.current.style.left = '';
-  //   //  printRef.current.classList.add('hidden');
-  //   //  printRef.current.style.position = '';
-  //   //  printRef.current.style.left = '';
-  //   // containerRef.current.classList.add('hidden');
-  //   // containerRef.current.style.position = '';
-  //   // containerRef.current.style.left = '';
-  //   // containerRef.current.style.top = '';
-  //   // containerRef.current.style.visibility = '';
-
-  //   // Info: (20250327 - Anna) 下載 PDF
-  //   pdf.save(filename);
-  // };
-    const handleDownload = async () => {
-      // pageCountRef.current = 1; // // Info: (20250327 - Anna) reset 頁數
-
-      if (!downloadRef.current) return;
-
-      //  Info: (20250327 - Anna) 顯示下載內容讓 html2canvas 擷取，移到畫面外避免干擾
-      downloadRef.current.classList.remove('hidden');
-      downloadRef.current.style.position = 'absolute';
-      downloadRef.current.style.left = '-9999px';
-
-      // Info: (20250327 - Anna) 強制瀏覽器執行「重新排版 (reflow)」，預防 classList.remove('hidden') 還沒生效導致 html2canvas 擷取不到內容
-      downloadRef.current?.getBoundingClientRect();
-
-      // Info: (20250327 - Anna) 等所有圖片載入，確保 html2canvas 可以擷取圖片內容
-      const images = Array.from(downloadRef.current.querySelectorAll('img'));
-      await Promise.all(
-        images.map((imgElement) => {
-          const img = imgElement; // Info: (20250327 - Anna)新變數，避免直接操作參數
-          return new Promise((resolve) => {
-            if (img.complete) {
-              resolve(true); // Info: (20250327 - Anna) 圖片已完成載入流程（無論成功或失敗），立即 resolve
-            } else {
-              img.onload = () => resolve(true); // Info: (20250327 - Anna) 尚未載入完成，監聽 onload 成功事件
-              img.onerror = () => resolve(true); // Info: (20250327 - Anna) 尚未載入完成，監聽 onerror 失敗事件，依然 resolve 避免卡住
-            }
-          });
-        })
-      );
-
-      // Info: (20250327 - Anna) 等待所有字體（包含系統字體）完成解析與載入。
-      await document.fonts.ready;
-
-      // Info: (20250327 - Anna) 雙重 requestAnimationFrame：等待兩次繪製週期，確保樣式與 DOM 完整渲染，避免 html2canvas 抓到第一頁空白
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => resolve());
+    // Info: (20250327 - Anna) 等所有圖片載入，確保 html2canvas 可以擷取圖片內容
+    const images = Array.from(downloadRef.current.querySelectorAll('img'));
+    await Promise.all(
+      images.map((imgElement) => {
+        const img = imgElement; // Info: (20250327 - Anna)新變數，避免直接操作參數
+        return new Promise((resolve) => {
+          if (img.complete) {
+            resolve(true); // Info: (20250327 - Anna) 圖片已完成載入流程（無論成功或失敗），立即 resolve
+          } else {
+            img.onload = () => resolve(true); // Info: (20250327 - Anna) 尚未載入完成，監聽 onload 成功事件
+            img.onerror = () => resolve(true); // Info: (20250327 - Anna) 尚未載入完成，監聽 onerror 失敗事件，依然 resolve 避免卡住
+          }
         });
+      })
+    );
+
+    // Info: (20250327 - Anna) 等待所有字體（包含系統字體）完成解析與載入。
+    await document.fonts.ready;
+
+    // Info: (20250327 - Anna) 雙重 requestAnimationFrame：等待兩次繪製週期，確保樣式與 DOM 完整渲染，避免 html2canvas 抓到第一頁空白
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve());
+      });
+    });
+
+    // Info: (20250327 - Anna) 額外延遲（150ms）確保樣式穩定下來
+    const wait = (ms: number) =>
+      new Promise<void>((resolve) => {
+        setTimeout(resolve, ms);
       });
 
-      // Info: (20250327 - Anna) 額外延遲（150ms）確保樣式穩定下來
-      const wait = (ms: number) =>
-        new Promise<void>((resolve) => {
-          setTimeout(resolve, ms);
-        });
+    await wait(150);
 
-      await wait(150);
+    const downloadPages = downloadRef.current.querySelectorAll('.download-page');
+    // eslint-disable-next-line no-console
+    console.log('📄 抓到 downloadPages 數量:', downloadPages.length); // 🌟
+    if (!downloadPages.length) {
+      // eslint-disable-next-line no-console
+      console.error('❌ 沒有抓到 .download-page 元素');
+      return;
+    }
 
-      const downloadPages = downloadRef.current.querySelectorAll('.download-page');
-      if (!downloadPages.length) return;
+    // Info: (20250327 - Anna) jsPDF 是類別，但命名為小寫，需關閉 eslint new-cap
+    // eslint-disable-next-line new-cap
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
-      // Info: (20250327 - Anna) jsPDF 是類別，但命名為小寫，需關閉 eslint new-cap
-      // eslint-disable-next-line new-cap
-      const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    // Info: (20250327 - Anna) 把 div 用 html2canvas 轉成圖片
+    for (let i = 0; i < downloadPages.length; i += 1) {
+      const page = downloadPages[i];
+      // Info: (20250327 - Anna) 為了逐頁轉圖並依序加入 PDF，需保留 await；略過 ESLint 提示
+      // eslint-disable-next-line no-await-in-loop
+      const canvas = await html2canvas(page as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        logging: true, // Info: (20250327 - Anna) 「顯示除錯訊息」到 console
+      }).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('❌ html2canvas 擷取錯誤:', err);
+        return null;
+      });
 
-      // Info: (20250327 - Anna) 把 div 用 html2canvas 轉成圖片
-      for (let i = 0; i < downloadPages.length; i += 1) {
-        const page = downloadPages[i];
-        // Info: (20250327 - Anna) 為了逐頁轉圖並依序加入 PDF，需保留 await；略過 ESLint 提示
-        // eslint-disable-next-line no-await-in-loop
-        const canvas = await html2canvas(page as HTMLElement, {
-          scale: 2,
-          useCORS: true,
-          logging: true, // Info: (20250327 - Anna) 「顯示除錯訊息」到 console
-        });
-
-        // Info: (20250327 - Anna) 轉成 PNG 格式
-        const imgData = canvas.toDataURL('image/png');
-
-        if (i === 0) {
-          // Info: (20250327 - Anna) 放入 PDF
-          pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
-        } else {
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
-        }
+      if (!canvas) {
+        // eslint-disable-next-line no-console
+        console.error(`❌ 第 ${i + 1} 頁 canvas 是 null，停止下載流程`);
+        return;
       }
 
-      // Info: (20250327 - Anna) 隱藏下載用的內容
-      downloadRef.current.classList.add('hidden');
-      downloadRef.current.style.position = '';
-      downloadRef.current.style.left = '';
+      // eslint-disable-next-line no-console
+      console.log(`🎨 canvas size: ${canvas.width} x ${canvas.height}`);
+      // eslint-disable-next-line no-console
+      console.log(`🎨 canvas toDataURL size: ${canvas.toDataURL().length}`);
 
-      // Info: (20250327 - Anna) 下載 PDF
-      pdf.save(filename);
-    };
+      // Info: (20250327 - Anna) 轉成 PNG 格式
+      const imgData = canvas.toDataURL('image/png');
+
+      if (i === 0) {
+        // Info: (20250327 - Anna) 放入 PDF
+        pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
+      } else {
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
+      }
+    }
+
+    // Info: (20250401 - Anna) 移除修正樣式
+    style.remove();
+
+    // Info: (20250327 - Anna) 隱藏下載用的內容
+    downloadRef.current.classList.add('hidden');
+    downloadRef.current.style.position = '';
+    downloadRef.current.style.left = '';
+
+    // Info: (20250327 - Anna) 下載 PDF
+    // eslint-disable-next-line no-console
+    console.log('📥 嘗試呼叫 pdf.save()');
+    pdf.save(filename);
+    // eslint-disable-next-line no-console
+    console.log('✅ pdf.save() 已執行');
+  };
 
   useEffect(() => {
     if (!selectedDateRange) return;
@@ -350,6 +296,11 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   const formattedPreFromDate = format(preDateFrom, 'yyyy-MM-dd');
   const formattedPreToDate = format(preDateTo, 'yyyy-MM-dd');
 
+  // eslint-disable-next-line no-console
+  console.log('📄 downloadRef 即將 render');
+  // eslint-disable-next-line no-console
+  console.log('📄 financialReport:', financialReport);
+
   return (
     <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
       {/* Info: (20250108 - Anna) 傳遞 isChinese 給 FilterBar */}
@@ -389,18 +340,17 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
           formattedPreToDate={formattedPreToDate}
         />
       </div>
-       <div>
-        <DownloadPreview
-          ref={downloadRef}
-          className="hidden"
-          // style={{ left: '-9999px' }}
-          financialReport={financialReport}
-          formattedCurFromDate={formattedCurFromDate}
-          formattedCurToDate={formattedCurToDate}
-          formattedPreFromDate={formattedPreFromDate}
-          formattedPreToDate={formattedPreToDate}
-        />
-      </div>
+
+      <DownloadPreview
+        ref={downloadRef}
+        className="hidden w-a4-width"
+        // style={{ left: '-9999px' }}
+        financialReport={financialReport}
+        formattedCurFromDate={formattedCurFromDate}
+        formattedCurToDate={formattedCurToDate}
+        formattedPreFromDate={formattedPreFromDate}
+        formattedPreToDate={formattedPreToDate}
+      />
     </div>
   );
 };

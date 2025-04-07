@@ -1,7 +1,7 @@
 import React from 'react';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import { useTranslation } from 'next-i18next';
-import Image from 'next/image';
+// import Image from 'next/image';
 
 interface DownloadCashFlowStatementProps {
   reportFinancial: CashFlowStatementReport | null;
@@ -77,7 +77,7 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
             <span className="absolute -bottom-20px right-0 h-5px w-9/12 bg-surface-brand-secondary"></span>
           </h2>
         </div>
-        <Image
+        <img
           className="absolute right-0 top-0 z-0 mt-80px bg-transparent"
           src="/logo/watermark_logo.svg"
           alt="isunfa logo"
@@ -109,93 +109,10 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
       <p className="text-xs text-white">{page}</p>
       <div className="text-base font-bold text-surface-brand-secondary">
-        <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+        <img width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
       </div>
     </footer>
   );
-
-  //   const renderTable = (data: FinancialReportItem[]) => {
-  //     if (!data || data.length === 0) return [];
-
-  //     // 1️⃣ 過濾掉 `curPeriodAmount` 和 `prePeriodAmount` 都為 0 的數據
-  //     const filteredData = data.filter(
-  //       (value) => !(Number(value.curPeriodAmount) === 0 && Number(value.prePeriodAmount) === 0)
-  //     );
-
-  //     // 2️⃣ 確保 `code` 唯一
-  //     const uniqueData: FinancialReportItem[] = [];
-  //     const seenCodes = new Set();
-
-  //     filteredData.forEach((item) => {
-  //       if (!seenCodes.has(item.code)) {
-  //         seenCodes.add(item.code);
-  //         uniqueData.push(item);
-  //       }
-  //     });
-
-  //     // 3️⃣ 設定每頁 10 行
-  //     const rowsPerPage = 10;
-  //     const totalPages = Math.ceil(uniqueData.length / rowsPerPage);
-
-  //     return Array.from({ length: totalPages }).map((_, pageIndex) => {
-  //       const pageRows = uniqueData.slice(pageIndex * rowsPerPage, (pageIndex + 1) * rowsPerPage);
-
-  //       const pageKey = pageRows[0]?.code ?? `page-${crypto.randomUUID()}`;
-
-  //       return (
-  //         <table
-  //           key={`table-${pageKey}`} // ✅ 使用 pageIndex 確保 key 穩定
-  //           className="relative z-1 w-full border-collapse bg-white"
-  //           style={{ pageBreakBefore: pageIndex === 0 ? 'auto' : 'always' }}
-  //         >
-  //           <thead>
-  //             <tr className="print:hidden">
-  //               <th className="w-125px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-  //                 {t('reports:REPORTS.CODE_NUMBER')}
-  //               </th>
-  //               <th className="w-540px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-  //                 {t('reports:REPORTS.ACCOUNTING_ITEMS')}
-  //               </th>
-  //               <th className="w-285px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-  //                 {curDateStartFormatted} <br /> {t('reports:COMMON.TO')} {curDateEndFormatted}
-  //               </th>
-  //               <th className="w-285px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-  //                 {preDateStartFormatted} <br /> {t('reports:COMMON.TO')} {preDateEndFormatted}
-  //               </th>
-  //             </tr>
-  //           </thead>
-  //           <tbody>
-  //             {pageRows.map((value) => (
-  //               <tr key={value.code ?? `row-${crypto.randomUUID()}`}>
-  //                 {' '}
-  //                 {/* ✅ 確保 key 唯一 */}
-  //                 <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-  //                   {value.code}
-  //                 </td>
-  //                 <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-  //                   {t(`reports:ACCOUNTING_ACCOUNT.${value.name}`)}
-  //                 </td>
-  //                 <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-  //                   {value.curPeriodAmount === 0
-  //                     ? '-'
-  //                     : value.curPeriodAmount < 0
-  //                       ? `(${Math.abs(value.curPeriodAmount).toLocaleString()})`
-  //                       : value.curPeriodAmount.toLocaleString()}
-  //                 </td>
-  //                 <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-  //                   {value.prePeriodAmount === 0
-  //                     ? '-'
-  //                     : value.prePeriodAmount < 0
-  //                       ? `(${Math.abs(value.prePeriodAmount).toLocaleString()})`
-  //                       : value.prePeriodAmount.toLocaleString()}
-  //                 </td>
-  //               </tr>
-  //             ))}
-  //           </tbody>
-  //         </table>
-  //       );
-  //     });
-  //   };
 
   // 1️⃣ 計算 ItemSummary 佔的頁數
   const renderTable = (data: FinancialReportItem[]) => {
@@ -280,19 +197,7 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     });
   };
 
-  //   const ItemSummaryPages = renderTable(reportFinancial?.general || []).length;
   const ItemSummaryPages = renderTable(reportFinancial?.general || []); // ✅ 確保回傳 `table[]` 陣列
-  //   const ItemSummary = (
-  //     <div id="1" className="relative overflow-y-hidden px-14px">
-  //       <section className="mx-1 text-text-neutral-secondary">
-  //         <div className="relative z-10 mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
-  //           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-  //           <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
-  //         </div>
-  //         {reportFinancial && reportFinancial.general && renderTable(reportFinancial.general)}
-  //       </section>
-  //     </div>
-  //   );
   const ItemSummary = ItemSummaryPages.map((table) => {
     const tableKey = crypto.randomUUID(); // ✅ Generate a stable unique key
 

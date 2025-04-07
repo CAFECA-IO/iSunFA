@@ -26,6 +26,7 @@ interface CostRevRatioProps {
   formattedPreFromDate: string;
   formattedPreToDate: string;
   defaultPageNumber: number;
+  useRawImg?: boolean;
 }
 const PrintCostRevRatio = ({
   financialReport,
@@ -34,6 +35,7 @@ const PrintCostRevRatio = ({
   formattedPreFromDate,
   formattedPreToDate,
   defaultPageNumber,
+  useRawImg = false,
 }: CostRevRatioProps) => {
   const { t } = useTranslation(['reports']);
   const otherInfo = financialReport?.otherInfo as IncomeStatementOtherInfo;
@@ -310,9 +312,7 @@ const PrintCostRevRatio = ({
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(
-                      2
-                    )}%
+                    {revenueToRD.ratio.curRatio.toFixed(2)}%
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {revenueToRD.ratio.preRatio.toFixed(2)}%
@@ -327,7 +327,16 @@ const PrintCostRevRatio = ({
       <footer className="absolute bottom-0 left-0 right-0 z-1 flex items-center justify-between bg-surface-brand-secondary p-10px">
         <p className="text-xs text-white">{defaultPageNumber + 1}</p>
         <div className="text-base font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+          {useRawImg ? (
+            <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" width={80} height={20} />
+          ) : (
+            <Image
+              src="/logo/white_isunfa_logo_light.svg"
+              alt="iSunFA Logo"
+              width={80}
+              height={20}
+            />
+          )}
         </div>
       </footer>
     </div>

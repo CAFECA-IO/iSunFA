@@ -1,5 +1,5 @@
 import React from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import { FinancialReport } from '@/interfaces/report';
 import PrintCostRevRatio from '@/components/income_statement_report_body/print_cost_rev_ratio';
 import { format } from 'date-fns';
@@ -40,7 +40,7 @@ const FirstHeader = ({ financialReport }: FirstHeaderProps) => {
       <div className="absolute right-0 top-0 z-1 mt-60px h-10px w-212px bg-surface-brand-primary"></div>
       <div className="absolute right-0 top-0 z-1 mt-74px h-5px w-160px bg-surface-brand-secondary"></div>
 
-      <Image
+      <img
         className="absolute right-0 top-0 z-0 mt-80px bg-transparent"
         src="/logo/watermark_logo.svg"
         alt="isunfa logo"
@@ -73,8 +73,7 @@ interface DownloadPreviewProps {
   formattedCurToDate: string;
   formattedPreFromDate: string;
   formattedPreToDate: string;
-  className?: string; // Info: (20250317 - Anna) className 作為可選屬性
-  // style?: React.CSSProperties; // Info: (20250317 - Anna) CSS 作為可選屬性
+  className?: string;
 }
 
 const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
@@ -86,12 +85,10 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
       formattedPreFromDate,
       formattedPreToDate,
       className,
-      // style,
     },
     ref
   ) => {
     const { t } = useTranslation(['reports']);
-    // const [totalPagesForSummary, setTotalPagesForSummary] = useState<number>(0);
 
     const flattenAccounts = (accounts: IAccountReadyForFrontend[]): IAccountReadyForFrontend[] => {
       const result: IAccountReadyForFrontend[] = [];
@@ -107,12 +104,8 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
     const flattenGeneralAccounts = financialReport?.general
       ? flattenAccounts(financialReport.general)
       : [];
-    // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
-    // const flattenDetailsAccounts = financialReport?.details
-    //   ? flattenAccounts(financialReport.details)
-    //   : [];
 
-    const firstPageSize = 10; // Info: (20250214 - Anna) 第一頁最多顯示 10 項
+    const firstPageSize = 8; // Info: (20250214 - Anna) 第一頁最多顯示 8 項
     const groupSize = 12;
 
     // Info: (20250214 - Anna) 過濾掉沒有金額的項目
@@ -158,23 +151,8 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
 
     const totalPagesForSummary = groupedGeneral.length;
 
-    // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
-    // const groupedDetails: IAccountReadyForFrontend[][] = [];
-    // flattenDetailsAccounts.forEach((account, index) => {
-    //   if (index < 10) {
-    //     if (groupedDetails.length === 0) groupedDetails.push([]);
-    //     groupedDetails[0].push(account);
-    //   } else {
-    //     const groupIndex = Math.floor((index - 10) / groupSize) + 1;
-    //     if (!groupedDetails[groupIndex]) groupedDetails[groupIndex] = [];
-    //     groupedDetails[groupIndex].push(account);
-    //   }
-    // });
-
-    // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    // const totalPagesForDetails = groupedDetails.length;
-
+    // eslint-disable-next-line no-console
+    console.log('🧩 DownloadPreview render 中，groupedGeneral.length:', groupedGeneral.length);
     return (
       // <div ref={ref} className={className} style={style}>
       <div ref={ref} className={className}>
@@ -192,7 +170,11 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
             >
               {index === 0 ? <FirstHeader financialReport={financialReport} /> : <NormalHeader />}
 
-              <section className="relative px-20px text-text-neutral-secondary">
+              <section
+                className={`relative px-20px text-text-neutral-secondary ${
+                  index === 0 ? '-mt-16' : ''
+                }`}
+              >
                 <table className="w-full border-collapse text-xxs">
                   <thead>
                     <tr>
@@ -221,7 +203,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
                       </th>
                       <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-3px text-end font-semibold">
                         {financialReport && financialReport.company && (
-                          <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
+                          <p className="whitespace-nowrap pb-2 text-center font-barlow font-semibold leading-5">
                             {formattedCurFromDate}
                             <br />
                             {t('reports:COMMON.TO')} {formattedCurToDate}
@@ -236,7 +218,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
                         style={{ whiteSpace: 'nowrap' }}
                       >
                         {financialReport && financialReport.company && (
-                          <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
+                          <p className="whitespace-nowrap pb-2 text-center font-barlow font-semibold leading-5">
                             {formattedPreFromDate}
                             <br />
                             {t('reports:COMMON.TO')} {formattedPreToDate}
@@ -262,7 +244,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
               >
                 <p className="text-xs text-white">{index + 1}</p>
                 <div className="text-base font-bold text-surface-brand-secondary">
-                  <Image
+                  <img
                     width={80}
                     height={20}
                     src="/logo/white_isunfa_logo_light.svg"
@@ -273,100 +255,6 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
             </div>
           ))
         }
-        {/* Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail */}
-        {/* {
-          // Print ItemDetail
-          groupedDetails.map((group, index) => (
-            <div
-              key={group[0].name + group[0].code}
-              style={{
-                breakBefore: 'page',
-                breakAfter: 'page',
-              }}
-              className="relative h-screen overflow-hidden download-page border border-stroke-neutral-quaternary"
-            >
-              <NormalHeader />
-              <section className="relative px-20px text-text-neutral-secondary">
-                <table className="w-full border-collapse text-xxs">
-                  <thead>
-                    <tr>
-                      <th
-                        colSpan={2}
-                        className="text-left text-xs font-semibold leading-5 text-surface-brand-secondary"
-                      >
-                        {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
-                      </th>
-                      <th
-                        colSpan={4}
-                        className="whitespace-nowrap text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
-                      >
-                        <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-                        <span className="pl-5">
-                          {t('reports:REPORTS.EPS_UNIT')}
-                        </span>
-                      </th>
-                    </tr>
-                    <tr className="h-16px"></tr>
-
-                    <tr>
-                      <th className="whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
-                        {t('reports:TAX_REPORT.CODE_NUMBER')}
-                      </th>
-                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
-                        {t('reports:REPORTS.ACCOUNTING_ITEMS')}
-                      </th>
-                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-3px text-end font-semibold">
-                        {financialReport && financialReport.company && (
-                          <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedCurFromDate}
-                            <br />
-                            {t('reports:COMMON.TO')} {formattedCurToDate}
-                          </p>
-                        )}
-                      </th>
-                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
-                        %
-                      </th>
-                      <th
-                        className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-3px text-end font-semibold"
-                        style={{ whiteSpace: 'nowrap' }}
-                      >
-                        {financialReport && financialReport.company && (
-                          <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedPreFromDate}
-                            <br />
-                            {t('reports:COMMON.TO')} {formattedPreToDate}
-                          </p>
-                        )}
-                      </th>
-                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
-                        %
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    <Rows flattenAccounts={group} isPrint />
-                  </tbody>
-                </table>
-              </section>
-              <footer
-                key={group[0].name + group[0].code + group[0].accountId}
-                className="absolute bottom-0 left-0 right-0 z-1 flex items-center justify-between bg-surface-brand-secondary p-10px"
-              >
-                <p className="text-xs text-white">{totalPagesForSummary + index + 1}</p>
-                <div className="text-base font-bold text-surface-brand-secondary">
-                  <Image
-                    width={80}
-                    height={20}
-                    src="/logo/white_isunfa_logo_light.svg"
-                    alt="iSunFA Logo"
-                  />
-                </div>
-              </footer>
-            </div>
-          ))
-        } */}
         <div className="download-page border border-stroke-neutral-quaternary">
           <PrintCostRevRatio
             financialReport={financialReport}
@@ -374,9 +262,8 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
             formattedCurToDate={formattedCurToDate}
             formattedPreFromDate={formattedPreFromDate}
             formattedPreToDate={formattedPreToDate}
-            // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
-            // defaultPageNumber={totalPagesForSummary + totalPagesForDetails}
             defaultPageNumber={totalPagesForSummary}
+            useRawImg
           />
         </div>
       </div>
