@@ -1,4 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
+import { TbArrowBack } from 'react-icons/tb';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
 import LandingFooter from '@/components/landing_page_v2/landing_footer';
 import ScrollToTopButton from '@/components/landing_page_v2/scroll_to_top';
@@ -7,17 +11,26 @@ import {
   LinearTextSize,
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
+import FavoriteButton from '@/components/join_us/favorite_button';
+import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { IJobDetail } from '@/interfaces/job';
 import { timestampToString } from '@/lib/utils/common';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IJobDetailBodyProps {
   jobData: IJobDetail;
 }
 
 const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
+  const { t } = useTranslation(['hiring', 'common']);
+
   const { title, location, date, description, jobResponsibilities, requirements, extraSkills } =
     jobData;
   const dateString = timestampToString(date).dateWithSlash;
+
+  // ToDo: (20250407 - Julian) 這邊要改成從後端取得的資料
+  const [isFavorite, setIsFavorite] = useState(false);
+  const toggleFavorite = () => setIsFavorite((prev) => !prev);
 
   const resList = jobResponsibilities.map((item) => (
     <li key={item} className="text-lg leading-10">
@@ -95,7 +108,29 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
 
           {/* Info: (20250407 - Julian) Job Footer */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center"></div>
+            <div className="flex items-center gap-lv-5">
+              {/* Info: (20250402 - Julian) Favorite Button */}
+              <FavoriteButton isActive={isFavorite} clickHandler={toggleFavorite} />
+              {/* Info: (20250407 - Julian) Share Button */}
+              <button type="button" className="p-10px hover:opacity-80">
+                <Image src="/icons/share_link.svg" width={24} height={24} alt="share_icon" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-lv-6">
+              {/* Info: (20250407 - Julian) Back Button */}
+              <Link href={ISUNFA_ROUTE.JOIN_US}>
+                <LandingButton type="button" variant="default" className="font-bold">
+                  <TbArrowBack size={28} />
+                  {t('common:COMMON.BACK')}
+                </LandingButton>
+              </Link>
+              {/* Info: (20250407 - Julian) Apply Now Button */}
+              {/* ToDo: (20250407 - Julian) apply */}
+              <LandingButton variant="primary" className="font-bold">
+                {t('hiring:JOIN_US_PAGE.APPLY_NOW_BTN')}
+              </LandingButton>
+            </div>
           </div>
         </div>
 

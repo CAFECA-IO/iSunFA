@@ -1,10 +1,12 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { timestampToString } from '@/lib/utils/common';
 import { IJob } from '@/interfaces/job';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import FavoriteButton from '@/components/join_us/favorite_button';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IVacancyItem {
   job: IJob;
@@ -15,7 +17,7 @@ interface IVacancyItem {
 const VacancyItem: React.FC<IVacancyItem> = ({ job, isFavorite, toggleFavorite }) => {
   const { t } = useTranslation(['hiring']);
 
-  const { title, location, date, description } = job;
+  const { id, title, location, date, description } = job;
   const dateStr = timestampToString(date).dateWithSlash;
 
   return (
@@ -56,9 +58,12 @@ const VacancyItem: React.FC<IVacancyItem> = ({ job, isFavorite, toggleFavorite }
           {/* Info: (20250402 - Julian) Favorite Button */}
           <FavoriteButton isActive={isFavorite} clickHandler={toggleFavorite} />
         </div>
-        <LandingButton variant="primary" className="font-bold">
-          {t('hiring:JOIN_US_PAGE.APPLY_NOW_BTN')}
-        </LandingButton>
+
+        <Link href={`${ISUNFA_ROUTE.JOIN_US}/${id}`}>
+          <LandingButton variant="primary" className="font-bold">
+            {t('hiring:JOIN_US_PAGE.APPLY_NOW_BTN')}
+          </LandingButton>
+        </Link>
       </div>
 
       <div className="flex flex-col gap-16px">
