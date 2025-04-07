@@ -16,7 +16,7 @@ import CreateAccountBookModal from '@/components/beta/account_books_page/create_
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
-import ChangeInfoModal from '@/components/beta/account_books_page/change_info_modal';
+import EditInfoModal from '@/components/beta/account_books_page/edit_info_modal';
 import { SortBy, SortOrder } from '@/constants/sort';
 
 const AccountBooksPageBody = () => {
@@ -37,7 +37,7 @@ const AccountBooksPageBody = () => {
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
     IAccountBookWithTeam | undefined
   >();
-  const [accountBookToChangeInfo, setAccountBookToChangeInfo] = useState<
+  const [accountBookToEditInfo, setAccountBookToEditInfo] = useState<
     IAccountBookWithTeam | undefined
   >();
   const [totalPage, setTotalPage] = useState(1);
@@ -143,7 +143,7 @@ const AccountBooksPageBody = () => {
             setAccountBookToEdit={setAccountBookToEdit}
             setAccountBookToDelete={setAccountBookToDelete}
             setAccountBookToUploadPicture={setAccountBookToUploadPicture}
-            setAccountBookToChangeInfo={setAccountBookToChangeInfo}
+            setAccountBookToEditInfo={setAccountBookToEditInfo}
             setRefreshKey={setRefreshKey}
             shouldGroupByTeam
           />
@@ -187,10 +187,10 @@ const AccountBooksPageBody = () => {
         />
       )}
 
-      {accountBookToChangeInfo && (
-        <ChangeInfoModal
-          accountBookToChangeInfo={accountBookToChangeInfo}
-          setAccountBookToChangeInfo={setAccountBookToChangeInfo}
+      {accountBookToEditInfo && (
+        <EditInfoModal
+          accountBookToEditInfo={accountBookToEditInfo}
+          setAccountBookToEditInfo={setAccountBookToEditInfo}
           setRefreshKey={setRefreshKey}
         />
       )}
