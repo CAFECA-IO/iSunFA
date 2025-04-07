@@ -16,6 +16,7 @@ import CreateAccountBookModal from '@/components/beta/account_books_page/create_
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
+import ChangeNameModal from '@/components/beta/account_books_page/change_name_modal';
 import { SortBy, SortOrder } from '@/constants/sort';
 
 const AccountBooksPageBody = () => {
@@ -34,6 +35,9 @@ const AccountBooksPageBody = () => {
     IAccountBookWithTeam | undefined
   >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
+    IAccountBookWithTeam | undefined
+  >();
+  const [accountBookToChangeName, setAccountBookToChangeName] = useState<
     IAccountBookWithTeam | undefined
   >();
   const [totalPage, setTotalPage] = useState(1);
@@ -139,6 +143,7 @@ const AccountBooksPageBody = () => {
             setAccountBookToEdit={setAccountBookToEdit}
             setAccountBookToDelete={setAccountBookToDelete}
             setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+            setAccountBookToChangeName={setAccountBookToChangeName}
             setRefreshKey={setRefreshKey}
             shouldGroupByTeam
           />
@@ -178,6 +183,14 @@ const AccountBooksPageBody = () => {
         <UploadCompanyPictureModal
           accountBookToUploadPicture={accountBookToUploadPicture}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+          setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {accountBookToChangeName && (
+        <ChangeNameModal
+          accountBookToChangeName={accountBookToChangeName}
+          setAccountBookToChangeName={setAccountBookToChangeName}
           setRefreshKey={setRefreshKey}
         />
       )}
