@@ -748,6 +748,7 @@ module.exports = {
         'magic-ball': "url('/elements/magic_ball.png')",
         'privacy-policy': 'url("/elements/sun_light.png")',
         'join-us': 'url("/elements/join_us_bg.png")',
+        'job-detail': "url('/elements/job_detail.png')",
       },
       zIndex: {
         '-10': '-10',
