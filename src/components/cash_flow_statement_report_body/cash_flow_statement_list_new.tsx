@@ -16,25 +16,28 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import { useTranslation } from 'next-i18next';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
-import { useGlobalCtx } from '@/contexts/global_context';
 import CashFlowA4Template from '@/components/cash_flow_statement_report_body/cash_flow_statement_a4_template';
+import DownloadCashFlowStatement from '@/components/cash_flow_statement_report_body/download_cash_flow_statement';
 
 interface CashFlowStatementListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
   isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
   printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
+  downloadRef: React.RefObject<HTMLDivElement>; // Info: (20250327 - Anna) 從父層傳入的 Ref
   printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
+  downloadFn: () => void; // Info: (20250327 - Anna) 從父層傳入的下載函數
 }
 
 const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   selectedDateRange,
   isPrinting, // Info: (20241122 - Anna) 使用打印狀態
   printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
+  downloadRef, // Info: (20250327 - Anna) 使用下載範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
+  downloadFn, // Info: (20250327 - Anna) 使用下載函數
 }) => {
   const { t, i18n } = useTranslation('reports'); // Info: (20250108 - Anna) 使用 i18n 來獲取當前語言
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, connectedAccountBook } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
   // Info: (20241024 - Anna) 用 useRef 追蹤之前的日期範圍
@@ -432,7 +435,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     return (
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
         <div className="ml-auto flex items-center gap-24px">
-          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+          <DownloadButton onClick={downloadFn} />
           {/* Info: (20241021 - Anna) 列印按鈕：只有中文可用 */}
           <PrintButton onClick={printFn} disabled={!isChinese} />
         </div>
@@ -777,6 +780,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         {investmentRatio}
         {freeCashFlow}
       </div>
+      <DownloadCashFlowStatement reportFinancial={reportFinancial} downloadRef={downloadRef} />
     </div>
   );
 };

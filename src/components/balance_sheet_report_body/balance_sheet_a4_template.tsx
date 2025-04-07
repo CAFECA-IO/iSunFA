@@ -293,8 +293,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
             className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
           >
             {renderedHeader(false)}
-            <div className="px-12px">{pageContent}</div>{' '}
-            {/* Info: (20241130 - Anna) 渲染 pageContent */}
+            <div className="px-12px">{pageContent}</div>
             {renderedFooter(firstBlockSplitPages.length + secondBlockSplitPages.length + index + 1)}
           </div>
         </div>
