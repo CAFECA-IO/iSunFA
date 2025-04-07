@@ -2,21 +2,21 @@ import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { Dispatch, SetStateAction } from 'react';
 import { IoCloseOutline } from 'react-icons/io5';
 
-interface ChangeNameModalProps {
-  accountBookToChangeName: IAccountBookWithTeam;
-  setAccountBookToChangeName: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+interface ChangeInfoModalProps {
+  accountBookToChangeInfo: IAccountBookWithTeam;
+  setAccountBookToChangeInfo: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
 }
 
-const ChangeNameModal = ({
+const ChangeInfoModal = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  accountBookToChangeName,
-  setAccountBookToChangeName,
+  accountBookToChangeInfo,
+  setAccountBookToChangeInfo,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setRefreshKey,
-}: ChangeNameModalProps) => {
-  const closeChangeNameModal = () => {
-    setAccountBookToChangeName(undefined);
+}: ChangeInfoModalProps) => {
+  const closeChangeInfoModal = () => {
+    setAccountBookToChangeInfo(undefined);
   };
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
@@ -25,7 +25,7 @@ const ChangeNameModal = ({
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             Change Company Name
           </h1>
-          <button type="button" onClick={closeChangeNameModal}>
+          <button type="button" onClick={closeChangeInfoModal}>
             <IoCloseOutline size={24} />
           </button>
         </section>
@@ -34,4 +34,4 @@ const ChangeNameModal = ({
   );
 };
 
-export default ChangeNameModal;
+export default ChangeInfoModal;
