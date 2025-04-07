@@ -225,7 +225,7 @@ const AccountBookItem = ({
               {accountBook.name}
             </p>
 
-            {/* ToDo: (20250407 - Liz) Edit account book name and image */}
+            {/* Info: (20250407 - Liz) Edit account book info */}
             <button type="button" onClick={openChangeNameModal} className="p-8px">
               <Image src="/icons/edit_square.svg" alt="edit icon" width={22} height={22} />
             </button>
