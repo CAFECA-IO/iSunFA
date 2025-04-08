@@ -6,12 +6,8 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortOrder } from '@/constants/sort';
 import { z } from 'zod';
-import {
-  canDeleteMember,
-  canUpdateMemberRole,
-  convertTeamRoleCanDo,
-} from '@/lib/shared/permission';
-import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { ITeamRoleCanDo, TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 
 export const addMembersToTeam = async (
@@ -188,15 +184,40 @@ export const updateMemberById = async (
     throw new Error('MEMBER_NOT_FOUND');
   }
 
-  // Info: (20250601 - Shirley) 使用權限函數檢查是否有權限更新角色
-  const permissionCheck = canUpdateMemberRole(
-    sessionUserTeamRole,
-    teamMember.role as TeamRole,
-    role
-  );
+  // Info: (20250603 - Shirley) 不能更新成員為 OWNER 角色
+  if (role === TeamRole.OWNER) {
+    throw new Error('CANNOT_UPDATE_TO_OWNER');
+  }
 
-  if (!permissionCheck.canUpdate) {
-    throw new Error(permissionCheck.errorMessage || 'PERMISSION_DENIED');
+  // Info: (20250603 - Shirley) 不能更新 OWNER 角色
+  if (teamMember.role === TeamRole.OWNER) {
+    throw new Error('CANNOT_UPDATE_OWNER_ROLE');
+  }
+
+  // Info: (20250603 - Shirley) 檢查用戶是否有權限變更角色
+  const canChangeRoleResult = convertTeamRoleCanDo({
+    teamRole: sessionUserTeamRole,
+    canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
+  });
+
+  if (!(TeamRoleCanDoKey.CAN_ALTER in canChangeRoleResult)) {
+    throw new Error('PERMISSION_DENIED');
+  }
+
+  // Info: (20250603 - Shirley) 檢查用戶是否可以設置成員為目標角色
+  const canAlterRoles = canChangeRoleResult.canAlter;
+  if (!canAlterRoles.includes(role)) {
+    throw new Error('CANNOT_ASSIGN_THIS_ROLE');
+  }
+
+  // Info: (20250603 - Shirley) Admin 不能更新 Admin 角色 (特殊情況)
+  if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
+    throw new Error('ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER');
+  }
+
+  // Info: (20250603 - Shirley) Admin 不能將成員提升為 Admin
+  if (sessionUserTeamRole === TeamRole.ADMIN && role === TeamRole.ADMIN) {
+    throw new Error('ADMIN_CANNOT_PROMOTE_TO_ADMIN');
   }
 
   const updatedMember = await prisma.teamMember.update({
@@ -257,11 +278,24 @@ export const deleteMemberById = async (
     throw new Error('MEMBER_NOT_FOUND');
   }
 
-  // Info: (20250601 - Shirley) 使用權限函數檢查是否有權限刪除成員
-  const permissionCheck = canDeleteMember(sessionUserTeamRole, teamMember.role as TeamRole);
+  // Info: (20250603 - Shirley) 不能刪除 OWNER
+  if (teamMember.role === TeamRole.OWNER) {
+    throw new Error('CANNOT_DELETE_OWNER');
+  }
 
-  if (!permissionCheck.canDelete) {
-    throw new Error(permissionCheck.errorMessage || 'PERMISSION_DENIED');
+  // Info: (20250603 - Shirley) 檢查用戶是否有權限變更角色
+  const canChangeRoleResult = convertTeamRoleCanDo({
+    teamRole: sessionUserTeamRole,
+    canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
+  });
+
+  if (!(TeamRoleCanDoKey.CAN_ALTER in canChangeRoleResult)) {
+    throw new Error('PERMISSION_DENIED');
+  }
+
+  // Admin 不能刪除其他 Admin
+  if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
+    throw new Error('ADMIN_CANNOT_DELETE_ADMIN');
   }
 
   // Info: (20250312 - Shirley) 執行軟刪除
