@@ -31,7 +31,6 @@ export const ISUNFA_ROUTE = {
   BALANCE_SHEET: '/users/reports/financials/balance_sheet',
   INCOME_STATEMENT: '/users/reports/financials/income_statement',
   CASH_FLOW: '/users/reports/financials/cash_flow',
-  BUSINESS_TAX: '/users/reports/tax/business_tax',
   LEDGER: '/users/accounting/ledger',
   TRIAL_BALANCE: '/users/accounting/trial_balance',
   COUNTERPARTY: '/users/setting/counterparty',

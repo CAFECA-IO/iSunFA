@@ -172,17 +172,6 @@ const MENU_CONFIG: TMenuOption[] = [
         ],
       },
       {
-        caption: 'TAX_REPORT',
-        subMenu: [
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'BUSINESS_TAX_RETURN_401',
-            link: ISUNFA_ROUTE.BUSINESS_TAX,
-            needToVerifyAccountBook: true,
-          },
-        ],
-      },
-      {
         caption: 'DAILY_REPORT',
         subMenu: [
           {
