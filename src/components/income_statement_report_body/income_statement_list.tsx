@@ -8,7 +8,6 @@ import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { IDatePeriod } from '@/interfaces/date_period';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
-import { useGlobalCtx } from '@/contexts/global_context';
 import PrintPreview from '@/components/income_statement_report_body/print_preview';
 import { useReactToPrint } from 'react-to-print';
 import NoData from '@/components/income_statement_report_body/no_data';
@@ -18,17 +17,20 @@ import ItemSummary from '@/components/income_statement_report_body/item_summary'
 // import ItemDetail from '@/components/income_statement_report_body/item_detail';
 import CostRevRatio from '@/components/income_statement_report_body/cost_rev_ratio';
 import { useTranslation } from 'next-i18next';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import DownloadPreview from '@/components/income_statement_report_body/download_preview';
 
 interface FilterBarProps {
   printFn: () => void;
+  downloadFn: () => void; // Info: (20250328 - Anna)
   isChinese: boolean; // Info: (20250108 - Anna) 添加 isChinese 屬性
 }
-const FilterBar = ({ printFn, isChinese }: FilterBarProps) => {
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+const FilterBar = ({ printFn, isChinese, downloadFn }: FilterBarProps) => {
   return (
     <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
       <div className="ml-auto flex items-center gap-24px">
-        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+        <DownloadButton onClick={downloadFn} />
         <PrintButton onClick={() => printFn()} disabled={!isChinese} />
       </div>
     </div>
@@ -54,11 +56,137 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn';
 
   const printRef = useRef<HTMLDivElement>(null);
+  const downloadRef = useRef<HTMLDivElement>(null);
+
+  const filename = `Income_Statement.pdf`;
 
   const printFn = useReactToPrint({
     contentRef: printRef,
-    documentTitle: 'Income_Statement Report',
+    documentTitle: 'Income_Statement',
   });
+
+  const handleDownload = async () => {
+    if (!downloadRef.current) {
+      return;
+    }
+
+    //  Info: (20250401 - Anna) 插入修正樣式
+    const style = document.createElement('style');
+    style.innerHTML = `
+  /* Info: (20250401 - Anna) 表格 */
+  .download-page td,
+  .download-page th {
+    padding-top: 0 !important;
+  }
+
+
+  /* Info: (20250401 - Anna) Income Statement (header) 調整底部間距 */
+  .download-page h2 {
+    padding-bottom: 6px !important;
+  }
+
+  /* Info: (20250401 - Anna) 大標題與表格間距 */
+  .download-page .download-header-label {
+    padding-bottom: 8px !important;
+  }
+`;
+
+    document.head.appendChild(style);
+
+    //  Info: (20250327 - Anna) 顯示下載內容讓 html2canvas 擷取，移到畫面外避免干擾
+    downloadRef.current.classList.remove('hidden');
+    downloadRef.current.style.position = 'absolute';
+    downloadRef.current.style.left = '-9999px';
+
+    // Info: (20250327 - Anna) 強制瀏覽器執行「重新排版 (reflow)」，預防 classList.remove('hidden') 還沒生效導致 html2canvas 擷取不到內容
+    downloadRef.current?.getBoundingClientRect();
+
+    // Info: (20250327 - Anna) 等所有圖片載入，確保 html2canvas 可以擷取圖片內容
+    const images = Array.from(downloadRef.current.querySelectorAll('img'));
+    await Promise.all(
+      images.map((imgElement) => {
+        const img = imgElement; // Info: (20250327 - Anna)新變數，避免直接操作參數
+        return new Promise((resolve) => {
+          if (img.complete) {
+            resolve(true); // Info: (20250327 - Anna) 圖片已完成載入流程（無論成功或失敗），立即 resolve
+          } else {
+            img.onload = () => resolve(true); // Info: (20250327 - Anna) 尚未載入完成，監聽 onload 成功事件
+            img.onerror = () => resolve(true); // Info: (20250327 - Anna) 尚未載入完成，監聽 onerror 失敗事件，依然 resolve 避免卡住
+          }
+        });
+      })
+    );
+
+    // Info: (20250327 - Anna) 等待所有字體（包含系統字體）完成解析與載入。
+    await document.fonts.ready;
+
+    // Info: (20250327 - Anna) 雙重 requestAnimationFrame：等待兩次繪製週期，確保樣式與 DOM 完整渲染，避免 html2canvas 抓到第一頁空白
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve());
+      });
+    });
+
+    // Info: (20250327 - Anna) 額外延遲（150ms）確保樣式穩定下來
+    const wait = (ms: number) =>
+      new Promise<void>((resolve) => {
+        setTimeout(resolve, ms);
+      });
+
+    await wait(150);
+
+    const downloadPages = downloadRef.current.querySelectorAll('.download-page');
+    if (!downloadPages.length) {
+      return;
+    }
+
+    // Info: (20250327 - Anna) jsPDF 是類別，但命名為小寫，需關閉 eslint new-cap
+    // eslint-disable-next-line new-cap
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+    // Info: (20250327 - Anna) 把 div 用 html2canvas 轉成圖片
+    for (let i = 0; i < downloadPages.length; i += 1) {
+      const page = downloadPages[i];
+      // Info: (20250327 - Anna) 為了逐頁轉圖並依序加入 PDF，需保留 await；略過 ESLint 提示
+      // eslint-disable-next-line no-await-in-loop
+      const canvas = await html2canvas(page as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        logging: true, // Info: (20250327 - Anna) 「顯示除錯訊息」到 console
+      }).catch((err) => {
+        // Info: (20250327 - Anna) Debug
+        // eslint-disable-next-line no-console
+        console.error('html2canvas 擷取錯誤:', err);
+        return null;
+      });
+
+      if (!canvas) {
+        return;
+      }
+
+      // Info: (20250327 - Anna) 轉成 PNG 格式
+      const imgData = canvas.toDataURL('image/png');
+
+      if (i === 0) {
+        // Info: (20250327 - Anna) 放入 PDF
+        pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
+      } else {
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
+      }
+    }
+
+    // Info: (20250401 - Anna) 移除修正樣式
+    style.remove();
+
+    // Info: (20250327 - Anna) 隱藏下載用的內容
+    downloadRef.current.classList.add('hidden');
+    downloadRef.current.style.position = '';
+    downloadRef.current.style.left = '';
+
+    // Info: (20250327 - Anna) 下載 PDF
+    pdf.save(filename);
+  };
 
   useEffect(() => {
     if (!selectedDateRange) return;
@@ -138,7 +266,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   return (
     <div className={`relative mx-auto w-full origin-top overflow-x-auto`}>
       {/* Info: (20250108 - Anna) 傳遞 isChinese 給 FilterBar */}
-      <FilterBar printFn={printFn} isChinese={isChinese} />
+      <FilterBar printFn={printFn} isChinese={isChinese} downloadFn={handleDownload} />
       <div>
         <ItemSummary
           financialReport={financialReport}
@@ -173,6 +301,16 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
           formattedPreToDate={formattedPreToDate}
         />
       </div>
+
+      <DownloadPreview
+        ref={downloadRef}
+        className="hidden w-a4-width"
+        financialReport={financialReport}
+        formattedCurFromDate={formattedCurFromDate}
+        formattedCurToDate={formattedCurToDate}
+        formattedPreFromDate={formattedPreFromDate}
+        formattedPreToDate={formattedPreToDate}
+      />
     </div>
   );
 };

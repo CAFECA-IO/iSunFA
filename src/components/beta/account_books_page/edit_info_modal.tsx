@@ -9,9 +9,11 @@ interface EditInfoModalProps {
 }
 
 const EditInfoModal = ({
+  // Deprecated: (2025-04-07 Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   accountBookToEditInfo,
   setAccountBookToEditInfo,
+  // Deprecated: (2025-04-07 Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setRefreshKey,
 }: EditInfoModalProps) => {
