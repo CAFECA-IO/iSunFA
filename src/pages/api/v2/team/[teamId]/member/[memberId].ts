@@ -81,7 +81,6 @@ const handlePutRequest = async (req: NextApiRequest) => {
   if (TeamRoleCanDoKey.CAN_ALTER in canChangeRoleResult) {
     const canAlterRoles = canChangeRoleResult.canAlter;
 
-    // 檢查用戶是否有權限將成員角色修改為目標角色
     if (!canAlterRoles.includes(updateData.role)) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }

@@ -95,7 +95,6 @@ const handlePutRequest = async (req: NextApiRequest) => {
     // Info: (20250531 - Shirley) 使用 repo 函數獲取已存在且被加入團隊的用戶
     const existingUserIds = await getExistingUsersInTeam(teamId, body.emails);
 
-    // 使用 Promise.all 同時更新所有用戶的 session
     await Promise.all(
       existingUserIds.map(async (userIdToUpdate) => {
         loggerBack.info({

@@ -442,7 +442,6 @@ export const getExistingUsersInTeam = async (
   const existingUsers = await prisma.user.findMany({
     where: {
       email: { in: emails },
-      // 必須確保用戶已存在且已經被成功加入到團隊中
       memberships: {
         some: {
           teamId,
