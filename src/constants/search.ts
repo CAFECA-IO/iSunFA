@@ -3,15 +3,15 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 
 export const SEARCH_KEYWORDS: ISearchKeyword[] = [
   {
-    label: 'My Company List',
+    label: 'Account Book List',
     path: ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
   },
   {
-    label: '公司清單',
+    label: '帳本清單',
     path: ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
   },
   {
-    label: '建立公司',
+    label: '建立帳本',
     path: ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
   },
   {
@@ -132,22 +132,6 @@ export const SEARCH_KEYWORDS: ISearchKeyword[] = [
     path: ISUNFA_ROUTE.CASH_FLOW,
     needToVerifyCompany: true,
   },
-  {
-    label: 'Business Tax Return(401)',
-    path: ISUNFA_ROUTE.BUSINESS_TAX,
-    needToVerifyCompany: true,
-  },
-  {
-    label: '營業人銷售額與稅額申報書(401)',
-    path: ISUNFA_ROUTE.BUSINESS_TAX,
-    needToVerifyCompany: true,
-  },
-  {
-    label: '營業稅申報表 (401)',
-    path: ISUNFA_ROUTE.BUSINESS_TAX,
-    needToVerifyCompany: true,
-  },
-  // ToDo: (20241226 - Liz) Ledger (總帳) 因為跟帳本撞名所以之後可能會變更名稱
   {
     label: 'Ledger',
     path: ISUNFA_ROUTE.LEDGER,
