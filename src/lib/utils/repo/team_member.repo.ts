@@ -169,17 +169,17 @@ export const updateMemberById = async (
     throw new Error('MEMBER_NOT_FOUND');
   }
 
-  // Info: (20250603 - Shirley) 不能更新成員為 OWNER 角色
+  // Info: (20250408 - Shirley) 不能更新成員為 OWNER 角色
   if (role === TeamRole.OWNER) {
     throw new Error('CANNOT_UPDATE_TO_OWNER');
   }
 
-  // Info: (20250603 - Shirley) 不能更新 OWNER 角色
+  // Info: (20250408 - Shirley) 不能更新 OWNER 角色
   if (teamMember.role === TeamRole.OWNER) {
     throw new Error('CANNOT_UPDATE_OWNER_ROLE');
   }
 
-  // Info: (20250603 - Shirley) 檢查用戶是否有權限變更角色
+  // Info: (20250408 - Shirley) 檢查用戶是否有權限變更角色
   const canChangeRoleResult = convertTeamRoleCanDo({
     teamRole: sessionUserTeamRole,
     canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
@@ -189,18 +189,18 @@ export const updateMemberById = async (
     throw new Error('PERMISSION_DENIED');
   }
 
-  // Info: (20250603 - Shirley) 檢查用戶是否可以設置成員為目標角色
+  // Info: (20250408 - Shirley) 檢查用戶是否可以設置成員為目標角色
   const canAlterRoles = canChangeRoleResult.canAlter;
   if (!canAlterRoles.includes(role)) {
     throw new Error('CANNOT_ASSIGN_THIS_ROLE');
   }
 
-  // Info: (20250603 - Shirley) Admin 不能更新 Admin 角色 (特殊情況)
+  // Info: (20250408 - Shirley) Admin 不能更新 Admin 角色 (特殊情況)
   if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
     throw new Error('ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER');
   }
 
-  // Info: (20250603 - Shirley) Admin 不能將成員提升為 Admin
+  // Info: (20250408 - Shirley) Admin 不能將成員提升為 Admin
   if (sessionUserTeamRole === TeamRole.ADMIN && role === TeamRole.ADMIN) {
     throw new Error('ADMIN_CANNOT_PROMOTE_TO_ADMIN');
   }
@@ -263,12 +263,12 @@ export const deleteMemberById = async (
     throw new Error('MEMBER_NOT_FOUND');
   }
 
-  // Info: (20250603 - Shirley) 不能刪除 OWNER
+  // Info: (20250408 - Shirley) 不能刪除 OWNER
   if (teamMember.role === TeamRole.OWNER) {
     throw new Error('CANNOT_DELETE_OWNER');
   }
 
-  // Info: (20250603 - Shirley) 檢查用戶是否有權限變更角色
+  // Info: (20250408 - Shirley) 檢查用戶是否有權限變更角色
   const canChangeRoleResult = convertTeamRoleCanDo({
     teamRole: sessionUserTeamRole,
     canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
@@ -278,7 +278,6 @@ export const deleteMemberById = async (
     throw new Error('PERMISSION_DENIED');
   }
 
-  // Admin 不能刪除其他 Admin
   if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
     throw new Error('ADMIN_CANNOT_DELETE_ADMIN');
   }

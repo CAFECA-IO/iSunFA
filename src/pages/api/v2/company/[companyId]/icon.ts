@@ -25,7 +25,6 @@ const handlePutRequest: IHandleRequest<
   try {
     const updatedCompany = await putCompanyIcon({ companyId, fileId });
 
-    // 將 Company 轉換為符合 accountBookSchema 的格式
     const formattedPayload = {
       ...updatedCompany,
       imageId: updatedCompany.imageFile?.id.toString() || '',
