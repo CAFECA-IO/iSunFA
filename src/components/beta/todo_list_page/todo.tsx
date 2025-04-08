@@ -2,7 +2,7 @@ import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import { FiEdit, FiTrash2, FiShare2 } from 'react-icons/fi';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
-import { ITodoCompany } from '@/interfaces/todo';
+import { ITodoAccountBook } from '@/interfaces/todo';
 import { Dispatch, SetStateAction } from 'react';
 
 const formatDateForGoogleCalendar = (date: number) => {
@@ -16,9 +16,9 @@ const formatDateForGoogleCalendar = (date: number) => {
 };
 
 interface TodoProps {
-  todo: ITodoCompany;
-  setTodoToUpdate: Dispatch<SetStateAction<ITodoCompany | undefined>>;
-  setTodoToDelete: Dispatch<SetStateAction<ITodoCompany | undefined>>;
+  todo: ITodoAccountBook;
+  setTodoToUpdate: Dispatch<SetStateAction<ITodoAccountBook | undefined>>;
+  setTodoToDelete: Dispatch<SetStateAction<ITodoAccountBook | undefined>>;
 }
 
 const Todo = ({ todo, setTodoToUpdate, setTodoToDelete }: TodoProps) => {
