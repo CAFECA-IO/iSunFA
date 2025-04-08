@@ -115,21 +115,6 @@ export const memberLeaveTeam = async (userId: number, teamId: number): Promise<I
     throw new Error('USER_NOT_IN_TEAM');
   }
 
-  // Special case: OWNER cannot leave the team
-  if (teamMember.role === TeamRole.OWNER) {
-    throw new Error('OWNER_IS_UNABLE_TO_LEAVE');
-  }
-
-  // Check permissions using convertTeamRoleCanDo
-  const canLeaveResult = convertTeamRoleCanDo({
-    teamRole: teamMember.role as TeamRole,
-    canDo: TeamPermissionAction.LEAVE_TEAM,
-  });
-
-  if (!('yesOrNo' in canLeaveResult) || !(canLeaveResult as ITeamRoleCanDo).yesOrNo) {
-    throw new Error('PERMISSION_DENIED');
-  }
-
   const leftAt = Math.floor(Date.now() / 1000); // Info: (20250310 - tzuhan) 以 UNIX 時間戳記記錄
   await prisma.teamMember.update({
     where: { teamId_userId: { teamId, userId } },
