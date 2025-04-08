@@ -1,10 +1,10 @@
-// ✅ 統一 Utility: 從 note 中解析 startTime / endTime
+// Info: (20250408 - Tzuhan) ✅ 統一 Utility: 從 note 中解析 startTime / endTime
 import { z } from 'zod';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { accountBookSchema } from '@/lib/utils/zod_schema/account_book';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
-// ---------- Input Schemas ----------
+// Info: (20250408 - Tzuhan) Input Schemas
 export const todoNullSchema = z.union([z.object({}), z.string()]);
 
 export const todoIdSchema = z.object({
@@ -36,14 +36,14 @@ export const todoSchema = z.object({
   endTime: z.number(),
 });
 
-// ---------- Backend Output Schema ----------
+// Info: (20250408 - Tzuhan) Backend Output Schema
 export const todoOutputSchema = todoSchema.extend({
   company: accountBookSchema,
 });
 
 export const paginatedTodoOutputSchema = paginatedDataSchema(todoOutputSchema);
 
-// ---------- Export 組合 ----------
+// Info: (20250408 - Tzuhan) Export 組合
 export const todoListSchema = {
   input: {
     querySchema: userIdSchema,
