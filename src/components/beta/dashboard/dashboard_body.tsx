@@ -4,17 +4,17 @@ import PendingTask from '@/components/beta/dashboard/pending_task';
 import TodayTodoList from '@/components/beta/dashboard/today_todo_list';
 import LatestNews from '@/components/beta/dashboard/latest_news';
 import { useEffect, useState, useCallback } from 'react';
-import { ITodoCompany } from '@/interfaces/todo';
+import { ITodoAccountBook } from '@/interfaces/todo';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 
 const DashboardBody = () => {
   const { userAuth } = useUserCtx();
-  const [todayTodoList, setTodayTodoList] = useState<ITodoCompany[]>([]);
+  const [todayTodoList, setTodayTodoList] = useState<ITodoAccountBook[]>([]);
 
   // Info: (20241122 - Liz) 打 API 取得待辦事項清單
-  const { trigger: listUserTodoAPI } = APIHandler<ITodoCompany[]>(APIName.TODO_LIST);
+  const { trigger: listUserTodoAPI } = APIHandler<ITodoAccountBook[]>(APIName.TODO_LIST);
 
   const getTodoList = useCallback(async () => {
     if (!userAuth) return;

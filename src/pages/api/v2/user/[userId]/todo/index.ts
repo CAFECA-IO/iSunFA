@@ -6,37 +6,21 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { Company, File, Todo } from '@prisma/client';
-import { createTodo, listTodo } from '@/lib/utils/repo/todo.repo';
-import { ITodoCompany } from '@/interfaces/todo';
-import {
-  todoListPostApiUtils as postUtils,
-  todoListGetListApiUtils as getUtils,
-} from '@/pages/api/v2/user/[userId]/todo/route_utils';
+import { createTodo, listTodoMapped } from '@/lib/utils/repo/todo.repo';
+import { ITodoAccountBook } from '@/interfaces/todo';
+import { todoListPostApiUtils as postUtils } from '@/pages/api/v2/user/[userId]/todo/route_utils';
+import loggerBack from '@/lib/utils/logger_back';
 
-const handleGetRequest: IHandleRequest<
-  APIName.TODO_LIST,
-  (Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] })[]
-> = async ({ query }) => {
+const handleGetRequest: IHandleRequest<APIName.TODO_LIST, ITodoAccountBook[]> = async ({
+  query,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: (Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] })[] = [];
+  let payload: ITodoAccountBook[] = [];
 
   const { userId } = query;
-  const todoListFromPrisma = await listTodo(userId);
+  const todoList = await listTodoMapped(userId);
 
-  const todoList = todoListFromPrisma
-    .map((todo) => {
-      const { startTime, endTime, note } = getUtils.splitStartEndTimeInNote(todo.note);
-      return {
-        ...todo,
-        startTime,
-        endTime,
-        note,
-      };
-    })
-    .sort((a, b) => {
-      return a.endTime - b.endTime;
-    });
+  loggerBack.info(`todoList: ${JSON.stringify(todoList)}`);
 
   payload = todoList;
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
@@ -44,42 +28,26 @@ const handleGetRequest: IHandleRequest<
   return { statusMessage, payload };
 };
 
-const handlePostRequest: IHandleRequest<
-  APIName.CREATE_TODO,
-  Todo & {
-    userTodoCompanies: { company: Company & { imageFile: File } }[];
-    startTime: number;
-    endTime: number;
-  }
-> = async ({ query, body }) => {
+const handlePostRequest: IHandleRequest<APIName.CREATE_TODO, ITodoAccountBook> = async ({
+  query,
+  body,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload:
-    | (Todo & {
-        userTodoCompanies: { company: Company & { imageFile: File } }[];
-        startTime: number;
-        endTime: number;
-      })
-    | null = null;
 
   const { userId } = query;
-  const { companyId, name, note, deadline, startTime, endTime } = body;
+  const { note, startDate, endDate } = body;
 
   const noteWithTime = postUtils.combineStartEndTimeInNote({
     note,
-    startTime,
-    endTime,
+    startDate,
+    endDate,
   });
 
-  const createdTodo = await createTodo(userId, name, deadline, noteWithTime, companyId);
+  const createdTodo = await createTodo({ ...body, note: noteWithTime, userId });
 
-  payload = {
-    ...createdTodo,
-    startTime,
-    endTime,
-  };
   statusMessage = STATUS_MESSAGE.CREATED;
 
-  return { statusMessage, payload };
+  return { statusMessage, payload: createdTodo };
 };
 
 const methodHandlers: {
@@ -88,7 +56,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload: ITodoCompany | ITodoCompany[] | null;
+    payload: ITodoAccountBook | ITodoAccountBook[] | null;
   }>;
 } = {
   GET: (req) => withRequestValidation(APIName.TODO_LIST, req, handleGetRequest),
@@ -98,11 +66,11 @@ const methodHandlers: {
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<
-    IResponseData<IPaginatedData<ITodoCompany[]> | ITodoCompany | ITodoCompany[] | null>
+    IResponseData<IPaginatedData<ITodoAccountBook[]> | ITodoAccountBook | ITodoAccountBook[] | null>
   >
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITodoCompany | ITodoCompany[] | null = null;
+  let payload: ITodoAccountBook | ITodoAccountBook[] | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -117,7 +85,7 @@ export default async function handler(
     payload = null;
   } finally {
     const { httpCode, result } = formatApiResponse<
-      IPaginatedData<ITodoCompany[]> | ITodoCompany | ITodoCompany[] | null
+      IPaginatedData<ITodoAccountBook[]> | ITodoAccountBook | ITodoAccountBook[] | null
     >(statusMessage, payload);
     res.status(httpCode).json(result);
   }

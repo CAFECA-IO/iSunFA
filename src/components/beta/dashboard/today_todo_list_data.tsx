@@ -2,7 +2,7 @@ import { useTranslation } from 'next-i18next';
 import MoreLink from '@/components/beta/dashboard/more_link';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { ITodoCompany } from '@/interfaces/todo';
+import { ITodoAccountBook } from '@/interfaces/todo';
 import { useEffect, useState } from 'react';
 import { MILLISECONDS_IN_A_MINUTE } from '@/constants/display';
 import TodayTodoListNoData from '@/components/beta/dashboard/today_todo_list_no_data';
@@ -15,12 +15,12 @@ const getTimeFromTimestamp = (timestamp: number): string => {
 };
 
 interface TodayTodoListDataProps {
-  todayTodoList: ITodoCompany[];
+  todayTodoList: ITodoAccountBook[];
 }
 
 const TodayTodoListData = ({ todayTodoList }: TodayTodoListDataProps) => {
   const { t } = useTranslation('dashboard');
-  const [filterTodoList, setFilterTodoList] = useState<ITodoCompany[]>([]);
+  const [filterTodoList, setFilterTodoList] = useState<ITodoAccountBook[]>([]);
 
   // Info: (20241122 - Liz) 判斷是否有待辦事項
   const isToDoListHasPlan = filterTodoList.length > 0;

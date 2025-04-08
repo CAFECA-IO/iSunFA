@@ -6,29 +6,26 @@ import { deleteTodo, getTodoById, updateTodo } from '@/lib/utils/repo/todo.repo'
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
-import { Company, Todo, File } from '@prisma/client';
-import { ITodoCompany } from '@/interfaces/todo';
+import { ITodoAccountBook } from '@/interfaces/todo';
 import {
   todoListGetListApiUtils as getListUtils,
   todoListPostApiUtils as postUtils,
 } from '@/pages/api/v2/user/[userId]/todo/route_utils';
 
-const handleGetRequest: IHandleRequest<
-  APIName.TODO_GET_BY_ID,
-  Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] }
-> = async ({ query }) => {
+const handleGetRequest: IHandleRequest<APIName.TODO_GET_BY_ID, ITodoAccountBook> = async ({
+  query,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: (Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] }) | null =
-    null;
+  let payload: ITodoAccountBook | null = null;
 
   const { todoId } = query;
   const todoFromPrisma = await getTodoById(todoId);
   if (todoFromPrisma) {
-    const { startTime, endTime, note } = getListUtils.splitStartEndTimeInNote(todoFromPrisma.note);
+    const { startDate, endDate, note } = getListUtils.splitStartEndTimeInNote(todoFromPrisma.note);
     const todo = {
       ...todoFromPrisma,
-      startTime,
-      endTime,
+      startDate,
+      endDate,
       note,
     };
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
@@ -37,60 +34,39 @@ const handleGetRequest: IHandleRequest<
   return { statusMessage, payload };
 };
 
-const handlePutRequest: IHandleRequest<
-  APIName.UPDATE_TODO,
-  Todo & {
-    userTodoCompanies: { company: Company & { imageFile: File } }[];
-    startTime: number;
-    endTime: number;
-  }
-> = async ({ query, body }) => {
+const handlePutRequest: IHandleRequest<APIName.UPDATE_TODO, ITodoAccountBook> = async ({
+  query,
+  body,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload:
-    | (Todo & {
-        userTodoCompanies: { company: Company & { imageFile: File } }[];
-        startTime: number;
-        endTime: number;
-      })
-    | null = null;
+  let payload: ITodoAccountBook | null = null;
 
   const { todoId } = query;
-  const { name, deadline, note, companyId, startTime, endTime } = body;
-  const constructedNote = postUtils.combineStartEndTimeInNote({
-    startTime,
-    endTime,
-    note,
-  });
-  const updatedTodo = await updateTodo(todoId, name, deadline, constructedNote, companyId);
+  const constructedNote = postUtils.combineStartEndTimeInNote(body);
+  const updatedTodo = await updateTodo({ ...body, id: todoId, note: constructedNote });
   if (updatedTodo) {
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    payload = {
-      ...updatedTodo,
-      startTime,
-      endTime,
-    };
+    payload = updatedTodo;
   }
   return { statusMessage, payload };
 };
 
-const handleDeleteRequest: IHandleRequest<
-  APIName.DELETE_TODO,
-  Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] }
-> = async ({ query }) => {
+const handleDeleteRequest: IHandleRequest<APIName.DELETE_TODO, ITodoAccountBook> = async ({
+  query,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: (Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] }) | null =
-    null;
+  let payload: ITodoAccountBook | null = null;
 
   const { todoId } = query;
   const deletedTodoFromPrisma = await deleteTodo(Number(todoId));
   if (deletedTodoFromPrisma) {
-    const { startTime, endTime, note } = getListUtils.splitStartEndTimeInNote(
+    const { startDate, endDate, note } = getListUtils.splitStartEndTimeInNote(
       deletedTodoFromPrisma.note
     );
     const deletedTodo = {
       ...deletedTodoFromPrisma,
-      startTime,
-      endTime,
+      startDate,
+      endDate,
       note,
     };
     statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
@@ -103,7 +79,7 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: ITodoCompany | null }>;
+  ) => Promise<{ statusMessage: string; payload: ITodoAccountBook | null }>;
 } = {
   GET: (req) => withRequestValidation(APIName.TODO_GET_BY_ID, req, handleGetRequest),
   PUT: (req) => withRequestValidation(APIName.UPDATE_TODO, req, handlePutRequest),
@@ -112,10 +88,10 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ITodoCompany | null>>
+  res: NextApiResponse<IResponseData<ITodoAccountBook | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITodoCompany | null = null;
+  let payload: ITodoAccountBook | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -129,7 +105,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<ITodoCompany | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<ITodoAccountBook | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }
