@@ -6,7 +6,11 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { SortOrder } from '@/constants/sort';
 import { z } from 'zod';
-import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import {
+  canDeleteMember,
+  canUpdateMemberRole,
+  convertTeamRoleCanDo,
+} from '@/lib/shared/permission';
 import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 
@@ -115,8 +119,19 @@ export const memberLeaveTeam = async (userId: number, teamId: number): Promise<I
     throw new Error('USER_NOT_IN_TEAM');
   }
 
+  // Special case: OWNER cannot leave the team
   if (teamMember.role === TeamRole.OWNER) {
     throw new Error('OWNER_IS_UNABLE_TO_LEAVE');
+  }
+
+  // Check permissions using convertTeamRoleCanDo
+  const canLeaveResult = convertTeamRoleCanDo({
+    teamRole: teamMember.role as TeamRole,
+    canDo: TeamPermissionAction.LEAVE_TEAM,
+  });
+
+  if (!('yesOrNo' in canLeaveResult) || !(canLeaveResult as ITeamRoleCanDo).yesOrNo) {
+    throw new Error('PERMISSION_DENIED');
   }
 
   const leftAt = Math.floor(Date.now() / 1000); // Info: (20250310 - tzuhan) 以 UNIX 時間戳記記錄
@@ -173,28 +188,15 @@ export const updateMemberById = async (
     throw new Error('MEMBER_NOT_FOUND');
   }
 
-  // Info: (20250312 - Shirley) 不能將成員更新為 OWNER
-  if (role === TeamRole.OWNER) {
-    throw new Error('CANNOT_UPDATE_TO_OWNER');
-  }
+  // Info: (20250601 - Shirley) 使用權限函數檢查是否有權限更新角色
+  const permissionCheck = canUpdateMemberRole(
+    sessionUserTeamRole,
+    teamMember.role as TeamRole,
+    role
+  );
 
-  // Info: (20250312 - Shirley) 不能更新 OWNER 的角色
-  if (teamMember.role === TeamRole.OWNER) {
-    throw new Error('CANNOT_UPDATE_OWNER_ROLE');
-  }
-
-  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，不能更新其他 ADMIN 或 OWNER 的角色
-  if (sessionUserTeamRole === TeamRole.ADMIN) {
-    if (
-      (teamMember.role as TeamRole) === TeamRole.ADMIN ||
-      (teamMember.role as TeamRole) === TeamRole.OWNER
-    ) {
-      throw new Error('ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER');
-    }
-    // Info: (20250312 - Shirley) ADMIN 不能將成員提升為 ADMIN
-    if (role === TeamRole.ADMIN) {
-      throw new Error('ADMIN_CANNOT_PROMOTE_TO_ADMIN');
-    }
+  if (!permissionCheck.canUpdate) {
+    throw new Error(permissionCheck.errorMessage || 'PERMISSION_DENIED');
   }
 
   const updatedMember = await prisma.teamMember.update({
@@ -235,11 +237,6 @@ export const deleteMemberById = async (
   memberId: number,
   sessionUserTeamRole: TeamRole
 ): Promise<IDeleteMemberResponse> => {
-  // Info: (20250312 - Shirley) 檢查當前用戶是否有權限刪除成員
-  if (sessionUserTeamRole !== TeamRole.OWNER && sessionUserTeamRole !== TeamRole.ADMIN) {
-    throw new Error('PERMISSION_DENIED');
-  }
-
   // Info: (20250312 - Shirley) 檢查要刪除的成員是否存在
   const teamMember = await prisma.teamMember.findFirst({
     where: {
@@ -251,8 +248,6 @@ export const deleteMemberById = async (
       user: {
         select: {
           id: true,
-          name: true,
-          email: true,
         },
       },
     },
@@ -262,27 +257,25 @@ export const deleteMemberById = async (
     throw new Error('MEMBER_NOT_FOUND');
   }
 
-  // Info: (20250312 - Shirley) 不能刪除 OWNER
-  if (teamMember.role === TeamRole.OWNER) {
-    throw new Error('CANNOT_DELETE_OWNER');
+  // Info: (20250601 - Shirley) 使用權限函數檢查是否有權限刪除成員
+  const permissionCheck = canDeleteMember(sessionUserTeamRole, teamMember.role as TeamRole);
+
+  if (!permissionCheck.canDelete) {
+    throw new Error(permissionCheck.errorMessage || 'PERMISSION_DENIED');
   }
 
-  // Info: (20250312 - Shirley) 如果當前用戶是 ADMIN，不能刪除其他 ADMIN
-  if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_DELETE_ADMIN');
-  }
-
-  const leftAt = Math.floor(Date.now() / 1000);
-  const deletedMember = await prisma.teamMember.update({
+  // Info: (20250312 - Shirley) 執行軟刪除
+  const now = Math.floor(Date.now() / 1000);
+  await prisma.teamMember.update({
     where: { id: memberId },
     data: {
       status: LeaveStatus.NOT_IN_TEAM,
-      leftAt,
+      leftAt: now,
     },
   });
 
   return {
-    memberId: deletedMember.id,
+    memberId: teamMember.user.id,
   };
 };
 
@@ -416,4 +409,30 @@ export const isUserTeamMember = async (userId: number, teamId: number): Promise<
   });
 
   return !!teamMember;
+};
+
+/**
+ * Info: (20250531 - Shirley) 獲取已存在並被加入到特定團隊的用戶列表
+ * @param teamId 團隊 ID
+ * @param emails 電子郵件列表
+ * @returns 存在且被加入團隊的用戶 ID 列表
+ */
+export const getExistingUsersInTeam = async (
+  teamId: number,
+  emails: string[]
+): Promise<number[]> => {
+  const existingUsers = await prisma.user.findMany({
+    where: {
+      email: { in: emails },
+      // 必須確保用戶已存在且已經被成功加入到團隊中
+      memberships: {
+        some: {
+          teamId,
+        },
+      },
+    },
+    select: { id: true },
+  });
+
+  return existingUsers.map((user) => user.id);
 };

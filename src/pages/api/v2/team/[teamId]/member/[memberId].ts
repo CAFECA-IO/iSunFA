@@ -73,7 +73,11 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
   const userRole = userTeam.role as TeamRole;
 
-  // Info: (20250312 - Shirley) 檢查用戶是否有權限更新成員角色
+  // Info: (20250531 - Shirley) 檢查用戶是否有權限更新成員角色
+  // 權限規則：
+  // - Owner 可以修改 Admin/Editor/Viewer 的角色
+  // - Admin 不能修改 Owner/Admin 的角色
+  // - Admin 可以修改 Editor/Viewer 的角色（但不能升級為 Admin）
   const canChangeRoleResult = convertTeamRoleCanDo({
     teamRole: userRole,
     canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
@@ -81,6 +85,8 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
   if (TeamRoleCanDoKey.CAN_ALTER in canChangeRoleResult) {
     const canAlterRoles = canChangeRoleResult.canAlter;
+
+    // 檢查用戶是否有權限將成員角色修改為目標角色
     if (!canAlterRoles.includes(updateData.role)) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
@@ -211,7 +217,11 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
   const userRole = userTeam.role as TeamRole;
 
-  // Info: (20250312 - Shirley) 檢查用戶是否有權限刪除成員
+  // Info: (20250531 - Shirley) 檢查用戶是否有權限刪除成員
+  // 權限規則：
+  // - Owner 可以刪除任何非 Owner 成員
+  // - Admin 不能刪除 Owner 或其他 Admin
+  // - Admin 可以刪除 Editor/Viewer
   const canChangeRoleResult = convertTeamRoleCanDo({
     teamRole: userRole,
     canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
