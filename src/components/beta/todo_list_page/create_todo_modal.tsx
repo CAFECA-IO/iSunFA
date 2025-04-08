@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoAdd } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
-import { ITodoCompany } from '@/interfaces/todo';
+import { ITodoAccountBook } from '@/interfaces/todo';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
@@ -45,7 +45,7 @@ const CreateTodoModal = ({
   };
 
   // Info: (20241119 - Liz) 建立待辦事項 API
-  const { trigger: createTodoAPI } = APIHandler<ITodoCompany>(APIName.CREATE_TODO);
+  const { trigger: createTodoAPI } = APIHandler<ITodoAccountBook>(APIName.CREATE_TODO);
 
   // Info: (20250306 - Liz) 打 API 取得使用者擁有的帳本清單(原為公司)
   const { trigger: getAccountBookListByUserIdAPI } = APIHandler<
@@ -80,9 +80,9 @@ const CreateTodoModal = ({
         body: {
           name: todoName,
           deadline: 0, // Info: (20241219 - Liz) 之後會捨棄 deadline 欄位，先傳 0
-          startTime: startTimeStamp,
-          endTime: endTimeStamp,
-          companyId: company?.id,
+          startDate: startTimeStamp,
+          endDate: endTimeStamp,
+          accountBookId: company?.id,
           note,
         },
       });

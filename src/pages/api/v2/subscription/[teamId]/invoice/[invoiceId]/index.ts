@@ -6,7 +6,7 @@ import { HTTP_STATUS } from '@/constants/http';
 import { ITeamInvoice } from '@/interfaces/subscription';
 import { checkRequestData, checkSessionUser, checkUserAuthorization } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
-import { FAKE_INVOICE_LIST } from '@/lib/services/subscription_service';
+import { getTeamInvoiceById } from '@/lib/utils/repo/team_subscription.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -27,8 +27,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
-  const payload: ITeamInvoice | null =
-    FAKE_INVOICE_LIST.find((invoice) => invoice.id === query.invoiceId) || null;
+  const payload: ITeamInvoice | null = await getTeamInvoiceById(query.invoiceId);
   const result = formatApiResponse(STATUS_MESSAGE.SUCCESS, payload);
   return result;
 };

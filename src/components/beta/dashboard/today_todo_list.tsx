@@ -7,7 +7,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
-import { ITodoCompany } from '@/interfaces/todo';
+import { ITodoAccountBook } from '@/interfaces/todo';
 import { IPaginatedData } from '@/interfaces/pagination';
 
 const ToDoListNotLink = () => {
@@ -33,7 +33,7 @@ const ToDoListNotLink = () => {
 };
 
 interface TodayTodoListProps {
-  todayTodoList: ITodoCompany[];
+  todayTodoList: ITodoAccountBook[];
 }
 
 const TodayTodoList = ({ todayTodoList }: TodayTodoListProps) => {
