@@ -1460,6 +1460,8 @@ module.exports = {
         '280px': '280px',
         '300px': '300px',
         '400px': '400px',
+        'with-sidebar': 'calc(100vw - 280px)',
+        'with-collapsed-sidebar': 'calc(100vw - 66px)',
       },
       minWidth: {
         '200px': '200px',
