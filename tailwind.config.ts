@@ -1581,6 +1581,10 @@ module.exports = {
       skew: {
         20: '20deg', // Info: (20241004 - Liz) 用來創造平行四邊形，例如: skew-x-20
       },
+      letterSpacing: {
+        'tight-016': '0.16px',
+        'tight-018': '0.18px',
+      },
     },
   },
   plugins: [],
