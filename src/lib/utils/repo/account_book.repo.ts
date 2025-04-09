@@ -1165,3 +1165,31 @@ export const deleteAccountBook = async (accountBookId: number): Promise<IAccount
   }
   return result;
 };
+
+/**
+ * Info: (20250409 - Shirley) 獲取帳本所屬的團隊ID
+ * @param accountBookId 帳本ID
+ * @returns 帳本所屬的團隊ID，如果找不到則返回null
+ */
+export const getAccountBookTeamId = async (accountBookId: number): Promise<number | null> => {
+  try {
+    const accountBook = await prisma.company.findFirst({
+      where: {
+        id: accountBookId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      select: {
+        teamId: true,
+      },
+    });
+
+    return accountBook?.teamId || null;
+  } catch (error) {
+    loggerBack.error({
+      error,
+      accountBookId,
+      message: 'Failed to get account book team ID',
+    });
+    return null;
+  }
+};
