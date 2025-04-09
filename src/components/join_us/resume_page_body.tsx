@@ -3,13 +3,9 @@ import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { TbArrowBack } from 'react-icons/tb';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
-import {
-  LinearGradientText,
-  LinearTextSize,
-  TextAlign,
-} from '@/components/landing_page_v2/linear_gradient_text';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import ResumeMainBody from '@/components/join_us/resume_main_body';
 
 interface IResumePageBodyProps {
   jobId: string;
@@ -23,7 +19,7 @@ const ResumePageBody: React.FC<IResumePageBodyProps> = ({ jobId }) => {
       {/* Info: (20250409 - Julian) Header */}
       <LandingNavbar />
 
-      <main className="z-10 flex flex-1 flex-col overflow-hidden p-80px">
+      <main className="z-10 flex flex-1 flex-col overflow-y-auto overflow-x-hidden px-80px pt-70px">
         {/* Info: (20250409 - Julian) Back Button */}
         <Link href={`${ISUNFA_ROUTE.JOIN_US}/${jobId}`} className="w-fit">
           <LandingButton type="button" variant="default" className="font-bold">
@@ -32,12 +28,7 @@ const ResumePageBody: React.FC<IResumePageBodyProps> = ({ jobId }) => {
           </LandingButton>
         </Link>
 
-        <div className="mt-120px flex flex-col items-center gap-lv-4">
-          <p className="text-lg font-semibold text-surface-brand-primary">Welcome</p>
-          <LinearGradientText align={TextAlign.CENTER} size={LinearTextSize.XL}>
-            How may we know you?
-          </LinearGradientText>
-        </div>
+        <ResumeMainBody />
       </main>
     </div>
   );
