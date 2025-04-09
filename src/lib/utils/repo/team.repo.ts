@@ -12,6 +12,7 @@ import { ITeamRoleCanDo, MAX_TEAM_LIMIT, TeamPermissionAction } from '@/interfac
 import { getTimestampNow } from '@/lib/utils/common';
 import { listTeamQuerySchema } from '@/lib/utils/zod_schema/team';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import loggerBack from '@/lib/utils/logger_back';
 
 export const getTeamList = async (
   userId: number,
@@ -130,6 +131,10 @@ export const createTeamWithTrial = async (
       throw new Error('USER_TEAM_LIMIT_REACHED');
     }
 
+    loggerBack.info(
+      `User ${userId} is creating a new team (teamData: ${JSON.stringify(teamData)}) with trial subscription.`
+    );
+
     const plan = await tx.teamPlan.findFirst({
       where: {
         type: teamData.planType === TPlanType.BEGINNER ? TPlanType.PROFESSIONAL : teamData.planType,
@@ -137,6 +142,8 @@ export const createTeamWithTrial = async (
       select: { type: true },
     });
     if (!plan) throw new Error('PLAN_NOT_FOUND');
+
+    loggerBack.info(`User ${userId} is creating a new team plan: ${plan.type}`);
 
     const now = new Date();
     const nowInSeconds = getUnixTime(now);
