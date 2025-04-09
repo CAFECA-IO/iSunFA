@@ -17,10 +17,6 @@ const userPutBodySchema = z.object({
   email: z.string(),
 });
 
-const userDeleteQuerySchema = z.object({
-  userId: zodStringToNumber,
-});
-
 export const userPrismaSchema = z.object({
   id: z.number().int(),
   name: z.string(),
@@ -100,24 +96,6 @@ export const userPutSchema = {
   input: {
     querySchema: userPutQuerySchema,
     bodySchema: userPutBodySchema,
-  },
-  outputSchema: userOutputSchema,
-  frontend: nullSchema,
-};
-
-export const userDeletionPutSchema = {
-  input: {
-    querySchema: userPutQuerySchema,
-    bodySchema: nullSchema,
-  },
-  outputSchema: userOutputSchema,
-  frontend: nullSchema,
-};
-
-export const userDeleteSchema = {
-  input: {
-    querySchema: userDeleteQuerySchema,
-    bodySchema: nullSchema,
   },
   outputSchema: userOutputSchema,
   frontend: nullSchema,

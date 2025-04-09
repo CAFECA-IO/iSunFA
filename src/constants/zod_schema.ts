@@ -96,13 +96,7 @@ import {
   filePutSchema,
 } from '@/lib/utils/zod_schema/file';
 import { imageGetSchema } from '@/lib/utils/zod_schema/image';
-import {
-  userDeleteSchema,
-  userDeletionPutSchema,
-  userGetSchema,
-  userListSchema,
-  userPutSchema,
-} from '@/lib/utils/zod_schema/user';
+import { userGetSchema, userListSchema, userPutSchema } from '@/lib/utils/zod_schema/user';
 import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
 import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
 import { accountGetV2Schema, accountPostV2Schema } from '@/lib/utils/zod_schema/account';
@@ -220,8 +214,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_LIST]: userListSchema,
   [APIName.USER_GET_BY_ID]: userGetSchema,
   [APIName.USER_UPDATE]: userPutSchema,
-  [APIName.USER_DELETION_UPDATE]: userDeletionPutSchema,
-  [APIName.USER_DELETE]: userDeleteSchema,
   [APIName.CERTIFICATE_PUT_V2]: nullAPISchema,
   [APIName.INVOICE_POST_V2]: invoicePostV2Schema,
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
