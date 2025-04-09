@@ -68,9 +68,7 @@ const LatestNewsPageBody = () => {
 
       <TabsForLatestNews activeTab={type} setActiveTab={setType} isPageStyle callBack={resetPage} />
 
-      <div className="flex flex-auto">
-        <NewsList newsList={newsList} isPageStyle />
-      </div>
+      <NewsList newsList={newsList} isPageStyle />
 
       <Pagination
         ref={paginationRef}
