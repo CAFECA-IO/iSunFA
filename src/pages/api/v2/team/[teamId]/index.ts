@@ -18,7 +18,7 @@ import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
 import { getTeamByTeamId, updateTeamById } from '@/lib/utils/repo/team.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { ITeamRoleCanDo, TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -81,62 +81,69 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
 
     const userRole = teamInfo.role as TeamRole;
 
-    // Info: (20250328 - Shirley) 檢查用戶是否有修改團隊資訊的權限
-    // Info: (20250328 - Shirley) 使用 permission 機制檢查基本修改權限
-    const canModifyNameResult = convertTeamRoleCanDo({
-      teamRole: userRole,
-      canDo: TeamPermissionAction.MODIFY_NAME,
-    });
+    // Info: (20250409 - Shirley) 檢查用戶是否有修改團隊資訊的權限
+    let permissionDenied = false;
 
-    const canModifyAboutResult = convertTeamRoleCanDo({
-      teamRole: userRole,
-      canDo: TeamPermissionAction.MODIFY_ABOUT,
-    });
+    // Info: (20250409 - Shirley) 檢查基本更新權限
+    if (updateData.name) {
+      const canModifyNameResult = convertTeamRoleCanDo({
+        teamRole: userRole,
+        canDo: TeamPermissionAction.MODIFY_NAME,
+      }) as ITeamRoleCanDo;
 
-    const canModifyProfileResult = convertTeamRoleCanDo({
-      teamRole: userRole,
-      canDo: TeamPermissionAction.MODIFY_PROFILE,
-    });
-
-    // Info: (20250328 - Shirley) 檢查 yesOrNo 屬性是否存在在結果中以確定是 ITeamRoleCanDo 類型
-    const canModifyName =
-      TeamRoleCanDoKey.YES_OR_NO in canModifyNameResult &&
-      (canModifyNameResult as ITeamRoleCanDo).yesOrNo;
-    const canModifyAbout =
-      TeamRoleCanDoKey.YES_OR_NO in canModifyAboutResult &&
-      (canModifyAboutResult as ITeamRoleCanDo).yesOrNo;
-    const canModifyProfile =
-      TeamRoleCanDoKey.YES_OR_NO in canModifyProfileResult &&
-      (canModifyProfileResult as ITeamRoleCanDo).yesOrNo;
-
-    if (
-      (updateData.name && !canModifyName) ||
-      (updateData.about && !canModifyAbout) ||
-      (updateData.profile && !canModifyProfile)
-    ) {
-      loggerBack.warn(
-        `User ${userId} with role ${userRole} attempted to update team ${teamIdNumber} but doesn't have sufficient permissions`
-      );
-      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+      if (!canModifyNameResult.yesOrNo) {
+        loggerBack.warn(
+          `User ${userId} with role ${userRole} doesn't have permission to modify team name`
+        );
+        permissionDenied = true;
+      }
     }
 
-    // Info: (20250328 - Shirley) 如果嘗試更新銀行帳號，檢查是否有銀行帳號修改權限
+    if (updateData.about) {
+      const canModifyAboutResult = convertTeamRoleCanDo({
+        teamRole: userRole,
+        canDo: TeamPermissionAction.MODIFY_ABOUT,
+      }) as ITeamRoleCanDo;
+
+      if (!canModifyAboutResult.yesOrNo) {
+        loggerBack.warn(
+          `User ${userId} with role ${userRole} doesn't have permission to modify team about`
+        );
+        permissionDenied = true;
+      }
+    }
+
+    if (updateData.profile) {
+      const canModifyProfileResult = convertTeamRoleCanDo({
+        teamRole: userRole,
+        canDo: TeamPermissionAction.MODIFY_PROFILE,
+      }) as ITeamRoleCanDo;
+
+      if (!canModifyProfileResult.yesOrNo) {
+        loggerBack.warn(
+          `User ${userId} with role ${userRole} doesn't have permission to modify team profile`
+        );
+        permissionDenied = true;
+      }
+    }
+
+    // Info: (20250409 - Shirley) 如果嘗試更新銀行帳號，檢查是否有銀行帳號修改權限
     if (updateData.bankInfo) {
       const canModifyBankAccountResult = convertTeamRoleCanDo({
         teamRole: userRole,
         canDo: TeamPermissionAction.MODIFY_BANK_ACCOUNT,
-      });
+      }) as ITeamRoleCanDo;
 
-      const canModifyBankAccount =
-        TeamRoleCanDoKey.YES_OR_NO in canModifyBankAccountResult &&
-        (canModifyBankAccountResult as ITeamRoleCanDo).yesOrNo;
-
-      if (!canModifyBankAccount) {
+      if (!canModifyBankAccountResult.yesOrNo) {
         loggerBack.warn(
-          `User ${userId} with role ${userRole} attempted to update bank info for team ${teamIdNumber} but doesn't have bank modification permission`
+          `User ${userId} with role ${userRole} doesn't have permission to modify bank account`
         );
-        return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+        permissionDenied = true;
       }
+    }
+
+    if (permissionDenied) {
+      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
     }
 
     // Info: (20250325 - Shirley) 更新團隊資訊
