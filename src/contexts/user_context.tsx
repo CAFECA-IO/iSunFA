@@ -63,18 +63,6 @@ interface UserContextType {
   }) => Promise<{ success: boolean }>;
 
   deleteAccountBook: (companyId: number) => Promise<IAccountBook | null>;
-  deleteAccount: () => Promise<{
-    success: boolean;
-    data: IUser | null;
-    code: string;
-    error: Error | null;
-  }>;
-  cancelDeleteAccount: () => Promise<{
-    success: boolean;
-    data: IUser | null;
-    code: string;
-    error: Error | null;
-  }>;
 
   errorCode: string | null;
   toggleIsSignInError: () => void;
@@ -113,9 +101,6 @@ export const UserContext = createContext<UserContextType>({
   connectAccountBook: async () => ({ success: false }),
   updateAccountBook: async () => ({ success: false }),
   deleteAccountBook: async () => null,
-  deleteAccount: async () => Promise.resolve({ success: false, data: null, code: '', error: null }),
-  cancelDeleteAccount: async () =>
-    Promise.resolve({ success: false, data: null, code: '', error: null }),
 
   errorCode: null,
   toggleIsSignInError: () => {},
@@ -186,9 +171,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20241115 - Liz) 刪除帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
   const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.DELETE_ACCOUNT_BOOK);
-
-  const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
-  const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
 
   // Info: (20250329 - Liz) 取得團隊資訊 API
   const { trigger: getTeamAPI } = APIHandler<ITeam>(APIName.GET_TEAM_BY_ID);
@@ -703,28 +685,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const deleteAccount = async () => {
-    const res = await deleteAccountAPI({
-      params: { userId: userAuthRef.current?.id },
-    });
-
-    if (res.success && res.data) {
-      setUserAuth(res.data);
-    }
-    return res;
-  };
-
-  const cancelDeleteAccount = async () => {
-    const res = await cancelDeleteAccountAPI({
-      params: { userId: userAuthRef.current?.id },
-    });
-
-    if (res.success && res.data) {
-      setUserAuth(res.data);
-    }
-    return res;
-  };
-
   const throttledGetStatusInfo = useCallback(
     throttle(() => {
       getStatusInfo();
@@ -829,8 +789,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       connectAccountBook,
       updateAccountBook,
       deleteAccountBook,
-      deleteAccount,
-      cancelDeleteAccount,
       connectedAccountBook: connectedAccountBookRef.current,
       team: teamRef.current,
       teamRole: teamRef.current?.role ?? null,
