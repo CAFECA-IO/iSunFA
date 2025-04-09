@@ -24,7 +24,12 @@
     "MAIN_TITLE": "How may we know you?",
     "MAIN_SUBTITLE": "Welcome",
     "UPLOAD_RESUME_BTN": "Upload Resume",
-    "CREATE_RESUME_BTN": "Create New Resume"
+    "CREATE_RESUME_BTN": "Create New Resume",
+    "STEP_PERSONAL": "Personal Info",
+    "STEP_EXPERIENCE": "Experience",
+    "STEP_SKILLS": "Skills",
+    "STEP_PREFERENCE": "Preference",
+    "STEP_ATTACHMENT": "Attachment"
   },
   "FINISH_PAGE": {
     "MAIN_TITLE": "Thank You for Applying!",

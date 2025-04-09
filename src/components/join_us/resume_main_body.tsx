@@ -49,7 +49,7 @@ const ResumeMainBody: React.FC<IResumeMainBodyProps> = ({ setIsProcess }) => {
         <div
           className={` ${
             isResumeRefVisible ? 'opacity-100' : 'opacity-0'
-          } transition-all delay-1000 duration-500`}
+          } hidden transition-all delay-1000 duration-500`} // Info: (20250409 - Julian) 先隱藏
         >
           <button type="button" className="hover:opacity-80">
             <Image
@@ -65,7 +65,7 @@ const ResumeMainBody: React.FC<IResumeMainBodyProps> = ({ setIsProcess }) => {
         <div
           className={` ${
             isResumeRefVisible ? 'translate-y-0 opacity-100' : '-translate-y-80px opacity-0'
-          } transition-all delay-1000 duration-500`}
+          } hidden transition-all delay-1000 duration-500`} // Info: (20250409 - Julian) 先隱藏
         >
           <LandingButton variant="primary" className="font-black">
             <Image src="/icons/upload_resume.svg" alt="upload_resume" width={20} height={20} />

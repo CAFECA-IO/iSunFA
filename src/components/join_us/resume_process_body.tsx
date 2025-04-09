@@ -13,7 +13,14 @@ const ResumeStepper: React.FC<IResumeStepperProps> = ({ currentStep }) => {
   const steps = ['personal', 'experience', 'skills', 'preference', 'attachment'];
 
   const steppers = steps.map((step, index) => {
-    const isActive = index + 1 === currentStep;
+    const isActiveIcon = currentStep >= index + 1;
+    const textColor =
+      currentStep === index + 1
+        ? 'text-stepper-text-active'
+        : currentStep >= index + 1
+          ? 'text-white'
+          : 'text-stepper-text-default';
+
     const connLinePosition =
       index === 0
         ? 'left-40px'
@@ -25,18 +32,19 @@ const ResumeStepper: React.FC<IResumeStepperProps> = ({ currentStep }) => {
               ? 'left-500px'
               : 'hidden';
 
+    const connLineColor =
+      currentStep > index + 1 ? 'bg-surface-brand-primary' : 'bg-stepper-surface-base';
+
     return (
       <>
         {/* Info: (20250409 - Julian) Step Icon */}
         <div
           key={`${step}_icon`}
-          className={`z-10 flex w-80px flex-col items-center gap-4px ${
-            isActive ? 'text-stepper-text-active' : 'text-stepper-text-default'
-          }`}
+          className={`z-10 flex w-80px flex-col items-center gap-4px ${textColor}`}
         >
           <Image
             src={
-              isActive
+              isActiveIcon
                 ? `/stepper/resume_${step}_active.svg`
                 : `/stepper/resume_${step}_default.svg`
             }
@@ -44,12 +52,12 @@ const ResumeStepper: React.FC<IResumeStepperProps> = ({ currentStep }) => {
             height={30}
             alt={`step_${index + 1}_icon`}
           />
-          <p>{t(`hiring:${step}`)}</p>
+          <p>{t(`hiring:RESUME_PAGE.STEP_${step.toUpperCase()}`)}</p>
         </div>
 
         {/* Info: (20250409 - Julian) Connecting Line */}
         <div
-          className={`absolute ${connLinePosition} top-12px h-4px w-150px bg-stepper-surface-base`}
+          className={`absolute ${connLinePosition} ${connLineColor} top-12px h-4px w-150px`}
         ></div>
       </>
     );
@@ -61,7 +69,7 @@ const ResumeStepper: React.FC<IResumeStepperProps> = ({ currentStep }) => {
 const ResumeProcessBody: React.FC = () => {
   return (
     <div className="flex flex-col items-center gap-90px">
-      <ResumeStepper currentStep={1} />
+      <ResumeStepper currentStep={5} />
     </div>
   );
 };

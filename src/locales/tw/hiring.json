@@ -24,7 +24,12 @@
     "MAIN_TITLE": "我們該如何認識您？",
     "MAIN_SUBTITLE": "歡迎",
     "UPLOAD_RESUME_BTN": "上傳履歷",
-    "CREATE_RESUME_BTN": "建立新履歷"
+    "CREATE_RESUME_BTN": "建立新履歷",
+    "STEP_PERSONAL": "個人資訊",
+    "STEP_EXPERIENCE": "經歷",
+    "STEP_SKILLS": "技能",
+    "STEP_PREFERENCE": "偏好",
+    "STEP_ATTACHMENT": "附件"
   },
   "FINISH_PAGE": {
     "MAIN_TITLE": "感謝您的應徵！",
