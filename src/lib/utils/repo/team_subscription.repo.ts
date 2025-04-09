@@ -264,6 +264,67 @@ export async function listTeamTransaction(
   };
 }
 
+export async function getTeamInvoiceById(invoiceId: number): Promise<ITeamInvoice | null> {
+  const invoice = await prisma.teamInvoice.findUnique({
+    where: { id: invoiceId },
+    include: {
+      teamPaymentTransaction: {
+        include: {
+          teamOrder: {
+            include: {
+              orderDetails: true,
+            },
+          },
+          userPaymentInfo: {
+            select: {
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!invoice) return null;
+
+  return {
+    id: invoice.id,
+    teamId: invoice.teamPaymentTransaction.teamOrder.teamId,
+    status: invoice.status === 'SUCCESS',
+    issuedTimestamp: invoice.issuedAt,
+    dueTimestamp: invoice?.issuedAt,
+
+    planId: invoice.teamPaymentTransaction.teamOrder.orderDetails[0].productName as TPlanType,
+    planStartTimestamp: invoice.teamPaymentTransaction.teamOrder.createdAt,
+    planEndTimestamp: invoice.teamPaymentTransaction.teamOrder.createdAt,
+    planQuantity: invoice.teamPaymentTransaction.teamOrder.orderDetails[0].quantity ?? 1,
+    planUnitPrice: invoice.teamPaymentTransaction.teamOrder.orderDetails[0].unitPrice ?? 0,
+    planAmount: invoice.teamPaymentTransaction.teamOrder.orderDetails[0].amount ?? 0,
+
+    payer: {
+      name: invoice.payerName ?? '—',
+      address: invoice.payerAddress ?? '—',
+      phone: invoice.payerPhone ?? '—',
+      taxId: invoice.payerId ?? '—',
+    },
+    payee: {
+      name: 'iSunFa Inc.', // Info: (20250401 - Tzuhan) 這個要在跟 Luphia 確認
+      address: 'Taipei, Taiwan',
+      phone: '+886-2-12345678',
+      taxId: '12345678',
+    },
+
+    subtotal: invoice.price ?? 0,
+    tax: invoice.tax ?? 0,
+    total: invoice.total ?? 0,
+    amountDue: invoice.total ?? 0,
+  };
+}
+
 export async function getSubscriptionByTeamId(
   userId: number,
   teamId: number

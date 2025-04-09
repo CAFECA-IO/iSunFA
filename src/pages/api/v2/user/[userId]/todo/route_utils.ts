@@ -3,36 +3,36 @@ import { getTimestampNow, getTimestampOfLastSecondOfDate } from '@/lib/utils/com
 export const todoListPostApiUtils = {
   /**
    * Info: (20241205 - Murky)
-   * @note 這個是暫時解法，把startTime, endTime先放在note裡面，等待資料庫更新之後再更改
+   * @note 這個是暫時解法，把startDate, endDate先放在note裡面，等待資料庫更新之後再更改
    */
   combineStartEndTimeInNote: (options: {
     note: string | null;
-    startTime: number;
-    endTime: number;
+    startDate: number;
+    endDate: number;
   }) => {
-    const { note, startTime, endTime } = options;
-    return `${startTime}-${endTime}-${note || ''}`;
+    const { note, startDate, endDate } = options;
+    return `${startDate}-${endDate}-${note || ''}`;
   },
 };
 
 export const todoListGetListApiUtils = {
   /**
    * Info: (20241205 - Murky)
-   * @note 這個是暫時解法，把startTime, endTime先放在note裡面，等待資料庫更新之後再更改
+   * @note 這個是暫時解法，把startDate, endDate先放在note裡面，等待資料庫更新之後再更改
    */
   splitStartEndTimeInNote: (note: string | null) => {
     const result = {
-      startTime: getTimestampNow(),
-      endTime: getTimestampOfLastSecondOfDate(getTimestampNow()),
+      startDate: getTimestampNow(),
+      endDate: getTimestampOfLastSecondOfDate(getTimestampNow()),
       note: '',
     };
 
     if (note) {
-      const [startTime, endTime, ...noteRemain] = note.split('-');
+      const [startDate, endDate, ...noteRemain] = note.split('-');
 
       const originNote = noteRemain.join('-');
-      result.startTime = parseInt(startTime, 10);
-      result.endTime = parseInt(endTime, 10);
+      result.startDate = parseInt(startDate, 10);
+      result.endDate = parseInt(endDate, 10);
       result.note = originNote;
     }
 
