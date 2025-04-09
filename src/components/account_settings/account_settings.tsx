@@ -1,12 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import { useModalContext } from '@/contexts/modal_context';
-import { useUserCtx } from '@/contexts/user_context';
-import { MessageType } from '@/interfaces/message_modal';
-import { ToastId } from '@/constants/toast_id';
-import { ToastType } from '@/interfaces/toastify';
-import { IUser } from '@/interfaces/user';
+
 import { ISUNFA_ROUTE } from '@/constants/url';
 import Link from 'next/link';
 
@@ -14,11 +9,8 @@ interface AccountSettingsProps {}
 
 const AccountSettings: React.FC<AccountSettingsProps> = () => {
   const { t } = useTranslation(['settings', 'common']);
-  const { userAuth, deleteAccount, cancelDeleteAccount } = useUserCtx();
-  const [user, setUser] = useState<IUser | null>(userAuth);
-  const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
-    useModalContext();
 
+  /* Deprecated: (20250409 - Tzuhan) 目前不開放使用者刪除帳號
   const procedureOfCancel = async () => {
     if (!user) return;
     try {
@@ -114,6 +106,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
     });
     messageModalVisibilityHandler();
   };
+    */
 
   return (
     <div className="flex flex-col">
@@ -135,6 +128,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
           <span>{t('settings:NORMAL.SUBSCRIPTION_MANAGEMENT')}</span>
         </p>
       </Link>
+      {/* Deprecated: (20250409 - Tzuhan) 目前不開放使用者刪除帳號
       {user?.deletedAt ? (
         <button
           id="settings-cancel-remove-account"
@@ -157,7 +151,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
             <span>{t('settings:ACCOUNT.REMOVE')}</span>
           </p>
         </button>
-      )}
+      )} */}
     </div>
   );
 };

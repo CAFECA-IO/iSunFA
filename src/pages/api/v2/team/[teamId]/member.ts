@@ -9,12 +9,16 @@ import {
 } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { getSession } from '@/lib/utils/session';
+import { getSession, updateTeamMemberSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
-import { IInviteMemberResponse, ITeamMember } from '@/interfaces/team';
-import { addMembersToTeam, listTeamMemberByTeamId } from '@/lib/utils/repo/team_member.repo';
+import { IInviteMemberResponse, ITeamMember, TeamRole } from '@/interfaces/team';
+import {
+  addMembersToTeam,
+  listTeamMemberByTeamId,
+  getExistingUsersInTeam,
+} from '@/lib/utils/repo/team_member.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -85,6 +89,37 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
   // Info: (20250304 - Tzuhan) 邀請成員加入團隊
   const addedResult = await addMembersToTeam(teamId, body.emails);
+
+  // Info: (20250408 - Shirley) 更新用戶的 session 資料，添加新的團隊
+  try {
+    // Info: (20250531 - Shirley) 使用 repo 函數獲取已存在且被加入團隊的用戶
+    const existingUserIds = await getExistingUsersInTeam(teamId, body.emails);
+
+    await Promise.all(
+      existingUserIds.map(async (userIdToUpdate) => {
+        loggerBack.info({
+          message: 'Updating user session after adding to team',
+          userId: userIdToUpdate,
+          teamId,
+        });
+
+        await updateTeamMemberSession(userIdToUpdate, teamId, TeamRole.EDITOR);
+
+        loggerBack.info({
+          message: 'Successfully updated user session after adding to team',
+          userId: userIdToUpdate,
+          teamId,
+        });
+      })
+    );
+  } catch (error) {
+    loggerBack.warn({
+      message: 'Failed to update user sessions after adding to team',
+      error,
+      teamId,
+      emails: body.emails,
+    });
+  }
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
 
