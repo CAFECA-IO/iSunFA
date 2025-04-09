@@ -8,7 +8,6 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { useDashboardCtx } from '@/contexts/dashboard_context';
 
 interface LayoutProps {
   children: ReactNode;
@@ -20,7 +19,6 @@ interface LayoutProps {
 const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) => {
   const { t } = useTranslation(['layout']);
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
-  const { isSideMenuOpen } = useDashboardCtx();
 
   const toggleOverlay = () => {
     setIsOverlayVisible((prev) => !prev);
@@ -68,10 +66,10 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
   }, [t, toastHandler, userAuth]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-y-hidden">
       <SideMenu toggleOverlay={toggleOverlay} notPrint />
 
-      <div className="relative flex flex-auto flex-col bg-surface-neutral-main-background">
+      <div className="relative flex min-w-0 flex-auto flex-col bg-surface-neutral-main-background">
         <Header
           isDashboard={isDashboard}
           pageTitle={pageTitle}
@@ -83,9 +81,7 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
         {isOverlayVisible && <div className="absolute inset-0 z-10 backdrop-blur-sm"></div>}
 
         {/* // Info: (20241018 - Liz) Content Body */}
-        <main
-          className={`hide-scrollbar h-full overflow-y-auto overflow-x-hidden p-lv-7 screen1280:px-56px ${isSideMenuOpen ? 'max-w-with-sidebar' : 'max-w-with-collapsed-sidebar'}`}
-        >
+        <main className="hide-scrollbar h-full overflow-y-auto overflow-x-hidden p-lv-7 screen1280:px-56px">
           {children}
         </main>
       </div>
