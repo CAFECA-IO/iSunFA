@@ -47,7 +47,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   await checkUserAuthorization(APIName.USER_CREATE_ROLE, req, session);
 
   const { body } = checkRequestData(APIName.USER_CREATE_ROLE, req, session);
-  loggerBack.info(`List Team by userId: ${userId} with body: ${JSON.stringify(body)}`);
+  loggerBack.info(`user: ${userId} create role with body: ${JSON.stringify(body)}`);
 
   if (body === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
