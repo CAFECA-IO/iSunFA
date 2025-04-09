@@ -316,6 +316,10 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
               userId: userAuth.id,
               paymentMethodId: paymentMethod[paymentMethod.length - 1].id,
             },
+            body: {
+              teamPlanType: selectedPlan.id,
+              teamId: data.id,
+            },
           });
 
           // Info: (20250326 - Julian) 升級訂閱方案失敗：顯示錯誤訊息
