@@ -20,6 +20,12 @@
     "NEWEST": "Newest",
     "OLDEST": "Oldest"
   },
+  "RESUME_PAGE": {
+    "MAIN_TITLE": "How may we know you?",
+    "MAIN_SUBTITLE": "Welcome",
+    "UPLOAD_RESUME_BTN": "Upload Resume",
+    "CREATE_RESUME_BTN": "Create New Resume"
+  },
   "FINISH_PAGE": {
     "MAIN_TITLE": "Thank You for Applying!",
     "TEXT": "Thank you for applying! Due to a high number of candidates, our team needs time to carefully review each application. We’ll notify you of the results via email.",

@@ -20,6 +20,12 @@
     "NEWEST": "最新",
     "OLDEST": "最舊"
   },
+  "RESUME_PAGE": {
+    "MAIN_TITLE": "我們該如何認識您？",
+    "MAIN_SUBTITLE": "歡迎",
+    "UPLOAD_RESUME_BTN": "上傳履歷",
+    "CREATE_RESUME_BTN": "建立新履歷"
+  },
   "FINISH_PAGE": {
     "MAIN_TITLE": "感謝您的應徵！",
     "TEXT": "感謝您的應徵！由於候選人數量眾多，我們需要時間仔細審核每一份申請。我們會透過電子郵件通知您結果。",

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
-// import { useTranslation } from 'next-i18next';
+import { useTranslation } from 'next-i18next';
 import {
   LinearGradientText,
   LinearTextSize,
@@ -8,8 +8,12 @@ import {
 } from '@/components/landing_page_v2/linear_gradient_text';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 
-const ResumeMainBody: React.FC = () => {
-  //   const { t } = useTranslation(['hiring']);
+interface IResumeMainBodyProps {
+  setIsProcess: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const ResumeMainBody: React.FC<IResumeMainBodyProps> = ({ setIsProcess }) => {
+  const { t } = useTranslation(['hiring']);
 
   const resumeRef = useRef<HTMLDivElement>(null);
   const [isResumeRefVisible, setIsResumeRefVisible] = useState(false);
@@ -23,6 +27,8 @@ const ResumeMainBody: React.FC = () => {
     };
   }, []);
 
+  const clickCreateResume = () => setIsProcess(true);
+
   return (
     <div ref={resumeRef} className="mt-100px flex flex-col items-center gap-100px">
       <div
@@ -30,9 +36,11 @@ const ResumeMainBody: React.FC = () => {
           isResumeRefVisible ? 'opacity-100' : 'opacity-0'
         } transition-all duration-500`}
       >
-        <p className="text-lg font-semibold text-surface-brand-primary">Welcome</p>
+        <p className="text-lg font-semibold text-surface-brand-primary">
+          {t('hiring:RESUME_PAGE.MAIN_SUBTITLE')}
+        </p>
         <LinearGradientText align={TextAlign.CENTER} size={LinearTextSize.XL}>
-          How may we know you?
+          {t('hiring:RESUME_PAGE.MAIN_TITLE')}
         </LinearGradientText>
       </div>
 
@@ -61,7 +69,7 @@ const ResumeMainBody: React.FC = () => {
         >
           <LandingButton variant="primary" className="font-black">
             <Image src="/icons/upload_resume.svg" alt="upload_resume" width={20} height={20} />
-            Upload Resume
+            {t('hiring:RESUME_PAGE.UPLOAD_RESUME_BTN')}
           </LandingButton>
         </div>
 
@@ -71,9 +79,9 @@ const ResumeMainBody: React.FC = () => {
             isResumeRefVisible ? 'translate-y-0 opacity-100' : '-translate-y-160px opacity-0'
           } transition-all delay-1000 duration-500`}
         >
-          <LandingButton variant="default" className="font-black">
+          <LandingButton variant="default" className="font-black" onClick={clickCreateResume}>
             <Image src="/icons/user_plus.svg" alt="create_resume" width={20} height={20} />
-            Create New Resume
+            {t('hiring:RESUME_PAGE.CREATE_RESUME_BTN')}
           </LandingButton>
         </div>
       </div>

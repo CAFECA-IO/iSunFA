@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { TbArrowBack } from 'react-icons/tb';
@@ -6,6 +6,7 @@ import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import ResumeMainBody from '@/components/join_us/resume_main_body';
+import ResumeProcessBody from '@/components/join_us/resume_process_body';
 
 interface IResumePageBodyProps {
   jobId: string;
@@ -13,6 +14,8 @@ interface IResumePageBodyProps {
 
 const ResumePageBody: React.FC<IResumePageBodyProps> = ({ jobId }) => {
   const { t } = useTranslation(['hiring']);
+
+  const [isProcess, setIsProcess] = useState(false);
 
   return (
     <div className="relative flex min-h-screen flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
@@ -28,7 +31,7 @@ const ResumePageBody: React.FC<IResumePageBodyProps> = ({ jobId }) => {
           </LandingButton>
         </Link>
 
-        <ResumeMainBody />
+        {isProcess ? <ResumeProcessBody /> : <ResumeMainBody setIsProcess={setIsProcess} />}
       </main>
     </div>
   );
