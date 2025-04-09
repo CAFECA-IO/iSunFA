@@ -354,6 +354,7 @@ export const listAccountBookByUserId = async (
                   : '',
                 editable: false,
               },
+              expiredAt: book.team.subscriptions[0]?.expiredDate ?? 0,
             }
           : null,
         isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
@@ -505,6 +506,7 @@ export const listAccountBooksByTeamId = async (
                   : '',
                 editable: false,
               },
+              expiredAt: book.team.subscriptions[0]?.expiredDate ?? 0,
             }
           : null,
         isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
@@ -894,6 +896,7 @@ export async function getAccountBookForUserWithTeam(
           : '',
         editable: userRole !== TeamRole.VIEWER,
       },
+      expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
     };
 
     // Info: (20250329 - Shirley) Since we're not using admin table anymore, we need default values for tag and order
@@ -1053,6 +1056,7 @@ export async function findUserAccountBook(
           : '',
         editable: userRole !== TeamRole.VIEWER,
       },
+      expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
     };
 
     // Info: (20250325 - Shirley) Return the formatted account book data

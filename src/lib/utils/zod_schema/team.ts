@@ -30,6 +30,7 @@ export const TeamSchema = z.object({
     value: z.string(),
     editable: z.boolean(),
   }),
+  expiredAt: z.number().default(0),
 });
 
 export const ITeamMemberSchema = z.object({

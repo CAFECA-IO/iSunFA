@@ -191,34 +191,6 @@ export async function updateUserById(
   return user;
 }
 
-export async function deleteUserById(
-  userId: number
-): Promise<User & { userAgreements: UserAgreement[]; imageFile: File | null }> {
-  const nowInSecond = getTimestampNow();
-
-  const where: Prisma.UserWhereUniqueInput = {
-    id: userId,
-    deletedAt: null,
-  };
-
-  const data: Prisma.UserUpdateInput = {
-    updatedAt: nowInSecond,
-    deletedAt: nowInSecond,
-  };
-
-  const include: Prisma.UserInclude = {
-    userAgreements: true,
-    imageFile: true,
-  };
-
-  const user = await prisma.user.update({
-    where,
-    data,
-    include,
-  });
-  return user;
-}
-
 export async function cancelDeleteUserById(
   userId: number
 ): Promise<User & { userAgreements: UserAgreement[]; imageFile: File | null }> {

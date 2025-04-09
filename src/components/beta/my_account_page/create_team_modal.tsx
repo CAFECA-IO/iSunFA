@@ -266,6 +266,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
         : currentStep !== 3; // Info: (20250326 - Julian) 第三步不需要檢查
 
   // deprecated: (20250326 - Julian) for testing
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const printResult = () => {
     // eslint-disable-next-line no-console
     console.log('createTeamBody:', {
@@ -283,7 +284,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
         body: {
           name: teamNameInput,
           members: teamMembers,
-          planType: selectedPlan,
+          planType: selectedPlan.id,
         },
       });
 
@@ -369,7 +370,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
         () => setCurrentStep(2)
       : currentStep === 2
         ? () => setCurrentStep(3) // Info: (20250225 - Julian) 第二步到第三步
-        : printResult; // Info: (20250326 - Julian) 完成所有步驟 -> 建立團隊
+        : printResult; // createTeamHandler Info: (20250326 - Julian) 完成所有步驟 -> 建立團隊
 
   const cancelOrSkip =
     currentStep === 1

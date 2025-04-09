@@ -13,7 +13,7 @@ import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
-import { createTeam } from '@/lib/utils/repo/team.repo';
+import { createTeamWithTrial } from '@/lib/utils/repo/team.repo';
 
 const handlePostRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -30,7 +30,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
   loggerBack.info(`Create Team by userId: ${userId} with body: ${JSON.stringify(body)}`);
 
-  const createdTeam = await createTeam(userId, body);
+  const createdTeam = await createTeamWithTrial(userId, body);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
 
