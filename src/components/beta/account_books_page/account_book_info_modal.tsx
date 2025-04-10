@@ -10,32 +10,37 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedData } from '@/interfaces/pagination';
 import Image from 'next/image';
-import { cityDistrictMap } from '@/constants/city_district';
+import { cityDistrictMap, CityList } from '@/constants/city_district';
 
-interface CreateCompanyModalProps {
+interface AccountBookInfoModalProps {
   closeCreateAccountBookModal: () => void;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
   getAccountBookList?: () => void;
 }
 
-const CreateAccountBookModal = ({
+const AccountBookInfoModal = ({
   closeCreateAccountBookModal,
   setRefreshKey,
   getAccountBookList,
-}: CreateCompanyModalProps) => {
-  const { t } = useTranslation(['dashboard']);
+}: AccountBookInfoModalProps) => {
+  const { t } = useTranslation(['dashboard', 'city_district']);
   const { createAccountBook, userAuth } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const [companyName, setCompanyName] = useState<string>('');
+  const [responsiblePerson, setResponsiblePerson] = useState<string>('');
   const [taxId, setTaxId] = useState<string>('');
+  const [taxSerialNumber, setTaxSerialNumber] = useState<string>('');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+
   const [tag, setTag] = useState<WORK_TAG | null>(null);
   const [teamList, setTeamList] = useState<ITeam[] | null>(null);
   const [team, setTeam] = useState<ITeam | null>(null);
+
   const [city, setCity] = useState<string | null>(null);
   const [district, setDistrict] = useState<string | null>(null);
-  const CityList = Object.keys(cityDistrictMap);
   const [districtOptions, setDistrictOptions] = useState<string[]>([]);
+  const [enteredAddress, setEnteredAddress] = useState<string>('');
 
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState<boolean>(false);
   const [isTeamDropdownOpen, setIsTeamDropdownOpen] = useState<boolean>(false);
@@ -44,8 +49,9 @@ const CreateAccountBookModal = ({
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [companyNameError, setCompanyNameError] = useState<string | null>(null);
-  const [tagError, setTagError] = useState<string | null>(null);
+  const [responsiblePersonError, setResponsiblePersonError] = useState<string | null>(null);
   const [teamError, setTeamError] = useState<string | null>(null);
+  const [tagError, setTagError] = useState<string | null>(null);
 
   // Info: (20250303 - Liz) 取得團隊清單 API
   const { trigger: getTeamListAPI } = APIHandler<IPaginatedData<ITeam[]>>(APIName.LIST_TEAM);
@@ -55,6 +61,7 @@ const CreateAccountBookModal = ({
     // Info: (20250409 - Liz) 關閉其他下拉選單
     setIsTeamDropdownOpen(false);
     setIsCityDropdownOpen(false);
+    setIsDistrictDropdownOpen(false);
   };
 
   const toggleTeamDropdown = () => {
@@ -62,6 +69,7 @@ const CreateAccountBookModal = ({
     // Info: (20250409 - Liz) 關閉其他下拉選單
     setIsTagDropdownOpen(false);
     setIsCityDropdownOpen(false);
+    setIsDistrictDropdownOpen(false);
   };
 
   const toggleCityDropdown = () => {
@@ -69,6 +77,7 @@ const CreateAccountBookModal = ({
     // Info: (20250409 - Liz) 關閉其他下拉選單
     setIsTagDropdownOpen(false);
     setIsTeamDropdownOpen(false);
+    setIsDistrictDropdownOpen(false);
   };
 
   const toggleDistrictDropdown = () => {
@@ -86,15 +95,21 @@ const CreateAccountBookModal = ({
 
     // Info: (20250213 - Liz) 必填機制
     if (!companyName) {
-      setCompanyNameError(t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.PLEASE_ENTER_THE_NAME'));
+      setCompanyNameError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_THE_NAME'));
       return;
     }
-    if (!tag) {
-      setTagError(t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.PLEASE_SELECT_A_WORK_TAG'));
+    if (!responsiblePerson) {
+      setResponsiblePersonError(
+        t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_RESPONSIBLE_PERSON')
+      );
       return;
     }
     if (!team) {
-      setTeamError(t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.PLEASE_SELECT_A_TEAM'));
+      setTeamError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_SELECT_A_TEAM'));
+      return;
+    }
+    if (!tag) {
+      setTagError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_SELECT_A_WORK_TAG'));
       return;
     }
 
@@ -116,9 +131,9 @@ const CreateAccountBookModal = ({
           type: ToastType.ERROR,
           content: (
             <p>
-              {`${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_ACCOUNT_BOOK_FAILED')}!
-              ${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ERROR_CODE')}: ${code}
-              ${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ERROR_MESSAGE')}: ${errorMsg}`}
+              {`${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CREATE_ACCOUNT_BOOK_FAILED')}!
+              ${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ERROR_CODE')}: ${code}
+              ${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ERROR_MESSAGE')}: ${errorMsg}`}
             </p>
           ),
           closeable: true,
@@ -127,7 +142,7 @@ const CreateAccountBookModal = ({
         return;
       }
 
-      // Info: (20241114 - Liz) 新增帳本成功後清空表單並關閉 modal
+      // ToDo: (20250410 - Liz) 新增帳本成功後清空表單並關閉 modal
       setCompanyName('');
       setTaxId('');
       setTag(WORK_TAG.ALL);
@@ -139,7 +154,7 @@ const CreateAccountBookModal = ({
     } catch (error) {
       // Deprecated: (20241104 - Liz)
       // eslint-disable-next-line no-console
-      console.log('CreateAccountBookModal handleSubmit error:', error);
+      console.log('AccountBookInfoModal handleSubmit error:', error);
     } finally {
       // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
       setIsLoading(false);
@@ -166,7 +181,7 @@ const CreateAccountBookModal = ({
       } catch (error) {
         // Deprecated: (20250303 - Liz)
         // eslint-disable-next-line no-console
-        console.log('CreateAccountBookModal getTeamList error:', error);
+        console.log('AccountBookInfoModal getTeamList error:', error);
       }
     };
 
@@ -178,7 +193,7 @@ const CreateAccountBookModal = ({
       <div className="overflow-hidden rounded-md bg-surface-neutral-surface-lv1">
         <header className="flex items-center justify-between px-40px pb-24px pt-40px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
+            {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
           </h1>
           <button type="button" onClick={closeCreateAccountBookModal}>
             <IoCloseOutline size={24} />
@@ -212,15 +227,15 @@ const CreateAccountBookModal = ({
 
             <section className="flex flex-col gap-24px">
               <div className="flex items-center gap-40px">
-                {/* Info: (20250409 - Liz) Company Name */}
+                {/* Info: (20250409 - Liz) 公司名稱 */}
                 <div className="flex w-250px flex-col gap-8px">
                   <h4 className="font-semibold text-input-text-primary">
-                    {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.COMPANY_NAME')}
+                    {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.COMPANY_NAME')}
                     <span className="text-text-state-error"> *</span>
                   </h4>
                   <input
                     type="text"
-                    placeholder={t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ENTER_NAME')}
+                    placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_NAME')}
                     className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
@@ -232,85 +247,93 @@ const CreateAccountBookModal = ({
                   )}
                 </div>
 
-                {/* Info: (20250409 - Liz) Company representative's name */}
+                {/* Info: (20250410 - Liz) 負責人 */}
                 <div className="flex w-250px flex-col gap-8px">
                   <h4 className="font-semibold text-input-text-primary">
-                    {`Company representative's name`}
+                    {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.RESPONSIBLE_PERSON')}
                     <span className="text-text-state-error"> *</span>
                   </h4>
                   <input
                     type="text"
-                    placeholder={t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ENTER_NAME')}
+                    placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_RESPONSIBLE_PERSON')}
                     className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
+                    value={responsiblePerson}
+                    onChange={(e) => setResponsiblePerson(e.target.value)}
                   />
-                  {companyNameError && !companyName && (
+                  {responsiblePersonError && !responsiblePerson && (
                     <p className="text-right text-sm font-medium text-text-state-error">
-                      {companyNameError}
+                      {responsiblePersonError}
                     </p>
                   )}
                 </div>
               </div>
 
               <div className="flex items-center gap-40px">
-                {/* Info: (20250409 - Liz) Business Tax ID Number */}
+                {/* Info: (20250409 - Liz) 統一編號 */}
                 <div className="flex w-250px flex-col gap-8px">
                   <h4 className="font-semibold text-input-text-primary">
-                    {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.TAX_ID')}
+                    {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.TAX_ID')}
                   </h4>
                   <input
                     type="text"
-                    placeholder={t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ENTER_NUMBER')}
+                    placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_TAX_ID')}
                     className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
                     value={taxId}
                     onChange={(e) => setTaxId(e.target.value)}
                   />
                 </div>
 
-                {/* Info: (20250409 - Liz) Tax Serial Number */}
+                {/* Info: (20250409 - Liz) 稅籍編號 */}
                 <div className="flex w-250px flex-col gap-8px">
-                  <h4 className="font-semibold text-input-text-primary">Tax Serial Number</h4>
+                  <h4 className="font-semibold text-input-text-primary">
+                    {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.TAX_SERIAL_NUMBER')}
+                  </h4>
                   <input
                     type="text"
-                    placeholder={t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ENTER_NUMBER')}
+                    placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_TAX_SERIAL_NUMBER')}
                     className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
-                    value={taxId}
-                    onChange={(e) => setTaxId(e.target.value)}
+                    value={taxSerialNumber}
+                    onChange={(e) => setTaxSerialNumber(e.target.value)}
                   />
                 </div>
               </div>
             </section>
           </section>
 
+          {/* Info: (20250410 - Liz) 電話號碼 */}
           <section className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">Phone Number</h4>
+            <h4 className="font-semibold text-input-text-primary">
+              {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PHONE_NUMBER')}
+            </h4>
             <input
               type="text"
-              placeholder={t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ENTER_NUMBER')}
+              placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_PHONE_NUMBER')}
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
-              value={taxId}
-              onChange={(e) => setTaxId(e.target.value)}
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
             />
           </section>
 
           <section className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">Company address</h4>
+            <h4 className="font-semibold text-input-text-primary">
+              {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.COMPANY_ADDRESS')}
+            </h4>
 
             <main className="flex gap-14px">
-              {/* Info: (20250409 - Liz) City */}
-              {/* ToDo: (20250409 - Liz) 縣市行政區以及翻譯尚未整理好，目前內容不正確 */}
-              <div className="relative w-150px">
+              {/* Info: (20250409 - Liz) 縣市 City */}
+              <div className="relative w-180px">
                 <button
                   type="button"
-                  className="flex w-150px items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-start text-dropdown-text-input-filled shadow-Dropshadow_SM"
+                  className="flex w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-start text-dropdown-text-input-filled shadow-Dropshadow_SM"
                   onClick={toggleCityDropdown}
                 >
                   <p className="px-12px py-10px text-base font-medium">
                     {city ? (
-                      t(`dashboard:CITY.${city}`)
+                      t(`city_district:CITY.${city}`)
                     ) : (
-                      <span className="text-input-text-input-placeholder">City</span>
+                      <span className="text-input-text-input-placeholder">
+                        {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CHOOSE_CITY')}
+                      </span>
                     )}
                   </p>
 
@@ -329,11 +352,12 @@ const CreateAccountBookModal = ({
                           onClick={() => {
                             setCity(item);
                             setDistrictOptions(cityDistrictMap[item]);
+                            setDistrict(null);
                             toggleCityDropdown();
                           }}
                           className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                         >
-                          {t('dashboard:CITY.' + item)}
+                          {t('city_district:CITY.' + item)}
                         </button>
                       ))}
                     </div>
@@ -341,19 +365,21 @@ const CreateAccountBookModal = ({
                 )}
               </div>
 
-              {/* Info: (20250409 - Liz) District */}
-              {/* ToDo: (20250409 - Liz) 縣市行政區以及翻譯尚未整理好，目前內容不正確 */}
-              <div className="relative w-150px">
+              {/* Info: (20250409 - Liz) 行政區 District */}
+              <div className="relative w-180px">
                 <button
                   type="button"
-                  className="flex w-150px items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-start text-dropdown-text-input-filled shadow-Dropshadow_SM"
+                  disabled={!city}
+                  className="flex w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-start text-dropdown-text-input-filled shadow-Dropshadow_SM"
                   onClick={toggleDistrictDropdown}
                 >
                   <p className="px-12px py-10px text-base font-medium">
                     {district ? (
-                      t(`dashboard:${city}.${district}`)
+                      t(`city_district:${city}.${district}`)
                     ) : (
-                      <span className="text-input-text-input-placeholder">District</span>
+                      <span className="text-input-text-input-placeholder">
+                        {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CHOOSE_DISTRICT')}
+                      </span>
                     )}
                   </p>
 
@@ -379,7 +405,7 @@ const CreateAccountBookModal = ({
                           }}
                           className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                         >
-                          {t(`dashboard:${city}.${item}`)}
+                          {t(`city_district:${city}.${item}`)}
                         </button>
                       ))}
                     </div>
@@ -387,12 +413,13 @@ const CreateAccountBookModal = ({
                 )}
               </div>
 
+              {/* Info: (20250410 - Liz) 使用者輸入地址(街道巷弄樓層) */}
               <input
                 type="text"
-                placeholder="Please enter the full address"
+                placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_FULL_ADDRESS')}
                 className="flex-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
-                value={taxId}
-                onChange={(e) => setTaxId(e.target.value)}
+                value={enteredAddress}
+                onChange={(e) => setEnteredAddress(e.target.value)}
               />
             </main>
           </section>
@@ -406,11 +433,11 @@ const CreateAccountBookModal = ({
             <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
           </section>
 
-          <section className="flex items-center gap-24px">
+          <section className="flex items-start gap-24px">
             {/* Info: (20250213 - Liz) Team 選擇團隊 */}
             <div className="flex flex-1 flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
-                {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.TEAM')}
+                {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.TEAM')}
                 <span className="text-text-state-error"> *</span>
               </h4>
 
@@ -425,7 +452,7 @@ const CreateAccountBookModal = ({
                       team.name.value
                     ) : (
                       <span className="text-input-text-input-placeholder">
-                        {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CHOOSE_TEAM')}
+                        {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CHOOSE_TEAM')}
                       </span>
                     )}
                   </p>
@@ -469,7 +496,7 @@ const CreateAccountBookModal = ({
             {/* Info: (20250213 - Liz) Work Tag 工作標籤 */}
             <div className="flex flex-1 flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
-                {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.WORK_TAG')}
+                {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.WORK_TAG')}
                 <span className="text-text-state-error"> *</span>
               </h4>
 
@@ -484,7 +511,7 @@ const CreateAccountBookModal = ({
                       t('dashboard:WORK_TAG.' + tag.toUpperCase())
                     ) : (
                       <span className="text-input-text-input-placeholder">
-                        {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CHOOSE_WORK_TAG')}
+                        {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CHOOSE_WORK_TAG')}
                       </span>
                     )}
                   </p>
@@ -528,7 +555,7 @@ const CreateAccountBookModal = ({
               onClick={closeCreateAccountBookModal}
               className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
             >
-              {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CANCEL')}
+              {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CANCEL')}
             </button>
 
             <button
@@ -547,4 +574,4 @@ const CreateAccountBookModal = ({
   );
 };
 
-export default CreateAccountBookModal;
+export default AccountBookInfoModal;

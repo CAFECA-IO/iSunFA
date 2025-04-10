@@ -50,6 +50,7 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
         'account_book',
         'search',
         'common',
+        'city_district',
       ])),
     },
   };
