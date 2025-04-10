@@ -73,7 +73,6 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
   const userRole = userTeam.role as TeamRole;
 
-  // Info: (20250312 - Shirley) 檢查用戶是否有權限更新成員角色
   const canChangeRoleResult = convertTeamRoleCanDo({
     teamRole: userRole,
     canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
@@ -81,6 +80,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
   if (TeamRoleCanDoKey.CAN_ALTER in canChangeRoleResult) {
     const canAlterRoles = canChangeRoleResult.canAlter;
+
     if (!canAlterRoles.includes(updateData.role)) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
@@ -211,7 +211,6 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
   const userRole = userTeam.role as TeamRole;
 
-  // Info: (20250312 - Shirley) 檢查用戶是否有權限刪除成員
   const canChangeRoleResult = convertTeamRoleCanDo({
     teamRole: userRole,
     canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,

@@ -2,7 +2,6 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import MyAccountBookItem from '@/components/beta/dashboard/my_account_book_item';
-import { useDashboardCtx } from '@/contexts/dashboard_context';
 
 interface MyAccountBookListProps {
   accountBookList: IAccountBookWithTeam[];
@@ -13,7 +12,6 @@ const MyAccountBookList = ({ accountBookList, setAccountBookToSelect }: MyAccoun
   const { connectedAccountBook } = useUserCtx();
   const containerRef = useRef<HTMLDivElement>(null);
   const [disabledCards, setDisabledCards] = useState<number[]>([]);
-  const { isSideMenuOpen } = useDashboardCtx();
 
   // Info: (20241216 - Liz) 監聽滾動事件，計算元素是否部分超出容器的左右邊界，得到左右滾動和部分遮蔽的效果
   useEffect(() => {
@@ -59,10 +57,7 @@ const MyAccountBookList = ({ accountBookList, setAccountBookToSelect }: MyAccoun
   }, [connectedAccountBook]);
 
   return (
-    <div
-      ref={containerRef}
-      className={`flex ${isSideMenuOpen ? 'max-w-850px' : 'max-w-1050px'} gap-24px overflow-x-auto px-1px pb-8px`}
-    >
+    <div ref={containerRef} className={`flex gap-24px overflow-x-auto px-1px pb-8px`}>
       {accountBookList.map((accountBook, index) => (
         <MyAccountBookItem
           key={accountBook.id}

@@ -12,10 +12,7 @@ export interface ITodo {
   endTime: number;
 }
 
-export interface ITodoCompany extends ITodo {
-  id: number;
+export interface ITodoAccountBook extends ITodo {
   company: IAccountBook;
-  createdAt: number;
-  updatedAt: number;
 }
 // ToDo: (20250306 - Liz) 這個 interface 預計改成 ITodoAccountBook

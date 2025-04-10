@@ -24,7 +24,7 @@ interface IJobDetailBodyProps {
 const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
   const { t } = useTranslation(['hiring', 'common']);
 
-  const { title, location, date, description, jobResponsibilities, requirements, extraSkills } =
+  const { id, title, location, date, description, jobResponsibilities, requirements, extraSkills } =
     jobData;
   const dateString = timestampToString(date).dateWithSlash;
 
@@ -126,10 +126,11 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
                 </LandingButton>
               </Link>
               {/* Info: (20250407 - Julian) Apply Now Button */}
-              {/* ToDo: (20250407 - Julian) apply */}
-              <LandingButton variant="primary" className="font-bold">
-                {t('hiring:JOIN_US_PAGE.APPLY_NOW_BTN')}
-              </LandingButton>
+              <Link href={`${ISUNFA_ROUTE.JOIN_US}/${id}/resume`}>
+                <LandingButton variant="primary" className="font-bold">
+                  {t('hiring:JOIN_US_PAGE.APPLY_NOW_BTN')}
+                </LandingButton>
+              </Link>
             </div>
           </div>
         </div>

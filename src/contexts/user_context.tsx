@@ -63,18 +63,6 @@ interface UserContextType {
   }) => Promise<{ success: boolean }>;
 
   deleteAccountBook: (companyId: number) => Promise<IAccountBook | null>;
-  deleteAccount: () => Promise<{
-    success: boolean;
-    data: IUser | null;
-    code: string;
-    error: Error | null;
-  }>;
-  cancelDeleteAccount: () => Promise<{
-    success: boolean;
-    data: IUser | null;
-    code: string;
-    error: Error | null;
-  }>;
 
   errorCode: string | null;
   toggleIsSignInError: () => void;
@@ -113,9 +101,6 @@ export const UserContext = createContext<UserContextType>({
   connectAccountBook: async () => ({ success: false }),
   updateAccountBook: async () => ({ success: false }),
   deleteAccountBook: async () => null,
-  deleteAccount: async () => Promise.resolve({ success: false, data: null, code: '', error: null }),
-  cancelDeleteAccount: async () =>
-    Promise.resolve({ success: false, data: null, code: '', error: null }),
 
   errorCode: null,
   toggleIsSignInError: () => {},
@@ -186,9 +171,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20241115 - Liz) 刪除帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
   const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.DELETE_ACCOUNT_BOOK);
-
-  const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
-  const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
 
   // Info: (20250329 - Liz) 取得團隊資訊 API
   const { trigger: getTeamAPI } = APIHandler<ITeam>(APIName.GET_TEAM_BY_ID);
@@ -321,28 +303,31 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ===============================================================================
 
-  // Info: (20241001 - Liz) 此函數處理公司資訊:
-  // 如果公司資料存在且不為空，它會設定選定的公司 (setConnectedAccountBook)，最後回傳公司資訊。
-  // 如果公司資料不存在，會將公司資訊設為 null，並回傳 null。
+  // Info: (20241001 - Liz) 此函數處理已連結帳本資訊:
+  // 如果帳本資料存在且不為空，它會設定選定的帳本 (setConnectedAccountBook)，最後回傳帳本資訊。
+  // 如果帳本資料不存在，會將帳本資訊設為 null，並回傳 null。
   const processAccountBookInfo = (accountBook: IStatusInfo['company']) => {
     if (!accountBook || Object.keys(accountBook).length === 0) {
       setConnectedAccountBook(null);
+      setTeam(null);
       return null;
     }
     setConnectedAccountBook(accountBook);
+    setTeam(accountBook.team);
     return accountBook;
   };
 
-  const processTeamsInfo = ({
-    teams,
-    teamId,
-  }: {
-    teams: IStatusInfo['teams'];
-    teamId: IAccountBook['teamId'] | null;
-  }) => {
-    const team = teams?.find((t) => t.id === teamId) ?? null;
-    setTeam(team);
-  };
+  // Deprecated: (20250408 - Liz) 預計於 20250501 刪除
+  // const processTeamsInfo = ({
+  //   teams,
+  //   teamId,
+  // }: {
+  //   teams: IStatusInfo['teams'];
+  //   teamId: IAccountBook['teamId'] | null;
+  // }) => {
+  //   const team = teams?.find((t) => t.id === teamId) ?? null;
+  //   setTeam(team);
+  // };
 
   // Info: (20241101 - Liz) 此函數處理角色資訊:
   const processRoleInfo = (role: IStatusInfo['role']) => {
@@ -370,8 +355,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return user;
   };
 
-  // Info: (20241009 - Liz) 此函數是在處理 getStatusInfo 獲得的資料，包含使用者、公司、角色，並根據處理結果來決定下一步的操作:
-  // 它會呼叫 processUserInfo, processAccountBookInfo, 和 processRoleInfo 分別處理使用者、公司、角色資訊。
+  // Info: (20241009 - Liz) 此函數是在處理 getStatusInfo 獲得的資料，包含使用者、已連結帳本、角色，並根據處理結果來決定下一步的操作:
+  // 它會呼叫 processUserInfo, processAccountBookInfo, 和 processRoleInfo 分別處理使用者、已連結帳本、角色資訊。
   // 依據處理結果，它會執行不同的自動導向邏輯。
   const handleProcessData = (statusInfo: IStatusInfo) => {
     const processedUser = processUserInfo(statusInfo.user);
@@ -384,10 +369,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const processedRole = processRoleInfo(statusInfo.role);
     const processedAccountBook = processAccountBookInfo(statusInfo.company);
-    processTeamsInfo({
-      teamId: statusInfo.company?.teamId ?? null,
-      teams: statusInfo.teams,
-    });
+
+    // Deprecated: (20250408 - Liz) 預計於 20250501 刪除
+    // processTeamsInfo({
+    //   teamId: statusInfo.company?.teamId ?? null,
+    //   teams: statusInfo.teams,
+    // });
 
     // Info: (20241117 - Liz) 檢查是否已經同意服務條款和隱私政策
     const hasAgreedToTermsOfService = processedUser.agreementList.includes(
@@ -408,10 +395,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     goBackToOriginalPath();
   };
 
-  // Info: (20241001 - Liz) 此函數使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
+  // Info: (20241001 - Liz) 此函數使用 useCallback 封裝，用來非同步取得使用者狀態資訊。
   // 它首先檢查是否需要取得使用者資料 (isProfileFetchNeeded)，如果不需要，則直接結束。
   // 當資料獲取中，它會設定載入狀態 (setIsAuthLoading)
-  // 當 API 回傳成功且有資料時，它會呼叫 handleProcessData 分別處理使用者、公司、角色資訊。
+  // 當 API 回傳成功且有資料時，它會呼叫 handleProcessData 分別處理使用者、已連結帳本、角色資訊。
   // 如果獲取資料失敗，它會執行未登入的處理邏輯: 清除狀態、導向登入頁面、設定登入錯誤狀態、設定錯誤代碼。
   // 最後，它會將載入狀態設為完成。
   const getStatusInfo = useCallback(async () => {
@@ -698,28 +685,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const deleteAccount = async () => {
-    const res = await deleteAccountAPI({
-      params: { userId: userAuthRef.current?.id },
-    });
-
-    if (res.success && res.data) {
-      setUserAuth(res.data);
-    }
-    return res;
-  };
-
-  const cancelDeleteAccount = async () => {
-    const res = await cancelDeleteAccountAPI({
-      params: { userId: userAuthRef.current?.id },
-    });
-
-    if (res.success && res.data) {
-      setUserAuth(res.data);
-    }
-    return res;
-  };
-
   const throttledGetStatusInfo = useCallback(
     throttle(() => {
       getStatusInfo();
@@ -824,8 +789,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       connectAccountBook,
       updateAccountBook,
       deleteAccountBook,
-      deleteAccount,
-      cancelDeleteAccount,
       connectedAccountBook: connectedAccountBookRef.current,
       team: teamRef.current,
       teamRole: teamRef.current?.role ?? null,

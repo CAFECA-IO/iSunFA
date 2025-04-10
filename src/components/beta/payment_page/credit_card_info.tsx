@@ -107,6 +107,10 @@ const CreditCardInfo = ({
           userId: userAuth.id,
           paymentMethodId: paymentMethod[paymentMethod.length - 1].id,
         },
+        body: {
+          teamPlanType: plan?.id,
+          teamId: team.id,
+        },
       });
 
       if (success) {

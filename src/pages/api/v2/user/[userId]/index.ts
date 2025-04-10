@@ -2,7 +2,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
-import { getUserById, updateUserById, deleteUserById } from '@/lib/utils/repo/user.repo';
+import { getUserById, updateUserById } from '@/lib/utils/repo/user.repo';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
@@ -61,28 +61,6 @@ const handlePutRequest: IHandleRequest<APIName.USER_UPDATE, User | null> = async
   return { statusMessage, payload };
 };
 
-const handleDeleteRequest: IHandleRequest<APIName.USER_DELETE, User | null> = async ({ query }) => {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: User | null = null;
-
-  const { userId } = query;
-
-  const getUser = await getUserById(userId);
-  if (!getUser) {
-    statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-  } else if (getUser.deletedAt && getUser.deletedAt > 0) {
-    // ToDo: (20241121 - Jacky) If user deletedAt already > 0, return original user data
-    statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-    payload = getUser;
-  } else {
-    const deletedUser = await deleteUserById(userId);
-    payload = deletedUser;
-    statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-  }
-
-  return { statusMessage, payload };
-};
-
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
@@ -91,7 +69,6 @@ const methodHandlers: {
 } = {
   GET: (req) => withRequestValidation(APIName.USER_GET_BY_ID, req, handleGetRequest),
   PUT: (req) => withRequestValidation(APIName.USER_UPDATE, req, handlePutRequest),
-  DELETE: (req) => withRequestValidation(APIName.USER_DELETE, req, handleDeleteRequest),
 };
 
 export default async function handler(

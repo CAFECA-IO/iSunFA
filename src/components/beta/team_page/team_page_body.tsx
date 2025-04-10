@@ -12,6 +12,7 @@ import AccountBookList from '@/components/beta/account_books_page/account_book_l
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import UploadCompanyPictureModal from '@/components/beta/account_books_page/upload_company_picture_modal';
+import EditInfoModal from '@/components/beta/account_books_page/edit_info_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
@@ -38,6 +39,9 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
     IAccountBookWithTeam | undefined
   >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
+    IAccountBookWithTeam | undefined
+  >();
+  const [accountBookToEditInfo, setAccountBookToEditInfo] = useState<
     IAccountBookWithTeam | undefined
   >();
   const [isMemberListModalOpen, setIsMemberListModalOpen] = useState<boolean>(false);
@@ -146,6 +150,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
           setAccountBookToEdit={setAccountBookToEdit}
           setAccountBookToDelete={setAccountBookToDelete}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+          setAccountBookToEditInfo={setAccountBookToEditInfo}
         />
       )}
 
@@ -179,6 +184,13 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
           accountBookToUploadPicture={accountBookToUploadPicture}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
           getAccountBookListByTeamId={getAccountBookListByTeamId}
+        />
+      )}
+
+      {accountBookToEditInfo && (
+        <EditInfoModal
+          accountBookToEditInfo={accountBookToEditInfo}
+          setAccountBookToEditInfo={setAccountBookToEditInfo}
         />
       )}
 
