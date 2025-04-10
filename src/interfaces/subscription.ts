@@ -37,6 +37,7 @@ export interface IPlan {
   price: TPlanPrice;
   extraMemberPrice?: TPlanPrice.EXTRA_MEMBER_PRICE;
   features: IPlanFeature[];
+  comparison?: Record<string, string>;
 }
 
 export enum TPaymentStatus {
