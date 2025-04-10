@@ -170,15 +170,13 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
   const { file } = files;
   const { isEncrypted, encryptedSymmetricKey, iv } = extractKeyAndIvFromFields(fields);
 
-  const { userId, teams } = await getSession(req);
+  const { teams } = await getSession(req);
 
   // Info: (20250410 - Shirley) 檢查用戶是否有權限上傳圖片(Team, Company)
   if (type === UploadType.TEAM) {
+    // Info: (20250410 - Shirley) 直接比對 session 中的 teams 是否包含 targetId，再檢查 role 是否可以上傳圖片
     const userTeam = teams?.find((team) => team.id === +targetId);
     if (!userTeam) {
-      loggerBack.warn(
-        `User ${userId} attempted to upload file to team ${targetId}, but is not in the team.`
-      );
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
     const assertResult = convertTeamRoleCanDo({
