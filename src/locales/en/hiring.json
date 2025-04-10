@@ -29,7 +29,26 @@
     "STEP_EXPERIENCE": "Experience",
     "STEP_SKILLS": "Skills",
     "STEP_PREFERENCE": "Preference",
-    "STEP_ATTACHMENT": "Attachment"
+    "STEP_ATTACHMENT": "Attachment",
+    "NEXT_BTN": "Next"
+  },
+  "PERSONAL_INFO": {
+    "FIRST_NAME_TITLE": "First Name",
+    "LAST_NAME_TITLE": "Last Name",
+    "PHONE_TITLE": "Phone number",
+    "EMAIL_TITLE": "Email",
+    "ADDRESS_TITLE": "Address",
+    "QUESTION_1_TITLE": "Have you ever worked for a related company?",
+    "QUESTION_2_TITLE": "Do you currently have any relatives working at iSunCloud?",
+    "QUESTION_3_TITLE": "Do you have any criminal records or a history of bad credit?",
+    "QUESTION_4_TITLE": "Where did you learn about this job opening?",
+    "YES": "Yes",
+    "NO": "No",
+    "WHERE_OPTION_104": "104",
+    "WHERE_OPTION_FB": "Facebook",
+    "WHERE_OPTION_LINKEDIN": "LinkedIn",
+    "WHERE_OPTION_OW": "Official Web",
+    "WHERE_OPTION_OTHERS": "Others"
   },
   "FINISH_PAGE": {
     "MAIN_TITLE": "Thank You for Applying!",
