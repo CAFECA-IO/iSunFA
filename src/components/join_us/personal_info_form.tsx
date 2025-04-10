@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
+import { IPersonalInfo } from '@/interfaces/resume';
 
 interface ITFQuestionProps {
   id: string;
@@ -141,7 +142,7 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
   const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const formData = {
+    const formData: IPersonalInfo = {
       firstName: firstNameInput,
       lastName: lastNameInput,
       phoneNumber: phoneNumberInput,
