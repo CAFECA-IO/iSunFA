@@ -162,16 +162,16 @@ const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ filterJobs }) => {
       </div>
 
       {/* Info: (20250401 - Julian) Search bar */}
-      <div className="flex h-60px flex-1 items-center rounded-full border border-white bg-landing-page-black3 px-24px shadow-job backdrop-blur-md">
+      <div className="relative flex flex-1 items-center">
         <input
           type="text"
-          className="flex-1 bg-transparent outline-none placeholder:text-landing-page-gray placeholder:opacity-50"
+          className="h-60px flex-1 rounded-full border border-white bg-landing-page-black3 px-24px shadow-job outline-none backdrop-blur-md placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary"
           placeholder={t('hiring:JOIN_US_PAGE.SEARCH_PLACEHOLDER')}
           value={searchKeyword}
           onChange={changeSearchInput}
           onKeyDown={keyDownHandler}
         />
-        <FiSearch size={24} />
+        <FiSearch size={24} className="absolute right-24px" />
       </div>
     </div>
   );

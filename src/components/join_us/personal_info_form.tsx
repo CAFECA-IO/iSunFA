@@ -80,7 +80,7 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
   const haloStyle =
     'border border-white bg-landing-page-black3 outline-none backdrop-blur-md shadow-job backdrop-blur-md';
 
-  const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50`;
+  const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 
   const questions = [
     {
@@ -305,12 +305,14 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
       {/* Info: (20250410 - Julian) True/False Questions */}
       <div className="mt-24px flex flex-col gap-50px">
         {tfQuestions}
+
+        {/* Info: (20250410 - Julian) Where did you learn about this job opening? */}
         <div className="flex items-center justify-between">
           <p>Where did you learn about this job opening?</p>
           <div ref={targetRef} className="relative flex flex-col">
             <div
               onClick={toggleDropdown}
-              className={`${haloStyle} ${isOpen ? 'border-surface-brand-primary-moderate text-surface-brand-primary-moderate' : ''} flex items-center gap-8px rounded-full px-24px py-4px hover:cursor-pointer hover:border-surface-brand-primary-moderate hover:text-surface-brand-primary-moderate`}
+              className={`${haloStyle} ${isOpen ? 'border-surface-brand-primary-moderate text-surface-brand-primary-moderate' : 'border-white'} flex items-center gap-8px rounded-full px-24px py-4px hover:cursor-pointer hover:border-surface-brand-primary-moderate hover:text-surface-brand-primary-moderate`}
             >
               <p className="w-120px">
                 {t(`hiring:PERSONAL_INFO.WHERE_OPTION_${whereLearnAboutJob.toUpperCase()}`)}
