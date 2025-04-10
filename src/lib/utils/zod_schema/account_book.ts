@@ -3,6 +3,7 @@ import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION, ACCOUNT_BOOK_ROLE } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema, TeamSchema } from '@/lib/utils/zod_schema/team';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { LocaleKey } from '@/constants/normal_setting';
 
 // Info: (2025) `roleSchema` 不再需要，因為 `role` 已經改為 `accountBookRole`
 
@@ -192,3 +193,27 @@ export const createAccountBookSchema = {
 };
 
 export type ICreateAccountBookBody = z.infer<typeof createAccountBookBodySchema>;
+
+// Info: (20250720 - Shirley) 更新帳本信息的 body schema
+const updateAccountBookInfoBodySchema = z.object({
+  name: z.string().optional(),
+  taxId: z.string().optional(),
+  taxSerialNumber: z.string().optional(),
+  representativeName: z.string().optional(),
+  country: z.nativeEnum(LocaleKey).optional(),
+  phoneNumber: z.string().optional(),
+  address: z.string().optional(),
+});
+
+// Info: (20250720 - Shirley) 定義更新帳本信息的 schema
+export const updateAccountBookInfoSchema = {
+  input: {
+    querySchema: getAccountBookQuerySchema,
+    bodySchema: updateAccountBookInfoBodySchema,
+  },
+  outputSchema: getAccountBookResponseSchema,
+  frontend: accountBookNullSchema,
+};
+
+// Info: (20250720 - Shirley) 定義更新帳本信息的輸入類型
+export type IUpdateAccountBookInfoBody = z.infer<typeof updateAccountBookInfoBodySchema>;

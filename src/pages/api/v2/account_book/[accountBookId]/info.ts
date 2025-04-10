@@ -14,6 +14,7 @@ import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import {
   getCompanySettingByCompanyId,
   createCompanySetting,
+  updateCompanySettingByCompanyId,
 } from '@/lib/utils/repo/company_setting.repo';
 import { getCountryByLocaleKey, getCountryByCode } from '@/lib/utils/repo/country.repo';
 import { loggerError } from '@/lib/utils/logger_back';
@@ -21,11 +22,27 @@ import { DefaultValue } from '@/constants/default_value';
 import { TeamPermissionAction, ITeamRoleCanDo, TeamRoleCanDoKey } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
+import { z } from 'zod';
+import { LocaleKey } from '@/constants/normal_setting';
 
 interface IResponse {
   statusMessage: string;
   payload: IGetAccountBookResponse | null;
 }
+
+// Info: (20250720 - Shirley) 定義更新帳本信息的輸入 schema
+const updateAccountBookInfoBodySchema = z.object({
+  name: z.string().optional(),
+  taxId: z.string().optional(),
+  taxSerialNumber: z.string().optional(),
+  representativeName: z.string().optional(),
+  country: z.nativeEnum(LocaleKey).optional(),
+  phoneNumber: z.string().optional(),
+  address: z.string().optional(),
+});
+
+// Info: (20250720 - Shirley) 定義更新帳本信息的輸入類型
+type IUpdateAccountBookInfoBody = z.infer<typeof updateAccountBookInfoBodySchema>;
 
 /**
  * Info: (20250524 - Shirley) 處理 GET 請求，獲取帳本詳細資訊
@@ -40,7 +57,7 @@ const handleGetRequest: IHandleRequest<
 
   try {
     // Info: (20250326 - Shirley) 根據 accountBookId 獲取公司資訊
-    const company = await getCompanyById(accountBookId);
+    const company = await getCompanyById(+accountBookId);
     if (!company) {
       return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
     }
@@ -91,11 +108,11 @@ const handleGetRequest: IHandleRequest<
       return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
     }
 
-    let companySetting = await getCompanySettingByCompanyId(accountBookId);
+    let companySetting = await getCompanySettingByCompanyId(+accountBookId);
 
     // Info: (20250326 - Shirley) 如果沒有公司設定記錄，創建一個空白記錄
     if (!companySetting) {
-      companySetting = await createCompanySetting(accountBookId);
+      companySetting = await createCompanySetting(+accountBookId);
       if (!companySetting) {
         loggerError({
           userId,
@@ -164,10 +181,181 @@ const handleGetRequest: IHandleRequest<
   }
 };
 
+/**
+ * Info: (20250720 - Shirley) 處理 PUT 請求，更新帳本詳細資訊
+ */
+const handlePutRequest: IHandleRequest<
+  APIName.UPDATE_ACCOUNT_BOOK_INFO,
+  IResponse['payload']
+> = async ({ query, body, session }) => {
+  const { userId } = session;
+  const { accountBookId } = query as IGetAccountBookQueryParams;
+  const updateData = body as IUpdateAccountBookInfoBody;
+
+  try {
+    // Info: (20250720 - Shirley) 獲取帳本信息
+    const company = await getCompanyById(+accountBookId);
+    if (!company) {
+      loggerError({
+        userId,
+        errorType: 'update account book info failed',
+        errorMessage: `Account book ${accountBookId} not found`,
+      });
+      return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+    }
+
+    // Info: (20250720 - Shirley) 獲取帳本所屬的團隊
+    const { teamId } = company;
+    if (!teamId) {
+      loggerError({
+        userId,
+        errorType: 'update account book info failed',
+        errorMessage: `Account book ${accountBookId} does not belong to any team`,
+      });
+      return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+    }
+
+    // Info: (20250720 - Shirley) 從 session 中獲取用戶在團隊中的角色
+    const teamInfo = session.teams?.find((team) => team.id === teamId);
+    if (!teamInfo) {
+      loggerError({
+        userId,
+        errorType: 'permission denied',
+        errorMessage: `User ${userId} is not a member of team ${teamId}`,
+      });
+      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+    }
+
+    const userRole = teamInfo.role as TeamRole;
+
+    // Info: (20250720 - Shirley) 檢查用戶是否有修改帳本權限
+    const canModifyResult = convertTeamRoleCanDo({
+      teamRole: userRole,
+      canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
+    });
+
+    const canModify =
+      TeamRoleCanDoKey.YES_OR_NO in canModifyResult && (canModifyResult as ITeamRoleCanDo).yesOrNo;
+
+    if (!canModify) {
+      loggerError({
+        userId,
+        errorType: 'permission denied',
+        errorMessage: `User ${userId} with role ${userRole} does not have permission to modify account book ${accountBookId}`,
+      });
+      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+    }
+
+    // Info: (20250720 - Shirley) 獲取公司設定
+    let companySetting = await getCompanySettingByCompanyId(+accountBookId);
+    if (!companySetting) {
+      // Info: (20250720 - Shirley) 如果沒有公司設定記錄，創建一個空白記錄
+      companySetting = await createCompanySetting(+accountBookId);
+      if (!companySetting) {
+        loggerError({
+          userId,
+          errorType: 'update account book info failed',
+          errorMessage: `Cannot create company setting for accountBookId: ${accountBookId}`,
+        });
+        return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
+      }
+    }
+
+    // Info: (20250720 - Shirley) 更新公司設定
+    const updatedSetting = await updateCompanySettingByCompanyId({
+      companyId: +accountBookId,
+      data: {
+        taxSerialNumber: updateData.taxSerialNumber,
+        representativeName: updateData.representativeName,
+        country: updateData.country,
+        phone: updateData.phoneNumber,
+        address: updateData.address,
+        companyName: updateData.name,
+        companyTaxId: updateData.taxId,
+      },
+    });
+
+    if (!updatedSetting) {
+      loggerError({
+        userId,
+        errorType: 'update account book info failed',
+        errorMessage: `Failed to update company setting for accountBookId: ${accountBookId}`,
+      });
+      return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
+    }
+
+    // Info: (20250720 - Shirley) 獲取更新後的帳本信息
+    const updatedCompany = await getCompanyById(+accountBookId);
+    if (!updatedCompany) {
+      loggerError({
+        userId,
+        errorType: 'update account book info failed',
+        errorMessage: `Failed to get updated company for accountBookId: ${accountBookId}`,
+      });
+      return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
+    }
+
+    // Info: (20250720 - Shirley) 獲取國家資訊
+    const countryCode = updatedSetting.countryCode || 'tw';
+    const countryLocaleKey = updatedSetting.country || 'tw';
+
+    let dbCountry = await getCountryByLocaleKey(countryLocaleKey);
+    if (!dbCountry) {
+      dbCountry = await getCountryByCode(countryCode);
+    }
+
+    // Info: (20250720 - Shirley) 構建國家資訊
+    const country: ICountry = dbCountry
+      ? {
+          id: String(dbCountry.id),
+          code: dbCountry.code,
+          name: dbCountry.name,
+          localeKey: dbCountry.localeKey,
+          currencyCode: dbCountry.currencyCode,
+          phoneCode: dbCountry.phoneCode,
+          phoneExample: dbCountry.phoneExample,
+        }
+      : {
+          id: String(updatedSetting.id),
+          code: countryCode,
+          name: 'Taiwan',
+          localeKey: countryLocaleKey,
+          currencyCode: 'TWD',
+          phoneCode: '+886',
+          phoneExample: '0902345678',
+        };
+
+    // Info: (20250720 - Shirley) 構建回應資料
+    const payload: IGetAccountBookResponse = {
+      id: String(accountBookId),
+      name: updatedCompany.name,
+      taxId: updatedCompany.taxId,
+      taxSerialNumber: updatedSetting.taxSerialNumber || '',
+      representativeName: updatedSetting.representativeName || '',
+      country,
+      phoneNumber: updatedSetting.phone || '',
+      address: updatedSetting.address || '',
+      startDate: updatedCompany.startDate,
+      createdAt: updatedCompany.createdAt,
+      updatedAt: updatedCompany.updatedAt,
+    };
+
+    return { statusMessage: STATUS_MESSAGE.SUCCESS_UPDATE, payload };
+  } catch (error) {
+    loggerError({
+      userId: session.userId || DefaultValue.USER_ID.SYSTEM,
+      errorType: 'update account book info failed',
+      errorMessage: (error as Error).message,
+    });
+    return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
+  }
+};
+
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
 } = {
   GET: (req) => withRequestValidation(APIName.GET_ACCOUNT_BOOK_INFO_BY_ID, req, handleGetRequest),
+  PUT: (req) => withRequestValidation(APIName.UPDATE_ACCOUNT_BOOK_INFO, req, handlePutRequest),
 };
 
 export default async function handler(
