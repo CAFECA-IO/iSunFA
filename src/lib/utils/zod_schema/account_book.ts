@@ -195,7 +195,7 @@ export const createAccountBookSchema = {
 export type ICreateAccountBookBody = z.infer<typeof createAccountBookBodySchema>;
 
 // Info: (20250720 - Shirley) 更新帳本信息的 body schema
-const updateAccountBookInfoBodySchema = z.object({
+export const updateAccountBookInfoBodySchema = z.object({
   name: z.string().optional(),
   taxId: z.string().optional(),
   taxSerialNumber: z.string().optional(),

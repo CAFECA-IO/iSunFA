@@ -9,6 +9,7 @@ import {
   IGetAccountBookQueryParams,
   IGetAccountBookResponse,
   ICountry,
+  IUpdateAccountBookInfoBody,
 } from '@/lib/utils/zod_schema/account_book';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import {
@@ -22,27 +23,11 @@ import { DefaultValue } from '@/constants/default_value';
 import { TeamPermissionAction, ITeamRoleCanDo, TeamRoleCanDoKey } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
-import { z } from 'zod';
-import { LocaleKey } from '@/constants/normal_setting';
 
 interface IResponse {
   statusMessage: string;
   payload: IGetAccountBookResponse | null;
 }
-
-// Info: (20250720 - Shirley) 定義更新帳本信息的輸入 schema
-const updateAccountBookInfoBodySchema = z.object({
-  name: z.string().optional(),
-  taxId: z.string().optional(),
-  taxSerialNumber: z.string().optional(),
-  representativeName: z.string().optional(),
-  country: z.nativeEnum(LocaleKey).optional(),
-  phoneNumber: z.string().optional(),
-  address: z.string().optional(),
-});
-
-// Info: (20250720 - Shirley) 定義更新帳本信息的輸入類型
-type IUpdateAccountBookInfoBody = z.infer<typeof updateAccountBookInfoBodySchema>;
 
 /**
  * Info: (20250524 - Shirley) 處理 GET 請求，獲取帳本詳細資訊
@@ -261,6 +246,13 @@ const handlePutRequest: IHandleRequest<
       }
     }
 
+    // Info: (20250701 - Shirley) 記錄更新前的狀態
+    loggerError({
+      userId,
+      errorType: 'info',
+      errorMessage: `Updating account book ${accountBookId}: Previous values - country: ${companySetting.country}, countryCode: ${companySetting.countryCode}`,
+    });
+
     // Info: (20250720 - Shirley) 更新公司設定
     const updatedSetting = await updateCompanySettingByCompanyId({
       companyId: +accountBookId,
@@ -283,6 +275,13 @@ const handlePutRequest: IHandleRequest<
       });
       return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
     }
+
+    // Info: (20250701 - Shirley) 記錄更新後的狀態
+    loggerError({
+      userId,
+      errorType: 'info',
+      errorMessage: `Updated account book ${accountBookId}: New values - country: ${updatedSetting.country}, countryCode: ${updatedSetting.countryCode}`,
+    });
 
     // Info: (20250720 - Shirley) 獲取更新後的帳本信息
     const updatedCompany = await getCompanyById(+accountBookId);

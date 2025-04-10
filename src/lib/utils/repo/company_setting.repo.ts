@@ -73,6 +73,7 @@ export async function updateCompanySettingByCompanyId(options: {
         taxSerialNumber: data.taxSerialNumber,
         representativeName: data.representativeName,
         country: data.country,
+        countryCode: data.country,
         phone: data.phone,
         address: data.address,
         updatedAt: nowInSecond,
