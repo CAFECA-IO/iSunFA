@@ -157,6 +157,7 @@ const teamPictureSchema = z.object({
 
 export const listTeamQuerySchema = paginatedDataQuerySchema.extend({
   canCreateAccountBookOnly: z.coerce.boolean().optional(),
+  syncSession: z.coerce.boolean().optional(),
 });
 
 export const teamPutIconSchema = {
