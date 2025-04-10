@@ -6,24 +6,30 @@ import {
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
 import Divider from '@/components/landing_page/divider';
+import { PLANS } from '@/constants/subscription';
 
 const PlanComparison: React.FC = () => {
   const { t } = useTranslation('pricing');
 
   const features = [
     'PRICE',
-    'BEST_FOR',
+    'FREE_TRIAL',
+    'OWNED_TEAM_LIMIT',
+    'JOINABLE_TEAM_LIMIT',
+    'OWNED_TEAM_MEMBER_LIMIT',
+    'OWNED_TEAM_LEDGER_LIMIT',
+    'CERTIFICATE_MANAGEMENT',
+    'VOUCHER_MANAGEMENT',
     'STORAGE',
-    'LEDGER',
-    'CERTIFICATE',
+    'TRIAL_BALANCE',
+    'GENERAL_LEDGER',
     'FINANCIAL_REPORTS',
-    // 'MATCHING_PLATFORM',
-    'TEAM_COLLABORATION',
-    'API_INTEGRATION',
-    'AUDITING',
-    'CUSTOMER_SUPPORT',
-    // 'EXTRAS',
-    // 'AI_FEATURES',
+    'TECH_ADVANTAGE',
+    'CONTINUOUS_AUDIT',
+    'EARLY_ACCESS',
+    'TAX_REPORTING',
+    'ENTERPRISE_SUPPORT',
+    'UNSUBSCRIBE',
   ];
 
   const plans = ['BEGINNER', 'PROFESSIONAL', 'ENTERPRISE'];
@@ -52,13 +58,13 @@ const PlanComparison: React.FC = () => {
         <table className="mb-200px w-full border-collapse border border-white text-left text-white">
           <thead>
             <tr>
-              <th className="pricing-header h-80px border border-white px-4 py-2 text-xl backdrop-blur-pricing">
+              <th className="pricing-header h-80px border border-white px-4 py-2 text-xl backdrop-blur-pricing min-w-200px">
                 {t('COMPARISON.FEATURES')}
               </th>
               {plans.map((plan) => (
                 <th
                   key={plan}
-                  className="pricing-header border border-white px-4 py-2 text-center text-base backdrop-blur-pricing"
+                  className="pricing-header w-1/3 border border-white px-4 py-2 text-center text-base backdrop-blur-pricing"
                 >
                   {t(`${plan}.TITLE`)}
                 </th>
@@ -71,14 +77,19 @@ const PlanComparison: React.FC = () => {
                 <td className="pricing-subtitle h-80px border border-white px-4 py-2 backdrop-blur-pricing">
                   {t(`FEATURES.${feature}`)}
                 </td>
-                {plans.map((plan) => (
-                  <td
-                    key={`${plan}-${feature}`}
-                    className="pricing-cell h-80px border border-white px-4 py-2 backdrop-blur-pricing"
-                  >
-                    {t(`${plan}.FEATURES.${feature}`)}
-                  </td>
-                ))}
+                {plans.map((planId) => {
+                  const plan = PLANS.find((p) => p.id === planId);
+                  const comparisonValue = plan?.comparison?.[feature];
+
+                  return (
+                    <td
+                      key={`${planId}-${feature}`}
+                      className="pricing-cell h-80px whitespace-pre-line border border-white px-4 py-2 backdrop-blur-pricing"
+                    >
+                      {comparisonValue ? t(`${planId}.FEATURES.${comparisonValue}`) : '-'}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
