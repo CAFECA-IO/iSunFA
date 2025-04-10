@@ -194,7 +194,7 @@ export const createAccountBookSchema = {
 
 export type ICreateAccountBookBody = z.infer<typeof createAccountBookBodySchema>;
 
-// Info: (20250720 - Shirley) 更新帳本信息的 body schema
+// Info: (20250410 - Shirley) 更新帳本信息的 body schema
 export const updateAccountBookInfoBodySchema = z.object({
   name: z.string().optional(),
   taxId: z.string().optional(),
@@ -206,7 +206,7 @@ export const updateAccountBookInfoBodySchema = z.object({
   startDate: z.number().optional(),
 });
 
-// Info: (20250720 - Shirley) 定義更新帳本信息的 schema
+// Info: (20250410 - Shirley) 定義更新帳本信息的 schema
 export const updateAccountBookInfoSchema = {
   input: {
     querySchema: getAccountBookQuerySchema,
@@ -216,5 +216,5 @@ export const updateAccountBookInfoSchema = {
   frontend: accountBookNullSchema,
 };
 
-// Info: (20250720 - Shirley) 定義更新帳本信息的輸入類型
+// Info: (20250410 - Shirley) 定義更新帳本信息的輸入類型
 export type IUpdateAccountBookInfoBody = z.infer<typeof updateAccountBookInfoBodySchema>;

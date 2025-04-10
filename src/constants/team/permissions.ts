@@ -25,7 +25,7 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   [TeamPermissionAction.MODIFY_PROFILE]: [TeamRole.OWNER, TeamRole.ADMIN],
   [TeamPermissionAction.MODIFY_BANK_ACCOUNT]: [TeamRole.OWNER],
   [TeamPermissionAction.MODIFY_PLAN]: [TeamRole.OWNER],
-  [TeamPermissionAction.VIEW_INFO]: [
+  [TeamPermissionAction.VIEW_TEAM_INFO]: [
     TeamRole.OWNER,
     TeamRole.ADMIN,
     TeamRole.EDITOR,

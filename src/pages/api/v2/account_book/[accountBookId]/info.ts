@@ -167,7 +167,7 @@ const handleGetRequest: IHandleRequest<
 };
 
 /**
- * Info: (20250720 - Shirley) 處理 PUT 請求，更新帳本詳細資訊
+ * Info: (20250410 - Shirley) 處理 PUT 請求，更新帳本詳細資訊
  */
 const handlePutRequest: IHandleRequest<
   APIName.UPDATE_ACCOUNT_BOOK_INFO,
@@ -178,7 +178,7 @@ const handlePutRequest: IHandleRequest<
   const updateData = body as IUpdateAccountBookInfoBody;
 
   try {
-    // Info: (20250720 - Shirley) 獲取帳本信息
+    // Info: (20250410 - Shirley) 獲取帳本信息
     const company = await getCompanyById(+accountBookId);
     if (!company) {
       loggerError({
@@ -189,7 +189,7 @@ const handlePutRequest: IHandleRequest<
       return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
     }
 
-    // Info: (20250720 - Shirley) 獲取帳本所屬的團隊
+    // Info: (20250410 - Shirley) 獲取帳本所屬的團隊
     const { teamId } = company;
     if (!teamId) {
       loggerError({
@@ -200,7 +200,7 @@ const handlePutRequest: IHandleRequest<
       return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
     }
 
-    // Info: (20250720 - Shirley) 從 session 中獲取用戶在團隊中的角色
+    // Info: (20250410 - Shirley) 從 session 中獲取用戶在團隊中的角色
     const teamInfo = session.teams?.find((team) => team.id === teamId);
     if (!teamInfo) {
       loggerError({
@@ -213,7 +213,7 @@ const handlePutRequest: IHandleRequest<
 
     const userRole = teamInfo.role as TeamRole;
 
-    // Info: (20250720 - Shirley) 檢查用戶是否有修改帳本權限
+    // Info: (20250410 - Shirley) 檢查用戶是否有修改帳本權限
     const canModifyResult = convertTeamRoleCanDo({
       teamRole: userRole,
       canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
@@ -231,10 +231,10 @@ const handlePutRequest: IHandleRequest<
       return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
     }
 
-    // Info: (20250720 - Shirley) 獲取公司設定
+    // Info: (20250410 - Shirley) 獲取公司設定
     let companySetting = await getCompanySettingByCompanyId(+accountBookId);
     if (!companySetting) {
-      // Info: (20250720 - Shirley) 如果沒有公司設定記錄，創建一個空白記錄
+      // Info: (20250410 - Shirley) 如果沒有公司設定記錄，創建一個空白記錄
       companySetting = await createCompanySetting(+accountBookId);
       if (!companySetting) {
         loggerError({
@@ -246,14 +246,14 @@ const handlePutRequest: IHandleRequest<
       }
     }
 
-    // Info: (20250701 - Shirley) 記錄更新前的狀態
+    // Info: (20250410 - Shirley) 記錄更新前的狀態
     loggerError({
       userId,
       errorType: 'info',
       errorMessage: `Updating account book ${accountBookId}: Previous values - country: ${companySetting.country}, countryCode: ${companySetting.countryCode}, startDate: ${company.startDate}`,
     });
 
-    // Info: (20250720 - Shirley) 更新公司設定
+    // Info: (20250410 - Shirley) 更新公司設定
     const updatedSetting = await updateCompanySettingByCompanyId({
       companyId: +accountBookId,
       data: {
@@ -277,14 +277,14 @@ const handlePutRequest: IHandleRequest<
       return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
     }
 
-    // Info: (20250701 - Shirley) 記錄更新後的狀態
+    // Info: (20250410 - Shirley) 記錄更新後的狀態
     loggerError({
       userId,
       errorType: 'info',
       errorMessage: `Updated account book ${accountBookId}: New values - country: ${updatedSetting.country}, countryCode: ${updatedSetting.countryCode}, startDate: ${updatedSetting.company.startDate}`,
     });
 
-    // Info: (20250720 - Shirley) 獲取更新後的帳本信息
+    // Info: (20250410 - Shirley) 獲取更新後的帳本信息
     const updatedCompany = await getCompanyById(+accountBookId);
     if (!updatedCompany) {
       loggerError({
@@ -295,7 +295,7 @@ const handlePutRequest: IHandleRequest<
       return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
     }
 
-    // Info: (20250720 - Shirley) 獲取國家資訊
+    // Info: (20250410 - Shirley) 獲取國家資訊
     const countryCode = updatedSetting.countryCode || 'tw';
     const countryLocaleKey = updatedSetting.country || 'tw';
 
@@ -304,7 +304,7 @@ const handlePutRequest: IHandleRequest<
       dbCountry = await getCountryByCode(countryCode);
     }
 
-    // Info: (20250720 - Shirley) 構建國家資訊
+    // Info: (20250410 - Shirley) 構建國家資訊
     const country: ICountry = dbCountry
       ? {
           id: String(dbCountry.id),
@@ -325,7 +325,7 @@ const handlePutRequest: IHandleRequest<
           phoneExample: '0902345678',
         };
 
-    // Info: (20250720 - Shirley) 構建回應資料
+    // Info: (20250410 - Shirley) 構建回應資料
     const payload: IGetAccountBookResponse = {
       id: String(accountBookId),
       name: updatedCompany.name,

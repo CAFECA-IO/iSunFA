@@ -14,7 +14,7 @@ export enum TeamPermissionAction {
   VIEW_BANK_INFO = 'VIEW_BANK_INFO', // Info: (20250320 - Liz) 查看團隊銀行帳號 bankAccount
   MODIFY_BANK_ACCOUNT = 'MODIFY_BANK_ACCOUNT', // Info: (20250320 - Liz) 編輯團隊銀行帳號 bankAccount
   MODIFY_PLAN = 'MODIFY_PLAN', // Info: (20250320 - Liz) 編輯團隊訂閱方案 planType
-  VIEW_INFO = 'VIEW_TEAM_INFO', // Info: (20250320 - Liz) 查看團隊資訊
+  VIEW_TEAM_INFO = 'VIEW_TEAM_INFO', // Info: (20250320 - Liz) 查看團隊資訊
   VIEW_SUBSCRIPTION = 'VIEW_SUBSCRIPTION', // Info: (20250320 - Liz) 查看目前團隊訂閱方案
 
   // Info: (20250313 - Tzuhan) 帳本權限
