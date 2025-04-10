@@ -73,6 +73,7 @@ export async function updateCompanySettingByCompanyId(options: {
         taxSerialNumber: data.taxSerialNumber,
         representativeName: data.representativeName,
         country: data.country,
+        countryCode: data.country,
         phone: data.phone,
         address: data.address,
         updatedAt: nowInSecond,
@@ -80,6 +81,7 @@ export async function updateCompanySettingByCompanyId(options: {
           update: {
             name: data.companyName,
             taxId: data.companyTaxId,
+            ...(data.companyStartDate ? { startDate: data.companyStartDate } : {}),
           },
         },
       },
@@ -116,6 +118,7 @@ export async function updateCompanySettingById(id: number, data: ICompanySetting
           update: {
             name: data.companyName,
             taxId: data.companyTaxId,
+            ...(data.companyStartDate ? { startDate: data.companyStartDate } : {}),
           },
         },
       },
