@@ -13,6 +13,7 @@ import { getTimestampNow } from '@/lib/utils/common';
 import { listTeamQuerySchema } from '@/lib/utils/zod_schema/team';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import loggerBack from '@/lib/utils/logger_back';
+import { updateTeamMemberSession } from '@/lib/utils/session';
 
 export const getTeamList = async (
   userId: number,
@@ -26,6 +27,7 @@ export const getTeamList = async (
     searchQuery,
     sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
     canCreateAccountBookOnly = false,
+    syncSession = true,
   } = queryParams;
 
   const nowInSecond = getTimestampNow();
@@ -62,9 +64,17 @@ export const getTeamList = async (
     }),
   ]);
 
+  const updatedSessionPromises: Promise<void>[] = [];
+
   const teamData = teams
     .map((team) => {
       const role = (team.members[0]?.role as TeamRole) ?? TeamRole.VIEWER;
+
+      // Info: (20250410 - tzuhan) 如果需要同步 session，就先準備 Promise
+      if (syncSession) {
+        updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, role));
+      }
+
       const permissionCheck = convertTeamRoleCanDo({
         teamRole: role,
         canDo: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
@@ -99,6 +109,11 @@ export const getTeamList = async (
       };
     })
     .filter((team): team is NonNullable<typeof team> => team !== null);
+
+  // Info: (20250410 - tzuhan) 統一觸發 session 同步
+  if (syncSession) {
+    await Promise.all(updatedSessionPromises);
+  }
 
   return toPaginatedData({
     data: teamData,
@@ -400,14 +415,66 @@ export const createTeam = async (
   });
 };
 
-export const getTeamByTeamId = async (teamId: number, userId: number): Promise<ITeam | null> => {
-  const teamMember = await prisma.teamMember.findFirst({
-    where: { teamId, userId },
-  });
-  if (!teamMember) {
-    throw new Error('USER_NOT_IN_TEAM');
-  }
+export async function assertUserIsTeamMember(
+  userId: number,
+  teamId: number
+): Promise<{
+  actualRole: TeamRole;
+  effectiveRole: TeamRole;
+  expiredAt?: number;
+}> {
+  const nowInSecond = Math.floor(Date.now() / 1000);
 
+  const member = await prisma.teamMember.findFirst({
+    where: {
+      teamId,
+      userId,
+      status: LeaveStatus.IN_TEAM,
+    },
+    select: {
+      role: true,
+      team: {
+        select: {
+          subscriptions: {
+            where: {
+              startDate: {
+                lte: nowInSecond,
+              },
+              expiredDate: {
+                gt: nowInSecond,
+              },
+            },
+            select: {
+              expiredDate: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!member) throw new Error('USER_NOT_IN_TEAM');
+
+  const { role, team } = member;
+
+  const expiredAt = team.subscriptions[0]?.expiredDate ?? 0;
+  const isExpired = expiredAt === 0;
+
+  return {
+    actualRole: role as TeamRole,
+    effectiveRole: isExpired ? TeamRole.VIEWER : (role as TeamRole),
+    expiredAt,
+  };
+}
+
+export const getTeamByTeamId = async (teamId: number, userId: number): Promise<ITeam | null> => {
+  // Info: (20250410 - tzuhan) Step 1. 驗證是否為團隊成員並取得角色
+  const role = await assertUserIsTeamMember(userId, teamId);
+
+  // Info: (20250410 - tzuhan) Step 2. 確保 session 中有正確的 teamRole
+  await updateTeamMemberSession(userId, teamId, role.effectiveRole);
+
+  // Info: (20250410 - tzuhan) Step 3. 查詢團隊資訊
   const nowInSecond = getTimestampNow();
 
   const team = await prisma.team.findUnique({
