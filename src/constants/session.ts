@@ -23,7 +23,7 @@ export const SESSION_DEVELOPER: ISessionData = {
       role: TeamRole.ADMIN,
     },
     {
-      id: 6,
+      id: 2,
       role: TeamRole.OWNER,
     },
   ],
