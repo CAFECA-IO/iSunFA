@@ -15,7 +15,7 @@ export interface ISubscription {
 export enum TPlanPrice {
   BEGINNER_PRICE = 0,
   PROFESSIONAL_PRICE = 899,
-  ENTERPRISE_PRICE = 8990,
+  ENTERPRISE_PRICE = 2399,
   EXTRA_MEMBER_PRICE = 89,
 }
 

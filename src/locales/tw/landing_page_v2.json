@@ -12,7 +12,7 @@
     "FREE_TRIAL_BTN": "立即開始免費試用",
     "BUSINESS_DESCRIPTION": "為公司解決記帳與稅務作業",
     "BUSINESS_BTN": "申請企業帳號",
-    "FIRM_DESCRIPTION": "為客戶提供會計報表與審計報告",
+    "FIRM_DESCRIPTION": "為客戶提供會計報表",
     "FIRM_BTN": "申請事務所帳號",
     "PERSONAL_DESCRIPTION": "透過平台承攬財務工作",
     "PERSONAL_BTN": "申請個人帳號"
@@ -33,7 +33,7 @@
   },
   "REAL_TIME_REPORT": {
     "MAIN_TITLE": "即時洞察財務，\n全面提升效率！",
-    "DESCRIPTION_1": "使用 iSunFA，輕鬆實現定期即時生成財務三大報表 (資產負債表、損益表、現金流量表) 及 401 營業稅申報表，讓您的財務狀況一目了然。我們的軟體不僅提供高度透明的數據分析，還能顯著節省處理時間，幫助您迅速制定關鍵決策。",
+    "DESCRIPTION_1": "使用 iSunFA，輕鬆實現定期即時生成財務三大報表 (資產負債表、損益表、現金流量表)，讓您的財務狀況一目了然。我們的軟體不僅提供高度透明的數據分析，還能顯著節省處理時間，幫助您迅速制定關鍵決策。",
     "DESCRIPTION_2": "無論是日常財務管理還是應對外部稽核，iSunFA 都能提供即時、精準的解決方案，確保您的企業高效穩健運行。選擇 iSunFA，掌握財務未來，開啟智慧與效率的新篇章！"
   },
   "FLEXIBLE_FEATURE_SELECTION": {

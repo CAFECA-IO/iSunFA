@@ -2,7 +2,6 @@ import Head from 'next/head';
 import React from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '@/components/nav_bar/nav_bar';
-import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import FinancialReportSection from '@/components/financial_report_section/financial_report_section';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
@@ -28,9 +27,6 @@ const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
     </div>
   ) : (
     <>
-      <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-        <ReportsSidebar />
-      </div>
       <div className="h-1200px overflow-x-hidden bg-surface-neutral-main-background lg:h-1200px">
         <FinancialReportSection reportType={reportType as FinancialReportTypesKey} />
       </div>{' '}

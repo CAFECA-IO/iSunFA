@@ -12,7 +12,7 @@
     "FREE_TRIAL_BTN": "立即开始免费试用",
     "BUSINESS_DESCRIPTION": "为公司解决记帐与税务作业",
     "BUSINESS_BTN": "申请企业帐号",
-    "FIRM_DESCRIPTION": "为客户提供会计报表与审计报告",
+    "FIRM_DESCRIPTION": "为客户提供会计报表",
     "FIRM_BTN": "申请事务所帐号",
     "PERSONAL_DESCRIPTION": "透过平台承揽财务工作",
     "PERSONAL_BTN": "申请个人帐号"
@@ -33,7 +33,7 @@
   },
   "REAL_TIME_REPORT": {
     "MAIN_TITLE": "即时洞察财务，\n全面提升效率！",
-    "DESCRIPTION_1": "使用 iSunFA，轻松实现定期即时生成财务三大报表 (资产负债表、损益表、现金流量表) 及 401 营业税申报表，让您的财务状况一目了然。我们的软体不仅提供高度透明的数据分析，还能显著节省处理时间，帮助您迅速制定关键决策。",
+    "DESCRIPTION_1": "使用 iSunFA，轻松实现定期即时生成财务三大报表 (资产负债表、损益表、现金流量表)，让您的财务状况一目了然。我们的软体不仅提供高度透明的数据分析，还能显著节省处理时间，帮助您迅速制定关键决策。",
     "DESCRIPTION_2": "无论是日常财务管理还是应对外部稽核，iSunFA 都能提供即时、精准的解决方案，确保您的企业高效稳健运行。选择 iSunFA，掌握财务未来，开启智慧与效率的新篇章！"
   },
   "FLEXIBLE_FEATURE_SELECTION": {
