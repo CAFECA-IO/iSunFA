@@ -12,7 +12,7 @@ export const SESSION_DEVELOPER: ISessionData = {
   ipAddress: DefaultValue.IP,
   userId: 10000000,
   companyId: 10000000,
-  roleId: 10000000,
+  roleId: 2,
   teams: [
     {
       id: 1, // Info: (20250324 - Shirley) 修改為 team table 裡 owner_id === SESSION_DEVELOPER.userId 的 id

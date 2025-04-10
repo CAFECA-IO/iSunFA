@@ -28,6 +28,8 @@ const SubscriptionPlan = ({
   const { toastHandler } = useModalContext();
   const isSelected = team.plan === plan.id;
   const isBeginner = plan.id === TPlanType.BEGINNER;
+  const isProfessional = plan.id === TPlanType.PROFESSIONAL;
+  const isEnterprise = plan.id === TPlanType.ENTERPRISE;
   const [isDowngradeMessageModalOpen, setIsDowngradeMessageModalOpen] = useState(false);
 
   const borderedStyle = bordered ? 'border border-stroke-neutral-quaternary' : '';
@@ -130,7 +132,7 @@ const SubscriptionPlan = ({
             </p>
 
             <p className="h-30px text-base font-semibold text-text-brand-primary-lv1">
-              {plan.id === TPlanType.PROFESSIONAL
+              {plan.id !== TPlanType.BEGINNER
                 ? `${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_PREFIX')}+ $${plan.extraMemberPrice}${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_SUFFIX')}`
                 : ''}
             </p>
@@ -156,7 +158,7 @@ const SubscriptionPlan = ({
         </span>
         {!isSelected && <FiArrowRight size={24} />}
       </button>
-      <ul className="flex flex-col gap-4px text-xs">
+      <ul className="flex min-h-350px flex-col gap-4px text-xs">
         {plan.id === TPlanType.PROFESSIONAL && (
           <li className="flex items-start gap-4px">
             <Image src="/icons/yellow_star.svg" alt="yellow_star" width={16} height={16} />
@@ -208,6 +210,26 @@ const SubscriptionPlan = ({
           </li>
         ))}
       </ul>
+      {isProfessional && (
+        <p className="mt-auto flex flex-col text-xs">
+          <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
+            {t('subscriptions:PLANS_FEATURES_NAME.FREE_TRIAL')}
+          </span>
+          <span className="min-h-100px text-xs font-medium leading-5 text-text-neutral-tertiary">
+            {`* ${t('subscriptions:PLANS_FEATURES_VALUE.30_DAYS_ON_TEAM_CREATION')}`}
+          </span>
+        </p>
+      )}
+      {isEnterprise && (
+        <p className="mt-auto flex flex-col text-xs">
+          <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
+            {t('subscriptions:PLANS_FEATURES_NAME.NOTE')}
+          </span>
+          <span className="min-h-100px text-xs font-medium leading-5 text-text-neutral-tertiary">
+            {`* ${t('subscriptions:PLANS_FEATURES_VALUE.NOTE_DES')}`}
+          </span>
+        </p>
+      )}
       {!isBeginner && (
         <p className="mt-auto flex flex-col text-xs">
           <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
