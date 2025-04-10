@@ -142,24 +142,30 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
   const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const formData: IPersonalInfo = {
-      firstName: firstNameInput,
-      lastName: lastNameInput,
-      phoneNumber: phoneNumberInput,
-      email: emailInput,
-      address: addressInput,
-      isRelatedCompany,
-      isWorkingISunCloud,
-      hasCriminalRecord,
-      whereLearnAboutJob,
-    };
+    try {
+      const formData: IPersonalInfo = {
+        firstName: firstNameInput,
+        lastName: lastNameInput,
+        phoneNumber: phoneNumberInput,
+        email: emailInput,
+        address: addressInput,
+        isRelatedCompany,
+        isWorkingISunCloud,
+        hasCriminalRecord,
+        whereLearnAboutJob,
+      };
 
-    // deprecated: (20250410 - Julian) for debugging
-    // eslint-disable-next-line no-console
-    console.log('Form Data:', formData);
+      // deprecated: (20250410 - Julian) for debugging
+      // eslint-disable-next-line no-console
+      console.log('Form Data:', formData);
 
-    // Info: (20250410 - Julian) 進行到下一步
-    toNextStep();
+      // Info: (20250410 - Julian) 進行到下一步
+      toNextStep();
+    } catch (error) {
+      // Info: (20250410 - Julian) 處理錯誤
+      // eslint-disable-next-line no-console
+      console.error('Error submitting form:', error);
+    }
   };
 
   const tfQuestions = questions.map((question, index) => {
