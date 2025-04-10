@@ -354,6 +354,7 @@ export const listAccountBookByUserId = async (
                   : '',
                 editable: false,
               },
+              expiredAt: book.team.subscriptions[0]?.expiredDate ?? 0,
             }
           : null,
         isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
@@ -505,6 +506,7 @@ export const listAccountBooksByTeamId = async (
                   : '',
                 editable: false,
               },
+              expiredAt: book.team.subscriptions[0]?.expiredDate ?? 0,
             }
           : null,
         isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
@@ -894,6 +896,7 @@ export async function getAccountBookForUserWithTeam(
           : '',
         editable: userRole !== TeamRole.VIEWER,
       },
+      expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
     };
 
     // Info: (20250329 - Shirley) Since we're not using admin table anymore, we need default values for tag and order
@@ -1053,6 +1056,7 @@ export async function findUserAccountBook(
           : '',
         editable: userRole !== TeamRole.VIEWER,
       },
+      expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
     };
 
     // Info: (20250325 - Shirley) Return the formatted account book data
@@ -1164,4 +1168,32 @@ export const deleteAccountBook = async (accountBookId: number): Promise<IAccount
     };
   }
   return result;
+};
+
+/**
+ * Info: (20250409 - Shirley) 獲取帳本所屬的團隊ID
+ * @param accountBookId 帳本ID
+ * @returns 帳本所屬的團隊ID，如果找不到則返回null
+ */
+export const getAccountBookTeamId = async (accountBookId: number): Promise<number | null> => {
+  try {
+    const accountBook = await prisma.company.findFirst({
+      where: {
+        id: accountBookId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      select: {
+        teamId: true,
+      },
+    });
+
+    return accountBook?.teamId || null;
+  } catch (error) {
+    loggerBack.error({
+      error,
+      accountBookId,
+      message: 'Failed to get account book team ID',
+    });
+    return null;
+  }
 };

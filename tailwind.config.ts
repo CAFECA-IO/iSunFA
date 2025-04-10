@@ -749,6 +749,7 @@ module.exports = {
         'privacy-policy': 'url("/elements/sun_light.png")',
         'join-us': 'url("/elements/join_us_bg.png")',
         'job-detail': "url('/elements/job_detail.png')",
+        finish: "url('/elements/finish.png')",
       },
       zIndex: {
         '-10': '-10',
@@ -1015,6 +1016,7 @@ module.exports = {
         '140px': '140px',
         '150px': '150px',
         '160px': '160px',
+        '168px': '168px',
         '170px': '170px',
         '177px': '177px',
         '180px': '180px',
@@ -1460,6 +1462,8 @@ module.exports = {
         '280px': '280px',
         '300px': '300px',
         '400px': '400px',
+        'with-sidebar': 'calc(100vw - 280px)',
+        'with-collapsed-sidebar': 'calc(100vw - 66px)',
       },
       minWidth: {
         '200px': '200px',
@@ -1583,6 +1587,10 @@ module.exports = {
       },
       skew: {
         20: '20deg', // Info: (20241004 - Liz) 用來創造平行四邊形，例如: skew-x-20
+      },
+      letterSpacing: {
+        'tight-016': '0.16px',
+        'tight-018': '0.18px',
       },
     },
   },

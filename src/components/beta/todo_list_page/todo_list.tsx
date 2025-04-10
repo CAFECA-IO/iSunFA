@@ -1,12 +1,12 @@
 import { useTranslation } from 'next-i18next';
-import { ITodoCompany } from '@/interfaces/todo';
+import { ITodoAccountBook } from '@/interfaces/todo';
 import Todo from '@/components/beta/todo_list_page/todo';
 import { Dispatch, SetStateAction } from 'react';
 
 interface TodoListProps {
-  todoList: ITodoCompany[];
-  setTodoToUpdate: Dispatch<SetStateAction<ITodoCompany | undefined>>;
-  setTodoToDelete: Dispatch<SetStateAction<ITodoCompany | undefined>>;
+  todoList: ITodoAccountBook[];
+  setTodoToUpdate: Dispatch<SetStateAction<ITodoAccountBook | undefined>>;
+  setTodoToDelete: Dispatch<SetStateAction<ITodoAccountBook | undefined>>;
 }
 
 const TodoList = ({ todoList, setTodoToUpdate, setTodoToDelete }: TodoListProps) => {

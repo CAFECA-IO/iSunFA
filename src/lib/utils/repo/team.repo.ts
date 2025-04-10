@@ -1,4 +1,5 @@
 import prisma from '@/client';
+import { addMonths, getUnixTime } from 'date-fns';
 import { ITeam, TeamRole, LeaveStatus } from '@/interfaces/team';
 import { InviteStatus } from '@prisma/client';
 import { IPaginatedOptions } from '@/interfaces/pagination';
@@ -11,6 +12,7 @@ import { ITeamRoleCanDo, MAX_TEAM_LIMIT, TeamPermissionAction } from '@/interfac
 import { getTimestampNow } from '@/lib/utils/common';
 import { listTeamQuerySchema } from '@/lib/utils/zod_schema/team';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import loggerBack from '@/lib/utils/logger_back';
 
 export const getTeamList = async (
   userId: number,
@@ -93,6 +95,7 @@ export const getTeamList = async (
         },
         // ToDo: (20250330 - Luphia) 需從團隊訂閱狀態取得資料
         paymentStatus: TPlanType.BEGINNER,
+        expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
       };
     })
     .filter((team): team is NonNullable<typeof team> => team !== null);
@@ -104,6 +107,156 @@ export const getTeamList = async (
     totalCount,
     pageSize,
     sort: sortOption,
+  });
+};
+
+export const createTeamWithTrial = async (
+  userId: number,
+  teamData: {
+    name: string;
+    members?: string[];
+    planType?: TPlanType;
+    about?: string;
+    profile?: string;
+    bankInfo?: { code: number; number: string };
+    imageFileId?: number;
+  }
+): Promise<ITeam> => {
+  return prisma.$transaction(async (tx) => {
+    // Info: (20250409 - Tzuhan) 1. 限制團隊數量
+    const teamCount = await tx.team.count({
+      where: { ownerId: userId },
+    });
+    if (teamCount >= MAX_TEAM_LIMIT) {
+      throw new Error('USER_TEAM_LIMIT_REACHED');
+    }
+
+    loggerBack.info(
+      `User ${userId} is creating a new team (teamData: ${JSON.stringify(teamData)}) with trial subscription.`
+    );
+
+    const plan = await tx.teamPlan.findFirst({
+      where: {
+        type: teamData.planType === TPlanType.BEGINNER ? TPlanType.PROFESSIONAL : teamData.planType,
+      },
+      select: { type: true },
+    });
+    if (!plan) throw new Error('PLAN_NOT_FOUND');
+
+    loggerBack.info(`User ${userId} is creating a new team plan: ${plan.type}`);
+
+    const now = new Date();
+    const nowInSeconds = getUnixTime(now);
+
+    // Info: (20250409 - Tzuhan) 2. 建立團隊
+    const newTeam = await tx.team.create({
+      data: {
+        ownerId: userId,
+        name: teamData.name,
+        imageFileId: teamData.imageFileId ?? null,
+        about: teamData.about ?? '',
+        profile: teamData.profile ?? '',
+        bankInfo: teamData.bankInfo ?? { code: '', number: '' },
+      },
+      include: {
+        members: true,
+        accountBook: true,
+        imageFile: true,
+      },
+    });
+
+    // Info: (20250409 - Tzuhan) 3. 新增 owner 為成員
+    await tx.teamMember.create({
+      data: {
+        teamId: newTeam.id,
+        userId,
+        role: TeamRole.OWNER,
+        joinedAt: nowInSeconds,
+      },
+    });
+
+    // Info: (20250409 - Tzuhan) 4. 處理邀請成員
+    if (teamData.members?.length) {
+      const existingUsers = await tx.user.findMany({
+        where: { email: { in: teamData.members } },
+        select: { id: true, email: true },
+      });
+
+      const existingUserEmails = new Set(existingUsers.map((u) => u.email));
+      const newUserEmails = teamData.members.filter((email) => !existingUserEmails.has(email));
+
+      if (existingUsers.length) {
+        await tx.teamMember.createMany({
+          data: existingUsers.map((user) => ({
+            teamId: newTeam.id,
+            userId: user.id,
+            role: TeamRole.EDITOR,
+            joinedAt: nowInSeconds,
+          })),
+          skipDuplicates: true,
+        });
+
+        await tx.inviteTeamMember.createMany({
+          data: existingUsers.map((user) => ({
+            teamId: newTeam.id,
+            email: user.email!,
+            status: InviteStatus.COMPLETED,
+            createdAt: nowInSeconds,
+            completedAt: nowInSeconds,
+            note: JSON.stringify({
+              reason: 'User already exists, added to team without asking',
+            }),
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      if (newUserEmails.length) {
+        await tx.inviteTeamMember.createMany({
+          data: newUserEmails.map((email) => ({
+            teamId: newTeam.id,
+            email,
+            status: InviteStatus.PENDING,
+            createdAt: nowInSeconds,
+            note: JSON.stringify({
+              reason:
+                'User not exists, pending for join, when user register, will be added to team',
+            }),
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
+    // Info: (20250409 - Tzuhan) 5. 建立試用 TeamSubscription（預設為 PROFESSIONAL 方案）
+    await tx.teamSubscription.create({
+      data: {
+        teamId: newTeam.id,
+        planType: plan.type,
+        startDate: nowInSeconds,
+        expiredDate: getUnixTime(addMonths(now, 1)),
+      },
+    });
+
+    // Info: (20250409 - Tzuhan) 6. 回傳 ITeam 格式
+    return {
+      id: newTeam.id,
+      imageId: newTeam.imageFile?.url ?? '/images/fake_team_img.svg',
+      role: TeamRole.OWNER,
+      name: { value: newTeam.name, editable: true },
+      about: { value: newTeam.about ?? '', editable: true },
+      profile: { value: newTeam.profile ?? '', editable: true },
+      planType: { value: plan.type as TPlanType, editable: false },
+      totalMembers: newTeam.members.length + 1,
+      totalAccountBooks: newTeam.accountBook.length,
+      bankAccount: {
+        value: newTeam.bankInfo
+          ? `${(newTeam.bankInfo as { code: string }).code}-${(newTeam.bankInfo as { number: string }).number}`
+          : '',
+        editable: true,
+      },
+      expiredAt: getUnixTime(addMonths(now, 1)),
+    };
   });
 };
 
@@ -242,6 +395,7 @@ export const createTeam = async (
           : '',
         editable: true,
       },
+      expiredAt: 0,
     };
   });
 };
@@ -327,6 +481,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
         : '',
       editable: teamRole !== TeamRole.VIEWER,
     },
+    expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
   };
 };
 
@@ -437,7 +592,13 @@ export const getTeamsByUserIdAndTeamIds = async (
         },
       },
       accountBook: true,
-      subscriptions: { include: { plan: true } },
+      subscriptions: {
+        where: {
+          startDate: { lte: getTimestampNow() },
+          expiredDate: { gt: getTimestampNow() },
+        },
+        include: { plan: true },
+      },
       imageFile: { select: { id: true, url: true } },
     },
   });
@@ -467,6 +628,7 @@ export const getTeamsByUserIdAndTeamIds = async (
       },
       // ToDo: (20250330 - Luphia) 需從團隊訂閱狀態取得資料
       paymentStatus: TPlanType.BEGINNER,
+      expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
     };
   });
 };

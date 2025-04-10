@@ -66,10 +66,10 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
   }, [t, toastHandler, userAuth]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-y-hidden">
       <SideMenu toggleOverlay={toggleOverlay} notPrint />
 
-      <div className="relative flex flex-auto flex-col bg-surface-neutral-main-background">
+      <div className="relative flex min-w-0 flex-auto flex-col bg-surface-neutral-main-background">
         <Header
           isDashboard={isDashboard}
           pageTitle={pageTitle}

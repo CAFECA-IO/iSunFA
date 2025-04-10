@@ -14,10 +14,15 @@ import { getSession } from '@/lib/utils/session';
 import loggerBack from '@/lib/utils/logger_back';
 import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
-import { deleteAccountBook, updateAccountBook } from '@/lib/utils/repo/account_book.repo';
+import {
+  deleteAccountBook,
+  updateAccountBook,
+  getAccountBookTeamId,
+} from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { getUserRoleInTeam } from '@/lib/utils/repo/team_member.repo';
 import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamRole } from '@/interfaces/team';
 
 /**
  * Info: (20250310 - Shirley) Handle PUT request
@@ -95,7 +100,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
 const handleDeleteRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
-  const { userId } = session;
+  const { userId, teams } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccountBook | null = null;
 
@@ -106,25 +111,53 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const teamRole = await getUserRoleInTeam(userId, query.accountBookId);
+  // Info: (20250409 - Shirley) 獲取帳本所屬的團隊ID
+  const accountBookId = Number(query.accountBookId);
+  const teamId = await getAccountBookTeamId(accountBookId);
 
-  if (!teamRole) {
+  if (!teamId) {
+    loggerBack.warn(`Account book ${accountBookId} not found or doesn't belong to any team`);
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  // Info: (20250409 - Shirley) 從 session 中獲取用戶在團隊中的角色
+  const teamInfo = teams?.find((team) => team.id === teamId);
+
+  if (!teamInfo) {
+    loggerBack.warn(
+      `User ${userId} is not in the team ${teamId} that owns account book ${accountBookId}`
+    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
-  const canDo = convertTeamRoleCanDo({
+
+  const teamRole = teamInfo.role as TeamRole;
+
+  // Info: (20250409 - Shirley) 檢查用戶是否有刪除帳本的權限
+  const canDeleteResult = convertTeamRoleCanDo({
     teamRole,
     canDo: TeamPermissionAction.DELETE_ACCOUNT_BOOK,
   }) as ITeamRoleCanDo;
 
-  if (!canDo || canDo.yesOrNo === false) {
+  loggerBack.info(`canDeleteResult: ${JSON.stringify(canDeleteResult)}`);
+
+  if (!canDeleteResult.yesOrNo) {
+    loggerBack.warn(
+      `User ${userId} with role ${teamRole} doesn't have permission to delete account book ${accountBookId}`
+    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
-  const result = await deleteAccountBook(query.accountBookId);
+
+  // Info: (20250409 - Shirley) 執行刪除帳本操作
+  loggerBack.info(`User ${userId} is deleting account book ${accountBookId}`);
+  const result = await deleteAccountBook(accountBookId);
+
+  // Info: (20250409 - Shirley) 驗證刪除結果
   const { isOutputDataValid, outputData } = validateOutputData(APIName.DELETE_ACCOUNT_BOOK, result);
 
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   } else {
+    statusMessage = STATUS_MESSAGE.SUCCESS;
     payload = outputData;
   }
 

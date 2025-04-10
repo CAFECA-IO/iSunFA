@@ -88,7 +88,7 @@ const ChangeTagModal = ({
         </section>
 
         <section className="flex flex-col gap-24px px-40px py-16px">
-          {/* Company Name */}
+          {/* Info: (20241025 - Liz) Company Name */}
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
               {t('account_book:INFO.COMPANY_NAME')}
@@ -102,7 +102,7 @@ const ChangeTagModal = ({
             />
           </div>
 
-          {/* Work Tag / Company Tag */}
+          {/* Info: (20241112 - Liz) Work Tag / Company Tag */}
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
               {t('account_book:INFO.WORK_TAG')}

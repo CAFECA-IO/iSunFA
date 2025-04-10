@@ -172,17 +172,6 @@ const MENU_CONFIG: TMenuOption[] = [
         ],
       },
       {
-        caption: 'TAX_REPORT',
-        subMenu: [
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'BUSINESS_TAX_RETURN_401',
-            link: ISUNFA_ROUTE.BUSINESS_TAX,
-            needToVerifyAccountBook: true,
-          },
-        ],
-      },
-      {
         caption: 'DAILY_REPORT',
         subMenu: [
           {
@@ -527,15 +516,15 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
               <Image
                 src={userAvatarSrc}
                 alt="user_avatar"
-                width={40}
-                height={40}
+                width={64}
+                height={64}
                 className="rounded-full"
               ></Image>
             </div>
 
             <div className="flex flex-auto items-center justify-between">
               <div>
-                <h3 className="text-base font-medium text-text-neutral-tertiary">
+                <h3 className="text-base font-medium tracking-tight-016 text-text-neutral-tertiary">
                   {t('layout:SIDE_MENU.CURRENT_ACCOUNT_BOOK')}
                 </h3>
 
@@ -548,7 +537,7 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
                 {!hasConnectedAccountBook && (
                   <Link
                     href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE}
-                    className="text-start text-lg font-semibold text-link-text-primary"
+                    className="text-start text-lg font-semibold tracking-tight-018 text-link-text-primary"
                   >
                     {t('layout:SIDE_MENU.SELECT_ACCOUNT_BOOK')}
                   </Link>

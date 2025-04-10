@@ -28,6 +28,7 @@ export interface ITeam {
   totalMembers: number;
   totalAccountBooks: number;
   bankAccount: IEditable<string>;
+  expiredAt: number;
 }
 
 export interface IInviteMember {
