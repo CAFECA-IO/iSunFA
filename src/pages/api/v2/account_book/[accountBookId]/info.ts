@@ -250,7 +250,7 @@ const handlePutRequest: IHandleRequest<
     loggerError({
       userId,
       errorType: 'info',
-      errorMessage: `Updating account book ${accountBookId}: Previous values - country: ${companySetting.country}, countryCode: ${companySetting.countryCode}`,
+      errorMessage: `Updating account book ${accountBookId}: Previous values - country: ${companySetting.country}, countryCode: ${companySetting.countryCode}, startDate: ${company.startDate}`,
     });
 
     // Info: (20250720 - Shirley) 更新公司設定
@@ -264,6 +264,7 @@ const handlePutRequest: IHandleRequest<
         address: updateData.address,
         companyName: updateData.name,
         companyTaxId: updateData.taxId,
+        companyStartDate: updateData.startDate,
       },
     });
 
@@ -280,7 +281,7 @@ const handlePutRequest: IHandleRequest<
     loggerError({
       userId,
       errorType: 'info',
-      errorMessage: `Updated account book ${accountBookId}: New values - country: ${updatedSetting.country}, countryCode: ${updatedSetting.countryCode}`,
+      errorMessage: `Updated account book ${accountBookId}: New values - country: ${updatedSetting.country}, countryCode: ${updatedSetting.countryCode}, startDate: ${updatedSetting.company.startDate}`,
     });
 
     // Info: (20250720 - Shirley) 獲取更新後的帳本信息

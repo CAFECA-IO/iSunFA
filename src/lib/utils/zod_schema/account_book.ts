@@ -203,6 +203,7 @@ export const updateAccountBookInfoBodySchema = z.object({
   country: z.nativeEnum(LocaleKey).optional(),
   phoneNumber: z.string().optional(),
   address: z.string().optional(),
+  startDate: z.number().optional(),
 });
 
 // Info: (20250720 - Shirley) 定義更新帳本信息的 schema
