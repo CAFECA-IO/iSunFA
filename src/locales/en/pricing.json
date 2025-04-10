@@ -22,10 +22,7 @@
     "TITLE": "Beginner",
     "PRICE_UNIT": "",
     "FEATURES": {
-      "ESSENTIAL": "Essential features for daily accounting:",
-      "CREATE_TEAMS": "Create up to 3 teams to share data and ledger.",
       "ACCEPT_TASKS": "Accept tasks from businesses or accountants on the platform.",
-      "SUPPORT_USER": "Supports 1 user.",
       "PRICE": "$0 / month",
       "BEST_FOR": "Explore basic features, meet daily needs",
       "STORAGE": "10GB",
@@ -34,10 +31,10 @@
       "FINANCIAL_REPORTS": "Unlimited generation",
       "MATCHING_PLATFORM": "Accept tasks only",
       "TEAM_COLLABORATION": "Up to 3 teams, 1 user",
-      "CUSTOMER_SUPPORT": "Live chat only",
       "API_INTEGRATION": "Not supported",
       "AUDITING": "Manual report downloads",
       "EXTRAS": "None",
+      "CUSTOMER_SUPPORT": "Live chat only",
       "AI_FEATURES": "All AI chats are public"
     },
     "BUTTON_TEXT": "Select this plan"
@@ -72,7 +69,6 @@
     "PRICE_UNIT": "NTD/Month",
     "FEATURES": {
       "EVERYTHING_IN_PROFESSIONAL": "Everything in Professional, plus:",
-      "ASSET_TAGS": "Free 100 asset tags for easy tracking.",
       "TECHNICAL_ASSISTANCE": "48 hours of one-on-one technical assistance , up to 4 hours per session.",
       "PRICE": "$2399 / month",
       "BEST_FOR": "Comprehensive solutions for large enterprises",
