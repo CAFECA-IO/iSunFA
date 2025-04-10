@@ -1,26 +1,37 @@
 import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa6';
-import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { LandingButton } from '@/components/landing_page_v2/landing_button';
 
-interface TFQuestionProps {
+interface ITFQuestionProps {
   id: string;
   question: string;
   answer: boolean;
   onChange: (answer: boolean) => void;
 }
 
-const TFQuestion: React.FC<TFQuestionProps> = ({ id, question, answer, onChange }) => {
+interface IPersonalInfoFormProps {
+  toNextStep: () => void;
+}
+
+const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange }) => {
+  const { t } = useTranslation(['hiring']);
+
   const radioStyle =
     'peer relative h-16px w-16px appearance-none rounded-full border border-white before:absolute before:left-2px before:top-2px before:hidden before:h-10px before:w-10px before:rounded-full before:bg-surface-brand-primary-moderate checked:border-surface-brand-primary-moderate checked:before:block hover:bg-surface-brand-primary-30 hover:border-surface-brand-primary';
 
   const changeYes = () => onChange(true);
   const changeNo = () => onChange(false);
 
+  const toggleAnswer = () => onChange(!answer);
+
   return (
     <div className="flex items-center justify-between">
-      <p>
-        {question} <span className="ml-px text-stroke-state-error">*</span>
+      <p onClick={toggleAnswer} className="hover:cursor-pointer">
+        {t(question)} <span className="ml-px text-stroke-state-error">*</span>
       </p>
 
       <div className="flex items-center gap-16px">
@@ -37,7 +48,7 @@ const TFQuestion: React.FC<TFQuestionProps> = ({ id, question, answer, onChange 
           />
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label htmlFor={`${id}-yes`} className="hover:cursor-pointer">
-            Yes
+            {t('hiring:PERSONAL_INFO.YES')}
           </label>
         </div>
         <div className="flex items-center gap-lv-2 text-white">
@@ -53,7 +64,7 @@ const TFQuestion: React.FC<TFQuestionProps> = ({ id, question, answer, onChange 
           />
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label htmlFor={`${id}-no`} className="hover:cursor-pointer">
-            No
+            {t('hiring:PERSONAL_INFO.NO')}
           </label>
         </div>
       </div>
@@ -61,8 +72,9 @@ const TFQuestion: React.FC<TFQuestionProps> = ({ id, question, answer, onChange 
   );
 };
 
-const PersonalInfoForm: React.FC = () => {
-  const { t } = useTranslation(['hiring', 'common']);
+const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
+  const { t } = useTranslation(['hiring']);
+  const router = useRouter();
 
   const haloStyle =
     'border border-white bg-landing-page-black3 outline-none backdrop-blur-md shadow-job backdrop-blur-md';
@@ -72,21 +84,21 @@ const PersonalInfoForm: React.FC = () => {
   const questions = [
     {
       id: 'related-company',
-      question: 'Have you ever worked for a related company?',
+      question: 'hiring:PERSONAL_INFO.QUESTION_1_TITLE',
     },
     {
       id: 'working-isuncloud',
-      question: 'Do you currently have any relatives working at iSunCloud?',
+      question: 'hiring:PERSONAL_INFO.QUESTION_2_TITLE',
     },
     {
       id: 'criminal-record',
-      question: 'Do you have any criminal records or a history of bad credit?',
+      question: 'hiring:PERSONAL_INFO.QUESTION_3_TITLE',
     },
   ];
 
-  const learnAboutJobOptions = ['104', 'Facebook', 'Linkedin', 'Official Web', 'Other'];
+  const learnAboutJobOptions = ['104', 'FB', 'Linkedin', 'OW', 'Others'];
 
-  const [firstNaeInput, setFirstNameInput] = useState<string>('');
+  const [firstNameInput, setFirstNameInput] = useState<string>('');
   const [lastNameInput, setLastNameInput] = useState<string>('');
   const [phoneNumberInput, setPhoneNumberInput] = useState<string>('');
   const [emailInput, setEmailInput] = useState<string>('');
@@ -118,6 +130,35 @@ const PersonalInfoForm: React.FC = () => {
   };
   const changeAddress = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAddressInput(e.target.value);
+  };
+
+  // Info: (20250410 - Julian) 回到上一頁
+  const cancelClickHandler = () => {
+    router.push(`${ISUNFA_ROUTE.JOIN_US}/${router.query.jobId}`);
+  };
+
+  // Info: (20250410 - Julian) 提交表單
+  const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = {
+      firstName: firstNameInput,
+      lastName: lastNameInput,
+      phoneNumber: phoneNumberInput,
+      email: emailInput,
+      address: addressInput,
+      isRelatedCompany,
+      isWorkingISunCloud,
+      hasCriminalRecord,
+      whereLearnAboutJob,
+    };
+
+    // deprecated: (20250410 - Julian) for debugging
+    // eslint-disable-next-line no-console
+    console.log('Form Data:', formData);
+
+    // Info: (20250410 - Julian) 進行到下一步
+    toNextStep();
   };
 
   const tfQuestions = questions.map((question, index) => {
@@ -162,7 +203,7 @@ const PersonalInfoForm: React.FC = () => {
             }}
             className="px-24px py-4px text-left hover:text-landing-page-orange"
           >
-            {t(`hiring:${option}`)}
+            {t(`hiring:PERSONAL_INFO.WHERE_OPTION_${option.toUpperCase()}`)}
           </button>
         ))}
       </div>
@@ -170,19 +211,20 @@ const PersonalInfoForm: React.FC = () => {
   );
 
   return (
-    <form className="flex flex-col gap-y-24px">
+    <form className="flex flex-col" onSubmit={submitHandler}>
       {/* Info: (20250410 - Julian) Input Fields */}
       <div className="grid grid-cols-2 gap-x-44px gap-y-24px lg:w-840px">
         {/* Info: (20250410 - Julian) First Name */}
         <div className="flex flex-col items-start gap-6px pb-32px">
           <p className="text-base font-normal text-white">
-            First Name <span className="ml-px text-stroke-state-error">*</span>
+            {t('hiring:PERSONAL_INFO.FIRST_NAME_TITLE')}{' '}
+            <span className="ml-px text-stroke-state-error">*</span>
           </p>
           <input
             type="text"
             className={inputStyle}
             placeholder={'John'}
-            value={firstNaeInput}
+            value={firstNameInput}
             onChange={changeFirstName}
             required
           />
@@ -191,7 +233,8 @@ const PersonalInfoForm: React.FC = () => {
         {/* Info: (20250410 - Julian) Last Name */}
         <div className="flex flex-col items-start gap-6px pb-32px">
           <p className="text-base font-normal text-white">
-            Last Name <span className="ml-px text-stroke-state-error">*</span>
+            {t('hiring:PERSONAL_INFO.LAST_NAME_TITLE')}{' '}
+            <span className="ml-px text-stroke-state-error">*</span>
           </p>
           <input
             type="text"
@@ -206,10 +249,11 @@ const PersonalInfoForm: React.FC = () => {
         {/* Info: (20250410 - Julian) Phone Number */}
         <div className="flex flex-col items-start gap-6px pb-32px">
           <p className="text-base font-normal text-white">
-            Phone number <span className="ml-px text-stroke-state-error">*</span>
+            {t('hiring:PERSONAL_INFO.PHONE_TITLE')}{' '}
+            <span className="ml-px text-stroke-state-error">*</span>
           </p>
           <input
-            type="text"
+            type="tel"
             className={inputStyle}
             placeholder={'0912345678'}
             value={phoneNumberInput}
@@ -221,10 +265,11 @@ const PersonalInfoForm: React.FC = () => {
         {/* Info: (20250410 - Julian) Email */}
         <div className="flex flex-col items-start gap-6px pb-32px">
           <p className="text-base font-normal text-white">
-            Email <span className="ml-px text-stroke-state-error">*</span>
+            {t('hiring:PERSONAL_INFO.EMAIL_TITLE')}{' '}
+            <span className="ml-px text-stroke-state-error">*</span>
           </p>
           <input
-            type="text"
+            type="email"
             className={inputStyle}
             placeholder={'abc123@himail.com'}
             value={emailInput}
@@ -235,7 +280,9 @@ const PersonalInfoForm: React.FC = () => {
 
         {/* Info: (20250410 - Julian) Address */}
         <div className="col-span-2 flex flex-col items-start gap-6px pb-32px">
-          <p className="text-base font-normal text-white">Address</p>
+          <p className="text-base font-normal text-white">
+            {t('hiring:PERSONAL_INFO.ADDRESS_TITLE')}
+          </p>
           <input
             type="text"
             className={inputStyle}
@@ -244,27 +291,40 @@ const PersonalInfoForm: React.FC = () => {
             }
             value={addressInput}
             onChange={changeAddress}
-            required
           />
         </div>
       </div>
 
       {/* Info: (20250410 - Julian) True/False Questions */}
-      <div className="flex flex-col gap-50px">
+      <div className="mt-24px flex flex-col gap-50px">
         {tfQuestions}
         <div className="flex items-center justify-between">
           <p>Where did you learn about this job opening?</p>
           <div ref={targetRef} className="relative flex flex-col">
             <div
               onClick={toggleDropdown}
-              className={`${haloStyle} flex items-center gap-8px rounded-full px-24px py-4px hover:cursor-pointer`}
+              className={`${haloStyle} ${isOpen ? 'border-surface-brand-primary-moderate text-surface-brand-primary-moderate' : ''} flex items-center gap-8px rounded-full px-24px py-4px hover:cursor-pointer hover:border-surface-brand-primary-moderate hover:text-surface-brand-primary-moderate`}
             >
-              <p className="w-120px">{whereLearnAboutJob}</p>
+              <p className="w-120px">
+                {t(`hiring:PERSONAL_INFO.WHERE_OPTION_${whereLearnAboutJob.toUpperCase()}`)}
+              </p>
               <FaChevronDown />
             </div>
             {whereDropdown}
           </div>
         </div>
+      </div>
+
+      <div className="ml-auto mt-70px flex items-center gap-lv-6">
+        {/* Info: (20250410 - Julian) Back Button */}
+        <LandingButton variant="default" className="font-bold" onClick={cancelClickHandler}>
+          {t('common:COMMON.CANCEL')}
+        </LandingButton>
+
+        {/* Info: (20250410 - Julian) Next Button */}
+        <LandingButton type="submit" variant="primary" className="font-bold">
+          {t('hiring:RESUME_PAGE.NEXT_BTN')}
+        </LandingButton>
       </div>
     </form>
   );
