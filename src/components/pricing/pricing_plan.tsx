@@ -7,6 +7,7 @@ import {
   LinearTextSize,
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
+import { PLANS } from '@/constants/subscription';
 
 const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
@@ -52,26 +53,19 @@ const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 interface PlanProps {
+  planId: 'BEGINNER' | 'PROFESSIONAL' | 'ENTERPRISE';
   title: string;
   price: { value: string; unit: string; additional: string };
-  description: string;
   features: { icon: string | null; description: string }[];
   buttonText: string;
   onClick: () => void;
 }
 
-const PlanCard: React.FC<PlanProps> = ({
-  title,
-  price,
-  description,
-  features,
-  buttonText,
-  onClick,
-}) => {
+const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonText, onClick }) => {
+  const { t } = useTranslation(['pricing', 'subscriptions']);
   return (
     <Card>
       <h3 className="text-28px font-bold text-text-brand-primary-lv3">{title}</h3>
-      <p className="mt-2 h-40px text-sm text-white">{description}</p>
       <div className="mt-4 md:h-74px">
         <LinearGradientText size={LinearTextSize.MD} align={TextAlign.LEFT}>
           {price.value}
@@ -89,7 +83,7 @@ const PlanCard: React.FC<PlanProps> = ({
       >
         {buttonText}
       </LandingButton>
-      <ul className="mt-6 space-y-2 text-left text-gray-300">
+      <ul className="mt-6 space-y-2 text-left text-gray-300 min-h-300px">
         {features.map((feature, index) => (
           <li key={`feature-${index + 1}`} className="flex items-center gap-2">
             {feature.icon && (
@@ -105,46 +99,83 @@ const PlanCard: React.FC<PlanProps> = ({
           </li>
         ))}
       </ul>
+      {planId === 'PROFESSIONAL' && (
+        <p className="mt-auto flex flex-col text-xs">
+          <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
+            {t('subscriptions:PLANS_FEATURES_NAME.FREE_TRIAL')}
+          </span>
+          <span className="min-h-100px text-xs font-medium leading-5 text-text-neutral-tertiary">
+            {`* ${t('subscriptions:PLANS_FEATURES_VALUE.30_DAYS_ON_TEAM_CREATION')}`}
+          </span>
+        </p>
+      )}
+      {planId === 'ENTERPRISE' && (
+          <p className="mt-auto flex flex-col text-xs">
+            <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
+              {t('subscriptions:PLANS_FEATURES_NAME.NOTE')}
+            </span>
+            <span className="min-h-100px text-xs font-medium leading-5 text-text-neutral-tertiary">
+              {`* ${t('subscriptions:PLANS_FEATURES_VALUE.NOTE_DES')}`}
+            </span>
+          </p>
+        )}
+      {planId !== 'BEGINNER' && (
+        <p className="mt-auto flex flex-col text-xs">
+          <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
+            {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME')}
+          </span>
+          <span className="text-xs font-medium leading-5 text-text-neutral-tertiary">
+            {`* ${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.NOTE')}`}
+          </span>
+        </p>
+      )}
     </Card>
   );
 };
 
 const PricingPlan: React.FC = () => {
-  const { t } = useTranslation('pricing');
+  const { t } = useTranslation(['pricing', 'subscriptions']);
+
+  const beginnerPlan = PLANS.find((p) => p.id === 'BEGINNER');
+  const professionalPlan = PLANS.find((p) => p.id === 'PROFESSIONAL');
+  const enterprisePlan = PLANS.find((p) => p.id === 'ENTERPRISE');
+
+  const beginnerFeatures = PLANS.find((p) => p.id === 'BEGINNER')?.features ?? [];
+  const professionalFeatures = PLANS.find((p) => p.id === 'PROFESSIONAL')?.features ?? [];
+  const enterpriseFeatures = PLANS.find((p) => p.id === 'ENTERPRISE')?.features ?? [];
 
   const plans = [
     {
+      planId: beginnerPlan?.id as 'BEGINNER',
       title: t('pricing:BEGINNER.TITLE'),
       price: {
-        value: t('pricing:BEGINNER.PRICE'),
+        value: beginnerPlan?.price
+          ? `$ ${beginnerPlan.price.toLocaleString('zh-TW')}`
+          : t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE'),
         unit: t('pricing:BEGINNER.PRICE_UNIT'),
-        additional: t('pricing:BEGINNER.PRICE_ADDITIONAL'),
+        additional: beginnerPlan?.extraMemberPrice
+          ? `${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_PREFIX')}+ $${beginnerPlan.extraMemberPrice}${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_SUFFIX')}`
+          : '',
       },
       description: t('pricing:BEGINNER.DESCRIPTION'),
-      features: [
-        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AI_UPLOADS') },
-        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AUTO_SUGGESTIONS') },
-        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.LIMIT_STORAGE') },
-        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.MANAGE_LEDGER') },
-        {
-          icon: '/icons/check.svg',
-          description: t('pricing:BEGINNER.FEATURES.GENERATE_STATEMENTS'),
-        },
-        { icon: '/icons/check.svg', description: t('pricing:BEGINNER.FEATURES.AUTO_FILL_TAX') },
-        {
-          icon: '/icons/check.svg',
-          description: t('pricing:BEGINNER.FEATURES.TECHNICAL_ASSISTANCE'),
-        },
-      ],
+      features: beginnerFeatures.map((f) => ({
+        icon: '/icons/check.svg',
+        description: `${t(`subscriptions:PLANS_FEATURES_NAME.${f.name}`)}：${t(`subscriptions:PLANS_FEATURES_VALUE.${f.value}`)}`,
+      })),
       buttonText: t('pricing:BEGINNER.BUTTON_TEXT'),
       onClick: () => {},
     },
     {
+      planId: professionalPlan?.id as 'PROFESSIONAL',
       title: t('pricing:PROFESSIONAL.TITLE'),
       price: {
-        value: t('pricing:PROFESSIONAL.PRICE'),
+        value: professionalPlan?.price
+          ? `$ ${professionalPlan.price.toLocaleString('zh-TW')}`
+          : t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE'),
         unit: t('pricing:PROFESSIONAL.PRICE_UNIT'),
-        additional: t('pricing:PROFESSIONAL.PRICE_ADDITIONAL'),
+        additional: professionalPlan?.extraMemberPrice
+          ? `${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_PREFIX')}+ $${professionalPlan.extraMemberPrice}${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_SUFFIX')}`
+          : '',
       },
       description: t('pricing:PROFESSIONAL.DESCRIPTION'),
       features: [
@@ -152,34 +183,26 @@ const PricingPlan: React.FC = () => {
           icon: '/icons/star.svg',
           description: t('pricing:PROFESSIONAL.FEATURES.EVERYTHING_IN_BEGINNER'),
         },
-        {
+        ...professionalFeatures.map((f) => ({
           icon: '/icons/check.svg',
-          description: t('pricing:PROFESSIONAL.FEATURES.UNLIMITED_AI_UPLOADS'),
-        },
-        { icon: '/icons/check.svg', description: t('pricing:PROFESSIONAL.FEATURES.LARGE_STORAGE') },
-        {
-          icon: '/icons/check.svg',
-          description: t('pricing:PROFESSIONAL.FEATURES.UNLIMITED_LEDGER'),
-        },
-        {
-          icon: '/icons/check.svg',
-          description: t('pricing:PROFESSIONAL.FEATURES.AUTO_GENERATE_STATEMENTS'),
-        },
-        {
-          icon: '/icons/check.svg',
-          description: t('pricing:PROFESSIONAL.FEATURES.TEAM_MEMBERS'),
-        },
+          description: `${t(`subscriptions:PLANS_FEATURES_NAME.${f.name}`)}：${t(`subscriptions:PLANS_FEATURES_VALUE.${f.value}`)}`,
+        })),
       ],
       buttonText: t('pricing:PROFESSIONAL.BUTTON_TEXT'),
       onClick: () => {},
       highlight: true,
     },
     {
+      planId: enterprisePlan?.id as 'ENTERPRISE',
       title: t('pricing:ENTERPRISE.TITLE'),
       price: {
-        value: t('pricing:ENTERPRISE.PRICE'),
+        value: enterprisePlan?.price
+          ? `$ ${enterprisePlan.price.toLocaleString('zh-TW')}`
+          : t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE'),
         unit: t('pricing:ENTERPRISE.PRICE_UNIT'),
-        additional: t('pricing:ENTERPRISE.PRICE_ADDITIONAL'),
+        additional: enterprisePlan?.extraMemberPrice
+          ? `${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_PREFIX')}+ $${enterprisePlan.extraMemberPrice}${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.PER_EXTRA_TEAM_MEMBER_SUFFIX')}`
+          : '',
       },
       description: t('pricing:ENTERPRISE.DESCRIPTION'),
       features: [
@@ -187,28 +210,10 @@ const PricingPlan: React.FC = () => {
           icon: '/icons/star.svg',
           description: t('pricing:ENTERPRISE.FEATURES.EVERYTHING_IN_PROFESSIONAL'),
         },
-        {
+        ...enterpriseFeatures.map((f) => ({
           icon: '/icons/check.svg',
-          description: t('pricing:ENTERPRISE.FEATURES.COLLABORATION_TOOLS'),
-        },
-        {
-          icon: '/icons/check.svg',
-          description: t('pricing:ENTERPRISE.FEATURES.CUSTOM_WORKFLOWS'),
-        },
-        {
-          icon: '/icons/check.svg',
-          description: t('pricing:ENTERPRISE.FEATURES.UNLIMITED_STORAGE'),
-        },
-        { icon: '/icons/check.svg', description: t('pricing:ENTERPRISE.FEATURES.TEAM_MEMBERS') },
-        {
-          icon: '/icons/check.svg',
-          description: t('pricing:ENTERPRISE.FEATURES.SERVER_INTEGRATION'),
-        },
-        { icon: '/icons/check.svg', description: t('pricing:ENTERPRISE.FEATURES.UNLIMITED_USERS') },
-        {
-          icon: '/icons/check.svg',
-          description: t('pricing:ENTERPRISE.FEATURES.API_WITH_SYSTEMS'),
-        },
+          description: `${t(`subscriptions:PLANS_FEATURES_NAME.${f.name}`)}：${t(`subscriptions:PLANS_FEATURES_VALUE.${f.value}`)}`,
+        })),
       ],
       buttonText: t('pricing:ENTERPRISE.BUTTON_TEXT'),
       onClick: () => {},

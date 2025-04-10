@@ -7,6 +7,8 @@ import { TeamPlanType } from '@prisma/client';
 import { LeaveStatus, TeamRole } from '@/interfaces/team';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IPaginatedOptions } from '@/interfaces/pagination';
+import { updateTeamMemberSession } from '@/lib/utils/session';
+import { assertUserIsTeamMember } from '@/lib/utils/repo/team.repo';
 
 export const createTeamSubscription = async (
   options: ITeamSubscription
@@ -329,17 +331,15 @@ export async function getSubscriptionByTeamId(
   userId: number,
   teamId: number
 ): Promise<IUserOwnedTeam | null> {
-  const team = await prisma.team.findFirst({
-    where: {
-      id: teamId,
-      members: {
-        some: {
-          userId,
-          role: TeamRole.OWNER,
-          status: LeaveStatus.IN_TEAM,
-        },
-      },
-    },
+  // Info: (20250410 - tzuhan) Step 1: 確認該用戶是團隊成員（任何角色都可以）
+  const role = await assertUserIsTeamMember(userId, teamId);
+
+  // Info: (20250410 - tzuhan) Step 2: 強化 session 資料一致性
+  await updateTeamMemberSession(userId, teamId, role.effectiveRole);
+
+  // Info: (20250410 - tzuhan) Step 3: 查詢訂閱資料
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
     select: {
       id: true,
       name: true,

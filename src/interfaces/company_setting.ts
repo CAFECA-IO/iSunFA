@@ -5,6 +5,7 @@ export interface ICompanySetting {
   companyId: number;
   companyName: string;
   companyTaxId: string;
+  companyStartDate?: number;
   taxSerialNumber: string;
   representativeName: string;
   country: LocaleKey;

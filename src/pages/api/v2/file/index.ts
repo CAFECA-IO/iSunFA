@@ -6,7 +6,7 @@ import { IFileBeta } from '@/interfaces/file';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { uploadFile } from '@/lib/utils/google_image_upload';
-import { updateCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById, updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import { updateTeamIcon } from '@/lib/utils/repo/team.repo';
@@ -23,6 +23,10 @@ import { getPusherInstance } from '@/lib/utils/pusher';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
 import { parseJsonWebKeyFromString } from '@/lib/utils/formatter/json_web_key.formatter';
 import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
+import { getSession } from '@/lib/utils/session';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
 
 export const config = {
   api: {
@@ -165,6 +169,50 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
   const { files, fields } = parsedForm;
   const { file } = files;
   const { isEncrypted, encryptedSymmetricKey, iv } = extractKeyAndIvFromFields(fields);
+
+  const { teams } = await getSession(req);
+
+  // Info: (20250410 - Shirley) 檢查用戶是否有權限上傳圖片(Team, Company)
+  if (type === UploadType.TEAM) {
+    // Info: (20250410 - Shirley) 直接比對 session 中的 teams 是否包含 targetId，再檢查 role 是否可以上傳圖片
+    const userTeam = teams?.find((team) => team.id === +targetId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.MODIFY_IMAGE,
+    });
+
+    if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+  } else if (type === UploadType.COMPANY) {
+    // Info: (20250410 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+    const company = await getCompanyById(+targetId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
+    });
+
+    if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+  }
 
   if (!file) {
     statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
