@@ -17,9 +17,9 @@ export const generateTeamInvoice = async (
   const teamPaymentTransactionId = transaction.id;
   const { currency, amount } = order;
   // Info: (20250328 - Luphia) 稅金採用總價內扣
-  const tax = Math.ceil(amount * TAX_RATIO.TAIWAN_NORMAL);
-  const price = order.amount - tax;
-  const total = tax + amount;
+  const tax = Math.ceil((amount / (1 + TAX_RATIO.TAIWAN_NORMAL)) * TAX_RATIO.TAIWAN_NORMAL);
+  const price = amount - tax;
+  const total = amount;
   const payerId = payer.id.toString();
   const payerName = payer.name;
   const payerEmail = payer.email;

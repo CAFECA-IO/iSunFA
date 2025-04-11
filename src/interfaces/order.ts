@@ -49,7 +49,7 @@ export interface IProductDetail {
 export interface ITeamOrderDetail {
   id?: number;
   orderId?: number;
-  productId: string;
+  productId: number;
   productName: string;
   unit: string;
   unitPrice: number;

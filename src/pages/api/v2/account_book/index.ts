@@ -5,7 +5,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
@@ -67,7 +67,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
       canDo: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
     });
 
-    if (!('yesOrNo' in checkResult) || !checkResult.yesOrNo) {
+    if (!(TeamRoleCanDoKey.YES_OR_NO in checkResult) || !checkResult.yesOrNo) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
       return { statusMessage, payload, session };
     }

@@ -25,8 +25,8 @@ export const BindCardBodySchema = z.object({
 
 // Info: (20250218 - tzuhan) 付款 API 請求
 export const PaymentQuerySchema = z.object({
-  userId: z.number(),
-  paymentInfoId: z.number(),
+  userId: z.string().transform((val) => parseInt(val, 10)),
+  paymentMethodId: z.string().transform((val) => parseInt(val, 10)),
 });
 
 export const PaymentBodySchema = z.object({
