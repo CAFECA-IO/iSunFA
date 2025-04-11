@@ -3,6 +3,7 @@ import { FaChevronDown } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { IPersonalInfo } from '@/interfaces/resume';
@@ -20,9 +21,6 @@ interface IPersonalInfoFormProps {
 
 const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange }) => {
   const { t } = useTranslation(['hiring']);
-
-  const radioStyle =
-    'peer relative h-16px w-16px appearance-none rounded-full border border-white before:absolute before:left-2px before:top-2px before:hidden before:h-10px before:w-10px before:rounded-full before:bg-surface-brand-primary-moderate checked:border-surface-brand-primary-moderate checked:before:block hover:bg-surface-brand-primary-30 hover:border-surface-brand-primary';
 
   const changeYes = () => onChange(true);
   const changeNo = () => onChange(false);
@@ -44,7 +42,7 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
             value="yes"
             checked={answer}
             onChange={changeYes}
-            className={radioStyle}
+            className={orangeRadioStyle}
             required
           />
           {/* Deprecated: (20250410 - Julian) remove eslint-disable */}
@@ -61,7 +59,7 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
             value="no"
             checked={!answer}
             onChange={changeNo}
-            className={radioStyle}
+            className={orangeRadioStyle}
             required
           />
           {/* Deprecrated: (20250410 - Julian) remove eslint-disable */}
@@ -78,9 +76,6 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
 const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
   const { t } = useTranslation(['hiring']);
   const router = useRouter();
-
-  const haloStyle =
-    'border border-white bg-landing-page-black3 outline-none backdrop-blur-md shadow-job backdrop-blur-md';
 
   const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 

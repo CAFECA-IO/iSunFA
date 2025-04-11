@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
+import EducationExperienceModal from '@/components/join_us/education_experience_modal';
 
-const ExperienceForm: React.FC = () => {
+interface IExperienceFormProps {
+  toNextStep: () => void;
+}
+
+const ExperienceForm: React.FC<IExperienceFormProps> = ({ toNextStep }) => {
   const { t } = useTranslation(['hiring']);
+
+  const [isShowEducationModal, setIsShowEducationModal] = useState(false);
+
+  const toggleEducationModal = () => setIsShowEducationModal((prev) => !prev);
 
   return (
     <div className="relative flex flex-col items-stretch gap-10px">
-      <LandingButton variant="primary" className="font-bold">
+      <LandingButton variant="primary" className="font-bold" onClick={toggleEducationModal}>
         <FaPlus size={20} /> Education
       </LandingButton>
 
@@ -22,17 +31,22 @@ const ExperienceForm: React.FC = () => {
         </LandingButton>
 
         <div className="flex items-center gap-lv-6">
-          {/* Info: (20250410 - Julian) Back Button */}
+          {/* Info: (20250411 - Julian) Back Button */}
           <LandingButton variant="default" className="font-bold">
             {t('common:COMMON.CANCEL')}
           </LandingButton>
 
-          {/* Info: (20250410 - Julian) Next Button */}
-          <LandingButton variant="primary" className="font-bold">
+          {/* Info: (20250411 - Julian) Next Button */}
+          <LandingButton variant="primary" className="font-bold" onClick={toNextStep}>
             {t('hiring:RESUME_PAGE.NEXT_BTN')}
           </LandingButton>
         </div>
       </div>
+
+      {/* Info: (20250411 - Julian) Education Experience Modal */}
+      {isShowEducationModal && (
+        <EducationExperienceModal modalVisibilityHandler={toggleEducationModal} />
+      )}
     </div>
   );
 };
