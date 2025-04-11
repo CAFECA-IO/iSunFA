@@ -22,6 +22,11 @@ const SubscriptionsPageBody = ({
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
+  // Info: (20250410 - Anna) 開啟或關閉取消訂閱的 Modal 狀態
+  const [teamForCancelSubscription, setTeamForCancelSubscription] = useState<
+    IUserOwnedTeam | undefined
+  >();
+
   const closeAutoRenewalModal = () => {
     setTeamForAutoRenewalOn(undefined);
     setTeamForAutoRenewalOff(undefined);
@@ -84,6 +89,21 @@ const SubscriptionsPageBody = ({
     backBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL'),
   };
 
+  // Info: (20250410 - Anna) 取消訂閱的Modal
+  const messageModalDataForCancelSubscription: IMessageModal = {
+    title: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE'),
+    content: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_MESSAGE'),
+    submitBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.YES_CANCEL_SUBSCRIPTION'),
+    submitBtnFunction: () => {
+      // eslint-disable-next-line no-console
+      console.log('取消訂閱確定'); // 先不串 API
+      setTeamForCancelSubscription(undefined);
+    },
+    messageType: MessageType.WARNING,
+    backBtnFunction: () => setTeamForCancelSubscription(undefined),
+    backBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL'),
+  };
+
   return (
     <main className="flex min-h-full flex-col gap-40px">
       <div className="flex items-center gap-8px">
@@ -91,13 +111,13 @@ const SubscriptionsPageBody = ({
         <h1>{t('subscriptions:SUBSCRIPTIONS_PAGE.MY_SUBSCRIPTIONS')}</h1>
         <span className="h-1px flex-auto bg-divider-stroke-lv-1"></span>
       </div>
-
       <OwnedTeams
         userOwnedTeams={userOwnedTeams}
         setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
         setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
+        // Info: (20250410 - Anna) 傳取消訂閱的Modal
+        setTeamForCancelSubscription={setTeamForCancelSubscription}
       />
-
       {teamForAutoRenewalOn && (
         <MessageModal
           messageModalData={messageModalDataForTurnOnRenewal}
@@ -105,12 +125,20 @@ const SubscriptionsPageBody = ({
           modalVisibilityHandler={closeAutoRenewalModal}
         />
       )}
-
       {teamForAutoRenewalOff && (
         <MessageModal
           messageModalData={messageModalDataForTurnOffRenewal}
           isModalVisible={!!teamForAutoRenewalOff}
           modalVisibilityHandler={closeAutoRenewalModal}
+        />
+      )}
+
+      {/* Info: (20250410 - Anna) 取消訂閱的Modal */}
+      {teamForCancelSubscription && (
+        <MessageModal
+          messageModalData={messageModalDataForCancelSubscription}
+          isModalVisible={!!teamForCancelSubscription}
+          modalVisibilityHandler={() => setTeamForCancelSubscription(undefined)}
         />
       )}
     </main>
