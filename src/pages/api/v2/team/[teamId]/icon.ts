@@ -6,8 +6,10 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { loggerError } from '@/lib/utils/logger_back';
-import { ITeamWithImage } from '@/interfaces/team';
+import { ITeamWithImage, TeamRole } from '@/interfaces/team';
 import { putTeamIcon } from '@/lib/utils/repo/team.repo';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 
 /** Info: (20250324 - Shirley)
  * 開發步驟：
@@ -31,9 +33,22 @@ const handlePutRequest: IHandleRequest<APIName.PUT_TEAM_ICON, ITeamWithImage> = 
 
   const { teamId } = query;
   const { fileId } = body;
-  const { userId } = session;
+  const { userId, teams } = session;
 
   try {
+    const userTeam = teams?.find((team) => team.id === teamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.MODIFY_IMAGE,
+    });
+
+    if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
     // Info: (20250324 - Shirley) 使用 putTeamIcon 函數更新團隊圖標
     const updatedTeam = await putTeamIcon({ teamId: Number(teamId), fileId: Number(fileId) });
 

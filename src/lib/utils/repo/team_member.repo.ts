@@ -9,6 +9,8 @@ import { z } from 'zod';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { ITeamRoleCanDo, TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
+import { updateTeamMemberSession } from '@/lib/utils/session';
+import { assertUserIsTeamMember } from '@/lib/utils/repo/team.repo';
 
 export const addMembersToTeam = async (
   teamId: number,
@@ -108,11 +110,25 @@ export const addMembersToTeam = async (
 };
 
 export const memberLeaveTeam = async (userId: number, teamId: number): Promise<ILeaveTeam> => {
-  const teamMember = await prisma.teamMember.findFirst({
-    where: { teamId, userId },
+  // Info: (20250410 - tzuhan) Step 1. 驗證是否為團隊成員並取得角色
+  const role = await assertUserIsTeamMember(userId, teamId);
+
+  // Info: (20250410 - tzuhan) Step 2. 確保 session 中有正確的 teamRole
+  await updateTeamMemberSession(userId, teamId, role.actualRole);
+
+  // Info: (20250410 - tzuhan) Special case: OWNER cannot leave the team
+  if (role.actualRole === TeamRole.OWNER) {
+    throw new Error('OWNER_IS_UNABLE_TO_LEAVE');
+  }
+
+  // Info: (20250410 - tzuhan) Check permissions using convertTeamRoleCanDo
+  const canLeaveResult = convertTeamRoleCanDo({
+    teamRole: role.actualRole as TeamRole,
+    canDo: TeamPermissionAction.LEAVE_TEAM,
   });
-  if (!teamMember) {
-    throw new Error('USER_NOT_IN_TEAM');
+
+  if (!('yesOrNo' in canLeaveResult) || !(canLeaveResult as ITeamRoleCanDo).yesOrNo) {
+    throw new Error('PERMISSION_DENIED');
   }
 
   const leftAt = Math.floor(Date.now() / 1000); // Info: (20250310 - tzuhan) 以 UNIX 時間戳記記錄
@@ -127,7 +143,7 @@ export const memberLeaveTeam = async (userId: number, teamId: number): Promise<I
   return {
     teamId,
     userId,
-    role: teamMember.role as TeamRole,
+    role: role.actualRole as TeamRole,
     status: LeaveStatus.NOT_IN_TEAM,
     leftAt,
   };

@@ -29,7 +29,26 @@
     "STEP_EXPERIENCE": "經歷",
     "STEP_SKILLS": "技能",
     "STEP_PREFERENCE": "偏好",
-    "STEP_ATTACHMENT": "附件"
+    "STEP_ATTACHMENT": "附件",
+    "NEXT_BTN": "下一步"
+  },
+  "PERSONAL_INFO": {
+    "FIRST_NAME_TITLE": "名",
+    "LAST_NAME_TITLE": "姓",
+    "PHONE_TITLE": "聯絡電話",
+    "EMAIL_TITLE": "電子郵件",
+    "ADDRESS_TITLE": "通訊地址",
+    "QUESTION_1_TITLE": "Have you ever worked for a related company?",
+    "QUESTION_2_TITLE": "Do you currently have any relatives working at iSunCloud?",
+    "QUESTION_3_TITLE": "Do you have any criminal records or a history of bad credit?",
+    "QUESTION_4_TITLE": "Where did you learn about this job opening?",
+    "YES": "是",
+    "NO": "否",
+    "WHERE_OPTION_104": "104",
+    "WHERE_OPTION_FB": "Facebook",
+    "WHERE_OPTION_LINKEDIN": "LinkedIn",
+    "WHERE_OPTION_OW": "官方網站",
+    "WHERE_OPTION_OTHERS": "其他"
   },
   "FINISH_PAGE": {
     "MAIN_TITLE": "感謝您的應徵！",

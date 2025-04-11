@@ -1,3 +1,5 @@
+import { TeamRole } from '@/interfaces/team';
+
 export interface ISessionOption {
   sid?: string;
   jwt?: string;
@@ -33,7 +35,7 @@ export interface ISessionData {
   teams: {
     // Info: (20250517 - Shirley) 用戶所屬的所有團隊及其角色
     id: number;
-    role: string;
+    role: TeamRole;
   }[];
 }
 
