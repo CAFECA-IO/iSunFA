@@ -26,7 +26,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [connectedAccountBook, setSelectedCompany] = useState<IAccountBookWithTeam | null>(null);
+  const [selectedAccountBook, setSelectedAccountBook] = useState<IAccountBookWithTeam | null>(null);
   const { userAuth } = useUserCtx();
 
   // ToDo: (20250328 - Liz) 根據工作標籤排序功能尚未實作
@@ -42,20 +42,20 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
     setAccountBookList(data.data);
   };
 
-  const handleEditModal = (company: IAccountBookWithTeam) => {
-    setSelectedCompany(company);
+  const handleEditModal = (accountBook: IAccountBookWithTeam) => {
+    setSelectedAccountBook(accountBook);
     setIsEditModalOpen(true);
   };
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      {isEditModalOpen && connectedAccountBook && (
+      {isEditModalOpen && selectedAccountBook && (
         <AccountBookEditModal
-          accountBook={connectedAccountBook}
+          accountBook={selectedAccountBook}
           toggleModal={() => setIsEditModalOpen((prev) => !prev)}
         />
       )}
-      <div className="ml-250px flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
+      <div className="flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
         <section className="flex items-center justify-between">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             {t('account_book:LIST.ACCOUNT_BOOK_LIST_TITLE')}
@@ -125,7 +125,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
                     </div>
                     <div
                       className="relative table-cell justify-center align-middle"
-                      onClick={handleEditModal.bind(null, accountBook)}
+                      onClick={() => handleEditModal(accountBook)}
                     >
                       <Image
                         alt="edit"

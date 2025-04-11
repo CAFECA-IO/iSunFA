@@ -29,7 +29,8 @@
   {
     "type": "ENTERPRISE",
     "planName": "Enterprise",
-    "price": 8990,
+    "price": 2399,
+    "extraMemberPrice": 89,
     "features": [
       { "featureKey": "CLOUD_STORAGE", "featureValue": "UNLIMITED" },
       { "featureKey": "REPORT_GENERATION", "featureValue": "CUSTOMIZABLE_REPORTS" },

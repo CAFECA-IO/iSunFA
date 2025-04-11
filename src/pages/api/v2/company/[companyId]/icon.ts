@@ -3,7 +3,6 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getCompanyById, putCompanyIcon } from '@/lib/utils/repo/company.repo';
-
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
@@ -11,7 +10,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { Company, File } from '@prisma/client';
 import { IAccountBook } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 
 const handlePutRequest: IHandleRequest<
