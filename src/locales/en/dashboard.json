@@ -148,6 +148,7 @@
   },
 
   "ACCOUNT_BOOK_INFO_MODAL": {
+    "BASIC_INFO": "Basic Info",
     "COMPANY_NAME": "Company Name",
     "TAX_ID": "Business Tax ID Number",
     "WORK_TAG": "Work Tag",

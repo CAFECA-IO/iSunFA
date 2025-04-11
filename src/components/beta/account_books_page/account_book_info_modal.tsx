@@ -230,7 +230,7 @@ const AccountBookInfoModal = ({
                 height={16}
                 alt="building_icon"
               />
-              <span>Basic info</span>
+              <span>{t('dashboard:ACCOUNT_BOOK_INFO_MODAL.BASIC_INFO')}</span>
             </div>
             <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
           </section>
@@ -464,7 +464,7 @@ const AccountBookInfoModal = ({
           <section className="flex items-center gap-16px">
             <div className="flex items-center gap-8px">
               <Image src="/icons/team_icon.svg" alt="team icon" width={16} height={16} />
-              <span>Team</span>
+              <span>{t('dashboard:ACCOUNT_BOOK_INFO_MODAL.TEAM')}</span>
             </div>
             <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
           </section>
