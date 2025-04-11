@@ -138,10 +138,7 @@
     "PLEASE_SELECT_A_TEAM": "Please select a team",
     "CREATE_ACCOUNT_BOOK_FAILED": "Failed to create account book",
     "ERROR_CODE": "Error Code",
-    "ERROR_MESSAGE": "Error Message",
-    "ACCOUNT_BOOK_PRIVACY": "Account Book Privacy",
-    "PUBLIC": "Public",
-    "PRIVATE": "Private"
+    "ERROR_MESSAGE": "Error Message"
   },
 
   "WORK_TAG": {
@@ -163,26 +160,26 @@
     "ADD": "Add",
     "CHOOSE_WORK_TAG": "Choose Work Tag",
     "CHOOSE_TEAM": "Choose Team",
-    "PLEASE_ENTER_THE_NAME": "Please enter the name",
-    "PLEASE_SELECT_A_WORK_TAG": "Please select a work tag",
-    "PLEASE_SELECT_A_TEAM": "Please select a team",
     "CREATE_ACCOUNT_BOOK_FAILED": "Failed to create account book",
     "ERROR_CODE": "Error Code",
     "ERROR_MESSAGE": "Error Message",
-    "ACCOUNT_BOOK_PRIVACY": "Account Book Privacy",
-    "PUBLIC": "Public",
-    "PRIVATE": "Private",
 
     "COMPANY_ADDRESS": "Company Address",
     "CHOOSE_CITY": "Choose City",
     "CHOOSE_DISTRICT": "Choose District",
-
     "RESPONSIBLE_PERSON": "Responsible Person",
     "ENTER_RESPONSIBLE_PERSON": "Enter Responsible Person",
-    "PLEASE_ENTER_RESPONSIBLE_PERSON": "Please enter responsible person",
+
     "TAX_SERIAL_NUMBER": "Tax Serial Number",
     "ENTER_TAX_SERIAL_NUMBER": "Enter Tax Serial Number",
     "PHONE_NUMBER": "Phone Number",
-    "ENTER_PHONE_NUMBER": "Enter Phone Number"
+    "ENTER_PHONE_NUMBER": "Enter Phone Number",
+
+    "PLEASE_ENTER_THE_NAME": "Please enter the name",
+    "PLEASE_ENTER_RESPONSIBLE_PERSON": "Please enter responsible person",
+    "PLEASE_ENTER_TAX_ID": "Please enter tax ID",
+    "PLEASE_ENTER_TAX_SERIAL_NUMBER": "Please enter tax serial number",
+    "PLEASE_SELECT_A_WORK_TAG": "Please select a work tag",
+    "PLEASE_SELECT_A_TEAM": "Please select a team"
   }
 }

@@ -50,6 +50,8 @@ const AccountBookInfoModal = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [companyNameError, setCompanyNameError] = useState<string | null>(null);
   const [responsiblePersonError, setResponsiblePersonError] = useState<string | null>(null);
+  const [taxIdError, setTaxIdError] = useState<string | null>(null);
+  const [taxSerialNumberError, setTaxSerialNumberError] = useState<string | null>(null);
   const [teamError, setTeamError] = useState<string | null>(null);
   const [tagError, setTagError] = useState<string | null>(null);
 
@@ -104,6 +106,16 @@ const AccountBookInfoModal = ({
       );
       return;
     }
+    if (!taxId) {
+      setTaxIdError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_TAX_ID'));
+      return;
+    }
+    if (!taxSerialNumber) {
+      setTaxSerialNumberError(
+        t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_TAX_SERIAL_NUMBER')
+      );
+      return;
+    }
     if (!team) {
       setTeamError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_SELECT_A_TEAM'));
       return;
@@ -142,10 +154,18 @@ const AccountBookInfoModal = ({
         return;
       }
 
-      // ToDo: (20250410 - Liz) 新增帳本成功後清空表單並關閉 modal
+      // Info: (20250411 - Liz) 新增帳本成功後清空表單並關閉 modal
       setCompanyName('');
+      setResponsiblePerson('');
       setTaxId('');
-      setTag(WORK_TAG.ALL);
+      setTaxSerialNumber('');
+      setPhoneNumber('');
+      setTag(null);
+      setTeam(null);
+      setCity(null);
+      setDistrict(null);
+      setDistrictOptions([]);
+      setEnteredAddress('');
       closeCreateAccountBookModal();
 
       if (getAccountBookList) getAccountBookList(); // Info: (20241209 - Liz) 重新取得帳本清單
@@ -226,7 +246,7 @@ const AccountBookInfoModal = ({
             </div>
 
             <section className="flex flex-col gap-24px">
-              <div className="flex items-center gap-40px">
+              <div className="flex items-start gap-40px">
                 {/* Info: (20250409 - Liz) 公司名稱 */}
                 <div className="flex w-250px flex-col gap-8px">
                   <h4 className="font-semibold text-input-text-primary">
@@ -268,11 +288,12 @@ const AccountBookInfoModal = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-40px">
+              <div className="flex items-start gap-40px">
                 {/* Info: (20250409 - Liz) 統一編號 */}
                 <div className="flex w-250px flex-col gap-8px">
                   <h4 className="font-semibold text-input-text-primary">
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.TAX_ID')}
+                    <span className="text-text-state-error"> *</span>
                   </h4>
                   <input
                     type="text"
@@ -281,12 +302,18 @@ const AccountBookInfoModal = ({
                     value={taxId}
                     onChange={(e) => setTaxId(e.target.value)}
                   />
+                  {taxIdError && !taxId && (
+                    <p className="text-right text-sm font-medium text-text-state-error">
+                      {taxIdError}
+                    </p>
+                  )}
                 </div>
 
                 {/* Info: (20250409 - Liz) 稅籍編號 */}
                 <div className="flex w-250px flex-col gap-8px">
                   <h4 className="font-semibold text-input-text-primary">
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.TAX_SERIAL_NUMBER')}
+                    <span className="text-text-state-error"> *</span>
                   </h4>
                   <input
                     type="text"
@@ -295,6 +322,11 @@ const AccountBookInfoModal = ({
                     value={taxSerialNumber}
                     onChange={(e) => setTaxSerialNumber(e.target.value)}
                   />
+                  {taxSerialNumberError && !taxSerialNumber && (
+                    <p className="text-right text-sm font-medium text-text-state-error">
+                      {taxSerialNumberError}
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
@@ -344,22 +376,24 @@ const AccountBookInfoModal = ({
 
                 {isCityDropdownOpen && (
                   <div className="absolute inset-x-0 top-full z-10 mt-8px">
-                    <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                      {CityList.map((item) => (
-                        <button
-                          key={item}
-                          type="button"
-                          onClick={() => {
-                            setCity(item);
-                            setDistrictOptions(cityDistrictMap[item]);
-                            setDistrict(null);
-                            toggleCityDropdown();
-                          }}
-                          className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
-                        >
-                          {t('city_district:CITY.' + item)}
-                        </button>
-                      ))}
+                    <div className="mb-20px overflow-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary shadow-Dropshadow_M">
+                      <div className="flex max-h-200px flex-col overflow-y-auto p-8px">
+                        {CityList.map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            onClick={() => {
+                              setCity(item);
+                              setDistrictOptions(cityDistrictMap[item]);
+                              setDistrict(null);
+                              toggleCityDropdown();
+                            }}
+                            className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
+                          >
+                            {t('city_district:CITY.' + item)}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -394,20 +428,22 @@ const AccountBookInfoModal = ({
 
                 {isDistrictDropdownOpen && (
                   <div className="absolute inset-x-0 top-full z-10 mt-8px">
-                    <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                      {districtOptions.map((item) => (
-                        <button
-                          key={item}
-                          type="button"
-                          onClick={() => {
-                            setDistrict(item);
-                            toggleDistrictDropdown();
-                          }}
-                          className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
-                        >
-                          {t(`city_district:${city}.${item}`)}
-                        </button>
-                      ))}
+                    <div className="mb-20px overflow-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary shadow-Dropshadow_M">
+                      <div className="flex max-h-200px flex-col overflow-y-auto p-8px">
+                        {districtOptions.map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            onClick={() => {
+                              setDistrict(item);
+                              toggleDistrictDropdown();
+                            }}
+                            className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
+                          >
+                            {t(`city_district:${city}.${item}`)}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
