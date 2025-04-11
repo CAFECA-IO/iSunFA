@@ -67,7 +67,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
       canDo: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
     });
 
-    if (!('yesOrNo' in checkResult) || !checkResult.yesOrNo) {
+    if (!checkResult.can) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
       return { statusMessage, payload, session };
     }

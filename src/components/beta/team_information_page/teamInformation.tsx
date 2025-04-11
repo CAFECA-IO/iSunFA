@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 import { FiEdit } from 'react-icons/fi';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { ITeam, TeamRole } from '@/interfaces/team';
 import { Button } from '@/components/button/button';
 import TeamNameEditModal from '@/components/beta/team_information_page/team_name_edit_modal';
@@ -41,14 +41,6 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
     teamRole: teamInfo.role,
     canDo: TeamPermissionAction.MODIFY_BANK_ACCOUNT,
   });
-
-  const canModifyName = TeamRoleCanDoKey.YES_OR_NO in modifyName ? modifyName.yesOrNo : false;
-  const canModifyAbout = TeamRoleCanDoKey.YES_OR_NO in modifyAbout ? modifyAbout.yesOrNo : false;
-  const canModifyProfile =
-    TeamRoleCanDoKey.YES_OR_NO in modifyProfile ? modifyProfile.yesOrNo : false;
-  const canModifyPlan = TeamRoleCanDoKey.YES_OR_NO in modifyPlan ? modifyPlan.yesOrNo : false;
-  const canModifyBankAccount =
-    TeamRoleCanDoKey.YES_OR_NO in modifyBankAccount ? modifyBankAccount.yesOrNo : false;
 
   // Info:(20250328 - Julian) 是否顯示編輯按鈕
   const visibleEditButton = teamInfo.role === TeamRole.OWNER || teamInfo.role === TeamRole.ADMIN;
@@ -95,7 +87,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               variant="tertiary"
               size="defaultSquare"
               className="ml-4"
-              disabled={!canModifyName}
+              disabled={!modifyName.can}
               onClick={openNameEditModal}
             >
               <FiEdit size={16} />
@@ -115,7 +107,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               variant="tertiary"
               size="defaultSquare"
               className="ml-4"
-              disabled={!canModifyAbout}
+              disabled={!modifyAbout.can}
               onClick={openDescriptionEditModal}
             >
               <FiEdit size={16} />
@@ -142,7 +134,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               variant="tertiary"
               size="defaultSquare"
               className="ml-4"
-              disabled={!canModifyProfile}
+              disabled={!modifyProfile.can}
               onClick={openProfileEditModal}
             >
               <FiEdit size={16} />
@@ -164,7 +156,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               variant="tertiary"
               size="defaultSquare"
               className="ml-4"
-              disabled={!canModifyPlan}
+              disabled={!modifyPlan.can}
               onClick={() => router.push(`/users/subscriptions/${teamInfo.id}`)} // Info:(20250226 - Anna) 點擊後導航
             >
               <FiEdit size={16} />
@@ -210,7 +202,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
                   variant="tertiary"
                   size="defaultSquare"
                   className="ml-4"
-                  disabled={!canModifyBankAccount}
+                  disabled={!modifyBankAccount.can}
                   onClick={openBankAccountEditModal}
                 >
                   <FiEdit size={16} />

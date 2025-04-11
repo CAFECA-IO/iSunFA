@@ -47,7 +47,7 @@ const handlePutRequest: IHandleRequest<
       canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
     });
 
-    if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+    if (!assertResult.can) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 

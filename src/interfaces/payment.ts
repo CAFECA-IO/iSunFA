@@ -102,6 +102,7 @@ export interface ITeamInvoice {
 
 export interface ITeamSubscription {
   id?: number;
+  userId: number;
   teamId: number;
   planType: TPlanType;
   startDate: number;

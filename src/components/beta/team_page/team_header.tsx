@@ -5,7 +5,7 @@ import { FiEdit2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { ITeam } from '@/interfaces/team';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface TeamHeaderProps {
   team: ITeam;
@@ -16,12 +16,10 @@ const TeamHeader = ({ team, setTeamToChangeImage }: TeamHeaderProps) => {
   const { t } = useTranslation(['team']);
   const [copied, setCopied] = useState<boolean>(false);
 
-  const result = convertTeamRoleCanDo({
+  const modifyImagePermission = convertTeamRoleCanDo({
     teamRole: team.role,
     canDo: TeamPermissionAction.MODIFY_IMAGE,
   });
-
-  const yesOrNo = TeamRoleCanDoKey.YES_OR_NO in result ? result.yesOrNo : false;
 
   const copyTeamId = async () => {
     try {
@@ -47,7 +45,7 @@ const TeamHeader = ({ team, setTeamToChangeImage }: TeamHeaderProps) => {
         type="button"
         className="group relative"
         onClick={() => setTeamToChangeImage(team)}
-        disabled={!yesOrNo}
+        disabled={!modifyImagePermission.can}
       >
         <Image
           src={team.imageId}
@@ -57,7 +55,7 @@ const TeamHeader = ({ team, setTeamToChangeImage }: TeamHeaderProps) => {
           className="h-60px w-60px rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
         ></Image>
 
-        {yesOrNo && (
+        {modifyImagePermission.can && (
           <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
             <FiEdit2 size={24} />
           </div>

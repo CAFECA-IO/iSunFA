@@ -21,7 +21,7 @@ import {
 } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { getUserRoleInTeam } from '@/lib/utils/repo/team_member.repo';
-import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 
 /**
@@ -72,12 +72,10 @@ const handlePutRequest = async (req: NextApiRequest) => {
   switch (action) {
     // Info: (20250310 - Shirley) Update account book tag
     case ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG: {
-      canDo = (
-        convertTeamRoleCanDo({
-          teamRole,
-          canDo: TeamPermissionAction.MODIFY_TAG,
-        }) as ITeamRoleCanDo
-      ).yesOrNo;
+      canDo = convertTeamRoleCanDo({
+        teamRole,
+        canDo: TeamPermissionAction.MODIFY_TAG,
+      }).can;
       payload = await updateAccountBook(userId, accountBookId, { tag });
 
       break;
@@ -136,11 +134,11 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   const canDeleteResult = convertTeamRoleCanDo({
     teamRole,
     canDo: TeamPermissionAction.DELETE_ACCOUNT_BOOK,
-  }) as ITeamRoleCanDo;
+  });
 
   loggerBack.info(`canDeleteResult: ${JSON.stringify(canDeleteResult)}`);
 
-  if (!canDeleteResult.yesOrNo) {
+  if (!canDeleteResult.can) {
     loggerBack.warn(
       `User ${userId} with role ${teamRole} doesn't have permission to delete account book ${accountBookId}`
     );

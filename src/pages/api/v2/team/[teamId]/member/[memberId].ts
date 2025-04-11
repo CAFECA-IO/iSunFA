@@ -22,7 +22,7 @@ import { DefaultValue } from '@/constants/default_value';
 import { ISessionData } from '@/interfaces/session';
 import { validateOutputData } from '@/lib/utils/validator';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface IResponse {
   statusMessage: string;
@@ -78,8 +78,8 @@ const handlePutRequest = async (req: NextApiRequest) => {
     canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
   });
 
-  if (TeamRoleCanDoKey.CAN_ALTER in canChangeRoleResult) {
-    const canAlterRoles = canChangeRoleResult.canAlter;
+  if (canChangeRoleResult.alterableRoles) {
+    const canAlterRoles = canChangeRoleResult.alterableRoles;
 
     if (!canAlterRoles.includes(updateData.role)) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
@@ -216,7 +216,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
     canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
   });
 
-  if (!(TeamRoleCanDoKey.CAN_ALTER in canChangeRoleResult)) {
+  if (!canChangeRoleResult.alterableRoles) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 

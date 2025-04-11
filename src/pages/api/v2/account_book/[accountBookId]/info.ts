@@ -20,7 +20,7 @@ import {
 import { getCountryByLocaleKey, getCountryByCode } from '@/lib/utils/repo/country.repo';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
-import { TeamPermissionAction, ITeamRoleCanDo, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 
@@ -81,10 +81,7 @@ const handleGetRequest: IHandleRequest<
       canDo: TeamPermissionAction.VIEW_PUBLIC_ACCOUNT_BOOK,
     });
 
-    const canView =
-      TeamRoleCanDoKey.YES_OR_NO in canViewResult && (canViewResult as ITeamRoleCanDo).yesOrNo;
-
-    if (!canView) {
+    if (!canViewResult.can) {
       loggerError({
         userId,
         errorType: 'permission denied',
@@ -219,10 +216,7 @@ const handlePutRequest: IHandleRequest<
       canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
     });
 
-    const canModify =
-      TeamRoleCanDoKey.YES_OR_NO in canModifyResult && (canModifyResult as ITeamRoleCanDo).yesOrNo;
-
-    if (!canModify) {
+    if (!canModifyResult.can) {
       loggerError({
         userId,
         errorType: 'permission denied',

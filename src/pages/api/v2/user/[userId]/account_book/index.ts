@@ -17,7 +17,7 @@ import { validateOutputData } from '@/lib/utils/validator';
 import { createAccountBook, listAccountBookByUserId } from '@/lib/utils/repo/account_book.repo';
 import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 
 const handleGetRequest = async (req: NextApiRequest) => {
@@ -44,9 +44,9 @@ const handleGetRequest = async (req: NextApiRequest) => {
       const canViewPublicAccountBookResult = convertTeamRoleCanDo({
         teamRole,
         canDo: TeamPermissionAction.VIEW_PUBLIC_ACCOUNT_BOOK,
-      }) as ITeamRoleCanDo;
+      });
 
-      if (canViewPublicAccountBookResult.yesOrNo) {
+      if (canViewPublicAccountBookResult.can) {
         loggerBack.info(
           `User ${userId} has permission to view public account books in team ${team.id} with role ${teamRole}`
         );
