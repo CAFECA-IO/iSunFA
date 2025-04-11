@@ -58,7 +58,7 @@ const PlanComparison: React.FC = () => {
         <table className="mb-200px w-full border-collapse border border-white text-left text-white">
           <thead>
             <tr>
-              <th className="pricing-header h-80px border border-white px-4 py-2 text-xl backdrop-blur-pricing min-w-200px">
+              <th className="pricing-header h-80px min-w-200px border border-white px-4 py-2 text-xl backdrop-blur-pricing">
                 {t('COMPARISON.FEATURES')}
               </th>
               {plans.map((plan) => (

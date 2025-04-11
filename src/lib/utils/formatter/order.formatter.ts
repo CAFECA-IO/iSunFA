@@ -8,7 +8,7 @@ export const teamOrderToOrderOen = (order: ITeamOrder, user: IUser): IOrderOen =
   if (!orderId) throw new Error(STATUS_MESSAGE.INVALID_ORDER_DATA);
 
   const productDetails = order.details.map((detail) => ({
-    productionCode: detail.productId,
+    productionCode: detail.productId.toString(),
     description: detail.productName,
     quantity: detail.quantity,
     unit: detail.unit,

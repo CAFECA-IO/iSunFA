@@ -16,6 +16,10 @@ import { getSession } from '@/lib/utils/session';
 import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DEFAULT_TIMEZONE } from '@/constants/common';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
 
 async function handleAssetExport(
   req: NextApiRequest,
@@ -119,6 +123,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (query === null || body === null) {
       statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
       throw new Error(statusMessage);
+    }
+
+    const { companyId } = req.query;
+    if (!companyId || typeof companyId !== 'string') {
+      throw new Error(STATUS_MESSAGE.INVALID_COMPANY_ID);
+    }
+
+    const { teams } = await getSession(req);
+
+    // Info: (20250410 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+    const company = await getCompanyById(+companyId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.BOOKKEEPING,
+    });
+
+    if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 
     res.setHeader('Content-Type', 'text/csv');

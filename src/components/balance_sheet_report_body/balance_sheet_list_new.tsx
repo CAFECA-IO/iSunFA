@@ -908,10 +908,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         <hr className="break-before-page" />
         {TurnoverDay}
       </div>
-      <DownloadBalanceSheet
-        reportFinancial={reportFinancial}
-        downloadRef={downloadRef}
-      />
+      <DownloadBalanceSheet reportFinancial={reportFinancial} downloadRef={downloadRef} />
     </div>
   );
 };

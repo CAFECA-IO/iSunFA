@@ -18,7 +18,7 @@ const ResumePage: React.FC<IResumePageProps> = ({ jobId }) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>iSunFA - {t('hiring:JOIN_US_PAGE.HEAD_TITLE')}</title>
+        <title>iSunFA - {t('hiring:RESUME_PAGE.HEAD_TITLE')}</title>
       </Head>
 
       <ResumePageBody jobId={jobId} />

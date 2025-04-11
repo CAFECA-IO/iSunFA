@@ -32,6 +32,25 @@ export const createTeamSubscription = async (
   return teamSubscription;
 };
 
+export const updateTeamSubscription = async (
+  options: ITeamSubscription
+): Promise<ITeamSubscription> => {
+  const data = {
+    planType: options.planType as TeamPlanType,
+    startDate: options.startDate,
+    expiredDate: options.expiredDate,
+    updatedAt: options.updatedAt,
+  };
+  const teamSubscription: ITeamSubscription = (await prisma.teamSubscription.update({
+    where: { id: options.id },
+    data,
+  })) as ITeamSubscription;
+  if (!teamSubscription) {
+    throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
+  }
+  return teamSubscription;
+};
+
 export const listValidTeamSubscription = async (teamId: number): Promise<ITeamSubscription[]> => {
   const nowInSecond = getTimestampNow();
   const teamSubscriptions: ITeamSubscription[] = (

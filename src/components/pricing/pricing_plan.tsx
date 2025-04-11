@@ -83,7 +83,7 @@ const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonT
       >
         {buttonText}
       </LandingButton>
-      <ul className="mt-6 space-y-2 text-left text-gray-300 min-h-300px">
+      <ul className="mt-6 min-h-300px space-y-2 text-left text-gray-300">
         {features.map((feature, index) => (
           <li key={`feature-${index + 1}`} className="flex items-center gap-2">
             {feature.icon && (
@@ -110,15 +110,15 @@ const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonT
         </p>
       )}
       {planId === 'ENTERPRISE' && (
-          <p className="mt-auto flex flex-col text-xs">
-            <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
-              {t('subscriptions:PLANS_FEATURES_NAME.NOTE')}
-            </span>
-            <span className="min-h-100px text-xs font-medium leading-5 text-text-neutral-tertiary">
-              {`* ${t('subscriptions:PLANS_FEATURES_VALUE.NOTE_DES')}`}
-            </span>
-          </p>
-        )}
+        <p className="mt-auto flex flex-col text-xs">
+          <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
+            {t('subscriptions:PLANS_FEATURES_NAME.NOTE')}
+          </span>
+          <span className="min-h-100px text-xs font-medium leading-5 text-text-neutral-tertiary">
+            {`* ${t('subscriptions:PLANS_FEATURES_VALUE.NOTE_DES')}`}
+          </span>
+        </p>
+      )}
       {planId !== 'BEGINNER' && (
         <p className="mt-auto flex flex-col text-xs">
           <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">

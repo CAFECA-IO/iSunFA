@@ -22,6 +22,11 @@ import { Prisma } from '@prisma/client';
 import { parseSortOption } from '@/lib/utils/sort';
 import { calculateRemainingLife } from '@/lib/utils/asset';
 import { SortBy, SortOrder } from '@/constants/sort';
+import { getSession } from '@/lib/utils/session';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 
 /* Info: (20241204 - Luphia) API develop SOP 以 POST ASSET API 為例
  * 1. 前置作業
@@ -81,7 +86,7 @@ interface IHandlerResponse extends IHandlerResult {
 export const handleGetRequest: IHandleRequest<
   APIName.ASSET_LIST_V2,
   IGetResult['payload']
-> = async ({ query }) => {
+> = async ({ query, req }) => {
   const {
     companyId,
     page = 1,
@@ -95,6 +100,33 @@ export const handleGetRequest: IHandleRequest<
   } = query;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedAsset | null = null;
+
+  const { teams } = await getSession(req);
+
+  // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.BOOKKEEPING,
+  });
+
+  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   const filterCondition: Prisma.AssetWhereInput = {
     ...(type ? { type } : {}),
@@ -193,7 +225,7 @@ export const handlePostRequest: IHandleRequest<
   IPostResult['payload']
 > = async ({ query, body, session }) => {
   const { companyId } = query;
-  const { userId } = session;
+  const { userId, teams } = session;
   const {
     assetName,
     assetType,
@@ -206,6 +238,31 @@ export const handlePostRequest: IHandleRequest<
     usefulLife,
     note = '',
   } = body as ICreateAssetInput;
+
+  // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.BOOKKEEPING,
+  });
+
+  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   // Info: (20241215 - Shirley) 檢查折舊開始日期是否大於購入日期
   if (depreciationStart && depreciationStart > acquisitionDate) {
