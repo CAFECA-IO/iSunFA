@@ -11,7 +11,7 @@ import { IPersonalInfo } from '@/interfaces/resume';
 interface ITFQuestionProps {
   id: string;
   question: string;
-  answer: boolean;
+  answer: boolean | null;
   onChange: (answer: boolean) => void;
 }
 
@@ -21,6 +21,9 @@ interface IPersonalInfoFormProps {
 
 const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange }) => {
   const { t } = useTranslation(['hiring']);
+
+  const isCheckedYes = answer === true;
+  const isCheckedNo = answer === false;
 
   const changeYes = () => onChange(true);
   const changeNo = () => onChange(false);
@@ -40,7 +43,7 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
             id={`${id}-yes`}
             name={id}
             value="yes"
-            checked={answer}
+            checked={isCheckedYes}
             onChange={changeYes}
             className={orangeRadioStyle}
             required
@@ -57,7 +60,7 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
             id={`${id}-no`}
             name={id}
             value="no"
-            checked={!answer}
+            checked={isCheckedNo}
             onChange={changeNo}
             className={orangeRadioStyle}
             required
@@ -101,9 +104,9 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
   const [phoneNumberInput, setPhoneNumberInput] = useState<string>('');
   const [emailInput, setEmailInput] = useState<string>('');
   const [addressInput, setAddressInput] = useState<string>('');
-  const [isRelatedCompany, setIsRelatedCompany] = useState<boolean>(false);
-  const [isWorkingISunCloud, setIsWorkingISunCloud] = useState<boolean>(false);
-  const [hasCriminalRecord, setHasCriminalRecord] = useState<boolean>(false);
+  const [isRelatedCompany, setIsRelatedCompany] = useState<boolean | null>(null);
+  const [isWorkingISunCloud, setIsWorkingISunCloud] = useState<boolean | null>(null);
+  const [hasCriminalRecord, setHasCriminalRecord] = useState<boolean | null>(null);
   const [whereLearnAboutJob, setWhereLearnAboutJob] = useState<string>(learnAboutJobOptions[0]);
 
   const {
@@ -111,6 +114,9 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
     componentVisible: isOpen,
     setComponentVisible: setTypeOpen,
   } = useOuterClick<HTMLDivElement>(false);
+
+  const disableSubmit =
+    isRelatedCompany === null || isWorkingISunCloud === null || hasCriminalRecord === null;
 
   const toggleDropdown = () => setTypeOpen(!isOpen);
 
@@ -138,6 +144,8 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
   // Info: (20250410 - Julian) 提交表單
   const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (disableSubmit) return;
 
     try {
       const formData: IPersonalInfo = {
@@ -328,7 +336,12 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
         </LandingButton>
 
         {/* Info: (20250410 - Julian) Next Button */}
-        <LandingButton type="submit" variant="primary" className="font-bold">
+        <LandingButton
+          type="submit"
+          variant="primary"
+          className="font-bold"
+          disabled={disableSubmit}
+        >
           {t('hiring:RESUME_PAGE.NEXT_BTN')}
         </LandingButton>
       </div>
