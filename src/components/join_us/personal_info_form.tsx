@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
-import { useRouter } from 'next/router';
-import { ISUNFA_ROUTE } from '@/constants/url';
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
@@ -16,6 +14,7 @@ interface ITFQuestionProps {
 }
 
 interface IPersonalInfoFormProps {
+  toPrevStep: () => void;
   toNextStep: () => void;
 }
 
@@ -76,9 +75,8 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
   );
 };
 
-const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
+const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring']);
-  const router = useRouter();
 
   const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 
@@ -134,11 +132,6 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
   };
   const changeAddress = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAddressInput(e.target.value);
-  };
-
-  // Info: (20250410 - Julian) 回到上一頁
-  const cancelClickHandler = () => {
-    router.push(`${ISUNFA_ROUTE.JOIN_US}/${router.query.jobId}`);
   };
 
   // Info: (20250410 - Julian) 提交表單
@@ -331,7 +324,7 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
 
       <div className="ml-auto mt-70px flex items-center gap-lv-6">
         {/* Info: (20250410 - Julian) Back Button */}
-        <LandingButton variant="default" className="font-bold" onClick={cancelClickHandler}>
+        <LandingButton variant="default" className="font-bold" onClick={toPrevStep}>
           {t('common:COMMON.CANCEL')}
         </LandingButton>
 

@@ -6,10 +6,11 @@ import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import EducationExperienceModal from '@/components/join_us/education_experience_modal';
 
 interface IExperienceFormProps {
+  toPrevStep: () => void;
   toNextStep: () => void;
 }
 
-const ExperienceForm: React.FC<IExperienceFormProps> = ({ toNextStep }) => {
+const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring']);
   const milestoneRef = useRef<HTMLDivElement>(null);
 
@@ -116,8 +117,8 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toNextStep }) => {
 
         <div className="flex items-center gap-lv-6">
           {/* Info: (20250411 - Julian) Back Button */}
-          <LandingButton variant="default" className="font-bold">
-            {t('common:COMMON.CANCEL')}
+          <LandingButton variant="default" className="font-bold" onClick={toPrevStep}>
+            {t('hiring:COMMON.PREVIOUS')}
           </LandingButton>
 
           {/* Info: (20250411 - Julian) Next Button */}
