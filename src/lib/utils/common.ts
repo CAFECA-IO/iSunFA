@@ -73,7 +73,6 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
       monthShortName: '-',
       monthFullName: '-',
       monthAndDay: '-',
-      yearAndMonth: '-',
       year: '-',
       lastYear: '-',
       lastYearDate: '-',
@@ -97,7 +96,6 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
   const monthNameShort = MONTH_SHORT_NAME[monthIndex];
   const monthName = MONTH_FULL_NAME[monthIndex];
   const monthString = MONTH_LIST[monthIndex];
-  const monthNumberFormat = `${month}`.padStart(2, '0');
 
   const dateOfLastYearString = `${year - 1}${separator}${month.toString().padStart(2, '0')}${separator}${day
     .toString()
@@ -121,7 +119,6 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
     monthShortName: `${monthNameShort}`, // Info: (20240417 - Jacky) e.g. Jan.
     monthFullName: `${monthName}`, // Info: (20240417 - Jacky) e.g. January
     monthAndDay: `${monthNameShort} ${day}`, // Info: (20240417 - Jacky) e.g. Jan. 01
-    yearAndMonth: `${year}-${monthNumberFormat}`, // Info: (20250411 - Julian) e.g. 2021-01
     year: `${year}`, // Info: (20240417 - Jacky) e.g. 2021
     lastYear: `${year - 1}`, // Info: (20240417 - Jacky) e.g. 2020
     lastYearDate: `${monthName} ${day}, ${year - 1}`, // Info: (20240417 - Jacky) e.g. Jan. 01, 2020

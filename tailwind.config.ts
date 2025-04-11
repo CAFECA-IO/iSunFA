@@ -699,6 +699,8 @@ module.exports = {
           white: '#FFFFFF',
 
           gray: '#C9C9C9',
+          gray2: '#CED7E4',
+          gray3: '#CDD1D9',
 
           taupe: '#E7E0D4',
           taupe2: '#C1B192',

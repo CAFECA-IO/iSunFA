@@ -13,11 +13,31 @@ export enum SchoolStatus {
   DROPOUT = 'Dropout',
 }
 
+export type IEducationDate = {
+  year: number;
+  month: number;
+};
+
 export interface IEducationExperience {
   degree: Degree;
   schoolName: string;
   department: string;
-  startTimestamp: number;
-  endTimestamp: number;
+  start: IEducationDate;
+  end: IEducationDate;
   status: SchoolStatus;
 }
+
+export const dummyEducationExperience: IEducationExperience = {
+  degree: Degree.BACHELOR,
+  schoolName: 'National Taiwan University',
+  department: 'Computer Science and Information Engineering',
+  start: {
+    year: 2020,
+    month: 9,
+  },
+  end: {
+    year: 2024,
+    month: 6,
+  },
+  status: SchoolStatus.GRADUATED,
+};

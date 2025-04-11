@@ -4,8 +4,12 @@ import { FaChevronDown } from 'react-icons/fa6';
 import { FiTrash2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { timestampToString } from '@/lib/utils/common';
-import { Degree, SchoolStatus, IEducationExperience } from '@/interfaces/experience';
+import {
+  Degree,
+  SchoolStatus,
+  IEducationExperience,
+  IEducationDate,
+} from '@/interfaces/experience';
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 
@@ -22,8 +26,14 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
   const [selectedDegree, setSelectedDegree] = useState<Degree>(Degree.ELEMENTARY);
   const [schoolNameInput, setSchoolNameInput] = useState<string>('');
   const [departmentInput, setDepartmentInput] = useState<string>('');
-  const [startTimestamp, setStartTimestamp] = useState<number>(0);
-  const [endTimestamp, setEndTimestamp] = useState<number>(0);
+  const [startInput, setStartInput] = useState<IEducationDate>({
+    year: 0,
+    month: 0,
+  });
+  const [endInput, setEndInput] = useState<IEducationDate>({
+    year: 0,
+    month: 0,
+  });
   const [selectedStatus, setSelectedStatus] = useState<SchoolStatus>(SchoolStatus.GRADUATED);
 
   const {
@@ -32,8 +42,8 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
     setComponentVisible: setIsOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const startDateValueFormat = timestampToString(startTimestamp).yearAndMonth;
-  const endDateValueFormat = timestampToString(endTimestamp).yearAndMonth;
+  const startDateValueFormat = `${startInput.year}-${startInput.month.toString().padStart(2, '0')}`;
+  const endDateValueFormat = `${endInput.year}-${endInput.month.toString().padStart(2, '0')}`;
 
   const toggleDegreeDropdown = () => setIsOpen((prev) => !prev);
 
@@ -44,10 +54,18 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
     setDepartmentInput(e.target.value);
   };
   const changeStartTimestamp = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStartTimestamp(Date.parse(e.target.value) / 1000);
+    const date = new Date(e.target.value);
+    setStartInput({
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+    });
   };
   const changeEndTimestamp = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEndTimestamp(Date.parse(e.target.value) / 1000);
+    const date = new Date(e.target.value);
+    setEndInput({
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+    });
   };
 
   const saveHandler = (e: React.FormEvent<HTMLFormElement>) => {
@@ -57,8 +75,8 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
       degree: selectedDegree,
       schoolName: schoolNameInput,
       department: departmentInput,
-      startTimestamp,
-      endTimestamp,
+      start: startInput,
+      end: endInput,
       status: selectedStatus,
     };
 
