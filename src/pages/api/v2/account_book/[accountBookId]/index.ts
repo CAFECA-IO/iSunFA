@@ -100,6 +100,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
       }
 
       payload = await updateAccountBook(userId, accountBookId, { tag });
+      statusMessage = STATUS_MESSAGE.SUCCESS;
       break;
     }
     default:
