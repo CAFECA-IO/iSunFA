@@ -657,7 +657,7 @@ export const getTeamsByUserIdAndTeamIds = async (
           : '',
         editable: roleMeta.effectiveRole !== TeamRole.VIEWER,
       },
-      paymentStatus: TPlanType.BEGINNER, // 可視需要再處理實際狀態
+      paymentStatus: TPlanType.BEGINNER, // Info: (20250411 - tzuhan) 可視需要再處理實際狀態
       expiredAt: roleMeta.expiredAt,
     };
   });
