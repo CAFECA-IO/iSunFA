@@ -184,7 +184,7 @@ const SubscriptionsPageBody = ({
         <MessageModal
           messageModalData={messageModalDataForCancelSubscription}
           isModalVisible={!!teamForCancelSubscription}
-          modalVisibilityHandler={() => setTeamForCancelSubscription(undefined)}
+          modalVisibilityHandler={closeCancelSubscriptionModal}
         />
       )}
     </main>
