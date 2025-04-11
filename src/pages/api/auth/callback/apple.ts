@@ -4,10 +4,11 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { loggerError } from '@/lib/utils/logger_back';
 import { handleSignInSession } from '@/lib/utils/signIn';
 import { DefaultValue } from '@/constants/default_value';
+import { HttpMethod } from '@/constants/api_connection';
 import { getSession } from '@/lib/utils/session';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
+  if (req.method !== HttpMethod.POST) {
     res.redirect(`${ISUNFA_ROUTE.LOGIN}?signin=false&error=Method+Not+Allowed`);
     return;
   }

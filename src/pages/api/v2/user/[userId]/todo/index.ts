@@ -10,7 +10,7 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { todoListPostApiUtils as postUtils } from '@/pages/api/v2/user/[userId]/todo/route_utils';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { createTodo, listTodoMapped } from '@/lib/utils/repo/todo.repo';
 import { validateOutputData } from '@/lib/utils/validator';
 import { ITodoAccountBook } from '@/interfaces/todo';
@@ -79,7 +79,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
   let response;
@@ -89,12 +89,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     switch (method) {
-      case 'GET':
+      case HttpMethod.GET:
         apiName = APIName.TODO_LIST;
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;
-      case 'POST':
+      case HttpMethod.POST:
         apiName = APIName.CREATE_TODO;
         ({ response, statusMessage } = await handlePostRequest(req));
         ({ httpCode, result } = response);

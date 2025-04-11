@@ -7,7 +7,7 @@ import {
   checkUserAuthorization,
   logUserAction,
 } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { getSession, updateTeamMemberSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
@@ -140,7 +140,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
   let response;
@@ -150,12 +150,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     switch (method) {
-      case 'GET':
+      case HttpMethod.GET:
         apiName = APIName.LIST_MEMBER_BY_TEAM_ID;
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;
-      case 'PUT':
+      case HttpMethod.PUT:
         apiName = APIName.ADD_MEMBER_TO_TEAM;
         ({ response, statusMessage } = await handlePutRequest(req));
         ({ httpCode, result } = response);

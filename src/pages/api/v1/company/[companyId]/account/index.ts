@@ -19,7 +19,7 @@ import { ReportSheetType } from '@/constants/report';
 import { convertStringToReportSheetType, isReportSheetType } from '@/lib/utils/type_guard/report';
 import { getSession } from '@/lib/utils/session';
 import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_factory';
-
+import { HttpMethod } from '@/constants/api_connection';
 import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
@@ -269,11 +269,11 @@ export default async function handler(
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   try {
     switch (req.method) {
-      case 'GET':
+      case HttpMethod.GET:
         payload = await handleGetRequest(req);
         statusMessage = STATUS_MESSAGE.SUCCESS;
         break;
-      case 'POST':
+      case HttpMethod.POST:
         payload = await handlePostRequest(req);
         statusMessage = STATUS_MESSAGE.CREATED;
         break;

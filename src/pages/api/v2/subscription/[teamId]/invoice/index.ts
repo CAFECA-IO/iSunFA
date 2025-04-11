@@ -7,7 +7,7 @@ import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { ITeamInvoice } from '@/interfaces/subscription';
 import { checkRequestData, checkSessionUser, checkUserAuthorization } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { listTeamTransaction } from '@/lib/utils/repo/team_subscription.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
@@ -34,13 +34,13 @@ const handleGetRequest = async (req: NextApiRequest) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
 
   try {
     switch (method) {
-      case 'GET':
+      case HttpMethod.GET:
       default:
         ({ httpCode, result } = await handleGetRequest(req));
     }

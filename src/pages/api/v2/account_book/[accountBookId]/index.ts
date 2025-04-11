@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountBook, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
   checkOutputDataValid,
   checkRequestData,
@@ -181,7 +181,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let name = APIName.UPDATE_ACCOUNT_BOOK;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
@@ -190,12 +190,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const session = await getSession(req);
   try {
     switch (method) {
-      case 'PUT':
+      case HttpMethod.PUT:
         name = APIName.UPDATE_ACCOUNT_BOOK;
         ({ response, statusMessage } = await handlePutRequest(req));
         ({ httpCode, result } = response);
         break;
-      case 'DELETE':
+      case HttpMethod.DELETE:
         name = APIName.DELETE_ACCOUNT_BOOK;
         ({ response, statusMessage } = await handleDeleteRequest(req));
         ({ httpCode, result } = response);

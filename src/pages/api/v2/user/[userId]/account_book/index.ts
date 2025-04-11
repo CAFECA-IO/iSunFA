@@ -7,7 +7,7 @@ import {
   checkUserAuthorization,
   logUserAction,
 } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { getSession } from '@/lib/utils/session';
@@ -126,7 +126,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
   let response;
@@ -136,12 +136,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     switch (method) {
-      case 'GET':
+      case HttpMethod.GET:
         apiName = APIName.LIST_ACCOUNT_BOOK_BY_USER_ID;
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;
-      case 'POST':
+      case HttpMethod.POST:
         apiName = APIName.CREATE_ACCOUNT_BOOK;
         ({ response, statusMessage } = await handlePostRequest(req));
         ({ httpCode, result } = response);

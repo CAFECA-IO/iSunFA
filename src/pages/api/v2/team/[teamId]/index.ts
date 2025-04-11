@@ -1,4 +1,4 @@
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IUpdateTeamBody, IUpdateTeamResponse } from '@/lib/utils/zod_schema/team';
 import { ITeam, TeamRole } from '@/interfaces/team';
@@ -181,16 +181,16 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
 
   try {
     switch (method) {
-      case 'GET':
+      case HttpMethod.GET:
         ({ httpCode, result } = await handleGetRequest(req));
         break;
-      case 'PUT': {
+      case HttpMethod.PUT: {
         const { statusMessage, payload } = await withRequestValidation(
           APIName.UPDATE_TEAM_BY_ID,
           req,

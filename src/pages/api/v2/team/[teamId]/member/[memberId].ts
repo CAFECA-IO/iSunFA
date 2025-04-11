@@ -8,7 +8,7 @@ import {
   checkUserAuthorization,
   logUserAction,
 } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
   IDeleteMemberResponse,
   IUpdateMemberBody,
@@ -321,14 +321,14 @@ export default async function handler(
   try {
     // Info: (20250312 - Shirley) 檢查請求方法
     switch (req.method) {
-      case 'PUT':
+      case HttpMethod.PUT:
         apiName = APIName.UPDATE_MEMBER;
         putResult = await handlePutRequest(req);
         statusMessage = putResult.statusMessage;
         payload = putResult.payload;
         session = putResult.session;
         break;
-      case 'DELETE':
+      case HttpMethod.DELETE:
         apiName = APIName.DELETE_MEMBER;
         deleteResult = await handleDeleteRequest(req);
         statusMessage = deleteResult.statusMessage;

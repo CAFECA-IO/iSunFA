@@ -1,3 +1,4 @@
+import { HttpMethod } from '@/constants/api_connection';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -10,7 +11,7 @@ export const config = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
+  if (req.method === HttpMethod.POST) {
     try {
       // Info: (20241120 - tzuhan) 獲取原始請求體
       const rawBody = await new Promise<string>((resolve, reject) => {
@@ -50,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } else {
     // Info: (20241120 - tzuhan) 如果不是 POST，返回 405 Method Not Allowed
-    res.setHeader('Allow', ['POST']);
+    res.setHeader('Allow', [HttpMethod.POST]);
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 }
