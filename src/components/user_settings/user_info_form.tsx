@@ -141,7 +141,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
       {/* Info: (20241218 - tzuhan) Country and Phone Inputs */}
       <div className="grid grid-cols-2 gap-6">
         <SelectCountryDropdown
-          country={formState.country}
+          countryCode={formState.country}
           onSelect={(value) => handleInputChange('country', value)}
         />
         <PhoneNumberInput

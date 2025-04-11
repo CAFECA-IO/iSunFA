@@ -1,3 +1,4 @@
+import { LocaleKey } from '@/constants/normal_setting';
 import { ITeam } from '@/interfaces/team';
 
 export const PUBLIC_ACCOUNT_BOOK_ID = 1002;
@@ -40,6 +41,32 @@ export interface IAccountBook {
 export interface IAccountBookWithTeam extends IAccountBook {
   team: ITeam;
   isTransferring: boolean;
+}
+
+// Info: (20250411 - Liz) getAccountBookInfoByBookId API payload
+export interface ICountry {
+  id: string;
+  code: LocaleKey;
+  name: string;
+  localeKey: LocaleKey;
+  currencyCode: string;
+  phoneCode: string;
+  phoneExample: string;
+}
+
+// Info: (20250411 - Liz) getAccountBookInfoByBookId API payload
+export interface IAccountBookDetails {
+  id: string;
+  name: string;
+  taxId: string;
+  taxSerialNumber: string;
+  representativeName: string;
+  country: ICountry;
+  phoneNumber: string;
+  address: string;
+  startDate: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface ICompanyTaxIdAndName {
