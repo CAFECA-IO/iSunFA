@@ -124,7 +124,7 @@ export const handleGetRequest: IHandleRequest<
     canDo: TeamPermissionAction.BOOKKEEPING,
   });
 
-  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+  if (!assertResult.can) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -260,7 +260,7 @@ export const handlePostRequest: IHandleRequest<
     canDo: TeamPermissionAction.BOOKKEEPING,
   });
 
-  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+  if (!assertResult.can) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
