@@ -23,7 +23,7 @@
     "RETURNING_TO_BEGINNER_IN": "Returning to Beginner in ",
     "DAYS": " Days",
     "CANCEL_SUBSCRIPTION_TITLE": "Cancel Subscription",
-    "CANCEL_SUBSCRIPTION_MESSAGE": "Are you sure you want to cancel {{planName}}? * Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
+    "CANCEL_SUBSCRIPTION_MESSAGE": "Are you sure you want to cancel <bold>{{planName}}</bold>? <br/><red>* Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.</red>",
     "YES_CANCEL_SUBSCRIPTION": "Yes. Cancel my plan"
   },
 

@@ -122,23 +122,26 @@ const OwnedTeam = ({
             </div>
 
             <div className="flex flex-col items-start gap-20px">
-              {/* Todo: (20250410 - Anna) 後端資料有嗎 */}
-              <p>
-                <span className="text-2xl font-semibold leading-8 text-neutral-300">
-                  {t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}:
-                </span>{' '}
-                <span className="text-2xl font-semibold leading-8 text-neutral-600">
-                  2024/05/10
-                </span>
-              </p>
-              {/* Info: (20250410 - Anna) 新增的 */}
-              <p
-                className="cursor-pointer text-base font-semibold leading-6 tracking-wide text-red-600"
-                onClick={() => setTeamForCancelSubscription(team)}
-              >
-                {t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE')}
-              </p>
-              {/* Info: (20250410 - Anna) 先隱藏 */}
+              {!isPlanBeginner && (
+                <>
+                  <p>
+                    <span className="text-2xl font-semibold leading-8 text-neutral-300">
+                      {t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}:
+                    </span>{' '}
+                    <span className="text-2xl font-semibold leading-8 text-neutral-600">
+                      {formatTimestamp(team.expiredTimestamp)}
+                    </span>
+                  </p>
+                  <p
+                    className="cursor-pointer text-base font-semibold leading-6 tracking-wide text-red-600"
+                    onClick={() => setTeamForCancelSubscription(team)}
+                  >
+                    {t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE')}
+                  </p>
+                </>
+              )}
+
+              {/* Info: (20250410 - Anna) 設計稿有改，「開啟自動續訂Toggle」先隱藏 */}
               <div className="hidden">
                 <span className="text-lg font-semibold text-text-neutral-primary">
                   {t('subscriptions:SUBSCRIPTIONS_PAGE.ENABLE_AUTO_RENEWAL')}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import OwnedTeams from '@/components/beta/subscriptions_page/owned_teams';
-import { useTranslation } from 'next-i18next';
+import { useTranslation, Trans } from 'next-i18next';
 import { IUserOwnedTeam } from '@/interfaces/subscription';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
@@ -69,6 +69,33 @@ const SubscriptionsPageBody = ({
     }
   };
 
+  // Info: (20250410 - Anna) 打 API 取消訂閱
+  const cancelSubscription = async () => {
+    if (!teamForCancelSubscription) return;
+    const teamId = teamForCancelSubscription.id;
+    const plan = teamForCancelSubscription.plan.toLowerCase();
+    // eslint-disable-next-line no-console
+    console.log('[取消訂閱] 發送 API 請求 : params', { teamId: String(teamId) });
+    // eslint-disable-next-line no-console
+    console.log('[取消訂閱] 發送 API 請求 : body', {
+      plan,
+      autoRenew: false,
+    });
+    const { success } = await updateSubscriptionAPI({
+      params: { teamId: String(teamId) },
+      body: {
+        plan,
+        autoRenew: false, // Info: (20250410 - Anna) 關閉自動續約即為取消訂閱
+      },
+    });
+    if (success) {
+      // eslint-disable-next-line no-console
+      console.log('[取消訂閱] API 成功回應');
+      setTeamForCancelSubscription(undefined);
+      getUserOwnedTeams();
+    }
+  };
+
   const messageModalDataForTurnOnRenewal: IMessageModal = {
     title: t('subscriptions:SUBSCRIPTIONS_PAGE.TURN_ON_AUTO_RENEWAL_TITLE'),
     content: t('subscriptions:SUBSCRIPTIONS_PAGE.TURN_ON_AUTO_RENEWAL_MESSAGE'),
@@ -92,16 +119,29 @@ const SubscriptionsPageBody = ({
   // Info: (20250410 - Anna) 取消訂閱的Modal
   const messageModalDataForCancelSubscription: IMessageModal = {
     title: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE'),
-    content: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_MESSAGE'),
+    content: (
+      <div className="max-w-300px leading-6">
+        <Trans
+          i18nKey="subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_MESSAGE"
+          components={{
+            bold: <span className="font-semibold" />,
+            br: <br />,
+            red: <span className="text-red-600" />,
+          }}
+          values={{
+            planName: t(`subscriptions:PLAN_NAME.${teamForCancelSubscription?.plan.toUpperCase()}`),
+          }}
+        />
+      </div>
+    ),
     submitBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.YES_CANCEL_SUBSCRIPTION'),
-    submitBtnFunction: () => {
-      // eslint-disable-next-line no-console
-      console.log('取消訂閱確定'); // 先不串 API
-      setTeamForCancelSubscription(undefined);
-    },
+    submitBtnFunction: cancelSubscription,
     messageType: MessageType.WARNING,
     backBtnFunction: () => setTeamForCancelSubscription(undefined),
     backBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL'),
+    backBtnClassName: 'border-orange-500 text-orange-600',
+    submitBtnClassName:
+      'bg-orange-400 text-orange-900 hover:bg-button-surface-strong-primary-hover',
   };
 
   return (
@@ -115,7 +155,6 @@ const SubscriptionsPageBody = ({
         userOwnedTeams={userOwnedTeams}
         setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
         setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
-        // Info: (20250410 - Anna) 傳取消訂閱的Modal
         setTeamForCancelSubscription={setTeamForCancelSubscription}
       />
       {teamForAutoRenewalOn && (
