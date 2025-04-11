@@ -26,7 +26,7 @@ import { getSession } from '@/lib/utils/session';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
-import { TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 
 /* Info: (20241204 - Luphia) API develop SOP 以 POST ASSET API 為例
  * 1. 前置作業
@@ -124,7 +124,7 @@ export const handleGetRequest: IHandleRequest<
     canDo: TeamPermissionAction.BOOKKEEPING,
   });
 
-  if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -260,7 +260,7 @@ export const handlePostRequest: IHandleRequest<
     canDo: TeamPermissionAction.BOOKKEEPING,
   });
 
-  if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 

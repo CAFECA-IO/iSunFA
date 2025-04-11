@@ -16,7 +16,7 @@ import { IAssetBulkPostOutputValidator } from '@/lib/utils/zod_schema/asset';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
-import { TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 
 interface IHandlerResult {
   statusMessage: string;
@@ -89,7 +89,7 @@ export const handlePostRequest: IHandleRequest<
     canDo: TeamPermissionAction.BOOKKEEPING,
   });
 
-  if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 

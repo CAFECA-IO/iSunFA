@@ -20,7 +20,7 @@ import { getSession } from '@/lib/utils/session';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
-import { TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
 
 interface IHandlerResult {
   statusMessage: string;
@@ -79,7 +79,7 @@ const handleGetRequest: IHandleRequest<APIName.ASSET_GET_BY_ID_V2, IGetResult['p
     canDo: TeamPermissionAction.BOOKKEEPING,
   });
 
-  if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -174,7 +174,7 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_ASSET_V2, IPutResult['payl
     canDo: TeamPermissionAction.BOOKKEEPING,
   });
 
-  if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -266,7 +266,7 @@ const handleDeleteRequest: IHandleRequest<
     canDo: TeamPermissionAction.BOOKKEEPING,
   });
 
-  if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
