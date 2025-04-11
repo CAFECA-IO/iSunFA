@@ -6,14 +6,15 @@ import { PAYMENT } from '@/constants/service';
 
 const paymentGatewayOptions: IPaymentGatewayOptions = {
   platform: PAYMENT.OEN,
-  prodMode: false, // process.env.NODE_ENV === 'production',
+  prodMode: false,
   id: process.env.PAYMENT_ID as string,
   secret: process.env.PAYMENT_TOKEN as string,
 };
 
 // Info: (20250318 - Luphia) Create payment gateway instance.
-export const createPaymentGateway = (): IPaymentGateway => {
+export const createPaymentGateway = (prodMode: boolean = false): IPaymentGateway => {
   const options = paymentGatewayOptions;
+  options.prodMode = prodMode;
   const { platform } = options;
   let paymentGateway;
   switch (platform) {
