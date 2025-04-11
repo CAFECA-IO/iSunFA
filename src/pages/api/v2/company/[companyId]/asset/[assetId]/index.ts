@@ -20,7 +20,7 @@ import { getSession } from '@/lib/utils/session';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface IHandlerResult {
   statusMessage: string;

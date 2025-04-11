@@ -20,7 +20,6 @@ import {
   getAccountBookTeamId,
 } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { getUserRoleInTeam } from '@/lib/utils/repo/team_member.repo';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 

@@ -16,7 +16,7 @@ import { getSession } from '@/lib/utils/session';
 import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DEFAULT_TIMEZONE } from '@/constants/common';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
