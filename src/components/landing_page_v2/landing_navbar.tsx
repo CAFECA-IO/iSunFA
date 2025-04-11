@@ -139,7 +139,7 @@ const LandingNavbar: React.FC = () => {
   );
 
   return (
-    <nav className="z-50 w-full">
+    <nav className="w-full">
       <div className="z-50 flex items-center justify-between rounded-sm border-b bg-landing-nav px-16px py-12px shadow-landing-nav backdrop-blur-md md:inset-x-36px md:mx-36px md:px-40px lg:px-112px">
         <div className="flex items-center gap-16px">
           {/* Info: (20241204 - Julian) Logo */}

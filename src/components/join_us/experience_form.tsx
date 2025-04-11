@@ -18,7 +18,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toNextStep }) => {
   return (
     <div className="relative flex flex-col items-stretch gap-10px">
       <LandingButton variant="primary" className="font-bold" onClick={toggleEducationModal}>
-        <FaPlus size={20} /> Education
+        <FaPlus size={20} /> {t('hiring:EXPERIENCE.EDUCATION_TITLE')}
       </LandingButton>
 
       <div className="w-90vw overflow-x-auto">
@@ -27,7 +27,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toNextStep }) => {
 
       <div className="flex items-center justify-between">
         <LandingButton variant="primary" className="font-bold">
-          <FaPlus size={20} /> Work Experience
+          <FaPlus size={20} /> {t('hiring:EXPERIENCE.WORK_TITLE')}
         </LandingButton>
 
         <div className="flex items-center gap-lv-6">
@@ -38,7 +38,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toNextStep }) => {
 
           {/* Info: (20250411 - Julian) Next Button */}
           <LandingButton variant="primary" className="font-bold" onClick={toNextStep}>
-            {t('hiring:RESUME_PAGE.NEXT_BTN')}
+            {t('hiring:COMMON.NEXT')}
           </LandingButton>
         </div>
       </div>

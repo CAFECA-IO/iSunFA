@@ -342,7 +342,7 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
           className="font-bold"
           disabled={disableSubmit}
         >
-          {t('hiring:RESUME_PAGE.NEXT_BTN')}
+          {t('hiring:COMMON.NEXT')}
         </LandingButton>
       </div>
     </form>
