@@ -79,7 +79,7 @@ const handleGetRequest: IHandleRequest<APIName.ASSET_GET_BY_ID_V2, IGetResult['p
     canDo: TeamPermissionAction.BOOKKEEPING,
   });
 
-  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+  if (!assertResult.can) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -174,7 +174,7 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_ASSET_V2, IPutResult['payl
     canDo: TeamPermissionAction.BOOKKEEPING,
   });
 
-  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+  if (!assertResult.can) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -266,7 +266,7 @@ const handleDeleteRequest: IHandleRequest<
     canDo: TeamPermissionAction.BOOKKEEPING,
   });
 
-  if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+  if (!assertResult.can) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
