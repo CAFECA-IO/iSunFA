@@ -80,7 +80,9 @@ const ResumeMainBody: React.FC<IResumeMainBodyProps> = ({ setIsProcess }) => {
           } transition-all delay-1000 duration-500`}
         >
           <LandingButton variant="default" className="font-black" onClick={clickCreateResume}>
-            <Image src="/icons/user_plus.svg" alt="create_resume" width={20} height={20} />
+            <div className="h-20px w-20px">
+              <Image src="/icons/user_plus.svg" alt="create_resume" width={20} height={20} />
+            </div>
             {t('hiring:RESUME_PAGE.CREATE_RESUME_BTN')}
           </LandingButton>
         </div>

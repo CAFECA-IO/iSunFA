@@ -5,26 +5,12 @@ import { FiTrash2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { timestampToString } from '@/lib/utils/common';
+import { Degree, SchoolStatus, IEducationExperience } from '@/interfaces/experience';
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 
 interface IEducationExperienceModalProps {
   modalVisibilityHandler: () => void;
-}
-
-enum Degree {
-  ELEMENTARY = 'Elementary',
-  JUNIOR = 'Junior',
-  HIGH = 'High',
-  BACHELOR = 'Bachelor',
-  MASTER = 'Master',
-  PROFESSIONAL = 'Professional',
-}
-
-enum SchoolStatus {
-  GRADUATED = 'Graduated',
-  IN_SCHOOL = 'In_School',
-  DROPOUT = 'Dropout',
 }
 
 const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
@@ -49,6 +35,8 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
   const startDateValueFormat = timestampToString(startTimestamp).yearAndMonth;
   const endDateValueFormat = timestampToString(endTimestamp).yearAndMonth;
 
+  const toggleDegreeDropdown = () => setIsOpen((prev) => !prev);
+
   const changeSchoolNameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSchoolNameInput(e.target.value);
   };
@@ -62,7 +50,22 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
     setEndTimestamp(Date.parse(e.target.value) / 1000);
   };
 
-  const toggleDegreeDropdown = () => setIsOpen((prev) => !prev);
+  const saveHandler = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const educationExperience: IEducationExperience = {
+      degree: selectedDegree,
+      schoolName: schoolNameInput,
+      department: departmentInput,
+      startTimestamp,
+      endTimestamp,
+      status: selectedStatus,
+    };
+
+    // Deprecated: (20250411 - Julian) For debugging purpose
+    // eslint-disable-next-line no-console
+    console.log('Education Experience:', educationExperience);
+  };
 
   const degreeOptions = Object.values(Degree);
 
@@ -111,7 +114,10 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <form className="relative mx-auto flex w-90vw flex-col items-stretch rounded-lg border border-white bg-landing-nav px-52px pb-69px pt-46px shadow-lg shadow-black/80 backdrop-blur-lg">
+      <form
+        onSubmit={saveHandler}
+        className="relative mx-auto flex w-90vw flex-col items-stretch rounded-lg border border-white bg-landing-nav px-52px pb-69px pt-46px shadow-lg shadow-black/80 backdrop-blur-lg"
+      >
         {/* Info: (20250411 - Julian) Modal Title */}
         <div className="flex items-center justify-between">
           <h2 className="text-36px font-bold text-text-brand-primary-lv3">
