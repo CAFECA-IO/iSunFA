@@ -8,7 +8,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ITransferAccountBook } from '@/interfaces/team';
@@ -75,24 +75,8 @@ const AccountBookItem = ({
     canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
   });
 
-  const canDelete =
-    TeamRoleCanDoKey.YES_OR_NO in deletePermission ? deletePermission.yesOrNo : false;
-  const canEditTag =
-    TeamRoleCanDoKey.YES_OR_NO in editTagPermission ? editTagPermission.yesOrNo : false;
-  const canRequestTransfer =
-    TeamRoleCanDoKey.YES_OR_NO in requestTransferPermission
-      ? requestTransferPermission.yesOrNo
-      : false;
-
-  const hasPermission = canDelete || canEditTag || canRequestTransfer;
-
-  const canCancelTransfer =
-    TeamRoleCanDoKey.YES_OR_NO in cancelTransferPermission
-      ? cancelTransferPermission.yesOrNo
-      : false;
-
-  const canModifyImage =
-    TeamRoleCanDoKey.YES_OR_NO in modifyImagePermission ? modifyImagePermission.yesOrNo : false;
+  const hasPermission =
+    deletePermission.can || editTagPermission.can || requestTransferPermission.can;
 
   const toggleOptionsDropdown = (e: React.MouseEvent<HTMLButtonElement>) => {
     setIsOptionsDropdownOpen((prev) => !prev);
@@ -203,7 +187,7 @@ const AccountBookItem = ({
             type="button"
             onClick={openUploadCompanyPictureModal}
             className="group relative"
-            disabled={!canModifyImage}
+            disabled={!modifyImagePermission.can}
           >
             <Image
               src={accountBook.imageId}
@@ -213,7 +197,7 @@ const AccountBookItem = ({
               className="h-60px w-60px rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
             ></Image>
 
-            {canModifyImage && (
+            {modifyImagePermission.can && (
               <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
                 <FiEdit2 size={24} />
               </div>
@@ -244,7 +228,7 @@ const AccountBookItem = ({
               {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.WAITING_FOR_TRANSFERRING')}...
             </p>
 
-            {canCancelTransfer && (
+            {cancelTransferPermission.can && (
               <button
                 type="button"
                 className="text-nowrap text-sm font-semibold text-link-text-primary"
@@ -266,7 +250,7 @@ const AccountBookItem = ({
             {isOptionsDropdownOpen && (
               <div className="absolute right-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS">
                 {/* Info: (20250213 - Liz) Account Book Transfer */}
-                {canRequestTransfer && (
+                {requestTransferPermission.can && (
                   <button
                     type="button"
                     onClick={openAccountBookTransferModal}
@@ -280,7 +264,7 @@ const AccountBookItem = ({
                 )}
 
                 {/* Info: (20250213 - Liz) Change Tag */}
-                {canEditTag && (
+                {editTagPermission.can && (
                   <button
                     type="button"
                     onClick={openChangeTagModal}
@@ -292,7 +276,7 @@ const AccountBookItem = ({
                 )}
 
                 {/* Info: (20250213 - Liz) Delete */}
-                {canDelete && (
+                {deletePermission.can && (
                   <button
                     type="button"
                     className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"

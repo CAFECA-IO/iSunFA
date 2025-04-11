@@ -16,6 +16,8 @@ export enum TeamPermissionAction {
   MODIFY_PLAN = 'MODIFY_PLAN', // Info: (20250320 - Liz) 編輯團隊訂閱方案 planType
   VIEW_TEAM_INFO = 'VIEW_TEAM_INFO', // Info: (20250320 - Liz) 查看團隊資訊
   VIEW_SUBSCRIPTION = 'VIEW_SUBSCRIPTION', // Info: (20250320 - Liz) 查看目前團隊訂閱方案
+  MODIFY_SUBSCRIPTION = 'MODIFY_SUBSCRIPTION', // Info: (20250411 - Tzuhan) 編輯團隊訂閱方案
+  VIEW_SUBSCRIPTION_INVOICE = 'VIEW_SUBSCRIPTION_INVOICE', // Info: (20250411 - Tzuhan) 查看訂閱發票
 
   // Info: (20250313 - Tzuhan) 帳本權限
   CREATE_ACCOUNT_BOOK = 'CREATE_ACCOUNT_BOOK', // Info: (20250320 - Liz) 建立帳本
@@ -46,18 +48,9 @@ export interface IWhatTeamRoleCanDo {
   canDo: TeamPermissionAction;
 }
 
-export interface ITeamRoleCanDo {
+export interface IResolvedTeamPermission {
   teamRole: TeamRole;
   canDo: TeamPermissionAction;
-  yesOrNo: boolean;
-}
-
-export interface IAlterTeamRole {
-  teamRole: TeamRole;
-  canAlter: TeamRole[];
-}
-
-export enum TeamRoleCanDoKey {
-  YES_OR_NO = 'yesOrNo',
-  CAN_ALTER = 'canAlter',
+  can: boolean;
+  alterableRoles?: TeamRole[]; // 只在 CHANGE_TEAM_ROLE 有值
 }

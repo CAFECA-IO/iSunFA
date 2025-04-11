@@ -9,7 +9,7 @@ import { useTranslation } from 'next-i18next';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface TeamPageButtonsProps {
   team: ITeam;
@@ -20,12 +20,10 @@ const TeamPageButtons = ({ team, openMemberListModal }: TeamPageButtonsProps) =>
   const { t } = useTranslation(['team']);
   const [isLeaving, setIsLeaving] = useState<boolean>(false);
 
-  const result = convertTeamRoleCanDo({
+  const leaveTeamPermission = convertTeamRoleCanDo({
     teamRole: team.role,
     canDo: TeamPermissionAction.LEAVE_TEAM,
   });
-
-  const yesOrNo = TeamRoleCanDoKey.YES_OR_NO in result ? result.yesOrNo : false;
 
   // Info: (20250321 - Liz) 離開團隊 API
   const { trigger: leaveTeamAPI } = APIHandler<ILeaveTeam>(APIName.LEAVE_TEAM);
@@ -70,7 +68,7 @@ const TeamPageButtons = ({ team, openMemberListModal }: TeamPageButtonsProps) =>
         <FiInfo size={16} />
       </Link>
 
-      {yesOrNo && (
+      {leaveTeamPermission.can && (
         <button
           type="button"
           className="rounded-xs bg-button-surface-strong-secondary p-10px text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"

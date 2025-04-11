@@ -10,7 +10,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { Company, File } from '@prisma/client';
 import { IAccountBook } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 
 const handlePutRequest: IHandleRequest<
@@ -46,7 +46,7 @@ const handlePutRequest: IHandleRequest<
       canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
     });
 
-    if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+    if (!assertResult.can) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 

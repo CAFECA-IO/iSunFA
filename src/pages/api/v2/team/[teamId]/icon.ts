@@ -8,7 +8,7 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { loggerError } from '@/lib/utils/logger_back';
 import { ITeamWithImage, TeamRole } from '@/interfaces/team';
 import { putTeamIcon } from '@/lib/utils/repo/team.repo';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 
 /** Info: (20250324 - Shirley)
@@ -45,7 +45,7 @@ const handlePutRequest: IHandleRequest<APIName.PUT_TEAM_ICON, ITeamWithImage> = 
       canDo: TeamPermissionAction.MODIFY_IMAGE,
     });
 
-    if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+    if (!assertResult.can) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 

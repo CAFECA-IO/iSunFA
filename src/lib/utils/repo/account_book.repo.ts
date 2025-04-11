@@ -20,7 +20,7 @@ import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import loggerBack from '@/lib/utils/logger_back';
 import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
-import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { createOrderByList } from '@/lib/utils/sort';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
@@ -94,11 +94,11 @@ export async function isEligibleToCreateAccountBookInTeam(
       teamId,
     },
   });
-  const canDo: ITeamRoleCanDo = convertTeamRoleCanDo({
+  const canDo = convertTeamRoleCanDo({
     teamRole: teamMember?.role as TeamRole,
     canDo: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
-  }) as ITeamRoleCanDo;
-  return canDo.yesOrNo;
+  });
+  return canDo.can;
 }
 
 export const getAccountBookById = async (id: number): Promise<IAccountBook | null> => {
@@ -550,7 +550,7 @@ export const requestTransferAccountBook = async (
     canDo: TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
   });
 
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+  if (!canDo.can) {
     throw new Error('FORBIDDEN');
   }
 
@@ -665,7 +665,7 @@ export const cancelTransferAccountBook = async (
     canDo: TeamPermissionAction.CANCEL_ACCOUNT_BOOK_TRANSFER,
   });
 
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+  if (!canDo.can) {
     throw new Error('FORBIDDEN');
   }
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
@@ -712,7 +712,7 @@ export const acceptTransferAccountBook = async (
     canDo: TeamPermissionAction.ACCEPT_ACCOUNT_BOOK_TRANSFER,
   });
 
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+  if (!canDo.can) {
     throw new Error('FORBIDDEN');
   }
 
@@ -760,7 +760,7 @@ export const declineTransferAccountBook = async (
     canDo: TeamPermissionAction.DECLINE_ACCOUNT_BOOK_TRANSFER,
   });
 
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+  if (!canDo.can) {
     throw new Error('FORBIDDEN');
   }
 

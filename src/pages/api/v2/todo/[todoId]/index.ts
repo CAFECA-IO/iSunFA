@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { deleteTodo, getTodoById, updateTodo } from '@/lib/utils/repo/todo.repo';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
   checkRequestData,
   checkSessionUser,
@@ -98,7 +98,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
   let response;
@@ -108,17 +108,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     switch (method) {
-      case 'GET':
+      case HttpMethod.GET:
         apiName = APIName.TODO_GET_BY_ID;
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;
-      case 'PUT':
+      case HttpMethod.PUT:
         apiName = APIName.UPDATE_TODO;
         ({ response, statusMessage } = await handlePutRequest(req));
         ({ httpCode, result } = response);
         break;
-      case 'DELETE':
+      case HttpMethod.DELETE:
         apiName = APIName.DELETE_TODO;
         ({ response, statusMessage } = await handleDeleteRequest(req));
         ({ httpCode, result } = response);

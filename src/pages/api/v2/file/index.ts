@@ -24,7 +24,7 @@ import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
 import { parseJsonWebKeyFromString } from '@/lib/utils/formatter/json_web_key.formatter';
 import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
 import { getSession } from '@/lib/utils/session';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 
@@ -184,7 +184,7 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
       canDo: TeamPermissionAction.MODIFY_IMAGE,
     });
 
-    if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+    if (!assertResult.can) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
   } else if (type === UploadType.COMPANY) {
@@ -209,7 +209,7 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
       canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
     });
 
-    if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+    if (!assertResult.can) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
   }

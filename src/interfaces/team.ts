@@ -38,7 +38,7 @@ export interface IInviteMember {
 
 export interface IInviteMemberResponse {
   invitedCount: number;
-  failedEmails: string[];
+  unregisteredEmails: string[];
 }
 
 // Info: (20250303 - Shirley) 定義 Team 與 File 的關聯介面

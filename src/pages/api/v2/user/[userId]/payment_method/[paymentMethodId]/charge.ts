@@ -76,7 +76,9 @@ export const handlePostRequest = async (req: NextApiRequest) => {
     const teamOrder = await createTeamOrder(order);
     const userPaymentInfo: IPaymentInfo | null = await getUserPaymentInfoById(paymentMethodId);
     const user = (await getUserById(userId)) as unknown as IUser;
-    if (!userPaymentInfo || !user || userPaymentInfo.userId !== userId) throw new Error(STATUS_MESSAGE.INVALID_PAYMENT_METHOD);
+    if (!userPaymentInfo || !user || userPaymentInfo.userId !== userId) {
+      throw new Error(STATUS_MESSAGE.INVALID_PAYMENT_METHOD);
+    }
     const paymentGateway = createPaymentGateway();
     const chargeOption: IChargeWithTokenOptions = {
       order: teamOrder,
@@ -109,7 +111,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
 
       // Info: (20250330 - Luphia) 根據扣款的結果建立 team_subscription 並儲存
       // ToDo: (20250330 - Luphia) 使用 DB Transaction
-      const teamSubscriptionData = await generateTeamSubscription(teamId, teamPlanType);
+      const teamSubscriptionData = await generateTeamSubscription(userId, teamId, teamPlanType);
       let teamSubscription: ITeamSubscription;
       if (teamSubscriptionData.id) {
         teamSubscription = await updateTeamSubscription(teamSubscriptionData);

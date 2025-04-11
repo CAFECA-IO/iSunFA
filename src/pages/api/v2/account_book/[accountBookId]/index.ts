@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountBook, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
   checkOutputDataValid,
   checkRequestData,
@@ -20,7 +20,7 @@ import {
   getAccountBookTeamId,
 } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 
 /**
@@ -85,12 +85,10 @@ const handlePutRequest = async (req: NextApiRequest) => {
   switch (action) {
     // Info: (20250310 - Shirley) Update account book tag
     case ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG: {
-      canDo = (
-        convertTeamRoleCanDo({
-          teamRole,
-          canDo: TeamPermissionAction.MODIFY_TAG,
-        }) as ITeamRoleCanDo
-      ).yesOrNo;
+      canDo = convertTeamRoleCanDo({
+        teamRole,
+        canDo: TeamPermissionAction.MODIFY_TAG,
+      }).can;
 
       if (!canDo) {
         loggerBack.warn(
@@ -153,11 +151,11 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   const canDeleteResult = convertTeamRoleCanDo({
     teamRole,
     canDo: TeamPermissionAction.DELETE_ACCOUNT_BOOK,
-  }) as ITeamRoleCanDo;
+  });
 
   loggerBack.info(`canDeleteResult: ${JSON.stringify(canDeleteResult)}`);
 
-  if (!canDeleteResult.yesOrNo) {
+  if (!canDeleteResult.can) {
     loggerBack.warn(
       `User ${userId} with role ${teamRole} doesn't have permission to delete account book ${accountBookId}`
     );
@@ -183,7 +181,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let name = APIName.UPDATE_ACCOUNT_BOOK;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
@@ -192,12 +190,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const session = await getSession(req);
   try {
     switch (method) {
-      case 'PUT':
+      case HttpMethod.PUT:
         name = APIName.UPDATE_ACCOUNT_BOOK;
         ({ response, statusMessage } = await handlePutRequest(req));
         ({ httpCode, result } = response);
         break;
-      case 'DELETE':
+      case HttpMethod.DELETE:
         name = APIName.DELETE_ACCOUNT_BOOK;
         ({ response, statusMessage } = await handleDeleteRequest(req));
         ({ httpCode, result } = response);

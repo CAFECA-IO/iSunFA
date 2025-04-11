@@ -11,6 +11,7 @@ import {
 import { getTimestampNow } from '@/lib/utils/common';
 import { PAYMENT_GATEWAY, PAYMENT_METHOD_TYPE } from '@/constants/payment';
 import { DefaultValue } from '@/constants/default_value';
+import { HttpMethod } from '@/constants/api_connection';
 import { teamOrderToOrderOen } from '@/lib/utils/formatter/order.formatter';
 
 class OenPaymentGateway implements IPaymentGateway {
@@ -59,7 +60,7 @@ class OenPaymentGateway implements IPaymentGateway {
      * The id in data is the paymentId.
      */
     const queryResponse = await fetch(this.handshakeUrl, {
-      method: 'POST',
+      method: HttpMethod.POST,
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
@@ -167,7 +168,7 @@ class OenPaymentGateway implements IPaymentGateway {
      *  The id in data is the paymentId.
      */
     const response = await fetch(this.chargeUrl, {
-      method: 'POST',
+      method: HttpMethod.POST,
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,

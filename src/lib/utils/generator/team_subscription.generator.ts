@@ -13,6 +13,7 @@ import { listValidTeamSubscription } from '@/lib/utils/repo/team_subscription.re
  * @param teamPlanType
  */
 export const generateTeamSubscription = async (
+  userId: number,
   teamId: number,
   teamPlanType: TPlanType
 ): Promise<ITeamSubscription> => {
@@ -32,6 +33,7 @@ export const generateTeamSubscription = async (
         updatedAt: nowInSecond,
       }
     : {
+        userId,
         teamId,
         planType: teamPlanType,
         startDate: nowInSecond,

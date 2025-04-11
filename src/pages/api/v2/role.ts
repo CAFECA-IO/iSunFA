@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { checkSessionUser, checkUserAuthorization, logUserAction } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
@@ -37,7 +37,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
   let response;
@@ -46,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     switch (method) {
-      case 'GET':
+      case HttpMethod.GET:
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;

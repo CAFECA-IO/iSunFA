@@ -16,7 +16,7 @@ import { getSession } from '@/lib/utils/session';
 import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DEFAULT_TIMEZONE } from '@/constants/common';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
@@ -153,7 +153,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       canDo: TeamPermissionAction.BOOKKEEPING,
     });
 
-    if (TeamRoleCanDoKey.YES_OR_NO in assertResult && !assertResult.yesOrNo) {
+    if (!assertResult.can) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 

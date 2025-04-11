@@ -8,11 +8,24 @@ import { LeaveStatus, TeamRole } from '@/interfaces/team';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { updateTeamMemberSession } from '@/lib/utils/session';
-import { assertUserIsTeamMember } from '@/lib/utils/repo/team.repo';
+import {
+  assertUserIsTeamMember,
+  assertUserCan,
+} from '@/lib/utils/permission/assert_user_team_permission';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { addMonths, getUnixTime } from 'date-fns';
 
 export const createTeamSubscription = async (
   options: ITeamSubscription
 ): Promise<ITeamSubscription> => {
+  const permission = await assertUserCan({
+    userId: options.userId,
+    teamId: options.teamId,
+    action: TeamPermissionAction.MODIFY_SUBSCRIPTION,
+  });
+
+  if (!permission.can) throw new Error('PERMISSION_DENIED');
+
   const data = {
     teamId: options.teamId,
     planType: options.planType as TeamPlanType,
@@ -65,11 +78,17 @@ export const listValidTeamSubscription = async (teamId: number): Promise<ITeamSu
         },
       },
       include: {
+        team: {
+          select: {
+            ownerId: true,
+          },
+        },
         plan: true,
       },
     })
   ).map((item) => ({
     ...item,
+    userId: item.team.ownerId,
     enableAutoRenewal: true,
   })) as ITeamSubscription[];
 
@@ -81,11 +100,11 @@ export async function listTeamSubscription(
   page = 1,
   pageSize = 20
 ): Promise<IPaginatedOptions<IUserOwnedTeam[]>> {
-  // Info: (20250401 - Tzuhan) 1. 找到 user 為 OWNER 的 teamId 列表
+  // Info: (20250411 - Tzuhan) 權限檢查已透過 prisma 查詢條件限制為團隊成員成員，無需額外 assertUserCan。
   const ownerTeams = await prisma.teamMember.findMany({
     where: {
       userId,
-      role: TeamRole.OWNER,
+      // role: TeamRole.OWNER, // Info: (20250411 - Tzuhan) 這邊不需要限制角色，因為團隊擁有者均可查看訂閱資料
       status: LeaveStatus.IN_TEAM,
     },
     select: {
@@ -119,7 +138,6 @@ export async function listTeamSubscription(
     take: pageSize,
   });
 
-  // Info: (20250401 - Tzuhan) 2. 計算總數
   const totalCount = await prisma.teamMember.count({
     where: {
       userId,
@@ -132,7 +150,7 @@ export async function listTeamSubscription(
     const latestSub = team.subscriptions[0];
     const latestOrder = team.TeamOrder[0];
     const latestTxn = latestOrder?.TeamPaymentTransaction[0];
-    const hasInvoice = latestTxn?.TeamInvoice?.length > 0;
+    const hasInvoice = (latestTxn?.TeamInvoice?.length ?? 0) > 0;
 
     let paymentStatus: TPaymentStatus = TPaymentStatus.FREE;
     if (latestSub) {
@@ -150,7 +168,7 @@ export async function listTeamSubscription(
       id: team.id,
       name: team.name,
       plan: (latestSub?.planType as TPlanType) || TPlanType.BEGINNER,
-      enableAutoRenewal: true, // Info: (20250401 - Tzuhan) 目前不支援修改自動續約
+      enableAutoRenewal: true,
       expiredTimestamp: latestSub?.expiredDate ?? 0,
       nextRenewalTimestamp: latestSub?.expiredDate ?? 0,
       paymentStatus,
@@ -175,6 +193,7 @@ export async function listTeamTransaction(
   const skip = (page - 1) * pageSize;
   const take = pageSize;
 
+  // Info: (20250411 - Tzuhan) 權限檢查已透過 prisma 查詢條件限制為 `role: OWNER` 成員，無需額外 assertUserCan。
   const teamMembers = await prisma.teamMember.findMany({
     where: {
       userId,
@@ -237,14 +256,12 @@ export async function listTeamTransaction(
         status: invoice?.status === 'SUCCESS', // Info: (20250401 - Tzuhan) 目前不確定 DB 發票狀態的定義（schema 上是 string），這邊假設是 'SUCCESS' 代表付款成功
         issuedTimestamp: invoice?.issuedAt ?? transaction.createdAt,
         dueTimestamp: invoice?.issuedAt ?? transaction.createdAt,
-
         planId: detail.productName as TPlanType,
         planStartTimestamp,
         planEndTimestamp,
         planQuantity: detail.quantity ?? 1,
         planUnitPrice: detail.unitPrice ?? 0,
         planAmount: detail.amount ?? 0,
-
         payer: {
           name: invoice?.payerName ?? transaction.userPaymentInfo?.user?.name ?? '—',
           address: invoice?.payerAddress ?? '—',
@@ -257,7 +274,6 @@ export async function listTeamTransaction(
           phone: '+886-2-12345678',
           taxId: '12345678',
         },
-
         subtotal: invoice?.price ?? detail.amount ?? 0,
         tax: invoice?.tax ?? 0,
         total: invoice?.total ?? detail.amount ?? 0,
@@ -318,14 +334,12 @@ export async function getTeamInvoiceById(invoiceId: number): Promise<ITeamInvoic
     status: invoice.status === 'SUCCESS',
     issuedTimestamp: invoice.issuedAt,
     dueTimestamp: invoice?.issuedAt,
-
     planId: invoice.teamPaymentTransaction.teamOrder.orderDetails[0].productName as TPlanType,
     planStartTimestamp: invoice.teamPaymentTransaction.teamOrder.createdAt,
     planEndTimestamp: invoice.teamPaymentTransaction.teamOrder.createdAt,
     planQuantity: invoice.teamPaymentTransaction.teamOrder.orderDetails[0].quantity ?? 1,
     planUnitPrice: invoice.teamPaymentTransaction.teamOrder.orderDetails[0].unitPrice ?? 0,
     planAmount: invoice.teamPaymentTransaction.teamOrder.orderDetails[0].amount ?? 0,
-
     payer: {
       name: invoice.payerName ?? '—',
       address: invoice.payerAddress ?? '—',
@@ -338,7 +352,6 @@ export async function getTeamInvoiceById(invoiceId: number): Promise<ITeamInvoic
       phone: '+886-2-12345678',
       taxId: '12345678',
     },
-
     subtotal: invoice.price ?? 0,
     tax: invoice.tax ?? 0,
     total: invoice.total ?? 0,
@@ -351,12 +364,18 @@ export async function getSubscriptionByTeamId(
   teamId: number
 ): Promise<IUserOwnedTeam | null> {
   // Info: (20250410 - tzuhan) Step 1: 確認該用戶是團隊成員（任何角色都可以）
-  const role = await assertUserIsTeamMember(userId, teamId);
-
+  const { effectiveRole } = await assertUserIsTeamMember(userId, teamId);
   // Info: (20250410 - tzuhan) Step 2: 強化 session 資料一致性
-  await updateTeamMemberSession(userId, teamId, role.effectiveRole);
-
+  await updateTeamMemberSession(userId, teamId, effectiveRole);
   // Info: (20250410 - tzuhan) Step 3: 查詢訂閱資料
+  const permission = await assertUserCan({
+    userId,
+    teamId,
+    action: TeamPermissionAction.VIEW_SUBSCRIPTION,
+  });
+
+  if (!permission.can) throw new Error('PERMISSION_DENIED');
+
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     select: {
@@ -408,3 +427,94 @@ export async function getSubscriptionByTeamId(
     paymentStatus,
   };
 }
+
+export const updateSubscription = async (
+  userId: number,
+  teamId: number,
+  input: { plan?: TPlanType; autoRenew?: boolean }
+): Promise<IUserOwnedTeam> => {
+  const { plan, autoRenew } = input;
+
+  const permission = await assertUserCan({
+    userId,
+    teamId,
+    action: TeamPermissionAction.MODIFY_SUBSCRIPTION,
+  });
+  if (!permission.can) throw new Error('PERMISSION_DENIED');
+
+  const now = Math.floor(Date.now() / 1000);
+
+  if (plan) {
+    const expired = getUnixTime(addMonths(new Date(), 1));
+    await prisma.teamSubscription.create({
+      data: {
+        teamId,
+        planType: plan,
+        startDate: now,
+        expiredDate: expired,
+        createdAt: now,
+        updatedAt: now,
+      },
+    });
+  }
+
+  if (autoRenew === false) {
+    const latestOrder = await prisma.teamOrder.findFirst({
+      where: { teamId, status: { not: 'CANCELED' } },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (latestOrder) {
+      await prisma.teamOrder.update({
+        where: { id: latestOrder.id },
+        data: { status: 'CANCELED' },
+      });
+    }
+  }
+
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    select: {
+      id: true,
+      name: true,
+      subscriptions: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        include: { plan: true },
+      },
+      TeamOrder: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        include: {
+          TeamPaymentTransaction: { include: { TeamInvoice: true } },
+        },
+      },
+    },
+  });
+
+  const latestSub = team?.subscriptions[0];
+  const latestOrder = team?.TeamOrder[0];
+  const latestTxn = latestOrder?.TeamPaymentTransaction[0];
+  const hasInvoice = (latestTxn?.TeamInvoice?.length ?? 0) > 0;
+
+  let paymentStatus: TPaymentStatus = TPaymentStatus.FREE;
+  if (latestSub) {
+    if (!latestTxn) {
+      paymentStatus = TPaymentStatus.TRIAL;
+    } else {
+      paymentStatus = hasInvoice ? TPaymentStatus.PAID : TPaymentStatus.PAYMENT_FAILED;
+    }
+  }
+  if (latestOrder?.status === 'CANCELED') {
+    paymentStatus = TPaymentStatus.PAYMENT_FAILED;
+  }
+
+  return {
+    id: team!.id,
+    name: team!.name,
+    plan: (latestSub?.planType as TPlanType) || TPlanType.BEGINNER,
+    enableAutoRenewal: true,
+    expiredTimestamp: latestSub?.expiredDate ?? 0,
+    nextRenewalTimestamp: latestSub?.expiredDate ?? 0,
+    paymentStatus,
+  };
+};

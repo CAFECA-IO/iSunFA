@@ -13,7 +13,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import Skeleton from '@/components/skeleton/skeleton';
 import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface MemberListModalProps {
   team: ITeam;
@@ -32,9 +32,6 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
     teamRole: team.role,
     canDo: TeamPermissionAction.INVITE_MEMBER,
   });
-
-  const canInviteMember =
-    TeamRoleCanDoKey.YES_OR_NO in invitePermission ? invitePermission.yesOrNo : false;
 
   const closeMemberListModal = () => {
     setIsMemberListModalOpen(false);
@@ -152,7 +149,7 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
               <p className="text-sm font-medium leading-5 text-text-neutral-mute">
                 {team.name.value} - {team.totalMembers} {t('team:MEMBER_LIST_MODAL.MEMBERS')}
               </p>
-              {canInviteMember && (
+              {invitePermission.can && (
                 <Button
                   variant="tertiary"
                   size="small"
@@ -180,7 +177,7 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
       </div>
 
       {/* Info: (20250324 - Liz) Modals */}
-      {isInviteMembersModalOpen && canInviteMember && (
+      {isInviteMembersModalOpen && invitePermission.can && (
         <InviteMembersModal
           team={team}
           setIsInviteMembersModalOpen={setIsInviteMembersModalOpen}

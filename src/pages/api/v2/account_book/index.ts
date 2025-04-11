@@ -3,9 +3,9 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountBook, WORK_TAG } from '@/interfaces/account_book';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
@@ -67,7 +67,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
       canDo: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
     });
 
-    if (!(TeamRoleCanDoKey.YES_OR_NO in checkResult) || !checkResult.yesOrNo) {
+    if (!checkResult.can) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
       return { statusMessage, payload, session };
     }
@@ -142,7 +142,7 @@ export default async function handler(
   try {
     // Info: (20250328 - Shirley) 檢查請求方法
     switch (req.method) {
-      case 'POST':
+      case HttpMethod.POST:
         postResult = await handlePostRequest(req);
         statusMessage = postResult.statusMessage;
         payload = postResult.payload;
