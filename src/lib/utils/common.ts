@@ -95,6 +95,8 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
 
   const monthNameShort = MONTH_SHORT_NAME[monthIndex];
   const monthName = MONTH_FULL_NAME[monthIndex];
+  const monthString = MONTH_LIST[monthIndex];
+
   const dateOfLastYearString = `${year - 1}${separator}${month.toString().padStart(2, '0')}${separator}${day
     .toString()
     .padStart(2, '0')}`;
@@ -105,7 +107,6 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
   const tomorrowString = `${year}${separator}${(month + 1)
     .toString()
     .padStart(2, '0')}${separator}${(day + 1).toString().padStart(2, '0')}`;
-  const monthString = MONTH_LIST[monthIndex];
 
   return {
     date: dateString, // Info: (20240417 - Jacky) e.g. 2021-01-01

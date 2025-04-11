@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
-import { useRouter } from 'next/router';
-import { ISUNFA_ROUTE } from '@/constants/url';
+import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { IPersonalInfo } from '@/interfaces/resume';
@@ -10,19 +9,20 @@ import { IPersonalInfo } from '@/interfaces/resume';
 interface ITFQuestionProps {
   id: string;
   question: string;
-  answer: boolean;
+  answer: boolean | null;
   onChange: (answer: boolean) => void;
 }
 
 interface IPersonalInfoFormProps {
+  toPrevStep: () => void;
   toNextStep: () => void;
 }
 
 const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange }) => {
   const { t } = useTranslation(['hiring']);
 
-  const radioStyle =
-    'peer relative h-16px w-16px appearance-none rounded-full border border-white before:absolute before:left-2px before:top-2px before:hidden before:h-10px before:w-10px before:rounded-full before:bg-surface-brand-primary-moderate checked:border-surface-brand-primary-moderate checked:before:block hover:bg-surface-brand-primary-30 hover:border-surface-brand-primary';
+  const isCheckedYes = answer === true;
+  const isCheckedNo = answer === false;
 
   const changeYes = () => onChange(true);
   const changeNo = () => onChange(false);
@@ -42,12 +42,12 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
             id={`${id}-yes`}
             name={id}
             value="yes"
-            checked={answer}
+            checked={isCheckedYes}
             onChange={changeYes}
-            className={radioStyle}
+            className={orangeRadioStyle}
             required
           />
-          {/* Deprecrated: (20250410 - Julian) remove eslint-disable */}
+          {/* Deprecated: (20250410 - Julian) remove eslint-disable */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label htmlFor={`${id}-yes`} className="hover:cursor-pointer">
             {t('hiring:PERSONAL_INFO.YES')}
@@ -59,9 +59,9 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
             id={`${id}-no`}
             name={id}
             value="no"
-            checked={!answer}
+            checked={isCheckedNo}
             onChange={changeNo}
-            className={radioStyle}
+            className={orangeRadioStyle}
             required
           />
           {/* Deprecrated: (20250410 - Julian) remove eslint-disable */}
@@ -75,12 +75,8 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
   );
 };
 
-const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
+const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring']);
-  const router = useRouter();
-
-  const haloStyle =
-    'border border-white bg-landing-page-black3 outline-none backdrop-blur-md shadow-job backdrop-blur-md';
 
   const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 
@@ -106,9 +102,9 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
   const [phoneNumberInput, setPhoneNumberInput] = useState<string>('');
   const [emailInput, setEmailInput] = useState<string>('');
   const [addressInput, setAddressInput] = useState<string>('');
-  const [isRelatedCompany, setIsRelatedCompany] = useState<boolean>(false);
-  const [isWorkingISunCloud, setIsWorkingISunCloud] = useState<boolean>(false);
-  const [hasCriminalRecord, setHasCriminalRecord] = useState<boolean>(false);
+  const [isRelatedCompany, setIsRelatedCompany] = useState<boolean | null>(null);
+  const [isWorkingISunCloud, setIsWorkingISunCloud] = useState<boolean | null>(null);
+  const [hasCriminalRecord, setHasCriminalRecord] = useState<boolean | null>(null);
   const [whereLearnAboutJob, setWhereLearnAboutJob] = useState<string>(learnAboutJobOptions[0]);
 
   const {
@@ -116,6 +112,9 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
     componentVisible: isOpen,
     setComponentVisible: setTypeOpen,
   } = useOuterClick<HTMLDivElement>(false);
+
+  const disableSubmit =
+    isRelatedCompany === null || isWorkingISunCloud === null || hasCriminalRecord === null;
 
   const toggleDropdown = () => setTypeOpen(!isOpen);
 
@@ -135,14 +134,11 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
     setAddressInput(e.target.value);
   };
 
-  // Info: (20250410 - Julian) 回到上一頁
-  const cancelClickHandler = () => {
-    router.push(`${ISUNFA_ROUTE.JOIN_US}/${router.query.jobId}`);
-  };
-
   // Info: (20250410 - Julian) 提交表單
   const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (disableSubmit) return;
 
     try {
       const formData: IPersonalInfo = {
@@ -328,13 +324,18 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toNextStep }) => {
 
       <div className="ml-auto mt-70px flex items-center gap-lv-6">
         {/* Info: (20250410 - Julian) Back Button */}
-        <LandingButton variant="default" className="font-bold" onClick={cancelClickHandler}>
+        <LandingButton variant="default" className="font-bold" onClick={toPrevStep}>
           {t('common:COMMON.CANCEL')}
         </LandingButton>
 
         {/* Info: (20250410 - Julian) Next Button */}
-        <LandingButton type="submit" variant="primary" className="font-bold">
-          {t('hiring:RESUME_PAGE.NEXT_BTN')}
+        <LandingButton
+          type="submit"
+          variant="primary"
+          className="font-bold"
+          disabled={disableSubmit}
+        >
+          {t('hiring:COMMON.NEXT')}
         </LandingButton>
       </div>
     </form>

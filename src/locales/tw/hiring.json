@@ -21,6 +21,7 @@
     "OLDEST": "最舊"
   },
   "RESUME_PAGE": {
+    "HEAD_TITLE": "履歷",
     "MAIN_TITLE": "我們該如何認識您？",
     "MAIN_SUBTITLE": "歡迎",
     "UPLOAD_RESUME_BTN": "上傳履歷",
@@ -29,8 +30,7 @@
     "STEP_EXPERIENCE": "經歷",
     "STEP_SKILLS": "技能",
     "STEP_PREFERENCE": "偏好",
-    "STEP_ATTACHMENT": "附件",
-    "NEXT_BTN": "下一步"
+    "STEP_ATTACHMENT": "附件"
   },
   "PERSONAL_INFO": {
     "FIRST_NAME_TITLE": "名",
@@ -50,9 +50,34 @@
     "WHERE_OPTION_OW": "官方網站",
     "WHERE_OPTION_OTHERS": "其他"
   },
+  "EXPERIENCE": {
+    "EDUCATION_TITLE": "學歷",
+    "WORK_TITLE": "工作經歷",
+    "DEGREE": "學位",
+    "DEGREE_OPTION_ELEMENTARY": "國小",
+    "DEGREE_OPTION_JUNIOR": "國中",
+    "DEGREE_OPTION_HIGH": "高中",
+    "DEGREE_OPTION_BACHELOR": "學士",
+    "DEGREE_OPTION_MASTER": "碩士",
+    "DEGREE_OPTION_PROFESSIONAL": "專科",
+    "SCHOOL_NAME": "學校名稱",
+    "DEPARTMENT": "科系",
+    "START": "起始於",
+    "END": "結束於",
+    "STATUS": "就學狀態",
+    "STATUS_OPTION_GRADUATED": "已畢業",
+    "STATUS_OPTION_IN_SCHOOL": "在學中",
+    "STATUS_OPTION_DROPOUT": "肄業"
+  },
   "FINISH_PAGE": {
     "MAIN_TITLE": "感謝您的應徵！",
     "TEXT": "感謝您的應徵！由於候選人數量眾多，我們需要時間仔細審核每一份申請。我們會透過電子郵件通知您結果。",
     "DONE_BTN": "完成"
+  },
+  "COMMON": {
+    "PREVIOUS": "上一步",
+    "NEXT": "下一步",
+    "DELETE": "刪除",
+    "SAVE": "儲存"
   }
 }

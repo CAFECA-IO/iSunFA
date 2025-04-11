@@ -6,12 +6,12 @@ const buttonVariants = cva('gap-8px flex items-center transition-all duration-15
   variants: {
     variant: {
       primary:
-        'enabled:shadow-landing-btn enabled:bg-landing-btn enabled:hover:text-landing-page-black2 enabled:hover:shadow-landing-btn-hover text-landing-page-black disabled:bg-landing-page-mute disabled:text-landing-page-black2 rounded-sm border-b border-t border-landing-page-white disabled:border-transparent',
+        'enabled:shadow-landing-btn whitespace-nowrap enabled:bg-landing-btn enabled:hover:text-landing-page-black2 enabled:hover:shadow-landing-btn-hover text-landing-page-black disabled:bg-landing-page-mute disabled:text-landing-page-black2 rounded-sm border-b border-t border-landing-page-white disabled:border-transparent',
       default:
-        'disabled:text-landing-page-black2 text-landing-page-white enabled:hover:text-surface-brand-primary-moderate disabled:hover:pointer-not-allowed',
+        'disabled:text-landing-page-black2 whitespace-nowrap text-landing-page-white enabled:hover:text-surface-brand-primary-moderate disabled:hover:pointer-not-allowed',
     },
     size: {
-      default: 'px-24px py-10px',
+      default: 'px-24px py-10px w-min',
       square: 'p-10px w-44px h-44px',
     },
   },
