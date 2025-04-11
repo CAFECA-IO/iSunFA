@@ -16,12 +16,16 @@ import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
 import { createAccountBook, listAccountBookByUserId } from '@/lib/utils/repo/account_book.repo';
 import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamRole } from '@/interfaces/team';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
-  const { userId } = session;
+  const { userId, teams } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<IAccountBookWithTeam[]> | null = null;
+
   await checkSessionUser(session, APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req);
   await checkUserAuthorization(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req, session);
 
@@ -32,20 +36,54 @@ const handleGetRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
+  let hasAnyTeamViewPermission = false;
+
+  if (teams && teams.length > 0) {
+    hasAnyTeamViewPermission = teams.some((team) => {
+      const teamRole = team.role as TeamRole;
+      const canViewPublicAccountBookResult = convertTeamRoleCanDo({
+        teamRole,
+        canDo: TeamPermissionAction.VIEW_PUBLIC_ACCOUNT_BOOK,
+      }) as ITeamRoleCanDo;
+
+      if (canViewPublicAccountBookResult.yesOrNo) {
+        loggerBack.info(
+          `User ${userId} has permission to view public account books in team ${team.id} with role ${teamRole}`
+        );
+        return true;
+      }
+      return false;
+    });
+  }
+
+  if (!hasAnyTeamViewPermission) {
+    loggerBack.warn(`User ${userId} doesn't have permission to view account books in any teams`);
+    return {
+      response: formatApiResponse(STATUS_MESSAGE.FORBIDDEN, null),
+      statusMessage: STATUS_MESSAGE.FORBIDDEN,
+    };
+  }
+
   statusMessage = STATUS_MESSAGE.SUCCESS;
   const options: IPaginatedOptions<IAccountBookWithTeam[]> = await listAccountBookByUserId(
     userId,
     query
   );
+
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
     toPaginatedData(options)
   );
+
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   } else {
     payload = outputData;
+    loggerBack.info(
+      `Successfully retrieved ${payload?.data?.length || 0} account books for user ${userId}`
+    );
   }
+
   const response = formatApiResponse(statusMessage, payload);
   return { response, statusMessage };
 };

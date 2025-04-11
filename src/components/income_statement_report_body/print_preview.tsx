@@ -175,7 +175,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
     return (
       <div ref={ref} className="">
         {
-          // Print ItemSummary
+          // Info: (20250214 - Anna) Print ItemSummary
           groupedGeneral.map((group, index) => (
             <div
               key={group[0].name + group[0].code}

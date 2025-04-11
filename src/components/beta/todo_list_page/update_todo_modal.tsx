@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
-import { ITodoCompany } from '@/interfaces/todo';
+import { ITodoAccountBook } from '@/interfaces/todo';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
@@ -12,8 +12,8 @@ import DateTimePicker from '@/components/beta/todo_list_page/date_time_picker';
 import { IPaginatedData } from '@/interfaces/pagination';
 
 interface UpdateTodoModalProps {
-  todoToUpdate: ITodoCompany;
-  setTodoToUpdate: React.Dispatch<React.SetStateAction<ITodoCompany | undefined>>;
+  todoToUpdate: ITodoAccountBook;
+  setTodoToUpdate: React.Dispatch<React.SetStateAction<ITodoAccountBook | undefined>>;
   getTodoList: () => Promise<void>;
 }
 
@@ -39,7 +39,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
   };
 
   // Info: (20241125 - Liz) 更新待辦事項 API
-  const { trigger: updateTodoAPI } = APIHandler<ITodoCompany>(APIName.UPDATE_TODO);
+  const { trigger: updateTodoAPI } = APIHandler<ITodoAccountBook>(APIName.UPDATE_TODO);
 
   // Info: (20250310 - Liz) 打 API 取得使用者擁有的帳本清單(原為公司)
   const { trigger: getAccountBookListByUserIdAPI } = APIHandler<
@@ -74,16 +74,16 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
         body: {
           name: todoName,
           deadline: 0, // Info: (20241219 - Liz) 之後會捨棄 deadline 欄位，先傳 0
-          startTime: startTimeStamp,
-          endTime: endTimeStamp,
-          companyId: accountBook.id,
+          startDate: startTimeStamp,
+          endDate: endTimeStamp,
+          accountBookId: accountBook.id,
           note,
         },
       });
 
       if (success && updatedTodo) {
         setTodoToUpdate(undefined); // Info: (20241125 - Liz) 關閉 modal
-        getTodoList(); // Info: (20241125 - Liz) 重新取得待辦事項列表
+        getTodoList(); // Info: (20241125 - Liz) 重新取得待辦事項清單
 
         // Deprecated: (20241125 - Liz)
         // eslint-disable-next-line no-console

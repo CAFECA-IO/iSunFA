@@ -72,7 +72,7 @@ export enum SortBy {
 
   /**
    * Info: (20241210 - Shirley)
-   * @description 資產列表排序
+   * @description 資產清單排序
    */
   ACQUISITION_DATE = 'AcquisitionDate',
 }

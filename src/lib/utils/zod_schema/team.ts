@@ -30,6 +30,7 @@ export const TeamSchema = z.object({
     value: z.string(),
     editable: z.boolean(),
   }),
+  expiredAt: z.number().default(0),
 });
 
 export const ITeamMemberSchema = z.object({
@@ -37,7 +38,7 @@ export const ITeamMemberSchema = z.object({
   name: z.string(),
   imageId: z.string(),
   email: z.string(),
-  role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
+  role: z.nativeEnum(TeamRole),
   editable: z.boolean(),
 });
 
@@ -66,15 +67,15 @@ export const transferAccountBookSchema = z.object({
   accountBookId: z.number(),
   fromTeamId: z.number(),
   toTeamId: z.number(),
-  status: z.enum(Object.values(TransferStatus) as [TransferStatus, ...TransferStatus[]]),
+  status: z.nativeEnum(TransferStatus),
   transferredAt: z.number().optional(),
 });
 
 export const leaveTeamSchema = z.object({
   teamId: z.number(),
   userId: z.number(),
-  role: z.enum(Object.values(TeamRole) as [TeamRole, ...TeamRole[]]),
-  status: z.enum(Object.values(LeaveStatus) as [LeaveStatus, ...LeaveStatus[]]),
+  role: z.nativeEnum(TeamRole),
+  status: z.nativeEnum(LeaveStatus),
   leftAt: z.number().optional(),
 });
 
@@ -108,7 +109,7 @@ export const updateTeamResponseSchema = z.union([
 
 // Info: (20250227 - Shirley) 定義更新團隊成員角色的 Schema，OWNER 不能透過更新 member 修改
 export const updateMemberBodySchema = z.object({
-  role: z.enum([TeamRole.ADMIN, TeamRole.EDITOR, TeamRole.VIEWER]),
+  role: z.nativeEnum(TeamRole),
 });
 
 // Info: (20250227 - Shirley) 定義更新團隊成員角色的回應 Schema
@@ -154,6 +155,11 @@ const teamPictureSchema = z.object({
   updatedAt: z.number().int(),
 });
 
+export const listTeamQuerySchema = paginatedDataQuerySchema.extend({
+  canCreateAccountBookOnly: z.coerce.boolean().optional(),
+  syncSession: z.coerce.boolean().optional(),
+});
+
 export const teamPutIconSchema = {
   input: {
     querySchema: teamPutIconQuerySchema,
@@ -170,7 +176,7 @@ export const teamSchemas = {
       bodySchema: z.object({
         name: z.string(),
         members: z.array(z.string().email()).optional(),
-        planType: z.enum(Object.values(TPlanType) as [TPlanType, ...TPlanType[]]).optional(),
+        planType: z.nativeEnum(TPlanType).optional(),
         about: z.string().optional(),
         profile: z.string().optional(),
         bankInfo: z.object({ code: z.number(), number: z.string() }).optional(),
@@ -182,7 +188,7 @@ export const teamSchemas = {
   },
   list: {
     input: {
-      querySchema: paginatedDataQuerySchema,
+      querySchema: listTeamQuerySchema,
       bodySchema: z.object({}).optional(),
     },
     outputSchema: paginatedDataSchema(TeamSchema),

@@ -22,7 +22,7 @@ export const AUTH_WHITELIST = {
 export const AUTH_CHECK = {
   [APIName.CREATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_UPDATE]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_DELETE]: [AuthFunctionsKeysNew.user],
+  [APIName.DELETE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_SETTING_GET]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_PUT_ICON]: [AuthFunctionsKeysNew.user],
@@ -79,8 +79,6 @@ export const AUTH_CHECK = {
   [APIName.USER_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.USER_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.USER_UPDATE]: [AuthFunctionsKeysNew.user],
-  [APIName.USER_DELETION_UPDATE]: [AuthFunctionsKeysNew.user],
-  [APIName.USER_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_PUT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_DELETE_V2]: [AuthFunctionsKeysNew.user],
   [APIName.IMAGE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
@@ -136,10 +134,10 @@ export const AUTH_CHECK = {
   [APIName.ACCEPT_TRANSFER_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.DECLINE_TRANSFER_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
 
-  [APIName.LIST_SUBSCRIPTION]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_TEAM_SUBSCRIPTION]: [AuthFunctionsKeysNew.user],
   [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_SUBSCRIPTION]: [AuthFunctionsKeysNew.user],
-  [APIName.LIST_SUBSCRIPTION_INVOICE]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_TEAM_INVOICE]: [AuthFunctionsKeysNew.user],
   [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
 
   [APIName.GET_CREDIT_CARD_INFO]: [AuthFunctionsKeysNew.user],
@@ -156,4 +154,6 @@ export const AUTH_CHECK = {
   [APIName.USER_PAYMENT_METHOD_CHARGE]: [AuthFunctionsKeysNew.user],
   [APIName.PAYMENT_METHOD_REGISTER_REDIRECT]: [AuthFunctionsKeysNew.user],
   [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCOUNT_BOOK_CREATE]: [AuthFunctionsKeysNew.user],
+  [APIName.UPDATE_ACCOUNT_BOOK_INFO]: [AuthFunctionsKeysNew.user],
 };

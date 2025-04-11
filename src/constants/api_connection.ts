@@ -32,8 +32,6 @@ export enum APIName {
   USER_LIST = 'USER_LIST',
   USER_GET_BY_ID = 'USER_GET_BY_ID',
   USER_UPDATE = 'USER_UPDATE',
-  USER_DELETION_UPDATE = 'USER_DELETION_UPDATE',
-  USER_DELETE = 'USER_DELETE',
   USER_PENDING_TASK_GET = 'USER_PENDING_TASK_GET',
   COMPANY_PENDING_TASK_GET = 'COMPANY_PENDING_TASK_GET',
   COMPANY_SETTING_GET = 'COMPANY_SETTING_GET',
@@ -87,7 +85,7 @@ export enum APIName {
   USER_SELECT_ROLE = 'USER_SELECT_ROLE',
   CREATE_ACCOUNT_BOOK = 'CREATE_ACCOUNT_BOOK',
   COMPANY_UPDATE = 'COMPANY_UPDATE',
-  COMPANY_DELETE = 'COMPANY_DELETE',
+  DELETE_ACCOUNT_BOOK = 'DELETE_ACCOUNT_BOOK',
   ROLE_LIST = 'ROLE_LIST',
   NEWS_LIST = 'NEWS_LIST',
   CREATE_NEWS = 'CREATE_NEWS',
@@ -132,10 +130,10 @@ export enum APIName {
   LIST_ACCOUNT_BOOK_BY_TEAM_ID = 'LIST_ACCOUNT_BOOK_BY_TEAM_ID',
   LIST_MEMBER_BY_TEAM_ID = 'LIST_MEMBER_BY_TEAM_ID',
   ADD_MEMBER_TO_TEAM = 'ADD_MEMBER_TO_TEAM',
-  LIST_SUBSCRIPTION = 'LIST_SUBSCRIPTION',
+  LIST_TEAM_SUBSCRIPTION = 'LIST_TEAM_SUBSCRIPTION',
   GET_SUBSCRIPTION_BY_TEAM_ID = 'GET_SUBSCRIPTION_BY_TEAM_ID',
   UPDATE_SUBSCRIPTION = 'UPDATE_SUBSCRIPTION',
-  LIST_SUBSCRIPTION_INVOICE = 'LIST_SUBSCRIPTION_INVOICE',
+  LIST_TEAM_INVOICE = 'LIST_TEAM_INVOICE',
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = 'GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID',
   GET_CREDIT_CARD_INFO = 'GET_CREDIT_CARD_INFO',
   LEAVE_TEAM = 'LEAVE_TEAM',
@@ -156,6 +154,8 @@ export enum APIName {
   USER_PAYMENT_METHOD_CHARGE = 'USER_PAYMENT_METHOD_CHARGE',
   PAYMENT_METHOD_REGISTER_REDIRECT = 'PAYMENT_METHOD_REGISTER_REDIRECT',
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = 'PAYMENT_METHOD_REGISTER_CALLBACK',
+  ACCOUNT_BOOK_CREATE = 'ACCOUNT_BOOK_CREATE',
+  UPDATE_ACCOUNT_BOOK_INFO = 'UPDATE_ACCOUNT_BOOK_INFO',
 }
 
 export enum APIPath {
@@ -166,8 +166,6 @@ export enum APIPath {
   USER_LIST = `${apiPrefixV2}/user`,
   USER_GET_BY_ID = `${apiPrefixV2}/user/:userId`,
   USER_UPDATE = `${apiPrefixV2}/user/:userId`,
-  USER_DELETION_UPDATE = `${apiPrefixV2}/user/:userId/deletion`,
-  USER_DELETE = `${apiPrefixV2}/user/:userId`,
   USER_PENDING_TASK_GET = `${apiPrefixV2}/user/:userId/pending_task`,
   COMPANY_PENDING_TASK_GET = `${apiPrefixV2}/company/:companyId/pending_task`,
   COMPANY_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/company/search`,
@@ -218,7 +216,7 @@ export enum APIPath {
   USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/selected_role`,
   CREATE_ACCOUNT_BOOK = `${apiPrefixV2}/user/:userId/account_book`,
   COMPANY_UPDATE = `${apiPrefixV2}/company/:companyId`,
-  COMPANY_DELETE = `${apiPrefixV2}/company/:companyId`,
+  DELETE_ACCOUNT_BOOK = `${apiPrefixV2}/company/:companyId`,
   ROLE_LIST = `${apiPrefixV2}/role`,
   NEWS_LIST = `${apiPrefixV2}/news`,
   CREATE_NEWS = `${apiPrefixV2}/news`,
@@ -263,10 +261,10 @@ export enum APIPath {
   LIST_ACCOUNT_BOOK_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/account_book`,
   LIST_MEMBER_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/member`,
   ADD_MEMBER_TO_TEAM = `${apiPrefixV2}/team/:teamId/member`,
-  LIST_SUBSCRIPTION = `${apiPrefixV2}/subscription`,
+  LIST_TEAM_SUBSCRIPTION = `${apiPrefixV2}/subscription`,
   GET_SUBSCRIPTION_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId`,
   UPDATE_SUBSCRIPTION = `${apiPrefixV2}/subscription/:teamId/subscription`,
-  LIST_SUBSCRIPTION_INVOICE = `${apiPrefixV2}/subscription/:teamId/invoice`,
+  LIST_TEAM_INVOICE = `${apiPrefixV2}/subscription/:teamId/invoice`,
   GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId/invoice/:invoiceId`,
   GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
   LEAVE_TEAM = `${apiPrefixV2}/team/:teamId/leave`,
@@ -291,6 +289,8 @@ export enum APIPath {
   USER_PAYMENT_METHOD_CHARGE = `${apiPrefixV2}/user/:userId/payment_method/:paymentMethodId/charge`,
   PAYMENT_METHOD_REGISTER_REDIRECT = `${apiPayment}/`,
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = `${apiPayment}/callback/oen`,
+  ACCOUNT_BOOK_CREATE = `${apiPrefixV2}/account_book`,
+  UPDATE_ACCOUNT_BOOK_INFO = `${apiPrefixV2}/account_book/:accountBookId/info`,
 }
 
 const createConfig = ({
@@ -351,16 +351,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.USER_UPDATE,
     method: HttpMethod.PUT,
     path: APIPath.USER_UPDATE,
-  }),
-  [APIName.USER_DELETION_UPDATE]: createConfig({
-    name: APIName.USER_DELETION_UPDATE,
-    method: HttpMethod.PUT,
-    path: APIPath.USER_DELETION_UPDATE,
-  }),
-  [APIName.USER_DELETE]: createConfig({
-    name: APIName.USER_DELETE,
-    method: HttpMethod.DELETE,
-    path: APIPath.USER_DELETE,
   }),
   [APIName.USER_PENDING_TASK_GET]: createConfig({
     name: APIName.USER_PENDING_TASK_GET,
@@ -477,10 +467,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.COMPANY_UPDATE,
   }),
-  [APIName.COMPANY_DELETE]: createConfig({
-    name: APIName.COMPANY_DELETE,
+  [APIName.DELETE_ACCOUNT_BOOK]: createConfig({
+    name: APIName.DELETE_ACCOUNT_BOOK,
     method: HttpMethod.DELETE,
-    path: APIPath.COMPANY_DELETE,
+    path: APIPath.DELETE_ACCOUNT_BOOK,
   }),
   [APIName.COMPANY_SETTING_GET]: createConfig({
     name: APIName.COMPANY_SETTING_GET,
@@ -843,10 +833,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.ADD_MEMBER_TO_TEAM,
   }),
-  [APIName.LIST_SUBSCRIPTION]: createConfig({
-    name: APIName.LIST_SUBSCRIPTION,
+  [APIName.LIST_TEAM_SUBSCRIPTION]: createConfig({
+    name: APIName.LIST_TEAM_SUBSCRIPTION,
     method: HttpMethod.GET,
-    path: APIPath.LIST_SUBSCRIPTION,
+    path: APIPath.LIST_TEAM_SUBSCRIPTION,
   }),
   [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: createConfig({
     name: APIName.GET_SUBSCRIPTION_BY_TEAM_ID,
@@ -858,10 +848,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.UPDATE_SUBSCRIPTION,
   }),
-  [APIName.LIST_SUBSCRIPTION_INVOICE]: createConfig({
-    name: APIName.LIST_SUBSCRIPTION_INVOICE,
+  [APIName.LIST_TEAM_INVOICE]: createConfig({
+    name: APIName.LIST_TEAM_INVOICE,
     method: HttpMethod.GET,
-    path: APIPath.LIST_SUBSCRIPTION_INVOICE,
+    path: APIPath.LIST_TEAM_INVOICE,
   }),
   [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: createConfig({
     name: APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID,
@@ -958,5 +948,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.USER_PAYMENT_METHOD_CHARGE,
     method: HttpMethod.POST,
     path: APIPath.USER_PAYMENT_METHOD_CHARGE,
+  }),
+  [APIName.ACCOUNT_BOOK_CREATE]: createConfig({
+    name: APIName.ACCOUNT_BOOK_CREATE,
+    method: HttpMethod.POST,
+    path: APIPath.ACCOUNT_BOOK_CREATE,
+  }),
+  [APIName.UPDATE_ACCOUNT_BOOK_INFO]: createConfig({
+    name: APIName.UPDATE_ACCOUNT_BOOK_INFO,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_ACCOUNT_BOOK_INFO,
   }),
 };

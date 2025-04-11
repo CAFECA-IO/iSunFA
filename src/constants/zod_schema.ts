@@ -18,7 +18,6 @@ import {
   certificateMultiDeleteSchema,
 } from '@/lib/utils/zod_schema/certificate';
 import {
-  companyDeleteSchema,
   companyPutIconSchema,
   companyPutSchema,
   companySearchSchema,
@@ -97,13 +96,7 @@ import {
   filePutSchema,
 } from '@/lib/utils/zod_schema/file';
 import { imageGetSchema } from '@/lib/utils/zod_schema/image';
-import {
-  userDeleteSchema,
-  userDeletionPutSchema,
-  userGetSchema,
-  userListSchema,
-  userPutSchema,
-} from '@/lib/utils/zod_schema/user';
+import { userGetSchema, userListSchema, userPutSchema } from '@/lib/utils/zod_schema/user';
 import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
 import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
 import { accountGetV2Schema, accountPostV2Schema } from '@/lib/utils/zod_schema/account';
@@ -123,9 +116,12 @@ import {
   accountBookCreateSchema,
   accountBookListSchema,
   connectAccountBookSchema,
-  listAccountBooksByTeamIdSchema,
   getAccountBookInfoSchema,
   updateAccountBookSchema,
+  updateAccountBookInfoSchema,
+  listAccountBooksByTeamIdSchema,
+  createAccountBookSchema,
+  deleteAccountBookSchema,
 } from '@/lib/utils/zod_schema/account_book';
 
 /*
@@ -164,7 +160,7 @@ export const API_ZOD_SCHEMA = {
 export const ZOD_SCHEMA_API = {
   [APIName.CREATE_ACCOUNT_BOOK]: accountBookCreateSchema,
   [APIName.COMPANY_UPDATE]: companyPutSchema,
-  [APIName.COMPANY_DELETE]: companyDeleteSchema,
+  [APIName.DELETE_ACCOUNT_BOOK]: deleteAccountBookSchema,
   [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: companySearchSchema,
   [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
   [APIName.COMPANY_PUT_ICON]: companyPutIconSchema,
@@ -219,8 +215,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_LIST]: userListSchema,
   [APIName.USER_GET_BY_ID]: userGetSchema,
   [APIName.USER_UPDATE]: userPutSchema,
-  [APIName.USER_DELETION_UPDATE]: userDeletionPutSchema,
-  [APIName.USER_DELETE]: userDeleteSchema,
   [APIName.CERTIFICATE_PUT_V2]: nullAPISchema,
   [APIName.INVOICE_POST_V2]: invoicePostV2Schema,
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
@@ -280,10 +274,10 @@ export const ZOD_SCHEMA_API = {
   [APIName.DECLINE_TRANSFER_ACCOUNT_BOOK]: teamSchemas.declineTransferAccountBook,
   [APIName.LEAVE_TEAM]: teamSchemas.leaveTeam,
 
-  [APIName.LIST_SUBSCRIPTION]: subscriptionSchemas.list,
+  [APIName.LIST_TEAM_SUBSCRIPTION]: subscriptionSchemas.list,
   [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: subscriptionSchemas.get,
   [APIName.UPDATE_SUBSCRIPTION]: subscriptionSchemas.update,
-  [APIName.LIST_SUBSCRIPTION_INVOICE]: subscriptionSchemas.listInvoiceList,
+  [APIName.LIST_TEAM_INVOICE]: subscriptionSchemas.listInvoiceList,
   [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: subscriptionSchemas.getInvoice,
 
   [APIName.GET_CREDIT_CARD_INFO]: subscriptionSchemas.getCreditCard,
@@ -295,6 +289,8 @@ export const ZOD_SCHEMA_API = {
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: getAccountBookInfoSchema,
   [APIName.PUT_TEAM_ICON]: teamSchemas.putIcon,
   [APIName.UPDATE_ACCOUNT_BOOK]: updateAccountBookSchema,
+  [APIName.ACCOUNT_BOOK_CREATE]: createAccountBookSchema,
+  [APIName.UPDATE_ACCOUNT_BOOK_INFO]: updateAccountBookInfoSchema,
 
   [APIName.USER_PAYMENT_METHOD_LIST]: nullAPISchema,
   [APIName.USER_PAYMENT_METHOD_CHARGE]: nullAPISchema,

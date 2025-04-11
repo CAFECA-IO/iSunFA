@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-import { putCompanyIcon } from '@/lib/utils/repo/company.repo';
+import { getCompanyById, putCompanyIcon } from '@/lib/utils/repo/company.repo';
 
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
@@ -10,6 +10,9 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { loggerError } from '@/lib/utils/logger_back';
 import { Company, File } from '@prisma/client';
 import { IAccountBook } from '@/interfaces/account_book';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamRole } from '@/interfaces/team';
 
 const handlePutRequest: IHandleRequest<
   APIName.COMPANY_PUT_ICON,
@@ -20,12 +23,43 @@ const handlePutRequest: IHandleRequest<
 
   const { companyId } = query;
   const { fileId } = body;
-  const { userId } = session;
+  const { userId, teams } = session;
 
   try {
+    // Info: (20250410 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+    const company = await getCompanyById(companyId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
+    });
+
+    if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
     const updatedCompany = await putCompanyIcon({ companyId, fileId });
+
+    const formattedPayload = {
+      ...updatedCompany,
+      imageId: updatedCompany.imageFile?.id.toString() || '',
+    };
+
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    payload = updatedCompany;
+    payload = formattedPayload as Company & { imageFile: File };
   } catch (_error) {
     const error = _error as Error;
     loggerError({

@@ -57,7 +57,7 @@ const MyAccountBookList = ({ accountBookList, setAccountBookToSelect }: MyAccoun
   }, [connectedAccountBook]);
 
   return (
-    <div ref={containerRef} className="flex max-w-full gap-24px overflow-x-auto px-1px pb-8px">
+    <div ref={containerRef} className={`flex gap-24px overflow-x-auto px-1px pb-8px`}>
       {accountBookList.map((accountBook, index) => (
         <MyAccountBookItem
           key={accountBook.id}

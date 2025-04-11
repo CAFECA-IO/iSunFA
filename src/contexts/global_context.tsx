@@ -15,11 +15,10 @@ import { useRouter } from 'next/router';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
-import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { useTranslation } from 'next-i18next';
-import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
+// import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal'; // Deprecated: (20250324 - Liz) 這好像是 Alpha 版本的元件
 import { UploadType } from '@/constants/file';
 import { useModalContext } from '@/contexts/modal_context';
@@ -65,8 +64,8 @@ interface IGlobalContext {
   isFilterOptionsModalForContractVisible: boolean;
   filterOptionsModalVisibilityHandler: (filterType: FilterOptionsModalType) => void;
 
-  isTeamSettingModalVisible: boolean;
-  teamSettingModalVisibilityHandler: () => void;
+  // isTeamSettingModalVisible: boolean;
+  // teamSettingModalVisibilityHandler: () => void;
 
   isTransferCompanyModalVisible: boolean;
   transferCompanyModalVisibilityHandler: () => void;
@@ -108,8 +107,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isMessageModalVisible,
     messageModalVisibilityHandler,
     messageModalData,
-    isAddBookmarkModalVisible,
-    addBookmarkModalVisibilityHandler,
     isAddCounterPartyModalVisible,
     addCounterPartyModalVisibilityHandler,
     addCounterPartyModalData,
@@ -142,7 +139,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
 
-  const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
+  // const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
 
   const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
 
@@ -207,9 +204,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsSalaryBookConfirmModalVisible(!isSalaryBookConfirmModalVisible);
   };
 
-  const teamSettingModalVisibilityHandler = () => {
-    setIsTeamSettingModalVisible(!isTeamSettingModalVisible);
-  };
+  // const teamSettingModalVisibilityHandler = () => {
+  //   setIsTeamSettingModalVisible(!isTeamSettingModalVisible);
+  // };
 
   const transferCompanyModalVisibilityHandler = () => {
     setIsTransferCompanyModalVisible(!isTransferCompanyModalVisible);
@@ -342,8 +339,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       profileUploadModalVisibilityHandler,
       profileUploadModalDataHandler,
 
-      isTeamSettingModalVisible,
-      teamSettingModalVisibilityHandler,
+      // isTeamSettingModalVisible,
+      // teamSettingModalVisibilityHandler,
 
       isTransferCompanyModalVisible,
       transferCompanyModalVisibilityHandler,
@@ -394,8 +391,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       profileUploadModalVisibilityHandler,
       profileUploadModalDataHandler,
 
-      isTeamSettingModalVisible,
-      teamSettingModalVisibilityHandler,
+      // isTeamSettingModalVisible,
+      // teamSettingModalVisibilityHandler,
 
       isTransferCompanyModalVisible,
       transferCompanyModalVisibilityHandler,
@@ -424,11 +421,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <PasskeySupportModal
         isModalVisible={isPasskeySupportModalVisible}
         modalVisibilityHandler={passKeySupportModalVisibilityHandler}
-      />
-
-      <EditBookmarkModal
-        isModalVisible={isAddBookmarkModalVisible}
-        modalVisibilityHandler={addBookmarkModalVisibilityHandler}
       />
 
       <MessageModal
@@ -489,10 +481,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={salaryBookConfirmModalVisibilityHandler}
       />
 
-      <TeamSettingModal
+      {/* <TeamSettingModal
         isModalVisible={isTeamSettingModalVisible}
         modalVisibilityHandler={teamSettingModalVisibilityHandler}
-      />
+      /> */}
 
       <TransferCompanyModal
         isModalVisible={isTransferCompanyModalVisible}

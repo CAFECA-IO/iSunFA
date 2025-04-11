@@ -1,158 +1,62 @@
+// Info: (20250408 - Tzuhan) ✅ 統一 Utility: 從 note 中解析 startTime / endTime
 import { z } from 'zod';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { ICompanyValidator } from '@/lib/utils/zod_schema/company';
-import {
-  getTimestampNow,
-  getTimestampOfLastSecondOfDate,
-  timestampInMilliSeconds,
-  timestampInSeconds,
-} from '@/lib/utils/common';
 import { accountBookSchema } from '@/lib/utils/zod_schema/account_book';
+import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
-// Info: (20241029 - Jacky) Todo null schema
-const todoNullSchema = z.union([z.object({}), z.string()]);
+// Info: (20250408 - Tzuhan) Input Schemas
+export const todoNullSchema = z.union([z.object({}), z.string()]);
 
-// Info: (20241015 - Jacky) Todo list schema
-const todoListQuerySchema = z.object({
-  userId: zodStringToNumber,
-});
-
-// Info: (20241015 - Jacky) Todo post schema
-const todoPostQuerySchema = z.object({
-  userId: zodStringToNumber,
-});
-const todoPostBodySchema = z.object({
-  companyId: z.number().int().optional(),
-  name: z.string(),
-  deadline: z
-    .number()
-    .int()
-    .transform((data) => timestampInSeconds(data)),
-  startTime: z
-    .number()
-    .int()
-    .optional()
-    .transform((data) => {
-      if (data) {
-        return timestampInSeconds(data);
-      }
-      return getTimestampNow();
-    }),
-  endTime: z
-    .number()
-    .int()
-    .optional()
-    .transform((data) => {
-      if (data) {
-        return timestampInSeconds(data);
-      }
-      return getTimestampOfLastSecondOfDate(getTimestampNow());
-    }),
-  note: z.string().nullable(),
-});
-
-const todoGetQuerySchema = z.object({
-  userId: zodStringToNumber,
+export const todoIdSchema = z.object({
   todoId: zodStringToNumber,
 });
 
-const todoPutQuerySchema = z.object({
-  todoId: zodStringToNumber,
+export const userIdSchema = z.object({
+  userId: zodStringToNumber,
 });
 
-const todoPutBodySchema = z.object({
-  companyId: z.number().int().optional(),
+export const todoPostPutBodySchema = z.object({
+  accountBookId: z.number(),
   name: z.string(),
-  deadline: z
-    .number()
-    .int()
-    .transform((data) => timestampInSeconds(data)),
-  startTime: z
-    .number()
-    .int()
-    .optional()
-    .transform((data) => {
-      if (data) {
-        return timestampInSeconds(data);
-      }
-      return getTimestampNow();
-    }),
-  endTime: z
-    .number()
-    .int()
-    .optional()
-    .transform((data) => {
-      if (data) {
-        return timestampInSeconds(data);
-      }
-      return getTimestampOfLastSecondOfDate(getTimestampNow());
-    }),
-  note: z.string().nullable(),
+  deadline: z.number(),
+  startDate: z.number(),
+  endDate: z.number(),
+  note: z.string().default(''),
 });
 
-const todoDeleteQuerySchema = z.object({
-  todoId: zodStringToNumber,
-});
-
-const todoOutputSchema = z
-  .object({
-    id: z.number().int(),
-    name: z.string(),
-    deadline: z.number().int(),
-    startTime: z.number().int(),
-    endTime: z.number().int(),
-    note: z.string().default(''),
-    status: z.boolean(),
-    createdAt: z.number().int(),
-    updatedAt: z.number().int(),
-    userTodoCompanies: z.array(
-      z.object({
-        company: accountBookSchema,
-      })
-    ),
-  })
-  .transform((data) => {
-    const { userTodoCompanies, startTime, endTime, ...rest } = data;
-    const { company } = userTodoCompanies[0];
-    const startTimeInMilliseconds = timestampInMilliSeconds(startTime);
-    const endTimeInMilliseconds = timestampInMilliSeconds(endTime);
-
-    return {
-      ...rest,
-      startTime: startTimeInMilliseconds,
-      endTime: endTimeInMilliseconds,
-      company,
-    };
-  });
-
-const paginatedTodoOutputSchema = z.array(todoOutputSchema);
-
-const ITodoCompanyValidator = z.object({
-  id: z.number().int(),
+export const todoSchema = z.object({
+  id: z.number(),
   name: z.string(),
-  deadline: z.number().int(),
+  deadline: z.number(),
   note: z.string(),
   status: z.boolean(),
-  createdAt: z.number().int(),
-  updatedAt: z.number().int(),
-  startTime: z.number().int(),
-  endTime: z.number().int(),
-  company: ICompanyValidator,
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  startTime: z.number(),
+  endTime: z.number(),
 });
 
+// Info: (20250408 - Tzuhan) Backend Output Schema
+export const todoOutputSchema = todoSchema.extend({
+  company: accountBookSchema,
+});
+
+export const paginatedTodoOutputSchema = paginatedDataSchema(todoOutputSchema);
+
+// Info: (20250408 - Tzuhan) Export 組合
 export const todoListSchema = {
   input: {
-    querySchema: todoListQuerySchema,
+    querySchema: userIdSchema,
     bodySchema: todoNullSchema,
   },
-  outputSchema: paginatedTodoOutputSchema,
-  frontend: z.array(ITodoCompanyValidator),
+  outputSchema: z.array(todoOutputSchema),
+  frontend: z.array(todoOutputSchema),
 };
 
 export const todoPostSchema = {
   input: {
-    querySchema: todoPostQuerySchema,
-    bodySchema: todoPostBodySchema,
+    querySchema: userIdSchema,
+    bodySchema: todoPostPutBodySchema,
   },
   outputSchema: todoOutputSchema,
   frontend: todoNullSchema,
@@ -160,7 +64,7 @@ export const todoPostSchema = {
 
 export const todoGetSchema = {
   input: {
-    querySchema: todoGetQuerySchema,
+    querySchema: userIdSchema.merge(todoIdSchema),
     bodySchema: todoNullSchema,
   },
   outputSchema: todoOutputSchema,
@@ -169,8 +73,8 @@ export const todoGetSchema = {
 
 export const todoPutSchema = {
   input: {
-    querySchema: todoPutQuerySchema,
-    bodySchema: todoPutBodySchema,
+    querySchema: todoIdSchema,
+    bodySchema: todoPostPutBodySchema,
   },
   outputSchema: todoOutputSchema,
   frontend: todoNullSchema,
@@ -178,9 +82,9 @@ export const todoPutSchema = {
 
 export const todoDeleteSchema = {
   input: {
-    querySchema: todoDeleteQuerySchema,
+    querySchema: todoIdSchema,
     bodySchema: todoNullSchema,
   },
   outputSchema: todoOutputSchema,
-  frontend: ITodoCompanyValidator,
+  frontend: todoOutputSchema,
 };

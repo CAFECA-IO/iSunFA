@@ -11,21 +11,19 @@ export const SESSION_DEVELOPER: ISessionData = {
   userAgent: DefaultValue.USER_AGENT,
   ipAddress: DefaultValue.IP,
   userId: 10000000,
-  companyId: 10000000,
-  roleId: 1006,
-  teamId: 2, // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
-  teamRole: TeamRole.OWNER, // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
+  companyId: 10000000, // Info: (20250408 - Liz) 需要將已連結帳本的所屬 team data 加入至 teams (直接修改 id 比較快)，原因是後端會驗證 user 是否有此帳本權限， user 在團隊裡=有帳本權限=可以連結帳本
+  roleId: 10000000,
   teams: [
     {
-      id: 1, // Info: (20250324 - Shirley) 在 npm run dev 開發環境，可修改 id 為 DB 裡 team table 的 id，之後後端會用 session 來判斷權限
+      id: 1, // Info: (20250324 - Shirley) 修改為 team table 裡 owner_id === SESSION_DEVELOPER.userId 的 id
       role: TeamRole.OWNER,
+    },
+    {
+      id: 5,
+      role: TeamRole.ADMIN,
     },
     {
       id: 2,
-      role: TeamRole.OWNER,
-    },
-    {
-      id: 6,
       role: TeamRole.OWNER,
     },
   ],

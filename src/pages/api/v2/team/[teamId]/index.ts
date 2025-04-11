@@ -17,7 +17,8 @@ import loggerBack from '@/lib/utils/logger_back';
 import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
 import { getTeamByTeamId, updateTeamById } from '@/lib/utils/repo/team.repo';
-import { getUserRoleInTeam } from '@/lib/utils/repo/team_member.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -64,34 +65,84 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
   body,
   session,
 }) => {
-  const { userId } = session;
+  const { userId, teams } = session;
   const teamIdNumber = Number(query.teamId);
   const updateData = body as IUpdateTeamBody;
 
   try {
-    // Info: (20250325 - Shirley) 獲取用戶在團隊中的角色
-    // TODO: (20250325 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
-    // TODO: (20250325 - Shirley) 用 src/lib/shared/permission.ts 來判斷團隊角色權限
-    const userRole = await getUserRoleInTeam(userId, teamIdNumber);
+    // Info: (20250328 - Shirley) 從 session 取得用戶在團隊中的角色
+    const teamInfo = teams?.find((team) => team.id === teamIdNumber);
 
-    // Info: (20250325 - Shirley) 檢查用戶是否在團隊中且為 OWNER 或 ADMIN
-    if (!userRole) {
+    // Info: (20250328 - Shirley) 檢查用戶是否在團隊中
+    if (!teamInfo) {
       loggerBack.warn(`User ${userId} is not in team ${teamIdNumber}`);
       return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
     }
 
-    if (userRole !== TeamRole.OWNER && userRole !== TeamRole.ADMIN) {
-      loggerBack.warn(
-        `User ${userId} with role ${userRole} attempted to update team ${teamIdNumber} but only OWNER and ADMIN are allowed`
-      );
-      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+    const userRole = teamInfo.role as TeamRole;
+
+    // Info: (20250409 - Shirley) 檢查用戶是否有修改團隊資訊的權限
+    let permissionDenied = false;
+
+    // Info: (20250409 - Shirley) 檢查基本更新權限
+    if (updateData.name) {
+      const canModifyNameResult = convertTeamRoleCanDo({
+        teamRole: userRole,
+        canDo: TeamPermissionAction.MODIFY_NAME,
+      }) as ITeamRoleCanDo;
+
+      if (!canModifyNameResult.yesOrNo) {
+        loggerBack.warn(
+          `User ${userId} with role ${userRole} doesn't have permission to modify team name`
+        );
+        permissionDenied = true;
+      }
     }
 
-    // Info: (20250325 - Shirley) 如果嘗試更新銀行帳號，但用戶不是 OWNER
-    if (updateData.bankInfo && userRole !== TeamRole.OWNER) {
-      loggerBack.warn(
-        `User ${userId} with role ${userRole} attempted to update bank info for team ${teamIdNumber} but only OWNER is allowed`
-      );
+    if (updateData.about) {
+      const canModifyAboutResult = convertTeamRoleCanDo({
+        teamRole: userRole,
+        canDo: TeamPermissionAction.MODIFY_ABOUT,
+      }) as ITeamRoleCanDo;
+
+      if (!canModifyAboutResult.yesOrNo) {
+        loggerBack.warn(
+          `User ${userId} with role ${userRole} doesn't have permission to modify team about`
+        );
+        permissionDenied = true;
+      }
+    }
+
+    if (updateData.profile) {
+      const canModifyProfileResult = convertTeamRoleCanDo({
+        teamRole: userRole,
+        canDo: TeamPermissionAction.MODIFY_PROFILE,
+      }) as ITeamRoleCanDo;
+
+      if (!canModifyProfileResult.yesOrNo) {
+        loggerBack.warn(
+          `User ${userId} with role ${userRole} doesn't have permission to modify team profile`
+        );
+        permissionDenied = true;
+      }
+    }
+
+    // Info: (20250409 - Shirley) 如果嘗試更新銀行帳號，檢查是否有銀行帳號修改權限
+    if (updateData.bankInfo) {
+      const canModifyBankAccountResult = convertTeamRoleCanDo({
+        teamRole: userRole,
+        canDo: TeamPermissionAction.MODIFY_BANK_ACCOUNT,
+      }) as ITeamRoleCanDo;
+
+      if (!canModifyBankAccountResult.yesOrNo) {
+        loggerBack.warn(
+          `User ${userId} with role ${userRole} doesn't have permission to modify bank account`
+        );
+        permissionDenied = true;
+      }
+    }
+
+    if (permissionDenied) {
       return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
     }
 

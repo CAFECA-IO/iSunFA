@@ -125,6 +125,7 @@ const CreateAccountBookModal = ({
         const { success, data } = await getTeamListAPI({
           params: { userId: userAuth.id },
           query: {
+            canCreateAccountBookOnly: true,
             page: 1,
             pageSize: 999,
           },
@@ -185,7 +186,7 @@ const CreateAccountBookModal = ({
                 </h4>
                 <input
                   type="text"
-                  placeholder={t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ENTER_NUMBER')}
+                  placeholder={t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ENTER_TAX_ID')}
                   className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
                   value={taxId}
                   onChange={(e) => setTaxId(e.target.value)}

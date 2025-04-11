@@ -21,7 +21,7 @@ export const handleGetRequestInputValiditor = z.object({
 export const handleGetRequestOutputValiditor = z
   .object({
     id: z.number(),
-    type: z.enum(Object.keys(PAYMENT_METHOD_TYPE) as [string, ...string[]]),
+    type: z.nativeEnum(PAYMENT_METHOD_TYPE), // Info: (20250218 - tzuhan) 信用卡類型
     number: z.string(),
     expirationDate: z.string(),
     cvv: z.string(),

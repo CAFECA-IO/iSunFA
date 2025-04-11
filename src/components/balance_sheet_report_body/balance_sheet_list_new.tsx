@@ -19,17 +19,16 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import Toggle from '@/components/toggle/toggle';
-import { useGlobalCtx } from '@/contexts/global_context';
-// import { useReactToPrint } from 'react-to-print';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
-// import { ReportLanguagesKey } from '@/interfaces/report_language'; // Todo: (20241206 - Anna) 下個PR繼續處理
+import DownloadBalanceSheet from '@/components/balance_sheet_report_body/download_balance_sheet';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
   isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
   printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
+  downloadRef: React.RefObject<HTMLDivElement>; // Info: (20250327 - Anna) 從父層傳入的 Ref
   printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
-  //  selectedReportLanguage: ReportLanguagesKey; // Todo: (20241206 - Anna) 接收語言選擇 下個PR繼續處理
+  downloadFn: () => void; // Info: (20250327 - Anna) 從父層傳入的下載函數
 }
 
 // Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
@@ -50,13 +49,13 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   selectedDateRange,
   isPrinting, // Info: (20241122 - Anna) 使用打印狀態
   printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
+  downloadRef, // Info: (20250327 - Anna) 使用下載範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
-  // selectedReportLanguage, // Todo: (20241206 - Anna)接收語言選擇 下個PR繼續處理
+  downloadFn, // Info: (20250327 - Anna) 使用下載函數
 }) => {
   const { t, i18n } = useTranslation(['reports']);
-  const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
 
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+  const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
@@ -547,7 +546,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
         </div>
         <div className="ml-auto flex items-center gap-24px">
-          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+          <DownloadButton onClick={downloadFn} />
           <PrintButton onClick={printFn} disabled={!isChinese} />
         </div>
       </div>
@@ -909,6 +908,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         <hr className="break-before-page" />
         {TurnoverDay}
       </div>
+      <DownloadBalanceSheet reportFinancial={reportFinancial} downloadRef={downloadRef} />
     </div>
   );
 };

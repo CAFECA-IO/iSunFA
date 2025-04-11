@@ -27,6 +27,58 @@ import { getTeamList } from '@/lib/utils/repo/team.repo';
 import { DEFAULT_MAX_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { createAccountingSetting } from '@/lib/utils/repo/accounting_setting.repo';
 
+/**
+ * Info: (20250402 - Shirley) 檢查團隊的帳本數量是否超過限制
+ * @param teamId 團隊 ID
+ * @returns 如果超過限制則返回 true，否則返回 false
+ */
+export const checkTeamAccountBookLimit = async (teamId: number): Promise<boolean> => {
+  // Info: (20250402 - Shirley) 獲取當前時間戳記（秒）
+  const nowInSecond = getTimestampNow();
+
+  // Info: (20250402 - Shirley) 獲取團隊資訊和訂閱計劃
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: {
+      subscriptions: {
+        where: {
+          startDate: {
+            lte: nowInSecond,
+          },
+          expiredDate: {
+            gt: nowInSecond,
+          },
+        },
+        include: { plan: true },
+      },
+    },
+  });
+
+  if (!team) {
+    throw new Error('RESOURCE_NOT_FOUND');
+  }
+
+  // Info: (20250402 - Shirley) 獲取團隊下的帳本數量
+  const accountBookCount = await prisma.company.count({
+    where: {
+      teamId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+  });
+
+  const lastSubscription = team.subscriptions[0];
+
+  // Info: (20250402 - Shirley) 獲取團隊的訂閱計劃，如果找不到對應的計劃類型，默認使用 BEGINNER 計劃
+  const planType = lastSubscription?.plan?.type || 'BEGINNER';
+
+  // Info: (20250402 - Shirley) 根據計劃類型確定帳本數量限制
+  const limitsByType = SUBSCRIPTION_PLAN_LIMITS as Record<string, number>;
+  const accountBookLimit = limitsByType[planType] || limitsByType.BEGINNER;
+
+  // Info: (20250402 - Shirley) 檢查是否超過帳本數量限制
+  return accountBookCount >= accountBookLimit;
+};
+
 export async function isEligibleToCreateAccountBookInTeam(
   userId: number,
   teamId: number
@@ -65,7 +117,7 @@ export const getAccountBookById = async (id: number): Promise<IAccountBook | nul
   return result;
 };
 
-export const getAccountBookByNameAndTaxId = async (
+export const getAccountBookByNameAndTeamId = async (
   teamId: number,
   taxId: string
 ): Promise<IAccountBook | null> => {
@@ -108,7 +160,7 @@ export const createAccountBook = async (
   loggerBack.info(`User ${userId} is creating a new AccountBook in Team ${teamId}`);
 
   // Info: (20250124 - Shirley) Step 1.
-  const accountBookIfExist = await getAccountBookByNameAndTaxId(teamId, taxId);
+  const accountBookIfExist = await getAccountBookByNameAndTeamId(teamId, taxId);
   if (accountBookIfExist) {
     throw new Error('DUPLICATE_ACCOUNT_BOOK');
   } else {
@@ -302,6 +354,7 @@ export const listAccountBookByUserId = async (
                   : '',
                 editable: false,
               },
+              expiredAt: book.team.subscriptions[0]?.expiredDate ?? 0,
             }
           : null,
         isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
@@ -453,6 +506,7 @@ export const listAccountBooksByTeamId = async (
                   : '',
                 editable: false,
               },
+              expiredAt: book.team.subscriptions[0]?.expiredDate ?? 0,
             }
           : null,
         isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
@@ -842,6 +896,7 @@ export async function getAccountBookForUserWithTeam(
           : '',
         editable: userRole !== TeamRole.VIEWER,
       },
+      expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
     };
 
     // Info: (20250329 - Shirley) Since we're not using admin table anymore, we need default values for tag and order
@@ -1001,6 +1056,7 @@ export async function findUserAccountBook(
           : '',
         editable: userRole !== TeamRole.VIEWER,
       },
+      expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
     };
 
     // Info: (20250325 - Shirley) Return the formatted account book data
@@ -1031,3 +1087,113 @@ export async function findUserAccountBook(
     return null;
   }
 }
+
+export const updateAccountBook = async (
+  userId: number,
+  accountBookId: number,
+  body: {
+    name?: string;
+    tag?: WORK_TAG;
+    taxId?: string;
+    teamId?: number;
+  }
+): Promise<IAccountBook | null> => {
+  let result: IAccountBook | null = null;
+  const { name, tag, taxId, teamId } = body;
+
+  const accountBook = await prisma.company.findFirst({
+    where: {
+      id: accountBookId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+  });
+  if (!accountBook) {
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
+  }
+
+  const updatedAccountBook = await prisma.company.update({
+    where: { id: accountBookId },
+    data: {
+      name,
+      tag,
+      taxId,
+      teamId,
+      updatedAt: getTimestampNow(),
+    },
+    include: {
+      imageFile: true, // Info: (20250327 - Tzuhan) 這裡才會拿到 imageFile.url
+    },
+  });
+
+  if (updatedAccountBook) {
+    result = {
+      ...updatedAccountBook,
+      imageId: updatedAccountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      tag: updatedAccountBook.tag as WORK_TAG,
+    };
+  }
+  return result;
+};
+
+export const deleteAccountBook = async (accountBookId: number): Promise<IAccountBook | null> => {
+  let result: IAccountBook | null = null;
+
+  const accountBook = await prisma.company.findFirst({
+    where: {
+      id: accountBookId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+  });
+  if (!accountBook) {
+    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
+  }
+  const nowInSecond = getTimestampNow();
+
+  const updatedAccountBook = await prisma.company.update({
+    where: { id: accountBookId },
+    data: {
+      deletedAt: nowInSecond,
+      updatedAt: nowInSecond,
+    },
+    include: {
+      imageFile: true,
+    },
+  });
+
+  if (updatedAccountBook) {
+    result = {
+      ...updatedAccountBook,
+      imageId: updatedAccountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      tag: updatedAccountBook.tag as WORK_TAG,
+    };
+  }
+  return result;
+};
+
+/**
+ * Info: (20250409 - Shirley) 獲取帳本所屬的團隊ID
+ * @param accountBookId 帳本ID
+ * @returns 帳本所屬的團隊ID，如果找不到則返回null
+ */
+export const getAccountBookTeamId = async (accountBookId: number): Promise<number | null> => {
+  try {
+    const accountBook = await prisma.company.findFirst({
+      where: {
+        id: accountBookId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      select: {
+        teamId: true,
+      },
+    });
+
+    return accountBook?.teamId || null;
+  } catch (error) {
+    loggerBack.error({
+      error,
+      accountBookId,
+      message: 'Failed to get account book team ID',
+    });
+    return null;
+  }
+};

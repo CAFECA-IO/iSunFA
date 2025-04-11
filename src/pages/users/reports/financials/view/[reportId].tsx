@@ -1,5 +1,4 @@
 // import NavBar from '@/components/nav_bar/nav_bar'; // ToDo: (20241129 - Liz) 使用新版的 Layout
-import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import ViewFinancialSection from '@/components/view_financial_section/view_financial_section';
 import {
   BaifaReportTypeToReportType,
@@ -90,10 +89,6 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       </div>
     ) : (
       <div>
-        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-          <ReportsSidebar />
-        </div>
-
         <div className="h-1400px bg-surface-neutral-main-background">
           <ViewFinancialSection
             reportTypesName={
