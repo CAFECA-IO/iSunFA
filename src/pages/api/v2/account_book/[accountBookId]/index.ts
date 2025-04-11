@@ -20,7 +20,6 @@ import {
   getAccountBookTeamId,
 } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { getUserRoleInTeam } from '@/lib/utils/repo/team_member.repo';
 import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 
@@ -54,19 +53,33 @@ const handlePutRequest = async (req: NextApiRequest) => {
   // Info: (20250310 - Shirley) Check user authorization, will throw FORBIDDEN error if not authorized
   await checkUserAuthorization(apiName, req, session);
 
-  // TODO: (20250310 - Shirley) Process account book update based on action type
-  // const { userId, teamRole, teamId } = session;
-  const { userId } = session;
+  const { userId, teams } = session;
   const accountBookId = Number(req.query.accountBookId);
   const { action, tag } = body;
 
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBook | null = null;
-  const teamRole = await getUserRoleInTeam(userId, query.accountBookId);
+  // Info: (20250718 - Shirley) 獲取帳本所屬的團隊ID
+  const teamId = await getAccountBookTeamId(accountBookId);
 
-  if (!teamRole) {
+  if (!teamId) {
+    loggerBack.warn(`Account book ${accountBookId} not found or doesn't belong to any team`);
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  // Info: (20250718 - Shirley) 從 session 中獲取用戶在團隊中的角色
+  const teamInfo = teams?.find((team) => team.id === teamId);
+
+  if (!teamInfo) {
+    loggerBack.warn(
+      `User ${userId} is not in the team ${teamId} that owns account book ${accountBookId}`
+    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
+
+  const teamRole = teamInfo.role as TeamRole;
+  loggerBack.info(`User ${userId} with role ${teamRole} is updating account book ${accountBookId}`);
+
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAccountBook | null = null;
   let canDo = false;
 
   switch (action) {
@@ -78,17 +91,20 @@ const handlePutRequest = async (req: NextApiRequest) => {
           canDo: TeamPermissionAction.MODIFY_TAG,
         }) as ITeamRoleCanDo
       ).yesOrNo;
-      payload = await updateAccountBook(userId, accountBookId, { tag });
 
+      if (!canDo) {
+        loggerBack.warn(
+          `User ${userId} with role ${teamRole} doesn't have permission to update tag of account book ${accountBookId}`
+        );
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      }
+
+      payload = await updateAccountBook(userId, accountBookId, { tag });
       break;
     }
     default:
       statusMessage = STATUS_MESSAGE.INVALID_INPUT_TYPE;
       break;
-  }
-
-  if (!canDo) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
   // Info: (20250310 - Shirley) Validate output data, will throw INVALID_OUTPUT_DATA error if invalid
