@@ -18,6 +18,7 @@ import { getUserById } from '@/lib/utils/repo/user.repo';
 import { IUser } from '@/interfaces/user';
 import { ITeamOrder } from '@/interfaces/order';
 import { generateTeamPaymentTransaction } from '@/lib/utils/generator/team_payment_transaction.generator';
+import { createTeamOrder } from '@/lib/utils/repo/team_order.repo';
 import { createTeamPaymentTransaction } from '@/lib/utils/repo/team_payment_transaction.repo';
 import { generateTeamOrder } from '@/lib/utils/generator/team_order.generator';
 import { createTeamInvoice } from '@/lib/utils/repo/team_invoice.repo';
@@ -55,7 +56,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
   let result;
   try {
     // Info: (20250218 - tzuhan) 驗證 URL 參數
-    const { userId, paymentInfoId } = PaymentQuerySchema.parse(req.query);
+    const { userId, paymentMethodId } = PaymentQuerySchema.parse(req.query);
     //  Info: (20250218 - tzuhan) 驗證請求 Body
     const { teamPlanType, teamId } = PaymentBodySchema.parse(req.body);
 
@@ -67,21 +68,27 @@ export const handlePostRequest = async (req: NextApiRequest) => {
       teamPlanType,
       quantity: 1,
     });
-    const userPaymentInfo: IPaymentInfo | null = await getUserPaymentInfoById(paymentInfoId);
+    // Info: (20250411 - Luphia) 根據訂單建立 team_order 並儲存
+    // ToDo: (20250411 - Luphia) 使用 DB Transaction
+    const teamOrder = await createTeamOrder(order);
+    const userPaymentInfo: IPaymentInfo | null = await getUserPaymentInfoById(paymentMethodId);
     const user = (await getUserById(userId)) as unknown as IUser;
+    loggerBack.warn('chargeOption');
     if (!userPaymentInfo || !user || userPaymentInfo.userId !== userId) throw new Error(STATUS_MESSAGE.INVALID_PAYMENT_METHOD);
     const paymentGateway = createPaymentGateway();
     const chargeOption: IChargeWithTokenOptions = {
-      order,
+      order: teamOrder,
       user,
       token: userPaymentInfo,
     };
+    loggerBack.warn('chargeOption');
+    loggerBack.warn(chargeOption);
     const paymentGetwayRecordId = await paymentGateway.chargeWithToken(chargeOption);
     // Info: (20250328 - Luphia) 根據扣款的結果建立 team_payment_transaction 並儲存
     // ToDo: (20250330 - Luphia) 使用 DB Transaction
     const paymentGatewayName = paymentGateway.getPlatform();
     const teamPaymentTransactionData = await generateTeamPaymentTransaction(
-      order,
+      teamOrder,
       userPaymentInfo,
       paymentGatewayName,
       paymentGetwayRecordId
@@ -93,7 +100,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
       // Info: (20250328 - Luphia) 根據扣款的結果建立 team_invoice 並儲存
       // ToDo: (20250330 - Luphia) 使用 DB Transaction
       const teamInvoiceData: ITeamInvoice = await generateTeamInvoice(
-        order,
+        teamOrder,
         teamPaymentTransaction,
         user
       );
@@ -111,6 +118,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
       result = formatApiResponse(STATUS_MESSAGE.PAYMENT_FAILED_TO_COMPLETE, {});
     }
   } catch (error) {
+    loggerBack.error(error);
     result = formatApiResponse((error as Error).message, {});
   }
   return result;
