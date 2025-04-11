@@ -81,7 +81,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toNextStep }) => {
 
   // Info: (20250411 - Julian) Milestone
   const displayMilestone = (
-    <div className="flex h-480px w-max items-center gap-8px">
+    <div className="grid h-480px w-max grid-flow-col grid-rows-1 items-center gap-8px">
       {years.map((year, index) => (
         <>
           {index !== 0 && (

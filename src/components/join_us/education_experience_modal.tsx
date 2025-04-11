@@ -234,7 +234,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
         </div>
         {/* Info: (20250411 - Julian) Buttons */}
         <div className="ml-auto mt-64px flex items-center gap-lv-6">
-          <LandingButton variant="default" className="font-bold">
+          <LandingButton type="button" variant="default" className="font-bold">
             <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
           </LandingButton>
           <LandingButton type="submit" variant="primary" className="font-bold">
