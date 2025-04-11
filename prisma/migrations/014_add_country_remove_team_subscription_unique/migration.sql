@@ -1,3 +1,5 @@
+-- Info: (20250411 - Shirley) 三個備份的 table: admin_backup, invitation_backup, role_backup table 在此 migration 檔被不小心刪除；如果要復原，則需要先隱藏這個 migration.sql，從頭執行 013_add_country_remove_team_subscription_unique/migration.sql
+
 /*
   Warnings:
 

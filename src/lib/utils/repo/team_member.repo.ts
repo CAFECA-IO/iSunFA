@@ -127,7 +127,10 @@ export const memberLeaveTeam = async (userId: number, teamId: number): Promise<I
     canDo: TeamPermissionAction.LEAVE_TEAM,
   });
 
-  if (!('yesOrNo' in canLeaveResult) || !(canLeaveResult as ITeamRoleCanDo).yesOrNo) {
+  if (
+    !(TeamRoleCanDoKey.YES_OR_NO in canLeaveResult) ||
+    !(canLeaveResult as ITeamRoleCanDo).yesOrNo
+  ) {
     throw new Error('PERMISSION_DENIED');
   }
 
