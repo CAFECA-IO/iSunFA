@@ -1,6 +1,29 @@
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ITeamOrder } from '@/interfaces/order';
+import { ITeamOrder, ITeamOrderDetail } from '@/interfaces/order';
+
+const createTeamOrderDetail = async (
+  orderId: number,
+  options: ITeamOrderDetail[]
+): Promise<ITeamOrderDetail[]> => {
+  const data = options.map((item) => ({
+    orderId,
+    productId: item.productId,
+    productName: item.productName,
+    unit: item.unit,
+    unitPrice: item.unitPrice,
+    quantity: item.quantity,
+    currency: item.currency,
+    amount: item.amount,
+  }));
+  const teamOrderDetails = await prisma.teamOrderDetail.createMany({
+    data,
+  });
+  if (!teamOrderDetails) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+  return options;
+};
 
 export const createTeamOrder = async (options: ITeamOrder): Promise<ITeamOrder> => {
   const data = {
@@ -16,9 +39,11 @@ export const createTeamOrder = async (options: ITeamOrder): Promise<ITeamOrder> 
     data,
   })) as ITeamOrder;
 
-  if (!teamOrder) {
+  if (!teamOrder.id) {
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
+  await createTeamOrderDetail(teamOrder.id, options.details);
 
-  return teamOrder;
+  const result = { ...options, id: teamOrder.id };
+  return result;
 };

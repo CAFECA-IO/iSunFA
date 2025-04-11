@@ -23,7 +23,10 @@ import { createTeamPaymentTransaction } from '@/lib/utils/repo/team_payment_tran
 import { generateTeamOrder } from '@/lib/utils/generator/team_order.generator';
 import { createTeamInvoice } from '@/lib/utils/repo/team_invoice.repo';
 import { generateTeamSubscription } from '@/lib/utils/generator/team_subscription.generator';
-import { createTeamSubscription } from '@/lib/utils/repo/team_subscription.repo';
+import {
+  createTeamSubscription,
+  updateTeamSubscription,
+} from '@/lib/utils/repo/team_subscription.repo';
 import { TRANSACTION_STATUS } from '@/constants/transaction';
 
 /** Info: (20250326 - Luphia) 訂閱支付細節
@@ -73,16 +76,13 @@ export const handlePostRequest = async (req: NextApiRequest) => {
     const teamOrder = await createTeamOrder(order);
     const userPaymentInfo: IPaymentInfo | null = await getUserPaymentInfoById(paymentMethodId);
     const user = (await getUserById(userId)) as unknown as IUser;
-    loggerBack.warn('chargeOption');
     if (!userPaymentInfo || !user || userPaymentInfo.userId !== userId) throw new Error(STATUS_MESSAGE.INVALID_PAYMENT_METHOD);
     const paymentGateway = createPaymentGateway();
     const chargeOption: IChargeWithTokenOptions = {
       order: teamOrder,
       user,
-      token: userPaymentInfo,
+      token: userPaymentInfo.token,
     };
-    loggerBack.warn('chargeOption');
-    loggerBack.warn(chargeOption);
     const paymentGetwayRecordId = await paymentGateway.chargeWithToken(chargeOption);
     // Info: (20250328 - Luphia) 根據扣款的結果建立 team_payment_transaction 並儲存
     // ToDo: (20250330 - Luphia) 使用 DB Transaction
@@ -110,7 +110,12 @@ export const handlePostRequest = async (req: NextApiRequest) => {
       // Info: (20250330 - Luphia) 根據扣款的結果建立 team_subscription 並儲存
       // ToDo: (20250330 - Luphia) 使用 DB Transaction
       const teamSubscriptionData = await generateTeamSubscription(teamId, teamPlanType);
-      const teamSubscription = await createTeamSubscription(teamSubscriptionData);
+      let teamSubscription: ITeamSubscription;
+      if (teamSubscriptionData.id) {
+        teamSubscription = await updateTeamSubscription(teamSubscriptionData);
+      } else {
+        teamSubscription = await createTeamSubscription(teamSubscriptionData);
+      }
       resultData.teamSubscription = teamSubscription;
       result = formatApiResponse(STATUS_MESSAGE.SUCCESS, resultData);
     } else {
