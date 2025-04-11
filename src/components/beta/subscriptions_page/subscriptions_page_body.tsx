@@ -32,6 +32,10 @@ const SubscriptionsPageBody = ({
     setTeamForAutoRenewalOff(undefined);
   };
 
+  const closeCancelSubscriptionModal = () => {
+    setTeamForCancelSubscription(undefined);
+  };
+
   // Info: (20250120 - Liz) 開啟自動續約、關閉自動續約 API
   const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
     APIName.UPDATE_SUBSCRIPTION
@@ -74,8 +78,10 @@ const SubscriptionsPageBody = ({
     if (!teamForCancelSubscription) return;
     const teamId = teamForCancelSubscription.id;
     const plan = teamForCancelSubscription.plan.toLowerCase();
+    // Info: (20250410 - Anna) Debug
     // eslint-disable-next-line no-console
     console.log('[取消訂閱] 發送 API 請求 : params', { teamId: String(teamId) });
+    // Info: (20250410 - Anna) Debug
     // eslint-disable-next-line no-console
     console.log('[取消訂閱] 發送 API 請求 : body', {
       plan,
@@ -89,9 +95,10 @@ const SubscriptionsPageBody = ({
       },
     });
     if (success) {
+      // Info: (20250410 - Anna) Debug
       // eslint-disable-next-line no-console
       console.log('[取消訂閱] API 成功回應');
-      setTeamForCancelSubscription(undefined);
+      closeCancelSubscriptionModal();
       getUserOwnedTeams();
     }
   };
@@ -137,7 +144,7 @@ const SubscriptionsPageBody = ({
     submitBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.YES_CANCEL_SUBSCRIPTION'),
     submitBtnFunction: cancelSubscription,
     messageType: MessageType.WARNING,
-    backBtnFunction: () => setTeamForCancelSubscription(undefined),
+    backBtnFunction: closeCancelSubscriptionModal,
     backBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL'),
     backBtnClassName: 'border-orange-500 text-orange-600',
     submitBtnClassName:

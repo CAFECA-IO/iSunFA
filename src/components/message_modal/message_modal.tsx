@@ -87,7 +87,7 @@ const MessageModal = ({
 
   const isBackBtn = backBtnStr ? (
     <Button
-      className={cn('px-16px py-8px', backBtnClassName)} // Info: (20250411 - Anna)
+      className={cn('px-16px py-8px', backBtnClassName)} // Info: (20250411 - Anna) 擴充 isBackBtn 的 className
       type="button"
       onClick={backBtnClickHandler}
       variant="tertiaryOutline"
