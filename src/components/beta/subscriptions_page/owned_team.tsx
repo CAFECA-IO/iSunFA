@@ -12,7 +12,7 @@ interface OwnedTeamProps {
   team: IUserOwnedTeam;
   setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
-  setTeamForCancelSubscription: (team: IUserOwnedTeam) => void;
+  setTeamForCancelSubscription?: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   isBillingButtonHidden?: boolean;
 }
 
@@ -132,12 +132,14 @@ const OwnedTeam = ({
                       {formatTimestamp(team.expiredTimestamp)}
                     </span>
                   </p>
-                  <p
-                    className="cursor-pointer text-base font-semibold leading-6 tracking-wide text-red-600"
-                    onClick={() => setTeamForCancelSubscription(team)}
-                  >
-                    {t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE')}
-                  </p>
+                  {setTeamForCancelSubscription && (
+                    <p
+                      className="cursor-pointer text-base font-semibold leading-6 tracking-wide text-red-600"
+                      onClick={() => setTeamForCancelSubscription(team)}
+                    >
+                      {t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE')}
+                    </p>
+                  )}
                 </>
               )}
 
