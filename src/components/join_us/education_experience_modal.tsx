@@ -72,6 +72,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
     e.preventDefault();
 
     const educationExperience: IEducationExperience = {
+      id: 0, // ToDo: (20250411 - Julian) Need to be updated
       degree: selectedDegree,
       schoolName: schoolNameInput,
       department: departmentInput,

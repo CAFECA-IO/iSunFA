@@ -10,6 +10,47 @@ interface IExperienceFormProps {
   toNextStep: () => void;
 }
 
+// ToDo: (20250411 - Julian) during the development
+const years = Array.from({ length: 10 }, (_, i) => 2024 - i).reverse();
+const yearsWithDivider = years.flatMap(
+  (item, index) => (index < years.length - 1 ? [item, '-'] : [item]) // Info: (20250414 - Julian) Add divider between years
+);
+
+const EducationExperience: React.FC<IEducationExperience> = ({
+  schoolName,
+  department,
+  start,
+  end,
+}) => {
+  const mainColor = {
+    text: 'text-surface-support-strong-maple',
+    bg: 'bg-surface-support-strong-maple',
+  };
+
+  const startPosition = yearsWithDivider.findIndex((year) => year === start.year);
+  const endPosition = yearsWithDivider.findIndex((year) => year === end.year);
+
+  return (
+    <div
+      key={schoolName}
+      className="flex flex-col items-start gap-14px"
+      style={{
+        gridColumnStart: startPosition + 1,
+        gridColumnEnd: endPosition + 1,
+      }}
+    >
+      <p className={`${mainColor.text} font-semibold`}>{schoolName}</p>
+      <p className="">
+        {department} -{' '}
+        <span className="text-landing-page-gray">
+          {start.year}/{start.month} - {end.year}/{end.month}
+        </span>
+      </p>
+      <div className={`${mainColor.bg} h-24px w-full rounded-full`}></div>
+    </div>
+  );
+};
+
 const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring']);
   const milestoneRef = useRef<HTMLDivElement>(null);
@@ -20,9 +61,8 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
 
   // ToDo: (20250411 - Julian) during the development
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [educationList, setEducationList] = useState<IEducationExperience[]>([
-    dummyEducationExperience,
-  ]);
+  const [educationList, setEducationList] =
+    useState<IEducationExperience[]>(dummyEducationExperience);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,13 +95,10 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
     });
   };
 
-  // ToDo: (20250411 - Julian) during the development
-  const years = Array.from({ length: 10 }, (_, i) => 2024 - i).reverse();
-
   // Info: (20250411 - Julian) Left Arrow
   const isDisplayLeftArrow = (
     <div
-      className={`${isShowLeftArrow ? 'visible' : 'invisible'} sticky left-0 flex h-full items-center bg-gradient-to-r from-landing-page-black from-60% to-transparent pr-80px`}
+      className={`${isShowLeftArrow ? 'visible' : 'invisible'} sticky left-0 flex h-480px items-center bg-gradient-to-r from-landing-page-black from-60% to-transparent pr-80px`}
     >
       <button type="button" className="p-8px" onClick={() => scrollMilestone('L')}>
         <FaChevronLeft size={40} />
@@ -72,7 +109,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
   // Info: (20250411 - Julian) Right Arrow
   const isDisplayRightArrow = (
     <div
-      className={`${isShowRightArrow ? 'visible' : 'invisible'} sticky right-0 flex h-full items-center bg-gradient-to-l from-landing-page-black from-60% to-transparent pl-80px`}
+      className={`${isShowRightArrow ? 'visible' : 'invisible'} sticky right-0 flex h-480px items-center bg-gradient-to-l from-landing-page-black from-60% to-transparent pl-80px`}
     >
       <button type="button" className="p-8px" onClick={() => scrollMilestone('R')}>
         <FaChevronRight size={40} />
@@ -80,20 +117,56 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
     </div>
   );
 
-  // Info: (20250411 - Julian) Milestone
-  const displayMilestone = (
-    <div className="grid h-480px w-max grid-flow-col grid-rows-1 items-center gap-8px">
-      {years.map((year, index) => (
-        <>
-          {index !== 0 && (
-            // Info: (20250411 - Julian) Divider
-            <div key={`${year}-line`} className="h-px w-80px bg-landing-page-gray3"></div>
-          )}
-          <p key={year} className="text-2xl text-landing-page-gray2">
-            {year}
-          </p>
-        </>
+  const displayEducation = (
+    <div
+      className="grid grid-flow-row items-center gap-8px"
+      style={{
+        gridTemplateColumns: 'repeat(10, 80px 200px)',
+      }}
+    >
+      {educationList.map((education) => (
+        <EducationExperience key={education.id} {...education} />
       ))}
+    </div>
+  );
+
+  // Info: (20250411 - Julian) Milestone
+  const yearLine = (
+    <div
+      className="grid grid-flow-row items-center gap-8px"
+      style={{
+        gridTemplateColumns: 'repeat(10, 80px 200px)',
+      }}
+    >
+      {yearsWithDivider.map((year, index) => {
+        if (year === '-') {
+          // Info: (20250411 - Julian) Divider
+          return (
+            <div
+              id={`${index + 1}`}
+              key={year}
+              className="h-px w-200px bg-landing-page-gray3"
+            ></div>
+          );
+        } else {
+          return (
+            <p
+              id={`${index + 1}`}
+              key={year}
+              className="text-center text-2xl text-landing-page-gray2"
+            >
+              {year}
+            </p>
+          );
+        }
+      })}
+    </div>
+  );
+
+  const displayMilestone = (
+    <div className="flex min-h-480px flex-col justify-center gap-10px">
+      {displayEducation}
+      {yearLine}
     </div>
   );
 
