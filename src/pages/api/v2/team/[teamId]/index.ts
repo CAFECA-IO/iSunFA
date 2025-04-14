@@ -1,4 +1,4 @@
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IUpdateTeamBody, IUpdateTeamResponse } from '@/lib/utils/zod_schema/team';
 import { ITeam, TeamRole } from '@/interfaces/team';
@@ -18,7 +18,7 @@ import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
 import { getTeamByTeamId, updateTeamById } from '@/lib/utils/repo/team.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -89,9 +89,9 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
       const canModifyNameResult = convertTeamRoleCanDo({
         teamRole: userRole,
         canDo: TeamPermissionAction.MODIFY_NAME,
-      }) as ITeamRoleCanDo;
+      });
 
-      if (!canModifyNameResult.yesOrNo) {
+      if (!canModifyNameResult.can) {
         loggerBack.warn(
           `User ${userId} with role ${userRole} doesn't have permission to modify team name`
         );
@@ -103,9 +103,9 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
       const canModifyAboutResult = convertTeamRoleCanDo({
         teamRole: userRole,
         canDo: TeamPermissionAction.MODIFY_ABOUT,
-      }) as ITeamRoleCanDo;
+      });
 
-      if (!canModifyAboutResult.yesOrNo) {
+      if (!canModifyAboutResult.can) {
         loggerBack.warn(
           `User ${userId} with role ${userRole} doesn't have permission to modify team about`
         );
@@ -117,9 +117,9 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
       const canModifyProfileResult = convertTeamRoleCanDo({
         teamRole: userRole,
         canDo: TeamPermissionAction.MODIFY_PROFILE,
-      }) as ITeamRoleCanDo;
+      });
 
-      if (!canModifyProfileResult.yesOrNo) {
+      if (!canModifyProfileResult.can) {
         loggerBack.warn(
           `User ${userId} with role ${userRole} doesn't have permission to modify team profile`
         );
@@ -132,9 +132,9 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
       const canModifyBankAccountResult = convertTeamRoleCanDo({
         teamRole: userRole,
         canDo: TeamPermissionAction.MODIFY_BANK_ACCOUNT,
-      }) as ITeamRoleCanDo;
+      });
 
-      if (!canModifyBankAccountResult.yesOrNo) {
+      if (!canModifyBankAccountResult.can) {
         loggerBack.warn(
           `User ${userId} with role ${userRole} doesn't have permission to modify bank account`
         );
@@ -181,16 +181,16 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
 
   try {
     switch (method) {
-      case 'GET':
+      case HttpMethod.GET:
         ({ httpCode, result } = await handleGetRequest(req));
         break;
-      case 'PUT': {
+      case HttpMethod.PUT: {
         const { statusMessage, payload } = await withRequestValidation(
           APIName.UPDATE_TEAM_BY_ID,
           req,

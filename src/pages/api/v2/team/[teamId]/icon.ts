@@ -45,7 +45,7 @@ const handlePutRequest: IHandleRequest<APIName.PUT_TEAM_ICON, ITeamWithImage> = 
       canDo: TeamPermissionAction.MODIFY_IMAGE,
     });
 
-    if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+    if (!assertResult.can) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 

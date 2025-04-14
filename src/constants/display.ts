@@ -142,6 +142,12 @@ export const checkboxStyle =
 export const radioButtonStyle =
   'relative h-16px w-16px appearance-none outline-none rounded-full border border-checkbox-stroke-unselected bg-white after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block';
 
+// Info: (20250411 - Julian) ----------- Hiring page CSS style -----------
+export const haloStyle = 'border border-white bg-landing-page-mute outline-none shadow-job';
+
+export const orangeRadioStyle =
+  'peer relative h-16px w-16px appearance-none rounded-full border border-white before:absolute before:left-2px before:top-2px before:hidden before:h-10px before:w-10px before:rounded-full before:bg-surface-brand-primary-moderate checked:border-surface-brand-primary-moderate checked:before:block hover:bg-surface-brand-primary-30 hover:border-surface-brand-primary';
+
 export const ITEMS_PER_PAGE_ON_DASHBOARD = 6;
 
 export enum SortOptions {

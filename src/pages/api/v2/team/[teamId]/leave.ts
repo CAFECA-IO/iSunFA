@@ -7,7 +7,7 @@ import {
   checkUserAuthorization,
   logUserAction,
 } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { getSession, updateTeamMemberSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
@@ -73,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let session = null;
 
   try {
-    if (req.method === 'GET') {
+    if (req.method === HttpMethod.GET) {
       session = await getSession(req);
       ({ httpCode, result } = await handleGetRequest(req));
     } else {

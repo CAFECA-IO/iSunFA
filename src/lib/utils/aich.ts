@@ -1,5 +1,6 @@
 import { AICH_URI } from '@/constants/config';
 import { AI_TYPE, AICH_APIS_TYPES, AICH_PATH } from '@/constants/aich';
+import { HttpMethod } from '@/constants/api_connection';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItemFromAICH } from '@/interfaces/line_item';
 import { fuzzySearchAccountByName } from '@/lib/utils/repo/account.repo';
@@ -62,7 +63,7 @@ export const fetchResultIdFromAICH = async (key: AI_TYPE, formData: FormData): P
   try {
     // Info: (20241125 - Jacky) Don't set headers, let fetch handle it
     const response = await fetch(aichPath, {
-      method: 'POST',
+      method: HttpMethod.POST,
       body: formData,
     });
 

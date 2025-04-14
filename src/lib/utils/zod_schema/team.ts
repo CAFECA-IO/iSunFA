@@ -56,7 +56,7 @@ export const addMemberBodySchema = z.object({
 
 export const addMemberResponseSchema = z.object({
   invitedCount: z.number(),
-  failedEmails: z.array(z.string().email()),
+  unregisteredEmails: z.array(z.string().email()),
 });
 
 export const requestTransferAccountBookQuerySchema = z.object({

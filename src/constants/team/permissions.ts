@@ -38,6 +38,8 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
     TeamRole.EDITOR,
     TeamRole.VIEWER,
   ],
+  [TeamPermissionAction.MODIFY_SUBSCRIPTION]: [TeamRole.OWNER],
+  [TeamPermissionAction.VIEW_SUBSCRIPTION_INVOICE]: [TeamRole.OWNER],
 
   // Info: (20250313 - Tzuhan) 帳本權限
   [TeamPermissionAction.CREATE_ACCOUNT_BOOK]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],

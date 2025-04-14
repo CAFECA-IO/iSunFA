@@ -484,9 +484,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
           pageBreakAfter: 'auto',
         }}
       >
-        <div
-          className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
-        >
+        <div className={`${printContentClass} relative h-a4-height overflow-y-hidden`}>
           {renderedHeader(true)}
           <div className="download-header-label relative z-10 mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
             <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
@@ -506,9 +504,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
           pageBreakAfter: 'auto',
         }}
       >
-        <div
-          className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
-        >
+        <div className={`${printContentClass} relative h-a4-height overflow-y-hidden`}>
           {renderedHeader(false)}
           <div className="px-12px">{TurnoverDay}</div>
           {renderedFooter()}

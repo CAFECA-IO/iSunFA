@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { IAuditReports } from '@/interfaces/audit_reports';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { HttpMethod } from '@/constants/api_connection';
 import { formatApiResponse, convertStringToNumber, pageToOffset } from '@/lib/utils/common';
 import { isTimestamp } from '@/lib/utils/type_guard/date';
 import prisma from '@/client';
@@ -40,7 +41,7 @@ export default async function handler(
 ) {
   const { page = '1', limit = '10', begin, end, search = '' } = req.query;
   try {
-    if (req.method !== 'GET') {
+    if (req.method !== HttpMethod.GET) {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
     const pageValue = convertStringToNumber(page);

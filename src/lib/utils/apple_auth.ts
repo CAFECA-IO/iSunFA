@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Account } from 'next-auth';
 import { AdapterUser } from 'next-auth/adapters';
+import { HttpMethod } from '@/constants/api_connection';
 
 export const generateAppleClientSecret = (): string => {
   const { APPLE_PRIVATE_KEY, APPLE_TEAM_ID, APPLE_CLIENT_ID, APPLE_KEY_ID, APPLE_TOKEN_EXPIRY } =
@@ -53,7 +54,7 @@ export async function handleAppleOAuth(code: string) {
 
   // Info: (20241127 - tzuhan) 使用 fetch 發送請求到 Apple 的 /auth/token 端點
   const tokenResponse = await fetch('https://appleid.apple.com/auth/token', {
-    method: 'POST',
+    method: HttpMethod.POST,
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       client_id: process.env.APPLE_CLIENT_ID!,

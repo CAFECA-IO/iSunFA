@@ -61,4 +61,5 @@ export enum ToastId {
   EXPORT_VOUCHER_ERROR = 'toast-export-voucher-error',
   UPDATE_ASSET_STATUS_SUCCESS = 'toast-update-asset-status-success',
   UPDATE_ASSET_STATUS_ERROR = 'toast-update-asset-status-error',
+  ACCOUNT_BOOK_SETTING_GET_ERROR = 'toast-account-book-setting-get-error',
 }

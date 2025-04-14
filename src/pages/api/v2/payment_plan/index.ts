@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { getSession } from '@/lib/utils/session';
 import {
   checkOutputDataValid,
@@ -65,7 +65,7 @@ export default async function handler(
 
   try {
     // Info: (20250310 - Shirley) Check request method
-    if (req.method !== 'GET') {
+    if (req.method !== HttpMethod.GET) {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     } else {
       // Info: (20250310 - Shirley) Call handleGetRequest to process GET request

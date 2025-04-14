@@ -21,6 +21,7 @@
     "OLDEST": "Oldest"
   },
   "RESUME_PAGE": {
+    "HEAD_TITLE": "Resume",
     "MAIN_TITLE": "How may we know you?",
     "MAIN_SUBTITLE": "Welcome",
     "UPLOAD_RESUME_BTN": "Upload Resume",
@@ -29,8 +30,7 @@
     "STEP_EXPERIENCE": "Experience",
     "STEP_SKILLS": "Skills",
     "STEP_PREFERENCE": "Preference",
-    "STEP_ATTACHMENT": "Attachment",
-    "NEXT_BTN": "Next"
+    "STEP_ATTACHMENT": "Attachment"
   },
   "PERSONAL_INFO": {
     "FIRST_NAME_TITLE": "First Name",
@@ -50,9 +50,34 @@
     "WHERE_OPTION_OW": "Official Web",
     "WHERE_OPTION_OTHERS": "Others"
   },
+  "EXPERIENCE": {
+    "EDUCATION_TITLE": "Education",
+    "WORK_TITLE": "Work Experience",
+    "DEGREE": "Degree",
+    "DEGREE_OPTION_ELEMENTARY": "Elementary School",
+    "DEGREE_OPTION_JUNIOR": "Junior High",
+    "DEGREE_OPTION_HIGH": "High school",
+    "DEGREE_OPTION_BACHELOR": "Bachelor's degree",
+    "DEGREE_OPTION_MASTER": "Master's degree",
+    "DEGREE_OPTION_PROFESSIONAL": "Professional degrees",
+    "SCHOOL_NAME": "School Name",
+    "DEPARTMENT": "Department",
+    "START": "Start",
+    "END": "End",
+    "STATUS": "Status",
+    "STATUS_OPTION_GRADUATED": "Graduated",
+    "STATUS_OPTION_IN_SCHOOL": "In School",
+    "STATUS_OPTION_DROPOUT": "Dropout"
+  },
   "FINISH_PAGE": {
     "MAIN_TITLE": "Thank You for Applying!",
     "TEXT": "Thank you for applying! Due to a high number of candidates, our team needs time to carefully review each application. We’ll notify you of the results via email.",
     "DONE_BTN": "Done"
+  },
+  "COMMON": {
+    "PREVIOUS": "Previous",
+    "NEXT": "Next",
+    "DELETE": "Delete",
+    "SAVE": "Save"
   }
 }

@@ -1,3 +1,4 @@
+import { HttpMethod } from '@/constants/api_connection';
 import loggerBack from '@/lib/utils/logger_back';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -7,7 +8,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   );
 
   // Info: (20250220 - Tzuhan) 交易類型 (GET 或 POST 皆可能回傳)
-  const params = req.method === 'GET' ? req.query : req.body;
+  const params = req.method === HttpMethod.GET ? req.query : req.body;
   const {
     type,
     ordernumber,
@@ -43,7 +44,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   ];
   const POST_METHOD_TYPES = ['AUTH']; // Info: (20250220 - Tzuhan) 授權交易使用 POST 回傳
 
-  if (req.method === 'POST') {
+  if (req.method === HttpMethod.POST) {
     if (!POST_METHOD_TYPES.includes(type as string)) {
       return res.status(405).json({
         message: `Method Not Allowed for this transaction type: ${JSON.stringify(req.method)}, ${JSON.stringify(req.query)}, ${JSON.stringify(req.body)}`,
@@ -51,7 +52,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
     // TODO: （20250220 - Tzuhan）要更新 IUserOwnedTeam 裡面的 plan 資料
     // TODO: （20250220 - Tzuhan）如果是 Auth 交易，要新增 Table 記錄
-  } else if (req.method === 'GET') {
+  } else if (req.method === HttpMethod.GET) {
     if (!GET_METHOD_TYPES.includes(type as string)) {
       return res.status(405).json({
         message: `Method Not Allowed for this transaction type: ${JSON.stringify(req.method)}, ${JSON.stringify(req.query)}, ${JSON.stringify(req.body)}`,

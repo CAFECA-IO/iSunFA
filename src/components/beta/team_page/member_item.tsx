@@ -5,7 +5,7 @@ import { FiTrash2, FiSave } from 'react-icons/fi';
 import { IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamPermissionAction, TeamRoleCanDoKey } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IMember } from '@/interfaces/member';
@@ -95,11 +95,10 @@ const MemberItem = ({ member, team, getMemberList }: MemberItemProps) => {
     teamRole,
     canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
   });
-  const canAlterRoles = TeamRoleCanDoKey.CAN_ALTER in result ? result.canAlter : [];
-  const canEditThisRole =
-    TeamRoleCanDoKey.CAN_ALTER in result && result.canAlter.includes(member.role);
+  const canAlterRoles = result.alterableRoles ? result.alterableRoles : [];
+  const canEditThisRole = result.alterableRoles && result.alterableRoles.includes(member.role);
   const hasOtherRoleToChange =
-    TeamRoleCanDoKey.CAN_ALTER in result && result.canAlter.some((item) => item !== member.role);
+    result.alterableRoles && result.alterableRoles.some((item) => item !== member.role);
   const isEditable = canEditThisRole && hasOtherRoleToChange;
   const isDeletable = canEditThisRole;
 

@@ -3,7 +3,6 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getCompanyById, putCompanyIcon } from '@/lib/utils/repo/company.repo';
-
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
@@ -47,7 +46,7 @@ const handlePutRequest: IHandleRequest<
       canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
     });
 
-    if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+    if (!assertResult.can) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 

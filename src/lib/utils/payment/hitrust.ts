@@ -1,4 +1,5 @@
 import HITRUST from '@/constants/hitrust';
+import { HttpMethod } from '@/constants/api_connection';
 import {
   IPaymentGateway,
   IPaymentGatewayOptions,
@@ -159,7 +160,7 @@ class HitrustPaymentGateway implements IPaymentGateway {
     isAutoRenewalEnabled: boolean;
   }) {
     const form = document.createElement('form');
-    form.method = 'POST';
+    form.method = HttpMethod.POST;
     form.action = this.requestUrl;
     form.style.display = 'none';
 

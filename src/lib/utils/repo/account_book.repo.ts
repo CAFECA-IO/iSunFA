@@ -10,12 +10,17 @@ import { IPaginatedOptions } from '@/interfaces/pagination';
 import { z } from 'zod';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
-import { IAccountBook, IAccountBookWithTeam, WORK_TAG } from '@/interfaces/account_book';
+import {
+  IAccountBook,
+  IAccountBookWithTeam,
+  WORK_TAG,
+  ACCOUNT_BOOK_ROLE,
+} from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import loggerBack from '@/lib/utils/logger_back';
 import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
-import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { createOrderByList } from '@/lib/utils/sort';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
@@ -89,11 +94,11 @@ export async function isEligibleToCreateAccountBookInTeam(
       teamId,
     },
   });
-  const canDo: ITeamRoleCanDo = convertTeamRoleCanDo({
+  const canDo = convertTeamRoleCanDo({
     teamRole: teamMember?.role as TeamRole,
     canDo: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
-  }) as ITeamRoleCanDo;
-  return canDo.yesOrNo;
+  });
+  return canDo.can;
 }
 
 export const getAccountBookById = async (id: number): Promise<IAccountBook | null> => {
@@ -545,7 +550,7 @@ export const requestTransferAccountBook = async (
     canDo: TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
   });
 
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+  if (!canDo.can) {
     throw new Error('FORBIDDEN');
   }
 
@@ -660,7 +665,7 @@ export const cancelTransferAccountBook = async (
     canDo: TeamPermissionAction.CANCEL_ACCOUNT_BOOK_TRANSFER,
   });
 
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+  if (!canDo.can) {
     throw new Error('FORBIDDEN');
   }
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
@@ -707,7 +712,7 @@ export const acceptTransferAccountBook = async (
     canDo: TeamPermissionAction.ACCEPT_ACCOUNT_BOOK_TRANSFER,
   });
 
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+  if (!canDo.can) {
     throw new Error('FORBIDDEN');
   }
 
@@ -755,7 +760,7 @@ export const declineTransferAccountBook = async (
     canDo: TeamPermissionAction.DECLINE_ACCOUNT_BOOK_TRANSFER,
   });
 
-  if (!(canDo as ITeamRoleCanDo).yesOrNo) {
+  if (!canDo.can) {
     throw new Error('FORBIDDEN');
   }
 
@@ -1101,6 +1106,15 @@ export const updateAccountBook = async (
   let result: IAccountBook | null = null;
   const { name, tag, taxId, teamId } = body;
 
+  loggerBack.info(
+    `User ${userId} is updating account book ${accountBookId} with data: ${JSON.stringify({
+      name,
+      tag,
+      taxId,
+      teamId,
+    })}`
+  );
+
   const accountBook = await prisma.company.findFirst({
     where: {
       id: accountBookId,
@@ -1108,30 +1122,70 @@ export const updateAccountBook = async (
     },
   });
   if (!accountBook) {
+    loggerBack.warn(`Account book ${accountBookId} not found`);
     throw new Error('ACCOUNT_BOOK_NOT_FOUND');
   }
 
-  const updatedAccountBook = await prisma.company.update({
-    where: { id: accountBookId },
-    data: {
-      name,
-      tag,
-      taxId,
-      teamId,
-      updatedAt: getTimestampNow(),
-    },
-    include: {
-      imageFile: true, // Info: (20250327 - Tzuhan) 這裡才會拿到 imageFile.url
-    },
-  });
+  try {
+    const updatedAccountBook = await prisma.company.update({
+      where: { id: accountBookId },
+      data: {
+        name,
+        tag, // Info: (20250701 - Shirley) tag 是 Tag 枚舉類型，與 WORK_TAG 枚舉相匹配
+        taxId,
+        teamId,
+        updatedAt: getTimestampNow(),
+      },
+      include: {
+        imageFile: true,
+      },
+    });
 
-  if (updatedAccountBook) {
-    result = {
-      ...updatedAccountBook,
-      imageId: updatedAccountBook.imageFile?.url ?? '/images/fake_company_img.svg',
-      tag: updatedAccountBook.tag as WORK_TAG,
-    };
+    if (updatedAccountBook) {
+      const imageUrl = updatedAccountBook.imageFile?.url ?? '/images/fake_company_img.svg';
+
+      // Info: (20250411 - Shirley) 創建標準 accountBookSchema 格式的 company 對象
+      const companyWithImageId = {
+        id: updatedAccountBook.id,
+        teamId: updatedAccountBook.teamId,
+        userId: updatedAccountBook.userId,
+        imageId: imageUrl,
+        name: updatedAccountBook.name,
+        taxId: updatedAccountBook.taxId,
+        tag: updatedAccountBook.tag as WORK_TAG,
+        startDate: updatedAccountBook.startDate,
+        createdAt: updatedAccountBook.createdAt,
+        updatedAt: updatedAccountBook.updatedAt,
+        isPrivate: updatedAccountBook.isPrivate ?? false,
+      };
+
+      // Info: (20250411 - Shirley) 根據 updateAccountBookResponseSchema 結構組織返回數據
+      result = {
+        ...updatedAccountBook,
+        teamId: updatedAccountBook.teamId,
+        imageId: imageUrl,
+        tag: updatedAccountBook.tag as WORK_TAG,
+        company: companyWithImageId,
+        order: 1,
+        accountBookRole: ACCOUNT_BOOK_ROLE.COMPANY,
+      } as IAccountBook & {
+        company: typeof companyWithImageId;
+        order: number;
+        accountBookRole: ACCOUNT_BOOK_ROLE;
+      };
+      loggerBack.info(`Successfully updated account book ${accountBookId}`);
+    }
+  } catch (error) {
+    loggerBack.error({
+      error,
+      accountBookId,
+      userId,
+      body,
+      message: 'Failed to update account book',
+    });
+    throw error;
   }
+
   return result;
 };
 

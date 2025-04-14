@@ -24,7 +24,7 @@ export interface IGetChargeUrlOptions {
 export interface IChargeWithTokenOptions {
   order: ITeamOrder;
   user: IUser;
-  token: IPaymentInfo;
+  token: string;
 }
 
 export interface IPaymentGateway {

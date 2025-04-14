@@ -8,12 +8,13 @@ import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { createOrderByList } from '@/lib/utils/sort';
-import { ITeamRoleCanDo, MAX_TEAM_LIMIT, TeamPermissionAction } from '@/interfaces/permissions';
+import { MAX_TEAM_LIMIT, TeamPermissionAction } from '@/interfaces/permissions';
 import { getTimestampNow } from '@/lib/utils/common';
 import { listTeamQuerySchema } from '@/lib/utils/zod_schema/team';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import loggerBack from '@/lib/utils/logger_back';
 import { updateTeamMemberSession } from '@/lib/utils/session';
+import { assertUserIsTeamMember } from '@/lib/utils/permission/assert_user_team_permission';
 
 export const getTeamList = async (
   userId: number,
@@ -66,31 +67,35 @@ export const getTeamList = async (
 
   const updatedSessionPromises: Promise<void>[] = [];
 
-  const teamData = teams
-    .map((team) => {
-      const role = (team.members[0]?.role as TeamRole) ?? TeamRole.VIEWER;
+  const teamData = await Promise.all(
+    teams.map(async (team) => {
+      // Info: (20250411 - Tzuhan) actualRole 是用來判斷用戶的實際角色
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { actualRole, effectiveRole, expiredAt } = await assertUserIsTeamMember(
+        userId,
+        team.id
+      );
 
-      // Info: (20250410 - tzuhan) 如果需要同步 session，就先準備 Promise
       if (syncSession) {
-        updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, role));
+        updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, effectiveRole));
       }
 
       const permissionCheck = convertTeamRoleCanDo({
-        teamRole: role,
+        teamRole: effectiveRole,
         canDo: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
       });
 
-      const hasPermission = (permissionCheck as ITeamRoleCanDo).yesOrNo === true;
+      const hasPermission = permissionCheck.can === true;
 
       if (canCreateAccountBookOnly && !hasPermission) return null;
 
       return {
         id: team.id,
         imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
-        role,
-        name: { value: team.name, editable: role !== TeamRole.VIEWER },
-        about: { value: team.about || '', editable: role !== TeamRole.VIEWER },
-        profile: { value: team.profile || '', editable: role !== TeamRole.VIEWER },
+        role: effectiveRole,
+        name: { value: team.name, editable: effectiveRole !== TeamRole.VIEWER },
+        about: { value: team.about || '', editable: effectiveRole !== TeamRole.VIEWER },
+        profile: { value: team.profile || '', editable: effectiveRole !== TeamRole.VIEWER },
         planType: {
           value: (team.subscriptions[0]?.plan.type as TPlanType) ?? TPlanType.BEGINNER,
           editable: false,
@@ -101,22 +106,20 @@ export const getTeamList = async (
           value: team.bankInfo
             ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
             : '',
-          editable: role !== TeamRole.VIEWER,
+          editable: effectiveRole !== TeamRole.VIEWER,
         },
-        // ToDo: (20250330 - Luphia) 需從團隊訂閱狀態取得資料
         paymentStatus: TPlanType.BEGINNER,
-        expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
+        expiredAt: expiredAt ?? 0,
       };
     })
-    .filter((team): team is NonNullable<typeof team> => team !== null);
+  );
 
-  // Info: (20250410 - tzuhan) 統一觸發 session 同步
   if (syncSession) {
     await Promise.all(updatedSessionPromises);
   }
 
   return toPaginatedData({
-    data: teamData,
+    data: teamData.filter((team): team is NonNullable<typeof team> => team !== null),
     page,
     totalPages: Math.ceil(totalCount / pageSize),
     totalCount,
@@ -150,6 +153,9 @@ export const createTeamWithTrial = async (
       `User ${userId} is creating a new team (teamData: ${JSON.stringify(teamData)}) with trial subscription.`
     );
 
+    const now = new Date();
+    const nowInSeconds = getUnixTime(now);
+
     const plan = await tx.teamPlan.findFirst({
       where: {
         type: teamData.planType === TPlanType.BEGINNER ? TPlanType.PROFESSIONAL : teamData.planType,
@@ -157,11 +163,6 @@ export const createTeamWithTrial = async (
       select: { type: true },
     });
     if (!plan) throw new Error('PLAN_NOT_FOUND');
-
-    loggerBack.info(`User ${userId} is creating a new team plan: ${plan.type}`);
-
-    const now = new Date();
-    const nowInSeconds = getUnixTime(now);
 
     // Info: (20250409 - Tzuhan) 2. 建立團隊
     const newTeam = await tx.team.create({
@@ -218,9 +219,7 @@ export const createTeamWithTrial = async (
             status: InviteStatus.COMPLETED,
             createdAt: nowInSeconds,
             completedAt: nowInSeconds,
-            note: JSON.stringify({
-              reason: 'User already exists, added to team without asking',
-            }),
+            note: JSON.stringify({ reason: 'User already exists, added to team without asking' }),
           })),
           skipDuplicates: true,
         });
@@ -415,65 +414,11 @@ export const createTeam = async (
   });
 };
 
-export async function assertUserIsTeamMember(
-  userId: number,
-  teamId: number
-): Promise<{
-  actualRole: TeamRole;
-  effectiveRole: TeamRole;
-  expiredAt?: number;
-}> {
-  const nowInSecond = Math.floor(Date.now() / 1000);
-
-  const member = await prisma.teamMember.findFirst({
-    where: {
-      teamId,
-      userId,
-      status: LeaveStatus.IN_TEAM,
-    },
-    select: {
-      role: true,
-      team: {
-        select: {
-          subscriptions: {
-            where: {
-              startDate: {
-                lte: nowInSecond,
-              },
-              expiredDate: {
-                gt: nowInSecond,
-              },
-            },
-            select: {
-              expiredDate: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!member) throw new Error('USER_NOT_IN_TEAM');
-
-  const { role, team } = member;
-
-  const expiredAt = team.subscriptions[0]?.expiredDate ?? 0;
-  const isExpired = expiredAt === 0;
-
-  return {
-    actualRole: role as TeamRole,
-    effectiveRole: isExpired ? TeamRole.VIEWER : (role as TeamRole),
-    expiredAt,
-  };
-}
-
 export const getTeamByTeamId = async (teamId: number, userId: number): Promise<ITeam | null> => {
   // Info: (20250410 - tzuhan) Step 1. 驗證是否為團隊成員並取得角色
-  const role = await assertUserIsTeamMember(userId, teamId);
-
+  const { effectiveRole, expiredAt } = await assertUserIsTeamMember(userId, teamId);
   // Info: (20250410 - tzuhan) Step 2. 確保 session 中有正確的 teamRole
-  await updateTeamMemberSession(userId, teamId, role.effectiveRole);
-
+  await updateTeamMemberSession(userId, teamId, effectiveRole);
   // Info: (20250410 - tzuhan) Step 3. 查詢團隊資訊
   const nowInSecond = getTimestampNow();
 
@@ -514,30 +459,26 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
     throw new Error('TEAM_NOT_FOUND');
   }
 
-  const teamRole =
-    (team.members.find((member) => member.userId === userId)?.role as TeamRole) ?? TeamRole.VIEWER;
-  const planType = team.subscriptions[0]
-    ? (team.subscriptions[0].plan.type as TPlanType)
-    : TPlanType.BEGINNER;
+  const planType = team.subscriptions[0]?.plan.type ?? TPlanType.BEGINNER;
 
   return {
     id: team.id,
     imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
-    role: teamRole,
+    role: effectiveRole,
     name: {
       value: team.name,
-      editable: teamRole !== TeamRole.VIEWER,
+      editable: effectiveRole !== TeamRole.VIEWER,
     },
     about: {
       value: team.about || '',
-      editable: teamRole !== TeamRole.VIEWER,
+      editable: effectiveRole !== TeamRole.VIEWER,
     },
     profile: {
       value: team.profile || '',
-      editable: teamRole !== TeamRole.VIEWER,
+      editable: effectiveRole !== TeamRole.VIEWER,
     },
     planType: {
-      value: planType,
+      value: planType as TPlanType,
       editable: false,
     },
     totalMembers: team.members.length,
@@ -546,9 +487,9 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
       value: team.bankInfo
         ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
         : '',
-      editable: teamRole !== TeamRole.VIEWER,
+      editable: effectiveRole !== TeamRole.VIEWER,
     },
-    expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
+    expiredAt: expiredAt ?? 0,
   };
 };
 
@@ -626,25 +567,56 @@ export const getTeamsByUserIdAndTeamIds = async (
 ): Promise<ITeam[]> => {
   if (!teamIds.length) return [];
 
-  // Info: (20250324 - Shirley) 獲取用戶在指定團隊中的成員資格
+  const nowInSecond = getTimestampNow();
+
+  // Info: (20250410 - tzuhan) 查詢使用者在這些團隊的有效成員角色與訂閱狀態
   const teamMembers = await prisma.teamMember.findMany({
     where: {
       userId,
       teamId: { in: teamIds },
       status: LeaveStatus.IN_TEAM,
     },
+    select: {
+      teamId: true,
+      role: true,
+      team: {
+        select: {
+          subscriptions: {
+            where: {
+              startDate: { lte: nowInSecond },
+              expiredDate: { gt: nowInSecond },
+            },
+            select: { expiredDate: true, plan: { select: { type: true } } },
+          },
+        },
+      },
+    },
   });
 
-  // Info: (20250324 - Shirley) 如果用戶不是任何團隊的成員，返回空數組
   if (!teamMembers.length) return [];
 
-  // Info: (20250324 - Shirley) 創建團隊 ID 到成員角色的映射
-  const teamMemberRoleMap = new Map(teamMembers.map((member) => [member.teamId, member.role]));
+  const roleMap = new Map<
+    number,
+    { actualRole: TeamRole; effectiveRole: TeamRole; expiredAt: number; planType: TPlanType }
+  >();
 
-  // Info: (20250324 - Shirley) 只獲取用戶是成員的團隊
-  const validTeamIds = teamMembers.map((member) => member.teamId);
+  teamMembers.forEach((member) => {
+    const actualRole = member.role as TeamRole;
+    const expiredAt = member.team.subscriptions[0]?.expiredDate ?? 0;
+    const planType = member.team.subscriptions[0]?.plan?.type ?? TPlanType.BEGINNER;
+    const isExpired = expiredAt === 0;
+    const effectiveRole = isExpired ? TeamRole.VIEWER : actualRole;
 
-  // Info: (20250324 - Shirley) 查詢這些團隊的詳細信息
+    roleMap.set(member.teamId, {
+      actualRole,
+      effectiveRole,
+      expiredAt,
+      planType: planType as TPlanType,
+    });
+  });
+
+  const validTeamIds = Array.from(roleMap.keys());
+
   const teams = await prisma.team.findMany({
     where: { id: { in: validTeamIds } },
     include: {
@@ -659,30 +631,22 @@ export const getTeamsByUserIdAndTeamIds = async (
         },
       },
       accountBook: true,
-      subscriptions: {
-        where: {
-          startDate: { lte: getTimestampNow() },
-          expiredDate: { gt: getTimestampNow() },
-        },
-        include: { plan: true },
-      },
       imageFile: { select: { id: true, url: true } },
     },
   });
 
-  // Info: (20250324 - Shirley) 轉換為 ITeam 格式
   return teams.map((team) => {
-    const teamRole = (teamMemberRoleMap.get(team.id) as TeamRole) || TeamRole.VIEWER;
+    const roleMeta = roleMap.get(team.id)!;
 
     return {
       id: team.id,
       imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
-      role: teamRole,
-      name: { value: team.name, editable: teamRole !== TeamRole.VIEWER },
-      about: { value: team.about || '', editable: teamRole !== TeamRole.VIEWER },
-      profile: { value: team.profile || '', editable: teamRole !== TeamRole.VIEWER },
+      role: roleMeta.effectiveRole,
+      name: { value: team.name, editable: roleMeta.effectiveRole !== TeamRole.VIEWER },
+      about: { value: team.about || '', editable: roleMeta.effectiveRole !== TeamRole.VIEWER },
+      profile: { value: team.profile || '', editable: roleMeta.effectiveRole !== TeamRole.VIEWER },
       planType: {
-        value: (team.subscriptions[0]?.plan.type as TPlanType) ?? TPlanType.BEGINNER,
+        value: roleMeta.planType,
         editable: false,
       },
       totalMembers: team.members.length,
@@ -691,11 +655,10 @@ export const getTeamsByUserIdAndTeamIds = async (
         value: team.bankInfo
           ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
           : '',
-        editable: teamRole !== TeamRole.VIEWER,
+        editable: roleMeta.effectiveRole !== TeamRole.VIEWER,
       },
-      // ToDo: (20250330 - Luphia) 需從團隊訂閱狀態取得資料
-      paymentStatus: TPlanType.BEGINNER,
-      expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
+      paymentStatus: TPlanType.BEGINNER, // Info: (20250411 - tzuhan) 可視需要再處理實際狀態
+      expiredAt: roleMeta.expiredAt,
     };
   });
 };

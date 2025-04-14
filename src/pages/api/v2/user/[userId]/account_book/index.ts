@@ -7,7 +7,7 @@ import {
   checkUserAuthorization,
   logUserAction,
 } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { getSession } from '@/lib/utils/session';
@@ -17,7 +17,7 @@ import { validateOutputData } from '@/lib/utils/validator';
 import { createAccountBook, listAccountBookByUserId } from '@/lib/utils/repo/account_book.repo';
 import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { ITeamRoleCanDo, TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 
 const handleGetRequest = async (req: NextApiRequest) => {
@@ -44,9 +44,9 @@ const handleGetRequest = async (req: NextApiRequest) => {
       const canViewPublicAccountBookResult = convertTeamRoleCanDo({
         teamRole,
         canDo: TeamPermissionAction.VIEW_PUBLIC_ACCOUNT_BOOK,
-      }) as ITeamRoleCanDo;
+      });
 
-      if (canViewPublicAccountBookResult.yesOrNo) {
+      if (canViewPublicAccountBookResult.can) {
         loggerBack.info(
           `User ${userId} has permission to view public account books in team ${team.id} with role ${teamRole}`
         );
@@ -126,7 +126,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const method = req.method || 'GET';
+  const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
   let response;
@@ -136,12 +136,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     switch (method) {
-      case 'GET':
+      case HttpMethod.GET:
         apiName = APIName.LIST_ACCOUNT_BOOK_BY_USER_ID;
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;
-      case 'POST':
+      case HttpMethod.POST:
         apiName = APIName.CREATE_ACCOUNT_BOOK;
         ({ response, statusMessage } = await handlePostRequest(req));
         ({ httpCode, result } = response);

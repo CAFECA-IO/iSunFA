@@ -184,7 +184,7 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
       canDo: TeamPermissionAction.MODIFY_IMAGE,
     });
 
-    if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+    if (!assertResult.can) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
   } else if (type === UploadType.COMPANY) {
@@ -209,7 +209,7 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ qu
       canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
     });
 
-    if ('yesOrNo' in assertResult && !assertResult.yesOrNo) {
+    if (!assertResult.can) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
   }
