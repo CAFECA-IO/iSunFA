@@ -70,7 +70,7 @@ const HappyCustomer: React.FC = () => {
         >
           {/* Info: (20241226 - Julian) Avatar */}
           <div className="relative h-15px w-15px shrink-0 overflow-hidden rounded-full md:h-40px md:w-40px">
-            <Image src="/entities/happy.png" fill objectFit="cover" alt="avatar" />
+            <Image src="/entities/happy_customer_001.png" fill objectFit="cover" alt="avatar" />
           </div>
           {/* Info: (20241226 - Julian) Message */}
           <p>{t('landing_page_v2:HAPPY_CUSTOMER.MESSAGE_1')}</p>
@@ -82,7 +82,7 @@ const HappyCustomer: React.FC = () => {
         >
           {/* Info: (20241226 - Julian) Avatar */}
           <div className="relative h-15px w-15px shrink-0 overflow-hidden rounded-full md:h-40px md:w-40px">
-            <Image src="/entities/happy.png" fill objectFit="cover" alt="avatar" />
+            <Image src="/entities/happy_customer_002.png" fill objectFit="cover" alt="avatar" />
           </div>
           {/* Info: (20241226 - Julian) Message */}
           <p>{t('landing_page_v2:HAPPY_CUSTOMER.MESSAGE_2')}</p>
@@ -94,7 +94,7 @@ const HappyCustomer: React.FC = () => {
         >
           {/* Info: (20241226 - Julian) Avatar */}
           <div className="relative h-15px w-15px shrink-0 overflow-hidden rounded-full md:h-40px md:w-40px">
-            <Image src="/entities/happy.png" fill objectFit="cover" alt="avatar" />
+            <Image src="/entities/happy_customer_006.png" fill objectFit="cover" alt="avatar" />
           </div>
           {/* Info: (20241226 - Julian) Message */}
           <p>{t('landing_page_v2:HAPPY_CUSTOMER.MESSAGE_6')}</p>
@@ -106,7 +106,7 @@ const HappyCustomer: React.FC = () => {
         >
           {/* Info: (20241226 - Julian) Avatar */}
           <div className="relative h-15px w-15px shrink-0 overflow-hidden rounded-full md:h-40px md:w-40px">
-            <Image src="/entities/happy.png" fill objectFit="cover" alt="avatar" />
+            <Image src="/entities/happy_customer_003.png" fill objectFit="cover" alt="avatar" />
           </div>
           {/* Info: (20241226 - Julian) Message */}
           <p>{t('landing_page_v2:HAPPY_CUSTOMER.MESSAGE_3')}</p>
@@ -118,7 +118,7 @@ const HappyCustomer: React.FC = () => {
         >
           {/* Info: (20241226 - Julian) Avatar */}
           <div className="relative h-15px w-15px shrink-0 overflow-hidden rounded-full md:h-40px md:w-40px">
-            <Image src="/entities/happy.png" fill objectFit="cover" alt="avatar" />
+            <Image src="/entities/happy_customer_004.png" fill objectFit="cover" alt="avatar" />
           </div>
           {/* Info: (20241226 - Julian) Message */}
           <p>{t('landing_page_v2:HAPPY_CUSTOMER.MESSAGE_4')}</p>
@@ -130,7 +130,7 @@ const HappyCustomer: React.FC = () => {
         >
           {/* Info: (20241226 - Julian) Avatar */}
           <div className="relative h-15px w-15px shrink-0 overflow-hidden rounded-full md:h-40px md:w-40px">
-            <Image src="/entities/happy.png" fill objectFit="cover" alt="avatar" />
+            <Image src="/entities/happy_customer_005.png" fill objectFit="cover" alt="avatar" />
           </div>
           {/* Info: (20241226 - Julian) Message */}
           <p>{t('landing_page_v2:HAPPY_CUSTOMER.MESSAGE_5')}</p>
@@ -142,7 +142,7 @@ const HappyCustomer: React.FC = () => {
         >
           {/* Info: (20241226 - Julian) Avatar */}
           <div className="relative h-15px w-15px shrink-0 overflow-hidden rounded-full md:h-40px md:w-40px">
-            <Image src="/entities/happy.png" fill objectFit="cover" alt="avatar" />
+            <Image src="/entities/happy_customer_007.png" fill objectFit="cover" alt="avatar" />
           </div>
           {/* Info: (20241226 - Julian) Message */}
           <p>{t('landing_page_v2:HAPPY_CUSTOMER.MESSAGE_7')}</p>
@@ -154,7 +154,7 @@ const HappyCustomer: React.FC = () => {
         >
           {/* Info: (20241226 - Julian) Avatar */}
           <div className="relative h-15px w-15px shrink-0 overflow-hidden rounded-full md:h-40px md:w-40px">
-            <Image src="/entities/happy.png" fill objectFit="cover" alt="avatar" />
+            <Image src="/entities/happy_customer_009.png" fill objectFit="cover" alt="avatar" />
           </div>
           {/* Info: (20241226 - Julian) Message */}
           <p>{t('landing_page_v2:HAPPY_CUSTOMER.MESSAGE_9')}</p>
@@ -166,7 +166,7 @@ const HappyCustomer: React.FC = () => {
         >
           {/* Info: (20241226 - Julian) Avatar */}
           <div className="relative h-15px w-15px shrink-0 overflow-hidden rounded-full md:h-40px md:w-40px">
-            <Image src="/entities/happy.png" fill objectFit="cover" alt="avatar" />
+            <Image src="/entities/happy_customer_008.png" fill objectFit="cover" alt="avatar" />
           </div>
           {/* Info: (20241226 - Julian) Message */}
           <p>{t('landing_page_v2:HAPPY_CUSTOMER.MESSAGE_8')}</p>
