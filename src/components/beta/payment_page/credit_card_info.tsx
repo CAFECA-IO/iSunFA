@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Image from 'next/image';
+import { PiSpinner } from 'react-icons/pi';
 import { IPlan, IUserOwnedTeam } from '@/interfaces/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { FiPlusCircle } from 'react-icons/fi';
@@ -125,6 +126,9 @@ const CreditCardInfo = ({
           content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_SUCCESS'),
           closeable: true,
         });
+
+        // Info: (20250414 - Julian) 如果更新訂閱成功，就不用顯示確認離開的 modal
+        setIsDirty(false);
       } else {
         toastHandler({
           id: 'UPDATE_SUBSCRIPTION_FAILED',
@@ -186,6 +190,19 @@ const CreditCardInfo = ({
   };
   */
 
+  const subscribeBtn = isSubscribeBtnDisabled ? (
+    <Button type="button" variant="default" size="large" disabled className="hover:cursor-progress">
+      {t('subscriptions:PAYMENT_PAGE.PROCESSING')}{' '}
+      <div className="animate-spin">
+        <PiSpinner />
+      </div>
+    </Button>
+  ) : (
+    <Button type="button" variant="default" size="large" onClick={updateSubscription}>
+      {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
+    </Button>
+  );
+
   return (
     <section className="flex flex-auto flex-col gap-16px rounded-md bg-surface-neutral-surface-lv2 px-32px py-24px shadow-Dropshadow_XS">
       <div className="flex justify-between">
@@ -235,17 +252,7 @@ const CreditCardInfo = ({
       </div>
 
       {/* Info: (20250326 - Julian) 在 CreateTeamModal 不需要顯示按鈕 */}
-      {!isHideSubscribeButton && (
-        <Button
-          type="button"
-          variant="default"
-          size="large"
-          onClick={updateSubscription}
-          disabled={isSubscribeBtnDisabled}
-        >
-          {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
-        </Button>
-      )}
+      {!isHideSubscribeButton && subscribeBtn}
     </section>
   );
 };

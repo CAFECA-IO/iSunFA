@@ -143,6 +143,7 @@
     "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "您可以随时取消订阅",
     "NOTE": "您的当前方案将持续有效至下一个续订日期，且本次已付费的周期将不提供退款。",
     "SUBSCRIBE": "订阅",
+    "PROCESSING": "处理中，请稍候...",
     "TOAST_SUBSCRIPTION_SUCCESS": "您已成功订阅",
     "TOAST_SUBSCRIPTION_UPDATE_ERROR": "订阅更新失败",
     "DOWNGRADED_TO_BEGINNER_PLAN": "已降级为基础版方案",

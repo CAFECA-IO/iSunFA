@@ -529,7 +529,7 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
                 </h3>
 
                 {hasConnectedAccountBook && (
-                  <h4 className="text-xl font-bold leading-8 text-text-neutral-secondary">
+                  <h4 className="break-all text-xl font-bold leading-8 text-text-neutral-secondary">
                     {connectedAccountBook.name}
                   </h4>
                 )}
