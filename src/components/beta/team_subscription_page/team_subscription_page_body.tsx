@@ -1,5 +1,5 @@
 import { IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
-import { formatTimestamp } from '@/constants/time';
+import { timestampToString } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 import SubscriptionFAQ from '@/components/beta/team_subscription_page/subscription_faq';
 import SubscriptionPlans from '@/components/beta/team_subscription_page/subscription_plans';
@@ -39,7 +39,7 @@ const TeamSubscriptionPageBody = ({ team, getOwnedTeam }: TeamSubscriptionPageBo
                   {t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}:{' '}
                 </span>
                 <span className="text-text-neutral-primary">
-                  {formatTimestamp(team.expiredTimestamp)}
+                  {timestampToString(team.expiredTimestamp).dateWithSlash}
                 </span>
               </p>
             )}
