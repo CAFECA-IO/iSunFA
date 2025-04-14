@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { IPlan, IUserOwnedTeam } from '@/interfaces/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
@@ -34,6 +34,8 @@ const CreditCardInfo = ({
   const { t } = useTranslation(['subscriptions']);
   const { bindingResult, userAuth, paymentMethod, handlePaymentMethod } = useUserCtx();
   const { toastHandler } = useModalContext();
+
+  const [isSubscribeBtnDisabled, setIsSubscribeBtnDisabled] = useState(false);
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
   const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
@@ -101,6 +103,9 @@ const CreditCardInfo = ({
   const updateSubscription = async () => {
     if (!(userAuth && paymentMethod)) return;
 
+    // Info: (20250414 - Julian) 執行中，禁用訂閱按鈕
+    setIsSubscribeBtnDisabled(true);
+
     try {
       const { success } = await updateSubscriptionAPI({
         params: {
@@ -136,6 +141,9 @@ const CreditCardInfo = ({
         closeable: true,
       });
     }
+
+    // Info: (20250414 - Julian) 完成後，啟用訂閱按鈕
+    setIsSubscribeBtnDisabled(false);
   };
 
   /* Info: (20250220 - Tzuhan) 為串接 HiTrust 金流測試: 會替換成跳轉至 HiTrust 金流頁面
@@ -228,7 +236,13 @@ const CreditCardInfo = ({
 
       {/* Info: (20250326 - Julian) 在 CreateTeamModal 不需要顯示按鈕 */}
       {!isHideSubscribeButton && (
-        <Button type="button" variant="default" size="large" onClick={updateSubscription}>
+        <Button
+          type="button"
+          variant="default"
+          size="large"
+          onClick={updateSubscription}
+          disabled={isSubscribeBtnDisabled}
+        >
           {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
         </Button>
       )}

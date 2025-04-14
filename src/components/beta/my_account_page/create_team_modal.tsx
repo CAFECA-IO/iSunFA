@@ -142,7 +142,6 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   );
 
   // Info: (20250326 - Julian) 訂閱方案
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { trigger: subscribe } = APIHandler(APIName.USER_PAYMENT_METHOD_CHARGE);
 
   const formBodyRef = useRef<HTMLDivElement>(null);
