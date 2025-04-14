@@ -64,6 +64,8 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
   const [educationList, setEducationList] =
     useState<IEducationExperience[]>(dummyEducationExperience);
 
+  const milestoneTemplateColumns = `repeat(${years.length}, 80px 200px)`;
+
   useEffect(() => {
     const handleScroll = () => {
       if (milestoneRef.current) {
@@ -121,7 +123,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
     <div
       className="grid grid-flow-row items-center gap-8px"
       style={{
-        gridTemplateColumns: 'repeat(10, 80px 200px)',
+        gridTemplateColumns: milestoneTemplateColumns,
       }}
     >
       {educationList.map((education) => (
@@ -135,7 +137,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
     <div
       className="grid grid-flow-row items-center gap-8px"
       style={{
-        gridTemplateColumns: 'repeat(10, 80px 200px)',
+        gridTemplateColumns: milestoneTemplateColumns,
       }}
     >
       {yearsWithDivider.map((year, index) => {
