@@ -9,12 +9,16 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { accountAPIPostUtils as postUtils } from '@/pages/api/v2/company/[companyId]/account/route_utils';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { TeamRole } from '@/interfaces/team';
 
 export const handleGetRequest: IHandleRequest<
   APIName.ACCOUNT_LIST,
   IPaginatedAccount | null
 > = async ({ query, session }) => {
-  const { companyId, userId } = session;
+  const { companyId, teams } = session;
   let payload: IPaginatedAccount | null = null;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   const {
@@ -32,33 +36,50 @@ export const handleGetRequest: IHandleRequest<
     isDeleted,
   } = query;
 
-  try {
-    const accountRetriever = AccountRetrieverFactory.createRetriever({
-      companyId,
-      includeDefaultAccount,
-      liquidity,
-      type,
-      reportType,
-      equityType,
-      forUser,
-      page,
-      limit,
-      sortBy,
-      sortOrder,
-      searchKey,
-      isDeleted,
-    });
-
-    payload = await accountRetriever.getAccounts();
-    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-  } catch (error) {
-    const errorInfo = {
-      userId,
-      errorType: 'getAccounts failed',
-      errorMessage: 'Func. getAccounts in company/companyId/account/index.ts failed',
-    };
-    loggerError(errorInfo);
+  // Info: (20250414 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const accountRetriever = AccountRetrieverFactory.createRetriever({
+    companyId,
+    includeDefaultAccount,
+    liquidity,
+    type,
+    reportType,
+    equityType,
+    forUser,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    searchKey,
+    isDeleted,
+  });
+
+  payload = await accountRetriever.getAccounts();
+  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+
   return {
     statusMessage,
     payload,
@@ -69,47 +90,64 @@ export const handlePostRequest: IHandleRequest<
   APIName.CREATE_NEW_SUB_ACCOUNT,
   IAccount | null
 > = async ({ body, session }) => {
-  const { companyId, userId } = session;
+  const { companyId, teams } = session;
   const { accountId, name, note } = body;
   let payload: IAccount | null = null;
   const nowInSecond = getTimestampNow();
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
 
-  try {
-    const parentAccount = await postUtils.getParentAccountFromPrisma({
-      accountId,
-      companyId,
-    });
-
-    const lastSubAccount = await postUtils.getLastSubAccountFromPrisma(parentAccount);
-    const newCode = postUtils.getNewCode({
-      parentAccount,
-      latestSubAccount: lastSubAccount,
-    });
-    const newName = postUtils.getNewName({
-      parentAccount,
-      name,
-    });
-
-    const newSubAccount = await postUtils.createNewSubAccountInPrisma({
-      parentAccount,
-      nowInSecond,
-      companyId,
-      newCode,
-      newName,
-      note: note ?? '',
-    });
-
-    payload = newSubAccount;
-    statusMessage = STATUS_MESSAGE.CREATED;
-  } catch (error) {
-    const errorInfo = {
-      userId,
-      errorType: 'postAccounts failed',
-      errorMessage: 'Func. postAccounts in company/companyId/account/index.ts failed',
-    };
-    loggerError(errorInfo);
+  // Info: (20250414 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const parentAccount = await postUtils.getParentAccountFromPrisma({
+    accountId,
+    companyId,
+  });
+
+  const lastSubAccount = await postUtils.getLastSubAccountFromPrisma(parentAccount);
+  const newCode = postUtils.getNewCode({
+    parentAccount,
+    latestSubAccount: lastSubAccount,
+  });
+  const newName = postUtils.getNewName({
+    parentAccount,
+    name,
+  });
+
+  const newSubAccount = await postUtils.createNewSubAccountInPrisma({
+    parentAccount,
+    nowInSecond,
+    companyId,
+    newCode,
+    newName,
+    note: note ?? '',
+  });
+
+  payload = newSubAccount;
+  statusMessage = STATUS_MESSAGE.CREATED;
+
   return {
     statusMessage,
     payload,
