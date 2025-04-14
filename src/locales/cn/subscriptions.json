@@ -21,7 +21,10 @@
     "PAYMENT_FAILED": "付款失败",
     "UPDATE_PAYMENT": "重新设定付款信息",
     "RETURNING_TO_BEGINNER_IN": "",
-    "DAYS": " 天后恢复为基础版方案"
+    "DAYS": " 天后恢复为基础版方案",
+    "CANCEL_SUBSCRIPTION_TITLE": "取消订阅",
+    "CANCEL_SUBSCRIPTION_MESSAGE": "您确定要取消<bold>{{planName}}</bold>订阅吗？<br/><red>* 当前方案将继续生效至下次续订日前，本期费用不予退还。</red>",
+    "YES_CANCEL_SUBSCRIPTION": "是的，取消我的方案"
   },
 
   "PLAN_NAME": {
@@ -143,6 +146,7 @@
     "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "您可以随时取消订阅",
     "NOTE": "您的当前方案将持续有效至下一个续订日期，且本次已付费的周期将不提供退款。",
     "SUBSCRIBE": "订阅",
+    "PROCESSING": "处理中，请稍候...",
     "TOAST_SUBSCRIPTION_SUCCESS": "您已成功订阅",
     "TOAST_SUBSCRIPTION_UPDATE_ERROR": "订阅更新失败",
     "DOWNGRADED_TO_BEGINNER_PLAN": "已降级为基础版方案",
