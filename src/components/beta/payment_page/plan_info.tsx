@@ -19,7 +19,7 @@ const PlanInfo = ({ team, plan }: PlanInfoProps) => {
 
   return (
     <main className="flex w-fit flex-col gap-40px">
-      <section className="flex overflow-hidden rounded-sm border border-stroke-brand-primary bg-surface-neutral-surface-lv2">
+      <section className="flex w-300px overflow-hidden rounded-sm border border-stroke-brand-primary bg-surface-neutral-surface-lv2">
         <div className="w-24px flex-none bg-surface-brand-primary"></div>
         <div className="flex-auto bg-surface-brand-primary-5 px-24px py-12px text-center text-36px font-bold text-text-brand-secondary-lv1">
           {team.name}

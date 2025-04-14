@@ -6,6 +6,7 @@ import { PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { useTranslation } from 'next-i18next';
 import { formatTimestamp, ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
+import { timestampToString } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface OwnedTeamProps {
@@ -85,14 +86,18 @@ const OwnedTeam = ({
                   <div className="text-2xl font-semibold text-text-neutral-tertiary">
                     {`${t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}: `}
                     <span className="text-text-neutral-primary">
-                      {team.expiredTimestamp ? formatTimestamp(team.expiredTimestamp) : ''}
+                      {team.expiredTimestamp
+                        ? timestampToString(team.expiredTimestamp).dateWithSlash
+                        : ''}
                     </span>
                   </div>
                 ) : (
                   <div className="text-2xl font-semibold text-text-neutral-tertiary">
                     {`${t('subscriptions:SUBSCRIPTIONS_PAGE.EXPIRED_DATE')}: `}
                     <span className="text-text-neutral-primary">
-                      {team.expiredTimestamp ? formatTimestamp(team.expiredTimestamp) : ''}
+                      {team.expiredTimestamp
+                        ? timestampToString(team.expiredTimestamp).dateWithSlash
+                        : ''}
                     </span>
                   </div>
                 ))}

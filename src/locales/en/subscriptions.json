@@ -146,6 +146,7 @@
     "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "You can cancel your subscription anytime.",
     "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
     "SUBSCRIBE": "Subscribe",
+    "PROCESSING": "Processing, please wait...",
     "TOAST_SUBSCRIPTION_SUCCESS": "You have successfully completed your subscription.",
     "TOAST_SUBSCRIPTION_UPDATE_ERROR": "Subscription update error",
     "DOWNGRADED_TO_BEGINNER_PLAN": "Downgraded to Beginner plan",
