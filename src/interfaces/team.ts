@@ -29,6 +29,8 @@ export interface ITeam {
   totalAccountBooks: number;
   bankAccount: IEditable<string>;
   expiredAt: number;
+  inGracePeriod: boolean;
+  gracePeriodEndAt: number;
 }
 
 export interface IInviteMember {

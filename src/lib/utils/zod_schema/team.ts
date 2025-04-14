@@ -31,6 +31,8 @@ export const TeamSchema = z.object({
     editable: z.boolean(),
   }),
   expiredAt: z.number().default(0),
+  inGracePeriod: z.boolean(),
+  gracePeriodEndAt: z.number().default(0),
 });
 
 export const ITeamMemberSchema = z.object({

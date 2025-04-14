@@ -3,6 +3,7 @@ import { TeamPermissionAction } from '@/interfaces/permissions';
 import { LeaveStatus, TeamRole } from '@/interfaces/team';
 import prisma from '@/client';
 import { SortOrder } from '@/constants/sort';
+import { updateTeamMemberSession } from '@/lib/utils/session';
 
 const ACTION_USE_ACTUAL_ROLE: TeamPermissionAction[] = [
   // Info: (20250411 - Tzuhan) 團隊管理
@@ -127,4 +128,10 @@ export const assertUserCan = async ({
     can: result.can,
     alterableRoles: result.alterableRoles, // Info: (20250411 - Tzuhan) 只有 CHANGE_TEAM_ROLE 會有值
   };
+};
+
+export const getEffectiveTeamMeta = async (userId: number, teamId: number) => {
+  const { effectiveRole, expiredAt, inGracePeriod } = await assertUserIsTeamMember(userId, teamId);
+  await updateTeamMemberSession(userId, teamId, effectiveRole);
+  return { effectiveRole, expiredAt, inGracePeriod };
 };

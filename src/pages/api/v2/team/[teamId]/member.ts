@@ -44,7 +44,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   );
 
   // Info: (20250226 - Tzuhan) 取得該團隊的成員列表
-  const paginatedTeamMembers = await listTeamMemberByTeamId(teamId, query);
+  const paginatedTeamMembers = await listTeamMemberByTeamId(userId, teamId, query);
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
 
@@ -88,7 +88,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
   );
 
   // Info: (20250304 - Tzuhan) 邀請成員加入團隊
-  const addedResult = await addMembersToTeam(teamId, body.emails);
+  const addedResult = await addMembersToTeam(userId, teamId, body.emails);
 
   // Info: (20250408 - Shirley) 更新用戶的 session 資料，添加新的團隊
   try {
