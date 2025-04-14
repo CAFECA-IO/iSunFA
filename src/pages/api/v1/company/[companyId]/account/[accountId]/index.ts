@@ -10,6 +10,10 @@ import {
   softDeleteAccountInPrisma,
 } from '@/lib/utils/repo/account.repo';
 import { getSession } from '@/lib/utils/session';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 function formatParams(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
@@ -29,15 +33,33 @@ function formatParams(companyId: unknown, accountId: string | string[] | undefin
 
 async function getCompanyIdAccountId(req: NextApiRequest) {
   const session = await getSession(req);
-  const { userId, companyId } = session;
+  const { userId, companyId, teams } = session;
   if (!userId) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
   }
   const { accountId } = req.query;
   const { accountIdNumber, companyIdNumber } = formatParams(companyId, accountId);
+
+  const company = await getCompanyById(companyIdNumber);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
   return {
     companyIdNumber,
     accountIdNumber,
+    teamRole: userTeam.role as TeamRole,
+    companyTeamId,
   };
 }
 
@@ -45,7 +67,17 @@ async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccount | null = null;
 
-  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req);
+  const { companyIdNumber, accountIdNumber, teamRole } = await getCompanyIdAccountId(req);
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
   const accountFromDb = await findFirstAccountInPrisma(accountIdNumber, companyIdNumber);
   const account = accountFromDb ? formatAccount(accountFromDb) : ({} as IAccount);
   statusMessage = STATUS_MESSAGE.SUCCESS;
@@ -58,7 +90,17 @@ async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccount | null = null;
 
-  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req);
+  const { companyIdNumber, accountIdNumber, teamRole } = await getCompanyIdAccountId(req);
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
   const { name, note } = req.body;
   const updatedAccount = await updateAccountInPrisma(accountIdNumber, companyIdNumber, name, note);
   const account = updatedAccount ? formatAccount(updatedAccount) : ({} as IAccount);
@@ -72,7 +114,17 @@ async function handleDeleteRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccount | null = null;
 
-  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req);
+  const { companyIdNumber, accountIdNumber, teamRole } = await getCompanyIdAccountId(req);
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
   const deletedAccount = await softDeleteAccountInPrisma(accountIdNumber, companyIdNumber);
   const account = deletedAccount ? formatAccount(deletedAccount) : ({} as IAccount);
   statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
