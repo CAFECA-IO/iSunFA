@@ -5,7 +5,7 @@ import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscrip
 import { PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { useTranslation } from 'next-i18next';
-import { ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
+import { formatTimestamp, ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
 import { timestampToString } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
