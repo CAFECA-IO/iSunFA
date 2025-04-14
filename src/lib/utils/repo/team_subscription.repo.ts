@@ -14,6 +14,7 @@ import {
 } from '@/lib/utils/permission/assert_user_team_permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { addMonths, getUnixTime } from 'date-fns';
+import { ORDER_STATUS } from '@/constants/order';
 
 export const createTeamSubscription = async (
   options: ITeamSubscription
@@ -253,7 +254,7 @@ export async function listTeamTransaction(
       invoices.push({
         id: invoice?.id ?? transaction.id,
         teamId,
-        status: invoice?.status === 'SUCCESS', // Info: (20250401 - Tzuhan) 目前不確定 DB 發票狀態的定義（schema 上是 string），這邊假設是 'SUCCESS' 代表付款成功
+        status: invoice?.status === ORDER_STATUS.PAID, // Info: (20250401 - Tzuhan) 目前不確定 DB 發票狀態的定義（schema 上是 string），這邊假設是 'SUCCESS' 代表付款成功
         issuedTimestamp: invoice?.issuedAt ?? transaction.createdAt,
         dueTimestamp: invoice?.issuedAt ?? transaction.createdAt,
         planId: detail.productName as TPlanType,
@@ -331,7 +332,7 @@ export async function getTeamInvoiceById(invoiceId: number): Promise<ITeamInvoic
   return {
     id: invoice.id,
     teamId: invoice.teamPaymentTransaction.teamOrder.teamId,
-    status: invoice.status === 'SUCCESS',
+    status: invoice.status === ORDER_STATUS.PAID,
     issuedTimestamp: invoice.issuedAt,
     dueTimestamp: invoice?.issuedAt,
     planId: invoice.teamPaymentTransaction.teamOrder.orderDetails[0].productName as TPlanType,
@@ -413,7 +414,7 @@ export async function getSubscriptionByTeamId(
       paymentStatus = hasInvoice ? TPaymentStatus.PAID : TPaymentStatus.PAYMENT_FAILED;
     }
   }
-  if (latestOrder?.status === 'CANCELED') {
+  if (latestOrder?.status === ORDER_STATUS.CANCELLED) {
     paymentStatus = TPaymentStatus.PAYMENT_FAILED;
   }
 
@@ -460,13 +461,13 @@ export const updateSubscription = async (
 
   if (autoRenew === false) {
     const latestOrder = await prisma.teamOrder.findFirst({
-      where: { teamId, status: { not: 'CANCELED' } },
-      orderBy: { createdAt: 'desc' },
+      where: { teamId, status: { not: ORDER_STATUS.CANCELLED } },
+      orderBy: { createdAt: SortOrder.DESC },
     });
     if (latestOrder) {
       await prisma.teamOrder.update({
         where: { id: latestOrder.id },
-        data: { status: 'CANCELED' },
+        data: { status: ORDER_STATUS.CANCELLED },
       });
     }
   }
@@ -477,12 +478,12 @@ export const updateSubscription = async (
       id: true,
       name: true,
       subscriptions: {
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: SortOrder.DESC },
         take: 1,
         include: { plan: true },
       },
       TeamOrder: {
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: SortOrder.DESC },
         take: 1,
         include: {
           TeamPaymentTransaction: { include: { TeamInvoice: true } },

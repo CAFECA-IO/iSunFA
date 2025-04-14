@@ -796,7 +796,6 @@ export async function getAccountBookForUserWithTeam(
   }
 
   try {
-    // Info: (20250329 - Shirley) Check if user is a member of the team
     const teamMember = await prisma.teamMember.findFirst({
       where: {
         userId,
@@ -805,15 +804,37 @@ export async function getAccountBookForUserWithTeam(
       },
       select: {
         role: true,
+        team: {
+          select: {
+            subscriptions: {
+              orderBy: { expiredDate: SortOrder.DESC },
+              take: 1,
+              select: {
+                startDate: true,
+                expiredDate: true,
+                plan: { select: { type: true } },
+              },
+            },
+          },
+        },
       },
     });
 
-    // Info: (20250329 - Shirley) If user is not a member of the team, return null
-    if (!teamMember) {
-      return null;
-    }
+    if (!teamMember) return null;
 
-    // Info: (20250329 - Shirley) Get the company/account book that belongs to the team
+    const { role, team } = teamMember;
+    const expiredAt = team.subscriptions[0]?.expiredDate ?? 0;
+    const nowInSecond = getTimestampNow();
+    const THREE_DAYS = 3 * 24 * 60 * 60;
+    const gracePeriodEndAt = expiredAt + THREE_DAYS;
+    const inGracePeriod =
+      expiredAt > 0 && nowInSecond > expiredAt && nowInSecond <= gracePeriodEndAt;
+    const isExpired = expiredAt === 0 || nowInSecond > gracePeriodEndAt;
+    const effectiveRole = isExpired ? TeamRole.VIEWER : (role as TeamRole);
+    const planType = team.subscriptions[0]
+      ? (team.subscriptions[0].plan.type as TPlanType)
+      : TPlanType.BEGINNER;
+
     const accountBook = await prisma.company.findFirst({
       where: {
         id: companyId,
@@ -825,87 +846,43 @@ export async function getAccountBookForUserWithTeam(
       },
     });
 
-    // Info: (20250329 - Shirley) If the account book doesn't exist or doesn't belong to the team, return null
-    if (!accountBook) {
-      return null;
-    }
+    if (!accountBook) return null;
 
-    const nowInSecond = getTimestampNow();
-
-    // Info: (20250329 - Shirley) Get team information
-    const team = await prisma.team.findUnique({
+    const teamEntity = await prisma.team.findUnique({
       where: { id: teamId },
       include: {
         members: {
           where: { status: LeaveStatus.IN_TEAM },
           select: { id: true, userId: true, role: true },
         },
-        accountBook: {
-          select: { id: true },
-        },
-        subscriptions: {
-          where: {
-            startDate: {
-              lte: nowInSecond,
-            },
-            expiredDate: {
-              gt: nowInSecond,
-            },
-          },
-          include: { plan: true },
-        },
-        imageFile: {
-          select: { id: true, url: true },
-        },
+        accountBook: { select: { id: true } },
+        imageFile: { select: { url: true } },
       },
     });
 
-    if (!team) {
-      return null;
-    }
+    if (!teamEntity) return null;
 
-    // Info: (20250329 - Shirley) Get user's role in the team
-    const userRole = (teamMember.role as TeamRole) || TeamRole.VIEWER;
-
-    // Info: (20250329 - Shirley) Get team's plan type
-    const planType = team.subscriptions[0]
-      ? (team.subscriptions[0].plan.type as TPlanType)
-      : TPlanType.BEGINNER;
-
-    // Info: (20250329 - Shirley) Transform data to ITeam format
     const teamInfo: ITeam = {
-      id: team.id,
-      imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
-      role: userRole,
-      name: {
-        value: team.name,
-        editable: userRole !== TeamRole.VIEWER,
-      },
-      about: {
-        value: team.about || '',
-        editable: userRole !== TeamRole.VIEWER,
-      },
-      profile: {
-        value: team.profile || '',
-        editable: userRole !== TeamRole.VIEWER,
-      },
-      planType: {
-        value: planType,
-        editable: false,
-      },
-      totalMembers: team.members.length,
-      totalAccountBooks: team.accountBook.length,
+      id: teamEntity.id,
+      imageId: teamEntity.imageFile?.url ?? '/images/fake_team_img.svg',
+      role: effectiveRole,
+      name: { value: teamEntity.name, editable: effectiveRole !== TeamRole.VIEWER },
+      about: { value: teamEntity.about ?? '', editable: effectiveRole !== TeamRole.VIEWER },
+      profile: { value: teamEntity.profile ?? '', editable: effectiveRole !== TeamRole.VIEWER },
+      planType: { value: planType, editable: false },
+      totalMembers: teamEntity.members.length,
+      totalAccountBooks: teamEntity.accountBook.length,
       bankAccount: {
-        value: team.bankInfo
-          ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
+        value: teamEntity.bankInfo
+          ? `${(teamEntity.bankInfo as { code: string }).code}-${(teamEntity.bankInfo as { number: string }).number}`
           : '',
-        editable: userRole !== TeamRole.VIEWER,
+        editable: effectiveRole !== TeamRole.VIEWER,
       },
-      expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
+      expiredAt,
+      inGracePeriod,
+      gracePeriodEndAt,
     };
 
-    // Info: (20250329 - Shirley) Since we're not using admin table anymore, we need default values for tag and order
-    // These will be determined by business requirements or replaced in the future
     return {
       id: accountBook.id,
       userId: accountBook.userId,
@@ -917,7 +894,7 @@ export async function getAccountBookForUserWithTeam(
       updatedAt: accountBook.updatedAt,
       isPrivate: accountBook.isPrivate ?? false,
       teamId,
-      tag: WORK_TAG.ALL, // Default tag
+      tag: WORK_TAG.ALL,
       team: teamInfo,
       isTransferring: accountBook.isTransferring ?? false,
     };
@@ -947,19 +924,16 @@ export async function findUserAccountBook(
   companyId: number,
   teamIds?: number[]
 ): Promise<IAccountBookWithTeam | null> {
-  if (userId <= 0 || companyId <= 0) {
-    return null;
-  }
+  if (userId <= 0 || companyId <= 0) return null;
 
   const nowInSecond = getTimestampNow();
+  const THREE_DAYS = 3 * 24 * 60 * 60;
 
   try {
-    // Info: (20250401 - Shirley) Start by finding the specific account book
     const accountBook = await prisma.company.findFirst({
       where: {
         id: companyId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
-        // Info: (20250401 - Shirley) Only include account books from teams where user is a member
         team: {
           members: {
             some: {
@@ -967,7 +941,6 @@ export async function findUserAccountBook(
               status: LeaveStatus.IN_TEAM,
             },
           },
-          // Info: (20250401 - Shirley) If teamIds are provided, further filter by those teams
           ...(teamIds && teamIds.length > 0 ? { id: { in: teamIds } } : {}),
         },
       },
@@ -976,95 +949,76 @@ export async function findUserAccountBook(
         team: {
           include: {
             members: {
-              where: {
-                userId,
-                status: LeaveStatus.IN_TEAM,
-              },
-              select: {
-                role: true,
-              },
+              where: { userId, status: LeaveStatus.IN_TEAM },
+              select: { role: true },
             },
             subscriptions: {
               where: {
-                startDate: {
-                  lte: nowInSecond,
-                },
-                expiredDate: {
-                  gt: nowInSecond,
-                },
+                startDate: { lte: nowInSecond },
+                expiredDate: { gt: nowInSecond - THREE_DAYS }, // 保留寬限期
               },
+              orderBy: { expiredDate: SortOrder.DESC },
+              take: 1,
               include: { plan: true },
             },
-            imageFile: {
-              select: { id: true, url: true },
-            },
+            imageFile: { select: { id: true, url: true } },
           },
         },
       },
     });
 
-    // Info: (20250401 - Shirley) If no account book found or it's not associated with a team, return null
-    if (!accountBook || !accountBook.team) {
-      return null;
-    }
+    if (!accountBook || !accountBook.team) return null;
 
     const { team } = accountBook;
-    // Info: (20250401 - Shirley) We should have exactly one matching team member since we filtered by userId
-    const userRole = team.members.length > 0 ? (team.members[0].role as TeamRole) : TeamRole.VIEWER;
+    const userRole = team.members[0]?.role ?? TeamRole.VIEWER;
+
+    const expiredAt = team.subscriptions[0]?.expiredDate ?? 0;
+    const gracePeriodEndAt = expiredAt + THREE_DAYS;
+    const inGracePeriod =
+      expiredAt > 0 && nowInSecond > expiredAt && nowInSecond <= gracePeriodEndAt;
+    const isExpired = expiredAt === 0 || nowInSecond > gracePeriodEndAt;
+    const effectiveRole = isExpired ? TeamRole.VIEWER : (userRole as TeamRole);
 
     const planType = team.subscriptions[0]
       ? (team.subscriptions[0].plan.type as TPlanType)
       : TPlanType.BEGINNER;
 
-    // Info: (20250401 - Shirley) Count the total account books in this team in a separate query
-    const totalAccountBooks = await prisma.company.count({
-      where: {
-        teamId: team.id,
-        OR: [{ deletedAt: 0 }, { deletedAt: null }],
-      },
-    });
+    const [totalAccountBooks, totalMembers] = await Promise.all([
+      prisma.company.count({
+        where: {
+          teamId: team.id,
+          OR: [{ deletedAt: 0 }, { deletedAt: null }],
+        },
+      }),
+      prisma.teamMember.count({
+        where: {
+          teamId: team.id,
+          status: LeaveStatus.IN_TEAM,
+        },
+      }),
+    ]);
 
-    // Info: (20250401 - Shirley) Count total members in this team
-    const totalMembers = await prisma.teamMember.count({
-      where: {
-        teamId: team.id,
-        status: LeaveStatus.IN_TEAM,
-      },
-    });
-
-    // Info: (20250401 - Shirley) Transform data to ITeam format
     const teamInfo: ITeam = {
       id: team.id,
       imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
-      role: userRole,
-      name: {
-        value: team.name,
-        editable: userRole !== TeamRole.VIEWER,
-      },
-      about: {
-        value: team.about || '',
-        editable: userRole !== TeamRole.VIEWER,
-      },
-      profile: {
-        value: team.profile || '',
-        editable: userRole !== TeamRole.VIEWER,
-      },
-      planType: {
-        value: planType,
-        editable: false,
-      },
+      role: effectiveRole,
+      name: { value: team.name, editable: effectiveRole !== TeamRole.VIEWER },
+      about: { value: team.about || '', editable: effectiveRole !== TeamRole.VIEWER },
+      profile: { value: team.profile || '', editable: effectiveRole !== TeamRole.VIEWER },
+      planType: { value: planType, editable: false },
       totalMembers,
       totalAccountBooks,
       bankAccount: {
         value: team.bankInfo
           ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
           : '',
-        editable: userRole !== TeamRole.VIEWER,
+        editable: effectiveRole !== TeamRole.VIEWER,
       },
-      expiredAt: team.subscriptions[0]?.expiredDate ?? 0,
+      expiredAt,
+      inGracePeriod,
+      gracePeriodEndAt,
     };
 
-    // Info: (20250325 - Shirley) Return the formatted account book data
     return {
       id: accountBook.id,
       userId: accountBook.userId,
@@ -1076,8 +1030,7 @@ export async function findUserAccountBook(
       updatedAt: accountBook.updatedAt,
       isPrivate: accountBook.isPrivate ?? false,
       teamId: team.id,
-      tag: WORK_TAG.ALL, // Info: (20250325 - Shirley) Default tag
-
+      tag: WORK_TAG.ALL,
       team: teamInfo,
       isTransferring: accountBook.isTransferring ?? false,
     };
